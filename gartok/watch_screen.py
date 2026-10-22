@@ -9,12 +9,13 @@ import pygame
 
 from . import artwork, wagon_watch
 from .screen import Screen
+from .sheet_panel import SheetModalMixin
 from .ui.primitives import draw_button, footer_bar, panel, section, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 
-class WatchScreen(Screen):
+class WatchScreen(SheetModalMixin, Screen):
     native = True
 
     def tutorial_key(self):
@@ -31,6 +32,7 @@ class WatchScreen(Screen):
         self.on_back = on_back
         self.goes = set(group.members)
         self.buttons = []
+        self.sheet_hits = []
         self._hot = False
 
     def handle_escape(self):
@@ -48,6 +50,12 @@ class WatchScreen(Screen):
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
             return
+        if self.close_sheet_on_click():
+            return
+        for rect, unit in self.sheet_hits:
+            if rect.collidepoint(event.pos):
+                self.open_sheet(unit)
+                return
         for key, rect in self.buttons:
             if rect.collidepoint(event.pos):
                 self._click(key)
@@ -79,6 +87,7 @@ class WatchScreen(Screen):
         m = T.S * 3
         screen.fill(T.TABLE)
         self.buttons = []
+        self.sheet_hits = []
         self._hot = False
 
         text(screen, F["titleb"], "WHO MINDS THE WAGON?", (m, m - 2), T.TX)
@@ -92,13 +101,18 @@ class WatchScreen(Screen):
         y = section(screen, F, f"THE PARTY  ({len(self.goes)} in, {len(self.guards)} outside)", x, area.y + 12, w)
         for i, unit in enumerate(self.group.members):
             going = unit in self.goes
-            text(screen, F["bodyb"], unit.name, (x, y + 4), T.TX if going else T.TX_MUTED)
+            badge = self.sheet_badge(screen, (x + 20, y + 4))
+            self.sheet_hits.append((badge, unit))
+            name = text(screen, F["bodyb"], unit.name, (x + 28, y + 4), T.TX if going else T.TX_MUTED)
+            text(screen, F["body_sm"], f"{unit.race['name']} {unit.occupation['name'].lower()}  ·  "
+                 f"HP {unit.hp}/{unit.hp_max}  ·  AC {unit.ac}", (name.right + T.S * 2, y + 6), T.TX_FAINT)
             self.add_button(screen, pygame.Rect(x + w - 190, y, 190, 28), f"toggle:{i}",
                             "GOES IN" if going else "MINDS THE WAGON",
                             enabled=not going or len(self.goes) > 1)
             y += 36
         self._draw_risk(screen, x, y + T.S, w)
         footer_bar(self, screen, F, primary=("go", self.go_label), back=("back", "BACK"))
+        self.draw_sheet_modal(screen)
 
     def _draw_risk(self, screen, x, y, w):
         F = self._F

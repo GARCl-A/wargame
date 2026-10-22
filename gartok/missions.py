@@ -394,7 +394,8 @@ def progress(guild, mission):
         from .library_screen import library_stock_dictionaries
         stock = set(library_stock_dictionaries(guild))
         return sum(sum(qty for name, qty in u._base_inventory if name.startswith("Dictionary of ") and name not in stock) for u in group.members)
-    return sum(_held(u, item) for u in group.members)
+    return (sum(_held(u, item) for u in group.members)
+            + sum(s.count_of(item) for s in group.stores))
 
 
 def can_turn_in(guild, mission):
@@ -435,6 +436,11 @@ def turn_in(guild, mission):
             if left > 0 and u.equipped_artifact == t.goal_item:
                 u.take_from_artifact()
                 left -= 1
+    if t.goal_item != "Any Dictionary":
+        for store in group.stores:
+            if left <= 0:
+                break
+            left -= store.remove_named(t.goal_item, left)
     if t.returns_goal:
         group.members[0].give_to_pack(t.goal_item, t.goal_qty)
     for node_id in t.reveals:
@@ -611,6 +617,8 @@ def slay_ox(guild):
 
 def _item_held(guild, item):
     if any(_held(u, item) for u in guild.roster):
+        return True
+    if any(s.count_of(item) for g in guild.groups for s in g.stores):
         return True
     return (guild.bank.count_of(item) + guild.house.stash.count_of(item)) > 0
 

@@ -199,3 +199,15 @@ def test_watch_screen_renders_carriage_medallion():
     # Renders without error and shows Carriage title
     assert g.wagons[0].kind == "Carriage"
 
+
+
+def test_each_member_has_a_badge_that_opens_their_sheet():
+    g = _group()
+    scr = _screen(g)
+    _keys(scr)
+    badge, unit = scr.sheet_hits[1]
+    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=badge.center))
+    assert scr.sheet_open and scr._sheet_unit is unit is g.members[1]
+    _keys(scr)
+    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=badge.center))
+    assert not scr.sheet_open and scr.party == g.members

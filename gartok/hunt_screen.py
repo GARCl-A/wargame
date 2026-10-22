@@ -404,9 +404,10 @@ class HuntScreen(SheetModalMixin, Screen):
         text(screen, F["bodyb"], lead, (m, top), T.BLOOD)
         est = self.autowin_estimator.result
         if est is not None:
-            pct = round(est.win_rate * 100)
-            ocol = T.GREEN if est.win_rate >= 0.8 else (T.BRASS if est.win_rate >= 0.5 else T.BLOOD)
-            caps(screen, F["micro"], f"ESTIMATED ODDS: {pct}% WIN", (m + w, top + 3), ocol, right=True)
+            pct = round(est.stomp_rate * 100)
+            ocol = T.GREEN if est.eligible else (T.BRASS if est.stomp_rate >= 0.5 else T.TX_MUTED)
+            caps(screen, F["micro"], f"CLEAN STOMP: {pct}% OF {est.iterations} SIMULATED FIGHTS",
+                 (m + w, top + 3), ocol, right=True)
         top += 26
         if foes:
             cols = min(len(foes), max(1, w // 220))

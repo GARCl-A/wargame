@@ -39,7 +39,7 @@ def test_autowin_overwhelming_victory():
     enemies = [_make_scrapper(hp=3)]
     res = autowin.simulate_matchup(squad, enemies, max_iterations=5, max_time=0.5)
     assert res.eligible is True
-    assert res.win_rate == 1.0
+    assert res.win_rate == 1.0 and res.stomp_rate == 1.0
     assert res.iterations > 0
     assert isinstance(res.avg_damage, dict)
 
@@ -172,3 +172,24 @@ def test_autowin_hunt_screen_flow():
     assert len(autowin_called) == 1
     assert autowin_called[0][2].eligible is True
 
+
+
+def test_a_won_fight_that_is_no_stomp_still_counts_toward_the_odds():
+    random.seed(4)
+    squad = [_make_fighter(hp=25) for _ in range(4)]
+    for u in squad:
+        u.give_to_pack("Minor Healing Potion")
+    real = autowin._stomp
+    autowin._stomp = lambda battle, squad: False
+    try:
+        res = autowin.simulate_matchup(squad, [_make_scrapper(hp=3)], max_iterations=4, max_time=5)
+    finally:
+        autowin._stomp = real
+    assert res.iterations == 4 and res.win_rate == 1.0 and res.stomp_rate == 0.0 and res.eligible is False
+
+
+def test_the_odds_are_the_share_of_fights_won():
+    random.seed(5)
+    res = autowin.simulate_matchup([_make_scrapper(hp=2)], [_make_fighter(hp=30) for _ in range(4)],
+                                   max_iterations=4, max_time=5)
+    assert res.iterations == 4 and res.win_rate == 0.0 and not res.eligible

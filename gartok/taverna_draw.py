@@ -288,8 +288,10 @@ class TavernaDrawMixin:
         y += T.S * 3 + 4
 
         buttons_w = T.S * 30
-        for i, m in enumerate(self.party):
-            mr = pygame.Rect(inner.x, y, inner.w, hb.PERSON_H + T.S)
+        area = pygame.Rect(inner.x, y, inner.w, max(0, inner.bottom - y))
+        rows = self._list_rows(area, hb.PERSON_H + T.S)
+        clip, mark = self._open_list(screen, area)
+        for i, (m, mr) in enumerate(zip(self.party, rows)):
             magic_tag = "/".join(s.capitalize() for s in m.magic_sources) + " magic" if m.magic_sources else "no magic"
             self._person(screen, mr, {
                 "face": _face(m), "name": m.name, "reserve": buttons_w,
@@ -318,7 +320,7 @@ class TavernaDrawMixin:
                      T.TX_FAINT)
                 b = pygame.Rect(mr.right - T.S * 2 - T.S * 20, mr.y + T.S * 2 - 2, T.S * 20, T.S * 5)
                 self.add_button(screen, b, f"choose_target_{i}", "Set target")
-            y += mr.h + ROW_GAP
+        self._close_list(screen, clip, mark)
 
     # ------------------------------------------------------------------ #
     def _draw_perform(self, screen, body):
@@ -348,8 +350,10 @@ class TavernaDrawMixin:
         y += T.S * 2
         hb.draw_section(screen, F, (inner.x, y), "Performers  ·  click to seat or stand down")
         y += T.S * 3 + 4
-        for i, m in enumerate(self.party):
-            mr = pygame.Rect(inner.x, y, inner.w, hb.PERSON_H)
+        area = pygame.Rect(inner.x, y, inner.w, max(0, inner.bottom - y))
+        rows = self._list_rows(area, hb.PERSON_H)
+        clip, mark = self._open_list(screen, area)
+        for i, (m, mr) in enumerate(zip(self.party, rows)):
             has = economy.can_perform(m)
             on = has and m not in self.perform_off
             if has:
@@ -365,7 +369,32 @@ class TavernaDrawMixin:
                 self._person(screen, mr, p)
             else:
                 hb.draw_person(screen, F, mr, p, (-1, -1))
-            y += hb.PERSON_H + ROW_GAP
+        self._close_list(screen, clip, mark)
+
+    # ------------------------------------------------------------------ #
+    def _list_rows(self, area, row_h):
+        """One rect per party member in `area`: rows shrink to fit, down to a floor, then scroll."""
+        n = len(self.party)
+        row_h = max(T.S * 7, min(row_h, (area.h + ROW_GAP) // max(1, n) - ROW_GAP))
+        self.list_content_h = max(0, n * (row_h + ROW_GAP) - ROW_GAP)
+        self.list_area, self.list_max = area, max(0, self.list_content_h - area.h)
+        self.list_scroll = min(self.list_scroll, self.list_max)
+        w = area.w - (T.S * 2 if self.list_max else 0)
+        return [pygame.Rect(area.x, area.y - self.list_scroll + i * (row_h + ROW_GAP), w, row_h)
+                for i in range(n)]
+
+    def _open_list(self, screen, area):
+        clip = screen.get_clip()
+        screen.set_clip(area.clip(clip))
+        return clip, len(self.buttons)
+
+    def _close_list(self, screen, clip, mark):
+        """Ends a `_list_rows` list: a button scrolled out of sight takes no click."""
+        area = self.list_area
+        self.buttons[mark:] = [(k, r.clip(area)) for k, r in self.buttons[mark:] if r.colliderect(area)]
+        screen.set_clip(clip)
+        if self.list_max:
+            scrollbar(screen, area, self.list_scroll, self.list_max, self.list_content_h)
 
     # ------------------------------------------------------------------ #
     def _draw_study_modal(self, screen):

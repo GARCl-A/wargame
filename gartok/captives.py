@@ -44,7 +44,8 @@ def take(guild, group, combatants):
     lines = []
     for c in combatants:
         group.captives.append(Captive(c.char, guild.clock.day, getattr(c.char, "npc_slug", None)))
-        lines.append(f"{c.char.name} is led away in bonds -- a captive for {CAPTIVE_DAYS} days.")
+        lines.append(f"{c.char.name} is led away in bonds -- a captive for {CAPTIVE_DAYS} days "
+                     f"(group screen, QUESTS & CAPTIVES).")
     return lines
 
 

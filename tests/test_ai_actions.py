@@ -295,6 +295,7 @@ def _case(aid, favoured):
     return batt, e, p
 
 
+FLANK_ONLY = ("sneak_attack", "precise_thrust")     # no flank, no action at all
 PREMISE = ("sneak_attack", "precise_thrust", "cleave", "repel_strike", "maiming_strike",
            "armor_pierce", "power_shot", "hook_shield", "parry_strike")
 
@@ -312,6 +313,9 @@ def test_every_weapon_action_loses_to_two_attacks_out_of_its_case_and_wins_in_it
                         monkeypatch.setattr(type(act), "favoured", lambda self, b, a, t: True)
                     elif aid == "armor_pierce":
                         monkeypatch.setattr(type(act), "favoured", lambda self, b, a, t: False)
+                    if aid in FLANK_ONLY and not favoured:
+                        assert not act.can(batt, e, p), aid
+                        continue
                     assert act.can(batt, e, p), aid
                     assert act.favoured(batt, e, p) is favoured, (aid, favoured)
                     worth = ai._weapon_action_worth(batt, e, act, p)

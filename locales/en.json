@@ -177,14 +177,14 @@
       "title": "Managing a group's gear",
       "body": [
         "Click a member on the left to open their column. Drag items between HAND / OFF HAND / BODY / PACK and between members, or click an item and then where it goes; shift or ctrl picks several. Right-click for a quick \"send to...\" menu.",
-        "The ARTIFACT slot holds one artifact (a Signal Horn, say), which gives its wearer a combat action. The QUESTS tab lists the group's jobs and deadlines."
+        "The ARTIFACT slot holds one artifact (a Signal Horn, say), which gives its wearer a combat action. The QUESTS & CAPTIVES tab lists the group's jobs and deadlines."
       ]
     },
     "missions": {
       "title": "Paid jobs",
       "body": [
         "Bring what the giver asks, or do the task, before the deadline. The reward splits evenly across the group when you hand it in; a missed deadline fails the job. Some jobs pay reputation instead of money.",
-        "The group leader signs, and the job follows that character, not the group. Progress is on the QUESTS tab (MANAGE GEAR & QUESTS on the map)."
+        "The group leader signs, and the job follows that character, not the group. Progress is on the QUESTS & CAPTIVES tab (MANAGE GEAR & QUESTS on the map)."
       ]
     },
     "trust": {

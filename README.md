@@ -286,7 +286,7 @@ gartok/
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
-  start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py
+  start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py + wiki_rules.py (its RULES tab)
   combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector) / guild_screen.py
   group_screen.py + group_draw.py (everything it paints)
   squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py

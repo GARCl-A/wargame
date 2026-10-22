@@ -5,7 +5,9 @@ and the market's finite stock on a few items (economy.STOCK)."""
 import random
 
 from gartok import items, missions
+from gartok.animals import Animal
 from gartok.guild import Guild
+from gartok.wagon import Wagon
 from tests.helpers import Unit, economy
 
 
@@ -71,6 +73,24 @@ def test_turn_in_consumes_the_hides_and_splits_the_reward():
     assert m.state == "done"
     assert signer._base_inventory.count("1sqm Hide") == 0
     assert sum(u.money for u in hunters.members) == missions.TANNER_HIDES.reward
+
+
+def test_goods_on_the_wagon_and_the_animals_count_and_are_handed_in():
+    guild, hunters, _home = _guild_with_two_groups()
+    hunters.add_wagon(Wagon())
+    hunters.herd.append(Animal("Donkey"))
+    m = missions.accept(guild, hunters.members[0], missions.APOTHECARY_MUSHROOMS)
+    hunters.members[0].give_to_pack("Red Mushroom", 5)
+    hunters.wagons[0].give_to_pack("Red Mushroom", 6)
+    hunters.herd[0].give_to_pack("Red Mushroom", 5)
+    assert missions.progress(guild, m) == 16
+
+    missions.turn_in(guild, m)
+
+    assert m.state == "done"
+    held = (hunters.members[0].count_of("Red Mushroom") + hunters.wagons[0].count_of("Red Mushroom")
+            + hunters.herd[0].count_of("Red Mushroom"))
+    assert held == 1
 
 
 def test_missed_deadline_fails_the_mission_and_it_is_not_offered_again():

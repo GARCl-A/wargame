@@ -5,12 +5,12 @@ Consumes centralized data catalogs:
 - Recipes (`items.CRAFTING_RECIPES`)
 - Talents (`talents.TREES`)
 - Beasts (`data.BEASTS`)
-- Rules (summary of tactical and world systems)
+- Rules (`wiki_rules.py`: the rules a player looks up, off the live constants)
 """
 
 import pygame
 
-from . import actions, data, items, talents, weapon_traits
+from . import actions, data, items, talents, weapon_traits, wiki_rules
 from .screen import Screen
 from .ui.primitives import draw_button, panel, set_pointer, text, wrap
 from .ui.tokens import T
@@ -310,43 +310,20 @@ class WikiScreen(Screen):
     def _draw_rules(self, screen, view, y):
         F = self.F
         orig_y = y
-        sections = [
-            ("COMBAT BASICS", [
-                "Every combatant has 2 Action Points (AP) per turn.",
-                "Moving 1 cell costs 1 AP (Green tiles show reachable terrain).",
-                "Basic melee or ranged attacks cost 1 AP against an adjacent or in-range foe.",
-                "Defend: spend remaining AP to enter defending posture, granting +2 AC until next turn.",
-                "Flee: attempt to retreat to edge markers when overwhelmed.",
-            ]),
-            ("CONDITIONS & MORALE", [
-                "Demoralized: -1 to dice checks and morale; attacks suffer disadvantage.",
-                "Defending: +2 AC, active defense stance.",
-                "Poison: damage ticked down each combat round until antidote or treated.",
-            ]),
-            ("WEAPON TRAITS & ACTIONS (2 AP)", [
-                "Every weapon kind in the catalog grants unique tactical options or passive traits.",
-                "2 AP Weapon Actions (Sneak Attack, Cleave, Armor Pierce, etc.) require the equipped weapon trait.",
-                "Picks and Light Picks deal 3x damage dice on critical hits (Crit 3x trait).",
-                "Finesse weapons use Dexterity for attack rolls when DEX is higher than Strength.",
-                "Thrown weapons can be hurled up to their designated range (adding STR mod to attack & damage).",
-            ]),
-            ("WORLD & GUILD", [
-                "No global guild treasury: coins exist physically in characters' and pack animals' inventories.",
-                "Time passes through campaign ticks when all active groups have issued orders.",
-                "Hunger: units must eat daily rations. Starvation lowers attributes and induces sickness.",
-                "Permadeath: when all units of a guild are wiped out, the campaign run concludes.",
-            ]),
-        ]
-
-        for title, lines in sections:
-            th = 28 + len(lines) * 22 + 16
+        line_h, inner_w = 22, view.w - T.S * 6
+        for title, lines in wiki_rules.matching(self.search_query):
+            wrapped = [wrap(F["body"], line, inner_w) for line in lines]
+            th = 30 + sum(len(w) for w in wrapped) * line_h + len(lines) * 4 + 12
             r = pygame.Rect(view.x, y, view.w, th)
             if r.bottom > view.top and r.top < view.bottom:
                 panel(screen, r)
                 text(screen, F["bodyb"], title, (r.x + T.S * 2, r.y + 8), T.BRASS)
-                ly = r.y + 30
-                for line in lines:
-                    text(screen, F["body"], f"•  {line}", (r.x + T.S * 2, ly), T.TX)
-                    ly += 22
+                ly = r.y + 32
+                for rows in wrapped:
+                    text(screen, F["body"], "•", (r.x + T.S * 2, ly), T.TX_MUTED)
+                    for row in rows:
+                        text(screen, F["body"], row, (r.x + T.S * 4, ly), T.TX)
+                        ly += line_h
+                    ly += 4
             y += th + 10
         return y - orig_y

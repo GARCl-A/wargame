@@ -78,12 +78,14 @@ def test_sneak_attack_action():
     a.equip_weapon("Dagger")
     a.ap = 2
     assert actions.SNEAK_ATTACK.applicable(batt, a)[0] is True
-    assert actions.SNEAK_ATTACK.can(batt, a, d) is True
 
     ally = _recruit(batt, team="player")
-    ally.pos = (6, 5)
+    ally.pos = (5, 6)
     d.pos = (5, 5)
     a.pos = (4, 5)
+    assert actions.SNEAK_ATTACK.can(batt, a, d) is False
+    ally.pos = (6, 5)
+    assert actions.SNEAK_ATTACK.can(batt, a, d) is True
 
     with fixed_d20(18):
         actions.SNEAK_ATTACK.execute(batt, a, d)
@@ -99,9 +101,12 @@ def test_precise_thrust_action():
     assert actions.PRECISE_THRUST.applicable(batt, a)[0] is True
 
     ally = _recruit(batt, team="player")
-    ally.pos = (6, 5)
     d.pos = (5, 5)
     a.pos = (4, 5)
+    ally.pos = (9, 9)
+    assert actions.PRECISE_THRUST.can(batt, a, d) is False
+    ally.pos = (6, 5)
+    assert actions.PRECISE_THRUST.can(batt, a, d) is True
 
     with fixed_d20(15):
         actions.PRECISE_THRUST.execute(batt, a, d)

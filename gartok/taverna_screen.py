@@ -74,6 +74,8 @@ class TavernaScreen(TavernaDrawMixin, Screen):
         self.signed = None                  # {"unit", "by", "pitch", "line"} of the most recent sign-on
         self.pitch_area = pygame.Rect(0, 0, 0, 0)
         self.pitch_scroll = self.pitch_max = 0
+        self.list_area = pygame.Rect(0, 0, 0, 0)  # the study / perform tab's member list
+        self.list_scroll = self.list_max = self.list_content_h = 0
 
     def sync_group(self):
         if self.group is not None:
@@ -166,8 +168,11 @@ class TavernaScreen(TavernaDrawMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def handle_event(self, event):
-        if event.type == pygame.MOUSEWHEEL and self.pitch_area.collidepoint(self.mouse):
+        if event.type == pygame.MOUSEWHEEL and self.tab == "recruits" and self.pitch_area.collidepoint(self.mouse):
             self.pitch_scroll = max(0, min(self.pitch_max, self.pitch_scroll - event.y * T.S * 4))
+            return
+        if event.type == pygame.MOUSEWHEEL and self.tab != "recruits" and self.list_area.collidepoint(self.mouse):
+            self.list_scroll = max(0, min(self.list_max, self.list_scroll - event.y * T.S * 4))
             return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             px = event.pos

@@ -552,8 +552,9 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   **one strike** for the price of two plain attacks, so it is the worse buy out of its **favoured
   case**; in that case the strike **lands twice over** (a second roll of the weapon's damage) plus
   the action's own edge, and beats the two attacks whatever the weapon or the modifiers:
-  - **Sneak Attack** (Dagger): a flanked foe; +1d4.
-  - **Precise Thrust** (Rapier): a flanked foe; +2 to hit.
+  - **Sneak Attack** (Dagger): a flanked foe (you and an ally adjacent on opposite sides); +1d4.
+    With no flank there is no action: the button stays dark.
+  - **Precise Thrust** (Rapier): a flanked foe, likewise only then; +2 to hit.
   - **Cleave** (Axe): a second foe beside both; the sweep strikes both, each swing +2 to hit
     (no double: two blows already).
   - **Repel Strike** (Quarterstaff): shoves the foe 1 cell (+2 to the push); with its back to a
@@ -650,12 +651,15 @@ to the fight, as before.
 
 | Answer | Check | Passed | Missed |
 |---|---|---|---|
-| **Persuade** | CHA vs 10 + the leader's WIS mod, **−3 a good leader, +3 an evil one** | no fight | a plain fight |
-| **Bluff** | CHA vs 10 + the leader's WIS mod | no fight | they **strike first** |
-| **Intimidate** | CHA (or STR with Intimidating Presence) vs 10 + the leader's WIS mod, **easier the stronger the squad looks** (its HP against the pack's, ±4) | they start **Demoralized**; passed by **5+** they run | they get **+5 initiative** |
+| **Persuade** | CHA vs 15 + the leader's WIS mod, **−3 a good leader, +3 an evil one** | no fight | a plain fight |
+| **Bluff** | CHA vs 15 + the leader's WIS mod | no fight | they **strike first** |
+| **Intimidate** | CHA (or STR with Intimidating Presence) vs 15 + the leader's WIS mod | they start **Demoralized**; passed by **5+** they run | they get **+5 initiative** |
 | **Bribe** | none: **$3 a foe per (its level + 1)**, paid from the group's purses, richest first | no fight | — |
 | **Attack** | none | the fight, initiative as rolled | — |
 
+- **An ambush reads the squad's look:** all three checks are **easier the stronger the squad looks**
+  (its HP against the pack's, ±4) and harder when the pack outweighs it. An ordinary speaker (CHA +1)
+  talks an even pack down about a third of the time.
 - **A language** the speaker shares with the leader is needed for every answer that talks; coin and
   steel need none. A closed answer shows why ("needs Orcish", "not enough coin").
 - **No criticals:** a natural 1 or 20 is just its number.
@@ -786,7 +790,7 @@ FALLEN*), then ends.
 After a won fight every captive joins the group (`captives.py`): **not a member** (it never
 fights, works or eats), it walks with the group (its speed counts in the pace), takes **1 of the
 herd limit** (`Group.herd_capacity`) and **dies 7 days** after its capture. A herd over the limit
-loses its latest captive first when it has no animal to lose. The group screen's QUESTS tab lists
+loses its latest captive first when it has no animal to lose. The group screen's QUESTS & CAPTIVES tab lists
 the captives with their days left and a RELEASE button. A captive with a body worth keeping (the
 Snake Dragon) leaves it in the leader's pack when it dies; a foe left fallen and unbound after a won
 lethal fight is finished off and drops that body in the loot. Bodies rot (the Snake Dragon Corpse in
@@ -1131,6 +1135,9 @@ immediately without manual combat grind.
   2. **Zero player casualties** (every squad member remains standing and alive).
   3. **Zero consumables used** (no ammo fired from quivers, no potions drunk, no
      first aid charges used).
+- **What the screen shows:** the hunt's ambush reads **CLEAN STOMP: N% OF M SIMULATED FIGHTS**,
+  the share of runs that met all three criteria. It is not the odds of winning: a fight the squad
+  always wins with one potion drunk reads 0%.
 - **Trade-off when accepted:**
   - **0 combat XP** awarded from kills (the encounter was too lopsided to learn from).
   - Squad members take the **average simulated damage** (rounded) sustained during

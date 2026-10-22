@@ -133,6 +133,21 @@ def test_intimidate_is_easier_for_a_squad_that_looks_stronger():
     assert weak.edge < 0
 
 
+def test_every_ambush_check_reads_the_squads_look():
+    weak = _ambush(n=6)
+    base = {v: weak.dc(v) for v in ("persuade", "bluff", "intimidate")}
+    weak.set_odds([_speaker()])
+    assert all(weak.dc(v) == base[v] - weak.edge > base[v] for v in base)
+
+
+def test_an_ordinary_speaker_talks_an_even_pack_down_less_than_half_the_time():
+    enc = _ambush(n=1)
+    enc.set_odds(enc.foes)
+    assert enc.edge == 0
+    assert enc.dc("bluff") == dialogue.BASE_DC + enc.leader.mod_wisdom
+    assert dialogue.odds(1, dialogue.BASE_DC) <= 0.35
+
+
 def test_a_bribe_is_priced_by_the_pack_and_paid_richest_first():
     enc = _ambush()
     price = sum(dialogue.BRIBE_PER_FOE * (u.mean_level + 1) for u in enc.foes)

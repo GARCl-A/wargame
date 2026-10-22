@@ -33,11 +33,6 @@ from .base import (
 )
 from .combat import PUSH_DC_BASE
 
-
-def _is_flanked(battle, actor, target):
-    return _flanked(battle, actor, target) or bool(_pack_flank(battle, actor, target))
-
-
 UNGUARDED = ("entangled", "sleeping", "surprised", "demoralized")
 
 
@@ -57,7 +52,7 @@ def _log_twice(battle, res, favoured, why):
 
 class SneakAttack(Action):
     id, name, cost, target, aimed = "sneak_attack", "Sneak Attack", 2, "enemy", True
-    desc = "2 AP: If the target is flanked, deals +1d4 bonus damage."
+    desc = "2 AP: Only against a flanked foe: the blow lands twice over, +1d4."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -69,15 +64,13 @@ class SneakAttack(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > actor.attack_range:
-            return False
-        return battle.los_between(actor, target)
+        return _flanked(battle, actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
         return "Sneak Attack (2 pts, double damage +1d4 vs flanked)"
 
     def favoured(self, battle, actor, target):
-        return _is_flanked(battle, actor, target)
+        return _flanked(battle, actor, target)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -85,8 +78,7 @@ class SneakAttack(Action):
         actor.ap -= self.cost
         actor.walking = False
 
-        flanked = self.favoured(battle, actor, target)
-        bonus_dmg = roll(1, 4) + _second_blow(actor, True) if flanked else 0
+        bonus_dmg = roll(1, 4) + _second_blow(actor, True)
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
@@ -94,7 +86,7 @@ class SneakAttack(Action):
         nat = d20()
         prefix = f"{actor.name} Sneak Attack -> {target.name}"
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=bonus_dmg)
-        _log_twice(battle, res, flanked, "Sneak Attack strikes a vulnerable spot")
+        _log_twice(battle, res, True, "Sneak Attack strikes a vulnerable spot")
 
 
 # --------------------------------------------------------------------------- #
@@ -103,7 +95,7 @@ class SneakAttack(Action):
 
 class PreciseThrust(Action):
     id, name, cost, target, aimed = "precise_thrust", "Precise Thrust", 2, "enemy", True
-    desc = "2 AP: Gains +2 to hit against flanked foes."
+    desc = "2 AP: Only against a flanked foe: +2 to hit, the blow lands twice over."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -115,15 +107,13 @@ class PreciseThrust(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > actor.attack_range:
-            return False
-        return battle.los_between(actor, target)
+        return _flanked(battle, actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
         return "Precise Thrust (2 pts, +2 to hit & double damage vs flanked)"
 
     def favoured(self, battle, actor, target):
-        return _is_flanked(battle, actor, target)
+        return _flanked(battle, actor, target)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -131,18 +121,16 @@ class PreciseThrust(Action):
         actor.ap -= self.cost
         actor.walking = False
 
-        favoured = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
-        if favoured:
-            mods.append((2, "circumstance", "Precise Thrust"))
+        mods.append((2, "circumstance", "Precise Thrust"))
 
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Precise Thrust -> {target.name}"
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                           bonus_damage=_second_blow(actor, favoured))
-        _log_twice(battle, res, favoured, "The thrust finds the gap")
+                           bonus_damage=_second_blow(actor, True))
+        _log_twice(battle, res, True, "The thrust finds the gap")
 
 
 # --------------------------------------------------------------------------- #

@@ -314,6 +314,30 @@ def test_the_work_tab_pays_by_each_workers_tool():
     assert scr.hub_cards()[0]["value"] == f"${scr._wage(16)}"
 
 
+def test_the_study_list_of_a_big_party_stays_inside_its_panel_and_scrolls():
+    from gartok.taverna_screen import TavernaScreen
+    pygame.init()
+    surf = pygame.Surface((1280, 720))
+    party = [Unit("player") for _ in range(10)]
+    g = Guild(party)
+    group = Group(list(g.roster), "city")
+    screen = TavernaScreen(ui_fonts(), g, party, "city", lambda: None, group=group)
+    screen.mouse = (0, 0)
+    screen.tab = "rooms"
+    screen.draw(surf)
+    area = screen.list_area
+    targets = [r for k, r in screen.buttons if k.startswith("choose_target_")]
+    assert screen.list_max > 0 and targets and all(area.contains(r) for r in targets)
+    assert len(targets) < len(party)
+
+    screen.mouse = area.center
+    for _ in range(20):
+        screen.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, {"x": 0, "y": -1}))
+    screen.draw(surf)
+    assert screen.list_scroll == screen.list_max
+    assert any(k == f"choose_target_{len(party) - 1}" for k, _ in screen.buttons)
+
+
 def test_a_sheet_opened_in_a_shop_tab_covers_the_whole_window():
     """The tab draws on a subsurface below the header; the sheet would be cropped there."""
     from gartok.hub_screen import TabbedHubScreen

@@ -312,10 +312,12 @@ class GroupDrawMixin:
         order = self.group.order
         order_state = "no orders" if order is None or order.kind == "idle" else order.kind
         node_name = world.node(self.group.node).name if self.group.node else "nowhere"
-        subtitle = (f"{len(self.group.members)} / {self.group.capacity} members  ·  "
+        held = len(self.group.captives)
+        bound = f"{held} captive{'s' if held != 1 else ''}  ·  " if held else ""
+        subtitle = (f"{len(self.group.members)} / {self.group.capacity} members  ·  {bound}"
                    f"{node_name}  ·  {order_state}")
         tab_rects = header(screen, F, head, "" if self.editing_name else title,
-                          subtitle, ("gear", "quests"), self.tab, mpos=self.mouse,
+                          subtitle, ("gear", "quests & captives"), self.tab, mpos=self.mouse,
                           has_tutorial=self.tutorial_key() is not None)
         self.tab_hits = [(r, tab_id) for tab_id, r in tab_rects.items()]
         self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)

@@ -23,11 +23,11 @@ from dataclasses import dataclass, field
 
 from . import economy, recruit
 
-BASE_DC = 10
+BASE_DC = 15                  # an ordinary speaker (CHA +1) talks an even pack down 35% of the time
 BRIBE_PER_FOE = 3             # copper a foe asks per (its level + 1)
 GUARD_BRIBE_PER_CRIME = 10    # copper a patrol asks per point of crime it caught
 ALIGN_SHIFT = 3               # Persuade: a good leader is this much easier, an evil one harder
-OUTMATCH_CAP = 4              # Intimidate: at most this much easier (or harder) for the odds
+OUTMATCH_CAP = 4              # an ambush: at most this much easier (or harder) for the odds
 ROUT_MARGIN = 5               # Intimidate passed by this much: they run instead of fighting shaken
 INITIATIVE_EDGE = 5           # a failed Intimidate: the foes' head start on initiative
 BLUFF_STEP = 2                # a Challenge: each bluff already told raises the next one's DC
@@ -244,7 +244,8 @@ class Ambush(Encounter):
         self.edge = 0
 
     def set_odds(self, squad):
-        """How much the squad's look moves Intimidate: its hit points against the pack's."""
+        """How much the squad's look moves every check: its hit points against the pack's. A pack
+        that outweighs the squad has no reason to listen; one that is outweighed is glad of a way out."""
         mine = sum(u.hp_max for u in squad)
         theirs = sum(u.hp_max for u in self.foes) or 1
         ratio = mine / theirs
@@ -255,9 +256,7 @@ class Ambush(Encounter):
         if verb == "persuade" and self.leader is not None:
             from .data import alignment_axes
             dc -= ALIGN_SHIFT * alignment_axes(self.leader.alignment)[1]
-        if verb == "intimidate":
-            dc -= self.edge
-        return dc
+        return dc - self.edge
 
     def note(self, verb):
         return {"persuade": "talk them out of it: no fight · a miss and it is a fight",
