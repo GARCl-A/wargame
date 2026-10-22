@@ -312,3 +312,20 @@ def test_the_work_tab_pays_by_each_workers_tool():
     note, tone = scr._crew_note(u, "Axe")
     assert "bare-handed" in note and tone == "money"
     assert scr.hub_cards()[0]["value"] == f"${scr._wage(16)}"
+
+
+def test_a_sheet_opened_in_a_shop_tab_covers_the_whole_window():
+    """The tab draws on a subsurface below the header; the sheet would be cropped there."""
+    from gartok.hub_screen import TabbedHubScreen
+    pygame.init()
+    surf = pygame.display.set_mode((1280, 720))
+    guild = Guild([Unit("player") for _ in range(2)], node="city")
+    node = next(n for n in world.NODES if n.has("shop"))
+    scr = TabbedHubScreen.for_node(ui_fonts(), guild, guild.groups[0], node, on_done=lambda *a: None)
+    shop = scr.active_screen()
+    shop.open_sheet(guild.roster[0])
+    scr.mouse = (10, 10)
+    drawn = []
+    shop.draw_sheet_modal = lambda s, fonts=None, *, host=False: drawn.append((s.get_size(), host))
+    scr.draw(surf)
+    assert drawn[-1] == ((1280, 720), True)

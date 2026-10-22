@@ -13,11 +13,11 @@ from . import items, medic, orders
 def craft(guild, group, unit, recipe, hours, *, alone=True):
     """Send `unit` (of `group`) to craft `recipe` for `hours`. `alone` splits them off with only
     their own pack (else `ok` is False and nothing changes when no slot allows it); otherwise
-    the whole group waits and feeds the craft from every pack. The crafting is rolled when the
+    the whole group waits and feeds the craft from every pack, wagon and animal. The crafting is rolled when the
     hours are done. Returns `(ok, lines)`."""
     if group.locked:
         return False, ["A group with an order in flight cannot start a craft."]
-    pool = [unit] if alone else [unit] + [u for u in group.members if u is not unit]
+    pool = [unit] if alone else [unit, *(u for u in group.members if u is not unit), *group.stores]
     blocked = guild.craft_blocker(unit, recipe, pool)
     if blocked:
         return False, [blocked]
@@ -38,7 +38,7 @@ def finish(guild, group, order):
         return []
     if order.task == "hospital":
         return [medic.discharge(unit)]
-    pool = [unit] + [u for u in group.members if u is not unit]
+    pool = [unit, *(u for u in group.members if u is not unit), *group.stores]
     blocked = guild.craft_blocker(unit, order.recipe, pool)
     if blocked:
         return [blocked]

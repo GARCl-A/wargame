@@ -345,8 +345,8 @@ class GroupDrawMixin:
                 actions.append(("treat_poison", "use antidote"))
             if self.on_cook:
                 if self.group.has_campfire(self.guild.clock.seconds):
-                    left = self.group.campfire_hours_left(self.guild.clock.seconds)
-                    actions.append(("campfire_cook", f"campfire ({left:g}h)"))
+                    hours = self.group.campfire_hours_left(self.guild.clock.seconds)
+                    actions.append(("campfire_cook", f"campfire ({hours:g}h)"))
                 else:
                     actions.append(("campfire_cook", "campfire cooking"))
 

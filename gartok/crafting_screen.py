@@ -1,7 +1,7 @@
 """The Forge: craft items using recipes and materials.
 
 Requires members to have learned recipes.
-Materials come from the whole group's packs (padlocked items excepted) and are consumed immediately.
+Materials come from the whole group's packs, wagons and animals (padlocked items excepted) and are consumed immediately.
 Progress requires rolling a 1d20+INT over hours.
 """
 
@@ -80,6 +80,10 @@ class CraftingScreen(Screen):
     def handle_escape(self):
         return False
 
+    @property
+    def _packs(self):
+        return [*self.group.members, *self.group.stores]
+
     def _get_missing_materials(self, recipe):
         recipe_data = items.get_recipe(recipe)
         if not recipe_data:
@@ -87,14 +91,14 @@ class CraftingScreen(Screen):
         need = Counter(recipe_data.materials)
         missing = []
         for mat, qty in need.items():
-            have = pooled_unlocked(self.group.members, mat)
+            have = pooled_unlocked(self._packs, mat)
             if have < qty:
                 missing.append(f"{qty - have}x {mat}")
         return missing
 
     def _get_missing_tools(self, recipe):
         recipe_data = items.get_recipe(recipe)
-        return items.missing_tools(recipe_data, self.group.members) if recipe_data else []
+        return items.missing_tools(recipe_data, self._packs) if recipe_data else []
 
     def _has_materials(self, recipe):
         return not self._get_missing_materials(recipe) and not self._get_missing_tools(recipe)
@@ -127,7 +131,7 @@ class CraftingScreen(Screen):
                     hours = int(parts[1])
                     recipe = parts[2]
                     result = self.guild.crafting_shift(self.selected_crafter, recipe, hours,
-                                                      pool=self.group.members)
+                                                      pool=self._packs)
                     self.notices = result[0] if isinstance(result, tuple) else result
                 return
 
@@ -281,7 +285,7 @@ class CraftingScreen(Screen):
 
         bx0 = r.right - T.S * 2 - buttons_w
         if not (active or self._has_materials(recipe_id)):
-            text(screen, F["hub_sub"], "the materials must be in the group's packs to start",
+            text(screen, F["hub_sub"], "the materials must be with the group (packs, wagons, animals) to start",
                  (r.right - T.S * 2, r.centery - T.S), T.TX_FAINT, right=True)
             return
         if len(self.group.members) > 1 and not self.guild.free_slots:

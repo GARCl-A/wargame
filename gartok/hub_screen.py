@@ -13,6 +13,7 @@ import pygame
 from . import world
 from .market_screen import MarketScreen
 from .screen import Screen
+from .sheet_panel import SheetModalMixin
 from .ui.hub_frame import draw_footer, draw_header, draw_tabs, hub_layout
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -47,6 +48,8 @@ class TabbedHubScreen(Screen):
         for _key, _label, screen in self.tabs:
             if _can_frame(screen):
                 screen.framed = True             # a tab that can draw for the frame does so here
+            if isinstance(screen, SheetModalMixin):
+                screen.sheet_in_host = True      # the tab's subsurface would crop the sheet
         self._tab_hits = []
         self._back = None
         self._help = pygame.Rect(0, 0, 0, 0)
@@ -222,6 +225,9 @@ class TabbedHubScreen(Screen):
                                                              max(1, size[1] - lay["tabs"].bottom))
         active.mouse = (self.mouse[0] - self._body.x, self.mouse[1] - self._body.y)
         active.draw(screen.subsurface(self._body))
+        if isinstance(active, SheetModalMixin) and active.sheet_open:
+            active.mouse = self.mouse
+            active.draw_sheet_modal(screen, host=True)
         self._back = draw_footer(screen, F, lay["footer"], BACK_LABEL, HINTS, self.mouse) if framed else None
         self._hot = getattr(active, "_hot", False) or any(r.collidepoint(self.mouse) for r, _k in self._tab_hits)
 

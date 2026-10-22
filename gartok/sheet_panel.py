@@ -30,6 +30,7 @@ class SheetModalMixin:
     """
 
     _sheet_unit = None
+    sheet_in_host = False   # set by a hub: it draws the sheet over the whole window instead
 
     def open_sheet(self, unit):
         self._sheet_unit = unit
@@ -61,17 +62,31 @@ class SheetModalMixin:
                         center=True)
         return r
 
-    def draw_sheet_modal(self, screen, fonts=None):
-        if self._sheet_unit is None:
+    def draw_sheet_modal(self, screen, fonts=None, *, host=False):
+        if self._sheet_unit is None or self.sheet_in_host != host:
             return
         F = ui_fonts()
         ch = unit_to_ch(Combatant(self._sheet_unit))
-        rect = primitives.modal_card(screen, (PANEL_W, PANEL_H), veil=True)
+        W, H = screen.get_size()
+        scale = min(1.0, (W - T.S * 2) / PANEL_W, (H - T.S * 2) / PANEL_H)
+        if scale >= 1.0:
+            card, mouse = screen, self.mouse
+            rect = primitives.modal_card(screen, (PANEL_W, PANEL_H), veil=True)
+        else:                                   # a short window: draw full size, shrink to fit
+            primitives.dim(screen)
+            card = pygame.Surface((PANEL_W, PANEL_H))
+            rect = card.get_rect()
+            primitives.panel(card, rect)
+            target = pygame.Rect(0, 0, round(PANEL_W * scale), round(PANEL_H * scale))
+            target.center = (W // 2, H // 2)
+            mouse = ((self.mouse[0] - target.x) / scale, (self.mouse[1] - target.y) / scale)
         pad = T.S * 2
         inner = pygame.Rect(rect.x + pad, rect.y + pad, rect.w - 2 * pad, 0)
-        _, tooltip = _draw_sheet_card(screen, F, inner, ch, density="full", mouse=self.mouse)
-        primitives.text(screen, F["micro"], "click anywhere to close",
+        _, tooltip = _draw_sheet_card(card, F, inner, ch, density="full", mouse=mouse)
+        primitives.text(card, F["micro"], "click anywhere to close",
                         (rect.centerx, rect.bottom - 18), T.TX_FAINT, center=True)
+        if card is not screen:
+            screen.blit(pygame.transform.smoothscale(card, target.size), target)
         if tooltip:
             primitives.draw_tooltip(screen, F, tooltip, self.mouse)
 

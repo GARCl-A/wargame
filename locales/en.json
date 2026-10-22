@@ -203,7 +203,7 @@
     "craft": {
       "title": "Crafting",
       "body": [
-        "Only recipes someone in the party knows appear. Starting one consumes the materials from every pack in the group (never a padlocked item); then each hour rolls d20 + INT toward the batch. A named tool (a Chisel, say) is not consumed, but some pack must hold it.",
+        "Only recipes someone in the party knows appear. Starting one consumes the materials from every pack in the group, wagons and animals included (never a padlocked item); then each hour rolls d20 + INT toward the batch. A named tool (a Chisel, say) is not consumed, but some pack must hold it.",
         "WORK makes the whole group wait out the hours. ALONE splits the crafter off into a group of their own (it takes a free slot, and only their pack feeds the craft); merge them back by hand.",
         "Everyone can cook -- Jerky, Roast Meat, Fruit Compote -- at a fire: a field campfire (Flint and Steel, 1 Lumber and 1 Coal, from the map), the Claim's, or the house oven. Jerky keeps 20 days; Meat only 2."
       ]

@@ -82,14 +82,19 @@ def pips(surf, center, count, total, *, r=6, gap=6):
         x += 2 * r + gap
 
 
+def dim(surf):
+    """The modal veil: darkens everything already on `surf`."""
+    v = pygame.Surface(surf.get_size(), pygame.SRCALPHA)
+    v.fill((6, 7, 12, 210))
+    surf.blit(v, (0, 0))
+
+
 def modal_card(surf, size, veil=False):
     """Centers a `panel` of `size` on `surf`; with `veil` dims everything
     behind it first. Returns the card Rect for the caller to place content in."""
     W, H = surf.get_size()
     if veil:
-        v = pygame.Surface((W, H), pygame.SRCALPHA)
-        v.fill((6, 7, 12, 210))
-        surf.blit(v, (0, 0))
+        dim(surf)
     rect = pygame.Rect(0, 0, *size)
     rect.center = (W // 2, H // 2)
     panel(surf, rect)

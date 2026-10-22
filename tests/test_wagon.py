@@ -1127,3 +1127,21 @@ def test_wagon_locked_items_persistence(tmp_path, monkeypatch):
     assert loaded_ox.locked_of("Iron Bar") == 2
 
 
+def test_the_gear_screen_draws_with_a_lit_campfire():
+    """The campfire button's hours once shadowed the rail's rect and crashed the draw."""
+    scr, g = _gear(wagon=True)
+    scr.on_cook = lambda: None
+    g.campfire_node, g.campfire_expires = g.node, scr.guild.clock.seconds + 3600
+    _draw(scr)
+    assert "campfire_cook" in {k for k, _ in scr.buttons}
+
+
+def test_the_campfire_cooks_meat_carried_on_the_wagon():
+    from gartok.crafting_screen import CraftingScreen
+    guild, g = _group(_animal("Ox", tack=HARNESS), wagon=True, cargo=("Meat",))
+    cook = g.members[0]
+    cook._base_inventory = []
+    scr = CraftingScreen(None, guild, g, on_done=lambda: None, station="cooking")
+    assert not scr._get_missing_materials("Roast Meat")
+    guild.crafting_shift(cook, "Roast Meat", 1, pool=scr._packs)
+    assert g.wagons[0].count_of("Meat") == 0
