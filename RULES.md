@@ -1458,7 +1458,7 @@ map; `orders.work(..., gather=True)`) instead of the wage.
   longer). A licence pays back in about 30 days for 3 workers gathering 16 h a day.
 - **Risk:** every hour carries a chance that a pack finds the crew (Yard 0.5% an hour, Mine 1%;
   Cautious and the Woodland Scout shave it like any ambush). **Yard:** wolves, Snakes or Giant Spiders;
-  **Mine:** Giant Spiders or Skeletons; 1-3 bodies. It is a lethal forced fight (`gather_ambush`);
+  **Mine:** Giant Spiders or Skeletons; 1-3 bodies, never a lone wolf (`encounters.WOLF_PACK_MIN`). It is a lethal forced fight (`gather_ambush`);
   a win banks the haul for the survivors, a loss sends them away with nothing.
 
 ### The tavern stage: busking for tips 🟡

@@ -6,7 +6,7 @@ import pygame
 
 from . import actions, aftermath, data, vision
 from .scenario import own_half
-from .ui import battle_panel, board_render, board_style, foe_panel
+from .ui import battle_panel, board_render, board_style, floors, foe_panel
 from .ui import primitives as ui_primitives
 from .ui.board_style import battle_layout
 from .ui.sheet_card import draw_sheet as draw_sheet_card
@@ -233,7 +233,8 @@ class BattleDrawMixin:
             return
 
         reach_cells = b.reachable_cells(actor)
-        board_render.draw_reach(screen, self.view, reach_cells)
+        reach = floors.style(b.scenario.floor).get("reach", (board_style.MOVE_HL, 40))
+        board_render.draw_reach(screen, self.view, reach_cells, *reach)
 
         atk_rects = [
             self._unit_rect(u) for u in b.units

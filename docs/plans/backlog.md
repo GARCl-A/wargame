@@ -24,7 +24,7 @@ a floor per place in `ui/floors.py`, every screen on the hub kit) are done; what
 
 **Phase 5 — tutorials** (last: they describe the final screens)
 5. **Tutorials.** Done 2026-10-21: every card checked against the code and cut to the rule it
-   teaches (~4,800 words -> ~3,000); the map's card closes onto the objectives (16, all open,
+   teaches (~4,800 words -> ~3,000); the map's card closes onto the objectives (17, all open,
    `gartok/objectives.py`); the wounded group's Medic line and the Library's WRITE hint are in.
    Left: the author reads every card in play and flags what still rings false.
 6. **Big screen files:** split `guild_screen.py` (812 lines) when phase 5 touches it; the two editors
@@ -70,7 +70,6 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   - *Choose a vocation* makes poor use of the space.
   - Since the shop screens moved to the hub kit everything feels oversized, like a website at 200% zoom.
   - Too few icons for the guild banner.
-  - Guild objectives are cut with "..." at 1920x1080: the texts are too long for their row.
 - **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
 - **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter.
 - **Text input:** on rename, the arrow keys do not move the typing cursor.
@@ -78,13 +77,9 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
   - Hit sounds feel off (the UI sounds are fine).
   - Reorder the combat hotkeys: Delay is used a lot and is running out of room.
-  - The Wilds: the green reachable-cells overlay vanishes on the green floor; make it more translucent.
 - **The Wilds:**
-  - A wolf ambush with a single wolf makes no sense: at least 2 wolves.
   - Wolves drop too much Meat: a group that only forages often gets enough to skip hunting.
   - A DISTRIBUTE LOAD button during the hunt.
-- **Objectives:** split *Take the road* in two: a pack animal alone already carries load; the wagon
-  is the second step.
 
 ## Playtest notes 2026-10-12
 

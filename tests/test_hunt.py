@@ -365,3 +365,16 @@ def test_hunt_screen_level_up_and_sheet_modal():
     assert scr.sheet_open
     assert scr.handle_escape()
     assert not scr.sheet_open
+
+
+def test_a_wolf_never_hunts_alone():
+    from gartok import encounters
+    rng = random.Random(7)
+    lone = {1: 1}
+    for table in (encounters.WILDS_TABLE, encounters.OLD_ROAD_TABLE, encounters.LUMBER_YARD_TABLE):
+        for _ in range(60):
+            pack = encounters.roll_encounter(table, lone, rng=rng)
+            if pack[0].race["name"] == "Wolf":
+                assert len(pack) == encounters.WOLF_PACK_MIN
+            else:
+                assert len(pack) == 1

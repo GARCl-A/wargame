@@ -108,10 +108,10 @@ def build_enemy(mean_level, rng=random, race_pool=None):
 
 
 def roll_pack(count_weights=WILDS_COUNT_WEIGHTS, level_weights=WILDS_LEVEL_WEIGHTS,
-              rng=random, race_pool=None):
+              rng=random, race_pool=None, min_count=1):
     """A list of enemy `Unit`s: a rolled headcount, each rolled its own level
     (and, with `race_pool` given, its own body drawn from that pool)."""
-    n = weighted_choice(count_weights, rng)
+    n = max(min_count, weighted_choice(count_weights, rng))
     return [build_enemy(weighted_choice(level_weights, rng), rng, race_pool=race_pool)
             for _ in range(n)]
 
@@ -126,10 +126,14 @@ class EncounterEntry:
     *tuple* pool (e.g. `data.BEAST_POOL`) always draws uniformly instead, since
     the bodies in it don't carry rarity thresholds of their own yet. Headcount/
     level weights are the table's own, passed to `roll_encounter` -- what
-    varies entry to entry is *who* shows up, not how many or how tough."""
+    varies entry to entry is *who* shows up and `min_count`, the fewest of them
+    that make sense (a wolf hunts in a pack)."""
     weight: int
     race_pool: tuple | None
+    min_count: int = 1
 
+
+WOLF_PACK_MIN = 2
 
 # The Wilds: mostly a wolf pack (the point of hunting there now -- see the
 # Wolf's `drop_item` in `data.BEASTS`); a rarer bandit gang keeps the old
@@ -137,7 +141,7 @@ class EncounterEntry:
 # `None`, not `tuple(data.RACE_POOL)`, so it stays weighted by rarity instead
 # of flattening every race to an equal ~5.5% (`data.roll_race()`'s thresholds).
 WILDS_TABLE = (
-    EncounterEntry(70, tuple(data.WILD_POOL)),
+    EncounterEntry(70, tuple(data.WILD_POOL), WOLF_PACK_MIN),
     EncounterEntry(30, None),
 )
 
@@ -147,7 +151,7 @@ WILDS_TABLE = (
 # out. Same weights as WILDS_TABLE, just inverted and off a different node.
 OLD_ROAD_TABLE = (
     EncounterEntry(70, None),
-    EncounterEntry(30, tuple(data.WILD_POOL)),
+    EncounterEntry(30, tuple(data.WILD_POOL), WOLF_PACK_MIN),
 )
 
 
@@ -156,7 +160,7 @@ OLD_ROAD_TABLE = (
 GATHER_COUNT_WEIGHTS = {1: 40, 2: 40, 3: 20}
 
 LUMBER_YARD_TABLE = (
-    EncounterEntry(45, tuple(data.WILD_POOL)),
+    EncounterEntry(45, tuple(data.WILD_POOL), WOLF_PACK_MIN),
     EncounterEntry(30, tuple(data.SNAKE_POOL)),
     EncounterEntry(25, tuple(data.SPIDER_POOL)),
 )
@@ -175,7 +179,8 @@ def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
     """A pack rolled off a locality's `EncounterEntry` table: one entry picked
     by weight decides the race pool every body in the pack is drawn from."""
     i = weighted_choice({i: e.weight for i, e in enumerate(table)}, rng)
-    pack = roll_pack(count_weights, level_weights, rng, race_pool=table[i].race_pool)
+    pack = roll_pack(count_weights, level_weights, rng, race_pool=table[i].race_pool,
+                     min_count=table[i].min_count)
     if table[i].race_pool is None and pack and rng.random() < BANDIT_CHEST_DROP_CHANCE:
         pack[0].give_to_pack(data.CHEST_ITEM)
     return pack

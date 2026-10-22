@@ -25,11 +25,21 @@ COL_MIN_W = T.S * 52
 DEED_H = T.S * 5
 UNLOCK_H = T.S * 5
 HEAD_H = T.S * 9
+LINE_H = 16
 
 
-def _card_h(f):
+def _deed_lines(F, blurb, w):
+    return _wrap_two(F["body_sm"], blurb, w - T.S * 12)
+
+
+def _deed_h(F, blurb, w):
+    return DEED_H + (len(_deed_lines(F, blurb, w)) - 1) * LINE_H
+
+
+def _card_h(F, f, cw):
+    w = cw - T.S * 4
     h = HEAD_H + T.S * 3
-    h += max(1, len(f["deeds"])) * DEED_H
+    h += sum(_deed_h(F, d[1], w) for d in f["deeds"]) if f["deeds"] else DEED_H
     if f["unlocks"]:
         h += T.S * 3 + len(f["unlocks"]) * UNLOCK_H
     return h + T.S * 2
@@ -57,13 +67,14 @@ def _draw_card(surf, F, rect, f, mpos):
         col = T.GREEN if done else T.BLOOD if failed else T.TX_FAINT
         smooth_circle(surf, col, (x + 5, y + 9), 5, 0 if done else 1)
         text(surf, F["bodyb"], name, (x + T.S * 2, y), T.GREEN if done else T.TX_FAINT if failed else T.TX)
-        text(surf, F["body_sm"], ellipsize(blurb, F["body_sm"], w - T.S * 2 - T.S * 10),
-             (x + T.S * 2, y + 18), T.TX_FAINT if failed else T.TX_MUTED)
+        for i, ln in enumerate(_deed_lines(F, blurb, w)):
+            text(surf, F["body_sm"], ln, (x + T.S * 2, y + 18 + i * LINE_H),
+                 T.TX_FAINT if failed else T.TX_MUTED)
         badge = "DONE" if done else "FAILED" if failed else f"+{rep} REP" if rep else ""
         if badge:
             caps(surf, F["microb"], badge, (x + w, y + 2),
                  T.GREEN if done else T.BLOOD if failed else T.BRASS, right=True)
-        y += DEED_H
+        y += _deed_h(F, blurb, w)
 
     if f["unlocks"]:
         y = section(surf, F, "Unlocks", x, y + T.S, w)
@@ -91,7 +102,7 @@ def draw_reputation(surf, F, rect, factions, scroll, mpos):
     with contained(surf, rect):
         for f in factions:
             c = heights.index(min(heights))
-            r = pygame.Rect(rect.x + c * (cw + gap), rect.y - scroll + heights[c], cw, _card_h(f))
+            r = pygame.Rect(rect.x + c * (cw + gap), rect.y - scroll + heights[c], cw, _card_h(F, f, cw))
             _draw_card(surf, F, r, f, mpos)
             heights[c] += r.h + gap
     content_h = max(heights) if heights else 0

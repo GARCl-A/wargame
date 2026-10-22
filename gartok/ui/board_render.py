@@ -425,10 +425,10 @@ def tint_cells(surf, view, cells, color, alpha):
         surf.blit(cell, view.cell_rect(*pos))
 
 
-def draw_reach(surf, view, cells):
+def draw_reach(surf, view, cells, color=MOVE_HL, alpha=40):
     """The cells the active unit can walk to: a tint plus an outline only on
     the region's outer edge."""
-    tint_cells(surf, view, cells, MOVE_HL, 40)
+    tint_cells(surf, view, cells, color, alpha)
     for pos in cells:
         r = view.cell_rect(*pos)
         for (dx, dy), seg in (((1, 0), (r.right, r.top, r.right, r.bottom)),
@@ -436,7 +436,7 @@ def draw_reach(surf, view, cells):
                               ((0, 1), (r.left, r.bottom, r.right, r.bottom)),
                               ((0, -1), (r.left, r.top, r.right, r.top))):
             if (pos[0] + dx, pos[1] + dy) not in cells:
-                pygame.draw.line(surf, (*MOVE_HL, 210), seg[:2], seg[2:], 2)
+                pygame.draw.line(surf, color, seg[:2], seg[2:], 2)
 
 
 def draw_rings(surf, rects, color):

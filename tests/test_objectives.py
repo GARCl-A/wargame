@@ -173,7 +173,7 @@ def test_state_objectives_follow_the_guild():
     u, v = Unit("a"), Unit("b")
     g = Guild([u, v])
     ids = ("obj_work_shift", "obj_licence", "obj_mission", "obj_two_groups",
-           "obj_strongbox", "obj_wagon", "obj_deed", "obj_initiation")
+           "obj_strongbox", "obj_pack_animal", "obj_wagon", "obj_deed", "obj_initiation")
     assert not any(objectives.is_done(g, i) for i in ids)
 
     u.work_hours = 4
@@ -184,7 +184,9 @@ def test_state_objectives_follow_the_guild():
     g.groups[0].wagons.append(cart)
     g.groups[0].herd.append(ox)
     assert not objectives.is_done(g, "obj_wagon")          # a wagon nothing pulls
+    assert not objectives.is_done(g, "obj_pack_animal")    # a Harness pulls, it carries nothing
     ox.hitch = cart.uid
+    g.groups[0].herd.append(Animal("Donkey", tack="Pack Saddle"))
     g.deeds_done.append("arena_dethrone")
     u.rite_progress["nature"] = 270
     u.magic_sources = [*u.magic_sources, "nature"]
