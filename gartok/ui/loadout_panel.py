@@ -19,6 +19,7 @@ import pygame
 
 from .. import icons
 from ..item_icon import draw_icon
+from . import load_meter
 from .inspector_panel import ROLE_MARK, draw_role
 from .primitives import caps, contained, draw_button, hline, scrollbar, text
 from .tokens import T, mix
@@ -94,16 +95,6 @@ def tag_pill(surf, F, tag, pos, max_x=None):
 
 SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "artifact": "artifact", "armor": "armor",
                "tack": "saddle / harness"}
-
-
-def load_bar(surf, rect, ratio, over):
-    """The bar the loadout tracks all use: fill marks current/carry_normal.
-    Turns blood red if over carry_normal."""
-    pygame.draw.rect(surf, T.TABLE, rect)
-    pygame.draw.rect(surf, T.STEEL_LINE, rect, 1)
-    w = int((rect.w - 2) * min(max(ratio, 0), 1.0))
-    col = T.BLOOD if over else T.GREEN
-    pygame.draw.rect(surf, col, pygame.Rect(rect.x + 1, rect.y + 1, w, rect.h - 2))
 
 
 def slot(surf, F, rect, kind, held, mouse):
@@ -199,7 +190,7 @@ def rail(surf, F, rect, members, pinned_keys, carrying, scroll, mouse, band=None
     """Every member as a compact row, always -- a rail row is both a pin
     toggle and, from the caller's own `zones`, a drop target whether or
     not that member's column is pinned open. `members` is `[{"key","name",
-    "role","kg","cap"}]`; `carrying` highlights the hovered row as a valid
+    "role","kg","normal","max"}]`; `carrying` highlights the hovered row as a valid
     drop target while the caller is carrying something. `band`, if given,
     is `(label, note_text, note_color, note_font)` drawn in the header
     strip already reserved for it: `label` top-left ('band · 4 of 6'),
@@ -238,12 +229,11 @@ def rail(surf, F, rect, members, pinned_keys, carrying, scroll, mouse, band=None
                 with contained(surf, r):
                     draw_role(surf, (r.x + T.S * 2, r.y + T.S * 2), ROLE_MARK.get(m["role"], "sword"), T.TX_MUTED)
                     text(surf, F["body"], m["name"], (r.x + T.S * 4, r.y + T.S - 2), T.TX if pinned else T.TX_MUTED)
-                    free = m["cap"] - m["kg"]
+                    load = (m["kg"], m["normal"], m["max"])
                     bar_y = r.y + T.S * 4
-                    caps(surf, F["micro"], f"{free:+.1f}", (r.right - T.S, bar_y - 12),
-                         T.BLOOD if free < 0 else T.GREEN if free > 4 else T.TX_MUTED, right=True)
-                    ratio = (m["kg"] / m["cap"]) if m["cap"] else 0
-                    load_bar(surf, pygame.Rect(r.x + T.S, bar_y, r.w - T.S * 2, 6), ratio, m["kg"] > m["cap"])
+                    caps(surf, F["micro"], load_meter.figure(*load), (r.right - T.S, bar_y - 12),
+                         load_meter.color(*load), right=True)
+                    load_meter.draw_bar(surf, pygame.Rect(r.x + T.S, bar_y, r.w - T.S * 2, 6), *load)
             y = r.bottom + 4
         if max_scroll > 0:
             scrollbar(surf, area, scroll, max_scroll, content_h)
@@ -272,7 +262,7 @@ def column(surf, F, rect, member, scroll, mouse):
     pygame.draw.rect(surf, T.STEEL, rect)
     pygame.draw.rect(surf, T.STEEL_LINE, rect, 1)
     x, w = rect.x + T.S * 2, rect.w - T.S * 4
-    over = member["kg"] > member["cap"]
+    load = (member["kg"], member["normal"], member["max"])
 
     head = pygame.Rect(rect.x, rect.y, rect.w, T.S * 11)
     pygame.draw.rect(surf, T.STEEL_HI, head)
@@ -292,13 +282,7 @@ def column(surf, F, rect, member, scroll, mouse):
     if not member.get("no_sheet"):
         draw_button(surf, F, sheet_rect, "?", ghost=True, mpos=mouse)
 
-    load_bar(surf, pygame.Rect(x, head.y + T.S * 5, w, 8),
-             (member["kg"] / member["cap"]) if member["cap"] else 0, over)
-    caps(surf, F["micro"], f"{member['kg']:.1f} / {member['cap']:.0f} kg",
-         (x, head.y + T.S * 7 + 2), T.BLOOD if over else T.TX_MUTED)
-    if over:
-        caps(surf, F["micro"], f"+{member['kg'] - member['cap']:.1f} kg",
-             (head.right - T.S * 2, head.y + T.S * 7 + 2), T.BLOOD, right=True)
+    load_meter.draw(surf, F, pygame.Rect(x, head.y + T.S * 5, w, 8), *load)
 
     y = head.bottom + T.S * 4
     status = member.get("status")
@@ -450,10 +434,9 @@ def container_panel(surf, F, rect, data, scroll, mouse):
     y += T.S * 3
     if data.get("capacity") is not None:
         used, total = data["capacity"]
-        over = used > total
-        load_bar(surf, pygame.Rect(x, y, w, 8), (used / total) if total else 0, over)
-        caps(surf, F["micro"], f"{used:.1f} / {total:.0f} kg held here",
-             (x, y + T.S + 4), T.BLOOD if over else T.TX_FAINT)
+        load_meter.draw_bar(surf, pygame.Rect(x, y, w, 8), used, total, total)
+        caps(surf, F["micro"], load_meter.figure(used, total, total) + " held here",
+             (x, y + T.S + 4), load_meter.color(used, total, total))
         y += T.S * 5
 
     services = data.get("services") or ()

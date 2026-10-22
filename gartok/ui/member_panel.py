@@ -7,7 +7,7 @@ that explains itself, else None. Data is plain dicts / tuples:
 - `identity`: `{"name", "sub", "where", "task", "token", "occ" (optional: the occupation whose glyph leads `sub`)}`; a stat `tip` is a string or tooltip lines
 - `vitals`: `{"hp": (cur, max), "hp_tip", "stats": [(label, value, tip)], "attrs": [(label, value, mod, penalised)]}`
 - `weapon`: `{"name", "tags", "chips": [(label, value, tip)]}`
-- `gear`: `{"hands", "armor", "armor_note", "coins", "rations": (n, ok), "load": (cur, normal, max), "load_state": (text, color)}`
+- `gear`: `{"hands", "armor", "armor_note", "coins", "rations": (n, ok), "load": (cur, normal, max)}`
 - `ability`: `{"ability": (name, description), "langs": [...]}`; no `langs` key, no Languages row
 - `animal_work`: `[(label, value, color)]`
 - `tracks`: `[{"label", "value", "frac" (0-1 or None), "text", "tip"}]`
@@ -20,6 +20,7 @@ import pygame
 
 from .. import artwork
 from ..constants import fmt_money
+from . import load_meter
 from .primitives import (
     caps,
     draw_button,
@@ -32,7 +33,6 @@ from .primitives import (
 )
 from .tokens import T
 
-AMBER = (224, 149, 75)
 ROW_H = T.S * 6
 CHIP_GAP = T.S
 
@@ -152,25 +152,21 @@ def draw_gear(surf, F, x, y, w, d, mpos):
     y = box.bottom + T.S
 
     cur, norm, mx = d["load"]
-    state, scol = d["load_state"]
-    caps(surf, F["micro"], f"Cargo {cur:g} / {norm:g} kg", (x, y), T.TX)
+    state, scol = load_meter.status(cur, norm, mx)
+    caps(surf, F["micro"], f"Load {load_meter.figure(cur, norm, mx)}", (x, y), T.TX)
     caps(surf, F["microb"], state, (x + w, y), scol, right=True)
     y += T.S * 2
     bar = pygame.Rect(x, y, w, T.S + 2)
-    pygame.draw.rect(surf, T.TABLE, bar)
-    pygame.draw.rect(surf, T.STEEL_LINE, bar, 1)
-    fill = int((bar.w - 2) * min(1.0, cur / mx)) if mx else 0
-    if fill:
-        pygame.draw.rect(surf, scol, (bar.x + 1, bar.y + 1, fill, bar.h - 2))
-    tick = bar.x + int((bar.w - 2) * min(1.0, norm / mx)) if mx else bar.x
-    pygame.draw.line(surf, T.TX, (tick, bar.y - 2), (tick, bar.bottom + 1), 2)
+    load_meter.draw_bar(surf, bar, cur, norm, mx)
     y = bar.bottom + 4
     left = caps(surf, F["micro"], "0", (x, y), T.TX_FAINT)
-    right = caps(surf, F["micro"], f"Max {mx:g} kg", (x + w, y), T.TX_FAINT, right=True)
-    lab = f"Normal limit {norm:g} kg"
-    lw = F["micro"].size(lab.upper())[0]
-    lx = max(left.right + T.S, min(tick - lw // 2, right.x - T.S - lw))
-    caps(surf, F["micro"], lab, (lx, y), T.TX_MUTED)
+    right = caps(surf, F["micro"], f"max {mx:g}", (x + w, y), T.TX_FAINT, right=True)
+    if norm < mx:
+        tick = bar.x + 1 + int((bar.w - 2) * norm / mx)
+        lab = f"slows past {norm:g}"
+        lw = F["micro"].size(lab.upper())[0]
+        lx = max(left.right + T.S, min(tick - lw // 2, right.x - T.S - lw))
+        caps(surf, F["micro"], lab, (lx, y), T.TX_MUTED)
     return y + T.S * 3, None
 
 

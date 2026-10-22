@@ -36,7 +36,7 @@ import pygame
 
 from .. import artwork, data, magic
 from ..constants import fmt_money
-from . import loadout_panel
+from . import load_meter, loadout_panel
 from .primitives import caps, contained, ellipsize, section, text, token_badge, wrap
 from .tokens import T
 
@@ -398,17 +398,10 @@ def _b_gear(s, F, r, ch, d, ed, mouse, tip):
             y += T.S * 3 + 4
         y += 2
     bar = pygame.Rect(r.x, y, r.w, 8)
-    pygame.draw.rect(s, T.TABLE, bar)
-    pygame.draw.rect(s, T.STEEL_LINE, bar, 1)
-    ratio = min(cur / high, 1.0) if high else 0
-    over = cur > norm
-    pygame.draw.rect(s, T.BLOOD if over else T.GREEN,
-                     pygame.Rect(bar.x + 1, bar.y + 1, int((bar.w - 2) * ratio), bar.h - 2))
-    if high:
-        mark = bar.x + int((bar.w - 2) * (norm / high))
-        pygame.draw.line(s, T.TX_FAINT, (mark, bar.y - 2), (mark, bar.bottom + 2), 1)
-    caps(s, F["micro"], f"load {cur:g} kg  ·  normal {norm:g}  ·  high {high:g}",
-         (r.x, bar.bottom + 4), T.BLOOD if over else T.TX_FAINT)
+    load_meter.draw_bar(s, bar, cur, norm, high)
+    note = load_meter.note(cur, norm, high)
+    caps(s, F["micro"], f"load {load_meter.figure(cur, norm, high)}" + (f"  ·  {note}" if note else ""),
+         (r.x, bar.bottom + 4), load_meter.color(cur, norm, high))
     caps(s, F["micro"], fmt_money(g['copper']), (r.right, bar.bottom + 4), T.BRASS, right=True)
 
 

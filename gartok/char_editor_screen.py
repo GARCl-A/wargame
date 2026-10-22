@@ -23,6 +23,7 @@ from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .constants import fmt_money
 from .screen import Screen
+from .ui import load_meter
 from .ui.primitives import (
     box,
     draw_button,
@@ -594,7 +595,8 @@ class CharEditorScreen(Screen):
         self._hit(tr, ("torch",))
         y += 22 + T.S
 
-        text(screen, F["micro"], f"PACK  ({len(u._base_inventory)})  ·  load " f"{u.load:g}/{u.carry_normal:g} kg",
+        text(screen, F["micro"], f"PACK  ({len(u._base_inventory)})  ·  load "
+             f"{load_meter.figure(u.load, u.carry_normal, u.carry_max)}",
              (x, y), T.TX_MUTED)
         y += 16
         for idx, (item, qty) in enumerate(list(u._base_inventory)):

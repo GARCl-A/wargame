@@ -5,13 +5,14 @@ Data in, rects out. `bands` items: `{"key", "name", "where" (node label),
 "task" (order label), "collapsed", "members": [...], optional "count" (people, when
 `members` also holds animals)}`; each member is
 `{"key", "name", "sub" (race / level line), "badges": [(label, color)],
-"hp": (cur, max), "load": (cur, normal), "selected", "token"}` where `token`
+"hp": (cur, max), "load": (cur, normal, max), "selected", "token"}` where `token`
 is anything `primitives.token_badge` can read (race / portrait_id / token).
 `filters` is `[(key, label, tip)]`.
 """
 
 import pygame
 
+from . import load_meter
 from .primitives import caps, contained, ellipsize, scrollbar, text, token_badge
 from .tokens import T
 
@@ -68,9 +69,8 @@ def draw_member_card(surf, F, rect, m, mpos):
 
     hp, mx = m["hp"]
     text(surf, F["bodyb"], f"HP {hp}/{mx}", (rect.right - T.S, rect.y + T.S), _hp_col(hp, mx), right=True)
-    load, norm = m["load"]
-    text(surf, F["body_sm"], f"{load:g}/{norm:g} kg", (rect.right - T.S, rect.y + T.S * 4),
-         T.BLOOD if load > norm else T.TX_MUTED, right=True)
+    text(surf, F["body_sm"], load_meter.figure(*m["load"]), (rect.right - T.S, rect.y + T.S * 4),
+         load_meter.color(*m["load"]), right=True)
 
 
 def draw_guild_roster(surf, F, rect, bands, filters, active_filter, scroll, footer, mpos):

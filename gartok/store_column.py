@@ -22,7 +22,7 @@ def store_dict(group, store, selected, carried):
     if isinstance(store, Wagon):
         kg, cap = kg + store.passenger_weight, store.budget
     member = {"role": "wagon", "pending_picks": False, "no_sheet": True,
-              "kg": kg, "cap": cap,
+              "kg": kg, "normal": cap, "max": cap,
               "pack": [(name, store.pack_tag(name), items.item_weight(name), qty,
                         store.locked_of(name) > 0, idx in selected)
                        for idx, (name, qty) in enumerate(store._base_inventory)]}

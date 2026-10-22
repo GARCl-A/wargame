@@ -317,11 +317,13 @@ class Group:
 
     @property
     def total_carry_normal(self):
-        """Combined normal-carry threshold across every member -- pairs with
-        `total_load` for a band-wide load bar (`carry_max` is the harder,
-        soft-blocked ceiling per member; summing it too would flatter an
-        unevenly-loaded group, so it's left per-member)."""
+        """Combined normal-carry threshold across every member. The band-wide figures
+        flatter an unevenly loaded group; who is slowed or full reads per member."""
         return sum(u.carry_normal for u in self.members)
+
+    @property
+    def total_carry_max(self):
+        return sum(u.carry_max for u in self.members)
 
     @property
     def rations(self):

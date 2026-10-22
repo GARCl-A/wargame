@@ -1,14 +1,15 @@
 """The figures on the right of a party row (the Wilds screen's roster).
 
     draw_party_stats(surf, F, rect, row)
-    party_load(rows) -> (kg, capacity)
+    party_load(rows) -> (kg, normal, max), summed
 
-A `row` is {"hp": (cur, max), "ac": int, "load": (kg, carry_normal), "rations": int,
+A `row` is {"hp": (cur, max), "ac": int, "load": (kg, carry_normal, carry_max), "rations": int,
 "work": (level, into, span)}; `span` 0 means the work track is maxed.
 """
 
 import pygame
 
+from . import load_meter
 from .primitives import caps
 from .tokens import T
 
@@ -17,7 +18,7 @@ _BAR_H = 6
 
 
 def party_load(rows):
-    return (round(sum(r["load"][0] for r in rows), 1), round(sum(r["load"][1] for r in rows), 1))
+    return tuple(round(sum(r["load"][i] for r in rows), 1) for i in range(3))
 
 
 def _hp_color(cur, mx):
@@ -28,12 +29,11 @@ def _hp_color(cur, mx):
 def draw_party_stats(surf, F, rect, row):
     right = rect.right - T.S * 2
     cur, mx = row["hp"]
-    kg, normal = row["load"]
     top = rect.y + T.S
     line = T.S * 2 + 2
 
-    load = f"load {kg:g}/{normal:g} kg".upper()
-    caps(surf, F["micro"], load, (right, top), T.BLOOD if kg > normal else T.TX_MUTED, right=True)
+    load = f"load {load_meter.figure(*row['load'])}".upper()
+    caps(surf, F["micro"], load, (right, top), load_meter.color(*row["load"]), right=True)
     caps(surf, F["micro"], f"hp {cur}/{mx}   ac {row['ac']}",
          (right - F["micro"].size(load)[0] - T.S * 3, top), _hp_color(cur, mx), right=True)
     caps(surf, F["micro"], f"{row['rations']} rations", (right, top + line), T.GREEN, right=True)

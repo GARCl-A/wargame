@@ -402,7 +402,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
             "role": getattr(u.occupation, "id", "sword"),
             "pending_picks": bool(getattr(u, "pending_picks", False)),
             "kg": u.load,
-            "cap": u.carry_max,
+            "normal": u.carry_normal, "max": u.carry_max,
             "slots": {
                 "hand": _slot("weapon"),
                 "offhand": None if two_handed else _slot("offhand"),

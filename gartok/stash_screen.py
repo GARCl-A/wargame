@@ -387,7 +387,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         member = {
             "name": unit.name, "role": role_for(unit.occupation),
             "pending_picks": bool(unit.pending_picks),
-            "kg": unit.load, "cap": unit.carry_normal,
+            "kg": unit.load, "normal": unit.carry_normal, "max": unit.carry_max,
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),

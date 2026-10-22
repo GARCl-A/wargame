@@ -3,7 +3,7 @@
     member_card(surf, F, rect, member, scroll, mouse) -> hit dict
 
 Same contract as `loadout_panel.column`: `member` is the dict `market_screen._member_dict` /
-`store_column.store_dict` build (name, kg, cap, the slots as {"name", "note", "accepts", "sel"} or
+`store_column.store_dict` build (name, kg, normal, max, the slots as {"name", "note", "accepts", "sel"} or
 None for a blocked off-hand, `pack: [(name, tag, weight, qty, locked, sel)]`, optional `status`,
 `action`, `no_sheet`, `pending_picks`), and the result carries the same keys: sheet_rect,
 head_rect, slot_rects, pack_zone, pack_area, pack_hits, lock_hits, dots_hits, scroll, action_rect.
@@ -15,6 +15,7 @@ import pygame
 
 from .. import icons
 from ..item_icon import draw_icon
+from . import load_meter
 from .hub_frame import hub_button
 from .primitives import (
     dashed_rect,
@@ -34,15 +35,12 @@ SLOT_H = T.S * 8 - 2
 ROW_H = T.S * 7 - 4
 
 
-def _load(surf, F, x, y, w, kg, cap):
-    frac = kg / cap if cap else 0
-    color = T.BLOOD if frac > 1 else T.BRASS if frac >= 0.75 else T.GREEN
+def _load(surf, F, x, y, w, load):
+    note = load_meter.note(*load)
     text(surf, F["hub_sub"], "Load", (x, y), T.TX_MUTED)
-    note = "  ·  over" if frac > 1 else "  ·  near limit" if frac >= 0.75 else ""
-    text(surf, F["hub_subb"], f"{kg:.1f} / {cap:.0f} kg{note}", (x + w, y), color if note else T.TX, right=True)
-    bar = pygame.Rect(x, y + T.S * 3 - 2, w, 7)
-    pygame.draw.rect(surf, T.TABLE, bar, border_radius=3)
-    pygame.draw.rect(surf, color, pygame.Rect(bar.x, bar.y, int(bar.w * min(1.0, frac)), bar.h), border_radius=3)
+    text(surf, F["hub_subb"], load_meter.figure(*load) + (f"  ·  {note}" if note else ""), (x + w, y),
+         load_meter.color(*load), right=True)
+    load_meter.draw_bar(surf, pygame.Rect(x, y + T.S * 3 - 2, w, 7), *load)
 
 
 def _slot(surf, F, r, kind, held, mouse):
@@ -127,7 +125,7 @@ def member_card(surf, F, rect, member, scroll, mouse):
     surf.set_clip(pygame.Rect(x, rect.y, edge - x, head.h).clip(clip))
     small_caps(surf, F["hub_card"], F["hub_card_sc"], member["name"], (x, rect.y + T.S * 2 + 4), T.TX)
     surf.set_clip(clip)
-    _load(surf, F, x, rect.y + T.S * 7 + 2, w, member["kg"], member["cap"])
+    _load(surf, F, x, rect.y + T.S * 7 + 2, w, (member["kg"], member["normal"], member["max"]))
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, head.bottom), (rect.right - 1, head.bottom))
 
     y = head.bottom + T.S * 2
@@ -234,15 +232,11 @@ def container_card(surf, F, rect, data, scroll, mouse):
     head = rect.y + T.S * 8
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, head), (rect.right - 1, head))
     if data.get("capacity") is not None:
-        used, total = data["capacity"]
-        over = used > total
-        text(surf, F["hub_body"], f"{used:.1f} / {total:.0f} kg", (rect.right - pad, title.bottom - F["hub_body"].get_height() - 1),
-             T.BLOOD if over else T.TX_MUTED, right=True)
+        load = (*data["capacity"], data["capacity"][1])
+        text(surf, F["hub_body"], load_meter.figure(*load), (rect.right - pad, title.bottom - F["hub_body"].get_height() - 1),
+             load_meter.color(*load), right=True)
         bar = pygame.Rect(x, head + T.S * 2, w, 6)
-        pygame.draw.rect(surf, T.TABLE, bar, border_radius=3)
-        fill = round(w * min(1.0, used / total)) if total else 0
-        if fill:
-            pygame.draw.rect(surf, T.BLOOD if over else T.GREEN, pygame.Rect(x, bar.y, fill, 6), border_radius=3)
+        load_meter.draw_bar(surf, bar, *load)
         top = bar.bottom + T.S * 2
     else:
         top = head + T.S * 2

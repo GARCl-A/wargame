@@ -29,7 +29,7 @@ from .constants import fmt_money
 from .group import BASE_CAPACITY
 from .item_icon import vocation_icon
 from .screen import Screen
-from .ui import guild_panel, guild_roster, member_panel, reputation_panel
+from .ui import guild_panel, guild_roster, load_meter, member_panel, reputation_panel
 from .ui.primitives import (
     contained,
     draw_button,
@@ -307,7 +307,7 @@ class GuildScreen(Screen):
             "key": unit.uid, "name": unit.name, "selected": selected, "badges": badges,
             "sub": (f"{unit.race['name']} · Lv {unit.racial_level}"
                     f"  (C{unit.combat_level} W{unit.work_level})"),
-            "hp": (max(0, unit.hp), unit.hp_max), "load": (unit.load, unit.carry_normal),
+            "hp": (max(0, unit.hp), unit.hp_max), "load": (unit.load, unit.carry_normal, unit.carry_max),
             "token": _token_of(unit),
         }
 
@@ -318,7 +318,7 @@ class GuildScreen(Screen):
         return {
             "key": animal.uid, "name": animal.species, "selected": selected, "badges": badges,
             "sub": f"{animal.species} · {job}",
-            "hp": (max(0, animal.hp), animal.hp_max), "load": (animal.load, animal.carry_normal),
+            "hp": (max(0, animal.hp), animal.hp_max), "load": (animal.load, animal.carry_normal, animal.carry_max),
             "token": _animal_token(animal),
         }
 
@@ -457,7 +457,7 @@ class GuildScreen(Screen):
         fed = ((f"hungry {animal.unfed_days} day(s) -- starves at {STARVE_DAYS}", T.BLOOD) if animal.unfed_days
                else ("fed", T.GREEN))
         return [("TACK", animal.tack or "none", T.TX), ("ROLE", role, T.TX_MUTED),
-                ("LOAD", f"{animal.load:g} / {animal.carry_normal:g} kg", T.TX_MUTED),
+                ("LOAD", load_meter.figure(animal.load, animal.carry_normal, animal.carry_max), T.TX_MUTED),
                 ("FEED", *fed), ("VALUE", fmt_money(animal.price), T.TX_MUTED)]
 
     def _draw_left(self, screen, F, x, y, w, unit, c, ch, grp, mp):
@@ -513,13 +513,6 @@ class GuildScreen(Screen):
             offhand = "Torch" if getattr(c, "torch_hand", False) else (
                 "Lantern" if getattr(c, "lantern_hand", False) else None)
         weapon = c.weapon_name or unit.ability.natural_weapon or "Unarmed"
-        load, norm, mx = unit.load, unit.carry_normal, unit.carry_max
-        if load > mx:
-            state = ("IMMOBILE", T.BLOOD)
-        elif load > norm:
-            state = ("OVERLOADED  -1 SPD  -2 STR/DEX", member_panel.AMBER)
-        else:
-            state = ("UNENCUMBERED", T.GREEN)
         return {
             "hands": f"{weapon} + {offhand}" if offhand and offhand != "None" else weapon,
             "armor": unit.armor_name if unit.armor else "None",
@@ -527,7 +520,7 @@ class GuildScreen(Screen):
                                                        if unit.armor.speed_penalty else "")) if unit.armor else "",
             "coins": unit.money,
             "rations": (unit.rations, unit.ability.id == "autotroph"),
-            "load": (load, norm, mx), "load_state": state,
+            "load": (unit.load, unit.carry_normal, unit.carry_max),
         }
 
     def _draw_right(self, screen, F, x, y, w, unit, grp, mp):

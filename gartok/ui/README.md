@@ -65,6 +65,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `shop_shelf.py` | a hub's FOR SALE panel: category chips, the shelf rows with their steppers, the cart / sell / auto-sell footer |
 | `hub_party.py` | a party member as a hub card (`member_card`, same contract as `loadout_panel.column`): load bar, the slots two by two, the pack, a drop area; `container_card` is a stash (the bank's strongbox, the house) as a hub panel, same contract as `loadout_panel.container_panel` |
 | `initiation_panel.py` | a sanctuary's initiation on the hub kit: The Terms (label / value, what is short in red) beside Who Stays (one member row each, where they stand or why they cannot) and the begin footer |
+| `load_meter.py` | what a body carries, the one way every screen shows it: a bar as long as `carry_max` with a tick at `carry_normal`, green / amber (slowed) / blood (full), the figure always `kg / max` |
 | `party_panel.py` | the figures on a party row (HP, AC, load, rations, work-XP bar) and the party's total load |
 | `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal; the founding screen (the banner on a shield beside the name, colour and emblem, one card per leader candidate with portrait, recruits and attributes) and `draw_shield` |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |

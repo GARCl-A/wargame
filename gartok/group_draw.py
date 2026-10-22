@@ -5,7 +5,7 @@ import pygame
 
 from . import items, missions, store_column, world
 from .animals import Animal
-from .ui import loadout_panel, quest_panel
+from .ui import load_meter, loadout_panel, quest_panel
 from .ui.inspector_panel import role_for
 from .ui.primitives import draw_button, header, set_pointer, text
 from .ui.tokens import T
@@ -59,7 +59,7 @@ class GroupDrawMixin:
         member = {
             "name": unit.full_name, "role": role_for(unit.occupation),
             "pending_picks": bool(unit.pending_picks),
-            "kg": unit.load, "cap": unit.carry_normal,
+            "kg": unit.load, "normal": unit.carry_normal, "max": unit.carry_max,
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
@@ -95,7 +95,7 @@ class GroupDrawMixin:
     # ------------------------------------------------------------------ #
     def _draw_rail(self, screen, F, rect):
         members = [{"key": u.uid, "name": u.name, "role": role_for(u.occupation),
-                    "kg": u.load, "cap": u.carry_normal} for u in self.group.members]
+                    "kg": u.load, "normal": u.carry_normal, "max": u.carry_max} for u in self.group.members]
         pinned_keys = {u.uid for u in self.pinned}
         overext = self.group.overextension
         note = (f"(-{overext} mental def)", T.BLOOD, "microb") if overext > 0 else ("free", T.TX_FAINT, "micro")
@@ -331,11 +331,10 @@ class GroupDrawMixin:
         self.buttons.append(("rename", rename_r))
 
         if self.tab == "gear":
-            over = self.group.total_load > self.group.total_carry_normal
+            band = (self.group.total_load, self.group.total_carry_normal, self.group.total_carry_max)
             short = self.group.rations_days <= 0
             metrics = [
-                ("band load", f"{self.group.total_load:.0f} / {self.group.total_carry_normal:.0f} kg",
-                 T.BLOOD if over else T.TX),
+                ("band load", load_meter.figure(*band), load_meter.color(*band)),
                 ("rations", f"{self.group.rations_days} days", T.BLOOD if short else T.TX),
                 ("speed", f"{self.group.speed:g} m", T.TX),
             ]

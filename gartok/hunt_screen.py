@@ -18,6 +18,7 @@ from . import autowin, hunt, ox, progression, wildfire
 from .scenario import Scenario
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
+from .ui import load_meter
 from .ui.party_panel import draw_party_stats, party_load
 from .ui.primitives import (
     draw_button,
@@ -220,9 +221,9 @@ class HuntScreen(SheetModalMixin, Screen):
         if self.state.ambush_mult != 1.0:
             why = "the Ogre's goblins range the Wilds" if wildfire.hold_standing(self.guild) else "cautious"
             yields += f"   ·   ambush chance x{self.state.ambush_mult:.2f} ({why})"
-        kg, cap = party_load([self._party_row(u) for u in self.state.party])
+        load = party_load([self._party_row(u) for u in self.state.party])
         text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   "
-             f"carrying {kg:g} / {cap:g} kg   ·   {yields}", (m, m + 30), T.TX_MUTED)
+             f"carrying {load_meter.figure(*load)}   ·   {yields}", (m, m + 30), T.TX_MUTED)
 
         self._draw_party(screen, m + 72)
 
@@ -271,7 +272,7 @@ class HuntScreen(SheetModalMixin, Screen):
     @staticmethod
     def _party_row(u):
         into, span = progression.to_next(progression.WORK_XP_THRESHOLDS, u.work_xp)
-        return {"hp": (max(u.hp, 0), u.hp_max), "ac": u.ac, "load": (u.load, u.carry_normal),
+        return {"hp": (max(u.hp, 0), u.hp_max), "ac": u.ac, "load": (u.load, u.carry_normal, u.carry_max),
                 "rations": u.rations, "work": (u.work_level, into, span)}
 
     def _draw_tracking_setup(self, screen, top):

@@ -12,19 +12,19 @@ from gartok.ui.tokens import fonts as ui_fonts
 
 
 def _row(**kw):
-    row = {"hp": (4, 7), "ac": 12, "load": (3.0, 10.0), "rations": 2, "work": (1, 5, 30)}
+    row = {"hp": (4, 7), "ac": 12, "load": (3.0, 10.0, 25.0), "rations": 2, "work": (1, 5, 30)}
     row.update(kw)
     return row
 
 
-def test_party_load_sums_weight_and_capacity():
-    assert party_load([_row(), _row(load=(7.5, 20.0))]) == (10.5, 30.0)
+def test_party_load_sums_weight_and_both_limits():
+    assert party_load([_row(), _row(load=(7.5, 20.0, 40.0))]) == (10.5, 30.0, 65.0)
 
 
 def test_stats_draw_for_a_normal_and_a_maxed_worker():
     pygame.init()
     F = ui_fonts()
-    for row in (_row(), _row(work=(15, 0, 0)), _row(load=(12.0, 10.0), hp=(0, 7))):
+    for row in (_row(), _row(work=(15, 0, 0)), _row(load=(12.0, 10.0, 25.0), hp=(0, 7))):
         surf = pygame.Surface((400, 74))
         draw_party_stats(surf, F, pygame.Rect(0, 0, 400, 74), row)
         assert any(surf.get_at((x, y))[:3] != (0, 0, 0) for x in range(0, 400, 4) for y in range(0, 74, 4))
