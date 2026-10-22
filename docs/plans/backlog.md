@@ -72,6 +72,22 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   128 for 7 (its till refills $25 a day), the Mine in 86 and 70. Open: a cost for going without sleep, a lower
   wage, or a new premise. Layer 1's floor check still counts one shift a day.
 
+## Playtest notes 2026-10-22
+
+- **Double click on the map (bug, needs a repro).** Depending on the button pressed, the same click also seems to
+  land on the map and order a forced trip to the Battlefield. Likely one click handled twice: by the button and
+  by the node under it.
+- **Cancel a trip (with 2+ groups).** Like STOP RESTING (`map_inspector.py`, `stop_rest`), a travelling group gets
+  a button to cancel its trip; it does not stop on the spot but at the next node of the route.
+- **Read the fight without the log.** Today only the log says *what* hit: an arrow, a Javelin Charge and Magic
+  Missiles all look the same, and so do the weapon actions (Cleave, Sneak Attack...), dealt or taken. Show the
+  action on the board itself (a name over the attacker or the target, a projectile or trail from the source, an
+  icon from `icons.py`...); how is open. `battle_fx.py` already reads `battle.fx` / `battle.cue`.
+- **Initiative bar by side.** Every portrait in the turn order is grey; mark each one's side (mine, allied
+  soldiers, foe, a third side) so the turn can be planned at a glance.
+- **Weapon in the unit panel.** On the right-hand panel (own units and foes) the wielded weapon is a small grey
+  line; it is key to positioning (a Broadsword's parry, an axe's Cleave) and should stand out.
+
 ## Playtest notes 2026-10-21 (guild Herança)
 
 Raw notes from the author's playtest, to be sized as they are picked up.
