@@ -66,9 +66,9 @@ def _scout(party):
 
 
 def search(guild, group):
-    """Spend `SEARCH_HOURS` searching the woods round the yard for the den. Only finds it
+    """The roll at the end of `SEARCH_HOURS` in the woods round the yard (an `orders.search`
+    order) for the den. Only finds it
     while a Snake Dragon job is out. -> (found, message)."""
-    guild.clock.advance_hours(SEARCH_HOURS)
     scout = _scout(group.members)
     who = scout.name if scout else "The squad"
     if missions.pending_snake(guild) is None:

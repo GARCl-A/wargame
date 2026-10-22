@@ -48,8 +48,8 @@ class NodeScreensMixin:
                                  arena_offers=offers, disabled=disabled,
                                  confirm_label="STAKE AND FIGHT")
 
-    def _open_market_stalls(self, shoppers, node, _offer):
-        group = next((g for g in self.guild.groups if g.node == node.id), None) or (self.guild.groups[0] if self.guild.groups else None)
+    def _open_market_stalls(self, shoppers, node, _offer, group=None):
+        group = group or next((g for g in self.guild.groups if g.node == node.id), None) or (self.guild.groups[0] if self.guild.groups else None)
         if group is not None and len(node.functions) > 1:
             from .hub_screen import TabbedHubScreen
             self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,

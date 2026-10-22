@@ -8,7 +8,9 @@ objects are needed."""
 
 import random
 
-from gartok import forced, orders
+import pytest
+
+from gartok import campaign, forced, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.group_turn_screen import GroupTurnScreen
@@ -340,3 +342,32 @@ def test_work_shift_leaves_the_tab_when_another_group_needs_an_order_first():
     app._work_shift(worker, orders.work(guild, worker, 16))
     assert isinstance(app.scene, (MapScreen, GroupTurnScreen)) and app.scene is not hub
     assert worker.busy and worker.order.remaining < 16
+
+
+@pytest.mark.parametrize("key", list(campaign.SEARCHES))
+def test_a_search_is_an_order_the_other_groups_spend_the_hours_with(key):
+    hours = campaign.SEARCHES[key][0]
+    searcher = Group([walker()], node="road")
+    worker = Group([walker()], node="lumber_yard")
+    guild = Guild(None, groups=[searcher, worker])
+    worker.order = orders.work(guild, worker, 16)
+    app = _app(guild)
+    app._start_map()
+    app.scene._select(searcher)
+    start = guild.clock.seconds
+    app.scene._handle_button(key)
+    assert guild.clock.seconds - start == hours * 3600
+    assert searcher.order is None and worker.order.remaining == pytest.approx(16 - hours)
+
+
+def test_work_shift_waits_for_the_order_of_a_group_still_idle():
+    random.seed(1)
+    worker = Group([walker()], node="lumber_yard")
+    idle = Group([walker()], node="arena")
+    guild = Guild(None, groups=[worker, idle])
+    app = _app(guild)
+    hub = app.scene = _Hub()
+    start = guild.clock.seconds
+    app._work_shift(worker, orders.work(guild, worker, 8))
+    assert isinstance(app.scene, (MapScreen, GroupTurnScreen)) and app.scene is not hub
+    assert guild.clock.seconds == start and worker.order.remaining == 8

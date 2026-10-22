@@ -119,7 +119,13 @@ def put_out(guild, group):
     return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, task="put_out")
 
 
-SUPPLY_START, SUPPLY_TURN = "ledger_hold", "frontier_outpost"
+def search(task, hours):
+    """Order a group to search where it stands for `hours`; `campaign.SEARCHES[task]` rolls
+    when they are spent."""
+    return Order("work", eta=hours, remaining=hours, hours=hours, task=task)
+
+
+SUPPLY_START, SUPPLY_TURN ="ledger_hold", "frontier_outpost"
 
 
 def supply_route():

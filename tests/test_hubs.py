@@ -280,6 +280,21 @@ def test_a_work_node_opened_from_the_map_shows_its_gathering_tab():
         assert [k for k, _l, _s in app.scene.tabs] == ["shop", "work", "gather"]
 
 
+def test_a_work_node_opens_for_the_group_that_clicked_not_the_first_one_there():
+    from types import SimpleNamespace
+
+    from gartok.app import App
+    pygame.init()
+    guild = Guild([Unit("player"), Unit("player")], node="lumber_yard")
+    second = guild.split_group(guild.groups[0], [guild.roster[1]])
+    app = SimpleNamespace(guild=guild, ui_fonts=ui_fonts(), scene=None, _after_activity=lambda: None,
+                          _work_shift=lambda *a: None)
+    app._open_market_stalls = lambda *a, **k: App._open_market_stalls(app, *a, **k)
+    App._FUNCTION_OPENERS["shop"](app, second, world.node("lumber_yard"), None)
+    work = next(s for k, _l, s in app.scene.tabs if k == "work")
+    assert work.group is second
+
+
 def _work_screen(node_id="mine"):
     from gartok.group import Group
     from gartok.work_screen import WorkScreen

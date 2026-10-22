@@ -35,10 +35,13 @@ from . import (
     economy,
     factions,
     forced,
+    lair,
     loot,
     objectives,
     orders,
+    ox,
     recorder,
+    serpent_nest,
     solo,
     vocations,
     wildfire,
@@ -427,6 +430,9 @@ def _advance(guild, dt=None, busy=()):
                 pending.append((g, ambush))
         elif order.kind == "work" and order.task == "put_out":
             events += wildfire.put_out(guild, g)
+        elif order.kind == "work" and order.task in SEARCHES:
+            _found, msg = SEARCHES[order.task][1](guild, g)
+            events.append(msg)
         elif order.kind == "work":
             events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
         elif order.kind == "rest":
@@ -512,9 +518,9 @@ def _wear_wagons(group, src, dest):
 
 
 def scout_ancient_ruins(guild, group):
-    """Spend 4 hours searching the scrub off the Old Road for the lost library ruins.
-    Tests WIS mod vs DC 12. On success, discovers the Ancient Ruins."""
-    guild.clock.advance_hours(4)
+    """The roll at the end of `SCOUT_RUINS_HOURS` in the scrub off the Old Road (an
+    `orders.search` order) for the lost library ruins. Tests WIS mod vs DC 12. On success,
+    discovers the Ancient Ruins."""
     scout = max(group.members, key=lambda u: u.mod_wisdom) if group.members else None
     wis_mod = scout.mod_wisdom if scout else 0
     nat = data.d20()
@@ -527,5 +533,16 @@ def scout_ancient_ruins(guild, group):
         return True, msg
     else:
         name = scout.name if scout else "The squad"
-        msg = f"{name} spends 4 hours searching the brush, but finds no trace of the ruins (d20({nat}) {wis_mod:+}(WIS) = {total} vs DC {dc})."
+        msg = f"{name} spends {SCOUT_RUINS_HOURS} hours searching the brush, but finds no trace of the ruins (d20({nat}) {wis_mod:+}(WIS) = {total} vs DC {dc})."
         return False, msg
+
+
+SCOUT_RUINS_HOURS = 4
+
+# search order task (also its map button key) -> (hours, the roll when they are spent)
+SEARCHES = {
+    "scout_ruins": (SCOUT_RUINS_HOURS, scout_ancient_ruins),
+    "scout_fields": (ox.SCOUT_HOURS, ox.scout_country_roads),
+    "search_nest": (serpent_nest.SEARCH_HOURS, serpent_nest.search),
+    "search_lair": (lair.SEARCH_HOURS, lair.search),
+}

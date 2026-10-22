@@ -1398,6 +1398,9 @@ copper instead of walking into the wilds and dying. The yard is also a shop
   midnight and trigger the day's meal), pays each worker and leaves the tab up
   with what the shift paid. When something else falls due on the way (another
   group idle, a fight, a death), the map takes over and the shift runs on there.
+  With another group still waiting on an order, the clock does not start: the
+  shift is set and the map asks for that group's order first, as it does for
+  any order given there.
 - **Pay:** `economy.LUMBER_WAGE` = **$1 per whole 4-hour block** bare-handed
   (work level 0); with an **Axe** in their pack or hand (work level 1) the pay is
   `LUMBER_AXE_RATIO` = **4/3** of that, floored. A partial hour does not count.
@@ -2032,7 +2035,10 @@ distinct from open-air wilderness or arena battlefields:
 - **Discovery:** Hidden sites (such as the `ancient_ruins` node) are not visible
   on the map by default. A group passing through connected country (the Old Road)
   can spend hours scouting to discover the entrance (`campaign.scout_ancient_ruins`),
-  revealing the node and travel routes permanently.
+  revealing the node and travel routes permanently. Every search (the ruins, the
+  Ox Fields, the Serpent's Nest, the Dragon's Lair) is an order like a work shift
+  (`orders.search`, `campaign.SEARCHES`): the other groups spend the same hours,
+  and the roll comes when they are up.
 - **Environment:** Dungeons are plunged in ambient darkness (`ambient_light = False`),
   requiring light sources (lanterns, carried torches, or dropped light globes) or
   Darkvision to navigate.

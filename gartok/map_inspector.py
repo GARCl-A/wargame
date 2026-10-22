@@ -4,6 +4,7 @@ function, the Wildfire, the gathering shifts, the REST rows and the bottom butto
 
 from . import (
     arena,
+    campaign,
     economy,
     gather,
     lair,
@@ -190,7 +191,7 @@ class MapInspectorMixin:
                            "text": f"! {label}: {names}"})
 
         if here.id == "road" and not self.guild.is_node_revealed("ancient_ruins"):
-            blocks.append({"type": "button", "key": "scout_ruins", "label": "EXPLORE THE AREA (4 h)",
+            blocks.append({"type": "button", "key": "scout_ruins", "label": f"EXPLORE THE AREA ({campaign.SCOUT_RUINS_HOURS} h)",
                           "gap_before": T.S * 2})
             blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
                           "color": T.TX_FAINT})

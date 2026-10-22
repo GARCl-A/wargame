@@ -84,9 +84,9 @@ def _scout(party):
 
 
 def search(guild, group, rng=random):
-    """Spend `SEARCH_HOURS` in the Mine's deep galleries looking for the lair. Only finds it while
+    """The roll at the end of `SEARCH_HOURS` in the Mine's deep galleries (an `orders.search`
+    order) looking for the lair. Only finds it while
     the Dragon's Clutch is out. -> (found, message)."""
-    guild.clock.advance_hours(SEARCH_HOURS)
     scout = _scout(group.members)
     who = scout.name if scout else "The squad"
     if missions.pending_clutch(guild) is None:

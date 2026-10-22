@@ -30,9 +30,8 @@ def _scout(party):
 
 
 def scout_country_roads(guild, group):
-    """Spend `SCOUT_HOURS` searching the lanes for the fields the tanner talks
+    """The roll at the end of `SCOUT_HOURS` on the lanes (an `orders.search` order) for the fields the tanner talks
     about. Only finds them while the ox job is out. -> (found, message)."""
-    guild.clock.advance_hours(SCOUT_HOURS)
     scout = _scout(group.members)
     who = scout.name if scout else "The squad"
     if missions.pending_ox(guild) is None:

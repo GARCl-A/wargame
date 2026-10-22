@@ -490,10 +490,14 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         """WORK on a work node's tab: the clock runs as the map's would, and the tab stays up
         when the shift's end is all that stopped it. Anything else that falls due on the way
         (another group idle, a fight, a death) plays out on the map's usual path, the shift
-        still running there."""
+        still running there. With another group still idle the clock waits for its order,
+        as it does on the map."""
         hub = self.scene
         group.order = order
         self._focus_gid = group.gid
+        if self.guild.needs_orders:
+            self._start_map()
+            return
         run = self._run_clock()
         if run is None:
             return
@@ -595,7 +599,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
 
     # node function id (node_functions.FUNCTIONS) -> the screen that plays it
     _FUNCTION_OPENERS: ClassVar[dict] = {
-        "shop": lambda s, g, n, o: s._open_market_stalls(list(g.members), n, None),
+        "shop": lambda s, g, n, o: s._open_market_stalls(list(g.members), n, None, group=g),
         "bank": lambda s, g, n, o: s._open_bank_vault(g, n, None),
         "property": lambda s, g, n, o: s._open_city_property(g, n),
         "claim": lambda s, g, n, o: s._open_wilds_claim(g, n),

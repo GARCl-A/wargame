@@ -67,13 +67,10 @@ from . import (
     campaign,
     dialogue,
     encounters,
-    lair,
     missions,
     orders,
-    ox,
     recruit,
     rest,
-    serpent_nest,
     vocations,
     wildfire,
     world,
@@ -279,7 +276,8 @@ class MapScreen(MapInspectorMixin, Screen):
         o = group.order
         if o is None or o.kind == "idle":
             return "NO ORDERS", T.BRASS
-        label = "gather" if o.kind == "work" and o.gather else o.task if o.kind == "solo" else o.kind
+        label = ("gather" if o.kind == "work" and o.gather else "search" if o.task in campaign.SEARCHES
+                 else o.task if o.kind == "solo" else o.kind)
         return label.upper().replace("_", " "), T.TX_MUTED
 
     def _order_status(self, group):
@@ -298,7 +296,8 @@ class MapScreen(MapInspectorMixin, Screen):
                 return f"→ {dest_name} via {world.node(o.dest).name} ({o.remaining:g} h)"
             return f"→ {dest_name} ({o.remaining:g} h)"
         if o.kind == "work":
-            return f"{'gathering' if o.gather else 'working'} ({o.remaining:g} h left)"
+            doing = "gathering" if o.gather else "searching" if o.task in campaign.SEARCHES else "working"
+            return f"{doing} ({o.remaining:g} h left)"
         if o.kind == "rest":
             return f"resting ({rest.format_hours(o.remaining)} left)"
         if o.kind == "solo":
@@ -625,30 +624,12 @@ class MapScreen(MapInspectorMixin, Screen):
                 self.notices.append(f"{g.display_name}: campfire lit. Burns for 4 hours.")
                 if self.on_cook:
                     self.on_cook(g)
-        elif key == "scout_ruins":
-            success, msg = campaign.scout_ancient_ruins(self.guild, self.selected)
-            self._refresh_nodes()
-            self.notices.append(msg)
-            self._maybe_auto_advance()
-        elif key == "scout_fields":
-            _found, msg = ox.scout_country_roads(self.guild, self.selected)
-            self._refresh_nodes()
-            self.notices.append(msg)
-            self._maybe_auto_advance()
+        elif key in campaign.SEARCHES:
+            self._issue(orders.search(key, campaign.SEARCHES[key][0]))
         elif key == "wf_talk":
             self._wildfire_talk()
         elif key == "wf_put_out":
             self._issue(orders.put_out(self.guild, self.selected))
-        elif key == "search_lair":
-            _found, msg = lair.search(self.guild, self.selected)
-            self._refresh_nodes()
-            self.notices.append(msg)
-            self._maybe_auto_advance()
-        elif key == "search_nest":
-            _found, msg = serpent_nest.search(self.guild, self.selected)
-            self._refresh_nodes()
-            self.notices.append(msg)
-            self._maybe_auto_advance()
         elif key in orders.INTERACTIVE_KINDS:
             if self.on_interactive:
                 self.on_interactive(self.selected, key)

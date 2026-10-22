@@ -12,6 +12,7 @@ import pygame
 
 from gartok import (
     ai,
+    campaign,
     data,
     encounters,
     factions,
@@ -164,14 +165,12 @@ def test_the_fields_are_hidden_until_found_and_two_hours_from_the_farm():
     assert world.route("farm", "country_roads")[1] == 1
 
 
-def test_the_search_finds_nothing_without_the_job_and_costs_the_hours():
+def test_the_search_finds_nothing_without_the_job():
     guild, (signer, _) = _guild()
     signer.mod_wisdom = 10
-    before = guild.clock.seconds
     with fixed_d20(20):
         found, _msg = ox.scout_country_roads(guild, guild.groups[0])
     assert not found and not guild.is_node_revealed("ox_fields")
-    assert guild.clock.seconds - before == ox.SCOUT_HOURS * 3600
 
 
 def test_the_search_finds_them_with_the_job_out_and_a_good_roll_only():
@@ -498,10 +497,15 @@ def test_the_search_button_reveals_the_fields_on_the_map():
     _job(guild, signer)
     ms, _ = _inspect(guild, "country_roads")
     ms.selected = guild.groups[0]
-    assert "ox_fields" not in ms._nodes
+    before = guild.clock.seconds
+    ms._handle_button("scout_fields")
+    assert guild.groups[0].order.remaining == ox.SCOUT_HOURS and not guild.is_node_revealed("ox_fields")
     with fixed_d20(20):
-        ms._handle_button("scout_fields")
-    assert "ox_fields" in ms._nodes and guild.is_node_revealed("ox_fields")
+        campaign.advance(guild)
+    assert guild.is_node_revealed("ox_fields") and guild.groups[0].order is None
+    assert guild.clock.seconds - before == ox.SCOUT_HOURS * 3600
+    ms, _ = _inspect(guild, "country_roads")
+    assert "ox_fields" in ms._nodes
 
 
 def test_the_fields_offer_the_track_button_only_with_the_job_out():
