@@ -1,9 +1,11 @@
 """Combat juice for the battle screen: floating damage/heal/roll numbers, the
-squash-and-hop hit/lunge reactions, the hit flash, the crit banner and the
+name of the action just done over its actor, the flight of a shot or a throw,
+the squash-and-hop hit/lunge reactions, the hit flash, the crit banner and the
 sounds, all driven off the same per-frame tick. Pure presentation state --
 nothing here reads or writes battle rules, it only watches HP deltas and
-drains `battle.fx_events` and `battle.cues` (the pings `actions.py` queues
-through `battle.fx` / `battle.cue`). What the side cannot see is heard, never shown."""
+drains `battle.fx_events`, `battle.cues` and `battle.acts` (the pings `actions`
+queues through `battle.fx` / `battle.cue` / `battle.announce`). What the side
+cannot see is heard, never shown."""
 
 import math
 import random
@@ -19,6 +21,9 @@ _FX_COLORS = {"ok": OK, "crit": WARN, "faint": INK_FAINT}
 
 FLASH_MS = 180
 BANNER_MS = 1100
+SHOT_MS = 200           # the missile's flight from the actor to the target
+TRAIL_MS = 380          # the streak it leaves, fading
+NAME_HOLD_MS = 650      # how long an action's name hangs before it fades
 
 
 def _sgn(v):
@@ -33,14 +38,28 @@ class BattleFX:
         self._react = {}        # id(unit) -> {kind, t, dur, [dir]} squash + hop
         self._flash = {}        # id(unit) -> ms left of its hit flash
         self.banner = None      # {"text", "t"}: the crit banner across the board
+        self._shots = []        # {"a", "b", "t", "color"}: a missile in flight, then its trail
 
-    def detect(self, battle, tile, unit_rect, cell_rect, seen=None):
+    def detect(self, battle, tile, unit_rect, cell_rect, seen=None, color_of=None):
         """Compare each unit's HP to last frame; spawn a floating number, a flash
         and a hit reaction on a change, and a lunge on whoever is acting. Also
-        drains `battle.fx_events` into floaters and `battle.cues` into the crit
-        banner. `seen(pos)` says whether the side sees a cell: what it does not
-        see only makes a sound. Each sound plays once a frame, however many hits."""
+        drains `battle.acts` into the action's name and its missile, in the actor's
+        side colour (`color_of(unit)`), `battle.fx_events` into floaters and
+        `battle.cues` into the crit banner. `seen(pos)` says whether the side sees
+        a cell: what it does not see only makes a sound, and an action is shown
+        only when its actor is seen. Each sound plays once a frame, however many hits."""
         seen = seen or (lambda pos: True)
+        color_of = color_of or (lambda unit: INK_FAINT)
+        for actor, name, aim in getattr(battle, "acts", []):
+            if not seen(actor.pos):
+                continue
+            color, r = color_of(actor), unit_rect(actor)
+            if aim is not None:
+                self._shots.append({"a": r.center, "b": cell_rect(*aim).center, "t": 0.0, "color": color})
+            if name:
+                self._spawn(r, tile, name, color, font="bodyb", hold=NAME_HOLD_MS)
+        if hasattr(battle, "acts"):
+            battle.acts.clear()
         sounds = set()
         for kind, pos in getattr(battle, "cues", []):
             sounds.add(kind)
@@ -91,14 +110,14 @@ class BattleFX:
         for cue in sorted(sounds):
             sound.play(cue)
 
-    def _spawn(self, r, tile, s, color):
+    def _spawn(self, r, tile, s, color, font="head", hold=140.0):
         stack = sum(1 for f in self._floaters
                     if abs(f["x"] - r.centerx) < tile and f["age"] < 240)
         self._floaters.append({
             "x": r.centerx + random.randint(-4, 4),
             "y": r.top - 6 - 14 * stack,
-            "vy": -0.03, "age": 0.0, "hold": 140.0,
-            "alpha": 255.0, "fade": 0.28, "text": s, "color": color})
+            "vy": -0.03, "age": 0.0, "hold": hold,
+            "alpha": 255.0, "fade": 0.28, "text": s, "color": color, "font": font})
 
     def advance(self, dt):
         for f in self._floaters:
@@ -107,6 +126,9 @@ class BattleFX:
             if f["age"] > f["hold"]:
                 f["alpha"] -= f["fade"] * dt
         self._floaters = [f for f in self._floaters if f["alpha"] > 0]
+        for sh in self._shots:
+            sh["t"] += dt
+        self._shots = [sh for sh in self._shots if sh["t"] < SHOT_MS + TRAIL_MS]
         for k in list(self._react):
             self._react[k]["t"] += dt
             if self._react[k]["t"] >= self._react[k]["dur"]:
@@ -143,13 +165,32 @@ class BattleFX:
         out.midbottom = (r.centerx + round(dx), r.bottom + round(dy))
         return out
 
+    def _draw_shots(self, screen, clip_rect):
+        if not self._shots:
+            return
+        layer = pygame.Surface(clip_rect.size, pygame.SRCALPHA)
+        ox, oy = clip_rect.topleft
+        for sh in self._shots:
+            (ax, ay), (bx, by) = sh["a"], sh["b"]
+            ax, ay, bx, by = ax - ox, ay - oy, bx - ox, by - oy
+            k = min(1.0, sh["t"] / SHOT_MS)
+            head = (ax + (bx - ax) * k, ay + (by - ay) * k)
+            fade = 1.0 - max(0.0, sh["t"] - SHOT_MS) / TRAIL_MS
+            pygame.draw.line(layer, (*sh["color"], round(170 * fade)), (ax, ay), head, 3)
+            if k < 1.0:
+                pygame.draw.circle(layer, (*sh["color"], 255), head, 4)
+                pygame.draw.circle(layer, (250, 245, 230, 255), head, 2)
+        screen.blit(layer, clip_rect.topleft)
+
     def draw(self, screen, fonts, clip_rect):
         clip = screen.get_clip()
         screen.set_clip(clip_rect)
+        self._draw_shots(screen, clip_rect)
         for fl in self._floaters:
             a = max(0, min(255, int(fl["alpha"])))
-            img = fonts["head"].render(fl["text"], True, fl["color"])
-            sh = fonts["head"].render(fl["text"], True, (12, 12, 16))
+            font = fonts[fl.get("font", "head")]
+            img = font.render(fl["text"], True, fl["color"])
+            sh = font.render(fl["text"], True, (12, 12, 16))
             img.set_alpha(a)
             sh.set_alpha(a // 2)
             rect = img.get_rect(center=(int(fl["x"]), int(fl["y"])))

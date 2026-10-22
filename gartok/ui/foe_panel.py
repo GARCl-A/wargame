@@ -5,7 +5,7 @@
 
 Data is plain dicts. A `card` is
     {"name", "race", "size", "alignment", "conditions": [str], "steps": int, "steps_max": int,
-     "equipment": [(label, name)], "read": str,
+     "weapon": {"name": str, "action": str | None}, "equipment": [(label, name)], "read": str,
      "bands": [{"label": "EASY", "open": bool, "rows": [{"label", "value": str | None,
                 "tip": (title, text) | None}]}]}
 A row whose `value` is None is a field not learned yet and shows "?". A band with nothing open
@@ -15,12 +15,23 @@ folds into one line of its field names with their "?".
 import pygame
 
 from .board_render import hp_bar
-from .primitives import caps, contained, ellipsize, format_tooltip, hline, scrollbar, text, tracked
+from .primitives import (
+    caps,
+    contained,
+    ellipsize,
+    format_tooltip,
+    hline,
+    scrollbar,
+    spaced,
+    text,
+    tracked,
+)
 from .tokens import T
 
 LINE = 16
 HEAD_H = T.S * 4 + 4
 BAR_H = T.S * 2
+WEAPON_H = T.S * 3
 
 
 def _lines(card):
@@ -31,7 +42,7 @@ def _lines(card):
 
 
 def card_height(card):
-    return HEAD_H + BAR_H + _lines(card) * LINE + T.S * 2
+    return HEAD_H + BAR_H + WEAPON_H + _lines(card) * LINE + T.S * 2
 
 
 def draw_foe_card(surf, F, rect, card, mpos, scroll=0):
@@ -53,6 +64,13 @@ def draw_foe_card(surf, F, rect, card, mpos, scroll=0):
         if card["conditions"]:
             caps(surf, F["micro"], "  ·  ".join(card["conditions"]), (rect.x, y), T.BLOOD)
             y += LINE
+        weapon = card["weapon"]
+        aw = 0
+        if weapon["action"]:
+            aw = spaced(surf, F["micro"], weapon["action"].upper(), (rect.x + bw, y + 4), T.BRASS,
+                        spacing=1, anchor="topright").w + T.S
+        text(surf, F["bodyb"], ellipsize(weapon["name"], F["bodyb"], bw - aw), (rect.x, y), T.TX)
+        y += WEAPON_H
         for label, name in card["equipment"]:
             tracked(surf, F["micro"], label.upper(), (rect.x, y + 1), T.TX_FAINT)
             text(surf, F["body_sm"], ellipsize(name, F["body_sm"], bw - T.S * 9), (rect.x + T.S * 9, y), T.TX_MUTED)

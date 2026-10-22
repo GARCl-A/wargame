@@ -37,6 +37,21 @@ def _breaks_invisibility(execute):
     return run
 
 
+def _announced(execute):
+    """An action that went through (spent its AP) is put on the board for the screen: its name over
+    the actor, and the flight of what it shot or threw at the target."""
+    def run(self, battle, actor, target=None, **kw):
+        ap, flies = actor.ap, self.flies(actor)
+        result = execute(self, battle, actor, target, **kw)
+        aim = getattr(target, "pos", target) if flies else None
+        name = self.name if self.announce else None
+        if actor.ap < ap and (name or aim):
+            battle.announce(actor, name, aim)
+        return result
+    run.__name__, run.__doc__ = execute.__name__, execute.__doc__
+    return run
+
+
 # --------------------------------------------------------------------------- #
 # Base                                                                         #
 # --------------------------------------------------------------------------- #
@@ -48,11 +63,14 @@ class Action:
     desc = ""
     target = "none"        # "none" | "enemy" | "cell"
     aimed = False          # True: needs the target picked by clicking the screen
+    announce = True        # False: too plain to name on the board (a step, a swing)
+    missile = False        # True: shot or thrown at the target, its flight drawn on the board
 
     def __init_subclass__(cls, **kw):
         super().__init_subclass__(**kw)
         if "execute" in cls.__dict__:
-            cls.execute = combat_log.recorded(lambda self: self.id)(_breaks_invisibility(cls.__dict__["execute"]))
+            cls.execute = combat_log.recorded(lambda self: self.id)(
+                _breaks_invisibility(_announced(cls.__dict__["execute"])))
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -74,6 +92,9 @@ class Action:
 
     def label(self, battle, actor):
         return self.name
+
+    def flies(self, actor):
+        return self.missile
 
     # highlights for the UI while the action is being aimed
     def highlight_cells(self, battle, actor):

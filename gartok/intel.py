@@ -21,7 +21,7 @@ import math
 import random
 from dataclasses import dataclass, field
 
-from . import items, magic, talents
+from . import items, magic, talents, weapon_traits
 
 STEPS = 5                 # a foe's health shows in this many steps
 BASE_DC = 8
@@ -317,7 +317,9 @@ def known_fields(battle, team, target):
               for name in FIELDS if not (name == "artifact" and not target.equipped_artifact)}
     visible = {"name": target.name, "race": target.race["name"], "size": target.size,
                "alignment": target.alignment, "conditions": _conditions(target),
-               "weapon": target.weapon_name, "armor": target.armor_name if target.armor else None,
+               "weapon": None if target.unarmed else target.weapon_name,
+               "weapon_action": None if target.unarmed else weapon_traits.action_name(target.weapon),
+               "armor": target.armor_name if target.armor else None,
                "artifact": target.equipped_artifact}
     return Known(full=has_full_intel(battle, team, target), margin=battle.intel.margin[team].get(target),
                  dc=dc(battle, team, target), steps=health_steps(target), fields=fields, visible=visible)

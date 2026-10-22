@@ -123,3 +123,12 @@ def get(trait_id: str) -> WeaponTrait | None:
 def all_traits() -> list[WeaponTrait]:
     """Returns all registered weapon traits."""
     return list(_TRAITS)
+
+
+def action_name(weapon) -> str | None:
+    """The name of the 2-AP action `weapon` (an `ItemDef`, or None bare-handed) brings, if any."""
+    for tid in getattr(weapon, "traits", ()):
+        t = TRAITS.get(tid)
+        if t is not None and t.action_id:
+            return t.name
+    return None

@@ -15,6 +15,7 @@ SWIM_DIVISOR = 5          # Swim: (d20 + Strength) / this = squares crossed, cap
 
 class Move(Action):
     id, name, cost, target = "move", "Move", 1, "cell"
+    announce = False
     desc = "Move up to your speed."
 
     def available(self, battle, actor):

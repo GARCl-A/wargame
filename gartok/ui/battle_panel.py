@@ -9,12 +9,12 @@ fixed string keys documented on the function.
 
 Data shapes::
 
-    init_entry = {"name": str, "team": "player" | "enemy", "known": bool,
+    init_entry = {"name": str, "team": "player" | "enemy" | "ally" | str, "known": bool,
                   "active": bool, "race": str, "portrait_id": str | None,
                   "token": str, "hp_frac": float, "hp_steps": int | None, "dying": str | None}
 
     turn_card = {"name": str, "race": str, "portrait_id": str | None, "token": str,
-                 "mine": bool, "stats": str,
+                 "team": str, "stats": str,
                  "ap": int, "ap_max": int,
                  "walk": (moved, speed) | None, "note": str | None}
 
@@ -54,6 +54,7 @@ ACTION_GAP = T.S // 2
 TAB_H = 26
 BACK_H = 30
 LOG_LINE_H = 17
+SIDE_STRIPE = 5
 
 
 # ---------------------------------------------------------------------- #
@@ -74,18 +75,21 @@ def draw_initiative(surf, F, rect, entries):
 
 def _init_chip(surf, F, r, e):
     active, known = e["active"], e["known"]
+    side = team_color(e["team"])
     box(surf, r, fill=T.STEEL_HI if active else T.TABLE,
-        border=T.BRASS if active else T.STEEL_LINE, width=2 if active else 1)
-    draw_face(surf, F, (r.x + 12, r.centery - 3), 8, e,
-              fallback_color=team_color(e["team"]), known=known)
+        border=T.BRASS if active else side, width=2 if active else 1)
+    pygame.draw.rect(surf, side, pygame.Rect(r.x, r.y, SIDE_STRIPE, r.h),
+                     border_top_left_radius=3, border_bottom_left_radius=3)
+    x = r.x + SIDE_STRIPE
+    draw_face(surf, F, (x + 11, r.centery - 3), 8, e, fallback_color=side, known=known)
     clip = surf.get_clip()
     surf.set_clip(r.inflate(-6, -6))
-    text(surf, F["body_sm"], e["name"], (r.x + 26, r.y + 4), T.TX if active else T.TX_MUTED)
+    text(surf, F["body_sm"], e["name"], (x + 24, r.y + 4), T.TX if active else T.TX_MUTED)
     surf.set_clip(clip)
     if e["dying"]:
-        text(surf, F["micro"], f"dying {e['dying']}", (r.x + 8, r.bottom - 14), DANGER)
+        text(surf, F["micro"], f"dying {e['dying']}", (x + 6, r.bottom - 14), DANGER)
     elif known:
-        hp_bar(surf, pygame.Rect(r.x + 8, r.bottom - 9, r.w - 16, 4), e["hp_frac"], e.get("hp_steps"))
+        hp_bar(surf, pygame.Rect(x + 6, r.bottom - 9, r.right - x - 14, 4), e["hp_frac"], e.get("hp_steps"))
 
 
 # ---------------------------------------------------------------------- #
@@ -101,8 +105,7 @@ def draw_title(surf, F, rect, title, state, vision_on):
 
 
 def draw_turn_card(surf, F, card, data):
-    mine = data["mine"]
-    tcol = team_color("player" if mine else "enemy")
+    tcol = team_color(data["team"])
     box(surf, card, fill=T.TABLE, border=tcol, width=1)
 
     dot = (card.x + T.S * 2 + 11, card.y + 21)

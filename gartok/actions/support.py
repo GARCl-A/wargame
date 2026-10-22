@@ -582,6 +582,7 @@ class WakeUp(Action):
 
 class EndTurn(Action):
     id, name, cost, target = "end", "End Turn", 0, "none"
+    announce = False
     desc = "End your turn."
 
     def available(self, battle, actor):
@@ -593,6 +594,7 @@ class EndTurn(Action):
 
 class Delay(Action):
     id, name, cost, target = "delay", "Delay", 0, "none"
+    announce = False
     desc = "Drop to the end of the initiative order, once per round. Only before you spend any points."
 
     @classmethod

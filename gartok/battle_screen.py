@@ -21,7 +21,7 @@ from .fog import FogMemory
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
-from .ui import board_style, foe_panel
+from .ui import board_render, board_style, foe_panel
 from .ui.board_style import BoardView
 from .ui.sheet_card import sheet_height
 from .ui.tokens import T
@@ -183,7 +183,8 @@ class BattleScreen(BattleDrawMixin, Screen):
                 self._step_with_arrows()
         visible = getattr(self, "_visible", None)
         self.fx.detect(b, self.view.tile, self._unit_rect, self._cell_rect,
-                       seen=None if visible is None else visible.__contains__)
+                       seen=None if visible is None else visible.__contains__,
+                       color_of=lambda u: board_render.team_color(self._side(u)))
         if (b.winner is None and self._pan is None and self.view.rect.w > 2
                 and self._centered_on is not b.active):
             self._centered_on = b.active

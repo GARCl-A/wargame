@@ -32,7 +32,7 @@ def _format(name, value):
 def foe_card(known):
     """`known` is an `intel.Known`."""
     v = known.visible
-    equipment = [("weapon", v["weapon"] or "unarmed")]
+    equipment = []
     if v["armor"]:
         equipment.append(("armour", v["armor"]))
     if v["artifact"]:
@@ -51,4 +51,5 @@ def foe_card(known):
             else f"INT read {known.margin:+} on DC {known.dc}")
     return {"name": v["name"], "race": v["race"], "size": v["size"], "alignment": v["alignment"],
             "conditions": v["conditions"], "steps": known.steps, "steps_max": intel.STEPS,
+            "weapon": {"name": v["weapon"] or "unarmed", "action": v["weapon_action"]},
             "equipment": equipment, "read": read, "bands": bands}

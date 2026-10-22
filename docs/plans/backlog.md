@@ -78,17 +78,6 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   the one upkeep. Open: a lower wage, the wood price falling with supply (*Production chain*), or accept it. Layer
   1's floor check still counts one shift a day.
 
-## Playtest notes 2026-10-22
-
-- **Read the fight without the log.** Today only the log says *what* hit: an arrow, a Javelin Charge and Magic
-  Missiles all look the same, and so do the weapon actions (Cleave, Sneak Attack...), dealt or taken. Show the
-  action on the board itself (a name over the attacker or the target, a projectile or trail from the source, an
-  icon from `icons.py`...); how is open. `battle_fx.py` already reads `battle.fx` / `battle.cue`.
-- **Initiative bar by side.** Every portrait in the turn order is grey; mark each one's side (mine, allied
-  soldiers, foe, a third side) so the turn can be planned at a glance.
-- **Weapon in the unit panel.** On the right-hand panel (own units and foes) the wielded weapon is a small grey
-  line; it is key to positioning (a Broadsword's parry, an axe's Cleave) and should stand out.
-
 ## Playtest notes 2026-10-21 (guild Herança)
 
 Raw notes from the author's playtest, to be sized as they are picked up.

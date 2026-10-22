@@ -43,6 +43,7 @@ class SpellAction(Action):
 class MagicMissileAction(SpellAction):
     spell_id = "magic_missile"
     target, aimed = "enemy", True
+    missile = True
     REACH = 6
 
     def can(self, battle, actor, target=None):
@@ -117,6 +118,7 @@ class WaterJetAction(SpellAction):
     target a square away from the caster. Reaches as far as a dagger is thrown."""
     spell_id = "water_jet"
     target, aimed = "enemy", True
+    missile = True
     DICE = (1, 6)
 
     @staticmethod
@@ -181,6 +183,7 @@ class DragonfireAction(SpellAction):
     AC for 2d6. Reaches as far as a dagger is thrown."""
     spell_id = "dragonfire"
     target, aimed = "enemy", True
+    missile = True
     DICE = (2, 6)
 
     @staticmethod

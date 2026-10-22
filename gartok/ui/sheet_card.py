@@ -34,10 +34,10 @@ own).
 
 import pygame
 
-from .. import artwork, data, magic
+from .. import artwork, data, magic, weapon_traits
 from ..constants import fmt_money
 from . import load_meter, loadout_panel
-from .primitives import caps, contained, ellipsize, section, text, token_badge, wrap
+from .primitives import caps, contained, ellipsize, section, spaced, text, token_badge, wrap
 from .tokens import T
 
 # ---------------------------------------------------------------- order
@@ -166,7 +166,8 @@ def unit_to_ch(u):
         "init": f"{u.initiative_bonus():+}",
         "attrs": [(k, eff(name), getattr(u, f"mod_{name}"), eff(name) < getattr(u, name)) for k, name in _ATTRS],
         "weapon": {"nm": wname, "hit": f"d20 {bab:+} ({src})", "dmg": dmg, "tags": reach,
-                  "crit": "crit 20, fumble 1"},
+                  "crit": "crit 20, fumble 1",
+                  "action": None if u.unarmed else weapon_traits.action_name(u.weapon)},
         "tongue": tongue,
         "gear": {"hands": held, "armor": armor, "pack": pack,
                 "load": (u.load, u.carry_normal, u.carry_max), "copper": u.money},
@@ -363,16 +364,22 @@ def _b_weapon(s, F, r, ch, d, ed, mouse, tip):
     y = r.y
     if d != "compact":
         y = section(s, F, "attack with the weapon in hand", r.x, y, r.w)
+    action = w.get("action")
     text(s, F["bodyb"], w["nm"], (r.x, y), T.TX)
-    caps(s, F["micro"], w["tags"], (r.right, y + 2), T.TX_FAINT, right=True)
+    if action:
+        spaced(s, F["micro"], action.upper(), (r.right, y + 3), T.BRASS, spacing=1, anchor="topright")
+    else:
+        caps(s, F["micro"], w["tags"], (r.right, y + 2), T.TX_FAINT, right=True)
     y += T.S * 2 + 4
     if d == "compact":
-        line = f"{w['hit']}  ·  {w['dmg']}  ·  {w['crit']}"
+        line = "  ·  ".join((w["hit"], w["dmg"], w["tags"] if action else w["crit"]))
         text(s, F["micro"], ellipsize(line, F["micro"], r.w), (r.x, y), T.TX_MUTED)
         return
     text(s, F["micro"], f"to hit  {w['hit']}   ·   {w['crit']}", (r.x, y), T.TX_MUTED)
     y += T.S * 2
     text(s, F["micro"], f"damage  {w['dmg']}", (r.x, y), T.TX_MUTED)
+    if action:
+        caps(s, F["micro"], w["tags"], (r.right, y), T.TX_FAINT, right=True)
     if ch["tongue"] and d == "full":
         y += T.S * 2
         tn, tdmg, treach = ch["tongue"]

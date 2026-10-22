@@ -310,7 +310,7 @@ class BattleDrawMixin:
                 "race": act.race["name"],
                 "portrait_id": act.portrait_id,
                 "token": act.token,
-                "mine": act.team == self.me,
+                "team": self._side(act),
                 "stats": stats,
                 "ap": act.ap,
                 "ap_max": 2,

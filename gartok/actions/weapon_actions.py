@@ -392,6 +392,7 @@ class ArmorPierce(Action):
 
 class PowerShot(Action):
     id, name, cost, target, aimed = "power_shot", "Power Shot", 2, "enemy", True
+    missile = True
     desc = "2 AP: Adds positive Strength modifier to arrow damage."
 
     @classmethod
@@ -449,6 +450,7 @@ class PowerShot(Action):
 
 class ExtremeShot(Action):
     id, name, cost, target, aimed = "extreme_shot", "Extreme Shot", 2, "enemy", True
+    missile = True
     desc = "2 AP: Doubles attack range to 36 squares."
 
     @classmethod
@@ -544,6 +546,7 @@ class HookShield(Action):
 
 class JavelinCharge(Action):
     id, name, cost, target, aimed = "javelin_charge", "Javelin Charge", 1, "enemy", True
+    missile = True
     desc = "1 AP: Throws the spear after moving this turn for +1d4 bonus damage."
 
     @classmethod

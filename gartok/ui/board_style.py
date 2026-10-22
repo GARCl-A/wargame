@@ -21,7 +21,7 @@ from .tokens import T
 PLAYER_C  = (94, 156, 214)
 ENEMY_C   = (214, 103, 92)
 ALLY_C    = (112, 186, 150)            # an allied NPC on the player's side, played by the AI
-UNDEAD_C  = (166, 128, 214)            # a third side, hostile to both (the necromancer's dead)
+THIRD_C   = (166, 128, 214)            # any third side, hostile to both (the necromancer's dead)
 NEUTRAL_C = (176, 170, 154)
 CORPSE_FILL   = (52, 52, 54)           # the dead: grey, no side colour
 CORPSE_RIM    = (74, 73, 72)

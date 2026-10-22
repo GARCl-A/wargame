@@ -64,6 +64,7 @@ from .board_style import (
     RELIC_C,
     RELIC_RIM,
     ROPE_C,
+    THIRD_C,
     TORCH_BASE,
     TORCH_C,
     TRAP_BELL,
@@ -77,7 +78,6 @@ from .board_style import (
     TRAP_STEEL,
     TRAP_TEETH,
     TRAP_WIRE,
-    UNDEAD_C,
     WALL_LO,
     WARN,
     WATER_C,
@@ -86,11 +86,12 @@ from .board_style import (
 from .primitives import TOKEN_INK, box, text
 from .tokens import T
 
-_SIDE_C = {"ally": ALLY_C, "undead": UNDEAD_C}
+_SIDE_C = {"player": PLAYER_C, "enemy": ENEMY_C, "ally": ALLY_C}
 
 
 def team_color(team):
-    return PLAYER_C if team == "player" else _SIDE_C.get(team, ENEMY_C)
+    """A side's colour as the seat sees it; every side past the first three is a third one."""
+    return _SIDE_C.get(team, THIRD_C)
 
 
 def hp_color(frac):

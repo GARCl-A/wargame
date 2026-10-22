@@ -66,6 +66,10 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
 class Attack(Action):
     id, name, cost, target, aimed = "attack", "Attack", 1, "enemy", True
     desc = "Melee or Ranged attack based on your equipped weapon."
+    announce = False
+
+    def flies(self, actor):
+        return actor.ranged
 
     def label(self, battle, actor):
         natural = actor.ability.natural_weapon if actor.unarmed else None
@@ -253,6 +257,7 @@ class Defend(Action):
 
 class Throw(Action):
     id, name, cost, target, aimed = "throw", "Throw", 1, "enemy", True
+    missile = True
     desc = "Throw your equipped weapon at a target in range."
 
     def available(self, battle, actor):
