@@ -131,7 +131,11 @@ class BattleScreen(BattleDrawMixin, Screen):
                 self.view.pan_tiles(dx, dy)
             elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_f) and self._is_player_turn():
                 self._confirm_armed_attack()
-            elif pygame.K_1 <= event.key <= pygame.K_9:
+            elif event.key == pygame.K_9:
+                self._action_click(actions.DELAY)
+            elif event.key == pygame.K_0:
+                self._action_click(actions.END)
+            elif pygame.K_1 <= event.key <= pygame.K_8:
                 self._hotkey_action(event.key - pygame.K_1)
         elif event.type == pygame.MOUSEWHEEL:
             act_rect = getattr(self, "_actions_scroll_rect", None)

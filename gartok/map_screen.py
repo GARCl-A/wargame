@@ -58,6 +58,8 @@ the guild out entirely. Leaving to the main menu is Esc -> the pause menu
 (`app`), not a button here.
 """
 
+import dataclasses
+
 import pygame
 
 from . import (
@@ -614,6 +616,8 @@ class MapScreen(MapInspectorMixin, Screen):
             self._start_rest(key.split(":")[1])
         elif key == "stop_rest":
             self.selected.order = orders.idle()
+        elif key == "cancel_trip":
+            self.selected.order = dataclasses.replace(self.selected.order, path=())
         elif key == "advance_world":
             self.on_advance(dt=ADVANCE_HOURS)
         elif key == "manage_group":

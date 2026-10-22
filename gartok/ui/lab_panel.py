@@ -6,13 +6,13 @@
 `form` is plain data:
     {"fights": [{"id", "name", "note"}], "selected": id, "level": int, "squad": int,
      "p1": "human" | "ai", "p2": "human" | "ai", "name": str, "editing": bool,
-     "placeholder": str, "ready": bool}
+     "placeholder": str, "ready": bool, "caret": int (optional, default the end)}
 `p1` is the guild's side (the player team, on the left of the board), `p2` the opposing one.
 """
 
 import pygame
 
-from .primitives import caps, draw_button, ellipsize, panel, section, text, tracked
+from .primitives import caps, draw_button, ellipsize, panel, section, text, tracked, with_caret
 from .tokens import T
 
 ROW_H = T.S * 5
@@ -66,7 +66,8 @@ def draw_lab_form(surf, F, rect, form, mpos):
     nr = pygame.Rect(rect.x, y + 16, rect.w, T.S * 5)
     hot = nr.collidepoint(mpos) or form["editing"]
     panel(surf, nr, hover=hot, width=2 if hot else 1)
-    shown = form["name"] + "|" if form["editing"] else form["name"] or form["placeholder"]
+    shown = (with_caret(form["name"], form.get("caret")) if form["editing"]
+             else form["name"] or form["placeholder"])
     text(surf, F["body"], shown, (nr.x + T.S * 2, nr.centery - F["body"].get_height() // 2),
          T.TX if (form["editing"] or form["name"]) else T.TX_FAINT)
     hits["name"] = nr

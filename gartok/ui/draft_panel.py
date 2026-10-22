@@ -19,7 +19,8 @@ for an empty seat or {"ch": ..., "attrs": [(abbr, value)]}. Modal `items` are
 {"key", "label", "desc", "style", "can_toggle", "note"}. The identity `form` is
     {"name": str, "name_set": bool, "editing": bool, "color": rgb, "icon": slug, "colors": [rgb],
      "icons": [slug], "leaders": [{"ch": ..., "selected": bool, "recruits": (n, "base 1 · CHA +2")}],
-     "can_continue": bool, "editing_unit_idx": int | None, "unit_name_buf": str}.
+     "can_continue": bool, "editing_unit_idx": int | None, "unit_name_buf": str}
+plus, while typing, "name_caret" / "unit_name_caret": where the caret sits (default: the end).
 """
 
 import pygame
@@ -38,6 +39,7 @@ from .primitives import (
     text,
     token_badge,
     tracked,
+    with_caret,
 )
 from .sheet_card import draw_sheet, sheet_height
 from .tokens import ARCHETYPE_COLORS, T, mix
@@ -260,7 +262,8 @@ def _identity_column(surf, F, rect, form, mpos, out):
     out["name"] = name_r
     lit = name_r.collidepoint(mpos) or form["editing"]
     panel(surf, name_r, hover=lit, width=2 if lit else 1)
-    shown = form["name"] + "|" if form["editing"] else form["name"] or "click to name your guild"
+    shown = (with_caret(form["name"], form.get("name_caret")) if form["editing"]
+             else form["name"] or "click to name your guild")
     text(surf, F["name"], ellipsize(shown, F["name"], w - T.S * 4),
          (name_r.x + T.S * 2, name_r.centery - F["name"].get_height() // 2),
          T.TX if (form["editing"] or form["name"]) else T.TX_FAINT)
@@ -323,7 +326,8 @@ def _leader_card(surf, F, r, i, leader, form, mpos, out):
     if form.get("editing_unit_idx") == i:
         box = pygame.Rect(x, y, w - 40, 28)
         panel(surf, box, hover=True, width=2)
-        text(surf, F["body"], ellipsize(form.get("unit_name_buf", "") + "|", F["body"], box.w - 8),
+        text(surf, F["body"], ellipsize(with_caret(form.get("unit_name_buf", ""), form.get("unit_name_caret")),
+                                 F["body"], box.w - 8),
              (box.x + 4, box.centery - F["body"].get_height() // 2), T.BRASS)
         btn = pygame.Rect(box.right + 4, y + 2, 34, 24)
         draw_button(surf, F, btn, "OK", primary=True, fnt=F["microb"], mpos=mpos)

@@ -54,13 +54,14 @@ Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
 | Replace a candidate (draft) | **COMMISSION** (top right) → choose archetypes → click the card to replace |
 | Walk (1 point) | click a green cell — the path to the cursor is drawn; the walked trail this turn is marked |
 | Attack (1 point) | click an enemy with a red outline to arm, click again or press `Enter` / `F` to strike |
-| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In / Grab / Escape | panel buttons (the aimed ones ask for a target click) or hotkeys `1`–`9` |
+| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In / Grab / Escape | panel buttons (the aimed ones ask for a target click) or hotkeys `1`–`8`, in panel order |
+| Delay | `9` (drop to the end of the initiative order) |
 | Switch action tab | `Tab` (toggles combat ↔ utility actions) |
 | Pan camera | `WASD` or middle/right mouse drag |
 | Zoom | mousewheel |
 | Toggle character ↔ squad vision | `L` |
 | Inspect a sheet | click any unit |
-| End turn | `Space` (defends first when it can) or the button |
+| End turn | `Space` (defends first when it can), `0` (ends without defending) or the button |
 | Pause / quit | `Esc` |
 
 After a battle, memorials, the after-action report and level-up cards lead to the loot / reward screens or back to the map.
@@ -286,6 +287,7 @@ gartok/
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
+  text_field.py     a one-line text box's buffer + caret (every name field types through it)
   start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py + wiki_rules.py (its RULES tab)
   combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector) / guild_screen.py
   group_screen.py + group_draw.py (everything it paints)

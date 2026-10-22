@@ -13,6 +13,8 @@ from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import unit_to_ch
 from .ui.tokens import T
 
+FIXED_HOTKEYS = {"delay": 9, "end": 0}   # off the 1-8 count, so the rest never shift
+
 
 class BattleDrawMixin:
     def _cell_rect(self, cx, cy):
@@ -442,8 +444,8 @@ class BattleDrawMixin:
             enabled = applies and (my_turn if action is actions.END else (my_turn and action.available(b, act)))
             armed = action.aimed and self.aim_action is action
 
-            hotkey_num = None
-            if hotkey_i < 9:
+            hotkey_num = FIXED_HOTKEYS.get(action.id)
+            if hotkey_num is None and hotkey_i < 8:
                 hotkey_i += 1
                 hotkey_num = hotkey_i
                 self._hotkey_actions.append(action)

@@ -13,6 +13,7 @@ import pygame
 
 from . import settings
 from .screen import Screen
+from .text_field import TextField
 from .ui.primitives import caps, draw_button, modal_card, panel, set_pointer, text
 from .ui.tokens import T
 
@@ -37,7 +38,7 @@ class PauseScreen(Screen):
         self.can_save = can_save          # False: the row shows greyed out and does nothing
         self.on_wiki = on_wiki            # callable() or None: opens in-game wiki compendium
         self.naming = False
-        self.name_buf = ""
+        self.name_field = TextField(MAX_SAVE_NAME)
         self.saved_note = None
         self._buttons = []
 
@@ -50,14 +51,13 @@ class PauseScreen(Screen):
     def handle_event(self, event):
         if self.naming and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                name = self.name_buf.strip() or "Manual save"
+                name = self.name_field.text.strip() or "Manual save"
                 self.on_save_as(name)
                 self.saved_note = f"saved: {name}"
-                self.naming, self.name_buf = False, ""
-            elif event.key == pygame.K_BACKSPACE:
-                self.name_buf = self.name_buf[:-1]
-            elif event.unicode and event.unicode.isprintable() and len(self.name_buf) < MAX_SAVE_NAME:
-                self.name_buf += event.unicode
+                self.naming = False
+                self.name_field.set()
+            else:
+                self.name_field.key(event)
             return
         super().handle_event(event)
 
@@ -117,7 +117,7 @@ class PauseScreen(Screen):
         if self.naming:
             box = pygame.Rect(card.x + T.S * 3, card.y + 78, card.w - 2 * T.S * 3, 40)
             panel(screen, box, hover=True, width=2)
-            text(screen, f["body"], self.name_buf + "|", (box.x + T.S, box.centery - 9), T.TX)
+            text(screen, f["body"], self.name_field.shown(), (box.x + T.S, box.centery - 9), T.TX)
             text(screen, f["body_sm"], "name this save  ·  Enter to save  ·  Esc to cancel",
                  (card.centerx, box.bottom + 18), T.TX_FAINT, center=True)
             self._buttons.clear()

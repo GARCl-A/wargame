@@ -26,6 +26,7 @@ import pygame
 from . import data, items, map_lib, npc_lib
 from .board import COLS, ROWS, Board, grid_distance
 from .screen import Screen
+from .text_field import TextField
 from .ui import floors
 from .ui.board_style import (
     ENEMY_C,
@@ -92,7 +93,7 @@ class MapEditorScreen(Screen):
         self.pit_depth = 1                    # PIT tool paints holes this many levels deep
         self.painting = None                  # "add" | "del" while a drag is live
         self.edit_name = False
-        self.name_buf = ""
+        self.name_field = TextField(_MAX_NAME)
         self.notice = None                    # (text, colour)
         self.confirm_delete = None            # slug awaiting a delete confirm
         self.library = []
@@ -262,10 +263,8 @@ class MapEditorScreen(Screen):
         if self.edit_name and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_ESCAPE):
                 self._commit_name()
-            elif event.key == pygame.K_BACKSPACE:
-                self.name_buf = self.name_buf[:-1]
-            elif event.unicode.isprintable() and len(self.name_buf) < _MAX_NAME:
-                self.name_buf += event.unicode
+            else:
+                self.name_field.key(event)
             return
 
         if self.picking is not None:
@@ -362,7 +361,7 @@ class MapEditorScreen(Screen):
             self.painting = None
 
     def _commit_name(self):
-        self.name = self.name_buf.strip() or "Untitled"
+        self.name = self.name_field.text.strip() or "Untitled"
         self.edit_name = False
 
     def _picker_click(self, px):
@@ -422,7 +421,7 @@ class MapEditorScreen(Screen):
             self.tool = action[1]
         elif kind == "name":
             self.edit_name = True
-            self.name_buf = "" if self.name == "Untitled" else self.name
+            self.name_field.set("" if self.name == "Untitled" else self.name)
         elif kind == "ambient":
             if not self.outdoor:              # OUTDOOR forces ambient light on
                 self.ambient = not self.ambient
@@ -731,7 +730,7 @@ class MapEditorScreen(Screen):
         pygame.draw.rect(screen, T.BRASS if hot else T.STEEL_LINE, nr, 1)
         caps(screen, F["micro"], "NAME", (nr.x + T.S, nr.centery - 5), T.TX_FAINT)
         vx = nr.x + T.S + F["micro"].size("NAME")[0] + T.S
-        shown = (self.name_buf + "|") if editing else self.name
+        shown = self.name_field.shown() if editing else self.name
         text(screen, F["body_sm"], ellipsize(shown, F["body_sm"], nr.right - T.S - vx),
              (vx, nr.centery - 6), T.TX)
         self.hits.append((nr, ("name",)))

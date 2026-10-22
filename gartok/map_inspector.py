@@ -15,6 +15,7 @@ from . import (
     scenario,
     serpent_nest,
     wildfire,
+    world,
 )
 from .constants import fmt_money
 from .group import CAUTIOUS, NORMAL
@@ -131,6 +132,10 @@ class MapInspectorMixin:
             blocks = [{"type": "text", "text": f"Busy: {self._order_status(g)}", "color": T.BRASS}]
             if g.order is not None and g.order.kind == "rest":
                 blocks.append({"type": "button", "key": "stop_rest", "label": "STOP RESTING",
+                               "danger": True})
+            if g.order is not None and g.order.kind == "travel" and g.order.path and not g.order.task:
+                blocks.append({"type": "button", "key": "cancel_trip",
+                               "label": f"STOP AT {world.node(g.order.dest).name.upper()}",
                                "danger": True})
             if g.order is not None and g.order.kind == "garrison":
                 if here.has("recruit"):

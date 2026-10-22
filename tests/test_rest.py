@@ -499,3 +499,26 @@ def test_rotten_food_sickness_emits_daily_upkeep_notice():
     assert eater.sick
     assert any("ate Rotten Food and fell sick" in ev for ev in events)
 
+
+
+def test_a_travelling_group_can_cancel_and_stops_at_the_next_node():
+    g = Group([Unit("player")], node="market")
+    ms, _ = _map(g)
+    g.order = orders.travel(g, "lumber_yard")
+    assert g.order.dest == "city" and g.order.path == ("lumber_yard",)
+    keys = [b.get("key") for b in ms._inspector_content(g, ms._here())]
+    assert "cancel_trip" in keys
+    ms._handle_button("cancel_trip")
+    assert g.order.dest == "city" and g.order.path == () and g.busy
+    campaign.advance(ms.guild, g.order.remaining + 0.01)
+    assert g.node == "city" and not g.busy
+
+
+def test_the_last_leg_and_a_supply_run_offer_no_cancel():
+    g = Group([Unit("player")], node="market")
+    ms, _ = _map(g)
+    g.order = orders.travel(g, "city")
+    assert "cancel_trip" not in [b.get("key") for b in ms._inspector_content(g, ms._here())]
+    g.order = orders.travel(g, "lumber_yard")
+    g.order.task = "supply_run"
+    assert "cancel_trip" not in [b.get("key") for b in ms._inspector_content(g, ms._here())]

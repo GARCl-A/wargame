@@ -31,6 +31,7 @@ from .ui.primitives import (
 )
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .unit import distribute_load
 
 
 class HuntScreen(SheetModalMixin, Screen):
@@ -60,6 +61,7 @@ class HuntScreen(SheetModalMixin, Screen):
         self.target_chips = []            # [(rect, target_str)]
         self.buttons = []                 # [(key, rect)]
         self.sheet_hits = []              # [(rect, unit)]
+        self.notice = None
         self._hot = False
         if self.phase == "done":
             self._wrap_up()
@@ -166,7 +168,11 @@ class HuntScreen(SheetModalMixin, Screen):
                 if self.on_level:
                     self.on_level(self.state.party[idx])
                 return
-            if key == "confirm":
+            self.notice = None
+            if key == "distribute":
+                distribute_load(self.state.party)
+                self.notice = "Redistributed packs by carrying capacity."
+            elif key == "confirm":
                 self.state.hours_left = min(self.hours, self._daylight()) if self._tracking else self.hours
                 self._do_stretch()
             elif key == "hunt_on":
@@ -450,13 +456,15 @@ class HuntScreen(SheetModalMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
+        distribute = ("distribute", "DISTRIBUTE LOAD", len(self.state.party) > 1)
         if self.phase == "setup":
-            footer_bar(self, screen, self._F, back=("leave", "LEAVE"),
+            footer_bar(self, screen, self._F, back=("leave", "LEAVE"), secondary=distribute,
                        primary=("confirm", "READ THE GROUND" if self._tracking else "INTO THE WILDS",
-                                not self._tracking or self._daylight() > 0))
+                                not self._tracking or self._daylight() > 0),
+                       notice=self.notice)
         elif self.phase == "interlude":
-            footer_bar(self, screen, self._F, back=("head_back", "HEAD BACK"),
-                      primary=("hunt_on", "KEEP HUNTING"))
+            footer_bar(self, screen, self._F, back=("head_back", "HEAD BACK"), secondary=distribute,
+                      primary=("hunt_on", "KEEP HUNTING"), notice=self.notice)
         elif self.phase == "ambush":
             sec = None
             if self._tracking:

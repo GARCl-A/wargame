@@ -52,6 +52,7 @@ from .group_draw import GroupDrawMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
+from .text_field import TextField
 from .ui.hscroll import ColumnScroll
 from .ui.tokens import fonts as ui_fonts
 from .wagon import Wagon
@@ -92,7 +93,7 @@ class GroupScreen(GroupDrawMixin, ItemMenuMixin, PackColumnMixin, DragSelectMixi
         self._wagon_idx = 0
         self._cols = ColumnScroll()
         self.editing_name = False
-        self.name_buf = ""
+        self.name_field = TextField(24)
         self.cargo_search = ""
         self.editing_search = False
         self._search_rect = None
@@ -217,14 +218,12 @@ class GroupScreen(GroupDrawMixin, ItemMenuMixin, PackColumnMixin, DragSelectMixi
     def handle_event(self, event):
         if self.editing_name and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                self.group.name = self.name_buf.strip() or None
+                self.group.name = self.name_field.text.strip() or None
                 self.editing_name = False
             elif event.key == pygame.K_ESCAPE:
                 self.editing_name = False
-            elif event.key == pygame.K_BACKSPACE:
-                self.name_buf = self.name_buf[:-1]
-            elif event.unicode and len(self.name_buf) < 24 and event.unicode.isprintable():
-                self.name_buf += event.unicode
+            else:
+                self.name_field.key(event)
             return
 
         if self.editing_search and event.type == pygame.KEYDOWN:
@@ -423,7 +422,7 @@ class GroupScreen(GroupDrawMixin, ItemMenuMixin, PackColumnMixin, DragSelectMixi
                 self.notice = "Campfire requires Flint and Steel, 1 Lumber and 1 Coal in the pack."
         elif key == "rename":
             self.editing_name = True
-            self.name_buf = self.group.name or ""
+            self.name_field.set(self.group.name or "")
         elif key == "view_bags":
             self.view, self.selected = "bags", []
         elif key == "view_cargo":

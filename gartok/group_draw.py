@@ -327,7 +327,7 @@ class GroupDrawMixin:
             title_r = pygame.Rect(T.S * 6, T.S * 2 - 2, tw + 30, 30)
             pygame.draw.rect(screen, T.STEEL_HI, title_r)
             pygame.draw.rect(screen, T.BRASS, title_r, 1)
-            text(screen, F["titleb"], self.name_buf + "|", (title_r.x + 4, title_r.y), T.TX)
+            text(screen, F["titleb"], self.name_field.shown(), (title_r.x + 4, title_r.y), T.TX)
         rename_r = pygame.Rect(T.S * 6 + tw + T.S * 2, T.S * 2 + 4, T.S * 3, T.S * 3)
         draw_button(screen, F, rename_r, "✎", ghost=True, mpos=self.mouse)
         self.buttons.append(("rename", rename_r))

@@ -26,6 +26,7 @@ from .archetypes import (
 )
 from .combatant import Combatant
 from .screen import Screen
+from .text_field import TextField
 from .ui.banner import BANNER_COLORS, set_player_color
 from .ui.draft_panel import (
     draw_commission_modal,
@@ -94,7 +95,7 @@ class DraftScreen(Screen):
         # identity phase state
         self.guild_name = ""
         self.editing_name = False
-        self.name_buf = ""
+        self.name_field = TextField(_MAX_GUILD_NAME)
         self.name_rect = None
         self.banner_color = BANNER_COLORS[0][1]
         self.banner_icon = artwork.BANNER_ICONS[0][1]
@@ -103,7 +104,7 @@ class DraftScreen(Screen):
         self.leader_pick = None
         self.leader_rects = []
         self.editing_unit_idx = None
-        self.unit_name_buf = ""
+        self.unit_name_field = TextField(24)
         self.unit_name_rects = []
         self.continue_rect = None
 
@@ -131,25 +132,19 @@ class DraftScreen(Screen):
     def handle_event(self, event):
         if self.editing_unit_idx is not None and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                if self.unit_name_buf.strip():
-                    self.picks[self.editing_unit_idx].name = self.unit_name_buf.strip()
+                self._commit_unit_name()
                 self.editing_unit_idx = None
             elif event.key == pygame.K_ESCAPE:
                 self.editing_unit_idx = None
-            elif event.key == pygame.K_BACKSPACE:
-                self.unit_name_buf = self.unit_name_buf[:-1]
-            elif event.unicode and len(self.unit_name_buf) < 24 and event.unicode.isprintable():
-                self.unit_name_buf += event.unicode
+            else:
+                self.unit_name_field.key(event)
             return
 
         if self.editing_name and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                self.guild_name, self.editing_name = self.name_buf, False
-            elif event.key == pygame.K_BACKSPACE:
-                self.name_buf = self.name_buf[:-1]
-            elif event.unicode and len(self.name_buf) < _MAX_GUILD_NAME \
-                    and event.unicode.isprintable():
-                self.name_buf += event.unicode
+                self.guild_name, self.editing_name = self.name_field.text, False
+            else:
+                self.name_field.key(event)
             return
 
         if self.commission_modal_open and event.type == pygame.KEYDOWN:
@@ -247,27 +242,30 @@ class DraftScreen(Screen):
         pad = T.S * 4
         return pygame.Rect(W - pad - 28, pad, 28, 28)
 
+    def _commit_unit_name(self):
+        if self.unit_name_field.text.strip():
+            self.picks[self.editing_unit_idx].name = self.unit_name_field.text.strip()
+
     def _click_identity(self, px):
         if self.editing_name:
-            self.guild_name, self.editing_name = self.name_buf, False
+            self.guild_name, self.editing_name = self.name_field.text, False
         if self.name_rect and self.name_rect.collidepoint(px):
-            self.name_buf, self.editing_name = self.guild_name, True
+            self.name_field.set(self.guild_name)
+            self.editing_name = True
             return
         for rect, idx in self.unit_name_rects:
             if rect.collidepoint(px):
                 if self.editing_unit_idx == idx:
-                    if self.unit_name_buf.strip():
-                        self.picks[idx].name = self.unit_name_buf.strip()
+                    self._commit_unit_name()
                     self.editing_unit_idx = None
                 else:
-                    if self.editing_unit_idx is not None and self.unit_name_buf.strip():
-                        self.picks[self.editing_unit_idx].name = self.unit_name_buf.strip()
+                    if self.editing_unit_idx is not None:
+                        self._commit_unit_name()
                     self.editing_unit_idx = idx
-                    self.unit_name_buf = self.picks[idx].name
+                    self.unit_name_field.set(self.picks[idx].name)
                 return
         if self.editing_unit_idx is not None:
-            if self.unit_name_buf.strip():
-                self.picks[self.editing_unit_idx].name = self.unit_name_buf.strip()
+            self._commit_unit_name()
             self.editing_unit_idx = None
         for rect, color in self.color_rects:
             if rect.collidepoint(px):
@@ -419,7 +417,8 @@ class DraftScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_identity(self, screen):
-        form = {"name": self.name_buf if self.editing_name else self.guild_name,
+        form = {"name": self.name_field.text if self.editing_name else self.guild_name,
+                "name_caret": self.name_field.caret,
                 "name_set": bool(self.guild_name), "editing": self.editing_name,
                 "color": self.banner_color, "icon": self.banner_icon,
                 "colors": [color for _, color in BANNER_COLORS],
@@ -428,7 +427,8 @@ class DraftScreen(Screen):
                              "recruits": _leader_recruits(u)} for u in self.picks],
                 "can_continue": self.leader_pick is not None,
                 "editing_unit_idx": self.editing_unit_idx,
-                "unit_name_buf": self.unit_name_buf}
+                "unit_name_buf": self.unit_name_field.text,
+                "unit_name_caret": self.unit_name_field.caret}
         out = draw_identity_form(screen, self.F, screen.get_rect(), form, self.mouse)
         self.name_rect = out["name"]
         self.color_rects = out["colors"]

@@ -144,6 +144,12 @@ def hline(surf, x1, x2, y, c=T.STEEL_LINE):
     pygame.draw.line(surf, c, (x1, y), (x2, y), 1)
 
 
+def with_caret(s, caret=None):
+    """A text box's typed `s` with the "|" caret at `caret` (None: the end)."""
+    caret = len(s) if caret is None else caret
+    return s[:caret] + "|" + s[caret:]
+
+
 def ellipsize(s, font, max_px):
     """`s` clipped with a trailing ellipsis so it renders within `max_px`."""
     if not s or max_px <= 0:

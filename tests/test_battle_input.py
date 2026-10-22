@@ -258,3 +258,30 @@ def test_skip_traps_with_nothing_queued_is_a_no_op():
     batt.trap_setup_queue = []
     batt.skip_traps()
     assert batt.awaiting_trap is None
+
+
+def test_delay_and_end_keep_fixed_keys_off_the_numbered_list():
+    from gartok import actions
+    from gartok.battle import AP_PER_TURN
+    from gartok.ui.tokens import fonts as ui_fonts
+    scr, batt = _screen()
+    me = batt.player_units[0]
+    me.ap = AP_PER_TURN
+    scr.F = ui_fonts()
+    scr.draw(pygame.display.set_mode((1280, 800)))
+    numbered = list(scr._hotkey_actions)
+    assert numbered[0] is actions.ATTACK and len(numbered) <= 8
+    assert actions.DELAY not in numbered and actions.END not in numbered
+    me.ap = AP_PER_TURN - 1                     # spent a point: Delay is out, nothing shifts
+    scr.draw(pygame.display.get_surface())
+    assert scr._hotkey_actions == numbered
+    me.ap = AP_PER_TURN
+    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_9))
+    assert me.delayed and batt.active is not me
+
+
+def test_zero_ends_the_turn_without_defending():
+    scr, batt = _screen()
+    me = batt.player_units[0]
+    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_0))
+    assert not me.defending and batt.active is not me

@@ -8,6 +8,7 @@ import pygame
 
 from . import combat_lab
 from .screen import Screen
+from .text_field import TextField
 from .ui.lab_panel import draw_lab_form
 from .ui.primitives import draw_button, text
 from .ui.tokens import T
@@ -27,10 +28,14 @@ class CombatLabScreen(Screen):
         self.level = 0
         self.squad = combat_lab.FIGHTS[self.fight].squad
         self.controllers = {"player": "human", "enemy": "ai"}
-        self.name = ""
+        self.name_field = TextField(_MAX_NAME)
         self.editing = False
         self.hits = {}
         self.back_rect = None
+
+    @property
+    def name(self):
+        return self.name_field.text
 
     def _placeholder(self):
         return combat_lab.default_name(self.fight, self.controllers)
@@ -76,10 +81,8 @@ class CombatLabScreen(Screen):
         if self.editing and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 self.editing = False
-            elif event.key == pygame.K_BACKSPACE:
-                self.name = self.name[:-1]
-            elif event.unicode and len(self.name) < _MAX_NAME and event.unicode.isprintable():
-                self.name += event.unicode
+            else:
+                self.name_field.key(event)
             return
         super().handle_event(event)
 
@@ -106,7 +109,7 @@ class CombatLabScreen(Screen):
         form = {"fights": [{"id": f.id, "name": f.name, "note": f.note} for f in combat_lab.FIGHTS.values()],
                 "selected": self.fight, "level": self.level, "squad": self.squad,
                 "p1": self.controllers["player"], "p2": self.controllers["enemy"],
-                "name": self.name, "editing": self.editing, "placeholder": self._placeholder(),
+                "name": self.name, "caret": self.name_field.caret, "editing": self.editing, "placeholder": self._placeholder(),
                 "ready": True}
         self.hits = draw_lab_form(screen, F, pygame.Rect((W - cw) // 2, pad + 70, cw, H - 2 * pad - 70),
                                   form, self.mouse)

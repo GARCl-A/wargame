@@ -80,8 +80,6 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Playtest notes 2026-10-22
 
-- **Cancel a trip (with 2+ groups).** Like STOP RESTING (`map_inspector.py`, `stop_rest`), a travelling group gets
-  a button to cancel its trip; it does not stop on the spot but at the next node of the route.
 - **Read the fight without the log.** Today only the log says *what* hit: an arrow, a Javelin Charge and Magic
   Missiles all look the same, and so do the weapon actions (Cleave, Sneak Attack...), dealt or taken. Show the
   action on the board itself (a name over the attacker or the target, a projectile or trail from the source, an
@@ -102,13 +100,9 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   - Too few icons for the guild banner.
 - **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
 - **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter.
-- **Text input:** on rename, the arrow keys do not move the typing cursor.
 - **Combat board:**
   - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
   - Hit sounds do not fit the game (the UI sounds are fine); swap the Kenney variants in `assets/sounds/`.
-  - Reorder the combat hotkeys: Delay is used a lot and is running out of room.
-- **The Wilds:**
-  - A DISTRIBUTE LOAD button during the hunt.
 
 ## Playtest notes 2026-10-12
 

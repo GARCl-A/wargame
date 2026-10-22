@@ -378,3 +378,46 @@ def test_a_wolf_never_hunts_alone():
                 assert len(pack) == encounters.WOLF_PACK_MIN
             else:
                 assert len(pack) == 1
+
+
+def test_distribute_load_on_the_hunt_spreads_the_packs():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    pygame.init()
+
+    from gartok import hunt, world
+    from gartok.guild import Guild
+    from gartok.hunt_screen import HuntScreen
+
+    a, b = Unit("player"), Unit("player")
+    a._base_inventory = [("Lumber", 20)]
+    b._base_inventory = []
+    a._derive_combat()
+    b._derive_combat()
+    guild = Guild([a, b])
+    state = hunt.HuntState([a, b], world.node("wilds"), hours_left=0)
+    for phase in ("setup", "interlude"):
+        screen = HuntScreen(None, guild, state, phase=phase, on_ambush=lambda *_: None,
+                            on_done=lambda: None)
+        screen.draw(pygame.Surface((1280, 720)))
+        assert "distribute" in dict(screen.buttons)
+    screen._click(dict(screen.buttons)["distribute"].center)
+    assert b.load > 0 and screen.notice
+    assert state.hours_hunted == 0
+
+
+def test_a_lone_hunter_gets_no_distribute():
+    import pygame
+    pygame.init()
+
+    from gartok import hunt, world
+    from gartok.guild import Guild
+    from gartok.hunt_screen import HuntScreen
+
+    guild = Guild([Unit("player")])
+    state = hunt.HuntState(list(guild.roster), world.node("wilds"), hours_left=0)
+    screen = HuntScreen(None, guild, state, phase="setup", on_ambush=lambda *_: None,
+                        on_done=lambda: None)
+    screen.draw(pygame.Surface((1280, 720)))
+    assert "distribute" not in dict(screen.buttons)

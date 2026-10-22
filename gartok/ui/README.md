@@ -40,7 +40,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | Module | What it is |
 |---|---|
 | `tokens.py` | `T` palette / spacing / font sizes, `fonts()`, `mix()` |
-| `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
+| `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize` / `with_caret`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
 | `item_icons.py` | item silhouettes drawn in code (`draw_item_icon`: ~50 kinds, one generator each, a `wagon` for the Stables; `gartok/item_icon.py` maps items and the six vocations to them) |
 | `hscroll.py` | `ColumnScroll`: sideways scroll over a row of equal columns (`fit`, `wheel`, `hint`, `click`) |
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |

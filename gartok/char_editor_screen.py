@@ -23,6 +23,7 @@ from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .constants import fmt_money
 from .screen import Screen
+from .text_field import TextField
 from .ui import load_meter
 from .ui.primitives import (
     box,
@@ -60,7 +61,7 @@ class CharEditorScreen(Screen):
         self.picker = None                    # (kind, [options], current) or None
         self.picker_hits = []
         self.edit_field = None                # "name" | "age" while typing into that row, else None
-        self.edit_buf = ""
+        self.edit_text = TextField(_MAX_NAME)
         self.notice = None                    # (text, colour)
         self.confirm_delete = None            # slug awaiting a delete confirm
         self.scroll = 0
@@ -110,16 +111,17 @@ class CharEditorScreen(Screen):
     def _start_edit(self, field):
         self.edit_field = field
         u = self.unit
-        self.edit_buf = "" if (field == "name" and u._auto_name) \
-            else u.name if field == "name" else u.bio if field == "bio" else str(u.age)
+        current = {"name": "" if u._auto_name else u.name, "bio": u.bio, "age": str(u.age)}[field]
+        self.edit_text = TextField(_MAX_BIO if field == "bio" else _MAX_NAME,
+                                   str.isdigit if field == "age" else str.isprintable, current)
 
     def _commit_edit(self):
         if self.edit_field == "name":
-            self.unit.set_name(self.edit_buf)
+            self.unit.set_name(self.edit_text.text)
         elif self.edit_field == "bio":
-            self.unit.set_bio(self.edit_buf)
-        elif self.edit_field == "age" and self.edit_buf:
-            self.unit.set_age(int(self.edit_buf))
+            self.unit.set_bio(self.edit_text.text)
+        elif self.edit_field == "age" and self.edit_text.text:
+            self.unit.set_age(int(self.edit_text.text))
         self.edit_field = None
 
     # ------------------------------------------------------------------ #
@@ -127,16 +129,10 @@ class CharEditorScreen(Screen):
     # ------------------------------------------------------------------ #
     def handle_event(self, event):
         if self.edit_field and event.type == pygame.KEYDOWN:
-            digits_only = self.edit_field == "age"
-            cap = _MAX_BIO if self.edit_field == "bio" else _MAX_NAME
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 self._commit_edit()
-            elif event.key == pygame.K_BACKSPACE:
-                self.edit_buf = self.edit_buf[:-1]
-            elif event.unicode and len(self.edit_buf) < cap \
-                    and (event.unicode.isdigit() if digits_only
-                         else event.unicode.isprintable()):
-                self.edit_buf += event.unicode
+            else:
+                self.edit_text.key(event)
             return
         if event.type == pygame.MOUSEWHEEL:
             for rect, attr, top in ((self._form_rect, "scroll", self._scroll_max),
@@ -677,9 +673,11 @@ class CharEditorScreen(Screen):
         edit_w = 0 if editing else F["micro"].size("edit")[0] + T.S
         vw = rect.right - T.S - edit_w - vx
         if editing:
-            shown = self.edit_buf + "|"
-            while len(shown) > 1 and F["body_sm"].size(shown)[0] > vw:
-                shown = shown[1:]                 # keep the caret end in view
+            shown = self.edit_text.shown()
+            cut = 0
+            while cut < self.edit_text.caret and F["body_sm"].size(shown[cut:])[0] > vw:
+                cut += 1                          # keep the caret in view
+            shown = shown[cut:]
         else:
             shown = ellipsize(str(value) or "(auto)", F["body_sm"], vw)
         text(screen, F["body_sm"], shown, (vx, rect.centery - 6), T.TX)
