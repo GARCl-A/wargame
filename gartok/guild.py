@@ -116,7 +116,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  leaving=None, ox_trails=0, vocation=None, recruit_seen=None,
                  licences=None, revealed=None, supply_runs_completed=0, met_factions=None,
-                 wildfire=None, boss_talks_seen=None, objectives_done=None):
+                 wildfire=None, boss_talks_seen=None, objectives_done=None, ruins_cleared=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -183,6 +183,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.met_factions = set(met_factions or ())         # hidden factions the guild has met (`factions.known`)
         self.supply_runs_completed = int(supply_runs_completed)
         self.boss_talks_seen = set(boss_talks_seen or ())   # `arena.BOSS_TALKS` keys already heard
+        self.ruins_cleared = set(ruins_cleared or ())       # foes slain / things taken in the Ancient Ruins
         self.wildfire = wildfire              # wildfire.Wildfire once the Coven's errand was taken, else None
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()

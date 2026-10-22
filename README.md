@@ -372,7 +372,9 @@ docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and i
 - **New battle scenario** (prebuilt map, deployment zones, lighting): a `Scenario`
   subclass with `build(battle)` in `scenario.py`; point a `world.Node` at it. A
   non-elimination objective goes through `Scenario.win_check` (capture-the-flag
-  `_FlagObjective` and `AncientRuinsScenario` already override it).
+  `_FlagObjective` and `AncientRuinsScenario` already override it); a place the squad
+  must walk out of keeps the field open with `holds_field`, and what a fight changes in
+  the world for good goes in `after_battle` (both on `AncientRuinsScenario`).
 - **New place on the map**: a `Node` in `world.NODES` listing its `functions` + edges in
   `world.EDGES` (cost in hours). Offering something already built is only the id in the list.
   A new kind of service is one `NodeFunction` in `node_functions.FUNCTIONS` (order kind, button

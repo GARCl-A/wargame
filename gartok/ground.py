@@ -28,6 +28,7 @@ class GroundObject:
         self.item_name = item_name
         self.contents = list(contents) if contents else []
         self.elevation = int(elevation)
+        self.fixture = False                # part of the place (a dungeon's chest): taken by hand, never field loot
 
     @classmethod
     def weapon(cls, pos, weapon_name):

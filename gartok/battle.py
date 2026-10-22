@@ -118,6 +118,7 @@ class Battle:
         self.intel = intel.Intel(self)
         self._mopup_open = False              # enemies down, allies still bleeding out
         self._capture_round = None            # enemies down: the round left to bind the fallen
+        self._held_open = False               # enemies down, the scenario keeps the field open
         if self.is_ctf:
             self._assign_flag_runners()
             
@@ -292,6 +293,13 @@ class Battle:
     def foe_units(self):
         """Every unit not on the player's side: the enemy and any further side."""
         return [u for u in self.units if u.team != "player"]
+
+    @property
+    def field_held(self):
+        """The field is the squad's to loot: every foe is down, or someone of the squad is still on
+        it (standing, or down and kept alive). A squad that ran from a live foe loots nothing."""
+        return (not any(u.alive for u in self.foe_units)
+                or any(c.survived and not c.fled for c in self.player_units))
 
     @property
     def mopping_up(self):
@@ -548,15 +556,25 @@ class Battle:
         return self.board.path_to(unit.pos, dest, blocked, unit.footprint, diags,
                                   vertical=unit.can_move_vertically, field=field)
 
-    def path_step_toward(self, unit, goal, budget, reach=1, avoid=frozenset()):
+    def _route_field(self, unit, avoid=frozenset()):
         allies, enemies = self.cells_by_side(unit)
         blocked = frozenset(enemies | self.board.walls | self.creature_cells()
                             | self._impassable_water(unit) | avoid)
-        target = self.unit_at(goal)
-        target_cells = self.cells_of(target) if target else None
         diags = self._walk_diags(unit)
         field = self._pf_field(unit.pos, unit.footprint, diags,
                                unit.can_move_vertically, blocked)
+        return allies, blocked, diags, field
+
+    def can_reach(self, unit, goal, reach=1):
+        """Can `unit` walk to within `reach` of the `goal` cell, however many turns it takes?"""
+        _allies, _blocked, _diags, (dist, _prev) = self._route_field(unit)
+        return any(cells_distance(cells(p, unit.footprint), [goal]) <= reach
+                   for p in (unit.pos, *dist))
+
+    def path_step_toward(self, unit, goal, budget, reach=1, avoid=frozenset()):
+        allies, blocked, diags, field = self._route_field(unit, avoid)
+        target = self.unit_at(goal)
+        target_cells = self.cells_of(target) if target else None
         return self.board.path_step_toward(unit.pos, goal, budget, blocked, unit.footprint,
                                            target_cells, allies, diags,
                                            vertical=unit.can_move_vertically, field=field,
@@ -683,6 +701,12 @@ class Battle:
                 self.log("Enemies down -- one round to bind the fallen before the fight ends.")
             if self.round_no <= self._capture_round + 1:
                 return None
+
+        if players_up and self.scenario.holds_field(self):
+            if not self._held_open:
+                self._held_open = True
+                self.log(self.scenario.held_note)
+            return None
 
         self.winner = "player"
         self._resolve_dangling_dying()

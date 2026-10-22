@@ -221,7 +221,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
 
     if arena_offer and won:                       # arena bout: the flat purse
         outcome.arena_reward = arena_offer.purse
-    elif won and battle.lethal:                   # lethal win: loot the field
+    elif won and battle.lethal and battle.field_held:   # lethal win, on the field: loot it
         outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
         bound = [c for c in battle.foe_units if c.captured]
         group = guild.group_of(survivors[0]) if survivors else None
@@ -246,7 +246,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
 
         # Award currency from any unopened chests remaining on the battlefield
         for obj in battle.ground:
-            if getattr(obj, "is_chest", False) and survivors:
+            if getattr(obj, "is_chest", False) and not obj.fixture and survivors:
                 for it in getattr(obj, "contents", []):
                     amt = loot.parse_currency(it)
                     if amt:
@@ -256,6 +256,10 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
                             s.money += share
                         if rem:
                             survivors[0].money += rem
+
+    after = getattr(getattr(battle, "scenario", None), "after_battle", None)
+    if after is not None:
+        after(guild, battle)
 
     outcome.deeds_earned = factions.settle(
         guild, factions.Event("battle", node=node, outcome=outcome))

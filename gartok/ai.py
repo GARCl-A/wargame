@@ -1399,6 +1399,39 @@ def _heist(battle, unit):
     return True
 
 
+def _fetch(battle, unit):
+    """Every foe is down and the scenario still holds the field (`Scenario.holds_field`): lift what
+    lies in reach, walk to the nearest chest or relic it can reach, and with none left make for
+    the way out and flee through it. True when the turn is spent."""
+    if any(f.alive for f in battle.foe_units):
+        return False
+    treasure = battle.scenario.treasure_on_floor(battle)
+    while (actions.PICK_UP.available(battle, unit)
+           and any(o in treasure for o in battle.ground_in_reach(unit))):
+        actions.PICK_UP.execute(battle, unit)
+        treasure = battle.scenario.treasure_on_floor(battle)
+    dest = (_reachable_step(battle, unit, treasure)
+            or _reachable_step(battle, unit, sorted(battle.escape_cells), reach=0))
+    if dest is not None and dest != unit.pos and unit.ap >= 1:
+        actions.MOVE.execute(battle, unit, dest)
+        unit.walking = False
+    if actions.FLEE.available(battle, unit) and _reachable_step(battle, unit, treasure) is None:
+        actions.FLEE.execute(battle, unit)
+    battle.check_objective()
+    if battle.winner is None and battle.active is unit:
+        battle.end_turn()
+    return True
+
+
+def _reachable_step(battle, unit, goals, reach=1):
+    """The step toward the nearest of `goals` (ground objects or cells) the unit can get to, or None."""
+    cells = [getattr(g, "pos", g) for g in goals]
+    for goal in sorted(cells, key=lambda c: grid_distance(unit.pos, c)):
+        if battle.can_reach(unit, goal, reach):
+            return battle.path_step_toward(unit, goal, unit.speed, reach=reach)
+    return None
+
+
 def take_turn(battle, unit):
     if unit.dormant:
         enemies = [u for u in battle.units if u.alive and u.team != unit.team]
@@ -1417,6 +1450,8 @@ def take_turn(battle, unit):
     if getattr(unit, "patrol_route", None) and not getattr(unit, "alerted", False) and _patrol(battle, unit):
         return
     if unit.team == "player" and hasattr(battle.scenario, "heist_goal") and _heist(battle, unit):
+        return
+    if unit.team == "player" and hasattr(battle.scenario, "treasure_on_floor") and _fetch(battle, unit):
         return
 
     if _should_delay(battle, unit):

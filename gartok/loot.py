@@ -123,6 +123,8 @@ def field_loot(battle, fallen_combatants, rng=random):
                 if rng.random() < BATTLEFIELD_SPARE_THE_DYING_CHANCE:
                     pool.append(SPARE_THE_DYING_SCROLL)
     for obj in battle.ground:
+        if obj.fixture:
+            continue
         if obj.is_weapon and obj.weapon_name:
             pool.append(obj.weapon_name)
         elif obj.is_torch:

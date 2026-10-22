@@ -2050,6 +2050,17 @@ distinct from open-air wilderness or arena battlefields:
   relics (e.g. the `Ancient Codex` for the Library faction) and ancient boss
   guardians (`The Ancient Archivist`), offering high-tier loot including rare spell
   scrolls (`Scroll of Sleep`).
+- **The squad walks out.** The Ruins' fight never ends on its own
+  (`Scenario.holds_field`): once the last foe is down the place is the squad's to
+  search, and it leaves by fleeing through the entrance. Out with every foe down
+  (or with the Codex) is a victory; the field loot is only what the foes carried.
+  The chest, the traps and the Codex are part of the place (`GroundObject.fixture`):
+  only a hand takes them, never the field loot.
+- **The Ruins remember.** Each delve records what it changed in
+  `Guild.ruins_cleared` (saved): a foe slain stays slain, a chest opened or a relic
+  lifted is gone, and what was left waits for the next delve
+  (`AncientRuinsScenario.after_battle`). With every foe dead, the chest open and
+  the Codex out, the map offers no way in (`scenario.ruins_empty`).
 
 ### Crime and justice 🟡
 

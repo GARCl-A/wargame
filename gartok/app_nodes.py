@@ -177,6 +177,11 @@ class NodeScreensMixin:
                                               on_done=self._after_activity)
 
     def _enter_ancient_ruins(self, group, node):
+        from .scenario import ruins_empty
+        if ruins_empty(self.guild):
+            self._map_notices.append("The Ancient Ruins lie silent: nothing is left down there.")
+            self._after_activity()
+            return
         if wagon_watch.needs_watch(group):
             self.scene = WatchScreen(self.ui_fonts, group, node, "ENTER THE RUINS",
                                      on_confirm=lambda party, guarded: self._delve(group, node, party, guarded),
@@ -187,7 +192,7 @@ class NodeScreensMixin:
     def _delve(self, group, node, squad, guarded):
         from .scenario import AncientRuinsScenario
         self._leave_outside(group, node, guarded)
-        scenario = AncientRuinsScenario()
+        scenario = AncientRuinsScenario(self.guild.ruins_cleared)
         battle = Battle(squad, scenario.enemies, scenario=scenario,
                         daylight=False, lethal=True, clock_day=self.guild.clock.day, aggressor="player")
         self._battle_squad = squad

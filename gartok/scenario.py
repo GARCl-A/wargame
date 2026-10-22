@@ -19,6 +19,7 @@ torch scatter). A concrete location on the world map picks a subclass:
   mixin) on the procedural pit / on an authored map.
 """
 
+import functools
 import random
 
 from . import data, encounters
@@ -84,6 +85,17 @@ class Scenario:
         """May the player's side leave the field now as winners (`Battle.withdraw`)? Only
         a scenario whose objective can be met before every foe is down says yes."""
         return False
+
+    held_note = "The last foe is down."
+
+    def holds_field(self, battle):
+        """Does the fight run on once every foe is down (`Battle._check_winner`)? A place the
+        squad has to walk out of says yes; `held_note` is the log line when it starts."""
+        return False
+
+    def after_battle(self, guild, battle):
+        """What the fight leaves in the world once it is over (`campaign.absorb_battle`).
+        The base scenario leaves nothing."""
 
     def win_check(self, battle):
         """Force a winner on a non-elimination objective: return "player" or
@@ -412,7 +424,9 @@ class AncientRuinsScenario(Scenario):
     outdoor = False
     torch_count = 0
 
-    def __init__(self):
+    def __init__(self, cleared=None):
+        """`cleared` is `Guild.ruins_cleared`: the foes slain and the things taken on earlier
+        delves, which this one leaves out."""
         from . import map_lib
         try:
             m = map_lib.load_map("ancient-ruins")
@@ -432,7 +446,12 @@ class AncientRuinsScenario(Scenario):
         self.escape_cells = {tuple(c) for c in m.get("escape_cells", [[0, 7], [0, 8], [1, 7], [1, 8]])}
         self._player_deploy = [tuple(c) for c in m.get("deploy_player",
             [(1, 7), (1, 8), (2, 7), (2, 8), (2, 6), (2, 9), (3, 7), (3, 8)])]
-        self.enemies = map_lib.npc_units(m)
+        self.cleared = set(cleared or ())
+        self.enemies = []
+        for i, u in enumerate(map_lib.npc_units(m)):
+            u.ruins_key = f"npc:{i}"
+            if u.ruins_key not in self.cleared:
+                self.enemies.append(u)
 
     def _build_walls(self):
         w = set()
@@ -512,18 +531,20 @@ class AncientRuinsScenario(Scenario):
             if p not in battle.board.walls:
                 battle.ground.append(GroundObject.torch(p))
 
-        for tr in self._traps:
-            pos = (tr[0], tr[1])
-            ttype = str(tr[2]).lower()
-            battle.ground.append(GroundObject.trap(pos, ttype, "enemy"))
-
-        for ch in self._chests:
+        for i, tr in enumerate(self._traps):
+            self._lay(battle, f"trap:{i}", GroundObject.trap((tr[0], tr[1]), str(tr[2]).lower(), "enemy"))
+        for i, ch in enumerate(self._chests):
             if len(ch) >= 3 and battle.board.in_bounds((ch[0], ch[1])):
-                battle.ground.append(GroundObject.chest((ch[0], ch[1]), list(ch[2])))
-
-        for rel in self._relics:
+                self._lay(battle, f"chest:{i}", GroundObject.chest((ch[0], ch[1]), list(ch[2])))
+        for i, rel in enumerate(self._relics):
             if len(rel) >= 3 and battle.board.in_bounds((rel[0], rel[1])):
-                battle.ground.append(GroundObject.relic((rel[0], rel[1]), rel[2]))
+                self._lay(battle, f"relic:{i}", GroundObject.relic((rel[0], rel[1]), rel[2]))
+
+    def _lay(self, battle, key, obj):
+        if key not in self.cleared:
+            obj.ruins_key = key
+            obj.fixture = True
+            battle.ground.append(obj)
 
     def win_check(self, battle):
         players = list(battle.player_units)
@@ -534,6 +555,46 @@ class AncientRuinsScenario(Scenario):
             data.CODEX_ITEM in getattr(u, "picked_up_items", []) 
             for u in players
         )
-        if not standing and fled and has_codex:
+        if not standing and fled and (has_codex or not any(u.alive for u in battle.foe_units)):
             return "player"
         return None
+
+    held_note = "The last foe is down. The ruins are yours to search -- leave by the entrance."
+
+    def holds_field(self, battle):
+        return True
+
+    def treasure_on_floor(self, battle):
+        """The chests and relics still where the ruins keep them: someone has to go and take them."""
+        return [o for o in battle.ground if o.is_relic or o.is_chest]
+
+    def after_battle(self, guild, battle):
+        """The ruins remember the delve: a foe down stays down, and what a hand took off the
+        floor is not there next time. The rest (a chest unopened, a trap unsprung, the Codex)
+        is part of the place, not field loot: it waits for the next delve."""
+        for c in battle.foe_units:
+            key = getattr(c.char, "ruins_key", None)
+            if key and not c.alive:
+                guild.ruins_cleared.add(key)
+        left = {o.ruins_key for o in battle.ground if getattr(o, "ruins_key", None)}
+        guild.ruins_cleared |= self._laid_keys() - left
+
+    def _laid_keys(self):
+        keys = {f"trap:{i}" for i in range(len(self._traps))}
+        keys |= {f"chest:{i}" for i in range(len(self._chests))}
+        keys |= {f"relic:{i}" for i in range(len(self._relics))}
+        return keys - self.cleared
+
+
+def ruins_empty(guild):
+    """Every foe of the Ancient Ruins is dead and its chests and the Codex are taken: nothing is
+    left down there."""
+    return _ruins_keys() <= guild.ruins_cleared
+
+
+@functools.cache
+def _ruins_keys():
+    scenario = AncientRuinsScenario()
+    return frozenset({u.ruins_key for u in scenario.enemies}
+                     | {f"chest:{i}" for i in range(len(scenario._chests))}
+                     | {f"relic:{i}" for i in range(len(scenario._relics))})

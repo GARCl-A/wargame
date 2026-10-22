@@ -12,6 +12,7 @@ from . import (
     node_functions,
     ox,
     rest,
+    scenario,
     serpent_nest,
     wildfire,
 )
@@ -154,14 +155,19 @@ class MapInspectorMixin:
             blocks += self._wildfire_blocks(g, focus)
         trail_cold = here.has("ox_hunt") and missions.pending_ox(self.guild) is None
         front_quiet = here.has("skirmish") and missions.pending_front(self.guild, g) is None
+        ruins_empty = here.has("ancient_ruins") and scenario.ruins_empty(self.guild)
         offered = [f for f in node_functions.offered(here)
                    if f.label and (f.id != "property" or self._has_property_business())
                    and (f.id != "ox_hunt" or not trail_cold)
                    and (f.id != "skirmish" or not front_quiet)
-                   and (f.id != "camp_fight" or not focus.cleared)]
+                   and (f.id != "camp_fight" or not focus.cleared)
+                   and (f.id != "ancient_ruins" or not ruins_empty)]
         if trail_cold:
             blocks.append({"type": "text", "color": T.TX_FAINT,
                            "text": "The trail is cold. Only the tanner's job brings you back here."})
+        elif ruins_empty:
+            blocks.append({"type": "text", "color": T.TX_FAINT,
+                           "text": "The ruins lie silent. Nothing is left down there."})
         elif front_quiet:
             blocks.append({"type": "text", "color": T.TX_FAINT,
                            "text": "The line holds without you. Only the Faith Order's errand "
