@@ -2,7 +2,7 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Next is
-the battle polish below; the map waits until the battle is good.
+step 1 below.
 
 ## Decisions so far
 
@@ -58,7 +58,8 @@ the battle polish below; the map waits until the battle is good.
   and the game's art.
 - **`gartok/web/client/`** is the screen: `board.js` paints the board and `battle.js`
   handles input, tokens, panels and effects.
-- **Launch:** `python -m gartok.web --fight <lab fight>`.
+- **Launch:** `python -m gartok.web --fight <lab fight>`, or double-click
+  [references/battle_mockup/play_battle.bat](references/battle_mockup/play_battle.bat) and pick a fight.
 - **Tests:** `tests/test_web.py`.
 
 ## Spike result (2026-10-23)
@@ -77,59 +78,56 @@ the battle polish below; the map waits until the battle is good.
 - **Look:** it reaches the mockup's direction on live data. The author's verdict:
   better, but a lot to improve in colour, fluidity and light.
 
+## How to continue
+
+"Seguir com plano de ui" means: take the first step below not marked done, do only that
+step, meet its **Done when**, commit, then mark it done here and note anything it
+changed for the steps after it. One step per session. Start from this file, not from
+exploring the code.
+
+Two rules hold for every step:
+
+- **Tests first, screenshots at milestones.** A step's rules are tested in pytest
+  through the API (`tests/test_web.py`). A screenshot (1920x1080) is taken only when the
+  step is about the look.
+- **pygame is frozen.** It stays the shipping front-end until step 10, and nothing in a
+  step may break it. A new feature meanwhile gets a working pygame screen, with no
+  polish.
+
 ## Next steps, in order
 
-### 1. Fluidity
+The order puts the steps with a clear test first and the ones tuned by eye last. Light
+and colour wait for the art, because tuning them before the textures exist is work
+that the real art throws away.
+
+### 1. Battle: fluidity — todo
 
 `ai.take_turn` resolves a unit's whole turn in one call, so the client sees only the
 result: tokens jump in a straight line and the blow has already landed.
 
 - The session records each step of an AI turn (each move with its path, each action
   with its target) and returns them in order.
-- The client animates them one at a time:
-  - the token walks the path cell by cell;
-  - the strike lands with its number;
-  - a short pause between steps.
+- The client animates them one at a time: the token walks the path cell by cell, the
+  strike lands with its number, a short pause between steps. The player's own moves
+  walk the path too.
+- The fog and light layer is redrawn only when sight changes; the static layer is
+  already cached.
+- No rule changes.
 
-  The player's own moves walk the path too.
-- Redraw only what changed: the static layer is already cached; the fog and light layer
-  is redrawn only when sight changes.
-- No rule changes. Test: the steps of a turn add up to the same end state.
+**Done when:** a test shows the steps of a turn add up to the same end state as one
+`take_turn`; in the browser, every move walks and every blow lands visibly.
 
-### 2. Light
+### 2. Battle: speed on big boards — todo
 
-Today the light is one flat level per cell, blurred. It still reads as blocky, flat in
-daylight, and too weak in the dark.
+Profile the Necromancer fight. The likely costs are `visible_cells` and `cell_levels`
+over every cell on every request: cache them per step instead of per request.
 
-- The server also sends the light sources the side can see (torches, fire, lit units)
-  and the walls around them.
-- The client draws real light: a visibility polygon from each source, cut by the walls,
-  with a warm radial falloff.
-- Darkness gets weight indoors. Daylight gets a direction (a soft shadow on each wall)
-  instead of flat paper.
-- The rule stays in Python: the client paints light only inside the cells
-  `visible_cells` already allows.
+**Done when:** the Necromancer fight's worst request is under 100 ms (218 ms median and
+485 ms worst today), measured by the same API run as the spike.
 
-### 3. Colour
+### 3. Battle: parity with pygame — todo
 
-Floor, walls, blank paper and remembered ground sit in nearly the same beige, and the
-UI is warm on warm.
-
-- Fix one value scale and hold every layer to it:
-  - unseen paper: light;
-  - floor: mid;
-  - walls: dark;
-  - tokens: the highest contrast.
-- Add a cooler accent in the chrome so it does not melt into the board.
-- Tint each place's floor from one texture: arena warm, cave cool, grass green-grey.
-- Generate the art still missing with Gemini, anchored on the reference portraits:
-  - a wall sheet;
-  - UI frames (9-slice);
-  - outdoor floors (earth, grass, sand).
-
-### 4. Parity with the pygame battle
-
-Each of these exists in pygame and is missing here:
+Each of these exists in the pygame battle and is missing here; each gets its test:
 
 - zoom and pan on big boards;
 - the challenge dialogue (`talk_handler`), where the AI answers for now;
@@ -139,27 +137,94 @@ Each of these exists in pygame and is missing here:
 - the crit banner and sound;
 - the combat-log sink (`battle.record_to`).
 
-### 5. Speed on big boards
+**Done when:** every lab fight in `combat_lab.FIGHTS` (capture the flag and the Lair
+included) plays to its end in the browser with no AI stand-in for a human choice.
 
-Profile the Necromancer fight. The likely costs are `visible_cells` and
-`cell_levels` over every cell on every request. Cache them per step instead of per
-request.
+### 4. Art for the board — todo (the author, with Gemini; no code)
 
-### 6. Migration
+Anchored on the reference portraits: a wall sheet, UI frames (9-slice), and outdoor
+floors (earth, grass, sand). Files go in `gartok/web/client/img/`.
 
-pygame stays the shipping front-end until the web one covers the whole loop: a window
-cannot mix the two. The order:
+**Done when:** the files are in the repo. Steps 5 and 6 need them.
 
-1. battle (steps 1-5)
-2. map
-3. hub screens, after the market mockup. Two things it leaves open:
-   - a pack column holds about 12 rows; past that (or 6 shoppers, or wagons and animals
-     shopping along) the columns scroll sideways, as `ui/hscroll.ColumnScroll` does today;
-   - the shelf is 660px wide, room enough for the kit tab but not yet tried with the
-     Smithy's weapons tab (damage, hands, size).
-4. the rest (the title screen follows the menu mockup)
+### 5. Battle: colour — todo
 
-The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign hands
-the web session a battle, and settles it through `campaign.absorb_battle` as today. When
-the swap happens, `AGENTS.md` (the `ui/` rules) and `gartok/ui/README.md` are rewritten
-for the new layer, and `ui/` is retired.
+Floor, walls, blank paper and remembered ground sit in nearly the same beige, and the
+UI is warm on warm.
+
+- One value scale, every layer held to it: unseen paper light, floor mid, walls dark,
+  tokens the highest contrast.
+- A cooler accent in the chrome so it does not melt into the board.
+- Each place's floor tinted from one texture: arena warm, cave cool, grass green-grey.
+
+**Done when:** the author approves a screenshot of the fortress, the dungeon and the
+wilds.
+
+### 6. Battle: light — todo
+
+Today the light is one flat level per cell, blurred. It reads as blocky, flat in
+daylight, and too weak in the dark.
+
+- The server also sends the light sources the side can see (torches, fire, lit units)
+  and the walls around them.
+- The client draws a visibility polygon from each source, cut by the walls, with a warm
+  radial falloff. Darkness gets weight indoors; daylight gets a direction (a soft shadow
+  on each wall).
+- The rule stays in Python: the client paints light only inside the cells
+  `visible_cells` allows.
+
+**Done when:** the author approves the dungeon and the Necromancer fight at night. The
+battle is then finished.
+
+### 7. The shared base — todo
+
+Before the second screen, so each screen after it is a small adapter and not a rewrite.
+
+- **Server:** the `state` / `act` pattern of `battle_session` becomes generic: one
+  session class per screen that turns the domain into JSON (as `ui/` turns it into
+  dicts today) and applies its actions. The server routes by screen and can open any
+  screen on a save: `python -m gartok.web --save <world> --screen <id>`.
+- **Client:** a shell with a screen router, the CSS tokens (the mockups' palette and
+  the fonts), and the materials as components: paper panel, leather panel, brass
+  button, wax seal, item row, portrait frame.
+- The battle moves onto it with no change in look.
+
+**Done when:** the battle runs on the shell, and an empty second screen opens from a
+save through the same router.
+
+### 8. Map — todo
+
+1. A mockup at 1920x1080 in `references/map_mockup/`, in the menu mockup's language
+   (the map inked by hand), approved by the author before any code.
+2. The screen on the shared base, on a real save: groups, orders, travel, the
+   inspector, entering a node.
+
+**Done when:** a pygame session's map loop (move a group, issue each order kind, advance
+time, open a node) works in the browser, pygame's `map_screen.py` checked as the list.
+
+### 9. Hubs, then the rest — todo
+
+- **Hubs:** one tabbed frame (the `TabbedHubScreen` equivalent) with the shop as its
+  first tab, following [market_mockup/](references/market_mockup/). Two things it
+  leaves open: past about 12 rows (or 6 shoppers, or wagons and animals shopping along)
+  the pack columns scroll sideways, as `ui/hscroll.ColumnScroll` does; the Smithy's
+  weapons tab (damage, hands, size) is not yet tried in the 660px shelf. The other
+  tabs (work, gathering, medic, jobs, initiation) then reuse the frame.
+- **The rest, by family:** each family not yet mocked gets one mockup before its first
+  screen (the guild and group sheets, the dialogues, the report after a fight); its
+  other screens follow without one. The title screen follows the menu mockup.
+
+**Done when:** every `*_screen.py` that the campaign can reach has a web screen.
+
+### 10. The swap — todo
+
+The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
+hands the web session a battle and settles it through `campaign.absorb_battle` as
+today. A window cannot mix pygame and the browser, so the swap is one move once the
+whole loop (title, map, hub, battle, report, map) runs in the browser:
+
+- the web front-end becomes `python -m gartok`;
+- pygame and `ui/` are retired;
+- `AGENTS.md` (the `ui/` rules) and `gartok/ui/README.md` are rewritten for the new layer.
+
+**Done when:** a new guild plays its first ten days with no pygame window.
