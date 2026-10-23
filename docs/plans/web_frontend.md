@@ -18,13 +18,24 @@ the battle polish below; the map waits until the battle is good.
 | 2026-10-23 | The transport is a stdlib HTTP server and the window is Edge or Chrome in `--app` mode; shipping is pywebview or Tauri, decided at the end. | No new dependency for the spike. pywebview's `pythonnet` is unverified on Python 3.14. |
 | 2026-10-23 | The server filters fog, sight and intel; the client never gets what the side does not know. | The client is untrusted. It is also the same rule `ai.py` lives by (`intel.known_fields`). |
 | 2026-10-23 | Fonts (Cinzel, EB Garamond, IM Fell English) ship in `gartok/web/client/fonts/`. | They must not be fetched at runtime. |
+| 2026-10-23 | The style holds off the board: the title screen and a shop were mocked in it, and the author approved both. | The battle alone did not prove the direction for the rest of the game; the menu and the market are its two most different screens. |
+| 2026-10-23 | A shop shows every shopper's whole kit as a readable list, one column per pack: worn slots and pack rows, each with icon, name, quantity and weight. The keeper is a strip across the top, not a column. | The first market mockup shrank the packs to rows of icon tiles beside a tall keeper page, and the author lost sight of the inventory, which is what the screen is for. |
 
 ## Art direction
 
 - **The table.** The game looks like the RPG's physical material (an engraved bestiary,
   a map inked by hand, character sheets) laid on a dark wooden table. The target is
   [references/battle_mockup/](references/battle_mockup/) (`battle.html`,
-  `battle_mockup.png`).
+  `battle_mockup.png`). The same language off the board:
+  [menu_mockup/](references/menu_mockup/) (the title screen: the menu beside the last
+  guild's charter, laid on the map it has walked) and
+  [market_mockup/](references/market_mockup/) (a shop: the keeper and the deal, the
+  shelf as a ledger page, the shoppers' packs, a ware in hand). Each folder is one HTML
+  page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
+  the item glyphs there stand in for art not made yet.
+- **Paper is for what you read, leather is for what you act on.** The board, the
+  bestiary, the shelf and the guild's charter are paper; the unit panel, the packs, the
+  purse and the buttons are dark leather and brass. A dragged ware is a paper slip.
 - **Rock** is ink hatching that fades away from the rooms. Walls are masonry, trees or
   boulders by place.
 - **Fog of war** reads the way a map would:
@@ -141,8 +152,12 @@ cannot mix the two. The order:
 
 1. battle (steps 1-5)
 2. map
-3. hub screens
-4. the rest
+3. hub screens, after the market mockup. Two things it leaves open:
+   - a pack column holds about 12 rows; past that (or 6 shoppers, or wagons and animals
+     shopping along) the columns scroll sideways, as `ui/hscroll.ColumnScroll` does today;
+   - the shelf is 660px wide, room enough for the kit tab but not yet tried with the
+     Smithy's weapons tab (damage, hands, size).
+4. the rest (the title screen follows the menu mockup)
 
 The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign hands
 the web session a battle, and settles it through `campaign.absorb_battle` as today. When

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ankareth Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=block" rel="stylesheet">
+<script src="icons.js"></script>
+<style>
+:root{
+  --ink:#24180e; --ink-2:#4a3522; --paper:#eadcbc; --paper-2:#d9c49b; --paper-3:#bfa477;
+  --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
+  --blood:#9a2f22; --blood-hi:#c9473a; --enamel:#2e5f8e; --enamel-hi:#5b8fc0;
+  --leather:#16110c; --leather-2:#231a12; --leather-3:#33261a;
+  --green:#6e9448;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  font-family:"EB Garamond",serif;color:var(--paper);
+  background:radial-gradient(ellipse 70% 60% at 45% 45%, #3b2a1b 0%, #20170f 55%, #0d0906 100%);
+  overflow:hidden}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.55;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .35' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .35  0 0 0 0 .2  0 0 0 1.2 -.2'/></filter><rect width='600' height='600' filter='url(%23n)'/></svg>")}
+#vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 85% 80% at 45% 46%, transparent 55%, rgba(0,0,0,.72) 100%)}
+.ico svg{width:100%;height:100%;display:block}
+.leather{position:absolute;border-radius:4px;background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.lbl{font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652}
+
+/* ---------- top bar ---------- */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.14em;color:var(--brass-hi);
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+.cartouche .sub{margin-top:7px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+.tabs{position:absolute;left:470px;top:22px;display:flex;gap:4px}
+.tabs span{font:600 12px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;padding:10px 18px;border-bottom:1px solid rgba(201,163,94,.2)}
+.tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
+#topright{margin-left:auto;display:flex;gap:10px;align-items:center}
+.ghost-btn{height:38px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:3px;
+  font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#b9a27c;
+  border:1px solid rgba(201,163,94,.28);background:linear-gradient(#211810,#17110b)}
+.ghost-btn .ico{width:18px;height:18px;color:#b9a27c}
+
+/* ---------- the keeper's strip ---------- */
+#keeper{left:32px;top:108px;width:1856px;height:124px;display:flex;align-items:center;padding:0 28px 0 150px}
+#keeper .med{position:absolute;left:22px;top:10px;width:104px;height:104px;border-radius:50%;
+  box-shadow:0 0 0 2px #120d08,0 0 0 5px var(--brass),0 0 0 7px #120d08,0 8px 14px rgba(0,0,0,.6)}
+#keeper .med img{width:100%;height:100%;border-radius:50%;display:block}
+.who-k{width:520px}
+.who-k h2{font:700 27px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.04em}
+.who-k .race{margin-top:5px;font:italic 15px/1 "IM Fell English",serif;color:#b59c76}
+.who-k q{display:block;margin-top:10px;font:italic 18px/1.25 "IM Fell English",serif;color:#d9c49b;quotes:"“" "”"}
+.vsep{width:1px;align-self:stretch;margin:18px 28px;background:linear-gradient(transparent,rgba(201,163,94,.35),transparent)}
+.deal{display:flex;align-items:center;gap:14px;width:470px}
+.deal .vm{width:54px;height:54px;border-radius:50%;flex:none;box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--enamel-hi),0 0 0 6px #120d08}
+.deal .vm img{width:100%;height:100%;border-radius:50%;display:block}
+.deal p{margin-top:7px;font:16px/1.25 "EB Garamond",serif;color:#c9b38c}
+.deal p b{font:600 13px/1 Cinzel,serif;letter-spacing:.06em;color:#f0dfb8}
+.marks{display:flex;gap:6px;margin-top:8px}
+.mark{font:600 9.5px/1 Cinzel,serif;letter-spacing:.14em;padding:5px 7px 4px;border-radius:2px;border:1px solid rgba(201,163,94,.3);color:#b9a27c}
+.mark.good{border-color:rgba(127,165,87,.6);color:#a9c98a;background:rgba(110,148,72,.12)}
+.rate{text-align:center;width:110px}
+.rate b{display:block;font:700 32px/1 Cinzel,serif;color:var(--brass-hi)}
+.rate span{display:block;margin-top:7px}
+.till{display:flex;align-items:center;gap:14px;margin-left:auto}
+.stack{position:relative;width:50px;height:44px;flex:none}
+.stack i{position:absolute;left:3px;width:44px;height:13px;border-radius:50%;
+  background:radial-gradient(ellipse at 40% 30%,#f6c39a,#b56a3a 50%,#5e2f15);box-shadow:0 0 0 1px #3a1e0c}
+.till b{display:block;font:700 30px/1 Cinzel,serif;color:#f0dfb8}
+.till small{display:block;margin-top:6px;font:italic 15px/1.2 "IM Fell English",serif;color:#a48b66;width:230px}
+
+/* ---------- paper ---------- */
+.page{position:absolute;color:var(--ink);border-radius:2px;
+  background:
+    radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.25),transparent 60%),
+    radial-gradient(ellipse at 90% 100%,rgba(120,80,30,.22),transparent 55%),
+    linear-gradient(175deg,#efe2c3,#dcc79d);
+  box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #5d4426,0 14px 24px rgba(0,0,0,.6)}
+.page:before{content:"";position:absolute;inset:7px;border:1px solid rgba(80,52,24,.45);
+  box-shadow:inset 0 0 0 4px rgba(80,52,24,.22);pointer-events:none}
+.kicker{font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#7d5c37;display:flex;align-items:center;gap:10px}
+.kicker:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.5),transparent)}
+.kicker em{order:2;font:italic 15px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142}
+
+/* ---------- the shelf ---------- */
+#shelf{left:32px;top:248px;width:660px;height:656px;padding:22px 24px}
+.shelfhead{display:flex;align-items:flex-end;margin-top:12px}
+.shelfhead h3{font:700 23px/1 Cinzel,serif;color:#2a1a0e}
+.cols,.row{display:grid;grid-template-columns:50px 1fr 62px 76px 56px 104px;align-items:center}
+.cols{margin-top:14px;padding:0 8px 7px;border-bottom:1px solid rgba(90,60,30,.45)}
+.cols span{font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#8a6c47}
+.r{text-align:right}.c{text-align:center}
+.row{position:relative;height:62px;padding:0 8px;border-bottom:1px dashed rgba(90,60,30,.28)}
+.row .ico{width:38px;height:38px;color:#3a2410}
+.row .nm{font:600 15.5px/1 Cinzel,serif;letter-spacing:.03em;color:#24170c}
+.row .use{margin-top:4px;font:italic 14px/1 "IM Fell English",serif;color:#6b5233}
+.row .wt,.row .stk{font:15px/1 "EB Garamond",serif;color:#4a3522}
+.row small{font-size:12.5px;color:#8a6c47}
+.pips{display:flex;gap:2px;justify-content:center;margin-top:5px}
+.pips i{width:5px;height:5px;border-radius:50%;background:#7d5c37}
+.pips i.off{background:transparent;box-shadow:inset 0 0 0 1px rgba(125,92,55,.5)}
+.row .price{font:700 19px/1 Cinzel,serif;color:#24170c}
+.row .price:before{content:"$";font-size:13px;color:#8a6c47;margin-right:1px}
+.qty{display:flex;justify-content:flex-end}
+.qty span{width:27px;height:27px;display:grid;place-items:center;font:700 15px/1 Cinzel,serif;color:#4a3420;
+  border:1px solid rgba(90,60,30,.45);background:rgba(255,250,235,.35)}
+.qty span.n{width:34px;border-left:0;border-right:0;color:#24170c;background:rgba(255,250,235,.6)}
+.row.hover{background:linear-gradient(90deg,rgba(201,163,94,0),rgba(201,163,94,.22) 20%,rgba(201,163,94,.22) 80%,rgba(201,163,94,0))}
+.row.picked{background:rgba(90,60,30,.10)}
+.row.picked:after{content:"";position:absolute;inset:5px 2px;border:2px dashed rgba(122,35,24,.6);border-radius:3px;pointer-events:none}
+.row.picked>*{opacity:.45}
+.row.out>*{opacity:.42}
+.row.out .price{text-decoration:line-through}
+.soldout{position:absolute;right:6px;top:19px;transform:rotate(-6deg);opacity:1!important;
+  font:700 11px/1 Cinzel,serif;letter-spacing:.18em;color:#8e2a1e;border:2px solid #8e2a1e;padding:6px 9px 5px;border-radius:3px;background:rgba(239,226,195,.6)}
+.shelffoot{position:absolute;left:24px;right:24px;bottom:20px;font:italic 14.5px/1.3 "IM Fell English",serif;color:#7b6142;
+  border-top:1px solid rgba(90,60,30,.35);padding-top:10px}
+.shelffoot b{font:600 10.5px/1 Cinzel,serif;letter-spacing:.2em;color:#4a3420;font-style:normal}
+
+/* ---------- the shoppers: one column per pack ---------- */
+#band{position:absolute;left:712px;top:248px;width:1176px;height:656px;display:flex;gap:12px}
+.col{position:relative;flex:1;border-radius:4px;padding:14px 14px 0;
+  background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.col.drop{box-shadow:inset 0 1px 0 rgba(240,215,158,.25),inset 0 0 0 1px rgba(240,215,158,.55),0 0 0 2px var(--brass-hi),0 0 34px rgba(240,215,158,.3),0 10px 22px rgba(0,0,0,.6)}
+.chead{display:flex;gap:12px;align-items:center}
+.chead .med{position:relative;width:62px;height:62px;border-radius:50%;flex:none;
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--enamel-hi),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6)}
+.chead .med img{width:100%;height:100%;border-radius:50%;display:block}
+.chead .med.hurt img{filter:sepia(.35) brightness(.85)}
+.chead h3{font:700 18px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em}
+.chead .race{margin-top:4px;font:italic 14.5px/1 "IM Fell English",serif;color:#b59c76}
+.chead .voice{display:inline-block;margin-top:6px;font:600 8.5px/1 Cinzel,serif;letter-spacing:.18em;color:#1a120a;background:var(--brass);padding:3px 5px 2px;border-radius:2px}
+.cstat{display:flex;align-items:flex-end;gap:10px;margin-top:14px}
+.cstat .money{display:flex;align-items:center;gap:6px;font:700 20px/1 Cinzel,serif;color:#f0dfb8}
+.cstat .money i{width:17px;height:17px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f6c39a,#b56a3a 45%,#5e2f15 100%);box-shadow:0 0 0 1.5px #3a1e0c}
+.cstat .load{margin-left:auto;text-align:right;font:14px/1 "EB Garamond",serif;color:#c9b38c}
+.cstat .load b{font:600 15px/1 Cinzel,serif;color:#f0dfb8}
+.cstat .load.tight b{color:#e0a85a}
+.bar{height:6px;margin-top:7px;border-radius:3px;background:#120d08;box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#8d6a30,var(--brass))}
+.bar i.tight{background:linear-gradient(90deg,#9a6a2a,#e0a85a)}
+.bar i.add{background:repeating-linear-gradient(135deg,var(--brass-hi) 0 4px,#c9a35e 4px 8px);box-shadow:0 0 8px rgba(240,215,158,.6)}
+.sec{display:flex;align-items:center;gap:8px;margin:16px 0 4px}
+.sec:after{content:"";flex:1;height:1px;background:rgba(201,163,94,.2)}
+.it{position:relative;display:grid;grid-template-columns:28px 1fr auto 52px;gap:8px;align-items:center;height:31px;padding:0 6px;border-radius:2px}
+.it:nth-child(odd){background:rgba(255,235,190,.035)}
+.it .ico{width:22px;height:22px;color:#d8bd86}
+.it .n{font:16px/1 "EB Garamond",serif;color:#eadcbc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .q{font:600 12px/1 Cinzel,serif;color:var(--brass-hi)}
+.it .kg{font:14px/1 "EB Garamond",serif;color:#8f7a59;text-align:right}
+.it .slotname{font:600 8.5px/1 Cinzel,serif;letter-spacing:.16em;color:#7f6747;margin-right:6px}
+.it.empty .n{font-style:italic;color:#6f5a3e}
+.it.empty .ico{color:#4e3e2a}
+.it.coin .ico{color:#c98a5a}
+.it.sel{background:rgba(240,215,158,.12);box-shadow:inset 2px 0 0 var(--brass-hi)}
+.it.new{background:rgba(240,215,158,.16);box-shadow:inset 0 0 0 1px var(--brass-hi),0 0 14px rgba(240,215,158,.3)}
+.it.new .n{color:var(--brass-hi)}
+.it.new .kg{color:#e8d0a0}
+.cfoot{position:absolute;left:14px;right:14px;bottom:12px;font:italic 14px/1.25 "IM Fell English",serif;color:#8f7a59;
+  border-top:1px dashed rgba(201,163,94,.2);padding-top:9px}
+.cfoot b{font:700 12px/1 Cinzel,serif;color:var(--brass-hi);font-style:normal}
+
+/* the lantern in hand */
+.ghost{position:absolute;left:1112px;top:676px;width:230px;padding:10px 13px;display:flex;gap:12px;align-items:center;color:var(--ink);transform:rotate(-4deg);z-index:5;
+  background:linear-gradient(170deg,#f2e6c9,#e2d0a7);border-radius:2px;
+  box-shadow:0 0 0 1px #6b4f2c,0 0 0 4px #efe2c4,0 0 0 5px #6b4f2c,0 22px 30px rgba(0,0,0,.6)}
+.ghost .ico{width:42px;height:42px;color:#5a2116;flex:none}
+.ghost b{display:block;font:700 14px/1 Cinzel,serif;letter-spacing:.08em}
+.ghost span{display:block;margin-top:5px;font:italic 14.5px/1 "IM Fell English",serif;color:#5b4630}
+.ghost em{position:absolute;right:-14px;top:-14px;font:700 14px/1 Cinzel,serif;font-style:normal;color:#fff3ea;background:var(--blood);
+  padding:7px 9px 6px;border-radius:2px;box-shadow:0 4px 8px rgba(0,0,0,.4);transform:rotate(6deg)}
+.cursor{position:absolute;left:1302px;top:718px;width:26px;height:34px;z-index:6;
+  background:#f6ead0;clip-path:polygon(0 0,0 26px,7px 20px,12px 32px,17px 30px,12px 18px,22px 18px);filter:drop-shadow(0 2px 2px #000)}
+
+/* ---------- bottom ---------- */
+#sell{left:32px;top:920px;width:660px;height:142px;display:flex;align-items:center;gap:20px;padding:0 28px}
+#sell:before{content:"";position:absolute;inset:11px;border:1.5px dashed rgba(201,163,94,.32);border-radius:3px;pointer-events:none}
+#sell .ico{width:58px;height:58px;color:#d8bd86;flex:none}
+#sell h4{font:700 22px/1 Cinzel,serif;letter-spacing:.16em;color:#f0dfb8}
+#sell p{margin-top:7px;font:italic 15.5px/1.3 "IM Fell English",serif;color:#b59c76}
+#purse{left:712px;top:920px;width:1176px;height:142px;display:flex;align-items:center;padding:0 26px;gap:30px}
+#purse .sum{display:flex;align-items:baseline;gap:14px;margin-top:9px}
+#purse .sum b{font:900 44px/1 Cinzel,serif;color:var(--brass-hi);text-shadow:0 2px 0 #000}
+#purse .sum s{font:700 24px/1 Cinzel,serif;color:#8f7652;text-decoration:none}
+#purse .sum s:before{content:"→ ";color:#6f5a3e}
+#purse .split{flex:1;display:flex;gap:10px}
+#purse .share{flex:1;padding:10px 12px;border-radius:3px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(201,163,94,.15)}
+#purse .share span{display:block;font:600 11px/1 Cinzel,serif;letter-spacing:.08em;color:#c9b38c}
+#purse .share b{display:block;margin-top:6px;font:700 19px/1 Cinzel,serif;color:#f0dfb8}
+#purse .share b s{text-decoration:none;font:italic 14px/1 "IM Fell English",serif;color:#c9473a;margin-left:6px}
+.done{width:140px;height:78px;border-radius:3px;display:grid;place-items:center;text-align:center;flex:none;
+  background:linear-gradient(180deg,#f1e3c2,#d8c08f);
+  box-shadow:0 0 0 1px #5d4426,0 0 0 3px var(--brass),0 0 0 4px #2a1c10,0 10px 16px rgba(0,0,0,.5)}
+.done .ico{width:26px;height:26px;margin:0 auto;color:#5a2116}
+.done b{display:block;margin-top:6px;font:700 14px/1 Cinzel,serif;letter-spacing:.18em;color:#2a1a0e}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="top">
+    <div class="cartouche">
+      <div class="place">The Market</div>
+      <div class="sub"><b>Ankareth</b> · Day 23, morning — the traders speak Ankarin</div>
+    </div>
+    <div class="tabs"><span class="on">Shop</span></div>
+    <div id="topright">
+      <div class="ghost-btn"><span class="ico" data-i="knapsack"></span>Sheets</div>
+      <div class="ghost-btn"><span class="ico" data-i="exit-door"></span>Back to map</div>
+    </div>
+  </div>
+
+  <div class="leather" id="keeper">
+    <div class="med"><img src="img/merchant.png"></div>
+    <div class="who-k">
+      <h2>Surmanyx</h2>
+      <div class="race">Automaton · merchant · Lawful and Neutral</div>
+      <q>Price recorded. Weight recorded. Haggling permitted within tolerance.</q>
+    </div>
+    <div class="vsep"></div>
+    <div class="deal">
+      <div class="vm"><img src="img/human.png"></div>
+      <div>
+        <div class="lbl">The deal</div>
+        <p><b>Aldwen</b> speaks for the band</p>
+        <div class="marks"><span class="mark good">Speaks Ankarin</span><span class="mark good">Cha +2</span><span class="mark">Close bent</span></div>
+      </div>
+    </div>
+    <div class="rate"><b>96%</b><span class="lbl">You pay</span></div>
+    <div class="rate"><b>52%</b><span class="lbl">They pay</span></div>
+    <div class="vsep"></div>
+    <div class="till">
+      <div class="stack"><i style="top:29px"></i><i style="top:21px"></i><i style="top:13px"></i><i style="top:5px"></i></div>
+      <div><div class="lbl">In the till</div><b style="margin-top:6px">$186</b><small>refills at dawn; a sale above it is refused</small></div>
+    </div>
+  </div>
+
+  <div class="page" id="shelf">
+    <div class="kicker">The shelf <em>8 wares · restocked each day</em></div>
+    <div class="shelfhead"><h3>Consumables &amp; Kit</h3></div>
+    <div class="cols"><span></span><span>Ware</span><span class="r">Weight</span><span class="c">Stock</span><span class="r">Price</span><span class="r">Buy</span></div>
+    <div id="rows"></div>
+    <div class="shelffoot"><b>Drag</b> a ware onto a shopper to buy it · <b>Shift</b> picks several</div>
+  </div>
+
+  <div id="band"></div>
+
+  <div class="leather" id="sell">
+    <div class="ico" data-i="receive-money"></div>
+    <div>
+      <h4>Sell</h4>
+      <p>Drop an item from any pack here. Surmanyx pays about half: a Torch brings $1, a Lantern $15.</p>
+    </div>
+  </div>
+
+  <div class="leather" id="purse">
+    <div>
+      <div class="lbl">Common purse</div>
+      <div class="sum"><b>$312</b><s>$282</s></div>
+    </div>
+    <div class="split" id="split"></div>
+    <div class="done"><div><div class="ico" data-i="exit-door"></div><b>Done</b></div></div>
+  </div>
+
+  <div class="ghost"><div class="ico" data-i="lantern-flame"></div><div><b>Lantern</b><span>Light 6 · 1.0 kg</span></div><em>$30</em></div>
+  <div class="cursor"></div>
+
+  <div id="grain"></div>
+  <div id="vignette"></div>
+</div>
+
+<script>
+const ico=n=>`<svg viewBox="0 0 512 512">${ICONS[n]}</svg>`;
+
+// economy.SHELVES["market"]: name, icon, use, weight, stock, target, price
+const WARES=[
+  ["Torch","torch","Light 4 · burns down",0.5,24,30,2],
+  ["Lantern","lantern-flame","Light 6 · lasts",1.0,3,5,30,"picked"],
+  ["Musical Instrument","lyre","Play the tavern stage",2.0,5,5,4],
+  ["Bear Trap","wolf-trap","Hurts and holds the mover",3.0,2,4,35,"hover"],
+  ["Alarm Trap","alarm-clock","Stops the mover, wakes all",1.0,0,4,45,"out"],
+  ["Lumber","log","Campfire, wagon repair",2.0,14,20,7],
+  ["Flint and Steel","flint-spark","Lights a field campfire",0.3,4,5,40],
+  ["Rope","rope-coil","Climb, bind a captive",2.0,6,8,4],
+];
+document.getElementById("rows").innerHTML=WARES.map(([n,i,u,w,s,t,p,st])=>{
+  const pips=t<=8?`<div class="pips">${Array.from({length:t},(_,k)=>`<i class="${k<s?"":"off"}"></i>`).join("")}</div>`:"";
+  return `<div class="row ${st||""}"><div class="ico">${ico(i)}</div>
+    <div><div class="nm">${n}</div><div class="use">${u}</div></div>
+    <div class="wt r">${w.toFixed(1)} <small>kg</small></div>
+    <div class="stk c">${s} <small>/ ${t}</small>${pips}</div>
+    <div class="price r">${p}</div>
+    ${st==="out"?`<div class="soldout">Sold out</div>`:`<div class="qty"><span>−</span><span class="n">${st==="hover"?2:1}</span><span>+</span></div>`}</div>`;}).join("");
+
+// each shopper's whole kit: [icon, name, qty, kg each]
+const BAND=[
+  {n:"Othmirekir",img:"gnoll",race:"Gnoll · Hunter",max:16,
+   worn:[["Hand",["stone-spear","Shortspear",1,1.5]],["Hand",null],["Armour",["leather-vest","Leather Jerkin",1,4.0]]],
+   pack:[["stone-spear","Shortspear",2,1.5],["meat","Meat",3,1.0],["animal-hide","Hide",1,2.0],["torch","Torch",2,0.5],["two-coins","Copper Coin",84,.005]]},
+  {n:"Aldwen",img:"human",race:"Human · Soldier",max:18,voice:true,drop:true,
+   worn:[["Hand",["broadsword","Broadsword",1,4.0]],["Hand",null],["Armour",["leather-vest","Leather Jerkin",1,4.0]]],
+   pack:[["meat","Jerky",4,0.5],["potato","Potato",2,1.0],["rope-coil","Rope",1,2.0],["two-coins","Copper Coin",121,.005]],
+   add:["lantern-flame","Lantern",1,1.0]},
+  {n:"Raxel",img:"kenku",race:"Kenku · Thief",max:12,
+   worn:[["Hand",["plain-dagger","Dagger",1,0.5]],["Hand",["stiletto","Dagger",1,0.5]],["Armour",["hood","Cloak",1,1.0]]],
+   pack:[["torch","Torch",3,0.5],["round-bottom-flask","Minor Healing Potion",1,0.2],["flint-spark","Flint and Steel",1,0.3],["shiny-apple","Fruit",4,0.2],["two-coins","Copper Coin",62,.005]],sel:3},
+  {n:"Drovelob",img:"grippli",race:"Grippli · Musician",max:8,hurt:true,
+   worn:[["Hand",["plain-dagger","Dagger",1,0.5]],["Hand",null],["Armour",null]],
+   pack:[["lyre","Musical Instrument",1,2.0],["honey-jar","Fruit Compote",2,0.4],["two-coins","Copper Coin",45,.005]]},
+];
+const kg=(q,w)=>{const t=q*w;return t<0.05?"—":t.toFixed(1)+" kg"};
+const row=(it,cls,slot)=>{
+  if(!it) return `<div class="it empty"><div class="ico">${ico("knapsack")}</div><div class="n"><span class="slotname">${slot}</span>empty</div><span></span><span></span></div>`;
+  const [i,n,q,w]=it;
+  return `<div class="it ${cls||""} ${i==="two-coins"?"coin":""}"><div class="ico">${ico(i)}</div>
+    <div class="n">${slot?`<span class="slotname">${slot}</span>`:""}${n}</div><span class="q">${q>1?"×"+q:""}</span><span class="kg">${kg(q,w)}</span></div>`;
+};
+const money=u=>u.pack.filter(p=>p[0]==="two-coins").reduce((a,p)=>a+p[2],0);
+const load=u=>[...u.worn.map(w=>w[1]).filter(Boolean),...u.pack].reduce((a,[,,q,w])=>a+q*w,0);
+document.getElementById("band").innerHTML=BAND.map(u=>{
+  const l=load(u),add=u.add?u.add[2]*u.add[3]:0,tight=(l+add)/u.max>.85;
+  return `<div class="col ${u.drop?"drop":""}">
+    <div class="chead"><div class="med ${u.hurt?"hurt":""}"><img src="img/${u.img}.png"></div>
+      <div><h3>${u.n}</h3><div class="race">${u.race}</div>${u.voice?`<span class="voice">Speaks for the band</span>`:""}</div></div>
+    <div class="cstat"><div class="money"><i></i>${money(u)}</div>
+      <div class="load ${tight?"tight":""}"><b>${(l+add).toFixed(1)}</b> / ${u.max} kg</div></div>
+    <div class="bar"><i class="${tight?"tight":""}" style="width:${l/u.max*100}%"></i>${add?`<i class="add" style="width:${add/u.max*100}%"></i>`:""}</div>
+    <div class="sec lbl">Worn</div>
+    ${u.worn.map(([s,it])=>row(it,"",s)).join("")}
+    <div class="sec lbl">Pack</div>
+    ${u.pack.map((p,k)=>row(p,k===u.sel?"sel":"")).join("")}
+    ${u.add?row(u.add,"new"):""}
+    ${u.drop?`<div class="cfoot">Drop the Lantern here · <b>$30</b> from the purse, <b>1.0 kg</b> on Aldwen</div>`:
+      u.sel!==undefined?`<div class="cfoot">Fruit picked · drag it to another shopper or onto <b>Sell</b></div>`:
+      tight?`<div class="cfoot">Near his limit: <b>${(u.max-l).toFixed(1)} kg</b> left</div>`:""}
+  </div>`;}).join("");
+
+// what each pack gives toward the Lantern, in proportion to its copper
+const total=BAND.reduce((a,u)=>a+money(u),0);
+let left=30;const parts=BAND.map((u,i)=>{const p=i===BAND.length-1?left:Math.round(30*money(u)/total);left-=p;return p});
+document.getElementById("split").innerHTML=BAND.map((u,i)=>`<div class="share"><span>${u.n}</span><b>${money(u)}<s>−${parts[i]}</s></b></div>`).join("");
+
+document.querySelectorAll("[data-i]").forEach(e=>e.innerHTML=ico(e.dataset.i));
+
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=document.getElementById("stage");
+  st.style.transform=`scale(${s})`;st.style.left=(innerWidth-1920*s)/2+"px";st.style.top=(innerHeight-1080*s)/2+"px";}
+addEventListener("resize",fit);fit();
+</script>
+</body>
+</html>

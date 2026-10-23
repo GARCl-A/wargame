@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gartok Tactical</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=block" rel="stylesheet">
+<script src="icons.js"></script>
+<style>
+:root{
+  --ink:#24180e; --ink-2:#4a3522; --paper:#eadcbc; --paper-2:#d9c49b; --paper-3:#bfa477;
+  --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
+  --blood:#9a2f22; --blood-hi:#c9473a; --enamel:#2e5f8e; --enamel-hi:#5b8fc0;
+  --leather:#16110c; --leather-2:#231a12; --leather-3:#33261a;
+  --green:#6e9448;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  font-family:"EB Garamond",serif;color:var(--paper);
+  background:
+    radial-gradient(ellipse 55% 60% at 18% 30%, rgba(255,190,110,.10), transparent 70%),
+    radial-gradient(ellipse 70% 65% at 62% 52%, #3b2a1b 0%, #20170f 55%, #0d0906 100%);
+  overflow:hidden}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.55;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .35' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .35  0 0 0 0 .2  0 0 0 1.2 -.2'/></filter><rect width='600' height='600' filter='url(%23n)'/></svg>")}
+#vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 85% 80% at 50% 48%, transparent 55%, rgba(0,0,0,.75) 100%)}
+
+/* ---------- the title and the menu ---------- */
+#left{position:absolute;left:128px;top:118px;width:620px}
+.tagline{font:600 13px/1 Cinzel,serif;letter-spacing:.42em;color:var(--brass)}
+.title{margin-top:18px;font:900 136px/.86 Cinzel,serif;letter-spacing:.02em;white-space:nowrap;width:max-content;
+  background:linear-gradient(180deg,#fff0c4 0%,#e6c27a 38%,#b0853d 62%,#6e4b1c 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 #120c06) drop-shadow(0 0 26px rgba(240,200,120,.18))}
+.subtitle{margin-top:10px;font:34px/1 "IM Fell English SC",serif;letter-spacing:.62em;color:#cdb68c;padding-left:6px}
+.rule{display:flex;align-items:center;gap:14px;margin:30px 0 22px;color:var(--brass)}
+.rule:before,.rule:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--brass-lo) 20%,var(--brass-lo) 80%,transparent)}
+.rule span{font:22px/1 "IM Fell English",serif}
+.quote{font:italic 23px/1.38 "IM Fell English",serif;color:#bda57d;max-width:560px}
+.quote b{font-style:normal;font-weight:400;color:#e2cfa6}
+
+#menu{margin-top:44px;width:520px}
+.item{position:relative;display:flex;align-items:center;height:54px;padding:0 22px 0 26px;
+  font:700 19px/1 Cinzel,serif;letter-spacing:.16em;color:#e8d8b4}
+.item .hint{margin-left:auto;font:italic 17px/1 "IM Fell English",serif;letter-spacing:0;color:#8f7a59}
+.item .num{position:absolute;left:-30px;font:15px/1 "IM Fell English",serif;letter-spacing:0;color:#6f5a3e}
+.item.primary{height:66px;margin-bottom:6px;border-radius:3px;color:#2a1a0e;
+  background:linear-gradient(180deg,#f3e3bd,#d6bd8b);
+  box-shadow:0 0 0 1px #5d4426,0 0 0 3px var(--brass),0 0 0 4px #2a1c10,0 0 30px rgba(240,215,158,.22),0 12px 20px rgba(0,0,0,.6)}
+.item.primary .hint{color:#6b5233}
+.item.primary .num{color:var(--brass)}
+.item.primary .ico{width:30px;height:30px;margin-right:14px;color:#7a2318}
+.item.primary .ico svg{width:100%;height:100%}
+.item.hot{color:var(--brass-hi);
+  background:linear-gradient(90deg,rgba(201,163,94,.16),rgba(201,163,94,0) 85%)}
+.item.hot:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;background:var(--brass-hi);box-shadow:0 0 10px rgba(240,215,158,.6)}
+.item.hot .hint{color:#c9b38c}
+.gap{height:18px;margin:0 22px 0 26px;position:relative}
+.gap:after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px dashed rgba(201,163,94,.22)}
+.item.quiet{color:#a8936d}
+
+/* ---------- the table: map sheet + charter ---------- */
+#mapsheet{position:absolute;left:836px;top:56px;width:980px;height:690px;transform:rotate(-2.2deg);
+  filter:drop-shadow(0 22px 30px rgba(0,0,0,.75)) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+
+.charter{position:absolute;left:1296px;top:512px;width:530px;transform:rotate(1.6deg);color:var(--ink);
+  border-radius:2px;padding:30px 34px 26px;
+  background:
+    radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.28),transparent 60%),
+    radial-gradient(ellipse at 90% 100%,rgba(120,80,30,.24),transparent 55%),
+    linear-gradient(175deg,#f1e4c5,#dbc499);
+  box-shadow:inset 0 0 50px rgba(110,70,25,.3),0 0 0 1px #5d4426,0 26px 40px rgba(0,0,0,.7),0 4px 6px rgba(0,0,0,.5)}
+.charter:before{content:"";position:absolute;inset:9px;border:1px solid rgba(80,52,24,.5);
+  box-shadow:inset 0 0 0 4px rgba(80,52,24,.22);pointer-events:none}
+.kicker{font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#7d5c37;display:flex;align-items:center;gap:10px}
+.kicker:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.5),transparent)}
+.kicker em{font:italic 14px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;order:2}
+.head{display:flex;gap:22px;margin-top:20px;align-items:flex-start}
+.shield{width:104px;height:124px;flex:none;position:relative;
+  filter:drop-shadow(0 6px 8px rgba(40,20,5,.45))}
+.shield .body{position:absolute;inset:0;background:linear-gradient(160deg,#3f75a8,var(--enamel) 55%,#1c3d5e);
+  clip-path:path("M4 4 H100 V62 C100 96 74 112 52 122 C30 112 4 96 4 62 Z")}
+.shield .rim{position:absolute;inset:-4px;background:linear-gradient(160deg,var(--brass-hi),var(--brass-lo));
+  clip-path:path("M4 4 H108 V66 C108 102 80 120 56 130 C32 120 4 102 4 66 Z");z-index:-1}
+.shield .ico{position:absolute;left:24px;top:22px;width:56px;height:56px;color:#f3e3bd;filter:drop-shadow(0 2px 0 rgba(0,0,0,.4))}
+.shield .ico svg{width:100%;height:100%}
+.head h2{font:700 34px/1.02 Cinzel,serif;color:#2a1a0e;margin-top:4px}
+.head .voc{margin-top:10px;font:600 12px/1 Cinzel,serif;letter-spacing:.26em;color:#7a2318}
+.head .motto{margin-top:8px;font:italic 18px/1.3 "IM Fell English",serif;color:#5b4630}
+.ledger{display:flex;margin-top:24px;border-top:1px solid rgba(90,60,30,.35);border-bottom:1px solid rgba(90,60,30,.35)}
+.ledger div{flex:1;padding:12px 0 10px;text-align:center}
+.ledger div+div{border-left:1px dashed rgba(90,60,30,.3)}
+.ledger b{display:block;font:700 30px/1 Cinzel,serif;color:var(--ink)}
+.ledger span{display:block;margin-top:6px;font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:#7b6142}
+.roster{display:flex;gap:22px;margin-top:22px}
+.face{width:86px;text-align:center}
+.face .med{width:78px;height:78px;margin:0 auto;border-radius:50%;
+  box-shadow:0 0 0 2px #2a1c10,0 0 0 4px var(--enamel),0 0 0 6px #2a1c10,0 6px 10px rgba(40,20,5,.4)}
+.face .med img{width:100%;height:100%;border-radius:50%;display:block}
+.face .med.hurt img{filter:sepia(.3) brightness(.92)}
+.face b{display:block;margin-top:10px;font:600 12px/1 Cinzel,serif;letter-spacing:.06em;color:#2a1a0e}
+.face small{display:block;margin-top:3px;font:italic 13px/1 "IM Fell English",serif;color:#7b6142}
+.where{margin-top:20px;font:italic 17px/1.3 "IM Fell English",serif;color:#5b4630}
+.where b{font:600 12px/1 Cinzel,serif;letter-spacing:.18em;color:#2a1a0e;font-style:normal}
+
+.seal{position:absolute;right:-52px;bottom:-44px;width:136px;height:136px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 38% 32%,#d0574a,#9a2f22 45%,#5a160f 85%);transform:rotate(-8deg);
+  box-shadow:inset 0 0 0 7px rgba(70,15,10,.55),inset 0 0 0 9px rgba(255,170,150,.18),0 12px 22px rgba(0,0,0,.65)}
+.seal:before{content:"";position:absolute;inset:-6px;border-radius:50%;
+  background:radial-gradient(circle,transparent 66%,#8e2a1e 67%,#7a2218 72%,transparent 73%);
+  -webkit-mask:repeating-conic-gradient(#000 0 9deg,transparent 9deg 15deg);opacity:.95}
+.seal .ico{width:42px;height:42px;margin:0 auto;color:#f3d6c6;opacity:.9}
+.seal .ico svg{width:100%;height:100%}
+.seal b{display:block;font:700 15px/1 Cinzel,serif;letter-spacing:.16em;color:#fff3ea;margin-top:6px;text-shadow:0 1px 0 #3a0c06}
+.seal small{display:block;font:600 10px/1 Cinzel,serif;color:#f1b6a6;margin-top:4px;letter-spacing:.2em}
+.ribbon{position:absolute;right:4px;bottom:-96px;width:22px;height:84px;background:linear-gradient(90deg,#6b1a12,#9a2f22,#6b1a12);
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);transform:rotate(14deg);z-index:-1}
+
+/* coins left on the table */
+.tcoin{position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff1c8,#d5a94f 45%,#7a5520 100%);
+  box-shadow:0 0 0 1.5px #3a2610,0 4px 6px rgba(0,0,0,.6),inset 0 0 0 4px rgba(122,85,32,.35)}
+.tcoin.cu{background:radial-gradient(circle at 35% 30%,#f6c39a,#b56a3a 45%,#5e2f15 100%)}
+
+#foot{position:absolute;left:128px;bottom:40px;font:italic 15px/1 "IM Fell English",serif;color:#6f5a3e}
+#foot b{font:600 11px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;font-style:normal;margin-right:10px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="left">
+    <div class="tagline">A squad wargame · a sandbox guild</div>
+    <div class="title">GARTOK</div>
+    <div class="subtitle">Tactical</div>
+    <div class="rule"><span>❦</span></div>
+    <div class="quote">In Gartok <b>the risk pays.</b> Most of those who take it do not live to spend it.</div>
+    <div id="menu">
+      <div class="item primary"><span class="num">I</span><span class="ico" id="contico"></span>Continue<span class="hint">The Ashen Lantern · day 23</span></div>
+      <div class="item hot"><span class="num">II</span>New guild</div>
+      <div class="item"><span class="num">III</span>Load game<span class="hint">3 guilds</span></div>
+      <div class="gap"></div>
+      <div class="item"><span class="num">IV</span>Wiki &amp; compendium</div>
+      <div class="item"><span class="num">V</span>Settings</div>
+      <div class="item"><span class="num">VI</span>Editor<span class="hint">characters, maps, combat lab</span></div>
+      <div class="gap"></div>
+      <div class="item quiet"><span class="num">VII</span>Quit</div>
+    </div>
+  </div>
+
+  <canvas id="mapsheet" width="980" height="690"></canvas>
+
+  <div class="tcoin" style="left:1050px;top:880px;width:46px;height:46px"></div>
+  <div class="tcoin cu" style="left:1094px;top:906px;width:38px;height:38px"></div>
+  <div class="tcoin cu" style="left:1030px;top:930px;width:38px;height:38px"></div>
+  <div class="tcoin cu" style="left:1210px;top:960px;width:36px;height:36px"></div>
+
+  <div class="charter">
+    <div class="kicker">Last guild <em>saved 22 Oct, 23:41</em></div>
+    <div class="head">
+      <div class="shield"><div class="rim"></div><div class="body"></div><div class="ico" id="shieldico"></div></div>
+      <div>
+        <h2>The Ashen<br>Lantern</h2>
+        <div class="voc">Caravan</div>
+        <div class="motto">A coin that sits still is a coin half spent.</div>
+      </div>
+    </div>
+    <div class="ledger">
+      <div><b>23</b><span>Day</span></div>
+      <div><b>4</b><span>Members</span></div>
+      <div><b>7</b><span>Wins</span></div>
+      <div><b>3</b><span>Buried</span></div>
+    </div>
+    <div class="roster">
+      <div class="face"><div class="med"><img src="img/gnoll.png"></div><b>Othmirekir</b><small>Gnoll · lvl 3</small></div>
+      <div class="face"><div class="med"><img src="img/human.png"></div><b>Aldwen</b><small>Human · lvl 2</small></div>
+      <div class="face"><div class="med"><img src="img/kenku.png"></div><b>Raxel</b><small>Kenku · lvl 2</small></div>
+      <div class="face"><div class="med hurt"><img src="img/grippli.png"></div><b>Drovelob</b><small>Grippli · lvl 1</small></div>
+    </div>
+    <div class="where"><b>On the Old Road</b> · two groups abroad</div>
+    <div class="ribbon"></div>
+    <div class="seal"><div><div class="ico" id="sealico"></div><b>Continue</b><small>Enter</small></div></div>
+  </div>
+
+  <div id="foot"><b>Gartok Tactical</b>build 8e71481 · the lost RPG, rebuilt from its character generator</div>
+
+  <div id="grain"></div>
+  <div id="vignette"></div>
+</div>
+
+<script>
+const W=980,H=690;
+let seed=11; const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const rr=(a,b)=>a+(b-a)*rnd();
+const cv=document.getElementById("mapsheet"), g=cv.getContext("2d");
+
+function deckle(ctx){
+  ctx.beginPath(); const j=()=>rr(-3,3);
+  const pts=[]; for(let x=6;x<=W-6;x+=14)pts.push([x,6+j()]);
+  for(let y=6;y<=H-6;y+=14)pts.push([W-6+j(),y]);
+  for(let x=W-6;x>=6;x-=14)pts.push([x,H-6+j()]);
+  for(let y=H-6;y>=6;y-=14)pts.push([6+j(),y]);
+  pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p)); ctx.closePath();
+}
+function paper(ctx,w,h,base){
+  ctx.fillStyle=base; ctx.fillRect(0,0,w,h);
+  for(let i=0;i<26;i++){const x=rr(0,w),y=rr(0,h),r=rr(60,260);
+    const gr=ctx.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${rnd()<.5?"150,105,55":"255,248,225"},${rr(.04,.10)})`);gr.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=gr;ctx.fillRect(x-r,y-r,2*r,2*r);}
+  for(let i=0;i<4200;i++){ctx.fillStyle=`rgba(90,60,30,${rr(.03,.12)})`;ctx.fillRect(rr(0,w),rr(0,h),rr(.6,1.6),rr(.6,1.6));}
+  for(let i=0;i<50;i++){ctx.strokeStyle=`rgba(110,80,45,${rr(.04,.09)})`;ctx.lineWidth=rr(.5,1);
+    ctx.beginPath();const x=rr(0,w),y=rr(0,h);ctx.moveTo(x,y);ctx.bezierCurveTo(x+rr(-60,60),y+rr(-20,20),x+rr(-60,60),y+rr(-20,20),x+rr(-120,120),y+rr(-30,30));ctx.stroke();}
+}
+
+// the world as the guild knows it (world.NODES, hidden ones left out)
+const NODES={
+  city:["Ankareth",.289,.559,"city"], lumber_yard:["Lumber Yard",.189,.628], carpenter:["The Carpenter",.302,.653],
+  mine:["The Mine",.727,.413,"peak"], arena:["Arena",.397,.394], market:["Market",.407,.642], smith:["The Smithy",.382,.533],
+  tanner:["The Tannery",.218,.496], apothecary:["Apothecary",.31,.455], tavern:["Tavern",.118,.511], prison:["Prison",.24,.37],
+  road:["Old Road",.547,.501], wilds:["The Wilds",.642,.239,"wood"], ledger_hold:["Ledger Hold",.647,.717,"fort"],
+  frontier_outpost:["Frontier Outpost",.792,.831,"fort"], battlefield:["The Battlefield",.92,.687], wilds_territory:["The Claim",.794,.278,"wood"],
+  library:["The Library",.151,.415], farm:["The Farm",.183,.732], country_roads:["Country Roads",.259,.809],
+};
+const EDGES=[["city","arena"],["city","lumber_yard"],["city","carpenter"],["lumber_yard","carpenter"],["city","market"],["city","tavern"],["city","prison"],
+  ["city","library"],["city","farm"],["city","smith"],["city","tanner"],["city","apothecary"],["city","road"],["arena","road"],["road","wilds"],
+  ["road","ledger_hold"],["ledger_hold","frontier_outpost"],["frontier_outpost","battlefield"],["farm","country_roads"],["wilds","wilds_territory"],
+  ["road","mine"],["mine","wilds_territory"]];
+const MX=60,MY=40,MW=W-120,MH=H-80;
+const P=id=>[MX+NODES[id][1]*MW,MY+NODES[id][2]*MH];
+
+function inkLine(x0,y0,x1,y1,w,dash){
+  g.lineWidth=w;g.setLineDash(dash||[]);g.beginPath();g.moveTo(x0,y0);
+  const n=Math.max(3,Math.round(Math.hypot(x1-x0,y1-y0)/26)),nx=-(y1-y0),ny=x1-x0,l=Math.hypot(nx,ny)||1,bend=rr(-.08,.08);
+  for(let i=1;i<=n;i++){const t=i/n,s=Math.sin(t*Math.PI)*bend*Math.hypot(x1-x0,y1-y0);
+    g.lineTo(x0+(x1-x0)*t+nx/l*s+rr(-.8,.8),y0+(y1-y0)*t+ny/l*s+rr(-.8,.8));}
+  g.stroke();g.setLineDash([]);
+}
+function tree(x,y,s){
+  g.fillStyle="#d9c49b";g.strokeStyle="rgba(36,22,10,.85)";g.lineWidth=1.1;
+  g.beginPath();g.moveTo(x,y-s);g.quadraticCurveTo(x+s*.75,y-s*.2,x+s*.55,y+s*.25);g.lineTo(x-s*.55,y+s*.25);g.quadraticCurveTo(x-s*.75,y-s*.2,x,y-s);g.fill();g.stroke();
+  g.beginPath();g.moveTo(x,y+s*.25);g.lineTo(x,y+s*.6);g.stroke();
+  for(let i=0;i<3;i++){g.beginPath();g.moveTo(x+s*(.1+i*.12),y-s*.5+i*s*.22);g.lineTo(x+s*(.35+i*.08),y-s*.3+i*s*.22);g.stroke();}
+}
+function peak(x,y,s){
+  g.fillStyle="#e2d0a8";g.strokeStyle="rgba(36,22,10,.9)";g.lineWidth=1.4;
+  g.beginPath();g.moveTo(x-s,y+s*.5);g.lineTo(x-s*.1,y-s*.8);g.lineTo(x+s,y+s*.5);g.closePath();g.fill();g.stroke();
+  g.lineWidth=.9;for(let i=0;i<6;i++){const t=i/6;g.beginPath();g.moveTo(x-s*.1+t*s*.9,y-s*.8+t*s*1.3);g.lineTo(x-s*.1+t*s*.9-s*.25,y-s*.8+t*s*1.3+s*.05+s*.3);g.stroke();}
+}
+function town(x,y){
+  g.fillStyle="#e6d5b0";g.strokeStyle="#1d120a";g.lineWidth=2.4;
+  g.beginPath();g.arc(x,y,22,0,7);g.fill();g.stroke();
+  g.lineWidth=1.2;g.beginPath();g.arc(x,y,17,0,7);g.stroke();
+  for(let a=0;a<8;a++){const t=a/8*Math.PI*2;g.fillStyle="#1d120a";g.fillRect(x+Math.cos(t)*22-3,y+Math.sin(t)*22-3,6,6);}
+  g.fillStyle="#3a2414";[[-6,-4,7,9],[2,-8,6,13],[-3,4,10,6]].forEach(([dx,dy,w,h])=>g.fillRect(x+dx,y+dy,w,h));
+}
+function fort(x,y){
+  g.fillStyle="#e6d5b0";g.strokeStyle="#1d120a";g.lineWidth=2;g.fillRect(x-10,y-10,20,20);g.strokeRect(x-10,y-10,20,20);
+  for(const [dx,dy] of [[-10,-10],[10,-10],[-10,10],[10,10]]){g.beginPath();g.arc(x+dx,y+dy,4.5,0,7);g.fill();g.stroke();}
+}
+function spot(x,y){
+  g.fillStyle="#e6d5b0";g.strokeStyle="#1d120a";g.lineWidth=1.8;g.beginPath();g.arc(x,y,7,0,7);g.fill();g.stroke();
+  g.fillStyle="#1d120a";g.beginPath();g.arc(x,y,2.4,0,7);g.fill();
+}
+function label(text,x,y,size,align,sc){
+  g.font=sc?`${size}px 'IM Fell English SC'`:`italic ${size}px 'IM Fell English'`;
+  g.textAlign=align||"center";g.lineWidth=4;g.strokeStyle="rgba(230,213,176,.85)";g.strokeText(text,x,y);
+  g.fillStyle="#2c1c0e";g.fillText(text,x,y);g.textAlign="start";
+}
+
+function render(){
+  g.save();deckle(g);g.clip();paper(g,W,H,"#e6d5b0");
+  // a river from the north hills down past the city
+  g.strokeStyle="rgba(46,95,142,.55)";g.lineWidth=3;g.beginPath();
+  let rx=MX+.48*MW,ry=MY-10;g.moveTo(rx,ry);
+  for(const [x,y] of [[.46,.12],[.43,.24],[.47,.33],[.45,.45],[.47,.58],[.44,.72],[.47,.86],[.45,1.05]])
+    g.quadraticCurveTo(rx+rr(-30,30),(ry+MY+y*MH)/2,rx=MX+x*MW,ry=MY+y*MH);
+  g.stroke();
+  g.strokeStyle="rgba(46,95,142,.25)";g.lineWidth=1;for(let i=0;i<40;i++){const t=rnd();g.beginPath();const x=MX+(.45+rr(-.02,.03))*MW,y=MY+t*MH;g.moveTo(x,y);g.lineTo(x+6,y);g.stroke();}
+  // woods around the Wilds and the Claim, peaks by the Mine
+  for(let i=0;i<70;i++){const x=MX+rr(.55,.9)*MW,y=MY+rr(.05,.34)*MH;if(Math.hypot(x-P("wilds")[0],y-P("wilds")[1])<30||Math.hypot(x-P("wilds_territory")[0],y-P("wilds_territory")[1])<30)continue;tree(x,y,rr(8,12));}
+  for(let i=0;i<10;i++)tree(MX+rr(.02,.12)*MW,MY+rr(.55,.7)*MH,rr(7,10));
+  for(const [x,y,s] of [[.80,.40,18],[.86,.47,22],[.77,.57,16],[.89,.36,14],[.68,.56,13]])peak(MX+x*MW,MY+y*MH,s);
+  // field furrows at the Farm and Country Roads
+  g.strokeStyle="rgba(80,55,25,.35)";g.lineWidth=1;
+  for(let i=0;i<9;i++){const y=MY+(.76+i*.012)*MH;g.beginPath();g.moveTo(MX+.2*MW,y);g.lineTo(MX+.33*MW,y-8);g.stroke();}
+  // the roads
+  g.strokeStyle="rgba(42,26,12,.75)";
+  for(const [a,b] of EDGES){const [x0,y0]=P(a),[x1,y1]=P(b);inkLine(x0,y0,x1,y1,1.6,[7,5]);}
+  // the band's path, in enamel
+  g.strokeStyle="rgba(46,95,142,.9)";const [ax,ay]=P("city"),[bx,by]=P("road");inkLine(ax,ay,bx,by,3);
+  // places
+  for(const [id,[name,x,y,kind]] of Object.entries(NODES)){const [px,py]=P(id);
+    if(kind==="city")town(px,py); else if(kind==="fort")fort(px,py); else spot(px,py);}
+  const OFF={city:[0,42,20,true],tavern:[0,-14],tanner:[-4,-14],apothecary:[0,-14],smith:[30,4,14,false,"left"],market:[0,24],carpenter:[0,24],
+    lumber_yard:[-12,24],library:[0,-14],prison:[0,-14],arena:[0,-14],road:[0,-16],wilds:[0,26,17],wilds_territory:[0,26],mine:[0,30],
+    ledger_hold:[0,-18],frontier_outpost:[0,-18],battlefield:[0,-16],farm:[0,24],country_roads:[0,24]};
+  for(const [id,[name]] of Object.entries(NODES)){const [px,py]=P(id),[dx,dy,s,sc,al]=OFF[id]||[0,-14];label(name,px+dx,py+dy,s||14,al,sc);}
+  // the band on the Old Road: a pennant
+  const [qx,qy]=P("road");g.fillStyle="#2e5f8e";g.strokeStyle="#1a120a";g.lineWidth=1.4;
+  g.beginPath();g.moveTo(qx-1,qy-8);g.lineTo(qx-1,qy-40);g.stroke();
+  g.beginPath();g.moveTo(qx,qy-40);g.lineTo(qx+22,qy-40);g.lineTo(qx+22,qy-22);g.lineTo(qx+11,qy-27);g.lineTo(qx,qy-22);g.closePath();g.fill();g.stroke();
+  // what lies past the known: blank, with a margin note
+  g.save();g.translate(MX+.0*MW,MY+.27*MH);g.rotate(-.05);g.fillStyle="rgba(70,45,22,.55)";g.font="italic 17px 'IM Fell English'";
+  g.fillText("here the map is not yet drawn",0,0);g.restore();
+  // compass rose
+  const [cx,cy]=[W-100,150];g.strokeStyle="#2c1c0e";g.lineWidth=1.2;g.beginPath();g.arc(cx,cy,40,0,7);g.stroke();g.beginPath();g.arc(cx,cy,34,0,7);g.stroke();
+  for(let a=0;a<8;a++){const t=a/8*Math.PI*2-Math.PI/2,l=a%2?26:52,w=a%2?5:8;
+    g.fillStyle=a%4===0?"#2c1c0e":"#e6d5b0";g.beginPath();g.moveTo(cx+Math.cos(t)*l,cy+Math.sin(t)*l);
+    g.lineTo(cx+Math.cos(t+Math.PI/2)*w,cy+Math.sin(t+Math.PI/2)*w);g.lineTo(cx,cy);g.closePath();g.fill();g.stroke();
+    g.fillStyle=a%4===0?"#e6d5b0":"#2c1c0e";g.beginPath();g.moveTo(cx+Math.cos(t)*l,cy+Math.sin(t)*l);
+    g.lineTo(cx+Math.cos(t-Math.PI/2)*w,cy+Math.sin(t-Math.PI/2)*w);g.lineTo(cx,cy);g.closePath();g.fill();g.stroke();}
+  label("N",cx,cy-58,18,"center",true);
+  // the cartouche
+  g.font="700 26px Cinzel";g.fillStyle="#2c1c0e";g.textAlign="left";g.fillText("THE ENVIRONS OF ANKARETH",54,68);
+  g.font="italic 17px 'IM Fell English'";g.fillStyle="#5b4630";g.fillText("as walked by the Ashen Lantern, to the 23rd day",56,92);
+  g.strokeStyle="rgba(42,26,12,.6)";g.lineWidth=1;g.beginPath();g.moveTo(54,104);g.lineTo(420,104);g.stroke();
+  // inner border
+  g.strokeStyle="rgba(42,26,12,.55)";g.lineWidth=1.4;g.strokeRect(22,22,W-44,H-44);g.lineWidth=.8;g.strokeRect(28,28,W-56,H-56);
+  g.restore();
+}
+
+document.getElementById("contico").innerHTML=`<svg viewBox="0 0 512 512">${ICONS["lantern-flame"]}</svg>`;
+document.getElementById("shieldico").innerHTML=`<svg viewBox="0 0 512 512">${ICONS["lantern-flame"]}</svg>`;
+document.getElementById("sealico").innerHTML=`<svg viewBox="0 0 512 512">${ICONS["castle"]}</svg>`;
+
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=document.getElementById("stage");
+  st.style.transform=`scale(${s})`;st.style.left=(innerWidth-1920*s)/2+"px";st.style.top=(innerHeight-1080*s)/2+"px";}
+addEventListener("resize",fit);fit();
+document.fonts.ready.then(render);
+</script>
+</body>
+</html>
