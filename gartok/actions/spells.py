@@ -365,6 +365,11 @@ class _PlacedSpellAction(SpellAction):
         dist = grid_distance(battle.cells_of(actor)[0], target)
         return dist <= self.spell_range(actor, self.REACH) and _cell_free(battle, actor, target, footprint=1)
 
+    def highlight_cells(self, battle, actor):
+        (x0, y0), r = battle.cells_of(actor)[0], self.spell_range(actor, self.REACH)
+        return [(x, y) for x in range(x0 - r, x0 + r + 1) for y in range(y0 - r, y0 + r + 1)
+                if self.can(battle, actor, (x, y))]
+
 
 class LightGlobeAction(_PlacedSpellAction):
     spell_id = "light_globe"
@@ -379,6 +384,17 @@ class LightGlobeAction(_PlacedSpellAction):
 
 class FloatingDiskAction(_PlacedSpellAction):
     spell_id = "floating_disk"
+
+    def heights(self, battle, actor, tile):
+        """[(z, label)] the disk may float at over `tile`, highest first: the ground, the caster's
+        height and, over a pit, its floor. More than one asks the caster to pick."""
+        caster_z = battle.elevation(actor)
+        pit_z = battle.board.elevation_at(tile)
+        opts = []
+        for z in sorted({0, caster_z, pit_z}, reverse=True):
+            tags = (["Ground"] if z == 0 else []) + (["Caster"] if z == caster_z else [])                 + (["Pit floor"] if z == pit_z and pit_z != 0 else [])
+            opts.append((z, f"z={z}" + (f" ({'/'.join(tags)})" if tags else "")))
+        return opts
 
     def execute(self, battle, actor, target=None, elevation=None):
         if not self.can(battle, actor, target):

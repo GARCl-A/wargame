@@ -8,7 +8,7 @@ health is in `intel` steps, cells never seen carry no terrain, and the light is 
 
 import os
 
-from .. import actions, aftermath, ai, artwork, data, intel, lighting, vision
+from .. import actions, aftermath, ai, artwork, data, dialogue, intel, lighting, vision
 from ..battle_screen import BattleScreen
 from ..board import cells
 from ..combatant import AP_PER_TURN
@@ -51,7 +51,7 @@ class _StepTap:
             return decide()
         self.busy = True
         try:
-            before = {id(u): (u.pos, len(u.path)) for u in battle.units}
+            before = {id(u): (u.pos, len(u.path), u.hp, u.alive and u.hp > 0) for u in battle.units}
             result = decide()
             self.session.cut_step(before)
             return result
@@ -60,10 +60,14 @@ class _StepTap:
 
 
 class BattleSession:
-    def __init__(self, battle, meta=None, team="player"):
+    def __init__(self, battle, meta=None, controllers=None):
         self.battle = battle
         self.meta = meta or {}
-        self.team = team
+        self.controllers = {"player": "human", "enemy": "ai", **(controllers or {})}
+        humans = [t for t in ("player", "enemy") if self.controllers[t] == "human"]
+        self.team = humans[0] if humans else "player"      # whose eyes the board is drawn through
+        self.handoff = None                                 # a team about to take the seat: two at one screen
+        self.talk = None                                    # a challenge on the board being answered
         self.fog = FogMemory()
         self._log_seen = battle.log_total
         self.steps = None
@@ -72,13 +76,41 @@ class BattleSession:
         self._last_visible = set()
         self._sight_key = self._sight_val = None
         battle.sink = _StepTap(self, battle.sink)
+        if self.controllers["player"] == "human":
+            battle.talk_handler = self._open_talk
+
+    @property
+    def two_humans(self):
+        return self.controllers["player"] == self.controllers["enemy"] == "human"
 
     def plays(self, unit):
-        return unit.team == self.team and not unit.ai_ally
+        """A person moves `unit`: its side is human and it is not an allied NPC (`ai_ally`)."""
+        return self.controllers.get(unit.team) == "human" and not unit.ai_ally
 
     def my_turn(self):
         b = self.battle
-        return b.winner is None and not b.awaiting_flag and not b.awaiting_trap and self.plays(b.active)
+        self._sync_seat()
+        return (b.winner is None and self._setup() is None and self.talk is None and self.handoff is None
+                and self.plays(b.active) and b.active.team == self.team)
+
+    def _sync_seat(self):
+        """The side whose unit is up takes the seat; with two people at one screen the board waits
+        hidden (`handoff`) until the next one sits down (`take_seat`)."""
+        b = self.battle
+        if b.winner is None and self.handoff is None and self.plays(b.active) and b.active.team != self.team:
+            if self.two_humans:
+                self.handoff = b.active.team
+            else:
+                self.team = b.active.team
+
+    def _setup(self):
+        """What a person places before the fight starts: "flag", "trap", or None."""
+        b = self.battle
+        if b.awaiting_flag and self.controllers["player"] == "human":
+            return "flag"
+        if b.awaiting_trap and self.plays(b.awaiting_trap):
+            return "trap"
+        return None
 
     def uid(self, unit):
         return f"u{self.battle.units.index(unit)}"
@@ -94,10 +126,22 @@ class BattleSession:
         steps (see `cut_step`); does nothing on the player's turn or once the fight is over."""
         return self._stepped(self._advance, inspect)
 
-    def act(self, action_id, target=None, cell=None, inspect=None):
+    def act(self, action_id, target=None, cell=None, inspect=None, elevation=None):
         """The player's `action_id` ("move" walks to `cell`) on `target` (a unit id) or `cell`,
         as steps. Raises ValueError when it cannot be done now."""
-        return self._stepped(lambda: self._act(action_id, target, cell), inspect)
+        return self._stepped(lambda: self._act(action_id, target, cell, elevation), inspect)
+
+    def answer(self, verb=None, speaker=None, go_on=False, inspect=None):
+        """The player's part in a challenge on the board: pick the `speaker` (an index into the
+        members), try a `verb`, or `go_on` past the line it got."""
+        return self._stepped(lambda: self._answer(verb, speaker, go_on), inspect)
+
+    def take_seat(self, inspect=None):
+        """The next person has the screen: show them their side."""
+        if self.handoff is None:
+            raise ValueError("nobody is waiting for the seat")
+        self.team, self.handoff = self.handoff, None
+        return self.snapshot(inspect)
 
     def snapshot(self, inspect=None):
         """The board as it stands, as the one step of a fight just opened."""
@@ -111,7 +155,10 @@ class BattleSession:
         finally:
             steps, self.steps = self.steps, None
         if not steps or self._events_pending():
-            steps.append({"moves": [], **self._events(), "state": self.state(inspect)})
+            steps.append({"moves": [], "sounds": [], **self._events(), "state": self.state(inspect)})
+        log = self.battle.sink.inner
+        if self.battle.winner is not None and log is not None and not log.closed:
+            log.end(self.battle)
         return steps
 
     def _events_pending(self):
@@ -120,14 +167,24 @@ class BattleSession:
 
     def cut_step(self, before):
         """Close one step: the units that moved (each with the cells it went through, cut to
-        what the side can see), what the step showed, and the board after it."""
+        what the side can see), what the step showed, what it sounded like (heard whether seen
+        or not, as `BattleFX` plays it), and the board after it."""
         b = self.battle
         seen_before, shown_before = self._last_visible, self._shown
+        sounds = {kind for kind, _ in b.cues}
+        for u in b.units:
+            _, _, hp, up = before.get(id(u), (None, 0, u.hp, False))
+            if u.hp < hp:
+                sounds.add("hit")
+            if up and not (u.alive and u.hp > 0):
+                sounds.add("fall")
+        if "crit" in sounds:
+            sounds.discard("hit")
         state = self.state(self._inspect_id)
         visible = self._last_visible
         moves = []
         for u in b.units:
-            pos, n = before.get(id(u), (None, 0))
+            pos, n, _, _ = before.get(id(u), (None, 0, 0, False))
             if pos is None or u.pos == pos:
                 continue
             walked = u.path[n - 1:] if n and len(u.path) > n and u.path[n - 1] == pos else [pos, u.pos]
@@ -136,11 +193,11 @@ class BattleSession:
                                                    for cc in cells(c, u.footprint))]
             if len(walked) >= 2 and (u.team == self.team or self.uid(u) in self._shown | shown_before):
                 moves.append({"id": self.uid(u), "path": [_cell(c) for c in walked]})
-        self.steps.append({"moves": moves, **self._events(visible), "state": state})
+        self.steps.append({"moves": moves, "sounds": sorted(sounds), **self._events(visible), "state": state})
 
     def _advance(self):
         b = self.battle
-        if b.winner is not None or self.my_turn():
+        if b.winner is not None or self.my_turn() or self.talk or self.handoff or self._setup():
             return
         if b.awaiting_flag:
             team = b.active.team
@@ -153,12 +210,19 @@ class BattleSession:
         else:
             ai.take_turn(b, b.active)
 
-    def _act(self, action_id, target, cell):
+    def _act(self, action_id, target, cell, elevation=None):
         b = self.battle
+        cell = tuple(cell) if cell is not None else None
+        if action_id in ("plant_flag", "plant_trap", "skip_traps"):
+            return self._place(action_id, cell)
+        if action_id == "withdraw":
+            if not (b.can_withdraw and self.controllers["player"] == "human" and self.talk is None):
+                raise ValueError("the squad cannot leave yet")
+            b.withdraw()
+            return
         if not self.my_turn():
             raise ValueError("not your turn")
         actor = b.active
-        cell = tuple(cell) if cell is not None else None
         if action_id == "move":
             dest = self._anchor(actor, cell)
             if dest is None:
@@ -177,7 +241,11 @@ class BattleSession:
             elif action.target == "cell":
                 if cell is None or not action.can(b, actor, cell):
                     raise ValueError(f"{action.name} cannot reach that cell")
-                action.execute(b, actor, cell)
+                if hasattr(action, "heights"):
+                    heights = [z for z, _ in action.heights(b, actor, cell)]
+                    action.execute(b, actor, cell, elevation=elevation if elevation in heights else heights[0])
+                else:
+                    action.execute(b, actor, cell)
             elif action.aimed:
                 unit = self.unit(target) if target is not None else None
                 if unit is None or not action.can(b, actor, unit):
@@ -188,6 +256,79 @@ class BattleSession:
                     raise ValueError(f"{action.name} cannot be done now")
                 action.execute(b, actor)
         self._after_action()
+
+    def _place(self, action_id, cell):
+        b, setup = self.battle, self._setup()
+        if action_id == "plant_flag" and setup == "flag" and cell is not None and b.can_plant_flag(cell):
+            b.plant_flag(cell)
+        elif action_id == "plant_trap" and setup == "trap" and cell is not None \
+                and b.can_plant_trap(b.awaiting_trap, cell):
+            b.plant_trap(b.awaiting_trap, cell)
+        elif action_id == "skip_traps" and setup == "trap":
+            b.skip_traps()
+        else:
+            raise ValueError("that cannot be placed there")
+
+    def _setup_state(self):
+        b, setup = self.battle, self._setup()
+        board = [(x, y) for x in range(b.board.cols) for y in range(b.board.rows)]
+        if setup == "flag":
+            return {"kind": "flag", "cells": [_cell(c) for c in board if b.can_plant_flag(c)]}
+        if setup == "trap":
+            trapper = b.awaiting_trap
+            return {"kind": "trap", "trapper": self.uid(trapper), "name": trapper.name,
+                    "cells": [_cell(c) for c in board if b.can_plant_trap(trapper, c)]}
+        return None
+
+    # -- a challenge on the board (`lair.py`'s patrols), as `DialogueScreen` plays it -------- #
+    def _open_talk(self, encounter, members, done):
+        self.talk = {"enc": encounter, "members": list(members), "done": done,
+                     "speaker": dialogue.first_speaker(encounter, members), "result": None}
+
+    def _answer(self, verb, speaker, go_on):
+        talk = self.talk
+        if talk is None:
+            raise ValueError("nobody is talking")
+        if go_on:
+            result = talk["result"]
+            if result is None:
+                raise ValueError("nothing said yet")
+            if result.over:
+                self.talk = None
+                talk["done"](result)
+            else:
+                talk["result"] = talk["enc"].advance()
+            return
+        if talk["result"] is not None:
+            raise ValueError("go on first")
+        if speaker is not None:
+            if not 0 <= int(speaker) < len(talk["members"]):
+                raise ValueError("no such speaker")
+            talk["speaker"] = talk["members"][int(speaker)]
+        if verb is not None:
+            talk["result"] = talk["enc"].choose(verb, talk["speaker"], talk["members"])
+
+    def _talk_state(self):
+        talk = self.talk
+        if talk is None:
+            return None
+        enc, speaker, members = talk["enc"], talk["speaker"], talk["members"]
+        lead, result = enc.leader, talk["result"]
+        return {
+            "title": enc.title, "line": enc.line,
+            "leader": None if lead is None else {
+                "name": lead.name, "caption": enc.caption(lead),
+                "portrait": asset_url(artwork.portrait_path(lead.race["name"], getattr(lead, "portrait_id", None)))},
+            "foes": [f"{u.name} · {u.race['name']}" for u in enc.foes],
+            "speakers": [{"id": i, "name": u.name, "selected": u is speaker,
+                          "caption": f"CHA {u.mod_charisma:+d} · INT {u.mod_intelligence:+d} · "
+                                     f"{', '.join(u.languages) or 'no language'}"}
+                         for i, u in enumerate(members)] if enc.offered() else [],
+            "options": [] if speaker is None or result is not None else [
+                {"id": o.verb, "label": o.label, "note": o.note, "check": o.check, "odds": o.odds, "block": o.block}
+                for o in enc.options(speaker, members)],
+            "result": None if result is None else {"text": result.text, "kind": result.kind},
+        }
 
     def _after_action(self):
         b = self.battle
@@ -234,10 +375,17 @@ class BattleSession:
         actor, obs = b.active, self._observers()
         shown = [c for c in action.highlight_cells(b, actor)
                  if 0 <= c[0] < b.board.cols and 0 <= c[1] < b.board.rows]
-        targets = [self.uid(u) for u in action.highlight_targets(b, actor)
-                   if u.team == actor.team or vision.enemy_visible(b, obs, u)]
+        targets = [] if action.target == "cell" else [
+            self.uid(u) for u in action.highlight_targets(b, actor)
+            if u.team == actor.team or vision.enemy_visible(b, obs, u)]
+        heights = {}
+        if hasattr(action, "heights"):
+            for c in shown:
+                opts = action.heights(b, actor, c) if action.can(b, actor, c) else []
+                if len(opts) > 1:
+                    heights[f"{c[0]},{c[1]}"] = [[z, label] for z, label in opts]
         return {"cells": [_cell(c) for c in shown], "targets": targets,
-                "kind": BattleScreen._aim_kind(action)}
+                "kind": BattleScreen._aim_kind(action), "heights": heights}
 
     def _observers(self):
         return vision.observers(self.battle, False, self.team)
@@ -259,6 +407,7 @@ class BattleSession:
     def state(self, inspect=None):
         """The board as the side knows it, `inspect` (a unit id) opened in the side panel."""
         b = self.battle
+        self._sync_seat()
         obs = self._observers()
         visible, levels = self._sight(obs)
         self.fog.remember(self.team, visible, self._props())
@@ -270,6 +419,11 @@ class BattleSession:
         self._last_visible, self._shown = visible, {t["id"] for t in units}
         return {
             "meta": self.meta,
+            "team": self.team,
+            "two_humans": self.two_humans,
+            "handoff": self.handoff,
+            "setup": self._setup_state(),
+            "talk": self._talk_state(),
             "round": b.round_no,
             "my_turn": my_turn,
             "winner": b.winner,
@@ -299,7 +453,9 @@ class BattleSession:
             "inspect": self._inspect(inspect, obs, my_turn),
             "log": list(b.log_lines[-LOG_LINES:]),
             "flags": {"mopping_up": b.mopping_up, "binding": b.binding_captives, "ctf": b.is_ctf,
-                      "can_withdraw": b.can_withdraw, "can_flee": my_turn and actions.FLEE.available(b, b.active)},
+                      "can_withdraw": bool(b.can_withdraw and self.controllers["player"] == "human"
+                                           and self.talk is None and b.winner is None),
+                      "can_flee": my_turn and actions.FLEE.available(b, b.active)},
         }
 
     def _props(self):
@@ -326,6 +482,15 @@ class BattleSession:
     def _side(self, u):
         return "ally" if u.team == self.team else "foe"
 
+    def _seat(self, u):
+        """`u`'s colour as this side sees it, as `BattleDrawMixin._side` and `team_color` pick it:
+        its own squad, an ally the AI plays, the foe, or a third side hostile to both."""
+        if u.ai_ally:
+            return "ally" if self.team == "player" else "enemy"
+        if u.team == self.team:
+            return "player"
+        return "enemy" if u.team in ("player", "enemy") else "third"
+
     def _health(self, u):
         if u.team != self.team:
             return {"hp_frac": intel.health_steps(u) / intel.STEPS, "steps": intel.STEPS}
@@ -334,7 +499,7 @@ class BattleSession:
     def _token(self, u, obs, my_turn):
         b = self.battle
         return {
-            "id": self.uid(u), "name": u.name, "side": self._side(u), "team": u.team,
+            "id": self.uid(u), "name": u.name, "side": self._side(u), "seat": self._seat(u), "team": u.team,
             "race": u.race["name"],
             "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
             "pos": _cell(u.pos), "fp": u.footprint,
@@ -355,6 +520,7 @@ class BattleSession:
                 continue
             known = u.team == self.team or vision.enemy_visible(b, obs, u)
             out.append({"id": self.uid(u) if known else None, "side": self._side(u),
+                        "seat": self._seat(u) if known else None,
                         "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
                         if known else None,
                         "name": u.name if known else None,
@@ -366,7 +532,10 @@ class BattleSession:
         w = u.weapon if u.weapon_hand else None
         occupation = u.char.occupation
         return {
-            "id": self.uid(u), "name": u.name, "side": self._side(u),
+            "id": self.uid(u), "name": u.name, "side": self._side(u), "seat": self._seat(u),
+            "level": u.char.racial_level if u.team == self.team else None,
+            "tracks": ({"combat": u.char.combat_level, "work": u.char.work_level, "magic": u.char.magic_level}
+                       if u.team == self.team else None),
             "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
             "race": u.race["name"], "occupation": occupation["name"] if isinstance(occupation, dict) else occupation,
             "alignment": u.char.alignment,

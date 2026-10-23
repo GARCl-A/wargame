@@ -21,8 +21,13 @@ Parts:
 The presentation moves from pygame to HTML/CSS/Canvas, and the Python core stays. The battle
 spike is built (`python -m gartok.web`), and the author's verdict is go. The decisions so far
 and the steps are in [web_frontend.md](web_frontend.md) ("Next steps"): fluidity, speed and
-zoom are done; next is the rest of the battle's parity with pygame, then the art, colour and
-light, the shared base, the map, the hubs and the swap.
+zoom and the battle's parity with pygame are done; next is the art (the author's), then
+colour and light, the shared base, the map, the hubs and the swap.
+
+- **CTF stalemate, AI against AI** (small, AI): the Ribbit Brothers' capture the flag with
+  `combat_lab.build("boss", 2, 6, seed=7)` and the player's flag at the first legal cell
+  never ends (1,400 rounds): two survivors, one sitting on its own flag, and nobody goes
+  for the other flag. Found by `tests/test_web.py`, which plays every lab fight to its end.
 
 ---
 

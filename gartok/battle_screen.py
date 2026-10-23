@@ -287,25 +287,6 @@ class BattleScreen(BattleDrawMixin, Screen):
     def tutorial_key(self):
         return "battle"
 
-    def _disk_height_options(self, actor, tile):
-        b = self.battle
-        caster_z = b.elevation(actor)
-        pit_z = b.board.elevation_at(tile)
-        raw = {0, caster_z, pit_z}
-        sorted_z = sorted(raw, reverse=True)
-        opts = []
-        for z in sorted_z:
-            tags = []
-            if z == 0:
-                tags.append("Ground")
-            if z == caster_z:
-                tags.append("Caster")
-            if z == pit_z and pit_z != 0:
-                tags.append("Pit floor")
-            tag_str = f" ({'/'.join(tags)})" if tags else ""
-            opts.append((z, f"z={z}{tag_str}"))
-        return opts
-
     def _click(self, px):
         b = self.battle
         if b.winner is not None:
@@ -398,7 +379,7 @@ class BattleScreen(BattleDrawMixin, Screen):
         if self.aim_action is not None and self.aim_action.target == "cell":
             if self.aim_action.can(b, actor, tile):
                 if getattr(self.aim_action, "spell_id", None) == "floating_disk":
-                    opts = self._disk_height_options(actor, tile)
+                    opts = self.aim_action.heights(b, actor, tile)
                     if len(opts) > 1:
                         self.height_prompt = {"action": self.aim_action, "tile": tile, "options": opts}
                         return

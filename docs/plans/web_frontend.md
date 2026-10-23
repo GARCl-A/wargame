@@ -2,7 +2,7 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-and 2 are done, and zoom and pan from step 3; next is the rest of step 3.
+to 3 are done. Step 4 is the author's (the art); until it lands, the next code step is 7.
 
 ## Decisions so far
 
@@ -88,9 +88,9 @@ and 2 are done, and zoom and pan from step 3; next is the rest of step 3.
 
 ## How to continue
 
-"Seguir com plano de ui" means: take the first step below not marked done, do only that
-step, meet its **Done when**, commit, then mark it done here and note anything it
-changed for the steps after it. One step per session. Start from this file, not from
+"Seguir com plano de ui" means: take the first step below not marked done whose inputs
+exist (5 and 6 wait for the art of step 4), do only that step, meet its **Done when**,
+commit, then mark it done here and note anything it changed for the steps after it. One step per session. Start from this file, not from
 exploring the code.
 
 Two rules hold for every step:
@@ -138,20 +138,36 @@ about 85 ms for one turn), which pygame pays too. The client spends that time in
 the 480 ms pause before the turn, so nobody sees it. If it ever shows, the next cost is
 `battle._pf_field` / `board._dijkstra`.
 
-### 3. Battle: parity with pygame — todo
+### 3. Battle: parity with pygame — done (2026-10-23)
 
-Each of these exists in the pygame battle and is missing here; each gets its test:
-
-- ~~zoom and pan on big boards~~ (done with step 1);
-- the challenge dialogue (`talk_handler`), where the AI answers for now;
-- placing your own flag and traps, auto-placed for now;
-- the Floating Disk height prompt;
-- the two-player hand-over;
-- the crit banner and sound;
-- the combat-log sink (`battle.record_to`).
-
-**Done when:** every lab fight in `combat_lab.FIGHTS` (capture the flag and the Lair
-included) plays to its end in the browser with no AI stand-in for a human choice.
+- Zoom and pan (with step 1).
+- **A question put to a person stops the fight until it is answered.** The state
+  carries `setup` (the flag, a trapper's trap: the cells it may go on, Skip traps),
+  `talk` (a patrol's challenge, played as `DialogueScreen` plays it: speaker, verbs
+  with their check and odds, the line it got, Go on) and `handoff`. `advance` never
+  answers them for the person.
+- **Two players at one screen.** `BattleSession` takes controllers per side, as
+  `BattleScreen` does. Between two people's turns the board hides behind a hand-over
+  card (`take_seat`). Pick it in New fight, or with `--players 2`.
+- **The Floating Disk** offers its heights per cell in `aim`. The rule moved to
+  `FloatingDiskAction.heights`, which pygame now reads too. Light Globe and the disk
+  now mark their reach while aiming, which they never did, in pygame either.
+- **Crit banner and sound.** Each step says what it sounded like (heard even when
+  unseen, as `BattleFX` plays it). The client plays `sound.py`'s own cues from
+  `/api/sounds` at the settings volume.
+- **Combat log.** Every fight from `python -m gartok.web` is logged to
+  `combat_lab/<date>/` as the pygame lab logs its own (`--no-log` to skip it).
+- **Withdraw**, missing before, is a button once the scenario allows it.
+- **The action bar.** Delay sits apart, beside the seal. Spells fold into one plate
+  that opens a list. Past the width, the row scrolls sideways, with arrows and the
+  wheel. The unit card shows the level (racial, the one the bestiary shows of a foe),
+  and each side has its own colour (squad, ally, foe, third side).
+- Tests: every lab fight plays to its end through the session with every human choice
+  answered through the API; the challenge, the flag, the hand-over, the disk's height,
+  the sounds and the log each have their own.
+- Left as is: with seed 7, the Ribbit Brothers' capture the flag stalls AI against AI
+  (two survivors, one sitting on its own flag). That is the AI, not the web; it is in
+  the backlog.
 
 ### 4. Art for the board — todo (the author, with Gemini; no code)
 

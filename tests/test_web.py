@@ -20,11 +20,27 @@ def _session(fight="dungeon", seed=3):
     return BattleSession(battle, meta)
 
 
+def _settle(s):
+    """Answer what a person must before the fight goes on: the flag, the traps, a challenge.
+    True when there was something to answer."""
+    st = s.state()
+    if st["setup"]:
+        if st["setup"]["kind"] == "flag":
+            s.act("plant_flag", cell=st["setup"]["cells"][0])
+        else:
+            s.act("skip_traps")
+        return True
+    if st["talk"]:
+        s.answer(go_on=True) if st["talk"]["result"] else s.answer(verb="attack")
+        return True
+    return False
+
+
 def _to_my_turn(s, limit=200):
     for _ in range(limit):
         if s.my_turn() or s.battle.winner is not None:
             return
-        s.advance()
+        _settle(s) or s.advance()
     raise AssertionError("the AI never handed the turn back")
 
 
@@ -93,7 +109,7 @@ def test_advance_never_moves_for_the_player():
 def test_events_drain_what_the_step_did():
     s = _session("fortress", seed=11)
     steps = s.advance()
-    assert steps and all(set(st) == {"moves", "log", "fx", "acts", "cues", "state"} for st in steps)
+    assert steps and all(set(st) == {"moves", "sounds", "log", "fx", "acts", "cues", "state"} for st in steps)
     assert not s.battle.fx_events and not s.battle.acts and not s.battle.cues
 
 
@@ -179,7 +195,7 @@ def test_a_fight_played_through_the_session_ends():
             break
         if s.my_turn():
             s.act("defend_end")
-        else:
+        elif not _settle(s):
             s.advance()
     assert s.battle.winner is not None
     assert s.state()["result"] in ("VICTORY", "DEFEAT", "FLED")
@@ -242,9 +258,168 @@ def test_server_refuses_an_illegal_act_and_plays_a_legal_one(server):
     for _ in range(200):
         if state["my_turn"]:
             break
+        if state["setup"]:
+            state = _post(server + "/api/act", {"action": "skip_traps"})["steps"][-1]["state"]
+            continue
         state = _post(server + "/api/advance", {})["steps"][-1]["state"]
     with pytest.raises(urllib.error.HTTPError) as e:
         _post(server + "/api/act", {"action": "no_such_action"})
     assert e.value.code == 409
     after = _post(server + "/api/act", {"action": "defend_end"})
     assert after["steps"] and "state" in after["steps"][-1]
+
+
+def test_each_side_has_its_own_colour_and_only_your_squad_shows_its_level():
+    s = _session("necromancer", seed=5)
+    _to_my_turn(s)
+    b, st = s.battle, s.state()
+    seats = {u["id"]: u["seat"] for u in st["units"]}
+    for u in b.units:
+        if s.uid(u) not in seats:
+            continue
+        want = ("ally" if u.ai_ally else "player" if u.team == "player"
+                else "enemy" if u.team == "enemy" else "third")
+        assert seats[s.uid(u)] == want
+    assert {"player", "ally"} <= set(seats.values())
+    assert all(c["seat"] is None for c in st["initiative"] if c["id"] is None)
+    assert st["active"]["level"] == b.active.char.racial_level
+    foe = next(u for u in b.units if u.team != "player" and u.alive)
+    assert s._sheet(foe)["level"] is None
+
+
+@pytest.mark.parametrize("fight", sorted(combat_lab.FIGHTS))
+def test_every_lab_fight_plays_to_its_end_with_a_person_on_every_human_choice(fight):
+    battle, meta = combat_lab.build(fight, 2, combat_lab.FIGHTS[fight].squad, seed=1)
+    s = BattleSession(battle, meta)
+    asked = set()
+    for _ in range(3000):
+        if battle.winner is not None:
+            break
+        st = s.state()
+        if st["setup"] or st["talk"]:
+            asked.add("setup" if st["setup"] else "talk")
+            _settle(s)
+        elif s.my_turn():
+            s._stepped(lambda: ai.take_turn(battle, battle.active), None)    # a stand-in player
+        else:
+            before = (battle.active, battle.round_no, battle.active.ap)
+            s.advance()
+            assert (battle.active, battle.round_no, battle.active.ap) != before or battle.winner, "stuck"
+    assert battle.winner is not None, f"{fight} never ended"
+    if fight in ("ctf", "boss"):
+        assert "setup" in asked
+
+
+def _to_talk(seed=1):
+    battle, meta = combat_lab.build("lair", 2, 4, seed=seed)
+    s = BattleSession(battle, meta)
+    for _ in range(300):
+        st = s.state()
+        if st["talk"]:
+            return s
+        if st["setup"]:
+            _settle(s)
+        elif s.my_turn():
+            s._stepped(lambda: ai.take_turn(battle, battle.active), None)
+        else:
+            s.advance()
+    raise AssertionError("no patrol challenged the squad")
+
+
+def test_a_challenge_waits_for_the_person_and_their_answer_settles_it():
+    s = _to_talk()
+    turn = (s.battle.active, s.battle.round_no)
+    s.advance()
+    assert (s.battle.active, s.battle.round_no) == turn and s.talk is not None
+    talk = s.state()["talk"]
+    assert {o["id"] for o in talk["options"]} == {"bluff", "bribe", "attack"}
+    s.answer(speaker=len(talk["speakers"]) - 1)
+    assert s.state()["talk"]["speakers"][-1]["selected"]
+    s.answer(verb="attack")
+    with pytest.raises(ValueError):
+        s.answer(verb="bluff")
+    s.answer(go_on=True)
+    assert s.talk is None and s.state()["talk"] is None
+    assert any("strikes before they can call out" in line for line in s.battle.log_lines)
+
+
+def test_a_person_plants_their_own_flag_where_the_rules_allow():
+    battle, meta = combat_lab.build("ctf", 2, 3, seed=1)
+    s = BattleSession(battle, meta)
+    setup = s.state()["setup"]
+    assert setup["kind"] == "flag" and setup["cells"]
+    s.advance()
+    assert battle.awaiting_flag, "the flag is the person's to plant"
+    with pytest.raises(ValueError):
+        s.act("plant_flag", cell=(-1, -1))
+    s.act("plant_flag", cell=setup["cells"][-1])
+    assert battle.flags["player"] == tuple(setup["cells"][-1])
+
+
+def test_two_people_at_one_screen_pass_it_between_their_turns():
+    battle, meta = combat_lab.build("brawl", 2, 3, seed=1)
+    s = BattleSession(battle, meta, {"player": "human", "enemy": "human"})
+    seen = set()
+    for _ in range(60):
+        st = s.state()
+        if st["handoff"]:
+            assert not s.my_turn()
+            with pytest.raises(ValueError):
+                s.act("defend_end")
+            team = st["handoff"]
+            s.take_seat()
+            assert s.team == team and s.my_turn()
+            seen.add(team)
+        elif s.my_turn():
+            assert battle.active.team == s.team
+            s.act("defend_end")
+        else:
+            s.advance()
+    assert seen == {"player", "enemy"}
+
+
+def test_the_floating_disk_offers_its_heights_and_takes_the_one_picked():
+    from tests.test_floating_disk import _setup_battle
+    batt, caster, _ = _setup_battle()
+    batt.board.elevation = {(1, 0): -2}
+    batt.board.refresh_terrain()
+    caster.char.spells_known.append("floating_disk")
+    s = BattleSession(batt)
+    while batt.active is not caster:
+        batt.end_turn()
+    aim = s.aim("spell:floating_disk")
+    assert aim["heights"]["1,0"] == [[0, "z=0 (Ground/Caster)"], [-2, "z=-2 (Pit floor)"]]
+    s.act("spell:floating_disk", cell=(1, 0), elevation=-2)
+    assert [o.elevation for o in batt.ground if getattr(o, "is_disk", False)] == [-2]
+
+
+def test_a_step_says_what_it_sounded_like():
+    s = _session("wilds", seed=4)
+    heard = set()
+    for _ in range(200):
+        if s.battle.winner is not None:
+            break
+        if s.my_turn():
+            steps = s.act("defend_end")
+        elif _settle(s):
+            continue
+        else:
+            steps = s.advance()
+        heard |= {snd for st in steps for snd in st["sounds"]}
+    assert heard & {"hit", "crit"} and heard <= {"hit", "crit", "miss", "fall"}
+
+
+def test_a_game_with_a_log_root_writes_the_fight_as_the_lab_does(tmp_path):
+    game = Game("wilds", 2, 3, seed=4, log_root=str(tmp_path))
+    s = game.session
+    for _ in range(600):
+        if s.battle.winner is not None:
+            break
+        if s.my_turn():
+            s.act("defend_end")
+        elif not _settle(s):
+            s.advance()
+    files = list(tmp_path.rglob("*.jsonl"))
+    assert len(files) == 1 and "wilds-human-vs-ai" in files[0].name
+    rows = [json.loads(line) for line in files[0].read_text(encoding="utf-8").splitlines()]
+    assert rows[-1]["e"] == "end" and any(r.get("by") == "human" for r in rows)

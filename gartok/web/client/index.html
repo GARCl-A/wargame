@@ -11,7 +11,7 @@
   <div id="top">
     <div class="cartouche"><div class="place" id="place"></div><div class="sub" id="sub"></div></div>
     <div id="init"></div>
-    <div id="topright"><div class="ghost-btn" id="newfight">New fight</div></div>
+    <div id="topright"><div class="ghost-btn" id="skiptraps" hidden>Skip traps</div><div class="ghost-btn" id="withdraw" hidden>Withdraw</div><div class="ghost-btn" id="newfight">New fight</div></div>
   </div>
 
   <div id="sheet">
@@ -19,6 +19,7 @@
     <canvas id="overlay"></canvas>
     <div id="tokens"></div>
     <div id="fx"></div>
+    <div id="banner"></div>
   </div>
 
   <div id="right">
@@ -31,13 +32,19 @@
     <div class="bar">
       <div class="hint"><span id="hint"></span>
         <div class="tabs" id="tabs"><span data-tab="combat">Combat</span><span data-tab="utility">Utility</span></div></div>
-      <div class="plates" id="plates"></div>
+      <div class="platerow">
+        <div class="platebox"><div class="plates" id="plates"></div>
+          <div class="nudge l" id="nudgeL">&lsaquo;</div><div class="nudge r" id="nudgeR">&rsaquo;</div></div>
+        <div class="fixed" id="fixed"></div>
+      </div>
+      <div class="page spellbook" id="spellbook" hidden></div>
     </div>
     <div class="seal" id="seal"><div><div class="ico mask" style="--icon:url(/assets/icons/gui/halt.svg)"></div><b>End Turn</b><small>0</small></div></div>
   </div>
 
   <div id="grain"></div>
   <div id="vignette"></div>
+  <div id="dialog" hidden></div>
   <div id="modal" hidden></div>
 </div>
 <script src="/client/board.js"></script>

@@ -152,16 +152,12 @@ def test_ai_casts_floating_disk_at_own_elevation_to_bridge_path():
 
 
 def test_disk_height_options_computation():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    from gartok.battle_screen import BattleScreen
     batt, c1, _ = _setup_battle()
     batt.board.elevation = {(1, 0): -2}
     batt.board.refresh_terrain()
 
-    screen = BattleScreen(None, batt, on_battle_end=lambda b: None)
     # For pit cell at (1, 0) with elevation -2
-    opts = screen._disk_height_options(c1, (1, 0))
+    opts = actions.CastSpellAction("floating_disk").heights(batt, c1, (1, 0))
     # Should contain 0 and -2
     elevations = [z for z, _ in opts]
     assert elevations == [0, -2]

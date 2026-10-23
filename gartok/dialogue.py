@@ -112,6 +112,13 @@ def leader_of(foes):
     return max(speakers, key=lambda u: (u.racial_level, u.mean_level)) if speakers else None
 
 
+def first_speaker(encounter, members):
+    """Who speaks for the squad unless the player picks another: the best Charisma among those
+    the foes understand."""
+    understood = [u for u in members if encounter.shared(u)] or members
+    return max(understood, key=lambda u: u.mod_charisma) if understood else None
+
+
 def can_talk(foes):
     return leader_of(foes) is not None
 

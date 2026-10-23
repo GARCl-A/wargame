@@ -9,7 +9,7 @@ the player presses the result's button. A `decided` result opens the screen alre
 
 import pygame
 
-from . import world
+from . import dialogue, world
 from .screen import Screen
 from .ui.dialogue_panel import draw_dialogue
 from .ui.primitives import header, set_pointer
@@ -34,9 +34,7 @@ class DialogueScreen(Screen):
         self.on_done = on_done
         self.on_decided = on_decided
         self.result = decided
-        members = self.members
-        understood = [u for u in members if encounter.shared(u)] or members
-        self.speaker = max(understood, key=lambda u: u.mod_charisma) if understood else None
+        self.speaker = dialogue.first_speaker(encounter, self.members)
         self.hits = {"speakers": [], "options": [], "button": None}
 
     @property

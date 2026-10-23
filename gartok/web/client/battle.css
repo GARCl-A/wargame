@@ -3,6 +3,7 @@
   --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
   --blood:#9a2f22; --blood-hi:#c9473a; --enamel:#2e5f8e; --enamel-hi:#5b8fc0;
   --green:#7fa557;
+  --moss:#4f7d5a; --moss-hi:#70ba96; --violet:#6c4f9a; --violet-hi:#a680d6;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
@@ -34,7 +35,8 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .coin{position:relative;width:44px;height:44px;border-radius:50%;flex:none;background:#2a2017;
   box-shadow:0 0 0 2px #120d08,0 0 0 3.5px var(--side),0 0 0 5px #120d08,0 3px 8px rgba(0,0,0,.7)}
 .coin img{width:100%;height:100%;border-radius:50%;display:block}
-.coin.foe{--side:var(--blood)} .coin.ally{--side:var(--enamel-hi)}
+.coin{--side:var(--blood)}
+.coin.seat-player{--side:var(--enamel-hi)} .coin.seat-ally{--side:var(--moss-hi)} .coin.seat-third{--side:var(--violet-hi)}
 .coin.now{width:60px;height:60px;box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass-hi),0 0 0 6px #120d08,0 0 22px rgba(240,215,158,.45)}
 .coin.now:after{content:"NOW";position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);
   font:700 9px/1 Cinzel,serif;letter-spacing:.25em;color:var(--brass-hi)}
@@ -57,7 +59,7 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .tok{position:absolute;border-radius:50%;transition:box-shadow .2s;
   box-shadow:0 0 0 2px #1a120a,0 0 0 4px var(--side),0 0 0 5.5px #1a120a,0 6px 8px rgba(30,18,8,.55)}
 .tok img,.tok .initial{width:100%;height:100%;border-radius:50%;display:block}
-.tok.ally{--side:var(--enamel)} .tok.foe{--side:var(--blood)} .tok.ai_ally{--side:#4f7d5a}
+.seat-player{--side:var(--enamel)} .seat-ally{--side:var(--moss)} .seat-enemy{--side:var(--blood)} .seat-third{--side:var(--violet)}
 .tok.downed img{filter:grayscale(1) brightness(.6)}
 .tok.active{box-shadow:0 0 0 2px #1a120a,0 0 0 5px var(--brass-hi),0 0 0 6.5px #1a120a,0 0 26px 6px rgba(255,214,140,.55),0 6px 8px rgba(30,18,8,.55)}
 .tok.target{box-shadow:0 0 0 2px #1a120a,0 0 0 5px var(--blood-hi),0 0 0 6.5px #1a120a,0 0 22px 4px rgba(220,80,60,.55)}
@@ -131,22 +133,26 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .unit .med{position:absolute;left:18px;top:-30px;width:150px;height:150px;border-radius:50%;overflow:hidden;
   box-shadow:0 0 0 3px #120d08,0 0 0 7px var(--brass),0 0 0 9px #120d08,0 0 0 11px var(--side,var(--enamel)),0 0 0 13px #120d08,0 14px 24px rgba(0,0,0,.7)}
 .unit .med img,.unit .med .initial{width:100%;height:100%;border-radius:50%}
-.unit .body{position:absolute;left:192px;top:16px;right:18px}
+.unit .body{position:absolute;left:192px;top:14px;right:18px}
+.unit .lvl{position:absolute;left:63px;top:102px;width:60px;height:30px;display:flex;align-items:baseline;justify-content:center;padding-top:7px;border-radius:2px;
+  font:700 15px/1 Cinzel,serif;color:#2a1a0e;background:linear-gradient(#f0d79e,#b8904c);
+  box-shadow:0 0 0 1.5px #3a2610,0 4px 8px rgba(0,0,0,.6);cursor:help}
+.unit .lvl small{font-size:9px;letter-spacing:.14em;margin-right:3px}
 .unit h1{font:700 28px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
 .unit .race{font:italic 16px/1 "IM Fell English",serif;color:#b59c76;margin-top:6px}
 .unit .waiting{position:absolute;left:192px;top:54px;font:italic 20px/1.3 "IM Fell English",serif;color:#b59c76}
-.stats{display:flex;gap:9px;margin-top:13px}
+.stats{display:flex;gap:9px;margin-top:10px}
 .stat{min-width:58px;padding:6px 8px 5px;text-align:center;border-radius:2px;
   background:linear-gradient(#120d08,#1d150e);box-shadow:inset 0 0 0 1px rgba(201,163,94,.25)}
 .stat span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:#8f7652;text-transform:uppercase}
 .stat b{display:block;font:700 20px/1 Cinzel,serif;color:#f0dfb8;margin-top:4px}
-.stat.hp{min-width:128px;text-align:left;padding-left:10px}
+.stat.hp{width:140px;text-align:left;padding-left:10px}
 .drops{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap;max-width:112px}
 .drops i{width:10px;height:13px;background:var(--blood-hi);clip-path:path("M5 0 C5 0 10 6 10 8.5 A5 5 0 0 1 0 8.5 C0 6 5 0 5 0Z")}
 .drops i.off{background:#3a2a1e}
 .hpbar{height:8px;margin-top:6px;border-radius:2px;background:#3a2a1e;overflow:hidden}
 .hpbar i{display:block;height:100%;background:var(--blood-hi)}
-.weapon{margin-top:10px;font:15px/1 "EB Garamond",serif;color:#c9b38c;white-space:nowrap}
+.weapon{margin-top:8px;font:15px/1.1 "EB Garamond",serif;color:#c9b38c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .weapon b{font:600 13px/1 Cinzel,serif;letter-spacing:.08em;color:#f0dfb8;margin-right:6px}
 .weapon em{color:var(--brass-hi);font-style:normal;font-family:Cinzel;font-size:11px;letter-spacing:.16em;margin-left:4px;text-transform:uppercase}
 .ap{position:absolute;right:18px;top:16px;text-align:right}
@@ -156,13 +162,33 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
   background:radial-gradient(circle at 35% 30%,#fff1c8,#d5a94f 45%,#7a5520 100%);box-shadow:0 0 0 1.5px #3a2610,0 2px 4px rgba(0,0,0,.6),0 0 12px rgba(240,200,110,.35)}
 .ap .coins i.spent{background:#2a2017;box-shadow:inset 0 0 0 1.5px #4a3a28}
 
-.bar{position:absolute;left:584px;top:0;width:1110px;height:150px}
+.bar{position:absolute;left:584px;top:0;width:1090px;height:150px}
 .bar .hint{display:flex;align-items:center;gap:12px;height:24px;font:italic 16px/1 "IM Fell English",serif;color:#b59c76}
 .bar .tabs{margin-left:auto;display:flex;gap:2px}
 .bar .tabs span{font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:#8f7652;padding:6px 12px;border-bottom:1px solid rgba(201,163,94,.2);cursor:pointer;text-transform:uppercase}
 .bar .tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
-.plates{display:flex;gap:8px;margin-top:10px}
-.plate{position:relative;flex:0 1 88px;min-width:66px;height:112px;border-radius:3px;text-align:center;cursor:pointer;
+.platerow{display:flex;gap:14px}
+.platebox{position:relative;flex:1;min-width:0}
+/* the row scrolls sideways when the actions outgrow it; the padding is the room a raised plate needs */
+.plates{display:flex;gap:8px;padding-top:10px;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth}
+.plates::-webkit-scrollbar{display:none}
+.nudge{position:absolute;top:10px;bottom:0;width:44px;display:grid;place-items:center;cursor:pointer;
+  font:700 40px/1 Cinzel,serif;color:var(--brass-hi);text-shadow:0 0 10px rgba(240,215,158,.5);z-index:1}
+.nudge.l{left:0;background:linear-gradient(90deg,#0d0906 45%,transparent)}
+.nudge.r{right:0;background:linear-gradient(270deg,#0d0906 45%,transparent)}
+.nudge[hidden]{display:none}
+.fixed{display:flex;padding-top:10px}
+.fixed:empty{display:none}
+.spellbook{position:absolute;left:0;bottom:142px;width:420px;max-height:420px;overflow-y:auto;padding:14px 16px;z-index:4}
+.spellbook[hidden]{display:none}
+.spellbook .row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid rgba(90,60,30,.18);cursor:pointer;
+  font:600 14px/1.1 Cinzel,serif;color:#2a1a0e}
+.spellbook .row:hover{background:rgba(201,163,94,.18)}
+.spellbook .row.off{opacity:.4;cursor:default}
+.spellbook .row.sel{background:rgba(201,163,94,.35)}
+.spellbook .row .cost{margin-left:auto;display:flex;gap:3px}
+.spellbook .row .cost i{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9b0,#a77a32);box-shadow:0 0 0 1px #5d4426}
+.plate{position:relative;flex:0 0 88px;height:112px;border-radius:3px;text-align:center;cursor:pointer;
   background:linear-gradient(180deg,#2e2318,#19120c);transition:transform .12s;
   box-shadow:inset 0 1px 0 rgba(240,215,158,.15),inset 0 0 0 1px rgba(201,163,94,.25),0 6px 12px rgba(0,0,0,.5)}
 .plate:hover{transform:translateY(-3px)}
@@ -192,8 +218,42 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .seal small{display:block;font:600 10px/1 Cinzel,serif;color:#f1b6a6;margin-top:4px;letter-spacing:.2em}
 
 /* end of the fight */
-#modal{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,6,3,.62);z-index:5}
-#modal[hidden]{display:none}
+#modal,#dialog{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,6,3,.62);z-index:5}
+#modal[hidden],#dialog[hidden]{display:none}
+#dialog.opaque{background:radial-gradient(ellipse at center,#2a1d12,#0b0806)}
+#topright{display:flex;gap:10px}
+#topright [hidden]{display:none}
+
+/* a crit across the board */
+#banner{position:absolute;left:0;right:0;top:38%;text-align:center;pointer-events:none;opacity:0;
+  font:900 54px/1 Cinzel,serif;letter-spacing:.18em;color:#ffcf5a;text-transform:uppercase;
+  text-shadow:0 2px 0 #3a0c06,0 0 24px rgba(255,180,80,.6)}
+#banner.on{animation:banner 1.4s ease-out}
+@keyframes banner{0%{opacity:0;transform:scale(1.25)}15%{opacity:1;transform:scale(1)}70%{opacity:1}100%{opacity:0}}
+
+/* a question put to the player: a challenge, the disk's height, the seat */
+.ask{width:760px;padding:30px 36px 28px}
+.ask h2{font:700 30px/1.1 Cinzel,serif;color:#2a1a0e}
+.ask .line{margin-top:10px;font:italic 20px/1.35 "IM Fell English",serif;color:#5b4630}
+.ask .foes{margin-top:8px;font:13px/1.3 "EB Garamond",serif;color:#7d5c37}
+.ask .head{display:flex;gap:20px;align-items:center;margin-top:14px}
+.ask .face{width:96px;height:96px;flex:none;border-radius:50%;overflow:hidden;
+  box-shadow:0 0 0 2px #2a1c10,0 0 0 5px var(--blood),0 0 0 7px #2a1c10,0 6px 12px rgba(40,20,5,.45)}
+.ask .face img,.ask .face .initial{width:100%;height:100%;display:block}
+.ask .cols{display:grid;grid-template-columns:230px 1fr;gap:20px;margin-top:20px}
+.ask .who,.ask .opt{padding:9px 10px;border-radius:2px;cursor:pointer;border:1px solid rgba(90,60,30,.25);margin-bottom:6px}
+.ask .who b,.ask .opt b{display:block;font:700 14px/1.1 Cinzel,serif;color:#2a1a0e}
+.ask .who small,.ask .opt small{display:block;margin-top:3px;font:13px/1.25 "EB Garamond",serif;color:#6b5236}
+.ask .who.sel{background:rgba(201,163,94,.35);border-color:#7d5c37}
+.ask .opt:hover,.ask .who:hover{background:rgba(201,163,94,.2)}
+.ask .opt .check{float:right;font:600 12px/1 Cinzel,serif;color:#7d5c37}
+.ask .opt.off{opacity:.45;cursor:default}
+.ask .opt.off:hover{background:none}
+.ask .result{margin-top:20px;padding:14px 16px;font:italic 19px/1.4 "IM Fell English",serif;color:#2a1a0e;
+  border-left:4px solid var(--brass)}
+.ask .result.fight{border-color:var(--blood)}
+.ask .row{margin-top:22px;display:flex;gap:10px;justify-content:flex-end}
+.ask .heights .opt{display:inline-block;margin-right:8px}
 .endcard{width:620px;padding:40px 48px 34px;text-align:center}
 .endcard h1{font:900 64px/1 Cinzel,serif;letter-spacing:.12em;color:#2a1a0e}
 .endcard h1.lost{color:var(--blood)}

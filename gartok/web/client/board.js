@@ -421,8 +421,13 @@ const Board = (() => {
 
   function overlay(s, ui) {
     over.clearRect(0, 0, W, H);
-    if (!s || !s.my_turn) return;
     const C = V.cell;
+    if (s && s.setup && !s.handoff) {
+      over.fillStyle = "rgba(201,163,94,.28)"; over.strokeStyle = "rgba(125,92,40,.85)"; over.lineWidth = 1.5;
+      for (const [x, y] of s.setup.cells) { over.fillRect(cx(x) + 1, cy(y) + 1, C - 2, C - 2); over.strokeRect(cx(x) + 3.5, cy(y) + 3.5, C - 7, C - 7); }
+      return;
+    }
+    if (!s || !s.my_turn) return;
     if (ui.aim) {
       const col = {attack: "201,71,58", demo: "128,70,150", heal: "90,140,70", move: "70,110,150", spell: "201,163,94", throw: "214,120,40"}[ui.aim.kind] || "201,163,94";
       over.fillStyle = `rgba(${col},.22)`; over.strokeStyle = `rgba(${col},.75)`; over.lineWidth = 1.5;

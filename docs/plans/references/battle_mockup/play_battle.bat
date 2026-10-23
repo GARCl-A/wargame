@@ -23,5 +23,7 @@ if "%pick%"=="6" set "fight=necromancer"
 if "%pick%"=="7" set "fight=lair"
 if "%pick%"=="8" set "fight=brawl"
 if "%pick%"=="9" set "fight=champion"
-python -m gartok.web --fight %fight%
+set "players=1"
+set /p "players=Players, 1 or 2 at one screen [1]: "
+python -m gartok.web --fight %fight% --players %players%
 if errorlevel 1 pause
