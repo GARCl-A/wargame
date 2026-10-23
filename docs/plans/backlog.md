@@ -71,7 +71,8 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   - *Choose a vocation* makes poor use of the space.
   - Too few icons for the guild banner.
 - **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
-- **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter.
+- **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter
+  (proposed answer: the drama engine, *Needs more information*).
 - **Combat board:**
   - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
   - Hit sounds do not fit the game (the UI sounds are fine); swap the Kenney variants in `assets/sounds/`.
@@ -162,10 +163,31 @@ Keep these while building them:
 
 # Needs more information
 
+- **Members with a will of their own: the drama engine (to evaluate, proposed 2026-10-22).** The market
+  read: as a guild manager the game sells on the stories its people make, not on its numbers ("the game
+  still lacks soul", *Occupations are bland*). Each member wants things and reacts to what already
+  happens to them, built on the occupation and alignment every character already rolls:
+  - **Occupation = what they want to do.** Group the 30 into about 6 wants (fight, labour, city, road,
+    care, faith), plus one detail of each occupation's own: the Woodcutter is content at the Yard, the
+    Mercenary resents labour and wants fights and pay, the Physician suffers a death left untreated.
+    It gives the waiting starting items (Deck of Cards, Map, Compass) a reason to matter.
+  - **Alignment = how they react.** Lawful/Chaotic to orders, the leader and crime; Good/Evil to
+    cruelty and greed (an ally abandoned, captives killed, the loot split, a member left hungry).
+  - **Opinion of each other and of the leader** (a small -3..+3 between pairs), moved by events that
+    already exist: a death in the group, hunger, ten days at the Yard, the loot, a bad order.
+  - **Short events that ask the player for a decision** ("Brakka wants a double share or leaves with
+    their own"; "Tovi will not march with Grok"; "Mira mourns Hal and will not fight for three days"), each
+    one written as a line of a guild chronicle the player can reread.
+  - Extends what alignment already drives (`cohesion.py`'s walk-outs and loot, `recruit.py`, `dialogue.py`,
+    `ai.py`'s temper) instead of a new system beside them.
+  Open: the want list and the reactions per axis, which triggers ship first, how it stays readable
+  (not a spreadsheet), and what the economy sim and `cohesion.py` must learn. The test: after an hour of
+  play the player tells a story with a character's name in it.
+
 - **Open design questions from the 2026-10-18 playtests** (no code yet).
-  - **The world moving by itself and members with a will of their own** (a Wilds node turns into a lair
-    if nobody clears it; an idle veteran asks for work or threatens to leave). The author's long-term
-    vision for time pressure; waits on earlier subsystems.
+  - **The world moving by itself** (a Wilds node turns into a lair if nobody clears it). The author's
+    long-term vision for time pressure; waits on earlier subsystems. The members' half (an idle veteran
+    asks for work or threatens to leave) is the drama engine above.
   - **Time pressures from the world itself.** Today's (Bankers' rent, the title defence, the Ogre's
     deadline) are all ones the player chooses. Lumber saturating the wood price enters with the production chain.
   - **Weather fog**, if it ever exists: how it looks apart from darkness.
