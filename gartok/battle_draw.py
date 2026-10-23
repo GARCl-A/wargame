@@ -13,8 +13,6 @@ from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import unit_to_ch
 from .ui.tokens import T
 
-FIXED_HOTKEYS = {"delay": 9, "end": 0}   # off the 1-8 count, so the rest never shift
-
 
 class BattleDrawMixin:
     def _cell_rect(self, cx, cy):
@@ -414,9 +412,6 @@ class BattleDrawMixin:
             battle_panel.draw_action_tabs(screen, F, tab_r, self.action_tab, self.show_blocked_actions, self.mouse)
         )
 
-        tab_actions = actions.COMBAT_ACTIONS if self.action_tab == "combat" else actions.UTILITY_ACTIONS
-        contextual = (actions.CLIMB, actions.DROP, actions.SWIM)
-
         visible_items = []
         if self.action_tab == "combat" and act.char.spells_known:
             visible_items.append({
@@ -431,32 +426,21 @@ class BattleDrawMixin:
                 "center": True,
             })
 
-        hotkey_i = 0
-        self._hotkey_actions = []
+        entries = actions.panel(b, act, self.action_tab, my_turn, self.show_blocked_actions)
+        self._hotkey_actions = [e["action"] for e in entries
+                                if e["hotkey"] is not None and e["action"].id not in actions.FIXED_HOTKEYS]
 
-        for action in tab_actions:
-            applies, reason = action.applicable(b, act)
-            if action in contextual and not (my_turn and action.available(b, act)):
-                continue
-            if not applies and not self.show_blocked_actions:
-                continue
-
-            enabled = applies and (my_turn if action is actions.END else (my_turn and action.available(b, act)))
+        for entry in entries:
+            action, enabled, hotkey_num = entry["action"], entry["enabled"], entry["hotkey"]
             armed = action.aimed and self.aim_action is action
-
-            hotkey_num = FIXED_HOTKEYS.get(action.id)
-            if hotkey_num is None and hotkey_i < 8:
-                hotkey_i += 1
-                hotkey_num = hotkey_i
-                self._hotkey_actions.append(action)
 
             if getattr(action, "toggle", False) or (not enabled and hasattr(action, "blocked_reason")):
                 name = action.label(b, act)
             else:
                 name = action.name
             label = name if not armed else f"{name}: click the target"
-            if not applies:
-                label += f" ({reason})"
+            if not entry["applies"]:
+                label += f" ({entry['reason']})"
             if hotkey_num is not None:
                 label = f"[{hotkey_num}] {label}"
 

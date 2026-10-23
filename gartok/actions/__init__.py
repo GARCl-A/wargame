@@ -224,3 +224,26 @@ UTILITY_ACTIONS = [
 ]
 
 PANEL_ACTIONS = COMBAT_ACTIONS + UTILITY_ACTIONS
+
+FIXED_HOTKEYS = {"delay": 9, "end": 0}   # off the 1-8 count, so the rest never shift
+CONTEXTUAL = (CLIMB, DROP, SWIM)         # shown only while they can be taken
+
+
+def panel(battle, actor, tab, my_turn, show_blocked=False):
+    """The action bar for `actor` on `tab` ("combat" | "utility"): one entry per action it shows,
+    `{"action", "applies", "reason", "enabled", "hotkey"}`, the free hotkeys 1-8 in order."""
+    entries, free = [], 0
+    for action in COMBAT_ACTIONS if tab == "combat" else UTILITY_ACTIONS:
+        applies, reason = action.applicable(battle, actor)
+        if action in CONTEXTUAL and not (my_turn and action.available(battle, actor)):
+            continue
+        if not applies and not show_blocked:
+            continue
+        hotkey = FIXED_HOTKEYS.get(action.id)
+        if hotkey is None and free < 8:
+            free += 1
+            hotkey = free
+        enabled = applies and my_turn and (action is END or action.available(battle, actor))
+        entries.append({"action": action, "applies": applies, "reason": reason,
+                        "enabled": enabled, "hotkey": hotkey})
+    return entries

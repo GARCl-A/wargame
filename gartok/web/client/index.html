@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GARTOK Tactical</title>
+<link rel="stylesheet" href="/client/fonts/fonts.css">
+<link rel="stylesheet" href="/client/battle.css">
+</head>
+<body>
+<div id="stage">
+  <div id="top">
+    <div class="cartouche"><div class="place" id="place"></div><div class="sub" id="sub"></div></div>
+    <div id="init"></div>
+    <div id="topright"><div class="ghost-btn" id="newfight">New fight</div></div>
+  </div>
+
+  <div id="sheet">
+    <canvas id="board"></canvas>
+    <canvas id="overlay"></canvas>
+    <div id="tokens"></div>
+    <div id="fx"></div>
+  </div>
+
+  <div id="right">
+    <div class="page bestiary" id="inspect"></div>
+    <div class="page chron"><div class="kicker">Chronicle</div><div class="entries" id="log"></div></div>
+  </div>
+
+  <div id="bottom">
+    <div class="unit" id="unit"></div>
+    <div class="bar">
+      <div class="hint"><span id="hint"></span>
+        <div class="tabs" id="tabs"><span data-tab="combat">Combat</span><span data-tab="utility">Utility</span></div></div>
+      <div class="plates" id="plates"></div>
+    </div>
+    <div class="seal" id="seal"><div><div class="ico mask" style="--icon:url(/assets/icons/gui/halt.svg)"></div><b>End Turn</b><small>0</small></div></div>
+  </div>
+
+  <div id="grain"></div>
+  <div id="vignette"></div>
+  <div id="modal" hidden></div>
+</div>
+<script src="/client/board.js"></script>
+<script src="/client/battle.js"></script>
+</body>
+</html>

@@ -16,6 +16,21 @@ Parts:
 
 ---
 
+# Web front-end (decided 2026-10-23)
+
+The presentation moves from pygame to HTML/CSS/Canvas, and the Python core stays. The battle
+spike is built (`python -m gartok.web`), and the author's verdict is go. The decisions so far
+and the next steps are in [web_frontend.md](web_frontend.md), in this order:
+
+1. fluidity (the AI's turn played step by step)
+2. light
+3. colour
+4. parity with the pygame battle
+5. speed on big boards
+6. migrating the other screens
+
+---
+
 # Pre-playtest plan (agreed 2026-10-20)
 
 Goal: a "stable" build for the author's playtest and one with friends. Phases 1-4 (content,

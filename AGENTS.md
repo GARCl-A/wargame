@@ -119,6 +119,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `tutorial.py` / `tutorial_card.py` | tutorial state + the modal card per screen (`ui/intro_card.py`); copy in `locales/en.json` |
 | `objectives.py` | the guild's objectives: 17 small tasks on the Guild Screen's REPUTATIONS tab above the faction deeds, all open from day one, each one teaching a system (food, work, arena, Medic, recruits, licence, jobs, groups, pack animal, wagon, deeds, magic); read off the guild's state, or marked by the screen where it happens; orientation, no coins/fame. The map's first tutorial card closes onto them |
 | `ui/` | war-table component kit; see `ui/README.md` |
+| `web/` | the web front-end being built to replace pygame (`docs/plans/web_frontend.md`): `battle_session.py` drives one fight and sends the board only as the side knows it (fog, `intel` steps, light levels), `server.py` is a stdlib HTTP API over it, `client/` the HTML/Canvas screen; `python -m gartok.web --fight <lab fight>` opens a combat-lab fight in a browser window |
 
 Screens follow `screen.Screen` base; `native = True` means full-window layout.
 Every `*_screen.py` is one screen; `*_hub_screen.py` wraps a city NPC's shop,

@@ -131,14 +131,20 @@ def _load_scaled_portrait(path, px):
 @functools.lru_cache(maxsize=256)
 def portrait(race_name, portrait_id, px):
     """Circular medallion portrait for a unit, scaled to `(px, px)`.
-    Returns None if the race has no portrait assets (caller falls back to `race_icon`).
+    Returns None if the race has no portrait assets (caller falls back to `race_icon`)."""
+    path = portrait_path(race_name, portrait_id)
+    return None if path is None else _load_scaled_portrait(path, px)
+
+
+@functools.lru_cache(maxsize=1024)
+def portrait_path(race_name, portrait_id):
+    """The file of a unit's portrait, or None if the race has none.
 
     If `portrait_id` is a string (e.g. 'ribit.png', 'adelio', 'npc/bufo.png'),
     it pins to that specific image file so the generic race pool does not pick it.
     Otherwise, an integer selects deterministically from the numbered portraits in the pool."""
     if not race_name and not portrait_id:
         return None
-    px = max(1, int(px))
 
     if isinstance(portrait_id, str) and not portrait_id.isdigit():
         p_str = portrait_id.strip()
@@ -164,7 +170,7 @@ def portrait(race_name, portrait_id, px):
             for cand in candidates:
                 p_cand = os.path.join(sdir, cand)
                 if os.path.isfile(p_cand):
-                    return _load_scaled_portrait(p_cand, px)
+                    return p_cand
 
     if not race_name:
         return None
@@ -198,8 +204,7 @@ def portrait(race_name, portrait_id, px):
         idx = abs(int(portrait_id)) % len(pool)
     else:
         idx = 0
-    path = os.path.join(folder, pool[idx])
-    return _load_scaled_portrait(path, px)
+    return os.path.join(folder, pool[idx])
 
 
 # A small curated gallery for the guild's banner emblem (see draft_screen.py's

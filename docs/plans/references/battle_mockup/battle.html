@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ogre's Fortress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=block" rel="stylesheet">
+<script src="icons.js"></script>
+<style>
+:root{
+  --ink:#24180e; --ink-2:#4a3522; --paper:#eadcbc; --paper-2:#d9c49b; --paper-3:#bfa477;
+  --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
+  --blood:#9a2f22; --blood-hi:#c9473a; --enamel:#2e5f8e; --enamel-hi:#5b8fc0;
+  --leather:#16110c; --leather-2:#231a12; --leather-3:#33261a;
+  --green:#6e9448;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  font-family:"EB Garamond",serif;color:var(--paper);
+  background:
+    radial-gradient(ellipse 70% 60% at 38% 45%, #3b2a1b 0%, #20170f 55%, #0d0906 100%);
+  overflow:hidden}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.55;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .35' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .35  0 0 0 0 .2  0 0 0 1.2 -.2'/></filter><rect width='600' height='600' filter='url(%23n)'/></svg>")}
+#vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 85% 80% at 40% 46%, transparent 55%, rgba(0,0,0,.72) 100%)}
+
+/* ---------- top bar ---------- */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center}
+.cartouche{width:420px}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.14em;color:var(--brass-hi);
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+.cartouche .sub{margin-top:7px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+#init{position:absolute;left:470px;top:0;height:76px;display:flex;align-items:center;gap:14px}
+.round{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 35% 30%,#4a3826,#1b140d 75%);
+  box-shadow:inset 0 0 0 2px var(--brass-lo),inset 0 0 0 4px #120d08,inset 0 0 0 5px rgba(240,215,158,.35),0 4px 10px rgba(0,0,0,.6)}
+.round small{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:#a98d5f}
+.round span{display:block;font:700 26px/1 Cinzel,serif;color:var(--brass-hi);margin-top:2px}
+.chain{position:relative;display:flex;align-items:center;gap:10px;padding:0 4px}
+.chain:before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;
+  background:repeating-linear-gradient(90deg,var(--brass-lo) 0 6px,transparent 6px 9px);opacity:.8}
+.coin{position:relative;width:44px;height:44px;border-radius:50%;flex:none;
+  box-shadow:0 0 0 2px #120d08,0 0 0 3.5px var(--side),0 0 0 5px #120d08,0 3px 8px rgba(0,0,0,.7)}
+.coin img{width:100%;height:100%;border-radius:50%;display:block;filter:sepia(.15) contrast(1.05)}
+.coin.foe{--side:var(--blood)} .coin.ally{--side:var(--enamel-hi)}
+.coin.now{width:62px;height:62px;box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass-hi),0 0 0 6px #120d08,0 0 22px rgba(240,215,158,.45),0 4px 10px rgba(0,0,0,.7)}
+.coin.now:after{content:"NOW";position:absolute;left:50%;bottom:-17px;transform:translateX(-50%);
+  font:700 9px/1 Cinzel,serif;letter-spacing:.25em;color:var(--brass-hi)}
+.coin.unknown{background:radial-gradient(circle at 40% 35%,#3a2c1e,#17110b);display:grid;place-items:center;
+  font:700 22px/1 "IM Fell English",serif;color:#7d6748}
+.coin.unknown img{display:none}
+.coin .hp{position:absolute;left:6px;right:6px;bottom:-7px;height:3px;border-radius:2px;background:#120d08}
+.coin .hp i{display:block;height:100%;border-radius:2px;background:var(--c)}
+#topright{margin-left:auto;display:flex;gap:10px;align-items:center}
+.ghost-btn{height:38px;padding:0 16px;display:grid;place-items:center;border-radius:3px;
+  font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#b9a27c;
+  border:1px solid rgba(201,163,94,.28);background:linear-gradient(#211810,#17110b)}
+.ghost-btn b{color:var(--brass-hi);font-weight:700;margin-left:6px}
+
+/* ---------- board ---------- */
+#sheet{position:absolute;left:30px;top:112px;width:1384px;height:780px;
+  filter:drop-shadow(0 18px 26px rgba(0,0,0,.75)) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+#sheet canvas{position:absolute;left:0;top:0}
+#tokens{position:absolute;left:0;top:0;width:1384px;height:780px}
+.tok{position:absolute;border-radius:50%;
+  box-shadow:0 0 0 2px #1a120a,0 0 0 4px var(--side),0 0 0 5.5px #1a120a,0 6px 8px rgba(30,18,8,.55)}
+.tok img{width:100%;height:100%;border-radius:50%;display:block}
+.tok.ally{--side:var(--enamel)} .tok.foe{--side:var(--blood)}
+.tok.dim img{filter:grayscale(.5) brightness(.7)}
+.tok.active{box-shadow:0 0 0 2px #1a120a,0 0 0 5px var(--brass-hi),0 0 0 6.5px #1a120a,0 0 26px 6px rgba(255,214,140,.55),0 6px 8px rgba(30,18,8,.55)}
+.tok svg.arc{position:absolute;left:-9px;top:-9px;overflow:visible}
+.pennant{position:absolute;left:-10px;top:-13px;width:16px;height:22px;
+  background:linear-gradient(var(--enamel-hi),var(--enamel));clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);
+  filter:drop-shadow(0 1px 0 #1a120a)}
+.nameplate{position:absolute;left:50%;top:calc(100% + 12px);transform:translateX(-50%);white-space:nowrap;
+  padding:3px 12px 4px;font:600 13px/1 Cinzel,serif;letter-spacing:.08em;color:#f3e6c6;
+  background:linear-gradient(#3a2a1a,#22180f);border:1px solid rgba(240,215,158,.45);border-radius:2px;
+  box-shadow:0 3px 6px rgba(0,0,0,.5)}
+.nameplate.foe{border-color:rgba(201,71,58,.6)}
+.dmg{position:absolute;font:900 34px/1 Cinzel,serif;color:var(--blood-hi);
+  text-shadow:0 2px 0 #2a0c07,0 0 10px rgba(255,120,90,.35);transform:rotate(-8deg)}
+.dmg small{display:block;font:italic 15px/1 "IM Fell English",serif;color:#7a2318;text-shadow:none;margin-top:2px}
+.heard{position:absolute;width:56px;height:56px;display:grid;place-items:center;
+  font:italic 13px/1.1 "IM Fell English",serif;color:#5a4128;text-align:center}
+
+/* tooltip */
+.tip{position:absolute;width:270px;padding:14px 16px 12px;color:var(--ink);
+  background:linear-gradient(170deg,#f2e6c9,#e2d0a7);border-radius:2px;
+  box-shadow:0 0 0 1px #6b4f2c,0 0 0 4px #efe2c4,0 0 0 5px #6b4f2c,0 14px 26px rgba(0,0,0,.55)}
+.tip h4{font:700 14px/1 Cinzel,serif;letter-spacing:.12em;color:#5a2116}
+.tip .vs{font:italic 15px/1.2 "IM Fell English",serif;color:#5b4630;margin:5px 0 10px}
+.tip .big{display:flex;align-items:flex-end;gap:14px;border-top:1px solid rgba(90,60,30,.3);padding-top:9px}
+.tip .big div{flex:1}
+.tip .big b{display:block;font:700 30px/1 Cinzel,serif;color:var(--ink)}
+.tip .big span{font:600 10px/1 Cinzel,serif;letter-spacing:.18em;color:#7b6142}
+.tip .note{margin-top:9px;font:italic 14px/1.25 "IM Fell English",serif;color:#5b4630}
+
+/* ---------- right column ---------- */
+#right{position:absolute;left:1440px;top:112px;width:448px;height:780px;display:flex;flex-direction:column;gap:16px}
+.page{position:relative;color:var(--ink);border-radius:2px;
+  background:
+    radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.25),transparent 60%),
+    radial-gradient(ellipse at 90% 100%,rgba(120,80,30,.22),transparent 55%),
+    linear-gradient(175deg,#efe2c3,#dcc79d);
+  box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #5d4426,0 14px 24px rgba(0,0,0,.6)}
+.page:before{content:"";position:absolute;inset:7px;border:1px solid rgba(80,52,24,.45);
+  box-shadow:inset 0 0 0 3px transparent,inset 0 0 0 4px rgba(80,52,24,.25);pointer-events:none}
+.bestiary{padding:22px 24px 18px}
+.kicker{font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#7d5c37;display:flex;align-items:center;gap:10px}
+.kicker:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.5),transparent)}
+.foehead{display:flex;gap:16px;margin-top:14px;align-items:center}
+.foehead .med{width:112px;height:112px;border-radius:50%;flex:none;
+  box-shadow:0 0 0 2px #2a1c10,0 0 0 5px var(--blood),0 0 0 7px #2a1c10,0 6px 12px rgba(40,20,5,.45)}
+.foehead .med img{width:100%;height:100%;border-radius:50%}
+.foehead h2{font:700 25px/1.05 Cinzel,serif;color:#2a1a0e}
+.foehead .race{font:italic 16px/1.25 "IM Fell English",serif;color:#5b4630;margin-top:6px}
+.foehead .threat{margin-top:9px;display:inline-flex;gap:6px;align-items:center;
+  font:700 10px/1 Cinzel,serif;letter-spacing:.2em;color:#f3e1d2;background:var(--blood);padding:5px 8px 4px;border-radius:2px}
+.known{margin-top:16px}
+.tier{display:grid;grid-template-columns:74px 1fr;gap:8px;padding:7px 0;border-top:1px dashed rgba(90,60,30,.3)}
+.tier>span{font:600 10px/1.9 Cinzel,serif;letter-spacing:.2em;color:#8a6c47}
+.facts{display:flex;flex-wrap:wrap;gap:6px 14px;font:16px/1.4 "EB Garamond",serif;color:#3a2918}
+.facts b{font-weight:600;color:#24170c}
+.facts .q{color:#9b8565;font-style:italic}
+.facts .q:after{content:" ?";font-family:"IM Fell English";color:#7a2318}
+.assess{margin-top:10px;font:italic 15px/1.3 "IM Fell English",serif;color:#5b4630}
+.assess kbd{font:700 11px/1 Cinzel,serif;border:1px solid #7d5c37;padding:2px 5px 1px;border-radius:2px;color:#4a3420;margin-right:2px}
+
+.chron{flex:1;padding:20px 24px 16px;overflow:hidden}
+.chron .entries{margin-top:12px;font:16.5px/1.38 "IM Fell English",serif;color:#3a2918}
+.chron .rnd{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font:700 11px/1 Cinzel,serif;letter-spacing:.3em;color:#8a6c47}
+.chron .rnd:before,.chron .rnd:after{content:"";flex:1;height:1px;background:rgba(90,60,30,.3)}
+.chron p{margin:0 0 7px;padding-left:14px;text-indent:-14px}
+.chron p:before{content:"❧ ";color:#a07a45;font-size:13px}
+.chron .a{color:#1f4a73;font-style:normal;font-family:"IM Fell English SC",serif}
+.chron .f{color:#7a2318;font-style:normal;font-family:"IM Fell English SC",serif}
+.chron .n{font:700 15px "Cinzel",serif;color:#5a2116}
+.chron .now{color:#5b4630;font-style:italic}
+.chron .fade{position:absolute;left:8px;right:8px;top:48px;height:46px;background:linear-gradient(#e9dbba,rgba(233,219,186,0))}
+
+/* ---------- bottom ---------- */
+#bottom{position:absolute;left:30px;right:32px;top:912px;height:150px}
+.unit{position:absolute;left:0;top:0;width:560px;height:150px;border-radius:4px;
+  background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.unit .med{position:absolute;left:18px;top:-30px;width:150px;height:150px;border-radius:50%;
+  box-shadow:0 0 0 3px #120d08,0 0 0 7px var(--brass),0 0 0 9px #120d08,0 0 0 11px var(--enamel),0 0 0 13px #120d08,0 14px 24px rgba(0,0,0,.7),0 0 40px rgba(240,215,158,.18)}
+.unit .med img{width:100%;height:100%;border-radius:50%}
+.unit .body{position:absolute;left:192px;top:16px;right:18px}
+.unit h1{font:700 30px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em}
+.unit .race{font:italic 16px/1 "IM Fell English",serif;color:#b59c76;margin-top:6px}
+.stats{display:flex;gap:10px;margin-top:14px}
+.stat{min-width:62px;padding:6px 8px 5px;text-align:center;border-radius:2px;
+  background:linear-gradient(#120d08,#1d150e);box-shadow:inset 0 0 0 1px rgba(201,163,94,.25)}
+.stat span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.22em;color:#8f7652}
+.stat b{display:block;font:700 21px/1 Cinzel,serif;color:#f0dfb8;margin-top:4px}
+.stat b small{font-size:13px;color:#8f7652}
+.stat.hp{min-width:132px;text-align:left;padding-left:10px}
+.drops{display:flex;gap:3px;margin-top:5px}
+.drops i{width:10px;height:13px;background:var(--blood-hi);clip-path:path("M5 0 C5 0 10 6 10 8.5 A5 5 0 0 1 0 8.5 C0 6 5 0 5 0Z")}
+.drops i.off{background:#3a2a1e}
+.weapon{margin-top:11px;font:15px/1 "EB Garamond",serif;color:#c9b38c}
+.weapon b{font:600 13px/1 Cinzel,serif;letter-spacing:.08em;color:#f0dfb8;margin-right:6px}
+.weapon em{color:var(--brass-hi);font-style:normal;font-family:Cinzel;font-size:11px;letter-spacing:.16em;margin-left:4px}
+.ap{position:absolute;right:18px;top:16px;text-align:right}
+.ap span{font:600 9px/1 Cinzel,serif;letter-spacing:.22em;color:#8f7652}
+.ap .coins{display:flex;gap:6px;margin-top:6px;justify-content:flex-end}
+.ap .coins i{width:24px;height:24px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff1c8,#d5a94f 45%,#7a5520 100%);box-shadow:0 0 0 1.5px #3a2610,0 2px 4px rgba(0,0,0,.6),0 0 12px rgba(240,200,110,.35)}
+.ap .coins i.spent{background:#2a2017;box-shadow:inset 0 0 0 1.5px #4a3a28}
+
+.bar{position:absolute;left:592px;top:0;width:1000px;height:150px}
+.bar .hint{display:flex;align-items:center;gap:12px;height:24px;font:italic 16px/1 "IM Fell English",serif;color:#b59c76}
+.bar .tabs{margin-left:auto;display:flex;gap:2px}
+.bar .tabs span{font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:#8f7652;padding:6px 12px;border-bottom:1px solid rgba(201,163,94,.2)}
+.bar .tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
+.plates{display:flex;gap:9px;margin-top:10px}
+.plate{position:relative;width:91px;height:112px;border-radius:3px;text-align:center;
+  background:linear-gradient(180deg,#2e2318,#19120c);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.15),inset 0 0 0 1px rgba(201,163,94,.25),0 6px 12px rgba(0,0,0,.5)}
+.plate .ico{width:46px;height:46px;margin:18px auto 0;color:#d8bd86;filter:drop-shadow(0 1px 0 #000)}
+.plate .ico svg{width:100%;height:100%}
+.plate .nm{position:absolute;left:4px;right:4px;bottom:11px;font:600 10.5px/1.15 Cinzel,serif;letter-spacing:.06em;color:#d9c7a2}
+.plate .key{position:absolute;left:7px;top:6px;font:700 11px/1 Cinzel,serif;color:#7f6747}
+.plate .cost{position:absolute;right:7px;top:8px;display:flex;gap:3px}
+.plate .cost i{width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9b0,#a77a32)}
+.plate.sel{transform:translateY(-8px);
+  background:linear-gradient(180deg,#f1e3c2,#d8c08f);
+  box-shadow:0 0 0 1px #5d4426,0 0 0 3px var(--brass-hi),0 0 24px rgba(240,215,158,.45),0 12px 18px rgba(0,0,0,.6)}
+.plate.sel .ico{color:#5a2116;filter:none} .plate.sel .nm{color:#2a1a0e} .plate.sel .key{color:#7d5c37}
+.plate.off{opacity:.38}
+.plate.off .ico{color:#8a7a62}
+
+.seal{position:absolute;right:16px;top:4px;width:142px;height:142px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 38% 32%,#d0574a,#9a2f22 45%,#5a160f 85%);
+  box-shadow:inset 0 0 0 7px rgba(70,15,10,.55),inset 0 0 0 9px rgba(255,170,150,.18),0 10px 20px rgba(0,0,0,.65)}
+.seal:before{content:"";position:absolute;inset:-6px;border-radius:50%;
+  background:radial-gradient(circle,transparent 66%,#8e2a1e 67%,#7a2218 72%,transparent 73%);
+  -webkit-mask:repeating-conic-gradient(#000 0 9deg,transparent 9deg 15deg);opacity:.95}
+.seal .ico{width:44px;height:44px;margin:0 auto;color:#f3d6c6;opacity:.9}
+.seal .ico svg{width:100%;height:100%}
+.seal b{display:block;font:700 15px/1 Cinzel,serif;letter-spacing:.16em;color:#fff3ea;margin-top:6px;text-shadow:0 1px 0 #3a0c06}
+.seal small{display:block;font:600 10px/1 Cinzel,serif;color:#f1b6a6;margin-top:4px;letter-spacing:.2em}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="top">
+    <div class="cartouche">
+      <div class="place">The Ogre's Fortress</div>
+      <div class="sub"><b>Wildfire</b> · for the Nature Coven — Day 14, dusk</div>
+    </div>
+    <div id="init"></div>
+    <div id="topright">
+      <div class="ghost-btn">Seen by<b>Squad</b></div>
+      <div class="ghost-btn">Chronicle</div>
+      <div class="ghost-btn">☰</div>
+    </div>
+  </div>
+
+  <div id="sheet">
+    <canvas id="board" width="1384" height="780"></canvas>
+    <div id="tokens"></div>
+  </div>
+
+  <div id="right">
+    <div class="page bestiary">
+      <div class="kicker">Bestiary · target</div>
+      <div class="foehead">
+        <div class="med"><img src="img/ogre.png"></div>
+        <div>
+          <h2>Grumbold<br>the Builder</h2>
+          <div class="race">Ogre · Large · Chaotic and Neutral</div>
+          <div class="threat">☠ Far above your level</div>
+        </div>
+      </div>
+      <div class="known">
+        <div class="tier"><span>Easy</span><div class="facts"><span>Damage <b>d12</b></span><span>Speed <b>5</b></span><span>Ability <b>Giant Grip</b></span><span class="q">Level</span></div></div>
+        <div class="tier"><span>Medium</span><div class="facts"><span>AC <b>14</b></span><span class="q">To hit</span><span class="q">Damage bonus</span><span class="q">Mental def.</span></div></div>
+        <div class="tier"><span>Hard</span><div class="facts"><span class="q">Hit points</span><span class="q">Attributes</span><span class="q">Talents</span></div></div>
+      </div>
+      <div class="assess"><kbd>6</kbd> Assess him to read the rest — or learn it the hard way.</div>
+    </div>
+    <div class="page chron">
+      <div class="kicker">Chronicle</div>
+      <div class="entries">
+        <div class="rnd">Round II</div>
+        <p><span class="a">Raxel</span> looses a dagger at <span class="f">Gormashorn</span> — <span class="n">4</span>. He falls and does not rise.</p>
+        <p><span class="f">Grumbold</span> bellows. The fire takes two more flagstones.</p>
+        <p><span class="f">Skeldroven</span> thrusts at <span class="a">Aldwen</span> and misses — a 7 against her mail.</p>
+        <div class="rnd">Round III</div>
+        <p><span class="a">Aldwen</span> cuts <span class="f">Skeldroven</span> across the arm — <span class="n">2</span>.</p>
+        <p><span class="a">Drovelob</span> slips into the smoke and is gone from sight.</p>
+        <p><span class="a">Othmirekir</span> runs three paces into the hall, spear raised…</p>
+        <p class="now">Something heavy shifts in the dark beyond the fire.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="bottom">
+    <div class="unit">
+      <div class="med"><img src="img/gnoll.png"></div>
+      <div class="body">
+        <h1>Othmirekir</h1>
+        <div class="race">Gnoll · Hunter · Lawful and Neutral</div>
+        <div class="stats">
+          <div class="stat hp"><span>Hit points · 7/9</span><div class="drops" id="drops"></div></div>
+          <div class="stat"><span>AC</span><b>12</b></div>
+          <div class="stat"><span>MD</span><b>11</b></div>
+          <div class="stat"><span>Speed</span><b>6</b></div>
+        </div>
+        <div class="weapon"><b>Shortspear</b>1d6 · thrown 12 <em>Javelin Charge</em></div>
+      </div>
+      <div class="ap"><span>Action</span><div class="coins"><i class="spent"></i><i></i></div></div>
+    </div>
+    <div class="bar">
+      <div class="hint">He has moved this turn — the spear flies with +1d4. Pick a target.
+        <div class="tabs"><span class="on">Combat</span><span>Utility</span></div></div>
+      <div class="plates" id="plates"></div>
+    </div>
+    <div class="seal"><div><div class="ico" id="sealico"></div><b>End Turn</b><small>0</small></div></div>
+  </div>
+
+  <div id="grain"></div>
+  <div id="vignette"></div>
+</div>
+
+<script>
+const CELL=60, COLS=22, ROWS=12, OX=32, OY=30;
+const W=1384, H=780;
+let seed=7; const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const rr=(a,b)=>a+(b-a)*rnd();
+
+// ---- the scene ----
+const FLOOR_RECTS=[[1,3,6,9],[3,1,4,2],[7,5,9,6],[10,1,20,10],[21,4,21,6]];
+const PILLARS=[[13,3],[13,8],[18,3],[18,8]];
+const FIRE=[[15,8],[16,8],[16,9],[14,9],[17,9]];
+const SCONCES=[[11,1],[19,1],[2,3]];
+const floor=new Set(), wall=new Set();
+const K=(x,y)=>x+","+y;
+for(const [x0,y0,x1,y1] of FLOOR_RECTS) for(let x=x0;x<=x1;x++) for(let y=y0;y<=y1;y++) floor.add(K(x,y));
+for(const [x,y] of PILLARS){floor.delete(K(x,y)); wall.add(K(x,y));}
+const isFloor=(x,y)=>floor.has(K(x,y));
+const blocks=(x,y)=>!isFloor(x,y);
+
+const UNITS=[
+  {n:"Othmirekir",img:"gnoll",side:"ally",pos:[10,5],hp:7,max:9,active:true},
+  {n:"Aldwen",img:"human",side:"ally",pos:[9,6],hp:11,max:11,torch:true},
+  {n:"Raxel",img:"kenku",side:"ally",pos:[6,4],hp:5,max:6},
+  {n:"Drovelob",img:"grippli",side:"ally",pos:[6,8],hp:2,max:4},
+  {n:"Grumbold the Builder",img:"ogre",side:"foe",pos:[15,5],fp:2,hp:98,max:98,target:true},
+  {n:"Skeldroven",img:"gob1",side:"foe",pos:[12,4],hp:1,max:3},
+  {n:"Unimbex",img:"gob3",side:"foe",pos:[12,7],hp:3,max:3},
+];
+const HEARD=[[20,9]];
+const CORPSE=[11,6];
+const TRAIL=[[7,5],[8,5],[9,5],[10,5]];
+
+// ---- line of sight / light ----
+function los(a,b){
+  let [x0,y0]=a,[x1,y1]=b; const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))*3||1;
+  for(let i=1;i<n;i++){const t=i/n;const x=Math.round(x0+(x1-x0)*t),y=Math.round(y0+(y1-y0)*t);
+    if((x!==x1||y!==y1)&&blocks(x,y))return false;}
+  return true;
+}
+const LIGHTS=[...SCONCES.map(p=>({p,r:4.6})),{p:[15.5,8.7],r:5.4,fire:true},{p:[9,6],r:4.2}];
+const lit=(x,y)=>LIGHTS.some(L=>Math.hypot(L.p[0]-x,L.p[1]-y)<=L.r&&los([Math.floor(L.p[0]),Math.floor(L.p[1])],[x,y]));
+const squad=UNITS.filter(u=>u.side==="ally");
+const visible=new Set(), seen=new Set();
+for(const k of floor){const [x,y]=k.split(",").map(Number);
+  if((x>=19&&y>=7)||x===21||(x===20&&y>=5)) continue;               // never seen: behind the fire
+  if(y<=2&&x<=4) seen.add(k); else visible.add(k);           // the way in: remembered
+}
+// a wall shows when a cell beside it shows
+const near=(set,x,y)=>{for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)if(set.has(K(x+dx,y+dy)))return true;return false};
+
+// ---- painting ----
+const cv=document.getElementById("board"), g=cv.getContext("2d");
+const cx=x=>OX+x*CELL, cy=y=>OY+y*CELL;
+
+function deckle(ctx){
+  ctx.beginPath(); const j=()=>rr(-3,3);
+  const pts=[]; for(let x=6;x<=W-6;x+=14)pts.push([x,6+j()]);
+  for(let y=6;y<=H-6;y+=14)pts.push([W-6+j(),y]);
+  for(let x=W-6;x>=6;x-=14)pts.push([x,H-6+j()]);
+  for(let y=H-6;y>=6;y-=14)pts.push([6+j(),y]);
+  pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p)); ctx.closePath();
+}
+function paper(ctx,w,h,base){
+  ctx.fillStyle=base; ctx.fillRect(0,0,w,h);
+  for(let i=0;i<26;i++){const x=rr(0,w),y=rr(0,h),r=rr(60,260);
+    const gr=ctx.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${rnd()<.5?"150,105,55":"255,248,225"},${rr(.04,.10)})`);gr.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=gr;ctx.fillRect(x-r,y-r,2*r,2*r);}
+  for(let i=0;i<5200;i++){ctx.fillStyle=`rgba(90,60,30,${rr(.03,.12)})`;ctx.fillRect(rr(0,w),rr(0,h),rr(.6,1.6),rr(.6,1.6));}
+  for(let i=0;i<60;i++){ctx.strokeStyle=`rgba(110,80,45,${rr(.04,.09)})`;ctx.lineWidth=rr(.5,1);
+    ctx.beginPath();const x=rr(0,w),y=rr(0,h);ctx.moveTo(x,y);ctx.bezierCurveTo(x+rr(-60,60),y+rr(-20,20),x+rr(-60,60),y+rr(-20,20),x+rr(-120,120),y+rr(-30,30));ctx.stroke();}
+}
+function distToFloor(x,y){let best=9;for(const k of floor){const [fx,fy]=k.split(",").map(Number);const d=Math.max(Math.abs(fx-x),Math.abs(fy-y));if(d<best)best=d;}return best;}
+
+function hatchCell(ctx,x,y,alpha,dense){
+  const n=dense===2?7:dense?9:alpha>.5?5:2;
+  for(let c=0;c<n;c++){
+    const px=cx(x)+rr(2,CELL-2),py=cy(y)+rr(2,CELL-2),a=rr(0,Math.PI),len=rr(11,19),k=Math.round(rr(3,6)),gap=rr(2.6,3.3);
+    const dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx;
+    ctx.strokeStyle=`rgba(36,22,10,${alpha*rr(.7,1)})`;ctx.lineWidth=rr(.9,1.35);ctx.lineCap="round";
+    for(let i=0;i<k;i++){const o=(i-k/2)*gap,l=len*rr(.7,1);ctx.beginPath();
+      ctx.moveTo(px+nx*o-dx*l/2,py+ny*o-dy*l/2);ctx.lineTo(px+nx*o+dx*l/2+rr(-1,1),py+ny*o+dy*l/2+rr(-1,1));ctx.stroke();}
+  }
+}
+function wobble(ctx,x0,y0,x1,y1,w){
+  ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x0+rr(-.8,.8),y0+rr(-.8,.8));
+  const steps=4;for(let i=1;i<=steps;i++){const t=i/steps;ctx.lineTo(x0+(x1-x0)*t+rr(-1,1),y0+(y1-y0)*t+rr(-1,1));}
+  ctx.stroke();
+}
+
+function render(floorImg){
+  // sheet
+  g.save(); deckle(g); g.clip(); paper(g,W,H,"#e6d5b0");
+  // rock hatching, fading away from the rooms
+  for(let x=-1;x<=COLS;x++)for(let y=-1;y<=ROWS;y++){
+    if(isFloor(x,y))continue; const d=wall.has(K(x,y))?0:distToFloor(x,y);
+    if(d<=3) hatchCell(g,x,y,d<=1?.95:d===2?.6:.25,d<=1);
+  }
+  // floor
+  const fl=document.createElement("canvas");fl.width=W;fl.height=H;const f=fl.getContext("2d");
+  const TS=420;
+  for(let x=OX;x<W;x+=TS)for(let y=OY-TS;y<H;y+=TS)f.drawImage(floorImg,x,y,TS,TS);
+  f.globalCompositeOperation="multiply";
+  f.fillStyle="#d4b88c";f.fillRect(0,0,W,H);
+  f.globalCompositeOperation="source-over";
+  for(let i=0;i<1400;i++){f.fillStyle=`rgba(70,45,20,${rr(.03,.1)})`;f.fillRect(rr(0,W),rr(0,H),rr(1,3),rr(1,2));}
+  f.globalCompositeOperation="destination-in";f.fillStyle="#000";
+  f.beginPath();for(const k of floor){const [x,y]=k.split(",").map(Number);f.rect(cx(x),cy(y),CELL,CELL);}f.fill();
+  g.drawImage(fl,0,0);
+  // grid
+  g.strokeStyle="rgba(50,32,16,.16)";g.lineWidth=1;g.setLineDash([2,4]);
+  for(const k of floor){const [x,y]=k.split(",").map(Number);g.strokeRect(cx(x)+.5,cy(y)+.5,CELL,CELL);}
+  g.setLineDash([]);
+  // shadow the walls cast on the floor
+  for(const k of floor){const [x,y]=k.split(",").map(Number);
+    if(blocks(x,y-1)){const gr=g.createLinearGradient(0,cy(y),0,cy(y)+16);gr.addColorStop(0,"rgba(40,25,10,.35)");gr.addColorStop(1,"rgba(40,25,10,0)");g.fillStyle=gr;g.fillRect(cx(x),cy(y),CELL,16);}
+    if(blocks(x-1,y)){const gr=g.createLinearGradient(cx(x),0,cx(x)+12,0);gr.addColorStop(0,"rgba(40,25,10,.25)");gr.addColorStop(1,"rgba(40,25,10,0)");g.fillStyle=gr;g.fillRect(cx(x),cy(y),12,CELL);}
+  }
+  // pillars: cut stone with a heavy outline
+  for(const [x,y] of PILLARS){const r=[cx(x)+5,cy(y)+5,CELL-10,CELL-10];
+    g.fillStyle="rgba(40,25,10,.35)";g.fillRect(r[0]+6,r[1]+8,r[2],r[3]);
+    g.fillStyle="#8d7350";g.fillRect(...r);g.save();g.beginPath();g.rect(...r);g.clip();hatchCell(g,x,y,.9,2);hatchCell(g,x,y,.9,2);g.restore();
+    g.strokeStyle="#1f140a";wobble(g,r[0],r[1],r[0]+r[2],r[1],3);wobble(g,r[0]+r[2],r[1],r[0]+r[2],r[1]+r[3],3);wobble(g,r[0]+r[2],r[1]+r[3],r[0],r[1]+r[3],3);wobble(g,r[0],r[1]+r[3],r[0],r[1],3);
+    g.fillStyle="rgba(245,230,200,.55)";g.fillRect(r[0]+4,r[1]+4,r[2]-8,4);}
+  // room outlines
+  g.strokeStyle="#1d120a";
+  for(const k of floor){const [x,y]=k.split(",").map(Number);
+    if(blocks(x,y-1)&&!wall.has(K(x,y-1)))wobble(g,cx(x),cy(y),cx(x+1),cy(y),3.6);
+    if(blocks(x,y+1)&&!wall.has(K(x,y+1)))wobble(g,cx(x),cy(y+1),cx(x+1),cy(y+1),3.6);
+    if(blocks(x-1,y)&&!wall.has(K(x-1,y)))wobble(g,cx(x),cy(y),cx(x),cy(y+1),3.6);
+    if(blocks(x+1,y)&&!wall.has(K(x+1,y)))wobble(g,cx(x+1),cy(y),cx(x+1),cy(y+1),3.6);
+  }
+  // rubble where the fortress is still unbuilt
+  for(const [x,y,n] of [[20,2,7],[19,10,6],[21,5,5],[10,9,4]]){for(let i=0;i<n;i++){const px=cx(x)+rr(8,52),py=cy(y)+rr(8,52),s=rr(3,8);
+    g.fillStyle="#d8c39b";g.strokeStyle="#2a1a0c";g.lineWidth=1.3;g.beginPath();for(let a=0;a<6;a++){const t=a/6*Math.PI*2;g.lineTo(px+Math.cos(t)*s*rr(.7,1.1),py+Math.sin(t)*s*rr(.7,1.1));}g.closePath();g.fill();g.stroke();}}
+  // the dead goblin and his blood
+  const [bx,by]=[cx(CORPSE[0])+30,cy(CORPSE[1])+32];
+  for(let i=0;i<14;i++){g.fillStyle=`rgba(118,30,20,${rr(.5,.8)})`;g.beginPath();g.arc(bx+rr(-22,22),by+rr(-16,18),rr(1.5,7),0,7);g.fill();}
+  g.fillStyle="rgba(118,30,20,.75)";g.beginPath();g.ellipse(bx+4,by+6,16,10,.4,0,7);g.fill();
+  // fire on the flagstones
+  for(const [x,y] of FIRE){const gx=cx(x)+30,gy=cy(y)+30;
+    const sc=g.createRadialGradient(gx,gy,4,gx,gy,40);sc.addColorStop(0,"rgba(25,12,4,.75)");sc.addColorStop(1,"rgba(25,12,4,0)");g.fillStyle=sc;g.fillRect(gx-40,gy-40,80,80);}
+  for(const [x,y] of FIRE){const gx=cx(x),gy=cy(y);
+    for(let i=0;i<3;i++){const px=gx+14+i*16+rr(-4,4),py=gy+rr(44,54),h=rr(30,48),w=rr(9,13);
+      const gr=g.createLinearGradient(0,py-h,0,py);gr.addColorStop(0,"#fff4c2");gr.addColorStop(.35,"#f6b04a");gr.addColorStop(.75,"#d4561f");gr.addColorStop(1,"#7a2012");
+      g.fillStyle=gr;g.strokeStyle="#2a1006";g.lineWidth=1.3;g.beginPath();g.moveTo(px-w,py);
+      g.bezierCurveTo(px-w-4,py-h*.45,px-w*.2,py-h*.55,px-w*.5,py-h*.8);g.bezierCurveTo(px-w*.1,py-h*.62,px+w*.2,py-h*.9,px+rr(-2,3),py-h);
+      g.bezierCurveTo(px+w*.7,py-h*.7,px+w+3,py-h*.4,px+w,py);g.closePath();g.fill();g.stroke();
+      g.fillStyle="rgba(255,250,215,.85)";g.beginPath();g.ellipse(px,py-h*.28,w*.35,h*.18,0,0,7);g.fill();}
+    for(let i=0;i<5;i++){g.fillStyle=`rgba(255,${Math.round(rr(140,210))},80,${rr(.6,1)})`;g.beginPath();g.arc(gx+rr(5,55),gy+rr(-14,20),rr(1,2.2),0,7);g.fill();}
+    g.strokeStyle="rgba(60,48,38,.28)";g.lineWidth=2;g.beginPath();g.moveTo(gx+30,gy+6);g.bezierCurveTo(gx+10,gy-14,gx+46,gy-24,gx+24,gy-44);g.stroke();}
+  g.restore();
+
+  // ---- light, memory and the unknown ----
+  const sh=document.createElement("canvas");sh.width=W;sh.height=H;const s=sh.getContext("2d");
+  const small=document.createElement("canvas");small.width=COLS+4;small.height=ROWS+4;const sm=small.getContext("2d");
+  const maskOf=(test,col)=>{sm.clearRect(0,0,COLS+4,ROWS+4);sm.fillStyle=col;
+    for(let x=-1;x<=COLS;x++)for(let y=-1;y<=ROWS;y++)if(test(x,y))sm.fillRect(x+2,y+2,1,1);
+    const c=document.createElement("canvas");c.width=W;c.height=H;const cc=c.getContext("2d");cc.imageSmoothingEnabled=true;cc.imageSmoothingQuality="high";
+    cc.filter="blur(14px)";cc.drawImage(small,-2*CELL+OX,-2*CELL+OY,(COLS+4)*CELL,(ROWS+4)*CELL);return c;};
+  s.fillStyle="rgb(226,214,192)";s.fillRect(0,0,W,H);                    // never seen: plain paper
+  const seenTest=(x,y)=>seen.has(K(x,y))||(!isFloor(x,y)&&near(seen,x,y)&&!near(visible,x,y));
+  const visTest=(x,y)=>visible.has(K(x,y))||(!isFloor(x,y)&&near(visible,x,y));
+  s.drawImage(maskOf(seenTest,"rgb(150,128,100)"),0,0);
+  s.drawImage(maskOf(visTest,"rgb(150,132,108)"),0,0);
+  const lights=document.createElement("canvas");lights.width=W;lights.height=H;const l=lights.getContext("2d");
+  for(const L of LIGHTS){const x=OX+L.p[0]*CELL+30,y=OY+L.p[1]*CELL+(L.fire?0:30),r=L.r*CELL*1.25;
+    const gr=l.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,L.fire?"rgba(255,190,140,.95)":"rgba(255,228,190,.85)");gr.addColorStop(.5,"rgba(130,110,85,.45)");gr.addColorStop(1,"rgba(0,0,0,0)");
+    l.globalCompositeOperation="lighter";l.fillStyle=gr;l.fillRect(x-r,y-r,2*r,2*r);}
+  l.globalCompositeOperation="destination-in";l.drawImage(maskOf(visTest,"#fff"),0,0);
+  s.globalCompositeOperation="lighter";s.drawImage(lights,0,0);
+  g.save();deckle(g);g.clip();
+  // what the squad has never seen is still blank paper
+  const unk=document.createElement("canvas");unk.width=W;unk.height=H;const u=unk.getContext("2d");
+  paper(u,W,H,"#e2cfa6");
+  u.globalCompositeOperation="destination-out";
+  u.drawImage(maskOf((x,y)=>visible.has(K(x,y))||seen.has(K(x,y))||(!isFloor(x,y)&&(near(visible,x,y)||near(seen,x,y))),"#fff"),0,0);
+  u.globalCompositeOperation="source-over";
+  for(let i=0;i<90;i++){const x=rr(cx(18.6),cx(22)),y=rr(cy(6.6),cy(11.4));u.strokeStyle=`rgba(90,65,40,${rr(.05,.14)})`;u.lineWidth=.8;u.beginPath();u.moveTo(x,y);u.lineTo(x+rr(8,22),y+rr(-10,-2));u.stroke();}
+  g.drawImage(unk,0,0);
+  g.globalCompositeOperation="multiply";g.drawImage(sh,0,0);
+  g.globalCompositeOperation="screen";
+  for(const L of LIGHTS){const x=OX+L.p[0]*CELL+30,y=OY+L.p[1]*CELL+(L.fire?0:30),r=(L.fire?2.2:1.2)*CELL;
+    const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,L.fire?"rgba(255,130,50,.38)":"rgba(255,170,90,.22)");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}
+  g.restore();
+
+  // sconces
+  for(const [x,y] of SCONCES){const px=cx(x)+30,py=cy(y)+6;
+    g.fillStyle="#2a1a0c";g.fillRect(px-7,py-4,14,7);
+    const gr=g.createLinearGradient(0,py-20,0,py);gr.addColorStop(0,"#fff1b8");gr.addColorStop(1,"#e8752c");
+    g.fillStyle=gr;g.strokeStyle="#2a1208";g.lineWidth=1.2;g.beginPath();g.moveTo(px-6,py-3);g.quadraticCurveTo(px-6,py-14,px,py-22);g.quadraticCurveTo(px+6,py-14,px+6,py-3);g.closePath();g.fill();g.stroke();}
+  // marginal note in the unknown
+  g.save();g.translate(cx(18)+40,cy(10)+44);g.rotate(-.06);g.fillStyle="rgba(70,45,22,.55)";g.font="italic 17px 'IM Fell English'";g.fillText("heard, not seen",0,0);g.restore();
+  g.fillStyle="rgba(70,45,22,.55)";g.font="italic 15px 'IM Fell English'";
+  // the hobgoblin nobody can see, only hear: ink sound rings
+  {const hx=cx(20)+30,hy=cy(9)+30;g.strokeStyle="rgba(122,35,24,.7)";g.lineCap="round";
+   for(let i=1;i<=3;i++){g.lineWidth=2.4-i*.5;g.beginPath();g.arc(hx,hy,i*13,Math.PI*1.05,Math.PI*1.65);g.stroke();g.beginPath();g.arc(hx,hy,i*13,Math.PI*1.85,Math.PI*2.35);g.stroke();}
+   g.fillStyle="rgba(122,35,24,.85)";g.font="700 26px 'IM Fell English'";g.textAlign="center";g.fillText("?",hx,hy+9);g.textAlign="start";}
+  // corpse mark
+  g.strokeStyle="#3a1008";g.lineWidth=3;const [kx,ky]=[cx(CORPSE[0])+30,cy(CORPSE[1])+28];
+  g.beginPath();g.moveTo(kx-9,ky-9);g.lineTo(kx+9,ky+9);g.moveTo(kx+9,ky-9);g.lineTo(kx-9,ky+9);g.stroke();
+
+  // ---- the move this turn: footprints in ink ----
+  g.strokeStyle="rgba(240,215,158,.0)";
+  for(let i=0;i<TRAIL.length-1;i++){const [ax,ay]=TRAIL[i];
+    for(let s2=0;s2<2;s2++){const px=cx(ax)+30+s2*30,py=cy(ay)+30+(s2%2?6:-6);
+      g.fillStyle="rgba(42,26,12,.7)";g.beginPath();g.ellipse(px,py,6,4,0,0,7);g.fill();
+      for(let t=-1;t<=1;t++){g.beginPath();g.arc(px+5.5,py+t*3.2,1.4,0,7);g.fill();}}}
+  // the throw: an ink arc from the gnoll to the ogre
+  const [sx,sy]=[cx(10)+30,cy(5)+30],[tx,ty]=[cx(15)+60,cy(5)+60];
+  g.save();g.strokeStyle="rgba(150,40,26,.9)";g.lineWidth=3;g.setLineDash([10,7]);g.lineCap="round";
+  g.beginPath();g.moveTo(sx+22,sy-10);g.quadraticCurveTo((sx+tx)/2,sy-120,tx-50,ty-46);g.stroke();g.setLineDash([]);
+  g.fillStyle="rgba(150,40,26,.95)";g.beginPath();g.moveTo(tx-44,ty-40);g.lineTo(tx-62,ty-46);g.lineTo(tx-52,ty-60);g.closePath();g.fill();g.restore();
+  // reticle around the target
+  g.save();g.strokeStyle="rgba(201,71,58,.95)";g.lineWidth=2.5;g.beginPath();g.arc(tx,ty,70,0,7);g.stroke();
+  for(let a=0;a<4;a++){const t=a*Math.PI/2+Math.PI/4;g.beginPath();g.moveTo(tx+Math.cos(t)*62,ty+Math.sin(t)*62);g.lineTo(tx+Math.cos(t)*82,ty+Math.sin(t)*82);g.stroke();}
+  g.restore();
+}
+
+// ---- tokens ----
+const T=document.getElementById("tokens");
+function arcSvg(d,frac,col){
+  const r=d/2+9,c=2*Math.PI*r,span=.36*c;
+  return `<svg class="arc" width="${d+18}" height="${d+18}"><g transform="rotate(${90-.18*360} ${r} ${r})">
+    <circle cx="${r}" cy="${r}" r="${r-1}" fill="none" stroke="rgba(26,18,10,.85)" stroke-width="6" stroke-dasharray="${span} ${c}" stroke-linecap="round"/>
+    <circle cx="${r}" cy="${r}" r="${r-1}" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${span*frac} ${c}" stroke-linecap="round"/></g></svg>`;
+}
+for(const u of UNITS){
+  const fp=u.fp||1,d=fp===2?118:(u.active?58:50);
+  const x=OX+u.pos[0]*CELL+fp*CELL/2-d/2,y=OY+u.pos[1]*CELL+fp*CELL/2-d/2;
+  const el=document.createElement("div");el.className=`tok ${u.side}${u.active?" active":""}`;
+  el.style.cssText=`left:${x}px;top:${y}px;width:${d}px;height:${d}px`;
+  const fr=u.hp/u.max,col=fr>.5?"#7fa557":"#d0493a";
+  el.innerHTML=`<img src="img/${u.img}.png">`+arcSvg(d,fr,col)+(u.side==="ally"?`<div class="pennant"></div>`:"")+
+    (u.target?`<div class="nameplate foe">Grumbold</div>`:"");
+  T.appendChild(el);
+}
+T.insertAdjacentHTML("beforeend",`<div class="dmg" style="left:${OX+11*CELL+4}px;top:${OY+3*CELL+2}px">−2<small>bloodied</small></div>`);
+T.insertAdjacentHTML("beforeend",`<div class="tip" style="left:${OX+15*CELL+130}px;top:${OY+2*CELL+4}px">
+  <h4>Javelin Charge</h4><div class="vs">Othmirekir → Grumbold the Builder</div>
+  <div class="big"><div><b>55%</b><span>To hit</span></div><div><b>1d6+1d4</b><span>Damage</span></div><div><b>1</b><span>AP</span></div></div>
+  <div class="note">Thrown after a move. He is Large — an easy mark, a hard kill.</div></div>`);
+
+// ---- initiative ----
+const INIT=[["gnoll","ally",1,"now"],["ogre","foe",1],["kenku","ally",.83],["gob1","foe",.33],["human","ally",1],["gob3","foe",1],["grippli","ally",.5],["?","foe",1,"unknown"]];
+document.getElementById("init").innerHTML=`<div class="round"><div><small>Round</small><span>III</span></div></div><div class="chain">`+
+  INIT.map(([i,s,f,k])=>`<div class="coin ${s} ${k||""}">${k==="unknown"?"?":`<img src="img/${i}.png">`}${k==="unknown"?"":`<div class="hp" style="--c:${f>.5?"#7fa557":"#d0493a"}"><i style="width:${f*100}%"></i></div>`}</div>`).join("")+`</div>`;
+
+// ---- hp drops ----
+document.getElementById("drops").innerHTML=Array.from({length:9},(_,i)=>`<i class="${i<7?"":"off"}"></i>`).join("");
+
+// ---- actions ----
+const ACTS=[["1","Attack","attack",1],["2","Javelin Charge","javelin",1,"sel"],["3","Grab","grab",1,"off"],["4","Throw","throw",1],["5","Demoralize","demoralize",1],
+  ["6","Assess","assess",1],["7","Push","push",1,"off"],["8","Defend","defend",1],["F","Flee","flee",1],["9","Delay","delay",0]];
+document.getElementById("plates").innerHTML=ACTS.map(([k,n,i,c,st])=>`<div class="plate ${st||""}"><div class="key">${k}</div>
+  <div class="cost">${"<i></i>".repeat(c)}</div><div class="ico"><svg viewBox="0 0 512 512">${ICONS[i]}</svg></div><div class="nm">${n}</div></div>`).join("");
+document.getElementById("sealico").innerHTML=`<svg viewBox="0 0 512 512">${ICONS.end}</svg>`;
+
+// ---- fit the 1920x1080 stage to the window ----
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=document.getElementById("stage");
+  st.style.transform=`scale(${s})`;st.style.left=(innerWidth-1920*s)/2+"px";st.style.top=(innerHeight-1080*s)/2+"px";}
+addEventListener("resize",fit);fit();
+
+const img=new Image();img.onload=()=>document.fonts.ready.then(()=>render(img));img.src="img/floor.jpg";
+</script>
+</body>
+</html>
