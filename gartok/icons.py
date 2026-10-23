@@ -369,6 +369,17 @@ def _parry_strike(surf, rect, c):
     pygame.draw.line(surf, c, (cx, cy - s * 0.1), (cx, cy + s * 0.1), w)
 
 
+def _long_thrust(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.line(surf, c, (x + s * 0.05, y + s * 0.95), (x + s * 0.68, y + s * 0.32), w)
+    pygame.draw.polygon(surf, c, [(x + s * 0.62, y + s * 0.26), (x + s * 0.95, y + s * 0.05),
+                                  (x + s * 0.74, y + s * 0.38)], 0)
+    pygame.draw.arc(surf, c, (x + s * 0.55, y + s * 0.02, s * 0.42, s * 0.42), 1.6, 3.4, w)
+    for ox in (0.1, 0.26):
+        pygame.draw.line(surf, c, (x + s * ox, y + s * 0.6), (x + s * (ox + 0.1), y + s * 0.5), w)
+
+
 _GLYPHS = {
     "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
     "demoralize": _shout, "assess": _eye, "eat_corpse": _bite, "spin_web": _web, "signal_horn": _horn,
@@ -380,7 +391,7 @@ _GLYPHS = {
     "sneak_attack": _sneak_attack, "cleave": _cleave, "precise_thrust": _precise_thrust,
     "repel_strike": _repel_strike, "maiming_strike": _maiming_strike, "armor_pierce": _armor_pierce,
     "power_shot": _power_shot, "extreme_shot": _extreme_shot, "hook_shield": _hook_shield,
-    "javelin_charge": _javelin_charge, "parry_strike": _parry_strike,
+    "javelin_charge": _javelin_charge, "parry_strike": _parry_strike, "long_thrust": _long_thrust,
     "tail_sweep": _cleave, "lift_rider": _hand, "pixie_dust": _jump,
 }
 

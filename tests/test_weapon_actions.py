@@ -281,3 +281,88 @@ def test_parry_strike_grants_defending():
         actions.PARRY_STRIKE.execute(batt, a, d)
     assert a.ap == 0
     assert a.has_condition("defending")
+
+
+def test_the_sword_is_a_one_handed_broadsword_and_the_longbow_a_farther_shortbow():
+    sword, broad = items.get("Sword"), items.get("Broadsword")
+    assert (sword.hands, sword.damage, sword.price) == (1, (1, 8), items.get("Axe").price)
+    assert sword.has_trait("parry_strike") and broad.hands == 2
+    longbow, shortbow = items.get("Longbow"), items.get("Shortbow")
+    assert (longbow.damage, longbow.range) == ((1, 8), shortbow.range * 3 // 2)
+    assert longbow.price == 2 * shortbow.price and longbow.has_trait("power_shot")
+
+
+def test_parry_strike_with_a_sword():
+    batt, a, d = _melee_battle()
+    d.hp = 20
+    a.equip_weapon("Sword")
+    a.ap = 2
+    assert actions.PARRY_STRIKE.applicable(batt, a)[0] is True
+    with fixed_d20(18):
+        actions.PARRY_STRIKE.execute(batt, a, d)
+    assert a.has_condition("defending")
+
+
+def test_a_longbow_power_shot_reaches_past_the_shortbow():
+    batt, a, d = _melee_battle()
+    batt.board = Board(cols=30, rows=12)
+    batt.board.walls = set()
+    batt.ambient_light = True
+    a.ammo, a.ap = 10, 2
+    a.pos, d.pos = (2, 3), (20, 3)
+    a.equip_weapon("Shortbow")
+    assert not actions.POWER_SHOT.can(batt, a, d)
+    a.equip_weapon("Longbow")
+    assert actions.POWER_SHOT.can(batt, a, d)
+    with fixed_d20(18):
+        actions.POWER_SHOT.execute(batt, a, d)
+    assert a.ammo == 9
+
+
+def _glaive_battle():
+    batt, a, d = _melee_battle()
+    batt.board.walls = set()
+    batt.ambient_light = True
+    a.equip_weapon("Glaive")
+    a.ap = 2
+    return batt, a, d
+
+
+def test_the_glaive_is_a_two_handed_d10_that_reaches_a_square_farther():
+    glaive = items.get("Glaive")
+    assert (glaive.hands, glaive.damage, glaive.reach, glaive.price) == (2, (1, 10), 1, 137)
+    assert items.get("Large Glaive").reach == 1 and items.get("Broadsword").reach == 0
+    assert glaive.has_trait("long_thrust")
+
+
+def test_a_glaive_strikes_two_squares_away_and_a_sword_does_not():
+    batt, a, d = _glaive_battle()
+    d.pos = (7, 5)
+    assert a.attack_range == 2 and actions.ATTACK.can(batt, a, d)
+    d.pos = (8, 5)
+    assert not actions.ATTACK.can(batt, a, d)
+    a.equip_weapon("Sword")
+    d.pos = (7, 5)
+    assert a.attack_range == 1 and not actions.ATTACK.can(batt, a, d)
+
+
+def test_long_thrust_reaches_one_square_past_the_glaive_at_plus_one():
+    batt, a, d = _glaive_battle()
+    d.hp = 30
+    d.pos = (8, 5)
+    assert actions.LONG_THRUST.can(batt, a, d) and actions.LONG_THRUST.favoured(batt, a, d)
+    d.pos = (9, 5)
+    assert not actions.LONG_THRUST.can(batt, a, d)
+    d.pos = (7, 5)
+    assert actions.LONG_THRUST.can(batt, a, d) and not actions.LONG_THRUST.favoured(batt, a, d)
+    d.pos = (8, 5)
+    with fixed_d20(15):
+        actions.LONG_THRUST.execute(batt, a, d)
+    assert a.ap == 0
+    assert any("Long Thrust" in line and "+1(Long Thrust" in line for line in batt.log_lines)
+
+
+def test_long_thrust_needs_a_glaive():
+    batt, a, _ = _melee_battle()
+    a.equip_weapon("Broadsword")
+    assert actions.LONG_THRUST.applicable(batt, a)[0] is False

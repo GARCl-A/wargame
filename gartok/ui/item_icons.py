@@ -91,6 +91,9 @@ def _hafted(g, head="axe", length=76, deg=40, double=False, size=1.0, metal=None
     elif head == "spear":
         g.poly(_rot([(50, top - 6), (58, top + 14), (50, top + 22), (42, top + 14)], deg), hc)
         g.line(_rot([(50, top), (50, top + 18)], deg), g.dark, 1.2)
+    elif head == "glaive":
+        g.poly(_rot([(48, top - 10), (58, top - 2), (62, top + 14), (56, top + 30), (48, top + 26)], deg), hc)
+        g.line(_rot([(51, top - 4), (55, top + 22)], deg), g.dark, 1.2)
 
 
 def _bow(g, draw=1.0):

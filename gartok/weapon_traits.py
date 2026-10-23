@@ -110,6 +110,12 @@ _TRAITS = [
         desc="2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow lands twice over (a second roll of the weapon's damage).",
         action_id="parry_strike",
     ),
+    WeaponTrait(
+        id="long_thrust",
+        name="Long Thrust",
+        desc="2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far.",
+        action_id="long_thrust",
+    ),
 ]
 
 TRAITS = {t.id: t for t in _TRAITS}

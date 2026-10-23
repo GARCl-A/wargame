@@ -306,6 +306,8 @@ def _weapon_action_worth(battle, unit, act, target):
     lands twice over in the action's favoured case (`act.favoured`), plus the action's own edge."""
     if act.id == "extreme_shot":
         return _strike_worth(battle, unit, target) - UNLOADED_COST
+    if act.id == "long_thrust":
+        return _strike_worth(battle, unit, target, extra=act.TO_HIT)
     twice = _blow(unit) if act.favoured(battle, unit, target) else 0
     if act.id == "sneak_attack":
         return _strike_worth(battle, unit, target, bonus_damage=twice + (2.5 if twice else 0))

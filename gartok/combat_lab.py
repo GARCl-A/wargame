@@ -21,6 +21,7 @@ from . import (
     hunt,
     lair,
     matchup,
+    names,
     necromancer,
     progression,
     wildfire,
@@ -72,6 +73,7 @@ def build(fight_id, level, squad_size, seed=None):
     fight's own foes. `seed` pins the squads and the foes (the dice go on from there)."""
     seed = random.randrange(1 << 30) if seed is None else seed
     random.seed(seed)
+    names.seed(seed)           # the opening INT reads are seeded off the names (`intel.Intel`)
     squad = [encounters.build_enemy(level) for _ in range(squad_size)]
     if fight_id in BOUTS:
         node = world.node("arena")

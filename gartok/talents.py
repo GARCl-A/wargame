@@ -13,7 +13,7 @@ exactly one consumer that reads it back:
     attr              Unit._apply_attributes           attribute name
     to_hit            Unit.attack_bonus / Combatant     "strength" | "dexterity"
     melee_damage      Combatant.damage_roll            --
-    melee_reach       Combatant.attack_range           --
+    melee_reach       Combatant.tongue_reach           --
     unarmed_dice      Unit._derive_combat (+N dice)    --
     size_up           Unit._derive_size (+N sizes)     --
     unarmed_finesse   Unit.attack_bonus / Combatant    --

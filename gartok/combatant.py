@@ -428,11 +428,11 @@ class Combatant:
 
     @property
     def attack_range(self):
-        """Reach of the HAND weapon. The Tongue weapon has its own, longer reach
-        (`tongue_reach`) -- see `actions.AttackTongue`."""
+        """Reach of the HAND weapon: its own (`ItemDef.reach`) plus the body's. The Tongue weapon
+        has its own, longer reach (`tongue_reach`) -- see `actions.AttackTongue`."""
         if self.ranged:
             return self.weapon["range"] + self.char.talent_bonus("ranged_reach")
-        return 1 + self._ability.melee_reach
+        return 1 + self._ability.melee_reach + (0 if self.unarmed else self.weapon.reach)
 
     @property
     def has_tongue_weapon(self):
@@ -440,7 +440,7 @@ class Combatant:
 
     @property
     def tongue_reach(self):
-        return 1 + self.char.talent_bonus("melee_reach")
+        return 1 + self.char.talent_bonus("melee_reach") + (self.tongue_weapon.reach if self.tongue_weapon else 0)
 
     @property
     def is_dex_melee(self):

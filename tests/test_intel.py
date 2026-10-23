@@ -568,3 +568,14 @@ def test_the_map_names_who_brought_each_fight(monkeypatch):
     state.target = "ox"
     app._start_hunt_battle(state, [Unit("enemy")])
     assert caught[-1].aggressor == "player"                       # the guild tracked the Aurochs down
+
+
+def test_a_lab_seed_rebuilds_the_same_fight_names_and_opening_reads_included():
+    from gartok import combat_lab, names
+
+    def fight():
+        names.seed(None)                        # whatever the name stream was doing before
+        battle, _ = combat_lab.build("lair", 3, 4, seed=7)
+        return ([(u.name, u.equipped_weapon) for u in battle.units], battle.intel.rng.random())
+
+    assert fight() == fight()

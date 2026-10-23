@@ -288,7 +288,7 @@ gartok/
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
   text_field.py     a one-line text box's buffer + caret (every name field types through it)
-  start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py + wiki_rules.py (its RULES tab)
+  start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py + wiki_rules.py / wiki_races.py (its RULES / RACES tabs)
   combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector) / guild_screen.py
   group_screen.py + group_draw.py (everything it paints)
   squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
@@ -310,8 +310,9 @@ gartok/
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
                     portraits under assets/portraits/; `RACE_ICON` and `OCCUPATION_ICON`
                     name each race's and occupation's glyph (`map_screen.NODE_ICON` the nodes')
-  lighting.py       LightRenderer: the darkness layer + radial light holes
-  battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, combat sounds
+  lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; LightRenderer paints it
+  battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, the action's
+                    name over its actor and the flight of a shot (`battle.announce`), combat sounds
   sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the app enables it, `volume` setting
   dragselect.py     shared press/drag/drop plumbing for the item screens
   packbox.py        shared drag bookkeeping for the gear and group screens

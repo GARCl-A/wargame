@@ -334,8 +334,10 @@ class DerivationMixin:
     @property
     def tongue_reach(self):
         """Squares a tongue attack reaches: 1 + the `melee_reach` talent bonus.
-        Only the weapon in the Tongue slot gets this -- the hands stay at 1."""
-        return 1 + self.talent_bonus("melee_reach")
+        Only the weapon in the Tongue slot gets this -- the hands stay at 1. A weapon with a
+        reach of its own (`ItemDef.reach`) adds it."""
+        weapon = items.get(self.equipped_tongue) if self.equipped_tongue else None
+        return 1 + self.talent_bonus("melee_reach") + (weapon.reach if weapon else 0)
 
     @property
     def attack_bonus(self):

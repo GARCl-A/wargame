@@ -97,6 +97,7 @@ from .weapon_actions import (
     ExtremeShot,
     HookShield,
     JavelinCharge,
+    LongThrust,
     MaimingStrike,
     ParryStrike,
     PowerShot,
@@ -160,6 +161,7 @@ EXTREME_SHOT = ExtremeShot()
 HOOK_SHIELD = HookShield()
 JAVELIN_CHARGE = JavelinCharge()
 PARRY_STRIKE = ParryStrike()
+LONG_THRUST = LongThrust()
 
 WEAPON_ACTIONS = [
     SNEAK_ATTACK,
@@ -173,6 +175,7 @@ WEAPON_ACTIONS = [
     HOOK_SHIELD,
     JAVELIN_CHARGE,
     PARRY_STRIKE,
+    LONG_THRUST,
 ]
 
 # Panel actions split into clear combat and utility categories for the UI.

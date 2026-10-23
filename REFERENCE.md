@@ -157,15 +157,24 @@ Each occupation grants one starting weapon and one starting item.
 | Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
 | Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 60 |
 | Huge Pick | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 120 |
+| Sword | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
+| Large Sword | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
+| Huge Sword | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 140 |
 | Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Large Broadsword | Large | 2d8 | melee | -- | -- | 2 | 8 kg | 210 |
 | Huge Broadsword | Huge | 3d8 | melee | -- | -- | 2 | 16 kg | 420 |
+| Glaive | Medium | 1d10 | melee | -- | -- | 2 | 4.5 kg | 137 |
+| Large Glaive | Large | 1d12 | melee | -- | -- | 2 | 9 kg | 274 |
+| Huge Glaive | Huge | 2d8 | melee | -- | -- | 2 | 18 kg | 548 |
 | Light Crossbow | Medium | 1d8 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
 | Large Light Crossbow | Large | 1d10 | 18 sq | -- | -- | 2 | 5 kg | 160 |
 | Huge Light Crossbow | Huge | 1d12 | 18 sq | -- | -- | 2 | 10 kg | 320 |
 | Shortbow | Medium | 1d6 | 14 sq | -- | -- | 2 | 1 kg | 320 |
 | Large Shortbow | Large | 1d8 | 14 sq | -- | -- | 2 | 2 kg | 640 |
 | Huge Shortbow | Huge | 1d10 | 14 sq | -- | -- | 2 | 4 kg | 1280 |
+| Longbow | Medium | 1d8 | 21 sq | -- | -- | 2 | 1.5 kg | 640 |
+| Large Longbow | Large | 1d10 | 21 sq | -- | -- | 2 | 3 kg | 1280 |
+| Huge Longbow | Huge | 1d12 | 21 sq | -- | -- | 2 | 6 kg | 2560 |
 | Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | 75 |
 | Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 150 |
 | Huge Dwarf Axe | Huge | 2d8 | melee | -- | -- | 1 | 16 kg | 300 |
@@ -193,6 +202,7 @@ Properties and keywords carried by weapons.
 | Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that lands twice over (a second roll of the weapon's damage). Otherwise one plain strike. |
 | Javelin Charge | 1 AP: Throws the spear after moving this turn, +1d4 bonus damage. |
 | Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow lands twice over (a second roll of the weapon's damage). |
+| Long Thrust | 2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far. |
 
 ## Armor
 
@@ -274,6 +284,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Flint and Steel | 0.3 kg | -- |
 | Fruit | 0.2 kg | food, consumable, material |
 | Fruit Compote | 0.4 kg | food, consumable |
+| Glaive | 4.5 kg | -- |
 | Gold Coin | 0.005 kg | -- |
 | Hammer | 4 kg | -- |
 | Harness | 4 kg | -- |
@@ -284,16 +295,19 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Huge Club | 6 kg | -- |
 | Huge Dagger | 2 kg | -- |
 | Huge Dwarf Axe | 16 kg | -- |
+| Huge Glaive | 18 kg | -- |
 | Huge Hammer | 16 kg | -- |
 | Huge Hatchet | 4 kg | -- |
 | Huge Light Crossbow | 10 kg | -- |
 | Huge Light Hammer | 4 kg | -- |
 | Huge Light Pick | 4 kg | -- |
+| Huge Longbow | 6 kg | -- |
 | Huge Pick | 12 kg | -- |
 | Huge Quarterstaff | 8 kg | -- |
 | Huge Rapier | 4 kg | -- |
 | Huge Shortbow | 4 kg | -- |
 | Huge Shortspear | 6 kg | -- |
+| Huge Sword | 12 kg | -- |
 | Ink | 0.1 kg | material |
 | Iron Bar | 5 kg | material |
 | Iron Ore | 4 kg | material |
@@ -304,16 +318,19 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Large Club | 3 kg | -- |
 | Large Dagger | 1 kg | -- |
 | Large Dwarf Axe | 8 kg | -- |
+| Large Glaive | 9 kg | -- |
 | Large Hammer | 8 kg | -- |
 | Large Hatchet | 2 kg | -- |
 | Large Light Crossbow | 5 kg | -- |
 | Large Light Hammer | 2 kg | -- |
 | Large Light Pick | 2 kg | -- |
+| Large Longbow | 3 kg | -- |
 | Large Pick | 6 kg | -- |
 | Large Quarterstaff | 4 kg | -- |
 | Large Rapier | 2 kg | -- |
 | Large Shortbow | 2 kg | -- |
 | Large Shortspear | 3 kg | -- |
+| Large Sword | 6 kg | -- |
 | Leather Jerkin | 4 kg | -- |
 | Leather of Biwolf | 1 kg | -- |
 | Legendary Horn | 2 kg | material |
@@ -322,6 +339,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Light Hammer | 1 kg | -- |
 | Light Pick | 1 kg | -- |
 | Locked Chest | 8 kg | -- |
+| Longbow | 1.5 kg | -- |
 | Lumber | 2 kg | material |
 | Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable, material |
@@ -367,6 +385,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Stone Brick | 3 kg | material |
 | Studded Leather | 6 kg | -- |
 | Sugar | 0.5 kg | material |
+| Sword | 3 kg | -- |
 | Thunderhide | 1.5 kg | -- |
 | Torch | 0.5 kg | -- |
 | Venom Gland | 0.2 kg | material |

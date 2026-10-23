@@ -307,3 +307,8 @@ def test_a_battle_lights_each_side_the_player_does_not_play():
     batt = Battle([Unit("player")], _broadswords(2), others={"bandits": _broadswords(2)})
     for side in (batt.enemy_units, batt.other_units):
         assert sum(c.char.equipped_offhand == items.TORCH_ITEM for c in side) == 1
+
+
+def test_weapons_of_one_price_are_tried_in_name_order_not_the_set_s():
+    tied = [n for n in outfit._SOLD if economy.buy_price(n) == economy.buy_price("Axe")]
+    assert len(tied) > 1 and tied == sorted(tied)

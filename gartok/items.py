@@ -66,6 +66,7 @@ class ItemDef:
     size: WeaponSize | None = None
     damage: tuple[int, int] | None = None
     range: int = 0
+    reach: int = 0                 # melee squares past the first (a Glaive strikes 2 away)
     finesse: bool = False
     thrown: int = 0
     hands: int = 1
@@ -269,7 +270,7 @@ def _register(item: ItemDef, *aliases: str) -> ItemDef:
     return item
 
 
-# 15 Base Weapons: (slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits, crit_mult)
+# 18 Base Weapons: (slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits, crit_mult)
 _BASE_WEAPONS_DATA = [
     ("dagger", "Dagger", ItemRarity.COMMON, 0.5, 8, (1, 4), 0, True, 6, 1, False, ("finesse", "thrown", "sneak_attack"), 2),
     ("hatchet", "Hatchet", ItemRarity.COMMON, 1.0, 10, (1, 6), 0, False, 4, 1, False, ("thrown", "hook_shield"), 2),
@@ -281,18 +282,23 @@ _BASE_WEAPONS_DATA = [
     ("shortspear", "Shortspear", ItemRarity.COMMON, 1.5, 12, (1, 6), 0, False, 12, 1, False, ("thrown", "javelin_charge"), 2),
     ("light_pick", "Light Pick", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 6, 1, False, ("finesse", "thrown", "crit_3x", "armor_pierce"), 3),
     ("pick", "Pick", ItemRarity.COMMON, 3.0, 30, (1, 8), 0, False, 0, 1, False, ("crit_3x", "armor_pierce"), 3),
+    ("sword", "Sword", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("parry_strike",), 2),
     ("broadsword", "Broadsword", ItemRarity.COMMON, 4.0, 105, (1, 12), 0, False, 0, 2, False, ("parry_strike",), 2),
+    ("glaive", "Glaive", ItemRarity.COMMON, 4.5, 137, (1, 10), 0, False, 0, 2, False, ("long_thrust",), 2),
     ("light_crossbow", "Light Crossbow", ItemRarity.COMMON, 2.5, 80, (1, 8), 18, False, 0, 2, True, ("extreme_shot",), 2),
     ("shortbow", "Shortbow", ItemRarity.COMMON, 1.0, 320, (1, 6), 14, False, 0, 2, False, ("power_shot",), 2),
+    ("longbow", "Longbow", ItemRarity.COMMON, 1.5, 640, (1, 8), 21, False, 0, 2, False, ("power_shot",), 2),
     ("dwarf_axe", "Dwarf Axe", ItemRarity.UNCOMMON, 4.0, 75, (1, 10), 0, False, 0, 1, False, ("cleave",), 2),
     ("rapier", "Rapier", ItemRarity.UNCOMMON, 1.0, 65, (1, 6), 0, True, 0, 1, False, ("finesse", "precise_thrust"), 2),
 ]
+_REACH = {"glaive": 1}
 
 for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits, crit_mult in _BASE_WEAPONS_DATA:
+    reach = _REACH.get(slug, 0)
     _register(ItemDef(
         id=slug, name=name, type=ItemType.WEAPON, rarity=rarity,
         weight=weight, price=price, size=WeaponSize.MEDIUM, damage=dmg,
-        range=rng, finesse=fin, thrown=thr, hands=hands, reload=reload,
+        range=rng, reach=reach, finesse=fin, thrown=thr, hands=hands, reload=reload,
         traits=traits, crit_mult=crit_mult,
     ))
     # Large variant
@@ -301,14 +307,14 @@ for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits
     _register(ItemDef(
         id=large_slug, name=large_name, type=ItemType.WEAPON, rarity=rarity,
         weight=round(weight * 2, 1), price=price * 2, size=WeaponSize.LARGE,
-        damage=step_damage_die(dmg), range=rng, finesse=fin, thrown=thr,
+        damage=step_damage_die(dmg), range=rng, reach=reach, finesse=fin, thrown=thr,
         hands=hands, reload=reload, traits=traits, crit_mult=crit_mult,
     ))
     # Huge variant: an Ogre's, or a Large body with Giant's Grip
     _register(ItemDef(
         id=f"huge_{slug}", name=f"Huge {name}", type=ItemType.WEAPON, rarity=rarity,
         weight=round(weight * 4, 1), price=price * 4, size=WeaponSize.HUGE,
-        damage=step_damage_die(step_damage_die(dmg)), range=rng, finesse=fin, thrown=thr,
+        damage=step_damage_die(step_damage_die(dmg)), range=rng, reach=reach, finesse=fin, thrown=thr,
         hands=hands, reload=reload, traits=traits, crit_mult=crit_mult,
     ))
 

@@ -26,6 +26,11 @@ SYLLABLES = [
 ]
 
 
+def seed(value):
+    """Pin the name stream, so a seeded fight (`combat_lab.build`) names its units the same."""
+    _rng.seed(value)
+
+
 def random_name(rng=_rng):
     return "".join(rng.choice(SYLLABLES)
                    for _ in range(rng.randint(2, 4))).capitalize()

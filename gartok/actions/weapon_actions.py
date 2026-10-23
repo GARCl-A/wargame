@@ -10,11 +10,12 @@ modifier:
 - Quarterstaff: Repel Strike (shoves the foe; with its back to a wall or a body it is slammed)
 - Club / Hammer / Light Hammer: Maiming Strike (halves foe speed; a foe that cannot dodge)
 - Pick / Light Pick: Armor Pierce (ignores worn armor AC; an armoured foe)
-- Shortbow: Power Shot (+STR; a foe at half the bow's range or farther)
+- Shortbow / Longbow: Power Shot (+STR; a foe at half the bow's range or farther)
 - Light Crossbow: Extreme Shot (doubles range to 36 squares: the only shot past the normal one)
 - Hatchet: Hook Shield (nullifies foe shield AC until next round; a foe with a shield)
 - Shortspear: Javelin Charge (1 AP, thrown after moving this turn, +1d4)
-- Broadsword: Parry & Strike (gains Defending; two or more foes in reach)
+- Broadsword / Sword: Parry & Strike (gains Defending; two or more foes in reach)
+- Glaive: Long Thrust (one square past its reach, +1 to hit: the only blow that lands there)
 """
 
 from .. import items
@@ -399,7 +400,7 @@ class PowerShot(Action):
     def applicable(cls, battle, actor):
         w = actor.weapon
         if getattr(actor, "unarmed", False) or w is None or not w.has_trait("power_shot"):
-            return False, "requires shortbow"
+            return False, "requires a bow"
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -608,7 +609,7 @@ class ParryStrike(Action):
     def applicable(cls, battle, actor):
         w = actor.weapon
         if getattr(actor, "unarmed", False) or w is None or not w.has_trait("parry_strike"):
-            return False, "requires broadsword"
+            return False, "requires a sword"
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -645,3 +646,56 @@ class ParryStrike(Action):
 
         actor.add_condition(Defending())
         battle.log(f"  {actor.name} falls back into a parrying stance (+1 AC until next turn)!")
+
+
+# --------------------------------------------------------------------------- #
+# Glaive: Long Thrust                                                         #
+# --------------------------------------------------------------------------- #
+
+class LongThrust(Action):
+    id, name, cost, target, aimed = "long_thrust", "Long Thrust", 2, "enemy", True
+    desc = "2 AP: One strike one square past the weapon's reach, +1 to hit."
+    EXTRA_REACH = 1
+    TO_HIT = 1
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        w = actor.weapon
+        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("long_thrust"):
+            return False, "requires a glaive"
+        return True, ""
+
+    @classmethod
+    def reach(cls, actor):
+        return actor.attack_range + cls.EXTRA_REACH
+
+    def can(self, battle, actor, target=None):
+        if not self.available(battle, actor) or actor.ranged or not _hostile_target(actor, target):
+            return False
+        if battle.units_distance(actor, target) > self.reach(actor):
+            return False
+        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
+            return False
+        return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
+
+    def label(self, battle, actor):
+        return f"Long Thrust (2 pts, reach {self.reach(actor)}, +{self.TO_HIT} to hit)"
+
+    def highlight_targets(self, battle, actor):
+        return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
+
+    def favoured(self, battle, actor, target):
+        """A foe past the plain reach: no other blow lands there."""
+        return battle.units_distance(actor, target) > actor.attack_range
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
+        mods.append((self.TO_HIT, "circumstance", "Long Thrust"))
+        bonus, applied = resolve_bonus(mods)
+        detail = " ".join(f"{v:+}({r})" for v, r in applied)
+        prefix = f"{actor.name} Long Thrust -> {target.name}"
+        _resolve_hit(battle, actor, target, d20(), bonus, detail, prefix)

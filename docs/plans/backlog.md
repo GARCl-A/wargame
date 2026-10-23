@@ -3,7 +3,7 @@
 The one place for open work. What is already built is in the code, its tests and the git
 log; the long-range AI plan is [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-21. When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-22. When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -41,23 +41,6 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 # Ready to do
 
 ## Medium
-
-- **Missing weapons: Sword, Glaive, Longbow (author 2026-10-22).** Three catalog entries in `items.py`, each with
-  its shop shelf, `item_icon.ICONS` entry, `outfit.py` pick and REFERENCE.md regen.
-  1. *Sword:* one hand, 1d8, the same weapon action as the Broadsword (`parry_strike`); priced with the Axe,
-     Hammer and Pick (~$35).
-  2. *Glaive:* two hands, 1d10, reach +1 square (strikes 2 squares away), 30% over the Broadsword ($105 → ~$137).
-     Its 2 AP action: +1 more square of reach and +1 to hit (decided). There are no opportunity attacks; the one
-     melee reach today is the Grippli Lash (`Combatant.tongue_reach`, `actions.AttackTongue`, `ai.py`). Generalise
-     it into a weapon's reach (Attack's range check, the target cells, the AI's distance) instead of a Glaive case.
-  3. *Longbow:* 1d8, 50% more range than the Shortbow (14 → 21), the same action (`power_shot`), twice its price
-     ($320 → $640).
-  Sword and Longbow are catalog entries only and can ship before the Glaive.
-
-- **Races in the Wiki (author 2026-10-22).** `wiki_screen.py` has ITEMS, RECIPES, ACTIONS, TALENTS,
-  BEASTS and RULES but no tab for the playable races. Add a RACES tab read off the live race data (`data.RACES`,
-  the playable races only; BEASTS keeps the animals): attribute modifiers, racial abilities, the racial talent
-  track, languages, and each race's glyph (`artwork.RACE_ICON`).
 
 - **Magic Arc follow-ups (future drops, quests & tuning).**
   1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).

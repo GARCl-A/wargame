@@ -4,13 +4,23 @@ Consumes centralized data catalogs:
 - Items (`items.CATALOG`)
 - Recipes (`items.CRAFTING_RECIPES`)
 - Talents (`talents.TREES`)
+- Races (`wiki_races.py`: the playable races, off `data`, `abilities` and `talents`)
 - Beasts (`data.BEASTS`)
 - Rules (`wiki_rules.py`: the rules a player looks up, off the live constants)
 """
 
 import pygame
 
-from . import actions, data, items, talents, weapon_traits, wiki_rules
+from . import (
+    actions,
+    artwork,
+    data,
+    items,
+    talents,
+    weapon_traits,
+    wiki_races,
+    wiki_rules,
+)
 from .screen import Screen
 from .ui.primitives import draw_button, panel, set_pointer, text, wrap
 from .ui.tokens import T
@@ -77,12 +87,12 @@ class WikiScreen(Screen):
         self.tab_buttons = []
 
         text(screen, F["big"], "WIKI & COMPENDIUM", (MARGIN, MARGIN), T.TX)
-        text(screen, F["body"], "in-game encyclopedia of rules, items, recipes, actions, talents and beasts",
+        text(screen, F["body"], "in-game encyclopedia of rules, items, recipes, actions, talents, races and beasts",
              (MARGIN, MARGIN + 32), T.TX_MUTED)
 
         # Tab bar
         tabs = [("items", "ITEMS"), ("recipes", "RECIPES"), ("actions", "ACTIONS"),
-                ("talents", "TALENTS"), ("beasts", "BEASTS"), ("rules", "RULES")]
+                ("talents", "TALENTS"), ("races", "RACES"), ("beasts", "BEASTS"), ("rules", "RULES")]
         tx = MARGIN
         ty = MARGIN + 64
         for tab_id, tab_label in tabs:
@@ -135,6 +145,8 @@ class WikiScreen(Screen):
             return self._draw_actions(screen, view, start_y)
         elif self.tab == "talents":
             return self._draw_talents(screen, view, start_y)
+        elif self.tab == "races":
+            return self._draw_races(screen, view, start_y)
         elif self.tab == "beasts":
             return self._draw_beasts(screen, view, start_y)
         else:
@@ -270,6 +282,30 @@ class WikiScreen(Screen):
                 text(screen, F["micro"], f"Track: {track.upper()}  ·  Tier {t.tier}  ·  {req_str}",
                      (r.x + T.S * 2, r.y + 24), T.BRASS)
                 text(screen, F["body"], t.effect, (r.x + T.S * 2, r.y + 38), T.TX_MUTED)
+            y += row_h + gap
+        return y - orig_y
+
+    def _draw_races(self, screen, view, y):
+        F = self.F
+        orig_y = y
+        icon_px, line_h, gap = 48, 18, 6
+        for e in wiki_races.matching(self.search_query):
+            lines = e["abilities"] + ([f"Racial track: {', '.join(e['talents'])}"] if e["talents"] else [])
+            row_h = 52 + line_h * len(lines) + T.S
+            r = pygame.Rect(view.x, y, view.w, row_h)
+            if r.bottom > view.top and r.top < view.bottom:
+                panel(screen, r)
+                glyph = artwork.race_icon(e["name"], icon_px, T.TX_MUTED)
+                if glyph:
+                    screen.blit(glyph, (r.x + T.S * 2, r.y + T.S))
+                x = r.x + T.S * 3 + icon_px
+                text(screen, F["bodyb"], e["name"], (x, r.y + 6), T.TX)
+                text(screen, F["body"], e["mods"], (r.right - T.S * 2, r.y + 6), T.BRASS, right=True)
+                text(screen, F["micro"], e["meta"], (x, r.y + 26), T.TX_MUTED)
+                ly = r.y + 46
+                for line in lines:
+                    text(screen, F["body"], line, (x, ly), T.TX)
+                    ly += line_h
             y += row_h + gap
         return y - orig_y
 

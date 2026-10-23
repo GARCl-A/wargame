@@ -89,6 +89,45 @@ def test_power_shot_on_a_long_shot_or_the_last_arrow():
     assert ai._pick_attack(batt, e, p) is actions.POWER_SHOT
 
 
+def test_a_longbow_power_shots_the_foe_past_half_its_range():
+    batt, e, p = _duel("Longbow")
+    batt.board.cols = max(batt.board.cols, 30)
+    e.char.strength = 16
+    e.ammo = 6
+    p.pos = (13, 5)
+    assert ai._pick_attack(batt, e, p) is actions.ATTACK
+    p.pos = (20, 5)
+    assert ai._pick_attack(batt, e, p) is actions.POWER_SHOT
+
+
+def test_parry_and_strike_with_a_sword_when_foes_crowd_in(monkeypatch):
+    batt, e, p = _duel("Sword")
+    assert ai._pick_attack(batt, e, p) is actions.ATTACK
+    for pos in ((4, 5), (5, 4)):
+        _recruit(batt, team="player").pos = pos
+    monkeypatch.setattr(ai, "_reckoned_ac", _ac(40))
+    assert ai._pick_attack(batt, e, p) is actions.PARRY_STRIKE
+
+
+def test_a_glaive_swings_twice_in_reach_and_long_thrusts_one_square_past_it():
+    batt, e, p = _duel("Glaive")
+    p.pos = (7, 5)
+    assert ai._pick_attack(batt, e, p) is actions.ATTACK
+    p.pos = (8, 5)
+    assert ai._pick_attack(batt, e, p) is actions.LONG_THRUST
+    p.pos = (9, 5)
+    assert ai._pick_attack(batt, e, p) is None
+
+
+def test_a_glaive_bearer_stops_at_its_reach_and_strikes():
+    batt, e, p = _duel("Glaive")
+    assert ai._approach_reach(e) == 2
+    p.pos = (11, 5)
+    ai.take_turn(batt, e)
+    assert batt.units_distance(e, p) == 2
+    assert any(line.startswith(f"{e.name} -> {p.name}") for line in batt.log_lines)
+
+
 def test_maiming_strike_on_a_foe_that_cannot_dodge():
     from gartok.conditions import Entangled
     batt, e, p = _duel("Club")

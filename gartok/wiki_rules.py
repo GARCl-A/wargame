@@ -4,7 +4,7 @@
 so the page moves with them. RULES.md stays the designer's full prose.
 """
 
-from . import captives, cohesion, dialogue, group, recruit, wagon
+from . import actions, captives, cohesion, dialogue, group, items, recruit, wagon
 from .combatant import AP_PER_TURN
 
 
@@ -38,9 +38,11 @@ def sections():
             "Repel Strike (Quarterstaff): shoves the foe 1 cell; against a wall or a body, +1d4 instead.",
             ("Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, "
             "Sleeping, Surprised, Demoralized) takes it at +2 to hit."),
-            "Armor Pierce (Picks): ignores worn armour. Power Shot (Shortbow): +STR, best at long range.",
+            "Armor Pierce (Picks): ignores worn armour. Power Shot (Bows): +STR, best at long range.",
             ("Hook Shield (Hatchet): the foe's shield gives no AC until next round. Parry & Strike "
-            "(Broadsword): while Defending, with two or more foes in reach."),
+            "(Swords): while Defending, with two or more foes in reach."),
+            (f"Long Thrust (Glaive): one strike a cell past the Glaive's reach of {1 + items.get('Glaive').reach}, "
+             f"+{actions.LongThrust.TO_HIT} to hit."),
         ]),
         ("TALKING BEFORE A FIGHT", [
             (f"Persuade, Bluff and Intimidate roll d20 + Charisma against {dialogue.BASE_DC} + the foes' "

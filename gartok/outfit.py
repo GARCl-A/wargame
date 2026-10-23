@@ -8,8 +8,8 @@ get there (`scripts/wealth_by_level.py`, a player who wins 95% of fights and tak
     is taken (`ac + min(Dex mod, max_dex)`), the cheapest of those, worn without being
     overloaded; a nimble body stops at the armour its Dex already fills;
   - weapon, up to `WEAPON_SHARE`, by the body's archetype, whatever its occupation: Strength
-    over Dexterity fights in melee, `TWO_HANDED_SHARE` of them with a two-handed blade (a
-    Broadsword), the rest with a one-handed weapon that is not finesse; otherwise
+    over Dexterity fights in melee, `TWO_HANDED_SHARE` of them with a two-handed weapon (a
+    Broadsword or a Glaive), the rest with a one-handed weapon that is not finesse; otherwise
     `RANGED_SHARE` of them shoot (a bow or a crossbow, and a Quiver) and the rest fight with a
     one-handed finesse weapon. A one-handed fighter holds a light in the off hand (the Lantern
     from the pack, else a Torch). Whoever cannot pay for the two-handed blade or the bow falls
@@ -41,11 +41,11 @@ TWO_HANDED_SHARE = 0.5
 POTION = "Minor Healing Potion"
 POTION_CAP = 3
 STRENGTH, FINESSE, RANGED = "strength", "finesse", "ranged"
-_HEAVY = "heavy"                       # Strength with a two-handed blade
+_HEAVY = "heavy"                       # Strength with a two-handed weapon
 _LIGHTS = (items.TORCH_ITEM, items.LANTERN_ITEM)
 
 _SOLD = sorted({name for shelf in economy.SHELVES.values() for name in shelf},
-               key=lambda name: -economy.buy_price(name))
+               key=lambda name: (-economy.buy_price(name), name))
 
 
 def budget(level):

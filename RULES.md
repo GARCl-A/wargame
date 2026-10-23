@@ -306,7 +306,7 @@ climb together.
 budget (`outfit.KIT_BUDGET`, $56 at 0 up to $5741 at 8: what a character who climbed there had to
 spend, measured by `scripts/wealth_by_level.py`). A humanoid of level 1 and up spends it: the armour
 that adds the most AC under its Dex cap (a body with Dex +3 stops at Studded Leather), a weapon by how
-it fights (Strength over Dexterity: a one-handed blade with a light, or a Broadsword; otherwise a
+it fights (Strength over Dexterity: a one-handed blade with a light, or a Broadsword or Glaive; otherwise a
 bow with a quiver, or a one-handed finesse blade with a light), then up to 3 Minor Healing Potions,
 never loading itself past the overload. The occupation's weapon is dropped; level 0 keeps it, and
 beasts carry nothing. Every outfitted band brings a light to the field: if nobody holds one, a free
@@ -562,18 +562,23 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   - **Maiming Strike** (Club, Hammers): halves the foe's speed; a foe Entangled, Sleeping,
     Surprised or Demoralized (it cannot dodge); +2 to hit.
   - **Armor Pierce** (Picks): ignores worn armour; an armoured foe.
-  - **Power Shot** (Shortbow): +STR; at half the bow's range or farther, +STR at least +1.
+  - **Power Shot** (Shortbow, Longbow): +STR; at half the bow's range or farther, +STR at least +1.
   - **Hook Shield** (Hatchet): a foe with a shield; the hook comes first, so the shield gives no
     AC to this strike or anyone's until next round.
-  - **Parry & Strike** (Broadsword): Defending (+1 AC); two or more foes in reach.
+  - **Parry & Strike** (Broadsword, Sword): Defending (+1 AC); two or more foes in reach.
   - **Extreme Shot** (Light Crossbow): no double; its case is a target past the normal range,
     which only it reaches (36 cells).
+  - **Long Thrust** (Glaive): no double either; one strike 1 cell past the Glaive's reach (3
+    cells), +1 to hit. Its case is a foe there, which no other blow reaches.
   - **Javelin Charge** (Shortspear) is **1 point**: a throw after a walk this turn, +1d4, so a
     walk and the throw fill a turn.
 
   The AI scores each by expected damage (hit odds against the AC it can reckon) against the two
   plain attacks the same points buy (one shot for a crossbow, whose other point reloads it) and
   takes the better; a test holds the premise for every action, STR 10-18 and AC 10-19.
+- **Reach** = a melee weapon strikes foes 1 cell away; one with a reach of its own reaches
+  farther (`ItemDef.reach`: the **Glaive**, 2 cells), and a body's **Reach** ability adds 1 on
+  top. The AI walks only as near as its reach and strikes from there.
 - **Lash** (1 point) = the Grippli's **Tongue** attack — the 1-handed weapon in
   the `equipped_tongue` slot, swung at **+1 cell of reach**. A separate action, so
   a Grippli chooses each turn between the reach lash and the hand weapon (e.g. a
