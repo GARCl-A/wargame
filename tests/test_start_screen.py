@@ -5,6 +5,7 @@ from gartok import persist, settings
 from gartok.app import App
 from gartok.settings_screen import SettingsScreen
 from gartok.start_screen import StartScreen
+from gartok.ui.tokens import T
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.wiki_screen import WikiScreen
 
@@ -192,3 +193,54 @@ def test_app_start_screen_integration():
     assert isinstance(app.scene, MenuScreen)
     app.scene.handle_escape()
     assert isinstance(app.scene, StartScreen)
+
+
+def test_the_world_row_carries_the_banner_vocation_and_faces(tmp_path, monkeypatch):
+    from gartok.guild import Guild
+    from gartok.unit import Unit
+    monkeypatch.setattr(persist, "SAVE_DIR", str(tmp_path))
+    from gartok.group import Group
+    units = [Unit("Fighter") for _ in range(3)]
+    for i, u in enumerate(units):
+        u.name = f"M{i}"
+    g = Guild(None, groups=[Group(units, node="city")])
+    g.vocation, g.banner_color, g.banner_icon = "caravan", (10, 20, 30), "wolf-head"
+    persist.save_game("w1", g)
+    row = persist.list_worlds()[0]
+    assert (row["vocation"], tuple(row["banner_color"]), row["banner_icon"]) == ("caravan", (10, 20, 30),
+                                                                               "wolf-head")
+    assert [f["name"] for f in row["faces"]] == ["M0", "M1", "M2"]
+    assert all(f["race"] == u.race["name"] for f, u in zip(row["faces"], units))
+
+
+def _start(monkeypatch, worlds, size):
+    monkeypatch.setattr(persist, "list_worlds", lambda: worlds)
+    got = []
+    screen = StartScreen(ui_fonts(), lambda: got.append("continue"), *[lambda: None] * 6)
+    screen.draw(pygame.Surface(size))
+    return screen, got
+
+
+WORLD = {"world": "w", "name": "The Iron Ravens", "day": 5, "squad": ["A", "B"], "battles_won": 3,
+         "saved_at": 1700000000, "vocation": "wilds", "banner_color": [200, 60, 50], "banner_icon": "wolf-head",
+         "faces": [{"name": "A", "race": "Orc", "portrait": 1}, {"name": "B", "race": "Elf", "portrait": 2}]}
+
+
+def test_clicking_the_last_guild_continues_it(monkeypatch):
+    screen, got = _start(monkeypatch, [WORLD], (1920, 1080))
+    assert screen.campaign_rect is not None
+    screen._click(screen.campaign_rect.center)
+    assert got == ["continue"]
+
+
+def test_with_no_guild_new_game_is_the_primary_and_there_is_no_card(monkeypatch):
+    screen, _ = _start(monkeypatch, [], (1920, 1080))
+    assert screen.campaign_rect is None
+    assert screen._menu()[1]["key"] == "new" and screen._menu()[1]["primary"]
+
+
+def test_the_menu_fits_every_window(monkeypatch):
+    for size in ((1024, 640), (1280, 720), (1920, 1080), (2560, 1440)):
+        screen, _ = _start(monkeypatch, [WORLD], size)
+        assert all(r.bottom <= size[1] - T.S * 6 for _, r, _ in screen.buttons), size
+        assert len({r.y for _, r, _ in screen.buttons}) == len(screen.buttons)

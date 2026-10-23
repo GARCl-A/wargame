@@ -40,7 +40,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | Module | What it is |
 |---|---|
 | `tokens.py` | `T` palette / spacing / font sizes, `fonts()`, `mix()` |
-| `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize` / `with_caret`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
+| `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize` / `with_caret`, `medallion` (a face by race and portrait id), `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
 | `item_icons.py` | item silhouettes drawn in code (`draw_item_icon`: ~50 kinds, one generator each, a `wagon` for the Stables; `gartok/item_icon.py` maps items and the six vocations to them) |
 | `hscroll.py` | `ColumnScroll`: sideways scroll over a row of equal columns (`fit`, `wheel`, `hint`, `click`) |
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
@@ -78,7 +78,8 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, log well, and the crit banner across the board |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |
 | `medic_panel.py` | the Apothecary's Medic tab on the hub kit: one patient row each (ailments as chips, price and hours), the till footer with the total and treat / admit |
-| `vocation_panel.py` | the founding vocation picker: six vocation cards with race icons and guild perk |
+| `title_panel.py` | the title screen: the game's name, the grouped main menu, the last guild played (banner shield, figures, the roster's faces) or the invitation to found one |
+| `vocation_panel.py` | the founding vocation picker: six vocation cards (motto, the six races' faces, the guild perk), a dense layout when the room is short; the founding's step row (`draw_steps`) |
 | `mission_offer_screen.py` | base class for NPC job boards: a Jobs panel with one card per job the giver has (`get_templates`) in as many columns as fit (up to 3), scrolls when they do not fit, a keeper's extra button in its footer |
 
 ## Adding to the kit

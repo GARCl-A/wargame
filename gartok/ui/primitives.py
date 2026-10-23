@@ -332,6 +332,20 @@ def token_badge(surf, F, center, unit, *, color=None, r=14):
         text(surf, F["bodyb"], str(getattr(unit, "token", unit)), center, TOKEN_INK, center=True)
 
 
+def medallion(surf, center, race, portrait, px):
+    """A face by race name and portrait id/file: the portrait medallion, or a steel disc
+    with the race silhouette when the race has no portrait."""
+    port = artwork.portrait(race, portrait, px) if race else None
+    if port is not None:
+        surf.blit(port, port.get_rect(center=center))
+        return
+    smooth_circle(surf, T.STEEL_HI, center, px // 2)
+    smooth_circle(surf, T.STEEL_LINE, center, px // 2, 2)
+    sil = artwork.race_icon(race, round(px * 0.6), T.TX_MUTED) if race else None
+    if sil is not None:
+        surf.blit(sil, sil.get_rect(center=center))
+
+
 def tracked(surf, font, s, pos, color, spacing=1):
     """`s` rendered with extra letter-spacing, for small caps labels."""
     x, y = pos

@@ -43,6 +43,7 @@ class T:
     F_TITLE   = 24   # screen title
     F_HEAD    = 18   # card / section heading
     F_BIG     = 28   # clock reading / critical number
+    F_DISPLAY = 64   # the game's name on the title screen, serif small caps
 
     # the hub screens (a node's tabs: shop, forge, recruit...) read a step above the base set
     F_HUB_TITLE = 26   # the keeper's name, serif small caps
@@ -72,7 +73,8 @@ def _hub_fonts(serif):
     for names and headings -- each small-caps size comes with its `_sc` lower-case partner."""
     sans = "dejavusans,arial"
     out = {}
-    for key, size in (("hub_title", T.F_HUB_TITLE), ("hub_head", T.F_HUB_HEAD), ("hub_card", T.F_HUB_CARD)):
+    for key, size in (("hub_title", T.F_HUB_TITLE), ("hub_head", T.F_HUB_HEAD), ("hub_card", T.F_HUB_CARD),
+                      ("display", T.F_DISPLAY)):
         out[key] = pygame.font.SysFont(serif, size, bold=True)
         out[key + "_sc"] = pygame.font.SysFont(serif, int(size * 0.76), bold=True)
     for key, size, bold in (("hub_row", T.F_HUB_ROW, False), ("hub_body", T.F_HUB_BODY, False),

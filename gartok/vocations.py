@@ -34,6 +34,7 @@ class Vocation:
     name: str
     races: tuple
     perk: str
+    motto: str = ""
     active: bool = True     # False: the perk waits on a system that does not exist yet
 
 
@@ -41,25 +42,31 @@ VOCATIONS = {v.id: v for v in (
     Vocation(WARBAND, "Warband",
              ("Orc", "Hobgoblin", "Goblin", "Goliath", "Gnoll", "Lizardfolk"),
              f"+{COHESION_BONUS} Mental Defense in the daily cohesion roll: fewer walk-outs "
-             "from an overextended group."),
+             "from an overextended group.",
+             motto="We hold the line together, or not at all."),
     Vocation(DELVERS, "Delvers",
              ("Dwarf", "Kobold", "Gnome", "Automaton", "Goblin", "Goliath"),
              f"+{GATHER_BONUS:.0%} yield from gathering: work shifts, and the meat, "
-             "mushrooms and fruit of a hunt or forage."),
+             "mushrooms and fruit of a hunt or forage.",
+             motto="What the earth keeps, we take back up."),
     Vocation(WILDS, "Wilds",
              ("Centaur", "Elf", "Treefolk", "Grippli", "Gnoll", "Sprite"),
              "Ambushes are 20% less likely while a group travels Cautious: on the Old Road "
-             "and on a hunt."),
+             "and on a hunt.",
+             motto="The road is long; the woods are longer."),
     Vocation(SCHOLARS, "Scholars",
              ("Kobold", "Gnome", "Elf", "Sprite", "Kenku", "Human"),
              f"+{INFO_BONUS} on the INT roll that reveals enemy information: the opening read "
-             "and Assess."),
+             "and Assess.",
+             motto="Know the beast before you meet it."),
     Vocation(CARAVAN, "Caravan",
              ("Human", "Halfling", "Dwarf", "Kenku", "Automaton", "Centaur"),
-             "Travel takes 15% fewer hours."),
+             "Travel takes 15% fewer hours.",
+             motto="A coin that sits still is a coin half spent."),
     Vocation(MARSH, "Marsh",
              ("Grippli", "Lizardfolk", "Treefolk", "Halfling", "Kobold", "Kenku"),
-             f"On every {FOOD_PAUSE_EVERY}th day no food in the guild ages."),
+             f"On every {FOOD_PAUSE_EVERY}th day no food in the guild ages.",
+             motto="The bog keeps what it is given."),
 )}
 
 

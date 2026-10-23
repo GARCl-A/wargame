@@ -34,7 +34,8 @@ When the two disagree, `REFERENCE.md` wins.
   what the active unit sees.
 - **Adventure out-earns day labour.** In Gartok the risk pays: lumber is only a
   survival floor (16 h = cheapest meal + $1), the arena and the wilds pay
-  more. Re-run `scripts/economy_report.py` (verdicts, exploits, what each activity pays,
+  more. There is no fatigue, so a crew chains shifts and the Yard pays about 50%
+  over that floor: accepted (2026-10-22), hunger is the one upkeep. Re-run `scripts/economy_report.py` (verdicts, exploits, what each activity pays,
   a guild living 30 days, the ranking; its parts are `economy_activities.py`,
   `economy_talents.py` (each work talent priced on its own), `economy_guild.py` and `economy_exploits.py`) after touching wages, purses, prices or loot.
   `scripts/economy_offers.py` lists what a guild can take up today (bouts, missions, kit, tools),
@@ -86,7 +87,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `recorder.py` | opt-in play log (`record_play` setting): one JSONL row per day, order, market buy/sell, fight, talent, asset and recruit pitch, in `saves/<world>/play.jsonl`; a no-op while detached. `scripts/play_analysis.py` reads it into the sim's day table and the author's thresholds (what `economy_guild.Balanced` was calibrated on) |
 | `battle_fx.py` / `sound.py` | the fight's juice, presentation only: floating numbers, the hit flash, the crit banner and their sounds, the name of the action just done over its actor and the flight of a shot or throw in the side's colour, read off HP deltas and `battle.fx` / `battle.cue` (crit, miss) / `battle.announce` (every `Action.execute` that spends AP: `Action.announce`, `Action.missile`); what the side cannot see is heard, never shown / one cue name -> a few Kenney variants in `assets/sounds/` (CC0), silent until `App` calls `enable()`; the app also clicks on a button press (hand cursor up) and chinks coins when the guild's money moves |
 | `settings.py` / `settings_screen.py` | player preferences in `settings.json` beside the saves (not per guild); one `SPEC` line per option, pause menu and settings screen list them |
-| `start_screen.py` / `wiki_screen.py` / `menu_screen.py` / `saves_screen.py` | classic main menu (Continue, New, Load, Editor, Settings, Wiki) and in-game compendium (its RULES tab is `wiki_rules.py`: the rules a player looks up, read off the live constants; its RACES tab `wiki_races.py`: the playable races off `data`, `abilities` and `talents`) -> guild browser -> save snapshots with date and time |
+| `start_screen.py` / `wiki_screen.py` / `menu_screen.py` / `saves_screen.py` | the title screen (`ui/title_panel.py`: the menu beside the last guild played, its banner and faces off `persist.list_worlds`, or an invitation to found one) and in-game compendium (its RULES tab is `wiki_rules.py`: the rules a player looks up, read off the live constants; its RACES tab `wiki_races.py`: the playable races off `data`, `abilities` and `talents`) -> guild browser -> save snapshots with date and time |
 | `factions.py` | factions + one-shot deeds → reputation; a faction is `hidden` until the guild enters one of its `nodes` (`Guild.meet_factions_at`, `factions.known`) |
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
 | `item_icon.py` | what each item looks like: `ICONS` names every catalogue item (kind, material, shape) for `ui/item_icons.py`'s code-drawn silhouettes, rarity is the rim; a test fails for an item with no entry |

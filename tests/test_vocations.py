@@ -399,3 +399,18 @@ def test_a_save_without_the_new_fields_loads_as_no_vocation_and_normal():
         assert back.vocation is None and back.groups[0].stance == NORMAL
     finally:
         persist.delete_world(world_id)
+
+
+def test_every_vocation_has_a_motto():
+    assert all(v.motto for v in vocations.VOCATIONS.values())
+
+
+def test_the_vocation_cards_fit_the_window_between_header_and_footer():
+    pygame.init()
+    for size in ((1024, 640), (1280, 720), (1920, 1080)):
+        vs = VocationScreen(ui_fonts(), lambda v: None)
+        vs.draw(pygame.Surface(size))
+        assert len(vs.card_rects) == 6
+        assert all(r.bottom < vs.continue_rect.y for r, _ in vs.card_rects), size
+        rects = [r for r, _ in vs.card_rects]
+        assert not any(a.colliderect(b) for i, a in enumerate(rects) for b in rects[i + 1:]), size

@@ -32,8 +32,8 @@ a floor per place in `ui/floors.py`, every screen on the hub kit) are done; what
    node or tab, split by concern instead of growing it.
 
 **After the playtest** (the playtest answers them, or they are content past it): weapon actions
-tuning, *Tune the specialised shops*, Magic Arc tuning, production chain (Coal for the Smith, sim
-crafter policy), cooking with meal buffs, the sim planner (`economy_offers.py` -> policy), the
+tuning, *Tune the specialised shops*, Magic Arc tuning, production chain (the sim's crafter policy:
+smelting Iron Bar, Coal's use), cooking with meal buffs, the sim planner (`economy_offers.py` -> policy), the
 other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ---
@@ -53,22 +53,12 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   of the AI's losses in every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0,
   `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later.
 
-- **No fatigue: shifts run back to back (found 2026-10-21).** Rest only heals HP, clears non-lethal damage and
-  sickness, and a meal falls once a calendar day whatever the hours worked, so a crew chains 16 h shifts (~1.5 a
-  day). The yard then pays about 50% over the premise's floor ("16 h = cheapest meal + $1"): `lumber` alone
-  affords the day-30 milestone in about half its guilds, and the licence pays back in 47 days for 3 at the Yard,
-  128 for 7 (its till refills $25 a day), the Mine in 86 and 70. Decided 2026-10-22: no fatigue system, hunger is
-  the one upkeep. Open: a lower wage, the wood price falling with supply (*Production chain*), or accept it. Layer
-  1's floor check still counts one shift a day.
-
 ## Playtest notes 2026-10-21 (guild Herança)
 
 Raw notes from the author's playtest, to be sized as they are picked up.
 
 - **Presentation:**
-  - The start screen still looks amateurish; the main menu is the ugliest part.
   - The pause menu (Esc) lists many options that belong behind one SETTINGS entry.
-  - *Choose a vocation* makes poor use of the space.
   - Too few icons for the guild banner.
 - **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
 - **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter
@@ -106,11 +96,13 @@ map**: a node has one "Enter" button and its functions are tabs inside.
   action is one strike; in it the strike lands twice over plus a small edge (RULES.md *Weapon actions*,
   `favoured` on each action, the premise held by `test_ai_actions`). Left: whether each case comes up
   often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
-  the slimmest), and the old Extreme Shot / Power Shot niches.
+  the slimmest), Long Thrust (Glaive, 2026-10-22: one strike past reach, no double, the narrowest by design),
+  and the old Extreme Shot / Power Shot niches (Power Shot is now on the Longbow too).
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
   group's output is another's input, the heart of the open-world vision. The Carpenter is open (2026-10-19).
-  Next: Coal for the Smith (Iron Bar recipe), wagon crafting, a crafting branch for the sim's `balanced`
-  policy and tests. Gives Coal and the gems a use and closes `sources.py`'s `traded` goods one chain at a time.
+  The Forge already smelts Iron Bar (2 Iron Ore + 1kg Coal). Next: wagon crafting, a crafting branch for
+  the sim's `balanced` policy (smelt, then forge or sell) and tests. Gives Coal and the gems a use and
+  closes `sources.py`'s `traded` goods one chain at a time.
   **Market supply and demand / lumber saturation:** endless day labour at the Yard should flood wood prices.
 - **Item properties: base material sources (after the production chain).**
   (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven
@@ -167,7 +159,7 @@ Keep these while building them:
   read: as a guild manager the game sells on the stories its people make, not on its numbers ("the game
   still lacks soul", *Occupations are bland*). Each member wants things and reacts to what already
   happens to them, built on the occupation and alignment every character already rolls:
-  - **Occupation = what they want to do.** Group the 30 into about 6 wants (fight, labour, city, road,
+  - **Occupation = what they want to do.** Group the 31 into about 6 wants (fight, labour, city, road,
     care, faith), plus one detail of each occupation's own: the Woodcutter is content at the Yard, the
     Mercenary resents labour and wants fights and pay, the Physician suffers a death left untreated.
     It gives the waiting starting items (Deck of Cards, Map, Compass) a reason to matter.
@@ -190,9 +182,9 @@ Keep these while building them:
     asks for work or threatens to leave) is the drama engine above.
   - **Time pressures from the world itself.** Today's (Bankers' rent, the title defence, the Ogre's
     deadline) are all ones the player chooses. Lumber saturating the wood price enters with the production chain.
-  - **Weather fog**, if it ever exists: how it looks apart from darkness.
-  - **Art direction for the board and shops.** The author is not an artist and worries that an engraved
-    board, or AI-made textures, would look bad or cause trouble later.
+  - **Weather fog**, if it ever exists: how it looks apart from darkness. Questions for the author:
+    (1) does weather live on the world map, on the board, or both? (2) does it change rules (sight, shots)
+    or only the look? (3) before the playtest or after (proposed: after)?
 
 - **Magic as the vertical progression.** The arc's work is in *Ready to do -> Medium*. The schools are
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
@@ -201,13 +193,18 @@ Keep these while building them:
 - **Found-the-guild charter** (`draft_screen.py`, `vocation_screen.py`). The vocation is built; left:
   - **Measure the Wilds perk.** `scripts/vocation_report.py` does not price it. Run `balanced` under
     `--vocation wilds` with the group on *Cautious* against *Normal*, past the milestone (the hunts),
-    and price the ambushes avoided.
+    and price the ambushes avoided. Questions for the author: (1) is the sim's measure enough, or should it
+    wait for the author's own Wilds playtest? (2) if it comes out weak, raise the number or swap the perk?
   - **Price the Scholars' perk** (`vocations.info_bonus`: +2 on the opening read and on Assess). Its value
     is how much sooner a guild reads a foe, so it needs a fight-level measure, not a copper-a-day one.
   - **Oath (deferred, not scheduled):** what binds the members together and how a stranger would tell
     someone belongs to the guild (a creed, a mark, a code). Cannot be broken, can be changed. Mechanics in
     **cohesion** (`cohesion.py`) and a **combat/world rule** (a lock for a bonus); not economy or
     reputation. Open: the list, the effects, whether NPCs react to it, the cost of changing one.
+    Questions for the author: (1) is it a code of conduct ("we never leave a wounded one behind") or a mark
+    of identity (a creed, a sign)? (2) since it cannot be broken, what does changing it cost, and how often?
+    (3) does a recruit swear it on joining, or does it bind only the founders? (4) do NPCs and factions
+    react to it (a sign seen on the road, a deed that honours it)?
   - **Presentation, later:** a founding charter that writes itself line by line, signed with the banner
     and the oath, kept as the first entry of the guild's chronicle.
 

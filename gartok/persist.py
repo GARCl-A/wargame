@@ -434,6 +434,12 @@ def _summary(world, save_id):
         "battles_won": payload.get("battles_won", 0),
         "day": payload.get("day"),
         "saved_at": payload.get("saved_at", 0),
+        "vocation": payload.get("vocation"),
+        "banner_color": payload.get("banner_color"),
+        "banner_icon": payload.get("banner_icon"),
+        "faces": [{"name": m.get("name", ""), "race": m.get("race"),
+                   "portrait": m.get("portrait_file") or m.get("portrait_id")}
+                  for g in payload.get("groups", []) for m in g.get("members", [])],
     }
 
 
