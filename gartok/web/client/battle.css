@@ -53,8 +53,8 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 #sheet{position:absolute;left:30px;top:112px;width:1384px;height:780px;
   filter:drop-shadow(0 18px 26px rgba(0,0,0,.75)) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
 #sheet canvas{position:absolute;left:0;top:0;width:1384px;height:780px}
-#tokens,#fx{position:absolute;left:0;top:0;width:1384px;height:780px;pointer-events:none}
-.tok{position:absolute;border-radius:50%;transition:left .28s ease,top .28s ease,box-shadow .2s;
+#tokens,#fx{position:absolute;left:0;top:0;width:1384px;height:780px;pointer-events:none;overflow:hidden}
+.tok{position:absolute;border-radius:50%;transition:box-shadow .2s;
   box-shadow:0 0 0 2px #1a120a,0 0 0 4px var(--side),0 0 0 5.5px #1a120a,0 6px 8px rgba(30,18,8,.55)}
 .tok img,.tok .initial{width:100%;height:100%;border-radius:50%;display:block}
 .tok.ally{--side:var(--enamel)} .tok.foe{--side:var(--blood)} .tok.ai_ally{--side:#4f7d5a}

@@ -64,3 +64,19 @@ def test_a_remembered_cell_shows_dimmer_than_one_in_sight():
     remembered = max(tuple(surf.get_at(view.cell_rect(2, 2).center))[:3])
     never = max(tuple(surf.get_at(view.cell_rect(12, 2).center))[:3])
     assert now > remembered > never
+
+
+def test_the_fast_sight_matches_the_rule_cell_by_cell():
+    from gartok import ai, combat_lab, vision
+    for fight in ("dungeon", "necromancer"):
+        b, _ = combat_lab.build(fight, 2, 4, seed=7)
+        for _ in range(6):
+            for team in ("player", "enemy"):
+                obs = vision.observers(b, True, team)
+                fast = vision.visible_cells(b, obs)
+                rule = {(x, y) for x in range(b.board.cols) for y in range(b.board.rows)
+                        if (x, y) not in b.board.walls and any(vision.can_see(b, o, (x, y)) for o in obs)}
+                assert fast - b.board.walls == rule
+                assert vision.lit_cells(b) == {(x, y) for x in range(b.board.cols) for y in range(b.board.rows)
+                                               if vision.cell_lit(b, (x, y))}
+            ai.take_turn(b, b.active)

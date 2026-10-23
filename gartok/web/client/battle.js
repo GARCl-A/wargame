@@ -2,7 +2,9 @@
 // player's decisions back. Every rule is the server's; this file only shows and asks.
 "use strict";
 
-const AI_DELAY = 480;
+const AI_DELAY = 480;      // the pause before an AI turn the side sees, the server's time included
+const STEP_MS = 110;       // a token's walk, per cell
+const STEP_PAUSE = 260;    // between two steps of one turn
 const ICONS = {
   attack: "action/backstab", sneak_attack: "action/backstab", precise_thrust: "action/targeting",
   cleave: "action/crush", repel_strike: "action/riposte", maiming_strike: "action/amputation",
@@ -24,10 +26,12 @@ const ICONS = {
 const iconOf = id => `url(/assets/icons/${id.startsWith("spell:") ? "action/meditation" : (ICONS[id] || "gui/triangle-target")}.svg)`;
 const ROMAN = n => { const m = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]; let s = ""; for (const [v, r] of m) while (n >= v) { s += r; n -= v; } return s || n; };
 const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 
 let S = null;
-const ui = {tab: "combat", aim: null, route: null, hover: null, armed: null, inspect: null, busy: false, error: null};
+const ui = {tab: "combat", aim: null, route: null, hover: null, armed: null, inspect: null, busy: false, error: null,
+            turn: null, dragged: false};
 
 async function api(path, body) {
   const res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
@@ -42,7 +46,7 @@ async function act(body) {
   try {
     const r = await api("/api/act", {...body, inspect: ui.inspect});
     ui.aim = null; ui.route = null; ui.armed = null; ui.error = null;
-    await apply(r.state, r.events);
+    await playSteps(r.steps);
   } catch (e) {
     ui.error = e.message; renderHint();
   } finally { ui.busy = false; }
@@ -52,12 +56,41 @@ async function act(body) {
 async function pump() {
   if (!S || S.winner || S.my_turn || ui.busy) return;
   ui.busy = true;
-  await new Promise(r => setTimeout(r, AI_DELAY));
   try {
+    const t0 = performance.now();
     const r = await api("/api/advance", {inspect: ui.inspect});
-    await apply(r.state, r.events);
+    if (r.steps.some(shows)) await sleep(AI_DELAY - (performance.now() - t0));
+    await playSteps(r.steps);
   } finally { ui.busy = false; }
   pump();
+}
+
+const shows = st => st.moves.length || st.fx.length || st.acts.length || st.cues.length;
+
+// one step per decision: the walks first, then the board after it, then what it showed
+async function playSteps(steps) {
+  for (const [i, st] of steps.entries()) {
+    if (S && st.moves.length) await walk(st.moves);
+    const actor = S && st.acts.length && Board.zoomed() && S.units.find(t => t.id === st.acts[0].actor);
+    if (actor) Board.reveal(actor.pos, actor.fp);
+    await apply(st.state, st);
+    if (shows(st) && i < steps.length - 1) await sleep(STEP_PAUSE);
+  }
+}
+
+async function walk(moves) {
+  const box = $("tokens"), runs = [];
+  const lead = S.units.find(t => t.id === moves[0].id);
+  if (lead && Board.zoomed()) Board.reveal(moves[0].path.at(-1), lead.fp);
+  for (const m of moves) {
+    const el = box.querySelector(`[data-id="${m.id}"]`), u = S.units.find(t => t.id === m.id);
+    if (!el || !u) continue;
+    const d = el.offsetWidth, half = Board.layout.cell * u.fp / 2;
+    const pts = m.path.map(([x, y]) => ({left: `${Board.cx(x) + half - d / 2}px`, top: `${Board.cy(y) + half - d / 2}px`}));
+    const anim = el.animate(pts, {duration: STEP_MS * (pts.length - 1), easing: "linear"});
+    runs.push(anim.finished.then(() => { el.style.left = pts.at(-1).left; el.style.top = pts.at(-1).top; }));
+  }
+  await Promise.all(runs);
 }
 
 async function apply(state, events) {
@@ -65,6 +98,12 @@ async function apply(state, events) {
   S = state;
   if (ui.inspect && !S.inspect) ui.inspect = null;
   await Board.draw(S);
+  const mine = S.my_turn && S.active ? S.active.id : null;
+  if (mine && mine !== ui.turn && Board.zoomed()) {
+    const u = S.units.find(t => t.id === mine);
+    if (u) Board.reveal(u.pos, u.fp);
+  }
+  ui.turn = mine;
   renderAll();
   if (events) playEvents(events);
   if (first) pump();
@@ -108,7 +147,8 @@ function renderTokens() {
     const badge = u.dying ? `<div class="badge">${esc(u.dying)}</div>` : u.defending ? `<div class="badge">◈</div>` : "";
     const plate = (u.active && S.my_turn) || ui.armed === u.id || ui.inspect === u.id
       ? `<div class="nameplate ${u.side}">${esc(u.name)}</div>` : "";
-    el.innerHTML = face(u.portrait, u.name) + arc(d, u.hp_frac, col) + (u.side === "ally" ? `<div class="pennant"></div>` : "") + badge + plate;
+    const html = face(u.portrait, u.name) + arc(d, u.hp_frac, col) + (u.side === "ally" ? `<div class="pennant"></div>` : "") + badge + plate;
+    if (el._html !== html) { el.innerHTML = html; el._html = html; }
   }
   for (const el of [...box.children]) if (!seen.has(el.dataset.id)) el.remove();
 }
@@ -205,7 +245,7 @@ function renderHint() {
   else if (S.flags.binding) h = "Enemies down — Capture a fallen foe, or Space to let the round run out.";
   else if (S.flags.ctf) h = "Carry their flag home to win, and guard your own.";
   else if (S.flags.can_flee) h = "At the edge of the field: you can Flee.";
-  else h = "Click a marked cell to move · a foe twice to strike · Space: defend and end the turn.";
+  else h = "Click a marked cell to move · a foe twice to strike · Space: defend and end the turn · wheel zooms, drag pans.";
   $("hint").textContent = h;
 }
 
@@ -273,7 +313,7 @@ async function showEnd(picker = false) {
     m.hidden = true; ui.inspect = null; ui.aim = null; ui.armed = null;
     const r = await api("/api/new", {fight: f.id, level: S.meta.level, squad: f.squad > 3 ? f.squad : S.meta.squad});
     S = null; $("tokens").innerHTML = "";
-    await apply(r.state);
+    await apply(r.steps.at(-1).state);
   };
   if (picker) $("cancel").onclick = () => { m.hidden = true; };
 }
@@ -305,6 +345,7 @@ async function selectAction(id) {
 }
 
 $("overlay").addEventListener("click", async e => {
+  if (ui.dragged) { ui.dragged = false; return; }
   if (!S || ui.busy || S.winner) return;
   const cell = Board.cellAt(...sheetPoint(e));
   if (!cell) return;
@@ -324,7 +365,7 @@ $("overlay").addEventListener("click", async e => {
 });
 
 $("overlay").addEventListener("mousemove", async e => {
-  if (!S || !S.my_turn || ui.aim) return;
+  if (!S || !S.my_turn || ui.aim || (drag && drag.moved)) return;
   const cell = Board.cellAt(...sheetPoint(e));
   const key = cell ? cell.join(",") : null;
   if (key === ui.hover) return;
@@ -332,6 +373,31 @@ $("overlay").addEventListener("mousemove", async e => {
   const reachable = cell && S.reach.some(([x, y]) => x === cell[0] && y === cell[1]);
   ui.route = reachable ? await api(`/api/route?x=${cell[0]}&y=${cell[1]}`) : null;
   if (ui.hover === key) Board.overlay(S, ui);
+});
+
+// the camera: the wheel zooms round the cursor, a drag with any button pans
+Board.onView = () => { if (S) { renderTokens(); Board.overlay(S, ui); } };
+let drag = null;
+$("sheet").addEventListener("wheel", e => {
+  e.preventDefault();
+  Board.zoomAt(...sheetPoint(e), e.deltaY < 0 ? 1.15 : 1 / 1.15);
+}, {passive: false});
+$("sheet").addEventListener("contextmenu", e => e.preventDefault());
+$("overlay").addEventListener("pointerdown", e => {
+  drag = {x: e.clientX, y: e.clientY, moved: false, button: e.button};
+  $("overlay").setPointerCapture(e.pointerId);
+});
+$("overlay").addEventListener("pointermove", e => {
+  if (!drag) return;
+  const k = 1384 / $("sheet").getBoundingClientRect().width;
+  const dx = (e.clientX - drag.x) * k, dy = (e.clientY - drag.y) * k;
+  if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+  drag.moved = true; drag.x = e.clientX; drag.y = e.clientY;
+  Board.panBy(dx, dy);
+});
+$("overlay").addEventListener("pointerup", () => {
+  if (drag && drag.moved && drag.button === 0) ui.dragged = true;
+  drag = null;
 });
 
 $("plates").addEventListener("click", e => { const p = e.target.closest(".plate"); if (p) selectAction(p.dataset.action); });
@@ -342,6 +408,15 @@ $("newfight").addEventListener("click", () => S && showEnd(true));
 document.addEventListener("keydown", e => {
   if (!S || !$("modal").hidden) return;
   if (e.key === "Escape") { ui.aim = null; ui.armed = null; renderAll(); return; }
+  const pan = {ArrowLeft: [160, 0], ArrowRight: [-160, 0], ArrowUp: [0, 160], ArrowDown: [0, -160]}[e.key];
+  if (pan) { e.preventDefault(); return Board.panBy(...pan); }
+  if (e.key === "+" || e.key === "=") return Board.zoomAt(692, 390, 1.25);
+  if (e.key === "-") return Board.zoomAt(692, 390, 1 / 1.25);
+  if (e.key === "c" || e.key === "C") {
+    const u = S.active && S.units.find(t => t.id === S.active.id);
+    if (u) Board.centerOn(u.pos, u.fp);
+    return;
+  }
   if (!S.my_turn) return;
   if (e.key === " ") { e.preventDefault(); return act({action: "defend_end"}); }
   if (e.key === "Tab") { e.preventDefault(); ui.tab = ui.tab === "combat" ? "utility" : "combat"; ui.aim = null; renderAll(); return; }

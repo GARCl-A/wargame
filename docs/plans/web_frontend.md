@@ -1,8 +1,8 @@
 # Web front-end: keep the Python core, replace the pygame presentation
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
-than pygame already, but with a lot left to fix in colour, fluidity and light. Next is
-step 1 below.
+than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
+and 2 are done, and zoom and pan from step 3; next is the rest of step 3.
 
 ## Decisions so far
 
@@ -53,7 +53,15 @@ step 1 below.
   - `artwork.portrait_path`: a portrait's file, split from loading it.
 - **`gartok/web/battle_session.py`** runs one fight: the turn flow `BattleScreen` runs,
   and the board as the side knows it, as JSON (`state`, `act`, `advance`, `route`,
-  `aim`).
+  `aim`). `act` and `advance` return *steps*, one per decision: a `_StepTap` sits in
+  front of `battle.sink` (the combat log's seam, which it passes through) and cuts a
+  step after each recorded action, with the walks (cut to what the side sees), the
+  events and the state after it. Sight and light are cached between steps while the
+  observers, the lights and the walls stay the same.
+- **The camera** (`board.js`): the board is painted once per state into a world canvas
+  at a fixed cell size (capped by a pixel budget); zoom and pan only crop and scale it.
+  The wheel zooms round the cursor, a drag pans, the arrows pan, `+`/`-` zoom, `C`
+  centres the active unit; zoomed in, the camera follows whoever walks or acts.
 - **`gartok/web/server.py`** is the JSON API over the session, plus the client's files
   and the game's art.
 - **`gartok/web/client/`** is the screen: `board.js` paints the board and `battle.js`
@@ -100,36 +108,41 @@ The order puts the steps with a clear test first and the ones tuned by eye last.
 and colour wait for the art, because tuning them before the textures exist is work
 that the real art throws away.
 
-### 1. Battle: fluidity — todo
+### 1. Battle: fluidity — done (2026-10-23)
 
-`ai.take_turn` resolves a unit's whole turn in one call, so the client sees only the
-result: tokens jump in a straight line and the blow has already landed.
+- Each decision of a turn is a step (see Architecture). The client plays them in order:
+  the token walks its path cell by cell (110 ms a cell), then the board after the step,
+  then its numbers and callouts, with 260 ms between steps.
+- An AI turn that shows the side nothing plays with no pause, so a big fight's unseen
+  turns do not drag.
+- Tests: the steps of AI turns add up to the same fight as plain `take_turn`; a foe's
+  walk never shows a cell the side does not know; the player's move walks its path.
+- Not done: the fog and light layer is still redrawn on every step. It costs about 5 ms
+  in the browser, so it was left.
 
-- The session records each step of an AI turn (each move with its path, each action
-  with its target) and returns them in order.
-- The client animates them one at a time: the token walks the path cell by cell, the
-  strike lands with its number, a short pause between steps. The player's own moves
-  walk the path too.
-- The fog and light layer is redrawn only when sight changes; the static layer is
-  already cached.
-- No rule changes.
+### 2. Battle: speed on big boards — done (2026-10-23)
 
-**Done when:** a test shows the steps of a turn add up to the same end state as one
-`take_turn`; in the browser, every move walks and every blow lands visibly.
+`vision.visible_cells` and `lighting.cell_levels` walked every light source for every
+cell. Now each source lights its own reach once (`vision.lit_cells`), the line of sight
+is tried only where light or dark range allows, and the session caches sight between
+steps. The output is identical (a test checks it cell by cell against `can_see`).
 
-### 2. Battle: speed on big boards — todo
+| Necromancer, 300 requests | Median | Worst |
+|---|---|---|
+| Spike | 218 ms | 485 ms |
+| With steps, before the fix | 237 ms | 688 ms |
+| Now | 27 ms | 159 ms |
 
-Profile the Necromancer fight. The likely costs are `visible_cells` and `cell_levels`
-over every cell on every request: cache them per step instead of per request.
-
-**Done when:** the Necromancer fight's worst request is under 100 ms (218 ms median and
-485 ms worst today), measured by the same API run as the spike.
+The worst requests are about half `ai.take_turn` itself (path fields on a 48x30 board,
+about 85 ms for one turn), which pygame pays too. The client spends that time inside
+the 480 ms pause before the turn, so nobody sees it. If it ever shows, the next cost is
+`battle._pf_field` / `board._dijkstra`.
 
 ### 3. Battle: parity with pygame — todo
 
 Each of these exists in the pygame battle and is missing here; each gets its test:
 
-- zoom and pan on big boards;
+- ~~zoom and pan on big boards~~ (done with step 1);
 - the challenge dialogue (`talk_handler`), where the AI answers for now;
 - placing your own flag and traps, auto-placed for now;
 - the Floating Disk height prompt;

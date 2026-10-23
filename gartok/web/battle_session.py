@@ -29,6 +29,36 @@ def _cell(c):
     return [c[0], c[1]]
 
 
+class _StepTap:
+    """Sits in front of the battle's sink (the combat log, when one is attached) and cuts what
+    happens into steps: one per decision, so the client can play an AI turn move by move."""
+
+    def __init__(self, session, inner):
+        self.session = session
+        self.inner = inner
+        self.busy = False
+
+    def __getattr__(self, name):
+        inner = self.__dict__.get("inner")
+        if inner is None or name.startswith("__"):
+            raise AttributeError(name)
+        return getattr(inner, name)
+
+    def record(self, battle, name, actor, target, kw, run):
+        def decide():
+            return self.inner.record(battle, name, actor, target, kw, run) if self.inner else run()
+        if self.session.steps is None:
+            return decide()
+        self.busy = True
+        try:
+            before = {id(u): (u.pos, len(u.path)) for u in battle.units}
+            result = decide()
+            self.session.cut_step(before)
+            return result
+        finally:
+            self.busy = False
+
+
 class BattleSession:
     def __init__(self, battle, meta=None, team="player"):
         self.battle = battle
@@ -36,7 +66,12 @@ class BattleSession:
         self.team = team
         self.fog = FogMemory()
         self._log_seen = battle.log_total
-        self.ids = {}
+        self.steps = None
+        self._inspect_id = None
+        self._shown = set()
+        self._last_visible = set()
+        self._sight_key = self._sight_val = None
+        battle.sink = _StepTap(self, battle.sink)
 
     def plays(self, unit):
         return unit.team == self.team and not unit.ai_ally
@@ -54,12 +89,59 @@ class BattleSession:
         except (ValueError, IndexError):
             return None
 
-    def advance(self):
-        """One step the client does not decide: a placement, or one AI unit's whole turn.
-        Returns the step's events; does nothing on the player's turn or once the fight is over."""
+    def advance(self, inspect=None):
+        """What the client does not decide: a placement, or one AI unit's whole turn. Returns its
+        steps (see `cut_step`); does nothing on the player's turn or once the fight is over."""
+        return self._stepped(self._advance, inspect)
+
+    def act(self, action_id, target=None, cell=None, inspect=None):
+        """The player's `action_id` ("move" walks to `cell`) on `target` (a unit id) or `cell`,
+        as steps. Raises ValueError when it cannot be done now."""
+        return self._stepped(lambda: self._act(action_id, target, cell), inspect)
+
+    def snapshot(self, inspect=None):
+        """The board as it stands, as the one step of a fight just opened."""
+        return self._stepped(lambda: None, inspect)
+
+    def _stepped(self, run, inspect):
+        self._inspect_id = inspect
+        self.steps = []
+        try:
+            run()
+        finally:
+            steps, self.steps = self.steps, None
+        if not steps or self._events_pending():
+            steps.append({"moves": [], **self._events(), "state": self.state(inspect)})
+        return steps
+
+    def _events_pending(self):
+        b = self.battle
+        return b.log_total != self._log_seen or b.fx_events or b.acts or b.cues
+
+    def cut_step(self, before):
+        """Close one step: the units that moved (each with the cells it went through, cut to
+        what the side can see), what the step showed, and the board after it."""
+        b = self.battle
+        seen_before, shown_before = self._last_visible, self._shown
+        state = self.state(self._inspect_id)
+        visible = self._last_visible
+        moves = []
+        for u in b.units:
+            pos, n = before.get(id(u), (None, 0))
+            if pos is None or u.pos == pos:
+                continue
+            walked = u.path[n - 1:] if n and len(u.path) > n and u.path[n - 1] == pos else [pos, u.pos]
+            if u.team != self.team:
+                walked = [c for c in walked if any(cc in visible or cc in seen_before
+                                                   for cc in cells(c, u.footprint))]
+            if len(walked) >= 2 and (u.team == self.team or self.uid(u) in self._shown | shown_before):
+                moves.append({"id": self.uid(u), "path": [_cell(c) for c in walked]})
+        self.steps.append({"moves": moves, **self._events(visible), "state": state})
+
+    def _advance(self):
         b = self.battle
         if b.winner is not None or self.my_turn():
-            return self._events()
+            return
         if b.awaiting_flag:
             team = b.active.team
             tiles = [(x, y) for x in own_half(team, b.board.cols) for y in range(b.board.rows)
@@ -70,11 +152,8 @@ class BattleSession:
             b.skip_traps() if cell is None else b.plant_trap(b.awaiting_trap, cell)
         else:
             ai.take_turn(b, b.active)
-        return self._events()
 
-    def act(self, action_id, target=None, cell=None):
-        """The player's `action_id` ("move" walks to `cell`) on `target` (a unit id) or `cell`.
-        Raises ValueError when it cannot be done now."""
+    def _act(self, action_id, target, cell):
         b = self.battle
         if not self.my_turn():
             raise ValueError("not your turn")
@@ -109,7 +188,6 @@ class BattleSession:
                     raise ValueError(f"{action.name} cannot be done now")
                 action.execute(b, actor)
         self._after_action()
-        return self._events()
 
     def _after_action(self):
         b = self.battle
@@ -165,18 +243,31 @@ class BattleSession:
         return vision.observers(self.battle, False, self.team)
 
     def _visible(self):
-        return vision.visible_cells(self.battle, self._observers())
+        return self._sight(self._observers())[0]
+
+    def _sight(self, obs):
+        """`(visible cells, light levels)` for `obs`, worked out again only when what they hang
+        on has changed: the observers, the lights, the walls. A foe's step mostly changes none."""
+        b = self.battle
+        key = (tuple((id(o), o.pos, o.footprint, o.alive) for o in obs), tuple(vision.light_sources(b)),
+               frozenset(b.board.walls), b.winner is None)
+        if key != self._sight_key:
+            visible = vision.visible_cells(b, obs)
+            self._sight_key, self._sight_val = key, (visible, lighting.cell_levels(b, visible, obs))
+        return self._sight_val
 
     def state(self, inspect=None):
         """The board as the side knows it, `inspect` (a unit id) opened in the side panel."""
         b = self.battle
         obs = self._observers()
-        visible = vision.visible_cells(b, obs)
+        visible, levels = self._sight(obs)
         self.fog.remember(self.team, visible, self._props())
         seen = self.fog.seen(self.team)
         known = visible | seen
         my_turn = self.my_turn()
         board = b.board
+        units = [self._token(u, obs, my_turn) for u in b.units if self._shows(u, obs, my_turn)]
+        self._last_visible, self._shown = visible, {t["id"] for t in units}
         return {
             "meta": self.meta,
             "round": b.round_no,
@@ -194,11 +285,11 @@ class BattleSession:
             },
             "visible": [_cell(c) for c in sorted(visible)],
             "seen": [_cell(c) for c in sorted(seen - visible)],
-            "light": [[x, y, round(v, 3)] for (x, y), v in sorted(lighting.cell_levels(b, visible, obs).items())],
+            "light": [[x, y, round(v, 3)] for (x, y), v in sorted(levels.items())],
             "props": ([p | {"pos": _cell(p["pos"])} for p in self._props() if p["pos"] in visible]
                       + [p | {"pos": _cell(p["pos"]), "remembered": True}
                          for p in self.fog.remembered_props(self.team, visible)]),
-            "units": [self._token(u, obs, my_turn) for u in b.units if self._shows(u, obs, my_turn)],
+            "units": units,
             "initiative": self._initiative(obs),
             "active": self._sheet(b.active) if b.active and (self.plays(b.active) or
                                                              self._shows(b.active, obs, my_turn)) else None,
@@ -320,11 +411,12 @@ class BattleSession:
                 "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
                 **card}
 
-    def _events(self):
+    def _events(self, visible=None):
         """What the last step did that the side could see, drained off the battle: the
         floating numbers, the named actions and their missiles, crits and misses, new log lines."""
         b = self.battle
-        visible = self._visible()
+        if visible is None:
+            visible = self._visible()
         fresh = b.log_total - self._log_seen
         self._log_seen = b.log_total
         events = {

@@ -52,19 +52,33 @@ def cell_lit(battle, pos):
                for fp, radius in _light_sources(battle))
 
 
+def lit_cells(battle):
+    """Every cell `cell_lit` answers yes for, worked out source by source over its own reach
+    instead of every source for every cell."""
+    board, lit = battle.board, set()
+    for (sx, sy), radius in _light_sources(battle):
+        for x in range(max(0, sx - radius), min(board.cols, sx + radius + 1)):
+            for y in range(max(0, sy - radius), min(board.rows, sy + radius + 1)):
+                p = (x, y)
+                if p not in lit and grid_distance((sx, sy), p) <= radius and board.los_clear((sx, sy), p):
+                    lit.add(p)
+    return lit
+
+
 def dark_range(unit):
     """How far `unit` sees in the dark with no light: darkvision, or the Elf's Twilight Sight."""
     twilight = unit.char.talent_bonus("twilight_sight") if hasattr(unit, "char") else 0
     return max(unit.ability.darkvision, int(twilight))
 
 
-def can_see(battle, observer, target_pos):
+def can_see(battle, observer, target_pos, lit=None):
     """Does `observer` see the cell `target_pos`?
 
     A dungeon map is dark: with no light and no darkvision you only see your own
     cell. `darkvision` sees up to its range as if lit. A scenario with
     `ambient_light` (daylight) drops the light requirement -- LOS and range still
-    apply, so walls and distance matter, torches don't.
+    apply, so walls and distance matter, torches don't. `lit` is `lit_cells`, when the caller
+    asks about many cells at once.
     """
     ocells = cells(observer.pos, observer.footprint)
     dist = min(grid_distance(oc, target_pos) for oc in ocells)
@@ -78,7 +92,7 @@ def can_see(battle, observer, target_pos):
     dark = dark_range(observer)
     if dark and dist <= dark:
         return True
-    return cell_lit(battle, target_pos)
+    return target_pos in lit if lit is not None else cell_lit(battle, target_pos)
 
 
 def can_see_unit(battle, observer, target):
@@ -142,14 +156,25 @@ def visible_cells(battle, obs):
     vis = set()
     for o in obs:
         vis.update(cells(o.pos, o.footprint))
+    ambient = getattr(b, "ambient_light", False)
+    lit = set() if ambient else lit_cells(b)
+    walls, los = b.board.walls, b.board.los_clear
+    # `can_see` cell by cell, with each observer's footprint and dark range read once and the
+    # line of sight, the dear part, tried only on a cell the light or the dark range allows
+    eyes = [(cells(o.pos, o.footprint), dark_range(o)) for o in obs]
     for cx in range(b.board.cols):
         for cy in range(b.board.rows):
             p = (cx, cy)
-            if p in vis or p in b.board.walls:
+            if p in vis or p in walls:
                 continue
-            if any(can_see(b, o, p) for o in obs):
-                vis.add(p)
-    for wx, wy in b.board.walls:
+            for ocells, dark in eyes:
+                dist = min(grid_distance(oc, p) for oc in ocells)
+                if dist > data.SIGHT_MAX or not (ambient or p in lit or (dark and dist <= dark)):
+                    continue
+                if any(los(oc, p) for oc in ocells):
+                    vis.add(p)
+                    break
+    for wx, wy in walls:
         if any((wx + dx, wy + dy) in vis
                for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
             vis.add((wx, wy))

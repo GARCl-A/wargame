@@ -1,12 +1,20 @@
 // The board painted as an inked map: paper, hatched rock, the floor of the place, and over it
 // the fog (blank paper where the side has never looked) and the light, smoothed from the
 // per-cell levels the server sends.
+//
+// The map is painted once per state into a "world" canvas at a fixed cell size; the camera
+// (zoom and pan) only crops and scales that picture onto the sheet, so moving it never repaints.
 "use strict";
 
 const Board = (() => {
   const W = 1384, H = 780, MARGIN = 30;
+  const PADC = 4;                    // cells of world round the board: the rock rings of a delve
+  const MAX_PX = 4e6;                // the world canvas's pixel budget, which caps its cell size
+  const ZOOM_CELL = 112;             // the largest a cell gets on screen
   const INDOOR = new Set(["stone", "cave"]);
-  const L = {cell: 48, ox: 0, oy: 0, cols: 1, rows: 1};
+  const L = {cell: 48, ox: 0, oy: 0, cols: 0, rows: 0};      // the world
+  const V = {s: 1, x: 0, y: 0, cell: 48, fit: 1, max: 1};    // the camera: screen = V.x + world * V.s
+  let WW = W, WH = H;
   const base = document.getElementById("board").getContext("2d");
   const over = document.getElementById("overlay").getContext("2d");
   for (const c of [base.canvas, over.canvas]) { c.width = W; c.height = H; }
@@ -14,7 +22,7 @@ const Board = (() => {
   stones.src = "/client/img/flagstones.jpg";
   const ready = new Promise(r => { stones.onload = r; stones.onerror = r; });
 
-  let staticKey = null, staticCanvas = null, paperCanvas = null;
+  let staticKey = null, staticCanvas = null, paperCanvas = null, worldPaper = null, worldCanvas = null;
 
   const K = (x, y) => x + "," + y;
   function hash(x, y, s = 0) {
@@ -26,14 +34,30 @@ const Board = (() => {
     let s = (seed % 2147483646) + 1;
     return () => (s = (s * 16807) % 2147483647) / 2147483647;
   }
-  const canvas = (w = W, h = H) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; };
-  const cx = x => L.ox + x * L.cell, cy = y => L.oy + y * L.cell;
+  const canvas = (w = WW, h = WH) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; };
+  const wx = x => L.ox + x * L.cell, wy = y => L.oy + y * L.cell;
+  const cx = x => V.x + wx(x) * V.s, cy = y => V.y + wy(y) * V.s;
 
   function layout(cols, rows) {
+    if (cols === L.cols && rows === L.rows) return false;
     L.cols = cols; L.rows = rows;
-    L.cell = Math.max(14, Math.min(72, Math.floor(Math.min((W - 2 * MARGIN) / cols, (H - 2 * MARGIN) / rows))));
-    L.ox = Math.round((W - cols * L.cell) / 2);
-    L.oy = Math.round((H - rows * L.cell) / 2);
+    const fit = Math.max(14, Math.min(72, Math.floor(Math.min((W - 2 * MARGIN) / cols, (H - 2 * MARGIN) / rows))));
+    const budget = Math.floor(Math.sqrt(MAX_PX / ((cols + 2 * PADC) * (rows + 2 * PADC))));
+    L.cell = Math.max(fit, Math.min(72, budget));
+    L.ox = L.oy = PADC * L.cell;
+    WW = (cols + 2 * PADC) * L.cell; WH = (rows + 2 * PADC) * L.cell;
+    V.fit = fit / L.cell; V.max = Math.max(V.fit, ZOOM_CELL / L.cell);
+    V.s = V.fit;
+    clamp();
+    return true;
+  }
+
+  // a board smaller than the sheet sits in its middle; a bigger one never leaves a gap at an edge
+  function clamp() {
+    V.cell = L.cell * V.s;
+    const gw = L.cols * V.cell, gh = L.rows * V.cell;
+    V.x = gw <= W - 2 * MARGIN ? (W - gw) / 2 - L.ox * V.s : Math.min(MARGIN - L.ox * V.s, Math.max(W - MARGIN - gw - L.ox * V.s, V.x));
+    V.y = gh <= H - 2 * MARGIN ? (H - gh) / 2 - L.oy * V.s : Math.min(MARGIN - L.oy * V.s, Math.max(H - MARGIN - gh - L.oy * V.s, V.y));
   }
 
   function deckle(ctx, r) {
@@ -94,7 +118,7 @@ const Board = (() => {
       const ts = (b.floor === "cobble" ? 4 : 7) * L.cell;
       for (let x = L.ox; x < L.ox + gw; x += ts) for (let y = L.oy; y < L.oy + gh; y += ts) f.drawImage(stones, x, y, ts, ts);
       f.globalCompositeOperation = "multiply";
-      f.fillStyle = b.floor === "cave" ? "#a8987f" : "#d4b88c"; f.fillRect(0, 0, W, H);
+      f.fillStyle = b.floor === "cave" ? "#a8987f" : "#d4b88c"; f.fillRect(0, 0, WW, WH);
       f.globalCompositeOperation = "source-over";
     } else {
       f.fillStyle = {arena: "#dcc296", earth: "#cfb487", grass: "#d6c99a"}[b.floor] || "#d8c49c";
@@ -131,12 +155,12 @@ const Board = (() => {
     ctx.fillStyle = "rgba(40,25,10,.28)";
     for (const k of walls) {
       const [x, y] = k.split(",").map(Number);
-      if (kind === "tree") { ctx.beginPath(); ctx.ellipse(cx(x) + L.cell * .62, cy(y) + L.cell * .7, L.cell * .44, L.cell * .3, 0, 0, 7); ctx.fill(); }
-      else ctx.fillRect(cx(x) + L.cell * .14, cy(y) + L.cell * .18, L.cell, L.cell);
+      if (kind === "tree") { ctx.beginPath(); ctx.ellipse(wx(x) + L.cell * .62, wy(y) + L.cell * .7, L.cell * .44, L.cell * .3, 0, 0, 7); ctx.fill(); }
+      else ctx.fillRect(wx(x) + L.cell * .14, wy(y) + L.cell * .18, L.cell, L.cell);
     }
     for (const k of [...walls].sort((a, b2) => a.split(",")[1] - b2.split(",")[1])) {
       const [x, y] = k.split(",").map(Number), r = rng(x * 977 + y * 131 + 7);
-      const X = cx(x), Y = cy(y), C = L.cell;
+      const X = wx(x), Y = wy(y), C = L.cell;
       if (kind === "tree") {
         ctx.fillStyle = "#4a3a22"; ctx.beginPath(); ctx.arc(X + C / 2, Y + C * .62, C * .1, 0, 7); ctx.fill();
         const lobes = 7, R = C * .44;
@@ -175,9 +199,7 @@ const Board = (() => {
 
   function drawStatic(b) {
     const [c, g] = canvas();
-    const r = rng(b.cols * 7919 + b.rows * 104729);
-    g.save(); deckle(g, r); g.clip();
-    g.drawImage(paperCanvas, 0, 0);
+    g.save();
     const gw = b.cols * L.cell, gh = b.rows * L.cell;
     if (INDOOR.has(b.floor)) {
       // the rock round the delve: hatching that fades away from the edge
@@ -185,32 +207,32 @@ const Board = (() => {
         const alpha = [0, .95, .55, .22][ring];
         for (let x = -ring; x < b.cols + ring; x++) for (let y = -ring; y < b.rows + ring; y++) {
           const d = Math.max(-x, x - b.cols + 1, -y, y - b.rows + 1);
-          if (d === ring) hatch(g, cx(x), cy(y), L.cell, L.cell, alpha, ring === 1 ? 7 : ring === 2 ? 4 : 2, rng(x * 31 + y * 17 + 3), L.cell / 60);
+          if (d === ring) hatch(g, wx(x), wy(y), L.cell, L.cell, alpha, ring === 1 ? 7 : ring === 2 ? 4 : 2, rng(x * 31 + y * 17 + 3), L.cell / 60);
         }
       }
     }
     g.drawImage(floorLayer(b), 0, 0);
     g.strokeStyle = "rgba(50,32,16,.16)"; g.lineWidth = 1; g.setLineDash([2, 4]);
-    for (let x = 0; x <= b.cols; x++) { g.beginPath(); g.moveTo(cx(x) + .5, L.oy); g.lineTo(cx(x) + .5, L.oy + gh); g.stroke(); }
-    for (let y = 0; y <= b.rows; y++) { g.beginPath(); g.moveTo(L.ox, cy(y) + .5); g.lineTo(L.ox + gw, cy(y) + .5); g.stroke(); }
+    for (let x = 0; x <= b.cols; x++) { g.beginPath(); g.moveTo(wx(x) + .5, L.oy); g.lineTo(wx(x) + .5, L.oy + gh); g.stroke(); }
+    for (let y = 0; y <= b.rows; y++) { g.beginPath(); g.moveTo(L.ox, wy(y) + .5); g.lineTo(L.ox + gw, wy(y) + .5); g.stroke(); }
     g.setLineDash([]);
     for (const [x, y] of b.water) {
-      g.fillStyle = "rgba(70,96,110,.32)"; g.fillRect(cx(x), cy(y), L.cell, L.cell);
+      g.fillStyle = "rgba(70,96,110,.32)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
       g.strokeStyle = "rgba(40,60,72,.55)"; g.lineWidth = 1.1;
       for (let k = 1; k <= 3; k++) {
-        const yy = cy(y) + k * L.cell / 4; g.beginPath();
-        for (let t = 0; t <= 6; t++) { const xx = cx(x) + 4 + t * (L.cell - 8) / 6; g.lineTo(xx, yy + Math.sin(t * 1.7 + x + k) * 2); }
+        const yy = wy(y) + k * L.cell / 4; g.beginPath();
+        for (let t = 0; t <= 6; t++) { const xx = wx(x) + 4 + t * (L.cell - 8) / 6; g.lineTo(xx, yy + Math.sin(t * 1.7 + x + k) * 2); }
         g.stroke();
       }
     }
     for (const [x, y, z] of b.elevation) {
       if (z < 0) {
-        g.fillStyle = "rgba(30,18,8,.45)"; g.fillRect(cx(x), cy(y), L.cell, L.cell);
-        hatch(g, cx(x), cy(y), L.cell, L.cell, .9, 8, rng(x * 13 + y * 7), L.cell / 60);
+        g.fillStyle = "rgba(30,18,8,.45)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
+        hatch(g, wx(x), wy(y), L.cell, L.cell, .9, 8, rng(x * 13 + y * 7), L.cell / 60);
       } else {
-        g.fillStyle = "rgba(40,25,10,.22)"; g.fillRect(cx(x) + 4, cy(y) + 6, L.cell, L.cell);
-        g.fillStyle = "rgba(250,238,210,.35)"; g.fillRect(cx(x), cy(y), L.cell, L.cell);
-        g.strokeStyle = "#2a1a0c"; g.lineWidth = 1.6; g.strokeRect(cx(x) + 1, cy(y) + 1, L.cell - 2, L.cell - 2);
+        g.fillStyle = "rgba(40,25,10,.22)"; g.fillRect(wx(x) + 4, wy(y) + 6, L.cell, L.cell);
+        g.fillStyle = "rgba(250,238,210,.35)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
+        g.strokeStyle = "#2a1a0c"; g.lineWidth = 1.6; g.strokeRect(wx(x) + 1, wy(y) + 1, L.cell - 2, L.cell - 2);
       }
     }
     drawWalls(g, b, new Set(b.walls.map(([x, y]) => K(x, y))));
@@ -249,7 +271,7 @@ const Board = (() => {
     const seen = new Set(s.seen.map(([x, y]) => K(x, y)));
     const level = new Map(s.light.map(([x, y, v]) => [K(x, y), v]));
     const blur = Math.max(3, L.cell * .12);
-    const grid = new Path2D(); grid.rect(0, 0, W, H);
+    const grid = new Path2D(); grid.rect(0, 0, WW, WH);
 
     // the light, as a multiply layer: dark where the side sees little, untouched where it never looked
     const sh = cellGrid((x, y) => {
@@ -267,14 +289,14 @@ const Board = (() => {
 
     const [mem, mc] = canvas();
     mc.strokeStyle = "rgba(90,60,30,.16)"; mc.lineWidth = 1;
-    for (let k = -H; k < W; k += 7) { mc.beginPath(); mc.moveTo(k, 0); mc.lineTo(k + H, H); mc.stroke(); }
+    for (let k = -WH; k < WW; k += 7) { mc.beginPath(); mc.moveTo(k, 0); mc.lineTo(k + WH, WH); mc.stroke(); }
     mc.globalCompositeOperation = "destination-in";
     blurUp(cellGrid((x, y) => seen.has(K(x, y)) ? "#fff" : null), mc, blur);
     g.save(); g.clip(grid); g.drawImage(mem, 0, 0); g.restore();
 
     // never seen: plain paper laid over the board
     const [unk, u] = canvas();
-    u.drawImage(paperCanvas, 0, 0);
+    u.drawImage(worldPaper, 0, 0);
     const r = rng(77);
     for (let i = 0; i < 260; i++) {
       const x = L.ox + r() * L.cols * L.cell, y = L.oy + r() * L.rows * L.cell;
@@ -292,9 +314,9 @@ const Board = (() => {
       gr.addColorStop(0, `rgba(255,140,55,${a})`); gr.addColorStop(1, "rgba(0,0,0,0)");
       g.fillStyle = gr; g.fillRect(x - rad, y - rad, 2 * rad, 2 * rad);
     };
-    for (const [x, y] of s.board.fire) glow(cx(x) + L.cell / 2, cy(y) + L.cell / 2, L.cell * 1.8, .3);
-    for (const p of s.props) if (p.kind === "torch" && !p.remembered) glow(cx(p.pos[0]) + L.cell / 2, cy(p.pos[1]) + L.cell / 2, L.cell * 1.3, .32);
-    for (const t of s.units) if (t.torch) glow(cx(t.pos[0]) + L.cell * t.fp / 2, cy(t.pos[1]) + L.cell * t.fp / 2, L.cell * 1.2, .22);
+    for (const [x, y] of s.board.fire) glow(wx(x) + L.cell / 2, wy(y) + L.cell / 2, L.cell * 1.8, .3);
+    for (const p of s.props) if (p.kind === "torch" && !p.remembered) glow(wx(p.pos[0]) + L.cell / 2, wy(p.pos[1]) + L.cell / 2, L.cell * 1.3, .32);
+    for (const t of s.units) if (t.torch) glow(wx(t.pos[0]) + L.cell * t.fp / 2, wy(t.pos[1]) + L.cell * t.fp / 2, L.cell * 1.2, .22);
     g.restore();
   }
 
@@ -314,14 +336,14 @@ const Board = (() => {
     const C = L.cell;
     for (const [x, y] of s.board.fire) {
       const r = rng(x * 41 + y * 7 + (s.round || 0));
-      const X = cx(x), Y = cy(y);
+      const X = wx(x), Y = wy(y);
       const sc = g.createRadialGradient(X + C / 2, Y + C / 2, 2, X + C / 2, Y + C / 2, C * .7);
       sc.addColorStop(0, "rgba(25,12,4,.7)"); sc.addColorStop(1, "rgba(25,12,4,0)");
       g.fillStyle = sc; g.fillRect(X - C * .2, Y - C * .2, C * 1.4, C * 1.4);
       for (let i = 0; i < 3; i++) flame(g, X + C * (.22 + i * .28) + (r() - .5) * C * .08, Y + C * (.75 + r() * .15), C * (.5 + r() * .3), C * (.15 + r() * .06), r);
     }
     for (const p of s.props) {
-      const [x, y] = p.pos, X = cx(x), Y = cy(y), r = rng(x * 19 + y * 23);
+      const [x, y] = p.pos, X = wx(x), Y = wy(y), r = rng(x * 19 + y * 23);
       g.globalAlpha = p.remembered ? .55 : 1;
       if (p.kind === "corpse") {
         const m = (p.size || 1) * C, bx = X + m / 2, by = Y + m / 2;
@@ -353,22 +375,54 @@ const Board = (() => {
   async function draw(s) {
     await ready;
     const b = s.board;
-    layout(b.cols, b.rows);
-    if (!paperCanvas) { const [pc, p] = canvas(); paper(p, W, H, "#e6d5b0", 11); paperCanvas = pc; }
-    const key = [b.cols, b.rows, b.floor, b.walls.length, b.water.length, b.elevation.length].join("|");
+    if (layout(b.cols, b.rows) || !worldPaper) { const [pc, p] = canvas(); paper(p, WW, WH, "#e6d5b0", 13); worldPaper = pc; }
+    if (!paperCanvas) { const [pc, p] = canvas(W, H); paper(p, W, H, "#e6d5b0", 11); paperCanvas = pc; }
+    const key = [b.cols, b.rows, L.cell, b.floor, b.walls.length, b.water.length, b.elevation.length].join("|");
     if (key !== staticKey) { staticCanvas = drawStatic(b); staticKey = key; }
+    const [wc, g] = canvas();
+    g.drawImage(staticCanvas, 0, 0);
+    drawProps(g, s);
+    fogAndLight(g, s);
+    worldCanvas = wc;
+    blit();
+  }
+
+  function blit() {
     base.clearRect(0, 0, W, H);
-    base.drawImage(staticCanvas, 0, 0);
-    base.save(); deckle(base, rng(b.cols * 7919 + b.rows * 104729)); base.clip();
-    drawProps(base, s);
-    fogAndLight(base, s);
+    if (!paperCanvas) return;
+    base.drawImage(paperCanvas, 0, 0);
+    if (!worldCanvas) return;
+    base.save(); deckle(base, rng(7919)); base.clip();
+    base.imageSmoothingEnabled = true; base.imageSmoothingQuality = "high";
+    base.drawImage(worldCanvas, V.x, V.y, WW * V.s, WH * V.s);
     base.restore();
+  }
+
+  let onView = null;
+  function moved() { clamp(); blit(); if (onView) onView(); }
+  function zoomAt(px, py, factor) {
+    const ns = Math.min(V.max, Math.max(V.fit, V.s * factor));
+    if (ns === V.s) return;
+    V.x = px - (px - V.x) * ns / V.s; V.y = py - (py - V.y) * ns / V.s; V.s = ns;
+    moved();
+  }
+  function panBy(dx, dy) { V.x += dx; V.y += dy; moved(); }
+  function centerOn([x, y], fp = 1) {
+    V.x = W / 2 - (wx(x) + L.cell * fp / 2) * V.s; V.y = H / 2 - (wy(y) + L.cell * fp / 2) * V.s;
+    moved();
+  }
+  // bring `cell` on screen when it is off it or within a cell of the edge; true when the camera moved
+  function reveal(cell, fp = 1) {
+    const x0 = cx(cell[0]), y0 = cy(cell[1]), m = V.cell;
+    if (x0 >= MARGIN + m && x0 + V.cell * fp <= W - MARGIN - m && y0 >= MARGIN + m && y0 + V.cell * fp <= H - MARGIN - m) return false;
+    centerOn(cell, fp);
+    return true;
   }
 
   function overlay(s, ui) {
     over.clearRect(0, 0, W, H);
     if (!s || !s.my_turn) return;
-    const C = L.cell;
+    const C = V.cell;
     if (ui.aim) {
       const col = {attack: "201,71,58", demo: "128,70,150", heal: "90,140,70", move: "70,110,150", spell: "201,163,94", throw: "214,120,40"}[ui.aim.kind] || "201,163,94";
       over.fillStyle = `rgba(${col},.22)`; over.strokeStyle = `rgba(${col},.75)`; over.lineWidth = 1.5;
@@ -410,9 +464,10 @@ const Board = (() => {
   }
 
   function cellAt(px, py) {
-    const x = Math.floor((px - L.ox) / L.cell), y = Math.floor((py - L.oy) / L.cell);
+    const x = Math.floor((px - cx(0)) / V.cell), y = Math.floor((py - cy(0)) / V.cell);
     return x >= 0 && y >= 0 && x < L.cols && y < L.rows ? [x, y] : null;
   }
 
-  return {draw, overlay, cellAt, layout: L, cx, cy};
+  return {draw, overlay, cellAt, layout: V, cx, cy, zoomAt, panBy, centerOn, reveal,
+          zoomed: () => V.s > V.fit + 1e-6, set onView(fn) { onView = fn; }};
 })();

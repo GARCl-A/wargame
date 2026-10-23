@@ -6,10 +6,11 @@ import os
 import threading
 import urllib.error
 import urllib.request
+from itertools import pairwise
 
 import pytest
 
-from gartok import actions, artwork, combat_lab, vision
+from gartok import actions, ai, artwork, combat_lab, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
 
@@ -91,9 +92,84 @@ def test_advance_never_moves_for_the_player():
 
 def test_events_drain_what_the_step_did():
     s = _session("fortress", seed=11)
-    events = s.advance()
-    assert set(events) == {"log", "fx", "acts", "cues"}
+    steps = s.advance()
+    assert steps and all(set(st) == {"moves", "log", "fx", "acts", "cues", "state"} for st in steps)
     assert not s.battle.fx_events and not s.battle.acts and not s.battle.cues
+
+
+def _snapshot(battle):
+    return [(u.pos, u.hp, u.ap, u.alive) for u in battle.units] + [battle.round_no, battle.winner]
+
+
+def test_the_steps_of_ai_turns_add_up_to_the_same_fight_as_plain_take_turn():
+    stepped, plain = [], []
+    s = _session("fortress", seed=11)
+    for _ in range(40):
+        if s.battle.winner is not None:
+            break
+        if s.my_turn():
+            s.act("defend_end")
+        else:
+            steps = s.advance()
+            assert steps[-1]["state"] == s.state()
+        stepped.append(_snapshot(s.battle))
+    battle, _ = combat_lab.build("fortress", 2, 4, seed=11)
+    for _ in range(len(stepped)):
+        if battle.active.team == "player" and not battle.active.ai_ally:
+            if actions.DEFEND.can(battle, battle.active):
+                actions.DEFEND.execute(battle, battle.active)
+            battle.end_turn()
+        else:
+            ai.take_turn(battle, battle.active)
+        plain.append(_snapshot(battle))
+    assert stepped == plain
+
+
+def test_an_ai_turn_comes_as_one_step_per_decision_with_each_walk_cell_by_cell():
+    s = _session("fortress", seed=11)
+    walks = []
+    for _ in range(30):
+        if s.battle.winner is not None:
+            break
+        if s.my_turn():
+            s.act("defend_end")
+            continue
+        steps = s.advance()
+        walks += [m for st in steps for m in st["moves"]]
+    assert walks, "nobody walked in thirty turns"
+    for m in walks:
+        path = [tuple(c) for c in m["path"]]
+        assert len(path) >= 2
+        unit = s.unit(m["id"])
+        if unit.team == "player":
+            assert len(path) == 2 or all(max(abs(a[0] - b[0]), abs(a[1] - b[1])) == 1 for a, b in pairwise(path))
+
+
+def test_a_foe_walking_out_of_sight_never_shows_where_it_went():
+    s = _session("dungeon", seed=3)
+    for _ in range(60):
+        if s.battle.winner is not None:
+            break
+        if s.my_turn():
+            s.act("defend_end")
+            continue
+        for st in s.advance():
+            known = {tuple(c) for c in st["state"]["visible"]} | set(map(tuple, st["state"]["seen"]))
+            for m in st["moves"]:
+                if s.unit(m["id"]).team != "player":
+                    assert all(tuple(c) in known for c in m["path"])
+
+
+def test_the_player_move_walks_its_path_as_a_step():
+    s = _session("wilds", seed=4)
+    _to_my_turn(s)
+    actor = s.battle.active
+    reach = s.battle.reachable(actor)
+    dest = max((c for c in reach if c != actor.pos), key=lambda c: reach[c])
+    expected = s.battle.path_to(actor, dest)
+    steps = s.act("move", cell=dest)
+    walk = next(m for st in steps for m in st["moves"] if m["id"] == s.uid(actor))
+    assert [tuple(c) for c in walk["path"]] == list(expected)
 
 
 def test_a_fight_played_through_the_session_ends():
@@ -166,9 +242,9 @@ def test_server_refuses_an_illegal_act_and_plays_a_legal_one(server):
     for _ in range(200):
         if state["my_turn"]:
             break
-        state = _post(server + "/api/advance", {})["state"]
+        state = _post(server + "/api/advance", {})["steps"][-1]["state"]
     with pytest.raises(urllib.error.HTTPError) as e:
         _post(server + "/api/act", {"action": "no_such_action"})
     assert e.value.code == 409
     after = _post(server + "/api/act", {"action": "defend_end"})
-    assert {"events", "state"} <= set(after)
+    assert after["steps"] and "state" in after["steps"][-1]

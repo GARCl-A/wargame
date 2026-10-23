@@ -35,19 +35,21 @@ def cell_levels(battle, visible, observers):
     board = battle.board
     if getattr(battle, "ambient_light", False):
         return dict.fromkeys(visible, 1.0)
-    sources = vision.light_sources(battle)
-    levels = {}
-    for cell in visible:
-        if cell in board.walls:
-            continue
-        light = 0.0
-        for pos, radius in sources:
+    levels = {cell: 0.0 for cell in visible if cell not in board.walls}
+    for (sx, sy), radius in vision.light_sources(battle):      # each source over its own reach
+        r = int(radius + 0.5)
+        for x in range(sx - r, sx + r + 1):
+            for y in range(sy - r, sy + r + 1):
+                cell = (x, y)
+                if cell not in levels:
+                    continue
+                d = math.dist((sx, sy), cell)
+                if d <= radius + 0.5 and board.los_clear((sx, sy), cell):
+                    levels[cell] = max(levels[cell], _falloff(d, radius, _TORCH_CORE))
+    eyes = [(o.pos, vision.dark_range(o)) for o in observers]
+    for cell, light in levels.items():
+        for pos, dark in eyes:
             d = math.dist(pos, cell)
-            if d <= radius + 0.5 and board.los_clear(pos, cell):
-                light = max(light, _falloff(d, radius, _TORCH_CORE))
-        for o in observers:
-            d = math.dist(o.pos, cell)
-            dark = vision.dark_range(o)
             if d == 0:
                 light = max(light, _OWN_CELL)
             elif dark and d <= dark + 0.5:

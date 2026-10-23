@@ -88,20 +88,21 @@ def make_handler(game):
             path, body = urlparse(self.path).path, self._body()
             with game.lock:
                 s = game.session
+                inspect = body.get("inspect")
                 try:
                     if path == "/api/act":
-                        events = s.act(body.get("action", ""), body.get("target"), body.get("cell"))
+                        steps = s.act(body.get("action", ""), body.get("target"), body.get("cell"), inspect)
                     elif path == "/api/advance":
-                        events = s.advance()
+                        steps = s.advance(inspect)
                     elif path == "/api/new":
                         game.new(body.get("fight", "fortress"), body.get("level", 2), body.get("squad", 4),
                                  body.get("seed"))
-                        s, events = game.session, {}
+                        steps = game.session.snapshot()
                     else:
                         return self._send(b"not found", "text/plain", 404)
                 except ValueError as e:
                     return self._json({"error": str(e)}, 409)
-                return self._json({"events": events, "state": s.state(body.get("inspect"))})
+                return self._json({"steps": steps})
 
     return Handler
 
