@@ -12,7 +12,6 @@ Parts:
 - **Ready to do** — the task is defined enough to start, sorted by size.
 - **Needs more information** — a design question, a repro or another system has to land
   before the task can be sized.
-- **Starting items waiting on another system** — items whose system does not exist yet.
 
 ---
 
@@ -58,6 +57,19 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Medium
 
+- **Remove occupations (decided 2026-10-23).** The first step of *Needs more information -> Loyalty,
+  the oath and who the members are*: an occupation is only a preset of the starting weapon and item
+  (`unit.py`), so the starting kit is rolled at random and nothing is written on the character. Touches
+  `data.OCCUPATIONS`, `Unit` (roll, save, `unit_edit`), `artwork.OCCUPATION_ICON` and `role_for` (the
+  member's icon needs another source: the race's, or the weapon's), every label that prints
+  "Race Occupation" (tavern, guild, squad, medic, initiation, crafting, watch, `dialogue.py`, the web
+  board), `aftermath.Memorial` and the memorial screen, `recorder.py`, `npc_lib` / `npcs/*.json`,
+  `outfit.py` (level 0 keeps the occupation's kit), `reference.py` / REFERENCE.md, the sims' rankings
+  (`economy_guild.py`, `balance_sim.py`, `unit_compare.py`) and their tests. Saves of the old shape stop
+  loading unless the key gets a default. The occupation-unique items lose their reason to exist: drop
+  them from the start, they come back if a system ever needs them. Check the economy sim afterwards:
+  a starting Axe or Pickaxe was a work tool.
+
 - **Magic Arc follow-ups (future drops, quests & tuning).**
   1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
   2. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
@@ -77,9 +89,8 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   - The pause menu (Esc) lists many options that belong behind one SETTINGS entry.
   - Too few icons for the guild banner.
 - **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
-- **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter
-  (proposed answer: replace them with an aspiration, *Needs more information -> Loyalty, the oath and
-  who the members are*).
+- **Occupations are bland:** answered 2026-10-23, they go (*Ready to do -> Remove occupations*) and an
+  aspiration takes their place (*Needs more information -> Loyalty, the oath and who the members are*).
 - **Combat board:**
   - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
   - Hit sounds do not fit the game (the UI sounds are fine); swap the Kenney variants in `assets/sounds/`.
@@ -191,7 +202,8 @@ Keep these while building them:
 # Needs more information
 
 - **Loyalty, the oath and who the members are (design talk 2026-10-23, no code).** Replaces the
-  2026-10-22 "drama engine" and the oath of the old *Found-the-guild charter* entry.
+  2026-10-22 "drama engine" and the oath of the old *Found-the-guild charter* entry. Its first concrete
+  step is *Ready to do -> Remove occupations*.
 
   **The problem.** "No soul, it is all one big calculator": a character is a statblock plus an
   alignment that only serves recruitment and shops; nobody wants anything. Several systems were built
@@ -206,67 +218,62 @@ Keep these while building them:
     at once. No avatar: an avatar dies to a wolf in a game built on a disposable early squad. Members
     are **partners, not employees** (no wages, no treasury: the guild has to be worth it to them).
     The guild leader and the group leaders are managerial roles, not a hierarchy.
-  - **Loyalty: one bar per member, the player sees it.** Starts mid-bar (~50%), rises with what the
-    member likes, falls with what they dislike. Inputs: doing what they want, their relations with the
-    other members, killing when they did not want to, progressing when they wanted to, the oath kept or
-    broken. At 0% they announce they are leaving (reuse `cohesion.py`'s 7-day notice, the window where
-    the player can still react); high loyalty tolerates more.
-  - **Recruiting is one person convincing another**, not the guild recruiting. The recruiter pitches
-    who the guild is and its oath ("this is us, this is the oath, you in?"); CHA still matters, it
-    covers the gap between what the guild offers and what the candidate wants ("not exactly what you
-    want, but close: try it?").
+  - **A member is a statblock + named traits + an aspiration.**
+    - **Occupations go** (a classless game; an occupation is only a preset of the random item roll).
+    - **The aspiration** is what the member wants to become: a mage, famous, rich (their own coins), to
+      see the world, a quiet life, to serve faction X. The main loyalty input, and it ties loyalty to
+      progression: a talent or an initiation spent on them is spent toward what they want. A fulfilled
+      aspiration is a story beat (a new one, or they retire a legend).
+    - **Alignment becomes named traits.** The two axes stay underneath, shown as words (proposed:
+      Steadfast / Fickle on the law axis, Merciful / Ruthless on the moral one). What alignment does
+      today, in the author's words: keeping one's word, holding the formation (law); not killing, not
+      stealing (moral). The traits carry both halves: how the member **behaves** when the player is not
+      in control (`ai.py`'s temper, what a deserter takes, `dialogue.py`) and what they **value**
+      (loyalty inputs: a Merciful one suffers a captive left to die). Further personality traits, if
+      ever, are more inputs of the same bar.
+  - **Loyalty: one bar per member, shown as a number** (the author likes a transparent game). Inputs:
+    doing what they want, their relations with the other members, killing when they did not want to,
+    progressing when they wanted to, the oath kept or broken. At 0% they announce they are leaving
+    (reuse `cohesion.py`'s 7-day notice, the window where the player can still react).
+    - **It accelerates**: the more loyal, the more they tolerate (losses are dampened); the less loyal,
+      the faster it falls.
+    - **Founders start at ~70%**: they founded the guild. Recruits start mid-bar (~50%), whatever the
+      pitch; one who has little in common with the guild simply falls fast, with no special rule.
+    - **A group past its leader's capacity costs the group leader loyalty**, in place of `cohesion.py`
+      rolling against the weakest member's Mental Defense (absorbs the leadership open problem).
+  - **Relations between members are in**, and they are also a reason to run more than one group
+    (keeping two who cannot stand each other apart). How the player manages them is open.
+  - **Recruiting is one person convincing another**, never the guild recruiting. The recruiter pitches
+    who the guild is and its oath ("this is us, this is the oath, you in?"); CHA still matters, it covers
+    the gap between what the guild offers and what the candidate wants ("not exactly what you want, but
+    close: try it?"). The recruiter's traits against the candidate's can stay (alike people get along);
+    the guild-vs-candidate alignment distance goes.
   - **The tavern is the world.** Who drinks there is there on their own; the player has no say in who
-    shows up. (Rejected: a "races the guild welcomes" list on the charter steering the tavern or the
-    draft. It locks the player out of the Grippli they meet later and fights world-first.)
-  - **The draft stays.** Choosing a starting crew among random strangers is common in the genre and
-    liked (RimWorld's colonists, Wildermyth); what players praise most is choosing the starting
-    *situation* (Battle Brothers' and Kenshi's origins), and attachment comes from what happens to a
-    character, not from picking them (XCOM). Today's draft is a numbers pick; once candidates show traits
-    and an aspiration it becomes a choice between people. The draft is the **founding**, not a
-    recruitment: nobody convinced anybody.
-  - **The oath is a set of rules, in the shape of pf2e's edicts and anathemas**, and the members swear
-    it. Every clause must point at an event the game already records, or it is abstract. "We survive
-    at any cost and get rich" is the author's first example: "get rich" alone is no trade-off (every
-    player wants it), it works as an edict that loyalty reads. Candidates from the talk: "nobody is left
-    behind" (anathema: a downed ally or body abandoned), "no blood for nothing" (anathema: killing one
-    who surrendered, a captive left to die), "we come home alive" (edict: withdrawing is never shameful),
-    "we keep the City's law" (anathema: a crime, `justice.py`).
-
-  **Proposed, waiting on the author.**
-  - **Vocation: cut it** (author leaning yes: "with the oath the guild may not need a mechanical
-    identity"). Today it is six races + one perk, and that coupling makes a fan of one race pick a perk
-    they do not want. The author only ever plays Caravan or Delvers: those two touch something done
-    every day (travel, gathering); the other four touch rare events (the cohesion roll, a Cautious
-    ambush, the opening read, every 10th day's food). If it stays, all six are rewritten around daily
-    loops with no races attached. Cutting it retires `vocation_screen.py`, `vocations.py`,
-    `scripts/vocation_report.py` and the open perk measurements (Wilds, Scholars).
-  - **Occupation becomes an aspiration** (author: occupation is a bad idea in a classless game; today it
-    only gives the starting weapon and item, `unit.py`). An aspiration is what the member wants to
-    become: a mage, famous, rich (their own coins), to see the world, a quiet life, to serve faction X.
-    It is the main loyalty input and ties loyalty to progression: a talent or an initiation spent on
-    them is spent toward what they want. A fulfilled aspiration is a story beat (a new one, or they
-    retire a legend). Starting items: from the aspiration or random.
-  - **Alignment's two axes stay underneath, shown as named traits** (Steadfast / Fickle on the law
-    axis, Merciful / Ruthless on the moral one). The author's read of what alignment does today: keeping
-    one's word, holding the formation (law); not killing, not stealing (moral). Split it in two: how the
-    member **behaves** when the player is not in control (`ai.py`'s temper, what a deserter takes,
-    `dialogue.py`) and what they **value** (loyalty inputs: a Merciful one suffers a captive left to die).
-    Recruitment stops reading the guild-vs-candidate distance; the recruiter's traits against the
-    candidate's can stay (alike people get along). The oath uses the same vocabulary, so a candidate's fit
-    with it can be computed. Further personality traits, if ever, are more inputs of the same bar.
-  - **The pitch's result sets the starting loyalty** instead of a flat 50%: a candidate who wants what
-    the guild is starts high, one talked in by CHA alone starts low. Overselling is a debt.
-  - **High loyalty dampens losses** rather than being a state the player fills once and forgets.
-  - **Loyalty absorbs the leadership open problem**: a group past its leader's capacity lowers loyalty
-    instead of `cohesion.py` rolling against the weakest member's Mental Defense.
-  - **The founders' starting loyalty** comes from how they fit the oath they just swore together; no
-    CHA roll at the founding.
-  - **Relations between pairs of members wait for a second wave**: they make the best stories ("Tovi will
-    not march with Grok") but are where the system turns into a spreadsheet. The first wave ships with the
-    inputs that are already events (what they do, deaths, hunger, progress, the oath).
-  - **Origins** (a starting situation in place of a perk: "a wagon and a debt to the Bankers",
-    "survivors of a Ruins expedition") are the form the genre likes best for a founding, but they are new
-    content: noted, not now.
+    shows up. (Rejected: a "races the guild welcomes" list steering the tavern or the draft. It locks the
+    player out of the Grippli they meet later and fights world-first.)
+  - **The draft stays, as the founding**, not a recruitment: nobody convinced anybody. Choosing a
+    starting crew among random strangers is common in the genre and liked (RimWorld's colonists,
+    Wildermyth); attachment comes from what happens to a character, not from picking them (XCOM).
+    Today's draft is a numbers pick; once candidates show traits and an aspiration it becomes a choice
+    between people.
+  - **The oath** (pf2e's edicts and anathemas):
+    - **Composed by the player, choice by choice**, along axes with trade-offs (e.g. killing: everyone
+      must die / free / nobody dies). The guild is as complex as the player wants it to be.
+    - **Every clause points at an event the game already records**, or it is abstract. "Get rich" alone
+      is no trade-off (every player wants it); it works as an edict loyalty reads. Candidates from the
+      talk: "nobody is left behind" (a downed ally or body abandoned), "no blood for nothing" (killing
+      one who surrendered, a captive left to die), "we come home alive" (withdrawing is never shameful),
+      "we keep the City's law" (a crime, `justice.py`).
+    - **Binds every member**, founders and recruits alike.
+    - **Can never be changed**: the guild is the player, and the oath is the commitment the player makes
+      by starting the run.
+    - **Factions and NPCs do not react to the oath**, only to what the guild does.
+  - **Vocation stays for now, on probation.** It is cut, merged or diluted into another system as soon
+    as one does its job better. Today it is six races + one perk; that coupling makes a fan of one race
+    pick a perk they do not want, and the author only ever plays Caravan or Delvers: those two touch
+    something done every day (travel, gathering), the other four rare events (the cohesion roll, a
+    Cautious ambush, the opening read, every 10th day's food). If it is reworked, each perk acts on a
+    daily loop.
 
   **Rules of thumb for every input and output.** An input is an event the game already has (a death,
   hunger, days at the Yard, the loot, a withdrawal, a crime); an output is a mechanism that already
@@ -276,15 +283,16 @@ Keep these while building them:
   hunger. And not everything feeds loyalty: if perk, oath, aspiration and trait only move the same bar,
   loyalty becomes the new calculator.
 
-  **Open.**
-  - Does the bar show a number, or only lines and events (Battle Brothers' mood or RimWorld's)?
-  - The oath: the clause list; whether it binds every member or only those recruited after it is
-    written; what changing it costs and how often (the old entry: it "cannot be broken, can be changed");
-    whether NPCs and factions react to it; whether it is chosen from a list or composed.
-  - Loyalty numbers: how far each input moves it, and what high loyalty buys besides tolerance.
-  - The aspiration list and how each one is detected from existing state.
-  - What becomes of the occupation-unique starting items (*Starting items waiting on another system*)
-    once occupations go.
+  **Proposed, not yet answered.**
+  - **Origins** (a starting situation in place of a perk: "a wagon and a debt to the Bankers",
+    "survivors of a Ruins expedition") are the form the genre likes best for a founding; new content, so
+    noted, not now. A candidate for what the vocation could become.
+
+  **Open (closes with play or numbers).**
+  - How far each input moves the bar, the acceleration curve, what high loyalty buys besides tolerance.
+  - The aspiration list and how each one is read off existing state.
+  - The oath's axes and the steps on each.
+  - How the player sees and manages relations between members.
   - What the economy sim (`economy_guild.py`) and `cohesion.py` must learn.
   - Presentation, later: a founding charter that writes itself line by line, signed with the banner and
     the oath, the first entry of the guild's chronicle.
@@ -309,17 +317,3 @@ Keep these while building them:
   attribute, advantage on a named kind of action...), and only the most recent meal's buff is active.
   Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
   the one price of a meal). Marsh's slower rot is priced low until this lands.
-
----
-
-# Starting items waiting on another system
-
-Each occupation starts with one item (`data.OCCUPATIONS`), useful and **unique to it**. These wait
-for a system that does not exist yet:
-
-- **Scissors** (Barber). Shearing sheep once player husbandry/farms land (Claim/property).
-- **Pliers** (Goldsmith). High-yield, long-duration jewelry crafting (money and craftable artifacts).
-- **Shovel** (Grave Robber). Archaeology at Ancient Ruins (after the magic arc).
-- **Map** (Cartographer). Finds treasures and secret zones.
-- **Compass** (Guide). Avoids getting lost on very long trips; waits for a getting-lost system.
-- **Deck of Cards** (Gambler). A card minigame at the tavern, among others. Its own arc.
