@@ -2,7 +2,7 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 7 are done. Step 4 is the author's (the art); until it lands, the next code step is 8.
+to 3 and 7 are done; step 4 (the art) is done as far as it got, so the next step is 5.
 
 ## Decisions so far
 
@@ -103,7 +103,7 @@ to 3 and 7 are done. Step 4 is the author's (the art); until it lands, the next 
 ## How to continue
 
 "Seguir com plano de ui" means: take the first step below not marked done whose inputs
-exist (5 and 6 wait for the art of step 4), do only that step, meet its **Done when**,
+exist, do only that step, meet its **Done when**,
 commit, then mark it done here and note anything it changed for the steps after it. One step per session. Start from this file, not from
 exploring the code.
 
@@ -183,10 +183,14 @@ the 480 ms pause before the turn, so nobody sees it. If it ever shows, the next 
   (two survivors, one sitting on its own flag). That is the AI, not the web; it is in
   the backlog.
 
-### 4. Art for the board — todo (the author, with Gemini; no code)
+### 4. Art for the board — done as far as it got (2026-10-23)
 
 Anchored on the reference portraits: a wall sheet, UI frames (9-slice), and outdoor
-floors (earth, grass, sand). Files go in `gartok/web/client/img/`.
+floors (earth, grass, sand). Files go in `gartok/web/client/img/`. As built: rock, grass and
+sand floors, three trees, one boulder and the UI materials (paper, leather, brass button,
+wax seal, portrait frame). Gemini ran out before earth, cobbles, the wall and two more
+boulders; they stay unchecked under Art in [backlog.md](backlog.md). Steps 5 and 6 work
+with what is in and keep today's drawing where a file is missing.
 
 **Done when:** the files are in the repo. Steps 5 and 6 need them.
 
