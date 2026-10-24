@@ -1,0 +1,13 @@
+/* A screen the browser does not draw yet: a note on paper over the table, and the way back. */
+#away{position:absolute;inset:0;display:grid;place-items:center;
+  background:radial-gradient(ellipse 70% 62% at 50% 50%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+#away .card{width:640px;padding:34px 40px 30px}
+#away .head{display:flex;align-items:center;gap:18px;margin-top:18px}
+#away .m{width:64px;height:64px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 40% 35%,#f6ecd2,#d6bf92);box-shadow:0 0 0 2px #2a1a0e,0 0 0 5px #e6d5b0,0 0 0 6.5px #2a1a0e}
+#away .m .ico{display:block;width:38px;height:38px;color:#2a1a0e}
+#away.fight .m .ico{color:#7a2318}
+#away h2{font:700 28px/1.1 Cinzel,serif;color:#24170c}
+#away p{margin-top:18px;font:italic 19px/1.4 "IM Fell English",serif;color:#4a3522}
+#away .ghost-btn{margin-top:26px;width:260px;color:#3a2814;border:1px solid rgba(90,60,30,.5);background:rgba(255,250,235,.4)}
+#away .ghost-btn:hover{color:#7a2318;border-color:#7a2318}

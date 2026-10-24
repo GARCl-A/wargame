@@ -2,8 +2,8 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 5 to 7 are done; step 4 (the art) is done as far as it got, and step 8 (the map)
-has its approved mockup, so the next step is 8's screen.
+to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. The next step is 9,
+the hubs.
 
 ## Decisions so far
 
@@ -82,8 +82,11 @@ has its approved mockup, so the next step is 8's screen.
   files and the game's art.
 - **`gartok/web/client/screens/battle/`** is the fight: `board.js` paints the board and
   `battle.js` handles input, tokens, panels and effects.
-- **`gartok/web/map_session.py`** + `screens/map/` is the map as step 7 left it: the
-  guild, the day and where each band stands, enough to prove the router.
+- **`gartok/web/map_session.py`** + `screens/map/` (`sheet.js` the sheet and its camera,
+  `map.js` the rest) is the campaign map (step 8). **`away_session.py`** + `screens/away/`
+  stands in for every screen the browser does not draw yet: it names where the band went
+  and goes back to the map. A session holds its `game` (`Game.open`), so a verb can open
+  another screen; its answer names the screen open and the client reloads on it.
 - **Launch:** `python -m gartok.web --fight <lab fight>`, `python -m gartok.web --save
   <world>` (a guild's folder under `saves/`; `--screen` picks the screen), or double-click
   [references/battle_mockup/play_battle.bat](references/battle_mockup/play_battle.bat) and pick a fight.
@@ -280,7 +283,7 @@ Before the second screen, so each screen after it is a small adapter and not a r
 **Done when:** the battle runs on the shell, and an empty second screen opens from a
 save through the same router.
 
-### 8. Map — mockup approved (2026-10-24), screen todo
+### 8. Map — done (2026-10-24)
 
 1. A mockup at 1920x1080 in `references/map_mockup/`, in the menu mockup's language
    (the map inked by hand), approved by the author before any code. Done: built on the
@@ -293,6 +296,39 @@ save through the same router.
 
 **Done when:** a pygame session's map loop (move a group, issue each order kind, advance
 time, open a node) works in the browser, pygame's `map_screen.py` checked as the list.
+
+As built:
+
+- **The server** (`MapSession`) reads the map as pygame does: it mixes in
+  `MapInspectorMixin` and borrows three `MapScreen` reads (`_order_status`, `_mates_for`,
+  `_rest_plans`), so a node's buttons, the searches, the Wildfire and the REST rows stay
+  one source. Step 10 moves them here when pygame goes. The state is the whole map for
+  the side: the known nodes and roads, every band with its way ahead (each stop and when
+  it gets there), its inspector and camp, the hours ahead, the seal. `preview` is the
+  slip over a place (the path, its hours, the arrival).
+- **The clock** runs as `App._advance` runs it: an order that leaves no band idle runs it
+  to the next band gone idle or the next screen due; the seal passes 24 h once every band
+  holds a post. A screen that falls due opens `AwaySession`; back from it, the next one
+  due opens, then the map. Every order saves the world (`persist.save_game`, as `App`
+  does), and `record_play` attaches the recorder as `App` does.
+- **A forced fight** (ambush, guard, raid) stops its band on the map, as pygame's ambush
+  does: no order, split or merge, and the seal turns red and opens it. The fight itself
+  waits for step 10 (the web battle in the campaign): the away card says so, and the band
+  keeps its fight due in the save, where pygame picks it up.
+- **The client** follows the mockup: the sheet painted once, the land, roads and ways
+  inked through the camera; places and pawns are HTML over it, each label set where it
+  does not hit another place; the slip and the red ink on hover; Split and Merge in the
+  picked band's card; stance and REST as segmented rows. The news of a run of the clock
+  (meals, arrivals, deaths, level-ups) is a paper slip over the sheet.
+- Tests: `tests/test_web_map.py` (travel, the clock waiting on an idle band, rest,
+  search, stance, the stops, a busy band, entering a place, a screen due on the clock,
+  split and merge, a fight due, the 24 h seal, the routing and the save).
+- **Not in the browser yet**, each a pygame screen the away card stands in for until step
+  9 or 10: the hand-over card between bands (the map just moves to the band, with the
+  news slip); level-ups and memorials (a line in the news); the starved's belongings
+  (pygame's loot screen; the browser does not offer them, so they are lost); the auto-win
+  of an ambush; the Wildfire talk; leaving a broken wagon (travel is refused with a note);
+  the camp kitchen; the guild and group sheets; the map's tutorial card.
 
 ### 9. Hubs, then the rest — todo
 

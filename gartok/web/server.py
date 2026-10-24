@@ -14,7 +14,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from .. import combat_lab, persist, settings, sound
+from .. import combat_lab, persist, recorder, settings, sound
 from ..combat_log import CombatLog
 from .battle_session import BattleSession
 from .map_session import MapSession
@@ -51,8 +51,14 @@ class Game:
 
     def __init__(self, session, lab=None):
         self.lock = threading.Lock()
-        self.session = session
         self.lab = lab
+        self.open(session)
+
+    def open(self, session):
+        """Make `session` the open screen; a verb that changes screen calls this, and the client
+        reloads on the screen its answer names."""
+        session.game = self
+        self.session = session
 
     @classmethod
     def fight(cls, fight="fortress", level=2, squad=4, seed=None, players=1, log_root=None):
@@ -61,10 +67,13 @@ class Game:
 
     @classmethod
     def from_save(cls, world, screen="map"):
-        return cls(SCREENS[screen](persist.load_game(world), world))
+        guild = persist.load_game(world)
+        if settings.get("record_play") == "ON":
+            recorder.attach(persist.world_dir(world), guild)
+        return cls(SCREENS[screen](guild, world))
 
     def new_fight(self, fight, level, squad, seed=None, players=1):
-        self.session = self.lab.fight(fight, level, squad, seed, players)
+        self.open(self.lab.fight(fight, level, squad, seed, players))
         return {"steps": self.session.snapshot()}
 
 

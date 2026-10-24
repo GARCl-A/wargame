@@ -20,6 +20,7 @@ def asset_url(path):
 
 class Session:
     screen = ""
+    game = None               # the `server.Game` that opened it, to open another screen
     GET: ClassVar[dict] = {}
     POST: ClassVar[dict] = {}
 

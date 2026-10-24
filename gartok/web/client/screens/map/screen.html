@@ -1,9 +1,43 @@
-<div id="maphead">
-  <div class="place" id="guildname"></div>
-  <div class="sub" id="clock"></div>
+<div id="maptable">
+  <div id="top">
+    <div class="gname">
+      <div class="shield"><div class="rim"></div><div class="body"></div><div class="ico mask" id="emblem"></div></div>
+      <div><h1 id="guildname"></h1><small id="guildsub"></small></div>
+    </div>
+    <div class="clock">
+      <svg class="dial" viewBox="0 0 86 46" id="dial"></svg>
+      <div><div class="day"><span>DAY</span><em id="day"></em></div><div class="hour"><b id="time"></b><i id="part"></i></div></div>
+    </div>
+    <div class="alerts" id="alerts"></div>
+    <div class="ledger" id="ledger"></div>
+    <div class="topbtns">
+      <div class="ghost-btn" id="guildbtn"><span class="ico mask" style="--icon:url(/assets/icons/gui/bookmark.svg)"></span><span id="guildlbl">Guild</span></div>
+    </div>
+  </div>
+
+  <div id="bands" class="leather">
+    <div class="lk">Bands <em id="bandsnote"></em></div>
+    <div id="bandlist"></div>
+    <div class="hours"><div class="kicker">The hours ahead</div><div class="tl" id="hours"></div></div>
+  </div>
+
+  <div id="sheet">
+    <canvas id="map" width="1060" height="946"></canvas>
+    <div id="nodes"></div>
+    <div id="slip" class="tip" hidden></div>
+    <div id="news" hidden></div>
+    <div class="zoom"><div id="zin" title="Zoom in (+)">+</div><div id="zout" title="Zoom out (−)">−</div><div class="fit" id="zfit" title="Fit the known world (F)">FIT</div></div>
+  </div>
+
+  <div id="insp">
+    <div class="place" id="place"></div>
+    <div id="inspscroll">
+      <div class="party leather" id="party"></div>
+      <div class="camp leather" id="camp"></div>
+    </div>
+    <div id="cta" class="leather"><p id="ctatext"></p><div class="seal" id="seal"></div></div>
+  </div>
+
+  <div id="wiped" hidden><div class="paper"><div class="kicker">The guild is gone</div>
+    <p>No one is left to carry the banner. The world keeps its last save; load an earlier one to try again.</p></div></div>
 </div>
-<div class="paper" id="mapsheet">
-  <div class="kicker">The map</div>
-  <p class="note">The map is drawn in step 8. Until then, this is where each band stands.</p>
-</div>
-<div id="bands"></div>

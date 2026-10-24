@@ -10,7 +10,7 @@ from itertools import pairwise
 
 import pytest
 
-from gartok import actions, ai, artwork, combat_lab, lighting, vision
+from gartok import actions, ai, artwork, combat_lab, lighting, recorder, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
 
@@ -441,7 +441,7 @@ def test_every_file_the_shell_routes_to_is_served(server):
     import re
     shell = _get(server + "/client/shell.js")[1].decode()
     manifest = re.findall(r'(\w+): \{css: \[(.*?)\], js: \[(.*?)\]\}', shell)
-    assert {screen for screen, _, _ in manifest} == {"battle", "map"}
+    assert {screen for screen, _, _ in manifest} == {"battle", "map", "away"}
     for screen, css, js in manifest:
         for name in ["screen.html", *re.findall(r'"([^"]+)"', css + js)]:
             assert _get(f"{server}/client/screens/{screen}/{name}")[0] == 200
@@ -467,13 +467,14 @@ def test_a_save_opens_the_map_through_the_same_router(tmp_path, monkeypatch):
         state = json.loads(_get(url + "/api/map/state")[1])
         assert state["meta"]["name"] == "Ink Hands" and state["meta"]["day"] == guild.clock.day
         (band,) = state["groups"]
-        assert [m["leader"] for m in band["members"]] == [False, True] and band["order"] is None
+        assert [m["lead"] for m in band["members"]] == [False, True] and band["idle"]
         with pytest.raises(urllib.error.HTTPError) as e:
             _post(url + "/api/lab/new", {"fight": "wilds"})
         assert e.value.code == 409
     finally:
         srv.shutdown()
         srv.server_close()
+        recorder.detach()
 
 
 def test_the_side_gets_only_the_lights_it_sees_and_the_levels_leave_them_to_the_client():

@@ -42,7 +42,8 @@ const Shell = {screen: null, lab: false};
 // each screen lives in screens/<id>/: screen.html, then these stylesheets and scripts in order
 const SCREENS = {
   battle: {css: ["battle.css"], js: ["board.js", "battle.js"]},
-  map: {css: ["map.css"], js: ["map.js"]},
+  map: {css: ["map.css"], js: ["sheet.js", "map.js"]},
+  away: {css: ["away.css"], js: ["away.js"]},
 };
 
 function fit() {
