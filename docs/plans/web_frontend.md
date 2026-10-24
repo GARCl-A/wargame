@@ -2,8 +2,8 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. The next step is 9,
-the hubs.
+to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
+the hub frame and its shop tab are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -87,6 +87,11 @@ the hubs.
   stands in for every screen the browser does not draw yet: it names where the band went
   and goes back to the map. A session holds its `game` (`Game.open`), so a verb can open
   another screen; its answer names the screen open and the client reloads on it.
+- **`gartok/web/hub_session.py`** + `screens/hub/` (`hub.js` the frame, `shop.js` the shop tab) is a
+  place's hub (step 9): the tabs pygame's hub shows for the same order, the keeper, the way back.
+  `shop_tab.py` drives a headless `MarketScreen` (or `LibraryScreen`), as the map borrows pygame's
+  reads. Item glyphs are game-icons.net SVGs in `assets/icons/item/`, one per `item_icon` kind
+  (`item_icon.glyph`).
 - **Launch:** `python -m gartok.web --fight <lab fight>`, `python -m gartok.web --save
   <world>` (a guild's folder under `saves/`; `--screen` picks the screen), or double-click
   [references/battle_mockup/play_battle.bat](references/battle_mockup/play_battle.bat) and pick a fight.
@@ -330,19 +335,46 @@ As built:
   of an ambush; the Wildfire talk; leaving a broken wagon (travel is refused with a note);
   the camp kitchen; the guild and group sheets; the map's tutorial card.
 
-### 9. Hubs, then the rest — todo
+### 9. Hubs, then the rest — under way
 
 - **Hubs:** one tabbed frame (the `TabbedHubScreen` equivalent) with the shop as its
-  first tab, following [market_mockup/](references/market_mockup/). Two things it
-  leaves open: past about 12 rows (or 6 shoppers, or wagons and animals shopping along)
-  the pack columns scroll sideways, as `ui/hscroll.ColumnScroll` does; the Smithy's
-  weapons tab (damage, hands, size) is not yet tried in the 660px shelf. The other
-  tabs (work, gathering, medic, jobs, initiation) then reuse the frame.
+  first tab, following [market_mockup/](references/market_mockup/). The other tabs (work,
+  gathering, medic, jobs, initiation) then reuse the frame.
 - **The rest, by family:** each family not yet mocked gets one mockup before its first
   screen (the guild and group sheets, the dialogues, the report after a fight); its
   other screens follow without one. The title screen follows the menu mockup.
 
 **Done when:** every `*_screen.py` that the campaign can reach has a web screen.
+
+**9a. The hub frame and the shop tab — done (2026-10-24).** As built:
+
+- **The server** (`HubSession`): an order whose kind has a hub in pygame (market, forge,
+  carpenter, apothecary, tanner, library, the Farm's stables, a sanctuary) opens it from the
+  map, on the tab pygame opens first. The tabs are `hub_session.HUBS` (the hubs with their own
+  class) or the node's own list as `TabbedHubScreen.for_node` builds it. A tab not drawn yet
+  is a note inside the frame; the bank, the tavern's recruits, the property, the Claim and the
+  rest still open the away card. Back lands on the map and saves.
+- **The shop** (`ShopTab`): pygame's own trades on a headless `MarketScreen`: buy into a pack,
+  onto a worn slot or shared out by room; hand items over, whole or part of a stack; sell (the
+  till refuses what it cannot pay); lock, mark for auto-sell and sell the marked; distribute
+  the load. Every verb answers the whole hub.
+- **The client** follows the mockup: the keeper's strip with the deal (who speaks, you pay,
+  they pay) and the till; the shelf on paper with its categories, stock pips and steppers; one
+  leather column per pack (wagons and animals too) that scroll sideways past four; the sell
+  plate and the purse with each pack's share. Drag a ware or an item where it goes, or click
+  it and click where; Shift picks several; right-click an item for its menu. A Large weapon is
+  its own row (pygame folds it into a size toggle).
+- **Item glyphs:** 59 game-icons.net SVGs (CC BY 3.0, `assets/icons/LICENSE.txt`) in
+  `assets/icons/item/`, one per `item_icon` kind; a test fails for a kind with no file.
+- Tests: `tests/test_web_hub.py` (tabs and keeper, buy into a pack / by room / onto a hand,
+  refusals, hand over part of a stack, sell and the till's limit, lock and auto-sell, back and
+  the save, the routing). The drags, clicks and menu were also driven in headless Edge over
+  the DevTools protocol on a copy of the day-70 save.
+- **Next (9b):** the other tabs, one per session, in the order a guild meets them: work and
+  gathering (the Lumber Yard), the Medic, the jobs boards, the forge and carpentry, the
+  stables and wagon yard, the tavern's tabs, initiation. The mockup's open question is
+  settled: a weapons shelf (damage, hands, range) reads in the 660px shelf. Left as is: an
+  item's tooltip is the browser's own `title`.
 
 ### 10. The swap — todo
 

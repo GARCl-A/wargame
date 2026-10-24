@@ -143,3 +143,16 @@ def test_item_instance_draws_icon_without_error():
     surf = pygame.Surface((32, 32))
     item_icon.draw_icon(surf, pygame.Rect(0, 0, 32, 32), inst)
 
+
+def test_every_item_kind_has_a_glyph_file_for_the_web_client():
+    import os
+
+    from gartok import item_icon, items
+    from gartok.web.session import ASSETS
+    root = os.path.join(ASSETS, "icons")
+    glyphs = {item_icon.glyph(n) for n in items.all_items()}
+    glyphs |= {"item/" + g for g in (*item_icon.GLYPHS.values(), *item_icon.HEAD_GLYPHS.values(),
+                                     *item_icon.STYLE_GLYPHS.values())}
+    missing = [g for g in glyphs if not os.path.isfile(os.path.join(root, g + ".svg"))]
+    assert not missing, f"fetch these from game-icons.net into assets/icons/: {missing}"
+    assert {kind for kind, _m, _s in item_icon.ICONS.values()} <= set(item_icon.GLYPHS) | {"hafted"}

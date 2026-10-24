@@ -126,6 +126,26 @@ VOCATION_ICONS = {
 }
 
 
+# the web client's game-icons.net glyph per kind (`assets/icons/item/<glyph>.svg`); a hafted weapon is told by
+# its head, an armour by its style
+GLYPHS = {
+    "blade": "broadsword", "bow": "pocket-bow", "crossbow": "crossbow", "armor": "leather-vest", "cloak": "hood",
+    "shield": "round-shield", "flask": "round-bottom-flask", "apple": "shiny-apple", "hide": "animal-hide",
+    "storm_hide": "animal-hide", "rocks": "stone-pile", "steak": "meat", "jerky": "meat", "sack": "swap-bag",
+    "drop": "drop", "horn": "hunting-horn", "book": "book-cover", "chest": "locked-chest", "coin": "two-coins",
+    "gems": "gems", "gem": "emerald", "potato": "potato", "mug": "beer-stein", "egg": "egg-clutch",
+    "mushroom": "mushroom-gills", "logs": "log", "ingot": "metal-bar", "brick": "brick-pile", "sheet": "rolled-cloth",
+    "ink": "quill-ink", "scroll": "scroll-unfurled", "torch": "torch", "lantern": "lantern-flame",
+    "aid_kit": "first-aid-kit", "quiver": "quiver", "beartrap": "wolf-trap", "alarm": "alarm-clock",
+    "saddle": "saddle", "harness": "horse-head", "rope": "rope-coil", "scissors": "scissors", "shovel": "spade",
+    "chisel": "chisel", "pliers": "pincers", "compass": "compass", "cards": "card-random", "lute": "lyre",
+    "holy": "ankh", "chains": "crossed-chains", "map": "treasure-map", "letter": "envelope",
+}
+HEAD_GLYPHS = {"axe": "battle-axe", "hammer": "flat-hammer", "club": "wood-club", "spear": "stone-spear",
+               "staff": "wizard-staff", "glaive": "glaive", "pick": "war-pick"}
+STYLE_GLYPHS = {"mail": "chain-mail", "plates": "breastplate"}
+
+
 def _base(name):
     """The catalogue name an icon is filed under: no ` (aged)` suffix, no `Large ` / `Huge ` prefix, and every
     spell scroll and language dictionary is the plain Scroll and Dictionary."""
@@ -146,6 +166,16 @@ def icon_spec(name):
     defn = items.get(name)
     kind, material, shape = ICONS.get(_base(name)) or FALLBACK.get(defn.type if defn else None, GENERIC)
     return kind, TONES[material], RIM.get(defn.rarity if defn else None), SCALE, shape
+
+
+def glyph(name):
+    """-> `"item/<glyph>"`, the item's glyph under `assets/icons/`."""
+    kind, _tone, _rim, _scale, shape = icon_spec(name)
+    if kind == "blade" and _base(name) == "Dagger":
+        return "item/plain-dagger"
+    return "item/" + (HEAD_GLYPHS.get(shape.get("head")) if kind == "hafted"
+                      else STYLE_GLYPHS.get(shape.get("style"), GLYPHS["armor"]) if kind == "armor"
+                      else GLYPHS.get(kind, "knapsack"))
 
 
 def vocation_icon(vocation_id):

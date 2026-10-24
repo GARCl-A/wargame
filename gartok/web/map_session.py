@@ -449,7 +449,7 @@ class MapSession(MapInspectorMixin, Session):
                 self._save()
             return self._away(g, None, title="Campfire cooking", what="the camp kitchen")
         elif key in orders.INTERACTIVE_KINDS:
-            return self._away(g, orders.interactive(key, hours=0))
+            return self._enter(g, orders.interactive(key, hours=0))
         else:
             raise ValueError(f"no such order: {key}")
         self.focus = g.gid
@@ -527,13 +527,21 @@ class MapSession(MapInspectorMixin, Session):
                 self.focus = group.gid
                 continue
             self._save()
-            return self._away(group, order)
+            return self._enter(group, order)
         self.notices += arena.sync(self.guild)
         if self.guild.can_auto_advance:
             self._advance()
             return self._land()
         self._save()
         return {"screen": self.screen, **self.state()}
+
+    def _enter(self, group, order):
+        """The screen `order` plays: a hub where the browser has one, else the away card."""
+        from .hub_session import HubSession, opens_hub
+        if opens_hub(order, world.node(group.node)):
+            self.game.open(HubSession(self, group, order))
+            return {"screen": HubSession.screen}
+        return self._away(group, order)
 
     def _away(self, group, order, fight=False, title=None, what=None):
         from .away_session import AwaySession
