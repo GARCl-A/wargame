@@ -1,5 +1,11 @@
 """The local HTTP server between the core and the web client: the client's files, the game's art,
-and a small JSON API over one `BattleSession`. Standard library only."""
+and a JSON API over the screen being played. Standard library only.
+
+    GET  /api/screen              -> which screen is open (the client's router reads it first)
+    GET  /api/sounds              -> the sound cues
+    *    /api/<screen>/<verb>     -> that screen's session (`session.Session`)
+    *    /api/lab/fights, /new    -> the combat lab, when the game was opened on one
+"""
 
 import json
 import mimetypes
@@ -8,32 +14,58 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from .. import combat_lab, settings, sound
+from .. import combat_lab, persist, settings, sound
 from ..combat_log import CombatLog
-from .battle_session import ASSETS, BattleSession
+from .battle_session import BattleSession
+from .map_session import MapSession
+from .session import ASSETS
 
 CLIENT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "client")
 ART = ("portraits", "icons", "sounds")    # the asset folders the client may read
+SCREENS = {"map": MapSession}             # the screens a save opens; a battle comes from the lab or the campaign
 
 
-class Game:
-    """The fight being played, behind one lock: the API's requests never interleave. With a
-    `log_root` every fight is written there as the combat lab writes its own (`combat_log`)."""
+class Lab:
+    """The combat lab's fights. With a `log_root` every fight is written there as the pygame lab
+    writes its own (`combat_log`)."""
 
-    def __init__(self, fight="fortress", level=2, squad=4, seed=None, players=1, log_root=None):
-        self.lock = threading.Lock()
+    def __init__(self, log_root=None):
         self.log_root = log_root
-        self.new(fight, level, squad, seed, players)
 
-    def new(self, fight, level, squad, seed=None, players=1):
+    def fight(self, fight="fortress", level=2, squad=4, seed=None, players=1):
         battle, meta = combat_lab.build(fight, int(level), int(squad), seed)
         controllers = {"player": "human", "enemy": "human" if int(players) == 2 else "ai"}
-        meta.update(name=combat_lab.FIGHTS[fight].name, players=int(players), volume=settings.get("volume"))
+        meta.update(name=combat_lab.FIGHTS[fight].name, players=int(players))
         if self.log_root is not None:
             name = combat_lab.default_name(fight, controllers)
             battle.record_to(CombatLog(combat_lab.log_path(name, root=self.log_root),
                                        {"source": "lab", "name": name, **meta}, controllers))
-        self.session = BattleSession(battle, meta, controllers)
+        return BattleSession(battle, meta, controllers)
+
+    def fights(self):
+        return [{"id": f.id, "name": f.name, "note": f.note, "squad": f.squad} for f in combat_lab.FIGHTS.values()]
+
+
+class Game:
+    """The screen being played, behind one lock: the API's requests never interleave."""
+
+    def __init__(self, session, lab=None):
+        self.lock = threading.Lock()
+        self.session = session
+        self.lab = lab
+
+    @classmethod
+    def fight(cls, fight="fortress", level=2, squad=4, seed=None, players=1, log_root=None):
+        lab = Lab(log_root)
+        return cls(lab.fight(fight, level, squad, seed, players), lab)
+
+    @classmethod
+    def from_save(cls, world, screen="map"):
+        return cls(SCREENS[screen](persist.load_game(world), world))
+
+    def new_fight(self, fight, level, squad, seed=None, players=1):
+        self.session = self.lab.fight(fight, level, squad, seed, players)
+        return {"steps": self.session.snapshot()}
 
 
 def _inside(root, rel):
@@ -57,10 +89,12 @@ def make_handler(game):
         def _json(self, payload, status=200):
             self._send(json.dumps(payload).encode(), "application/json", status)
 
+        def _missing(self):
+            self._send(b"not found", "text/plain", 404)
+
         def _file(self, path):
             if path is None:
-                self._send(b"not found", "text/plain", 404)
-                return
+                return self._missing()
             ctype = mimetypes.guess_type(path)[0] or "application/octet-stream"
             with open(path, "rb") as fh:
                 self._send(fh.read(), ctype)
@@ -69,57 +103,58 @@ def make_handler(game):
             n = int(self.headers.get("Content-Length") or 0)
             return json.loads(self.rfile.read(n) or b"{}")
 
+        def _api(self, parts, args, post):
+            """`parts` past /api/; the lock is held."""
+            s = game.session
+            if parts == ["screen"] and not post:
+                return self._json({"screen": s.screen, "lab": game.lab is not None,
+                                   "volume": settings.get("volume")})
+            if parts == ["sounds"] and not post:
+                return self._json({"cues": {cue: [f"/assets/sounds/{f}" for f in files]
+                                            for cue, files in sound.CUES.items()},
+                                   "level": sound.LEVEL})
+            if len(parts) != 2:
+                return self._missing()
+            screen, verb = parts
+            try:
+                if screen == "lab" and game.lab is not None:
+                    if verb == "fights" and not post:
+                        return self._json(game.lab.fights())
+                    if verb == "new" and post:
+                        return self._json(game.new_fight(args.get("fight", "fortress"), args.get("level", 2),
+                                                         args.get("squad", 4), args.get("seed"),
+                                                         args.get("players", 1)))
+                    return self._missing()
+                if screen != s.screen:
+                    return self._json({"error": f"the open screen is {s.screen}"}, 409)
+                handler = s.verb(verb, post)
+                if handler is None:
+                    return self._missing()
+                return self._json(handler(s, args))
+            except ValueError as e:
+                return self._json({"error": str(e)}, 409)
+
         def do_GET(self):
             url = urlparse(self.path)
-            q = {k: v[0] for k, v in parse_qs(url.query).items()}
-            parts = url.path.strip("/").split("/", 1)
+            parts = url.path.strip("/").split("/")
             if url.path in ("/", "/index.html"):
                 return self._file(os.path.join(CLIENT, "index.html"))
-            if parts[0] == "client" and len(parts) == 2:
-                return self._file(_inside(CLIENT, parts[1]))
-            if parts[0] == "assets" and len(parts) == 2 and parts[1].split("/", 1)[0] in ART:
-                return self._file(_inside(ASSETS, parts[1]))
-            with game.lock:
-                s = game.session
-                if url.path == "/api/state":
-                    return self._json(s.state(q.get("inspect")))
-                if url.path == "/api/route":
-                    return self._json(s.route((int(q["x"]), int(q["y"]))))
-                if url.path == "/api/aim":
-                    return self._json(s.aim(q.get("action", "")))
-                if url.path == "/api/sounds":
-                    return self._json({"cues": {cue: [f"/assets/sounds/{f}" for f in files]
-                                                for cue, files in sound.CUES.items()},
-                                       "level": sound.LEVEL})
-                if url.path == "/api/fights":
-                    return self._json([{"id": f.id, "name": f.name, "note": f.note, "squad": f.squad}
-                                       for f in combat_lab.FIGHTS.values()])
-            self._send(b"not found", "text/plain", 404)
+            if parts[0] == "client" and len(parts) > 1:
+                return self._file(_inside(CLIENT, "/".join(parts[1:])))
+            if parts[0] == "assets" and len(parts) > 2 and parts[1] in ART:
+                return self._file(_inside(ASSETS, "/".join(parts[1:])))
+            if parts[0] == "api":
+                with game.lock:
+                    return self._api(parts[1:], {k: v[0] for k, v in parse_qs(url.query).items()}, False)
+            self._missing()
 
         def do_POST(self):
-            path, body = urlparse(self.path).path, self._body()
+            parts = urlparse(self.path).path.strip("/").split("/")
+            if parts[0] != "api":
+                return self._missing()
+            body = self._body()
             with game.lock:
-                s = game.session
-                inspect = body.get("inspect")
-                try:
-                    if path == "/api/act":
-                        steps = s.act(body.get("action", ""), body.get("target"), body.get("cell"), inspect,
-                                      body.get("elevation"))
-                    elif path == "/api/advance":
-                        steps = s.advance(inspect)
-                    elif path == "/api/talk":
-                        steps = s.answer(body.get("verb"), body.get("speaker"), bool(body.get("go_on")), inspect)
-                    elif path == "/api/seat":
-                        steps = s.take_seat(inspect)
-                    elif path == "/api/new":
-                        game.new(body.get("fight", "fortress"), body.get("level", 2), body.get("squad", 4),
-                                 body.get("seed"), body.get("players", 1))
-                        steps = game.session.snapshot()
-                    else:
-                        return self._send(b"not found", "text/plain", 404)
-                except ValueError as e:
-                    return self._json({"error": str(e)}, 409)
-                return self._json({"steps": steps})
+                return self._api(parts[1:], body, True)
 
     return Handler
 

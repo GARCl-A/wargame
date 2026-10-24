@@ -6,7 +6,7 @@ health is in `intel` steps, cells never seen carry no terrain, and the light is 
 `lighting.cell_levels` gives. The client is never trusted with the rest.
 """
 
-import os
+from typing import ClassVar
 
 from .. import actions, aftermath, ai, artwork, data, dialogue, intel, lighting, vision
 from ..battle_screen import BattleScreen
@@ -16,13 +16,9 @@ from ..foe_card import foe_card
 from ..fog import FogMemory
 from ..scenario import own_half
 from ..ui import floors
+from .session import Session, asset_url
 
-ASSETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
 LOG_LINES = 60
-
-
-def asset_url(path):
-    return "/assets/" + os.path.relpath(path, ASSETS).replace(os.sep, "/") if path else None
 
 
 def _cell(c):
@@ -59,7 +55,25 @@ class _StepTap:
             self.busy = False
 
 
-class BattleSession:
+def _steps(steps):
+    return {"steps": steps}
+
+
+class BattleSession(Session):
+    screen = "battle"
+    GET: ClassVar[dict] = {
+        "state": lambda s, q: s.state(q.get("inspect")),
+        "route": lambda s, q: s.route((int(q["x"]), int(q["y"]))),
+        "aim": lambda s, q: s.aim(q.get("action", "")),
+    }
+    POST: ClassVar[dict] = {
+        "act": lambda s, b: _steps(s.act(b.get("action", ""), b.get("target"), b.get("cell"), b.get("inspect"),
+                                         b.get("elevation"))),
+        "advance": lambda s, b: _steps(s.advance(b.get("inspect"))),
+        "talk": lambda s, b: _steps(s.answer(b.get("verb"), b.get("speaker"), bool(b.get("go_on")), b.get("inspect"))),
+        "seat": lambda s, b: _steps(s.take_seat(b.get("inspect"))),
+    }
+
     def __init__(self, battle, meta=None, controllers=None):
         self.battle = battle
         self.meta = meta or {}

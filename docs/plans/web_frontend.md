@@ -2,7 +2,7 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 are done. Step 4 is the author's (the art); until it lands, the next code step is 7.
+to 3 and 7 are done. Step 4 is the author's (the art); until it lands, the next code step is 8.
 
 ## Decisions so far
 
@@ -51,6 +51,17 @@ to 3 are done. Step 4 is the author's (the art); until it lands, the next code s
   pygame screen uses too:
   - `actions.panel`: the action bar's entries, enabled state and hotkeys;
   - `artwork.portrait_path`: a portrait's file, split from loading it.
+- **The shell** (step 7): `gartok/web/session.py` is what every screen's server half is (a
+  `Session` with a `screen` id, a `state`, and its verbs in `GET` / `POST`); the server
+  routes `/api/<screen>/<verb>` to the open session and refuses another screen's verbs
+  (409). `/api/screen` says which one is open; `/api/lab/...` is the combat lab's (fights,
+  a new one), there only when the game was opened on a lab fight. On the client,
+  `index.html` + `shell.js` + `shell.css` are the shell: the helpers (`$`, `api`, `esc`,
+  `face`, `Sound`), the stage scaled to the window, the palette, and the materials
+  (`.paper`, `.kicker`, `.leather`, `.ghost-btn`, `.btn`, `.brass-btn`, `.seal`, `.medal`,
+  the `.it` item row). Each screen is `client/screens/<id>/`: `screen.html` and the files
+  `SCREENS` in `shell.js` names. A screen's scripts declare top-level names, so it opens
+  once per page load; moving to another screen reloads the page on it.
 - **`gartok/web/battle_session.py`** runs one fight: the turn flow `BattleScreen` runs,
   and the board as the side knows it, as JSON (`state`, `act`, `advance`, `route`,
   `aim`). `act` and `advance` return *steps*, one per decision: a `_StepTap` sits in
@@ -58,15 +69,18 @@ to 3 are done. Step 4 is the author's (the art); until it lands, the next code s
   step after each recorded action, with the walks (cut to what the side sees), the
   events and the state after it. Sight and light are cached between steps while the
   observers, the lights and the walls stay the same.
-- **The camera** (`board.js`): the board is painted once per state into a world canvas
+- **The camera** (`screens/battle/board.js`): the board is painted once per state into a world canvas
   at a fixed cell size (capped by a pixel budget); zoom and pan only crop and scale it.
   The wheel zooms round the cursor, a drag pans, the arrows pan, `+`/`-` zoom, `C`
   centres the active unit; zoomed in, the camera follows whoever walks or acts.
-- **`gartok/web/server.py`** is the JSON API over the session, plus the client's files
-  and the game's art.
-- **`gartok/web/client/`** is the screen: `board.js` paints the board and `battle.js`
-  handles input, tokens, panels and effects.
-- **Launch:** `python -m gartok.web --fight <lab fight>`, or double-click
+- **`gartok/web/server.py`** is the JSON API over the open session, plus the client's
+  files and the game's art.
+- **`gartok/web/client/screens/battle/`** is the fight: `board.js` paints the board and
+  `battle.js` handles input, tokens, panels and effects.
+- **`gartok/web/map_session.py`** + `screens/map/` is the map as step 7 left it: the
+  guild, the day and where each band stands, enough to prove the router.
+- **Launch:** `python -m gartok.web --fight <lab fight>`, `python -m gartok.web --save
+  <world>` (a guild's folder under `saves/`; `--screen` picks the screen), or double-click
   [references/battle_mockup/play_battle.bat](references/battle_mockup/play_battle.bat) and pick a fight.
 - **Tests:** `tests/test_web.py`.
 
@@ -205,7 +219,20 @@ daylight, and too weak in the dark.
 **Done when:** the author approves the dungeon and the Necromancer fight at night. The
 battle is then finished.
 
-### 7. The shared base — todo
+### 7. The shared base — done (2026-10-23)
+
+- As built: see **The shell** under Architecture. The battle moved onto it with no change
+  in look (a screenshot of the same fight before and after matches but for the portraits,
+  which are drawn at random), and `--save <world>` opens the map screen on a save.
+- Tests: the router names the open screen and refuses another screen's verbs; every file
+  the shell's manifest names is served; a save opens the map through the router.
+- For step 8: fill `MapSession.state` and `screens/map/`. The session is built from a
+  loaded `Guild` (`Game.from_save`); nothing yet saves it back, which the map's orders
+  will need (`persist.save_game`, as `App` does after each tick). Moving between screens
+  (map → hub → battle) is a page reload on the screen the server opened; a verb that
+  changes screen sets `game.session` and the client reloads.
+
+The plan as written before it was built:
 
 Before the second screen, so each screen after it is a small adapter and not a rewrite.
 

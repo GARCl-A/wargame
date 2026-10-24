@@ -220,7 +220,7 @@ def test_portrait_path_names_the_file_portrait_loads():
 
 @pytest.fixture
 def server():
-    srv = serve(Game("wilds", 2, 3, seed=4))
+    srv = serve(Game.fight("wilds", 2, 3, seed=4))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{srv.server_address[1]}"
     srv.shutdown()
@@ -240,9 +240,9 @@ def _post(url, body):
 
 def test_server_serves_the_client_the_art_and_the_state(server):
     assert _get(server + "/")[0] == 200
-    assert _get(server + "/client/battle.js")[0] == 200
+    assert _get(server + "/client/screens/battle/battle.js")[0] == 200
     assert _get(server + "/assets/icons/gui/halt.svg")[0] == 200
-    status, body = _get(server + "/api/state")
+    status, body = _get(server + "/api/battle/state")
     assert status == 200 and "board" in json.loads(body)
 
 
@@ -254,18 +254,18 @@ def test_server_keeps_to_its_folders(server):
 
 
 def test_server_refuses_an_illegal_act_and_plays_a_legal_one(server):
-    state = json.loads(_get(server + "/api/state")[1])
+    state = json.loads(_get(server + "/api/battle/state")[1])
     for _ in range(200):
         if state["my_turn"]:
             break
         if state["setup"]:
-            state = _post(server + "/api/act", {"action": "skip_traps"})["steps"][-1]["state"]
+            state = _post(server + "/api/battle/act", {"action": "skip_traps"})["steps"][-1]["state"]
             continue
-        state = _post(server + "/api/advance", {})["steps"][-1]["state"]
+        state = _post(server + "/api/battle/advance", {})["steps"][-1]["state"]
     with pytest.raises(urllib.error.HTTPError) as e:
-        _post(server + "/api/act", {"action": "no_such_action"})
+        _post(server + "/api/battle/act", {"action": "no_such_action"})
     assert e.value.code == 409
-    after = _post(server + "/api/act", {"action": "defend_end"})
+    after = _post(server + "/api/battle/act", {"action": "defend_end"})
     assert after["steps"] and "state" in after["steps"][-1]
 
 
@@ -410,7 +410,7 @@ def test_a_step_says_what_it_sounded_like():
 
 
 def test_a_game_with_a_log_root_writes_the_fight_as_the_lab_does(tmp_path):
-    game = Game("wilds", 2, 3, seed=4, log_root=str(tmp_path))
+    game = Game.fight("wilds", 2, 3, seed=4, log_root=str(tmp_path))
     s = game.session
     for _ in range(600):
         if s.battle.winner is not None:
@@ -423,3 +423,54 @@ def test_a_game_with_a_log_root_writes_the_fight_as_the_lab_does(tmp_path):
     assert len(files) == 1 and "wilds-human-vs-ai" in files[0].name
     rows = [json.loads(line) for line in files[0].read_text(encoding="utf-8").splitlines()]
     assert rows[-1]["e"] == "end" and any(r.get("by") == "human" for r in rows)
+
+
+def test_the_router_names_the_open_screen_and_refuses_another_screens_verbs(server):
+    info = json.loads(_get(server + "/api/screen")[1])
+    assert info["screen"] == "battle" and info["lab"] is True
+    with pytest.raises(urllib.error.HTTPError) as e:
+        _get(server + "/api/map/state")
+    assert e.value.code == 409
+    with pytest.raises(urllib.error.HTTPError) as e:
+        _get(server + "/api/battle/no_such_verb")
+    assert e.value.code == 404
+    assert any(f["id"] == "wilds" for f in json.loads(_get(server + "/api/lab/fights")[1]))
+
+
+def test_every_file_the_shell_routes_to_is_served(server):
+    import re
+    shell = _get(server + "/client/shell.js")[1].decode()
+    manifest = re.findall(r'(\w+): \{css: \[(.*?)\], js: \[(.*?)\]\}', shell)
+    assert {screen for screen, _, _ in manifest} == {"battle", "map"}
+    for screen, css, js in manifest:
+        for name in ["screen.html", *re.findall(r'"([^"]+)"', css + js)]:
+            assert _get(f"{server}/client/screens/{screen}/{name}")[0] == 200
+    for path in ("/client/shell.css", "/client/fonts/fonts.css"):
+        assert _get(server + path)[0] == 200
+
+
+def test_a_save_opens_the_map_through_the_same_router(tmp_path, monkeypatch):
+    from gartok import persist
+    from gartok.group import Group
+    from gartok.guild import Guild
+    from gartok.unit import Unit
+    monkeypatch.setattr(persist, "SAVE_DIR", str(tmp_path))
+    units = [Unit("Fighter") for _ in range(2)]
+    guild = Guild(None, groups=[Group(units, node="city", leader=units[1])], name="Ink Hands")
+    persist.save_game("w1", guild)
+    srv = serve(Game.from_save("w1"))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        info = json.loads(_get(url + "/api/screen")[1])
+        assert info["screen"] == "map" and info["lab"] is False
+        state = json.loads(_get(url + "/api/map/state")[1])
+        assert state["meta"]["name"] == "Ink Hands" and state["meta"]["day"] == guild.clock.day
+        (band,) = state["groups"]
+        assert [m["leader"] for m in band["members"]] == [False, True] and band["order"] is None
+        with pytest.raises(urllib.error.HTTPError) as e:
+            _post(url + "/api/lab/new", {"fight": "wilds"})
+        assert e.value.code == 409
+    finally:
+        srv.shutdown()
+        srv.server_close()

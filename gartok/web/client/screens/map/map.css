@@ -1,0 +1,14 @@
+/* The map: only the guild and its bands for now; the map itself is step 8. */
+#maphead{position:absolute;left:32px;top:24px}
+#maphead .place{font:700 25px/1 Cinzel,serif;letter-spacing:.14em;color:var(--brass-hi);text-transform:uppercase;
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+#maphead .sub{margin-top:7px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+#mapsheet{position:absolute;left:30px;top:112px;width:1384px;height:780px;padding:28px 32px}
+#mapsheet .note{margin-top:16px;font:italic 19px/1.4 "IM Fell English",serif;color:#5b4630}
+#bands{position:absolute;left:1440px;top:112px;width:448px;bottom:32px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.band{padding:16px 18px}
+.band h2{font:700 18px/1.1 Cinzel,serif;color:#f4e6c3}
+.band .where{margin-top:5px;font:italic 16px/1.2 "IM Fell English",serif;color:#b59c76}
+.band .faces{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.band .medal{width:44px;height:44px}
+.band .medal.lead{--side:var(--brass-hi)}

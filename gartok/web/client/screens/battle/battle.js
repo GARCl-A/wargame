@@ -1,5 +1,6 @@
 // The battle screen: asks the server for the side's view of the fight, draws it, and sends the
-// player's decisions back. Every rule is the server's; this file only shows and asks.
+// player's decisions back. Every rule is the server's; this file only shows and asks. The helpers
+// ($, api, esc, face, Sound) are the shell's.
 "use strict";
 
 const AI_DELAY = 480;      // the pause before an AI turn the side sees, the server's time included
@@ -25,23 +26,13 @@ const ICONS = {
 };
 const iconOf = id => `url(/assets/icons/${id.startsWith("spell:") ? "action/meditation" : (ICONS[id] || "gui/triangle-target")}.svg)`;
 const ROMAN = n => { const m = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]; let s = ""; for (const [v, r] of m) while (n >= v) { s += r; n -= v; } return s || n; };
-const $ = id => document.getElementById(id);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 
 let S = null;
 const ui = {tab: "combat", aim: null, route: null, hover: null, armed: null, inspect: null, busy: false, error: null,
             turn: null, dragged: false, spellbook: false};
 const SEAT = {player: "var(--enamel)", ally: "var(--moss)", enemy: "var(--blood)", third: "var(--violet)"};
 
-async function api(path, body) {
-  const res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || res.statusText);
-  return data;
-}
-
-async function act(body, path = "/api/act") {
+async function act(body, path = "/api/battle/act") {
   if (ui.busy) return;
   ui.busy = true;
   try {
@@ -62,7 +53,7 @@ async function pump() {
   ui.busy = true;
   try {
     const t0 = performance.now();
-    const r = await api("/api/advance", {inspect: ui.inspect});
+    const r = await api("/api/battle/advance", {inspect: ui.inspect});
     if (r.steps.some(shows)) await sleep(AI_DELAY - (performance.now() - t0));
     await playSteps(r.steps);
   } finally { ui.busy = false; }
@@ -118,10 +109,6 @@ function unitAt(cell) {
   if (!S || !cell) return null;
   const [x, y] = cell;
   return S.units.find(u => x >= u.pos[0] && x < u.pos[0] + u.fp && y >= u.pos[1] && y < u.pos[1] + u.fp) || null;
-}
-
-function face(src, name, cls = "") {
-  return src ? `<img src="${src}" class="${cls}" draggable="false">` : `<div class="initial ${cls}">${esc((name || "?")[0])}</div>`;
 }
 
 function arc(d, frac, col) {
@@ -302,7 +289,7 @@ function renderDialog() {
   if (ui.picking) return;
   d.classList.toggle("opaque", !!S.handoff);
   if (S.handoff) {
-    d.innerHTML = `<div class="page ask" style="text-align:center"><div class="kicker">Hand over</div>
+    d.innerHTML = `<div class="paper ask" style="text-align:center"><div class="kicker">Hand over</div>
       <h2 style="margin-top:16px">${S.handoff === "player" ? "First" : "Second"} player's turn</h2>
       <p class="line">The other player looks away. Take the seat when you are ready.</p>
       <div class="row" style="justify-content:center"><div class="btn" data-seat>I have the seat</div></div></div>`;
@@ -313,7 +300,7 @@ function renderDialog() {
       : `<div class="cols"><div>${t.speakers.map(s => `<div class="who ${s.selected ? "sel" : ""}" data-speaker="${s.id}"><b>${esc(s.name)}</b><small>${esc(s.caption)}</small></div>`).join("")}</div>
          <div>${t.options.map(o => `<div class="opt ${o.block ? "off" : ""}" data-verb="${esc(o.id)}"><span class="check">${esc(o.check)}${o.odds != null ? ` · ${Math.round(o.odds * 100)}%` : ""}</span>
            <b>${esc(o.label)}</b><small>${esc(o.block || o.note)}</small></div>`).join("")}</div></div>`;
-    d.innerHTML = `<div class="page ask"><div class="kicker">${esc(t.title)}</div>
+    d.innerHTML = `<div class="paper ask"><div class="kicker">${esc(t.title)}</div>
       <div class="head">${lead ? `<div class="face">${face(lead.portrait, lead.name)}</div>` : ""}
       <div>${lead ? `<h2>${esc(lead.name)}</h2><div class="race">${esc(lead.caption)}</div>` : ""}
       <p class="line">${esc(t.line)}</p><div class="foes">${t.foes.map(esc).join(" · ")}</div></div></div>${body}</div>`;
@@ -326,7 +313,7 @@ function pick(title, options) {
   const d = $("dialog");
   ui.picking = true;
   d.classList.remove("opaque");
-  d.innerHTML = `<div class="page ask" style="width:560px"><div class="kicker">${esc(title)}</div>
+  d.innerHTML = `<div class="paper ask" style="width:560px"><div class="kicker">${esc(title)}</div>
     <div class="heights" style="margin-top:18px">${options.map(([v, label]) => `<div class="opt" data-pick="${v}"><b>${esc(label)}</b></div>`).join("")}</div>
     <div class="row"><div class="ghost-btn" data-pick="">Cancel</div></div></div>`;
   d.hidden = false;
@@ -391,18 +378,19 @@ function missile([x0, y0], [x1, y1]) {
 
 async function showEnd(picker = false) {
   const m = $("modal");
-  const fights = await api("/api/fights");
+  const fights = Shell.lab ? await api("/api/lab/fights") : null;
   const won = S.result === "VICTORY";
-  m.innerHTML = `<div class="page endcard">${picker ? `<h1 style="font-size:40px">New fight</h1>` : `<h1 class="${won ? "" : "lost"}">${esc(S.result)}</h1>`}
+  m.innerHTML = `<div class="paper endcard">${picker ? `<h1 style="font-size:40px">New fight</h1>` : `<h1 class="${won ? "" : "lost"}">${esc(S.result)}</h1>`}
     <p>${picker ? "Pick a fight from the combat lab." : won ? "The field is yours." : S.result === "FLED" ? "You live to fight again." : "Your squad has fallen."}</p>
-    <div class="row"><select id="fightsel">${fights.map(f => `<option value="${f.id}" ${f.id === S.meta.fight ? "selected" : ""}>${esc(f.name)}</option>`).join("")}</select>
+    ${fights ? `<div class="row"><select id="fightsel">${fights.map(f => `<option value="${f.id}" ${f.id === S.meta.fight ? "selected" : ""}>${esc(f.name)}</option>`).join("")}</select>
     <select id="playersel"><option value="1">One player</option><option value="2" ${S.meta.players === 2 ? "selected" : ""}>Two players</option></select>
-    <div class="btn" id="again">Fight</div>${picker ? `<div class="ghost-btn" id="cancel">Cancel</div>` : ""}</div></div>`;
+    <div class="btn" id="again">Fight</div>${picker ? `<div class="ghost-btn" id="cancel">Cancel</div>` : ""}</div>` : ""}</div>`;
   m.hidden = false;
+  if (!fights) return;
   $("again").onclick = async () => {
     const f = fights.find(x => x.id === $("fightsel").value);
     m.hidden = true; ui.inspect = null; ui.aim = null; ui.armed = null;
-    const r = await api("/api/new", {fight: f.id, level: S.meta.level, squad: f.squad > 3 ? f.squad : S.meta.squad,
+    const r = await api("/api/lab/new", {fight: f.id, level: S.meta.level, squad: f.squad > 3 ? f.squad : S.meta.squad,
                                      players: Number($("playersel").value)});
     S = null; $("tokens").innerHTML = "";
     await apply(r.steps.at(-1).state);
@@ -417,7 +405,7 @@ function sheetPoint(e) {
 
 async function inspect(id) {
   ui.inspect = id;
-  S = await api(`/api/state${id ? `?inspect=${id}` : ""}`);
+  S = await api(`/api/battle/state${id ? `?inspect=${id}` : ""}`);
   renderAll();
 }
 
@@ -430,7 +418,7 @@ async function selectAction(id) {
   if (a.id === "end") return act({action: "end"});
   if (a.aimed || a.target === "cell") {
     if (ui.aim && ui.aim.id === id) { ui.aim = null; renderAll(); return; }
-    const aim = await api(`/api/aim?action=${encodeURIComponent(id)}`);
+    const aim = await api(`/api/battle/aim?action=${encodeURIComponent(id)}`);
     ui.aim = {...aim, id, name: a.name, cellTarget: a.target === "cell"};
     ui.route = null; renderAll();
     return;
@@ -475,7 +463,7 @@ $("overlay").addEventListener("mousemove", async e => {
   if (key === ui.hover) return;
   ui.hover = key;
   const reachable = cell && S.reach.some(([x, y]) => x === cell[0] && y === cell[1]);
-  ui.route = reachable ? await api(`/api/route?x=${cell[0]}&y=${cell[1]}`) : null;
+  ui.route = reachable ? await api(`/api/battle/route?x=${cell[0]}&y=${cell[1]}`) : null;
   if (ui.hover === key) Board.overlay(S, ui);
 });
 
@@ -521,11 +509,12 @@ $("dialog").addEventListener("click", e => {
   if (ui.picking || !S) return;
   const t = e.target.closest("[data-seat],[data-goon],[data-speaker],[data-verb]");
   if (!t) return;
-  if (t.dataset.seat !== undefined) return act({}, "/api/seat");
-  if (t.dataset.goon !== undefined) return act({go_on: true}, "/api/talk");
-  if (t.dataset.speaker !== undefined) return act({speaker: Number(t.dataset.speaker)}, "/api/talk");
-  if (!t.classList.contains("off")) return act({verb: t.dataset.verb}, "/api/talk");
+  if (t.dataset.seat !== undefined) return act({}, "/api/battle/seat");
+  if (t.dataset.goon !== undefined) return act({go_on: true}, "/api/battle/talk");
+  if (t.dataset.speaker !== undefined) return act({speaker: Number(t.dataset.speaker)}, "/api/battle/talk");
+  if (!t.classList.contains("off")) return act({verb: t.dataset.verb}, "/api/battle/talk");
 });
+$("newfight").hidden = !Shell.lab;
 $("newfight").addEventListener("click", () => S && showEnd(true));
 
 document.addEventListener("keydown", e => {
@@ -551,31 +540,4 @@ document.addEventListener("keydown", e => {
   }
 });
 
-function fit() {
-  const s = Math.min(innerWidth / 1920, innerHeight / 1080), st = $("stage");
-  st.style.transform = `scale(${s})`;
-  st.style.left = (innerWidth - 1920 * s) / 2 + "px";
-  st.style.top = (innerHeight - 1080 * s) / 2 + "px";
-}
-addEventListener("resize", fit);
-fit();
-// the fight's sounds, the cues `sound.py` plays in pygame; silent until the browser allows audio
-const Sound = (() => {
-  let bank = null, level = {}, volume = 0;
-  api("/api/sounds").then(r => {
-    level = r.level;
-    bank = Object.fromEntries(Object.entries(r.cues).map(([cue, urls]) => [cue, urls.map(u => new Audio(u))]));
-  }).catch(() => {});
-  return {
-    set volume(v) { volume = v / 100; },
-    play(cue) {
-      const list = bank && bank[cue];
-      if (!list || volume <= 0) return;
-      const a = list[Math.floor(Math.random() * list.length)].cloneNode();
-      a.volume = Math.min(1, volume * (level[cue] ?? 1));
-      a.play().catch(() => {});
-    },
-  };
-})();
-
-document.fonts.ready.then(() => api("/api/state")).then(s => { Sound.volume = s.meta.volume ?? 70; return apply(s); });
+api("/api/battle/state").then(s => apply(s));

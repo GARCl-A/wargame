@@ -1,8 +1,10 @@
-"""`python -m gartok.web`: serve a combat-lab fight and open it in a browser window.
+"""`python -m gartok.web`: serve a combat-lab fight, or a screen of a saved guild, and open it in a
+browser window.
 
     python -m gartok.web --fight fortress --level 2 --squad 4 [--seed N] [--players 2] [--no-log] [--no-window]
+    python -m gartok.web --save <world> [--screen map]
 
-Every fight is logged to `combat_lab/<date>/` as the pygame lab logs its own, unless `--no-log`.
+A lab fight is logged to `combat_lab/<date>/` as the pygame lab logs its own, unless `--no-log`.
 """
 
 import argparse
@@ -13,7 +15,7 @@ import tempfile
 import webbrowser
 
 from .. import combat_lab
-from .server import Game, serve
+from .server import SCREENS, Game, serve
 
 _BROWSERS = (
     r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
@@ -42,11 +44,16 @@ def main():
     p.add_argument("--seed", type=int)
     p.add_argument("--players", type=int, choices=(1, 2), default=1, help="2: both sides at one screen")
     p.add_argument("--no-log", action="store_true")
+    p.add_argument("--save", metavar="WORLD", help="open a saved guild (its folder under saves/) instead of a lab fight")
+    p.add_argument("--screen", default="map", choices=sorted(SCREENS), help="the screen --save opens")
     p.add_argument("--port", type=int, default=0)
     p.add_argument("--no-window", action="store_true")
     args = p.parse_args()
-    game = Game(args.fight, args.level, args.squad, args.seed, args.players,
-                None if args.no_log else combat_lab.ROOT)
+    if args.save:
+        game = Game.from_save(args.save, args.screen)
+    else:
+        game = Game.fight(args.fight, args.level, args.squad, args.seed, args.players,
+                          None if args.no_log else combat_lab.ROOT)
     server = serve(game, args.port)
     url = f"http://127.0.0.1:{server.server_address[1]}/"
     print(f"GARTOK web: {url}  (Ctrl+C to stop)")
