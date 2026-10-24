@@ -2,8 +2,8 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 5 to 7 are done; step 4 (the art) is done as far as it got, so the next step is 8
-(the map).
+to 3 and 5 to 7 are done; step 4 (the art) is done as far as it got, and step 8 (the map)
+has its approved mockup, so the next step is 8's screen.
 
 ## Decisions so far
 
@@ -21,6 +21,7 @@ to 3 and 5 to 7 are done; step 4 (the art) is done as far as it got, so the next
 | 2026-10-23 | Fonts (Cinzel, EB Garamond, IM Fell English) ship in `gartok/web/client/fonts/`. | They must not be fetched at runtime. |
 | 2026-10-23 | The style holds off the board: the title screen and a shop were mocked in it, and the author approved both. | The battle alone did not prove the direction for the rest of the game; the menu and the market are its two most different screens. |
 | 2026-10-23 | A shop shows every shopper's whole kit as a readable list, one column per pack: worn slots and pack rows, each with icon, name, quantity and weight. The keeper is a strip across the top, not a column. | The first market mockup shrank the packs to rows of icon tiles beside a tall keeper page, and the author lost sight of the inventory, which is what the screen is for. |
+| 2026-10-24 | The map mockup is approved, with four changes from pygame's map: the minimap goes (the known world fits; zoom, pan and FIT stay); hovering a place shows a paper slip with the walk's hours and arrival and the way there in red ink; Split and Merge open inside the picked band's card instead of behind a gear; the REST choices and the travel stance are always shown, as segmented rows. | The whole known world fits one sheet at 1920x1080, so the minimap only duplicated it; pygame never said how long a walk takes before it was ordered; the gear and the REST drop-down hid what a band can do. |
 
 ## Art direction
 
@@ -31,7 +32,10 @@ to 3 and 5 to 7 are done; step 4 (the art) is done as far as it got, so the next
   [menu_mockup/](references/menu_mockup/) (the title screen: the menu beside the last
   guild's charter, laid on the map it has walked) and
   [market_mockup/](references/market_mockup/) (a shop: the keeper and the deal, the
-  shelf as a ledger page, the shoppers' packs, a ware in hand). Each folder is one HTML
+  shelf as a ledger page, the shoppers' packs, a ware in hand) and
+  [map_mockup/](references/map_mockup/) (the campaign map: the sheet inked by hand
+  between the bands and the inspector; `map.html?state=split` and `?state=merge` are its
+  two other frames, `map_split.png` and `map_merge.png`). Each folder is one HTML
   page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
   the item glyphs there stand in for art not made yet.
 - **Paper is for what you read, leather is for what you act on.** The board, the
@@ -276,10 +280,14 @@ Before the second screen, so each screen after it is a small adapter and not a r
 **Done when:** the battle runs on the shell, and an empty second screen opens from a
 save through the same router.
 
-### 8. Map — todo
+### 8. Map — mockup approved (2026-10-24), screen todo
 
 1. A mockup at 1920x1080 in `references/map_mockup/`, in the menu mockup's language
-   (the map inked by hand), approved by the author before any code.
+   (the map inked by hand), approved by the author before any code. Done: built on the
+   day-70 save `35d38388`; the decisions it took are in the table above. Not drawn, but
+   decided: the seal is the CTA (`_footer_cta`), live red with "Fight" on an ambush and
+   "Advance 24 h" once every band is garrisoned; a busy band's inspector shows its stop
+   (Stop at, Stop resting, Recall from garrison) where the camp section is.
 2. The screen on the shared base, on a real save: groups, orders, travel, the
    inspector, entering a node.
 
