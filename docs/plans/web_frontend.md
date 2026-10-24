@@ -2,7 +2,7 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 7 are done; step 4 (the art) is done as far as it got, so the next step is 5.
+to 3, 5 and 7 are done; step 4 (the art) is done as far as it got, so the next step is 6.
 
 ## Decisions so far
 
@@ -194,18 +194,29 @@ with what is in and keep today's drawing where a file is missing.
 
 **Done when:** the files are in the repo. Steps 5 and 6 need them.
 
-### 5. Battle: colour — todo
+### 5. Battle: colour — done (2026-10-23)
 
-Floor, walls, blank paper and remembered ground sit in nearly the same beige, and the
-UI is warm on warm.
+Floor, walls, blank paper and remembered ground sat in nearly the same beige, and the
+UI was warm on warm. As built (`screens/battle/board.js`, the tables at its top):
 
-- One value scale, every layer held to it: unseen paper light, floor mid, walls dark,
-  tokens the highest contrast.
-- A cooler accent in the chrome so it does not melt into the board.
-- Each place's floor tinted from one texture: arena warm, cave cool, grass green-grey.
-
-**Done when:** the author approves a screenshot of the fortress, the dungeon and the
-wilds.
+- **One value scale:** never-seen paper is the lightest, the floor mid, walls dark, the
+  tokens the strongest contrast.
+- **Each place tints one texture** (`FLOORS`): a `color` blend gives the place's hue and
+  keeps the engraving's values, a multiply sinks it into the floor's band. Cave is cool
+  rock, the dungeon's flagstones neutral grey, the arena warm sand, grass green-grey.
+  Earth borrows the sand, darker, and cobbles the flagstones, smaller, until their art
+  exists. Broad soft-light patches hide the tile's repeat.
+- **Walls** (`WALL`): trees and boulders are the art, turned at random and tinted the
+  same way into the dark band; masonry is drawn, dark (its art is still missing).
+- **Remembered ground** is the board itself washed to sepia, darker, and hatched; it
+  was a beige multiply barely apart from the paper.
+- **The chrome** gets a cool verdigris accent (`--verdigris` in `shell.css`) on idle
+  edges, labels, plates and the initiative chain, on a charcoal table. Brass stays
+  the focus: the active unit, the chosen action.
+- For step 6: torchlight still multiplies each lit cell toward warm brown, which turns
+  the dungeon's grey back to brown round a torch; the remembered wash runs a canvas
+  `filter` over the whole world on every state, the first thing to cache if a big
+  board stutters. At the fit zoom the trees lose their leaf detail.
 
 ### 6. Battle: light — todo
 

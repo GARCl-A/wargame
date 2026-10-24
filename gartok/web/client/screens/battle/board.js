@@ -18,9 +18,26 @@ const Board = (() => {
   const base = document.getElementById("board").getContext("2d");
   const over = document.getElementById("overlay").getContext("2d");
   for (const c of [base.canvas, over.canvas]) { c.width = W; c.height = H; }
-  const stones = new Image();
-  stones.src = "/client/img/flagstones.jpg";
-  const ready = new Promise(r => { stones.onload = r; stones.onerror = r; });
+  const IMG = {};
+  const ready = Promise.all(["flagstones.jpg", "rock.jpg", "grass.jpg", "sand.jpg", "boulder.png",
+                             "tree_1.png", "tree_2.png", "tree_3.png"].map(f => new Promise(r => {
+    const im = new Image(); im.onload = () => { IMG[f.split(".")[0]] = im; r(); }; im.onerror = r;
+    im.src = "/client/img/" + f;
+  })));
+  // One value scale holds every layer apart: never-seen paper is the lightest, the floor sits mid,
+  // walls are dark and the tokens carry the strongest contrast. Each place tints one texture:
+  // `hue` gives it the place's colour (a "color" blend keeps the engraving's values), `mul` then
+  // pulls it down into the floor's band. `cells` is the texture's span on the board.
+  const FLOORS = {
+    stone:  {tex: "flagstones", cells: 7, hue: "#7c7f85", mul: "#8d8b88"},
+    cobble: {tex: "flagstones", cells: 4, hue: "#7c766c", mul: "#8a8478"},
+    cave:   {tex: "rock",       cells: 6, hue: "#6f7a86", mul: "#b4bcc4"},
+    arena:  {tex: "sand",       cells: 8, hue: "#b98a52", mul: "#c9a57a"},
+    earth:  {tex: "sand",       cells: 7, hue: "#8c6a46", mul: "#a3876a"},
+    grass:  {tex: "grass",      cells: 5, hue: "#7d8a5e", mul: "#c3c6a8"},
+  };
+  // walls by kind: the masonry's fill, and the tint (as the floors') that sinks a tree or a boulder into the dark band
+  const WALL = {block: "#4b3f33", tree: {hue: "#4e5f3c", mul: "#9da38c"}, rock: {hue: "#6d6f73", mul: "#8e8b86"}};
 
   let staticKey = null, staticCanvas = null, paperCanvas = null, worldPaper = null, worldCanvas = null;
 
@@ -113,39 +130,34 @@ const Board = (() => {
   function floorLayer(b) {
     const [c, f] = canvas();
     const gw = b.cols * L.cell, gh = b.rows * L.cell, r = rng(b.cols * 31 + b.rows);
+    const st = FLOORS[b.floor] || FLOORS.stone, tex = IMG[st.tex];
     f.save(); f.beginPath(); f.rect(L.ox, L.oy, gw, gh); f.clip();
-    if (b.floor === "stone" || b.floor === "cave" || b.floor === "cobble") {
-      const ts = (b.floor === "cobble" ? 4 : 7) * L.cell;
-      for (let x = L.ox; x < L.ox + gw; x += ts) for (let y = L.oy; y < L.oy + gh; y += ts) f.drawImage(stones, x, y, ts, ts);
-      f.globalCompositeOperation = "multiply";
-      f.fillStyle = b.floor === "cave" ? "#a8987f" : "#d4b88c"; f.fillRect(0, 0, WW, WH);
-      f.globalCompositeOperation = "source-over";
-    } else {
-      f.fillStyle = {arena: "#dcc296", earth: "#cfb487", grass: "#d6c99a"}[b.floor] || "#d8c49c";
-      f.fillRect(L.ox, L.oy, gw, gh);
-      const n = gw * gh / 90;
-      for (let i = 0; i < n; i++) {
-        f.fillStyle = `rgba(70,45,20,${.06 + r() * .14})`;
-        const s = .8 + r() * (b.floor === "arena" ? 1.2 : 1.8);
-        f.beginPath(); f.arc(L.ox + r() * gw, L.oy + r() * gh, s, 0, 7); f.fill();
-      }
-      if (b.floor === "grass") {
-        for (let i = 0; i < gw * gh / 900; i++) {
-          const x = L.ox + r() * gw, y = L.oy + r() * gh;
-          f.strokeStyle = `rgba(60,62,28,${.25 + r() * .3})`; f.lineWidth = 1;
-          for (let k = -2; k <= 2; k++) { f.beginPath(); f.moveTo(x + k * 2, y); f.lineTo(x + k * 3 + (r() - .5) * 3, y - 5 - r() * 5); f.stroke(); }
-        }
-      }
-      if (b.floor === "earth" || b.floor === "arena") {
-        for (let i = 0; i < gw * gh / 9000; i++) {
-          const x = L.ox + r() * gw, y = L.oy + r() * gh, l = 40 + r() * 120;
-          f.strokeStyle = "rgba(80,55,28,.18)"; f.lineWidth = 1.2;
-          f.beginPath(); f.moveTo(x, y); f.bezierCurveTo(x + l / 3, y + (r() - .5) * 20, x + 2 * l / 3, y + (r() - .5) * 20, x + l, y + (r() - .5) * 10); f.stroke();
-        }
-      }
+    const ts = st.cells * L.cell;
+    for (let x = L.ox; x < L.ox + gw; x += ts) for (let y = L.oy; y < L.oy + gh; y += ts) f.drawImage(tex, x, y, ts, ts);
+    f.globalCompositeOperation = "color"; f.fillStyle = st.hue; f.fillRect(0, 0, WW, WH);
+    f.globalCompositeOperation = "multiply"; f.fillStyle = st.mul; f.fillRect(0, 0, WW, WH);
+    // broad patches of light and shade, so a big board does not read as one repeated tile
+    for (let i = 0; i < gw * gh / (L.cell * L.cell * 6); i++) {
+      const x = L.ox + r() * gw, y = L.oy + r() * gh, rad = L.cell * (2 + r() * 4);
+      const gr = f.createRadialGradient(x, y, 0, x, y, rad);
+      gr.addColorStop(0, r() < .5 ? `rgba(60,48,36,${.25 + r() * .25})` : `rgba(255,250,235,${.2 + r() * .2})`);
+      gr.addColorStop(1, "rgba(255,255,255,0)");
+      f.globalCompositeOperation = "soft-light"; f.fillStyle = gr; f.fillRect(x - rad, y - rad, 2 * rad, 2 * rad);
     }
     f.restore();
     return c;
+  }
+
+  // a tree or a boulder from the art, turned at random and sunk into the walls' dark band
+  function sprite(ctx, im, X, Y, C, scale, r, tint) {
+    const s = C * scale, a = r() * Math.PI * 2;
+    const [sc, sg] = canvas(Math.ceil(s), Math.ceil(s));
+    sg.translate(s / 2, s / 2); sg.rotate(a); sg.drawImage(im, -s / 2, -s / 2, s, s);
+    sg.setTransform(1, 0, 0, 1, 0, 0);
+    sg.globalCompositeOperation = "color"; sg.fillStyle = tint.hue; sg.fillRect(0, 0, s, s);
+    sg.globalCompositeOperation = "multiply"; sg.fillStyle = tint.mul; sg.fillRect(0, 0, s, s);
+    sg.globalCompositeOperation = "destination-in"; sg.translate(s / 2, s / 2); sg.rotate(a); sg.drawImage(im, -s / 2, -s / 2, s, s);
+    ctx.drawImage(sc, X + C / 2 - s / 2, Y + C / 2 - s / 2);
   }
 
   function drawWalls(ctx, b, walls) {
@@ -161,36 +173,18 @@ const Board = (() => {
     for (const k of [...walls].sort((a, b2) => a.split(",")[1] - b2.split(",")[1])) {
       const [x, y] = k.split(",").map(Number), r = rng(x * 977 + y * 131 + 7);
       const X = wx(x), Y = wy(y), C = L.cell;
-      if (kind === "tree") {
-        ctx.fillStyle = "#4a3a22"; ctx.beginPath(); ctx.arc(X + C / 2, Y + C * .62, C * .1, 0, 7); ctx.fill();
-        const lobes = 7, R = C * .44;
-        ctx.beginPath();
-        for (let i = 0; i <= lobes; i++) {
-          const a = i / lobes * Math.PI * 2, rr = R * (.82 + r() * .2);
-          const px = X + C / 2 + Math.cos(a) * rr, py = Y + C * .45 + Math.sin(a) * rr;
-          i ? ctx.quadraticCurveTo(X + C / 2 + Math.cos(a - Math.PI / lobes) * R * 1.12, Y + C * .45 + Math.sin(a - Math.PI / lobes) * R * 1.12, px, py) : ctx.moveTo(px, py);
-        }
-        ctx.closePath(); ctx.fillStyle = "#a79a6a"; ctx.fill();
-        ctx.save(); ctx.clip(); hatch(ctx, X, Y + C * .35, C, C * .6, .8, 6, r, C / 60); ctx.restore();
-        ctx.strokeStyle = "#1d140a"; ctx.lineWidth = Math.max(1.4, C / 26); ctx.stroke();
+      if (kind === "tree" || kind === "rock") {
+        const tree = kind === "tree", im = tree ? IMG["tree_" + (1 + Math.floor(hash(x, y) * 3))] : IMG.boulder;
+        sprite(ctx, im, X, Y, C, (tree ? 1.2 : 1.05) + r() * .15, r, WALL[kind]);
         continue;
       }
-      if (kind === "rock") {
-        const pts = [];
-        for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, k2 = (.38 + r() * .12) * C; pts.push([X + C / 2 + Math.cos(a) * k2, Y + C / 2 + Math.sin(a) * k2]); }
-        ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.closePath();
-        ctx.fillStyle = "#9c8664"; ctx.fill();
-        ctx.save(); ctx.clip(); hatch(ctx, X + C * .2, Y + C * .35, C * .8, C * .7, .85, 6, r, C / 60); ctx.restore();
-        ctx.strokeStyle = "#1d140a"; ctx.lineWidth = Math.max(1.4, C / 24); ctx.stroke();
-        continue;
-      }
-      ctx.fillStyle = "#8d7350"; ctx.fillRect(X, Y, C, C);
+      ctx.fillStyle = WALL.block; ctx.fillRect(X, Y, C, C);
       ctx.save(); ctx.beginPath(); ctx.rect(X, Y, C, C); ctx.clip();
       hatch(ctx, X, Y, C, C, .9, Math.round(10 * (C / 60) ** 2) + 4, r, C / 60);
       ctx.restore();
-      ctx.strokeStyle = "#1a1009";
+      ctx.strokeStyle = "#140c06";
       const w = Math.max(2, C / 16);
-      if (!has(x, y - 1)) { inkLine(ctx, X, Y, X + C, Y, w, r); ctx.fillStyle = "rgba(245,230,200,.45)"; ctx.fillRect(X + 3, Y + 3, C - 6, Math.max(2, C / 15)); }
+      if (!has(x, y - 1)) { inkLine(ctx, X, Y, X + C, Y, w, r); ctx.fillStyle = "rgba(220,200,165,.35)"; ctx.fillRect(X + 3, Y + 3, C - 6, Math.max(2, C / 15)); }
       if (!has(x, y + 1)) inkLine(ctx, X, Y + C, X + C, Y + C, w, r);
       if (!has(x - 1, y)) inkLine(ctx, X, Y, X, Y + C, w, r);
       if (!has(x + 1, y)) inkLine(ctx, X + C, Y, X + C, Y + C, w, r);
@@ -273,26 +267,25 @@ const Board = (() => {
     const blur = Math.max(3, L.cell * .12);
     const grid = new Path2D(); grid.rect(0, 0, WW, WH);
 
-    // the light, as a multiply layer: dark where the side sees little, untouched where it never looked
+    // seen before: the same ground washed to sepia and sunk below the lit floor, hatched like a map's old survey
+    const [mem, mc] = canvas();
+    mc.filter = "grayscale(1) sepia(.6) brightness(.58) contrast(.8)";
+    mc.drawImage(g.canvas, 0, 0); mc.filter = "none";
+    mc.strokeStyle = "rgba(30,20,10,.22)"; mc.lineWidth = 1;
+    for (let k = -WH; k < WW; k += 7) { mc.beginPath(); mc.moveTo(k, 0); mc.lineTo(k + WH, WH); mc.stroke(); }
+    mc.globalCompositeOperation = "destination-in";
+    blurUp(cellGrid((x, y) => seen.has(K(x, y)) && !vis.has(K(x, y)) ? "#fff" : null), mc, blur);
+    g.save(); g.clip(grid); g.drawImage(mem, 0, 0); g.restore();
+
+    // the light, as a multiply layer: dark where the side sees little, untouched elsewhere
     const sh = cellGrid((x, y) => {
       const k = K(x, y);
-      let c;
-      if (vis.has(k)) {
-        const v = level.has(k) ? level.get(k) : .55, t = Math.pow(v, .8);
-        c = [108 + (255 - 108) * t, 90 + (250 - 90) * t, 70 + (238 - 70) * t];
-      } else if (seen.has(k)) c = [222, 208, 184];
-      else c = [255, 255, 255];
-      return `rgb(${c.map(Math.round).join(",")})`;
+      if (!vis.has(k)) return "#fff";
+      const v = level.has(k) ? level.get(k) : .55, t = Math.pow(v, .8);
+      return `rgb(${[108 + (255 - 108) * t, 90 + (250 - 90) * t, 70 + (238 - 70) * t].map(Math.round).join(",")})`;
     });
     const [lit, lc] = canvas(); blurUp(sh, lc, blur);
     g.save(); g.clip(grid); g.globalCompositeOperation = "multiply"; g.drawImage(lit, 0, 0); g.restore();
-
-    const [mem, mc] = canvas();
-    mc.strokeStyle = "rgba(90,60,30,.16)"; mc.lineWidth = 1;
-    for (let k = -WH; k < WW; k += 7) { mc.beginPath(); mc.moveTo(k, 0); mc.lineTo(k + WH, WH); mc.stroke(); }
-    mc.globalCompositeOperation = "destination-in";
-    blurUp(cellGrid((x, y) => seen.has(K(x, y)) ? "#fff" : null), mc, blur);
-    g.save(); g.clip(grid); g.drawImage(mem, 0, 0); g.restore();
 
     // never seen: plain paper laid over the board
     const [unk, u] = canvas();
