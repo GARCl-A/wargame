@@ -30,13 +30,14 @@ def _falloff(dist, radius, core):
     return 1 - (6 + 249 * fade ** 1.5) / 255
 
 
-def cell_levels(battle, visible, observers):
-    """{cell: light 0..1} for every cell in `visible`."""
+def cell_levels(battle, visible, observers, sources=None):
+    """{cell: light 0..1} for every cell in `visible`, from `sources` ([(cell, radius)], every
+    light on the board when None)."""
     board = battle.board
     if getattr(battle, "ambient_light", False):
         return dict.fromkeys(visible, 1.0)
     levels = {cell: 0.0 for cell in visible if cell not in board.walls}
-    for (sx, sy), radius in vision.light_sources(battle):      # each source over its own reach
+    for (sx, sy), radius in vision.light_sources(battle) if sources is None else sources:
         r = int(radius + 0.5)
         for x in range(sx - r, sx + r + 1):
             for y in range(sy - r, sy + r + 1):

@@ -52,6 +52,16 @@ const Board = (() => {
     return () => (s = (s * 16807) % 2147483647) / 2147483647;
   }
   const canvas = (w = WW, h = WH) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; };
+  // world-sized canvases a state's paint reuses: allocating four of them per state cost more than drawing them
+  const scratches = new Map();
+  function scratch(name) {
+    let e = scratches.get(name);
+    if (!e || e[0].width !== WW || e[0].height !== WH) scratches.set(name, e = canvas());
+    const ctx = e[1];
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1; ctx.filter = "none";
+    ctx.clearRect(0, 0, WW, WH);
+    return e;
+  }
   const wx = x => L.ox + x * L.cell, wy = y => L.oy + y * L.cell;
   const cx = x => V.x + wx(x) * V.s, cy = y => V.y + wy(y) * V.s;
 
@@ -253,52 +263,179 @@ const Board = (() => {
     }
     return s;
   }
+  // the blur runs on the small grid and the upscale smooths the rest: blurring the world-sized canvas
+  // instead was most of a state's paint
+  const edge = () => Math.max(3, L.cell * .12);     // px the fog's and the light's edges soften over
   function blurUp(small, ctx, px) {
+    const [b, bc] = canvas(small.width, small.height);
+    bc.filter = `blur(${px * SUB / L.cell}px)`; bc.drawImage(small, 0, 0);
     ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-    ctx.filter = `blur(${px}px)`;
-    ctx.drawImage(small, L.ox - PAD * L.cell, L.oy - PAD * L.cell, (L.cols + 2 * PAD) * L.cell, (L.rows + 2 * PAD) * L.cell);
+    ctx.drawImage(b, L.ox - PAD * L.cell, L.oy - PAD * L.cell, (L.cols + 2 * PAD) * L.cell, (L.rows + 2 * PAD) * L.cell);
     ctx.restore();
   }
 
+  const DARK = [12, 14, 22], DIM = [190, 196, 210], SUN = "#fff4e2";
+  // a light's colour, and how its reach fades: full to `core` of the way, gone at the edge (as `lighting._falloff`)
+  const POOL = {torch: {rgb: "255,206,140", core: .3}, fire: {rgb: "255,150,70", core: .25}};
+
+  // the floor a light reaches: a polygon cast from the cell's middle and stopped by the walls the side
+  // knows, with a little past each hit so the face of a wall takes the light
+  function pool(x, y, r, walls) {
+    const C = L.cell, ox = wx(x) + C / 2, oy = wy(y) + C / 2, R = (r + .5) * C;
+    const segs = [], angles = [];
+    for (let i = 0; i < 72; i++) angles.push(i / 72 * Math.PI * 2);
+    for (let cx0 = x - r - 1; cx0 <= x + r + 1; cx0++) for (let cy0 = y - r - 1; cy0 <= y + r + 1; cy0++) {
+      if (!walls.has(K(cx0, cy0))) continue;
+      const X0 = wx(cx0), Y0 = wy(cy0), X1 = X0 + C, Y1 = Y0 + C;
+      // only the faces turned to the light and not against another wall can stop a ray first
+      if (oy < Y0 && !walls.has(K(cx0, cy0 - 1))) segs.push([X0, Y0, X1, Y0]);
+      if (oy > Y1 && !walls.has(K(cx0, cy0 + 1))) segs.push([X0, Y1, X1, Y1]);
+      if (ox < X0 && !walls.has(K(cx0 - 1, cy0))) segs.push([X0, Y0, X0, Y1]);
+      if (ox > X1 && !walls.has(K(cx0 + 1, cy0))) segs.push([X1, Y0, X1, Y1]);
+    }
+    for (const [x1, y1, x2, y2] of segs) for (const [px, py] of [[x1, y1], [x2, y2]]) {
+      const a = Math.atan2(py - oy, px - ox);
+      angles.push(a - 1e-4, a + 1e-4);
+    }
+    angles.sort((a, b) => a - b);
+    const path = new Path2D();
+    angles.forEach((a, i) => {
+      const dx = Math.cos(a), dy = Math.sin(a);
+      let t = R;
+      for (const [x1, y1, x2, y2] of segs) {
+        const sx = x2 - x1, sy = y2 - y1, den = dx * sy - dy * sx;
+        if (Math.abs(den) < 1e-9) continue;
+        const u = ((x1 - ox) * sy - (y1 - oy) * sx) / den, v = ((x1 - ox) * dy - (y1 - oy) * dx) / den;
+        if (u > 0 && v >= 0 && v <= 1 && u < t) t = u;
+      }
+      if (t < R) t = Math.min(R, t + C * .3);
+      i ? path.lineTo(ox + dx * t, oy + dy * t) : path.moveTo(ox + dx * t, oy + dy * t);
+    });
+    path.closePath();
+    return {path, ox, oy, R};
+  }
+
+  // a pool's warm falloff in `rgb`, `k` times as strong
+  function falloff(ctx, p, look, rgb = look.rgb, k = 1) {
+    const gr = ctx.createRadialGradient(p.ox, p.oy, 0, p.ox, p.oy, p.R);
+    gr.addColorStop(0, `rgba(${rgb},${k})`); gr.addColorStop(look.core, `rgba(${rgb},${.95 * k})`);
+    gr.addColorStop(.65, `rgba(${rgb},${.3 * k})`); gr.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.fillStyle = gr; ctx.fill(p.path);
+  }
+
+  // by day the sun stands up and to the left: every wall the side knows throws a soft shadow down and right
+  let sunKey = null, sunCanvas = null;
+  function sunShadows(s) {
+    const key = staticKey + "|" + s.board.walls.length;
+    if (key === sunKey) return sunCanvas;
+    const C = L.cell, tree = s.board.wall_kind === "tree";
+    const [sh, sg] = canvas();
+    sg.fillStyle = "#000";
+    for (const [x, y] of s.board.walls) for (let t = .15; t <= 1; t += .085) {
+      const X = wx(x) + t * C * .75, Y = wy(y) + t * C * .55;
+      if (tree) { sg.beginPath(); sg.arc(X + C / 2, Y + C / 2, C * .5, 0, 7); sg.fill(); }
+      else sg.fillRect(X, Y, C, C);
+    }
+    sg.globalCompositeOperation = "destination-out";
+    for (const [x, y] of s.board.walls) {
+      if (tree) { sg.beginPath(); sg.arc(wx(x) + C / 2, wy(y) + C / 2, C * .6, 0, 7); sg.fill(); }
+      else sg.fillRect(wx(x), wy(y), C, C);
+    }
+    const [c, cg] = canvas();
+    cg.fillStyle = "#fff"; cg.fillRect(0, 0, WW, WH);
+    cg.globalAlpha = .38; cg.filter = `blur(${Math.max(2, C * .14)}px)`; cg.drawImage(sh, 0, 0);
+    sunKey = key; sunCanvas = c;
+    return c;
+  }
+
+  // `layer` showing only where the cell mask `grid` is white, its edges softened over `blur` px; the
+  // canvas it returns is the next call's too, so draw it before masking again
+  function masked(layer, grid, blur) {
+    const [c, cc] = scratch("mask");
+    blurUp(grid, cc, blur);
+    cc.globalCompositeOperation = "source-in"; cc.drawImage(layer, 0, 0);
+    return c;
+  }
+
+  // seen before: the same ground washed to sepia and sunk below the lit floor, hatched like a map's old
+  // survey; washed once per board, since a canvas filter over the whole world is dear
+  let memKey = null, memCanvas = null;
+  function memory(g, s) {
+    if (memKey !== staticKey) {
+      const [m, mc] = canvas();
+      mc.filter = "grayscale(1) sepia(.6) brightness(.58) contrast(.8)";
+      mc.drawImage(staticCanvas, 0, 0); mc.filter = "none";
+      mc.strokeStyle = "rgba(30,20,10,.22)"; mc.lineWidth = 1;
+      for (let k = -WH; k < WW; k += 7) { mc.beginPath(); mc.moveTo(k, 0); mc.lineTo(k + WH, WH); mc.stroke(); }
+      memKey = staticKey; memCanvas = m;
+    }
+    const seen = new Set(s.seen.map(([x, y]) => K(x, y)));
+    g.drawImage(masked(memCanvas, cellGrid((x, y) => seen.has(K(x, y)) ? "#fff" : null), edge()), 0, 0);
+  }
+
+  // the lights the side sees and the cells in sight, kept from the last paint so the flicker can play
+  // over it frame by frame without painting it again
+  let flames = [], sight = null;
+  const FLICKER_MS = 66, STILL = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function flicker(now) {
+    if (!flames.length || STILL) return;
+    base.save(); deckle(base, rng(7919)); base.clip();
+    base.setTransform(V.s, 0, 0, V.s, V.x, V.y); base.clip(sight);
+    for (const f of flames) {
+      const t = now / 1000 + f.phase, fire = f.look === POOL.fire;
+      const n = .55 * Math.sin(t * 7.3) + .3 * Math.sin(t * 13.1 + 1.7) + .15 * Math.sin(t * 23.7 + .4);
+      const amp = (fire ? .2 : .13) * n;
+      if (amp > 0) { base.globalCompositeOperation = "lighter"; falloff(base, f.p, f.look, f.look.rgb, amp * .5); }
+      else { base.globalCompositeOperation = "source-over"; falloff(base, f.p, f.look, "20,10,4", -amp); }
+    }
+    base.restore();
+  }
+
+  let lastFrame = 0, running = false;
+  function animate(now) {
+    if (!flames.length || STILL) { running = false; return; }
+    if (now - lastFrame >= FLICKER_MS) { lastFrame = now; blit(now); }
+    requestAnimationFrame(animate);
+  }
+
   function fogAndLight(g, s) {
+    flames = [];
     const vis = new Set(s.visible.map(([x, y]) => K(x, y)));
     const seen = new Set(s.seen.map(([x, y]) => K(x, y)));
     const level = new Map(s.light.map(([x, y, v]) => [K(x, y), v]));
-    const blur = Math.max(3, L.cell * .12);
-    const grid = new Path2D(); grid.rect(0, 0, WW, WH);
+    const blur = edge();
 
-    // seen before: the same ground washed to sepia and sunk below the lit floor, hatched like a map's old survey
-    const [mem, mc] = canvas();
-    mc.filter = "grayscale(1) sepia(.6) brightness(.58) contrast(.8)";
-    mc.drawImage(g.canvas, 0, 0); mc.filter = "none";
-    mc.strokeStyle = "rgba(30,20,10,.22)"; mc.lineWidth = 1;
-    for (let k = -WH; k < WW; k += 7) { mc.beginPath(); mc.moveTo(k, 0); mc.lineTo(k + WH, WH); mc.stroke(); }
-    mc.globalCompositeOperation = "destination-in";
-    blurUp(cellGrid((x, y) => seen.has(K(x, y)) && !vis.has(K(x, y)) ? "#fff" : null), mc, blur);
-    g.save(); g.clip(grid); g.drawImage(mem, 0, 0); g.restore();
-
-    // the light, as a multiply layer: dark where the side sees little, untouched elsewhere
-    const sh = cellGrid((x, y) => {
-      const k = K(x, y);
-      if (!vis.has(k)) return "#fff";
-      const v = level.has(k) ? level.get(k) : .55, t = Math.pow(v, .8);
-      return `rgb(${[108 + (255 - 108) * t, 90 + (250 - 90) * t, 70 + (238 - 70) * t].map(Math.round).join(",")})`;
-    });
-    const [lit, lc] = canvas(); blurUp(sh, lc, blur);
-    g.save(); g.clip(grid); g.globalCompositeOperation = "multiply"; g.drawImage(lit, 0, 0); g.restore();
+    // the light, as a multiply layer over the cells in sight; elsewhere it leaves the board alone
+    const [lit, lc] = scratch("light");
+    if (s.daylight) {
+      lc.fillStyle = SUN; lc.fillRect(0, 0, WW, WH);
+      lc.globalCompositeOperation = "multiply"; lc.drawImage(sunShadows(s), 0, 0);
+    } else {
+      // what the server leaves to the cells (the eyes' own sight, the glow of a light out of sight) is cool
+      // and dim; each light the side sees is drawn here, warm, and cut by the walls it knows
+      blurUp(cellGrid((x, y) => {
+        const t = Math.pow(level.get(K(x, y)) || 0, .9);
+        return `rgb(${DARK.map((d, i) => Math.round(d + (DIM[i] - d) * t)).join(",")})`;
+      }), lc, blur);
+      lc.globalCompositeOperation = "lighten";      // lights overlap as the rules do: the brightest wins
+      const walls = new Set(s.board.walls.map(([x, y]) => K(x, y)));
+      for (const [x, y, r, kind] of s.lights) {
+        const p = pool(x, y, r, walls), look = POOL[kind] || POOL.torch;
+        falloff(lc, p, look);
+        flames.push({p, look, phase: hash(x, y, 5) * 100});
+      }
+    }
+    sight = new Path2D();
+    for (const [x, y] of s.visible) sight.rect(wx(x), wy(y), L.cell, L.cell);
+    lc.globalCompositeOperation = "destination-in";
+    blurUp(cellGrid((x, y) => vis.has(K(x, y)) ? "#fff" : null), lc, blur);
+    lc.globalCompositeOperation = "destination-over"; lc.fillStyle = "#fff"; lc.fillRect(0, 0, WW, WH);
+    g.save(); g.beginPath(); g.rect(L.ox, L.oy, L.cols * L.cell, L.rows * L.cell); g.clip();
+    g.globalCompositeOperation = "multiply"; g.drawImage(lit, 0, 0); g.restore();
 
     // never seen: plain paper laid over the board
-    const [unk, u] = canvas();
-    u.drawImage(worldPaper, 0, 0);
-    const r = rng(77);
-    for (let i = 0; i < 260; i++) {
-      const x = L.ox + r() * L.cols * L.cell, y = L.oy + r() * L.rows * L.cell;
-      u.strokeStyle = `rgba(90,65,40,${.04 + r() * .07})`; u.lineWidth = .8;
-      u.beginPath(); u.moveTo(x, y); u.lineTo(x + 8 + r() * 14, y - 2 - r() * 8); u.stroke();
-    }
-    u.globalCompositeOperation = "destination-in";
-    blurUp(cellGrid((x, y) => !vis.has(K(x, y)) && !seen.has(K(x, y)) ? "#fff" : null), u, blur);
-    g.save(); g.clip(grid); g.drawImage(unk, 0, 0); g.restore();
+    g.drawImage(masked(worldPaper, cellGrid((x, y) => !vis.has(K(x, y)) && !seen.has(K(x, y)) ? "#fff" : null), blur), 0, 0);
 
     // the glow of what burns
     g.save(); g.globalCompositeOperation = "screen";
@@ -368,19 +505,30 @@ const Board = (() => {
   async function draw(s) {
     await ready;
     const b = s.board;
-    if (layout(b.cols, b.rows) || !worldPaper) { const [pc, p] = canvas(); paper(p, WW, WH, "#e6d5b0", 13); worldPaper = pc; }
+    if (layout(b.cols, b.rows) || !worldPaper) {
+      const [pc, p] = canvas(); paper(p, WW, WH, "#e6d5b0", 13);
+      const r = rng(77);
+      for (let i = 0; i < 260; i++) {
+        const x = L.ox + r() * L.cols * L.cell, y = L.oy + r() * L.rows * L.cell;
+        p.strokeStyle = `rgba(90,65,40,${.04 + r() * .07})`; p.lineWidth = .8;
+        p.beginPath(); p.moveTo(x, y); p.lineTo(x + 8 + r() * 14, y - 2 - r() * 8); p.stroke();
+      }
+      worldPaper = pc;
+    }
     if (!paperCanvas) { const [pc, p] = canvas(W, H); paper(p, W, H, "#e6d5b0", 11); paperCanvas = pc; }
     const key = [b.cols, b.rows, L.cell, b.floor, b.walls.length, b.water.length, b.elevation.length].join("|");
     if (key !== staticKey) { staticCanvas = drawStatic(b); staticKey = key; }
-    const [wc, g] = canvas();
+    const [wc, g] = scratch("world");
     g.drawImage(staticCanvas, 0, 0);
+    memory(g, s);
     drawProps(g, s);
     fogAndLight(g, s);
     worldCanvas = wc;
     blit();
+    if (flames.length && !STILL && !running) { running = true; requestAnimationFrame(animate); }
   }
 
-  function blit() {
+  function blit(now = performance.now()) {
     base.clearRect(0, 0, W, H);
     if (!paperCanvas) return;
     base.drawImage(paperCanvas, 0, 0);
@@ -389,6 +537,7 @@ const Board = (() => {
     base.imageSmoothingEnabled = true; base.imageSmoothingQuality = "high";
     base.drawImage(worldCanvas, V.x, V.y, WW * V.s, WH * V.s);
     base.restore();
+    flicker(now);
   }
 
   let onView = null;

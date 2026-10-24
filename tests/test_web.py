@@ -10,7 +10,7 @@ from itertools import pairwise
 
 import pytest
 
-from gartok import actions, ai, artwork, combat_lab, vision
+from gartok import actions, ai, artwork, combat_lab, lighting, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
 
@@ -474,3 +474,31 @@ def test_a_save_opens_the_map_through_the_same_router(tmp_path, monkeypatch):
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+def test_the_side_gets_only_the_lights_it_sees_and_the_levels_leave_them_to_the_client():
+    s = _session("lair", seed=1)
+    _to_my_turn(s)
+    st, b = s.state(), s.battle
+    visible = {tuple(c) for c in st["visible"]}
+    sources = vision.light_sources(b)
+    assert any(c not in visible for c, _ in sources), "this seed has a torch out of sight"
+    assert sorted((x, y, r) for x, y, r, _ in st["lights"]) == sorted(
+        (*c, r) for c, r in sources if c in visible)
+    assert st["lights"] and not st["daylight"]
+    obs = vision.observers(b, False, "player")
+    alone = lighting.cell_levels(b, visible, obs, [src for src in sources if src[0] not in visible])
+    assert {(x, y): v for x, y, v in st["light"]} == {c: round(v, 3) for c, v in alone.items()}
+    every = lighting.cell_levels(b, visible, obs)
+    torch = next(tuple(c[:2]) for c in st["lights"])
+    assert every[torch] > alone[torch]
+
+
+def test_a_fight_by_day_says_so_and_a_burning_cell_is_a_fire():
+    s = _session("wilds")
+    assert s.state()["daylight"]
+    s = _session("fortress")
+    _to_my_turn(s)
+    st = s.state()
+    fire = {tuple(c) for c in st["board"]["fire"]}
+    assert fire and all(k == "fire" for x, y, _, k in st["lights"] if (x, y) in fire)

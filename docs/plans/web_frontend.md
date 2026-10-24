@@ -2,7 +2,8 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3, 5 and 7 are done; step 4 (the art) is done as far as it got, so the next step is 6.
+to 3 and 5 to 7 are done; step 4 (the art) is done as far as it got, so the next step is 8
+(the map).
 
 ## Decisions so far
 
@@ -213,26 +214,38 @@ UI was warm on warm. As built (`screens/battle/board.js`, the tables at its top)
 - **The chrome** gets a cool verdigris accent (`--verdigris` in `shell.css`) on idle
   edges, labels, plates and the initiative chain, on a charcoal table. Brass stays
   the focus: the active unit, the chosen action.
-- For step 6: torchlight still multiplies each lit cell toward warm brown, which turns
-  the dungeon's grey back to brown round a torch; the remembered wash runs a canvas
-  `filter` over the whole world on every state, the first thing to cache if a big
-  board stutters. At the fit zoom the trees lose their leaf detail.
+- Left open: at the fit zoom the trees lose their leaf detail. (The torchlight that
+  turned the grey back to brown and the remembered wash's cost were step 6's.)
 
-### 6. Battle: light — todo
+### 6. Battle: light — done (2026-10-24)
 
-Today the light is one flat level per cell, blurred. It reads as blocky, flat in
-daylight, and too weak in the dark.
+The light was one flat level per cell, blurred: blocky, flat in daylight, too weak in
+the dark. As built:
 
-- The server also sends the light sources the side can see (torches, fire, lit units)
-  and the walls around them.
-- The client draws a visibility polygon from each source, cut by the walls, with a warm
-  radial falloff. Darkness gets weight indoors; daylight gets a direction (a soft shadow
-  on each wall).
-- The rule stays in Python: the client paints light only inside the cells
-  `visible_cells` allows.
+- **The server** sends `lights`, the sources the side sees (torch, fire, a lit unit) with
+  their reach, and `daylight`. The per-cell levels leave those sources out
+  (`lighting.cell_levels(..., sources)`), so a light out of sight is only a glow on the
+  cells and never shows where it stands. The walls are the ones the side already knows.
+- **The client** (`board.js`) casts each light as a polygon from its cell's middle,
+  stopped by the known walls (only their exposed faces turned to the light), filled with
+  a warm falloff; overlapping lights keep the brightest, as the rules do. What the
+  levels leave (the eyes' own sight, a far glow) is cool and dim, so the dark has
+  weight. Light paints only the cells in sight and never past the board.
+- **By day** a sun stands up and to the left: each known wall or tree throws a soft
+  shadow down and right.
+- **Flicker:** the pools brighten and dim a little, about 15 times a second, drawn over
+  the last paint (each pool's polygon is kept) instead of painting the board again; off
+  by day and under `prefers-reduced-motion`.
+- **Cost**, measured in Edge with the GPU, forcing the canvas to finish (a bare redraw
+  of the sheet is about 14 ms of that): a state's paint went from about 50 ms to about
+  30 ms once the blurs ran on the small cell grid, the remembered wash was cached per
+  board and the world-sized canvases were reused; forty torches add about 12 ms; a
+  flicker frame costs about what a bare redraw does.
+- Left as is: a wall the side never saw can stand between a light it sees and a cell in
+  sight; that cell then reads a little brighter than the rules have it. No information
+  leaks (the cell is in sight); it is rare.
 
-**Done when:** the author approves the dungeon and the Necromancer fight at night. The
-battle is then finished.
+The battle is finished.
 
 ### 7. The shared base — done (2026-10-23)
 

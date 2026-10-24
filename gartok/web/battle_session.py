@@ -408,14 +408,23 @@ class BattleSession(Session):
         return self._sight(self._observers())[0]
 
     def _sight(self, obs):
-        """`(visible cells, light levels)` for `obs`, worked out again only when what they hang
-        on has changed: the observers, the lights, the walls. A foe's step mostly changes none."""
+        """`(visible cells, light levels, lights)` for `obs`, worked out again only when what they
+        hang on has changed: the observers, the lights, the walls. A foe's step mostly changes none.
+
+        `lights` are the sources the side sees, which the client draws itself, cut by the walls;
+        the levels hold only the rest (the eyes' own sight and the glow of a light out of sight),
+        so a hidden torch never shows where it stands."""
         b = self.battle
-        key = (tuple((id(o), o.pos, o.footprint, o.alive) for o in obs), tuple(vision.light_sources(b)),
+        sources = vision.light_sources(b)
+        key = (tuple((id(o), o.pos, o.footprint, o.alive) for o in obs), tuple(sources),
                frozenset(b.board.walls), b.winner is None)
         if key != self._sight_key:
             visible = vision.visible_cells(b, obs)
-            self._sight_key, self._sight_val = key, (visible, lighting.cell_levels(b, visible, obs))
+            shown = [(c, r) for c, r in sources if c in visible]
+            fire = set(getattr(b, "fire", ()))
+            lights = [[*_cell(c), r, "fire" if c in fire else "torch"] for c, r in shown]
+            levels = lighting.cell_levels(b, visible, obs, [src for src in sources if src[0] not in visible])
+            self._sight_key, self._sight_val = key, (visible, levels, lights)
         return self._sight_val
 
     def state(self, inspect=None):
@@ -423,7 +432,7 @@ class BattleSession(Session):
         b = self.battle
         self._sync_seat()
         obs = self._observers()
-        visible, levels = self._sight(obs)
+        visible, levels, lights = self._sight(obs)
         self.fog.remember(self.team, visible, self._props())
         seen = self.fog.seen(self.team)
         known = visible | seen
@@ -454,6 +463,8 @@ class BattleSession(Session):
             "visible": [_cell(c) for c in sorted(visible)],
             "seen": [_cell(c) for c in sorted(seen - visible)],
             "light": [[x, y, round(v, 3)] for (x, y), v in sorted(levels.items())],
+            "lights": lights,
+            "daylight": bool(getattr(b, "ambient_light", False)),
             "props": ([p | {"pos": _cell(p["pos"])} for p in self._props() if p["pos"] in visible]
                       + [p | {"pos": _cell(p["pos"]), "remembered": True}
                          for p in self.fog.remembered_props(self.team, visible)]),
