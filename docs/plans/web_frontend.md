@@ -3,7 +3,8 @@
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
-the hub frame and its shop tab are in; the other tabs come next.
+the hub frame, its shop tab and a work node's Work and Gathering tabs are in; the other tabs
+come next.
 
 ## Decisions so far
 
@@ -92,6 +93,9 @@ the hub frame and its shop tab are in; the other tabs come next.
   `shop_tab.py` drives a headless `MarketScreen` (or `LibraryScreen`), as the map borrows pygame's
   reads. Item glyphs are game-icons.net SVGs in `assets/icons/item/`, one per `item_icon` kind
   (`item_icon.glyph`).
+- **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
+  tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
+  verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
 - **Launch:** `python -m gartok.web --fight <lab fight>`, `python -m gartok.web --save
   <world>` (a guild's folder under `saves/`; `--screen` picks the screen), or double-click
   [references/battle_mockup/play_battle.bat](references/battle_mockup/play_battle.bat) and pick a fight.
@@ -375,6 +379,24 @@ As built:
   stables and wagon yard, the tavern's tabs, initiation. The mockup's open question is
   settled: a weapons shelf (damage, hands, range) reads in the 660px shelf. Left as is: an
   item's tooltip is the browser's own `title`.
+
+**9b. Work and Gathering (the Lumber Yard, the Mine) — done (2026-10-27).** As built:
+
+- **The layout** every tab after it can follow: the hub's cards are the tab's `hub_cards()`
+  (`{label, value, tone}`, drawn by `labor.js`'s `cards`), the people or the thing you buy on
+  leather at the left (660px, where the shelf sits), the ledger of choices on paper at the right.
+- **Work:** the crew with each one's tool (own or the foreman's), wage and note; the four
+  shifts. A shift runs the clock as `App._work_shift` does: the tab stays up with what the
+  shift paid when its end is all that stopped the clock; another band idle (before or during
+  the shift), a screen or a fight due, or a death lands on the map with the shift still running.
+  `MapSession._advance` now answers `(idle gids, the dead)` for that.
+- **Gathering:** the licence (status, the band's purse, buy) and the drop table; the shifts
+  with haul, wage and ambush odds, live only with the licence. A gathering shift goes back to
+  the map and the clock runs there, as pygame's does.
+- Tests: `tests/test_web_hub.py` (the crew and shifts, a paid shift's pay and clock, a shift
+  that lands on the map, the licence bought and refused, a gathering shift). The clicks were
+  driven in headless Edge on a copy of the day-70 save.
+- **Next (9c):** the Medic (the Apothecary's MEDIC tab), then the jobs boards.
 
 ### 10. The swap — todo
 

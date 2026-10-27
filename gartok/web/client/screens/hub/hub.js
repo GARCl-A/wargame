@@ -1,5 +1,6 @@
 // A place's hub: the keeper's strip, the row of tabs and the tab in view. The shop draws itself
-// (shop.js); a tab the browser does not draw yet is a note on paper. Every verb answers the whole hub.
+// (shop.js), and so do a work node's shifts (labor.js); a tab the browser does not draw yet is a note
+// on paper. Every verb answers the whole hub.
 "use strict";
 
 let H = null;
@@ -50,6 +51,8 @@ function drawAway() {
 function draw() {
   drawFrame();
   if (H.shop) Shop.draw(H.shop);
+  else if (H.work) Labor.work(H.work);
+  else if (H.gather) Labor.gather(H.gather);
   else drawAway();
 }
 

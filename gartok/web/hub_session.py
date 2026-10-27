@@ -1,18 +1,20 @@
 """A node's screens behind one row of tabs, in the browser: the keeper's strip, the tabs, the way back
-to the map. The shop is the first tab (`shop_tab.ShopTab`); a tab the browser does not draw yet says
-so inside the frame, and its screen is played in pygame until its part of step 9 of
-`docs/plans/web_frontend.md` lands.
+to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
+(`work_tab`); a tab the browser does not draw yet says so inside the frame, and its screen is played in
+pygame until its part of step 9 of `docs/plans/web_frontend.md` lands.
 
 The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
 """
 
 from typing import ClassVar
 
-from .. import artwork, world
+from .. import artwork, orders, world
 from ..hub_screen import TabbedHubScreen
 from ..map_screen import node_icon
+from ..work_screen import SHIFTS
 from .session import Session, asset_url
 from .shop_tab import ShopTab
+from .work_tab import GatherTab, WorkTab
 
 # order kind -> its hub's tabs, where it is not the node's own list (`_node_tabs`)
 HUBS = {
@@ -22,7 +24,7 @@ HUBS = {
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", *HUBS}
-LIVE = {"shop"}                        # the tabs the browser draws so far
+LIVE = {"shop", "work", "gather"}      # the tabs the browser draws so far
 # what a tab not drawn yet is, for its note
 WHAT = {"recruits": "the recruits", "rooms": "the study rooms", "perform": "the stage", "tavern": "the tavern",
         "stable": "the stables", "forge": "the forge", "craft": "the workbench", "carpenter": "the carpentry",
@@ -91,6 +93,9 @@ class HubSession(Session):
         "mark": _shop(lambda t, b: t.mark(b["name"])),
         "sell_marked": _shop(lambda t, b: t.sell_marked()),
         "distribute": _shop(lambda t, b: t.distribute()),
+        "work": lambda s, b: s.work(int(b["hours"])),
+        "gather": lambda s, b: s.gather(int(b["hours"])),
+        "licence": lambda s, b: s.licence(),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -105,6 +110,8 @@ class HubSession(Session):
         first = "shop" if order.kind in ("market", "stable") else {"forge": "craft"}.get(order.kind, order.kind)
         self.tab = first if any(k == first for k, _ in self.tabs) else self.tabs[0][0]
         self._shop = None
+        self._work = None
+        self._gather = None
 
     @property
     def shop(self):
@@ -113,6 +120,60 @@ class HubSession(Session):
         if self._shop is None:
             self._shop = ShopTab(self.guild, self.group, self.node)
         return self._shop
+
+    def _tab(self, key, attr, make):
+        if not any(k == key for k, _ in self.tabs):
+            raise ValueError(f"no {key} tab here")
+        if getattr(self, attr) is None:
+            setattr(self, attr, make(self.guild, self.group, self.node))
+        return getattr(self, attr)
+
+    @property
+    def working(self):
+        return self._tab("work", "_work", WorkTab)
+
+    @property
+    def gathering(self):
+        return self._tab("gather", "_gather", GatherTab)
+
+    def _shift(self, hours, **kw):
+        if hours not in SHIFTS:
+            raise ValueError(f"no {hours} h shift")
+        if self.group.busy:
+            raise ValueError(f"{self.group.display_name} is busy")
+        self.group.order = orders.work(self.guild, self.group, hours, **kw)
+        self.map.focus = self.group.gid
+
+    def work(self, hours):
+        """A paid shift, as `App._work_shift` runs it: the clock runs as the map's would, and the tab
+        stays up with what the shift paid when its end is all that stopped it. Anything else (another
+        band idle, a screen or a fight due, a death) lands on the map, the shift still running there."""
+        tab = self.working
+        self._shift(hours)
+        m = self.map
+        if self.guild.needs_orders:
+            return m.back()
+        before = len(m.notices)
+        idle, dead = m._advance()
+        if m.wiped or self.group.busy or m.pending or dead or idle - {self.group.gid}:
+            return m.back()
+        tab.report = m.notices[before:]
+        del m.notices[before:]
+        m._save()
+        self.tab = "work"
+        return self.state()
+
+    def licence(self):
+        self.gathering.buy_licence()
+        self.tab = "gather"
+        return self.state()
+
+    def gather(self, hours):
+        """A gathering shift: the band goes back to the map and the clock runs there, as pygame's does."""
+        self._tab("gather", "_gather", GatherTab)
+        self._shift(hours, gather=True)
+        self.map.game.open(self.map)
+        return self.map._after_order()
 
     def pick_tab(self, key):
         if not any(k == key for k, _ in self.tabs):
@@ -134,6 +195,10 @@ class HubSession(Session):
                "tab": self.tab}
         if self.tab == "shop":
             out["shop"] = self.shop.state()
+        elif self.tab == "work":
+            out["work"] = self.working.state()
+        elif self.tab == "gather":
+            out["gather"] = self.gathering.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

@@ -494,26 +494,28 @@ class MapSession(MapInspectorMixin, Session):
 
     def _advance(self, dt=None):
         """Run the clock to the next thing that needs the person: a band gone idle, a screen due,
-        or (with `dt`) one jump of that many hours."""
+        or (with `dt`) one jump of that many hours. -> `(idle gids, the dead)` of the last run."""
+        dead = []
         while True:
             busy_before = {g.gid for g in self.guild.groups if g.busy}
             result = campaign.advance(self.guild, dt=dt)
             self.notices += result.events
             self.notices += [f"{u.name} died." for u in result.casualties]
+            dead += result.casualties
             for lu in result.level_ups:
                 gains = ", ".join(f"{label} {a} → {b}" for label, a, b in lu.gains)
                 self.notices.append(f"{lu.unit.name} grows: {gains}.")
             if result.wiped:
                 self.wiped = True
-                return
+                return set(), dead
             self.pending += result.pending
             idle = {g.gid for g in self.guild.groups if g.gid in busy_before and not g.busy}
             if dt is not None or result.pending:
-                break
+                return idle, dead
             if idle or not any(g.busy for g in self.guild.groups):
                 if idle:
                     self.focus = next(iter(idle))
-                break
+                return idle, dead
 
     def _land(self):
         """Open the next screen the clock left due, or land on the map; the answer is the screen open."""

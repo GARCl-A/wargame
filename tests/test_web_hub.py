@@ -8,7 +8,7 @@ import urllib.request
 
 import pytest
 
-from gartok import economy, items, persist, recorder
+from gartok import economy, gather, items, orders, persist, recorder
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
@@ -69,7 +69,7 @@ def test_the_market_opens_on_its_shop_and_a_work_node_lists_its_shifts_beside_it
     assert hub.state()["tab"] == "shop" and [t["key"] for t in hub.state()["tabs"]] == ["shop"]
     hub, _, _ = _hub("lumber_yard", "market")
     tabs = hub.state()["tabs"]
-    assert [t["key"] for t in tabs] == ["shop", "work", "gather"] and [t["live"] for t in tabs] == [True, False, False]
+    assert [t["key"] for t in tabs] == ["shop", "work", "gather"] and all(t["live"] for t in tabs)
 
 
 def test_buying_into_a_pack_pays_from_the_purse_into_the_till_and_takes_one_off_the_shelf():
@@ -164,6 +164,69 @@ def test_leaving_the_hub_lands_on_the_map_and_saves_what_was_bought(saves):
     st = hub.verb("back", True)(hub, {})
     assert st["screen"] == "map" and isinstance(game.session, MapSession)
     assert persist.load_game("w1").groups[0].members[0].count_of(r["name"]) == g.members[0].count_of(r["name"])
+
+
+def test_the_work_tab_lists_the_crew_with_their_tool_and_the_shifts_with_the_bands_wage():
+    hub, _, g = _hub("lumber_yard", "market")
+    st = hub.pick_tab("work")
+    w = st["work"]
+    assert [u["name"] for u in w["crew"]] == [u.name for u in g.members] and w["tool"] == "Axe"
+    assert [s["hours"] for s in w["shifts"]] == [4, 8, 12, 16] and w["glyph"].startswith("item/")
+    assert w["shifts"][-1]["wage"] == sum(u["pay"] for u in w["crew"])
+    assert {c["label"] for c in w["cards"]} >= {"party purse", "rations"} and w["report"] == []
+
+
+def test_a_paid_shift_runs_the_clock_pays_the_crew_and_keeps_the_tab_up_with_what_it_paid():
+    hub, guild, g = _hub("lumber_yard", "market")
+    wage = hub.pick_tab("work")["work"]["shifts"][1]["wage"]
+    money, start = sum(u.money for u in g.members), guild.clock.seconds
+    st = hub.verb("work", True)(hub, {"hours": 8})
+    assert hub.game.session is hub and st["tab"] == "work" and st["work"]["report"]
+    assert (guild.clock.seconds - start) / 3600 == 8 and not g.busy
+    assert sum(u.money for u in g.members) == money + wage
+    with pytest.raises(ValueError):
+        hub.work(5)
+
+
+def test_a_shift_lands_on_the_map_when_another_band_needs_the_person():
+    units = [Unit("Fighter") for _ in range(2)]
+    guild = Guild(None, groups=[Group(units[:1], node="lumber_yard", leader=units[0]),
+                                Group(units[1:], node="city", leader=units[1])], name="Ink Hands")
+    game = Game(MapSession(guild))
+    yard, other = guild.groups
+    other.order = orders.rest(2)
+    game.session.act(yard.gid, "market")
+    st = game.session.work(8)
+    assert st["screen"] == "map" and isinstance(game.session, MapSession)
+    assert yard.order.kind == "work" and not other.busy
+
+
+def test_the_licence_is_bought_from_the_bands_purse_and_refused_when_it_is_short():
+    poor, guild, _ = _hub("lumber_yard", "market", coins=0)
+    st = poor.pick_tab("gather")
+    assert not st["gather"]["held"] and st["gather"]["short"] == gather.licence_price("lumber_yard")
+    st = poor.verb("licence", True)(poor, {})
+    assert st["gather"]["notice"] and not guild.has_licence("lumber_yard")
+    with pytest.raises(ValueError):
+        poor.gather(4)
+    hub, guild, g = _hub("lumber_yard", "market")
+    money = sum(u.money for u in g.members)
+    st = hub.verb("licence", True)(hub, {})
+    assert st["gather"]["held"] and guild.has_licence("lumber_yard")
+    assert sum(u.money for u in g.members) == money - gather.licence_price("lumber_yard")
+    assert [d["name"] for d in st["gather"]["drops"]] == [n for n, _ in gather.drops("lumber_yard")]
+    crew = st["gather"]["crew"]
+    assert [u["name"] for u in crew] == [u.name for u in g.members]
+    assert sum(u["haul"] for u in crew) == round(guild.shift_worth(g, "lumber_yard", gather.DAY_HOURS)[0])
+
+
+def test_a_gathering_shift_goes_back_to_the_map_and_runs_the_clock_there():
+    hub, guild, g = _hub("lumber_yard", "market")
+    hub.gathering.buy_licence()
+    start = guild.clock.seconds
+    st = hub.verb("gather", True)(hub, {"hours": 4})
+    assert st["screen"] == "map" and isinstance(hub.game.session, MapSession)
+    assert guild.clock.seconds - start == 4 * 3600 or g.fight_due
 
 
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():

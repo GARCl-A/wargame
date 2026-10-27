@@ -107,11 +107,15 @@ class LaborMixin:
         """`(haul, wage, ambush)` of a shift of `hours` for `group` at `node_id`: what the crew's
         gathering sells for on average, what the same hours pay them as a wage (Piecework and the
         vocation in), and the odds a pack finds the gatherers."""
-        crew = [u for u in group.members if u in self.roster]
-        haul = gather.expected_value(node_id, hours) * vocations.gather_mult(self) * len(crew)
-        wage = sum(economy.work_pay(node_id, hours, economy.work_level(u, node_id))
-                   * vocations.gather_mult(self) * (1 + u.talent_bonus("coin_gain")) for u in crew)
-        return haul, wage, gather.ambush_chance(node_id, hours, self.gather_risk_mult(group, node_id))
+        each = [self.worker_worth(u, node_id, hours) for u in group.members if u in self.roster]
+        return (sum(h for h, _ in each), sum(w for _, w in each),
+                gather.ambush_chance(node_id, hours, self.gather_risk_mult(group, node_id)))
+
+    def worker_worth(self, u, node_id, hours):
+        """`(haul, wage)` of one worker's shift: `shift_worth` for a crew of one."""
+        mult = vocations.gather_mult(self)
+        return (gather.expected_value(node_id, hours) * mult,
+                economy.work_pay(node_id, hours, economy.work_level(u, node_id)) * mult * (1 + u.talent_bonus("coin_gain")))
 
     def bank_haul(self, workers, hours, node_id):
         """Each worker's roll on the node's table goes into their own pack and the hours into their
