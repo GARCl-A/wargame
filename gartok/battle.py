@@ -250,6 +250,15 @@ class Battle:
         for side in (self.player_units, self.enemy_units):
             tag_flag_runners(side)
 
+    def _promote_fallen_runners(self):
+        """A side whose runner fell sends its fastest survivor: with no runner left nobody goes for
+        the other flag and the fight never ends."""
+        for side in (self.player_units, self.enemy_units):
+            living = [u for u in side if u.alive]
+            if (living and any(u.ctf_runner for u in side if not u.alive)
+                    and not any(u.ctf_runner for u in living)):
+                tag_flag_runners(living)
+
     @property
     def can_withdraw(self):
         """The scenario lets the player's side leave now, its objective met (`withdraw`)."""
@@ -925,6 +934,8 @@ class Battle:
                 self.round_no += 1
                 self.log(f"--- Round {self.round_no} ---")
                 self.scenario.on_round(self)
+                if self.is_ctf:
+                    self._promote_fallen_runners()
             u = self.active
             if u.status == "dying":
                 u.delayed = False            # downed while waiting: a revived turn starts fresh

@@ -54,12 +54,25 @@ def test_the_chord_window_follows_the_setting():
     assert scr._chord_ms == 100
 
 
-def test_the_pause_menu_cycles_a_setting():
+def test_the_pause_menu_opens_settings():
     from gartok.pause_screen import PauseScreen
     from gartok.ui.tokens import fonts
     pygame.init()
-    pause = PauseScreen(fonts(), None, lambda: None, lambda: None, lambda: None)
+    opened = []
+    pause = PauseScreen(fonts(), None, lambda: None, lambda: None, lambda: None,
+                        on_settings=lambda: opened.append(True))
     pause.draw(pygame.Surface((1280, 720)))
-    rect = dict(pause._buttons)["set_chord_ms"]
+    rect = dict(pause._buttons)["settings"]
     pause._click(rect.center)
+    assert opened == [True]
+
+
+def test_settings_screen_cycles_a_setting():
+    from gartok.settings_screen import SettingsScreen
+    from gartok.ui.tokens import fonts
+    pygame.init()
+    screen = SettingsScreen(fonts(), on_back=lambda: None)
+    screen.draw(pygame.Surface((1280, 720)))
+    rect = dict(screen.buttons)["set_chord_ms"]
+    screen._click(rect.center)
     assert settings.get("chord_ms") == 70

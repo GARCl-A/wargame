@@ -141,6 +141,36 @@ def test_each_side_s_fastest_is_its_one_flag_runner():
     assert sum(c.ctf_runner for c in b.player_units) == 1   # the AI runs the player's side too
 
 
+def test_fallen_flag_runner_is_replaced_by_fastest_living_survivor():
+    b = _ctf_battle(n_enemy=3)
+    b.enemy_units[0].char.speed = 3
+    b.enemy_units[1].char.speed = 9
+    b.enemy_units[2].char.speed = 6
+    b._assign_flag_runners()
+    runner = b.enemy_units[1]
+    assert runner.ctf_runner is True
+    runner.status = "dead"
+    runner.hp = 0
+    b._promote_fallen_runners()
+    assert b.enemy_units[2].ctf_runner is True
+    assert b.enemy_units[0].ctf_runner is False
+
+
+def test_a_disarmed_runner_keeps_on_the_flag_instead_of_a_dropped_weapon():
+    from gartok.ground import GroundObject
+    b = _ctf_battle()
+    b.board.walls = set()
+    runner = b.enemy_units[0]
+    runner.ctf_runner = True
+    runner.pos, runner.ap = (COLS - 2, 5), 2
+    runner.disarm()
+    b.ground.append(GroundObject.weapon((COLS - 6, 8), "Axe"))
+    assert not ai._recover_weapon(b, runner)
+    assert runner.pos == (COLS - 2, 5)
+    runner.ctf_runner = False
+    assert ai._recover_weapon(b, runner)                   # a holder still goes for it
+
+
 def test_a_player_side_runner_goes_for_the_enemy_flag_and_brings_it_home():
     b = _ctf_battle()
     b.board.walls = set()

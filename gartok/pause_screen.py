@@ -1,7 +1,8 @@
 """Pause menu: the only way back to the main menu once a campaign is running.
 
 Esc opens it over whatever scene is showing (`resume_to`, drawn frozen behind a
-dark veil); Esc again -- or RESUME -- drops back into the game. SAVE AS...
+dark veil); Esc again -- or RESUME -- drops back into the game. SETTINGS opens
+the settings screen (preferences and tutorials) and comes back here. SAVE AS...
 snapshots the campaign under a name the player types (it shows up on the guild's
 saves list); it is greyed out where there is no campaign yet to save (the draft,
 the editors). Leaving to the main menu or quitting is a deliberate two-step from
@@ -11,7 +12,6 @@ so `app` draws it the same way.
 
 import pygame
 
-from . import settings
 from .screen import Screen
 from .text_field import TextField
 from .ui.primitives import caps, draw_button, modal_card, panel, set_pointer, text
@@ -22,8 +22,7 @@ MAX_SAVE_NAME = 40
 
 class PauseScreen(Screen):
     def __init__(self, fonts, resume_to, on_resume, on_menu, on_quit,
-                 tutorial=None, on_tutorial_toggle=None, on_tutorial_reset=None,
-                 on_save_as=None, can_save=True, on_wiki=None):
+                 on_settings=None, on_save_as=None, can_save=True, on_wiki=None):
         super().__init__()
         self.fonts = fonts
         self.resume_to = resume_to
@@ -31,9 +30,7 @@ class PauseScreen(Screen):
         self.on_resume = on_resume
         self.on_menu = on_menu
         self.on_quit = on_quit
-        self.tutorial = tutorial  # tutorial.TutorialState -- read for the ON/OFF label
-        self.on_tutorial_toggle = on_tutorial_toggle
-        self.on_tutorial_reset = on_tutorial_reset
+        self.on_settings = on_settings
         self.on_save_as = on_save_as      # callable(name) or None: no SAVE AS row
         self.can_save = can_save          # False: the row shows greyed out and does nothing
         self.on_wiki = on_wiki            # callable() or None: opens in-game wiki compendium
@@ -67,18 +64,17 @@ class PauseScreen(Screen):
                 if key == "save_as":
                     self.naming, self.saved_note = True, None
                     return
+                if key == "settings":
+                    if self.on_settings:
+                        self.on_settings()
+                    return
                 if key == "wiki":
                     if self.on_wiki:
                         self.on_wiki()
                     return
-                if key.startswith("set_"):
-                    settings.cycle(key[4:])
-                    return
                 {"resume": self.on_resume,
                  "menu": self.on_menu,
-                 "quit": self.on_quit,
-                 "tutorial_toggle": self.on_tutorial_toggle,
-                 "tutorial_reset": self.on_tutorial_reset}[key]()
+                 "quit": self.on_quit}[key]()
                 return
 
     def draw(self, screen):
@@ -91,28 +87,22 @@ class PauseScreen(Screen):
         else:
             screen.fill(T.TABLE)
 
-        tutorial_rows = ((2 if self.tutorial is not None else 0) + (1 if self.on_save_as else 0)
-                         + (1 if self.on_wiki else 0) + len(settings.SPEC))
-        card = modal_card(screen, (320, 250 + tutorial_rows * 48), veil=True)
-
-        f = self.fonts
-        caps(screen, f["big"], "PAUSED", (card.centerx, card.y + 26), T.TX, center=True)
-        text(screen, f["body_sm"], "the campaign is saved on every stop",
-             (card.centerx, card.y + 58), T.TX_FAINT, center=True)
-
         rows = [("resume", "RESUME", True, False)]
+        if self.on_settings:
+            rows.append(("settings", "SETTINGS", False, False))
         if self.on_wiki:
             rows.append(("wiki", "WIKI & RULES", False, False))
         if self.on_save_as:
             rows.append(("save_as", "SAVE AS...", False, False))
         rows += [("menu", "SAVE & MAIN MENU", False, False),
                  ("quit", "QUIT GAME", False, True)]
-        
-        if self.tutorial is not None:
-            on = self.tutorial.enabled
-            rows.append(("tutorial_toggle", f"TUTORIALS: {'ON' if on else 'OFF'}", False, False))
-            rows.append(("tutorial_reset", "RESET TUTORIALS", False, False))
-        rows += [(f"set_{k}", settings.label(k), False, False) for k in settings.SPEC]
+
+        card = modal_card(screen, (320, 110 + len(rows) * 48), veil=True)
+
+        f = self.fonts
+        caps(screen, f["big"], "PAUSED", (card.centerx, card.y + 26), T.TX, center=True)
+        text(screen, f["body_sm"], "the campaign is saved on every stop",
+             (card.centerx, card.y + 58), T.TX_FAINT, center=True)
 
         if self.naming:
             box = pygame.Rect(card.x + T.S * 3, card.y + 78, card.w - 2 * T.S * 3, 40)

@@ -620,6 +620,9 @@ def _recover_weapon(battle, unit):
     if any(o.is_weapon for o in battle.ground_in_reach(unit)):
         actions.PICK_UP.execute(battle, unit)
         return True
+    if battle.is_ctf and (getattr(unit, "ctf_runner", False)
+                          or battle.flag_carrier.get(_other_side(unit.team)) is unit):
+        return False                # the flag comes first: a runner never detours for a dropped blade
     obj = min(weapons, key=lambda o: grid_distance(unit.pos, o.pos))
     dest = battle.path_step_toward(unit, obj.pos, unit.speed)
     if dest == unit.pos:

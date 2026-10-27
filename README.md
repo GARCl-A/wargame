@@ -171,7 +171,7 @@ World systems, outside combat:
   next, dismissed with a click or Enter/Space (input is swallowed while it is up
   and just after, so closing it never presses what lies beneath) and reopenable
   from its `?` badge; per-slot, toggled and reset
-  from the pause menu. Its copy is the first thing routed through `i18n.py`, a
+  from the settings screen. Its copy is the first thing routed through `i18n.py`, a
   small dotted-key catalog reader (`locales/en.json`) meant to grow into the
   game's general translation layer, not a tutorial-only shim.
 
@@ -273,7 +273,7 @@ gartok/
   ox.py             the tanner's last job: the Country Roads search, tracking Aurochs by daylight
   ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
-  settings.py       player preferences (settings.json), listed in the pause menu
+  settings.py       player preferences (settings.json), listed on the settings screen
   combat_log.py     one JSONL per fight, enough to rebuild it: every decision, its options, what the AI would have done
   combat_lab.py     the benchmark fights set up outside a campaign (Editor menu: COMBAT LAB), either side a person or the AI
   recorder.py       opt-in play log (play.jsonl beside the saves) the economy sim learns from

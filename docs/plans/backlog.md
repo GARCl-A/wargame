@@ -25,11 +25,6 @@ the art as far as Gemini got and the board's colour and light are done (the batt
 finished), the campaign map is in (`--save <world>`) and so are the hub frame and its shop;
 next are the hubs' other tabs, the rest of the screens and the swap.
 
-- **CTF stalemate, AI against AI** (small, AI): the Ribbit Brothers' capture the flag with
-  `combat_lab.build("boss", 2, 6, seed=7)` and the player's flag at the first legal cell
-  never ends (1,400 rounds): two survivors, one sitting on its own flag, and nobody goes
-  for the other flag. Found by `tests/test_web.py`, which plays every lab fight to its end.
-
 ---
 
 # Pre-playtest plan (agreed 2026-10-20)
@@ -55,6 +50,11 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 ---
 
 # Ready to do
+
+## Small
+
+- **Hit sounds swap (`assets/sounds/`).** Hit sounds do not fit the game (the UI sounds are fine);
+  swap the Kenney variants in `assets/sounds/`.
 
 ## Medium
 
@@ -87,7 +87,6 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 Raw notes from the author's playtest, to be sized as they are picked up.
 
 - **Presentation:**
-  - The pause menu (Esc) lists many options that belong behind one SETTINGS entry.
   - Too few icons for the guild banner.
 - **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
 - **Occupations are bland:** answered 2026-10-23, they go (*Ready to do -> Remove occupations*) and an

@@ -310,6 +310,20 @@ def test_every_lab_fight_plays_to_its_end_with_a_person_on_every_human_choice(fi
         assert "setup" in asked
 
 
+def test_the_boss_ctf_ends_when_its_flag_runners_fall():
+    battle, meta = combat_lab.build("boss", 2, 6, seed=7)       # stalled 1,400 rounds once
+    s = BattleSession(battle, meta)
+    for _ in range(3000):
+        if battle.winner is not None:
+            break
+        if not _settle(s):
+            if s.my_turn():
+                s._stepped(lambda: ai.take_turn(battle, battle.active), None)
+            else:
+                s.advance()
+    assert battle.winner is not None
+
+
 def _to_talk(seed=1):
     battle, meta = combat_lab.build("lair", 2, 4, seed=seed)
     s = BattleSession(battle, meta)

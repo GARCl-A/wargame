@@ -171,8 +171,11 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         if worlds:
             self._continue_game(worlds[0]["world"])
 
-    def _open_settings(self):
-        self.scene = SettingsScreen(self.ui_fonts, on_back=self._start_screen)
+    def _open_settings(self, on_back=None):
+        self.scene = SettingsScreen(self.ui_fonts, on_back=on_back or self._start_screen,
+                                    tutorial=self.tutorial,
+                                    on_tutorial_toggle=self._toggle_tutorial,
+                                    on_tutorial_reset=self._reset_tutorial)
 
     def _open_wiki(self):
         self.scene = WikiScreen(self.ui_fonts, on_back=self._start_screen)
@@ -690,12 +693,14 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
                                      on_resume=self._resume_from_pause,
                                      on_menu=self._pause_to_menu,
                                      on_quit=self._quit,
-                                     tutorial=self.tutorial,
-                                     on_tutorial_toggle=self._toggle_tutorial,
-                                     on_tutorial_reset=self._reset_tutorial,
+                                     on_settings=self._pause_to_settings,
                                      on_save_as=self._save_as,
                                      can_save=self._can_save(),
                                      on_wiki=self._pause_to_wiki)
+
+    def _pause_to_settings(self):
+        prev_scene = self.scene.resume_to if isinstance(self.scene, PauseScreen) else self.scene
+        self._open_settings(on_back=lambda: self._return_to_scene(prev_scene))
 
     def _pause_to_wiki(self):
         prev_scene = self.scene.resume_to if isinstance(self.scene, PauseScreen) else self.scene
