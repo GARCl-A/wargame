@@ -8,7 +8,7 @@ import urllib.request
 
 import pytest
 
-from gartok import economy, gather, items, medic, orders, persist, recorder
+from gartok import economy, gather, items, medic, orders, persist, recorder, world
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
@@ -296,6 +296,85 @@ def test_a_stay_the_whole_band_waits_goes_back_to_the_map(monkeypatch):
     st = hub.treat()
     assert st["screen"] == "map" and isinstance(hub.game.session, MapSession)
     assert len(guild.groups) == 1 and (g.busy or g.members[1].poisons == {})
+
+
+def _board(node="tanner", kind="tanner", coins=200):
+    hub, guild, g = _hub(node, kind, coins)
+    for u in g.members:
+        u.remove_named("1sqm Hide", u.count_of("1sqm Hide"))
+    return hub, guild, g, hub.pick_tab("jobs")["jobs"]
+
+
+def test_a_givers_jobs_tab_shows_the_board_the_signer_and_what_the_packs_carry():
+    hub, _, g, j = _board()
+    assert next(t for t in hub.state()["tabs"] if t["key"] == "jobs")["live"]
+    job = j["jobs"][0]
+    assert job["id"] == "tanner_hides" and job["button"] == {"verb": "accept", "label": "ACCEPT THE JOB", "on": True}
+    assert job["detail"][0] == "15x 1sqm Hide" and not job["taken"]
+    assert j["signer"]["name"] == g.leader.name and j["egg"] is None
+    g.members[1].give_to_pack("1sqm Hide", 4)
+    c = hub.state()["jobs"]["carried"][0]
+    assert (c["item"], c["have"], c["goal"]) == ("1sqm Hide", 4, 15) and c["who"] == [f"{g.members[1].name} 4"]
+
+
+def test_accepting_a_job_signs_it_to_the_leader_and_turns_its_button_into_the_turn_in(saves):
+    hub, guild, g, _ = _board()
+    job = hub.verb("accept", True)(hub, {"id": "tanner_hides"})["jobs"]["jobs"][0]
+    assert [(m.template_id, m.unit_uid) for m in guild.missions] == [("tanner_hides", g.leader.uid)]
+    assert job["taken"] and job["button"]["verb"] == "turn_in" and not job["button"]["on"]
+    assert job["button"]["label"] == "NEED 15 MORE" and job["detail"][0] == "0 / 15 1sqm Hide"
+    st = hub.on_board(type(hub.board).accept, "tanner_hides")
+    assert st["jobs"]["notice"] and len(guild.missions) == 1
+
+
+def test_turning_a_job_in_takes_the_goal_and_pays_the_band():
+    hub, guild, g, _ = _board()
+    hub.on_board(type(hub.board).accept, "tanner_hides")
+    g.members[0].give_to_pack("1sqm Hide", 15)
+    assert hub.state()["jobs"]["jobs"][0]["button"]["on"]
+    money = sum(u.money for u in g.members)
+    st = hub.verb("turn_in", True)(hub, {"id": "tanner_hides"})
+    assert guild.missions[0].state == "done" and g.members[0].count_of("1sqm Hide") == 0
+    assert sum(u.money for u in g.members) == money + 200 and st["jobs"]["notice"]
+
+
+def test_a_turn_in_the_band_cannot_make_is_refused_and_a_job_off_the_board_is_an_error():
+    hub, guild, _, _ = _board()
+    assert hub.on_board(type(hub.board).turn_in, "tanner_hides")["jobs"]["notice"]
+    assert guild.missions == []
+    with pytest.raises(ValueError):
+        hub.on_board(type(hub.board).accept, "apothecary_mushrooms")
+
+
+def test_a_sanctuary_opens_on_its_board_and_buys_a_dragon_egg():
+    from gartok import lair
+    guild = _guild("nature_grove")
+    guild.reveal_node("nature_grove")
+    game = Game(MapSession(guild))
+    g = guild.groups[0]
+    assert game.session.act(g.gid, "shrine") == {"screen": "hub"}
+    hub = game.session
+    st = hub.state()
+    assert st["tab"] == "jobs" and st["jobs"]["egg"] is None
+    g.members[1].give_to_pack(lair.EGG, 1)
+    assert hub.state()["jobs"]["egg"]["on"]
+    money = g.members[1].money
+    st = hub.on_board(type(hub.board).sell_egg)
+    assert g.members[1].count_of(lair.EGG) == 0 and g.members[1].money == money + lair.SHRINE_EGG_PRICE
+    assert st["jobs"]["egg"] is None and st["jobs"]["notice"]
+
+
+def test_a_job_won_by_a_fight_is_taken_here_and_met_on_the_map(monkeypatch):
+    from gartok import missions
+    from gartok.web.jobs_tab import JobsTab
+    guild = _guild("faith_cathedral")
+    tab = JobsTab(guild, guild.groups[0], world.node("faith_cathedral"))
+    monkeypatch.setattr(tab.b, "get_templates", lambda: [missions.FAITH_BATTLEFIELD])
+    monkeypatch.setattr(missions, "offers_at", lambda g, n: [missions.FAITH_BATTLEFIELD])
+    assert tab.state()["jobs"][0]["button"]["on"]
+    tab.accept(missions.FAITH_BATTLEFIELD.id)
+    b = tab.state()["jobs"][0]["button"]
+    assert b["verb"] == "turn_in" and not b["on"] and "BATTLEFIELD" in b["label"]
 
 
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():

@@ -170,21 +170,33 @@ class MissionOfferScreen(Screen):
             action, tid = key
             t = missions.TEMPLATES[tid]
             if action == "accept":
-                if self._is_offered(t):
-                    missions.accept(self.guild, self.group.leader, t)
-                    self.notice = None
+                self.accept(t)
             elif action == "turn_in":
-                m = self._mission_of(t)
-                if m is not None and missions.can_turn_in(self.guild, m):
-                    earned = missions.turn_in(self.guild, m)
-                    self.notice = self.get_success_notice(t.reward)
-                    if t.reward_recipe:
-                        self.notice += f"  ·  the group learns to craft the {t.reward_recipe}"
-                    if t.reward_item:
-                        self.notice += f"  ·  you are given a {t.reward_item}"
-                    for d in earned:
-                        self.notice += "  ·  " + factions.deed_notice(d)
+                self.turn_in(t)
             return
+
+    def accept(self, t):
+        """The leader signs for `t` when it is on offer here: -> whether they did."""
+        if not self._is_offered(t):
+            return False
+        missions.accept(self.guild, self.group.leader, t)
+        self.notice = None
+        return True
+
+    def turn_in(self, t):
+        """Hand over `t`'s goal when this band holds the job and carries it: -> whether it was paid."""
+        m = self._mission_of(t)
+        if m is None or not missions.can_turn_in(self.guild, m):
+            return False
+        earned = missions.turn_in(self.guild, m)
+        self.notice = self.get_success_notice(t.reward)
+        if t.reward_recipe:
+            self.notice += f"  ·  the group learns to craft the {t.reward_recipe}"
+        if t.reward_item:
+            self.notice += f"  ·  you are given a {t.reward_item}"
+        for d in earned:
+            self.notice += "  ·  " + factions.deed_notice(d)
+        return True
 
     def _quest_layout(self, F, t, w):
         """Everything a job's card needs to be sized and drawn, worked out once for a card `w` wide."""

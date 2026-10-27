@@ -3,8 +3,8 @@
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
-the hub frame, its shop tab and a work node's Work and Gathering tabs are in; the other tabs
-come next.
+the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic and the jobs
+boards are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -93,6 +93,8 @@ come next.
   `shop_tab.py` drives a headless `MarketScreen` (or `LibraryScreen`), as the map borrows pygame's
   reads. Item glyphs are game-icons.net SVGs in `assets/icons/item/`, one per `item_icon` kind
   (`item_icon.glyph`).
+- **`gartok/web/jobs_tab.py`** + `screens/hub/jobs.js` are a giver's jobs board (9d), on pygame's own
+  `MissionOfferScreen` held headless.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -413,6 +415,22 @@ As built:
   bill the band cannot pay, a stay split off, a stay the band waits). The two states were looked at in
   headless Edge at 1920x1080.
 - **Next (9d):** the jobs boards (the Apothecary's, the Tanner's, the Library's, the sanctuaries').
+
+**9d. The jobs boards — done (2026-10-27).** As built:
+
+- **The server** (`JobsTab`) holds the giver's own pygame board headless (`TannerScreen`,
+  `ApothecaryMissionScreen`, `LibraryMissionScreen`, `ShrineMissionScreen`, picked by the node's function as
+  `TabbedHubScreen.for_node` picks it), as `ShopTab` holds a `MarketScreen`: the board, the terms, the labels
+  and the notices are pygame's. Accepting and handing over moved out of `MissionOfferScreen._click` into
+  `accept` / `turn_in`, which pygame calls too. A sanctuary's dragon-egg sale is its `footer_action`.
+- **The layout** is 9b's: on leather who signs (the leader; the job travels with them) and what the packs
+  already carry toward each job the band can take or hand over; on paper the board, one row per job (glyph,
+  name, tags, blurb, terms, button). A job whose goal is a fight (the Battlefield, the Necromancer, the
+  Wildfire) keeps its button off: the fight is met on the map.
+- Tests: `tests/test_web_hub.py` (the board, the signer and the carried goods; accepting; handing over and
+  the pay; refusals; a sanctuary's egg sale). The open and the taken board were looked at in headless Edge at
+  1920x1080 on a copy of the day-70 save.
+- **Next (9e):** the forge and carpentry (the workbench), then the stables and the wagon yard.
 
 ### 10. The swap — todo
 

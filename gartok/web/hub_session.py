@@ -1,6 +1,6 @@
 """A node's screens behind one row of tabs, in the browser: the keeper's strip, the tabs, the way back
 to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
-(`work_tab`), the Apothecary its Medic (`medic_tab`); a tab the browser does not draw yet says so inside
+(`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`); a tab the browser does not draw yet says so inside
 the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md`
 lands.
 
@@ -13,6 +13,7 @@ from .. import artwork, orders, world
 from ..hub_screen import TabbedHubScreen
 from ..map_screen import node_icon
 from ..work_screen import SHIFTS
+from .jobs_tab import JobsTab
 from .medic_tab import MedicTab
 from .session import Session, asset_url
 from .shop_tab import ShopTab
@@ -26,7 +27,7 @@ HUBS = {
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", *HUBS}
-LIVE = {"shop", "work", "gather", "medic"}      # the tabs the browser draws so far
+LIVE = {"shop", "work", "gather", "medic", "jobs"}      # the tabs the browser draws so far
 # what a tab not drawn yet is, for its note
 WHAT = {"recruits": "the recruits", "rooms": "the study rooms", "perform": "the stage", "tavern": "the tavern",
         "stable": "the stables", "forge": "the forge", "craft": "the workbench", "carpenter": "the carpentry",
@@ -100,6 +101,9 @@ class HubSession(Session):
         "licence": lambda s, b: s.licence(),
         "patient": lambda s, b: s.patient(b["uid"]),
         "treat": lambda s, b: s.treat(),
+        "accept": lambda s, b: s.on_board(JobsTab.accept, b["id"]),
+        "turn_in": lambda s, b: s.on_board(JobsTab.turn_in, b["id"]),
+        "sell_egg": lambda s, b: s.on_board(JobsTab.sell_egg),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -117,6 +121,7 @@ class HubSession(Session):
         self._work = None
         self._gather = None
         self._medic = None
+        self._jobs = None
 
     @property
     def shop(self):
@@ -144,6 +149,16 @@ class HubSession(Session):
     @property
     def ward(self):
         return self._tab("medic", "_medic", MedicTab)
+
+    @property
+    def board(self):
+        return self._tab("jobs", "_jobs", JobsTab)
+
+    def on_board(self, verb, *args):
+        verb(self.board, *args)
+        self.map._save()
+        self.tab = "jobs"
+        return self.state()
 
     def _shift(self, hours, **kw):
         if hours not in SHIFTS:
@@ -229,6 +244,8 @@ class HubSession(Session):
             out["gather"] = self.gathering.state()
         elif self.tab == "medic":
             out["medic"] = self.ward.state()
+        elif self.tab == "jobs":
+            out["jobs"] = self.board.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "
