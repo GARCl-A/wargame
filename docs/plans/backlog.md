@@ -22,8 +22,9 @@ spike is built (`python -m gartok.web`), and the author's verdict is go. The dec
 and the steps are in [web_frontend.md](web_frontend.md) ("Next steps"): fluidity, speed and
 zoom, the battle's parity with pygame and the shared base (the shell every screen runs in)
 the art as far as Gemini got and the board's colour and light are done (the battle is
-finished), the campaign map is in (`--save <world>`) and so are the hub frame and its shop;
-next are the hubs' other tabs, the rest of the screens and the swap.
+finished), the campaign map is in (`--save <world>`) and so are the hub frame, its shop, the
+work node's tabs and the Medic; next are the jobs boards, the hubs' other tabs, the rest of the
+screens and the swap.
 
 ---
 

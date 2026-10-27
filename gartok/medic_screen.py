@@ -44,30 +44,45 @@ class MedicScreen(Screen):
         """The one patient picked for a hospital stay, or None (a stay is picked alone)."""
         return next((q for q in self._picked_quotes() if not q.offered), None)
 
+    def _toggle(self, uid):
+        """Pick or drop a patient: visits combine, a hospital stay is picked alone."""
+        offered = {q.uid: q.offered for q in self._quotes()}
+        if uid not in offered:
+            raise ValueError("nobody by that name needs treating")
+        self.notice = None
+        if uid in self.picked:
+            self.picked.discard(uid)
+        elif offered[uid]:
+            self.picked = {u for u in self.picked if offered.get(u)} | {uid}
+        else:
+            self.picked = {uid}
+
+    def _treat(self):
+        """Treat the picked patients, or admit the one picked for a stay. -> `(ok, lines)`."""
+        patients = [u for u in self.group.members if u.uid in self.picked]
+        if self._stay():
+            ok, lines = medic.admit(self.guild, self.group, patients[0])
+        else:
+            ok, lines = medic.treat(self.guild, self.group, patients)
+        self.notice = "  ".join(lines)
+        if ok:
+            self.picked.clear()
+        return ok, lines
+
+    def _stay_where(self):
+        return ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
+                else "the whole group waits (no free group slot)")
+
     def _click(self, pos):
         if self.leave_rect.collidepoint(pos):
             self.on_done()
             return
         if self.treat_rect.collidepoint(pos):
-            patients = [u for u in self.group.members if u.uid in self.picked]
-            if self._stay():
-                ok, lines = medic.admit(self.guild, self.group, patients[0])
-            else:
-                ok, lines = medic.treat(self.guild, self.group, patients)
-            self.notice = "  ".join(lines)
-            if ok:
-                self.picked.clear()
+            self._treat()
             return
-        offered = {q.uid: q.offered for q in self._quotes()}
         for uid, rect in self.row_rects:
             if rect.collidepoint(pos):
-                self.notice = None
-                if uid in self.picked:
-                    self.picked.discard(uid)
-                elif offered[uid]:
-                    self.picked = {u for u in self.picked if offered.get(u)} | {uid}
-                else:
-                    self.picked = {uid}
+                self._toggle(uid)
                 return
 
     framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
@@ -114,8 +129,7 @@ class MedicScreen(Screen):
                                   "token": u.token},
                          "sub": f"{u.race['name']} {u.occupation['name'].lower()}  ·  HP {u.hp} / {u.hp_max}"})
         can_pay = sum(u.money for u in (*self.group.members, *getattr(self.group, "stores", ()))) >= cost
-        where = ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
-                 else "the whole group waits (no free group slot)")
+        where = self._stay_where()
         self.row_rects, self.treat_rect, self.leave_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse,
                                                      stay=where if stay else None, aside=aside,
                                                      leave_label=None if self.framed else "Leave the medic")

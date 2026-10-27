@@ -1,11 +1,13 @@
 // A place's hub: the keeper's strip, the row of tabs and the tab in view. The shop draws itself
-// (shop.js), and so do a work node's shifts (labor.js); a tab the browser does not draw yet is a note
-// on paper. Every verb answers the whole hub.
+// (shop.js), and so do a work node's shifts (labor.js) and the Medic (medic.js); a tab the browser does
+// not draw yet is a note on paper. Every verb answers the whole hub.
 "use strict";
 
 let H = null;
 const ico = (path, cls = "ico") => `<span class="${cls} mask" style="--icon:url(/assets/icons/${path}.svg)"></span>`;
 const money = n => "$" + n;
+const card = c => `<div class="hcard"><div class="lbl">${esc(c.label)}</div><b class="${c.tone || ""}">${esc(c.value)}</b></div>`;
+const cards = list => { $("cards").innerHTML = `<div class="vsep"></div>` + list.map(card).join(`<div class="vsep"></div>`); };
 
 let toastTimer = null;
 function toast(text) {
@@ -53,6 +55,7 @@ function draw() {
   if (H.shop) Shop.draw(H.shop);
   else if (H.work) Labor.work(H.work);
   else if (H.gather) Labor.gather(H.gather);
+  else if (H.medic) Medic.draw(H.medic);
   else drawAway();
 }
 

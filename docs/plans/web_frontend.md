@@ -398,6 +398,22 @@ As built:
   driven in headless Edge on a copy of the day-70 save.
 - **Next (9c):** the Medic (the Apothecary's MEDIC tab), then the jobs boards.
 
+**9c. The Medic — done (2026-10-27).** As built:
+
+- **The server** (`MedicTab`) borrows `MedicScreen`'s reads and its pick rule (`_toggle`: visits
+  combine, a hospital stay is picked alone) and `_treat`, now methods pygame calls too. The pick lives
+  on the server (`patient`), so both front-ends hold one rule.
+- **The layout** is 9b's: the ward on leather (each patient with an ailment chip per part, the price
+  and hours, a red chip for a stay; the healthy ones in a line under it), the bill on paper (the picked
+  ones itemised, the total, who waits, Treat or Admit), the last visit's lines under it.
+- **The clock:** a visit passes its hours as pygame's does (`medic.treat` -> `guild.pass_time`) and
+  the tab stays up; a stay that splits the patient off stays up too; a stay the whole band waits out
+  (no free slot, or a lone patient) is an order, and the band goes back to the map where the clock runs.
+- Tests: `tests/test_web_hub.py` (the ward and the bill, the pick rule, a visit paid and cured, a
+  bill the band cannot pay, a stay split off, a stay the band waits). The two states were looked at in
+  headless Edge at 1920x1080.
+- **Next (9d):** the jobs boards (the Apothecary's, the Tanner's, the Library's, the sanctuaries').
+
 ### 10. The swap — todo
 
 The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign

@@ -1,7 +1,8 @@
 """A node's screens behind one row of tabs, in the browser: the keeper's strip, the tabs, the way back
 to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
-(`work_tab`); a tab the browser does not draw yet says so inside the frame, and its screen is played in
-pygame until its part of step 9 of `docs/plans/web_frontend.md` lands.
+(`work_tab`), the Apothecary its Medic (`medic_tab`); a tab the browser does not draw yet says so inside
+the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md`
+lands.
 
 The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
 """
@@ -12,6 +13,7 @@ from .. import artwork, orders, world
 from ..hub_screen import TabbedHubScreen
 from ..map_screen import node_icon
 from ..work_screen import SHIFTS
+from .medic_tab import MedicTab
 from .session import Session, asset_url
 from .shop_tab import ShopTab
 from .work_tab import GatherTab, WorkTab
@@ -24,7 +26,7 @@ HUBS = {
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", *HUBS}
-LIVE = {"shop", "work", "gather"}      # the tabs the browser draws so far
+LIVE = {"shop", "work", "gather", "medic"}      # the tabs the browser draws so far
 # what a tab not drawn yet is, for its note
 WHAT = {"recruits": "the recruits", "rooms": "the study rooms", "perform": "the stage", "tavern": "the tavern",
         "stable": "the stables", "forge": "the forge", "craft": "the workbench", "carpenter": "the carpentry",
@@ -96,6 +98,8 @@ class HubSession(Session):
         "work": lambda s, b: s.work(int(b["hours"])),
         "gather": lambda s, b: s.gather(int(b["hours"])),
         "licence": lambda s, b: s.licence(),
+        "patient": lambda s, b: s.patient(b["uid"]),
+        "treat": lambda s, b: s.treat(),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -112,6 +116,7 @@ class HubSession(Session):
         self._shop = None
         self._work = None
         self._gather = None
+        self._medic = None
 
     @property
     def shop(self):
@@ -135,6 +140,10 @@ class HubSession(Session):
     @property
     def gathering(self):
         return self._tab("gather", "_gather", GatherTab)
+
+    @property
+    def ward(self):
+        return self._tab("medic", "_medic", MedicTab)
 
     def _shift(self, hours, **kw):
         if hours not in SHIFTS:
@@ -175,6 +184,25 @@ class HubSession(Session):
         self.map.game.open(self.map)
         return self.map._after_order()
 
+    def patient(self, uid):
+        self.ward.pick(uid)
+        self.tab = "medic"
+        return self.state()
+
+    def treat(self):
+        """Treat the picked patients (the clock passes their hours here, as pygame's does) or admit the
+        one picked for a stay. A stay the whole band waits out is an order: the band goes back to the
+        map and the clock runs there."""
+        if not self.ward.treat():
+            return self.state()
+        m = self.map
+        if m.wiped or not self.group.members or self.group.busy:
+            m.game.open(m)
+            return m._after_order()
+        m._save()
+        self.tab = "medic"
+        return self.state()
+
     def pick_tab(self, key):
         if not any(k == key for k, _ in self.tabs):
             raise ValueError(f"no {key} tab here")
@@ -199,6 +227,8 @@ class HubSession(Session):
             out["work"] = self.working.state()
         elif self.tab == "gather":
             out["gather"] = self.gathering.state()
+        elif self.tab == "medic":
+            out["medic"] = self.ward.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

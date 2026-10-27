@@ -5,9 +5,6 @@
 "use strict";
 
 const Labor = (() => {
-  const card = c => `<div class="hcard"><div class="lbl">${esc(c.label)}</div><b class="${c.tone || ""}">${esc(c.value)}</b></div>`;
-  const cards = list => { $("cards").innerHTML = `<div class="vsep"></div>` + list.map(card).join(`<div class="vsep"></div>`); };
-
   function shiftRow(glyph, s, sub, price, tone, verb, label, on) {
     return `<div class="shift ${on ? "" : "off"}">
       <div class="ico mask" style="--icon:url(/assets/icons/${glyph}.svg)"></div>

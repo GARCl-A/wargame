@@ -8,7 +8,7 @@ import urllib.request
 
 import pytest
 
-from gartok import economy, gather, items, orders, persist, recorder
+from gartok import economy, gather, items, medic, orders, persist, recorder
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
@@ -227,6 +227,75 @@ def test_a_gathering_shift_goes_back_to_the_map_and_runs_the_clock_there():
     st = hub.verb("gather", True)(hub, {"hours": 4})
     assert st["screen"] == "map" and isinstance(hub.game.session, MapSession)
     assert guild.clock.seconds - start == 4 * 3600 or g.fight_due
+
+
+def _ward(missing=(3, 0), stacks=0, coins=200):
+    hub, guild, g = _hub("apothecary", "apothecary", coins)
+    for u, m in zip(g.members, missing):
+        u.hp = u.hp_max - m
+    for _ in range(stacks):
+        g.members[1].add_poison("giant_spider_venom", 12)
+    assert hub.state()["tab"] == "shop"
+    hub.pick_tab("medic")
+    return hub, guild, g
+
+
+def test_the_medic_tab_lists_who_needs_treating_and_bills_the_picked_ones():
+    hub, _, g = _ward()
+    hurt, fine = g.members
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["shop", "medic", "craft", "jobs"] and st["tabs"][1]["live"]
+    m = st["medic"]
+    assert [u["uid"] for u in m["ward"]] == [hurt.uid] and m["fine"] == [fine.name]
+    assert m["ward"][0]["parts"][0]["label"] == "3 HP" and m["cost"] == 0
+    with pytest.raises(ValueError):
+        hub.patient(fine.uid)
+    m = hub.verb("patient", True)(hub, {"uid": hurt.uid})["medic"]
+    q = medic.quote(hurt)
+    assert m["ward"][0]["picked"] and (m["cost"], m["hours"]) == (q.cost, q.hours) and m["can_pay"]
+    assert m["stay"] is None
+    assert not hub.patient(hurt.uid)["medic"]["ward"][0]["picked"]
+
+
+def test_a_treatment_pays_passes_the_hours_cures_and_stays_on_the_tab(saves):
+    hub, guild, g = _ward()
+    hurt = g.members[0]
+    hub.patient(hurt.uid)
+    q, money, start = medic.quote(hurt), sum(u.money for u in g.members), guild.clock.seconds
+    st = hub.verb("treat", True)(hub, {})
+    assert hub.game.session is hub and st["tab"] == "medic" and st["medic"]["report"]
+    assert hurt.hp == hurt.hp_max and st["medic"]["ward"] == []
+    assert sum(u.money for u in g.members) == money - q.cost
+    assert (guild.clock.seconds - start) / 3600 == q.hours
+
+
+def test_a_treatment_the_band_cannot_pay_is_refused_with_a_notice():
+    hub, _, g = _ward(coins=0)
+    hub.patient(g.members[0].uid)
+    st = hub.treat()
+    assert not st["medic"]["can_pay"] and st["medic"]["notice"] and g.members[0].hp < g.members[0].hp_max
+
+
+def test_a_hospital_stay_is_picked_alone_and_splits_the_patient_off_while_the_tab_stays_up():
+    hub, guild, g = _ward(stacks=4)
+    hurt, sick = g.members
+    hub.patient(hurt.uid)
+    m = hub.patient(sick.uid)["medic"]
+    assert [u["uid"] for u in m["ward"] if u["picked"]] == [sick.uid] and m["stay"]
+    st = hub.treat()
+    assert hub.game.session is hub and st["tab"] == "medic"
+    assert g.members == [hurt] and any(x.order and x.order.task == "hospital" for x in guild.groups)
+
+
+def test_a_stay_the_whole_band_waits_goes_back_to_the_map(monkeypatch):
+    hub, guild, g = _ward(stacks=4)
+    monkeypatch.setattr(Guild, "free_slots", property(lambda self: 0))
+    hub.patient(g.members[1].uid)
+    m = hub.state()["medic"]
+    assert "waits" in m["stay"]
+    st = hub.treat()
+    assert st["screen"] == "map" and isinstance(hub.game.session, MapSession)
+    assert len(guild.groups) == 1 and (g.busy or g.members[1].poisons == {})
 
 
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
