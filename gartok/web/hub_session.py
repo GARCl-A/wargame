@@ -1,9 +1,9 @@
 """A node's screens behind one row of tabs, in the browser: the keeper's strip, the tabs, the way back
 to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
 (`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`), a workbench its
-recipes (`craft_tab`); a tab the browser does not draw yet says so inside
-the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md`
-lands.
+recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`); a tab the
+browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of
+step 9 of `docs/plans/web_frontend.md` lands.
 
 The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
 """
@@ -20,6 +20,7 @@ from .jobs_tab import JobsTab
 from .medic_tab import MedicTab
 from .session import Session, asset_url
 from .shop_tab import ShopTab
+from .stable_tab import StableTab, WagonTab
 from .work_tab import GatherTab, WorkTab
 
 # order kind -> its hub's tabs, where it is not the node's own list (`_node_tabs`)
@@ -30,10 +31,11 @@ HUBS = {
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", *HUBS}
-LIVE = {"shop", "work", "gather", "medic", "jobs", *CRAFT_TABS}      # the tabs the browser draws so far
+# the tabs the browser draws so far
+LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", *CRAFT_TABS}
 # what a tab not drawn yet is, for its note
 WHAT = {"recruits": "the recruits", "rooms": "the study rooms", "perform": "the stage", "tavern": "the tavern",
-        "stable": "the stables", "wagons": "the wagon yard", "jobs": "the jobs board", "medic": "the Medic", "study": "the study desk",
+        "jobs": "the jobs board", "medic": "the Medic", "study": "the study desk",
         "initiation": "the initiation", "work": "the paid shifts", "gather": "the gathering"}
 
 
@@ -108,6 +110,11 @@ class HubSession(Session):
         "sell_egg": lambda s, b: s.on_board(JobsTab.sell_egg),
         "crafter": lambda s, b: s.crafter(b["uid"]),
         "craft": lambda s, b: s.craft(b["recipe"], int(b["hours"]), bool(b.get("alone"))),
+        "buy_animal": lambda s, b: s.on_yard("stable", StableTab.buy, b["species"]),
+        "fit": lambda s, b: s.on_yard("stable", StableTab.fit, b["uid"], b["tack"]),
+        "sell_animal": lambda s, b: s.on_yard("stable", StableTab.sell, b["uid"]),
+        "buy_wagon": lambda s, b: s.on_yard("wagons", WagonTab.buy, b["kind"]),
+        "sell_wagon": lambda s, b: s.on_yard("wagons", WagonTab.sell, b["uid"]),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -127,6 +134,8 @@ class HubSession(Session):
         self._medic = None
         self._jobs = None
         self._craft = None
+        self._stable = None
+        self._wagons = None
 
     @property
     def shop(self):
@@ -158,6 +167,21 @@ class HubSession(Session):
     @property
     def board(self):
         return self._tab("jobs", "_jobs", JobsTab)
+
+    @property
+    def stables(self):
+        return self._tab("stable", "_stable", StableTab)
+
+    @property
+    def yard(self):
+        return self._tab("wagons", "_wagons", WagonTab)
+
+    def on_yard(self, key, verb, *args):
+        verb(self.stables if key == "stable" else self.yard, *args)
+        if self._shop is not None:
+            self._shop.m.sync_group()       # the animals and wagons shop as packs
+        self.tab = key
+        return self.state()
 
     @property
     def bench(self):
@@ -278,7 +302,10 @@ class HubSession(Session):
         keeper = {"name": k.get("name"), "caption": k.get("caption", ""), "bent": k.get("bent", ""),
                   "line": k.get("line", ""),
                   "portrait": asset_url(artwork.portrait_path(None, k["portrait"])) if k.get("portrait") else None}
-        tongue = f" · the traders speak {n.language}" if getattr(n, "language", None) else ""
+        lang = getattr(n, "language", None)
+        if isinstance(lang, (list, tuple)):
+            lang = " or ".join(lang)
+        tongue = f" · the traders speak {lang}" if lang else ""
         out = {"place": n.name, "sub": f"Day {c.day}, {part}{tongue}", "band": self.group.display_name,
                "icon": "/".join(node_icon(n.id) or ("map", "signpost")), "keeper": keeper,
                "tabs": [{"key": key, "label": label, "live": key in LIVE} for key, label in self.tabs],
@@ -295,6 +322,10 @@ class HubSession(Session):
             out["jobs"] = self.board.state()
         elif self.tab in CRAFT_TABS:
             out["craft"] = self.bench.state()
+        elif self.tab == "stable":
+            out["stable"] = self.stables.state()
+        elif self.tab == "wagons":
+            out["wagons"] = self.yard.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

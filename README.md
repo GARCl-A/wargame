@@ -310,7 +310,7 @@ gartok/
                     session.py (a screen's server half), battle_session.py (one fight as the side
                     knows it), map_session.py (the map), hub_session.py + shop_tab.py (a place's
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
-                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), server.py (stdlib JSON API routed
+                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), server.py (stdlib JSON API routed
                     by screen), client/ (the shell + one folder per screen under screens/);
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   icons.py          vector action icons (pygame.draw) -- no asset file

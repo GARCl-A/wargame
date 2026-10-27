@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards and the workbenches are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -97,6 +97,8 @@ boards and the workbenches are in; the other tabs come next.
   `MissionOfferScreen` held headless.
 - **`gartok/web/craft_tab.py`** + `screens/hub/craft.js` are a workbench (9e: the forge, the carpentry,
   the Apothecary's craft, the Library's writing desk), on pygame's own `CraftingScreen` held headless.
+- **`gartok/web/stable_tab.py`** + `screens/hub/stables.js` are the Farm's STABLES and the Carpenter's WAGONS
+  (9f), on pygame's own `StablesScreen` / `WagonYardScreen` rules, borrowed as `medic_tab` borrows the Medic's.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -451,6 +453,23 @@ As built:
 - Tests: `tests/test_web_hub.py` (the crafters and the recipes with what they use, a stint the group waits, a
   stint alone and its refusal with no slot, each bench at its own station). Looked at in headless Edge at 1920x1080.
 - **Next (9f):** the stables and the wagon yard (the Farm's STABLES, the Carpenter's WAGONS).
+
+**9f. The stables and the wagon yard — done (2026-10-27).** As built:
+
+- **The server** (`StableTab`, `WagonTab`) borrows `StablesScreen`'s and `WagonYardScreen`'s rules (the pooled purse
+  paid richest first, the herd limit, the tack fitted once, the resale to the leader, nothing sold while it carries
+  cargo). Buying and selling a wagon moved out of `WagonYardScreen._click` into `_buy_wagon` / `_sell_wagon`, which
+  pygame calls too; a loaded wagon now says why it will not sell, in both. A purchase resyncs the shop tab, where
+  animals and wagons shop as packs.
+- **The layout** is 9b's: what the band keeps on leather (each animal with its portrait, tack, job, hunger and the
+  tack it can still take; each wagon with what pulls it, its cargo, HP and meals aboard) with its Sell; on paper what
+  is for sale, with why a row is off (the herd full, the purse short). Wagons use game-icons.net's `old-wagon`
+  (`assets/icons/item/old-wagon.svg`).
+- The Farm's subtitle printed its languages as a Python tuple; it reads "Ankarin or Sylvan" now.
+- Tests: `tests/test_web_hub.py` (the Farm's tabs and the offers, buying an animal and the shop seeing it, a full herd
+  and a short purse, tack and a sale back only unloaded, the wagon yard's buy and sell). Both tabs were looked at in
+  headless Edge at 1920x1080; the clicks were not driven, the verbs are tested through the session.
+- **Next (9g):** the tavern's tabs (Recruit, Study, Perform), then initiation.
 
 ### 10. The swap — todo
 

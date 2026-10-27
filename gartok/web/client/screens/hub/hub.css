@@ -331,3 +331,17 @@
 .hrow .lbl{font:600 10.5px/1 Cinzel,serif;letter-spacing:.14em;color:#6b5233;text-transform:uppercase}
 .hrow .btn{height:36px;padding:0;display:grid;place-items:center}
 .hrow .why,.acts p.why{grid-column:2/-1;font:italic 14.5px/1.2 "IM Fell English",serif;color:#7b6142}
+
+/* ---------- the stables and the wagon yard: what the band keeps on leather, what is for sale on paper ---------- */
+.medal.store{display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#3a2b1d,#1a130d)}
+.medal.store .ico{width:60%;height:60%;color:#d8bd86}
+.shift.offer{grid-template-columns:78px 1fr 130px 150px}
+.shift.offer .medal{width:56px;height:56px}
+.shift.offer .medal.store{background:radial-gradient(circle at 40% 35%,#f6ecd2,#d6bf92)}
+.shift.offer .medal.store .ico{color:#3a2410}
+.shift.offer .why{margin-top:5px;font:italic 14px/1 "IM Fell English",serif;color:#7a2318}
+.worker.kept h3 small{font:italic 15px/1 "IM Fell English",serif;color:#b59c76;letter-spacing:0}
+.worker .keep{display:flex;flex-direction:column;gap:6px;flex:none;align-items:stretch}
+.worker .keep .ghost-btn{height:32px;font:600 11px/1 Cinzel,serif;letter-spacing:.08em}
+.worker .keep .ghost-btn.off{opacity:.45;cursor:default}
+.lcol .hint.warn{color:var(--blood-hi)}

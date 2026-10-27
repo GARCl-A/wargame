@@ -216,20 +216,27 @@ class WagonYardScreen(StablesScreen):
         return "wagon_yard"
 
     def _click(self, key):
-        g = self.group
         kind, _, arg = key.partition(":")
         if kind == "buy_wagon" and arg in wagon.VEHICLES:
-            if self._pay(wagon.VEHICLES[arg].price, f"a {arg.lower()}"):
-                g.add_wagon(wagon.Wagon(arg))
-                g.hitch_idle()
-                self.notice = f"the {arg.lower()} is yours -- harness an animal to pull it."
-        elif kind == "sell_wagon" and not g.wagons[int(arg)].stash.items:
-            sold = g.wagons[int(arg)]
-            g.remove_wagon(sold)
-            self._receive(_resale(sold.price))
-            self.notice = f"sold the {sold.kind.lower()}."
+            self._buy_wagon(arg)
+        elif kind == "sell_wagon":
+            self._sell_wagon(self.group.wagons[int(arg)])
         else:
             super()._click(key)
+
+    def _buy_wagon(self, kind):
+        if self._pay(wagon.VEHICLES[kind].price, f"a {kind.lower()}"):
+            self.group.add_wagon(wagon.Wagon(kind))
+            self.group.hitch_idle()
+            self.notice = f"the {kind.lower()} is yours -- harness an animal to pull it."
+
+    def _sell_wagon(self, sold):
+        if sold.stash.items:
+            self.notice = f"unload the {sold.kind.lower()} first."
+            return
+        self.group.remove_wagon(sold)
+        self._receive(_resale(sold.price))
+        self.notice = f"sold the {sold.kind.lower()}."
 
     def _draw_market(self, screen, rect):
         F = self._F

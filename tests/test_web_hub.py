@@ -9,9 +9,12 @@ import urllib.request
 import pytest
 
 from gartok import economy, gather, items, medic, orders, persist, recorder, world
+from gartok.animals import HARNESS, PACK_SADDLE
+from gartok.data import LIVESTOCK
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
+from gartok.wagon import VEHICLES
 from gartok.web.away_session import AwaySession
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
@@ -440,6 +443,90 @@ def test_the_forge_apothecary_and_library_benches_work_at_their_own_station():
                                ("library", "craft", "scriptorium"), ("carpenter", "carpenter", "carpenter")):
         guild = _guild(node)
         assert CraftTab(guild, guild.groups[0], world.node(node), key).station == station
+
+
+def _purse(g):
+    return sum(u.money for u in (*g.members, *g.stores))
+
+
+def test_the_farm_opens_on_its_shop_beside_the_stables_which_list_the_animals_and_the_herd():
+    hub, _, g = _hub("farm", "stable")
+    st = hub.state()
+    assert st["tab"] == "shop" and [t["key"] for t in st["tabs"]] == ["shop", "stable"] and all(t["live"] for t in st["tabs"])
+    s = hub.pick_tab("stable")["stable"]
+    assert [o["name"] for o in s["offers"]] == list(LIVESTOCK) and s["herd"] == []
+    assert s["capacity"] == g.herd_capacity and s["purse"] == _purse(g)
+    assert all(o["portrait"].startswith("/assets/portraits/") for o in s["offers"])
+    horse = next(o for o in s["offers"] if o["name"] == "Horse")
+    assert horse["can"] == (_purse(g) >= horse["price"])
+
+
+def test_buying_an_animal_pays_from_the_purse_and_the_shop_tab_carries_it_as_a_pack():
+    hub, _, g = _hub("farm", "stable")
+    hub.pick_tab("shop")
+    purse = _purse(g)
+    st = hub.verb("buy_animal", True)(hub, {"species": "Donkey"})
+    donkey = g.herd[0]
+    assert st["tab"] == "stable" and st["stable"]["herd"][0]["uid"] == donkey.uid and st["stable"]["notice"]
+    assert _purse(g) == purse - donkey.price
+    assert any(p["id"] == donkey.uid for p in hub.pick_tab("shop")["shop"]["packs"])
+    with pytest.raises(ValueError):
+        hub.verb("buy_animal", True)(hub, {"species": "Dragon"})
+
+
+def test_a_full_herd_or_a_short_purse_refuses_the_animal_with_a_notice(monkeypatch):
+    hub, _, g = _hub("farm", "stable", coins=1000)
+    monkeypatch.setattr(Group, "herd_capacity", property(lambda self: 1))
+    hub.verb("buy_animal", True)(hub, {"species": "Donkey"})
+    st = hub.verb("buy_animal", True)(hub, {"species": "Ox"})
+    assert len(g.herd) == 1 and st["stable"]["full"] and "herd" in st["stable"]["notice"]
+    assert all(o["why"] == "the herd is full" and not o["can"] for o in st["stable"]["offers"])
+    hub, _, g = _hub("farm", "stable", coins=10)
+    st = hub.verb("buy_animal", True)(hub, {"species": "Horse"})
+    assert not g.herd and "costs" in st["stable"]["notice"]
+
+
+def test_tack_is_fitted_once_and_an_animal_sells_back_to_the_leader_only_unloaded():
+    hub, _, g = _hub("farm", "stable")
+    uid = hub.verb("buy_animal", True)(hub, {"species": "Donkey"})["stable"]["herd"][0]["uid"]
+    a = g.herd[0]
+    purse = _purse(g)
+    st = hub.verb("fit", True)(hub, {"uid": uid, "tack": PACK_SADDLE})
+    kept = st["stable"]["herd"][0]
+    assert a.tack == PACK_SADDLE and kept["fits"] == [] and kept["job"] == "carries cargo"
+    assert _purse(g) == purse - items.get(PACK_SADDLE).price
+    with pytest.raises(ValueError):
+        hub.verb("fit", True)(hub, {"uid": uid, "tack": HARNESS})
+    a.give_to_pack("Potato", 1)
+    st = hub.verb("sell_animal", True)(hub, {"uid": uid})
+    assert g.herd == [a] and st["stable"]["herd"][0]["loaded"] and "unload" in st["stable"]["notice"]
+    a.remove_named("Potato", 1)
+    before = g.leader.money
+    st = hub.verb("sell_animal", True)(hub, {"uid": uid})
+    assert not g.herd and g.leader.money == before + economy.SELL_FACTOR * a.price
+    assert g.leader.count_of(PACK_SADDLE) == 1
+    with pytest.raises(ValueError):
+        hub.verb("sell_animal", True)(hub, {"uid": uid})
+
+
+def test_the_wagon_yard_sells_a_wagon_and_buys_back_only_an_empty_one():
+    hub, _, g = _hub("carpenter", "carpenter")
+    assert next(t for t in hub.state()["tabs"] if t["key"] == "wagons")["live"]
+    w = hub.pick_tab("wagons")["wagons"]
+    assert [o["name"] for o in w["offers"]] == list(VEHICLES) and w["wagons"] == []
+    purse = _purse(g)
+    st = hub.verb("buy_wagon", True)(hub, {"kind": "Cart"})
+    cart = g.wagons[0]
+    assert st["tab"] == "wagons" and st["wagons"]["wagons"][0]["uid"] == cart.uid
+    assert _purse(g) == purse - cart.price and not st["wagons"]["wagons"][0]["pulled"]
+    cart.give_to_pack("Potato", 1)
+    st = hub.verb("sell_wagon", True)(hub, {"uid": cart.uid})
+    assert g.wagons == [cart] and "unload" in st["wagons"]["notice"]
+    cart.remove_named("Potato", 1)
+    st = hub.verb("sell_wagon", True)(hub, {"uid": cart.uid})
+    assert not g.wagons and st["wagons"]["wagons"] == []
+    with pytest.raises(ValueError):
+        hub.verb("buy_wagon", True)(hub, {"kind": "Chariot"})
 
 
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
