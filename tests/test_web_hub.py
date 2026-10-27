@@ -720,6 +720,57 @@ def test_a_band_studying_at_the_tavern_enters_it_from_the_map():
     assert game.session.state()["tab"] == "recruits" and game.session.tavern.s._studying()
 
 
+def _cells(monkeypatch, coins=1000):
+    monkeypatch.setattr(recruit, "capacity", lambda guild, u: 3)
+    hub, guild, g = _hub("prison", "prison", coins)
+    guild.leader = g.leader
+    for u in g.members:
+        u.languages = sorted({*u.languages, *(lang for c in hub.tavern.s.candidates for lang in c.languages)})
+    return hub, guild, g
+
+
+def test_the_prison_opens_on_its_cells_with_each_prisoners_bail(monkeypatch):
+    hub, guild, _ = _cells(monkeypatch)
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["prison"] and st["tab"] == "prison" and st["tabs"][0]["live"]
+    assert st["keeper"]["name"] == world.vendor("prison", "prison").name
+    t = st["tavern"]
+    assert t["prison"] and [c["uid"] for c in t["strangers"]] == [c.uid for c in guild.prison_pool]
+    cand = guild.prison_pool[0]
+    bail = recruit.bail_cost(cand)
+    assert t["strangers"][0]["note"].endswith(f"bail ${bail:,}")
+    assert t["dossier"]["bail"] == {"cost": f"${bail:,}", "held": f"${2000:,}", "ok": True}
+    assert t["dossier"]["button"]["label"] == f"Pay the ${bail:,} bail and convince"
+    st = hub.verb("candidate", True)(hub, {"uid": guild.prison_pool[1].uid})
+    assert st["tab"] == "prison" and st["tavern"]["dossier"]["uid"] == guild.prison_pool[1].uid
+
+
+def test_bailing_a_prisoner_pays_before_the_pitch_and_a_won_pitch_signs_them(saves, monkeypatch):
+    hub, guild, g = _cells(monkeypatch)
+    hub.map.world_id = "w1"
+    cand = guild.prison_pool[0]
+    bail = recruit.bail_cost(cand)
+    _roll(monkeypatch, 20, 1)
+    t = hub.verb("convince", True)(hub, {})["tavern"]
+    assert cand in g.members and cand not in guild.prison_pool and t["signed"]["name"] == cand.name
+    assert sum(u.money for u in g.members if u is not cand) == 2000 - bail
+    assert "obj_recruit_prison" in guild.objectives_done
+    assert len(persist.load_game("w1").roster) == 3
+
+
+def test_a_lost_pitch_keeps_the_bail_and_a_short_purse_cannot_pay_it(monkeypatch):
+    hub, guild, g = _cells(monkeypatch)
+    cand = guild.prison_pool[0]
+    bail = recruit.bail_cost(cand)
+    _roll(monkeypatch, 1, 20)
+    t = hub.verb("convince", True)(hub, {})["tavern"]
+    assert cand not in g.members and "walks away free" in t["notice"]
+    assert sum(u.money for u in g.members) == 2000 - bail
+    hub, guild, g = _cells(monkeypatch, coins=0)
+    d = hub.state()["tavern"]["dossier"]
+    assert not d["bail"]["ok"] and not d["button"]["on"] and d["button"]["label"].startswith("Cannot afford")
+
+
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
     guild = _guild("city")
     game = Game(MapSession(guild))

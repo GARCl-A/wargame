@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs and the initiation are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation and the prison's cells are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -100,7 +100,7 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs and t
 - **`gartok/web/stable_tab.py`** + `screens/hub/stables.js` are the Farm's STABLES and the Carpenter's WAGONS
   (9f), on pygame's own `StablesScreen` / `WagonYardScreen` rules, borrowed as `medic_tab` borrows the Medic's.
 - **`gartok/web/tavern_tab.py`** + `screens/hub/tavern.js` are the Tavern's RECRUIT, STUDY and PERFORM (9g), on pygame's
-  own `TavernaScreen` held headless.
+  own `TavernaScreen` held headless; the City Prison's THE CELLS (9i) is the same tab on `PrisonScreen`.
 - **`gartok/web/initiation_tab.py`** + `screens/hub/initiation.js` are a sanctuary's INITIATION (9h), on pygame's own
   `InitiationScreen` held headless.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
@@ -511,6 +511,21 @@ As built:
 - Tests: `tests/test_web_hub.py` (the terms and the pick, a school with no standing, the Faith's symbol, a novice split
   off, a band that boards whole). Looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
 - **Next (9i):** the prison's cells (`PrisonScreen` is the Tavern's RECRUIT with a bail, so it can reuse `TavernTab`).
+
+**9i. The prison's cells — done (2026-10-27).** As built:
+
+- **The server:** the order `prison` opens a hub with one tab, THE CELLS (`hub_session.HUBS["prison"]`), and the
+  keeper is the warden. `TavernTab(prison=True)` holds pygame's `PrisonScreen` headless, so the weekly pool, the bail
+  (`recruit.bail_cost`, paid richest first before the roll), the +2 it buys and the bar after a lost pitch are its; the
+  tavern's verbs (`candidate`, `recruiter`, `convince`) serve it as they are.
+- **The layout** is the Tavern's RECRUIT: each prisoner's bail beside their tongues, a bail line in the dossier (gold
+  when the band can pay it, red when not), the button "Pay the $N bail and convince" or "Cannot afford", and the cells'
+  own rule in the footer.
+- Tests: `tests/test_web_hub.py` (the cells and the warden, each bail, a bail paid and the prisoner signed with the
+  objective, a lost pitch that keeps the coin, a purse too short). Looked at in headless Edge at 1920x1080 on a copy of
+  the day-70 save.
+- **Next (9j):** the bank (`bank_screen.py`, the City's VISIT THE BANK), the first of the holdings: the strongbox, then
+  the house and the Claim.
 
 ### 10. The swap — todo
 

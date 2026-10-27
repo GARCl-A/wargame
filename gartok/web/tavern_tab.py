@@ -1,6 +1,7 @@
 """The Tavern's three tabs in the browser: RECRUIT (the strangers drinking here on leather, the picked
 one's dossier and who makes the pitch on paper), STUDY (the rooms to rent and each member's study
-target) and PERFORM (the stage: the show's length and who plays).
+target) and PERFORM (the stage: the show's length and who plays); the City Prison's cells are RECRUIT
+with a bail paid before the pitch (`PrisonScreen`).
 
 The rules are pygame's own `TavernaScreen`, held headless as `jobs_tab` holds a board: the pool, the
 pitch, the bars, the study targets and the show stay one source until step 10 of
@@ -10,6 +11,8 @@ pitch, the bars, the study targets and the show stay one source until step 10 of
 
 from .. import economy, item_icon, magic, recruit
 from ..archetypes import unit_archetypes
+from ..constants import fmt_money
+from ..prison_screen import PrisonScreen
 from ..taverna_draw import _ARCHETYPE_TONE
 from ..taverna_screen import TavernaScreen
 from .shop_tab import _portrait
@@ -28,8 +31,12 @@ def _kind(u):
 
 
 class TavernTab:
-    def __init__(self, guild, group, node):
-        self.s = TavernaScreen(None, guild, list(group.members), node, lambda: None, group=group, hide_tabs=True)
+    def __init__(self, guild, group, node, prison=False):
+        if prison:
+            self.s = PrisonScreen(None, guild, list(group.members), node, lambda: None, group=group)
+        else:
+            self.s = TavernaScreen(None, guild, list(group.members), node, lambda: None, group=group, hide_tabs=True)
+        self.prison = prison
         self.guild, self.group, self.node = guild, group, node
         self.report = []                    # what the last show said
 
@@ -58,8 +65,10 @@ class TavernTab:
     def _stranger(self, i, c):
         s = self.s
         text, tone = s._cand_status(c)
+        bail = s._bail(c)
         return {"uid": c.uid, "name": c.name, "portrait": _portrait(c),
-                "sub": f"{_kind(c)} · resists CHA {c.mod_charisma:+}", "note": f"Speaks {', '.join(c.languages)}",
+                "sub": f"{_kind(c)} · resists CHA {c.mod_charisma:+}",
+                "note": f"Speaks {', '.join(c.languages)}" + (f" · bail {fmt_money(bail)}" if bail else ""),
                 "chips": _chips(c, 3), "status": {"text": text, "tone": tone}, "picked": i == s.sel}
 
     def _last(self, c):
@@ -80,7 +89,15 @@ class TavernTab:
                 "chips": _chips(c), "facts": [("HP", str(c.hp_max)), ("AC", str(c.ac)), ("Speed", f"{c.speed} sq"),
                                               ("Attack", c.weapon_name or "Unarmed")],
                 "kit": [{"name": n, "glyph": item_icon.glyph(n)} for n in kit],
-                "ability": {"name": c.ability.name, "effect": c.ability.effect}, "last": self._last(c)}
+                "ability": {"name": c.ability.name, "effect": c.ability.effect}, "last": self._last(c),
+                "bail": self._bail(c)}
+
+    def _bail(self, c):
+        cost = self.s._bail(c)
+        if not cost:
+            return None
+        held = self.s._wealth()
+        return {"cost": fmt_money(cost), "held": fmt_money(held), "ok": held >= cost}
 
     def _pitch(self, c):
         s, who = self.s, self.s.selected_recruiter
@@ -94,8 +111,11 @@ class TavernTab:
                              "signed": signed is not None and signed["unit"] is m})
         can = (who is not None and recruit.can_pitch(who, c) and not s._barred(c, who)
                and recruit.slots_free(self.guild, who) > 0)
-        label = "Convince to join the guild"
-        if who is not None and not can:
+        bail = s._bail(c)
+        label = f"Pay the {fmt_money(bail)} bail and convince" if bail else "Convince to join the guild"
+        if bail and can and s._wealth() < bail:
+            can, label = False, f"Cannot afford the {fmt_money(bail)} bail"
+        elif who is not None and not can:
             label = f"{who.name} cannot pitch: {s._pitch_condition(c, who)[0]}"
         hint = None
         if not s._eligible(c):
@@ -117,7 +137,8 @@ class TavernTab:
     def _recruits(self):
         s = self.s
         out = {"strangers": [self._stranger(i, c) for i, c in enumerate(s.candidates)],
-               "empty": s.EMPTY_LIST.replace("\n", " "), "signed": self._signed(), "dossier": None}
+               "empty": s.EMPTY_LIST.replace("\n", " "), "signed": self._signed(), "dossier": None,
+               "prison": self.prison}
         if s.sel is not None and s.sel < len(s.candidates):
             c = s.candidates[s.sel]
             out["dossier"] = {**self._dossier(c), **self._pitch(c)}

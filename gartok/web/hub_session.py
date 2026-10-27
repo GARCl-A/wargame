@@ -2,9 +2,9 @@
 to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
 (`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`), a workbench its
 recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`), the Tavern its
-recruits, study rooms and stage (`tavern_tab`), a sanctuary its initiation (`initiation_tab`); a tab the
-browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of
-step 9 of `docs/plans/web_frontend.md` lands.
+recruits, study rooms and stage (`tavern_tab`), the City Prison its cells (`tavern_tab` with a bail), a
+sanctuary its initiation (`initiation_tab`); a tab the browser does not draw yet says so inside the frame,
+and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md` lands.
 
 The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
 """
@@ -33,10 +33,11 @@ HUBS = {
     "tanner": (("shop", "Shop"), ("jobs", "Jobs")),
     "apothecary": (("shop", "Shop"), ("medic", "Medic"), ("craft", "Craft"), ("jobs", "Jobs")),
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
+    "prison": (("prison", "The Cells"),),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", *HUBS}
 # the tabs the browser draws so far
-LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", *CRAFT_TABS, *TAVERN_TABS}
+LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
 WHAT = {"tavern": "the tavern", "study": "the study desk"}
 
@@ -201,10 +202,11 @@ class HubSession(Session):
 
     @property
     def tavern(self):
-        if not any(k in TAVERN_TABS for k, _ in self.tabs):
+        prison = any(k == "prison" for k, _ in self.tabs)
+        if not prison and not any(k in TAVERN_TABS for k, _ in self.tabs):
             raise ValueError("no tavern here")
         if self._tavern is None:
-            self._tavern = TavernTab(self.guild, self.group, self.node)
+            self._tavern = TavernTab(self.guild, self.group, self.node, prison=prison)
         return self._tavern
 
     def on_tavern(self, key, verb, *args):
@@ -212,7 +214,7 @@ class HubSession(Session):
         if self._shop is not None:
             self._shop.m.sync_group()       # a recruit shops beside the band
         self.map._save()
-        self.tab = key
+        self.tab = "prison" if self.tavern.prison else key
         return self.state()
 
     def perform(self):
@@ -395,6 +397,8 @@ class HubSession(Session):
             out["wagons"] = self.yard.state()
         elif self.tab in TAVERN_TABS:
             out["tavern"] = self.tavern.state(self.tab)
+        elif self.tab == "prison":
+            out["tavern"] = self.tavern.state("recruits")
         elif self.tab == "initiation":
             out["initiation"] = self.rite.state()
         else:

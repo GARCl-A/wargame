@@ -1,7 +1,8 @@
 // The Tavern's three tabs. RECRUIT: the strangers drinking here on leather (click to read one), the picked
 // one's dossier on paper with who makes the pitch and the button that rolls it. STUDY: the rooms on leather,
 // each member's study target on paper (a scroll or dictionary the band carries). PERFORM: who plays on leather
-// (click to seat or stand down), the show's length and its tips on paper. Every verb answers the whole hub.
+// (click to seat or stand down), the show's length and its tips on paper. The City Prison's cells are RECRUIT
+// with a bail. Every verb answers the whole hub.
 "use strict";
 
 const Tavern = (() => {
@@ -46,6 +47,7 @@ const Tavern = (() => {
           <div class="dfacts">${facts}<span class="kit">${kit}</span></div>
           <div class="chips">${d.chips.map(c => `<span class="tag ${c.tone}" title="${esc(c.tip)}">${esc(c.label)}</span>`).join("")}</div>
           <p class="ability"><b>${esc(d.ability.name)}</b> ${esc(d.ability.effect)}</p></div></div>
+      ${d.bail ? `<p class="lastpitch ${d.bail.ok ? "money" : "bad"}">Bail <b>${esc(d.bail.cost)}</b> · the band holds ${esc(d.bail.held)}</p>` : ""}
       ${last(d.last)}
       <div class="sec dark"><span class="lbl">Who makes the pitch</span></div>
       <div class="pitchers">${pitchers}</div>
@@ -57,12 +59,15 @@ const Tavern = (() => {
     const list = R.strangers.length ? R.strangers.map(stranger).join("") : `<p class="hint">${esc(R.empty)}</p>`;
     const body = R.dossier ? dossier(R.dossier)
       : `<p class="aside">${R.signed ? "" : "Pick a stranger on the left to read their dossier and make a pitch."}</p>`;
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">Strangers in the tavern</div>
-        <p class="hint">Charisma against Charisma, in a tongue both speak; a tie goes to the stranger.</p>
+    const foot = R.prison
+      ? "The bail is paid before the pitch and buys +2 on it. Turned down, the prisoner walks free with the coin, and the one who pitched may not try them again until the cells turn over."
+      : "Opposite alignment docks the pitch a point a step, and so does every member past the second. Turned down, the one who pitched may not try that stranger again until the crowd changes.";
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${R.prison ? "Prisoners in the cells" : "Strangers in the tavern"}</div>
+        <p class="hint">Charisma against Charisma, in a tongue both speak; a tie goes to the ${R.prison ? "prisoner" : "stranger"}.</p>
         <div class="crew">${list}</div></div>
       <div class="paper ledger"><div class="kicker">Dossier <em>who they are and who could talk them into the guild</em></div>
         ${R.signed ? signed(R.signed) : ""}${body}
-        <div class="ledgerfoot"><p>Opposite alignment docks the pitch a point a step, and so does every member past the second. Turned down, the one who pitched may not try that stranger again until the crowd changes.</p></div></div>`;
+        <div class="ledgerfoot"><p>${foot}</p></div></div>`;
   }
 
   function student(m) {
@@ -126,7 +131,7 @@ const Tavern = (() => {
   function draw(T, tab) {
     cards(T.cards);
     if (tab !== "rooms") picking = null;
-    if (tab === "recruits") recruits(T);
+    if (tab === "recruits" || tab === "prison") recruits(T);
     else if (tab === "rooms") rooms(T);
     else perform(T);
     toast(T.notice);

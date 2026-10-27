@@ -385,6 +385,7 @@
 .lastpitch{margin-top:12px;font:16px/1.3 "EB Garamond",serif;color:#3a2410}
 .lastpitch.good b{color:#2f5a22}
 .lastpitch.bad b{color:#7a2318}
+.lastpitch.money b{color:#7a5a12}
 .sec.dark{margin-top:18px}
 .sec.dark .lbl{color:#6b5233}
 .pitchers{margin-top:8px;max-height:310px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(90,60,30,.45) transparent}

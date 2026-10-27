@@ -19,10 +19,10 @@ class PrisonScreen(TavernaScreen):
     PITCH_BONUS = (BAIL_BONUS,)
     SEEN_KEY = "prison"
 
-    def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
+    def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None, group=None):
         pool = list(candidates) if candidates is not None else recruit.refresh_prison_pool(guild)
         super().__init__(fonts, guild, party, node, on_done, candidates=pool,
-                         title=title or "CITY PRISON", hide_tabs=True)
+                         title=title or "CITY PRISON", group=group, hide_tabs=True)
 
     @property
     def vendor(self):
