@@ -182,12 +182,10 @@ class TavernaScreen(TavernaDrawMixin, Screen):
                 for key, rect, arg in self.modal_buttons:
                     if rect.collidepoint(px):
                         if key == "set_target":
-                            magic.begin_study(self.study_modal_member, arg["id"], self._study_holders())
-                            self.notice = f"{self.study_modal_member.name} begins studying {arg['name']}."
+                            self._set_target(self.study_modal_member, arg)
                             self.study_modal_member = None
                         elif key == "clear_target":
-                            magic.end_study(self.study_modal_member)
-                            self.notice = f"{self.study_modal_member.name} stopped studying."
+                            self._stop_study(self.study_modal_member)
                             self.study_modal_member = None
                         elif key == "cancel":
                             self.study_modal_member = None
@@ -215,14 +213,9 @@ class TavernaScreen(TavernaDrawMixin, Screen):
                     elif key == "perform_go":
                         self._perform()
                     elif key == "rent_study" and self.group is not None:
-                        if not any(m.study_target for m in self.party):
-                            self.notice = "Set a study target for someone before renting rooms."
-                        else:
-                            self.group.order = orders.garrison("study")
-                            self.notice = "Party rented quiet rooms and begins studying daily."
+                        self._rent_study()
                     elif key == "cancel_study" and self.group is not None:
-                        self.group.order = None
-                        self.notice = "Study order cancelled. Party is now idle."
+                        self._cancel_study()
                     elif key == "convince" and self.selected_recruiter is not None:
                         self._pitch(self.selected_recruiter)
                     elif key.startswith("choose_target_"):
@@ -230,28 +223,54 @@ class TavernaScreen(TavernaDrawMixin, Screen):
                         self.study_modal_member = self.party[idx]
                     elif key.startswith("stop_study_"):
                         idx = int(key.split("_")[-1])
-                        m = self.party[idx]
-                        magic.end_study(m)
-                        self.notice = f"{m.name} stopped studying."
+                        self._stop_study(self.party[idx])
                     return
 
             # Candidate card click in recruit tab
             if self.tab == "recruits":
                 for rect, i in self.cand_cards:
                     if rect.collidepoint(px):
-                        self.sel = i
-                        self.signed = None
-                        self.notice = None
-                        cand = self.candidates[i]
-                        best = self._best(cand)
-                        if best is not None and not (self.selected_recruiter and self.selected_recruiter in self._eligible(cand)):
-                            self.selected_recruiter = best[0]
+                        self._pick_candidate(i)
                         return
 
                 for rect, member in self.party_cards:
                     if rect.collidepoint(px):
                         self.selected_recruiter = member
                         return
+
+    def _pick_candidate(self, i):
+        """Read candidate `i`'s dossier; the one pitching moves to the strongest pitch still open
+        unless the one picked can still pitch them."""
+        self.sel = i
+        self.signed = None
+        self.notice = None
+        cand = self.candidates[i]
+        best = self._best(cand)
+        if best is not None and not (self.selected_recruiter and self.selected_recruiter in self._eligible(cand)):
+            self.selected_recruiter = best[0]
+
+    def _studying(self):
+        o = self.group.order if self.group is not None else None
+        return o is not None and o.kind == "garrison" and o.job == "study"
+
+    def _rent_study(self):
+        if not any(m.study_target for m in self.party):
+            self.notice = "Set a study target for someone before renting rooms."
+            return
+        self.group.order = orders.garrison("study")
+        self.notice = "Party rented quiet rooms and begins studying daily."
+
+    def _cancel_study(self):
+        self.group.order = None
+        self.notice = "Study order cancelled. Party is now idle."
+
+    def _set_target(self, member, opt):
+        magic.begin_study(member, opt["id"], self._study_holders())
+        self.notice = f"{member.name} begins studying {opt['name']}."
+
+    def _stop_study(self, member):
+        magic.end_study(member)
+        self.notice = f"{member.name} stopped studying."
 
     # ------------------------------------------------------------------ #
     def _performers(self):
@@ -262,9 +281,10 @@ class TavernaScreen(TavernaDrawMixin, Screen):
         crew = self._performers()
         if not crew:
             self.notice = "Pick someone with a Musical Instrument to play."
-            return
+            return []
         events, _ = self.guild.perform_shift(crew, self.perform_hours)
         self.notice = "  ".join(events)
+        return events
 
     # ------------------------------------------------------------------ #
     @staticmethod

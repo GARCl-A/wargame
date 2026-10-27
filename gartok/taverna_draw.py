@@ -271,8 +271,7 @@ class TavernaDrawMixin:
         if self.group is None:
             text(screen, F["hub_body"], "The party is not staying here", (btn.right, btn.y + T.S * 2),
                  T.TX_FAINT, right=True)
-        elif (self.group.order is not None and self.group.order.kind == "garrison"
-              and self.group.order.job == "study"):
+        elif self._studying():
             text(screen, F["hub_bodyb"], "Studying now", (btn.x - T.S * 2, btn.y + T.S * 2), T.GREEN, right=True)
             self.add_button(screen, btn, "cancel_study", "Cancel the study order")
         else:

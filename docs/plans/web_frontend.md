@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard and the Tavern's tabs are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -99,6 +99,8 @@ boards, the workbenches, the stables and the wagon yard are in; the other tabs c
   the Apothecary's craft, the Library's writing desk), on pygame's own `CraftingScreen` held headless.
 - **`gartok/web/stable_tab.py`** + `screens/hub/stables.js` are the Farm's STABLES and the Carpenter's WAGONS
   (9f), on pygame's own `StablesScreen` / `WagonYardScreen` rules, borrowed as `medic_tab` borrows the Medic's.
+- **`gartok/web/tavern_tab.py`** + `screens/hub/tavern.js` are the Tavern's RECRUIT, STUDY and PERFORM (9g), on pygame's
+  own `TavernaScreen` held headless.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -470,6 +472,30 @@ As built:
   and a short purse, tack and a sale back only unloaded, the wagon yard's buy and sell). Both tabs were looked at in
   headless Edge at 1920x1080; the clicks were not driven, the verbs are tested through the session.
 - **Next (9g):** the tavern's tabs (Recruit, Study, Perform), then initiation.
+
+**9g. The Tavern — done (2026-10-27).** As built:
+
+- **The server** (`TavernTab`) holds pygame's `TavernaScreen` headless, one object for the three tabs as pygame's hub
+  shares one screen: the pool, the pitch and its bars, the study targets and the show are its. Picking a stranger, renting
+  and cancelling the rooms, setting and stopping a study target moved out of `TavernaScreen.handle_event` into
+  `_pick_candidate`, `_rent_study`, `_cancel_study`, `_set_target`, `_stop_study`, which pygame calls too; `_perform`
+  answers the show's lines. The map's ENTER THE TAVERN (order `recruit`) and the garrisoned band's `visit_tavern` open it
+  on RECRUIT, beside the Food & Drink shop.
+- **The layout** is 9b's. RECRUIT: the strangers on leather (status, archetype chips with their tooltips); on paper the
+  picked one's dossier (HP, AC, speed, attack, kit glyphs, the racial ability), the last pitch's two rolls with every
+  modifier, who makes the pitch (each one's odds or why not) and the button. STUDY: the rent on leather with Rent or
+  Cancel; on paper each member's target and progress, Set target opening the scrolls and dictionaries the band carries in
+  place (pygame's modal). PERFORM: the players on leather (click to seat; who has no instrument is dimmed); on paper the
+  rules, the show's length as a segmented row, Play and the last show's lines.
+- **The clock:** a show passes its hours here (`Guild.perform_shift`) and the tab stays up with what it paid; a death
+  that empties the band lands on the map. Renting the rooms puts the band on its garrison post and stays.
+- Tests: `tests/test_web_hub.py` (the tabs and the dossier, a pitch won and saved, a pitch lost and the bar, the study
+  target and the rooms, a show and its seats, entering from a study post). The three tabs were looked at in headless
+  Edge at 1920x1080 on a copy of the day-70 save.
+- Left as is: `test_buying_into_a_pack_pays_from_the_purse_into_the_till...` fails about one run in five, before this
+  step too (a random ware); it is not the tavern's.
+- **Next (9h):** initiation (a sanctuary's INITIATION tab), then the prison's cells (`PrisonScreen` is the Tavern's
+  RECRUIT with a bail, so it can reuse `TavernTab`).
 
 ### 10. The swap — todo
 

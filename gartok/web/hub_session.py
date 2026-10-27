@@ -1,7 +1,8 @@
 """A node's screens behind one row of tabs, in the browser: the keeper's strip, the tabs, the way back
 to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
 (`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`), a workbench its
-recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`); a tab the
+recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`), the Tavern its
+recruits, study rooms and stage (`tavern_tab`); a tab the
 browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of
 step 9 of `docs/plans/web_frontend.md` lands.
 
@@ -21,6 +22,8 @@ from .medic_tab import MedicTab
 from .session import Session, asset_url
 from .shop_tab import ShopTab
 from .stable_tab import StableTab, WagonTab
+from .tavern_tab import TABS as TAVERN_TABS
+from .tavern_tab import TavernTab
 from .work_tab import GatherTab, WorkTab
 
 # order kind -> its hub's tabs, where it is not the node's own list (`_node_tabs`)
@@ -30,12 +33,11 @@ HUBS = {
     "apothecary": (("shop", "Shop"), ("medic", "Medic"), ("craft", "Craft"), ("jobs", "Jobs")),
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
 }
-HUB_KINDS = {"market", "carpenter", "stable", "shrine", *HUBS}
+HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", *HUBS}
 # the tabs the browser draws so far
-LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", *CRAFT_TABS}
+LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
-WHAT = {"recruits": "the recruits", "rooms": "the study rooms", "perform": "the stage", "tavern": "the tavern",
-        "jobs": "the jobs board", "medic": "the Medic", "study": "the study desk",
+WHAT = {"tavern": "the tavern", "jobs": "the jobs board", "medic": "the Medic", "study": "the study desk",
         "initiation": "the initiation", "work": "the paid shifts", "gather": "the gathering"}
 
 
@@ -115,6 +117,16 @@ class HubSession(Session):
         "sell_animal": lambda s, b: s.on_yard("stable", StableTab.sell, b["uid"]),
         "buy_wagon": lambda s, b: s.on_yard("wagons", WagonTab.buy, b["kind"]),
         "sell_wagon": lambda s, b: s.on_yard("wagons", WagonTab.sell, b["uid"]),
+        "candidate": lambda s, b: s.on_tavern("recruits", TavernTab.candidate, b["uid"]),
+        "recruiter": lambda s, b: s.on_tavern("recruits", TavernTab.recruiter, b["uid"]),
+        "convince": lambda s, b: s.on_tavern("recruits", TavernTab.convince),
+        "study_target": lambda s, b: s.on_tavern("rooms", TavernTab.set_target, b["uid"], b["id"]),
+        "stop_study": lambda s, b: s.on_tavern("rooms", TavernTab.stop_study, b["uid"]),
+        "rent_study": lambda s, b: s.on_tavern("rooms", TavernTab.rent),
+        "cancel_study": lambda s, b: s.on_tavern("rooms", TavernTab.cancel),
+        "show_hours": lambda s, b: s.on_tavern("perform", TavernTab.hours, int(b["hours"])),
+        "seat": lambda s, b: s.on_tavern("perform", TavernTab.seat, b["uid"]),
+        "perform": lambda s, b: s.perform(),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -126,7 +138,7 @@ class HubSession(Session):
         self.order = order
         self.node = world.node(group.node)
         self.tabs = tabs_for(order.kind, self.node)
-        first = "shop" if order.kind in ("market", "stable") else {"forge": "craft"}.get(order.kind, order.kind)
+        first = "shop" if order.kind in ("market", "stable") else {"forge": "craft", "recruit": "recruits"}.get(order.kind, order.kind)
         self.tab = first if any(k == first for k, _ in self.tabs) else self.tabs[0][0]
         self._shop = None
         self._work = None
@@ -136,6 +148,7 @@ class HubSession(Session):
         self._craft = None
         self._stable = None
         self._wagons = None
+        self._tavern = None
 
     @property
     def shop(self):
@@ -181,6 +194,34 @@ class HubSession(Session):
         if self._shop is not None:
             self._shop.m.sync_group()       # the animals and wagons shop as packs
         self.tab = key
+        return self.state()
+
+    @property
+    def tavern(self):
+        if not any(k in TAVERN_TABS for k, _ in self.tabs):
+            raise ValueError("no tavern here")
+        if self._tavern is None:
+            self._tavern = TavernTab(self.guild, self.group, self.node)
+        return self._tavern
+
+    def on_tavern(self, key, verb, *args):
+        verb(self.tavern, *args)
+        if self._shop is not None:
+            self._shop.m.sync_group()       # a recruit shops beside the band
+        self.map._save()
+        self.tab = key
+        return self.state()
+
+    def perform(self):
+        """A show on the stage: the clock passes its hours here, as pygame's does, and the tab stays up
+        with what the crowd tipped; a death that empties the band lands on the map."""
+        self.tavern.perform()
+        m = self.map
+        if m.wiped or not self.group.members:
+            m.game.open(m)
+            return m._after_order()
+        m._save()
+        self.tab = "perform"
         return self.state()
 
     @property
@@ -326,6 +367,8 @@ class HubSession(Session):
             out["stable"] = self.stables.state()
         elif self.tab == "wagons":
             out["wagons"] = self.yard.state()
+        elif self.tab in TAVERN_TABS:
+            out["tavern"] = self.tavern.state(self.tab)
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

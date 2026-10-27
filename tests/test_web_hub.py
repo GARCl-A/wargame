@@ -8,7 +8,18 @@ import urllib.request
 
 import pytest
 
-from gartok import economy, gather, items, medic, orders, persist, recorder, world
+from gartok import (
+    data,
+    economy,
+    gather,
+    items,
+    medic,
+    orders,
+    persist,
+    recorder,
+    recruit,
+    world,
+)
 from gartok.animals import HARNESS, PACK_SADDLE
 from gartok.data import LIVESTOCK
 from gartok.group import Group
@@ -527,6 +538,123 @@ def test_the_wagon_yard_sells_a_wagon_and_buys_back_only_an_empty_one():
     assert not g.wagons and st["wagons"]["wagons"] == []
     with pytest.raises(ValueError):
         hub.verb("buy_wagon", True)(hub, {"kind": "Chariot"})
+
+
+def _tavern(coins=200):
+    hub, guild, g = _hub("tavern", "recruit", coins)
+    guild.leader = g.leader
+    pool = hub.tavern.s.candidates      # rolled on the first visit
+    for u in g.members:
+        u.languages = sorted({*u.languages, *(lang for c in pool for lang in c.languages)})
+    return hub, guild, g
+
+
+def _roll(monkeypatch, ours, theirs):
+    """Every pitch rolls `ours` against `theirs` (a Halfling's luck rerolls `ours`), with a slot to spare."""
+    rolls = [ours, theirs]
+    monkeypatch.setattr(recruit.random, "randint", lambda a, b: rolls.pop(0) if rolls else ours)
+    monkeypatch.setattr(recruit, "capacity", lambda guild, u: 3)
+
+
+def test_the_tavern_opens_on_its_recruits_with_the_strangers_and_the_picked_ones_dossier():
+    hub, guild, g = _tavern()
+    st = hub.state()
+    assert st["tab"] == "recruits" and [t["key"] for t in st["tabs"]] == ["shop", "recruits", "rooms", "perform"]
+    assert all(t["live"] for t in st["tabs"])
+    t = st["tavern"]
+    assert [c["uid"] for c in t["strangers"]] == [c.uid for c in guild.taverna_pool]
+    assert t["strangers"][0]["picked"] and t["dossier"]["uid"] == guild.taverna_pool[0].uid
+    assert {m["uid"] for m in t["dossier"]["pitchers"]} == {u.uid for u in g.members}
+    assert [c["label"] for c in t["cards"]][:3] == ["guild size", "crowd penalty", "new faces in"]
+    second = guild.taverna_pool[1]
+    t = hub.verb("candidate", True)(hub, {"uid": second.uid})["tavern"]
+    assert t["dossier"]["uid"] == second.uid and t["strangers"][1]["picked"]
+    with pytest.raises(ValueError):
+        hub.verb("candidate", True)(hub, {"uid": "nobody"})
+
+
+def test_a_pitch_won_signs_the_stranger_into_the_band_and_saves(saves, monkeypatch):
+    hub, guild, g = _tavern()
+    hub.map.world_id = "w1"
+    cand = guild.taverna_pool[0]
+    hub.verb("recruiter", True)(hub, {"uid": g.leader.uid})
+    _roll(monkeypatch, 20, 1)
+    t = hub.verb("convince", True)(hub, {})["tavern"]
+    assert cand in g.members and cand.recruited_by == g.leader.uid and cand not in guild.taverna_pool
+    assert t["signed"]["name"] == cand.name and t["signed"]["by"] == g.leader.name
+    assert cand.uid not in [c["uid"] for c in t["strangers"]]
+    assert any(p["id"] == cand.uid for p in hub.pick_tab("shop")["shop"]["packs"])
+    assert len(persist.load_game("w1").roster) == 3
+
+
+def test_a_pitch_lost_bars_that_recruiter_from_the_stranger_until_the_crowd_changes(monkeypatch):
+    hub, guild, g = _tavern()
+    cand = guild.taverna_pool[0]
+    hub.verb("recruiter", True)(hub, {"uid": g.leader.uid})
+    _roll(monkeypatch, 1, 20)
+    t = hub.verb("convince", True)(hub, {})["tavern"]
+    assert cand not in g.members and "turns" in t["notice"]
+    d = t["dossier"]
+    assert d["last"]["ok"] is False and d["last"]["ours_total"] < d["last"]["theirs_total"]
+    me = next(m for m in d["pitchers"] if m["uid"] == g.leader.uid)
+    assert me["status"]["text"] == "already tried this week" and not d["button"]["on"]
+    assert t["strangers"][0]["status"]["tone"] == "bad"
+
+
+def test_a_study_target_is_set_from_what_the_band_carries_and_the_rooms_rent_and_cancel(saves):
+    hub, _, g = _tavern()
+    u = g.members[1]
+    lang = next(lang for lang in sorted(data.LANGUAGES) if lang not in u.languages)
+    st = hub.pick_tab("rooms")["tavern"]
+    assert not st["studying"] and st["studiers"] == 0
+    st = hub.verb("rent_study", True)(hub, {})
+    assert g.order is None and "target" in st["tavern"]["notice"]
+    g.leader.give_to_pack(f"Dictionary of {lang}", 1)
+    me = next(m for m in hub.state()["tavern"]["students"] if m["uid"] == u.uid)
+    assert lang in [o["id"] for o in me["options"]]
+    st = hub.verb("study_target", True)(hub, {"uid": u.uid, "id": lang})["tavern"]
+    assert u.study_target == lang and st["studiers"] == 1 and st["today"] == st["cost"]
+    with pytest.raises(ValueError):
+        hub.verb("study_target", True)(hub, {"uid": u.uid, "id": "Nothing"})
+    st = hub.verb("rent_study", True)(hub, {})["tavern"]
+    assert g.order.kind == "garrison" and g.order.job == "study" and st["studying"]
+    st = hub.verb("cancel_study", True)(hub, {})["tavern"]
+    assert g.order is None and not st["studying"]
+    st = hub.verb("stop_study", True)(hub, {"uid": u.uid})["tavern"]
+    assert not u.study_target and st["studiers"] == 0
+
+
+def test_a_show_seats_who_carries_an_instrument_pays_the_tips_and_passes_the_clock(monkeypatch):
+    hub, guild, g = _tavern()
+    player, other = g.members
+    player.give_to_pack(economy.PERFORM_ITEM, 1)
+    if other.count_of(economy.PERFORM_ITEM):
+        other.remove_named(economy.PERFORM_ITEM, other.count_of(economy.PERFORM_ITEM))
+    st = hub.pick_tab("perform")["tavern"]
+    seat = {m["uid"]: m for m in st["players"]}
+    assert seat[player.uid]["on"] and not seat[other.uid]["has"] and st["can"]
+    with pytest.raises(ValueError):
+        hub.verb("seat", True)(hub, {"uid": other.uid})
+    st = hub.verb("show_hours", True)(hub, {"hours": 2})["tavern"]
+    assert st["hours"] == 2
+    monkeypatch.setattr(economy, "perform_pay", lambda hours, mod: 5)
+    before, then = player.money, guild.clock.seconds
+    st = hub.verb("perform", True)(hub, {})
+    assert st["tab"] == "perform" and st["tavern"]["report"] and player.money == before + 5
+    assert guild.clock.seconds > then
+    st = hub.verb("seat", True)(hub, {"uid": player.uid})["tavern"]
+    assert not st["can"] and not next(m for m in st["players"] if m["uid"] == player.uid)["on"]
+    with pytest.raises(ValueError):
+        hub.verb("show_hours", True)(hub, {"hours": 3})
+
+
+def test_a_band_studying_at_the_tavern_enters_it_from_the_map():
+    guild = _guild("tavern")
+    game = Game(MapSession(guild))
+    g = guild.groups[0]
+    g.order = orders.garrison("study")
+    assert game.session.act(g.gid, "visit_tavern") == {"screen": "hub"}
+    assert game.session.state()["tab"] == "recruits" and game.session.tavern.s._studying()
 
 
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
