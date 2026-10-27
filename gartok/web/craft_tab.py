@@ -1,7 +1,7 @@
 """A hub's workbench in the browser (the Smithy's FORGE, the Carpenter's CARPENTRY, the Apothecary's CRAFT,
-the Library's WRITE): on leather who in the band can work here and what the last stint made, on paper the
-picked crafter's recipes (what each uses, what the band lacks, the progress) and the hours to put in, with
-the group waiting or the crafter gone off alone.
+the Library's WRITE, the house's KITCHEN): on leather who in the band can work here and what the last stint
+made, on paper the picked crafter's recipes (what each uses, what the band lacks, the progress) and the hours
+to put in, with the group waiting or the crafter gone off alone.
 
 The reads and rules are pygame's own `CraftingScreen`, held headless as `jobs_tab` holds a board. The verb
 that runs the clock lives on `HubSession`, which holds the map.
@@ -18,8 +18,9 @@ from .shop_tab import _portrait
 STATIONS = {"forge": ("forge", "forge weapons and armour"),
             "carpenter": ("carpenter", "craft wooden bows, crossbows and tools"),
             "apothecary": ("apothecary", "brew potions and draughts"),
-            "library": ("scriptorium", "write dictionaries and translate texts")}
-CRAFT_TABS = {"craft", "forge", "carpenter"}
+            "library": ("scriptorium", "write dictionaries and translate texts"),
+            "kitchen": ("cooking", "cook what the pack carries")}
+CRAFT_TABS = {"craft", "forge", "carpenter", "kitchen"}
 
 
 def _function(key, node):

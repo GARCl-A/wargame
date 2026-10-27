@@ -1,23 +1,37 @@
-"""The Bank's VAULT tab in the browser: the strongbox on paper, every pack of the band beside it, the
-Bankers' services (rent the strongbox, buy the house) and the gold exchange on a coin stack.
+"""A stash tab in the browser: the Bank's VAULT (the strongbox, the Bankers' services, the gold exchange on
+a coin stack) and the City house's THE HOUSE (its stash, the tax, the oven, the debt), each on paper with
+every pack of the band beside it.
 
-The moves are pygame's own (`BankScreen` and its `StashScreen`, held headless as `shop_tab` holds a
-`MarketScreen`): a verb sets the screen's pick the way a drop would and calls the same method, so the
-chest's weight cap, the load limit on what comes out, the slots, the fee and the purse stay one source
-until step 10 of `docs/plans/web_frontend.md` moves them here.
+The moves are pygame's own (`BankScreen` / `CityPropertyScreen` and their `StashScreen`, held headless as
+`shop_tab` holds a `MarketScreen`): a verb sets the screen's pick the way a drop would and calls the same
+method, so the stash's weight cap, the load limit on what comes out, the slots, the fee and the purse stay
+one source until step 10 of `docs/plans/web_frontend.md` moves them here.
 """
 
 from .. import economy, item_icon, items, store_column
 from ..bank_screen import BankScreen
+from ..city_property_screen import CityPropertyScreen
 from ..ui.inspector_panel import role_for
 from .shop_tab import SLOTS, _portrait, _tip
 
-CHEST = BankScreen.OWNER
+# what each stash says of itself: where it is held, and what stands in for it before the guild has one
+COPY = {
+    BankScreen.OWNER: {"title": "The strongbox", "where": "held in the City", "closed": "No strongbox yet",
+                       "closed_line": "The guild keeps nothing of its own until it rents a chest from the Bankers. Rent "
+                                      "one below: what goes in stays in the City, safe from the road, and any band that "
+                                      "visits the bank can take it out."},
+    CityPropertyScreen.OWNER: {"title": "The house", "where": "the guild's house in the City", "closed": "No house yet",
+                               "closed_line": "The Bankers sell the guild a house in the City once they trust it. It "
+                                              "stores far more than the strongbox, takes an oven and a garage, and owes "
+                                              "the Bankers a tax every cycle."},
+}
 
 
 class VaultTab:
-    def __init__(self, guild, group, node):
-        self.s = BankScreen(None, guild, list(group.members), lambda: None)
+    def __init__(self, guild, group, node, screen=BankScreen):
+        self.s = screen(None, guild, list(group.members), lambda: None)
+        self.chest = self.s.OWNER
+        self.exchanges = isinstance(self.s, BankScreen)
         self.guild, self.group, self.node = guild, group, node
 
     # ------------------------------------------------------------------ #
@@ -30,18 +44,23 @@ class VaultTab:
         return {
             "cards": s.hub_cards(),
             "purse": s.purse,
-            "chest": {"open": s._open(), "load": round(stash.load, 2), "capacity": stash.capacity,
-                      "rows": [self._row(CHEST, i, items.stack_name(e), e[1]) for i, e in enumerate(stash.items)]},
+            "chest": {"owner": self.chest, "label": s.LABEL, **COPY[self.chest], "open": s._open(),
+                      "load": round(stash.load, 2), "capacity": stash.capacity,
+                      "rows": [self._row(self.chest, i, items.stack_name(e), e[1]) for i, e in enumerate(stash.items)]},
             "services": [{"key": k, "label": label, "sub": sub, "on": on} for k, label, sub, on in s._services()],
             "packs": [self._store(o) if store_column.is_store(o) else self._member(o) for o in (*s.party, *s.stores)],
-            "gold": {"price": economy.gold_price(1), "payout": economy.gold_payout(1), "fee": economy.GOLD_FEE},
+            "gold": {"price": economy.gold_price(1), "payout": economy.gold_payout(1), "fee": economy.GOLD_FEE}
+                    if self.exchanges else None,
+            "distribute": s.CAN_DISTRIBUTE,
             "notice": notice,
         }
 
     def _row(self, owner, loc, name, qty):
-        holder = self.s._holder_of(owner)
         row = {"loc": loc, "name": name, "qty": qty, "glyph": item_icon.glyph(name), "kg": items.item_weight(name),
                "coin": items.is_coin(name), "tip": _tip(name)}
+        if not self.exchanges:
+            return row
+        holder = self.s._holder_of(owner)
         if name == items.COIN_ITEM:
             row["mint"] = economy.max_gold_buyable(holder)
         elif name == items.GOLD_ITEM:
@@ -78,8 +97,8 @@ class VaultTab:
     # what the person does                                                #
     # ------------------------------------------------------------------ #
     def _owner(self, oid):
-        if oid == CHEST:
-            return CHEST
+        if oid == self.chest:
+            return self.chest
         o = next((o for o in (*self.s.party, *self.s.stores) if o.uid == oid), None)
         if o is None:
             raise ValueError("no such pack")
@@ -89,18 +108,18 @@ class VaultTab:
         """`(owner, loc)` of a chest or pack row (`loc` its index) or a worn slot (`loc` its zone)."""
         owner, loc = self._owner(b["from"]), b["loc"]
         if isinstance(loc, str):
-            if owner == CHEST or loc not in dict(SLOTS) or self.s._item_at(owner, loc) is None:
+            if owner == self.chest or loc not in dict(SLOTS) or self.s._item_at(owner, loc) is None:
                 raise ValueError(f"nothing in that {loc} slot")
         elif not 0 <= loc < len(self.s._inventory(owner)):
             raise ValueError("no such stack")
         return owner, loc
 
     def move(self, picks, to, zone="pack"):
-        """Hand the picks to `to`: the chest (`CHEST`), a pack, or a member's worn slot."""
+        """Hand the picks to `to`: the stash (`self.chest`), a pack, or a member's worn slot."""
         s = self.s
         dest = self._owner(to)
-        if dest == CHEST:
-            zone = CHEST
+        if dest == self.chest:
+            zone = self.chest
         elif zone not in ("pack", *dict(SLOTS)):
             raise ValueError(f"no such slot: {zone}")
         s.selected, s._sel_qty = [], {}
@@ -116,13 +135,17 @@ class VaultTab:
     def service(self, key):
         offer = next((x for x in self.s._services() if x[0] == key), None)
         if offer is None or not offer[3]:
-            raise ValueError("the Bankers do not offer that to this band now")
+            raise ValueError("that is not on offer to this band now")
         self.s._run_service(key)
 
     def exchange(self, oid, n, melt=False):
+        if not self.exchanges:
+            raise ValueError("gold is minted and melted at the bank")
         holder = self.s._holder_of(self._owner(oid))
         if not self.s._exchange(holder, "sell_gold" if melt else "buy_gold", int(n)):
             raise ValueError(f"cannot {'melt' if melt else 'mint'} {n} gold coins there")
 
     def distribute(self):
+        if not self.s.CAN_DISTRIBUTE:
+            raise ValueError("the load is not shared out here")
         self.s._distribute_load()

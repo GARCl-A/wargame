@@ -1,6 +1,9 @@
 // A place's hub: the keeper's strip, the row of tabs and the tab in view. The shop draws itself
-// (shop.js), and so do a work node's shifts (labor.js), the Medic (medic.js), a jobs board (jobs.js), a workbench (craft.js), the stables and wagon yard (stables.js), the Tavern (tavern.js), a sanctuary's initiation (initiation.js) and the Bank's strongbox (vault.js); a tab the browser does
-// not draw yet is a note on paper. Every verb answers the whole hub.
+// (shop.js), and so do a work node's shifts (labor.js), the Medic (medic.js), a jobs board (jobs.js), a
+// workbench (craft.js), the stables, wagon yard and the house's garage (stables.js), the Tavern (tavern.js),
+// a sanctuary's initiation (initiation.js), the Bank's strongbox and the house's stash (vault.js); the
+// Bankers' repossession notice stands in for the house's tabs. A tab the browser does not draw yet is a
+// note on paper. Every verb answers the whole hub.
 "use strict";
 
 let H = null;
@@ -50,9 +53,20 @@ function drawAway() {
     <h2>${esc(H.away.title)}</h2><p>${esc(H.away.line)}</p></div>`;
 }
 
+function drawRepossession() {
+  const R = H.repossession;
+  $("cards").innerHTML = "";
+  $("body").innerHTML = `<div class="paper awaytab repo"><div class="kicker">Tax default notice</div>
+    <h2>The Bankers want the house back</h2>
+    <p>${R.missed} tax cycles missed: ${money(R.owed)} behind. The Bankers want the house back, or the debt paid.</p>
+    <div class="repo-opt" data-choice="return"><b>Return the property</b><span>Hand it back. The guild owes ${money(R.owed)}, and the Bankers deal with it no more until that is paid.</span></div>
+    <div class="repo-opt bad" data-choice="squat"><b>Refuse, and squat</b><span>Keep the house without paying. The City Guard will come to clear it out.</span></div></div>`;
+}
+
 function draw() {
   drawFrame();
-  if (H.shop) Shop.draw(H.shop);
+  if (H.repossession) drawRepossession();
+  else if (H.shop) Shop.draw(H.shop);
   else if (H.work) Labor.work(H.work);
   else if (H.gather) Labor.gather(H.gather);
   else if (H.medic) Medic.draw(H.medic);
@@ -63,6 +77,7 @@ function draw() {
   else if (H.tavern) Tavern.draw(H.tavern, H.tab);
   else if (H.initiation) Initiation.draw(H.initiation);
   else if (H.vault) Vault.draw(H.vault);
+  else if (H.garage) Stables.garage(H.garage);
   else drawAway();
 }
 
@@ -82,6 +97,13 @@ $("tabs").addEventListener("click", e => {
   if (t && t.dataset.tab !== H.tab) { Sound.play("click"); post("tab", {key: t.dataset.tab}); }
 });
 $("back").onclick = back;
+$("body").addEventListener("click", async e => {
+  const o = H && H.repossession && e.target.closest("[data-choice]");
+  if (!o) return;
+  Sound.play("click");
+  await api("/api/hub/repossess", {choice: o.dataset.choice});
+  location.reload();
+});
 addEventListener("keydown", e => {
   if (e.key === "Tab" && H && H.tabs.length > 1) { e.preventDefault(); nextTab(e.shiftKey ? -1 : 1); return; }
   if (e.key === "Escape" && !(H && ((H.shop && Shop.escape()) || (H.vault && Vault.escape())))) back();

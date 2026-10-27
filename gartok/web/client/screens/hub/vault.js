@@ -1,15 +1,16 @@
-// The Bank's VAULT tab: the strongbox on paper where the shop's shelf sits, one leather column per pack,
-// the Bankers' services under the chest and the common purse. Drag an item onto the chest to stow it,
+// A stash tab, the Bank's VAULT or the house's THE HOUSE: the stash on paper where the shop's shelf sits,
+// one leather column per pack, the services under it (the Bankers', or the house's tax, oven and debt) and
+// the common purse. Drag an item onto the chest to stow it,
 // onto a pack or a worn slot to hand it over; a chest row's stepper takes part of the stack. A click
 // picks, a second click on the chest or a pack drops; Shift picks several. Right-click an item for its
-// menu (where to send it; on a coin stack, mint or melt gold). The server does every move, as the pygame
-// strongbox does it.
+// menu (where to send it; at the bank, on a coin stack, mint or melt gold). The server does every move, as
+// the pygame stash does it.
 "use strict";
 
 const Vault = (() => {
   let V = null, picks = null, drag = null, over = null;
   const take = {};
-  const CHEST = "bank";
+  let CHEST = null;
   const kg = (q, w) => { const t = q * w; return t < 0.05 ? "—" : t.toFixed(1) + " kg"; };
   const short = name => name.split(" ")[0];
   const pack = id => V.packs.find(p => p.id === id);
@@ -43,18 +44,17 @@ const Vault = (() => {
   function chest() {
     const c = V.chest;
     if (!c.open)
-      return `<div class="paper" id="shelf"><div class="kicker">The strongbox <em>held at the bank in the City</em></div>
-        <div class="shelfhead"><h3>No strongbox yet</h3></div>
-        <p class="vaultnote">The guild keeps nothing of its own until it rents a chest from the Bankers. Rent one below:
-        what goes in stays in the City, safe from the road, and any band that visits the bank can take it out.</p></div>`;
+      return `<div class="paper" id="shelf"><div class="kicker">${esc(c.title)} <em>${esc(c.where)}</em></div>
+        <div class="shelfhead"><h3>${esc(c.closed)}</h3></div>
+        <p class="vaultnote">${esc(c.closed_line)}</p></div>`;
     const pct = Math.min(100, c.load / c.capacity * 100).toFixed(1);
     const add = picks ? weight(picks.filter(p => p.from !== CHEST)) : 0;
-    const rows = c.rows.length ? c.rows.map(chestLine).join("") : `<p class="vaultnote">The chest is empty. Drag what the band can spare onto it.</p>`;
-    return `<div class="paper" id="shelf"><div class="kicker">The strongbox <em>${c.rows.length} stacks · held in the City</em></div>
+    const rows = c.rows.length ? c.rows.map(chestLine).join("") : `<p class="vaultnote">${esc(c.title)} is empty. Drag what the band can spare onto it.</p>`;
+    return `<div class="paper" id="shelf"><div class="kicker">${esc(c.title)} <em>${c.rows.length} stacks · ${esc(c.where)}</em></div>
       <div class="shelfhead"><h3>${c.load.toFixed(1)} / ${c.capacity} kg</h3><div class="chestbar"><i style="width:${pct}%"></i>${add ? `<i class="add ${c.load + add > c.capacity ? "over" : ""}" style="width:${Math.min(100 - pct, add / c.capacity * 100).toFixed(1)}%"></i>` : ""}</div></div>
       <div class="cols"><span></span><span>Stack</span><span class="r">Each</span><span class="c">Held</span><span></span><span class="r">Take</span></div>
       <div id="rows">${rows}</div>
-      <div class="shelffoot"><b>Drag</b> an item onto the chest to stow it · out of it onto a pack or a worn slot · <b>right-click</b> a coin stack to mint or melt gold</div></div>`;
+      <div class="shelffoot"><b>Drag</b> an item here to stow it · out of it onto a pack or a worn slot${V.gold ? " · <b>right-click</b> a coin stack to mint or melt gold" : ""}</div></div>`;
   }
 
   // ---------------------------------------------------------------- the packs
@@ -69,7 +69,7 @@ const Vault = (() => {
 
   function foot(p) {
     const mine = picks ? picks.filter(x => x.from === p.id) : [];
-    if (mine.length) return `${mine.length === 1 ? esc(mine[0].name) : mine.length + " items"} picked · drag onto the chest or another pack`;
+    if (mine.length) return `${mine.length === 1 ? esc(mine[0].name) : mine.length + " items"} picked · drag onto ${esc(V.chest.label)} or another pack`;
     if (picks) {
       const after = p.kg + weight(picks);
       return `Click here to hand the pick to ${esc(short(p.name))}${after > p.max ? " · <b>won't fit</b>" : ""}`;
@@ -99,6 +99,9 @@ const Vault = (() => {
   // ---------------------------------------------------------------- the bottom
   function services() {
     const g = V.gold;
+    if (!V.services.length && !g)
+      return `<div class="leather" id="sell">${ico("item/locked-chest")}<div><h4>${esc(V.chest.title)}</h4>
+        <p>Nothing owed and nothing to buy: what is stowed here stays in the City for any band that comes by.</p></div></div>`;
     if (!V.services.length)
       return `<div class="leather" id="sell">${ico("item/two-coins")}<div><h4>The exchange</h4>
         <p>Right-click a coin stack to mint gold (<b>$${g.price}</b> a coin) or melt it (<b>$${g.payout}</b> back): the Bankers keep $${g.fee} a coin each way.</p></div></div>`;
@@ -110,7 +113,7 @@ const Vault = (() => {
   function purse() {
     const shares = V.packs.filter(p => !p.store || p.money).map(p =>
       `<div class="share"><span>${esc(short(p.name))}</span><b>${p.money}</b></div>`).join("");
-    const tools = V.packs.length > 1 ? `<div class="tools"><div class="ghost-btn" id="spread" title="Share the load out by what each can carry">Distribute load</div></div>` : "";
+    const tools = V.distribute && V.packs.length > 1 ? `<div class="tools"><div class="ghost-btn" id="spread" title="Share the load out by what each can carry">Distribute load</div></div>` : "";
     return `<div class="leather" id="purse"><div><div class="lbl">Common purse</div>
       <div class="sum"><b>${money(V.purse)}</b></div></div>
       <div class="split">${shares}</div>${tools}
@@ -120,6 +123,7 @@ const Vault = (() => {
   // ---------------------------------------------------------------- drawing
   function draw(st) {
     V = st;
+    CHEST = V.chest.owner;
     const keep = {rows: $("rows") ? $("rows").scrollTop : 0, band: $("band") ? $("band").scrollLeft : 0, lists: {}};
     document.querySelectorAll(".col").forEach(c => { keep.lists[c.dataset.owner] = c.querySelector(".packlist").scrollTop; });
     cards(V.cards);
@@ -220,7 +224,7 @@ const Vault = (() => {
     let html = rows.map((r, i) => `<div data-i="${i}">${r}</div>`).join("");
     if (rows.length) html += "<hr>";
     const send = (to, q) => () => act("vault_move", {picks: [{from: it.from, loc: it.loc, ...(q ? {qty: q} : {qty: it.qty})}], to});
-    const dests = [...(it.from !== CHEST && V.chest.open ? [{id: CHEST, name: "the strongbox"}] : []),
+    const dests = [...(it.from !== CHEST && V.chest.open ? [{id: CHEST, name: V.chest.label}] : []),
       ...V.packs.filter(p => p.id !== it.from || typeof it.loc === "string")];
     html += dests.map(o => {
       const all = acts.push(send(o.id)) - 1, one = it.qty > 1 ? acts.push(send(o.id, 1)) - 1 : null;

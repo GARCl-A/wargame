@@ -132,7 +132,7 @@ def test_entering_a_place_opens_its_screen_and_coming_back_changes_nothing(saves
     m = game.session
     g = guild.groups[0]
     t0 = guild.clock.seconds
-    assert m.act(g.gid, "property") == {"screen": "away"}
+    assert m.act(g.gid, "trust") == {"screen": "away"}
     assert isinstance(game.session, AwaySession)
     assert game.session.state()["title"] and g.node == "city"
     st = game.session.map.back()
@@ -143,10 +143,10 @@ def test_an_order_whose_screen_falls_due_on_the_clock_opens_it():
     guild = _guild("city")
     game = _game(guild)
     g = guild.groups[0]
-    g.order = orders.interactive("property")
+    g.order = orders.interactive("trust")
     game.session._advance()
     st = game.session._land()
-    assert st == {"screen": "away"} and game.session.order.kind == "property"
+    assert st == {"screen": "away"} and game.session.order.kind == "trust"
     assert game.session.map.back()["screen"] == "map"
 
 
@@ -208,7 +208,7 @@ def test_the_server_routes_the_map_verbs_and_answers_with_the_screen_open(saves)
 
     try:
         gid = json.loads(urllib.request.urlopen(url + "/api/map/state").read())["groups"][0]["gid"]
-        assert post("/api/map/act", {"gid": gid, "key": "property"}) == {"screen": "away"}
+        assert post("/api/map/act", {"gid": gid, "key": "trust"}) == {"screen": "away"}
         assert json.loads(urllib.request.urlopen(url + "/api/screen").read())["screen"] == "away"
         with pytest.raises(urllib.error.HTTPError) as e:
             post("/api/map/travel", {"gid": gid, "node": "market"})

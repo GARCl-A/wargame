@@ -3,20 +3,26 @@ to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its
 (`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`), a workbench its
 recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`), the Tavern its
 recruits, study rooms and stage (`tavern_tab`), the City Prison its cells (`tavern_tab` with a bail), a
-sanctuary its initiation (`initiation_tab`), the Bank its strongbox (`vault_tab`) beside the Bankers' jobs; a
-tab the browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md` lands.
+sanctuary its initiation (`initiation_tab`), the Bank its strongbox (`vault_tab`) beside the Bankers' jobs, the
+City house its stash (`vault_tab` again), its kitchen (`craft_tab`) and its garage (`garage_tab`); a tab the
+browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of step 9
+of `docs/plans/web_frontend.md` lands.
 
 The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
 """
 
 from typing import ClassVar
 
-from .. import artwork, orders, solo, world
+from .. import artwork, campaign, economy, orders, solo, world
+from ..bank_screen import BankScreen
+from ..city_property_screen import CityPropertyScreen
+from ..constants import fmt_money
 from ..crafting_screen import ALONE_HOURS, WAIT_HOURS
 from ..hub_screen import TabbedHubScreen
 from ..map_screen import node_icon
 from ..work_screen import SHIFTS
 from .craft_tab import CRAFT_TABS, CraftTab
+from .garage_tab import GarageTab
 from .initiation_tab import InitiationTab
 from .jobs_tab import JobsTab
 from .medic_tab import MedicTab
@@ -37,9 +43,10 @@ HUBS = {
     "prison": (("prison", "The Cells"),),
     "bank": (("vault", "Vault"), ("jobs", "Jobs")),
 }
-HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", *HUBS}
+HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", "property", *HUBS}
 # the tabs the browser draws so far
-LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", "vault", *CRAFT_TABS, *TAVERN_TABS}
+LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", "vault", "property",
+        "garage", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
 WHAT = {"tavern": "the tavern", "study": "the study desk"}
 
@@ -74,6 +81,14 @@ def _node_tabs(node):
     return tabs or [("shop", "Shop")]
 
 
+def _house_tabs(guild):
+    """The City house's tabs, as `CityPropertyScreen` offers them: the kitchen once it has an oven, the
+    garage once it is owned."""
+    house = guild.house
+    return [("property", "The House"), *((("kitchen", "Kitchen"),) if house.owned and house.oven else ()),
+            *((("garage", "Garage"),) if house.owned else ())]
+
+
 def tabs_for(kind, node):
     return list(HUBS.get(kind) or _node_tabs(node))
 
@@ -93,10 +108,10 @@ def _shop(verb):
 
 
 def _on_vault(verb):
-    """A vault verb: it acts on the strongbox tab and answers the whole hub."""
+    """A stash verb: it acts on the strongbox or the house and answers the whole hub."""
     def run(s, b):
         verb(s.vault, b)
-        s.tab = "vault"
+        s.tab = s.stash_key
         return s.state()
     return run
 
@@ -145,6 +160,11 @@ class HubSession(Session):
         "vault_service": _on_vault(lambda t, b: t.service(b["key"])),
         "vault_gold": _on_vault(lambda t, b: t.exchange(b["from"], b["n"], bool(b.get("melt")))),
         "vault_distribute": _on_vault(lambda t, b: t.distribute()),
+        "garage_bay": lambda s, b: s.on_garage(GarageTab.bay),
+        "garage_park": lambda s, b: s.on_garage(GarageTab.park, b["uid"]),
+        "garage_take": lambda s, b: s.on_garage(GarageTab.take, b["uid"]),
+        "garage_repair": lambda s, b: s.on_garage(GarageTab.repair, b["uid"]),
+        "repossess": lambda s, b: s.repossess(b["choice"]),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -155,7 +175,7 @@ class HubSession(Session):
         self.group = group
         self.order = order
         self.node = world.node(group.node)
-        self.tabs = tabs_for(order.kind, self.node)
+        self._tabs = tabs_for(order.kind, self.node)
         first = "shop" if order.kind in ("market", "stable") else {"forge": "craft", "recruit": "recruits", "bank": "vault"}.get(order.kind, order.kind)
         self.tab = first if any(k == first for k, _ in self.tabs) else self.tabs[0][0]
         self._shop = None
@@ -169,6 +189,19 @@ class HubSession(Session):
         self._tavern = None
         self._rite = None
         self._vault = None
+        self._garage = None
+
+    @property
+    def tabs(self):
+        return _house_tabs(self.guild) if self.order.kind == "property" else self._tabs
+
+    @property
+    def repossession_due(self):
+        return self.order.kind == "property" and self.guild.house.repossession_due
+
+    def _open(self):
+        if self.repossession_due:
+            raise ValueError("the Bankers want an answer about the house first")
 
     @property
     def shop(self):
@@ -179,6 +212,7 @@ class HubSession(Session):
         return self._shop
 
     def _tab(self, key, attr, make):
+        self._open()
         if not any(k == key for k, _ in self.tabs):
             raise ValueError(f"no {key} tab here")
         if getattr(self, attr) is None:
@@ -246,8 +280,53 @@ class HubSession(Session):
         return self.state()
 
     @property
+    def stash_key(self):
+        return "property" if self.order.kind == "property" else "vault"
+
+    @property
     def vault(self):
-        return self._tab("vault", "_vault", VaultTab)
+        screen = CityPropertyScreen if self.order.kind == "property" else BankScreen
+        return self._tab(self.stash_key, "_vault", lambda g, grp, n: VaultTab(g, grp, n, screen))
+
+    @property
+    def garage(self):
+        return self._tab("garage", "_garage", lambda g, grp, n: GarageTab(g, grp, n, tick=self._tick))
+
+    def _tick(self, hours, busy=()):
+        """An hour the garage spends off the map (a repair), run through `campaign.advance` as
+        `App._tick_outside_map` does, so the other bands keep in step and what falls due waits for the map."""
+        m = self.map
+        result = campaign.advance(self.guild, dt=hours, busy=busy)
+        m.pending += result.pending
+        m.notices += [f"{u.name} died." for u in result.casualties]
+        m.wiped = m.wiped or result.wiped
+        return result.events, result.casualties
+
+    def on_garage(self, verb, *args):
+        verb(self.garage, *args)
+        m = self.map
+        if m.wiped or not self.group.members:
+            m.game.open(m)
+            return m._after_order()
+        m._save()
+        self.tab = "garage"
+        return self.state()
+
+    def repossess(self, choice):
+        """The Bankers' notice once too many tax cycles went unpaid: hand the house back and owe them, or
+        squat in it; either way back to the map, as pygame's `RepossessionScreen` does."""
+        g, m = self.guild, self.map
+        if not self.repossession_due:
+            raise ValueError("the Bankers want nothing of the house now")
+        if choice == "return":
+            g.repossess_city_property()
+            m.notices.append(f"The property is returned to the Bankers -- the guild now owes {fmt_money(g.bankers_debt)}.")
+        elif choice == "squat":
+            g.house.squat()
+            m.notices.append("The guild keeps the house without paying -- the guard won't like that.")
+        else:
+            raise ValueError(f"no such answer: {choice}")
+        return m.back()
 
     @property
     def rite(self):
@@ -274,6 +353,7 @@ class HubSession(Session):
 
     @property
     def bench(self):
+        self._open()
         key = next((k for k, _ in self.tabs if k in CRAFT_TABS), None)
         if key is None:
             raise ValueError("no workbench here")
@@ -397,9 +477,13 @@ class HubSession(Session):
         tongue = f" · the traders speak {lang}" if lang else ""
         out = {"place": n.name, "sub": f"Day {c.day}, {part}{tongue}", "band": self.group.display_name,
                "icon": "/".join(node_icon(n.id) or ("map", "signpost")), "keeper": keeper,
-               "tabs": [{"key": key, "label": label, "live": key in LIVE} for key, label in self.tabs],
+               "tabs": [] if self.repossession_due else
+                       [{"key": key, "label": label, "live": key in LIVE} for key, label in self.tabs],
                "tab": self.tab}
-        if self.tab == "shop":
+        if self.repossession_due:
+            missed = self.guild.house.missed_payments
+            out["repossession"] = {"missed": missed, "owed": missed * economy.CITY_PROPERTY_TAX}
+        elif self.tab == "shop":
             out["shop"] = self.shop.state()
         elif self.tab == "work":
             out["work"] = self.working.state()
@@ -421,8 +505,10 @@ class HubSession(Session):
             out["tavern"] = self.tavern.state("recruits")
         elif self.tab == "initiation":
             out["initiation"] = self.rite.state()
-        elif self.tab == "vault":
+        elif self.tab == self.stash_key:
             out["vault"] = self.vault.state()
+        elif self.tab == "garage":
+            out["garage"] = self.garage.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

@@ -1,6 +1,7 @@
 // The Farm's STABLES and the Carpenter's WAGONS: on leather what the band keeps (each animal with its tack
 // and job, each wagon with its cargo and what pulls it) and sells back; on paper what is for sale. The
-// party pays out of its pooled coin, richest first; a sale back pays the leader.
+// party pays out of its pooled coin, richest first; a sale back pays the leader. The house's GARAGE is the
+// same page: on leather what is parked at the house, on paper the bays and what the band can park.
 "use strict";
 
 const Stables = (() => {
@@ -67,15 +68,55 @@ const Stables = (() => {
       "The road wears a wagon down; a broken one is mended with Lumber. Only an empty wagon sells back, for half its price.");
   }
 
+  function repairBtn(o) {
+    const r = o.repair;
+    return r ? `<div class="ghost-btn ${r.can ? "" : "off"}" data-verb="garage_repair" data-uid="${esc(o.uid)}" title="${r.can ? "an hour and an INT check" : `the band carries too little ${esc(r.item)}`}">Repair</div>` : "";
+  }
+  const mend = o => o.repair ? ` · mends with ${o.repair.cost} ${esc(o.repair.item)}` : "";
+
+  function parked(o) {
+    const chips = o.broken ? [`<span class="chip bad">broken</span>`] : [];
+    if (o.unfed) chips.push(`<span class="chip bad">unfed ${o.unfed} day${o.unfed === 1 ? "" : "s"}</span>`);
+    const take = o.can ? `<div class="ghost-btn" data-verb="garage_take" data-uid="${esc(o.uid)}">Take out</div>`
+      : `<span class="chip">${esc(o.why)}</span>`;
+    return `<div class="worker kept">${medal(o)}
+      <div class="who"><h3>${esc(o.name)}</h3><div class="race">${esc(o.sub)}${mend(o)}</div>${chips.length ? `<div class="chips">${chips.join("")}</div>` : ""}</div>
+      <div class="keep">${take}${repairBtn(o)}</div></div>`;
+  }
+
+  function kept(o) {
+    return `<div class="shift offer ${o.can ? "" : "off"}">${medal(o)}
+      <div><div class="nm">${esc(o.name)}${o.broken ? " <small>· broken</small>" : ""}</div><div class="use">${esc(o.sub)}${mend(o)}</div>${o.why ? `<div class="why">${esc(o.why)}</div>` : ""}</div>
+      <div class="price">${o.repair ? repairBtn(o) : ""}</div>
+      <div class="btn ${o.can ? "" : "off"}" data-verb="garage_park" data-uid="${esc(o.uid)}">${o.portrait ? "Stable" : "Park"}</div></div>`;
+  }
+
+  function garage(G) {
+    cards(G.cards);
+    const held = G.open ? `${G.wagons} / ${G.tier} wagons · ${G.animals} / ${G.tier} animals` : "no bays yet";
+    const bay = `<div class="shift offer ${G.can_bay ? "" : "off"}"><div class="medal store">${ico("item/old-wagon")}</div>
+      <div><div class="nm">${G.open ? "Add a bay" : "Build a garage"}</div><div class="use">one more wagon and one more animal kept at the house</div>
+      ${G.can_bay ? "" : `<div class="why">the party has ${money(G.purse)}</div>`}</div>
+      <div class="price">${money(G.price)}</div>
+      <div class="btn ${G.can_bay ? "" : "off"}" data-verb="garage_bay">Build</div></div>`;
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">In the garage · ${esc(held)}</div>
+        <p class="hint">What is parked belongs to the house: safe, fed from the house stash, off the herd limit.</p>
+        <div class="crew">${G.parked.map(parked).join("") || `<p class="hint">Nothing parked.</p>`}</div></div>
+      <div class="paper ledger"><div class="kicker">The bays <em>${esc(held)}</em></div>
+        <div class="shifts">${bay}${G.kept.map(kept).join("") || ""}</div>
+        <div class="ledgerfoot"><p>${G.kept.length ? "" : "The band has no wagon or animal with it to park. "}A wagon parked keeps its cargo; an animal in the garage eats from the house stash, and with no food it starves. Lose the house and you lose the garage.</p></div></div>`;
+    toast(G.notice);
+  }
+
   $("body").addEventListener("click", async e => {
-    if (!H || !(H.stable || H.wagons)) return;
+    if (!H || !(H.stable || H.wagons || H.garage)) return;
     const b = e.target.closest("[data-verb]");
     if (!b || b.classList.contains("off")) return;
     const d = b.dataset;
-    const body = d.body ? {[d.body]: d.key} : d.tack ? {uid: d.uid, tack: d.tack} : {uid: d.uid};
+    const body = d.body ? {[d.body]: d.key} : d.tack ? {uid: d.uid, tack: d.tack} : d.uid ? {uid: d.uid} : {};
     const r = await post(d.verb, body);
-    if (r) Sound.play("coins");
+    if (r) Sound.play(d.verb.startsWith("garage_") && d.verb !== "garage_bay" ? "click" : "coins");
   });
 
-  return {animals, wagons};
+  return {animals, wagons, garage};
 })();

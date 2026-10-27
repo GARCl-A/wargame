@@ -25,7 +25,7 @@ from gartok.data import LIVESTOCK
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
-from gartok.wagon import VEHICLES
+from gartok.wagon import VEHICLES, Wagon
 from gartok.web.away_session import AwaySession
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
@@ -413,7 +413,10 @@ def test_a_school_the_guild_has_no_standing_with_takes_nobody_and_says_why():
 
 
 def test_the_faith_rite_asks_for_a_holy_symbol():
-    hub, _, g, i = _rite("faith_cathedral")
+    hub, _, g, _ = _rite("faith_cathedral")
+    for u in g.members:
+        u.remove_named("Holy Symbol", u.count_of("Holy Symbol"))
+    i = hub.state()["initiation"]
     assert all("Holy Symbol" in m["note"] for m in i["members"])
     g.members[1].give_to_pack("Holy Symbol", 1)
     assert all(m["on"] for m in hub.state()["initiation"]["members"])
@@ -876,10 +879,132 @@ def test_the_bankers_test_of_trust_is_taken_on_the_jobs_tab():
     assert job["taken"] and g.leader.count_of(data.MISSION_CHEST_ITEM) == 1
 
 
+def _house(coins=1000, owned=True, oven=False, rep=economy.CITY_PROPERTY_REP_GATE):
+    guild = _guild("city", coins)
+    guild.reputation["bankers"] = rep
+    if owned:
+        guild.buy_city_property()
+    if oven:
+        guild.buy_oven()
+    game = Game(MapSession(guild))
+    g = guild.groups[0]
+    assert game.session.act(g.gid, "property") == {"screen": "hub"}
+    return game.session, guild, g
+
+
+def test_the_house_before_it_is_bought_is_one_tab_that_sells_it_once_the_bankers_trust_the_guild():
+    hub, _, _ = _house(owned=False, rep=0)
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["property"] and st["tab"] == "property"
+    v = st["vault"]
+    assert not v["chest"]["open"] and v["chest"]["owner"] == "house" and v["gold"] is None and not v["distribute"]
+    assert not next(s for s in v["services"] if s["key"] == "buy")["on"]
+    with pytest.raises(ValueError):
+        hub.verb("vault_service", True)(hub, {"key": "buy"})
+    hub, guild, _ = _house(owned=False)
+    st = hub.verb("vault_service", True)(hub, {"key": "buy"})
+    assert guild.house.owned and "bought a house" in st["vault"]["notice"]
+    assert [t["key"] for t in st["tabs"]] == ["property", "garage"]
+    assert st["vault"]["purse"] == 2000 - economy.CITY_PROPERTY_PRICE and st["vault"]["cards"][0]["label"] == "next tax"
+    assert any(s["key"] == "oven" for s in st["vault"]["services"])
+
+
+def test_the_house_stows_and_gives_back_but_mints_no_gold():
+    hub, guild, g = _house()
+    u, v = g.members
+    loc = next(i for i, e in enumerate(u._base_inventory) if e[0] == "Potato")
+    st = hub.verb("vault_move", True)(hub, {"picks": [{"from": u.uid, "loc": loc, "qty": 3}], "to": "house"})["vault"]
+    assert _row(st["chest"]["rows"], "Potato")["qty"] == 3 and guild.house.stash.count_of("Potato") == 3
+    assert "mint" not in _row(next(p for p in st["packs"] if p["id"] == u.uid)["pack"], items.COIN_ITEM)
+    hub.verb("vault_move", True)(hub, {"picks": [{"from": "house", "loc": 0}], "to": v.uid})
+    assert guild.house.stash.count_of("Potato") == 0 and v.count_of("Potato") == 7
+    with pytest.raises(ValueError):
+        hub.verb("vault_gold", True)(hub, {"from": u.uid, "n": 1})
+    with pytest.raises(ValueError):
+        hub.verb("vault_distribute", True)(hub, {})
+
+
+def test_an_oven_opens_the_kitchen_where_the_band_cooks_jerky():
+    hub, guild, g = _house()
+    st = hub.verb("vault_service", True)(hub, {"key": "oven"})
+    assert guild.house.oven and [t["key"] for t in st["tabs"]] == ["property", "kitchen", "garage"]
+    assert st["vault"]["purse"] == 2000 - economy.OVEN_PRICE
+    cook = g.members[0]
+    cook.give_to_pack("Meat", 2)
+    cook.give_to_pack("Salt", 1)
+    k = hub.pick_tab("kitchen")["craft"]
+    jerky = next(r for r in k["recipes"] if r["id"] == "Jerky")
+    assert k["what"] == "cook what the pack carries" and jerky["can"]
+    t0 = guild.clock.seconds
+    st = hub.verb("craft", True)(hub, {"recipe": "Jerky", "hours": 8})
+    assert st["tab"] == "kitchen" and guild.clock.seconds > t0 and st["craft"]["report"]
+
+
+def test_paying_the_debt_to_the_bankers_comes_out_of_the_purse():
+    hub, guild, _ = _house(owned=False)
+    guild.bankers_debt = 90
+    st = hub.state()
+    assert st["vault"]["cards"][0]["label"] == "owed to the bankers"
+    st = hub.verb("vault_service", True)(hub, {"key": "pay_debt"})["vault"]
+    assert guild.bankers_debt == 0 and st["purse"] == 2000 - 90 and "debt cleared" in st["notice"]
+
+
+def test_the_garage_builds_bays_and_parks_a_wagon_and_an_animal_and_takes_them_out():
+    hub, guild, g = _house(coins=2000)
+    cart = Wagon("Cart")
+    g.add_wagon(cart)
+    st = hub.pick_tab("garage")["garage"]
+    assert not st["open"] and st["kept"][0]["uid"] == cart.uid and not st["kept"][0]["can"]
+    st = hub.verb("garage_bay", True)(hub, {})["garage"]
+    assert st["open"] and st["tier"] == 1 and st["purse"] == 4000 - economy.GARAGE_PRICE
+    st = hub.verb("garage_park", True)(hub, {"uid": cart.uid})["garage"]
+    assert guild.house.garage.wagons == [cart] and not g.wagons and st["parked"][0]["uid"] == cart.uid
+    g.add_wagon(Wagon("Cart"))
+    st = hub.state()["garage"]
+    assert not st["kept"][0]["can"] and st["kept"][0]["why"] == "every bay holds a wagon"
+    st = hub.verb("garage_take", True)(hub, {"uid": cart.uid})["garage"]
+    assert cart in g.wagons and not guild.house.garage.wagons and "rejoins" in st["notice"]
+    with pytest.raises(ValueError):
+        hub.verb("garage_take", True)(hub, {"uid": "nobody"})
+
+
+def test_a_wagon_mended_in_the_garage_takes_lumber_and_an_hour_of_the_clock():
+    hub, guild, g = _house()
+    cart = Wagon("Cart")
+    cart.hp = 0
+    g.add_wagon(cart)
+    st = hub.pick_tab("garage")["garage"]
+    assert st["kept"][0]["broken"] and not st["kept"][0]["repair"]["can"]
+    g.members[0].give_to_pack("Lumber", cart.repair_cost)
+    t0 = guild.clock.seconds
+    st = hub.verb("garage_repair", True)(hub, {"uid": cart.uid})
+    assert st["tab"] == "garage" and guild.clock.seconds > t0 and g.members[0].count_of("Lumber") == 0
+    assert st["garage"]["notice"]
+
+
+def test_a_house_too_far_behind_on_the_tax_meets_the_bankers_notice_first():
+    hub, guild, _ = _house()
+    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+    st = hub.state()
+    assert st["repossession"]["owed"] == economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT * economy.CITY_PROPERTY_TAX
+    assert "vault" not in st
+    with pytest.raises(ValueError):
+        hub.verb("vault_service", True)(hub, {"key": "oven"})
+    st = hub.verb("repossess", True)(hub, {"choice": "return"})
+    assert st["screen"] == "map" and not guild.house.owned and guild.bankers_debt > 0
+    assert any("returned to the Bankers" in n for n in st["notices"])
+    hub, guild, _ = _house()
+    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+    st = hub.verb("repossess", True)(hub, {"choice": "squat"})
+    assert st["screen"] == "map" and guild.house.squatting and guild.bankers_debt == 0
+    with pytest.raises(ValueError):
+        hub.verb("repossess", True)(hub, {"choice": "squat"})
+
+
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
     guild = _guild("city")
     game = Game(MapSession(guild))
-    assert game.session.act(guild.groups[0].gid, "property") == {"screen": "away"}
+    assert game.session.act(guild.groups[0].gid, "trust") == {"screen": "away"}
     assert isinstance(game.session, AwaySession)
 
 

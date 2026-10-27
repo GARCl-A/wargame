@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells and the Bank's vault are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault and the City house are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -103,8 +103,11 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   own `TavernaScreen` held headless; the City Prison's THE CELLS (9i) is the same tab on `PrisonScreen`.
 - **`gartok/web/initiation_tab.py`** + `screens/hub/initiation.js` are a sanctuary's INITIATION (9h), on pygame's own
   `InitiationScreen` held headless.
-- **`gartok/web/vault_tab.py`** + `screens/hub/vault.js` are the Bank's VAULT (9j), on pygame's own `BankScreen`
-  held headless; the Bankers' JOBS beside it is `jobs_tab` on `TrustScreen`.
+- **`gartok/web/vault_tab.py`** + `screens/hub/vault.js` are a stash: the Bank's VAULT (9j) on pygame's own
+  `BankScreen` held headless, and the City house's THE HOUSE (9k) on `CityPropertyScreen`; the Bankers' JOBS beside the
+  vault is `jobs_tab` on `TrustScreen`.
+- **`gartok/web/garage_tab.py`** + `Stables.garage` in `screens/hub/stables.js` are the house's GARAGE (9k), on pygame's
+  own `GarageScreen` held headless; the house's KITCHEN is `craft_tab` at the `cooking` station.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -549,6 +552,29 @@ As built:
   a drag in, a click out, the menu, a mint and Done were driven over the DevTools protocol.
 - **Next (9k):** the house (`city_property_screen.py`, VISIT THE PROPERTY): the stash, the tax, the oven and its
   kitchen, the garage; `RepossessionScreen` before it when the tax is too far behind.
+
+**9k. The City house — done (2026-10-27).** As built:
+
+- **The server:** the order `property` opens a hub whose tabs follow the house (`hub_session._house_tabs`): THE HOUSE
+  always, KITCHEN once it has an oven, GARAGE once it is owned, so buying the house or the oven adds its tab at once.
+  pygame's COOK and GARAGE services are tabs here (the screen is built without `on_cook` / `on_garage`).
+- **The house** is `VaultTab` on `CityPropertyScreen`: the stash, the tax and debt cards, buying the house, the oven and
+  paying the debt are pygame's. `VaultTab` takes the screen class; the gold exchange and Distribute stay the bank's only
+  (`exchanges`, `CAN_DISTRIBUTE`), and `vault.js` reads the stash's owner, title and copy off the state.
+- **The kitchen** is `CraftTab` at the `cooking` station (`craft_tab.STATIONS["kitchen"]`).
+- **The garage** (`GarageTab`) holds `GarageScreen` headless and calls its own click by index from a uid: the bays, the
+  herd limit, the pooled purse, parking and taking out, and the repair, whose hour runs through `HubSession._tick` (as
+  `App._tick_outside_map`: the other bands keep in step, what falls due waits for the map). On leather what is parked; on
+  paper the next bay and what the band has with it.
+- **Repossession:** with the tax too far behind, the hub shows the Bankers' notice in place of the tabs (no tabs, every
+  tab verb refused); return (the debt) or squat, both back to the map with pygame's notice.
+- The map's away-card tests now use the Test of Trust. `test_the_faith_rite_asks_for_a_holy_symbol` failed when a random
+  Priest carried his own Holy Symbol; the test takes them away first.
+- Tests: `tests/test_web_hub.py` (the house before and after it is bought, stowing with no gold exchange, the oven and a
+  stint of Jerky, the debt, the garage's bays, parking and taking out, a repair and its hour, both answers to the notice).
+  The three tabs and the notice were looked at in headless Edge at 1920x1080.
+- **Next (9l):** the Wilds Claim (`wilds_claim_screen.py`, the Claim's own screen: its stages and their fights, the
+  kitchen at the `cooking` station, the Claim's garage with `GarageTab(claim=True)`).
 
 ### 10. The swap — todo
 
