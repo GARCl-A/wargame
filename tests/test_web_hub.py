@@ -378,6 +378,69 @@ def test_a_sanctuary_opens_on_its_board_and_buys_a_dragon_egg():
     assert st["jobs"]["egg"] is None and st["jobs"]["notice"]
 
 
+def _rite(node="nature_grove", rep=2, members=2):
+    from gartok import rite
+    guild = _guild(node)
+    del guild.groups[0].members[members:]
+    guild.reveal_node(node)
+    guild.reputation[rite.FACTION[rite.school_at(node)]] = rep
+    for u in guild.groups[0].members:
+        u.magic_sources = []
+    game = Game(MapSession(guild))
+    g = guild.groups[0]
+    assert game.session.act(g.gid, "shrine") == {"screen": "hub"}
+    hub = game.session
+    return hub, guild, g, hub.verb("tab", True)(hub, {"key": "initiation"})["initiation"]
+
+
+def test_the_initiation_tab_shows_the_schools_terms_and_who_may_stay():
+    hub, _, g, i = _rite()
+    assert next(t for t in hub.state()["tabs"] if t["key"] == "initiation")["live"]
+    assert i["school"] == "Nature" and i["terms"][0]["ok"] and i["action"] is None
+    assert [m["uid"] for m in i["members"]] == [u.uid for u in g.members] and all(m["on"] for m in i["members"])
+    i = hub.verb("novice", True)(hub, {"uid": g.members[1].uid})["initiation"]
+    assert i["picked"] == g.members[1].name and i["action"] == "BEGIN THE RITE"
+    assert hub.novice(g.members[1].uid)["initiation"]["picked"] is None
+    with pytest.raises(ValueError):
+        hub.begin_rite()
+
+
+def test_a_school_the_guild_has_no_standing_with_takes_nobody_and_says_why():
+    hub, _, g, i = _rite(rep=1)
+    assert not i["terms"][0]["ok"] and not any(m["on"] for m in i["members"])
+    i = hub.novice(g.members[0].uid)["initiation"]
+    assert i["picked"] is None and "reputation" in i["notice"]
+
+
+def test_the_faith_rite_asks_for_a_holy_symbol():
+    hub, _, g, i = _rite("faith_cathedral")
+    assert all("Holy Symbol" in m["note"] for m in i["members"])
+    g.members[1].give_to_pack("Holy Symbol", 1)
+    assert all(m["on"] for m in hub.state()["initiation"]["members"])
+
+
+def test_beginning_the_rite_splits_the_novice_off_to_board_and_keeps_the_tab_up(saves):
+    from gartok import rite
+    hub, guild, g, _ = _rite()
+    a, b = g.members
+    hub.novice(b.uid)
+    st = hub.verb("begin_rite", True)(hub, {})
+    assert hub.game.session is hub and st["tab"] == "initiation" and st["initiation"]["report"]
+    assert g.members == [a] and b.rite_school == "nature"
+    ward = next(x for x in guild.groups if b in x.members)
+    assert ward.order.kind == "garrison" and ward.order.job == rite.JOB
+    assert next(m for m in st["initiation"]["members"] if m["uid"] == a.uid)["on"]
+
+
+def test_a_band_that_boards_whole_goes_back_to_the_map(monkeypatch):
+    hub, guild, g, _ = _rite()
+    monkeypatch.setattr(Guild, "free_slots", property(lambda self: 0))
+    hub.novice(g.members[0].uid)
+    st = hub.begin_rite()
+    assert st["screen"] == "map" and isinstance(hub.game.session, MapSession)
+    assert len(guild.groups) == 1 and g.order.job == "rite"
+
+
 def test_a_job_won_by_a_fight_is_taken_here_and_met_on_the_map(monkeypatch):
     from gartok import missions
     from gartok.web.jobs_tab import JobsTab

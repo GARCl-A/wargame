@@ -412,3 +412,7 @@
 .hrow.show .btn:hover{color:#24170c;box-shadow:inset 0 0 0 1px #8a6420}
 .hrow.show .btn.on{background:linear-gradient(#e7cf96,#c9a35e);color:#24170c;box-shadow:inset 0 0 0 1px #8a6420}
 .ledger #convince{width:640px}
+.rterm{grid-template-columns:150px 1fr;padding-left:10px}
+.rterm .lbl{font:600 11px/1.5 Cinzel,serif;letter-spacing:.16em;color:#7b6142;text-transform:uppercase}
+.rterm span.bad{color:#7a2318}
+.rstand{margin-top:26px}

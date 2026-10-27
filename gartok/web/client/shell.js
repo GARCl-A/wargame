@@ -43,7 +43,7 @@ const Shell = {screen: null, lab: false};
 const SCREENS = {
   battle: {css: ["battle.css"], js: ["board.js", "battle.js"]},
   map: {css: ["map.css"], js: ["sheet.js", "map.js"]},
-  hub: {css: ["hub.css"], js: ["shop.js", "labor.js", "medic.js", "jobs.js", "craft.js", "stables.js", "tavern.js", "hub.js"]},
+  hub: {css: ["hub.css"], js: ["shop.js", "labor.js", "medic.js", "jobs.js", "craft.js", "stables.js", "tavern.js", "initiation.js", "hub.js"]},
   away: {css: ["away.css"], js: ["away.js"]},
 };
 

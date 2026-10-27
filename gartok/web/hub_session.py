@@ -2,7 +2,7 @@
 to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
 (`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`), a workbench its
 recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`), the Tavern its
-recruits, study rooms and stage (`tavern_tab`); a tab the
+recruits, study rooms and stage (`tavern_tab`), a sanctuary its initiation (`initiation_tab`); a tab the
 browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of
 step 9 of `docs/plans/web_frontend.md` lands.
 
@@ -17,6 +17,7 @@ from ..hub_screen import TabbedHubScreen
 from ..map_screen import node_icon
 from ..work_screen import SHIFTS
 from .craft_tab import CRAFT_TABS, CraftTab
+from .initiation_tab import InitiationTab
 from .jobs_tab import JobsTab
 from .medic_tab import MedicTab
 from .session import Session, asset_url
@@ -35,10 +36,9 @@ HUBS = {
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", *HUBS}
 # the tabs the browser draws so far
-LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", *CRAFT_TABS, *TAVERN_TABS}
+LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
-WHAT = {"tavern": "the tavern", "jobs": "the jobs board", "medic": "the Medic", "study": "the study desk",
-        "initiation": "the initiation", "work": "the paid shifts", "gather": "the gathering"}
+WHAT = {"tavern": "the tavern", "study": "the study desk"}
 
 
 def _node_tabs(node):
@@ -127,6 +127,8 @@ class HubSession(Session):
         "show_hours": lambda s, b: s.on_tavern("perform", TavernTab.hours, int(b["hours"])),
         "seat": lambda s, b: s.on_tavern("perform", TavernTab.seat, b["uid"]),
         "perform": lambda s, b: s.perform(),
+        "novice": lambda s, b: s.novice(b["uid"]),
+        "begin_rite": lambda s, b: s.begin_rite(),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -149,6 +151,7 @@ class HubSession(Session):
         self._stable = None
         self._wagons = None
         self._tavern = None
+        self._rite = None
 
     @property
     def shop(self):
@@ -222,6 +225,29 @@ class HubSession(Session):
             return m._after_order()
         m._save()
         self.tab = "perform"
+        return self.state()
+
+    @property
+    def rite(self):
+        return self._tab("initiation", "_rite", InitiationTab)
+
+    def novice(self, uid):
+        self.rite.pick(uid)
+        self.tab = "initiation"
+        return self.state()
+
+    def begin_rite(self):
+        """Leave the picked one boarding for the rite. Split off into a group of their own, the tab
+        stays up; a band that boards whole (a lone member, or no free group slot) goes back to the map,
+        where the clock runs."""
+        if not self.rite.begin():
+            return self.state()
+        m = self.map
+        if self.group.busy:
+            m.game.open(m)
+            return m._after_order()
+        m._save()
+        self.tab = "initiation"
         return self.state()
 
     @property
@@ -369,6 +395,8 @@ class HubSession(Session):
             out["wagons"] = self.yard.state()
         elif self.tab in TAVERN_TABS:
             out["tavern"] = self.tavern.state(self.tab)
+        elif self.tab == "initiation":
+            out["initiation"] = self.rite.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

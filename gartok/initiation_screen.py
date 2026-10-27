@@ -89,23 +89,31 @@ class InitiationScreen(Screen):
             return None
         return "RESUME THE RITE" if rite.paid(u, self.school) else "BEGIN THE RITE"
 
+    def _pick(self, uid):
+        """Pick `uid` to stay (again: unpick); one who cannot stay is not picked, and says why."""
+        u = self._member(uid)
+        blocked = rite.blocker(self.guild, self.group, u, self.school)
+        self.notice = blocked
+        self.picked = None if self.picked == uid or blocked else uid
+
+    def _begin(self):
+        """Begin the picked one's rite. Returns `(ok, lines)`."""
+        ok, lines = rite.begin(self.guild, self.group, self._member(self.picked), self.school)
+        self.notice = "  ".join(lines)
+        if ok:
+            self.picked = None
+        return ok, lines
+
     def _click(self, pos):
         if self.leave_rect.collidepoint(pos):
             self.on_done()
             return
         if self.begin_rect.collidepoint(pos) and self._action():
-            ok, lines = rite.begin(self.guild, self.group, self._member(self.picked), self.school)
-            self.notice = "  ".join(lines)
-            if ok:
-                self.picked = None
+            self._begin()
             return
-        enabled = {r["key"]: r["enabled"] for r in self._rows()}
         for uid, rect in self.row_rects:
             if rect.collidepoint(pos):
-                self.notice = None
-                self.picked = None if self.picked == uid or not enabled[uid] else uid
-                if not enabled[uid]:
-                    self.notice = rite.blocker(self.guild, self.group, self._member(uid), self.school)
+                self._pick(uid)
                 return
 
     framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back

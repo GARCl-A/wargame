@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard and the Tavern's tabs are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs and the initiation are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -101,6 +101,8 @@ boards, the workbenches, the stables and the wagon yard and the Tavern's tabs ar
   (9f), on pygame's own `StablesScreen` / `WagonYardScreen` rules, borrowed as `medic_tab` borrows the Medic's.
 - **`gartok/web/tavern_tab.py`** + `screens/hub/tavern.js` are the Tavern's RECRUIT, STUDY and PERFORM (9g), on pygame's
   own `TavernaScreen` held headless.
+- **`gartok/web/initiation_tab.py`** + `screens/hub/initiation.js` are a sanctuary's INITIATION (9h), on pygame's own
+  `InitiationScreen` held headless.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -494,8 +496,21 @@ As built:
   Edge at 1920x1080 on a copy of the day-70 save.
 - Left as is: `test_buying_into_a_pack_pays_from_the_purse_into_the_till...` fails about one run in five, before this
   step too (a random ware); it is not the tavern's.
-- **Next (9h):** initiation (a sanctuary's INITIATION tab), then the prison's cells (`PrisonScreen` is the Tavern's
-  RECRUIT with a bail, so it can reuse `TavernTab`).
+- **Next (9h):** initiation (a sanctuary's INITIATION tab), then the prison's cells.
+
+**9h. The initiation — done (2026-10-27).** As built:
+
+- **The server** (`InitiationTab`) holds pygame's `InitiationScreen` headless: the school's terms, the blockers (no standing,
+  no Holy Symbol, a tested blood with no magic, a band with an order in flight), the status line and the begin are its.
+  Picking and beginning moved out of `InitiationScreen._click` into `_pick` / `_begin`, which pygame calls too.
+- **The layout** is 9b's: the band on leather (click who stays; a chip for where each one stands, initiated or the stage
+  and its points, or the reason the school will not take them, dimmed); on paper the terms as a ledger, the picked one's
+  bar and status (points and days left) and BEGIN or RESUME THE RITE, the sanctuary's lines under it.
+- **The clock:** a novice split off into a group of their own leaves the tab up; a band that boards whole (a lone
+  member, or no free group slot) goes back to the map, where the clock runs.
+- Tests: `tests/test_web_hub.py` (the terms and the pick, a school with no standing, the Faith's symbol, a novice split
+  off, a band that boards whole). Looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
+- **Next (9i):** the prison's cells (`PrisonScreen` is the Tavern's RECRUIT with a bail, so it can reuse `TavernTab`).
 
 ### 10. The swap — todo
 
