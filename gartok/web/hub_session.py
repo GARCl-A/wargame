@@ -1,6 +1,7 @@
 """A node's screens behind one row of tabs, in the browser: the keeper's strip, the tabs, the way back
 to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its shifts and gathering
-(`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`); a tab the browser does not draw yet says so inside
+(`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`), a workbench its
+recipes (`craft_tab`); a tab the browser does not draw yet says so inside
 the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md`
 lands.
 
@@ -9,10 +10,12 @@ The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_scree
 
 from typing import ClassVar
 
-from .. import artwork, orders, world
+from .. import artwork, orders, solo, world
+from ..crafting_screen import ALONE_HOURS, WAIT_HOURS
 from ..hub_screen import TabbedHubScreen
 from ..map_screen import node_icon
 from ..work_screen import SHIFTS
+from .craft_tab import CRAFT_TABS, CraftTab
 from .jobs_tab import JobsTab
 from .medic_tab import MedicTab
 from .session import Session, asset_url
@@ -27,11 +30,10 @@ HUBS = {
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", *HUBS}
-LIVE = {"shop", "work", "gather", "medic", "jobs"}      # the tabs the browser draws so far
+LIVE = {"shop", "work", "gather", "medic", "jobs", *CRAFT_TABS}      # the tabs the browser draws so far
 # what a tab not drawn yet is, for its note
 WHAT = {"recruits": "the recruits", "rooms": "the study rooms", "perform": "the stage", "tavern": "the tavern",
-        "stable": "the stables", "forge": "the forge", "craft": "the workbench", "carpenter": "the carpentry",
-        "wagons": "the wagon yard", "jobs": "the jobs board", "medic": "the Medic", "study": "the study desk",
+        "stable": "the stables", "wagons": "the wagon yard", "jobs": "the jobs board", "medic": "the Medic", "study": "the study desk",
         "initiation": "the initiation", "work": "the paid shifts", "gather": "the gathering"}
 
 
@@ -104,6 +106,8 @@ class HubSession(Session):
         "accept": lambda s, b: s.on_board(JobsTab.accept, b["id"]),
         "turn_in": lambda s, b: s.on_board(JobsTab.turn_in, b["id"]),
         "sell_egg": lambda s, b: s.on_board(JobsTab.sell_egg),
+        "crafter": lambda s, b: s.crafter(b["uid"]),
+        "craft": lambda s, b: s.craft(b["recipe"], int(b["hours"]), bool(b.get("alone"))),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -122,6 +126,7 @@ class HubSession(Session):
         self._gather = None
         self._medic = None
         self._jobs = None
+        self._craft = None
 
     @property
     def shop(self):
@@ -153,6 +158,48 @@ class HubSession(Session):
     @property
     def board(self):
         return self._tab("jobs", "_jobs", JobsTab)
+
+    @property
+    def bench(self):
+        key = next((k for k, _ in self.tabs if k in CRAFT_TABS), None)
+        if key is None:
+            raise ValueError("no workbench here")
+        if self._craft is None:
+            self._craft = CraftTab(self.guild, self.group, self.node, key)
+        return self._craft
+
+    def crafter(self, uid):
+        self.bench.pick(uid)
+        self.tab = self.bench.key
+        return self.state()
+
+    def craft(self, recipe, hours, alone):
+        """Put `hours` into `recipe`. With the group waiting the stint is rolled now and the clock passes
+        here, as pygame's does; alone, the crafter splits off on a solo task and the band goes back to the
+        map, where the clock runs."""
+        tab = self.bench
+        recipe = tab.recipe(recipe)
+        m = self.map
+        if alone:
+            if hours not in ALONE_HOURS:
+                raise ValueError(f"no {hours} h stint alone")
+            ok, lines = solo.craft(self.guild, self.group, tab.crafter, recipe, hours)
+            if not ok:
+                tab.notice = lines[0]
+                return self.state()
+            m.notices += lines
+            m.game.open(m)
+            return m._after_order()
+        if hours not in WAIT_HOURS:
+            raise ValueError(f"no {hours} h stint")
+        lines, _ = self.guild.crafting_shift(tab.crafter, recipe, hours, pool=tab.s._packs)
+        tab.report = lines
+        if m.wiped or not self.group.members:
+            m.game.open(m)
+            return m._after_order()
+        m._save()
+        self.tab = tab.key
+        return self.state()
 
     def on_board(self, verb, *args):
         verb(self.board, *args)
@@ -246,6 +293,8 @@ class HubSession(Session):
             out["medic"] = self.ward.state()
         elif self.tab == "jobs":
             out["jobs"] = self.board.state()
+        elif self.tab in CRAFT_TABS:
+            out["craft"] = self.bench.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

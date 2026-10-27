@@ -57,7 +57,7 @@ def test_a_shop_opens_as_a_hub_with_the_tabs_and_keeper_of_its_place():
     st = hub.state()
     assert [t["key"] for t in st["tabs"]] == ["shop", "craft"] and st["tab"] == "craft"
     assert st["keeper"]["name"] and st["keeper"]["portrait"].startswith("/assets/portraits/npc/")
-    assert "away" in st and "shop" not in st
+    assert "craft" in st and "shop" not in st
     st = hub.pick_tab("shop")
     assert st["tab"] == "shop" and {c["key"] for c in st["shop"]["shelf"]} >= {"weapons", "armor"}
     with pytest.raises(ValueError):
@@ -375,6 +375,71 @@ def test_a_job_won_by_a_fight_is_taken_here_and_met_on_the_map(monkeypatch):
     tab.accept(missions.FAITH_BATTLEFIELD.id)
     b = tab.state()["jobs"][0]["button"]
     assert b["verb"] == "turn_in" and not b["on"] and "BATTLEFIELD" in b["label"]
+
+
+def _bench(node="carpenter", kind="carpenter", lumber=3):
+    hub, guild, g = _hub(node, kind)
+    g.members[0].recipes.append("Club")
+    for u in g.members:
+        u.remove_named("Lumber", u.count_of("Lumber"))
+    g.members[0].give_to_pack("Lumber", lumber)
+    return hub, guild, g
+
+
+def test_a_workbench_lists_who_works_here_and_the_picked_ones_recipes_with_what_they_use():
+    hub, _, g = _bench(lumber=0)
+    st = hub.state()
+    assert st["tab"] == "carpenter" and next(t for t in st["tabs"] if t["key"] == "carpenter")["live"]
+    c = st["craft"]
+    crafters = [u["uid"] for u in c["crafters"]]
+    assert g.members[0].uid == crafters[0] and c["crafters"][0]["picked"] and c["who"] == g.members[0].name
+    club = next(r for r in c["recipes"] if r["id"] == "Club")
+    assert club["uses"] == [{"name": "Lumber", "need": 1, "have": 0}] and not club["can"] and club["makes"] == 2
+    assert all(items.get_recipe(r["id"]).station == "carpenter" for r in c["recipes"])
+    g.members[1].give_to_pack("Lumber", 2)
+    club = next(r for r in hub.state()["craft"]["recipes"] if r["id"] == "Club")
+    assert club["can"] and club["uses"][0]["have"] == 2 and club["alone"] == "not in their own pack"
+    with pytest.raises(ValueError):
+        hub.crafter("nobody")
+
+
+def test_a_stint_the_group_waits_rolls_the_craft_passes_the_clock_and_stays_on_the_tab(saves):
+    hub, guild, g = _bench()
+    smith = g.members[0]
+    start = guild.clock.seconds
+    st = hub.verb("craft", True)(hub, {"recipe": "Club", "hours": 8})
+    assert hub.game.session is hub and st["tab"] == "carpenter" and st["craft"]["report"]
+    assert smith.count_of("Club") >= 2 and smith.count_of("Lumber") < 3
+    assert guild.clock.seconds > start
+    with pytest.raises(ValueError):
+        hub.craft("Club", 16, False)
+    with pytest.raises(ValueError):
+        hub.craft("Longsword", 4, False)
+
+
+def test_a_stint_alone_splits_the_crafter_off_and_goes_back_to_the_map():
+    hub, guild, g = _bench()
+    smith = g.members[0]
+    st = hub.craft("Club", 8, True)
+    assert st["screen"] == "map" and isinstance(hub.game.session, MapSession)
+    assert smith not in g.members and any(x.order and x.order.task == "craft" for x in guild.groups)
+
+
+def test_a_stint_alone_with_no_free_slot_is_refused_on_the_tab(monkeypatch):
+    hub, guild, _ = _bench()
+    monkeypatch.setattr(Guild, "free_slots", property(lambda self: 0))
+    club = next(r for r in hub.state()["craft"]["recipes"] if r["id"] == "Club")
+    assert club["alone"] == "no free group slot"
+    st = hub.craft("Club", 8, True)
+    assert st["tab"] == "carpenter" and st["craft"]["notice"] and len(guild.groups) == 1
+
+
+def test_the_forge_apothecary_and_library_benches_work_at_their_own_station():
+    from gartok.web.craft_tab import CraftTab
+    for node, key, station in (("smith", "craft", "forge"), ("apothecary", "craft", "apothecary"),
+                               ("library", "craft", "scriptorium"), ("carpenter", "carpenter", "carpenter")):
+        guild = _guild(node)
+        assert CraftTab(guild, guild.groups[0], world.node(node), key).station == station
 
 
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():

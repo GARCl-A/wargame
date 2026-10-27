@@ -21,6 +21,8 @@ from .ui.vendor_panel import draw_vendor, draw_vendor_name
 from .unit_loadout import pooled_unlocked
 
 CARD_H = T.S * 13
+WAIT_HOURS = (1, 4, 8)          # a stint the whole group waits out, here and now
+ALONE_HOURS = (4, 8, 16)        # a solo task: the crafter splits off and the map runs the clock
 
 class CraftingScreen(Screen):
     native = True
@@ -102,6 +104,14 @@ class CraftingScreen(Screen):
 
     def _has_materials(self, recipe):
         return not self._get_missing_materials(recipe) and not self._get_missing_tools(recipe)
+
+    def alone_blocker(self, m, recipe_id):
+        """Why `m` cannot go off alone to craft `recipe_id`, or None when they can."""
+        if len(self.group.members) > 1 and not self.guild.free_slots:
+            return "no free group slot"
+        if self.guild.craft_blocker(m, recipe_id, [m]) is not None:
+            return "not in their own pack"
+        return None
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL and self.roster_area.collidepoint(self.mouse):
@@ -288,14 +298,9 @@ class CraftingScreen(Screen):
             text(screen, F["hub_sub"], "the materials must be with the group (packs, wagons, animals) to start",
                  (r.right - T.S * 2, r.centery - T.S), T.TX_FAINT, right=True)
             return
-        if len(self.group.members) > 1 and not self.guild.free_slots:
-            alone_no = "no free group slot"
-        elif self.guild.craft_blocker(m, recipe_id, [m]) is not None:
-            alone_no = "not in their own pack"
-        else:
-            alone_no = None
+        alone_no = self.alone_blocker(m, recipe_id)
         bw, bh = (buttons_w - T.S * 12) // 3, T.S * 4 + 4
-        rows = (("Group waits", "work", (1, 4, 8), None), ("Alone", "alone", (4, 8, 16), alone_no))
+        rows = (("Group waits", "work", WAIT_HOURS, None), ("Alone", "alone", ALONE_HOURS, alone_no))
         for row, (label, kind, hours, no) in enumerate(rows):
             by = r.y + T.S * 2 + row * (bh + T.S * 2)
             mid = by + (bh - F["hub_sub"].get_height()) // 2

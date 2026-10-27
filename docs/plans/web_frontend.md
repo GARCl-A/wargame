@@ -3,8 +3,8 @@
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
-the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic and the jobs
-boards are in; the other tabs come next.
+the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
+boards and the workbenches are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -95,6 +95,8 @@ boards are in; the other tabs come next.
   (`item_icon.glyph`).
 - **`gartok/web/jobs_tab.py`** + `screens/hub/jobs.js` are a giver's jobs board (9d), on pygame's own
   `MissionOfferScreen` held headless.
+- **`gartok/web/craft_tab.py`** + `screens/hub/craft.js` are a workbench (9e: the forge, the carpentry,
+  the Apothecary's craft, the Library's writing desk), on pygame's own `CraftingScreen` held headless.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -431,6 +433,24 @@ As built:
   the pay; refusals; a sanctuary's egg sale). The open and the taken board were looked at in headless Edge at
   1920x1080 on a copy of the day-70 save.
 - **Next (9e):** the forge and carpentry (the workbench), then the stables and the wagon yard.
+
+**9e. The workbenches — done (2026-10-27).** As built:
+
+- **The server** (`CraftTab`) holds pygame's `CraftingScreen` headless at the station of the node's function
+  (the Smithy's forge, the Carpenter, the Apothecary, the Library's scriptorium): one tab class for every
+  `craft`, `forge` and `carpenter` tab key. The hour sets (`WAIT_HOURS`, `ALONE_HOURS`) and the rule that
+  keeps a crafter from going alone (`alone_blocker`) moved out of pygame's draw into names both front-ends use.
+- **The layout** is 9b's: the crafters on leather (click to pick; each with d20 + INT and the batch under way)
+  and the last stint's lines under them; on paper the picked crafter's recipes, one row each (glyph, level,
+  work XP, yield, what it uses with what the band holds, the tools, the progress bar of a batch under way) with
+  the two rows of hours: the group waits (1 / 4 / 8 h) or the crafter goes alone (4 / 8 / 16 h), or why not.
+- **The clock:** a stint the group waits is rolled now and passes its hours as pygame's does
+  (`Guild.crafting_shift`) and the tab stays up with its lines; alone is `solo.craft` (a solo task with its own
+  group slot) and the band goes back to the map, as pygame's does. The Claim kitchen (station `cooking`) is not
+  a hub tab: it waits for the Claim's screen.
+- Tests: `tests/test_web_hub.py` (the crafters and the recipes with what they use, a stint the group waits, a
+  stint alone and its refusal with no slot, each bench at its own station). Looked at in headless Edge at 1920x1080.
+- **Next (9f):** the stables and the wagon yard (the Farm's STABLES, the Carpenter's WAGONS).
 
 ### 10. The swap — todo
 
