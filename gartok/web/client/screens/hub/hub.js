@@ -1,5 +1,5 @@
 // A place's hub: the keeper's strip, the row of tabs and the tab in view. The shop draws itself
-// (shop.js), and so do a work node's shifts (labor.js), the Medic (medic.js), a jobs board (jobs.js), a workbench (craft.js), the stables and wagon yard (stables.js), the Tavern (tavern.js) and a sanctuary's initiation (initiation.js); a tab the browser does
+// (shop.js), and so do a work node's shifts (labor.js), the Medic (medic.js), a jobs board (jobs.js), a workbench (craft.js), the stables and wagon yard (stables.js), the Tavern (tavern.js), a sanctuary's initiation (initiation.js) and the Bank's strongbox (vault.js); a tab the browser does
 // not draw yet is a note on paper. Every verb answers the whole hub.
 "use strict";
 
@@ -62,6 +62,7 @@ function draw() {
   else if (H.wagons) Stables.wagons(H.wagons);
   else if (H.tavern) Tavern.draw(H.tavern, H.tab);
   else if (H.initiation) Initiation.draw(H.initiation);
+  else if (H.vault) Vault.draw(H.vault);
   else drawAway();
 }
 
@@ -83,7 +84,7 @@ $("tabs").addEventListener("click", e => {
 $("back").onclick = back;
 addEventListener("keydown", e => {
   if (e.key === "Tab" && H && H.tabs.length > 1) { e.preventDefault(); nextTab(e.shiftKey ? -1 : 1); return; }
-  if (e.key === "Escape" && !(H && H.shop && Shop.escape())) back();
+  if (e.key === "Escape" && !(H && ((H.shop && Shop.escape()) || (H.vault && Vault.escape())))) back();
 });
 
 api("/api/hub/state").then(r => { H = r; draw(); });

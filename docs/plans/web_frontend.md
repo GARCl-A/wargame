@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation and the prison's cells are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells and the Bank's vault are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -103,6 +103,8 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   own `TavernaScreen` held headless; the City Prison's THE CELLS (9i) is the same tab on `PrisonScreen`.
 - **`gartok/web/initiation_tab.py`** + `screens/hub/initiation.js` are a sanctuary's INITIATION (9h), on pygame's own
   `InitiationScreen` held headless.
+- **`gartok/web/vault_tab.py`** + `screens/hub/vault.js` are the Bank's VAULT (9j), on pygame's own `BankScreen`
+  held headless; the Bankers' JOBS beside it is `jobs_tab` on `TrustScreen`.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -526,6 +528,27 @@ As built:
   the day-70 save.
 - **Next (9j):** the bank (`bank_screen.py`, the City's VISIT THE BANK), the first of the holdings: the strongbox, then
   the house and the Claim.
+
+**9j. The Bank — done (2026-10-27).** As built:
+
+- **The server:** the order `bank` opens a hub with VAULT and JOBS (`hub_session.HUBS["bank"]`), the keeper Elysia.
+  `VaultTab` holds pygame's `BankScreen` headless: the chest's weight cap, the hard load limit on what comes out, the
+  slots, the services (rent the strongbox, buy the house: refused when off, as pygame's button is) and the purse are its.
+  The gold exchange moved out of `BankScreen._exchange_click` into `_exchange`, which pygame calls too. JOBS is `JobsTab`
+  on `TrustScreen` (the Test of Trust), added to `jobs_tab.BOARDS` as `trust`.
+- **The layout** is the shop's: the strongbox on paper where the shelf sits (each stack with its weight, how many are
+  held and a Take stepper, the chest's load as a bar that shows what a pick would add), one leather column per pack, the
+  Bankers' services on the sell plate (or, once rented and with no house to buy, the exchange's rates), the purse with
+  Distribute and Done. Drag onto the chest to stow, out of it onto a pack or a worn slot; click and click; Shift picks
+  several; right-click for the menu (where to send it; on a coin stack, mint or melt gold).
+- The shop's pointer handlers answered on every tab of the hub (a Done elsewhere would have gone back twice); they now
+  answer only on the shop.
+- Tests: `tests/test_web_hub.py` (the tabs and keeper, the rent and a short purse, part of a stack in and out, the chest
+  and a pack that will not hold it, a weapon from the chest into a hand, minting and melting, the Test of Trust). The
+  map's away-card tests now use the property. Looked at in headless Edge at 1920x1080 on a copy of the day-70 save, and
+  a drag in, a click out, the menu, a mint and Done were driven over the DevTools protocol.
+- **Next (9k):** the house (`city_property_screen.py`, VISIT THE PROPERTY): the stash, the tax, the oven and its
+  kitchen, the garage; `RepossessionScreen` before it when the tax is too far behind.
 
 ### 10. The swap — todo
 

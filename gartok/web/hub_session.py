@@ -3,8 +3,8 @@ to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its
 (`work_tab`), the Apothecary its Medic (`medic_tab`), a giver its jobs board (`jobs_tab`), a workbench its
 recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`), the Tavern its
 recruits, study rooms and stage (`tavern_tab`), the City Prison its cells (`tavern_tab` with a bail), a
-sanctuary its initiation (`initiation_tab`); a tab the browser does not draw yet says so inside the frame,
-and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md` lands.
+sanctuary its initiation (`initiation_tab`), the Bank its strongbox (`vault_tab`) beside the Bankers' jobs; a
+tab the browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md` lands.
 
 The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
 """
@@ -25,6 +25,7 @@ from .shop_tab import ShopTab
 from .stable_tab import StableTab, WagonTab
 from .tavern_tab import TABS as TAVERN_TABS
 from .tavern_tab import TavernTab
+from .vault_tab import VaultTab
 from .work_tab import GatherTab, WorkTab
 
 # order kind -> its hub's tabs, where it is not the node's own list (`_node_tabs`)
@@ -34,10 +35,11 @@ HUBS = {
     "apothecary": (("shop", "Shop"), ("medic", "Medic"), ("craft", "Craft"), ("jobs", "Jobs")),
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
     "prison": (("prison", "The Cells"),),
+    "bank": (("vault", "Vault"), ("jobs", "Jobs")),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", *HUBS}
 # the tabs the browser draws so far
-LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", *CRAFT_TABS, *TAVERN_TABS}
+LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", "vault", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
 WHAT = {"tavern": "the tavern", "study": "the study desk"}
 
@@ -90,6 +92,15 @@ def _shop(verb):
     return run
 
 
+def _on_vault(verb):
+    """A vault verb: it acts on the strongbox tab and answers the whole hub."""
+    def run(s, b):
+        verb(s.vault, b)
+        s.tab = "vault"
+        return s.state()
+    return run
+
+
 class HubSession(Session):
     screen = "hub"
     GET: ClassVar[dict] = {"state": lambda s, q: s.state()}
@@ -130,6 +141,10 @@ class HubSession(Session):
         "perform": lambda s, b: s.perform(),
         "novice": lambda s, b: s.novice(b["uid"]),
         "begin_rite": lambda s, b: s.begin_rite(),
+        "vault_move": _on_vault(lambda t, b: t.move(b["picks"], b["to"], b.get("zone", "pack"))),
+        "vault_service": _on_vault(lambda t, b: t.service(b["key"])),
+        "vault_gold": _on_vault(lambda t, b: t.exchange(b["from"], b["n"], bool(b.get("melt")))),
+        "vault_distribute": _on_vault(lambda t, b: t.distribute()),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -141,7 +156,7 @@ class HubSession(Session):
         self.order = order
         self.node = world.node(group.node)
         self.tabs = tabs_for(order.kind, self.node)
-        first = "shop" if order.kind in ("market", "stable") else {"forge": "craft", "recruit": "recruits"}.get(order.kind, order.kind)
+        first = "shop" if order.kind in ("market", "stable") else {"forge": "craft", "recruit": "recruits", "bank": "vault"}.get(order.kind, order.kind)
         self.tab = first if any(k == first for k, _ in self.tabs) else self.tabs[0][0]
         self._shop = None
         self._work = None
@@ -153,6 +168,7 @@ class HubSession(Session):
         self._wagons = None
         self._tavern = None
         self._rite = None
+        self._vault = None
 
     @property
     def shop(self):
@@ -228,6 +244,10 @@ class HubSession(Session):
         m._save()
         self.tab = "perform"
         return self.state()
+
+    @property
+    def vault(self):
+        return self._tab("vault", "_vault", VaultTab)
 
     @property
     def rite(self):
@@ -401,6 +421,8 @@ class HubSession(Session):
             out["tavern"] = self.tavern.state("recruits")
         elif self.tab == "initiation":
             out["initiation"] = self.rite.state()
+        elif self.tab == "vault":
+            out["vault"] = self.vault.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "

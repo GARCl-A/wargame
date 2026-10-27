@@ -771,10 +771,115 @@ def test_a_lost_pitch_keeps_the_bail_and_a_short_purse_cannot_pay_it(monkeypatch
     assert not d["bail"]["ok"] and not d["button"]["on"] and d["button"]["label"].startswith("Cannot afford")
 
 
+def _vault(coins=300, rent=True):
+    hub, guild, g = _hub("city", "bank", coins)
+    if rent:
+        hub.verb("vault_service", True)(hub, {"key": "rent"})
+    return hub, guild, g
+
+
+def _row(rows, name):
+    return next((r for r in rows if r["name"] == name), None)
+
+
+def test_the_bank_opens_on_its_vault_beside_the_bankers_jobs():
+    hub, _, g = _vault(rent=False)
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["vault", "jobs"] and st["tab"] == "vault"
+    assert st["keeper"]["name"] == world.vendor("city", "bank").name
+    v = st["vault"]
+    assert not v["chest"]["open"] and [p["id"] for p in v["packs"]] == [u.uid for u in g.members]
+    rent = next(s for s in v["services"] if s["key"] == "rent")
+    assert rent["on"] and not next(s for s in v["services"] if s["key"] == "buy_property")["on"]
+    with pytest.raises(ValueError):
+        hub.verb("vault_service", True)(hub, {"key": "buy_property"})
+    u = g.members[0]
+    st = hub.verb("vault_move", True)(hub, {"picks": [{"from": u.uid, "loc": 0}], "to": "bank"})
+    assert "rent a strongbox first" in st["vault"]["notice"]
+    jobs = hub.pick_tab("jobs")["jobs"]["jobs"]
+    assert [j["id"] for j in jobs] == ["bankers_trust_chest"]
+
+
+def test_renting_the_strongbox_pays_the_bankers_and_a_short_purse_cannot():
+    hub, _, _ = _vault(rent=False)
+    v = hub.verb("vault_service", True)(hub, {"key": "rent"})["vault"]
+    assert v["chest"]["open"] and v["chest"]["capacity"] == economy.BANK_CHEST_CAPACITY
+    assert v["purse"] == 600 - economy.BANK_CHEST_PRICE
+    assert not any(s["key"] == "rent" for s in v["services"])
+    hub, guild, _ = _vault(coins=10, rent=False)
+    assert not next(s for s in hub.state()["vault"]["services"] if s["key"] == "rent")["on"]
+    with pytest.raises(ValueError):
+        hub.verb("vault_service", True)(hub, {"key": "rent"})
+    assert not guild.bank.open
+
+
+def test_items_go_into_the_chest_part_of_a_stack_at_a_time_and_come_back_out():
+    hub, _, g = _vault()
+    u, v = g.members
+    loc = next(i for i, e in enumerate(u._base_inventory) if e[0] == "Potato")
+    st = hub.verb("vault_move", True)(hub, {"picks": [{"from": u.uid, "loc": loc, "qty": 3}], "to": "bank"})["vault"]
+    assert _row(st["chest"]["rows"], "Potato")["qty"] == 3 and u.count_of("Potato") == 1
+    st = hub.verb("vault_move", True)(hub, {"picks": [{"from": "bank", "loc": 0, "qty": 2}], "to": v.uid})["vault"]
+    assert _row(st["chest"]["rows"], "Potato")["qty"] == 1 and v.count_of("Potato") == 6
+    with pytest.raises(ValueError):
+        hub.verb("vault_move", True)(hub, {"picks": [{"from": "bank", "loc": 9}], "to": v.uid})
+
+
+def test_the_chest_refuses_what_it_cannot_hold_and_a_pack_what_it_cannot_carry():
+    hub, guild, g = _vault()
+    u = g.members[0]
+    u.give_to_pack("Lumber", 40)
+    loc = next(i for i, e in enumerate(u._base_inventory) if e[0] == "Lumber")
+    st = hub.verb("vault_move", True)(hub, {"picks": [{"from": u.uid, "loc": loc}], "to": "bank"})["vault"]
+    assert "won't fit" in st["notice"] and not st["chest"]["rows"] and u.count_of("Lumber") == 40
+    guild.bank.put("Lumber", 10)
+    u.give_to_pack("Lumber", 200)
+    st = hub.verb("vault_move", True)(hub, {"picks": [{"from": "bank", "loc": 0}], "to": u.uid})["vault"]
+    assert "won't fit" in st["notice"] and _row(st["chest"]["rows"], "Lumber")["qty"] == 10
+
+
+def test_a_weapon_from_the_chest_goes_straight_into_a_hand():
+    hub, guild, g = _vault()
+    u = g.members[0]
+    u.take_from_hand()
+    guild.bank.put("Dagger")
+    st = hub.verb("vault_move", True)(hub, {"picks": [{"from": "bank", "loc": 0}], "to": u.uid, "zone": "hand"})["vault"]
+    assert u.equipped_weapon == "Dagger" and not st["chest"]["rows"]
+    hand = next(w for w in next(p for p in st["packs"] if p["id"] == u.uid)["worn"] if w["zone"] == "hand")
+    assert hand["name"] == "Dagger"
+    hub.verb("vault_move", True)(hub, {"picks": [{"from": u.uid, "loc": "hand"}], "to": "bank"})
+    assert u.equipped_weapon is None and guild.bank.count_of("Dagger") == 1
+
+
+def test_copper_mints_gold_at_the_fee_and_gold_melts_back():
+    hub, guild, g = _vault()
+    u = g.members[0]
+    before = u.money
+    st = hub.verb("vault_gold", True)(hub, {"from": u.uid, "n": 1})["vault"]
+    assert u.count_of(items.GOLD_ITEM) == 1 and u.money == before - economy.GOLD_FEE
+    assert "minted 1 gold" in st["notice"]
+    assert _row(next(p for p in st["packs"] if p["id"] == u.uid)["pack"], items.GOLD_ITEM)["melt"] == 1
+    hub.verb("vault_gold", True)(hub, {"from": u.uid, "n": 1, "melt": True})
+    assert u.count_of(items.GOLD_ITEM) == 0 and u.money == before - 2 * economy.GOLD_FEE
+    with pytest.raises(ValueError):
+        hub.verb("vault_gold", True)(hub, {"from": u.uid, "n": 50})
+    guild.bank.put(items.COIN_ITEM, economy.gold_price(1))
+    hub.verb("vault_gold", True)(hub, {"from": "bank", "n": 1})
+    assert guild.bank.count_of(items.GOLD_ITEM) == 1 and guild.bank.count_of(items.COIN_ITEM) == 0
+
+
+def test_the_bankers_test_of_trust_is_taken_on_the_jobs_tab():
+    hub, _, g = _vault()
+    hub.pick_tab("jobs")
+    st = hub.verb("accept", True)(hub, {"id": "bankers_trust_chest"})
+    job = st["jobs"]["jobs"][0]
+    assert job["taken"] and g.leader.count_of(data.MISSION_CHEST_ITEM) == 1
+
+
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
     guild = _guild("city")
     game = Game(MapSession(guild))
-    assert game.session.act(guild.groups[0].gid, "bank") == {"screen": "away"}
+    assert game.session.act(guild.groups[0].gid, "property") == {"screen": "away"}
     assert isinstance(game.session, AwaySession)
 
 

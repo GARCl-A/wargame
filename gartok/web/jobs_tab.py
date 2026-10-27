@@ -1,4 +1,4 @@
-"""A hub's JOBS tab in the browser (the Tanner, the Apothecary, the Library, a sanctuary): the board on
+"""A hub's JOBS tab in the browser (the Tanner, the Apothecary, the Library, a sanctuary, the Bankers): the board on
 paper (each job the giver has, what it asks and pays, its state and its button) and, on leather, who signs
 for the band and what the packs already carry toward each goal.
 
@@ -12,12 +12,13 @@ from ..apothecary_mission_screen import ApothecaryMissionScreen
 from ..library_mission_screen import LibraryMissionScreen
 from ..shrine_screen import ShrineMissionScreen
 from ..tanner_screen import TannerScreen
+from ..trust_screen import TrustScreen
 from ..ui.mission_offer_screen import TAG_TONE
 from .shop_tab import _portrait
 
 # a node's function -> its giver's board, in the order `TabbedHubScreen.for_node` checks them
 BOARDS = (("tanner", TannerScreen), ("apothecary", ApothecaryMissionScreen), ("library", LibraryMissionScreen),
-          ("shrine", ShrineMissionScreen))
+          ("shrine", ShrineMissionScreen), ("trust", TrustScreen))
 
 
 def _glyph(t):

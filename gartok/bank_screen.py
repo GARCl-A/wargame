@@ -119,17 +119,23 @@ class BankScreen(StashScreen):
             elif key == "plus":
                 p["amount"] = min(p["max"], p["amount"] + 1)
             else:
-                n = p["amount"]
-                if p["mode"] == "buy_gold":
-                    economy.buy_gold(p["holder"], n)
-                    self.notice = f"minted {n} gold coins for {fmt_money(economy.gold_price(n))}."
-                else:
-                    economy.sell_gold(p["holder"], n)
-                    self.notice = f"melted {n} gold coins into {fmt_money(economy.gold_payout(n))}."
-                if hasattr(p["holder"], "_derive_combat"):
-                    p["holder"]._derive_combat()
+                self._exchange(p["holder"], p["mode"], p["amount"])
                 self.exchange = None
             return
+
+    def _exchange(self, holder, mode, n):
+        """Mint (`buy_gold`) or melt (`sell_gold`) `n` Gold Coins out of `holder`. False if it cannot."""
+        if mode == "buy_gold":
+            if not economy.buy_gold(holder, n):
+                return False
+            self.notice = f"minted {n} gold coins for {fmt_money(economy.gold_price(n))}."
+        else:
+            if not economy.sell_gold(holder, n):
+                return False
+            self.notice = f"melted {n} gold coins into {fmt_money(economy.gold_payout(n))}."
+        if hasattr(holder, "_derive_combat"):
+            holder._derive_combat()
+        return True
 
     def handle_event(self, event):
         if self.exchange is not None and event.type == pygame.MOUSEBUTTONDOWN:

@@ -311,7 +311,7 @@ const Shop = (() => {
   // ---------------------------------------------------------------- the pointer
   const body = $("body");
   body.addEventListener("pointerdown", e => {
-    if (e.button !== 0 || !S) return;
+    if (e.button !== 0 || !S || !H.shop) return;
     $("menu").hidden = true;
     const q = e.target.closest(".qty [data-q]");
     if (q) {
@@ -345,10 +345,12 @@ const Shop = (() => {
     else if (el && el.closest("#body")) click(el, e);
   });
   body.addEventListener("click", e => {
+    if (!S || !H.shop) return;
     if (e.target.closest("#done")) back();
     else if (e.target.closest("#spread")) act("distribute", {});
   });
   body.addEventListener("contextmenu", e => {
+    if (!S || !H.shop) return;
     e.preventDefault();
     const src = source(e.target);
     if (src && src.item) menu(e, src.item);
