@@ -6,7 +6,7 @@ The rules are `stables`' (`Stables`, `WagonYard`), which pygame's tabs read too:
 the tack and the resale.
 """
 
-from .. import animals, artwork, data, items, wagon
+from .. import animals, art_files, data, items, wagon
 from ..stables import Stables, WagonYard, resale
 from .session import asset_url
 
@@ -14,7 +14,7 @@ WAGON_GLYPH = "item/old-wagon"
 
 
 def _face(species, uid=None):
-    return asset_url(artwork.portrait_path(species, int(uid[:8], 16) if uid else 0))
+    return asset_url(art_files.portrait_path(species, int(uid[:8], 16) if uid else 0))
 
 
 class StableTab(Stables):

@@ -1,43 +1,35 @@
 """Tests for the founding draft: a pool of nine, pick three, and the commission tokens."""
 
 import os
+import subprocess
+import sys
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 import pygame
 
-from gartok import archetypes
-from gartok.draft_screen import (
+from gartok import archetypes, recruit
+from gartok.draft import (
     COMMISSION_TOKENS,
     POOL_SIZE,
     TEAM_SIZE,
-    DraftScreen,
+    Draft,
+    leader_recruits,
 )
+from gartok.guild import Guild
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 
-SIZE = (1280, 800)
+
+def _commission(d, labels, target):
+    d.pending_labels = list(labels)
+    d.replace(target)
 
 
-def _screen(on_done=lambda *args: None):
-    pygame.init()
-    ds = DraftScreen(ui_fonts(), on_done)
-    surf = pygame.Surface(SIZE)
-    ds.draw(surf)
-    return ds, surf
-
-
-def _commission(ds, surf, labels, target):
-    ds._click(ds.commission_btn_rect.center)
-    ds.draw(surf)
-    for rect, key, _can in ds.modal_item_rects:
-        if key in labels:
-            ds._click(rect.center)
-    ds.draw(surf)
-    ds._click(ds.modal_confirm_rect.center)
-    ds.draw(surf)
-    ds._click(next(r for r, u in ds.card_rects if u is target).center)
-    ds.draw(surf)
+def test_the_draft_and_its_web_session_load_without_pygame():
+    code = ("import sys; sys.modules['pygame'] = None; "
+            "import gartok.draft, gartok.sheet, gartok.art_files, gartok.web.draft_session")
+    subprocess.run([sys.executable, "-c", code], check=True)
 
 
 def test_archetype_catalog_completeness():
@@ -64,136 +56,65 @@ def test_generate_candidate_satisfies_requested_labels():
 
 
 def test_draft_starts_with_a_pool_of_nine_and_three_tokens():
-    ds, _ = _screen()
+    d = Draft()
     assert POOL_SIZE == 9 and TEAM_SIZE == 3
-    assert len(ds.pool) == POOL_SIZE
-    assert ds.tokens == COMMISSION_TOKENS == 3
-    assert ds.picks == [] and ds.phase == "pick"
+    assert len(d.pool) == POOL_SIZE
+    assert d.tokens == COMMISSION_TOKENS == 3
+    assert d.picks == [] and d.leader_pick is None
 
 
 def test_picking_toggles_and_caps_at_three():
-    ds, _ = _screen()
-    units = ds.pool[:4]
+    d = Draft()
+    units = d.pool[:4]
     for u in units[:3]:
-        ds._toggle_pick(u)
-    ds._toggle_pick(units[3])
-    assert ds.picks == units[:3]
-    ds._toggle_pick(units[0])
-    assert ds.picks == units[1:3]
-    ds._toggle_pick(units[3])
-    assert ds.picks == [units[1], units[2], units[3]]
-
-
-def test_continue_needs_three_picks_then_opens_identity():
-    ds, surf = _screen()
-    for rect, _u in ds.card_rects[:2]:
-        ds._click(rect.center)
-    ds.draw(surf)
-    ds._click(ds.continue_rect.center)
-    assert ds.phase == "pick" and len(ds.picks) == 2
-    ds._click(ds.card_rects[2][0].center)
-    ds.draw(surf)
-    ds._click(ds.continue_rect.center)
-    assert ds.phase == "identity"
-
-
-def test_scrolling_reaches_the_last_card_and_clicks_outside_the_view_are_ignored():
-    ds, surf = _screen()
-    assert ds.max_scroll > 0
-    first_row_y = ds.card_rects[0][0].y
-    ds.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, y=-50))
-    assert ds.scroll == ds.max_scroll
-    ds.draw(surf)
-    assert ds.card_rects[0][0].y < first_row_y
-    assert ds.card_rects[-1][1] is ds.pool[-1]
-    ds._click((ds.pool_view.x + 2, ds.pool_view.bottom + 20))
-    assert ds.picks == []
-
-
-def test_commission_open_cancel_spends_nothing():
-    ds, surf = _screen()
-    ds._click(ds.commission_btn_rect.center)
-    assert ds.commission_modal_open
-    ds.draw(surf)
-    assert len(ds.modal_item_rects) == 7
-    ds._click(ds.modal_cancel_rect.center)
-    assert not ds.commission_modal_open and ds.tokens == 3 and not ds.pending_labels
+        d.toggle_pick(u)
+    d.toggle_pick(units[3])
+    assert d.picks == units[:3]
+    d.toggle_pick(units[0])
+    assert d.picks == units[1:3]
+    d.toggle_pick(units[3])
+    assert d.picks == [units[1], units[2], units[3]]
 
 
 def test_commission_replaces_the_chosen_card_and_spends_tokens_then():
-    ds, surf = _screen()
-    target = ds.pool[4]
-    ds.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, y=-50))
-    ds.draw(surf)
-    ds._click(ds.commission_btn_rect.center)
-    ds.draw(surf)
-    leader = next(r for r, k, _c in ds.modal_item_rects if k == "LEADER")
-    ds._click(leader.center)
-    ds.draw(surf)
-    ds._click(ds.modal_confirm_rect.center)
-    assert ds.pending_labels == ["LEADER"] and ds.tokens == 3
-    ds.draw(surf)
-    ds._click(next(r for r, u in ds.card_rects if u is target).center)
-
-    assert ds.tokens == 2 and not ds.pending_labels
-    fresh = ds.pool[4]
-    assert fresh is not target and len(ds.pool) == POOL_SIZE
+    d = Draft()
+    target = d.pool[4]
+    d.pending_labels = ["LEADER"]
+    assert d.tokens == 3
+    d.replace(target)
+    assert d.tokens == 2 and not d.pending_labels
+    fresh = d.pool[4]
+    assert fresh is not target and len(d.pool) == POOL_SIZE
     assert fresh.mod_charisma >= 2
-    assert ds.commissioned[id(fresh)] == ["LEADER"] and id(target) not in ds.commissioned
-    ds.draw(surf)
-
-
-def test_commission_target_mode_can_be_cancelled_for_free():
-    ds, surf = _screen()
-    ds._click(ds.commission_btn_rect.center)
-    ds.draw(surf)
-    ds._click(ds.modal_item_rects[0][0].center)
-    ds.draw(surf)
-    ds._click(ds.modal_confirm_rect.center)
-    ds.draw(surf)
-    assert ds.handle_escape() is True
-    assert not ds.pending_labels and ds.tokens == 3
-    assert ds.handle_escape() is False
+    assert d.commissioned[id(fresh)] == ["LEADER"] and id(target) not in d.commissioned
 
 
 def test_replacing_a_picked_card_drops_it_from_the_squad():
-    ds, surf = _screen()
-    target = ds.pool[0]
-    ds._toggle_pick(target)
-    ds._toggle_pick(ds.pool[1])
-    _commission(ds, surf, ["STRONG"], target)
-    assert target not in ds.picks and len(ds.picks) == 1
-    assert ds.pool[0].mod_strength >= 2
+    d = Draft()
+    target = d.pool[0]
+    d.toggle_pick(target)
+    d.toggle_pick(d.pool[1])
+    _commission(d, ["STRONG"], target)
+    assert target not in d.picks and len(d.picks) == 1
+    assert d.pool[0].mod_strength >= 2
 
 
 def test_tokens_carry_across_commissions_and_run_out():
-    ds, surf = _screen()
-    _commission(ds, surf, ["STRONG"], ds.pool[0])
-    assert ds.tokens == 2
-    _commission(ds, surf, ["LEADER", "TOUGH"], ds.pool[1])
-    assert ds.tokens == 0
-    assert ds.pool[1].mod_charisma >= 2 and ds.pool[1].hp_max >= 8
-    ds._click(ds.commission_btn_rect.center)
-    assert not ds.commission_modal_open
+    d = Draft()
+    _commission(d, ["STRONG"], d.pool[0])
+    assert d.tokens == 2
+    _commission(d, ["LEADER", "TOUGH"], d.pool[1])
+    assert d.tokens == 0
+    assert d.pool[1].mod_charisma >= 2 and d.pool[1].hp_max >= 8
 
 
-def test_zero_tokens_disables_commission_button():
-    ds, surf = _screen()
-    ds.tokens = 0
-    ds.draw(surf)
-    ds._click(ds.commission_btn_rect.center)
-    assert ds.commission_modal_open is False
-
-
-def test_commission_cannot_exceed_remaining_tokens():
-    ds, surf = _screen()
-    ds.tokens = 1
-    ds._click(ds.commission_btn_rect.center)
-    ds.draw(surf)
-    ds._click(ds.modal_item_rects[0][0].center)
-    ds.draw(surf)
-    ds._click(ds.modal_item_rects[1][0].center)
-    assert len(ds.selected_modal_labels) == 1
+def test_each_founder_shows_what_the_guild_leader_could_recruit():
+    for u in Draft().pool:
+        total, parts = leader_recruits(u)
+        guild = Guild([u])
+        guild.leader = u
+        assert total == recruit.capacity(guild, u)
+        assert f"CHA {u.mod_charisma:+d}" in parts
 
 
 def test_commission_archetypes_are_roles_not_a_race_picker():
@@ -223,37 +144,14 @@ def test_strong_is_about_strength_not_size():
     assert not archetypes.ARCHETYPES["STRONG"].predicate(u)
 
 
-def test_pool_cards_show_a_portrait_and_fit_a_900p_window_without_scroll():
-    pygame.init()
-    ds = DraftScreen(ui_fonts(), lambda *a: None)
-    surf = pygame.Surface((1600, 900))
-    ds.draw(surf)
-    assert ds.max_scroll == 0
-    rect, _ = ds.card_rects[0]
-    ring = pygame.Rect(rect.x + 16, rect.y + 16, 64, 64)
-    assert len({tuple(surf.get_at(p)[:3]) for p in
-                [(ring.x + i * 8, ring.y + j * 8) for i in range(8) for j in range(8)]}) > 3
-
-
 def test_compact_weapon_block_is_two_lines():
     from gartok.combatant import Combatant
+    from gartok.sheet import unit_to_ch
     from gartok.ui import sheet_card
     assert sheet_card.H["compact"]["weapon"] == 32
-    ch = sheet_card.unit_to_ch(Combatant(Unit("player")))
+    ch = unit_to_ch(Combatant(Unit("player")))
     pygame.init()
     surf = pygame.Surface((600, 80))
     sheet_card.draw_sheet(surf, ui_fonts(), pygame.Rect(0, 0, 400, 80), ch, density="compact", only=("weapon",))
 
 
-def test_identity_form_reports_a_hit_rect_for_every_choice():
-    from gartok import artwork
-    from gartok.ui.banner import BANNER_COLORS
-    ds, surf = _screen()
-    ds.picks = ds.pool[:TEAM_SIZE]
-    ds.leader_pick = ds.picks[0]
-    ds.phase = "identity"
-    ds.draw(surf)
-    assert len(ds.color_rects) == len(BANNER_COLORS)
-    assert len(ds.icon_rects) == len(artwork.BANNER_ICONS)
-    assert [u for _, u in ds.leader_rects] == ds.picks
-    assert ds.continue_rect is not None and ds.name_rect is not None

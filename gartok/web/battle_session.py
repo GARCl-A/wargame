@@ -8,7 +8,17 @@ health is in `intel` steps, cells never seen carry no terrain, and the light is 
 
 from typing import ClassVar
 
-from .. import actions, aftermath, ai, artwork, data, dialogue, intel, lighting, vision
+from .. import (
+    actions,
+    aftermath,
+    ai,
+    art_files,
+    data,
+    dialogue,
+    intel,
+    lighting,
+    vision,
+)
 from ..battle_screen import BattleScreen
 from ..board import cells
 from ..combatant import AP_PER_TURN
@@ -346,7 +356,7 @@ class BattleSession(Session):
             "title": enc.title, "line": enc.line,
             "leader": None if lead is None else {
                 "name": lead.name, "caption": enc.caption(lead),
-                "portrait": asset_url(artwork.portrait_path(lead.race["name"], getattr(lead, "portrait_id", None)))},
+                "portrait": asset_url(art_files.portrait_path(lead.race["name"], getattr(lead, "portrait_id", None)))},
             "foes": [f"{u.name} · {u.race['name']}" for u in enc.foes],
             "speakers": [{"id": i, "name": u.name, "selected": u is speaker,
                           "caption": f"CHA {u.mod_charisma:+d} · INT {u.mod_intelligence:+d} · "
@@ -541,7 +551,7 @@ class BattleSession(Session):
         return {
             "id": self.uid(u), "name": u.name, "side": self._side(u), "seat": self._seat(u), "team": u.team,
             "race": u.race["name"],
-            "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
+            "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
             "pos": _cell(u.pos), "fp": u.footprint,
             **self._health(u),
             "active": u is b.active and b.winner is None,
@@ -561,7 +571,7 @@ class BattleSession(Session):
             known = u.team == self.team or vision.enemy_visible(b, obs, u)
             out.append({"id": self.uid(u) if known else None, "side": self._side(u),
                         "seat": self._seat(u) if known else None,
-                        "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
+                        "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
                         if known else None,
                         "name": u.name if known else None,
                         "hp_frac": self._health(u)["hp_frac"] if known else None,
@@ -576,7 +586,7 @@ class BattleSession(Session):
             "level": u.char.racial_level if u.team == self.team else None,
             "tracks": ({"combat": u.char.combat_level, "work": u.char.work_level, "magic": u.char.magic_level}
                        if u.team == self.team else None),
-            "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
+            "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
             "race": u.race["name"], "occupation": occupation["name"] if isinstance(occupation, dict) else occupation,
             "alignment": u.char.alignment,
             **self._health(u),
@@ -617,7 +627,7 @@ class BattleSession(Session):
             return {"kind": "ally", **self._sheet(u)}
         card = foe_card(intel.known_fields(self.battle, self.team, u))
         return {"kind": "foe", "id": uid,
-                "portrait": asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
+                "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
                 **card}
 
     def _events(self, visible=None):

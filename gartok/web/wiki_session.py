@@ -7,7 +7,7 @@ from typing import ClassVar
 from .. import (
     abilities,
     actions,
-    artwork,
+    art_files,
     data,
     item_icon,
     items,
@@ -88,7 +88,7 @@ def _talents():
 
 def _races():
     return [_entry(e["name"], "Race", [e["meta"]], e["abilities"], tags=e["mods"].split("  "),
-                   glyph=f"head/{artwork.RACE_ICON[e['name']]}" if e["name"] in artwork.RACE_ICON else None,
+                   glyph=f"head/{art_files.RACE_ICON[e['name']]}" if e["name"] in art_files.RACE_ICON else None,
                    find=[e["meta"], *e["abilities"], *e["talents"]])
             | {"track": e["talents"]} for e in wiki_races.entries()]
 

@@ -10,7 +10,7 @@ group; `Guild.node` is a single-group convenience over the first group (see the
 property below) and stops making sense once a second group exists.
 
 The guild also has one **leader** -- "who am I" (chosen at the draft; see
-`draft_screen.py`), the identity the player answers to before anyone else. It
+`draft.py`), the identity the player answers to before anyone else. It
 is a *run-unique* title, not scoped to a group. It auto-succeeds by Charisma
 the instant it stops being a living roster member (`_sync_leadership`), same as
 a `Group`'s own leader (`group.py`) -- but a *deliberate* swap
@@ -21,10 +21,8 @@ itself) ends by calling `_sync_leadership`, which also folds each group's
 `overextension` into its members' Mental Defense.
 
 The guild also has a chosen **identity** -- `name`, `banner_color`, `banner_icon`
--- set at the draft (`draft_screen.py`'s "identity" phase) purely for flavour:
-`app.py` feeds `banner_color` to `ui.banner.set_player_color` so every unit token
-in the game renders in it. A guild from before this existed falls back to
-`DEFAULT_BANNER_COLOR`/`DEFAULT_BANNER_ICON` below.
+-- set at the draft's charter (`draft.py`) purely for flavour. A guild from before
+this existed falls back to `DEFAULT_BANNER_COLOR`/`DEFAULT_BANNER_ICON` below.
 
 What the guild owns as a body lives in `holdings.py`: the **bank chest**
 (`bank`, a `Stash` rented from the Bankers in the City -- capacity 0 means no
@@ -91,12 +89,20 @@ from .holdings import CityProperty, Garage, Stash
 from .shop import Shop
 from .tutorial import TutorialState
 
-# Fallbacks for a guild with no chosen identity (the draft's naming/banner
-# step not taken). Plain data, not `artwork`
-# imports -- this module stays pygame-free; the presentation layer resolves
-# these slugs/colours (`ui.banner.BANNER_COLORS`, `artwork.BANNER_ICONS`).
-DEFAULT_BANNER_COLOR = (94, 156, 214)   # same value as ui.banner.DEFAULT_COLOR
-DEFAULT_BANNER_ICON = "shield-bash"     # artwork.BANNER_ICONS[0]
+# The banner's colours, a curated palette named like a heraldry tincture list, distinct enough
+# from the enemy red to stay readable; the emblems are `art_files.BANNER_ICONS`.
+BANNER_COLORS = [
+    ("Steel",   (94, 156, 214)),
+    ("Teal",    (80, 176, 170)),
+    ("Forest",  (104, 176, 108)),
+    ("Amber",   (224, 158, 72)),
+    ("Crimson", (196, 90, 90)),
+    ("Violet",  (150, 112, 196)),
+    ("Rose",    (206, 120, 152)),
+    ("Slate",   (150, 150, 162)),
+]
+DEFAULT_BANNER_COLOR = BANNER_COLORS[0][1]
+DEFAULT_BANNER_ICON = "shield-bash"     # art_files.BANNER_ICONS[0]
 
 
 class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):

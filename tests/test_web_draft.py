@@ -9,7 +9,7 @@ import pytest
 
 from gartok import persist, recorder, vocations
 from gartok.archetypes import ARCHETYPES
-from gartok.ui.banner import BANNER_COLORS
+from gartok.guild import BANNER_COLORS
 from gartok.web.server import Game, serve
 
 

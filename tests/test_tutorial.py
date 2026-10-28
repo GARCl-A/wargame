@@ -28,14 +28,6 @@ def test_has_tells_a_real_string_apart_from_one_that_only_looks_like_its_key():
     assert not i18n.has("tutorial.does_not_exist.title")
 
 
-def test_draft_screen_reports_one_id_per_phase():
-    from gartok.draft_screen import DraftScreen
-    ds = DraftScreen.__new__(DraftScreen)
-    ds.picks = []
-    ds.tutorial = TutorialState(seen={"draft.intro"})
-    for phase, expected in (("pick", "draft.pick"), ("identity", "draft.identity")):
-        ds.phase = phase
-        assert ds.tutorial_key() == expected and expected in TUTORIALS
 
 
 def test_guild_screen_key_follows_the_active_tab():
@@ -93,8 +85,8 @@ def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
 
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
-    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.ui.tokens import T
+    from gartok.ui.tokens import fonts as ui_fonts
 
     pygame.init()
     g = Guild([Unit("Alice"), Unit("Bob")], node="city")
@@ -137,46 +129,8 @@ def test_header_reserves_space_when_has_tutorial_is_true():
     assert tabs_tut["quests"].right == tabs_normal["quests"].right - (28 + T.S)
 
 
-def test_draft_screen_buttons_clear_tutorial_badge():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.draft_screen import DraftScreen
-    from gartok.ui.tokens import T
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    pygame.init()
-    F = ui_fonts()
-    ds = DraftScreen(F, lambda *args: None)
-    W, H = 1280, 800
-    surf = pygame.Surface((W, H))
-    ds.draw(surf)
-
-    badge_rect = ds.tutorial_badge_rect((W, H))
-    assert badge_rect.width == 28 and badge_rect.height == 28
-    assert badge_rect.right == W - T.S * 4
-    assert badge_rect.top == T.S * 4
-
-    # Commission button should be aligned on the same top line and height as the tutorial badge
-    assert ds.commission_btn_rect.top == badge_rect.top
-    assert ds.commission_btn_rect.height == badge_rect.height
-
-    # Commission button should be immediately to the left of the badge, separated by T.S
-    assert ds.commission_btn_rect.right + T.S == badge_rect.left
-    assert not ds.commission_btn_rect.colliderect(badge_rect)
 
 
-def test_draft_opens_on_the_intro_card_once():
-    from gartok.draft_screen import DraftScreen
-    ds = DraftScreen.__new__(DraftScreen)
-    ds.phase, ds.picks, ds.tutorial = "pick", [], TutorialState()
-    assert ds.tutorial_key() == "draft.intro"
-    ds.tutorial.dismiss("draft.intro")
-    assert ds.tutorial_key() == "draft.pick"
-    ds.tutorial.reset()
-    ds.picks = ["a"]                                  # mid-draft: a reset never re-pops the intro
-    assert ds.tutorial_key() == "draft.pick"
 
 
 def test_no_registered_card_is_orphaned():

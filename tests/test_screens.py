@@ -750,43 +750,6 @@ def test_goblin_portraits():
     assert p.get_size() == (24, 24)
 
 
-def test_draft_screen_attribute_and_stat_hover_tooltips():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.draft_screen import DraftScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    ds = DraftScreen(ui_fonts(), lambda *args: None)
-    surf = pygame.Surface((1280, 720))
-    ds.mouse = (0, 0)
-    ds.draw(surf)
-
-    # Hover on first candidate card: find attribute row position
-    card_rect, unit = ds.card_rects[0]
-    # In _draw_card, attributes section is placed after header + derived chips
-    # We can scan the card area to find the attribute cells and hover
-    found_attr_tooltip = False
-    found_stat_tooltip = False
-
-    for pt in [(card_rect.x + dx, card_rect.y + dy)
-               for dy in (30, 110, 200, 240)
-               for dx in (45, 70, 120, 145, 195)]:
-        ds.mouse = pt
-        ds.draw(surf)
-        if ds.tooltip and isinstance(ds.tooltip, list):
-            title = ds.tooltip[0][0]
-            if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
-                found_attr_tooltip = True
-            if any(stat in title for stat in ("HP", "AC", "MD", "SPD")):
-                found_stat_tooltip = True
-        if found_attr_tooltip and found_stat_tooltip:
-            break
-
-    assert found_attr_tooltip, "Draft card attribute cells should set tooltip on hover"
-    assert found_stat_tooltip, "Draft card stat chips should set tooltip on hover"
 
 
 def test_sheet_panel_attribute_hover_tooltip():

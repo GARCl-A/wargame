@@ -21,7 +21,7 @@ from gartok import (
     world,
 )
 from gartok.clock import Clock
-from gartok.draft_screen import DraftScreen
+from gartok.draft import Draft
 from gartok.group import BASE_CAPACITY, CAUTIOUS, NORMAL, Group
 from gartok.guild import Guild
 from gartok.ui.tokens import fonts as ui_fonts
@@ -62,7 +62,7 @@ def test_only_the_scholars_add_to_the_info_roll():
 
 def test_the_pool_holds_one_of_each_race_of_the_vocation_and_three_more():
     for vid, voc in vocations.VOCATIONS.items():
-        ds = DraftScreen(ui_fonts(), lambda *a: None, vocation=vid)
+        ds = Draft(vid)
         names = [u.race["name"] for u in ds.pool]
         assert len(ds.pool) == 9
         for race in voc.races:
@@ -70,33 +70,17 @@ def test_the_pool_holds_one_of_each_race_of_the_vocation_and_three_more():
 
 
 def test_a_draft_without_a_vocation_is_the_plain_natural_pool():
-    ds = DraftScreen(ui_fonts(), lambda *a: None)
+    ds = Draft()
     assert len(ds.pool) == 9 and ds.vocation is None
 
 
 def test_a_commission_replaces_the_card_from_the_natural_table():
-    ds = DraftScreen(ui_fonts(), lambda *a: None, vocation="marsh")
+    ds = Draft("marsh")
     ds.pending_labels = ["STRONG"]
     target = ds.pool[0]
-    ds._replace(target)
+    ds.replace(target)
     assert target not in ds.pool and len(ds.pool) == 9
     assert ds.pool[0].mod_strength >= 2
-
-
-def test_the_draft_hands_the_vocation_to_on_done():
-    pygame.init()
-    got = {}
-    ds = DraftScreen(ui_fonts(), lambda *a: got.update(args=a), vocation="caravan")
-    surf = pygame.Surface(SIZE)
-    ds.draw(surf)
-    for rect, _u in ds.card_rects[:3]:
-        ds._click(rect.center)
-    ds.draw(surf)
-    ds._click(ds.continue_rect.center)
-    ds.draw(surf)
-    ds.leader_pick = ds.picks[0]
-    ds._click(ds.continue_rect.center)
-    assert got["args"][-1] == "caravan"
 
 
 # ---- the picker screen --------------------------------------------------- #

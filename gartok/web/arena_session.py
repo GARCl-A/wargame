@@ -8,7 +8,7 @@ them (`AdelioPromptScreen`, `RibbitPromptScreen`), which opens the Tavern's RECR
 
 from typing import ClassVar
 
-from .. import arena, artwork, economy, matchup, objectives, orders, world
+from .. import arena, art_files, economy, matchup, objectives, orders, world
 from ..battle import Battle
 from ..constants import fmt_money
 from .campaign_fight import _enter
@@ -206,7 +206,7 @@ class ArenaSession(Session):
         out = {"place": n.name, "band": g.display_name, "day": day, "at": at,
                "keeper": None if v is None else {
                    "name": v.name, "caption": f"{v.race} {v.role}", "line": v.line,
-                   "portrait": asset_url(artwork.portrait_path(None, v.portrait)) if v.portrait else None}}
+                   "portrait": asset_url(art_files.portrait_path(None, v.portrait)) if v.portrait else None}}
         if self.offered is not None:
             return {**out, "recruit": self._recruit()}
         champ, due = arena.champion_of(self.guild), arena.defense_due(self.guild)

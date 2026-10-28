@@ -29,6 +29,7 @@ from .constants import fmt_money
 from .group import BASE_CAPACITY
 from .item_icon import vocation_icon
 from .screen import Screen
+from .sheet import unit_to_ch
 from .ui import guild_panel, guild_roster, load_meter, member_panel, reputation_panel
 from .ui.primitives import (
     contained,
@@ -41,7 +42,7 @@ from .ui.primitives import (
     tabs,
     text,
 )
-from .ui.sheet_card import hp_tooltip, unit_to_ch
+from .ui.sheet_card import hp_tooltip
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

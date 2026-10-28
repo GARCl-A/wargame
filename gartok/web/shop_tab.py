@@ -5,7 +5,7 @@ counter's pick the way a drop would and calls the same method, so the prices, th
 the purse and the deeds stay one source.
 """
 
-from .. import artwork, economy, item_icon, items, store_column, trade
+from .. import art_files, economy, item_icon, items, store_column, trade
 from ..data import role_for
 from .session import asset_url
 
@@ -13,7 +13,7 @@ SLOTS = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", 
 
 
 def _portrait(u):
-    return asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
+    return asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
 
 
 def _tip(name):

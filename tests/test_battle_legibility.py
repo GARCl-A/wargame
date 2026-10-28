@@ -5,8 +5,8 @@ import os
 import pygame
 
 from gartok import abilities, ai, battle_fx, foe_card, intel, weapon_traits
+from gartok.sheet import unit_to_ch
 from gartok.ui import battle_panel, board_render, board_style
-from gartok.ui.sheet_card import unit_to_ch
 from gartok.ui.tokens import fonts
 from tests.helpers import _melee_battle, _recruit, actions, fixed_d20
 

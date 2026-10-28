@@ -11,7 +11,7 @@ band's campfire in the field the same kitchen; a tab the browser does not draw s
 
 from typing import ClassVar
 
-from .. import artwork, economy, orders, world
+from .. import art_files, economy, orders, world
 from ..constants import fmt_money
 from ..map_view import node_icon
 from ..vault import BankVault, HouseVault
@@ -550,7 +550,7 @@ class HubSession(Session):
         part = "night" if not c.is_daylight else "morning" if c.hour_of_day < 12 else "afternoon" if c.hour_of_day < 15 else "evening"
         keeper = {"name": k.get("name"), "caption": k.get("caption", ""), "bent": k.get("bent", ""),
                   "line": k.get("line", ""),
-                  "portrait": asset_url(artwork.portrait_path(None, k["portrait"])) if k.get("portrait") else None}
+                  "portrait": asset_url(art_files.portrait_path(None, k["portrait"])) if k.get("portrait") else None}
         lang = getattr(n, "language", None)
         if isinstance(lang, (list, tuple)):
             lang = " or ".join(lang)

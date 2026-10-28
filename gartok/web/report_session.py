@@ -7,7 +7,7 @@ them. It reads `campaign.absorb_battle`'s outcome (`aftermath.py`); the loot's m
 
 from typing import ClassVar
 
-from .. import artwork, factions, item_icon, items, progression
+from .. import art_files, factions, item_icon, items, progression
 from ..constants import fmt_money
 from ..loot_screen import LootScreen
 from ..memorial_screen import card
@@ -24,7 +24,7 @@ CATEGORIES = (("Coin", lambda d: items.is_coin(d.name)),
 
 
 def _face(race, pid):
-    return asset_url(artwork.portrait_path(race, pid))
+    return asset_url(art_files.portrait_path(race, pid))
 
 
 def _foe_status(c):

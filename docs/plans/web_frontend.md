@@ -1096,9 +1096,9 @@ launcher hands off and exits at once, so the browser process cannot be watched i
 - Not checked: the PyInstaller build itself (not run).
 
 **10z. The swap — next.** pygame and `ui/` cannot go yet: the web still holds about thirty pygame screens headless
-for their rules (`MarketScreen`, `DraftScreen`, `MapScreen`, `CraftingScreen`, `TavernaScreen`, ...; `grep "_screen
-import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_ch`, `inspector_panel.role_for`,
-`banner.BANNER_COLORS`, `tokens.T`, `floors`), and the Editor has no browser screen. Cut as step 10 was:
+for their rules (`GuildScreen`, `GroupScreen`, `DialogueScreen`, `LootScreen`, `BattleScreen`; `grep "_screen
+import" gartok/web/*.py` lists them), reads `ui/` helpers (`tokens.T`, `floors`), and the Editor has no browser
+screen. Cut as step 10 was:
 
 **The cut list (2026-10-28, from the import graph of `gartok/web/`).** Under "pygame is abandoned" above:
 
@@ -1126,9 +1126,9 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
   between groups (its tutorial card `group_turn` is still registered), the vault read from the map, the
   auto-win of an ambush or a hunt (`autowin.py` is still there). The old screens are in git before this cut.
 - **Held headless by the web, deleted as their family's rules move out (step 2):** `battle_screen` +
-  `battle_draw`; `dialogue_screen`; `draft_screen`; `guild_screen`, `group_screen` + `group_draw`;
-  `loot_screen`, `memorial_screen`; `start_screen` (three constants). The hubs' screens are gone (the
-  hubs III below).
+  `battle_draw`; `dialogue_screen`; `guild_screen`, `group_screen` + `group_draw`; `loot_screen`,
+  `memorial_screen`. The hubs' screens are gone (the hubs III below), and so are the draft's and the
+  title's (the draft below).
 - **Kept until step 3:** `editor_app`, `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`,
   `combat_lab_screen`, and `battle_screen` for the lab's fights.
 
@@ -1233,16 +1233,33 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
        `test_keepers`, `test_shelf_layout` `test_quantity_prompt`. New: `test_web_hub` opens every hub a
        node offers on every one of its tabs (the old "every node builds a tabbed hub"). About 40 tests that
        only drew or clicked a pygame screen went.
-     - **Next:** the draft (`draft_session` on `DraftScreen`, `ui.sheet_card.unit_to_ch`,
-       `ui.banner.BANNER_COLORS`), then the report, the guild.
+   - **The draft and the title — done (2026-10-28).** `draft.py` is the draft with no pygame: `Draft` holds what
+     `DraftScreen` held for the rules (the pool of nine by vocation, the picks, the tokens, `replace` for a
+     commission, the charter's name, banner and leader; `leader_recruits`, `TEAM_SIZE`, `POOL_SIZE`,
+     `COMMISSION_TOKENS`, `MAX_GUILD_NAME`). Three reads left `ui/` and `artwork` for modules with no pygame:
+     `sheet.unit_to_ch` (was `ui.sheet_card`'s; the pygame sheet, the battle and the Editor read it there now),
+     `guild.BANNER_COLORS` (was `ui.banner`'s, which keeps only the token colour), and `art_files.py`
+     (`portrait_path`, `BANNER_ICONS`, `RACE_ICON`, `OCCUPATION_ICON`; `artwork` imports them back), so no web
+     session reads `artwork` any more. `title_session` holds the title's three constants. Gone in the same
+     commit: `draft_screen`, `start_screen`, `ui/draft_panel`, `ui/title_panel`, `test_start_screen`, and what
+     only they used (`primitives.medallion`, `primitives.small_caps`, `tokens.ARCHETYPE_COLORS`);
+     `scripts/economy_activities.py` reads `draft`.
+     - Tests: the rule tests in `test_draft_commission` (the pool, the picks, a commission and its tokens, a
+       picked card replaced, each founder's recruits) and `test_vocations` (the pool by vocation) press `Draft`;
+       `gartok.draft`, `sheet`, `art_files` and `web.draft_session` load with pygame blocked. About fifteen
+       tests that only clicked or drew the pygame draft or title went (`test_web_draft` and `test_web_tutorial`
+       cover the steps, the charter and the cards).
+     - Left: `title_session` still loads pygame through the wiki (`item_icon` imports `ui.item_icons`), a later
+       family's. The sheet as a modal (the playtest below) waits for the guild family, which reads
+       `unit_to_ch` too.
+     - **Next:** the report (`report_session` on `LootScreen`, `memorial_screen.card`), then the guild.
    - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
      these into the families above where they share code, the rest after them:
      - **The character sheet as a modal, opened from anywhere.** pygame opened a member's sheet from the band
        tab and the shops; the browser shows it only on the guild's MEMBERS page, and the draft shows a short
        dossier with no way to the whole sheet. One shell component, opened from the guild's band tab, every
-       shop's pack column and the draft's pool. It reads `ui.sheet_card.unit_to_ch`
-       (`guild_session`, `draft_session`), which this step must move out of `ui/` anyway: do both with the
-       guild / draft family.
+       shop's pack column and the draft's pool. It reads `sheet.unit_to_ch` (out of `ui/` with the draft);
+       build it with the guild family.
      - **The work level-up has no screen.** A work track's level-up is only a map notice
        (`MapSession._advance`, "X grows: ..."); pygame opened `level_up_screen` and then the talent pick.
        Port it (it joins "Not in the browser, pygame had them" above): the numbers before and after, then

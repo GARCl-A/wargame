@@ -9,7 +9,7 @@ from typing import ClassVar
 
 from .. import (
     arena,
-    artwork,
+    art_files,
     campaign,
     clock,
     economy,
@@ -36,7 +36,7 @@ def _icon(slug):
 
 
 def _portrait(u):
-    return asset_url(artwork.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
+    return asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
 
 
 def _when(guild, hours):
@@ -142,7 +142,7 @@ class MapSession(MapView, Session):
                 "part": part, "turn": f"{'light' if c.is_daylight else 'dark'} till {turn:02d}:00",
                 "subtitle": f"{voc.name if voc else 'A guild'} · {_plural(len(g), 'member')} in {_plural(bands, 'band')}",
                 "banner": list(g.banner_color) if g.banner_color else None,
-                "emblem": _icon(next(((c, s) for c, s, _ in artwork.BANNER_ICONS if s == g.banner_icon), None)),
+                "emblem": _icon(next(((c, s) for c, s, _ in art_files.BANNER_ICONS if s == g.banner_icon), None)),
                 "level_ups": pending, "slots_free": g.free_slots}
 
     def _alerts(self):

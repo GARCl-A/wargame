@@ -23,6 +23,7 @@ from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .constants import fmt_money
 from .screen import Screen
+from .sheet import unit_to_ch
 from .text_field import TextField
 from .ui import load_meter
 from .ui.primitives import (
@@ -37,7 +38,7 @@ from .ui.primitives import (
 )
 from .ui.primitives import contained as ui_contained
 from .ui.sheet_card import draw_sheet as draw_sheet_card
-from .ui.sheet_card import hp_tooltip, sheet_height, unit_to_ch
+from .ui.sheet_card import hp_tooltip, sheet_height
 from .ui.tokens import T
 from .unit import Unit
 

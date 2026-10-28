@@ -6,11 +6,11 @@ import pygame
 
 from . import actions, aftermath, data, vision
 from .scenario import own_half
+from .sheet import unit_to_ch
 from .ui import battle_panel, board_render, board_style, floors, foe_panel
 from .ui import primitives as ui_primitives
 from .ui.board_style import battle_layout
 from .ui.sheet_card import draw_sheet as draw_sheet_card
-from .ui.sheet_card import unit_to_ch
 from .ui.tokens import T
 
 

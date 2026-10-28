@@ -332,18 +332,6 @@ def token_badge(surf, F, center, unit, *, color=None, r=14):
         text(surf, F["bodyb"], str(getattr(unit, "token", unit)), center, TOKEN_INK, center=True)
 
 
-def medallion(surf, center, race, portrait, px):
-    """A face by race name and portrait id/file: the portrait medallion, or a steel disc
-    with the race silhouette when the race has no portrait."""
-    port = artwork.portrait(race, portrait, px) if race else None
-    if port is not None:
-        surf.blit(port, port.get_rect(center=center))
-        return
-    smooth_circle(surf, T.STEEL_HI, center, px // 2)
-    smooth_circle(surf, T.STEEL_LINE, center, px // 2, 2)
-    sil = artwork.race_icon(race, round(px * 0.6), T.TX_MUTED) if race else None
-    if sil is not None:
-        surf.blit(sil, sil.get_rect(center=center))
 
 
 def tracked(surf, font, s, pos, color, spacing=1):
@@ -373,22 +361,6 @@ def spaced_width(font, s, spacing=2):
     return sum(font.size(ch)[0] for ch in s.upper()) + spacing * max(0, len(s) - 1)
 
 
-def small_caps(surf, big, small, s, pos, color, *, anchor="topleft"):
-    """`s` in small capitals: each word's first letter in `big`, the rest upper-cased in
-    `small`, on one baseline. Returns its rect."""
-    parts = []
-    for wi, word in enumerate(s.split(" ")):
-        if wi:
-            parts.append((small, " "))
-        parts += [(big if ci == 0 or not ch.isalpha() else small, ch.upper()) for ci, ch in enumerate(word)]
-    imgs = [(f, f.render(ch, True, color)) for f, ch in parts]
-    r = pygame.Rect(0, 0, sum(i.get_width() for _, i in imgs), big.get_height())
-    setattr(r, anchor, pos)
-    x, asc = r.x, big.get_ascent()
-    for f, img in imgs:
-        surf.blit(img, (x, r.y + asc - f.get_ascent()))
-        x += img.get_width()
-    return r
 
 
 def dashed_rect(surf, rect, color, dash=8, gap=6):

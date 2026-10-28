@@ -277,6 +277,7 @@ gartok/
   lair.py           the Dragon's Lair under the Mine: a heist past kobold patrols and a sleeping dragon
   dialogue.py       the talk before a fight: the verbs (persuade, bluff, intimidate, bribe...),
                     the checks, the encounters (ambush, patrol, Wildfire) and the squad's AI
+  draft.py          a new guild's draft: the pool of nine, three picks, the commission tokens, the charter
   recruit.py        the recruitment contest, the weekly tavern pool, and the prison's
                     bail-and-pitch alternative
   vocations.py      the founding trade (six races + one guild perk), read by travel, hunt, work, food and cohesion
@@ -309,8 +310,8 @@ gartok/
   text_field.py     a one-line text box's buffer + caret (every name field types through it)
   # pygame is abandoned (docs/plans/web_frontend.md): what is left is held headless by web/ for its
   # rules until they move out, or is the Editor's
-  start_screen.py (three constants) / wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
-  draft_screen.py / guild_screen.py / group_screen.py + group_draw.py / dialogue_screen.py
+  wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
+  guild_screen.py / group_screen.py + group_draw.py / dialogue_screen.py
   battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / memorial_screen.py
   the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 
@@ -326,9 +327,11 @@ gartok/
                     `python main.py` / `python -m gartok` (the title; `--editor` the Editor),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   icons.py          vector action icons (pygame.draw) -- no asset file
+  art_files.py      where the art is, no pygame: portrait_path, BANNER_ICONS, `RACE_ICON` and
+                    `OCCUPATION_ICON` name each race's and occupation's glyph (`map_view.NODE_ICON` the nodes')
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
-                    portraits under assets/portraits/; `RACE_ICON` and `OCCUPATION_ICON`
-                    name each race's and occupation's glyph (`map_view.NODE_ICON` the nodes')
+                    portraits under assets/portraits/ for pygame
+  sheet.py          a character's sheet as a plain dict (unit_to_ch), no pygame
   lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; LightRenderer paints it
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, the action's
                     name over its actor and the flight of a shot (`battle.announce`), combat sounds

@@ -15,7 +15,7 @@ both held headless as the hub's tabs hold theirs, until step 10 of `docs/plans/w
 from typing import ClassVar
 
 from .. import (
-    artwork,
+    art_files,
     data,
     factions,
     item_icon,
@@ -39,7 +39,7 @@ from ..guild_screen import (
     _needs_attention,
     _node_label,
 )
-from ..ui.sheet_card import unit_to_ch
+from ..sheet import unit_to_ch
 from ..ui.tokens import T
 from .map_session import _icon, _portrait
 from .session import Session
@@ -121,7 +121,7 @@ class GuildSession(Session):
         out = {
             "name": g.name or "The Guild",
             "banner": list(g.banner_color) if g.banner_color else None,
-            "emblem": _icon(next(((c, s) for c, s, _ in artwork.BANNER_ICONS if s == g.banner_icon), None)),
+            "emblem": _icon(next(((c, s) for c, s, _ in art_files.BANNER_ICONS if s == g.banner_icon), None)),
             "day": g.clock.day, "won": g.battles_won, "count": len(g.roster),
             "band_count": len([gr for gr in g.groups if not gr.empty]), "pending": pending,
             "tabs": [{"key": k, "label": label, "badge": pending if k == "members" and pending else 0}

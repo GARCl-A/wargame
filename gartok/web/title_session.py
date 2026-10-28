@@ -1,19 +1,21 @@
-"""The title screen, as pygame's `StartScreen`, `MenuScreen` and `SavesScreen`: the menu beside the
-last guild played (its charter and the map it has walked), the guilds kept, and one guild's saves.
-CONTINUE and LOAD open the map on that save, as `App._continue_game` does."""
+"""The title screen: the menu beside the last guild played (its charter and the map it has walked),
+the guilds kept, and one guild's saves. CONTINUE and LOAD open the map on that save; with no guild
+yet, the invitation shows a face of each of `INVITE_RACES`."""
 
 import time
 from typing import ClassVar
 
-from .. import artwork, persist, recorder, vocations, world
+from .. import art_files, persist, recorder, vocations, world
 from ..guild import DEFAULT_BANNER_COLOR, DEFAULT_BANNER_ICON
-from ..start_screen import INVITE_RACES, MAX_FACES, QUOTE
 from .map_session import MapSession, _icon, _plural, _portrait
 from .session import Session, asset_url
 from .settings_session import SettingsSession
 from .wiki_session import WikiSession
 
 CHARTER_FACES = 4    # the charter's roster row; the rest are a count
+INVITE_RACES = ("Human", "Orc", "Elf", "Dwarf", "Goblin", "Grippli", "Centaur", "Kenku")
+MAX_FACES = 12
+QUOTE = "In Gartok the risk pays. Most of those who take it do not live to spend it."
 KIND = {"current": "Current", "auto": "Auto", "manual": "Manual"}
 
 
@@ -22,7 +24,7 @@ def _stamp(ts, seconds=False):
 
 
 def _emblem(slug):
-    return _icon(next(((c, s) for c, s, _ in artwork.BANNER_ICONS if s == slug), None))
+    return _icon(next(((c, s) for c, s, _ in art_files.BANNER_ICONS if s == slug), None))
 
 
 def _banner(row):
@@ -174,7 +176,7 @@ class TitleSession(Session):
         return out
 
     def _faces(self, w):
-        return [{"name": f["name"], "portrait": asset_url(artwork.portrait_path(f["race"], f["portrait"])),
+        return [{"name": f["name"], "portrait": asset_url(art_files.portrait_path(f["race"], f["portrait"])),
                  "what": f["race"] or "", "hurt": False} for f in w.get("faces", [])[:MAX_FACES]]
 
     def _map(self):
@@ -188,8 +190,8 @@ class TitleSession(Session):
                 "groups": [{"gid": b.gid, "at": b.node, "trip": None} for b in g.groups if not b.empty]}
 
     def _invite(self):
-        return [{"name": r, "portrait": asset_url(artwork.portrait_path(r, 0))}
-                for r in INVITE_RACES if artwork.portrait_path(r, 0)]
+        return [{"name": r, "portrait": asset_url(art_files.portrait_path(r, 0))}
+                for r in INVITE_RACES if art_files.portrait_path(r, 0)]
 
     def _guild_row(self, w):
         voc = vocations.get(w.get("vocation"))

@@ -409,7 +409,8 @@ def test_a_skeleton_speaks_no_language_and_no_blank_dictionary_recipe():
 
 def test_sheet_hides_the_magic_block_until_initiated():
     from gartok.combatant import Combatant
-    from gartok.ui.sheet_card import sheet_height, unit_to_ch
+    from gartok.sheet import unit_to_ch
+    from gartok.ui.sheet_card import sheet_height
     u = Unit("player")
     plain = sheet_height("normal", ch=unit_to_ch(Combatant(u)))
     u.set_magic_source("faith")

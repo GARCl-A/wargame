@@ -58,9 +58,6 @@ class T:
     F_HUB_PRICE = 16   # a shelf row's price
 
 
-ARCHETYPE_COLORS = {"brass": T.BRASS, "green": T.GREEN, "muted": T.TX_MUTED}
-
-
 def mix(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 

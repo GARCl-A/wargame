@@ -1,26 +1,25 @@
-"""A new guild in the browser, as pygame's `VocationScreen` and `DraftScreen`: the vocation, the pool of
-nine with the commission tokens, then the charter (the name, the banner, who leads). The pool's rules are
-pygame's own `DraftScreen` held headless; FOUND THE GUILD founds it as `App._draft_done` and opens the map.
+"""A new guild in the browser: the vocation, the pool of nine with the commission tokens, then the
+charter (the name, the banner, who leads). The pool's rules are `draft.Draft`; FOUND THE GUILD founds
+the guild, saves it and opens the map.
 
 The title's New guild opens it."""
 
 from typing import ClassVar
 
-from .. import artwork, persist, recorder, settings, vocations, wildfire, world
+from .. import art_files, persist, recorder, settings, vocations, wildfire, world
 from ..archetypes import ARCHETYPES, is_compatible, unit_archetypes
 from ..combatant import Combatant
-from ..draft_screen import (
-    _MAX_GUILD_NAME,
+from ..draft import (
     COMMISSION_TOKENS,
+    MAX_GUILD_NAME,
     POOL_SIZE,
     TEAM_SIZE,
-    DraftScreen,
-    _leader_recruits,
+    Draft,
+    leader_recruits,
 )
-from ..guild import Guild
+from ..guild import BANNER_COLORS, Guild
+from ..sheet import unit_to_ch
 from ..tutorial import TutorialState
-from ..ui.banner import BANNER_COLORS
-from ..ui.sheet_card import unit_to_ch
 from .map_session import MapSession, _icon, _portrait
 from .session import Session, asset_url
 
@@ -52,14 +51,14 @@ class DraftSession(Session):
     def __init__(self):
         self.step = "vocation"
         self.vocation = None
-        self.draft = None           # pygame's DraftScreen, made once the vocation is settled
+        self.draft = None           # made once the vocation is settled
         self.tutorial = TutorialState()
 
     def tutorials(self):
         return self.tutorial
 
     def tutorial_key(self):
-        """As pygame's draft: the welcome first, then the card of the step."""
+        """The welcome first, then the card of the step."""
         if "draft.intro" not in self.tutorial.seen:
             return "draft.intro"
         return {"vocation": "draft.vocation", "pick": "draft.pick", "charter": "draft.identity"}[self.step]
@@ -86,7 +85,7 @@ class DraftSession(Session):
             if self.vocation is None:
                 raise ValueError("pick a vocation first")
             if self.draft is None or self.draft.vocation != self.vocation:
-                self.draft = DraftScreen(None, on_done=None, tutorial=self.tutorial, vocation=self.vocation)
+                self.draft = Draft(self.vocation)
             self.step = "pick"
         elif self.step == "pick":
             if len(self.draft.picks) != TEAM_SIZE:
@@ -115,11 +114,11 @@ class DraftSession(Session):
             raise ValueError("no such candidate")
         unit = self.draft.pool[index]
         if self.draft.pending_labels:
-            self.draft._replace(unit)
+            self.draft.replace(unit)
         elif unit not in self.draft.picks and len(self.draft.picks) >= TEAM_SIZE:
             raise ValueError(f"the squad is {TEAM_SIZE}: let one go first")
         else:
-            self.draft._toggle_pick(unit)
+            self.draft.toggle_pick(unit)
         return self.state()
 
     def commission(self, labels):
@@ -146,7 +145,7 @@ class DraftSession(Session):
 
     def set_name(self, name):
         self._at("charter")
-        self.draft.guild_name = str(name).strip()[:_MAX_GUILD_NAME]
+        self.draft.guild_name = str(name).strip()[:MAX_GUILD_NAME]
         return self.state()
 
     def rename(self, index, name):
@@ -166,7 +165,7 @@ class DraftSession(Session):
 
     def set_emblem(self, slug):
         self._at("charter")
-        if slug not in {s for _, s, _ in artwork.BANNER_ICONS}:
+        if slug not in {s for _, s, _ in art_files.BANNER_ICONS}:
             raise ValueError(f"no emblem called {slug}")
         self.draft.banner_icon = slug
         return self.state()
@@ -182,7 +181,7 @@ class DraftSession(Session):
         return self.draft.picks[index]
 
     def found(self, name=None):
-        """Found the guild as `App._draft_done` does, save it and open the map; `name` is the guild's name
+        """Found the guild, save it and open the map; `name` is the guild's name
         as last written, when it was not sent on its own."""
         self._at("charter")
         d = self.draft
@@ -237,7 +236,7 @@ class DraftSession(Session):
             return None
         return {"id": v.id, "name": v.name, "motto": v.motto, "perk": v.perk, "open": v.active,
                 "icon": VOCATION_GLYPHS.get(v.id), "chosen": v.id == self.vocation,
-                "races": [{"race": r, "portrait": asset_url(artwork.portrait_path(r, 0))} for r in v.races]}
+                "races": [{"race": r, "portrait": asset_url(art_files.portrait_path(r, 0))} for r in v.races]}
 
     def _card(self, u):
         d = self.draft
@@ -261,12 +260,12 @@ class DraftSession(Session):
         founders = []
         for u in d.picks:
             card = self._card(u)
-            n, why = _leader_recruits(u)
+            n, why = leader_recruits(u)
             card.update(recruits=n, recruits_why=why, leader=u is d.leader_pick)
             founders.append(card)
-        return {"name": d.guild_name, "max_name": _MAX_GUILD_NAME, "max_founder": _UNIT_NAME,
+        return {"name": d.guild_name, "max_name": MAX_GUILD_NAME, "max_founder": _UNIT_NAME,
                 "color": list(d.banner_color), "emblem": d.banner_icon,
                 "colors": [{"name": n, "rgb": list(c), "on": tuple(c) == tuple(d.banner_color)} for n, c in BANNER_COLORS],
                 "emblems": [{"slug": s, "label": lb, "icon": _icon((c, s)), "on": s == d.banner_icon}
-                            for c, s, lb in artwork.BANNER_ICONS],
+                            for c, s, lb in art_files.BANNER_ICONS],
                 "founders": founders, "can_found": d.leader_pick is not None}

@@ -50,7 +50,7 @@ The generator's exact order:
 
 ### The squad draft & commission tokens 🟡
 
-A new campaign begins at the **Vocation** screen (`VocationScreen`), then the **Draft** (`DraftScreen`):
+A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
 - The guild picks one **vocation** (`vocations.py`), once and for good. Each is a list of six races and one fixed perk that **the whole guild** has, whatever a member's race; the Guild tab shows it. The draft pool of the chosen vocation always holds at least one candidate of each of its six races, the other three come from the natural race table (all 18 races); a commission replaces a card from that same natural table.
 
   | Vocation | Races | Perk |
@@ -1208,7 +1208,7 @@ Two kinds of leader (`gartok/group.py`, `gartok/guild.py`), answering two
 different questions:
 
 - **The guild's leader** (`Guild.leader`) is "who am I" — chosen at the draft
-  (`DraftScreen`'s leader-pick step, after the three squad picks) and held for
+  (the charter's leader pick, after the three squad picks) and held for
   the whole run. It is a title, not a place: it does not move a leader between
   groups or change who leads any of them. It **auto-succeeds by Charisma** the
   instant it stops being a living roster member (death); a *deliberate* change

@@ -43,7 +43,6 @@ from gartok import (
     archetypes,
     arena,
     data,
-    draft_screen,
     economy,
     hunt,
     items,
@@ -54,6 +53,7 @@ from gartok import (
     world,
 )
 from gartok.battle import Battle
+from gartok.draft import COMMISSION_TOKENS, POOL_SIZE, TEAM_SIZE
 from gartok.guild import Guild
 from gartok.guild_upkeep import HOURS_PER_HEAL, rest_heal
 from gartok.scenario import ErmosScenario
@@ -123,18 +123,18 @@ def is_leader(unit):
 
 
 def draft(team="player"):
-    """The author's draft (`draft_screen`): a pool of nine, the best three by `draft_score`; with
+    """The author's draft (`gartok.draft`): a pool of nine, the best three by `draft_score`; with
     no LEADER among them, a Commission Token calls one in place of a candidate left out, the
     tokens left call a STRONG + TOUGH and then a TOUGH the same way; then the pool is judged again,
     the best LEADER in first. -> `(picks, leader)`."""
-    pool = [Unit(team) for _ in range(draft_screen.POOL_SIZE)]
-    tokens = draft_screen.COMMISSION_TOKENS
+    pool = [Unit(team) for _ in range(POOL_SIZE)]
+    tokens = COMMISSION_TOKENS
 
     def best_leader():
         return max((u for u in pool if is_leader(u)), key=draft_score, default=None)
 
     def left_out():
-        keep = sorted(pool, key=draft_score, reverse=True)[:draft_screen.TEAM_SIZE] + [best_leader()]
+        keep = sorted(pool, key=draft_score, reverse=True)[:TEAM_SIZE] + [best_leader()]
         return min((u for u in pool if u not in keep), key=draft_score)
 
     def commission(labels):
@@ -144,14 +144,14 @@ def draft(team="player"):
         pool[pool.index(left_out())] = fresh
         tokens -= len(labels)
 
-    if not any(is_leader(u) for u in sorted(pool, key=draft_score, reverse=True)[:draft_screen.TEAM_SIZE]):
+    if not any(is_leader(u) for u in sorted(pool, key=draft_score, reverse=True)[:TEAM_SIZE]):
         commission(["LEADER"])
     for labels in (["STRONG", "TOUGH"], ["TOUGH"]):
         if tokens >= len(labels):
             commission(labels)
     leader = best_leader() or max(pool, key=lambda u: u.mod_charisma)
     rest = sorted((u for u in pool if u is not leader), key=draft_score, reverse=True)
-    return [leader] + rest[:draft_screen.TEAM_SIZE - 1], leader
+    return [leader] + rest[:TEAM_SIZE - 1], leader
 
 
 def make_squad(size, level, team="player", draft_pool=DRAFT_POOL):

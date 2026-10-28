@@ -40,7 +40,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | Module | What it is |
 |---|---|
 | `tokens.py` | `T` palette / spacing / font sizes, `fonts()`, `mix()` |
-| `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize` / `with_caret`, `medallion` (a face by race and portrait id), `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
+| `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize` / `with_caret`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
 | `item_icons.py` | item silhouettes drawn in code (`draw_item_icon`: ~50 kinds, one generator each, a `wagon` for the Stables; `gartok/item_icon.py` maps items and the six vocations to them) |
 | `hscroll.py` | `ColumnScroll`: sideways scroll over a row of equal columns (`fit`, `wheel`, `hint`, `click`) |
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
@@ -56,14 +56,12 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `foe_panel.py` | what a side knows of a foe: its visible traits and the fields Intelligence opened, `?` for the rest |
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
 | `load_meter.py` | what a body carries, the one way every screen shows it: a bar as long as `carry_max` with a tick at `carry_normal`, green / amber (slowed) / blood (full), the figure always `kg / max` |
-| `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal; the founding screen (the banner on a shield beside the name, colour and emblem, one card per leader candidate with portrait, recruits and attributes) and `draw_shield` |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |
 | `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
 | `board_render.py` | the battle board: terrain (the floor from `floors.py`, then pits, water, fire, ropes), props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
 | `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, log well, and the crit banner across the board |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |
-| `title_panel.py` | the title screen: the game's name, the grouped main menu, the last guild played (banner shield, figures, the roster's faces) or the invitation to found one |
 
 ## Adding to the kit
 

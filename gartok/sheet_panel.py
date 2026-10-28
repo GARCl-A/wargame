@@ -8,9 +8,10 @@ the `SheetModalMixin` a screen mixes in to open it (`open_sheet`, `sheet_open`,
 import pygame
 
 from .combatant import Combatant
+from .sheet import unit_to_ch
 from .ui import primitives
 from .ui.sheet_card import draw_sheet as _draw_sheet_card
-from .ui.sheet_card import sheet_height, unit_to_ch
+from .ui.sheet_card import sheet_height
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
