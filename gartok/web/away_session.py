@@ -1,4 +1,4 @@
-"""A place the map opens that the browser does not play yet (the hunt, the searches' finds and the errands'
+"""A place the map opens that the browser does not play yet (the searches' finds and the errands'
 fights): it says where the band went and that pygame plays it until its part of step 10 of
 `docs/plans/web_frontend.md` lands, then goes back to the map."""
 

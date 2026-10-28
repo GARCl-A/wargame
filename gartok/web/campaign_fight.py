@@ -3,8 +3,8 @@ play log, the guild's bestiary, then `BattleSession`; once it is over, `campaign
 fight settles for good, and `ReportSession`, which ends on the map.
 
 What opens one: a forced fight (the guard, an ambush, a raid), after its talk or with nobody to talk to,
-the Wilds Claim's two fights and an arena bout (`arena_session`). The hunt and the searches' finds still
-open the away card."""
+the Wilds Claim's two fights, an arena bout (`arena_session`) and the hunt's ambushes (`hunt_session`). The
+searches' finds and the errands' fights still open the away card."""
 
 from .. import (
     campaign,

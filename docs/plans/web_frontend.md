@@ -3,8 +3,8 @@
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 is under way:
-the forced fights, the Claim's and the arena's are played in the browser from the map to the
-report; the hunt, the searches' finds and the errands' fights still open the away card.
+the forced fights, the Claim's, the arena's and the hunt are played in the browser from the map to the
+report; the searches' finds and the errands' fights still open the away card.
 
 ## Decisions so far
 
@@ -916,6 +916,30 @@ anywhere); otherwise the bouts say who must come and by when.
 - **Next (10c):** the hunt (`app_hunt`: the Wilds' hunt for meat with its ambushes, the Biwolf, the ox chase), then
   the searches' finds (the Ruins, the Nest, the Lair), the errands' fights (the battlefield, the necromancer, the
   Wildfire's camp and fortress), then the title screen and the draft, then the swap below.
+
+**10c. The hunt — done (2026-10-28).** `hunt_session.py` (screen `hunt`) is pygame's `HuntScreen` and `TrackScreen`
+as `app_hunt` plays them, for the Wilds' `hunt` and the Ox Fields' `ox_hunt`: a band with a wagon first says who
+minds it (`watch_screen`: someone must go in, one guard keeps it safe), then the quarry (meat or forage) and the
+shift (the ox's shifts only as long as the daylight left), each stretch on the clock through
+`MapSession.tick_outside` (the other bands keep in step, what falls due waits for the map), an ambush (the wolves,
+the Ogre's goblins, the Biwolf after dark with the meat) or the ox's trail fought as a campaign fight
+(`campaign_fight._enter` with the party as `squad` and an `after` that comes back to the hunt), won with hours left
+to KEEP HUNTING or HEAD BACK, then the haul banked (`hunt.grant_haul`) and the wagon rolled for on the way out. A
+member with a talent pick opens the talent tree and comes back to the hunt.
+
+- One change from pygame: a hunt left before any hour was spent does not roll for the wagon (pygame rolls it even
+  then). Like pygame, a hunt is never saved: a window closed mid-hunt drops it.
+- Left out: the auto-resolve of an ambush (pygame's AUTO-WIN, its Monte Carlo); a tutorial card.
+- The client is the arena's frame: the choices and the news on paper, the party on leather, a green seal to set out
+  and a red one to fight. No mockup.
+- Tests: `tests/test_web_hunt.py` (the quarry and the shift, a quiet shift banks the meat and returns to the map, an
+  ambush to the board with the snapshot and back to the interlude, heading back, a lost ambush, the wagon's watch, an
+  unguarded wagon lost and a guarded one kept, the ox by daylight only, the ox's chase is the player's and his fall
+  closes the job, the talents and back, an order due on the clock, the routing); the away-card tests now enter the
+  Ancient Ruins. The watch, the setup, the ambush and the haul were looked at in headless Edge at 1920x1080.
+- **Next (10d):** the searches' finds (the Ancient Ruins, the Serpent's Nest, the Dragon's Lair: each its own
+  scenario behind the wagon's watch), then the errands' fights (the battlefield, the necromancer, the Wildfire's
+  camp and fortress), then the title screen and the draft, then the swap below.
 
 **10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as
