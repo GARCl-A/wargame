@@ -22,6 +22,7 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
 | 2026-10-23 | Fonts (Cinzel, EB Garamond, IM Fell English) ship in `gartok/web/client/fonts/`. | They must not be fetched at runtime. |
 | 2026-10-23 | The style holds off the board: the title screen and a shop were mocked in it, and the author approved both. | The battle alone did not prove the direction for the rest of the game; the menu and the market are its two most different screens. |
 | 2026-10-23 | A shop shows every shopper's whole kit as a readable list, one column per pack: worn slots and pack rows, each with icon, name, quantity and weight. The keeper is a strip across the top, not a column. | The first market mockup shrank the packs to rows of icon tiles beside a tall keeper page, and the author lost sight of the inventory, which is what the screen is for. |
+| 2026-10-28 | The talent tree is a graph laid out from `requires` alone, in two views behind one toggle: THE MAP (radial round the character, with a camera) and THE BRANCH (an outline and the talent's neighbourhood). | The trees will reach about 100 talents each, wider and deeper, and may not keep six attribute families; a fixed page holds 30 to 35. A 100-node load test fitted top-down and left-to-right at 15% and radial at 29%; the outline holds any size. |
 | 2026-10-24 | The map mockup is approved, with four changes from pygame's map: the minimap goes (the known world fits; zoom, pan and FIT stay); hovering a place shows a paper slip with the walk's hours and arrival and the way there in red ink; Split and Merge open inside the picked band's card instead of behind a gear; the REST choices and the travel stance are always shown, as segmented rows. | The whole known world fits one sheet at 1920x1080, so the minimap only duplicated it; pygame never said how long a walk takes before it was ordered; the gear and the REST drop-down hid what a band can do. |
 
 ## Art direction
@@ -43,7 +44,9 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   before a fight: the foe's page, the answers as cards, who speaks; one frame per
   `dialogue.html?state=`) and [report_mockup/](references/report_mockup/) (after a fight:
   the fallen, the report with its blows in ink, the level-up, the field, the arena's
-  purse; one frame per `report.html?state=`). Each folder is one HTML
+  purse; one frame per `report.html?state=`) and [talents_mockup/](references/talents_mockup/) (the talent
+  tree: the member and the four tracks on leather, the tree on paper, the talent in hand; one frame per
+  `talents.html?state=`). Each folder is one HTML
   page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
   the item glyphs there stand in for art not made yet.
 - **Paper is for what you read, leather is for what you act on.** The board, the
@@ -790,6 +793,33 @@ As built:
   on a copy of the day-70 save, on an Old Road ambush played AI against AI.
 - **Next:** what still opens the away card is the talent tree, `trust` and the campaign fights. The talent tree is the
   last screen family of step 9 that the campaign reaches; step 10 follows it.
+
+**9q. The talent tree — mockup approved (2026-10-28), screen next.**
+[references/talents_mockup/](references/talents_mockup/) `talents.html` is built on the day-70 save `35d38388`: Ylhel
+after the report's fight (combat 2, one pick). `data.js` is the real trees read through `talents.TREE` /
+`racial_tree`, each node's state off `Unit.holds_talent` / `offerable`, and for an open node the sheet before and
+after the pick (`choose_talent` on a copy). `big.js` is the load test: a made-up combat tree of 100 talents (8 roots,
+8 tiers, 40 leaves, 6 with two requirements). Frames, one per `?state=`:
+
+- `combat` (`talents_mockup.png`), `locked`, `racial`, `magic`: the first layout, one track per paper page with the
+  trees in attribute families. Kept as the record of what a fixed page holds (about 30).
+- `big_down`, `big_zoom`, `big_right`: the 100 top-down and left-to-right with a camera; discarded (15% at FIT).
+- `big_radial` (THE MAP) and `big_focus` (THE BRANCH), with the toggle between them; `&real=1` puts today's 30
+  real talents in them (`talents_real_radial.png`, `talents_real_focus.png`); `&sel=<id>` picks the talent in hand.
+
+Decided with the author (2026-10-28):
+
+- **Two views, one toggle.** THE MAP is the default: the portrait at the centre, the roots on the first ring, each
+  tier one ring out; a camera as the map's (wheel, drag, FIT); at FIT the names of what is held and what can be taken
+  stay (a name that hits another hides until zoomed), the rest wait for the zoom. THE BRANCH: every talent as an
+  outline open along the picked branch (a closed branch shows held/total and how many are open), and round the
+  talent in hand what it needs above, its siblings, what it opens below. The view last used is remembered.
+- **The layout reads only `requires`**, so the tree may grow wider, deeper or lose its families; a second
+  requirement is a red dotted line.
+- **Click picks, TAKE confirms** (pygame takes on click; a pick is for good). The card shows what moves on the sheet
+  (STR 8 → 9, and when the modifier does not move), the branch, and what the talent opens.
+- **On leather:** the member, the four tracks with their picks, CAN TAKE NOW (every open talent; a click takes it in
+  hand), the band's faces with their waiting picks.
 
 ### 10. The swap — todo
 

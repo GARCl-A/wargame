@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Talent Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=block" rel="stylesheet">
+<script src="icons.js"></script>
+<script src="data.js"></script>
+<script src="big.js"></script>
+<style>
+:root{
+  --ink:#24180e; --ink-2:#4a3522; --paper:#eadcbc; --paper-2:#d9c49b; --paper-3:#bfa477;
+  --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
+  --blood:#9a2f22; --blood-hi:#c9473a; --enamel:#2e5f8e; --enamel-hi:#5b8fc0;
+  --green:#6e9448; --greenink:#3f6b2a; --redink:#8e2a1e; --blueink:#2b4f78;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  font-family:"EB Garamond",serif;color:var(--paper);
+  background:radial-gradient(ellipse 70% 60% at 50% 45%, #3b2a1b 0%, #20170f 55%, #0d0906 100%);overflow:hidden}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.55;mix-blend-mode:overlay;z-index:20;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .35' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .35  0 0 0 0 .2  0 0 0 1.2 -.2'/></filter><rect width='600' height='600' filter='url(%23n)'/></svg>")}
+#vignette{position:absolute;inset:0;pointer-events:none;z-index:19;
+  background:radial-gradient(ellipse 85% 80% at 50% 46%, transparent 55%, rgba(0,0,0,.72) 100%)}
+.ico{display:inline-block}
+.ico svg{width:100%;height:100%;display:block}
+.leather{position:absolute;border-radius:4px;background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.page{position:absolute;color:var(--ink);border-radius:2px;
+  background:radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.25),transparent 60%),
+    radial-gradient(ellipse at 90% 100%,rgba(120,80,30,.22),transparent 55%),linear-gradient(175deg,#efe2c3,#dcc79d);
+  box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #5d4426,0 14px 24px rgba(0,0,0,.6)}
+.page:before{content:"";position:absolute;inset:7px;border:1px solid rgba(80,52,24,.45);
+  box-shadow:inset 0 0 0 4px rgba(80,52,24,.22);pointer-events:none}
+.kicker{font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#7d5c37;display:flex;align-items:center;gap:10px;text-transform:uppercase}
+.kicker:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.5),transparent)}
+.kicker em{order:2;font:italic 15px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;text-transform:none}
+.leather .kicker{color:#8f7652}.leather .kicker:after{background:linear-gradient(90deg,rgba(201,163,94,.3),transparent)}
+.leather .kicker em{color:#a08a68}
+.medal{border-radius:50%;overflow:hidden;flex:none;position:relative;
+  box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--side,var(--enamel-hi)),0 0 0 5px #120d08,0 4px 8px rgba(0,0,0,.6)}
+.medal img{width:100%;height:100%;display:block}
+.bigbtn{height:58px;padding:0 34px;display:inline-flex;align-items:center;justify-content:center;gap:12px;border-radius:3px;
+  font:700 15px/1 Cinzel,serif;letter-spacing:.2em;color:#24180e;text-transform:uppercase;
+  background:linear-gradient(#f0d79e,#c9a35e);box-shadow:0 0 0 1px #5d4426,0 0 0 3px rgba(36,24,14,.2),0 8px 16px rgba(0,0,0,.45)}
+.bigbtn .ico{width:24px;height:24px}
+.bigbtn.ghost{background:transparent;color:#d9c49b;box-shadow:inset 0 0 0 1px rgba(201,163,94,.45)}
+.bigbtn.off{background:transparent;color:#6f5a40;box-shadow:inset 0 0 0 1px rgba(201,163,94,.18)}
+.bigbtn.small{height:44px;padding:0 22px;font-size:12px}
+.seal{width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:radial-gradient(circle at 38% 32%,#f0d79e,#c9a35e 55%,#7d5c28);
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6),inset 0 -8px 14px rgba(0,0,0,.35)}
+.seal b{font:900 26px/1 Cinzel,serif;color:#1a0d08}
+.seal.black{background:radial-gradient(circle at 38% 32%,#4a3f36,#1e1813 60%,#0a0806)}
+.seal.black b{color:#8f7652}
+.stamp{display:inline-block;transform:rotate(-4deg);padding:8px 14px 6px;border:3px solid var(--redink);border-radius:4px;
+  font:900 20px/1 Cinzel,serif;letter-spacing:.16em;color:var(--redink);opacity:.88;text-transform:uppercase;
+  box-shadow:inset 0 0 0 2px rgba(142,42,30,.35)}
+
+/* ---------- top bar ---------- */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center;z-index:2}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.12em;color:var(--brass-hi);text-transform:uppercase;
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+.cartouche .sub{margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+#topright{margin-left:auto;display:flex;gap:30px;align-items:center}
+.chain{display:flex;align-items:center;gap:8px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;color:#6f5a40;text-transform:uppercase}
+.chain span{padding:6px 9px 5px;border-radius:2px;border:1px solid rgba(201,163,94,.16)}
+.chain span.done{color:#8f7652;text-decoration:line-through;text-decoration-color:rgba(143,118,82,.6)}
+.chain span.now{color:#24180e;background:var(--brass);border-color:var(--brass)}
+.chain i{color:#5d4a33;font-style:normal}
+
+/* ---------- left: the member and the tracks ---------- */
+#who{left:32px;top:108px;width:356px;height:944px;padding:24px 22px}
+.plate{display:flex;gap:16px;align-items:center}
+.plate .medal{width:92px;height:92px}
+.plate b{display:block;font:700 24px/1 Cinzel,serif;letter-spacing:.05em;color:var(--brass-hi)}
+.plate span{display:block;margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.plate small{display:block;margin-top:8px;font:600 10px/1 Cinzel,serif;letter-spacing:.2em;color:#8f7652;text-transform:uppercase}
+.attrs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:20px}
+.attr{text-align:center;padding:8px 0 7px;border-radius:2px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(201,163,94,.16)}
+.attr span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.18em;color:#8f7652}
+.attr b{display:block;margin-top:6px;font:700 19px/1 Cinzel,serif;color:#e8d6ae}
+.attr i{display:block;margin-top:4px;font:italic 13px/1 "IM Fell English",serif;color:#a08a68}
+.attr.hot{box-shadow:inset 0 0 0 1px var(--brass),0 0 10px rgba(201,163,94,.35)}
+.attr.hot b{color:var(--brass-hi)}
+#who .kicker{margin:26px 0 12px}
+.track{position:relative;display:block;padding:14px 16px 13px;margin-bottom:10px;border-radius:3px;
+  background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(201,163,94,.16)}
+.track.on{background:linear-gradient(90deg,rgba(201,163,94,.2),rgba(201,163,94,.05));box-shadow:inset 0 0 0 1px var(--brass),inset 4px 0 0 var(--brass)}
+.track .row{display:flex;align-items:baseline}
+.track .nm{font:700 15px/1 Cinzel,serif;letter-spacing:.2em;color:#d9c49b;text-transform:uppercase}
+.track.on .nm{color:var(--brass-hi)}
+.track .lv{margin-left:auto;font:600 11px/1 Cinzel,serif;letter-spacing:.16em;color:#8f7652}
+.track .lv b{font-size:17px;color:#e8d6ae;letter-spacing:0;margin-left:4px}
+.tbar{margin-top:10px;height:6px;border-radius:1px;background:rgba(0,0,0,.4);box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden}
+.tbar i{display:block;height:100%;background:linear-gradient(#f0d79e,#c9a35e)}
+.track .note{margin-top:8px;font:italic 14.5px/1.2 "IM Fell English",serif;color:#a08a68}
+.track .pick{position:absolute;right:-8px;top:-8px;padding:5px 8px 4px;border-radius:2px;transform:rotate(3deg);
+  font:700 10px/1 Cinzel,serif;letter-spacing:.14em;color:#fff3dc;background:linear-gradient(#b0402f,#7a2218);box-shadow:0 2px 4px rgba(0,0,0,.5)}
+.band{display:flex;flex-wrap:wrap;gap:7px}
+#hand .act .bigbtn{font-size:13px;letter-spacing:.14em;padding:0 18px}
+.mate{position:relative;text-align:center;width:46px}
+.mate .medal{width:46px;height:46px}
+.mate.dim .medal{opacity:.5}
+.mate.on .medal{--side:var(--brass-hi)}
+.mate span{display:block;margin-top:7px;font:600 9px/1 Cinzel,serif;letter-spacing:.06em;color:#8f7652;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mate.on span{color:var(--brass-hi)}
+.mate em{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;
+  font:700 11px/1 Cinzel,serif;font-style:normal;color:#fff3dc;background:radial-gradient(circle at 40% 35%,#c9473a,#7a2218);box-shadow:0 0 0 2px #120d08}
+#who .foot{position:absolute;left:22px;right:22px;bottom:22px}
+#who .foot .bigbtn{width:100%}
+
+/* ---------- centre: the tree on paper ---------- */
+#sheet{left:408px;top:108px;width:1084px;height:944px;padding:34px 40px}
+.head{display:flex;align-items:flex-start;gap:24px}
+.head h1{font:700 40px/1 Cinzel,serif;letter-spacing:.08em;color:#1c140c}
+.head p{margin-top:12px;max-width:640px;font:italic 18px/1.35 "IM Fell English",serif;color:#4a3522}
+.head .seals{margin-left:auto;display:flex;gap:26px;align-items:center;padding-top:4px}
+.head .seals div{text-align:center}
+.head .seals small{display:block;margin-top:12px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#6b5236;text-transform:uppercase}
+.head .held b{display:block;font:700 34px/1 Cinzel,serif;color:#1c140c}
+.head .held span{font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+#tree{position:absolute;left:40px;right:40px;top:200px;bottom:40px}
+#tree svg.lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.tier{position:absolute;left:0;font:700 13px/1 Cinzel,serif;letter-spacing:.2em;color:#8a6c48}
+.tier:after{content:"";position:absolute;left:34px;width:960px;top:6px;height:1px;background:linear-gradient(90deg,rgba(80,52,24,.18),transparent 90%)}
+.node{position:absolute;width:156px;transform:translate(-50%,-30px);text-align:center}
+.disc{position:relative;width:60px;height:60px;margin:0 auto;border-radius:50%;display:grid;place-items:center}
+.disc .ico{width:34px;height:34px}
+.node .nm{margin-top:8px;font:600 12.5px/1.1 Cinzel,serif;letter-spacing:.03em;color:#2b1d10;white-space:nowrap}
+.node .ef{display:none}
+.fam{position:absolute;padding-top:6px;text-align:center;font:600 10px/1 Cinzel,serif;letter-spacing:.3em;color:#8a6c48;text-transform:uppercase;border-top:1px solid rgba(80,52,24,.25)}
+.node.taken .disc{background:radial-gradient(circle at 40% 34%,#5a4129,#2b1d10 70%);color:#efe2c3;
+  box-shadow:0 0 0 2px #efe2c3,0 0 0 4px #2b1d10,0 4px 8px rgba(40,24,10,.45)}
+.node.taken .disc:after{content:"";position:absolute;right:-4px;top:-4px;width:26px;height:26px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#c9473a,#7a2218);box-shadow:0 0 0 2px #efe2c3;
+  -webkit-mask:none}
+.node.taken .chk{position:absolute;right:-1px;top:2px;width:20px;height:16px;z-index:2}
+.node.open .disc{background:radial-gradient(circle at 40% 32%,#f6e2b0,#d4ad66 60%,#9a7434);color:#2b1d10;
+  box-shadow:0 0 0 2px #5d4426,0 0 0 6px rgba(201,163,94,.35),0 0 18px rgba(201,163,94,.65)}
+.node.open .nm{color:#1c140c}
+.node.waiting .disc{background:rgba(255,255,255,.12);color:#5a4330;box-shadow:inset 0 0 0 1.5px #5a4330}
+.node.locked .disc,.node.granted .disc{background:transparent;color:rgba(80,52,24,.38);box-shadow:inset 0 0 0 1.5px rgba(80,52,24,.32)}
+.node.locked .disc{border:1.5px dashed rgba(80,52,24,.35);box-shadow:none}
+.node.locked .nm,.node.granted .nm{color:#8a7154}
+.node.locked .ef{color:#9c8566}
+.node.sel .ring{position:absolute;left:50%;top:-12px;width:126px;height:104px;transform:translateX(-50%) rotate(-8deg);pointer-events:none}
+.pencil{position:absolute;left:0;right:0;top:-60px;text-align:center;font:italic 20px/1.3 "IM Fell English",serif;color:#7b6142}
+.lore{position:absolute;left:0;right:0;bottom:0;padding-top:18px;border-top:1px dotted rgba(80,52,24,.35);display:flex;gap:40px}
+.lore div{flex:1;font:16px/1.4 "EB Garamond",serif;color:#4a3522}
+.lore b{display:block;margin-bottom:6px;font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:#7d5c37;text-transform:uppercase}
+
+/* ---------- the big tree: camera, outline ---------- */
+.view{position:absolute;left:0;top:0;width:1004px;height:664px;overflow:hidden;cursor:grab}
+.world{position:absolute;left:0;top:0;transform-origin:0 0}
+.world svg.lines{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible}
+.world.far .nm{display:none}
+.world.far.crowd .node.taken .nm{display:none}
+.world.far .node.taken .nm,.world.far .node.open .nm,.world.far .node.sel .nm{display:block;width:max-content;margin-left:50%;
+  transform:translateX(-50%);font-size:calc(11px * var(--inv));margin-top:calc(4px * var(--inv));
+  padding:0 calc(3px * var(--inv));background:rgba(239,226,195,.82);border-radius:2px}
+.world.dots .disc .ico{display:none}
+.world.dots .disc{transform:scale(.8)}
+.world.dots .node.locked .disc{border:none;background:rgba(80,52,24,.3)}
+.world.dots .node.waiting .disc{background:rgba(80,52,24,.3)}
+.world.dots .node.sel .ring{transform:translateX(-50%) scale(1.6)}
+.node.two .disc{outline:2px dotted rgba(142,42,30,.7);outline-offset:5px}
+.cam{position:absolute;right:0;bottom:-6px;display:flex;gap:6px;align-items:center}
+.cam .ghost{min-width:34px;height:30px;padding:0 10px;display:grid;place-items:center;border-radius:2px;cursor:pointer;
+  font:700 12px/1 Cinzel,serif;letter-spacing:.14em;color:#4a3522;box-shadow:inset 0 0 0 1px rgba(80,52,24,.45);background:rgba(255,255,255,.2)}
+.cam .scale{margin-left:8px;font:italic 15px/1 "IM Fell English",serif;color:#6b5236;font-weight:400}
+.legend{position:absolute;left:0;bottom:0;display:flex;gap:20px;font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+.legend span{display:flex;align-items:center;gap:7px}
+.lg{display:inline-block;width:14px;height:14px;border-radius:50%}
+.lg.taken{background:#2b1d10}.lg.open{background:#d4ad66;box-shadow:0 0 0 1px #5d4426}
+.lg.locked{border:1.5px dashed rgba(80,52,24,.5)}.lg.two{border:2px dotted #8e2a1e}
+.hubface{position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;overflow:hidden;
+  box-shadow:0 0 0 3px #efe2c3,0 0 0 5px #2b1d10,0 0 0 9px rgba(80,52,24,.25)}
+.hubface img{width:100%;height:100%;filter:sepia(.35)}
+.orbit{position:absolute;left:0;top:0;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(80,52,24,.13);pointer-events:none}
+.outline{position:absolute;left:0;top:0;width:340px;bottom:0}
+.orows{margin-top:12px;height:620px;overflow:hidden;border-right:1px dotted rgba(80,52,24,.35);padding-right:10px}
+.orow{display:flex;align-items:center;gap:7px;height:25px;font:15.5px/1 "EB Garamond",serif;color:#2b1d10;white-space:nowrap}
+.orow .tw{width:10px;font-style:normal;color:#8a6c48;font-size:11px}
+.orow .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.orow.taken .dot{background:#2b1d10}.orow.open .dot{background:#d4ad66;box-shadow:0 0 0 1px #5d4426}.orow.locked .dot{border:1.5px dashed rgba(80,52,24,.5)}
+.orow.locked span{color:#8a7154}
+.orow.on{background:rgba(142,42,30,.1);box-shadow:inset 3px 0 0 #8e2a1e}
+.orow em{margin-left:auto;font:italic 13.5px/1 "IM Fell English",serif;color:#8a6c48}
+.orow em b{font-weight:400;color:#8a5d16}
+.hood{position:absolute;left:370px;right:0;top:0;bottom:0}
+.hoodbox{position:relative;margin-top:12px;height:640px}
+.hoodbox svg.lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.node.sib{opacity:.55}
+.mode{position:absolute;right:0;top:-34px;display:flex;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(80,52,24,.45);overflow:hidden}
+.mode span{padding:8px 16px 7px;font:700 11px/1 Cinzel,serif;letter-spacing:.2em;color:#6b5236;text-transform:uppercase;cursor:pointer}
+.mode span.on{background:#2b1d10;color:#efe2c3}
+.node[data-id],.orow[data-id]{cursor:pointer}
+.canlist .crow{display:flex;align-items:center;gap:10px;height:30px;cursor:pointer;border-bottom:1px dotted rgba(201,163,94,.14)}
+.canlist .crow i{width:10px;height:10px;border-radius:50%;background:#d4ad66;flex:none}
+.canlist .crow span{font:600 12.5px/1 Cinzel,serif;letter-spacing:.04em;color:#e8d6ae}
+.canlist .crow em{margin-left:auto;font:italic 13.5px/1 "IM Fell English",serif;color:#a08a68}
+
+/* ---------- right: the talent in hand ---------- */
+#hand{left:1512px;top:108px;width:376px;height:944px;padding:24px 22px}
+.slip{position:relative;padding:28px 26px 24px;color:var(--ink);border-radius:2px;transform:rotate(.6deg);
+  background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.3),transparent 60%),linear-gradient(176deg,#efe2c3,#d9c49b);
+  box-shadow:inset 0 0 30px rgba(110,70,25,.25),0 0 0 1px #5d4426,0 10px 18px rgba(0,0,0,.55)}
+.slip .big{display:flex;gap:16px;align-items:center}
+.slip .big .disc{width:76px;height:76px;flex:none}
+.slip h2{font:700 24px/1.05 Cinzel,serif;letter-spacing:.04em;color:#1c140c}
+.slip .tt{margin-top:7px;font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:#7d5c37;text-transform:uppercase}
+.slip .eff{margin-top:18px;font:19px/1.35 "EB Garamond",serif;color:#2b1d10}
+.slip .status{margin-top:16px;font:700 11px/1 Cinzel,serif;letter-spacing:.2em;text-transform:uppercase}
+.status.open{color:#8a5d16}.status.taken{color:var(--greenink)}.status.locked,.status.waiting,.status.granted{color:var(--redink)}
+.slip .k{margin:20px 0 10px;font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:#7d5c37;text-transform:uppercase;display:flex;gap:10px;align-items:center}
+.slip .k:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.45),transparent)}
+.led{display:grid;grid-template-columns:1fr auto auto auto;gap:8px 12px;align-items:baseline;font:17px/1 "EB Garamond",serif}
+.led span{font:600 11px/1 Cinzel,serif;letter-spacing:.12em;color:#4a3522}
+.led s{color:#8a7154}
+.led b{font:700 18px/1 Cinzel,serif;color:#1c140c}
+.led i{font:italic 15px/1 "IM Fell English",serif;color:var(--greenink)}
+.led i.flat{color:#8a7154}
+.slip .gloss{margin-top:12px;font:italic 15.5px/1.3 "IM Fell English",serif;color:#6b5236}
+.path{display:flex;flex-direction:column;gap:0}
+.step{display:flex;align-items:center;gap:12px;height:38px;position:relative}
+.step:not(:last-child):after{content:"";position:absolute;left:13px;top:30px;height:16px;width:2px;background:rgba(80,52,24,.35)}
+.step .d{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none}
+.step .d .ico{width:17px;height:17px}
+.step.taken .d{background:#2b1d10;color:#efe2c3}
+.step.open .d{background:#d4ad66;color:#2b1d10;box-shadow:0 0 0 1px #5d4426}
+.step.locked .d,.step.waiting .d{color:rgba(80,52,24,.5);box-shadow:inset 0 0 0 1.5px rgba(80,52,24,.4)}
+.step b{font:600 14px/1 Cinzel,serif;letter-spacing:.03em;color:#2b1d10}
+.step.locked b{color:#8a7154}
+.step em{margin-left:auto;font:italic 14px/1 "IM Fell English",serif;color:#6b5236}
+.step em.red{color:var(--redink)}
+#hand .act{position:absolute;left:22px;right:22px;bottom:22px}
+#hand .act .bigbtn{width:100%}
+#hand .act p{margin-bottom:14px;text-align:center;font:italic 15.5px/1.3 "IM Fell English",serif;color:#a08a68}
+#hand .after{margin-top:22px}
+#hand .after p{font:italic 16px/1.35 "IM Fell English",serif;color:#b9a27c}
+#hand .after p b{font-style:normal;font-family:Cinzel;font-size:13px;letter-spacing:.06em;color:#e8d6ae}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="top"></div>
+  <div id="who" class="leather"></div>
+  <div id="sheet" class="page"></div>
+  <div id="hand" class="leather"></div>
+  <div id="grain"></div><div id="vignette"></div>
+</div>
+<script>
+const D = window.DATA, I = window.ICONS;
+const STATE = new URLSearchParams(location.search).get("state") || "combat";
+const ico = (k, px) => `<span class="ico" style="width:${px}px;height:${px}px"><svg viewBox="0 0 512 512">${I[k] || ""}</svg></span>`;
+const mod = v => { const m = Math.floor((v - 10) / 2); return (m >= 0 ? "+" : "−") + Math.abs(m); };
+const ROMAN = ["I", "II", "III", "IV"];
+const LABEL = {combat: "Combat", work: "Work", racial: "Racial", magic: "Magic"};
+const u = D.unit;
+
+// one frame per ?state=: which track is on the page, which talent is in hand, what came before
+const FRAMES = {
+  combat: {track: "combat", sel: "sharp_analysis"},
+  locked: {track: "combat", sel: "anatomist"},
+  racial: {track: "racial", sel: "parley"},
+  magic:  {track: "magic", sel: "arcane_mind"},
+};
+const F = FRAMES[STATE] || (window.BIG ? {track: "combat", sel: window.BIG.sel} : FRAMES.combat);
+ROMAN.push("V", "VI", "VII", "VIII");
+const T = D.tracks.find(t => t.track === F.track);
+const byId = Object.fromEntries(T.nodes.map(n => [n.id, n]));
+const sel = byId[F.sel];
+
+const PICKS_TOTAL = D.tracks.reduce((a, t) => a + t.picks, 0);
+const ATTR_OF = {STR: "Strength", DEX: "Dexterity", CON: "Constitution", INT: "Intelligence", WIS: "Wisdom", CHA: "Charisma"};
+
+/* ---------- top ---------- */
+document.getElementById("top").innerHTML = `
+  <div class="cartouche"><div class="place">${u.name}'s talents</div>
+    <div class="sub"><b>${u.race} ${u.occupation}</b> · ${D.guild} · day ${D.day}</div></div>
+  <div id="topright">
+    <div class="chain"><span class="done">Report</span><i>›</i><span class="done">Level up</span><i>›</i><span class="now">Talents</span><i>›</i><span>The field</span><i>›</i><span>Map</span></div>
+  </div>`;
+
+/* ---------- left: who, the four tracks, the band ---------- */
+function trackCard(t) {
+  let note, bar = "";
+  if (t.track === "racial") {
+    note = t.picks ? "a racial pick to spend" : `next racial pick at racial level ${t.next_racial} · every level anywhere adds a hit die`;
+  } else if (t.track === "magic" && !u.magic_sources.length) {
+    note = "no school yet · a school opens at its sanctuary";
+  } else if (t.span) {
+    note = `${t.into} / ${t.span} XP to level ${t.level + 1}`;
+    bar = `<div class="tbar"><i style="width:${100 * t.into / t.span}%"></i></div>`;
+  }
+  return `<div class="track ${t.track === F.track ? "on" : ""}">
+    ${t.picks ? `<div class="pick">${t.picks} pick${t.picks > 1 ? "s" : ""}</div>` : ""}
+    <div class="row"><span class="nm">${LABEL[t.track]}</span><span class="lv">LEVEL<b>${t.level}</b></span></div>
+    ${bar}<div class="note">${note} · ${t.held} held</div></div>`;
+}
+const hot = sel && sel.state === "open" ? (sel.delta.find(d => ATTR_OF[d[0]]) || [])[0] : null;
+document.getElementById("who").innerHTML = `
+  <div class="plate"><div class="medal"><img src="${u.portrait}"></div>
+    <div><b>${u.name}</b><span>${u.race} ${u.occupation}</span><small>racial level ${u.racial_level} · HP ${u.hp}/${u.hp_max}</small></div></div>
+  <div class="attrs">${Object.keys(ATTR_OF).map(k => `<div class="attr ${k === hot ? "hot" : ""}"><span>${k}</span><b>${u.snap[k]}</b><i>${mod(u.snap[k])}</i></div>`).join("")}</div>
+  <div class="kicker">The four tracks<em>a level, a pick</em></div>
+  ${D.tracks.map(trackCard).join("")}
+  ${window.BIG ? `<div class="kicker">Can take now<em>${window.BIG.open.length} open</em></div>
+  <div class="canlist">${window.BIG.open.slice(0, 7).map(n => `<div class="crow"><i></i><span>${n.name}</span><em>tier ${ROMAN[n.depth]}</em></div>`).join("")}</div>` : `
+  <div class="kicker">The band<em>picks waiting</em></div>
+  <div class="band">${D.members.map(m => {
+    const p = Object.values(m.picks).reduce((a, b) => a + b, 0);
+    return `<div class="mate ${m.name === u.name ? "on" : p ? "" : "dim"}"><div class="medal"><img src="${m.portrait}"></div>
+      ${p ? `<em>${p}</em>` : ""}<span>${m.name.split(" ")[0]}</span></div>`;
+  }).join("")}</div>`}
+  <div class="foot"><div class="bigbtn ghost small" style="width:100%">Back to the level-up</div></div>`;
+
+/* ---------- centre: the tree ---------- */
+const HEADS = {
+  combat: ["Combat", "Each level won in a fight gives one pick. A deeper talent needs the one above it, and nothing is closed for good: given the levels, every talent here can be held."],
+  work: ["Work", "Each level of work gives one pick: what a shift pays, how fast it ends, what the body bears on the road."],
+  racial: ["Racial", "The race's own gifts. The racial track earns nothing by itself: it climbs with every level in the other three, a hit die each, and every fifth racial level gives a pick."],
+  magic: ["Magic", "The caster's tree, the same for every school. Magic XP comes from a foe put down by a spell and from a spell studied to the end; both need a school."],
+};
+// a family is one root and what hangs from it; families pack into rows of at most 7 leaves
+const W = 1004, kids = id => T.nodes.filter(n => n.requires === id);
+const fams = T.nodes.filter(n => !n.requires).map(root => {
+  const pos = {}; let leaf = 0;
+  const place = (n, d) => { const cs = kids(n.id); const c = cs.length ? cs.map(k => place(k, d + 1)).reduce((a, b) => a + b) / cs.length : leaf++; pos[n.id] = [c, d]; return c; };
+  place(root, 0);
+  return {root, pos, width: Math.max(leaf, 1), depth: 1 + Math.max(...Object.values(pos).map(p => p[1]))};
+});
+const rows = []; for (const f of fams) { const r = rows[rows.length - 1]; if (r && r.w + f.width <= 7) { r.f.push(f); r.w += f.width; } else rows.push({f: [f], w: f.width}); }
+const PITCH = 104, ROWGAP = 44, LEAF = W / 7;
+const XY = {}; let y0 = 30;
+for (const r of rows) {
+  const gap = (W - r.w * LEAF) / r.f.length; let x0 = gap / 2;
+  for (const f of r.f) { for (const [id, [c, d]] of Object.entries(f.pos)) XY[id] = [x0 + LEAF * (c + 0.5), y0 + PITCH * d]; f.x = x0; f.y = y0; x0 += f.width * LEAF + gap; }
+  y0 += PITCH * Math.max(...r.f.map(f => f.depth)) + ROWGAP;
+}
+const OFF = Math.max(0, ((T.track === "combat" || T.track === "work" ? 700 : 560) - y0) / 2.4);
+for (const k in XY) XY[k][1] += OFF;
+for (const f of fams) f.y += OFF;
+const xy = n => XY[n.id];
+const lineStyle = s => s === "taken" ? 'stroke="#2b1d10" stroke-width="3"' :
+  s === "open" ? 'stroke="#9a7434" stroke-width="2.5" stroke-dasharray="7 5"' :
+  'stroke="rgba(80,52,24,.32)" stroke-width="1.5" stroke-dasharray="2 5"';
+const chk = `<svg class="chk" viewBox="0 0 20 16"><path d="M3 8l5 5 9-11" fill="none" stroke="#fff3dc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ring = `<svg class="ring" viewBox="0 0 126 104"><path d="M63 6c34 0 58 18 57 44s-26 48-60 47S5 76 6 50 32 4 70 8" fill="none" stroke="#8e2a1e" stroke-width="2.6" stroke-linecap="round" opacity=".85"/></svg>`;
+const short = e => e.length > 46 ? e.slice(0, 44).replace(/[ ,.;:]+\S*$/, "") + "…" : e;
+
+let lines = "", nodes = "", tiers = "";
+for (const n of T.nodes) {
+  if (n.requires) {
+    const [px, py] = xy(byId[n.requires]), [qx, qy] = xy(n), mid = (py + qy) / 2 + 6;
+    lines += `<path d="M${px} ${py + 34} V${mid} H${qx} V${qy - 34}" fill="none" ${lineStyle(n.state)} stroke-linejoin="round"/>`;
+  }
+  const [x, y] = xy(n);
+  nodes += `<div class="node ${n.state} ${n === sel ? "sel" : ""}" style="left:${x}px;top:${y}px">
+    ${n === sel ? ring : ""}<div class="disc">${ico(n.icon, 46)}${n.state === "taken" ? chk : ""}</div>
+    <div class="nm">${n.name}</div><div class="ef">${short(n.effect)}</div></div>`;
+}
+for (const f of fams) {
+  const a = (f.root.effect.match(/^\+1 (\w+)\.$/) || [])[1];
+  if (a && fams.length > 2) tiers += `<div class="fam" style="left:${f.x}px;top:${f.y - 64}px;width:${f.width * LEAF}px">${a}</div>`;
+}
+
+let extra = "";
+if (T.track === "magic" && !u.magic_sources.length)
+  extra = `<div class="lore"><div><b>Where a school opens</b>Three sanctuaries keep the schools, hidden until the Library's turn-in names them. Initiation asks 2 standing with the school's faction and some days of study.</div>
+    <div><b>What this tree needs</b>Magic levels, from spells. ${u.name} has no school and no spell, so the tree waits in pencil.</div></div>`;
+if (T.track === "racial")
+  extra = `<div class="lore"><div><b>How the racial track climbs</b>Racial level ${u.racial_level} comes from combat ${D.tracks[0].level}, work ${D.tracks[1].level} and magic ${D.tracks[3].level} together, on the racial scale. Each step is a hit die.</div>
+    <div><b>Next pick</b>At racial level ${T.next_racial}: ${T.next_racial - u.racial_level} more racial levels. Then one of these ${T.nodes.length} gifts, kept for life.</div></div>`;
+
+const head = HEADS[T.track];
+document.getElementById("sheet").innerHTML = `
+  <div class="head"><div><div class="kicker">${u.race} ${u.occupation} · ${LABEL[T.track]} level ${T.level}<em>${T.track === "racial" ? "gifts of the " + u.race.toLowerCase() + "s" : "one tree per track"}</em></div>
+      <h1 style="margin-top:14px">${head[0]}</h1><p>${head[1]}</p></div>
+    <div class="seals">
+      <div><div class="seal ${T.picks ? "" : "black"}"><b>${T.picks}</b></div><small>pick${T.picks === 1 ? "" : "s"} to spend</small></div>
+      <div class="held"><b>${T.held}<span> of ${T.nodes.length}</span></b><small>held</small></div>
+    </div></div>
+  <div id="tree" style="${extra ? "bottom:150px" : ""}">
+    ${T.track === "magic" && !u.magic_sources.length ? `<div class="pencil" style="top:${OFF - 50}px">— waits for a school —</div>` : ""}
+    <svg class="lines">${lines}</svg>${tiers}${nodes}</div>
+  ${extra ? `<div style="position:absolute;left:40px;right:40px;bottom:34px;height:96px">${extra}</div>` : ""}`;
+
+/* ---------- right: the talent in hand ---------- */
+function chainOf(n) { const out = []; for (let c = n; c; c = byId[c.requires]) out.unshift(c); return out; }
+const STATUS = {
+  open: "Ready to take", taken: "Held",
+  locked: `Needs ${sel.requires ? byId[sel.requires].name : ""} first`,
+  waiting: T.track === "racial" ? `Opens at racial level ${T.next_racial}` : "Needs a level in this track",
+  granted: "Granted by a school's initiation",
+};
+let ledger = "";
+if (sel.state === "open" && sel.delta.length) {
+  ledger = `<div class="k">What it changes</div><div class="led">${sel.delta.map(([k, a, b]) => {
+    const isA = ATTR_OF[k], mv = isA && mod(a) !== mod(b);
+    return `<span>${isA ? ATTR_OF[k] : k}</span><s>${a}</s><b>${b}</b><i class="${isA && !mv ? "flat" : ""}">${isA ? (mv ? `mod ${mod(a)} → ${mod(b)}` : `mod ${mod(b)}`) : ""}</i>`;
+  }).join("")}</div>`;
+  const a = sel.delta.find(d => ATTR_OF[d[0]]);
+  if (a && mod(a[1]) === mod(a[2])) ledger += `<div class="gloss">The score rises but the modifier holds at ${mod(a[2])}; it moves at ${a[2] + 1}.</div>`;
+} else if (sel.state === "open") {
+  ledger = `<div class="k">What it changes</div><div class="gloss">No number on the sheet moves: it counts in play, each time it applies.</div>`;
+}
+const opens = T.nodes.filter(n => n.requires === sel.id);
+const path = chainOf(sel);
+const pathHtml = path.length > 1 || opens.length ? `<div class="k">The branch</div><div class="path">
+  ${path.map(n => `<div class="step ${n.state}"><div class="d">${ico(n.icon, 17)}</div><b>${n.name}</b>
+    <em class="${n.state === "locked" ? "red" : ""}">${n === sel ? "this one" : n.state === "taken" ? "held" : n.state === "open" ? "can take now" : "not yet"}</em></div>`).join("")}
+  ${opens.map(n => `<div class="step locked"><div class="d">${ico(n.icon, 17)}</div><b>${n.name}</b><em>opens after</em></div>`).join("")}</div>` : "";
+
+let act;
+if (sel.state === "open") {
+  act = `<p>A pick is kept for good. ${T.picks - 1 ? "" : "It is the last pick in " + LABEL[T.track].toLowerCase() + " until the next level."}</p>
+    <div class="bigbtn">${ico("action/targeting", 22)}Take ${sel.name}</div>`;
+} else if (sel.state === "locked") {
+  const need = path.find(n => n.state === "open");
+  const gap = path.filter(n => n.state !== "taken").length;
+  act = `<p>${need ? `Take ${need.name} with this pick; ${sel.name} is ${gap - 1} more combat level${gap - 1 > 1 ? "s" : ""} away.` : ""}</p>
+    <div class="bigbtn off">Needs ${byId[sel.requires].name}</div>`;
+} else {
+  act = `<p>${T.track === "racial" ? `${u.name} has no racial pick yet.` : `${u.name} has no school yet.`}</p><div class="bigbtn off">No pick to spend</div>`;
+}
+const others = D.tracks.filter(t => t.picks && t.track !== T.track);
+document.getElementById("hand").innerHTML = `
+  <div class="kicker">The talent in hand<em>click a talent to read it</em></div>
+  <div class="slip" style="margin-top:14px">
+    <div class="big"><div class="node ${sel.state}" style="position:static;transform:none;width:auto"><div class="disc">${ico(sel.icon, 44)}</div></div>
+      <div><h2>${sel.name}</h2><div class="tt">${LABEL[T.track]} · tier ${ROMAN[sel.tier - 1]}</div></div></div>
+    <div class="eff">${sel.effect}</div>
+    <div class="status ${sel.state}">${STATUS[sel.state]}</div>
+    ${ledger}${pathHtml}
+  </div>
+  ${others.length && STATE !== "combat" && STATE !== "locked" ? `<div class="after"><p>Still to spend: <b>${others.map(t => `${t.picks} ${LABEL[t.track]}`).join(", ")}</b>. Pick that track on the left.</p></div>` : ""}
+  <div class="act">${act}</div>`;
+
+if (window.BIG) {
+  window.renderBig(ico);
+  document.querySelectorAll(".canlist .crow").forEach((r, i) => r.onclick = () => window.goBig(window.BIG.open[i].id));
+}
+
+/* ---------- fit the stage ---------- */
+function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080); document.getElementById("stage").style.transform = `scale(${s})`; }
+addEventListener("resize", fit); fit();
+</script>
+</body>
+</html>
