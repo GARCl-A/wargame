@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen, the guild's sheet and the talk before a fight are in; the report after a fight comes next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen, the guild's sheet and the talk before a fight are in; the report after a fight is mocked and awaits the author.
 
 ## Decisions so far
 
@@ -41,7 +41,9 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   sheet as an open book, a band's packs, the charter, the reputations; one frame per
   `sheets.html?state=`) and [dialogue_mockup/](references/dialogue_mockup/) (the talk
   before a fight: the foe's page, the answers as cards, who speaks; one frame per
-  `dialogue.html?state=`). Each folder is one HTML
+  `dialogue.html?state=`) and [report_mockup/](references/report_mockup/) (after a fight:
+  the fallen, the report with its blows in ink, the level-up, the field, the arena's
+  purse; one frame per `report.html?state=`). Each folder is one HTML
   page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
   the item glyphs there stand in for art not made yet.
 - **Paper is for what you read, leather is for what you act on.** The board, the
@@ -737,6 +739,37 @@ As built:
   ambush, the roll, the guard and the boss were looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
 - **Next (9p):** the report after a fight (`aftermath.py`'s memorials, report, level-ups, loot), the next family that
   needs a mockup. What still opens the away card: the talent tree, the campaign fights (step 10), `trust`.
+
+**9p. The report after a fight — mockup made, awaiting the author.**
+[references/report_mockup/](references/report_mockup/) `report.html` is built on the day-70 save `35d38388`: band 1
+against a five-strong ambush on the Old Road, played AI against AI until a seed gave a win with deaths, a level-up and
+loot (seed 30 under `PYTHONHASHSEED=0`; the fight is not the same across processes otherwise). `data.js` is that
+outcome read through pygame's own `ReportScreen.data()`, `LevelUpScreen.data()`, `memorial_screen.card()` and the
+loot pool; the purse is `arena.brawl_bout()` with the same survivors. Five frames, one per `?state=`, in the order
+`app_battle` plays them; a strip at the top right names where each frame sits in that chain:
+
+- `memorial` (`report_memorial.png`): the fight's dead lie together, one mourning card each (the portrait in grey,
+  days with the guild, "one of the founders" for a day-1 member, who put them down with their medal, the line of the
+  fall, and that their kit lies on the field).
+- `report` (`report_mockup.png`): VICTORY stamped on a muster roll; the band on the left (status, combat XP before
+  and after, takedowns, a LEVEL mark), the pack on the right, and every takedown drawn between them in ink (blue the
+  band's, dashed red the pack's). On leather: what follows, in order, and each survivor's HP after the fight.
+- `level` (`report_level.png`): the plate with a wax seal of the new level, the gains as a ledger (struck before,
+  after, the delta), the bar to the next level, the talent pick that waits.
+- `loot` (`report_loot.png`): the shop's layout: the field's stacks on paper by kind, one leather column per survivor
+  (HP, load against the hard limit, worn slots, pack); a dragged Brigandine refused on the column that cannot carry it,
+  with why; Take what fits and Leave the rest on leather.
+- `purse` (`report_purse.png`): the purse against the stake (staked, won, net) and one card per fighter, Give on each.
+
+Proposed, for the author to settle:
+
+- **The dead on one page**, not one card per death (pygame's `memorial_screen.chain`).
+- **The blows as lines**, and the pack listed beside the band (pygame lists the takedowns as text and never shows the
+  pack). The stable foes are named as ones that could have been bound.
+- **HP after the fight and the chain of screens** on the report; pygame shows neither.
+- Unchanged rules: the purse lands whole on one fighter; the loot's ceiling is each one's hard load limit; whatever
+  stays on the field is lost.
+- Not mocked: the Adelio and Ribbit recruit prompts after an arena win (they open the Tavern's RECRUIT, which is built).
 
 ### 10. The swap — todo
 
