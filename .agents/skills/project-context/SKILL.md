@@ -1,9 +1,13 @@
 ---
 name: project-context
-description: On-demand deep context for the GARTOK project. Read this when you need the design rationale, history, or architecture details behind a specific feature — each reference file covers one completed initiative.
+description: Deep context for the GARTOK project up to 2026-10-20 (frozen). Read this when you need the design rationale, history, or what was tried and rejected behind a feature built by then — each reference file covers one completed initiative.
 ---
 
-This skill holds the full project memory from GARTOK's development. **Do not
+**Frozen on 2026-10-28: the history up to 2026-10-20, no longer updated.** It still holds the
+why behind the features built by then, including what was tried and rejected; for anything
+later, or for how a thing works today, the code, `docs/plans/` and `git log` win.
+
+This skill holds the project memory from GARTOK's development up to then. **Do not
 read every file** — scan the index below, identify which reference(s) are
 relevant to your current task, and read only those.
 

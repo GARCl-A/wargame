@@ -1,6 +1,16 @@
+import random
+import zlib
+
 import pytest
 
 from gartok import world
+
+
+@pytest.fixture(autouse=True)
+def _dice_seeded_by_the_test(request):
+    """Each test rolls the same dice whatever ran before it, alone, serial or under xdist.
+    crc32, not hash(): a str hash changes per process."""
+    random.seed(zlib.crc32(request.node.nodeid.encode()))
 
 
 @pytest.fixture(autouse=True)

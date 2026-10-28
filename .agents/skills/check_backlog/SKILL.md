@@ -6,13 +6,18 @@ description: Tech-lead / PM review of the backlog against the last 5 commits —
 Act as the user's tech lead / product manager. Reply in Portuguese. Read-only:
 do not edit files unless the user asks afterwards.
 
+`pre-commit` already syncs the backlog and the docs with each commit (its step 5) and runs the
+tests before each one, so this is the safety net for what slipped through, not a second gate:
+no test run here. If `git status --short` shows uncommitted work (another agent may be
+mid-task), say so in one line and leave it out of the audit.
+
 ## Inputs
 
 - `git log -5 --stat --format='--- %h %s%n%b'` — the last 5 commits, with bodies.
 - `docs/plans/backlog.md` — the one place for open work (parts: *Ready to do*
   by size, *Needs more information*).
-- Docs the backlog or the commits point to (`docs/plans/economy_sim_v2.md`,
-  `campaign_ai_roadmap.md`, `AGENTS.md` module table, `README.md`).
+- Docs the backlog or the commits point to (`docs/plans/*.md`, the `AGENTS.md`
+  module table, `README.md`).
 
 ## Steps
 
@@ -24,7 +29,6 @@ do not edit files unless the user asks afterwards.
      the prose (`grep` for the flag, the function, the file the item names);
    - docs that describe a thing as "not built" / "a switch" / "B1" that now
      exists.
-   Run `python -m pytest tests/ -q` as the sanity gate and report the result.
    List each divergence with file and line, and say what should change.
 
 2. **Execution priority.** From *Ready to do*, list the highest immediate-impact

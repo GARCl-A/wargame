@@ -59,10 +59,9 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Medium
 
-- **Test suite: the skills' gates and the last luck-dependent tests (found 2026-10-28).** The
-  suite is seeded per test and runs under `pytest-xdist`; left is how `pre-commit` and
-  `check_backlog` use `-n auto` and the `slow` / `balance` markers, and four tests that still
-  lean on luck; the steps are in [test_suite.md](test_suite.md).
+- **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per
+  test, runs under `pytest-xdist` and the skills use it; four tests still lean on luck and the
+  rest move to `standard_unit` as they are touched; the steps are in [test_suite.md](test_suite.md).
 
 - **Remove occupations (decided 2026-10-23).** The first step of *Needs more information -> Loyalty,
   the oath and who the members are*: an occupation is only a preset of the starting weapon and item

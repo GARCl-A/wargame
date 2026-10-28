@@ -16,8 +16,12 @@ When the two disagree, `REFERENCE.md` wins.
   `Co-Authored-By:` trailer. Always run the `pre-commit` skill first.
 - **Comments** default to none. Keep only a comment that explains a non-obvious
   *why*. Cut anything that restates what the code already says.
-- **Tests:** `python -m pytest tests/` — the hard gate. `sim_test.py` is a
-  secondary check for combat/AI changes.
+- **Tests:** `python -m pytest tests/ -n auto -m "not balance"` — the hard gate (~30 s, in
+  parallel). `-m balance` holds the sims' design numbers: run it with
+  `scripts/economy_report.py` after touching wages, prices or loot. A test that is not about a
+  roll builds its characters from `tests.helpers.standard_unit`, never a rolled `Unit(...)`.
+  `sim_test.py` is a secondary check for combat/AI changes. Tiers and what is left:
+  `docs/plans/test_suite.md`.
 - Work and commit straight on `main`; no feature branches unless the user asks for one.
   A teammate works on `main` in parallel, so `git pull` before committing.
 
@@ -155,10 +159,10 @@ recipe in `README.md`).
 
 ## Deep context
 
-For detailed history of any feature or past design decision, use the
-`project-context` skill (`.agents/skills/project-context/`). It indexes every
-memory from the project's development and has the full files as references —
-read only what you need.
+For the history of a feature built up to 2026-10-20 or a past design decision (including what
+was tried and rejected), use the `project-context` skill (`.agents/skills/project-context/`):
+an index and one reference per initiative — read only what you need. It is frozen since
+2026-10-28; for anything later, the code, `docs/plans/` and `git log` are the record.
 
 ## Feature Implementation Rules
 

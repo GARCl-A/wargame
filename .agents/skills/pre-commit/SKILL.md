@@ -27,16 +27,30 @@ only makes sense historically is the expensive one.
    the user can correct a misreading early); if the diff is too ambiguous to
    infer it, ask.
 
-2. **Tests must pass first.** Run `python -m pytest tests/`. A failure stops
-   this skill here — report it and fix or ask before going any further. Never
-   let a red suite ride into a commit. (`python sim_test.py` is a good second
-   check for anything touching combat/AI, but isn't a hard gate the way pytest
-   is.)
+2. **Tests must pass first.** The gate, ~30 s:
 
-3. **Check for missing imports and undefined variables (static analysis).**
-   Python tests often miss `NameError`s in UI hover states or error paths.
-   For every new variable, constant, or function used in the diff, verify it is
-   defined in scope or imported at the top of the file.
+   ```
+   python -m pytest tests/ -n auto -m "not balance" -q
+   ```
+
+   When the diff touches wages, purses, prices or loot, also run
+   `python -m pytest tests/ -n auto -m balance -q` and `python scripts/economy_report.py --quick`
+   (the `balance` tests are design numbers off the sims, not bug checks:
+   [docs/plans/test_suite.md](../../../docs/plans/test_suite.md)). A failure stops this skill
+   here — report it and fix or ask before going any further. Never let a red suite ride into a
+   commit. A failure in a file another agent is editing right now (step 6) is theirs: name it,
+   don't fix it. (`python sim_test.py` is a good second check for anything touching combat/AI,
+   but isn't a hard gate the way pytest is.)
+
+3. **Lint the diff's Python files** for undefined names, broken imports and syntax errors
+   (tests miss a `NameError` in a hover state or an error path):
+
+   ```
+   python -m ruff check --select F,E9 <every .py file in the diff>
+   ```
+
+   The edit hook runs the same check, but only on files an agent edited through its edit
+   tool — not on hand edits or scripted ones. Fix only what the diff introduced.
 
 4. **Review the diff for quality, not just correctness — never skipped, not
    even for a one-line diff.** A green suite proves the code works; it says
@@ -83,8 +97,8 @@ only makes sense historically is the expensive one.
    a variable, drop dead code, rename for convention, add a missing import. The
    user should never have to answer "adjust these?" with "yes, do all of it."
 
-   - After editing, re-run `python -m pytest tests/` (step 2) so the fixes are
-     covered by the green suite, and re-read the resulting diff.
+   - After editing, re-run step 2's gate so the fixes are covered by the green
+     suite, and re-read the resulting diff.
    - Ask the user only about what genuinely needs their call: two reasonable
      designs with different trade-offs, a behaviour change beyond the diff's
      intent, or a change that widens scope. Put those in the recap (step 7) as
@@ -105,7 +119,7 @@ only makes sense historically is the expensive one.
    - **Docs that describe what changed.** For each flag, function, constant,
      module or behaviour the diff adds, removes or renames, `grep` the names
      (and the old prose, such as "never heals") across `RULES.md`,
-     `README.md`, `AGENTS.md` (the module table), `docs/plans/*.md` and
+     `README.md`, `AGENTS.md` (the module table, the design premises), `docs/plans/*.md` and
      `locales/en.json` tutorial copy. Fix every sentence that is now false.
      `REFERENCE.md` is generated: regenerate it, never edit it by hand.
    - **Follow-ups the diff creates.** Debt left on purpose, a split-off task
@@ -121,6 +135,12 @@ only makes sense historically is the expensive one.
    skills, unrelated edits) are never folded in silently: leave them out of
    the commit, mention them in one line and propose a separate commit. If
    `git add` was run broadly, re-check `git status` after staging.
+
+   **Another agent may be working in the same tree** (the author runs more than one session
+   on `main`): files you did not touch can change, appear or get committed while you work.
+   Never stage them. When one file holds your hunks and theirs, stage only yours:
+   `git diff -- <file> > own.patch`, delete their hunks from the patch,
+   `git apply --cached own.patch`.
 
 7. **Recap decisions and implementation — separate from, and more complete
    than, the commit message.** The commit message (step 8) stays terse and in
@@ -170,23 +190,18 @@ only makes sense historically is the expensive one.
    fine does not.
 
 10. **Only after approval:** `git pull` first (a teammate works on `main` in
-   parallel), stage exactly the files that belong to this change (named
-   explicitly — not a blanket `git add -A`), commit with the approved message,
-   then `git status` to confirm a clean result.
-
-11. **If this commit closes a major arc**, update the project context:
-    - Create or update a reference file in
-      `.agents/skills/project-context/references/` with the design rationale
-      (what was decided and why, what NOT to redo).
-    - Update the index table in `.agents/skills/project-context/SKILL.md`.
-    - If a design premise changed, update `AGENTS.md`.
-    Stage these alongside the commit or as a follow-up commit.
+   parallel), stage exactly the files and hunks that belong to this change
+   (named explicitly — not a blanket `git add -A`; step 6 for a shared file),
+   commit with the approved message, then `git status` to confirm that what is
+   left is only other work.
 
 ## Hard rules
 
 - Never `--no-verify`, never skip or bypass a hook.
 - Never `git commit --amend` unless the user asks for it by name.
 - Never force-push, never touch `main` history.
+- Never `git stash` (nor `checkout`/`restore` of a file you did not change): in a shared tree it
+  carries off another agent's uncommitted work.
 - Step 4 (the quality pass) is never skipped for being "too small a change" —
   a one-line diff can still be the wrong one line.
 - If the user has already reviewed the diff and says "just commit it," steps

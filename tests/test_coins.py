@@ -10,6 +10,7 @@ from gartok.group_screen import GroupScreen
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit, distribute_load, flatten_pack
+from tests.helpers import standard_unit
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
@@ -143,9 +144,10 @@ def test_gear_screen_splits_a_purse_and_hands_part_of_it_to_a_mate():
 
 
 def test_a_purse_weighs_on_a_weak_carrier():
-    u = _bare(0)
-    u.equipped_armor = None
+    u = standard_unit()
+    u.set_base_attribute("strength", 4)
     base = u.load
     u.money = 2000
+    u._derive_combat()
     assert u.load == base + 10.0
-    assert u.encumbered == (u.load > u.carry_normal)
+    assert u.encumbered

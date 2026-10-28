@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import _FixedRNG, _person, recruit
+from tests.helpers import _FixedRNG, _person, recruit, standard_unit
 
 
 def test_recruit_needs_a_shared_language():
@@ -387,16 +387,15 @@ def test_a_prison_pitch_charges_the_bail_and_adds_the_bonus(monkeypatch):
 
 
 def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
-    from gartok.unit import Unit
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     from gartok.guild import Guild
     from gartok.taverna_screen import TavernaScreen
-    recruiter = Unit("player")
+    recruiter = standard_unit()
     recruiter.money = 50
     recruiter.languages = ["Common"]
     g = Guild([recruiter])
-    cand = Unit("player")
+    cand = standard_unit()
     cand.languages = ["Common"]
     scr = TavernaScreen(None, g, g.roster, None, lambda *a: None, candidates=[cand])
     seen = {}

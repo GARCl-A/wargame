@@ -22,16 +22,14 @@ from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.map_screen import MapScreen
 from gartok.ui.tokens import fonts as ui_fonts
-from gartok.unit import Unit
+from tests.helpers import standard_unit
 
 SHIFTS = (4, 8, 12, 16)
 
 
 def _worker(money=0):
-    u = Unit("player")
-    u._base_inventory = []
+    u = standard_unit()
     u.money = money
-    u._derive_combat()
     return u
 
 
