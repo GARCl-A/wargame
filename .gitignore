@@ -5,6 +5,8 @@ Equipe.xlsx
 *.txt
 !requirements.txt
 !requirements-dev.txt
+!LICENSE.txt
+!OFL.txt
 .venv/
 .pytest_cache/
 .ruff_cache/

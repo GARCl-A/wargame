@@ -1,0 +1,26 @@
+The SVGs under action/, body/, gui/, hat/, head/ and item/ come from game-icons.net and are used
+under Creative Commons Attribution 3.0 (CC BY 3.0), a few under CC0.
+
+    License:  https://creativecommons.org/licenses/by/3.0/
+    Source:   https://game-icons.net/
+
+The original download nests each icon under its author (…/1x1/<author>/<name>.svg);
+that layer was flattened to <category>/<name>.svg here. Authorship is recorded by
+game-icons.net per icon on the site. Contributors whose work appears in this
+subset include:
+
+    Lorc          — http://lorcblog.blogspot.com
+    Delapouite    — https://delapouite.com
+    Cathelineau
+    DarkZaitzev   — https://www.deviantart.com/darkzaitzev
+    Sbed          — http://opengameart.org/content/95-game-icons
+    Skoll
+    Carl Olsen    — https://twitter.com/unstoppableCarl
+    Caro Asercion
+    Kier Heyl
+    Willdabeast
+    Faithtoken
+    Lord Berandas — http://berandas.deviantart.com
+
+Attribution requirement: if the game ships, credit "game-icons.net (CC BY 3.0)"
+in the about/credits screen.
