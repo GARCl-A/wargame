@@ -15,11 +15,10 @@ The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_scree
 
 from typing import ClassVar
 
-from .. import artwork, economy, orders, solo, world
+from .. import artwork, economy, orders, world
 from ..bank_screen import BankScreen
 from ..city_property_screen import CityPropertyScreen
 from ..constants import fmt_money
-from ..crafting_screen import ALONE_HOURS, WAIT_HOURS
 from ..hub_screen import TabbedHubScreen
 from ..map_view import node_icon
 from ..work_desk import SHIFTS
@@ -440,19 +439,14 @@ class HubSession(Session):
         recipe = tab.recipe(recipe)
         m = self.map
         if alone:
-            if hours not in ALONE_HOURS:
-                raise ValueError(f"no {hours} h stint alone")
-            ok, lines = solo.craft(self.guild, self.group, tab.crafter, recipe, hours)
+            ok, lines = tab.s._alone(recipe, hours)
             if not ok:
                 tab.notice = lines[0]
                 return self.state()
             m.notices += lines
             m.game.open(m)
             return m._after_order()
-        if hours not in WAIT_HOURS:
-            raise ValueError(f"no {hours} h stint")
-        lines, _ = self.guild.crafting_shift(tab.crafter, recipe, hours, pool=tab.s._packs)
-        tab.report = lines
+        tab.report = tab.s._work(recipe, hours)
         if m.wiped or not self.group.members:
             m.game.open(m)
             return m._after_order()

@@ -1,16 +1,11 @@
-"""The Forge: craft items using recipes and materials.
-
-Requires members to have learned recipes.
-Materials come from the whole group's packs, wagons and animals (padlocked items excepted) and are consumed immediately.
-Progress requires rolling a 1d20+INT over hours.
+"""A workbench's window: the crafters on the left, the picked one's recipes on the right, the stints as
+buttons. The rules are `workbench.Bench`'s.
 """
-
-from collections import Counter
 
 import pygame
 
-from . import items, progression, solo
 from .item_icon import draw_icon
+from .progression import work_xp_hours
 from .screen import Screen
 from .ui import hub_body as hb
 from .ui.hub_frame import MARGIN, hub_button
@@ -18,26 +13,14 @@ from .ui.primitives import ellipsize, footer_bar, scrollbar, text
 from .ui.tokens import T, mix
 from .ui.tokens import fonts as ui_fonts
 from .ui.vendor_panel import draw_vendor, draw_vendor_name
-from .unit_loadout import pooled_unlocked
+from .workbench import ALONE_HOURS, WAIT_HOURS, Bench
 
 CARD_H = T.S * 13
-WAIT_HOURS = (1, 4, 8)          # a stint the whole group waits out, here and now
-ALONE_HOURS = (4, 8, 16)        # a solo task: the crafter splits off and the map runs the clock
 
-class CraftingScreen(Screen):
+
+class CraftingScreen(Screen, Bench):
     native = True
     framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
-
-    def hub_cards(self):
-        known = {r for u in self.crafters for r in u.known_recipes if self._for_station(r)}
-        return [{"label": "crafters", "value": f"{len(self.crafters)} of {len(self.group.members)}"},
-                {"label": "recipes known", "value": str(len(known))}]
-
-    def _for_station(self, recipe):
-        """Is `recipe` worked at this screen's station (any station when it has none)?"""
-        found = items.CRAFTING_RECIPES.get(recipe)
-        variants = found if isinstance(found, list) else [found] if found else []
-        return not self.station or any(rc.station == self.station for rc in variants)
 
     def tutorial_key(self):
         return "craft"
@@ -46,18 +29,13 @@ class CraftingScreen(Screen):
                  subtitle="forge weapons and armor  ·  needs recipes and materials",
                  station="forge", vendor=None):
         super().__init__()
+        Bench.__init__(self, guild, group, station)        # Screen ends the cooperative chain
         self.fonts = fonts
         self._F = ui_fonts()
-        self.guild = guild
-        self.group = group
         self.on_done = on_done
         self.title = title
         self.subtitle = subtitle
-        self.station = station
         self.vendor = vendor
-        
-        self.crafters = [u for u in group.members if any(self._for_station(r) for r in u.known_recipes)]
-        self.selected_crafter = self.crafters[0] if self.crafters else None
 
         self.buttons = []         # [(key, rect)]
         self._hot = False
@@ -82,37 +60,6 @@ class CraftingScreen(Screen):
     def handle_escape(self):
         return False
 
-    @property
-    def _packs(self):
-        return [*self.group.members, *self.group.stores]
-
-    def _get_missing_materials(self, recipe):
-        recipe_data = items.get_recipe(recipe)
-        if not recipe_data:
-            return []
-        need = Counter(recipe_data.materials)
-        missing = []
-        for mat, qty in need.items():
-            have = pooled_unlocked(self._packs, mat)
-            if have < qty:
-                missing.append(f"{qty - have}x {mat}")
-        return missing
-
-    def _get_missing_tools(self, recipe):
-        recipe_data = items.get_recipe(recipe)
-        return items.missing_tools(recipe_data, self._packs) if recipe_data else []
-
-    def _has_materials(self, recipe):
-        return not self._get_missing_materials(recipe) and not self._get_missing_tools(recipe)
-
-    def alone_blocker(self, m, recipe_id):
-        """Why `m` cannot go off alone to craft `recipe_id`, or None when they can."""
-        if len(self.group.members) > 1 and not self.guild.free_slots:
-            return "no free group slot"
-        if self.guild.craft_blocker(m, recipe_id, [m]) is not None:
-            return "not in their own pack"
-        return None
-
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL and self.roster_area.collidepoint(self.mouse):
             self.roster_scroll = max(0, min(self.roster_max, self.roster_scroll - event.y * T.S * 4))
@@ -129,20 +76,14 @@ class CraftingScreen(Screen):
                 if key == "done":
                     self.on_done()
                 elif key.startswith("alone:"):
-                    parts = key.split(":", 2)
-                    hours = parts[1]
-                    recipe = parts[2]
-                    ok, lines = solo.craft(self.guild, self.group, self.selected_crafter, recipe, int(hours))
+                    _, hours, recipe = key.split(":", 2)
+                    ok, lines = self._alone(recipe, int(hours))
                     if ok:
                         self.on_done()
                     self.notices = lines
                 elif key.startswith("work:"):
-                    parts = key.split(":", 2)
-                    hours = int(parts[1])
-                    recipe = parts[2]
-                    result = self.guild.crafting_shift(self.selected_crafter, recipe, hours,
-                                                      pool=self._packs)
-                    self.notices = result[0] if isinstance(result, tuple) else result
+                    _, hours, recipe = key.split(":", 2)
+                    self.notices = self._work(recipe, int(hours))
                 return
 
         for rect, m in self.roster_rows:
@@ -151,20 +92,6 @@ class CraftingScreen(Screen):
                 self.notices = []
                 self.scroll = 0
                 return
-
-    def _recipes(self, m):
-        """`(recipe_id, data, active)` for each recipe `m` works at this station."""
-        out = []
-        for r_name in m.known_recipes:
-            found = items.CRAFTING_RECIPES.get(r_name, [])
-            variants = found if isinstance(found, (list, tuple)) else [found] if found else []
-            for i, r_data in enumerate(variants):
-                if not r_data or (self.station and r_data.station != self.station):
-                    continue
-                recipe_id = f"{r_name}:{i}" if len(variants) > 1 else r_name
-                active = m.crafting_target == recipe_id or (len(variants) == 1 and m.crafting_target == r_name)
-                out.append((recipe_id, r_data, active))
-        return out
 
     def draw(self, screen):
         F = self._F
@@ -262,7 +189,7 @@ class CraftingScreen(Screen):
         right = r.right - buttons_w - T.S * 3
 
         name = text(screen, F["hub_row"], r_data.target, (x, r.y + T.S + 6), T.TX)
-        xp_mult = progression.work_xp_hours(1, r_data.level, m.work_level)
+        xp_mult = work_xp_hours(1, r_data.level, m.work_level)
         chips = [(f"level {r_data.level}", "money"), (f"×{xp_mult} work XP" if xp_mult else "no work XP", "muted")]
         if r_data.yield_qty > 1:
             chips.append((f"makes {r_data.yield_qty}", "good"))

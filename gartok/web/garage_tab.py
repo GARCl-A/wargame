@@ -2,20 +2,20 @@
 with its HP and cargo, each animal with what it eats), on paper what the band keeps and can park, and the house's
 bays and the price of the next one, or the Claim's risk with no garrison to watch it.
 
-The rules are pygame's own `GarageScreen`, held headless as `jobs_tab` holds a board: a verb names a wagon
-or an animal by its uid and the tab calls the screen's own click on its index, so the bays, the herd limit,
-the pooled purse and the repair stay one source. The repair's hour runs through the `tick` the hub hands in.
+The rules are `holdings.GarageDesk`'s, which pygame's `GarageScreen` reads too: a verb names a wagon or an
+animal by its uid and the tab presses the desk's verb on its index. The repair's hour runs through the `tick`
+the hub hands in.
 """
 
 from .. import economy, wagon_watch
 from .. import wagon as wagon_mod
-from ..garage_screen import GarageScreen
+from ..holdings import GarageDesk
 from .stable_tab import WAGON_GLYPH, _face
 
 
 class GarageTab:
     def __init__(self, guild, group, node, tick=None, claim=False):
-        self.s = GarageScreen(None, guild, group, lambda: None, claim=claim, on_tick=tick)
+        self.s = GarageDesk(guild, group, claim=claim, on_tick=tick)
         self.claim = claim
         self.guild, self.group, self.node = guild, group, node
 
@@ -30,28 +30,28 @@ class GarageTab:
         return i
 
     def bay(self):
-        self.s._click("bay")
+        self.s._act("bay")
 
     def park(self, uid):
         g = self.group
         if any(w.uid == uid for w in g.wagons):
-            self.s._click(f"park_wagon:{self._index(g.wagons, uid)}")
+            self.s._act(f"park_wagon:{self._index(g.wagons, uid)}")
         else:
-            self.s._click(f"park_animal:{self._index(g.herd, uid)}")
+            self.s._act(f"park_animal:{self._index(g.herd, uid)}")
 
     def take(self, uid):
         garage = self.garage
         if any(w.uid == uid for w in garage.wagons):
-            self.s._click(f"take_wagon:{self._index(garage.wagons, uid)}")
+            self.s._act(f"take_wagon:{self._index(garage.wagons, uid)}")
         else:
-            self.s._click(f"take_animal:{self._index(garage.herd, uid)}")
+            self.s._act(f"take_animal:{self._index(garage.herd, uid)}")
 
     def repair(self, uid):
         garage, g = self.garage, self.group
         if any(w.uid == uid for w in garage.wagons):
-            self.s._click(f"repair_garaged:{self._index(garage.wagons, uid)}")
+            self.s._act(f"repair_garaged:{self._index(garage.wagons, uid)}")
         else:
-            self.s._click(f"repair_group:{self._index(g.wagons, uid)}")
+            self.s._act(f"repair_group:{self._index(g.wagons, uid)}")
 
     def _wagon(self, w, parked):
         have = sum(u.count_of(wagon_mod.REPAIR_ITEM) for u in self.group.members)

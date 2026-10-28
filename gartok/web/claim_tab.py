@@ -1,14 +1,14 @@
 """The Wilds Claim in the browser: on leather the band here (what each one carries toward the claim), on paper
 the claim's six stages, the one in hand with its work, and the hearth once the region is swept.
 
-The rules are pygame's own `WildsClaimScreen`, held headless as `jobs_tab` holds a board: scouting, the
-Lumber for the fences, the garrison and its job, the campfire, the oven and the banked Lumber are its. The
+The rules are `claim_desk.ClaimDesk`'s, which pygame's `WildsClaimScreen` reads too: scouting, the Lumber for
+the fences, the garrison and its job, the campfire, the oven and the banked Lumber are its. The
 verbs that leave the claim (the two fights, the garrison) live on `HubSession`, which holds the map.
 """
 
 from .. import economy, wagon_watch
+from ..claim_desk import ClaimDesk
 from ..guild_claim import WILDS_CLAIM_STAGES
-from ..wilds_claim_screen import WildsClaimScreen
 from .shop_tab import _portrait
 
 STEPS = (("SCOUTED", "Scout"), ("CLEARED", "Clear"), ("FENCED", "Fence"), ("SWEPT", "Sweep"),
@@ -20,7 +20,7 @@ CARRIED = ("Lumber", economy.CLAIM_OVEN_BRICK)
 
 class ClaimTab:
     def __init__(self, guild, group, node):
-        self.s = WildsClaimScreen(None, guild, group, lambda: None, None, None)
+        self.s = ClaimDesk(guild, group)
         self.guild, self.group, self.node = guild, group, node
         self.report = []                # what the last piece of work said
 

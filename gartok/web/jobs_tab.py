@@ -2,23 +2,12 @@
 paper (each job the giver has, what it asks and pays, its state and its button) and, on leather, who signs
 for the band and what the packs already carry toward each goal.
 
-The reads, labels and verbs are pygame's own board (`MissionOfferScreen` and the giver's subclass, held
-headless), so the offers, the turn-ins and their notices stay one
-source until step 10 of `docs/plans/web_frontend.md` moves them here.
+The reads, labels and verbs are the giver's `job_board.Board`, which pygame's board reads too.
 """
 
 from .. import item_icon, missions
-from ..apothecary_mission_screen import ApothecaryMissionScreen
-from ..library_mission_screen import LibraryMissionScreen
-from ..shrine_screen import ShrineMissionScreen
-from ..tanner_screen import TannerScreen
-from ..trust_screen import TrustScreen
-from ..ui.mission_offer_screen import TAG_TONE
+from ..job_board import BOARDS, TAG_TONE
 from .shop_tab import _portrait
-
-# a node's function -> its giver's board, in the order `TabbedHubScreen.for_node` checks them
-BOARDS = (("tanner", TannerScreen), ("apothecary", ApothecaryMissionScreen), ("library", LibraryMissionScreen),
-          ("shrine", ShrineMissionScreen), ("trust", TrustScreen))
 
 
 def _glyph(t):
@@ -32,7 +21,7 @@ def _glyph(t):
 class JobsTab:
     def __init__(self, guild, group, node):
         board = next(cls for fn, cls in BOARDS if node.has(fn))
-        self.b = board(None, guild, group, lambda: None)
+        self.b = board(guild, group)
         self.guild, self.group, self.node = guild, group, node
 
     def _template(self, tid):

@@ -137,7 +137,7 @@ World systems, outside combat:
   alignment and finite stock per shop; the arena's staked non-lethal bouts; field
   loot; the lumber yard's and the Mine's day-labour wages (the Mine pays $1 more per block and
   sells the stone, ore and coal); the Forge turns learned recipes and
-  materials into gear and battlefield traps (`crafting_screen.py`). The numbers are
+  materials into gear and battlefield traps (`workbench.py`). The numbers are
   kept honest by an economy sim (`scripts/economy_report.py`).
 - **Bank**: a rented strongbox at the City, the gold exchange and the Bankers'
   trust mission (`bank_screen.py`, `economy.buy_gold`/`sell_gold`).
@@ -147,7 +147,7 @@ World systems, outside combat:
 - **Wagons and animals**: a group keeps livestock (Donkey, Ox, Horse) and wagons
   (cart, carriage) that carry cargo and passengers by weight, eat, wear down on the
   road and are lost with the group (`wagon.py`, `animals.py`, `stables.py`,
-  `garage_screen.py`).
+  `holdings.GarageDesk`).
 - **Recruitment**: a tavern pool refreshed weekly (no money, a Charisma-vs-
   Charisma pitch) or the prison's bail-and-pitch alternative (pay first, then
   pitch); each member can only sponsor so many people (Charisma-gated), the
@@ -160,7 +160,7 @@ World systems, outside combat:
   finish — a taxed house bought from the Bankers in the City, or a Wilds
   claim fenced and garrisoned by hand through a scout/clear/fence/sweep/
   sustain campaign, contestable by raids and seizure once established
-  (`city_property_screen.py`, `wilds_claim_screen.py`).
+  (`city_property_screen.py`, `claim_desk.py`).
 - **Crime & justice**: a personal rap sheet that can get a character caught by
   the City guard at a jurisdiction node — accept prison time, fight the
   patrol, flee, or talk (bluff or bribe) your way out; the Old Road carries its own ambush risk regardless of
@@ -216,6 +216,8 @@ gartok/
   item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for ui/item_icons.py's code-drawn icons
   weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
   craft_level.py    a recipe's difficulty level, worked out from its requirements, reagents and batch time
+  workbench.py      a station's bench, no pygame (`Bench`: the crafters, their recipes, what the packs lack,
+                    a stint waited out or alone); crafting_screen.py is pygame's tab
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
@@ -240,10 +242,14 @@ gartok/
                     the purse, the herd limit, the tack, the resale); stables_screen.py is pygame's tab
   ledger.py         Ledger Hold's desk, no pygame (`LedgerDesk`: the chest, the mentorship, the supply run);
                     ledger_screen.py is pygame's tab
+  job_board.py      each giver's jobs board, no pygame (`Board`, `TannerBoard`, `ShrineBoard`, ...: the offers,
+                    the signing, the turn-in and its notice); ui/mission_offer_screen.py and its subclasses draw them
+  claim_desk.py     the Wilds Claim's work, no pygame (`ClaimDesk`: scouting, the fences, the garrison, the hearth);
+                    wilds_claim_screen.py is pygame's screen
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
-  holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals)
+  holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals); GarageDesk is a garage's counter, no pygame
   creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
   animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role
   wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at the Carpenter (stables_screen.WagonYardScreen); wagon_watch.py / watch_screen.py handle the wagon left outside the Ruins or a hunt

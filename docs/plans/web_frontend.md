@@ -169,9 +169,13 @@ Two rules hold for every step:
 - **Tests first, screenshots at milestones.** A step's rules are tested in pytest
   through the API (`tests/test_web.py`). A screenshot (1920x1080) is taken only when the
   step is about the look.
-- **pygame is frozen.** It stays the shipping front-end until step 10, and nothing in a
-  step may break it. A new feature meanwhile gets a working pygame screen, with no
-  polish.
+- **pygame is abandoned (since 2026-10-28).** The web is the front-end; every pygame screen goes
+  to the bin at the end, so none is kept working on the way. No new pygame screen, no pygame
+  change for a new feature, no rewiring a pygame screen onto a rule moved out of it: the screen,
+  its `*_draw` mixin, the `app*` path that opens it and the tests that only test it are deleted
+  in the commit that moves its rules (the cut list is in 10z). A test that checked a rule through
+  a screen moves onto the core module or the web session only if nothing else covers the rule.
+  `--pygame` may break and nothing guards it; only the Editor (10z step 3) is kept able to open.
 
 ## Next steps, in order
 
@@ -1096,6 +1100,28 @@ for their rules (`MarketScreen`, `DraftScreen`, `MapScreen`, `CraftingScreen`, `
 import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_ch`, `inspector_panel.role_for`,
 `banner.BANNER_COLORS`, `tokens.T`, `floors`), and the Editor has no browser screen. Cut as step 10 was:
 
+**The cut list (2026-10-28, from the import graph of `gartok/web/`).** Under "pygame is abandoned" above:
+
+- **Dead now, the web has its own:** `map_screen` + `map_inspector`, `hunt_screen`, `watch_screen`,
+  `garage_screen`, `ledger_screen`, `wilds_claim_screen`, `trust_screen`, `squad_screen`, `level_screen`,
+  `level_up_screen`, `report_screen`, `reward_screen`, `adelio_prompt_screen`, `ribbit_prompt_screen`,
+  `vocation_screen`, `menu_screen`, `pause_screen`, `saves_screen`, `settings_screen`, `wiki_screen`,
+  `alert_screen`, the per-node `*_hub_screen` modules (`apothecary`, `bank`, `forge`, `library`, `tanner`:
+  the web builds hubs from `TabbedHubScreen.for_node`). No web module imports them; only `app*.py` and tests
+  do, so they go with the campaign half of `app*.py` in one commit.
+- **pygame only, port or drop first:** `abandon_screen` (leaving a broken wagon: `map_session` refuses the
+  trip and says "pygame's map, for now"), `group_turn_screen` (the hand-over card between groups),
+  `bank_view_screen` (the vault read from the map), the auto-win of an ambush or a hunt.
+- **Held headless by the web, deleted as their family's rules move out (step 2):** `battle_screen` +
+  `battle_draw`; `dialogue_screen`; `draft_screen`; `guild_screen`, `group_screen` + `group_draw`;
+  `loot_screen`, `memorial_screen`; `taverna_screen` + `taverna_draw`, `prison_screen`; `bank_screen`,
+  `city_property_screen`, `stash_screen`; `start_screen` (three constants); `hub_screen`, which pulls in
+  `market_screen` + `market_draw`, `crafting_screen`, `gather_screen`, `work_screen`, `medic_screen`,
+  `stables_screen`, `initiation_screen`, `library_screen`, the four mission screens and
+  `ui/mission_offer_screen`.
+- **Kept until step 3:** `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`
+  (the menu needs only `screen`; the editors are wired in `app.py`).
+
 1. **The tutorial cards in the browser — done (2026-10-28).** A session names its card in `tutorial_key()` (the id
    its pygame screen names; a hub by its tab, the guild sheet by its tab, the report by its stage, the draft by its
    step) and reads it in `tutorials()` (the guild's `TutorialState`, the draft's own before the guild exists). Every
@@ -1160,9 +1186,22 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
        refused, a patient treated, an animal sold back at a loss, two carts numbered, the Ledger's gate,
        a sanctuary's terms; the pygame screens are the same desks); the Ledger's two rule tests in
        `test_trust_mission` and `test_treefolk_mentorship` press the desk instead of a faked screen.
-     - **Next:** the hubs II (`craft_tab` on `CraftingScreen`, `jobs_tab` on the five mission boards and
-       `ui/mission_offer_screen.TAG_TONE`, `garage_tab` on `GarageScreen`, `claim_tab` on
-       `WildsClaimScreen`), then the hubs III, the draft, the report.
+   - **The hubs II, the workbenches and boards — done (2026-10-28).** Same shape as the desks: `workbench.Bench`
+     (the crafters, their recipes, what the packs lack, `_work` / `_alone` for a stint; `WAIT_HOURS`,
+     `ALONE_HOURS`; `refresh` is what `craft_tab._refresh` was), `job_board.py` (`Board` and the five givers'
+     boards, `TannerBoard` ... `TrustBoard`, with `TAG_TONE`, `KEEPER_LINE` and `BOARDS`), `holdings.GarageDesk`
+     (the verbs by `kind:index`, as pygame's buttons name them) and `claim_desk.ClaimDesk` (scouting, the fences,
+     the garrison and its job, the hearth, the banked Lumber). `CraftingScreen`, `MissionOfferScreen` and its five
+     subclasses (now only their title, leave label and keeper), `GarageScreen` and `WildsClaimScreen` inherit them;
+     `craft_tab`, `jobs_tab`, `garage_tab` and `claim_tab` hold the desk, not a screen. `HubSession.craft` runs
+     the bench's `_work` / `_alone`, so the stint's hours are checked in one place.
+     - Tests: `tests/test_desks.py` grew (the four modules load with pygame blocked; the bench's crafters,
+       recipes and refresh; the Tanner's board signs and pays; every giver has its board; the garage parks,
+       takes out, refuses a bay; the Claim scouts, banks the Lumber, garrisons and stands down; the pygame
+       screens are the same desks).
+     - **Next:** the hubs III (`vault_tab` on `BankScreen` / `CityPropertyScreen`, `tavern_tab` on
+       `TavernaScreen` / `PrisonScreen`, `hub_session` on `TabbedHubScreen`, `BankScreen`,
+       `CityPropertyScreen`), then the draft, the report.
 3. **The Editor in the browser** (the character creator, the map editor, the combat lab's menu), or the author keeps
    it as a pygame tool apart from the game.
 4. **The retirement:** the pygame screens, `app*.py`, `ui/` and `--pygame` go; `AGENTS.md` (the `ui/` rules, the

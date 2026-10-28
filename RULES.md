@@ -1488,7 +1488,7 @@ right now (clock advanced through `pass_time`), no order.
 
 ### The Forge: crafting 🟡
 
-`crafting_screen.py`, at the Smithy (the `forge` function of node `smith`; `forge_hub_screen.py` puts the smith's shop beside it). A member needs a
+`workbench.py`, at the Smithy (the `forge` function of node `smith`; `forge_hub_screen.py` puts the smith's shop beside it). A member needs a
 learned recipe (`Unit.recipes`) before they can start; the recipe's materials
 are consumed the moment `crafting_target` is set, not on completion — an
 abandoned craft doesn't get them back.
@@ -1802,7 +1802,7 @@ instance of a given template can be active guild-wide at a time
   reshuffled by splits/merges constantly, so `progress`/`turn_in` always
   resolve the signer's *current* group (`guild.group_of`) and count that
   whole group's packs, the same trick the shared food larder uses.
-- **The Tanner** (`tanner_screen.py`, at the Tannery node): wants 15× `1sqm Hide`,
+- **The Tanner** (`job_board.TannerBoard`, at the Tannery node): wants 15× `1sqm Hide`,
   pays $200, 5 days, +1 reputation with the Tanners. If the deadline passes it is
   offered again 7 days after the failure (`MissionTemplate.retry_days`), until
   it is done. Hides only drop from Wilds beasts, not from hours
@@ -1853,7 +1853,7 @@ instance of a given template can be active guild-wide at a time
     the job forever (`missions.fail_if_hide_lost`).
 - **The Apothecary** (`apothecary_mission_screen.py`, at the Apothecary node): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
-- **The Bankers' trust mission** (`trust_screen.py` at the City,
+- **The Bankers' trust mission** (`job_board.TrustBoard` at the City,
   `ledger.py` at Ledger Hold): hands the signer a sealed chest
   (`data.MISSION_CHEST_ITEM`) instead of asking for a gathered item; the
   "goal" is a letter of receipt, traded for the chest at Ledger Hold and
@@ -1887,7 +1887,7 @@ shipped start to finish (buy/claim, use, lose, recover):
   days), or **squat** — keep it tax-free (no further charges, none missed) but illegal, and the guard
   periodically raids it (a new `"eviction"` order, same shape as a `"guard"`
   or `"ambush"` pause).
-- **The Wilds Claim** (`wilds_claim_screen.py`, the `wilds_territory` node,
+- **The Wilds Claim** (`claim_desk.py`, the `wilds_territory` node,
   `Node.claim = True`). A mini-campaign through
   `guild.WILDS_CLAIM_STAGES` = `NONE → SCOUTED → CLEARED → FENCED → SWEPT →
   SUSTAINING → ESTABLISHED`: **Scout** is a pure time gate; **Clear** and
@@ -1922,7 +1922,7 @@ the one list of nodes a guild can see: the public ones plus every secret node it
 saved (`"revealed"` in the guild payload, empty by default). The map, routes and the minimap all
 read `known`, so a revealed node simply appears with its edges.
 
-**The three sanctuaries** (`shrine` function, JOBS tab, `shrine_screen.py`): turning the Ancient Codex in at
+**The three sanctuaries** (`shrine` function, JOBS tab, `job_board.ShrineBoard`): turning the Ancient Codex in at
 the Library pays as before, hands the Codex back and reveals all three (`MissionTemplate.reveals`,
 `returns_goal`). Each sanctuary then offers one job, delivering the Codex (`missions.CODEX_DELIVERIES`, no
 pay, no deadline), worth 1 reputation with that school's faction (The Blood Cult, The Nature Coven, The

@@ -1,10 +1,10 @@
-"""Base class for NPC screens that list the jobs a giver has on the board."""
+"""Base class for NPC screens that list the jobs a giver has on the board: the window over `job_board.Board`."""
 
 import pygame
 
-from .. import factions, missions, world
-from ..constants import fmt_money
+from .. import missions, world
 from ..item_icon import draw_icon
+from ..job_board import TAG_TONE, Board
 from ..screen import Screen
 from .hub_body import draw_chip, draw_panel
 from .hub_frame import MARGIN, button_width, hub_button
@@ -18,31 +18,17 @@ CARD_PAD = T.S * 3
 ICON = T.S * 7
 BTN_H = T.S * 5 + 4
 
-TAG_TONE = {"economic": "money", "trust": "money", "bankers": "money", "apothecary": "good", "ruins": "bad"}
 
-
-class MissionOfferScreen(Screen):
+class MissionOfferScreen(Screen, Board):
     native = True
     VENDOR = None      # (node id, function) of the keeper whose face the card shows
     framed = False     # a hub's tab: the hub draws the keeper, the tabs and the back
 
-    def hub_cards(self):
-        """The jobs board's cards: how many jobs are up, how many the guild holds here."""
-        templates = self.get_templates()
-        ids = {t.id for t in templates}
-        held = sum(1 for m in self.guild.missions if m.template_id in ids and m.state == "active")
-        purse = sum(u.money for u in self.group.members)
-        return [{"label": "jobs on the board", "value": str(len(templates))},
-                {"label": "taken", "value": str(held)},
-                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
-
     def __init__(self, fonts, guild, group, on_done):
         super().__init__()
+        Board.__init__(self, guild, group)        # Screen ends the cooperative chain
         self.fonts = fonts
-        self.guild = guild
-        self.group = group
         self.on_done = on_done
-        self.notice = None
         keeper = world.vendor(*self.VENDOR) if self.VENDOR else None
         self.vendor_card = keeper.card if keeper else None
         self.buttons = []              # [(key, rect)]; key is "done" or (action, template id)
@@ -50,99 +36,13 @@ class MissionOfferScreen(Screen):
         self.scroll = 0
         self._max_scroll = 0
 
-    # Subclasses must implement these properties and methods:
     @property
     def title_text(self):
         raise NotImplementedError
 
     @property
-    def subtitle_text(self):
-        raise NotImplementedError
-
-    @property
-    def accept_label(self):
-        raise NotImplementedError
-
-    @property
     def leave_label(self):
         raise NotImplementedError
-
-    def get_template(self):
-        raise NotImplementedError
-
-    def get_templates(self):
-        """Every job the board shows, top to bottom. The default is the one
-        `get_template` picks; a giver with several jobs at once overrides this."""
-        t = self.get_template()
-        return [] if t is None else [t]
-
-    def get_req_str(self, t):
-        raise NotImplementedError
-
-    def get_status_str(self, t, progress, ready, days_left):
-        raise NotImplementedError
-
-    def get_turn_in_label(self, t, progress, ready):
-        raise NotImplementedError
-
-    def footer_action(self):
-        """`(label, enabled)` for a second button beside the leave one (a keeper buying
-        something), or None for none."""
-        return None
-
-    def run_footer_action(self):
-        """Press the footer action: -> the notice to show."""
-        return None
-
-    def get_success_notice(self, reward):
-        raise NotImplementedError
-
-    @property
-    def _template(self):
-        """The first job on the board."""
-        return next(iter(self.get_templates()), None)
-
-    def _is_offered(self, t):
-        """Whether `t` can be freshly accepted here right now
-        (`missions.offers_at` -- the "one job out at a time" rule)."""
-        return t in missions.offers_at(self.guild, self.group.node)
-
-    def _active_of(self, t):
-        """`t`'s job out right now, if any, regardless of who's holding it."""
-        return next((m for m in self.guild.missions
-                     if m.template_id == t.id and m.state == "active"), None)
-
-    def _completed_of(self, t):
-        return any(m.template_id == t.id and m.state in ("done", "failed")
-                   for m in self.guild.missions)
-
-    def _mission_of(self, t):
-        """`t`'s active job, but only if the group standing here right now is
-        the one sharing it (its signer is one of `self.group.members`)."""
-        m = self._active_of(t)
-        if m is None:
-            return None
-        return m if any(u.uid == m.unit_uid for u in self.group.members) else None
-
-    @property
-    def _offered(self):
-        t = self._template
-        return t is not None and self._is_offered(t)
-
-    @property
-    def _active(self):
-        t = self._template
-        return None if t is None else self._active_of(t)
-
-    @property
-    def _completed(self):
-        t = self._template
-        return t is not None and self._completed_of(t)
-
-    @property
-    def _mission(self):
-        t = self._template
-        return None if t is None else self._mission_of(t)
 
     def tutorial_key(self):
         return "missions"
@@ -175,29 +75,6 @@ class MissionOfferScreen(Screen):
                 self.turn_in(t)
             return
 
-    def accept(self, t):
-        """The leader signs for `t` when it is on offer here: -> whether they did."""
-        if not self._is_offered(t):
-            return False
-        missions.accept(self.guild, self.group.leader, t)
-        self.notice = None
-        return True
-
-    def turn_in(self, t):
-        """Hand over `t`'s goal when this band holds the job and carries it: -> whether it was paid."""
-        m = self._mission_of(t)
-        if m is None or not missions.can_turn_in(self.guild, m):
-            return False
-        earned = missions.turn_in(self.guild, m)
-        self.notice = self.get_success_notice(t.reward)
-        if t.reward_recipe:
-            self.notice += f"  ·  the group learns to craft the {t.reward_recipe}"
-        if t.reward_item:
-            self.notice += f"  ·  you are given a {t.reward_item}"
-        for d in earned:
-            self.notice += "  ·  " + factions.deed_notice(d)
-        return True
-
     def _quest_layout(self, F, t, w):
         """Everything a job's card needs to be sized and drawn, worked out once for a card `w` wide."""
         m = self._mission_of(t)
@@ -219,26 +96,6 @@ class MissionOfferScreen(Screen):
                   + len(lay["detail"]) * lh + T.S * 2 + BTN_H)
         lay["h"] = CARD_PAD * 2 + max(ICON, text_h)
         return lay
-
-    def _job_button(self, t, m, lay):
-        """`(key, label, enabled)` of the button at the foot of `t`'s card."""
-        if m is not None:
-            ready = lay["ready"]
-            return ("turn_in", t.id), self.get_turn_in_label(t, lay["progress"], ready), ready
-        offered = self._is_offered(t)
-        wait = missions.retry_in(self.guild, t)
-        if wait:
-            label = f"Failed: try again in {wait} day{'s' if wait != 1 else ''}"
-        elif missions.closed(self.guild, t):
-            label = "Failed: it went to another school"
-        elif self._completed_of(t):
-            done = any(x.template_id == t.id and x.state == "done" for x in self.guild.missions)
-            label = "Job completed" if done else "Job failed"
-        elif offered:
-            label = self.accept_label
-        else:
-            label = "Out with another group"
-        return ("accept", t.id), label, offered
 
     def _draw_quest(self, screen, F, rect, lay):
         t, m = lay["t"], lay["m"]

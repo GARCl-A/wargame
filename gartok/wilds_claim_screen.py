@@ -7,33 +7,33 @@ off to `app`, which drops the present group into a real `BattleScreen` and
 comes back to the map, not this screen, once it resolves (`App._battle_end`'s
 own `_claim_stage_pending` hook advances the stage on a win). Everything else
 (scouting, hauling Lumber, raising fences, garrisoning) resolves right here,
-same idiom `bank_screen`/`city_property_screen` use for a flat action.
+same idiom `bank_screen`/`city_property_screen` use for a flat action. The
+rules are `claim_desk.ClaimDesk`'s.
 """
 
 import pygame
 
-from . import economy, items, orders
+from . import economy
+from .claim_desk import ClaimDesk
 from .screen import Screen
 from .ui.primitives import caps, draw_button, header, hline, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 
-class WildsClaimScreen(Screen):
+class WildsClaimScreen(Screen, ClaimDesk):
     native = True
 
     def __init__(self, fonts, guild, group, on_done, on_fight_clear, on_fight_sweep, on_cook=None, on_garage=None):
         super().__init__()
+        ClaimDesk.__init__(self, guild, group)        # Screen ends the cooperative chain
         self.fonts = fonts
         self._F = None
-        self.guild = guild
-        self.group = group
         self.on_done = on_done
         self.on_fight_clear = on_fight_clear
         self.on_fight_sweep = on_fight_sweep
         self.on_cook = on_cook
         self.on_garage = on_garage
-        self.notice = None
         self.buttons = []
 
     def _ui_fonts(self):
@@ -43,39 +43,6 @@ class WildsClaimScreen(Screen):
 
     def tutorial_key(self):
         return "claim"
-
-    # ------------------------------------------------------------------ #
-    def _carriers(self):
-        return [*self.group.members, *self.group.wagons, *self.group.herd]
-
-    def _party_lumber(self):
-        return sum(m.count_of("Lumber") for m in self._carriers())
-
-    def _deposit_lumber(self):
-        total = 0
-        for m in self._carriers():
-            n = m.count_of("Lumber")
-            if n:
-                m.remove_named("Lumber", n)
-                total += n
-                m._derive_combat()
-        if total:
-            self.guild.wilds_claim_deposit_lumber(total)
-            self.notice = f"deposited {total} Lumber toward the fences."
-        else:
-            self.notice = "nobody here is carrying Lumber."
-
-    def _collect_lumber(self):
-        stock = self.guild.garrison_stock.setdefault(self.group.node, [])
-        taken = 0
-        for m in self.group.members:
-            while stock and m.load + items.item_weight("Lumber") <= m.carry_max:
-                stock.pop()
-                m.give_to_pack("Lumber")
-                m._derive_combat()
-                taken += 1
-        self.notice = (f"collected {taken} Lumber." if taken
-                       else "no room to carry any Lumber right now.")
 
     # ------------------------------------------------------------------ #
     def _click(self, px):
@@ -100,39 +67,9 @@ class WildsClaimScreen(Screen):
             }[key]()
             return
 
-    def _scout(self):
-        events, _ = self.guild.pass_time(economy.WILDS_CLAIM_SCOUT_HOURS, busy=self.group.members)
-        self.guild.wilds_claim_scout()
-        self.notice = "  ".join(["the land is scouted -- ready to clear."] + events)
-
-    def _build_fences(self):
-        if self.guild.wilds_claim_fence_lumber < economy.WILDS_CLAIM_FENCE_LUMBER:
-            return
-        events, _ = self.guild.pass_time(economy.WILDS_CLAIM_FENCE_HOURS, busy=self.group.members)
-        self.guild.wilds_claim_build_fences()
-        self.notice = "  ".join(["the fences go up -- time to sweep the region."] + events)
-
-    def _light_campfire(self):
-        self._built(self.guild.wilds_claim_light_campfire(self.group.members)[1])
-
-    def _build_oven(self):
-        self._built(self.guild.claim_build_oven(self.group.members)[1])
-
-    def _built(self, events):
-        self.notice = "  ".join(events)
-        for m in self.group.members:
-            m._derive_combat()
-
     def _start_garrison(self):
-        self.group.order = orders.garrison("lumber")
-        self.guild.wilds_claim_start_sustaining()
+        ClaimDesk._start_garrison(self)
         self.on_done()
-
-    def _toggle_garrison_job(self):
-        order = self.group.order
-        if order is None or order.kind != "garrison":
-            return
-        order.job = "lumber" if order.job == "hold" else "hold"
 
     def _garrison_job_button(self, screen, F, y, w):
         order = self.group.order
@@ -141,11 +78,6 @@ class WildsClaimScreen(Screen):
         holding = order.job == "hold"
         label = "GATHER LUMBER INSTEAD" if holding else "JUST HOLD THE CLAIM (REST)"
         return self._button(screen, F, "garrison_job", label, y, w)
-
-    def _leave_garrison(self):
-        if self.group.order is not None and self.group.order.kind == "garrison":
-            self.group.order = orders.idle()
-        self.notice = "the garrison stands down -- sustaining the claim starts over."
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):

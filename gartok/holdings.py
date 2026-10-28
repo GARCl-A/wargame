@@ -6,11 +6,13 @@ share the same storage, so a future base reuses `Stash` rather than growing
 another copy of the item bookkeeping on `Guild`. `CityProperty` adds the part
 that is specific to the house: ownership, the tax cycle, repossession and
 squatting. Money and the guard stay with the caller (`Guild`, `campaign`).
+`GarageDesk` is a garage's counter (the house's or the Claim's), with no window.
 """
 
 import math
 
-from . import animals, economy, items
+from . import animals, economy
+from .constants import fmt_money
 from .stash import Stash  # noqa: F401 -- re-exported
 
 
@@ -110,3 +112,63 @@ class CityProperty:
         self.oven = False
         self.garage.clear()
         self.stash.items = []
+
+
+class GarageDesk:
+    """A garage's counter with no window: park the band's wagons and animals, take them out, repair a wagon,
+    and (at the house) add bays. The party pays out of its pooled coin, richest first, like the stables.
+    The Claim's garage (`claim=True`) has no bays and no limit, and is only safe while a garrison stands
+    there. pygame's `GarageScreen` and `web/garage_tab.py` are the windows over it."""
+
+    def __init__(self, guild, group, claim=False, on_tick=None):
+        self.guild, self.group, self.claim, self.on_tick = guild, group, claim, on_tick
+        self.notice = None
+
+    @property
+    def garage(self):
+        return self.guild.claim_garage if self.claim else self.guild.house.garage
+
+    @property
+    def wealth(self):
+        return sum(m.money for m in (*self.group.members, *getattr(self.group, "stores", ())))
+
+    def _act(self, key):
+        """Run one of the garage's verbs, named `kind:index` as pygame's buttons name them."""
+        g, garage, guild = self.group, self.garage, self.guild
+        kind, _, arg = key.partition(":")
+        if kind == "bay":
+            if self.wealth < economy.GARAGE_PRICE:
+                self.notice = f"a bay costs {fmt_money(economy.GARAGE_PRICE)} -- the party has {fmt_money(self.wealth)}."
+                return
+            economy.charge_richest_first((*g.members, *getattr(g, "stores", ())), economy.GARAGE_PRICE)
+            guild.buy_garage_tier()
+            self.notice = "a new bay: room for one more wagon and one more animal."
+        elif kind in ("repair_garaged", "repair_group"):
+            wagon = (garage.wagons if kind == "repair_garaged" else g.wagons)[int(arg)]
+            ok, events, _ = guild.repair_wagon(g.members, wagon, self.on_tick)
+            if ok and wagon in g.wagons:
+                g.hitch_idle()
+            self.notice = "  ".join(events)
+        elif kind == "park_wagon":
+            wagon = g.wagons[int(arg)]
+            if guild.park_wagon(g, wagon, garage):
+                self.notice = f"the {wagon.kind.lower()} is parked in the garage."
+            else:
+                self.notice = "every bay already holds a wagon."
+        elif kind == "take_wagon":
+            wagon = garage.wagons[int(arg)]
+            if guild.take_wagon(g, wagon, garage):
+                self.notice = f"the {wagon.kind.lower()} rejoins the group."
+        elif kind == "park_animal":
+            animal = g.herd[int(arg)]
+            if guild.park_animal(g, animal, garage):
+                self.notice = f"the {animal.species} is stabled in the garage."
+            else:
+                self.notice = "every bay already holds an animal."
+        elif kind == "take_animal":
+            animal = garage.herd[int(arg)]
+            if guild.take_animal(g, animal, garage):
+                self.notice = f"the {animal.species} rejoins the group."
+            else:
+                keeper = g.leader or g.members[0]
+                self.notice = f"{keeper.name} can control a herd of {g.herd_capacity} at most."

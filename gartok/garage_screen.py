@@ -1,11 +1,5 @@
-"""A garage: park the group's wagons and animals, take them out again, and (at the
-house) add bays.
-
-The house garage holds one wagon and one animal per tier (`holdings.Garage`). What is
-parked there belongs to the house, not the group: it is safe, eats from the house stash
-and does not count against the group's herd capacity. The party pays out of its pooled
-coin, richest first, like the stables. The Claim's garage (`claim=True`) has no bays and
-no limit, and is only safe while a garrison stands there.
+"""A garage's window (the house's, or the Claim's with `claim=True`): the bays or the Claim's risk, the
+wagons and the animals, each with its button. The rules are `holdings.GarageDesk`'s.
 """
 
 import pygame
@@ -13,13 +7,14 @@ import pygame
 from . import economy, wagon_watch
 from . import wagon as wagon_mod
 from .constants import fmt_money
+from .holdings import GarageDesk
 from .screen import Screen
 from .ui.primitives import draw_button, footer_bar, panel, section, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 
-class GarageScreen(Screen):
+class GarageScreen(Screen, GarageDesk):
     native = True
 
     def tutorial_key(self):
@@ -27,27 +22,15 @@ class GarageScreen(Screen):
 
     def __init__(self, fonts, guild, group, on_done, claim=False, on_tick=None):
         super().__init__()
-        self.on_tick = on_tick
-        self.claim = claim
+        GarageDesk.__init__(self, guild, group, claim, on_tick)        # Screen ends the cooperative chain
         self.fonts = fonts
         self._F = ui_fonts()
-        self.guild = guild
-        self.group = group
         self.on_done = on_done
-        self.notice = None
         self.buttons = []
         self._hot = False
 
     def handle_escape(self):
         return False
-
-    @property
-    def garage(self):
-        return self.guild.claim_garage if self.claim else self.guild.house.garage
-
-    @property
-    def wealth(self):
-        return sum(m.money for m in (*self.group.members, *getattr(self.group, "stores", ())))
 
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
@@ -58,46 +41,10 @@ class GarageScreen(Screen):
                 return
 
     def _click(self, key):
-        g, garage, guild = self.group, self.garage, self.guild
-        kind, _, arg = key.partition(":")
-        if kind == "done":
+        if key == "done":
             self.on_done()
-        elif kind == "bay":
-            if self.wealth < economy.GARAGE_PRICE:
-                self.notice = f"a bay costs {fmt_money(economy.GARAGE_PRICE)} -- the party has {fmt_money(self.wealth)}."
-                return
-            economy.charge_richest_first((*g.members, *getattr(g, "stores", ())), economy.GARAGE_PRICE)
-            guild.buy_garage_tier()
-            self.notice = "a new bay: room for one more wagon and one more animal."
-        elif kind in ("repair_garaged", "repair_group"):
-            wagon = (garage.wagons if kind == "repair_garaged" else g.wagons)[int(arg)]
-            ok, events, _ = guild.repair_wagon(g.members, wagon, self.on_tick)
-            if ok and wagon in g.wagons:
-                g.hitch_idle()
-            self.notice = "  ".join(events)
-        elif kind == "park_wagon":
-            wagon = g.wagons[int(arg)]
-            if guild.park_wagon(g, wagon, garage):
-                self.notice = f"the {wagon.kind.lower()} is parked in the garage."
-            else:
-                self.notice = "every bay already holds a wagon."
-        elif kind == "take_wagon":
-            wagon = garage.wagons[int(arg)]
-            if guild.take_wagon(g, wagon, garage):
-                self.notice = f"the {wagon.kind.lower()} rejoins the group."
-        elif kind == "park_animal":
-            animal = g.herd[int(arg)]
-            if guild.park_animal(g, animal, garage):
-                self.notice = f"the {animal.species} is stabled in the garage."
-            else:
-                self.notice = "every bay already holds an animal."
-        elif kind == "take_animal":
-            animal = garage.herd[int(arg)]
-            if guild.take_animal(g, animal, garage):
-                self.notice = f"the {animal.species} rejoins the group."
-            else:
-                keeper = g.leader or g.members[0]
-                self.notice = f"{keeper.name} can control a herd of {g.herd_capacity} at most."
+        else:
+            self._act(key)
 
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False, danger=False, sub=None):
         draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
