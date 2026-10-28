@@ -8,7 +8,7 @@ from gartok.animals import Animal
 from gartok.garage_screen import GarageScreen
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.market_screen import MarketScreen
+from gartok.trade import Counter
 from gartok.stables_screen import StablesScreen
 from gartok.taverna_screen import TavernaScreen
 from gartok.ui.tokens import fonts as ui_fonts
@@ -37,7 +37,7 @@ def test_a_cart_holds_coins_like_a_pack():
 def test_the_common_purse_counts_the_carts_coins_and_pays_across_all_of_them():
     guild, _, u, cart = _party((items.COIN_ITEM, 100))
     u.money = 40
-    shop = MarketScreen(None, guild, [u], world.node("city"), lambda: None)
+    shop = Counter(guild, [u], world.node("city"))
     assert shop.purse == 140
     shop.purse -= 120
     assert shop.purse == 20 and u.money + cart.money == 20
@@ -46,7 +46,7 @@ def test_the_common_purse_counts_the_carts_coins_and_pays_across_all_of_them():
 def test_change_and_proceeds_go_to_the_shoppers_never_into_the_cart():
     guild, _, u, cart = _party((items.COIN_ITEM, 100))
     u.money = 0
-    shop = MarketScreen(None, guild, [u], world.node("city"), lambda: None)
+    shop = Counter(guild, [u], world.node("city"))
     shop.purse += 30
     assert u.money == 30 and cart.money == 100
 
@@ -57,7 +57,7 @@ def test_a_pack_animal_also_counts_toward_the_purse():
     group.herd.append(donkey)
     donkey.money = 12
     u.money = 8
-    shop = MarketScreen(None, guild, [u], world.node("city"), lambda: None)
+    shop = Counter(guild, [u], world.node("city"))
     assert shop.purse == 20
 
 

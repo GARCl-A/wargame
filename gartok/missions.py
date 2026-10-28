@@ -391,7 +391,7 @@ def progress(guild, mission):
         return sum(1 for c in group.captives if c.npc_slug == t.goal_captive)
     item = t.goal_item
     if item == "Any Dictionary":
-        from .library_screen import library_stock_dictionaries
+        from .trade import library_stock_dictionaries
         stock = set(library_stock_dictionaries(guild))
         return sum(sum(qty for name, qty in u._base_inventory if name.startswith("Dictionary of ") and name not in stock) for u in group.members)
     return (sum(_held(u, item) for u in group.members)
@@ -426,7 +426,7 @@ def turn_in(guild, mission):
         if left <= 0:
             break
         if t.goal_item == "Any Dictionary":
-            from .library_screen import library_stock_dictionaries
+            from .trade import library_stock_dictionaries
             stock = set(library_stock_dictionaries(guild))
             for name, qty in list(u._base_inventory):
                 if name.startswith("Dictionary of ") and name not in stock and left > 0:

@@ -1113,7 +1113,26 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
      the guild and the draft were looked at in headless Edge at 1920x1080.
 2. **The rules out of the screens**, family by family (the shop, the map, the hubs, the draft, the report): what a web
    tab borrows from a pygame screen moves to a core module that both read, as `actions.panel` and
-   `LedgerScreen.panels` already did; the `ui/` helpers the web reads move with them.
+   `LedgerScreen.panels` already did; the `ui/` helpers the web reads move with them. One family per session.
+   - **The shop — done (2026-10-28).** `trade.py` is the counter, with no pygame: `Counter` holds what
+     `MarketScreen` and `MarketTradeMixin` held for the rules (the shelf, the deal and `_deal_card`, the
+     purse, the till and the stock, the picks, `_buy` / `_buy_cart` / `_sell` / `_drop_on_zone`, the
+     auto-sell marks, `_distribute_load`, `_stock_spec`, `BENT_WORDS`); `LibraryCounter` the Library's
+     shelf, with `library_stock_dictionaries`; `counter_for` picks one. `MarketScreen` is now the window
+     over it (`Counter` last in its bases, after `Screen`, which ends the cooperative `__init__` chain,
+     so the screen calls `Counter.__init__` itself); `market_trade.py` is gone, its `_drop` (the mouse)
+     is the screen's. `shop_tab.py`, `scripts/economy_guild.py` and `economy_exploits.py` trade on the
+     counter, and so do the tests that were only about the rules (`test_market_cash`, `test_cart_pooled`,
+     a test each in `test_node_functions` and `test_objectives`). `trade.collect` is the pick-lifting
+     `DragSelectMixin._collect` now calls. `role_for` moved from `ui/inspector_panel` to `data`.
+     - Tests: `tests/test_trade.py` (`trade` loads with pygame blocked; a buy into the roomiest pack, a
+       sale into the seller's purse; the Library's counter and its dictionaries; the pygame screens are
+       the same counter).
+     - Left for later families: `shop_tab` still reads `artwork.portrait_path`, and `artwork` imports
+       pygame (it tints and caches the glyphs too); the path half goes with the guild or the draft family.
+     - **Next:** the map (`MapScreen`, `ADVANCE_HOURS`, `_position`, `node_icon`; `pause_screen.MAX_SAVE_NAME`),
+       then the hubs (the work, medic, jobs, craft, stable, tavern, vault, garage, claim, ledger,
+       initiation tabs), the draft, the report.
 3. **The Editor in the browser** (the character creator, the map editor, the combat lab's menu), or the author keeps
    it as a pygame tool apart from the game.
 4. **The retirement:** the pygame screens, `app*.py`, `ui/` and `--pygame` go; `AGENTS.md` (the `ui/` rules, the

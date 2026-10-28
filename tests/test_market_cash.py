@@ -4,7 +4,7 @@ import os
 
 from gartok import economy, items, persist, world
 from gartok.guild import Guild
-from gartok.market_screen import MarketScreen
+from gartok.trade import Counter
 from gartok.unit import Unit
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -27,7 +27,7 @@ def _screen(u, cash=None):
     guild = Guild([u])
     if cash is not None:
         guild.shop(NODE.id).cash = cash
-    return MarketScreen(None, guild, [u], NODE, lambda: None)
+    return Counter(guild, [u], NODE)
 
 
 def _pick(s, u, name):

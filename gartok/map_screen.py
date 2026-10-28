@@ -78,13 +78,14 @@ from . import (
     world,
 )
 from .constants import fmt_money
+from .data import role_for
 from .group import CAUTIOUS, NORMAL
 from .map_inspector import MapInspectorMixin
 from .scenario import Scenario
 from .screen import Screen
 from .ui.camera import MapCamera
 from .ui.command_bar import draw_command
-from .ui.inspector_panel import draw_inspector, role_for
+from .ui.inspector_panel import draw_inspector
 from .ui.map_panel import draw_map, node_hit_rect
 from .ui.primitives import draw_button, set_pointer
 from .ui.roster_panel import draw_roster

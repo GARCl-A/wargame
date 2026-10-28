@@ -144,12 +144,12 @@ def test_guild_screen_reputations_shows_objectives_card_first():
 
 def test_market_buy_completes_objectives():
     from gartok import world
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
     u = Unit("player")
     u.give_to_pack("Copper Coin", 500)
     g = Guild([u])
     node = world.node("market")
-    ms = MarketScreen(None, g, [u], node, lambda: None)
+    ms = Counter(g, [u], node)
 
     assert "obj_buy_food" not in g.objectives_done
     assert "obj_buy_torch" not in g.objectives_done

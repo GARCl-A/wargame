@@ -2,7 +2,7 @@
 
 Plan: docs/plans/economy_sim_v2.md. The real `Guild` lives the days: the real order engine
 (`orders` + `campaign.advance`) walks it between places and ticks the clock, the real daily
-upkeep feeds it, rots its food and heals it, and the market is the real `MarketScreen`, so
+upkeep feeds it, rots its food and heals it, and the market is the real `trade.Counter`, so
 prices, haggling, finite stock and the market's cash (`Guild.shop(node_id).cash`) all bite. Work and
 tavern shifts, hunts and rests go through the same calls the game makes.
 
@@ -56,7 +56,6 @@ from gartok import (
     gather,
     hunt,
     items,
-    library_screen,
     magic,
     matchup,
     medic,
@@ -67,6 +66,7 @@ from gartok import (
     recruit,
     rest,
     rite,
+    trade,
     vocations,
     wagon,
     world,
@@ -74,7 +74,6 @@ from gartok import (
 from gartok.clock import SECONDS_PER_DAY
 from gartok.group import NORMAL
 from gartok.guild import Guild
-from gartok.market_screen import MarketScreen
 from gartok.prison_screen import BAIL_BONUS
 from gartok.scenario import ErmosScenario, Scenario
 
@@ -600,7 +599,7 @@ class Sim:
         has_dict = any(u.has_item(dict_name) for u in holders)
 
         if not has_dict:
-            if dict_name in library_screen.library_stock_dictionaries(self.guild):
+            if dict_name in trade.library_stock_dictionaries(self.guild):
                 cost = items.get(dict_name).price
                 if self.money >= cost + 20:
                     with self.market("library") as mkt:
@@ -1001,7 +1000,7 @@ class Sim:
 
 
 class MarketVisit:
-    """A round of the shops, through the real `MarketScreen`: it stands at one shop at a time
+    """A round of the shops, through the real `trade.Counter`: it stands at one shop at a time
     and walks to the next when an item is not on the shelf it is at."""
 
     def __init__(self, sim, node_id=None):
@@ -1017,7 +1016,7 @@ class MarketVisit:
         sim.crew_pay_in()
         crew = list(sim.crew.members) if sim.crew is not None else []
         self.node = world.node(node_id)
-        self._screen = MarketScreen(None, sim.guild, sim.members + crew, self.node, lambda: None)
+        self._screen = trade.Counter(sim.guild, sim.members + crew, self.node)
 
     @property
     def screen(self):
@@ -1386,7 +1385,7 @@ class Balanced(Policy):
             return False
         holder = holders[0]
         sim.goto("library")
-        shop = MarketScreen(None, sim.guild, sim.members, world.node("library"), lambda: None)
+        shop = trade.LibraryCounter(sim.guild, sim.members, world.node("library"))
         for name in economy.LIBRARY_SUPPLIES:
             if not crafter.count_of(name):
                 shop.qty[name] = 1

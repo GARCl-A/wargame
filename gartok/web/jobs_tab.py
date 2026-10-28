@@ -3,7 +3,7 @@ paper (each job the giver has, what it asks and pays, its state and its button) 
 for the band and what the packs already carry toward each goal.
 
 The reads, labels and verbs are pygame's own board (`MissionOfferScreen` and the giver's subclass, held
-headless as `shop_tab` holds a `MarketScreen`), so the offers, the turn-ins and their notices stay one
+headless), so the offers, the turn-ins and their notices stay one
 source until step 10 of `docs/plans/web_frontend.md` moves them here.
 """
 

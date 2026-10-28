@@ -184,22 +184,6 @@ class MarketDrawMixin:
             all_size = sizes.pop() if len(sizes) == 1 else None
         return {"kind": kind, "all_size": all_size, "hover": not self.selected, "rows": rows}
 
-    def _stock_spec(self, name):
-        """The one-line stat blurb under a weapon / armor row."""
-        w = items.get(name)
-        if not w:
-            return ""
-        if w.type == items.ItemType.WEAPON:
-            n, faces = w.damage
-            hands = "2h" if w.hands >= 2 else "1h"
-            rng = f"  ·  {w.range * 3 // 2}m" if w.range else ""
-            return f"{n}d{faces}  ·  {hands}{rng}"
-        if w.type == items.ItemType.ARMOR:
-            cap = "no dex cap" if w.max_dex is None else f"dex cap {w.max_dex}"
-            spd = f"  ·  -{w.speed_penalty} spd" if w.speed_penalty else ""
-            return f"+{w.ac} AC  ·  {cap}{spd}"
-        return ""
-
     @staticmethod
     def _kit_tag(name):
         return items.item_tag(name)

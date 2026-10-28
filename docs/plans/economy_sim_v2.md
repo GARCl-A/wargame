@@ -99,7 +99,7 @@ Two things it accounts for that the first version did not:
 `economy_guild.py` runs a real `Guild` for N days under a **policy**. What is real: the order
 engine (`orders` + `campaign.advance`, so walking takes the real route time and a road ambush
 fires on the way), daily upkeep (meals, rot, healing, house tax, animal feed, cart wear), the
-market (`MarketScreen`: prices, haggling, finite stock, the market's cash), lumber and tavern
+market (`trade.Counter`: prices, haggling, finite stock, the market's cash), lumber and tavern
 shifts (`work_shift`, `perform_shift`), crafting (`crafting_shift`), hunts (the `hunt` module) and
 rests (`rest.until_full`). What is a stand-in: the fight (a library of real battles played ahead
 of time for each kind, level and party size, drawn by outcome; `--skill` picks the outcome).
@@ -161,7 +161,7 @@ read the real rules):
   over the tour time); it reads the world's market nodes, so it prices the shops when they split;
 - **dominance**: among the activities meant for a level, one that beats another by $1/day or
   more, with no less XP in either track and no more risk, leaves the other with no job;
-- a conservation fuzz that drives `MarketScreen` with random buys and sells: shoppers' coins
+- a conservation fuzz that drives `trade.Counter` with random buys and sells: shoppers' coins
   plus the till must be conserved and their worth at the best price must never rise.
 
 `tests/test_economy_exploits.py` runs it and breaks the rules on purpose to prove each scan can
@@ -391,7 +391,7 @@ D1. **Fights are drawn from a library of real battles, not played live in layer 
    regenerates every run, so it never goes stale against combat changes.
 D2. **Everything but the fight is the real engine**, including walking, the Old Road ambush,
    meals and rot, the market screen and the market's cash. I preferred driving `campaign.advance`
-   and `MarketScreen` headless to modelling them, so a rule change moves the sim.
+   and `MarketScreen` headless (now `trade.Counter`) to modelling them, so a rule change moves the sim.
 D3. **`relief` carried into layer 2.** At a perfect record layer 1 said 0% deaths while layer 2
    still killed members in the AI's bloody wins; I applied the same shrink to both.
 D4. **A day is a 16 h shift plus 8 h of sleep** for every policy, the same day the yard's wage

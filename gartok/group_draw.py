@@ -5,8 +5,8 @@ import pygame
 
 from . import items, missions, store_column, world
 from .animals import Animal
+from .data import role_for
 from .ui import load_meter, loadout_panel, quest_panel
-from .ui.inspector_panel import role_for
 from .ui.primitives import draw_button, header, set_pointer, text
 from .ui.tokens import T
 from .wagon import Wagon

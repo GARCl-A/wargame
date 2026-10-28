@@ -131,12 +131,12 @@ def test_a_save_of_the_old_shape_does_not_load():
 
 
 def test_shop_stock_reaches_the_market_screen():
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
     shopper = Unit("player")
     guild = Guild([shopper])
     node = world.node("library")
     guild.shop(node.id).stock["Vial"] = 0
-    screen = MarketScreen(None, guild, [shopper], node, lambda: None)
+    screen = Counter(guild, [shopper], node)
     assert screen._stock_of("Vial") == 0
-    assert MarketScreen(None, guild, [shopper], world.node("apothecary"), lambda: None)._stock_of("Vial") > 0
+    assert Counter(guild, [shopper], world.node("apothecary"))._stock_of("Vial") > 0
 

@@ -2,8 +2,8 @@
 a coin stack) and the City house's THE HOUSE (its stash, the tax, the oven, the debt), each on paper with
 every pack of the band beside it.
 
-The moves are pygame's own (`BankScreen` / `CityPropertyScreen` and their `StashScreen`, held headless as
-`shop_tab` holds a `MarketScreen`): a verb sets the screen's pick the way a drop would and calls the same
+The moves are pygame's own (`BankScreen` / `CityPropertyScreen` and their `StashScreen`, held
+headless): a verb sets the screen's pick the way a drop would and calls the same
 method, so the stash's weight cap, the load limit on what comes out, the slots, the fee and the purse stay
 one source until step 10 of `docs/plans/web_frontend.md` moves them here.
 """
@@ -11,7 +11,7 @@ one source until step 10 of `docs/plans/web_frontend.md` moves them here.
 from .. import economy, item_icon, items, store_column
 from ..bank_screen import BankScreen
 from ..city_property_screen import CityPropertyScreen
-from ..ui.inspector_panel import role_for
+from ..data import role_for
 from .shop_tab import SLOTS, _portrait, _tip
 
 # what each stash says of itself: where it is held, and what stands in for it before the guild has one

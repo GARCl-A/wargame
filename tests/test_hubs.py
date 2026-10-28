@@ -79,7 +79,7 @@ def test_library_dictionary_mission_flow():
 
 def test_library_shop_locked_before_rep_and_rejects_stocked_dictionaries():
     from gartok import missions
-    from gartok.library_screen import library_stock_dictionaries
+    from gartok.trade import library_stock_dictionaries
     u = Unit("player")
     g = Guild([u])
     group = Group(list(g.roster), "library")

@@ -29,6 +29,7 @@ from .. import wagon as wagon_mod
 from ..animals import Animal
 from ..combatant import Combatant
 from ..constants import fmt_money
+from ..data import role_for
 from ..group_screen import GroupScreen
 from ..guild_screen import (
     ATTRIBUTE_LABELS,
@@ -38,7 +39,6 @@ from ..guild_screen import (
     _needs_attention,
     _node_label,
 )
-from ..ui.inspector_panel import role_for
 from ..ui.sheet_card import unit_to_ch
 from ..ui.tokens import T
 from .map_session import _icon, _portrait

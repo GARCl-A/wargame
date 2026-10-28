@@ -12,7 +12,7 @@ and calls back into the screen for the layout-specific parts:
 
 `_collect(picks)` pulls every ``(owner, loc)`` pick off its owner and returns
 ``(names, owners touched)``; pack rows come off highest index first so an earlier
-removal doesn't shift the ones still to come. It needs ``self._take(owner, loc)``.
+removal doesn't shift the ones still to come (`trade.collect`). It needs ``self._take(owner, loc)``.
 
 Mix in before `Screen` so this `handle_event` wins:
 ``class GuildScreen(DragSelectMixin, Screen)``.
@@ -23,6 +23,8 @@ hand / off-hand / armour / pack.
 """
 
 import pygame
+
+from .trade import collect
 
 
 class DragSelectMixin:
@@ -65,22 +67,7 @@ class DragSelectMixin:
         return [(name, i, qty) for i, (name, qty) in enumerate(pack)]
 
     def _collect(self, picks):
-        """Pull every `(owner, loc)` pick off its owner -- `[(name, qty)]`
-        moved plus the owners touched. Pack rows come off highest index first
-        so an earlier removal doesn't shift the ones still to come."""
-        by_owner = {}
-        for owner, loc in picks:
-            by_owner.setdefault(id(owner), (owner, []))[1].append(loc)
-        items, touched = [], []
-        for owner, locs in by_owner.values():
-            touched.append(owner)
-            ordered = [l for l in locs if isinstance(l, str)]
-            ordered += sorted((l for l in locs if not isinstance(l, str)), reverse=True)
-            for loc in ordered:
-                name, qty = self._take(owner, loc)
-                if name is not None:
-                    items.append((name, qty))
-        return items, touched
+        return collect(picks, self._take)
 
 
 class LoadoutMoveMixin:

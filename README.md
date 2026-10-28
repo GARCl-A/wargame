@@ -230,6 +230,8 @@ gartok/
   world.py          the map graph: nodes, edges (distance), route (Dijkstra), Bout (arena offers)
   node_functions.py what a node can offer (shop, bank, forge...): order kind + map button, one entry each
   shop.py           a shop's own till and finite shelf, one per node that offers `shop`
+  trade.py          a shop's counter: buying, selling, the purse, the deal, the moves between packs
+                    (`Counter`, the Library's `LibraryCounter`); no pygame, both front-ends trade through it
   hub_screen.py     a node's screens behind one row of tabs, in the frame it owns (keeper header, tab row, back); `for_node` builds the hub of every node with a shop
   work_screen.py    the Work tab of a work node (Lumber Yard, Mine): paid shifts, each worker's tool and wage
   gather_screen.py  the Gathering tab of a work node (Lumber Yard, Mine): licence purchase and shift picker
@@ -299,7 +301,7 @@ gartok/
   group_screen.py + group_draw.py (everything it paints)
   squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
   memorial_screen.py / report_screen.py / level_up_screen.py (after a fight: the fallen, the after-action report, each level-up; data in aftermath.py)
-  market_screen.py + market_draw.py (painting) + market_trade.py (drops, buying, selling) / taverna_screen.py + taverna_draw.py (painting)
+  market_screen.py (input over `trade.Counter`) + market_draw.py (painting) / taverna_screen.py + taverna_draw.py (painting)
   prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / shrine_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / dialogue_screen.py

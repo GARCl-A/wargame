@@ -1,15 +1,12 @@
 """A hub's shop tab in the browser: the shelf, every shopper's whole kit, the purse and the till.
 
-The trades are pygame's own (`MarketScreen` and its `MarketTradeMixin`, held headless): a verb sets
-the screen's pick the way a drop would and calls the same method, so the prices, the stock, the
-till, the purse and the deeds stay one source until step 10 of `docs/plans/web_frontend.md` moves
-them here.
+The trades are `trade.Counter`'s, the same counter pygame's `MarketScreen` draws: a verb sets the
+counter's pick the way a drop would and calls the same method, so the prices, the stock, the till,
+the purse and the deeds stay one source.
 """
 
-from .. import artwork, economy, item_icon, items, store_column
-from ..library_screen import LibraryScreen
-from ..market_screen import _BENT_WORDS, MarketScreen
-from ..ui.inspector_panel import role_for
+from .. import artwork, economy, item_icon, items, store_column, trade
+from ..data import role_for
 from .session import asset_url
 
 SLOTS = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Armour"), ("artifact", "Artifact"))
@@ -30,8 +27,7 @@ def _first_line(name):
 
 class ShopTab:
     def __init__(self, guild, group, node):
-        screen = LibraryScreen if node.id == "library" else MarketScreen
-        self.m = screen(None, guild, list(group.members), node, lambda: None)
+        self.m = trade.counter_for(guild, list(group.members), node)
         self.guild, self.group, self.node = guild, group, node
 
     # ------------------------------------------------------------------ #
@@ -74,7 +70,7 @@ class ShopTab:
             cha = voice.haggle_charisma_mod
             out["marks"] = [{"text": f"Speaks {lang}", "good": True},
                             {"text": f"Cha {cha:+d}", "good": cha > 0},
-                            {"text": _BENT_WORDS[dist].capitalize(), "good": dist <= 1}]
+                            {"text": trade.BENT_WORDS[dist].capitalize(), "good": dist <= 1}]
         elif lang:
             out["marks"] = [{"text": f"No one speaks {' or '.join(economy.vendor_tongues(lang))}", "good": False}]
         return out

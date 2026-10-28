@@ -29,52 +29,35 @@ import pygame
 
 from . import economy, items
 from .constants import fmt_money
+from .data import role_for
 from .dragselect import DragSelectMixin
 from .market_draw import MarketDrawMixin
-from .market_trade import MarketTradeMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
+from .trade import Counter
 from .ui.hscroll import ColumnScroll
-from .ui.inspector_panel import role_for
 from .ui.tokens import fonts as ui_fonts
 
-# how far the voice's alignment sits from the vendor's (`data.alignment_distance`)
-_BENT_WORDS = {0: "same bent", 1: "close bent", 2: "different bent", 3: "far bent", 4: "opposite bent"}
 
+class MarketScreen(MarketDrawMixin, ItemMenuMixin, PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen,
+                   Counter):
+    """The window over `trade.Counter`: the rules are the counter's, this is the drawing and the mouse."""
 
-class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMenuMixin, PackColumnMixin,
-                   DragSelectMixin, SheetModalMixin, Screen):
     framed = True           # drawn for a hub's frame (`hub_screen.TabbedHubScreen`)
     native = True
 
     def __init__(self, fonts, guild, shoppers, node, on_done):
         super().__init__()
+        Counter.__init__(self, guild, shoppers, node)     # Screen ends the cooperative chain
         self.fonts = fonts
-        self.guild = guild
-        self.shoppers = shoppers
-        self.node = node
         self.on_done = on_done
-        # haggling: language + charisma + alignment (and talents) bend the prices;
-        # the shopping group's leader speaks for it when they're eligible (see
-        # economy._haggle_fraction). `self.deal` is a list of economy.PriceMod,
-        # fed straight to buy/sell_price.
-        group = guild.group_of(shoppers[0]) if guild and shoppers else None
-        self.group = group
-        self.stores = [*group.herd, *group.wagons] if group else []     # wagons and animals shop along
-        self.deal = economy.deal_mods(shoppers, getattr(node, "language", None),
-                                      getattr(node, "alignment", None),
-                                      leader=group.leader if group else None)
         self.tab = self.get_categories()[0][1]     # "weapons"
         self.weapon_size = "Large" if any(items.weapon_size(n) == "Large"
                                           for n in economy.targets_of(self._node_id())) else "Medium"
         self._weapon_sizes = {}              # base_name -> "Medium" | "Large"
         self.size_hits = []                  # [(rect, base_name, size)]
         self.header_size_hits = []           # [(rect, size)]
-        self.qty = {}                        # kit tab: stock name -> quantity to buy
-        self.selected = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
-        self._sel_qty = {}                   # (member, idx) -> how much of that pack stack is picked
-        self.notice = None
         self._F = None
         self.zones = []
         self.stock_rows = []                 # [(rect, name)]
@@ -97,15 +80,6 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         self._shelf_max = 0
         self._shelf_rect = None              # the FOR SALE panel: drop pack items on it to sell
         self._shelf_list = None
-
-    def sync_group(self):
-        if self.group is None:
-            return
-        self.shoppers = list(self.group.members)
-        self.stores = [*self.group.herd, *self.group.wagons]
-        self.deal = economy.deal_mods(self.shoppers, getattr(self.node, "language", None),
-                                      getattr(self.node, "alignment", None),
-                                      leader=self.group.leader)
 
     def _stock_weapon_size(self, base_name):
         return self._weapon_sizes.get(base_name, self.weapon_size)
@@ -139,14 +113,6 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "market"
-
-    def get_categories(self):
-        shop = self._shop()
-        cats = economy.market_categories(self._node_id(), shop.strays() if shop else ())
-
-        def base_names(names):     # a weapon row is its Medium name; the size toggle picks the Large one
-            return list(dict.fromkeys(n.removeprefix("Large ") for n in names))
-        return [(lbl, key, base_names(names) if key == "weapons" else names) for lbl, key, names in cats]
 
     # ------------------------------------------------------------------ #
     def _ui_fonts(self):
@@ -199,108 +165,9 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         member["artifact"] = held("artifact", unit.equipped_artifact, None)
         return member
 
-    def _fits_slot(self, dst, zone, name):
-        if zone == "hand":
-            return dst.can_wield(name)
-        if zone == "offhand":
-            return dst.fits_offhand(name)
-        if zone == "tongue":
-            return dst.fits_tongue(name)
-        if zone == "artifact":
-            return dst.fits_artifact(name)
-        if zone == "armor":
-            return dst.fits_armor(name)
-        return True
-
-    @staticmethod
-    def _item_at(member, loc):
-        if loc == "hand":
-            return member.equipped_weapon
-        if loc == "offhand":
-            return member.equipped_offhand
-        if loc == "tongue":
-            return member.equipped_tongue
-        if loc == "artifact":
-            return member.equipped_artifact
-        if loc == "armor":
-            return member.equipped_armor
-        return items.stack_name(member._base_inventory[loc]) if loc < len(member._base_inventory) else None
-
-    def _take(self, member, loc):
-        """Lift the pick at `loc` off `member` -- `(name, qty)`. A pack pick
-        takes only what `self._sel_qty` says is selected (the stepper's
-        partial-stack pick), not necessarily the whole stack; an equip slot
-        is always qty 1."""
-        if loc == "hand":
-            return member.take_from_hand(), 1
-        if loc == "offhand":
-            return member.take_from_offhand(), 1
-        if loc == "tongue":
-            return member.take_from_tongue(), 1
-        if loc == "artifact":
-            return member.take_from_artifact(), 1
-        if loc == "armor":
-            return member.take_from_armor(), 1
-        if loc >= len(member._base_inventory):
-            return None, 0
-        held = member._base_inventory[loc][1]
-        qty = min(held, self._sel_qty.get((member, loc), held))
-        if qty <= 0:
-            return None, 0
-        return member.take_from_pack(loc, qty), qty
-
-    def _name_of(self, pick):
-        if pick[0] == "stock":
-            return pick[1]
-        return self._item_at(*pick)
-
-    def _marked(self):
-        return getattr(self.guild, "autosell", None) or set()
-
     def _pack_tag(self, owner, name):
         tag = owner.pack_tag(name)
         return f"{tag} · AUTO-SELL" if name in self._marked() else tag
-
-    def _marked_stock(self):
-        """`([(member, loc)], {pick: qty})` for every marked item the shoppers and stores carry -- all of a
-        stack but the padlocked part."""
-        picks, qty = [], {}
-        for member in (*self.shoppers, *self.stores):
-            left = {n: member.unlocked_of(n) for n in self._marked()}
-            for loc, (name, held) in enumerate(member._base_inventory):
-                take = min(held, left.get(name, 0))
-                if take > 0:
-                    left[name] -= take
-                    picks.append((member, loc))
-                    qty[(member, loc)] = take
-        return picks, qty
-
-    def _marked_total(self):
-        picks, qty = self._marked_stock()
-        return sum(economy.sell_price(self._name_of(p), self.deal) * qty[p] for p in picks)
-
-    def _sell_marked(self):
-        picks, qty = self._marked_stock()
-        if not picks:
-            self.notice = "nothing marked for auto-sell in the packs."
-            return
-        self.selected, self._sel_qty = picks, qty
-        self._sell()
-
-    def _toggle_marked(self, name):
-        marked = self.guild.autosell
-        marked.symmetric_difference_update({name})
-        self.notice = (f"{name}: will be sold with SELL MARKED." if name in marked
-                       else f"{name}: no longer marked.")
-
-    def _goods(self, picks):
-        """The picks that are pack items a shop would buy -- not stock rows, not coins."""
-        return [p for p in picks if p[0] != "stock"
-                and self._name_of(p) is not None and not items.is_coin(self._name_of(p))]
-
-    def _sell_total(self):
-        return sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
-                   for p in self._goods(self.selected))
 
     def _selected_names(self):
         return [n for n in (self._name_of(p) for p in self.selected) if n is not None]
@@ -308,22 +175,6 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
     @property
     def _buying(self):
         return bool(self.selected) and self.selected[0][0] == "stock"
-
-    def _buy_qty(self, name):
-        return max(1, self.qty.get(name, 1))
-
-    def _get_qty(self, pick):
-        if pick[0] == "stock":
-            return self._buy_qty(pick[1])
-        return min(self._held_qty(pick), self._sel_qty.get(pick, self._held_qty(pick)))
-
-    def _held_qty(self, pick):
-        """Full quantity of the pick's stack, ignoring any partial selection
-        -- what the stepper's ALL grabs."""
-        owner, loc = pick
-        if isinstance(loc, str):
-            return 1
-        return owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
 
     def _select_one(self, src):
         """Replace the current selection with just `src` (a plain click) --
@@ -333,32 +184,6 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         self._sel_qty = {}
         if src is not None and src[0] != "stock" and not isinstance(src[1], str):
             self._sel_qty[src] = 1
-
-    def _fits(self, member, name):
-        return member.load + items.item_weight(name) <= member.carry_max
-
-    def _stock_of(self, name):
-        """Units of `name` left to buy, or None if the shop has no count -- also None with
-        no `guild` (a few tests build a bare screen with no campaign behind it). A weapon the
-        shelf does not keep is 0: the size toggle can name one."""
-        shop = self._shop()
-        if shop and name not in shop.stock and items.is_weapon(name):
-            return 0
-        return economy.stock_of(shop.stock, name) if shop else None
-
-    def _cash(self):
-        """What the market can still pay out today, or None with no `guild`."""
-        shop = self._shop()
-        return shop.cash if shop else None
-
-    def _till(self, delta):
-        shop = self._shop()
-        if shop:
-            shop.move_cash(delta)
-
-    def _shop(self):
-        guild, node = getattr(self, "guild", None), getattr(self, "node", None)
-        return guild.shop(node.id) if guild and node else None
 
     def hub_cards(self):
         """The hub header's cards for the shop: the deal, the party's purse, the till."""
@@ -370,30 +195,6 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         if cash is not None:
             cards.append({"label": "shop can pay", "value": fmt_money(cash)})
         return cards
-
-    def _deal_card(self):
-        """How the party's haggling moved the prices, for the header's deal block."""
-        lang = getattr(self.node, "language", None)
-        alignment = getattr(self.node, "alignment", None)
-        sell = f"you sell at {int(economy.SELL_FACTOR * 100)}% of the price"
-        if not lang or not alignment:
-            return {"headline": "fixed prices", "tone": "none", "why": [sell]}
-        voice, dist = economy.haggle_voice(self.shoppers, lang, alignment,
-                                           self.group.leader if self.group else None)
-        if voice is None:
-            tongues = " or ".join(economy.vendor_tongues(lang))
-            return {"headline": "no haggling", "tone": "none", "why": [f"no one speaks {tongues}", sell]}
-        general = economy.deal_value(self.deal, None, "buy")
-        food = economy.deal_value(self.deal, next(iter(items.food_items())), "buy")
-        pct = round(general * 100)
-        headline = f"{pct}% off" if pct > 0 else f"{-pct}% markup" if pct < 0 else "list price"
-        tone = "good" if pct > 0 else "bad" if pct < 0 else "none"
-        cha = voice.haggle_charisma_mod
-        why = [f"{voice.name} speaks for the group",
-               f"Charisma {cha:+d}  ·  {_BENT_WORDS[dist]}"]
-        if round(food, 3) != round(general, 3):
-            why.append(f"food {round(food * 100)}% off")
-        return {"headline": headline, "tone": tone, "why": why}
 
     # ------------------------------------------------------------------ #
     # input: click / shift-click to (multi-)select, or drag onto a card  #
@@ -532,10 +333,115 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
                 self._bump_qty(p, 999)
         self._sell()
 
+    def _drop(self, px, dragging, src):
+        if self.close_sheet_on_click():
+            return
 
-    def _distribute_load(self):
-        from . import unit as unit_module
-        unit_module.distribute_load(self.shoppers, share_coins=True, creatures=self.stores)
-        self.selected = []
-        self.notice = "redistributed packs by carrying capacity."
+        if dragging:
+            for rect, member, zone in self.zones:
+                if rect.collidepoint(px):
+                    self._drop_on_zone(member, zone)
+                    return
+            for key, rect in self.buttons:
+                if key == "sell" and rect.collidepoint(px):
+                    self._sell()
+                    return
+            if self._goods(self.selected) and self._shelf_rect is not None and self._shelf_rect.collidepoint(px):
+                self._sell()
+            return
 
+        if self._col_scroll.click(px):
+            return
+
+        for rect, pick, delta in self.qty_hits:
+            if rect.collidepoint(px):
+                self._bump_qty(pick, delta)
+                return
+
+        pick = self._dots_at(px)
+        if pick is not None:
+            self._open_menu(px, self._menu_picks_for(pick))
+            return
+
+        for rect, member, name in self.lock_hits:
+            if rect.collidepoint(px):
+                member.toggle_lock(name)
+                return
+
+        for rect, base_name, size in self.size_hits:
+            if rect.collidepoint(px):
+                self._set_weapon_size(base_name, size)
+                return
+
+        for rect, size in self.header_size_hits:
+            if rect.collidepoint(px):
+                self._set_all_weapon_sizes(size)
+                return
+
+        for key, rect in self.buttons:
+            if rect.collidepoint(px):
+                if key == "done":
+                    self._checkout()
+                elif key == "buy_cart":
+                    self._buy_cart()
+                elif key == "sell":
+                    self._sell()
+                elif key == "sell_all":
+                    self._sell_all()
+                elif key == "sell_marked":
+                    self._sell_marked()
+                elif key == "distribute":
+                    self._distribute_load()
+                elif key == "group_view":
+                    self.group_view = not self.group_view
+                    self.selected = []
+                    self._sel_qty = {}
+                return
+
+        for rect, key in self.tab_hits:
+            if rect.collidepoint(px):
+                self.tab, self.selected, self.notice, self._shelf_scroll = key, [], None, 0
+                return
+
+        for rect, member in self.info_hits:
+            if rect.collidepoint(px):
+                self.open_sheet(member)
+                return
+
+        self.notice = None
+        mods = pygame.key.get_mods()
+        multi = not dragging and src is not None and src[0] != "stock" \
+            and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL) \
+            and (not self.selected or self.selected[0][0] != "stock")
+        if multi:
+            owner, loc = src
+            if src in self.selected:
+                self.selected = [p for p in self.selected if p != src]
+                self._sel_qty.pop(src, None)
+            else:
+                self.selected.append(src)
+                if not isinstance(loc, str):
+                    held = owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
+                    self._sel_qty[src] = held
+            return
+
+        if not dragging and src is not None and src[0] == "stock" and self._buying:
+            if src in self.selected:                       # the cart: a click adds a row or takes it out
+                self.selected = [p for p in self.selected if p != src]
+            else:
+                self.selected.append(src)
+            return
+
+        if self.selected:
+            for rect, member, zone in self.zones:
+                if dragging and rect.collidepoint(px):
+                    self._drop_on_zone(member, zone)
+                    return
+            if not dragging:
+                self._select_one(src)
+            return
+        if not dragging:
+            self._select_one(src)
+
+    def _checkout(self):
+        self.on_done()

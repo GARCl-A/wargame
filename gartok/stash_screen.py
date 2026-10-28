@@ -28,13 +28,13 @@ import pygame
 
 from . import economy, items, store_column
 from .constants import fmt_money
+from .data import role_for
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import ItemMenuMixin
 from .screen import Screen
 from .ui import hub_party
 from .ui.hscroll import ColumnScroll
 from .ui.hub_frame import MARGIN, button_width, hub_button
-from .ui.inspector_panel import role_for
 from .ui.primitives import ellipsize, set_pointer, small_caps, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
