@@ -60,11 +60,13 @@ const SCREENS = {
   settings: {css: ["settings.css"], js: ["settings.js"]},
 };
 
+// the screens are laid out on 1920x1080, centred; a window off 16:9 gets the backdrop's bleed, not black bars
 function fit() {
   const s = Math.min(innerWidth / 1920, innerHeight / 1080), st = $("stage");
-  st.style.transform = `scale(${s})`;
-  st.style.left = (innerWidth - 1920 * s) / 2 + "px";
-  st.style.top = (innerHeight - 1080 * s) / 2 + "px";
+  const w = innerWidth / s, h = innerHeight / s;
+  Object.assign(st.style, {transform: `scale(${s})`, width: w + "px", height: h + "px"});
+  st.style.setProperty("--bx", (w - 1920) / 2 + "px");
+  st.style.setProperty("--by", (h - 1080) / 2 + "px");
 }
 addEventListener("resize", fit);
 fit();

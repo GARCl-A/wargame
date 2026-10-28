@@ -76,7 +76,8 @@ screens moved out first.
   (409). `/api/screen` says which one is open; `/api/lab/...` is the combat lab's (fights,
   a new one), there only when the game was opened on a lab fight. On the client,
   `index.html` + `shell.js` + `shell.css` are the shell: the helpers (`$`, `api`, `esc`,
-  `face`, `Sound`), the stage scaled to the window, the palette, and the materials
+  `face`, `Sound`), the stage scaled to the window (the 1920x1080 `#screen` centred, its
+  backdrop and full-screen veils bleeding to the edges, `--bleed`), the palette, and the materials
   (`.paper`, `.kicker`, `.leather`, `.ghost-btn`, `.btn`, `.brass-btn`, `.seal`, `.medal`,
   the `.it` item row). Each screen is `client/screens/<id>/`: `screen.html` and the files
   `SCREENS` in `shell.js` names. A screen's scripts declare top-level names, so it opens

@@ -175,7 +175,7 @@
 #seal{position:absolute;right:14px;top:4px}
 
 /* end of the fight */
-#modal,#dialog{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,6,3,.62);z-index:5}
+#modal,#dialog{position:absolute;inset:var(--bleed);display:grid;place-items:center;background:rgba(10,6,3,.62);z-index:5}
 #modal[hidden],#dialog[hidden]{display:none}
 #dialog.opaque{background:radial-gradient(ellipse at center,#2a1d12,#0b0806)}
 #topright{display:flex;gap:10px}

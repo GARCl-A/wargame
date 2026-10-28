@@ -286,14 +286,14 @@
 #cta .seal.calm{background:radial-gradient(circle at 38% 32%,#c79a52,#8a6326 45%,#4f3712 85%)}
 
 #wiped[hidden]{display:none}
-#wiped{position:absolute;inset:0;display:grid;place-items:center;background:rgba(8,6,4,.7);z-index:20}
+#wiped{position:absolute;inset:var(--bleed);display:grid;place-items:center;background:rgba(8,6,4,.7);z-index:20}
 #wiped .paper{width:560px;padding:30px 34px}
 #wiped p{margin-top:14px;font:italic 19px/1.4 "IM Fell English",serif;color:#4a3522}
 #wiped .ghost-btn{margin-top:20px;width:max-content}
 
 /* the menu over the map: pygame's pause menu */
 #pause[hidden]{display:none}
-#pause{position:absolute;inset:0;display:grid;place-items:center;background:rgba(8,6,4,.72);z-index:25}
+#pause{position:absolute;inset:var(--bleed);display:grid;place-items:center;background:rgba(8,6,4,.72);z-index:25}
 #pause .leather{width:520px;padding:34px 40px 30px}
 #pause .tagline{font:600 12px/1 Cinzel,serif;letter-spacing:.4em;color:var(--brass);text-transform:uppercase}
 #pause h3{margin:12px 0 18px;font:700 30px/1.1 Cinzel,serif;color:#e8d8b4}

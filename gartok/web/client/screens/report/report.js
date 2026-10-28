@@ -331,7 +331,7 @@ function slip(src) {
 }
 
 function moveSlip(e) {
-  const st = $("stage").getBoundingClientRect(), k = st.width / 1920;
+  const st = $("screen").getBoundingClientRect(), k = st.width / 1920;
   $("slip").style.left = (e.clientX - st.left) / k + 14 + "px";
   $("slip").style.top = (e.clientY - st.top) / k + 10 + "px";
   document.querySelectorAll(".target").forEach(t => t.classList.remove("target"));

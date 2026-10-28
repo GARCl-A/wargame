@@ -257,7 +257,7 @@ const Shop = (() => {
   }
 
   function stagePoint(e) {
-    const r = $("stage").getBoundingClientRect(), s = r.width / 1920;
+    const r = $("screen").getBoundingClientRect(), s = r.width / 1920;
     return [(e.clientX - r.left) / s, (e.clientY - r.top) / s];
   }
 

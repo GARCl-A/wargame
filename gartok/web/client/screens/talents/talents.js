@@ -198,7 +198,7 @@ function camera(tree, R) {
   tree.querySelectorAll(".cam .cb").forEach(b => b.onclick = () => {
     if (b.dataset.z === "fit") { fitAll(); apply(); } else zoom(b.dataset.z === "in" ? 1.25 : 1 / 1.25);
   });
-  const stage = () => $("stage").getBoundingClientRect().width / 1920;
+  const stage = () => $("screen").getBoundingClientRect().width / 1920;
   vw.addEventListener("wheel", e => {
     e.preventDefault();
     const r = vw.getBoundingClientRect(), k = stage();
