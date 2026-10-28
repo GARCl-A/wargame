@@ -370,9 +370,10 @@ class HubSession(Session):
         return m._after_order()
 
     def claim_fight(self, verb):
-        """The claim's two fights (CLEAR, SWEEP) are campaign fights: the away card says so until step 10."""
-        title = self.claim.fight(verb)
-        return self.map._away(self.group, None, fight=True, title=title, what="the claim's fight")
+        """The claim's two fights (CLEAR, SWEEP): campaign fights, which end on the map."""
+        from .campaign_fight import claim_fight
+        self.claim.fight(verb)
+        return claim_fight(self.map, self.group)
 
     @property
     def desk(self):

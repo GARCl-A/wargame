@@ -1082,15 +1082,14 @@ def test_the_claim_opens_as_a_hub_and_scouting_passes_its_hours_on_the_tab():
     assert "scouted" in st["claim"]["report"][0] and st["claim"]["fight"]
 
 
-def test_the_claims_fights_are_met_on_the_away_card_and_change_nothing():
+def test_the_claims_fights_open_the_board_and_change_nothing_until_won():
     hub, guild, g = _claim("SCOUTED")
     with pytest.raises(ValueError):
         hub.verb("claim_fight", True)(hub, {"verb": "fight_sweep"})
     with pytest.raises(ValueError):
         hub.verb("claim", True)(hub, {"verb": "fight_clear"})
-    assert hub.verb("claim_fight", True)(hub, {"verb": "fight_clear"}) == {"screen": "away"}
-    away = hub.map.game.session
-    assert isinstance(away, AwaySession) and away.state()["fight"] and away.state()["title"] == "Clear the land"
+    assert hub.verb("claim_fight", True)(hub, {"verb": "fight_clear"}) == {"screen": "battle"}
+    assert hub.map.game.session.state()["campaign"]
     assert guild.wilds_claim_stage == "SCOUTED" and not g.busy
 
 

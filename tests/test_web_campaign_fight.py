@@ -1,0 +1,120 @@
+"""A campaign fight in the browser: entered from the map, the talk or the Claim, played on the board,
+settled as `app_battle` settles it and handed to the report, which ends on the map."""
+
+import random
+
+import pytest
+
+from gartok import ai, economy, orders, persist, recorder, world
+from gartok.group import Group
+from gartok.guild import Guild
+from gartok.unit import Unit
+from gartok.web.battle_session import BattleSession
+from gartok.web.map_session import MapSession
+from gartok.web.report_session import ReportSession
+from gartok.web.server import Game, Lab
+
+
+@pytest.fixture(autouse=True)
+def saves(tmp_path, monkeypatch):
+    monkeypatch.setattr(persist, "SAVE_DIR", str(tmp_path))
+    yield tmp_path
+    recorder.detach()
+
+
+def _band(node, n=3, lang="Common"):
+    random.seed(4)
+    units = [Unit("Fighter") for _ in range(n)]
+    for u in units:
+        u.languages = [lang]
+        u.give_to_pack("Potato", 6)
+    return Group(units, node=node, leader=units[0])
+
+
+def _ambushed(world_id=None, lang=None):
+    g = _band("road")
+    guild = Guild(None, groups=[g], name="Ink Hands")
+    random.seed(5)
+    pack = [Unit("enemy") for _ in range(2)]
+    for u in pack:
+        u.languages = [lang] if lang else []
+    g.pending = orders.Order("ambush", pack=tuple(pack))
+    return Game(MapSession(guild, world_id)), guild, g
+
+
+def _win(session):
+    b = session.battle
+    for c in b.foe_units:
+        c.hp, c.status = 0, "dead"
+    b.winner = "player"
+
+
+def test_a_fight_with_nobody_to_talk_to_opens_the_board_and_the_report_ends_on_the_map():
+    game, _, g = _ambushed("w1")
+    assert game.session.act(g.gid, "resolve_event") == {"screen": "battle"}
+    s = game.session
+    assert isinstance(s, BattleSession) and s.state()["campaign"] and s.state()["meta"]["name"] == "Old Road"
+    assert any(x["kind"] == "auto" for x in persist.list_saves("w1"))
+    with pytest.raises(ValueError):
+        s.done()
+    _win(s)
+    assert s.done() == {"screen": "report"}
+    report = game.session
+    assert isinstance(report, ReportSession) and report.state()["result"] == "VICTORY"
+    assert not g.fight_due and g.pending is None
+    while game.session is report:
+        report.next()
+    assert game.session.screen == "map" and not persist.load_game("w1").groups[0].fight_due
+
+
+def test_a_fight_played_out_by_the_ai_on_both_sides_is_settled():
+    game, _, g = _ambushed()
+    game.session.act(g.gid, "resolve_event")
+    s = game.session
+    b = s.battle
+    for _ in range(400):
+        if b.winner is not None:
+            break
+        if s._setup() == "trap":
+            s.act("skip_traps")
+        elif s.my_turn():
+            s._stepped(lambda: ai.take_turn(b, b.active), None)     # a stand-in player
+        else:
+            s.advance()
+    assert s.battle.winner is not None
+    assert s.done() == {"screen": "report"} and not g.fight_due
+
+
+def test_a_talk_that_ends_in_a_fight_opens_the_board_with_how_it_ended(monkeypatch):
+    game, _, g = _ambushed(lang="Common")
+    assert game.session.act(g.gid, "resolve_event") == {"screen": "talk"}
+    monkeypatch.setattr(random, "randint", lambda a, b: 1)
+    assert game.session.choose("bluff")["result"]["kind"] == "fight"
+    assert game.session.go_on() == {"screen": "battle"}
+    b = game.session.battle
+    assert b.opening["surprised"] == "player"
+
+
+def test_the_claims_fight_won_moves_the_claim_a_stage():
+    g = _band(world.WILDS_TERRITORY_NODE)
+    for u in g.members:
+        u.money = 200
+    guild = Guild(None, groups=[g], name="Ink Hands")
+    guild.wilds_claim_stage = "SCOUTED"
+    game = Game(MapSession(guild))
+    game.session.act(g.gid, "visit_claim")
+    hub = game.session
+    assert hub.verb("claim_fight", True)(hub, {"verb": "fight_clear"}) == {"screen": "battle"}
+    s = game.session
+    assert len(s.battle.foe_units) == economy.WILDS_CLAIM_CLEAR_SIZE
+    _win(s)
+    s.done()
+    assert guild.wilds_claim_stage == "CLEARED"
+    assert any("now Cleared" in n for n in game.session.map.notices)
+
+
+def test_a_lab_fight_has_nothing_after_it():
+    s = Lab().fight("wilds", 1, 2, seed=3)
+    with pytest.raises(ValueError):
+        s.done()
+    assert not s.state()["campaign"]

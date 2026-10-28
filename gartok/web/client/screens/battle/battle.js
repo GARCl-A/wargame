@@ -147,7 +147,7 @@ function renderTokens() {
 
 function renderTop() {
   $("place").textContent = S.meta.name || "Battle";
-  $("sub").innerHTML = `Level ${esc(S.meta.level)} · squad of ${esc(S.meta.squad)} · seed ${esc(S.meta.seed)}`;
+  $("sub").innerHTML = S.campaign ? esc(S.meta.sub) : `Level ${esc(S.meta.level)} · squad of ${esc(S.meta.squad)} · seed ${esc(S.meta.seed)}`;
   const coins = S.initiative.map(c => {
     if (!c.id) return `<div class="coin unknown">?</div>`;
     const hp = c.hp_frac == null ? "" : `<div class="hp" style="--c:${c.hp_frac > .5 ? "#7fa557" : "#d0493a"}"><i style="width:${c.hp_frac * 100}%"></i></div>`;
@@ -384,8 +384,10 @@ async function showEnd(picker = false) {
     <p>${picker ? "Pick a fight from the combat lab." : won ? "The field is yours." : S.result === "FLED" ? "You live to fight again." : "Your squad has fallen."}</p>
     ${fights ? `<div class="row"><select id="fightsel">${fights.map(f => `<option value="${f.id}" ${f.id === S.meta.fight ? "selected" : ""}>${esc(f.name)}</option>`).join("")}</select>
     <select id="playersel"><option value="1">One player</option><option value="2" ${S.meta.players === 2 ? "selected" : ""}>Two players</option></select>
-    <div class="btn" id="again">Fight</div>${picker ? `<div class="ghost-btn" id="cancel">Cancel</div>` : ""}</div>` : ""}</div>`;
+    <div class="btn" id="again">Fight</div>${picker ? `<div class="ghost-btn" id="cancel">Cancel</div>` : ""}</div>` : ""}
+    ${S.campaign ? `<div class="row"><div class="btn" id="goon">Go on</div></div>` : ""}</div>`;
   m.hidden = false;
+  if (S.campaign) $("goon").onclick = async () => { await api("/api/battle/done", {}); location.reload(); };
   if (!fights) return;
   $("again").onclick = async () => {
     const f = fights.find(x => x.id === $("fightsel").value);

@@ -857,9 +857,38 @@ job taken, back to the map); the map's tests of the away card now enter the aren
   their talk). They are step 10's seam: `app_battle` hands the battle to `BattleSession` and settles it through
   `campaign.absorb_battle`, then `ReportSession` plays the aftermath.
 
-### 10. The swap — todo
+### 10. The swap — in progress
 
-The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
+Too big for one session, so it is cut as step 9 was: first the campaign's fights, family by family,
+then the title and the draft, then the swap itself.
+
+**10a. The forced fights and the Claim's — done (2026-10-28).** `campaign_fight.py` is the seam
+`app_battle` was: `forced_fight` builds the fight as `App._start_forced_battle` does (after the talk with
+its `Opening`, or straight from the map's seal when nobody in the pack speaks), `claim_fight` the
+Claim's CLEAR and SWEEP as `_start_claim_battle`; `_enter` saves the snapshot before it, writes the
+play log's combat log, binds the bestiary and opens `BattleSession` with a `then`. A campaign fight's
+state says `campaign` and its header is the place and the event (`meta.sub`); once it is over the end
+card's Go on posts `done`, which settles it: `campaign.absorb_battle`, the `fight` row of the play log,
+`group.pending` cleared and `forced.resolve` (or the Claim's stage), the save, then `ReportSession`,
+whose chain ends on the map through the clock (`_to_map`), or on the wiped map. The away card now
+only stands for the fights still left; it lost its forced-fight forms. A window closed mid-fight
+leaves the fight due on the map, as in pygame.
+
+- Left out: the map's auto-resolve (`autowin_ambush`, pygame's Monte Carlo) has no button in the
+  browser yet.
+- Tests: `tests/test_web_campaign_fight.py` (the seal with nobody to talk to opens the board, the
+  snapshot, `done` refused before the end, the report and back to the map with the fight gone from
+  the save; a whole fight played by the AI on both sides through the session; a talk lost into a
+  fight keeps its opening; the Claim's fight won moves the stage; a lab fight has nothing after it);
+  the old away-card tests in `test_web_map.py`, `test_web_talk.py`, `test_web_hub.py` now land on the
+  board. The end card and the report after it were looked at in headless Edge at 1920x1080.
+- **Next (10b):** the arena (`_start_battle` with a `Bout`: the entry fee, a boss's lines, the purse
+  on the report, Adelio's and the Ribbit Brothers' recruit offers, the title defense). Then the hunt
+  (its ambushes and the ox chase), the searches' finds (the Ruins, the Nest, the Lair), the errands'
+  fights (the battlefield, the necromancer, the Wildfire's camp and fortress), then the title screen
+  and the draft, then the swap below.
+
+**10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as
 today. A window cannot mix pygame and the browser, so the swap is one move once the
 whole loop (title, map, hub, battle, report, map) runs in the browser:

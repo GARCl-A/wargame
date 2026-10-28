@@ -410,8 +410,9 @@ class MapSession(MapInspectorMixin, Session):
         if key == "resolve_event":
             if not g.fight_due:
                 raise ValueError(f"{g.display_name} has no fight to face")
+            from .campaign_fight import forced_fight
             from .dialogue_session import forced_talk
-            return self._talk(forced_talk(self, g)) or self._away(g, g.pending, fight=True)
+            return self._talk(forced_talk(self, g)) or forced_fight(self, g, g.pending)
         if key == "guild":
             return self._sheet("members", g.gid)
         if g.fight_due:
@@ -572,9 +573,9 @@ class MapSession(MapInspectorMixin, Session):
         self.game.open(session)
         return {"screen": session.screen}
 
-    def _away(self, group, order, fight=False, title=None, what=None):
+    def _away(self, group, order):
         from .away_session import AwaySession
-        self.game.open(AwaySession(self, group, order, fight=fight, title=title, what=what))
+        self.game.open(AwaySession(self, group, order))
         return {"screen": AwaySession.screen}
 
     def back(self):

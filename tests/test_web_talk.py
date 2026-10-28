@@ -10,7 +10,7 @@ from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
-from gartok.web.away_session import AwaySession
+from gartok.web.battle_session import BattleSession
 from gartok.web.dialogue_session import DialogueSession, _roll, boss_talk
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game
@@ -118,7 +118,8 @@ def test_bribe_is_closed_for_an_empty_purse():
 
 def test_a_failed_bluff_reads_the_roll_keeps_it_on_the_order_and_a_reopen_does_not_roll_again(monkeypatch, saves):
     game, _, g = _ambushed()
-    game.session.world_id = "w1"
+    m = game.session
+    m.world_id = "w1"
     _open(game, g)
     _die(monkeypatch, 1)
     r = game.session.choose("bluff")["result"]
@@ -128,9 +129,9 @@ def test_a_failed_bluff_reads_the_roll_keeps_it_on_the_order_and_a_reopen_does_n
     assert [o["title"] for o in r["opening"]] == ["Caught off guard"]
     assert g.pending.parley["kind"] == "fight"
     assert persist.load_game("w1").groups[0].pending.parley["opening"]["surprised"] == "player"
-    assert game.session.go_on() == {"screen": "away"}
-    assert isinstance(game.session, AwaySession) and game.session.state()["fight"]
-    game.session.map.back()
+    assert game.session.go_on() == {"screen": "battle"}
+    assert isinstance(game.session, BattleSession)
+    game.open(m)                         # the window closed mid-fight: the fight is still due
     assert g.fight_due
     _die(monkeypatch, 20)
     _open(game, g)
@@ -158,8 +159,8 @@ def test_intimidate_that_lands_shakes_them_and_one_that_misses_gives_them_the_ju
 
 def test_a_pack_with_nobody_who_speaks_goes_straight_to_the_fight():
     game, _, g = _ambushed(pack=_pack(lang=None))
-    assert _open(game, g) == {"screen": "away"}
-    assert game.session.state()["fight"]
+    assert _open(game, g) == {"screen": "battle"}
+    assert game.session.state()["campaign"]
 
 
 def test_a_band_with_no_fight_due_has_nothing_to_face():

@@ -195,7 +195,8 @@ def forced_talk(map_session, group):
 
     def done(result):
         if result.kind == "fight":
-            return map_session._away(group, order, fight=True)
+            from .campaign_fight import forced_fight
+            return forced_fight(map_session, group, order, result.opening)
         if result.kind == "surrender":
             map_session.notices += forced.resolve_guard_prison(guild, group, order)
         elif result.kind == "leave":

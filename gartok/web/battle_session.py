@@ -72,10 +72,12 @@ class BattleSession(Session):
         "advance": lambda s, b: _steps(s.advance(b.get("inspect"))),
         "talk": lambda s, b: _steps(s.answer(b.get("verb"), b.get("speaker"), bool(b.get("go_on")), b.get("inspect"))),
         "seat": lambda s, b: _steps(s.take_seat(b.get("inspect"))),
+        "done": lambda s, b: s.done(),
     }
 
-    def __init__(self, battle, meta=None, controllers=None):
+    def __init__(self, battle, meta=None, controllers=None, then=None):
         self.battle = battle
+        self.then = then                                    # a campaign fight: what follows once it is over
         self.meta = meta or {}
         self.controllers = {"player": "human", "enemy": "ai", **(controllers or {})}
         humans = [t for t in ("player", "enemy") if self.controllers[t] == "human"]
@@ -156,6 +158,14 @@ class BattleSession(Session):
             raise ValueError("nobody is waiting for the seat")
         self.team, self.handoff = self.handoff, None
         return self.snapshot(inspect)
+
+    def done(self):
+        """Leave the finished fight for what follows it: the campaign's report."""
+        if self.then is None:
+            raise ValueError("a lab fight has nothing after it")
+        if self.battle.winner is None:
+            raise ValueError("the fight is not over")
+        return self.then()
 
     def snapshot(self, inspect=None):
         """The board as it stands, as the one step of a fight just opened."""
@@ -442,6 +452,7 @@ class BattleSession(Session):
         self._last_visible, self._shown = visible, {t["id"] for t in units}
         return {
             "meta": self.meta,
+            "campaign": self.then is not None,
             "team": self.team,
             "two_humans": self.two_humans,
             "handoff": self.handoff,

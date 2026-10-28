@@ -3,8 +3,7 @@ level-up, then the field's loot or the arena's purse, then the map -- in the ord
 them. It reads `campaign.absorb_battle`'s outcome (`aftermath.py`); the loot's moves are pygame's own
 `LootScreen` held headless, the purse lands as `RewardScreen` lands it.
 
-Nothing opens it from a campaign fight yet: the fight itself joins the browser in step 10, which hands
-it the battle and the outcome (`ReportSession(map_session, group, battle, outcome, ...)`)."""
+`campaign_fight` opens it once a campaign fight is settled."""
 
 from typing import ClassVar
 
@@ -61,7 +60,7 @@ class ReportSession(Session):
         self.place = place or ""
         self.what = what
         self.offer = offer
-        self.then = then or map_session.back     # where the chain ends: the map, unless step 10 says otherwise
+        self.then = then or map_session.back     # where the chain ends
         self.rounds = battle.round_no
         self.foes = list(battle.foe_units)
         self.bodies = {c.name: c for c in battle.units}

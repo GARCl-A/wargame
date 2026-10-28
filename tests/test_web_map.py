@@ -179,9 +179,9 @@ def test_a_fight_due_stops_the_band_and_the_seal_opens_it_without_settling_it():
         s.travel(a.gid, "city")
     with pytest.raises(ValueError):
         s.advance_world()
-    assert s.act(a.gid, "resolve_event") == {"screen": "away"}
-    assert game.session.state()["fight"]
-    game.session.map.back()
+    assert s.act(a.gid, "resolve_event") == {"screen": "battle"}
+    assert game.session.state()["campaign"]
+    game.open(s)
     assert a.fight_due
 
 
