@@ -9,9 +9,58 @@ const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&
 async function api(path, body) {
   const res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
   const data = await res.json();
+  Tutorial.sync(res.headers.get("X-Tutorial"));
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
 }
+
+// the open screen's tutorial card, named in every answer's X-Tutorial header ("key|1" while it is up):
+// a veiled card that swallows every click and key until it is closed, then a ? that opens it again
+const Tutorial = (() => {
+  let key = null, up = false, shown = null;
+  const card = c => `<div id="tut-card" class="paper"><div class="kicker">The guild's notes</div>
+    <h2>${esc(c.title)}</h2>${c.body.map(p => `<p>${esc(p)}</p>`).join("")}
+    ${c.suggestion ? `<p class="next">${esc(c.suggestion)}</p>` : ""}<div class="btn">${esc(c.button)}</div></div>`;
+  const node = id => document.getElementById(id) || $("stage").appendChild(Object.assign(document.createElement("div"), {id}));
+  const drop = id => document.getElementById(id)?.remove();
+  function show(c) {
+    if (c.key !== key || !up) return;
+    drop("tut-badge");
+    const veil = node("tut-veil");
+    veil.innerHTML = card(c);
+    veil.onclick = close;
+  }
+  async function close() {
+    if (!up) return;
+    up = false;
+    drop("tut-veil");
+    shown = null;
+    const r = await api("/api/tutorial/dismiss", {});
+    if (r.screen && r.screen !== Shell.screen) location.reload();
+  }
+  function badge() {
+    const b = node("tut-badge");
+    b.textContent = "?";
+    b.title = "How this screen works";
+    b.onclick = () => api("/api/tutorial/reopen", {}).catch(() => {});
+  }
+  addEventListener("keydown", e => {
+    if (!up) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (["Enter", " ", "Escape"].includes(e.key)) close();
+  }, true);
+  return {
+    sync(header) {
+      const [k, flag] = (header || "").split("|");
+      key = k || null;
+      up = key !== null && flag === "1";
+      if (!key) { drop("tut-veil"); drop("tut-badge"); shown = null; return; }
+      if (!up) { drop("tut-veil"); shown = null; badge(); return; }
+      if (shown !== key) { shown = key; fetch("/api/tutorial").then(r => r.json()).then(show).catch(() => {}); }
+    },
+  };
+})();
 
 // a portrait, or the name's initial when there is none
 function face(src, name, cls = "") {
@@ -84,6 +133,7 @@ async function open(id) {
   const spec = SCREENS[id];
   if (!spec) throw new Error(`no screen called ${id}`);
   const dir = `/client/screens/${id}/`;
+  document.body.dataset.screen = id;
   await Promise.all(spec.css.map(f => attach("link", {rel: "stylesheet", href: dir + f})));
   const res = await fetch(dir + "screen.html");
   if (!res.ok) throw new Error(`could not load ${dir}screen.html`);

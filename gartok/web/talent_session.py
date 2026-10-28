@@ -52,6 +52,9 @@ class TalentSession(Session):
         "back": lambda s, b: s.back(),
     }
 
+    def tutorial_key(self):
+        return "level"
+
     def __init__(self, map_session, unit, band, back, *, back_label="Back", chain=None):
         self.map = map_session
         self.guild = map_session.guild

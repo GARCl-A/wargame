@@ -132,6 +132,9 @@ class GuildSession(Session):
                          "reputations": self._reputations}[self.tab]()
         return out
 
+    def tutorial_key(self):
+        return {"bands": "group", "guild": "guild.overview"}.get(self.tab, f"guild.{self.tab}")
+
     def pick_tab(self, key):
         if key not in dict(TABS):
             raise ValueError(f"no such tab: {key}")

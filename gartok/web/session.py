@@ -6,6 +6,10 @@ person does, as `ui/` turns it into dicts for pygame today.
 
 A verb answers JSON; a `ValueError` is a refusal (409). Every session has a `state` verb, the
 whole screen as its side knows it.
+
+A screen with a tutorial card names it in `tutorial_key` (its `tutorial.<id>` in `locales/en.json`, read again after
+every request, so a tab or a phase can change it); the server sends it in each answer's `X-Tutorial` header
+and serves the card itself (`/api/tutorial`).
 """
 
 import os
@@ -26,6 +30,18 @@ class Session:
 
     def state(self):
         raise NotImplementedError
+
+    def tutorial_key(self):
+        return None
+
+    def tutorials(self):
+        """The `TutorialState` the card is read and dismissed in: the guild's."""
+        guild = getattr(self, "guild", None)
+        return guild.tutorial if guild is not None else None
+
+    def tutorial_closed(self, key, first):
+        """A card was dismissed (`first`: never before); an answer naming another screen moves there."""
+        return
 
     def verb(self, name, post):
         """The handler of `name`, or None when this screen has no such verb."""

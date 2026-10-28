@@ -41,6 +41,9 @@ class HuntSession(Session):
         "leave": lambda s, b: s.leave(),
     }
 
+    def tutorial_key(self):
+        return "watch" if self.phase == "watch" else "ox_hunt" if self.tracking else "hunt"
+
     def __init__(self, map_session, group, target="meat"):
         self.map = map_session
         self.guild = map_session.guild

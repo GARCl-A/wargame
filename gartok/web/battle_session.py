@@ -75,8 +75,9 @@ class BattleSession(Session):
         "done": lambda s, b: s.done(),
     }
 
-    def __init__(self, battle, meta=None, controllers=None, then=None):
+    def __init__(self, battle, meta=None, controllers=None, then=None, guild=None):
         self.battle = battle
+        self.guild = guild                                  # a campaign fight's: its tutorial card
         self.then = then                                    # a campaign fight: what follows once it is over
         self.meta = meta or {}
         self.controllers = {"player": "human", "enemy": "ai", **(controllers or {})}
@@ -166,6 +167,9 @@ class BattleSession(Session):
         if self.battle.winner is None:
             raise ValueError("the fight is not over")
         return self.then()
+
+    def tutorial_key(self):
+        return "battle" if self.guild is not None else None
 
     def snapshot(self, inspect=None):
         """The board as it stands, as the one step of a fight just opened."""

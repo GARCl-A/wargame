@@ -55,6 +55,15 @@ class DraftSession(Session):
         self.draft = None           # pygame's DraftScreen, made once the vocation is settled
         self.tutorial = TutorialState()
 
+    def tutorials(self):
+        return self.tutorial
+
+    def tutorial_key(self):
+        """As pygame's draft: the welcome first, then the card of the step."""
+        if "draft.intro" not in self.tutorial.seen:
+            return "draft.intro"
+        return {"vocation": "draft.vocation", "pick": "draft.pick", "charter": "draft.identity"}[self.step]
+
     # ------------------------------------------------------------------ #
     # verbs                                                              #
     # ------------------------------------------------------------------ #

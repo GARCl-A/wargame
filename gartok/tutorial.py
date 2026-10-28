@@ -9,6 +9,8 @@ already dismissed, whether the system is switched on at all, and which id (if
 any) the player forced back open with a screen's `?` badge.
 """
 
+from . import i18n
+
 TUTORIALS = (
     "draft.intro", "draft.vocation", "draft.pick", "draft.identity", "combat_lab",
     "map",
@@ -18,6 +20,20 @@ TUTORIALS = (
     "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "dialogue", "prison", "stable", "wagon_yard", "watch", "garage", "gathering", "initiation",
     "group_turn"
 )
+
+
+def card(key):
+    """The copy of `key`'s card: title, paragraphs, an optional closing pointer and the button."""
+    title = i18n.t(f"tutorial.{key}.title")
+    body = i18n.t(f"tutorial.{key}.body")
+    if isinstance(body, str):
+        body = [body]
+    suggestion_key = f"tutorial.{key}.suggestion"
+    suggestion = i18n.t(suggestion_key) if i18n.has(suggestion_key) else None
+    button_key = f"tutorial.{key}.button"
+    button = i18n.t(button_key if i18n.has(button_key) else "tutorial.default_button")
+    return {"title": title, "body": list(body), "suggestion": suggestion, "button": button}
+
 
 class TutorialState:
     def __init__(self, seen=None, enabled=True):

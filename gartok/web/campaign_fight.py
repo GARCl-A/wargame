@@ -214,7 +214,8 @@ def _enter(map_session, group, battle, node, kind, title, settle, *, squad=None,
                                    {"player": "human", "enemy": "ai"}))
     battle.intel.bind("player", guild.bestiary, vocations.info_bonus(guild))
     session = BattleSession(battle, {"name": node.name, "sub": f"{title} · day {day}"},
-                            then=lambda: _settle(map_session, group, squad, battle, node, kind, settle, offer, after))
+                            then=lambda: _settle(map_session, group, squad, battle, node, kind, settle, offer, after),
+                            guild=guild)
     map_session.game.open(session)
     return {"screen": session.screen}
 

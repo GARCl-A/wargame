@@ -4,6 +4,7 @@ and a JSON API over the screen being played. Standard library only.
     GET  /api/screen              -> which screen is open (the client's router reads it first)
     GET  /api/sounds              -> the sound cues
     POST /api/bye                 -> the page is going (closed, or reloaded on another screen)
+    GET  /api/tutorial            -> the open screen's tutorial card; POST .../dismiss, .../reopen
     *    /api/<screen>/<verb>     -> that screen's session (`session.Session`)
     *    /api/lab/fights, /new    -> the combat lab, when the game was opened on one
 """
@@ -16,7 +17,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from .. import combat_lab, persist, recorder, settings, sound
+from .. import combat_lab, persist, recorder, settings, sound, tutorial
 from ..combat_log import CombatLog
 from .battle_session import BattleSession
 from .guild_session import GuildSession
@@ -106,6 +107,30 @@ def _load(world, save_id=persist.CURRENT):
     return guild
 
 
+def tutorial_header(session):
+    """`key` and whether its card is up (`key|1`), or empty when the screen has none."""
+    key, state = session.tutorial_key(), session.tutorials()
+    if key is None or state is None or not state.enabled:
+        return ""
+    return f"{key}|{int(state.should_show(key))}"
+
+
+def _tutorial(session, verb, post):
+    key, state = session.tutorial_key(), session.tutorials()
+    if key is None or state is None:
+        raise ValueError("this screen has no tutorial card")
+    if not post and verb is None:
+        return {"key": key, **tutorial.card(key)}
+    if post and verb == "dismiss":
+        first = key not in state.seen
+        state.dismiss(key)
+        return session.tutorial_closed(key, first) or {}
+    if post and verb == "reopen":
+        state.reopen(key)
+        return {"key": key, **tutorial.card(key)}
+    return None
+
+
 def _inside(root, rel):
     path = os.path.normpath(os.path.join(root, rel))
     return path if path.startswith(os.path.normpath(root) + os.sep) and os.path.isfile(path) else None
@@ -116,8 +141,10 @@ def make_handler(game):
         def log_message(self, *args):
             pass
 
-        def _send(self, body, ctype, status=200):
+        def _send(self, body, ctype, status=200, headers=()):
             self.send_response(status)
+            for k, v in headers:
+                self.send_header(k, v)
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
@@ -125,7 +152,9 @@ def make_handler(game):
             self.wfile.write(body)
 
         def _json(self, payload, status=200):
-            self._send(json.dumps(payload).encode(), "application/json", status)
+            """The answer, with the tutorial card of the screen open once it has run."""
+            self._send(json.dumps(payload).encode(), "application/json", status,
+                       (("X-Tutorial", tutorial_header(game.session)),))
 
         def _missing(self):
             self._send(b"not found", "text/plain", 404)
@@ -154,6 +183,12 @@ def make_handler(game):
                 return self._json({"cues": {cue: [f"/assets/sounds/{f}" for f in files]
                                             for cue, files in sound.CUES.items()},
                                    "level": sound.LEVEL})
+            if parts[0] == "tutorial" and len(parts) <= 2:
+                try:
+                    answer = _tutorial(s, parts[1] if len(parts) == 2 else None, post)
+                except ValueError as e:
+                    return self._json({"error": str(e)}, 409)
+                return self._missing() if answer is None else self._json(answer)
             if len(parts) != 2:
                 return self._missing()
             screen, verb = parts

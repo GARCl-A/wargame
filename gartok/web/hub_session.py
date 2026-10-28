@@ -59,6 +59,13 @@ LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiati
 WHAT = {"tavern": "the tavern"}
 
 
+# tab -> its tutorial card, as the pygame screen behind it names it
+TUTORIAL = {"shop": "market", "work": "work", "gather": "gathering", "medic": "medic", "jobs": "missions",
+            "stable": "stable", "wagons": "wagon_yard", "initiation": "initiation", "prison": "prison",
+            "vault": "bank", "property": "property", "garage": "garage", "claim": "claim", "ledger": "ledger",
+            "tavern": "taverna", **dict.fromkeys(CRAFT_TABS, "craft"), **dict.fromkeys(TAVERN_TABS, "taverna")}
+
+
 def _node_tabs(node):
     """The tabs `TabbedHubScreen.for_node` builds for `node`, in its order."""
     tabs = []
@@ -516,6 +523,13 @@ class HubSession(Session):
         m._save()
         self.tab = "medic"
         return self.state()
+
+    def tutorial_key(self):
+        if self.tab == "shop" and self.node.id == "library":
+            return "library"
+        if self.tab == "jobs" and self.order.kind == "trust":
+            return "trust"
+        return TUTORIAL.get(self.tab)
 
     def pick_tab(self, key):
         if not any(k == key for k, _ in self.tabs):

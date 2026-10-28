@@ -1096,8 +1096,21 @@ for their rules (`MarketScreen`, `DraftScreen`, `MapScreen`, `CraftingScreen`, `
 import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_ch`, `inspector_panel.role_for`,
 `banner.BANNER_COLORS`, `tokens.T`, `floors`), and the Editor has no browser screen. Cut as step 10 was:
 
-1. **The tutorial cards in the browser** (every screen left them out): `tutorial_key()` and `locales/en.json`'s
-   `tutorial.<id>` are already the data; one card component in the shell.
+1. **The tutorial cards in the browser — done (2026-10-28).** A session names its card in `tutorial_key()` (the id
+   its pygame screen names; a hub by its tab, the guild sheet by its tab, the report by its stage, the draft by its
+   step) and reads it in `tutorials()` (the guild's `TutorialState`, the draft's own before the guild exists). Every
+   answer carries `X-Tutorial: <key>|<1 while up>` (`server.tutorial_header`), so a tab or a phase that changes the
+   card needs no verb of its own; `/api/tutorial` serves the copy (`tutorial.card`, which pygame's `tutorial_card`
+   now reads too), `/dismiss` and `/reopen` close and open it, and `tutorial_closed` lets the map's first close open
+   the objectives as pygame does. The shell (`Tutorial` in `shell.js`) draws the card on paper over a veil that
+   swallows every click and key (Enter, Space or Esc closes it) and, once closed, a small `?` in the window's top
+   right corner that opens it again; `body[data-screen]` is there for a screen whose corner is ever taken.
+   - No card on the title, the wiki, the settings or a lab fight (no guild); `group_turn` and `combat_lab` wait for
+     their screens.
+   - Tests: `tests/test_web_tutorial.py` (the header and the copy, the map's first close to the objectives and a later
+     one staying, switched off, every key a screen names has its copy, a hub's, the guild sheet's, the draft's and the
+     report's card following their tab, step or stage). The map's and the draft's cards and the `?` on the map, a hub,
+     the guild and the draft were looked at in headless Edge at 1920x1080.
 2. **The rules out of the screens**, family by family (the shop, the map, the hubs, the draft, the report): what a web
    tab borrows from a pygame screen moves to a core module that both read, as `actions.panel` and
    `LedgerScreen.panels` already did; the `ui/` helpers the web reads move with them.

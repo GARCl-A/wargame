@@ -42,6 +42,9 @@ class WatchSession(Session):
         "leave": lambda s, b: s.leave(),
     }
 
+    def tutorial_key(self):
+        return "watch"
+
     def __init__(self, map_session, group, label, lead, go):
         """`label` is the seal's (ENTER THE RUINS), `lead` what waits inside, `go(party, guarded)` what
         GO IN opens."""

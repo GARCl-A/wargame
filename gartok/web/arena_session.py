@@ -97,6 +97,9 @@ class ArenaSession(Session):
         "leave": lambda s, b: s.leave(),
     }
 
+    def tutorial_key(self):
+        return "squad"
+
     def __init__(self, map_session, group, recruit=None):
         self.map = map_session
         self.guild = map_session.guild

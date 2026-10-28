@@ -59,6 +59,10 @@ class DialogueSession(Session):
         "go_on": lambda s, b: s.go_on(),
     }
 
+    def tutorial_key(self):
+        kind = self.enc.kind
+        return None if kind == "boss" else "guard" if kind == "guard" else "dialogue"
+
     def __init__(self, map_session, group, encounter, done, decided=None, on_decided=None, caught=()):
         self.map = map_session
         self.guild = map_session.guild

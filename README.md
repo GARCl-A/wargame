@@ -413,7 +413,8 @@ docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and i
   `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
   screen (and `tutorial_badge_rect()` if the default top-right `?` would
   collide with something clickable). `app.py`'s draw/input hooks pick it up for
-  free — see `screen.py`'s two defaults for the contract.
+  free — see `screen.py`'s two defaults for the contract. In the browser the
+  screen's session names the same id in its own `tutorial_key()` (`web/session.py`).
 - **New translated string anywhere else**: a key under its own namespace in
   `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` is the only
   namespace actually converted so far; the rest of the game's text is still

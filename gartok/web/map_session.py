@@ -622,6 +622,13 @@ class MapSession(MapInspectorMixin, Session):
         self.game.quit()
         return {"quit": True}
 
+    def tutorial_key(self):
+        return "map"
+
+    def tutorial_closed(self, key, first):
+        """The map's card is the first after the draft: its first close opens the objectives, as pygame's."""
+        return self._sheet("reputations", None) if first else None
+
     def back(self):
         """Back from a screen: on to whatever else the clock left due."""
         self.game.open(self)

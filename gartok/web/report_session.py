@@ -82,6 +82,10 @@ class ReportSession(Session):
         self.refused = None                      # {"uid", "item", "why"}: the last drop that would not fit
         self.paid_to = None
 
+    def tutorial_key(self):
+        return {"memorial": "memorial", "report": "report", "level": "level_up", "purse": "reward",
+                "loot": "loot"}.get(self.stage[0])
+
     @property
     def stage(self):
         return self.stages[self.at_stage]
