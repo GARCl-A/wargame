@@ -34,13 +34,7 @@ class NodeScreensMixin:
         if arena.defense_due(self.guild):
             self._start_title_defense(node)
             return
-        offers = [arena.scrapper_bout()]
-        if "arena_dethrone" not in self.guild.deeds_done:
-            offers.append(arena.champion_bout())
-        else:                                   # champion beaten: the Games are open
-            offers += [arena.brawl_bout(), arena.ctf_bout()]
-            if "arena_ribbit_brothers" not in self.guild.deeds_done:
-                offers.append(arena.boss_bout())
+        offers = arena.bouts_on_offer(self.guild)
         disabled = {u for u in group.members if u.incapacitated}
         self._arena_purse = group.members
         self.scene = SquadScreen(self.ui_fonts, group.members, node,

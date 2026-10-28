@@ -31,11 +31,12 @@ def _kind(u):
 
 
 class TavernTab:
-    def __init__(self, guild, group, node, prison=False):
+    def __init__(self, guild, group, node, prison=False, candidates=None):
         if prison:
             self.s = PrisonScreen(None, guild, list(group.members), node, lambda: None, group=group)
         else:
-            self.s = TavernaScreen(None, guild, list(group.members), node, lambda: None, group=group, hide_tabs=True)
+            self.s = TavernaScreen(None, guild, list(group.members), node, lambda: None, group=group, hide_tabs=True,
+                                   candidates=candidates)
         self.prison = prison
         self.guild, self.group, self.node = guild, group, node
         self.report = []                    # what the last show said

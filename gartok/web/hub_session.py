@@ -49,6 +49,7 @@ HUBS = {
     "trust": (("jobs", "Jobs"),),
     "ledger": (("ledger", "The Desk"),),
     "campfire": (("kitchen", "Campfire"),),
+    "pit_recruit": (("recruits", "Recruit"),),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", "property", "claim", *HUBS}
 # the tabs the browser draws so far
@@ -190,14 +191,14 @@ class HubSession(Session):
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
 
-    def __init__(self, map_session, group, order):
+    def __init__(self, map_session, group, order, candidates=None):
         self.map = map_session
         self.guild = map_session.guild
         self.group = group
         self.order = order
         self.node = world.node(group.node)
         self._tabs = tabs_for(order.kind, self.node)
-        first = "shop" if order.kind in ("market", "stable") else {"forge": "craft", "recruit": "recruits", "bank": "vault"}.get(order.kind, order.kind)
+        first = "shop" if order.kind in ("market", "stable") else {"forge": "craft", "recruit": "recruits", "pit_recruit": "recruits", "bank": "vault"}.get(order.kind, order.kind)
         self.tab = first if any(k == first for k, _ in self.tabs) else self.tabs[0][0]
         self._shop = None
         self._work = None
@@ -208,6 +209,7 @@ class HubSession(Session):
         self._stable = None
         self._wagons = None
         self._tavern = None
+        self.candidates = candidates        # who RECRUIT offers instead of the tavern's pool (the arena's fallen)
         self._rite = None
         self._vault = None
         self._garage = None
@@ -280,7 +282,7 @@ class HubSession(Session):
         if not prison and not any(k in TAVERN_TABS for k, _ in self.tabs):
             raise ValueError("no tavern here")
         if self._tavern is None:
-            self._tavern = TavernTab(self.guild, self.group, self.node, prison=prison)
+            self._tavern = TavernTab(self.guild, self.group, self.node, prison=prison, candidates=self.candidates)
         return self._tavern
 
     def on_tavern(self, key, verb, *args):

@@ -2,9 +2,9 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
-the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen, the guild's sheet, the talk before a fight and the screens after one are in; nothing opens the report from a campaign fight until step 10 brings the fight itself.
+to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 is under way:
+the forced fights, the Claim's and the arena's are played in the browser from the map to the
+report; the hunt, the searches' finds and the errands' fights still open the away card.
 
 ## Decisions so far
 
@@ -887,6 +887,35 @@ leaves the fight due on the map, as in pygame.
   (its ambushes and the ox chase), the searches' finds (the Ruins, the Nest, the Lair), the errands'
   fights (the battlefield, the necromancer, the Wildfire's camp and fortress), then the title screen
   and the draft, then the swap below.
+
+**10b. The arena — done (2026-10-28).** `arena_session.py` (screen `arena`) is pygame's `SquadScreen` in arena
+mode as `App._open_arena` opens it: the bouts in the arena's story (the Scrapper and the champion, then the Games
+and the Ribbit Brothers until they fall), who fights (a band that fits the bout is picked whole, a smaller bout
+trims the overflow, a member collapsed from hunger cannot be picked) and the stake (a head, out of the whole band's
+purses, richest first). STAKE AND FIGHT builds the bout through `matchup.build`; the guild's first bout against a
+boss opens the boss's lines first (`dialogue_session.boss_talk`, `guild.boss_talks_seen`). The bout is a campaign
+fight: `campaign_fight._enter` takes the picked `squad`, the `offer` (to `absorb_battle` and the report's purse)
+and `after`, where the report ends. Settled, it marks `obj_arena_bout`; a title note with no purse goes to the
+map's notices. Won against Adelio (not yet in the roster) or the Ribbit Brothers, the report ends on the offer to
+recruit them (`AdelioPromptScreen`, `RibbitPromptScreen`), whose yes opens the Tavern's RECRUIT with them as the
+only strangers (`hub_session.HUBS["pit_recruit"]`, `HubSession(candidates=...)`, `TavernTab(candidates=...)`).
+A due title defense goes straight to the board, the champion alone, not to the death, as
+`App._start_title_defense`, but only when the champion stands in the band that entered (pygame takes them from
+anywhere); otherwise the bouts say who must come and by when.
+
+- The client follows the talk's frame: the pit master and the bouts on paper, the band's cards on leather, the
+  stake's ledger and the seal at its foot; the offer is a paper card. No mockup: it is the squad picker the other
+  screens already drew in parts (the band's cards, the keeper, the seal).
+- Left out: a tutorial card (no web screen has one yet).
+- Tests: `tests/test_web_arena.py` (the bouts by the guild's deeds, the band picked whole and the stake a head, the
+  cap, the trim and the unfit, a stake the band cannot pay, a Scrapper won to the purse and the map with the
+  snapshot and the objective, a bout lost with no purse, the champion's lines once, his fall and the offer into
+  RECRUIT with Adelio alone, the offer turned down, the defense with the champion here and elsewhere, the routing);
+  the map's and the hub's away-card tests now enter the hunt. The bouts (the Pit, the Games with the Ribbit
+  Brothers picked) and the offer were looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
+- **Next (10c):** the hunt (`app_hunt`: the Wilds' hunt for meat with its ambushes, the Biwolf, the ox chase), then
+  the searches' finds (the Ruins, the Nest, the Lair), the errands' fights (the battlefield, the necromancer, the
+  Wildfire's camp and fortress), then the title screen and the draft, then the swap below.
 
 **10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as

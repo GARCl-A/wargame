@@ -39,13 +39,13 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Dev tools (pytest, ruff) live apart from the game's own requirements:
+Dev tools (pytest, pytest-xdist, ruff) live apart from the game's own requirements:
 `pip install -r requirements-dev.txt`.
 
-Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
+Tests: `python -m pytest tests/ -n auto` (rules, in parallel) and `python sim_test.py`
 (200 headless AI-vs-AI battles). `-m "not slow and not balance"` skips the whole AI fights
-and the sims' design numbers; the tiers are in [docs/plans/test_suite.md](docs/plans/test_suite.md). `python -m gartok.reference` regenerates
-[`REFERENCE.md`](REFERENCE.md).
+and the sims' design numbers; the tiers are in [docs/plans/test_suite.md](docs/plans/test_suite.md).
+`python -m gartok.reference` regenerates [`REFERENCE.md`](REFERENCE.md).
 
 ## Controls
 
@@ -311,7 +311,7 @@ gartok/
                     session.py (a screen's server half), battle_session.py (one fight as the side
                     knows it), map_session.py (the map), hub_session.py + shop_tab.py (a place's
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
-                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), server.py (stdlib JSON API routed
+                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), server.py (stdlib JSON API routed
                     by screen), client/ (the shell + one folder per screen under screens/);
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   icons.py          vector action icons (pygame.draw) -- no asset file

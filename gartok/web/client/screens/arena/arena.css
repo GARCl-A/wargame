@@ -1,0 +1,109 @@
+/* The arena: the pit master and the bouts on paper, the band on leather, the stake and the seal to fight. */
+#arena{position:absolute;inset:0;--greenink:#3f6b2a;--redink:#8e2a1e;
+  background:radial-gradient(ellipse 70% 60% at 50% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+#arena .ico{display:inline-block}
+#arena .medal{--side:var(--brass)}
+
+/* the top bar */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center}
+.aseal{width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;margin-right:18px;
+  background:radial-gradient(circle at 38% 32%,#f0d79e,#c9a35e 55%,#7d5c28);
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6),inset 0 -8px 14px rgba(0,0,0,.35)}
+.aseal .ico{width:36px;height:36px;color:#1a0d08}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.12em;color:var(--brass-hi);text-transform:uppercase;
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+.cartouche .sub{margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+#topright{margin-left:auto;display:flex;gap:32px;align-items:center}
+.stat{text-align:right}
+.stat b{display:block;font:700 22px/1 Cinzel,serif;color:var(--brass-hi)}
+.stat span{font:600 9.5px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;text-transform:uppercase}
+
+/* the pit master and the bouts */
+#bouts{position:absolute;left:32px;top:108px;width:620px;height:944px;padding:30px 34px}
+.master{display:flex;gap:20px;align-items:center}
+.master .medal{width:104px;height:104px}
+.master b{display:block;font:700 24px/1.05 Cinzel,serif;letter-spacing:.04em;color:var(--ink)}
+.master .cap{margin-top:6px;font:600 13px/1.2 Cinzel,serif;letter-spacing:.08em;color:var(--ink-2);text-transform:capitalize}
+.master q{display:block;margin-top:10px;font:italic 17px/1.3 "IM Fell English",serif;color:#5b4329}
+#bouts .kicker{margin:30px 0 14px}
+#bouts .kicker em{order:2;font:italic 15px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;text-transform:none}
+.bout{position:relative;padding:16px 20px 14px 22px;margin-bottom:12px;border-radius:3px;cursor:pointer;transition:transform .12s,box-shadow .12s;
+  background:linear-gradient(175deg,rgba(255,250,235,.5),rgba(255,250,235,.18));box-shadow:0 0 0 1px rgba(93,68,38,.55)}
+.bout:hover{transform:translateX(6px)}
+.bout.on{background:linear-gradient(175deg,#f7ecd2,#e9d6ad);box-shadow:0 0 0 2px var(--brass-lo),0 0 0 4px rgba(201,163,94,.45),0 8px 14px rgba(60,35,10,.35)}
+.bout.on:before{content:"";position:absolute;left:-1px;top:10px;bottom:10px;width:5px;background:var(--redink);border-radius:0 2px 2px 0}
+.bout h3{display:flex;align-items:baseline;gap:10px;font:700 19px/1 Cinzel,serif;letter-spacing:.06em;color:var(--ink)}
+.bout h3 .tag{margin-left:auto;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;color:var(--redink);text-transform:uppercase}
+.bout p{margin-top:8px;font:italic 16px/1.3 "IM Fell English",serif;color:#4a3522}
+.bout .terms{display:flex;gap:22px;margin-top:12px;font:15px/1 "EB Garamond",serif;color:#5b4329}
+.bout .terms b{font:600 14px/1 Cinzel,serif;color:var(--ink);margin-right:5px}
+.bout .terms .purse b{color:var(--greenink)}
+
+/* the band: who fights */
+#band{position:absolute;left:684px;right:32px;top:108px;height:944px;padding:26px 28px 0}
+#band .head{display:flex;align-items:baseline;gap:14px}
+#band .head .lbl{font-size:11px;color:var(--brass)}
+#band .head i{font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+#band .head .count{margin-left:auto;font:700 20px/1 Cinzel,serif;color:var(--brass-hi)}
+#band .head .count small{font:600 10px/1 Cinzel,serif;letter-spacing:.2em;color:#8f7652;margin-left:6px}
+.defnote{margin-top:14px;padding:10px 14px;border-radius:3px;border:1px solid rgba(224,168,90,.45);background:rgba(224,168,90,.08);
+  font:italic 16px/1.3 "IM Fell English",serif;color:#e8c48a}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px;max-height:680px;overflow-y:auto;align-content:start;padding:4px 6px 4px 4px}
+.mem{position:relative;padding:14px 16px;border-radius:3px;cursor:pointer;min-height:206px;
+  background:linear-gradient(180deg,#2a1f15,#1b140d);box-shadow:0 0 0 1px rgba(111,148,140,.3),0 6px 12px rgba(0,0,0,.45);transition:box-shadow .12s,transform .12s}
+.mem:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(240,215,158,.6),0 10px 16px rgba(0,0,0,.55)}
+.mem.on{background:linear-gradient(180deg,#3a2a19,#241a10);box-shadow:0 0 0 2px var(--brass),0 0 0 4px #120d08,0 0 22px rgba(201,163,94,.25)}
+.mem.unfit{filter:saturate(.25) brightness(.6);cursor:not-allowed}
+.mem.unfit:hover{transform:none}
+.mem .who{display:flex;gap:14px;align-items:center}
+.mem .medal{width:62px;height:62px}
+.mem.on .medal{--side:var(--enamel-hi)}
+.mem .who b{display:block;font:700 16px/1.1 Cinzel,serif;letter-spacing:.04em;color:var(--paper)}
+.mem .who span{display:block;margin-top:5px;font:italic 15px/1.1 "IM Fell English",serif;color:#b9a27c}
+.mem .mark{position:absolute;right:12px;top:12px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;color:#8f7652}
+.mem.on .mark{color:var(--brass-hi)}
+.vit{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px}
+.vit div{text-align:center;padding:6px 0 5px;border-radius:2px;background:rgba(255,235,190,.04)}
+.vit b{display:block;font:700 15px/1 Cinzel,serif;color:var(--paper)}
+.vit span{font:600 8.5px/1 Cinzel,serif;letter-spacing:.2em;color:#8f7652}
+.vit .hurt b{color:#e2a194}
+.arm{display:flex;justify-content:space-between;margin-top:10px;font:15px/1.2 "EB Garamond",serif;color:#d9c49b}
+.arm em{font-style:normal;color:#8f7652}
+.flags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.flag{font:600 9px/1 Cinzel,serif;letter-spacing:.12em;padding:4px 6px 3px;border-radius:2px;text-transform:uppercase;border:1px solid rgba(201,163,94,.3);color:#b9a27c}
+.flag.bad{border-color:rgba(201,71,58,.5);color:#e2a194}
+.flag.warn{border-color:rgba(224,168,90,.55);color:#e8c48a}
+.flag.good{border-color:rgba(127,165,87,.55);color:#b4d18e}
+
+/* the stake and the seal */
+.foot{position:absolute;left:28px;right:28px;bottom:22px;height:168px;display:flex;align-items:center;gap:28px;
+  border-top:1px solid rgba(111,148,140,.25);padding-top:16px}
+.ledger{flex:1}
+.ledger .sum{font:700 30px/1 Cinzel,serif;color:var(--brass-hi)}
+.ledger .sum small{font:italic 18px/1 "IM Fell English",serif;color:#b9a27c;margin-left:10px}
+.ledger .line{margin-top:10px;font:16px/1.35 "EB Garamond",serif;color:#cdb991}
+.ledger .why{margin-top:8px;font:italic 17px/1.3 "IM Fell English",serif;color:#e2a194}
+.foot .ghost-btn{width:200px}
+
+/* the offer to recruit the fallen */
+#offer{position:absolute;inset:0;display:grid;place-items:center;z-index:5;
+  background:radial-gradient(ellipse 70% 62% at 50% 50%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+#offer[hidden]{display:none}
+#offer .card{width:760px;padding:38px 46px 34px}
+#offer h2{margin-top:16px;font:700 30px/1.1 Cinzel,serif;color:#24170c}
+#offer .faces{display:flex;gap:26px;margin-top:26px}
+#offer .faces > div{text-align:center}
+#offer .faces .medal{width:118px;height:118px;--side:var(--blood-hi)}
+#offer .faces b{display:block;margin-top:14px;font:600 14px/1.1 Cinzel,serif;color:var(--ink)}
+#offer .faces span{font:italic 14px/1 "IM Fell English",serif;color:#6b5236}
+#offer p{margin-top:8px;font:italic 19px/1.4 "IM Fell English",serif;color:#4a3522}
+#offer .faces + p{margin-top:26px}
+#offer .acts{display:flex;gap:18px;margin-top:30px}
+#offer .acts .btn{width:280px}
+#offer .acts .ghost-btn{width:220px;height:42px;color:#3a2814;border:1px solid rgba(90,60,30,.5);background:rgba(255,250,235,.4)}
+#offer .acts .ghost-btn:hover{color:#7a2318;border-color:#7a2318}
+
+#toast{position:absolute;left:50%;bottom:40px;transform:translateX(-50%);z-index:30;padding:14px 26px;border-radius:3px;
+  font:italic 18px/1.3 "IM Fell English",serif;color:#f6e7c8;background:#2a1a10;box-shadow:0 0 0 1px var(--brass-lo),0 10px 20px rgba(0,0,0,.6)}
+#toast[hidden]{display:none}

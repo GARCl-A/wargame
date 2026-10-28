@@ -1,5 +1,5 @@
-"""A place the map opens that the browser does not play yet (the arena, the hunt, the searches' finds and the
-errands' fights): it says where the band went and that pygame plays it until its part of step 10 of
+"""A place the map opens that the browser does not play yet (the hunt, the searches' finds and the errands'
+fights): it says where the band went and that pygame plays it until its part of step 10 of
 `docs/plans/web_frontend.md` lands, then goes back to the map."""
 
 from typing import ClassVar
@@ -13,8 +13,6 @@ STEP_FIGHT = "the rest of the campaign's fights join the browser in step 10"
 
 def _label(order, here):
     """The node button's label for an interactive order, as the map's inspector shows it."""
-    if order.kind == "arena":
-        return "Enter the arena"
     fn = next((f for f in node_functions.FUNCTIONS.values() if f.order_kind == order.kind and f.label), None)
     if fn is None:
         return order.kind.replace("_", " ").capitalize()

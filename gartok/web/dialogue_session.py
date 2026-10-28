@@ -3,7 +3,7 @@ answers as cards with their odds, the band choosing who speaks, and the roll on 
 pygame's own `DialogueScreen` headless for who speaks, the verbs and the result.
 
 Three talks open it: a forced fight's (the guard, the ambushes: `forced_talk`), the Wildfire's
-(`wildfire_talk`) and an arena boss's lines (`boss_talk`, for the bout once it is in the browser)."""
+(`wildfire_talk`) and an arena boss's lines before the bout (`boss_talk`, `arena_session`)."""
 
 import re
 from typing import ClassVar

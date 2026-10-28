@@ -48,6 +48,7 @@ const SCREENS = {
   talk: {css: ["talk.css"], js: ["talk.js"]},
   report: {css: ["report.css"], js: ["report.js"]},
   talents: {css: ["talents.css"], js: ["talents.js"]},
+  arena: {css: ["arena.css"], js: ["arena.js"]},
   away: {css: ["away.css"], js: ["away.js"]},
 };
 

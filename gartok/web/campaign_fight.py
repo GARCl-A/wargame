@@ -3,7 +3,8 @@ play log, the guild's bestiary, then `BattleSession`; once it is over, `campaign
 fight settles for good, and `ReportSession`, which ends on the map.
 
 What opens one: a forced fight (the guard, an ambush, a raid), after its talk or with nobody to talk to,
-and the Wilds Claim's two fights. The arena, the hunt and the searches' finds still open the away card."""
+the Wilds Claim's two fights and an arena bout (`arena_session`). The hunt and the searches' finds still
+open the away card."""
 
 from .. import (
     campaign,
@@ -61,10 +62,11 @@ def claim_fight(map_session, group):
     return _enter(map_session, group, battle, node, node.id, title, settle)
 
 
-def _enter(map_session, group, battle, node, kind, title, settle):
+def _enter(map_session, group, battle, node, kind, title, settle, *, squad=None, offer=None, after=None):
     """Every campaign fight starts here, as `App._enter_battle`: the world is saved first, so a bad
-    fight can be undone."""
-    guild, squad = map_session.guild, list(group.members)
+    fight can be undone. `squad` is who fights (the whole band unless an arena bout picked), `offer` the
+    arena's `world.Bout`, `after(outcome)` where the report ends (the map, unless the fight says)."""
+    guild, squad = map_session.guild, list(squad if squad is not None else group.members)
     if map_session.world_id is not None:
         foes = len(battle.enemy_units)
         persist.save_game(map_session.world_id, guild, kind="auto",
@@ -77,16 +79,16 @@ def _enter(map_session, group, battle, node, kind, title, settle):
                                    {"player": "human", "enemy": "ai"}))
     battle.intel.bind("player", guild.bestiary, vocations.info_bonus(guild))
     session = BattleSession(battle, {"name": node.name, "sub": f"{title} · day {day}"},
-                            then=lambda: _settle(map_session, group, squad, battle, node, kind, settle))
+                            then=lambda: _settle(map_session, group, squad, battle, node, kind, settle, offer, after))
     map_session.game.open(session)
     return {"screen": session.screen}
 
 
-def _settle(map_session, group, squad, battle, node, kind, settle):
+def _settle(map_session, group, squad, battle, node, kind, settle, offer, after):
     """The fight is over: fold it into the guild as `App._battle_end` does, then the report."""
     from .dialogue_session import _to_map
     guild = map_session.guild
-    outcome = campaign.absorb_battle(guild, squad, battle, node=node)
+    outcome = campaign.absorb_battle(guild, squad, battle, node=node, arena_offer=offer)
     recorder.emit("fight", node=node.id, kind=kind, won=outcome.won, squad=outcome.squad_size,
                   deaths=len(outcome.fallen), foes=len(battle.enemy_units), xp=sum(outcome.xp_awards.values()),
                   level=round(sum(u.combat_level for u in guild.roster) / max(1, len(guild.roster)), 2))
@@ -96,8 +98,12 @@ def _settle(map_session, group, squad, battle, node, kind, settle):
     if outcome.campaign_over:
         map_session.wiped = True
     map_session._save()
-    report = ReportSession(map_session, group, battle, outcome, place=node.name,
-                           then=lambda: map_session.back() if map_session.wiped else _to_map(map_session, group))
+    def then():
+        if map_session.wiped:
+            return map_session.back()
+        return after(outcome) if after is not None else _to_map(map_session, group)
+
+    report = ReportSession(map_session, group, battle, outcome, place=node.name, offer=offer, then=then)
     map_session.game.open(report)
     return {"screen": report.screen}
 

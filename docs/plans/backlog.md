@@ -22,9 +22,9 @@ spike is built (`python -m gartok.web`), and the author's verdict is go. The dec
 and the steps are in [web_frontend.md](web_frontend.md) ("Next steps"): fluidity, speed and
 zoom, the battle's parity with pygame and the shared base (the shell every screen runs in)
 the art as far as Gemini got and the board's colour and light are done (the battle is
-finished), the campaign map is in (`--save <world>`) and so are the hub frame, its shop, the
-work node's tabs, the Medic and the jobs boards; next are the hubs' other tabs, the rest of the
-screens and the swap.
+finished), the campaign map is in (`--save <world>`) and so is every screen the campaign reaches
+(step 9). Step 10 brings the campaign's fights: the forced ones, the Claim's and the arena are in;
+next are the hunt, the searches' finds, the errands' fights, the title and the draft, then the swap.
 
 ---
 
@@ -59,9 +59,10 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Medium
 
-- **Test suite: one seed per test, xdist and the skills' gates (found 2026-10-28).** Tests that
-  pass only by the order they run in, the `slow` / `balance` markers and how `pre-commit` and
-  `check_backlog` should use them; the steps are in [test_suite.md](test_suite.md).
+- **Test suite: the skills' gates and the last luck-dependent tests (found 2026-10-28).** The
+  suite is seeded per test and runs under `pytest-xdist`; left is how `pre-commit` and
+  `check_backlog` use `-n auto` and the `slow` / `balance` markers, and four tests that still
+  lean on luck; the steps are in [test_suite.md](test_suite.md).
 
 - **Remove occupations (decided 2026-10-23).** The first step of *Needs more information -> Loyalty,
   the oath and who the members are*: an occupation is only a preset of the starting weapon and item

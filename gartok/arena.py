@@ -124,6 +124,19 @@ def boss_bout():
                       squad_max=BOSS_SQUAD)
 
 
+def bouts_on_offer(guild):
+    """The bouts the arena offers `guild` today: the Scrapper and the champion's bout, then, once he
+    is dethroned, the Games (and their boss until the brothers fall)."""
+    bouts = [scrapper_bout()]
+    if "arena_dethrone" not in guild.deeds_done:
+        bouts.append(champion_bout())
+    else:
+        bouts += [brawl_bout(), ctf_bout()]
+        if "arena_ribbit_brothers" not in guild.deeds_done:
+            bouts.append(boss_bout())
+    return bouts
+
+
 def stage2_pack(n=STAGE2_ENEMIES, rng=random):
     """`n` opponents for a Games bout, each rolled level 1..6 off
     `encounters.ARENA_LEVEL_WEIGHTS` (level 1 common, level 6 rare)."""
