@@ -39,7 +39,9 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   two other frames, `map_split.png` and `map_merge.png`) and
   [sheets_mockup/](references/sheets_mockup/) (the guild's sheet: a member's character
   sheet as an open book, a band's packs, the charter, the reputations; one frame per
-  `sheets.html?state=`). Each folder is one HTML
+  `sheets.html?state=`) and [dialogue_mockup/](references/dialogue_mockup/) (the talk
+  before a fight: the foe's page, the answers as cards, who speaks; one frame per
+  `dialogue.html?state=`). Each folder is one HTML
   page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
   the item glyphs there stand in for art not made yet.
 - **Paper is for what you read, leather is for what you act on.** The board, the
@@ -692,6 +694,27 @@ As built:
 - **Next (9o):** the dialogues (`dialogue_screen.py`: the talk before a fight), the next family that needs a mockup;
   then the report after a fight. What still opens the away card: the talent tree, the wildfire's talk, the campaign
   fights (step 10), `trust`.
+
+**9o. The dialogues — mockup made (2026-10-27), the screens next.**
+[references/dialogue_mockup/](references/dialogue_mockup/) `dialogue.html` (built on the day-70 save `35d38388`;
+`data.js` is a real `Ambush`, `Patrol` and `BossTalk` read through `DialogueScreen._data()`, with every member's
+options) has four frames, one per `?state=`. Read left to right: they speak, you answer, who answers.
+
+- `ambush` (`dialogue_mockup.png`): the leader on paper as a bestiary page (the engraved plate, race and trade, the
+  tongues they speak, their line in large type, the rest of the pack below), and why the checks moved (the
+  `Ambush.edge` the squad's look gives, which pygame never shows). In the middle, one paper card per verb: what a
+  pass does in green ink and a miss in red, the odds, the check, and the d20's twenty faces with the ones that pass
+  inked ("8 or more on the die"); the bribe's price against the band's purses; Attack as "roll initiative". On
+  leather, the band: CHA, INT and tongues, the one shared with the leader underlined; a member with no shared tongue
+  is dimmed ("no Goblin"); a click picks who answers.
+- `result` (`dialogue_roll.png`): the card played, then a slip with the d20 drawn, the sum against the DC, a stamp
+  (SEEN THROUGH / IT HOLDS), what happened, and "how the fight opens" read off the `Opening` (caught off guard,
+  they come on shaken, they get the jump), then the result's one button.
+- `guard` (`dialogue_guard.png`): the same table for the City's patrol; the wanted member carries the crime.
+- `boss` (`dialogue_boss.png`): no verbs; the middle is the order of speakers (who speaks now, who waits) and GO ON.
+
+- **Next:** the screens: a `DialogueSession` for the forced talks (guard, the ambushes), the wildfire's talk and an
+  arena boss's lines, then the report after a fight.
 
 ### 10. The swap — todo
 
