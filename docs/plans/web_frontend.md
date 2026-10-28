@@ -36,7 +36,10 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   shelf as a ledger page, the shoppers' packs, a ware in hand) and
   [map_mockup/](references/map_mockup/) (the campaign map: the sheet inked by hand
   between the bands and the inspector; `map.html?state=split` and `?state=merge` are its
-  two other frames, `map_split.png` and `map_merge.png`). Each folder is one HTML
+  two other frames, `map_split.png` and `map_merge.png`) and
+  [sheets_mockup/](references/sheets_mockup/) (the guild's sheet: a member's character
+  sheet as an open book, a band's packs, the charter, the reputations; one frame per
+  `sheets.html?state=`). Each folder is one HTML
   page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
   the item glyphs there stand in for art not made yet.
 - **Paper is for what you read, leather is for what you act on.** The board, the
@@ -626,6 +629,35 @@ As built:
 - **Next (9n):** the first family that needs a mockup: the guild and group sheets (`guild_screen.py`, `group_screen.py`:
   the map's Gear & quests and the guild's tabs), one mockup first, then the screens. What still opens the away card
   after that: the wildfire's talk, the campaign fights (step 10), `trust` (the City's Test of Trust as its own order).
+
+**9n. The guild and group sheets — mockup made (2026-10-27), the screens next.**
+[references/sheets_mockup/](references/sheets_mockup/) `sheets.html` (built on the day-70 save `35d38388`; `data.js`
+is the save read through `GuildScreen`'s own adapters) has four frames, one per `?state=`:
+
+- `members` (`sheets_mockup.png`): the roster on leather (filters, each band and its herd, HP, badges); the member's
+  sheet as an open book on paper, the RPG's own character sheet: the engraved plate, attributes and fight boxes, the
+  weapon, the kit, the race's gift on the left page; the three careers, the talents and the record on the right; on
+  leather beside it what can be done for them: the talent tree, the roles (guild leader, group leader, rations, pack
+  load) and the way to the band's gear.
+- `guild` (`sheets_guild.png`): the charter on paper (banner, founding trade, fame and the band slots as wax seals,
+  standing per faction, the bands, the notices); the holdings on leather, each with its stamp.
+- `reputations` (`sheets_reputations.png`): the objectives as a checklist page; each faction a paper card with its
+  rep as a wax seal, its deeds ticked in red ink and its unlocks.
+- `bands` (`sheets_bands.png`): one band at a time. A chip per band across the top (its faces, where, what it does,
+  how full; the picked one carries the rename pencil), then the band's load, rations and pace and its two actions;
+  one leather column per member as the shop's; on the right the wagon (hull, the hitched animal, the cargo) above the
+  band's jobs in hand and its captives. The item menu (drop, split, lock, send to whom with the room each has) is a
+  paper slip, and only the picked band's packs are on the table.
+
+Decided with the author (2026-10-27):
+
+- **One sheet, four tabs: Members, Bands, The Guild, Reputations.** pygame's separate Manage Gear screen
+  (`group_screen.py`) becomes the Bands tab. An item moves only between people in one place, and one place is one
+  band, so the tab shows one band at a time: no trade can cross bands, and the rule shows on the table instead of as
+  a refusal. The map's Gear & quests opens the sheet on Bands with that band picked; the member sheet's button and
+  the charter's band table go there too. A band with a fight due shows read-only (`Group.locked`).
+- **A member is hungry from the first hunger level**, when the attributes already drop; pygame waited for the second
+  (`guild_screen._needs_attention`, `hunger_level >= 2`), a bug to fix with the screen.
 
 ### 10. The swap — todo
 

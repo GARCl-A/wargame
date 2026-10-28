@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Guild Sheets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=block" rel="stylesheet">
+<script src="icons.js"></script>
+<script src="data.js"></script>
+<style>
+:root{
+  --ink:#24180e; --ink-2:#4a3522; --paper:#eadcbc; --paper-2:#d9c49b; --paper-3:#bfa477;
+  --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
+  --blood:#9a2f22; --blood-hi:#c9473a; --enamel:#2e5f8e; --enamel-hi:#5b8fc0;
+  --green:#6e9448; --redink:#8e2a1e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  font-family:"EB Garamond",serif;color:var(--paper);
+  background:radial-gradient(ellipse 70% 60% at 45% 45%, #3b2a1b 0%, #20170f 55%, #0d0906 100%);overflow:hidden}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.55;mix-blend-mode:overlay;z-index:20;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .35' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .35  0 0 0 0 .2  0 0 0 1.2 -.2'/></filter><rect width='600' height='600' filter='url(%23n)'/></svg>")}
+#vignette{position:absolute;inset:0;pointer-events:none;z-index:19;
+  background:radial-gradient(ellipse 85% 80% at 45% 46%, transparent 55%, rgba(0,0,0,.72) 100%)}
+.ico{display:inline-block}
+.ico svg{width:100%;height:100%;display:block}
+.frame{display:none}.frame.on{display:block}
+.leather{position:absolute;border-radius:4px;background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.lbl{font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;text-transform:uppercase}
+.page{position:absolute;color:var(--ink);border-radius:2px;
+  background:radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.25),transparent 60%),
+    radial-gradient(ellipse at 90% 100%,rgba(120,80,30,.22),transparent 55%),linear-gradient(175deg,#efe2c3,#dcc79d);
+  box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #5d4426,0 14px 24px rgba(0,0,0,.6)}
+.page:before{content:"";position:absolute;inset:7px;border:1px solid rgba(80,52,24,.45);
+  box-shadow:inset 0 0 0 4px rgba(80,52,24,.22);pointer-events:none}
+.kicker{font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#7d5c37;display:flex;align-items:center;gap:10px;text-transform:uppercase}
+.kicker:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.5),transparent)}
+.kicker em{order:2;font:italic 15px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;text-transform:none}
+.mark{display:inline-block;font:600 9.5px/1 Cinzel,serif;letter-spacing:.14em;padding:5px 7px 4px;border-radius:2px;border:1px solid rgba(201,163,94,.3);color:#b9a27c;text-transform:uppercase}
+.mark.good{border-color:rgba(127,165,87,.6);color:#a9c98a;background:rgba(110,148,72,.12)}
+.mark.bad{border-color:rgba(201,71,58,.5);color:#e2a194;background:rgba(154,47,34,.14)}
+.mark.warn{border-color:rgba(224,168,90,.55);color:#e8c48a;background:rgba(224,168,90,.1)}
+.ghost-btn{height:38px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:3px;
+  font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#b9a27c;text-transform:uppercase;white-space:nowrap;
+  border:1px solid rgba(201,163,94,.28);background:linear-gradient(#211810,#17110b)}
+.ghost-btn .ico{width:18px;height:18px}
+.ghost-btn.off{opacity:.4}
+.btn{height:34px;padding:0 14px;display:grid;place-items:center;border-radius:2px;white-space:nowrap;
+  font:700 10.5px/1 Cinzel,serif;letter-spacing:.18em;color:#fbe9dd;text-transform:uppercase;
+  background:linear-gradient(#b0402f,#7a2218);box-shadow:0 0 0 1px #3a0c06,0 6px 12px rgba(0,0,0,.4)}
+.medal{border-radius:50%;overflow:hidden;flex:none;
+  box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--side,var(--enamel-hi)),0 0 0 5px #120d08,0 4px 8px rgba(0,0,0,.6)}
+.medal img{width:100%;height:100%;display:block}
+.medal.beast{display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#efe2c3,#cdb48a);--side:var(--brass)}
+.medal.beast .ico{width:62%;height:62%;color:#3a2410}
+.coin{display:inline-block;width:15px;height:15px;border-radius:50%;vertical-align:-2px;
+  background:radial-gradient(circle at 35% 30%,#f6c39a,#b56a3a 45%,#5e2f15 100%);box-shadow:0 0 0 1.5px #3a1e0c}
+
+/* ---------- top bar ---------- */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center;z-index:2}
+.banner{width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;margin-right:18px;
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6),inset 0 -8px 14px rgba(0,0,0,.35)}
+.banner .ico{width:38px;height:38px;color:#1a120a}
+.cartouche{width:520px;flex:none}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.12em;color:var(--brass-hi);text-transform:uppercase;
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+.cartouche .sub{margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+.tabs{display:flex;gap:4px}
+.tabs span{font:600 12px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;padding:10px 18px;border-bottom:1px solid rgba(201,163,94,.2);text-transform:uppercase}
+.tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
+.tabs span i{font-style:normal;margin-left:7px;padding:2px 5px;border-radius:2px;background:var(--blood);color:#fbe9dd;font-size:9.5px;letter-spacing:.06em}
+#topright{margin-left:auto;display:flex;gap:10px;align-items:center}
+
+/* ---------- MEMBERS: the roster ---------- */
+#roster{left:32px;top:108px;width:384px;height:944px;padding:16px 12px 0}
+.filters{display:flex;border:1px solid rgba(201,163,94,.25);border-radius:3px;overflow:hidden}
+.filters span{flex:1;text-align:center;padding:9px 0 8px;font:600 10px/1 Cinzel,serif;letter-spacing:.18em;color:#8f7652;text-transform:uppercase}
+.filters span+span{border-left:1px solid rgba(201,163,94,.2)}
+.filters span.on{background:rgba(201,163,94,.16);color:var(--brass-hi)}
+.filters span em{font-style:normal;color:#e2a194;margin-left:4px}
+.bandh{display:flex;align-items:baseline;gap:10px;margin:20px 4px 8px;padding-bottom:7px;border-bottom:1px solid rgba(201,163,94,.2)}
+.bandh .caret{font:12px/1 serif;color:#8f7652;width:10px}
+.bandh b{font:700 14px/1 Cinzel,serif;letter-spacing:.06em;color:#f0dfb8}
+.bandh span{font:italic 14.5px/1 "IM Fell English",serif;color:#a48b66}
+.bandh small{margin-left:auto;font:600 11px/1 Cinzel,serif;color:#8f7652;letter-spacing:.1em}
+.mem{position:relative;display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;height:60px;padding:0 10px 0 8px;border-radius:3px}
+.mem .medal{width:40px;height:40px}
+.mem .medal.hurt img{filter:sepia(.4) brightness(.8)}
+.mem .nm{font:600 15.5px/1 Cinzel,serif;letter-spacing:.02em;color:#eadcbc;white-space:nowrap}
+.mem .sb{margin-top:5px;font:14px/1 "EB Garamond",serif;color:#a48b66;white-space:nowrap}
+.mem .hpbar{height:4px;margin-top:6px;width:150px;border-radius:2px;background:#120d08;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(201,163,94,.15)}
+.mem .hpbar i{display:block;height:100%;background:linear-gradient(90deg,#4f7a35,#7fa557)}
+.mem .hpbar i.low{background:linear-gradient(90deg,#7a2218,#c9473a)}
+.mem .hpbar i.mid{background:linear-gradient(90deg,#9a6a2a,#e0a85a)}
+.mem .bdg{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.mem .bdg .mark{font-size:8.5px;padding:4px 5px 3px}
+.mem.sel{background:linear-gradient(90deg,rgba(240,215,158,.16),rgba(240,215,158,.04));box-shadow:inset 3px 0 0 var(--brass-hi)}
+.mem.sel .nm{color:var(--brass-hi)}
+.rfoot{position:absolute;left:14px;right:14px;bottom:14px;font:italic 14.5px/1 "IM Fell English",serif;color:#8f7a59;border-top:1px dashed rgba(201,163,94,.2);padding-top:11px}
+.rfoot b{font:700 12px/1 Cinzel,serif;color:var(--brass-hi);font-style:normal}
+
+/* ---------- MEMBERS: the sheet, an open spread ---------- */
+#sheet{left:432px;top:108px;width:1092px;height:944px;padding:30px 36px}
+#sheet:after{content:"";position:absolute;left:50%;top:14px;bottom:14px;width:28px;margin-left:-14px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(90,55,20,.18) 40%,rgba(60,35,12,.32) 50%,rgba(90,55,20,.18) 60%,transparent)}
+.lpage{position:absolute;left:36px;top:30px;width:474px;bottom:30px}
+.rpage{position:absolute;right:36px;top:30px;width:474px;bottom:30px}
+.who{display:flex;gap:22px;align-items:flex-start}
+.plate{width:150px;height:186px;flex:none;padding:6px;background:#efe2c3;box-shadow:0 0 0 1px #5d4426,0 0 0 4px #e6d6b1,0 0 0 5px #5d4426,2px 4px 8px rgba(60,35,12,.35);position:relative}
+.plate img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.15)}
+.who h1{font:700 32px/1 Cinzel,serif;color:#24170c;letter-spacing:.03em;margin-top:6px}
+.who .race{margin-top:8px;font:italic 19px/1.2 "IM Fell English",serif;color:#5b4630}
+.who .race b{font:600 17px/1 Cinzel,serif;color:#3a2410;letter-spacing:.04em;font-style:normal}
+.who .pos{margin-top:12px;font:16px/1.35 "EB Garamond",serif;color:#4a3522}
+.who .pos b{font-weight:600;color:#24170c}
+.stamp{display:inline-block;margin-top:12px;transform:rotate(-4deg);font:700 11px/1 Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--redink);border:2px solid var(--redink);padding:6px 9px 5px;border-radius:3px;opacity:.85}
+.stamp.leader{color:#2a3f5c;border-color:#2a3f5c}
+.boxes{display:grid;gap:8px;margin-top:10px}
+.box{position:relative;border:1.5px solid #5d4426;border-radius:3px;background:rgba(255,250,235,.32);text-align:center;padding:8px 0 7px}
+.box .k{font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37}
+.box .v{margin-top:6px;font:700 25px/1 Cinzel,serif;color:#24170c}
+.box .m{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);min-width:34px;padding:3px 5px 2px;border-radius:10px;
+  font:700 12px/1 Cinzel,serif;color:#3a2410;background:#ead9b2;border:1.5px solid #5d4426}
+.box.low .v{color:var(--redink)}
+.attrs{grid-template-columns:repeat(6,1fr);margin-bottom:14px}
+.vitals{grid-template-columns:1.9fr repeat(4,1fr)}
+.vitals .box{text-align:left;padding:8px 12px 7px}
+.box .hp{display:flex;align-items:baseline;gap:6px}
+.box .hp small{font:16px/1 "EB Garamond";color:#6b5233}
+.hpline{height:6px;margin-top:6px;border-radius:3px;background:rgba(60,35,12,.18);overflow:hidden}
+.hpline i{display:block;height:100%;background:#5c7f3c}
+.note{margin-top:8px;font:italic 14.5px/1.3 "IM Fell English",serif;color:var(--redink)}
+.sec{margin-top:22px}
+.weapon{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:center;margin-top:12px}
+.weapon .ico{width:52px;height:52px;color:#3a2410}
+.weapon h3{font:700 20px/1 Cinzel,serif;color:#24170c}
+.weapon .tags{margin-top:5px;font:italic 15px/1 "IM Fell English",serif;color:#6b5233}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.chip{border-top:1.5px solid #5d4426;padding-top:6px}
+.chip span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37}
+.chip b{display:block;margin-top:5px;font:600 21px/1 "EB Garamond",serif;color:#24170c}
+.chip.act b{font:italic 17px/1 "IM Fell English",serif;color:var(--redink)}
+.kit{margin-top:10px}
+.kit .r{display:grid;grid-template-columns:96px 1fr auto;align-items:center;height:33px;border-bottom:1px dashed rgba(90,60,30,.28)}
+.kit .r span{font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37}
+.kit .r b{font:600 16px/1 "EB Garamond";color:#24170c}
+.kit .r em{font:italic 15px/1 "IM Fell English",serif;color:#6b5233}
+.kit .r em.bad{color:var(--redink)}
+.ab{margin-top:10px;font:16px/1.35 "EB Garamond";color:#3a2410}
+.ab b{font:700 15px/1 Cinzel,serif;letter-spacing:.04em;color:#24170c}
+.ab i{color:#6b5233}
+.track{margin-top:14px}
+.track .h{display:flex;align-items:baseline}
+.track .h b{font:700 15px/1 Cinzel,serif;letter-spacing:.04em;color:#24170c}
+.track .h span{margin-left:auto;font:600 13px/1 Cinzel,serif;color:#4a3522}
+.track .h span small{font:14px/1 "EB Garamond";color:#7b6142;margin-left:6px}
+.track .bar{height:7px;margin-top:7px;border-radius:4px;background:rgba(60,35,12,.16);box-shadow:inset 0 0 0 1px rgba(60,35,12,.25);overflow:hidden}
+.track .bar i{display:block;height:100%;background:linear-gradient(90deg,#7d5c28,#b0894a)}
+.track p{margin-top:6px;font:italic 15px/1.3 "IM Fell English",serif;color:#5b4630}
+.tal{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;margin-top:10px}
+.tal div{display:flex;gap:9px;align-items:baseline;padding:6px 0;border-bottom:1px dashed rgba(90,60,30,.25)}
+.tal div:before{content:"✓";font:700 14px/1 serif;color:var(--redink)}
+.tal b{font:600 14.5px/1 Cinzel,serif;letter-spacing:.02em;color:#24170c;white-space:nowrap}
+.tal em{font:italic 14.5px/1.15 "IM Fell English",serif;color:#6b5233}
+.rec{margin-top:10px;font:16px/1.45 "EB Garamond";color:#3a2410}
+.rec p+p{margin-top:2px}
+.rec .faint{color:#7b6142}
+
+/* ---------- MEMBERS: what can be done for them ---------- */
+#acts{left:1540px;top:108px;width:348px;height:944px;padding:18px 16px}
+.tree{display:flex;align-items:center;gap:14px;height:84px;padding:0 18px;border-radius:3px;
+  background:linear-gradient(180deg,#f1e3c2,#d8c08f);color:#2a1a0e;
+  box-shadow:0 0 0 1px #5d4426,0 0 0 3px var(--brass),0 0 0 4px #2a1c10,0 10px 16px rgba(0,0,0,.5)}
+.tree .ico{width:40px;height:40px;color:#5a2116}
+.tree b{display:block;font:700 15px/1 Cinzel,serif;letter-spacing:.14em;text-transform:uppercase}
+.tree span{display:block;margin-top:6px;font:italic 15px/1.2 "IM Fell English",serif;color:#5b4630}
+.role{margin-top:14px;padding:13px 14px;border-radius:3px;background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(201,163,94,.15)}
+.role .t{display:flex;align-items:center;gap:8px}
+.role .t b{font:700 13px/1 Cinzel,serif;letter-spacing:.1em;color:#f0dfb8;text-transform:uppercase}
+.role .t .mark{margin-left:auto}
+.role p{margin-top:7px;font:italic 15px/1.25 "IM Fell English",serif;color:#b59c76}
+.role .act{margin-top:11px;display:flex}
+.role .act .ghost-btn{height:32px;font-size:10px}
+.acts-foot{position:absolute;left:16px;right:16px;bottom:16px}
+.acts-foot .ghost-btn{justify-content:center}
+
+/* ---------- THE GUILD: the charter ---------- */
+#charter{left:32px;top:108px;width:1180px;height:944px;padding:34px 42px}
+.chead{display:flex;gap:26px;align-items:center}
+.chead .banner{width:110px;height:110px;margin:0}
+.chead .banner .ico{width:66px;height:66px}
+.chead h1{font:900 38px/1 Cinzel,serif;letter-spacing:.06em;color:#24170c}
+.chead p{margin-top:9px;font:italic 19px/1.3 "IM Fell English",serif;color:#5b4630}
+.voc{margin-left:auto;width:330px;padding:14px 18px;border:1.5px solid #5d4426;border-radius:3px;background:rgba(255,250,235,.3)}
+.voc .row1{display:flex;align-items:center;gap:10px}
+.voc .ico{width:30px;height:30px;color:#3a2410}
+.voc b{font:700 18px/1 Cinzel,serif;color:#24170c;letter-spacing:.06em}
+.voc p{margin-top:7px;font:italic 16px/1.25 "IM Fell English",serif;color:#4a3522}
+.cgrid{display:grid;grid-template-columns:400px 1fr;gap:40px;margin-top:30px}
+.fame{display:flex;align-items:flex-end;gap:16px;margin-top:14px}
+.fame b{font:900 54px/1 Cinzel,serif;color:#24170c}
+.fame span{font:italic 17px/1.25 "IM Fell English",serif;color:#5b4630;padding-bottom:5px}
+.slots{display:flex;gap:10px;margin-top:18px}
+.slots i{width:38px;height:38px;border-radius:50%;border:1.5px dashed rgba(90,60,30,.45)}
+.slots i.on{border:0;background:radial-gradient(circle at 38% 32%,#d0574a,#9a2f22 45%,#5a160f 85%);box-shadow:inset 0 0 0 3px rgba(70,15,10,.5),1px 2px 3px rgba(0,0,0,.3)}
+.slots+p{margin-top:9px;font:italic 15px/1.3 "IM Fell English",serif;color:#5b4630}
+.stand{margin-top:12px}
+.stand .r{display:grid;grid-template-columns:1fr auto 26px;align-items:center;gap:12px;height:34px;border-bottom:1px dashed rgba(90,60,30,.28)}
+.stand .r b{font:600 15.5px/1 Cinzel,serif;color:#24170c;letter-spacing:.02em}
+.stand .pips{display:flex;gap:3px}
+.stand .pips i{width:9px;height:9px;transform:rotate(45deg);background:#7d5c37}
+.stand .pips i.off{background:transparent;box-shadow:inset 0 0 0 1px rgba(125,92,55,.5)}
+.stand .r span{font:700 16px/1 Cinzel,serif;color:#24170c;text-align:right}
+.btab{margin-top:12px;width:100%;border-collapse:collapse}
+.btab th{font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#8a6c47;text-align:left;padding:0 0 8px;border-bottom:1px solid rgba(90,60,30,.45)}
+.btab td{height:52px;border-bottom:1px dashed rgba(90,60,30,.28);font:16px/1.2 "EB Garamond";color:#3a2410}
+.btab td b{font:600 16px/1 Cinzel,serif;color:#24170c}
+.btab td.full{color:var(--redink)}
+.btab td small{display:block;font:italic 14px/1 "IM Fell English",serif;color:#7b6142;margin-top:3px}
+.quiet{margin-top:20px;padding:14px 16px;border-left:3px solid rgba(90,60,30,.4);font:italic 16.5px/1.35 "IM Fell English",serif;color:#5b4630}
+.cfootnote{position:absolute;left:42px;right:42px;bottom:28px;font:italic 15px/1.3 "IM Fell English",serif;color:#7b6142;border-top:1px solid rgba(90,60,30,.35);padding-top:10px}
+#holds{left:1228px;top:108px;width:660px;height:944px;padding:20px 22px}
+.hold{display:grid;grid-template-columns:62px 1fr;gap:18px;align-items:center;margin-top:16px;padding:18px;border-radius:3px;background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(201,163,94,.15)}
+.hold .ico{width:56px;height:56px;color:#8f7652}
+.hold.good .ico{color:#d8bd86}
+.hold h3{display:flex;align-items:center;gap:10px;font:700 18px/1 Cinzel,serif;color:#f0dfb8;letter-spacing:.06em}
+.hold h3 .mark{margin-left:auto}
+.hold p{margin-top:8px;font:italic 16px/1.3 "IM Fell English",serif;color:#b59c76}
+.hold .act{margin-top:12px;display:flex;gap:8px}
+.hold .act .ghost-btn{height:32px;font-size:10px}
+.loadbar{height:6px;margin-top:9px;border-radius:3px;background:#120d08;box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden}
+.loadbar i{display:block;height:100%;background:linear-gradient(90deg,#8d6a30,var(--brass))}
+
+/* ---------- REPUTATIONS ---------- */
+#objs{left:32px;top:108px;width:560px;height:944px;padding:28px 30px}
+#objs h2,.fac h2{font:700 23px/1 Cinzel,serif;color:#24170c;margin-top:12px}
+.objhead{display:flex;align-items:flex-end}
+.objhead b{margin-left:auto;font:900 30px/1 Cinzel,serif;color:#24170c}
+.objhead b small{font:600 14px/1 Cinzel;color:#7b6142}
+.objs{margin-top:16px}
+.ob{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:7px 0;border-bottom:1px dashed rgba(90,60,30,.25)}
+.ob .box2{width:16px;height:16px;border:1.5px solid #5d4426;border-radius:2px;margin-top:2px;position:relative}
+.ob.done .box2:after{content:"✓";position:absolute;left:1px;top:-6px;font:700 19px/1 serif;color:var(--redink)}
+.ob b{font:600 14.5px/1 Cinzel,serif;color:#24170c;letter-spacing:.02em}
+.ob.done b{color:#6b5233}
+.ob p{margin-top:3px;font:italic 14px/1.2 "IM Fell English",serif;color:#6b5233}
+.ob.done p{display:none}
+#facs{position:absolute;left:608px;top:108px;width:1280px;height:944px;column-count:3;column-gap:16px}
+.fac{position:relative;break-inside:avoid;margin-bottom:16px;padding:22px 24px 20px;display:inline-block;width:100%}
+.fac .top{display:flex;align-items:flex-start;gap:12px}
+.fac .top h2{margin-top:0;font-size:20px}
+.fac .rep{margin-left:auto;width:50px;height:50px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font:900 21px/1 Cinzel,serif;color:#fff3ea;background:radial-gradient(circle at 38% 32%,#d0574a,#9a2f22 45%,#5a160f 85%);
+  box-shadow:inset 0 0 0 4px rgba(70,15,10,.5),1px 2px 4px rgba(0,0,0,.35)}
+.fac .rep.zero{background:none;color:#7b6142;box-shadow:inset 0 0 0 1.5px rgba(90,60,30,.45)}
+.fac .bl{margin-top:6px;font:italic 15px/1.25 "IM Fell English",serif;color:#5b4630}
+.fac .ob{padding:6px 0}
+.fac .ob.done p{display:none}
+.fac .ob .pt{font:600 11px/1 Cinzel;color:#7b6142;margin-left:6px}
+.unl{margin-top:10px;display:flex;gap:10px;align-items:baseline;font:15px/1.25 "EB Garamond";color:#3a2410}
+.unl .lk{font:600 9.5px/1 Cinzel,serif;letter-spacing:.14em;padding:4px 6px 3px;border-radius:2px;white-space:nowrap;border:1.5px solid #5c7f3c;color:#3f5e26}
+.unl.shut .lk{border-color:rgba(90,60,30,.45);color:#7b6142}
+.unl.shut{color:#6b5233}
+
+/* ---------- GEAR: one band's packs ---------- */
+#bar{left:32px;top:108px;width:1856px;height:76px;display:flex;align-items:center;padding:0 14px;gap:22px}
+.seg{display:flex;border:1px solid rgba(201,163,94,.3);border-radius:3px;overflow:hidden}
+.seg span{padding:10px 18px 9px;font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#8f7652}
+.seg span.on{background:rgba(201,163,94,.18);color:var(--brass-hi)}
+.metric span{display:block}
+.metric b{display:block;margin-top:6px;font:700 17px/1 Cinzel,serif;color:#f0dfb8}
+.metric b small{font:14px/1 "EB Garamond";color:#a48b66}
+.metric.bad b{color:#e2a194}
+.metric.tight b{color:#e8c48a}
+#bar .acts{margin-left:auto;display:flex;gap:10px}
+#cols{position:absolute;left:32px;top:196px;width:1532px;height:856px;display:flex;gap:10px}
+#side{position:absolute;left:1576px;top:196px;width:312px;height:856px;display:flex;flex-direction:column;gap:10px}
+#side .col{flex:none}
+.bchip{position:relative;flex:none;white-space:nowrap;display:flex;align-items:center;gap:12px;height:56px;padding:0 16px 0 12px;border-radius:3px;border:1px solid rgba(201,163,94,.22);background:rgba(0,0,0,.18)}
+.bchip .medals{display:flex}
+.bchip .medals .medal{width:28px;height:28px;margin-right:-8px;box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--enamel-hi)}
+.bchip b{display:block;font:700 14px/1 Cinzel,serif;color:#d9c49b;letter-spacing:.04em;margin-left:8px}
+.bchip span{display:block;margin:5px 0 0 8px;font:italic 14px/1 "IM Fell English",serif;color:#a48b66}
+.bchip.on{background:linear-gradient(180deg,rgba(240,215,158,.16),rgba(240,215,158,.05));border-color:var(--brass);box-shadow:inset 0 -2px 0 var(--brass)}
+.bchip.on b{color:var(--brass-hi)}
+.bchip .pen{font-style:normal;color:#8f7652;font:16px/1 "EB Garamond";margin-left:6px}
+.bchip .mark{margin-left:6px}
+.vline{width:1px;align-self:stretch;margin:12px 0;background:linear-gradient(transparent,rgba(201,163,94,.35),transparent)}
+.empty-note{margin-top:8px;font:italic 14.5px/1.3 "IM Fell English",serif;color:#8f7a59}
+.col{position:relative;flex:1;min-width:0;border-radius:4px;padding:12px 10px 0;
+  background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.col.drop{box-shadow:inset 0 1px 0 rgba(240,215,158,.25),inset 0 0 0 1px rgba(240,215,158,.55),0 0 0 2px var(--brass-hi),0 0 34px rgba(240,215,158,.3),0 10px 22px rgba(0,0,0,.6)}
+.colh{display:flex;gap:10px;align-items:center}
+.colh .medal{width:48px;height:48px}
+.colh h3{font:700 15px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.colh .race{margin-top:4px;font:italic 13.5px/1 "IM Fell English",serif;color:#b59c76;white-space:nowrap}
+.colh .voice{display:inline-block;margin-top:5px;font:600 8px/1 Cinzel,serif;letter-spacing:.16em;color:#1a120a;background:var(--brass);padding:3px 5px 2px;border-radius:2px}
+.cst{display:flex;align-items:flex-end;gap:8px;margin-top:12px}
+.cst .money{display:flex;align-items:center;gap:5px;font:700 16px/1 Cinzel,serif;color:#f0dfb8}
+.cst .load{margin-left:auto;text-align:right;font:13px/1 "EB Garamond",serif;color:#c9b38c}
+.cst .load b{font:600 14px/1 Cinzel,serif;color:#f0dfb8}
+.cst .load.tight b{color:#e0a85a}
+.cst .load.over b{color:#e2a194}
+.cbar i.over{background:linear-gradient(90deg,#7a2218,#c9473a)}
+.cbar{height:5px;margin-top:6px;border-radius:3px;background:#120d08;box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden}
+.cbar i{display:block;height:100%;background:linear-gradient(90deg,#8d6a30,var(--brass))}
+.cbar i.tight{background:linear-gradient(90deg,#9a6a2a,#e0a85a)}
+.csec{display:flex;align-items:center;gap:8px;margin:13px 0 3px}
+.csec:after{content:"";flex:1;height:1px;background:rgba(201,163,94,.2)}
+.it{position:relative;display:grid;grid-template-columns:22px 1fr auto 44px;gap:7px;align-items:center;height:29px;padding:0 4px;border-radius:2px}
+.it:nth-child(odd){background:rgba(255,235,190,.035)}
+.it .ico{width:19px;height:19px;color:#d8bd86}
+.it .n{font:15px/1 "EB Garamond",serif;color:#eadcbc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .q{font:600 11px/1 Cinzel,serif;color:var(--brass-hi)}
+.it .kg{font:13px/1 "EB Garamond",serif;color:#8f7a59;text-align:right}
+.it .slotname{font:600 8px/1 Cinzel,serif;letter-spacing:.14em;color:#7f6747;margin-right:5px}
+.it.empty .n{font-style:italic;color:#6f5a3e}
+.it.empty .ico{color:#4e3e2a}
+.it.money .ico{color:#c98a5a}
+.it.sel{background:rgba(240,215,158,.12);box-shadow:inset 2px 0 0 var(--brass-hi)}
+.it.sel .n{color:var(--brass-hi)}
+.it.lock .n:after{content:" ⚿";color:#8f7652;font-size:12px}
+.cfoot{position:absolute;left:10px;right:10px;bottom:10px;font:italic 13.5px/1.25 "IM Fell English",serif;color:#8f7a59;border-top:1px dashed rgba(201,163,94,.2);padding-top:8px}
+.cfoot b{font:700 11.5px/1 Cinzel,serif;color:var(--brass-hi);font-style:normal}
+.cfoot.bad b{color:#e2a194}
+.menu{position:absolute;z-index:6;width:228px;padding:8px 0;border-radius:3px;color:var(--ink);
+  background:linear-gradient(170deg,#f2e6c9,#e2d0a7);box-shadow:0 0 0 1px #6b4f2c,0 18px 28px rgba(0,0,0,.6)}
+.menu .mh{padding:4px 14px 8px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;border-bottom:1px solid rgba(90,60,30,.3)}
+.menu div.o{padding:8px 14px;font:16px/1 "EB Garamond";color:#24170c}
+.menu div.o.hov{background:rgba(201,163,94,.35)}
+.menu div.o small{float:right;font:italic 13px/1 "IM Fell English";color:#7b6142}
+.menu hr{border:0;border-top:1px solid rgba(90,60,30,.25);margin:4px 0}
+.wag .whp{display:flex;gap:4px;margin-top:9px}
+.wag .whp i{flex:1;height:7px;border-radius:2px;background:#7fa557}
+.wag .whp i.off{background:#120d08;box-shadow:inset 0 0 0 1px rgba(201,163,94,.2)}
+.beast{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:center;margin-top:8px;padding:8px;border-radius:3px;background:rgba(0,0,0,.22)}
+.beast .medal{width:38px;height:38px}
+.beast b{font:600 14px/1 Cinzel,serif;color:#eadcbc}
+.beast p{margin-top:4px;font:italic 13.5px/1.15 "IM Fell English",serif;color:#b59c76}
+.beast p.bad{color:#e2a194}
+.wbtns{display:flex;gap:6px;margin-top:10px}
+.wbtns .ghost-btn{height:30px;padding:0 10px;font-size:9.5px;flex:1;justify-content:center}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="top">
+    <div class="banner" id="bannerMed"></div>
+    <div class="cartouche"><div class="place" id="title"></div><div class="sub" id="subtitle"></div></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="topright"></div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div class="frame" id="f-members">
+    <div class="leather" id="roster"></div>
+    <div class="page" id="sheet"><div class="lpage" id="lpage"></div><div class="rpage" id="rpage"></div></div>
+    <div class="leather" id="acts"></div>
+  </div>
+
+  <!-- THE GUILD -->
+  <div class="frame" id="f-guild">
+    <div class="page" id="charter"></div>
+    <div class="leather" id="holds"></div>
+  </div>
+
+  <!-- REPUTATIONS -->
+  <div class="frame" id="f-reputations">
+    <div class="page" id="objs"></div>
+    <div id="facs"></div>
+  </div>
+
+  <!-- BANDS: one band at a time, so a trade never crosses places -->
+  <div class="frame" id="f-bands">
+    <div class="leather" id="bar"></div>
+    <div id="cols"></div>
+    <div id="side"></div>
+  </div>
+
+  <div id="vignette"></div><div id="grain"></div>
+</div>
+<script>
+const D=window.DATA;
+const ico=n=>`<span class="ico">${ICONS[n]?`<svg viewBox="0 0 512 512">${ICONS[n]}</svg>`:""}</span>`;
+const state=new URLSearchParams(location.search).get("state")||"members";
+const M=Object.values(D.members);
+const byName=n=>M.find(m=>m.name===n);
+const rgb=c=>`rgb(${c.join(",")})`;
+const kg=(q,w)=>{const t=q*w;return t<0.05?"—":t.toFixed(1)+" kg"};
+const band0=D.groups[0];
+const where=D.bands[0].where;
+
+document.getElementById("bannerMed").style.background=`radial-gradient(circle at 38% 32%,${rgb(D.banner[0].map(v=>Math.min(255,v+40)))},${rgb(D.banner[0])} 55%,${rgb(D.banner[0].map(v=>v*.55|0))})`;
+document.getElementById("bannerMed").innerHTML=ico(D.banner[1]);
+const fame=D.guild;
+document.getElementById("title").innerHTML=D.name;
+document.getElementById("subtitle").innerHTML=`Day <b>${D.day}</b> · <b>${D.won}</b> victories · <b>${M.length}</b> members in <b>${D.groups.length}</b> bands`;
+const tabs=[["members","Members"],["bands","Bands"],["guild","The Guild"],["reputations","Reputations"]];
+document.getElementById("tabs").innerHTML=tabs.map(([k,l])=>`<span class="${k===state?"on":""}">${l}</span>`).join("");
+document.getElementById("topright").innerHTML=`<div class="ghost-btn">${ico("locked-chest")}City vault</div><div class="ghost-btn">${ico("journey")}Back to map</div>`;
+document.getElementById("f-"+state).classList.add("on");
+
+// ---------------- MEMBERS ----------------
+const SEL="Vashmorza";
+const hpcls=(h,m)=>h/m<.34?"low":h/m<.67?"mid":"";
+const badge=([t,c])=>`<span class="mark ${t==="HUNGRY"||t==="SICK"?"bad":t==="LEVEL UP"?"warn":""}">${t.toLowerCase()}</span>`;
+function roster(){
+  const alerts=D.bands.reduce((a,b)=>a+b.members.filter(m=>m.badges.length&&m.badges.some(x=>x[0]==="HUNGRY"||x[0]==="LEVEL UP")||(byName(m.name)||{}).hunger>=1).length,0);
+  let h=`<div class="filters"><span class="on">All</span><span>Idle</span><span>Busy</span><span>Alerts<em>${alerts}</em></span></div>`;
+  for(const b of D.bands){
+    h+=`<div class="bandh"><span class="caret">▾</span><b>${b.name}</b><span>${b.where} · ${b.task.toLowerCase()==="idle"?"idle":"travelling"}</span><small>${b.count}</small></div>`;
+    for(const m of b.members){
+      const u=byName(m.name),beast=!u;
+      const med=beast?`<div class="medal beast">${ico("horse-head")}</div>`
+        :`<div class="medal ${m.hp[0]/m.hp[1]<.5?"hurt":""}"><img src="img/${u.img}"></div>`;
+      const sub=beast?m.sub:`${u.race} · Lv ${u.lv[0]} · <i>C${u.lv[1]} W${u.lv[2]}</i>`;
+      h+=`<div class="mem ${m.name===SEL?"sel":""}">${med}<div><div class="nm">${m.name}</div><div class="sb">${sub}</div>
+        <div class="hpbar"><i class="${hpcls(...m.hp)}" style="width:${m.hp[0]/m.hp[1]*100}%"></i></div></div>
+        <div class="bdg">${m.badges.map(badge).join("")}${u&&u.hunger>=1&&!m.badges.length?`<span class="mark bad">hungry</span>`:""}</div></div>`;
+    }
+  }
+  h+=`<div class="rfoot"><b>${M.length}</b> members · <b>${D.groups.length}</b> of <b>${fame.slots[1]}</b> bands in the field</div>`;
+  document.getElementById("roster").innerHTML=h;
+}
+function sheet(){
+  const u=byName(SEL);
+  const lowAll=u.attrs.every(a=>a[3]);
+  const sign=n=>n>=0?"+"+n:"−"+(-n);
+  let L=`<div class="who"><div class="plate"><img src="img/${u.img}"></div><div>
+      <h1>${u.name}</h1>
+      <div class="race"><b>${u.race} ${u.occ}</b><br>${u.age} years · ${u.align}</div>
+      <div class="pos">Rides with <b>${D.bands[0].name}</b><br>on the ${where}, travelling</div>
+      ${u.arena?`<span class="stamp">Champion of the Pit</span>`:""}${u.leader?`<span class="stamp leader">Guild leader</span>`:""}
+    </div></div>
+    <div class="sec"><div class="kicker">Attributes${lowAll?"<em>hungry: each one counts lower</em>":""}</div>
+    <div class="boxes attrs">${u.attrs.map(([k,v,m,low])=>`<div class="box ${low?"low":""}"><div class="k">${k}</div><div class="v">${v}</div><div class="m">${sign(m)}</div></div>`).join("")}</div></div>
+    <div class="sec"><div class="kicker">In a fight</div>
+    <div class="boxes vitals">
+      <div class="box"><div class="k">HIT POINTS</div><div class="hp"><span class="v">${u.hp[0]}</span><small>/ ${u.hp[1]}</small></div><div class="hpline"><i style="width:${u.hp[0]/u.hp[1]*100}%"></i></div></div>
+      ${[["AC",u.ac],["MD",u.md],["SPD",u.spd],["INIT",u.init.replace("-","−")]].map(([k,v])=>`<div class="box"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("")}
+    </div>
+    <div class="weapon">${ico(u.worn[0][1][0])}<div><h3>${u.weapon.name}</h3><div class="tags">${u.weapon.tags.replace("  ·  "," · ")} · ${u.wcrit}</div></div></div>
+    <div class="chips">${u.weapon.chips.map(([k,v])=>`<div class="chip"><span>${k}</span><b>${v.replace("+","+")}</b></div>`).join("")}<div class="chip act"><span>ACTION</span><b>${u.waction}</b></div></div></div>
+    <div class="sec"><div class="kicker">Kit</div><div class="kit">
+      <div class="r"><span>HANDS</span><b>${u.gear.hands.replace(" + "," &amp; ")}</b><em></em></div>
+      <div class="r"><span>BODY</span><b>${u.gear.armor}</b><em>${u.gear.armor_note}</em></div>
+      <div class="r"><span>PURSE</span><b><i class="coin"></i> ${u.money} copper</b><em></em></div>
+      <div class="r"><span>RATIONS</span><b>${u.gear.rations[0]||"None"}</b><em class="${u.gear.rations[0]?"":"bad"}">${u.gear.rations[0]?"days of food":"nothing to eat in the pack"}</em></div>
+      <div class="r"><span>LOAD</span><b>${u.load[0]} kg</b><em>of ${u.load[1]} at a normal pace, ${u.load[2]} at most</em></div>
+    </div></div>
+    <div class="sec"><div class="kicker">Of the ${u.race}</div>
+      <div class="ab"><b>${u.ability[0]}</b> — <i>${u.ability[1]}</i></div>
+      <div class="ab"><b>Speaks</b> — <i>${u.langs.join(", ")}</i></div></div>`;
+  let R=`<div class="kicker">Career<em>racial level ${u.lv[0]}</em></div>
+    ${u.tracks.map(t=>{const[lv,xp]=t.value.split("  ");return `<div class="track"><div class="h"><b>${t.label}</b><span>${lv.replace("LVL","Lv")}<small>${(xp||"").replace(/[()]/g,"")}</small></span></div>
+      <div class="bar"><i style="width:${Math.max(2,t.frac*100)}%"></i></div><p>${t.text}</p></div>`}).join("")}
+    <div class="sec"><div class="kicker">Talents<em>${u.talents.length} taken</em></div>
+    <div class="tal">${u.talents.map(([n,d])=>`<div><span><b>${n}</b><br><em>${d}</em></span></div>`).join("")}</div></div>
+    <div class="sec"><div class="kicker">Record</div><div class="rec">
+      <p>${u.recruiter?`Recruited by ${u.recruiter}`:"A founding member of the guild."}</p>
+      <p>${u.sponsor.replace(" -- "," — ")}.</p>
+      ${u.arena?"<p>Won the title <i>Champion of the Pit</i> by downing Adelio in the arena.</p>":""}
+    </div></div>`;
+  document.getElementById("lpage").innerHTML=L;
+  document.getElementById("rpage").innerHTML=R;
+  const role=r=>`<div class="role"><div class="t"><b>${r.title.replace("★ ","")}</b>${r.badge?`<span class="mark good">current</span>`:""}</div>
+      <p>${r.sub.replace(" -- "," — ")}</p>${r.action?`<div class="act"><div class="ghost-btn ${r.action[1]?"":"off"}">${r.action[0].toLowerCase()}</div></div>`:""}</div>`;
+  document.getElementById("acts").innerHTML=`<div class="tree">${ico("skills")}<div><b>Talent tree</b><span>${u.picks?`${u.picks} pick${u.picks>1?"s":""} waiting`:"No pick waiting · next at racial Lv 5"}</span></div></div>
+    <div class="lbl" style="margin:24px 2px 0">Roles</div>${u.roles.map(role).join("")}
+    <div class="acts-foot"><div class="ghost-btn">${ico("knapsack")}Open ${D.bands[0].name}</div></div>`;
+}
+
+// ---------------- THE GUILD ----------------
+function guildFrame(){
+  const g=D.guild,v=g.vocation;
+  const facs=D.reps.slice(1);
+  const max=Math.max(7,...facs.map(f=>f.rep));
+  document.getElementById("charter").innerHTML=`
+    <div class="chead"><div class="banner" style="${document.getElementById("bannerMed").getAttribute("style")}">${ico(D.banner[1])}</div>
+      <div><h1>${D.name}</h1><p>A guild of ${M.length}, seventy days on the road · ${D.won} fights won</p></div>
+      <div class="voc"><div class="row1">${ico("compass")}<b>${v.name}</b><span class="mark good" style="margin-left:auto;color:#3f5e26;border-color:#5c7f3c">founding trade</span></div><p>${v.perk}</p></div></div>
+    <div class="cgrid">
+      <div>
+        <div class="kicker">Fame</div>
+        <div class="fame"><b>${g.fame}</b><span>the sum of every faction's regard;<br>${g.fame_next} more opens another band</span></div>
+        <div class="slots" style="margin-top:22px">${Array.from({length:g.slots[1]},(_,i)=>`<i class="${i<g.slots[0]?"on":""}"></i>`).join("")}</div>
+        <p>${g.slots[0]} of ${g.slots[1]} bands in the field. A band past its leader's hold, with no seat free, starts to lose its weakest.</p>
+        <div class="kicker" style="margin-top:30px">Standing</div>
+        <div class="stand">${facs.map(f=>`<div class="r"><b>${f.name}</b><div class="pips">${Array.from({length:max},(_,i)=>`<i class="${i<f.rep?"":"off"}"></i>`).join("")}</div><span>${f.rep}</span></div>`).join("")}</div>
+      </div>
+      <div>
+        <div class="kicker">The bands</div>
+        <table class="btab"><tr><th>BAND</th><th>WHERE</th><th>DOING</th><th>MEMBERS</th></tr>
+        ${g.groups.map(b=>`<tr><td><b>${b.name}</b>${b.note?`<small>${b.note}</small>`:""}</td><td>${b.where}</td><td>${b.task==="Travel"?"Travelling":b.task}</td>
+          <td class="${b.size>=b.capacity?"full":""}">${b.size} of ${b.capacity}${b.size>=b.capacity?"<small>full: the leader holds no more</small>":""}</td></tr>`).join("")}</table>
+        <div class="kicker" style="margin-top:34px">Notices</div>
+        ${g.notices.length?g.notices.map(([t,tone])=>`<div class="quiet" style="color:var(--redink);border-color:var(--redink)">${t.replace(" -- "," — ")}</div>`).join("")
+          :`<div class="quiet">All quiet. Nobody has given notice, no band is over its hold, and every herd follows its keepers.</div>`}
+      </div>
+    </div>
+    <div class="cfootnote">Fame never buys anything: it is how many bands the guild can keep on the road at once.</div>`;
+  const icons={"City house":"locked-chest","The Claim":"compass","Strongbox":"locked-chest"};
+  const tone={muted:"",good:"good",warn:"warn",bad:"bad"};
+  document.getElementById("holds").innerHTML=`<div class="lbl" style="margin:4px 2px 0">Holdings</div>`+
+    g.bases.map(b=>{const used=b.name==="Strongbox"&&b.status==="RENTED"?b.detail.match(/([\d.]+)\/([\d.]+)/):null;
+      return `<div class="hold ${b.tone}">${ico(b.name==="The Claim"?"scroll-unfurled":b.name==="City house"?"knapsack":"locked-chest")}<div>
+        <h3>${b.name}<span class="mark ${tone[b.tone]}">${b.status.toLowerCase()}</span></h3><p>${b.detail}</p>
+        ${used?`<div class="loadbar"><i style="width:${used[1]/used[2]*100}%"></i></div><div class="act"><div class="ghost-btn">Look inside</div></div>`:""}
+      </div></div>`}).join("")+
+    `<div class="lbl" style="margin:30px 2px 0">The road ahead</div>
+     <div class="hold" style="display:block"><div><p style="margin:0">The Bankers will sell a house in the City now (4 rep). A Claim starts with scouting in the Wilds.</p></div></div>`;
+}
+
+// ---------------- REPUTATIONS ----------------
+function repFrame(){
+  const o=D.reps[0];
+  document.getElementById("objs").innerHTML=`<div class="kicker">Objectives</div>
+    <div class="objhead"><h2>Guild Objectives</h2><b>${o.rep.split("/")[0]}<small> / ${o.rep.split("/")[1]}</small></b></div>
+    <div style="margin-top:6px;font:italic 15px/1.3 'IM Fell English';color:#5b4630">${o.blurb.replace(" -- "," — ")}</div>
+    <div class="objs">${[...o.deeds.filter(d=>d[3]!=="done"),...o.deeds.filter(d=>d[3]==="done")].map(([n,b,,s])=>`<div class="ob ${s}"><span class="box2"></span><div><b>${n}</b><p>${b}</p></div></div>`).join("")}</div>`;
+  document.getElementById("facs").innerHTML=D.reps.slice(1).map(f=>`<div class="page fac" style="position:relative">
+      <div class="top"><div><div class="kicker">Faction</div><h2 style="margin-top:9px">${f.name}</h2></div><div class="rep ${f.rep?"":"zero"}">${f.rep}</div></div>
+      <div class="bl">${f.blurb}</div>
+      <div style="margin-top:8px">${f.deeds.map(([n,b,p,s])=>`<div class="ob ${s}"><span class="box2"></span><div><b>${n}</b><span class="pt">+${p}</span><p>${b}</p></div></div>`).join("")}</div>
+      ${f.unlocks.map(([t,d,on,need])=>`<div class="unl ${on?"":"shut"}"><span class="lk">${on?"open":"at "+need}</span><span><b style="font-family:Cinzel;font-size:14px">${t}</b> — <i>${d}</i></span></div>`).join("")}
+    </div>`).join("");
+}
+
+// ---------------- GEAR ----------------
+function bandsFrame(){
+  const [l,n,mx]=band0.load,tight=l/n>.9;
+  const chips=D.groups.map((g,i)=>{const b=D.bands[i];const ms=g.members.slice(0,4).map(id=>D.members[id]);
+    return `<div class="bchip ${i===0?"on":""}"><div class="medals">${ms.map(u=>`<div class="medal"><img src="img/${u.img}"></div>`).join("")}</div>
+      <div><b>${g.name}${i===0?`<i class="pen">✎</i>`:""}</b><span>${b.where} · ${b.task==="Idle"?"idle":"travelling"} · ${g.members.length} of ${g.cap}</span></div></div>`}).join("");
+  document.getElementById("bar").innerHTML=`${chips}<div class="vline"></div>
+    <div class="seg"><span class="on">BAGS</span><span>CARGO</span></div>
+    <div class="metric ${tight?"tight":""}"><span class="lbl">Band load</span><b>${l} <small>/ ${n} kg</small></b></div>
+    <div class="metric ${band0.rations?"":"bad"}"><span class="lbl">Rations</span><b>${band0.rations} days</b></div>
+    <div class="metric"><span class="lbl">Pace</span><b>${band0.speed} m</b></div>
+    <div class="acts"><div class="ghost-btn">${ico("rally-the-troops")}Distribute</div><div class="ghost-btn">${ico("eating")}Campfire</div></div>`;
+  const row=(it,cls,slot)=>{
+    if(!it) return `<div class="it empty"><div class="ico">${ico("knapsack")}</div><div class="n"><span class="slotname">${slot}</span>empty</div><span></span><span></span></div>`;
+    const [i,nm,q,w]=it;
+    return `<div class="it ${cls||""} ${i==="two-coins"?"money":""}">${ico(i)}<div class="n">${slot?`<span class="slotname">${slot}</span>`:""}${nm}</div><span class="q">${q>1?"×"+q:""}</span><span class="kg">${kg(q,w)}</span></div>`;
+  };
+  const cols=band0.members.map(id=>D.members[id]).map(u=>{
+    const t=u.load[0]/u.load[1]>.85,over=u.load[0]>u.load[1];
+    const sel=u.name==="Tikrom"?2:-1;
+    return `<div class="col ${u.name==="Vashmorza"?"drop":""}">
+      <div class="colh"><div class="medal"><img src="img/${u.img}"></div><div style="min-width:0"><h3>${u.name}</h3><div class="race">${u.race} ${u.occ}</div>${u.leader?`<span class="voice">Leads the band</span>`:""}</div></div>
+      <div class="cst"><div class="money"><i class="coin"></i>${u.money}</div><div class="load ${over?"over":t?"tight":""}"><b>${u.load[0]}</b> / ${u.load[1]} kg</div></div>
+      <div class="cbar"><i class="${over?"over":t?"tight":""}" style="width:${Math.min(100,u.load[0]/u.load[1]*100)}%"></i></div>
+      <div class="csec lbl">Worn</div>${u.worn.map(([s,it])=>row(it,"",s)).join("")}
+      <div class="csec lbl">Pack</div>${u.pack.map((p,k)=>row(p,k===sel?"sel":"")).join("")}
+      ${u.name==="Vashmorza"?`<div class="cfoot">The <b>Alarm Traps</b> go here · <b>+4.0 kg</b> on Vashmorza</div>`
+        :over?`<div class="cfoot bad">Past a normal load by <b>${(u.load[0]-u.load[1]).toFixed(1)} kg</b> · slows the band</div>`:u.hunger?`<div class="cfoot bad">No food in the pack · <b>hungry</b></div>`:""}
+    </div>`}).join("");
+  const w=band0.wagons[0],a=band0.herd[0];
+  const wag=`<div class="col wag" style="height:520px">
+      <div class="colh"><div class="medal beast">${ico("old-wagon")}</div><div><h3>${w.kind}</h3><div class="race">pulled by the ${a.species.toLowerCase()}</div></div></div>
+      <div class="whp">${Array.from({length:w.hp[1]},(_,i)=>`<i class="${i<w.hp[0]?"":"off"}"></i>`).join("")}</div>
+      <div style="margin-top:6px;font:italic 13.5px/1.2 'IM Fell English';color:#b59c76">${w.hp[0]} of ${w.hp[1]} hull · the road wears it</div>
+      <div class="wbtns"><div class="ghost-btn">Repair</div><div class="ghost-btn">Ride</div></div>
+      <div class="csec lbl">Hitched</div>
+      <div class="beast"><div class="medal beast">${ico("horse-head")}</div><div><b>${a.species}</b> <span class="mark" style="font-size:8px">${a.tack.toLowerCase()}</span><p class="${a.unfed?"bad":""}">${a.unfed?`unfed ${a.unfed} day — starves at 7`:"fed"}</p></div></div>
+      <div class="csec lbl">Cargo</div>${w.cargo.map(c=>row(c)).join("")}
+      <div class="cfoot">Room for <b>${w.cap} kg</b> more · the cart feeds the band like a mate who shares</div>
+    </div>`;
+  document.getElementById("side").innerHTML=wag+`<div class="col" style="flex:1">
+      <div class="csec lbl" style="margin-top:2px">Jobs in hand</div><div class="empty-note">No job taken by anyone in this band. A giver's board lists what is on offer.</div>
+      <div class="csec lbl">Captives</div><div class="empty-note">Nobody bound. A captive walks with the band, counts on the herd and dies seven days after the fight.</div></div>`;
+  document.getElementById("cols").innerHTML=cols+
+    `<div class="menu" style="left:222px;top:308px"><div class="mh">ALARM TRAP ×4 · TIKROM</div>
+      <div class="o">Drop</div><div class="o">Split the stack…</div><div class="o">Lock it in this pack</div><hr>
+      ${band0.members.map(id=>D.members[id]).filter(u=>u.name!=="Tikrom").map(u=>`<div class="o ${u.name==="Vashmorza"?"hov":""}">to ${u.name}<small>${u.load[1]>=u.load[0]?(u.load[1]-u.load[0]).toFixed(1)+" kg free":"already over"}</small></div>`).join("")}
+      <div class="o">to the Cart<small>${w.cap} kg free</small></div></div>`;
+}
+
+roster();sheet();guildFrame();repFrame();bandsFrame();
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=document.getElementById("stage");
+  st.style.transform=`scale(${s})`;st.style.left=(innerWidth-1920*s)/2+"px";st.style.top=(innerHeight-1080*s)/2+"px";}
+addEventListener("resize",fit);fit();
+</script>
+</body>
+</html>
