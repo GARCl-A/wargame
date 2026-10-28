@@ -1215,6 +1215,32 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
      - **Next:** the hubs III (`vault_tab` on `BankScreen` / `CityPropertyScreen`, `tavern_tab` on
        `TavernaScreen` / `PrisonScreen`, `hub_session` on `TabbedHubScreen`, `BankScreen`,
        `CityPropertyScreen`), then the draft, the report.
+   - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
+     these into the families above where they share code, the rest after them:
+     - **The character sheet as a modal, opened from anywhere.** pygame opened a member's sheet from the band
+       tab and the shops; the browser shows it only on the guild's MEMBERS page, and the draft shows a short
+       dossier with no way to the whole sheet. One shell component, opened from the guild's band tab, every
+       shop's pack column and the draft's pool. It reads `ui.sheet_card.unit_to_ch`
+       (`guild_session`, `draft_session`), which this step must move out of `ui/` anyway: do both with the
+       guild / draft family.
+     - **The work level-up has no screen.** A work track's level-up is only a map notice
+       (`MapSession._advance`, "X grows: ..."); pygame opened `level_up_screen` and then the talent pick.
+       Port it (it joins "Not in the browser, pygame had them" above): the numbers before and after, then
+       `TalentSession` when there is a pick, back to the map.
+     - **The tutorial `?` in the header.** Most screens have a header; the corner button floats over it and
+       does not look part of the game. Move it into each screen's header (the hub frame's, the guild's, the
+       map's top bar), keep the corner only where there is none. A shell change across every screen.
+     - **Type for reading.** The deeds' lines on REPUTATIONS are small and in a face that is hard to read at
+       that size. A pass over `shell.css`: one body face and a minimum size for running text, then the
+       screens that set their own.
+     - **The talent map shows more of the tree.** THE MAP has room, across and down, for one or two more rings
+       around what is in reach; widen the starting view (`talents.js`).
+   - **After the families, by eye** (screenshots, a mockup first for the board):
+     - **The board's fog.** Grey (seen before), paper (never seen) and the dark (seen, unlit) stack into too
+       many layers: it is hard to tell what is dark, what is fog and what is unknown (the 2026-10-21 playtest
+       said it too). Reopens steps 5 and 6.
+     - **A pit reads as a pit, and how deep.** The board must show a pit and its depth (`board.py` elevation).
+     - **The bands walk on the map** as tokens do on the board, from node to node along the edge.
 3. **The Editor in the browser** (the character creator, the map editor, the combat lab's menu), or the author keeps
    it as a pygame tool apart from the game.
 4. **The retirement:** the pygame screens, `app*.py`, `ui/` and `--pygame` go; `AGENTS.md` (the `ui/` rules, the

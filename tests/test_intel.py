@@ -7,7 +7,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 import pygame
 import pytest
 
-from gartok import actions, ai, foe_card, intel
+from gartok import actions, ai, conditions, foe_card, intel
 from gartok.battle import Battle
 from gartok.ui import foe_panel
 from gartok.ui.board_render import hp_bar
@@ -127,6 +127,15 @@ def test_your_own_side_is_fully_known():
 
 
 # ---- the bestiary --------------------------------------------------------- #
+
+
+def test_every_condition_on_a_foe_shows_on_sight():
+    batt, hero, (foe,) = _fight()
+    for cond in (conditions.Grappled(hero), conditions.Defending(), conditions.Surprised(),
+                 conditions.ShieldHooked(), conditions.Sleeping()):
+        foe.add_condition(cond)
+    assert {"grappled", "defending", "surprised", "shield hooked", "asleep"} <= set(
+        intel.known_fields(batt, "player", foe).visible["conditions"])
 
 
 def test_a_racial_ability_seen_once_is_free_on_the_next_of_the_race():

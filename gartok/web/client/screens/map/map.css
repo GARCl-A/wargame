@@ -46,6 +46,7 @@
   box-shadow:inset 0 0 0 1px rgba(201,71,58,.55),0 6px 12px rgba(0,0,0,.4)}
 .alert.warn{background:linear-gradient(180deg,rgba(201,163,94,.2),rgba(120,90,40,.2));box-shadow:inset 0 0 0 1px rgba(201,163,94,.5),0 6px 12px rgba(0,0,0,.4)}
 .alert .ico{width:24px;height:24px;color:#f1a596;flex:none}
+.alert>div{min-width:0}
 .alert.warn .ico{color:var(--brass-hi)}
 .alert b{display:block;font:600 12px/1 Cinzel,serif;letter-spacing:.14em;color:#f6cdc2;text-transform:uppercase}
 .alert.warn b{color:var(--brass-hi)}

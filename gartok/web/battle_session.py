@@ -18,7 +18,7 @@ from ..scenario import own_half
 from ..ui import floors
 from .session import Session, asset_url
 
-LOG_LINES = 60
+LOG_LINES = 120
 
 
 def _cell(c):
@@ -588,7 +588,7 @@ class BattleSession(Session):
                 "thrown": w.thrown or None, "range": w.range or None,
                 "action": next((a.name for a in actions.WEAPON_ACTIONS if w.has_trait(a.id)), None),
             },
-            "conditions": [c.id for c in u.conditions],
+            "conditions": [intel.CONDITION_LABELS.get(c.id, c.id) for c in u.conditions],
         }
 
     def _actions(self, my_turn):

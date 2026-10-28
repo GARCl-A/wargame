@@ -186,7 +186,8 @@ function renderInspect() {
 
 function renderLog() {
   const names = new Map(S.units.map(u => [u.name, u.side]));
-  const lines = S.log.slice(-26).map(line => {
+  const box = $("log"), pinned = box.scrollHeight - box.scrollTop - box.clientHeight < 24;
+  const lines = S.log.map(line => {
     const m = /^-+\s*Round\s+(\d+)\s*-+$/i.exec(line.trim());
     if (m) return `<div class="rnd">Round ${ROMAN(+m[1])}</div>`;
     let html = esc(line);
@@ -194,7 +195,8 @@ function renderLog() {
       html = html.split(esc(n)).join(`<span class="${side === "ally" ? "a" : "f"}">${esc(n)}</span>`);
     return `<p>${html}</p>`;
   });
-  $("log").innerHTML = lines.join("");
+  box.innerHTML = lines.join("");
+  if (pinned) box.scrollTop = box.scrollHeight;
 }
 
 function renderUnit() {

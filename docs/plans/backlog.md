@@ -104,6 +104,14 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   of the AI's losses in every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0,
   `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later.
 
+## Playtest notes 2026-10-28 (save "Polissexus playtest 1", after 9c3ed73)
+
+A short run in the browser. Its local bugs are fixed (the draft's COMMISSION hit area and cut weapon lines, the
+food alert's overflow, the Chronicle's scroll, every condition on the foe card, Edge's
+translate prompt). What needs a design call, a shared component or a behaviour pygame had is in
+[web_frontend.md](web_frontend.md) (10z's *Playtest 2026-10-28* list: the sheet as a modal, the work level-up,
+the tutorial button in the header, the type, the fog, the pit, the talent map, the map's walking bands).
+
 ## Playtest notes 2026-10-21 (guild Herança)
 
 Raw notes from the author's playtest, to be sized as they are picked up.
@@ -339,37 +347,3 @@ Keep these while building them:
   attribute, advantage on a named kind of action...), and only the most recent meal's buff is active.
   Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
   the one price of a meal). Marsh's slower rot is priced low until this lands.
-
-----------------
-
-NOTAS RAPIDAS feitas logo após o commit 9c3ed733bfc829722deb8bb6ce4cf6e12c7c75f5: O estado final desse playstest curtissimo ficou no save "Polissexus playtest 1"
-
-- Seria bom, que na tela de "Found A guild" -> The squad. Desse pra abrir a ficha completa dos candidatos. Tem um ponto de incomodo que em algumas armas tem texto aparecendo comreticencias, por exemplo dagger, club quarterstaff.
-
-- Clicar no botão de "comission" ta meio bugado. é como se o botão todo não fosse clicavel so uma parte de cima. ta mto estranho.
-
-- quando eu rodo pelo main.py, abre tipo um edge né. E o bagulho de "traduzir a pagina do ingles" fica aparecento O TEMPO TODO. muito chato. E isso emenda numa outra duvida, quando eu exportar o jogo pra ser um executavel, ele vai rodar no navegador do jogador?
-
-- Na tela "reputations" o subtexto das deeds ta pequeno & com uma fonte relativamente ruim. Eu por exemplo mal consigo ler o que ta escrito. Acho que essa fonte não é muito adequada (alem de estar pequeno)
-
-- O alerta "no food left" o texto dele ta maior que quadrado. Ta vazando o texto.
-
-- Quando o nivel de work sobe, nenhum modal de abrir a escolha de talentos ou de level up aparece, acho que isso foi comportamento perdido.
-
-- Acho que na visualização de árvore, da pra mostrar um pouco mais de talentos, acho que tem espaço vertical e horizontal pra isso. pelo menos mais um ou dois níveis de distãncia.
-
-- Na tela de "bands" eu perdi o modal que abre a ficha dos persoangens.
-
-- Ns lojas eu tambem não consigo ver a ficha dos personagens.
-
-- Uma coisa que eu nao gostei muito é one o botão de tutorial está na tela, ele parece que nao faz parte do jogo e ta isolado no canto acima de tudo. sendo que a maior parte das telas tem um header e um botão de tutorial. Pq o botão nao ta no header?
-
-- Da mesma forma que durante o combate temos uma animação de mnovimento do persaongem, seria bacana ter no mapa tbm.
-
-- No combate, o cinza que representa fog e a "cor de papel" que representa o não visto não estão muito legais. Como ficam muitas camadas e cores difernetes, é dificil saber oq é realmente escuro, oq é fog e oq desconhecido.
-
-- O log do combate deveria ser um scrollavel.
-
-- A condição "grappled" nao aparece no card do inimigo
-
-- O buraco nao da pra entender q é um buraco e nao quao fundo o buraco é 

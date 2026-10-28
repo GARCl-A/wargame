@@ -36,7 +36,7 @@ def open_window(url):
         return
     profile = os.path.join(tempfile.gettempdir(), "gartok-web-profile")
     subprocess.Popen([exe, f"--app={url}", f"--user-data-dir={profile}", "--window-size=1920,1080",
-                      "--no-first-run", "--no-default-browser-check"])
+                      "--no-first-run", "--no-default-browser-check", "--disable-features=Translate"])
 
 
 CLOSE_GRACE = 5      # seconds between the page's bye and the stop: a reload onto another screen is back by then

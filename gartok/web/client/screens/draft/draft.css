@@ -24,7 +24,8 @@
 .step.now b{color:var(--brass-hi)}
 .step.now small{color:#c9b38c}
 #body{flex:1;margin-top:24px;min-height:0}
-#foot{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px}
+#foot{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;pointer-events:none}
+#foot>*{pointer-events:auto}
 #foot .left{display:flex;flex-direction:column;gap:10px;padding-bottom:6px}
 #foot .esc{font:italic 14px/1 "IM Fell English",serif;color:#6f7a76}
 #back[hidden]{display:none}
@@ -136,9 +137,9 @@
 .att b{font:700 18px/1 Cinzel,serif;color:var(--ink)}
 .att i{font:600 12px/1 Cinzel,serif;font-style:normal;margin-left:3px;color:#7b6142}
 .att i.up{color:var(--greenink)}.att i.dn{color:var(--redink)}
-.wpn{display:flex;align-items:baseline;gap:8px;margin-top:10px;padding-top:8px;border-top:1px dashed rgba(90,60,30,.3)}
+.wpn{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-top:10px;padding-top:8px;border-top:1px dashed rgba(90,60,30,.3)}
 .wpn b{font:600 16px/1 "EB Garamond",serif;color:#2a1a0e;white-space:nowrap}
-.wpn span{font:14px/1 "EB Garamond",serif;color:#5b4630;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wpn span{order:3;flex-basis:100%;font:14px/1.2 "EB Garamond",serif;color:#5b4630}
 .wpn em{margin-left:auto;font:700 10px/1 Cinzel,serif;font-style:normal;letter-spacing:.16em;color:var(--redink);white-space:nowrap;text-transform:uppercase}
 .dos .ab{margin-top:7px;font:italic 14px/1.1 "IM Fell English",serif;color:#5b4630;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dos .ab b{font:600 14px/1 "EB Garamond",serif;font-style:normal;color:#2a1a0e}

@@ -1,7 +1,7 @@
 """Who knows what about whom in a fight.
 
 A side sees a foe's position, race, size, alignment, the *names* of its gear, its
-visible conditions and its health in `STEPS` steps. Everything else is learned
+conditions and its health in `STEPS` steps. Everything else is learned
 with Intelligence: the first time anyone on a side sees a foe, every teammate
 that sees it rolls d20 + INT against `DC = BASE_DC + the foe's racial level`; the
 best margin is stored and shared by the side, and opens the fields of the bands
@@ -274,6 +274,9 @@ def _value(name, u):
     return _artifact_effect(u)
 
 
+CONDITION_LABELS = {"sleeping": "asleep", "shield_hooked": "shield hooked", "pixie_flight": "flying"}
+
+
 def _conditions(u):
     out = []
     if u.dying:
@@ -282,10 +285,7 @@ def _conditions(u):
         out.append("stable")
     elif u.broken:
         out.append("broken")
-    if u.has_condition("sleeping"):
-        out.append("asleep")
-    if u.demoralized:
-        out.append("demoralized")
+    out += [CONDITION_LABELS.get(c.id, c.id) for c in u.conditions]
     if u.poisoned:
         out.append("poisoned")
     if u.hunger_level:
