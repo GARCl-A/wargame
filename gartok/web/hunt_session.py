@@ -14,6 +14,7 @@ from ..unit import distribute_load
 from .campaign_fight import _enter
 from .map_session import _portrait, _when
 from .session import Session
+from .watch_session import toggle, watch_state
 
 
 def open_hunt(map_session, group, target="meat"):
@@ -79,15 +80,7 @@ class HuntSession(Session):
     # ------------------------------------------------------------------ #
     def toggle_watch(self, uid):
         self._phase("watch")
-        u = next((m for m in self.group.members if m.uid == uid), None)
-        if u is None:
-            raise ValueError("no such member in the band")
-        if u not in self.goes:
-            self.goes = [m for m in self.group.members if m in self.goes or m is u]
-        elif len(self.goes) == 1:
-            raise ValueError("someone has to go in")
-        else:
-            self.goes.remove(u)
+        self.goes = toggle(self.group, self.goes, uid)
         return self.state()
 
     def go(self):
@@ -264,7 +257,7 @@ class HuntSession(Session):
                "icon": "/".join(node_icon(n.id) or ("action", "wolf-howl")),
                "notice": self.notice, "events": list(self.events)}
         if self.phase == "watch":
-            return {**out, "watch": self._watch()}
+            return {**out, "watch": watch_state(self.group, self.goes)}
         s = self.state_
         out["members"] = [self._member(u) for u in s.party]
         out["guards"] = [u.name for u in s.guards]
@@ -283,16 +276,6 @@ class HuntSession(Session):
             out["done"] = {"title": "The trail goes cold" if self.tracking else "Back from the Wilds",
                            "lines": list(self.result or []), "hours": s.hours_hunted, "fights": s.fights}
         return out
-
-    def _watch(self):
-        g, n = self.group, self.node
-        guards = [u for u in g.members if u not in self.goes]
-        flight = wagon_watch.flight_chance(g)
-        return {"members": [{"uid": u.uid, "name": u.name, "portrait": _portrait(u),
-                             "what": f"{u.race['name']} {u.occupation['name'].lower()}",
-                             "level": f"level {u.combat_level}", "goes": u in self.goes} for u in g.members],
-                "going": len(self.goes), "outside": len(guards), "guarded": bool(guards),
-                "risk": wagon_watch.risk(g, n), "place_risk": n.wagon_risk, "flight": flight}
 
     def _member(self, u):
         into, span = progression.to_next(progression.WORK_XP_THRESHOLDS, u.work_xp)

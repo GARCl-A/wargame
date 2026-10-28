@@ -1020,7 +1020,7 @@ def test_a_house_too_far_behind_on_the_tax_meets_the_bankers_notice_first():
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
     guild = _guild("city")
     game = Game(MapSession(guild))
-    assert game.session.act(guild.groups[0].gid, "ancient_ruins") == {"screen": "away"}
+    assert game.session.act(guild.groups[0].gid, "skirmish") == {"screen": "away"}
     assert isinstance(game.session, AwaySession)
 
 

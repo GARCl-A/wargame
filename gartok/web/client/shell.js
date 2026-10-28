@@ -50,6 +50,7 @@ const SCREENS = {
   talents: {css: ["talents.css"], js: ["talents.js"]},
   arena: {css: ["arena.css"], js: ["arena.js"]},
   hunt: {css: ["hunt.css"], js: ["hunt.js"]},
+  watch: {css: ["watch.css"], js: ["watch.js"]},
   away: {css: ["away.css"], js: ["away.js"]},
 };
 

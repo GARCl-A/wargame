@@ -941,6 +941,24 @@ member with a talent pick opens the talent tree and comes back to the hunt.
   scenario behind the wagon's watch), then the errands' fights (the battlefield, the necromancer, the Wildfire's
   camp and fortress), then the title screen and the draft, then the swap below.
 
+**10d. The searches' finds — done (2026-10-28).** `campaign_fight.delve` is `App._enter_ancient_ruins`,
+`_enter_nest` and `_enter_lair`: the Ancient Ruins, the Serpent's Nest and the Dragon's Lair (`DELVES`: the seal's
+label, the header, what waits inside, the scenario), in the dark, lethal, the squad the aggressor; the Nest wants the
+Snake Dragon alive while the Nature Coven's job is out; ruins with nothing left say so on the map. A band with a wagon
+first opens `watch_session.py` (screen `watch`), pygame's `WatchScreen`: who goes in, who minds it, GO IN hands the
+party to the place; the fight's settle rolls for a wagon left unguarded (`wagon_watch.leave_outside`). The hunt's
+watch now reads the same `watch_state` / `toggle`. The Lair's patrol challenges and the withdraw were already the
+battle session's.
+
+- The client is the hunt's watch page on its own screen (`watch.css` imports `hunt.css`, with a darker ground).
+- Left out: a tutorial card.
+- Tests: `tests/test_web_delve.py` (each place straight in with no wagon, in the dark with the snapshot; the watch
+  and the guards out of the fight; back changes nothing; an unguarded wagon lost and a guarded one kept; the Ruins
+  remember and once empty lie silent; the Nest's dragon wanted alive; a wipe; the routing); the away-card tests now
+  enter the skirmish. The watch was looked at in headless Edge at 1920x1080.
+- **Next (10e):** the errands' fights (the skirmish: the battlefield and the necromancer; the Wildfire's camp and
+  fortress), each behind the same `WatchSession`; then the title screen and the draft, then the swap below.
+
 **10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as
 today. A window cannot mix pygame and the browser, so the swap is one move once the

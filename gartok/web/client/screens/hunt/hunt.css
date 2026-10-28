@@ -1,8 +1,8 @@
 /* The hunt: the choices and the news on paper, the party on leather, the seal to go out or to fight. */
-#hunt{position:absolute;inset:0;--greenink:#3f6b2a;--redink:#8e2a1e;
+#hunt,#watch{position:absolute;inset:0;--greenink:#3f6b2a;--redink:#8e2a1e;
   background:radial-gradient(ellipse 70% 60% at 50% 45%,#26301f 0%,#171a12 55%,#0a0c08 100%)}
-#hunt .ico{display:inline-block}
-#hunt .medal{--side:var(--brass)}
+#hunt .ico,#watch .ico{display:inline-block}
+#hunt .medal,#watch .medal{--side:var(--brass)}
 
 /* the top bar */
 #top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center}

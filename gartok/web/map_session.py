@@ -554,7 +554,8 @@ class MapSession(MapInspectorMixin, Session):
         return {"screen": self.screen, **self.state()}
 
     def _enter(self, group, order):
-        """The screen `order` plays: the arena, the hunt, a hub where the browser has one, else the away card."""
+        """The screen `order` plays: the arena, the hunt, a search's find, a hub where the browser has one, else the
+        away card."""
         from .hub_session import HubSession, opens_hub
         if order.kind == "arena":
             from .arena_session import open_arena
@@ -562,6 +563,9 @@ class MapSession(MapInspectorMixin, Session):
         if order.kind in ("hunt", "ox_hunt"):
             from .hunt_session import open_hunt
             return open_hunt(self, group, "ox" if order.kind == "ox_hunt" else "meat")
+        if order.kind in ("ancient_ruins", "serpents_nest", "dragon_lair"):
+            from .campaign_fight import delve
+            return delve(self, group, order.kind)
         if opens_hub(order, world.node(group.node)):
             self.game.open(HubSession(self, group, order))
             return {"screen": HubSession.screen}
