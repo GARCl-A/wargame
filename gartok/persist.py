@@ -51,6 +51,7 @@ else:
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
+MAX_SAVE_NAME = 40
 SAVE_VERSION = 2                 # bumped when the payload shape changes; nothing upgrades an older save
 
 

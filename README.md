@@ -297,7 +297,7 @@ gartok/
   screen.py         the screens' base class (click dispatch -> self._click)
   text_field.py     a one-line text box's buffer + caret (every name field types through it)
   start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py + wiki_rules.py / wiki_races.py (its RULES / RACES tabs)
-  combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector) / guild_screen.py
+  combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector, on map_view.py) / guild_screen.py
   group_screen.py + group_draw.py (everything it paints)
   squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
   memorial_screen.py / report_screen.py / level_up_screen.py (after a fight: the fallen, the after-action report, each level-up; data in aftermath.py)
@@ -325,7 +325,7 @@ gartok/
   icons.py          vector action icons (pygame.draw) -- no asset file
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
                     portraits under assets/portraits/; `RACE_ICON` and `OCCUPATION_ICON`
-                    name each race's and occupation's glyph (`map_screen.NODE_ICON` the nodes')
+                    name each race's and occupation's glyph (`map_view.NODE_ICON` the nodes')
   lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; LightRenderer paints it
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, the action's
                     name over its actor and the flight of a shot (`battle.announce`), combat sounds

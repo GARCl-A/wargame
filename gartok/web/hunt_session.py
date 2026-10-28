@@ -9,7 +9,7 @@ from typing import ClassVar
 
 from .. import hunt, missions, ox, progression, wagon_watch, wildfire, world
 from ..battle import Battle
-from ..map_screen import node_icon
+from ..map_view import node_icon
 from ..unit import distribute_load
 from .campaign_fight import _enter
 from .map_session import _portrait, _when

@@ -1130,8 +1130,22 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
        the same counter).
      - Left for later families: `shop_tab` still reads `artwork.portrait_path`, and `artwork` imports
        pygame (it tints and caches the glyphs too); the path half goes with the guild or the draft family.
-     - **Next:** the map (`MapScreen`, `ADVANCE_HOURS`, `_position`, `node_icon`; `pause_screen.MAX_SAVE_NAME`),
-       then the hubs (the work, medic, jobs, craft, stable, tavern, vault, garage, claim, ledger,
+   - **The map — done (2026-10-28).** `map_view.py` is what the map shows of a band and its node, with no
+     pygame: `MapView` holds what `MapInspectorMixin` and `MapScreen` held for the rules (the inspector's
+     blocks, the Wildfire's, a function's notes, the work line, `_order_status`, `_mates_for`,
+     `_rest_plans`, `_rest_urgent`, `_everyone_garrisoned`), beside `ADVANCE_HOURS`, `STANCE_NOTES`,
+     `NODE_ICON` / `node_icon` and `position` (was `map_screen._position`). A block says its `tone`
+     (`bad`, `warn`, `good`, `faint`) where it held a palette colour, so the web's `TONES` (the colour read
+     back into a word) is gone; pygame paints them (`MapInspectorMixin._painted`, `TONE_COLORS`), and
+     keeps for itself the auto-win of an ambush, the REST rows and the bottom buttons. `MapSession` is a
+     `MapView` and no longer reads `ui.tokens`; `MAX_SAVE_NAME` moved to `persist`. The hub, hunt and
+     watch sessions read `node_icon` from `map_view`.
+     - Tests: `tests/test_map_view.py` (`map_view` loads with pygame blocked; the blocks carry a tone and
+       no colour; both maps read the same blocks and pygame paints them; a walking band stands part way).
+     - Left: `map_session` still reads `artwork.portrait_path` (the guild or the draft family). The
+       layout hints (`gap_before`, `height`) stay in the blocks as plain numbers, which the web ignores;
+       they go with pygame.
+     - **Next:** the hubs (the work, medic, jobs, craft, stable, tavern, vault, garage, claim, ledger,
        initiation tabs), the draft, the report.
 3. **The Editor in the browser** (the character creator, the map editor, the combat lab's menu), or the author keeps
    it as a pygame tool apart from the game.

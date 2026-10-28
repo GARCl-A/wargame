@@ -3,7 +3,7 @@
 import os
 
 from gartok import artwork, data, world
-from gartok.map_screen import NODE_ICON
+from gartok.map_view import NODE_ICON
 
 
 def _exists(slug):

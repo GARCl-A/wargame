@@ -12,12 +12,11 @@ so `app` draws it the same way.
 
 import pygame
 
+from .persist import MAX_SAVE_NAME
 from .screen import Screen
 from .text_field import TextField
 from .ui.primitives import caps, draw_button, modal_card, panel, set_pointer, text
 from .ui.tokens import T
-
-MAX_SAVE_NAME = 40
 
 
 class PauseScreen(Screen):

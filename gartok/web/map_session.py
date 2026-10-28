@@ -1,9 +1,6 @@
 """The campaign map in the browser: the bands, the known world, what the picked band can do where it
-stands, and the clock. Orders and the clock run as `MapScreen` and `App` run them; a screen the
-browser does not draw yet opens as an `AwaySession` and comes back here.
-
-pygame's map reads (`MapInspectorMixin` and a few `MapScreen` adapters) are shared until step 10 of
-`docs/plans/web_frontend.md` retires pygame and they move here.
+stands, and the clock. Orders and the clock run as `MapScreen` and `App` run them; what the map
+shows of a band and its node is `map_view.MapView`, which pygame's map reads too.
 """
 
 import dataclasses
@@ -28,13 +25,9 @@ from .. import (
 )
 from ..constants import fmt_money
 from ..group import CAUTIOUS, NORMAL
-from ..map_inspector import STANCE_NOTES, MapInspectorMixin
-from ..map_screen import ADVANCE_HOURS, MapScreen, _position, node_icon
-from ..pause_screen import MAX_SAVE_NAME
-from ..ui.tokens import T
+from ..map_view import ADVANCE_HOURS, STANCE_NOTES, MapView, node_icon, position
 from .session import Session, asset_url
 
-TONES = {T.BLOOD: "bad", T.BRASS: "warn", T.GREEN: "good"}
 REST_ROWS = (("rest:1", "1 h"), ("rest:8", "8 h"), ("rest:full", "Until full"))
 
 
@@ -56,7 +49,7 @@ def _plural(n, word):
     return f"{n} {word}{'s' * (n != 1)}"
 
 
-class MapSession(MapInspectorMixin, Session):
+class MapSession(MapView, Session):
     screen = "map"
     GET: ClassVar[dict] = {
         "state": lambda s, q: s.state(),
@@ -74,10 +67,6 @@ class MapSession(MapInspectorMixin, Session):
         "settings": lambda s, b: s.aside("settings"),
         "quit": lambda s, b: s.quit(),
     }
-
-    _order_status = MapScreen._order_status
-    _mates_for = MapScreen._mates_for
-    _rest_plans = MapScreen._rest_plans
 
     def __init__(self, guild, world_id=None):
         self.guild = guild
@@ -192,7 +181,7 @@ class MapSession(MapInspectorMixin, Session):
 
     def _band(self, g):
         chip, tone = self._chip(g)
-        at = _position(g)
+        at = position(g)
         kit = [_plural(len(g.members), "soul")]
         kit += [f"a {w.kind.lower()}" for w in g.wagons] + [f"a {a.species.lower()}" for a in g.herd]
         return {
@@ -254,7 +243,7 @@ class MapSession(MapInspectorMixin, Session):
                     "enabled": b.get("enabled", True)}
         if b["type"] == "section":
             return {"t": "section", "label": b["label"]}
-        return {"t": "note", "text": b["text"], "tone": TONES.get(b.get("color"), "faint")}
+        return {"t": "note", "text": b["text"], "tone": b.get("tone", "faint")}
 
     def _inspector(self, g):
         here = world.node(g.node)
@@ -603,7 +592,7 @@ class MapSession(MapInspectorMixin, Session):
         """A named snapshot on the guild's saves (pygame's pause menu, SAVE AS)."""
         if self.world_id is None or self.wiped:
             raise ValueError("there is nothing to save")
-        name = str(name).strip()[:MAX_SAVE_NAME] or "Manual save"
+        name = str(name).strip()[:persist.MAX_SAVE_NAME] or "Manual save"
         persist.save_game(self.world_id, self.guild, kind="manual", label=name)
         return {"saved": name}
 

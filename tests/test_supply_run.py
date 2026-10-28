@@ -11,7 +11,7 @@ from gartok import campaign, economy, encounters, forced, orders, persist, world
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.ledger_screen import LedgerScreen
-from gartok.map_screen import _position
+from gartok.map_view import position
 from tests.helpers import Unit
 
 
@@ -121,7 +121,7 @@ def test_an_ambush_stops_the_caravan_part_way_and_a_win_walks_on(monkeypatch):
     ambush = grp.pending
     assert ambush.kind == "supply_ambush" and (grp, ambush) in res.pending
     assert grp.node == "ledger_hold" and grp.order is None
-    assert _position(grp) == ("ledger_hold", "frontier_outpost", pytest.approx(0.5))
+    assert position(grp) == ("ledger_hold", "frontier_outpost", pytest.approx(0.5))
 
     events = forced.resolve_supply_ambush(g, grp, ambush, _won(units))
     assert "rolls on" in events[0]

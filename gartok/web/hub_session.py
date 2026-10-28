@@ -21,7 +21,7 @@ from ..city_property_screen import CityPropertyScreen
 from ..constants import fmt_money
 from ..crafting_screen import ALONE_HOURS, WAIT_HOURS
 from ..hub_screen import TabbedHubScreen
-from ..map_screen import node_icon
+from ..map_view import node_icon
 from ..work_screen import SHIFTS
 from .claim_tab import ClaimTab
 from .craft_tab import CRAFT_TABS, CraftTab

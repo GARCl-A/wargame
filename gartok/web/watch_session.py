@@ -4,7 +4,7 @@ click leaves them outside; one guard keeps it safe (`wagon_watch`). GO IN hands 
 from typing import ClassVar
 
 from .. import wagon_watch, world
-from ..map_screen import node_icon
+from ..map_view import node_icon
 from .map_session import _portrait, _when
 from .session import Session
 

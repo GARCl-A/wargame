@@ -81,6 +81,7 @@ from .constants import fmt_money
 from .data import role_for
 from .group import CAUTIOUS, NORMAL
 from .map_inspector import MapInspectorMixin
+from .map_view import ADVANCE_HOURS, node_icon, position
 from .scenario import Scenario
 from .screen import Screen
 from .ui.camera import MapCamera
@@ -97,35 +98,12 @@ from .ui.tokens import fonts as ui_fonts
 # panels scale with the window instead of eating/wasting fixed pixels
 ROSTER_FRAC, ROSTER_MIN, ROSTER_MAX = 0.22, 260, 360
 INSPECTOR_FRAC, INSPECTOR_MIN, INSPECTOR_MAX = 0.26, 320, 440
-ADVANCE_HOURS = 24                      # the CTA's world-wide wait, once every group is garrisoned
 
 KIND_TERRAIN = {"town": "town", "market": "town", "tavern": "town",
                 "battle": "rock", "prison": "rock", "wilds": "green"}
 WASH = {"town": T.WASH_TOWN, "rock": T.WASH_ROCK, "green": T.WASH_GREEN}
 DEFAULT_REGION_R = 0.045
 WILDS_REGION_R = 0.09
-
-NODE_ICON = {
-    "city": ("map", "city"), "lumber_yard": ("action", "stick-splitting"), "carpenter": ("action", "crafting"), "mine": ("action", "mining"),
-    "arena": ("body", "sword-tie"), "market": ("action", "trade"), "smith": ("map", "smith"),
-    "tanner": ("map", "hide"), "apothecary": ("map", "flask"), "tavern": ("action", "drinking"),
-    "prison": ("body", "imprisoned"), "road": ("map", "signpost"), "wilds": ("action", "wolf-howl"),
-    "ledger_hold": ("map", "fort"), "wilds_territory": ("map", "claim"), "library": ("gui", "open-book"),
-    "farm": ("map", "wheat"), "ancient_ruins": ("map", "ruins"), "country_roads": ("action", "journey"),
-    "ox_fields": ("map", "ox"), "blood_sanctuary": ("map", "blood"),
-    "serpents_nest": ("head", "snake-bite"), "dragon_lair": ("head", "dragon-head"),
-    "nature_grove": ("map", "leaf"), "faith_cathedral": ("map", "cathedral"),
-    "frontier_outpost": ("body", "spiked-wall"), "battlefield": ("action", "trench-assault"),
-}
-# The ethereal nodes (`wildfire.py`): a focus is numbered as it starts, so it goes by its prefix.
-ETHEREAL_ICON = {wildfire.GREAT_ID: ("head", "ogre"), wildfire.FORTRESS_ID: ("head", "ogre")}   # never on the map together
-FOCUS_ICON = ("body", "fire-silhouette")
-
-
-def node_icon(node_id):
-    if node_id.startswith("wildfire_focus_"):
-        return FOCUS_ICON
-    return NODE_ICON.get(node_id) or ETHEREAL_ICON.get(node_id)
 
 
 def _icon_fn(surf, node, center):
@@ -164,16 +142,6 @@ def _hp_frac(u):
 
 def _race_tag(u):
     return f"{u.race.get('name', '')} · R-Lvl {u.racial_level}"
-
-
-def _position(g):
-    """Where the group's pawn stands: its node, or `(from, to, share)` part-way along the leg it
-    walks (or stopped on, for a caravan held by its ambush). The share counts the hours a stopped
-    leg still owes, so the pawn never gives an ambush away before it springs."""
-    o = g.order if g.order is not None and g.order.kind == "travel" else g.pending
-    if o is None or not o.dest or o.dest == g.node or o.eta <= 0:
-        return g.node
-    return (g.node, o.dest, max(0.0, min(1.0, (o.eta - o.remaining - o.owed) / o.eta)))
 
 
 class MapScreen(MapInspectorMixin, Screen):
@@ -284,45 +252,13 @@ class MapScreen(MapInspectorMixin, Screen):
                  else o.task if o.kind == "solo" else o.kind)
         return label.upper().replace("_", " "), T.TX_MUTED
 
-    def _order_status(self, group):
-        """One-line status for a group's ROSTER card / INSPECTOR header."""
-        if self._group_blocked(group):
-            n = len(self._pending_event[1].pack)
-            return f"ambushed -- {n} enem{'y' if n == 1 else 'ies'} block the path"
-        o = group.order
-        if o is None or o.kind == "idle":
-            return "idle"
-        if o.kind == "travel" and o.task == "supply_run":
-            return f"supply run → {world.node(o.dest).name} ({o.remaining + o.owed:.1f} h)"
-        if o.kind == "travel":
-            dest_name = world.node(o.final_dest).name
-            if o.path:                            # more waypoints still to come
-                return f"→ {dest_name} via {world.node(o.dest).name} ({o.remaining:g} h)"
-            return f"→ {dest_name} ({o.remaining:g} h)"
-        if o.kind == "work":
-            doing = "gathering" if o.gather else "searching" if o.task in campaign.SEARCHES else "working"
-            return f"{doing} ({o.remaining:g} h left)"
-        if o.kind == "rest":
-            return f"resting ({rest.format_hours(o.remaining)} left)"
-        if o.kind == "solo":
-            doing = "in the hospital" if o.task == "hospital" else f"crafting {o.recipe}"
-            return f"{doing} ({o.remaining:g} h left)"
-        return f"heading to {o.kind} ({o.remaining:g} h)"
-
-    def _mates_for(self, g):
-        """Other idle bands standing right there -- MERGE candidates, offered
-        from `g`'s own roster card once it's expanded (see roster_panel's
-        SPLIT UI), never from a band that can't act on it either way."""
-        return [(o.gid, o.display_name) for o in self.guild.groups
-               if o is not g and o.node == g.node and not o.busy and not self._group_blocked(o)]
-
     def _group_dict(self, g):
         label, color = self._state(g)
         blocked = self._group_blocked(g)
         return {"key": g.gid,
                 "name": g.display_name,
                 "lead": g.leader.name if g.leader is not None else "",
-                "at": _position(g),
+                "at": position(g),
                 "busy": g.busy,
                 "pace": world.hours(1, g.speed) * vocations.travel_mult(self.guild, g),
                 "needs_orders": self._is_idle(g),
@@ -447,12 +383,6 @@ class MapScreen(MapInspectorMixin, Screen):
         if not self.selected.busy and not self._group_blocked(self.selected):
             self.selected.order = order
             self._maybe_auto_advance()
-
-    def _rest_plans(self, g):
-        """`[(key, label, plan)]` for the REST rows of group `g`."""
-        return [("rest:1", "1 h", rest.fixed(self.guild, 1)),
-                ("rest:8", "8 h", rest.fixed(self.guild, 8)),
-                ("rest:full", "UNTIL FULL", rest.until_full(self.guild, g))]
 
     def _start_rest(self, which):
         """Sit the selected group down to eat, then rest: a 1 h / 8 h / until
@@ -724,7 +654,7 @@ class MapScreen(MapInspectorMixin, Screen):
         gd = next(gd for gd in groups if gd["key"] == g.gid)
         here = self._here()
         draw_inspector(screen, F, right, gd["name"], gd["state_label"], gd["state_color"],
-                       here.name, gd["party"], self._inspector_content(g, here),
+                       here.name, gd["party"], self._painted(self._inspector_content(g, here)),
                        self._inspector_bottom(g), self.mouse, button=self._inspector_button,
                        party_icon=_party_icon_fn)
 
