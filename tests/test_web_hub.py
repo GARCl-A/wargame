@@ -37,6 +37,8 @@ def _guild(node, coins=200):
     for u in units:
         u.money = coins
         u.give_to_pack("Potato", 4 - u.count_of("Potato"))
+        for name in ("Lumber", economy.CLAIM_OVEN_BRICK):     # a random kit can carry them
+            u.remove_named(name, u.count_of(name))
     return Guild(None, groups=[Group(units, node=node, leader=units[0])], name="Ink Hands")
 
 
@@ -1038,3 +1040,128 @@ def test_the_server_routes_the_hub_verbs(saves):
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+def _claim(stage="NONE", coins=200):
+    guild = _guild(world.WILDS_TERRITORY_NODE, coins)
+    guild.wilds_claim_stage = stage
+    game = Game(MapSession(guild))
+    g = guild.groups[0]
+    assert game.session.act(g.gid, "visit_claim") == {"screen": "hub"}
+    return game.session, guild, g
+
+
+def test_the_claim_opens_as_a_hub_and_scouting_passes_its_hours_on_the_tab():
+    hub, guild, _ = _claim()
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["claim"] and st["tab"] == "claim"
+    c = st["claim"]
+    assert [s["state"] for s in c["steps"]] == ["now", "todo", "todo", "todo", "todo", "todo"]
+    assert [a["verb"] for a in c["actions"]] == ["scout"] and c["hearth"] is None
+    with pytest.raises(ValueError):
+        hub.verb("claim", True)(hub, {"verb": "build"})
+    t0 = guild.clock.seconds
+    st = hub.verb("claim", True)(hub, {"verb": "scout"})
+    assert st["tab"] == "claim" and guild.wilds_claim_stage == "SCOUTED"
+    assert guild.clock.seconds - t0 == economy.WILDS_CLAIM_SCOUT_HOURS * 3600
+    assert "scouted" in st["claim"]["report"][0] and st["claim"]["fight"]
+
+
+def test_the_claims_fights_are_met_on_the_away_card_and_change_nothing():
+    hub, guild, g = _claim("SCOUTED")
+    with pytest.raises(ValueError):
+        hub.verb("claim_fight", True)(hub, {"verb": "fight_sweep"})
+    with pytest.raises(ValueError):
+        hub.verb("claim", True)(hub, {"verb": "fight_clear"})
+    assert hub.verb("claim_fight", True)(hub, {"verb": "fight_clear"}) == {"screen": "away"}
+    away = hub.map.game.session
+    assert isinstance(away, AwaySession) and away.state()["fight"] and away.state()["title"] == "Clear the land"
+    assert guild.wilds_claim_stage == "SCOUTED" and not g.busy
+
+
+def test_the_fences_take_the_lumber_the_band_carries_and_go_up_once_there_is_enough():
+    hub, guild, g = _claim("CLEARED")
+    c = hub.state()["claim"]
+    assert not next(a for a in c["actions"] if a["verb"] == "deposit")["can"]
+    assert c["lumber"] == {"have": 0, "need": economy.WILDS_CLAIM_FENCE_LUMBER, "carried": 0}
+    u, v = g.members
+    u.give_to_pack("Lumber", 4)
+    v.give_to_pack("Lumber", 3)
+    c = hub.verb("claim", True)(hub, {"verb": "deposit"})["claim"]
+    assert guild.wilds_claim_fence_lumber == 7 and not u.count_of("Lumber") and _member_held(c, u) == []
+    with pytest.raises(ValueError):
+        hub.verb("claim", True)(hub, {"verb": "build"})
+    guild.wilds_claim_fence_lumber = economy.WILDS_CLAIM_FENCE_LUMBER + 1
+    t0 = guild.clock.seconds
+    c = hub.verb("claim", True)(hub, {"verb": "build"})["claim"]
+    assert guild.wilds_claim_stage == "FENCED" and guild.wilds_claim_fence_lumber == 1
+    assert guild.clock.seconds - t0 == economy.WILDS_CLAIM_FENCE_HOURS * 3600
+    assert [a["verb"] for a in c["actions"]] == ["fight_sweep"]
+
+
+def _member_held(c, u):
+    return next(m for m in c["members"] if m["uid"] == u.uid)["held"]
+
+
+def test_garrisoning_the_swept_claim_goes_to_the_map_and_opens_the_garage():
+    hub, guild, g = _claim("SWEPT")
+    c = hub.state()["claim"]
+    assert c["hearth"] and [a["verb"] for a in c["actions"]] == ["garrison"]
+    st = hub.verb("claim_garrison", True)(hub, {})
+    assert st["screen"] == "map" and g.order.kind == "garrison" and guild.wilds_claim_stage == "SUSTAINING"
+    m = hub.map
+    assert m.act(g.gid, "visit_claim") == {"screen": "hub"}
+    hub = m.game.session
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["claim", "garage"]
+    c = st["claim"]
+    assert c["here"] and c["garrison"] == g.display_name and c["days_left"] == economy.WILDS_CLAIM_SUSTAIN_DAYS
+    job = g.order.job
+    hub.verb("claim", True)(hub, {"verb": "garrison_job"})
+    assert g.order.job != job
+    c = hub.verb("claim", True)(hub, {"verb": "leave_garrison"})["claim"]
+    assert g.order.kind != "garrison" and [a["verb"] for a in c["actions"]] == ["garrison"]
+
+
+def test_the_hearth_lights_a_fire_that_opens_the_kitchen_and_an_oven_takes_the_bricks(monkeypatch):
+    hub, guild, g = _claim("SWEPT")
+    h = hub.state()["claim"]["hearth"]
+    assert not h["can_fire"] and not h["can_oven"]
+    with pytest.raises(ValueError):
+        hub.verb("claim", True)(hub, {"verb": "campfire"})
+    g.members[0].give_to_pack(economy.CAMPFIRE_FUEL, 1)
+    monkeypatch.setattr(data, "roll", lambda n, d: 20)
+    st = hub.verb("claim", True)(hub, {"verb": "campfire"})
+    assert guild.wilds_claim_campfire and [t["key"] for t in st["tabs"]] == ["claim", "kitchen"]
+    assert st["claim"]["hearth"]["can_cook"] and hub.pick_tab("kitchen")["craft"]["what"] == "cook what the pack carries"
+    g.members[1].give_to_pack(economy.CLAIM_OVEN_BRICK, economy.CLAIM_OVEN_BRICKS)
+    hub.pick_tab("claim")
+    h = hub.state()["claim"]["hearth"]
+    assert h["oven"] is False and h["bricks_have"] == economy.CLAIM_OVEN_BRICKS
+    guild.wilds_claim_campfire = False
+    hub.verb("claim", True)(hub, {"verb": "oven"})
+    assert guild.claim_oven and not g.members[1].count_of(economy.CLAIM_OVEN_BRICK)
+
+
+def test_the_established_claim_hands_over_its_banked_lumber_and_a_seized_one_offers_nothing():
+    hub, guild, g = _claim("ESTABLISHED")
+    guild.wilds_claim_owner = "guild"
+    guild.garrison_stock.setdefault(g.node, []).extend(["Lumber"] * 3)
+    c = hub.state()["claim"]
+    assert c["banked"] == 3 and [s["state"] for s in c["steps"]] == ["done"] * 6
+    c = hub.verb("claim", True)(hub, {"verb": "collect"})["claim"]
+    assert c["banked"] == 0 and sum(u.count_of("Lumber") for u in g.members) == 3
+    guild.wilds_claim_owner = "seized"
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["claim"] and st["claim"]["actions"] == []
+    assert st["claim"]["seized"] and st["claim"]["steps"][-1]["state"] == "seized" and st["claim"]["hearth"] is None
+
+
+def test_the_claim_garage_parks_with_no_bays_and_warns_while_nobody_holds_it():
+    hub, guild, g = _claim("SUSTAINING")
+    cart = Wagon("Cart")
+    g.add_wagon(cart)
+    st = hub.pick_tab("garage")["garage"]
+    assert st["claim"] and st["kept"][0]["can"] and all(c["label"] != "bays" for c in st["cards"])
+    st = hub.verb("garage_park", True)(hub, {"uid": cart.uid})["garage"]
+    assert guild.claim_garage.wagons == [cart] and st["watch"] is not None

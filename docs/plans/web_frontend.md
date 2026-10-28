@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault and the City house are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house and the Wilds Claim are in; the other tabs come next.
 
 ## Decisions so far
 
@@ -108,6 +108,8 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   vault is `jobs_tab` on `TrustScreen`.
 - **`gartok/web/garage_tab.py`** + `Stables.garage` in `screens/hub/stables.js` are the house's GARAGE (9k), on pygame's
   own `GarageScreen` held headless; the house's KITCHEN is `craft_tab` at the `cooking` station.
+- **`gartok/web/claim_tab.py`** + `screens/hub/claim.js` are the Wilds Claim's THE CLAIM (9l), on pygame's own
+  `WildsClaimScreen` held headless; its KITCHEN is `craft_tab` at `cooking` and its GARAGE `garage_tab` with `claim=True`.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -575,6 +577,33 @@ As built:
   The three tabs and the notice were looked at in headless Edge at 1920x1080.
 - **Next (9l):** the Wilds Claim (`wilds_claim_screen.py`, the Claim's own screen: its stages and their fights, the
   kitchen at the `cooking` station, the Claim's garage with `GarageTab(claim=True)`).
+
+**9l. The Wilds Claim — done (2026-10-27).** As built:
+
+- **The server:** the map's THE WILDS CLAIM (order `claim`) opens a hub whose tabs follow the claim
+  (`hub_session._claim_tabs`, beside `_house_tabs` in `DYNAMIC`): THE CLAIM always, KITCHEN once the hearth can cook
+  (a fire or the oven), GARAGE once the garrison opens it. `ClaimTab` holds pygame's `WildsClaimScreen` headless and
+  calls its own methods, so scouting, the fences' Lumber, the garrison and its job, the campfire's WIS roll, the oven and
+  the banked Lumber stay one source; a verb the stage does not offer is refused. The kitchen is `craft_tab`'s
+  `kitchen`; the garage is `GarageTab(claim=True)`: no bays, no limit, the bolt chance while nobody holds it.
+- **The clock:** scouting, the fences and the hearth pass their hours here (`guild.pass_time`, as pygame's do) and the
+  tab stays up with what came of it; garrisoning is an order, so the band goes back to the map. The two fights (CLEAR,
+  SWEEP) are campaign fights: the away card says so (`AwaySession` with `fight=True` and no order) and nothing changes
+  until step 10.
+- **The layout** is 9b's: the band on leather (a chip for the Lumber and Stone Brick each carries); on paper the six
+  stages as a track (done, in hand, to come, seized), the stage's lines, its progress (the fences' Lumber, the days left
+  and who holds it, the banked Lumber), its buttons and the hearth's two builds.
+- The hub frame's fallback glyph (a place with no keeper) was painted in the medallion's own gradient and never showed;
+  it is dark now.
+- The test guild's Fighters now carry no Lumber or Stone Brick (a random kit could, and failed the garage's mend test
+  about one run in eight). `test_the_house_stows_and_gives_back_but_mints_no_gold` still fails about one run in twenty
+  (a random kit); it was left.
+- Tests: `tests/test_web_hub.py` (the claim's hub and scouting, the fights on the away card, the fences, the garrison
+  and its garage, the fire, the kitchen and the oven, the established and the seized claim, the claim garage). Looked at
+  in headless Edge at 1920x1080.
+- **Next (9m):** the places left behind the away card: Ledger Hold (`ledger_screen.py`: the Bankers' chest exchange,
+  Commander Varkas, the supply runs), the Library's study desk, the map's campfire cooking (`craft_tab` at `cooking`);
+  then the first family that needs a mockup, the guild and group sheets.
 
 ### 10. The swap — todo
 

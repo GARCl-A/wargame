@@ -1,9 +1,9 @@
 // A place's hub: the keeper's strip, the row of tabs and the tab in view. The shop draws itself
 // (shop.js), and so do a work node's shifts (labor.js), the Medic (medic.js), a jobs board (jobs.js), a
 // workbench (craft.js), the stables, wagon yard and the house's garage (stables.js), the Tavern (tavern.js),
-// a sanctuary's initiation (initiation.js), the Bank's strongbox and the house's stash (vault.js); the
-// Bankers' repossession notice stands in for the house's tabs. A tab the browser does not draw yet is a
-// note on paper. Every verb answers the whole hub.
+// a sanctuary's initiation (initiation.js), the Bank's strongbox and the house's stash (vault.js), the
+// Wilds Claim's stages (claim.js); the Bankers' repossession notice stands in for the house's tabs. A tab
+// the browser does not draw yet is a note on paper. Every verb answers the whole hub.
 "use strict";
 
 let H = null;
@@ -78,6 +78,7 @@ function draw() {
   else if (H.initiation) Initiation.draw(H.initiation);
   else if (H.vault) Vault.draw(H.vault);
   else if (H.garage) Stables.garage(H.garage);
+  else if (H.claim) Claim.draw(H.claim);
   else drawAway();
 }
 

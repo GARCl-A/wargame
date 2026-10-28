@@ -1,21 +1,22 @@
-"""The City house's GARAGE in the browser: on leather what is parked at the house (each wagon with its HP and
-cargo, each animal with what it eats), on paper what the band keeps and can park, the bays and the price of
-the next one.
+"""The City house's GARAGE in the browser, and the Wilds Claim's: on leather what is parked there (each wagon
+with its HP and cargo, each animal with what it eats), on paper what the band keeps and can park, and the house's
+bays and the price of the next one, or the Claim's risk with no garrison to watch it.
 
 The rules are pygame's own `GarageScreen`, held headless as `jobs_tab` holds a board: a verb names a wagon
 or an animal by its uid and the tab calls the screen's own click on its index, so the bays, the herd limit,
 the pooled purse and the repair stay one source. The repair's hour runs through the `tick` the hub hands in.
 """
 
-from .. import economy
+from .. import economy, wagon_watch
 from .. import wagon as wagon_mod
 from ..garage_screen import GarageScreen
 from .stable_tab import WAGON_GLYPH, _face
 
 
 class GarageTab:
-    def __init__(self, guild, group, node, tick=None):
-        self.s = GarageScreen(None, guild, group, lambda: None, on_tick=tick)
+    def __init__(self, guild, group, node, tick=None, claim=False):
+        self.s = GarageScreen(None, guild, group, lambda: None, claim=claim, on_tick=tick)
+        self.claim = claim
         self.guild, self.group, self.node = guild, group, node
 
     @property
@@ -65,7 +66,8 @@ class GarageTab:
         g = self.group
         if parked:
             can, why = g.can_take(a), None if g.can_take(a) else "the herd is full"
-            sub = f"unfed {a.unfed_days} day(s)" if a.unfed_days else "eats from the house stash"
+            fed_by = "the garrison's food" if self.claim else "the house stash"
+            sub = f"unfed {a.unfed_days} day(s)" if a.unfed_days else f"eats from {fed_by}"
         else:
             can = self.garage.animal_room > 0
             why, sub = None if can else "every bay holds an animal", f"{a.tack or 'no tack'} · speed {a.speed:g} m"
@@ -75,7 +77,7 @@ class GarageTab:
     def hub_cards(self):
         garage = self.garage
         cards = [{"label": "party purse", "value": f"${self.s.wealth}", "tone": "money"}]
-        if garage.open:
+        if garage.open and not self.claim:
             cards.insert(0, {"label": "bays", "value": f"{garage.tier}"})
         return cards
 
@@ -84,7 +86,9 @@ class GarageTab:
         notice, s.notice = s.notice, None
         return {"cards": self.hub_cards(), "purse": s.wealth, "open": garage.open, "tier": garage.tier,
                 "price": economy.GARAGE_PRICE, "can_bay": s.wealth >= economy.GARAGE_PRICE,
-                "wagons": len(garage.wagons), "animals": len(garage.herd),
+                "wagons": len(garage.wagons), "animals": len(garage.herd), "claim": self.claim,
+                "watch": None if not self.claim or self.guild.claim_garrison() is not None
+                else f"{wagon_watch.flight_chance(garage):.0%}",
                 "parked": [*(self._wagon(w, True) for w in garage.wagons), *(self._animal(a, True) for a in garage.herd)],
                 "kept": [*(self._wagon(w, False) for w in g.wagons), *(self._animal(a, False) for a in g.herd)],
                 "notice": notice}

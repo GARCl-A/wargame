@@ -30,6 +30,7 @@
   box-shadow:0 0 0 2px #120d08,0 0 0 5px var(--brass),0 0 0 7px #120d08,0 8px 14px rgba(0,0,0,.6)}
 #keeper .med img,#keeper .med .initial{width:100%;height:100%;border-radius:50%;display:block}
 #keeper .med .ico{width:100%;height:100%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#f6ecd2,#d6bf92)}
+#keeper .med .ico .ico{width:58%;height:58%;background:#3a2410}
 .who-k{width:520px;flex:none}
 .who-k h2{font:700 27px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.04em}
 .who-k .race{margin-top:5px;font:italic 15px/1 "IM Fell English",serif;color:#b59c76}
@@ -440,3 +441,27 @@
 .rterm .lbl{font:600 11px/1.5 Cinzel,serif;letter-spacing:.16em;color:#7b6142;text-transform:uppercase}
 .rterm span.bad{color:#7a2318}
 .rstand{margin-top:26px}
+
+/* ---------- the Wilds Claim: the band here on leather, the stages on paper ---------- */
+.csteps{display:flex;margin-top:22px;padding-bottom:18px;border-bottom:1px solid rgba(90,60,30,.45)}
+.cstep{flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;position:relative}
+.cstep:not(:first-child):before{content:"";position:absolute;top:17px;right:50%;width:100%;height:2px;background:rgba(90,60,30,.25);z-index:0}
+.cstep.done:not(:first-child):before,.cstep.now:not(:first-child):before{background:#8a6420}
+.cstep i{position:relative;z-index:1;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:700 15px/1 Cinzel,serif;font-style:normal;
+  color:#8a6c47;background:#eadcbc;box-shadow:inset 0 0 0 2px rgba(90,60,30,.35)}
+.cstep span{font:600 11px/1 Cinzel,serif;letter-spacing:.16em;color:#8a6c47;text-transform:uppercase}
+.cstep.done i{color:#f4e6c3;background:linear-gradient(#8a6420,#5e4214);box-shadow:none}
+.cstep.done span{color:#4a3420}
+.cstep.now i{color:#24170c;background:linear-gradient(#e7cf96,#c9a35e);box-shadow:0 0 0 3px rgba(201,163,94,.35)}
+.cstep.now span{color:#24170c}
+.cstep.seized i{color:#fff3ea;background:#7a2318;box-shadow:none}
+.cstep.seized span{color:#7a2318}
+.cstage{margin-top:18px}
+.cstage p{margin-top:8px;font:italic 18px/1.4 "IM Fell English",serif;color:#4a3522}
+.cstage.bad p{color:#7a2318}
+.cprog{margin-top:16px}
+.cprog .bar{width:420px}
+.cacts{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.cacts .brass-btn{min-width:300px;height:52px}
+.cacts .brass-btn b{margin:0}
+.cacts+.sec.dark{margin-top:30px}

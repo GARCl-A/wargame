@@ -422,7 +422,7 @@ class MapSession(MapInspectorMixin, Session):
         elif key == "visit_tavern":
             return self._enter(g, orders.interactive("recruit", hours=0))
         elif key == "visit_claim":
-            return self._away(g, orders.interactive("claim", hours=0))
+            return self._enter(g, orders.interactive("claim", hours=0))
         elif g.busy:
             raise ValueError(f"{g.display_name} is busy")
         elif key.startswith("rest:"):

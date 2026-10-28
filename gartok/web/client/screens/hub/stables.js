@@ -91,8 +91,22 @@ const Stables = (() => {
       <div class="btn ${o.can ? "" : "off"}" data-verb="garage_park" data-uid="${esc(o.uid)}">${o.portrait ? "Stable" : "Park"}</div></div>`;
   }
 
+  function claimGarage(G) {
+    const held = `${G.wagons} wagon${G.wagons === 1 ? "" : "s"} · ${G.animals} animal${G.animals === 1 ? "" : "s"}`;
+    const risk = G.watch ? `<p class="aside bad">Nobody is garrisoned: each day the animals may bolt and take it all (${G.watch} a day).</p>`
+      : `<p class="aside">A garrison stands here: what is parked is safe, and a raid is a fight.</p>`;
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">At the claim · ${esc(held)}</div>
+        <p class="hint">What is parked stays at the claim with no limit, fed from the garrison's food, off the herd limit.</p>
+        <div class="crew">${G.parked.map(parked).join("") || `<p class="hint">Nothing parked.</p>`}</div></div>
+      <div class="paper ledger"><div class="kicker">The claim garage <em>safe only while a garrison stands here</em></div>
+        ${risk}<div class="shifts">${G.kept.map(kept).join("")}</div>
+        <div class="ledgerfoot"><p>${G.kept.length ? "" : "The band has no wagon or animal with it to park. "}A wagon parked keeps its cargo. With nobody garrisoned the animals may bolt, and a seized claim loses everything parked there.</p></div></div>`;
+    toast(G.notice);
+  }
+
   function garage(G) {
     cards(G.cards);
+    if (G.claim) { claimGarage(G); return; }
     const held = G.open ? `${G.wagons} / ${G.tier} wagons · ${G.animals} / ${G.tier} animals` : "no bays yet";
     const bay = `<div class="shift offer ${G.can_bay ? "" : "off"}"><div class="medal store">${ico("item/old-wagon")}</div>
       <div><div class="nm">${G.open ? "Add a bay" : "Build a garage"}</div><div class="use">one more wagon and one more animal kept at the house</div>

@@ -37,7 +37,11 @@ class AwaySession(Session):
 
     def state(self):
         g, here = self.group, world.node(self.group.node)
-        if self.fight:
+        if self.fight and self.order is None:
+            title = self.title
+            line = (f"{self.what.capitalize()} is played in pygame for now: {STEP_FIGHT}. "
+                    f"{g.display_name} goes back to the map, and nothing has changed.")
+        elif self.fight:
             title = forced.EVENTS[self.order.kind].label or "A fight"
             line = (f"{len(self.order.pack)} foes stand before {g.display_name}. The fight is played in "
                     f"pygame for now: {STEP_FIGHT}. The band waits on the map with its fight due, and the save keeps it.")

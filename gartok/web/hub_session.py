@@ -4,9 +4,10 @@ to the map. The shop is the first tab (`shop_tab.ShopTab`), a work node adds its
 recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`stable_tab`), the Tavern its
 recruits, study rooms and stage (`tavern_tab`), the City Prison its cells (`tavern_tab` with a bail), a
 sanctuary its initiation (`initiation_tab`), the Bank its strongbox (`vault_tab`) beside the Bankers' jobs, the
-City house its stash (`vault_tab` again), its kitchen (`craft_tab`) and its garage (`garage_tab`); a tab the
-browser does not draw yet says so inside the frame, and its screen is played in pygame until its part of step 9
-of `docs/plans/web_frontend.md` lands.
+City house its stash (`vault_tab` again), its kitchen (`craft_tab`) and its garage (`garage_tab`), the Wilds
+Claim its stages (`claim_tab`) with the same kitchen and garage; a tab the browser does not draw yet says so
+inside the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md`
+lands.
 
 The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
 """
@@ -21,6 +22,7 @@ from ..crafting_screen import ALONE_HOURS, WAIT_HOURS
 from ..hub_screen import TabbedHubScreen
 from ..map_screen import node_icon
 from ..work_screen import SHIFTS
+from .claim_tab import ClaimTab
 from .craft_tab import CRAFT_TABS, CraftTab
 from .garage_tab import GarageTab
 from .initiation_tab import InitiationTab
@@ -43,10 +45,10 @@ HUBS = {
     "prison": (("prison", "The Cells"),),
     "bank": (("vault", "Vault"), ("jobs", "Jobs")),
 }
-HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", "property", *HUBS}
+HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", "property", "claim", *HUBS}
 # the tabs the browser draws so far
 LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", "vault", "property",
-        "garage", *CRAFT_TABS, *TAVERN_TABS}
+        "garage", "claim", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
 WHAT = {"tavern": "the tavern", "study": "the study desk"}
 
@@ -87,6 +89,16 @@ def _house_tabs(guild):
     house = guild.house
     return [("property", "The House"), *((("kitchen", "Kitchen"),) if house.owned and house.oven else ()),
             *((("garage", "Garage"),) if house.owned else ())]
+
+
+def _claim_tabs(guild):
+    """The Wilds Claim's tabs, as `WildsClaimScreen` offers them: the kitchen once the hearth can cook, the
+    garage once the garrison opens it."""
+    return [("claim", "The Claim"), *((("kitchen", "Kitchen"),) if guild.wilds_claim_can_cook else ()),
+            *((("garage", "Garage"),) if guild.claim_garage_open else ())]
+
+
+DYNAMIC = {"property": _house_tabs, "claim": _claim_tabs}
 
 
 def tabs_for(kind, node):
@@ -165,6 +177,9 @@ class HubSession(Session):
         "garage_take": lambda s, b: s.on_garage(GarageTab.take, b["uid"]),
         "garage_repair": lambda s, b: s.on_garage(GarageTab.repair, b["uid"]),
         "repossess": lambda s, b: s.repossess(b["choice"]),
+        "claim": lambda s, b: s.claim_work(b["verb"]),
+        "claim_garrison": lambda s, b: s.claim_garrison(),
+        "claim_fight": lambda s, b: s.claim_fight(b["verb"]),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -190,10 +205,12 @@ class HubSession(Session):
         self._rite = None
         self._vault = None
         self._garage = None
+        self._claim = None
 
     @property
     def tabs(self):
-        return _house_tabs(self.guild) if self.order.kind == "property" else self._tabs
+        tabs = DYNAMIC.get(self.order.kind)
+        return tabs(self.guild) if tabs else self._tabs
 
     @property
     def repossession_due(self):
@@ -290,7 +307,8 @@ class HubSession(Session):
 
     @property
     def garage(self):
-        return self._tab("garage", "_garage", lambda g, grp, n: GarageTab(g, grp, n, tick=self._tick))
+        return self._tab("garage", "_garage", lambda g, grp, n: GarageTab(g, grp, n, tick=self._tick,
+                                                                       claim=self.order.kind == "claim"))
 
     def _tick(self, hours, busy=()):
         """An hour the garage spends off the map (a repair), run through `campaign.advance` as
@@ -327,6 +345,34 @@ class HubSession(Session):
         else:
             raise ValueError(f"no such answer: {choice}")
         return m.back()
+
+    @property
+    def claim(self):
+        return self._tab("claim", "_claim", ClaimTab)
+
+    def claim_work(self, verb):
+        """A piece of the claim's work done here: scouting, the fences and the hearth pass their hours as
+        pygame's do, and the tab stays up with what came of it; a death that empties the band lands on the map."""
+        self.claim.act(verb)
+        m = self.map
+        if m.wiped or not self.group.members:
+            m.game.open(m)
+            return m._after_order()
+        m._save()
+        self.tab = "claim"
+        return self.state()
+
+    def claim_garrison(self):
+        """Leave the band holding the claim: a garrison order, so it goes back to the map, where the clock runs."""
+        self.claim.start_garrison()
+        m = self.map
+        m.game.open(m)
+        return m._after_order()
+
+    def claim_fight(self, verb):
+        """The claim's two fights (CLEAR, SWEEP) are campaign fights: the away card says so until step 10."""
+        title = self.claim.fight(verb)
+        return self.map._away(self.group, None, fight=True, title=title, what="the claim's fight")
 
     @property
     def rite(self):
@@ -509,6 +555,8 @@ class HubSession(Session):
             out["vault"] = self.vault.state()
         elif self.tab == "garage":
             out["garage"] = self.garage.state()
+        elif self.tab == "claim":
+            out["claim"] = self.claim.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "
