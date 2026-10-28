@@ -554,9 +554,8 @@ class MapSession(MapInspectorMixin, Session):
         return {"screen": self.screen, **self.state()}
 
     def _enter(self, group, order):
-        """The screen `order` plays: the arena, the hunt, a search's find, a hub where the browser has one, else the
-        away card."""
-        from .hub_session import HubSession, opens_hub
+        """The screen `order` plays: the arena, the hunt, a search's find, an errand's fight, else its hub."""
+        from .hub_session import HUB_KINDS, HubSession
         if order.kind == "arena":
             from .arena_session import open_arena
             return open_arena(self, group)
@@ -566,10 +565,13 @@ class MapSession(MapInspectorMixin, Session):
         if order.kind in ("ancient_ruins", "serpents_nest", "dragon_lair"):
             from .campaign_fight import delve
             return delve(self, group, order.kind)
-        if opens_hub(order, world.node(group.node)):
-            self.game.open(HubSession(self, group, order))
-            return {"screen": HubSession.screen}
-        return self._away(group, order)
+        if order.kind in ("skirmish", "camp_fight", "ogre_fight"):
+            from .campaign_fight import errand
+            return errand(self, group, order.kind)
+        if order.kind not in HUB_KINDS:
+            raise ValueError(f"no screen plays {order.kind}")
+        self.game.open(HubSession(self, group, order))
+        return {"screen": HubSession.screen}
 
     def _sheet(self, tab, gid):
         from .guild_session import GuildSession
@@ -583,13 +585,8 @@ class MapSession(MapInspectorMixin, Session):
         self.game.open(session)
         return {"screen": session.screen}
 
-    def _away(self, group, order):
-        from .away_session import AwaySession
-        self.game.open(AwaySession(self, group, order))
-        return {"screen": AwaySession.screen}
-
     def back(self):
-        """Back from a screen the browser does not draw yet: on to whatever else the clock left due."""
+        """Back from a screen: on to whatever else the clock left due."""
         self.game.open(self)
         return self._land()
 

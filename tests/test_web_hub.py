@@ -26,7 +26,6 @@ from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
 from gartok.wagon import VEHICLES, Wagon
-from gartok.web.away_session import AwaySession
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game, serve
@@ -1015,13 +1014,6 @@ def test_a_house_too_far_behind_on_the_tax_meets_the_bankers_notice_first():
     assert st["screen"] == "map" and guild.house.squatting and guild.bankers_debt == 0
     with pytest.raises(ValueError):
         hub.verb("repossess", True)(hub, {"choice": "squat"})
-
-
-def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
-    guild = _guild("city")
-    game = Game(MapSession(guild))
-    assert game.session.act(guild.groups[0].gid, "skirmish") == {"screen": "away"}
-    assert isinstance(game.session, AwaySession)
 
 
 def test_the_server_routes_the_hub_verbs(saves):

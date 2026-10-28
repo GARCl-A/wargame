@@ -253,14 +253,16 @@ def test_the_wildfire_talk_gets_a_hearing_then_teaches_and_the_fire_goes_out(mon
 
 def test_a_missed_wildfire_talk_sets_the_camp_on_the_band(monkeypatch):
     guild, g, focus = _wildfire_guild()
-    game = Game(MapSession(guild))
+    m = MapSession(guild)
+    game = Game(m)
     game.session.act(g.gid, "wf_talk")
     _die(monkeypatch, 1)
     assert game.session.choose("persuade")["result"]["kind"] == "fight"
     assert focus.hostile
-    assert game.session.go_on() == {"screen": "away"}
+    assert game.session.go_on() == {"screen": "battle"}
+    assert isinstance(game.session, BattleSession) and game.session.state()["meta"]["sub"].startswith("The goblin camp")
     with pytest.raises(ValueError):
-        game.session.map.act(g.gid, "wf_talk")
+        m.act(g.gid, "wf_talk")
 
 
 def test_an_arena_boss_reads_the_lines_in_order_then_opens_the_bout():

@@ -3,8 +3,8 @@
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 is under way:
-the forced fights, the Claim's, the arena's and the hunt are played in the browser from the map to the
-report; the searches' finds and the errands' fights still open the away card.
+every campaign fight (forced, the Claim's, the arena, the hunt, the searches' finds, the errands') is played
+in the browser from the map to the report; the title screen and the draft are next, then the swap.
 
 ## Decisions so far
 
@@ -94,10 +94,10 @@ report; the searches' finds and the errands' fights still open the away card.
 - **`gartok/web/client/screens/battle/`** is the fight: `board.js` paints the board and
   `battle.js` handles input, tokens, panels and effects.
 - **`gartok/web/map_session.py`** + `screens/map/` (`sheet.js` the sheet and its camera,
-  `map.js` the rest) is the campaign map (step 8). **`away_session.py`** + `screens/away/`
-  stands in for every screen the browser does not draw yet: it names where the band went
-  and goes back to the map. A session holds its `game` (`Game.open`), so a verb can open
-  another screen; its answer names the screen open and the client reloads on it.
+  `map.js` the rest) is the campaign map (step 8). Every order it opens has a screen (the away
+  card that stood in for the rest is gone since 10e); a kind with none is a `ValueError`. A session
+  holds its `game` (`Game.open`), so a verb can open another screen; its answer names the screen
+  open and the client reloads on it.
 - **`gartok/web/hub_session.py`** + `screens/hub/` (`hub.js` the frame, `shop.js` the shop tab) is a
   place's hub (step 9): the tabs pygame's hub shows for the same order, the keeper, the way back.
   `shop_tab.py` drives a headless `MarketScreen` (or `LibraryScreen`), as the map borrows pygame's
@@ -958,6 +958,27 @@ battle session's.
   enter the skirmish. The watch was looked at in headless Edge at 1920x1080.
 - **Next (10e):** the errands' fights (the skirmish: the battlefield and the necromancer; the Wildfire's camp and
   fortress), each behind the same `WatchSession`; then the title screen and the draft, then the swap below.
+
+**10e. The errands' fights — done (2026-10-28).** `campaign_fight.errand` is `App._enter_skirmish` and
+`_enter_wildfire_fight`: `skirmish` at the Battlefield is the Faith Order's Mercy at the Front (four Ledger Hold
+soldiers at the band's side, played by the AI) or, once that errand is out, the necromancer's night (three sides);
+`camp_fight` is a Wildfire camp, `ogre_fight` the Great Focus or the hostile fortress left standing. Each goes behind
+the same `WatchSession` (`_watched`, which `delve` uses too) and is settled as `_battle_end` does: the errand
+(`settle_battlefield` with the soldiers lost, `settle_necromancer` on his fall, with the deed's notice) or
+`wildfire.settle_fight`; a band with nothing to fight there is back on the map. With that, every order the campaign
+reaches has a browser screen: `AwaySession` and `screens/away/` are gone, and `MapSession._enter` raises on a kind
+it cannot play (`hub_session.opens_hub` went with it: no node has a stable without a shop).
+
+- The client is unchanged: the watch and the board already drew all of it (the allies and a third side came with the
+  lab fights).
+- Left out: a tutorial card.
+- Tests: `tests/test_web_errand.py` (every activity kind of `App._ACTIVITY_OPENERS` has a screen; the skirmish with
+  the soldiers and the snapshot; every soldier home is the deed, one lost fails it even on a win; the necromancer's
+  night and his fall; no errand, back on the map; the wagon's watch; a camp, a cleared camp, a camp lost; the Great
+  Focus and the standing fortress); the map's away-card tests now open the Bank, and a missed Wildfire talk lands on
+  the board (`test_web_talk.py`).
+- **Next (10f):** the title screen and the draft (`start_screen`, the draft and `vocation_screen`, the saves
+  browser), so a new guild starts in the browser; then the swap below.
 
 **10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as

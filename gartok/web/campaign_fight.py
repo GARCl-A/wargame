@@ -3,27 +3,32 @@ play log, the guild's bestiary, then `BattleSession`; once it is over, `campaign
 fight settles for good, and `ReportSession`, which ends on the map.
 
 What opens one: a forced fight (the guard, an ambush, a raid), after its talk or with nobody to talk to,
-the Wilds Claim's two fights, an arena bout (`arena_session`), the hunt's ambushes (`hunt_session`) and the
-searches' finds (`delve`: the Ancient Ruins, the Serpent's Nest, the Dragon's Lair). The errands' fights
-still open the away card."""
+the Wilds Claim's two fights, an arena bout (`arena_session`), the hunt's ambushes (`hunt_session`), the
+searches' finds (`delve`: the Ancient Ruins, the Serpent's Nest, the Dragon's Lair) and the errands' fights
+(`errand`: the Battlefield's skirmish, the necromancer, the Wildfire's camps and the Ogre's fortress)."""
 
 from .. import (
+    battlefield,
     campaign,
     combat_lab,
     encounters,
+    factions,
     forced,
     lair,
     missions,
+    necromancer,
     persist,
     recorder,
     serpent_nest,
     vocations,
     wagon_watch,
+    wildfire,
     world,
 )
 from ..battle import Battle
 from ..combat_log import CombatLog
-from ..scenario import AncientRuinsScenario, ruins_empty, scenario_for
+from ..fortress_scenario import FortressScenario
+from ..scenario import AncientRuinsScenario, ErmosScenario, ruins_empty, scenario_for
 from .battle_session import BattleSession
 from .claim_tab import FIGHTS
 from .report_session import ReportSession
@@ -70,16 +75,18 @@ def claim_fight(map_session, group):
 def delve(map_session, group, kind):
     """A search's find (`ancient_ruins`, `serpents_nest`, `dragon_lair`), as `App._enter_ancient_ruins`,
     `_enter_nest` and `_enter_lair`: a band with a wagon first says who minds it, the rest go in."""
-    from .watch_session import WatchSession
     if kind == "ancient_ruins" and ruins_empty(map_session.guild):
         from .dialogue_session import _to_map
         map_session.notices.append("The Ancient Ruins lie silent: nothing is left down there.")
         return _to_map(map_session, group)
     label, title, lead, build = DELVES[kind]
+    return _watched(map_session, group, label, lead,
+                    lambda squad, guarded: _delve(map_session, group, kind, title, build, squad, guarded))
 
-    def go(squad, guarded):
-        return _delve(map_session, group, kind, title, build, squad, guarded)
 
+def _watched(map_session, group, label, lead, go):
+    """`go(party, guarded)` with the whole band, or after the wagon's watch when the band has one."""
+    from .watch_session import WatchSession
     if not wagon_watch.needs_watch(group):
         return go(list(group.members), True)
     session = WatchSession(map_session, group, label, lead, go)
@@ -119,6 +126,75 @@ DELVES = {
                     "Kobold patrols, a hoard, the clutch, and the dragon asleep beside it.",
                     lambda guild, squad: lair.LairScenario(encounters.squad_level(squad))),
 }
+
+
+BATTLEFIELD_LEAD = "Four Ledger Hold soldiers hold the trenches against a warband. If one of them dies, the errand fails."
+NECROMANCER_LEAD = "The Battlefield at night: a warband, the dead of days before, and the necromancer unseen among them."
+CAMP_LEAD = "The Ogre's goblins feed the fire from their camp."
+FORTRESS_LEAD = "The Ogre's half-raised fortress, its bonfire spreading, and the Ogre inside."
+
+
+def errand(map_session, group, kind):
+    """An errand's fight, as `App._enter_skirmish` and `_enter_wildfire_fight`: `skirmish` (the Faith
+    Order's Battlefield, or the necromancer's night once that errand is out) or `camp_fight` /
+    `ogre_fight` (a Wildfire camp, the Great Focus, the hostile fortress left standing). With nothing
+    left to fight there, back to the map."""
+    from .dialogue_session import _to_map
+    guild = map_session.guild
+    if kind == "skirmish":
+        mission = missions.pending_front(guild, group)
+        if mission is None:
+            return _to_map(map_session, group)
+        night = mission.template_id == missions.FAITH_NECROMANCER.id
+        return _watched(map_session, group, "JOIN THE SKIRMISH", NECROMANCER_LEAD if night else BATTLEFIELD_LEAD,
+                        lambda squad, guarded: _skirmish(map_session, group, mission, squad, guarded))
+    focus = wildfire.focus_at(guild, group.node)
+    hold = group.node == wildfire.FORTRESS_ID and wildfire.hold_standing(guild)
+    if not hold and (focus is None or focus.cleared):
+        return _to_map(map_session, group)
+    camp = focus is not None and not focus.great
+    label, lead = ("ATTACK THE CAMP", CAMP_LEAD) if camp else ("STORM THE FORTRESS", FORTRESS_LEAD)
+    return _watched(map_session, group, label, lead,
+                    lambda squad, guarded: _wildfire(map_session, group, kind, focus, squad, guarded))
+
+
+def _skirmish(map_session, group, mission, squad, guarded):
+    guild, node = map_session.guild, world.node(group.node)
+    night = mission.template_id == missions.FAITH_NECROMANCER.id
+    if night:
+        scenario, title = necromancer.NecromancerScenario(squad), "The necromancer"
+    else:
+        scenario, title = battlefield.BattlefieldScenario(squad), "Mercy at the Front"
+    battle = Battle(squad, scenario.enemies, scenario=scenario, allies=scenario.allies,
+                    others=getattr(scenario, "others", None), daylight=guild.clock.is_daylight, lethal=True,
+                    clock_day=guild.clock.day, aggressor="enemy")
+
+    def settle(outcome):
+        wagon_watch.leave_outside(group, node, guarded)
+        if night:
+            notice, deeds = missions.settle_necromancer(guild, mission, necromancer.errand_met(battle))
+        else:
+            notice, deeds = missions.settle_battlefield(guild, mission, outcome.won, battlefield.soldiers_lost(battle))
+        return [notice, *(factions.deed_notice(d) for d in deeds)]
+
+    return _enter(map_session, group, battle, node, "skirmish", title, settle, squad=squad)
+
+
+def _wildfire(map_session, group, kind, focus, squad, guarded):
+    guild, node = map_session.guild, world.node(group.node)
+    if focus is not None and not focus.great:
+        scenario, foes, title = ErmosScenario(), wildfire.camp_crew(encounters.squad_level(squad)), "The goblin camp"
+    else:
+        foes = wildfire.ogre_band(hold=focus is None)
+        scenario, title = FortressScenario(foes, finished=focus is None), "The Ogre's fortress"
+    battle = Battle(squad, foes, scenario=scenario, daylight=guild.clock.is_daylight, lethal=True,
+                    clock_day=guild.clock.day, aggressor="player")
+
+    def settle(outcome):
+        wagon_watch.leave_outside(group, node, guarded)
+        return wildfire.settle_fight(guild, node.id, outcome.won)
+
+    return _enter(map_session, group, battle, node, kind, title, settle, squad=squad)
 
 
 def _enter(map_session, group, battle, node, kind, title, settle, *, squad=None, offer=None, after=None):

@@ -12,7 +12,7 @@ from gartok import orders, persist, recorder, world
 from gartok.group import CAUTIOUS, Group
 from gartok.guild import Guild
 from gartok.unit import Unit
-from gartok.web.away_session import AwaySession
+from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game, serve
 
@@ -132,9 +132,9 @@ def test_entering_a_place_opens_its_screen_and_coming_back_changes_nothing(saves
     m = game.session
     g = guild.groups[0]
     t0 = guild.clock.seconds
-    assert m.act(g.gid, "skirmish") == {"screen": "away"}
-    assert isinstance(game.session, AwaySession)
-    assert game.session.state()["title"] and g.node == "city"
+    assert m.act(g.gid, "bank") == {"screen": "hub"}
+    assert isinstance(game.session, HubSession)
+    assert game.session.state()["tab"] == "vault" and g.node == "city"
     st = game.session.map.back()
     assert st["screen"] == "map" and game.session is m and guild.clock.seconds == t0
 
@@ -143,10 +143,10 @@ def test_an_order_whose_screen_falls_due_on_the_clock_opens_it():
     guild = _guild("city")
     game = _game(guild)
     g = guild.groups[0]
-    g.order = orders.interactive("skirmish")
+    g.order = orders.interactive("bank")
     game.session._advance()
     st = game.session._land()
-    assert st == {"screen": "away"} and game.session.order.kind == "skirmish"
+    assert st == {"screen": "hub"} and game.session.order.kind == "bank"
     assert game.session.map.back()["screen"] == "map"
 
 
@@ -210,12 +210,12 @@ def test_the_server_routes_the_map_verbs_and_answers_with_the_screen_open(saves)
 
     try:
         gid = json.loads(urllib.request.urlopen(url + "/api/map/state").read())["groups"][0]["gid"]
-        assert post("/api/map/act", {"gid": gid, "key": "skirmish"}) == {"screen": "away"}
-        assert json.loads(urllib.request.urlopen(url + "/api/screen").read())["screen"] == "away"
+        assert post("/api/map/act", {"gid": gid, "key": "bank"}) == {"screen": "hub"}
+        assert json.loads(urllib.request.urlopen(url + "/api/screen").read())["screen"] == "hub"
         with pytest.raises(urllib.error.HTTPError) as e:
             post("/api/map/travel", {"gid": gid, "node": "market"})
         assert e.value.code == 409
-        assert post("/api/away/back", {})["screen"] == "map"
+        assert post("/api/hub/back", {})["screen"] == "map"
         st = post("/api/map/travel", {"gid": gid, "node": "market"})
         assert st["screen"] == "map" and st["groups"][0]["node"] == "market"
         with pytest.raises(urllib.error.HTTPError) as e:

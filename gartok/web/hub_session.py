@@ -111,12 +111,6 @@ def tabs_for(kind, node):
     return list(HUBS.get(kind) or _node_tabs(node))
 
 
-def opens_hub(order, node):
-    """True when the browser plays `order` at `node` in a hub (the Farm's stables only beside its shop,
-    as `App._open_stables` does)."""
-    return order.kind in HUB_KINDS and (order.kind != "stable" or node.has("shop"))
-
-
 def _shop(verb):
     """A shop verb: it acts on the shop tab and answers the whole hub."""
     def run(s, b):
