@@ -317,7 +317,39 @@ $("nodes").addEventListener("pointerover", e => { const n = e.target.closest(".n
 $("nodes").addEventListener("pointerleave", () => hover(null));
 
 $("guildbtn").onclick = () => post("act", {gid: sel, key: "guild"});
-$("titlebtn").onclick = $("wipedbtn").onclick = () => post("title", {});
+$("wipedbtn").onclick = () => post("title", {});
+
+// ---------------------------------------------------------------- the menu (pygame's pause menu)
+function pause(open) {
+  $("pause").hidden = !open;
+  $("saveform").hidden = true;
+  $("savednote").textContent = "";
+  if (!open || !M) return;
+  $("pausename").textContent = M.meta ? M.meta.name : "";
+  $("pause").querySelector('[data-pause="save"]').classList.toggle("off", !!M.wiped);
+}
+async function saveAs() {
+  try {
+    const r = await api("/api/map/save_as", {name: $("savename").value});
+    $("saveform").hidden = true;
+    $("savename").value = "";
+    $("savednote").textContent = `saved: ${r.saved}`;
+    Sound.play("click");
+  } catch (e) { news([e.message], true); }
+}
+$("titlebtn").onclick = () => pause(true);
+$("pause").addEventListener("click", e => {
+  if (e.target === $("pause")) { pause(false); return; }
+  const t = e.target.closest("[data-pause]");
+  if (!t || t.classList.contains("off")) return;
+  const d = t.dataset.pause;
+  if (d === "resume") pause(false);
+  else if (d === "save") { $("saveform").hidden = false; $("savednote").textContent = ""; $("savename").focus(); }
+  else if (d === "quit") api("/api/map/quit", {}).then(() => { window.close(); document.body.innerHTML = ""; });
+  else post(d, {});
+});
+$("savego").onclick = saveAs;
+$("saveform").addEventListener("submit", e => { e.preventDefault(); saveAs(); });
 $("seal").onclick = () => {
   const t = M && M.cta;
   if (!t || !t.enabled) return;
@@ -329,7 +361,13 @@ $("seal").onclick = () => {
 };
 
 addEventListener("keydown", e => {
+  if (!$("pause").hidden) {
+    if (e.key === "Escape") { if (!$("saveform").hidden) $("saveform").hidden = true; else pause(false); }
+    return;
+  }
+  if (e.target.tagName === "INPUT") return;
   if (e.key === "Escape" && splitting) { splitting = null; drawBands(); }
+  else if (e.key === "Escape") pause(true);
   else if (e.key === "+" || e.key === "=") Sheet.zoomIn();
   else if (e.key === "-") Sheet.zoomOut();
   else if (e.key === "f" || e.key === "F") Sheet.fit();

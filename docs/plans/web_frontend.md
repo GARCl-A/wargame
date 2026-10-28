@@ -4,7 +4,8 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 is under way:
 every campaign fight (forced, the Claim's, the arena, the hunt, the searches' finds, the errands') is played
-in the browser from the map to the report, the title screen opens it and a new guild is drafted there; the settings and the wiki are next, then the swap.
+in the browser from the map to the report, the title screen opens it, a new guild is drafted there, and the settings, the wiki
+and the map's menu are there too; the swap is next.
 
 ## Decisions so far
 
@@ -994,7 +995,7 @@ the window. The map's top bar has MENU (save, then the title, as pygame's pause 
 there too, with the wipe as the title's notice.
 
 - `Sheet.labelSides` (where each place's name goes) moved from `map.js` into `sheet.js`, which both read.
-- Not in the browser yet, so shown off with a note: New guild (10g, since built), Wiki, Settings, Editor. Settings and the wiki
+- Not in the browser yet, so shown off with a note: New guild (10g, since built), Wiki, Settings (10h, since built), Editor. Settings and the wiki
   are pygame's pause menu too; the swap needs them (10h), the editor stays a pygame tool until then.
 - Left out: a tutorial card.
 - Tests: `tests/test_web_title.py` (no guild, the invitation; the last guild's charter and map; Continue to the map;
@@ -1045,6 +1046,29 @@ As built:
   title shows it; an unnamed guild is The Guild; the routing). The vocation, the pool, a replacement, the charter
   and the map after FOUND were looked at in headless Edge at 1920x1080.
 - **Next (10h):** the settings and the wiki (pygame's pause menu too), then the swap below.
+
+**10h. The settings, the wiki and the map's menu — done (2026-10-28).** No new mockup: both follow the title's
+language (the menu mockup), a page of paper on the table, the chapters on leather.
+
+- **The settings** (`settings_session.py`, screen `settings`): one ruled row per `settings.SPEC` entry, each with a
+  line on what it does and its choices as stamps (press one to keep it, where pygame cycles); with a guild open,
+  its tutorial cards (on/off, and reset), saved with the guild. Opened from the title (no tutorial rows) or the
+  map's menu. Verbs: `set`, `tutorial`, `reset_tutorial`, `back`. The volume reaches the shell's sounds at once.
+- **The wiki** (`wiki_session.py`, screen `wiki`): pygame's seven tabs as chapters on leather (items, recipes,
+  actions, talents, races, beasts, rules), a filter field, the chapter's entries as cards in columns on paper
+  (glyph, name, kind, a line of numbers, the text, the traits as stamps; the match marked). The filter reads the
+  text too, as pygame's does, and holds across chapters. Verbs: `chapter`, `find`, `back`.
+- **The map's menu** (pygame's pause menu): MENU or Esc opens it over the map. Resume, Save as… (a named manual
+  save, `MapSession.save_as`), Settings, Wiki & compendium, Main menu (saved first, as before), Quit (saved first).
+  Back from the settings or the wiki lands on the map as `back` does.
+- Left out: a tutorial card.
+- Tests: `tests/test_web_settings_wiki.py` (the title opens both and they come back; a choice is kept and saved, a
+  refusal for one not offered or a tutorial with no guild; the guild's tutorial toggled and reset into its save;
+  every chapter reads its catalog, the filter past the name, across chapters, capped; Save as names a save, an
+  empty name is Manual save, a wiped guild has nothing to save; Quit saves; the routing). The wiki (items, rules,
+  a filtered chapter), the settings from the map and the menu over the map were looked at in headless Edge at
+  1920x1080.
+- **Next (10z):** the swap below: every screen the loop reaches now runs in the browser.
 
 **10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as

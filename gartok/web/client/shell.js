@@ -53,6 +53,8 @@ const SCREENS = {
   arena: {css: ["arena.css"], js: ["arena.js"]},
   hunt: {css: ["hunt.css"], js: ["hunt.js"]},
   watch: {css: ["watch.css"], js: ["watch.js"]},
+  wiki: {css: ["wiki.css"], js: ["wiki.js"]},
+  settings: {css: ["settings.css"], js: ["settings.js"]},
 };
 
 function fit() {

@@ -10,6 +10,8 @@ from ..guild import DEFAULT_BANNER_COLOR, DEFAULT_BANNER_ICON
 from ..start_screen import INVITE_RACES, MAX_FACES, QUOTE
 from .map_session import MapSession, _icon, _plural, _portrait
 from .session import Session, asset_url
+from .settings_session import SettingsSession
+from .wiki_session import WikiSession
 
 CHARTER_FACES = 4    # the charter's roster row; the rest are a count
 KIND = {"current": "Current", "auto": "Auto", "manual": "Manual"}
@@ -36,6 +38,8 @@ class TitleSession(Session):
         "page": lambda s, b: s.page(b["page"], b.get("world")),
         "continue": lambda s, b: s.load(s.latest["world"] if s.latest else None),
         "new": lambda s, b: s.new_guild(),
+        "wiki": lambda s, b: s.aside(WikiSession(s._return, "Back to the title")),
+        "settings": lambda s, b: s.aside(SettingsSession(s._return, "Back to the title")),
         "load": lambda s, b: s.load(b["world"], b.get("save", persist.CURRENT)),
         "delete_world": lambda s, b: s.delete_world(b["world"]),
         "delete_save": lambda s, b: s.delete_save(b["world"], b["save"]),
@@ -87,6 +91,15 @@ class TitleSession(Session):
         self.game.open(DraftSession())
         return {"screen": DraftSession.screen}
 
+    def aside(self, session):
+        """The wiki or the settings, which come back here."""
+        self.game.open(session)
+        return {"screen": session.screen}
+
+    def _return(self):
+        self.game.open(self)
+        return {"screen": self.screen}
+
     def delete_world(self, world_id):
         persist.delete_world(world_id)
         self._refresh()
@@ -121,7 +134,6 @@ class TitleSession(Session):
 
     def _menu(self):
         n, latest = len(self.worlds), self.latest
-        later = "pygame only, for now"
         return [
             {"key": "continue", "label": "Continue", "primary": True, "enabled": latest is not None,
              "hint": f"{latest['name'] or 'Unnamed guild'} · day {latest.get('day') or 1}" if latest else None,
@@ -129,8 +141,8 @@ class TitleSession(Session):
             {"key": "new", "label": "New guild", "enabled": True},
             {"key": "load", "label": "Load game", "enabled": n > 0, "hint": _plural(n, "guild") if n else None},
             None,
-            {"key": "wiki", "label": "Wiki & compendium", "enabled": False, "hint": later},
-            {"key": "settings", "label": "Settings", "enabled": False, "hint": later},
+            {"key": "wiki", "label": "Wiki & compendium", "enabled": True},
+            {"key": "settings", "label": "Settings", "enabled": True},
             {"key": "editor", "label": "Editor", "enabled": False, "hint": "characters, maps, combat lab"},
             None,
             {"key": "quit", "label": "Quit", "enabled": True, "quiet": True},

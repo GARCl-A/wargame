@@ -25,7 +25,7 @@ the art as far as Gemini got and the board's colour and light are done (the batt
 finished), the campaign map is in (`--save <world>`) and so is every screen the campaign reaches
 (step 9). Step 10 brings the campaign's fights: the forced ones, the Claim's, the arena, the hunt, the searches'
 finds and the errands' fights are in, the title screen opens it all (`python -m gartok.web`) and a new
-guild is drafted there; next are settings and the wiki, then the swap.
+guild is drafted there, the settings, the wiki and the map's menu too; next is the swap.
 
 ---
 

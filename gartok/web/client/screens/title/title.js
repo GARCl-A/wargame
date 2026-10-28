@@ -55,6 +55,7 @@ function choose(key) {
   if (key === "continue") post("continue");
   else if (key === "new") post("new");
   else if (key === "load") post("page", {page: T.mode === "guilds" ? "home" : "guilds"});
+  else if (key === "wiki" || key === "settings") post(key);
   else if (key === "quit") post("quit");
 }
 

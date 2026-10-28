@@ -290,3 +290,22 @@
 #wiped .paper{width:560px;padding:30px 34px}
 #wiped p{margin-top:14px;font:italic 19px/1.4 "IM Fell English",serif;color:#4a3522}
 #wiped .ghost-btn{margin-top:20px;width:max-content}
+
+/* the menu over the map: pygame's pause menu */
+#pause[hidden]{display:none}
+#pause{position:absolute;inset:0;display:grid;place-items:center;background:rgba(8,6,4,.72);z-index:25}
+#pause .leather{width:520px;padding:34px 40px 30px}
+#pause .tagline{font:600 12px/1 Cinzel,serif;letter-spacing:.4em;color:var(--brass);text-transform:uppercase}
+#pause h3{margin:12px 0 18px;font:700 30px/1.1 Cinzel,serif;color:#e8d8b4}
+#pause .pm{position:relative;display:flex;align-items:center;height:50px;padding:0 16px 0 26px;cursor:pointer;
+  font:700 17px/1 Cinzel,serif;letter-spacing:.16em;color:#e8d8b4;text-transform:uppercase}
+#pause .pm .num{position:absolute;left:0;font:14px/1 "IM Fell English",serif;letter-spacing:0;color:#6f5a3e}
+#pause .pm .hint{margin-left:auto;font:italic 16px/1 "IM Fell English",serif;letter-spacing:0;color:#8f7a59;text-transform:none}
+#pause .pm:hover{color:var(--brass-hi);background:linear-gradient(90deg,rgba(201,163,94,.16),rgba(201,163,94,0) 85%)}
+#pause .pm.quiet{color:#a8936d}
+#pause .pm.off{color:#5e4d37;cursor:default;background:none}
+#pause .gap{height:14px}
+#saveform{display:flex;gap:10px;margin:4px 0 10px 26px}
+#saveform[hidden]{display:none}
+#saveform input{flex:1;min-width:0;height:38px;padding:0 12px;border:0;outline:0;border-radius:3px;
+  font:18px/1 "EB Garamond",serif;color:#eadcbc;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--brass-lo)}

@@ -30,6 +30,7 @@ from ..constants import fmt_money
 from ..group import CAUTIOUS, NORMAL
 from ..map_inspector import STANCE_NOTES, MapInspectorMixin
 from ..map_screen import ADVANCE_HOURS, MapScreen, _position, node_icon
+from ..pause_screen import MAX_SAVE_NAME
 from ..ui.tokens import T
 from .session import Session, asset_url
 
@@ -68,6 +69,10 @@ class MapSession(MapInspectorMixin, Session):
         "merge": lambda s, b: s.merge(b["gid"], b["other"]),
         "advance": lambda s, b: s.advance_world(),
         "title": lambda s, b: s.to_title(),
+        "save_as": lambda s, b: s.save_as(b.get("name", "")),
+        "wiki": lambda s, b: s.aside("wiki"),
+        "settings": lambda s, b: s.aside("settings"),
+        "quit": lambda s, b: s.quit(),
     }
 
     _order_status = MapScreen._order_status
@@ -593,6 +598,29 @@ class MapSession(MapInspectorMixin, Session):
         notice = "The guild was wiped out. Load an earlier save to try again." if self.wiped else None
         self.game.open(TitleSession(notice))
         return {"screen": "title"}
+
+    def save_as(self, name):
+        """A named snapshot on the guild's saves (pygame's pause menu, SAVE AS)."""
+        if self.world_id is None or self.wiped:
+            raise ValueError("there is nothing to save")
+        name = str(name).strip()[:MAX_SAVE_NAME] or "Manual save"
+        persist.save_game(self.world_id, self.guild, kind="manual", label=name)
+        return {"saved": name}
+
+    def aside(self, which):
+        """The wiki or the settings from the menu; back comes to the map as it was."""
+        from .settings_session import SettingsSession
+        from .wiki_session import WikiSession
+        session = (WikiSession(self.back, "Back to the map") if which == "wiki"
+                   else SettingsSession(self.back, "Back to the map", self.guild, self._save))
+        self.game.open(session)
+        return {"screen": session.screen}
+
+    def quit(self):
+        """QUIT from the menu, the world saved first."""
+        self._save()
+        self.game.quit()
+        return {"quit": True}
 
     def back(self):
         """Back from a screen: on to whatever else the clock left due."""
