@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house and the Wilds Claim are in; the other tabs come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold and the campfire's kitchen are in; the guild and group sheets come next.
 
 ## Decisions so far
 
@@ -110,6 +110,8 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   own `GarageScreen` held headless; the house's KITCHEN is `craft_tab` at the `cooking` station.
 - **`gartok/web/claim_tab.py`** + `screens/hub/claim.js` are the Wilds Claim's THE CLAIM (9l), on pygame's own
   `WildsClaimScreen` held headless; its KITCHEN is `craft_tab` at `cooking` and its GARAGE `garage_tab` with `claim=True`.
+- **`gartok/web/ledger_tab.py`** + `screens/hub/ledger.js` are Ledger Hold's THE DESK (9m), on pygame's own
+  `LedgerScreen` held headless: its panels are data (`LedgerScreen.panels`) that both draw.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -604,6 +606,26 @@ As built:
 - **Next (9m):** the places left behind the away card: Ledger Hold (`ledger_screen.py`: the Bankers' chest exchange,
   Commander Varkas, the supply runs), the Library's study desk, the map's campfire cooking (`craft_tab` at `cooking`);
   then the first family that needs a mockup, the guild and group sheets.
+
+**9m. Ledger Hold and the campfire — done (2026-10-27).** As built:
+
+- **Ledger Hold:** the order `ledger` opens a hub with one tab, THE DESK (`hub_session.HUBS["ledger"]`), the keeper
+  Commander Varkas. `LedgerScreen` lost its per-panel draws: `panels()` returns the desk's panels as data (the chest
+  while someone carries it, the mentorship and the supply run once the Bankers vouch, else the gatehouse) and `_act`
+  is what its buttons do; pygame draws the panels from that and `LedgerTab` sends them. A button the desk does not offer,
+  or offers greyed out, is refused. The supply run is an order: the band goes back to the map, where the clock runs.
+- **The layout:** the band on leather (a chip on whoever carries the chest or the letter); on paper the panels side by
+  side, each with its facts, its button and the ambush warning under the supply run.
+- **The campfire:** the map's campfire (lit, or lit first) opens a hub with one tab, CAMPFIRE: `craft_tab`'s `kitchen`
+  at the `cooking` station, with no keeper (the band's own fire). Back lands on the map.
+- **The Library's study:** pygame's STUDY tab (`TabbedHubScreen.for_node`) is the Library's shop a second time, and the
+  map only ever opens the Library's own hub (shop, write, jobs); the browser's node tabs drop it.
+- Tests: `tests/test_web_hub.py` (the desk and the gate, the chest for a letter, the mentorship accepted and delivered
+  once trained, the supply run refused short of cargo and sent off, the campfire's kitchen, the Library's tabs). Looked
+  at in headless Edge at 1920x1080.
+- **Next (9n):** the first family that needs a mockup: the guild and group sheets (`guild_screen.py`, `group_screen.py`:
+  the map's Gear & quests and the guild's tabs), one mockup first, then the screens. What still opens the away card
+  after that: the wildfire's talk, the campaign fights (step 10), `trust` (the City's Test of Trust as its own order).
 
 ### 10. The swap — todo
 

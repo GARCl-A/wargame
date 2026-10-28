@@ -1165,3 +1165,105 @@ def test_the_claim_garage_parks_with_no_bays_and_warns_while_nobody_holds_it():
     assert st["claim"] and st["kept"][0]["can"] and all(c["label"] != "bays" for c in st["cards"])
     st = hub.verb("garage_park", True)(hub, {"uid": cart.uid})["garage"]
     assert guild.claim_garage.wagons == [cart] and st["watch"] is not None
+
+
+def _desk(deeds=(), strength=None):
+    guild = _guild("ledger_hold")
+    guild.deeds_done += list(deeds)
+    g = guild.groups[0]
+    for u in g.members:
+        if strength:
+            u.strength = strength
+            u._derive_carry()
+        for name in (data.MISSION_CHEST_ITEM, data.LETTER_ITEM):
+            u.remove_named(name, u.count_of(name))
+    game = Game(MapSession(guild))
+    assert game.session.act(g.gid, "ledger") == {"screen": "hub"}
+    return game.session, guild, g
+
+
+def test_ledger_hold_opens_on_its_desk_and_the_gate_turns_a_stranger_away():
+    hub, _, _ = _desk()
+    st = hub.state()
+    assert [(t["key"], t["live"]) for t in st["tabs"]] == [("ledger", True)] and st["tab"] == "ledger"
+    assert st["keeper"]["name"] == "Commander Varkas"
+    d = st["ledger"]
+    assert [p["key"] for p in d["panels"]] == ["gate"] and d["panels"][0]["lines"] and not d["panels"][0]["button"]
+    with pytest.raises(ValueError):
+        hub.verb("ledger", True)(hub, {"key": "accept_mentorship"})
+
+
+def test_the_sealed_chest_is_handed_over_for_a_letter_of_receipt(saves):
+    hub, _, g = _desk()
+    carrier = g.members[1]
+    carrier.give_to_pack(data.MISSION_CHEST_ITEM)
+    d = hub.state()["ledger"]
+    chest = next(p for p in d["panels"] if p["key"] == "chest")
+    assert chest["rows"][0]["value"] == carrier.name and chest["button"]["can"]
+    assert next(u for u in d["members"] if u["uid"] == carrier.uid)["chest"]
+    st = hub.verb("ledger", True)(hub, {"key": "exchange"})
+    assert st["tab"] == "ledger" and "letter of receipt" in st["ledger"]["notice"]
+    assert not carrier.has_item(data.MISSION_CHEST_ITEM) and carrier.has_item(data.LETTER_ITEM)
+    assert [p["key"] for p in st["ledger"]["panels"]] == ["gate"]
+
+
+def test_varkas_mentors_a_treefolk_who_is_delivered_only_once_trained():
+    hub, guild, g = _desk(deeds=["bankers_trust"])
+    d = hub.state()["ledger"]
+    assert [p["key"] for p in d["panels"]] == ["mentorship", "supply_run"]
+    assert next(c for c in d["cards"] if c["label"] == "supply runs")["value"] == "0 / 10"
+    st = hub.verb("ledger", True)(hub, {"key": "accept_mentorship"})
+    recruit = g.members[-1]
+    assert len(g.members) == 3 and recruit.race["name"] == "Treefolk"
+    mentor = next(p for p in st["ledger"]["panels"] if p["key"] == "mentorship")
+    assert mentor["button"] == {"key": "deliver_recruit", "label": "Deliver the recruit", "can": False}
+    with pytest.raises(ValueError):
+        hub.verb("ledger", True)(hub, {"key": "deliver_recruit"})
+    recruit.set_track_level("combat", 4)
+    st = hub.verb("ledger", True)(hub, {"key": "deliver_recruit"})
+    assert recruit not in guild.roster and "ledger_hold_mentoring" in guild.deeds_done
+    assert "$230" in st["ledger"]["notice"]
+    mentor = next(p for p in st["ledger"]["panels"] if p["key"] == "mentorship")
+    assert mentor["button"] is None and mentor["rows"][0]["tone"] == "good"
+
+
+def test_the_supply_run_needs_the_cargo_and_sends_the_band_off_on_the_map(monkeypatch):
+    monkeypatch.setattr(economy, "SUPPLY_RUN_AMBUSH_CHANCE", 0)
+    hub, guild, g = _desk(deeds=["bankers_trust"], strength=3)
+    if g.free_cargo_capacity < economy.SUPPLY_RUN_CARGO_KG:
+        run = next(p for p in hub.state()["ledger"]["panels"] if p["key"] == "supply_run")
+        assert not run["button"]["can"] and run["rows"][2]["tone"] == "bad"
+        with pytest.raises(ValueError):
+            hub.verb("ledger", True)(hub, {"key": "supply_run"})
+    for u in g.members:
+        u.strength = 18
+        u._derive_carry()
+    run = next(p for p in hub.state()["ledger"]["panels"] if p["key"] == "supply_run")
+    assert run["button"]["can"] and run["warn"]
+    st = hub.verb("ledger", True)(hub, {"key": "supply_run"})
+    assert st["screen"] == "map" and g.node == "ledger_hold" and guild.supply_runs_completed == 1
+
+
+def test_the_campfire_on_the_map_opens_the_camp_kitchen_and_back_lands_on_the_map():
+    guild = _guild("road")
+    g = guild.groups[0]
+    g.campfire_node, g.campfire_expires = g.node, guild.clock.seconds + 4 * 3600
+    game = Game(MapSession(guild))
+    m = game.session
+    assert m.act(g.gid, "campfire_cook") == {"screen": "hub"}
+    hub = game.session
+    st = hub.state()
+    assert [(t["key"], t["label"]) for t in st["tabs"]] == [("kitchen", "Campfire")] and st["tab"] == "kitchen"
+    assert st["keeper"]["name"] is None and st["craft"]["what"] == "cook what the pack carries"
+    cook = g.members[0]
+    cook.give_to_pack("Meat", 2)
+    cook.give_to_pack("Salt", 1)
+    assert next(r for r in hub.state()["craft"]["recipes"] if r["id"] == "Jerky")["can"]
+    assert hub.verb("back", True)(hub, {})["screen"] == "map"
+
+
+def test_the_library_hub_has_no_second_copy_of_its_shop():
+    from gartok.web.hub_session import tabs_for
+    node = world.node("library")
+    assert [k for k, _ in tabs_for("market", node)] == ["shop", "jobs"]
+    assert [k for k, _ in tabs_for("library", node)] == ["shop", "craft", "jobs"]

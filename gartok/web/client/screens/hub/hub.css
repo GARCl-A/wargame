@@ -465,3 +465,19 @@
 .cacts .brass-btn{min-width:300px;height:52px}
 .cacts .brass-btn b{margin:0}
 .cacts+.sec.dark{margin-top:30px}
+
+/* ---------- Ledger Hold's desk: its panels side by side on paper ---------- */
+.desks{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:30px;margin-top:22px;padding-top:4px;border-top:1px solid rgba(90,60,30,.45)}
+.desk{display:flex;flex-direction:column;padding-top:16px}
+.desk h3{font:700 21px/1 Cinzel,serif;color:#24170c;letter-spacing:.04em}
+.desk .daside{margin-top:6px;font:italic 15.5px/1 "IM Fell English",serif;color:#7b6142}
+.dfact{margin-top:16px;padding-bottom:10px;border-bottom:1px dashed rgba(90,60,30,.28)}
+.dfact .lbl{display:block;color:#7b6142}
+.dfact b{display:block;margin-top:6px;font:600 17px/1.3 "EB Garamond",serif;color:#24170c}
+.dfact b.good{color:#2f5a22}
+.dfact b.bad{color:#7a2318}
+.dfact b.muted{font-weight:400;font-style:italic;color:#6b5233}
+.dfact b.money{color:#6a4a12}
+.desk .brass-btn{margin-top:22px;height:52px}
+.desk .brass-btn b{margin:0}
+.desk .dwarn{margin-top:12px;font:italic 15.5px/1.3 "IM Fell English",serif;color:#7a2318}

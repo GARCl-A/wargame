@@ -447,7 +447,9 @@ class MapSession(MapInspectorMixin, Session):
                     raise ValueError("the band cannot light a campfire")
                 self.notices.append(f"{g.display_name}: campfire lit. Burns for 4 hours.")
                 self._save()
-            return self._away(g, None, title="Campfire cooking", what="the camp kitchen")
+            from .hub_session import HubSession
+            self.game.open(HubSession(self, g, orders.Order("campfire")))
+            return {"screen": HubSession.screen}
         elif key in orders.INTERACTIVE_KINDS:
             return self._enter(g, orders.interactive(key, hours=0))
         else:

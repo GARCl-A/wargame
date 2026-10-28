@@ -5,7 +5,8 @@ recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`s
 recruits, study rooms and stage (`tavern_tab`), the City Prison its cells (`tavern_tab` with a bail), a
 sanctuary its initiation (`initiation_tab`), the Bank its strongbox (`vault_tab`) beside the Bankers' jobs, the
 City house its stash (`vault_tab` again), its kitchen (`craft_tab`) and its garage (`garage_tab`), the Wilds
-Claim its stages (`claim_tab`) with the same kitchen and garage; a tab the browser does not draw yet says so
+Claim its stages (`claim_tab`) with the same kitchen and garage, Ledger Hold its desk (`ledger_tab`), and a
+band's campfire in the field the same kitchen; a tab the browser does not draw yet says so
 inside the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md`
 lands.
 
@@ -27,6 +28,7 @@ from .craft_tab import CRAFT_TABS, CraftTab
 from .garage_tab import GarageTab
 from .initiation_tab import InitiationTab
 from .jobs_tab import JobsTab
+from .ledger_tab import LedgerTab
 from .medic_tab import MedicTab
 from .session import Session, asset_url
 from .shop_tab import ShopTab
@@ -44,13 +46,15 @@ HUBS = {
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
     "prison": (("prison", "The Cells"),),
     "bank": (("vault", "Vault"), ("jobs", "Jobs")),
+    "ledger": (("ledger", "The Desk"),),
+    "campfire": (("kitchen", "Campfire"),),
 }
 HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", "property", "claim", *HUBS}
 # the tabs the browser draws so far
 LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", "vault", "property",
-        "garage", "claim", *CRAFT_TABS, *TAVERN_TABS}
+        "garage", "claim", "ledger", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
-WHAT = {"tavern": "the tavern", "study": "the study desk"}
+WHAT = {"tavern": "the tavern"}
 
 
 def _node_tabs(node):
@@ -72,7 +76,7 @@ def _node_tabs(node):
     if node.has("apothecary"):
         tabs += (("medic", "Medic"), ("jobs", "Jobs"))
     if node.has("library"):
-        tabs += (("study", "Study"), ("jobs", "Jobs"))
+        tabs.append(("jobs", "Jobs"))       # pygame's STUDY repeats the Library's shop, which the shop tab already is
     if node.has("shrine"):
         tabs += (("jobs", "Jobs"), ("initiation", "Initiation"))
     if node.has("work"):
@@ -180,6 +184,7 @@ class HubSession(Session):
         "claim": lambda s, b: s.claim_work(b["verb"]),
         "claim_garrison": lambda s, b: s.claim_garrison(),
         "claim_fight": lambda s, b: s.claim_fight(b["verb"]),
+        "ledger": lambda s, b: s.ledger_act(b["key"]),
     }
 
     keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
@@ -206,6 +211,7 @@ class HubSession(Session):
         self._vault = None
         self._garage = None
         self._claim = None
+        self._ledger = None
 
     @property
     def tabs(self):
@@ -375,6 +381,22 @@ class HubSession(Session):
         return self.map._away(self.group, None, fight=True, title=title, what="the claim's fight")
 
     @property
+    def desk(self):
+        return self._tab("ledger", "_ledger", LedgerTab)
+
+    def ledger_act(self, key):
+        """A button on Ledger Hold's desk: the supply run sends the band off on its order, back to the map where
+        the clock runs; the rest is done here and the tab stays up."""
+        self.desk.act(key)
+        m = self.map
+        if self.group.busy:
+            m.game.open(m)
+            return m._after_order()
+        m._save()
+        self.tab = "ledger"
+        return self.state()
+
+    @property
     def rite(self):
         return self._tab("initiation", "_rite", InitiationTab)
 
@@ -512,7 +534,7 @@ class HubSession(Session):
 
     def state(self):
         c, n = self.guild.clock, self.node
-        k = self.keeper()
+        k = {} if self.order.kind == "campfire" else self.keeper()      # the band's own fire keeps no shop
         part = "night" if not c.is_daylight else "morning" if c.hour_of_day < 12 else "afternoon" if c.hour_of_day < 15 else "evening"
         keeper = {"name": k.get("name"), "caption": k.get("caption", ""), "bent": k.get("bent", ""),
                   "line": k.get("line", ""),
@@ -557,6 +579,8 @@ class HubSession(Session):
             out["garage"] = self.garage.state()
         elif self.tab == "claim":
             out["claim"] = self.claim.state()
+        elif self.tab == "ledger":
+            out["ledger"] = self.desk.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
             out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "
