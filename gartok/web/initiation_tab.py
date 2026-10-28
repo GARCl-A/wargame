@@ -2,19 +2,17 @@
 school's rite, where each one stands in it, or why they cannot), the school's terms on paper and the
 button that leaves the picked one boarding.
 
-The rules are pygame's own `InitiationScreen`, held headless as `tavern_tab` holds the Tavern: the terms,
-the blockers, the pick and the begin stay one source until step 10 of `docs/plans/web_frontend.md` moves
-them here. The verb that may hand the band to the clock (`begin`) lives on `HubSession`, which holds the map.
+The rules are `rite.Initiation`'s, which pygame's `InitiationScreen` reads too: the terms, the blockers,
+the pick and the begin. The verb that may hand the band to the clock (`begin`) lives on `HubSession`, which holds the map.
 """
 
 from .. import factions, rite
-from ..initiation_screen import InitiationScreen
 from .shop_tab import _portrait
 
 
 class InitiationTab:
     def __init__(self, guild, group, node):
-        self.s = InitiationScreen(None, guild, group, lambda: None)
+        self.s = rite.Initiation(guild, group)
         self.guild, self.group, self.node = guild, group, node
         self.report = []                    # what the last begin said
 

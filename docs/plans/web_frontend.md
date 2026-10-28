@@ -1145,8 +1145,24 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
      - Left: `map_session` still reads `artwork.portrait_path` (the guild or the draft family). The
        layout hints (`gap_before`, `height`) stay in the blocks as plain numbers, which the web ignores;
        they go with pygame.
-     - **Next:** the hubs (the work, medic, jobs, craft, stable, tavern, vault, garage, claim, ledger,
-       initiation tabs), the draft, the report.
+   - **The hubs** are twelve tabs over some 4,600 lines of pygame screens, too big for one session, so they
+     are cut in three: the simple desks, then the workbenches and boards (craft, jobs, garage, claim),
+     then the stashes and the Tavern (vault, tavern, `hub_screen`'s `TabbedHubScreen` and the crafting
+     constants `hub_session` reads).
+   - **The hubs I, the simple desks — done (2026-10-28).** Each desk's rules are a class with no pygame,
+     which its pygame screen inherits (`Screen` first, calling the desk's `__init__` itself, as
+     `MarketScreen` does with `Counter`) and its web tab subclasses or holds: `work_desk.py` (`WorkDesk`,
+     `GatherDesk`, `SHIFTS`), `medic.Ward`, `stables.py` (`Stables`, `WagonYard`, `resale`,
+     `tack_price`), `ledger.py` (`LedgerDesk`, its `panels` and `_act`), `rite.Initiation`. The tabs no
+     longer borrow methods off the screens. One wording change: pygame's Gathering now says the web's
+     notice when the licence is bought or refused. `scripts/economy_exploits.py` reads `stables.resale`.
+     - Tests: `tests/test_desks.py` (the desks load with pygame blocked; a wage, the licence bought or
+       refused, a patient treated, an animal sold back at a loss, two carts numbered, the Ledger's gate,
+       a sanctuary's terms; the pygame screens are the same desks); the Ledger's two rule tests in
+       `test_trust_mission` and `test_treefolk_mentorship` press the desk instead of a faked screen.
+     - **Next:** the hubs II (`craft_tab` on `CraftingScreen`, `jobs_tab` on the five mission boards and
+       `ui/mission_offer_screen.TAG_TONE`, `garage_tab` on `GarageScreen`, `claim_tab` on
+       `WildsClaimScreen`), then the hubs III, the draft, the report.
 3. **The Editor in the browser** (the character creator, the map editor, the combat lab's menu), or the author keeps
    it as a pygame tool apart from the game.
 4. **The retirement:** the pygame screens, `app*.py`, `ui/` and `--pygame` go; `AGENTS.md` (the `ui/` rules, the

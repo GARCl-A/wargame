@@ -1854,7 +1854,7 @@ instance of a given template can be active guild-wide at a time
 - **The Apothecary** (`apothecary_mission_screen.py`, at the Apothecary node): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
 - **The Bankers' trust mission** (`trust_screen.py` at the City,
-  `ledger_screen.py` at Ledger Hold): hands the signer a sealed chest
+  `ledger.py` at Ledger Hold): hands the signer a sealed chest
   (`data.MISSION_CHEST_ITEM`) instead of asking for a gathered item; the
   "goal" is a letter of receipt, traded for the chest at Ledger Hold and
   carried back. Opening the sealed chest early — mistaking it for an

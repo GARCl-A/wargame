@@ -1,26 +1,16 @@
 """A work node's two tabs in the browser (the Lumber Yard, the Mine): WORK, the paid shifts with each
 worker's tool and wage, and GATHERING, the licence and the shifts that keep what the crew finds.
 
-The reads are pygame's own (`WorkScreen`, `GatherScreen`), borrowed as the map borrows `MapScreen`'s,
-until step 10 of `docs/plans/web_frontend.md` moves them here. The verbs that run the clock live on
-`HubSession`, which holds the map.
+The rules are `work_desk`'s (`WorkDesk`, `GatherDesk`), which pygame's tabs read too. The verbs that run
+the clock live on `HubSession`, which holds the map.
 """
 
 from .. import economy, gather, item_icon
-from ..gather_screen import GatherScreen
-from ..work_screen import SHIFTS, WorkScreen
+from ..work_desk import SHIFTS, GatherDesk, WorkDesk
 from .shop_tab import _portrait
 
 
-class WorkTab:
-    _wage = WorkScreen._wage
-    _crew_note = WorkScreen._crew_note
-    hub_cards = WorkScreen.hub_cards
-
-    def __init__(self, guild, group, node):
-        self.guild, self.group, self.node = guild, group, node
-        self.report = []                # what the last shift paid
-
+class WorkTab(WorkDesk):
     def state(self):
         tool = economy.WORK_TOOLS[self.node.id]
         crew = []
@@ -37,20 +27,7 @@ class WorkTab:
                 "report": self.report}
 
 
-class GatherTab:
-    hub_cards = GatherScreen.hub_cards
-    _payback_line = GatherScreen._payback_line
-
-    def __init__(self, guild, group, node):
-        self.guild, self.group, self.node = guild, group, node
-        self.notice = None
-
-    def buy_licence(self):
-        if self.guild.buy_licence(self.node.id, self.group):
-            self.notice = f"{self.node.name}: the gathering licence is the guild's."
-        else:
-            self.notice = "not enough coin for the licence"
-
+class GatherTab(GatherDesk):
     def state(self):
         node = self.node.id
         price = gather.licence_price(node)

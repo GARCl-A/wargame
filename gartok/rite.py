@@ -14,7 +14,8 @@ the test only reveals it, and a failed test is final. The rite grants the school
 the magic talent track, no spell.
 """
 
-from . import data, economy, orders, world
+from . import data, economy, factions, orders, world
+from .constants import fmt_money
 
 SANCTUARY = {"blood_sanctuary": "blood", "nature_grove": "nature", "faith_cathedral": "faith"}
 FACTION = {"blood": "blood_cult", "nature": "nature_coven", "faith": "faith_order"}
@@ -141,3 +142,85 @@ def daily(group):
         group.order = None
         events.append(f"{world.node(group.node).name}: nobody left boarding for the rite.")
     return events
+
+
+class Initiation:
+    """A sanctuary's INITIATION tab with no window: the school's terms, who may stay to board and why not,
+    the pick and the begin. `InitiationScreen` is the pygame window over it and `web/initiation_tab.py`
+    the browser's."""
+
+    def __init__(self, guild, group):
+        self.guild, self.group = guild, group
+        self.school = school_at(group.node)
+        self.picked = None
+        self.notice = None
+
+    def _member(self, uid):
+        return next((u for u in self.group.members if u.uid == uid), None)
+
+    def _status(self, u):
+        if self.school in u.magic_sources:
+            return f"initiated in {self.school.title()} magic"
+        label, done, total = stage(u, self.school)
+        if label == "blood test":
+            left = f"{total - done} day(s) of testing, then {POINTS['blood']} learning points"
+        else:
+            per_day = max(1, 10.5 + u.mod_intelligence)
+            left = f"{done}/{total} learning points  ·  about {round((total - done) / per_day)} day(s) left"
+        boarding = "boarding  ·  " if u.rite_school == self.school else ""
+        return f"{boarding}{left}  ·  INT {u.mod_intelligence:+}"
+
+    def _terms(self):
+        faction = FACTION[self.school]
+        have = self.guild.reputation.get(faction, 0)
+        terms = [("The school", f"{factions.FACTIONS[faction].name}: reputation {have} of {REP_NEEDED}",
+                  have >= REP_NEEDED)]
+        if self.school == "faith":
+            terms.append(("Up front", f"one {HOLY_SYMBOL}, consumed", True))
+        if self.school == "blood":
+            terms.append(("Blood test", f"{BLOOD_TEST_DAYS} days: only magic blood goes on; a failed test is final",
+                          True))
+        terms.append(("Learning", f"{POINTS[self.school]} points, 1d20 + INT a day, kept if you leave", True))
+        terms.append(("Board", f"${BOARD_PER_DAY} a day with the meal, only on a day with no food in the pack",
+                      True))
+        where = ("alone, in a group of their own" if self.guild.free_slots or len(self.group.members) == 1
+                 else "the whole group waits (no free group slot)")
+        terms.append(("Who waits", where, True))
+        terms.append(("Grants", "the school and its root in the magic talents; no spell", True))
+        return terms
+
+    def _rows(self):
+        rows = []
+        for u in self.group.members:
+            blocked = blocker(self.guild, self.group, u, self.school)
+            rows.append({"key": u.uid, "name": u.name, "status": self._status(u),
+                         "face": {"race": u.race["name"], "portrait_id": getattr(u, "portrait_id", None),
+                                  "token": u.token},
+                         "sub": f"{u.race['name']} {u.occupation['name'].lower()}  ·  INT {u.mod_intelligence:+}",
+                         "note": blocked or "", "enabled": blocked is None, "picked": u.uid == self.picked})
+        return rows
+
+    def _action(self):
+        u = self._member(self.picked)
+        if u is None or blocker(self.guild, self.group, u, self.school):
+            return None
+        return "RESUME THE RITE" if paid(u, self.school) else "BEGIN THE RITE"
+
+    def _pick(self, uid):
+        """Pick `uid` to stay (again: unpick); one who cannot stay is not picked, and says why."""
+        u = self._member(uid)
+        blocked = blocker(self.guild, self.group, u, self.school)
+        self.notice = blocked
+        self.picked = None if self.picked == uid or blocked else uid
+
+    def _begin(self):
+        """Begin the picked one's rite. Returns `(ok, lines)`."""
+        ok, lines = begin(self.guild, self.group, self._member(self.picked), self.school)
+        self.notice = "  ".join(lines)
+        if ok:
+            self.picked = None
+        return ok, lines
+
+    def hub_cards(self):
+        purse = sum(u.money for u in self.group.members)
+        return [{"label": "party purse", "value": fmt_money(purse), "tone": "money"}]

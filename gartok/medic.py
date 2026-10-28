@@ -7,12 +7,16 @@ The clock moves for the whole group by the longest treatment picked. Anything pa
 `economy.MEDIC_MAX_HOURS` is not a visit but a hospital stay (`admit`): the patient splits off
 into a group of their own on a `solo` order and leaves cured when it runs out (`solo.finish`). With
 no free group slot the whole group waits with them instead. Either way the price is the quote's.
+
+`Ward` is the Medic's tab with no window: who needs care, who is picked, the bill. `MedicScreen` is the
+pygame window over it and `web/medic_tab.py` the browser's.
 """
 
 import math
 from dataclasses import dataclass
 
 from . import economy, items, objectives, orders, poisons
+from .constants import fmt_money
 
 POTION = "Minor Healing Potion"
 
@@ -130,3 +134,55 @@ def discharge(patient):
     """Cures the patient; the player merges them back by hand."""
     cure(patient)
     return f"{patient.name} leaves the hospital cured."
+
+
+class Ward:
+    def __init__(self, guild, group):
+        self.guild, self.group = guild, group
+        self.picked = set()
+        self.notice = None
+
+    def _quotes(self):
+        return [q for q in quotes(self.group.members) if q.needs_care]
+
+    def _picked_quotes(self):
+        return [q for q in self._quotes() if q.uid in self.picked]
+
+    def _stay(self):
+        """The one patient picked for a hospital stay, or None (a stay is picked alone)."""
+        return next((q for q in self._picked_quotes() if not q.offered), None)
+
+    def _toggle(self, uid):
+        """Pick or drop a patient: visits combine, a hospital stay is picked alone."""
+        offered = {q.uid: q.offered for q in self._quotes()}
+        if uid not in offered:
+            raise ValueError("nobody by that name needs treating")
+        self.notice = None
+        if uid in self.picked:
+            self.picked.discard(uid)
+        elif offered[uid]:
+            self.picked = {u for u in self.picked if offered.get(u)} | {uid}
+        else:
+            self.picked = {uid}
+
+    def _treat(self):
+        """Treat the picked patients, or admit the one picked for a stay. -> `(ok, lines)`."""
+        patients = [u for u in self.group.members if u.uid in self.picked]
+        if self._stay():
+            ok, lines = admit(self.guild, self.group, patients[0])
+        else:
+            ok, lines = treat(self.guild, self.group, patients)
+        self.notice = "  ".join(lines)
+        if ok:
+            self.picked.clear()
+        return ok, lines
+
+    def _stay_where(self):
+        return ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
+                else "the whole group waits (no free group slot)")
+
+    def hub_cards(self):
+        hurt = sum(1 for q in self._quotes())
+        purse = sum(u.money for u in (*self.group.members, *getattr(self.group, "stores", ())))
+        return [{"label": "need treating", "value": str(hurt)},
+                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]

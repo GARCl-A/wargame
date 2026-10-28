@@ -2,7 +2,7 @@ import pytest
 from gartok import data, factions, missions
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.ledger_screen import LedgerScreen
+from gartok.ledger import LedgerDesk
 from gartok.unit import Unit
 
 
@@ -112,21 +112,11 @@ def test_treefolk_mentorship_turn_in_and_gear_return():
     assert guild.reputation.get("ledger_hold") == 1
 
 
-def test_ledger_screen_accept_and_deliver_buttons():
+def test_ledger_desk_accepts_and_delivers_the_recruit():
     guild, group, leader = _setup_guild_at_ledger()
 
-    scr = LedgerScreen.__new__(LedgerScreen)
-    scr.guild, scr.group, scr.on_done = guild, group, lambda: None
-    scr.notice = None
-    scr.mouse = (0, 0)
-
-    class _Rect:
-        def collidepoint(self, _px):
-            return True
-
-    # Click accept_mentorship
-    scr.buttons = [("accept_mentorship", _Rect())]
-    scr._click((0, 0))
+    scr = LedgerDesk(guild, group, lambda: None)
+    scr._act("accept_mentorship")
 
     m = next((m for m in guild.missions if m.template_id == "ledger_treefolk"), None)
     assert m is not None and m.state == "active"
@@ -137,9 +127,7 @@ def test_ledger_screen_accept_and_deliver_buttons():
     recruit.set_track_level("combat", 4)
     assert recruit.racial_level >= 2
 
-    # Click deliver_recruit
-    scr.buttons = [("deliver_recruit", _Rect())]
-    scr._click((0, 0))
+    scr._act("deliver_recruit")
 
     assert m.state == "done"
     assert recruit not in guild.roster

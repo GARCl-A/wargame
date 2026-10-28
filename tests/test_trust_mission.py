@@ -98,21 +98,12 @@ def test_the_fortress_ambush_fires_once_through_campaign_advance():
 
 
 def test_ledger_hold_exchanges_the_chest_for_a_letter():
-    from gartok.ledger_screen import LedgerScreen
+    from gartok.ledger import LedgerDesk
     guild, g, signer = _guild_with_signer(node="ledger_hold")
     missions.accept(guild, signer, missions.TRUST_CHEST)
 
-    scr = LedgerScreen.__new__(LedgerScreen)
-    scr.guild, scr.group, scr.on_done = guild, g, lambda: None
-    scr.notice = None
-    scr.buttons = [("exchange", None)]
-    scr.mouse = (0, 0)
-
-    class _Rect:
-        def collidepoint(self, _px):
-            return True
-    scr.buttons = [("exchange", _Rect())]
-    scr._click((0, 0))
+    scr = LedgerDesk(guild, g, lambda: None)
+    scr._act("exchange")
 
     assert not signer.has_item(data.MISSION_CHEST_ITEM)
     assert signer.has_item(data.LETTER_ITEM)

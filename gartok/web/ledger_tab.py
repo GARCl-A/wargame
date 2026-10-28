@@ -1,19 +1,19 @@
 """Ledger Hold's THE DESK in the browser: on leather the band here (who carries the Bankers' sealed chest),
-on paper the desk's panels as pygame's `LedgerScreen.panels` lays them out: the chest to hand over, Commander
+on paper the desk's panels as `ledger.LedgerDesk.panels` lays them out: the chest to hand over, Commander
 Varkas's mentorship, the frontier supply run, or the gatehouse that turns the band away.
 
-The rules are pygame's own `LedgerScreen`, held headless as `jobs_tab` holds a board. The supply run leaves
+The rules are `ledger.LedgerDesk`'s, which pygame's `LedgerScreen` reads too. The supply run leaves
 the desk: `HubSession` sends the band back to the map, where the clock runs.
 """
 
 from .. import data
-from ..ledger_screen import LedgerScreen
+from ..ledger import LedgerDesk
 from .shop_tab import _portrait
 
 
 class LedgerTab:
     def __init__(self, guild, group, node):
-        self.s = LedgerScreen(None, guild, group, lambda: None)
+        self.s = LedgerDesk(guild, group, lambda: None)
         self.guild, self.group, self.node = guild, group, node
 
     def act(self, key):

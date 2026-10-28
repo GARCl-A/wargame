@@ -2,12 +2,12 @@
 animal with its tack and job, each wagon with its cargo and what pulls it) and sells back; on paper what
 is for sale.
 
-The rules are pygame's own (`StablesScreen`, `WagonYardScreen`), borrowed as `medic_tab` borrows
-`MedicScreen`'s: the purse, the herd limit, the tack and the resale stay one source.
+The rules are `stables`' (`Stables`, `WagonYard`), which pygame's tabs read too: the purse, the herd limit,
+the tack and the resale.
 """
 
 from .. import animals, artwork, data, items, wagon
-from ..stables_screen import StablesScreen, WagonYardScreen, _resale
+from ..stables import Stables, WagonYard, resale
 from .session import asset_url
 
 WAGON_GLYPH = "item/old-wagon"
@@ -17,19 +17,10 @@ def _face(species, uid=None):
     return asset_url(artwork.portrait_path(species, int(uid[:8], 16) if uid else 0))
 
 
-class StableTab:
-    wealth = StablesScreen.wealth
-    _keeper = StablesScreen._keeper
-    _pay = StablesScreen._pay
-    _receive = StablesScreen._receive
-    _buy_animal = StablesScreen._buy_animal
-    _fit = StablesScreen._fit
-    _sell_animal = StablesScreen._sell_animal
-    hub_cards = StablesScreen.hub_cards
-
+class StableTab(Stables):
     def __init__(self, guild, group, node):
-        self.guild, self.group, self.node = guild, group, node
-        self.notice = None
+        super().__init__(guild, group)
+        self.node = node
 
     def _animal(self, uid):
         a = next((a for a in self.group.herd if a.uid == uid), None)
@@ -67,7 +58,7 @@ class StableTab:
         price = {t: items.get(t).price for t in (animals.HARNESS, animals.PACK_SADDLE)}
         return {"uid": a.uid, "name": a.species, "portrait": _face(a.species, a.uid), "tack": a.tack, "job": job,
                 "sub": f"speed {a.speed:g} m · HP {a.hp} / {a.hp_max}" + (f" · {a.stash.load:g} kg aboard" if a.stash.items else ""),
-                "unfed": a.unfed_days, "loaded": bool(a.stash.items), "resale": _resale(a.price),
+                "unfed": a.unfed_days, "loaded": bool(a.stash.items), "resale": resale(a.price),
                 "fits": [] if a.tack else [{"tack": t, "price": p, "can": self.wealth >= p} for t, p in price.items()]}
 
     def state(self):
@@ -79,11 +70,7 @@ class StableTab:
                 "notice": notice}
 
 
-class WagonTab(StableTab):
-    _buy_wagon = WagonYardScreen._buy_wagon
-    _sell_wagon = WagonYardScreen._sell_wagon
-    _wagon_label = WagonYardScreen._wagon_label
-    hub_cards = WagonYardScreen.hub_cards
+class WagonTab(StableTab, WagonYard):
 
     def buy(self, kind):
         if kind not in wagon.VEHICLES:
@@ -107,7 +94,7 @@ class WagonTab(StableTab):
                 "cargo": round(w.stash.load, 2), "capacity": w.capacity, "budget": w.budget,
                 "sub": f"HP {w.hp} / {w.hp_max} · speed {f'{w.speed:g} m' if w.speed else '--'} · "
                        f"{w.rations} meals aboard{riders}",
-                "loaded": bool(w.stash.items), "resale": _resale(w.price)}
+                "loaded": bool(w.stash.items), "resale": resale(w.price)}
 
     def state(self):
         notice, self.notice = self.notice, None

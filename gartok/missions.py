@@ -100,7 +100,7 @@ TANNER_BIWOLF = MissionTemplate(
 # The Bankers' trust mission: accepting hands over a sealed chest
 # (`starting_item`) instead of asking the guild to gather anything; the
 # "goal" delivered back here is the letter Ledger Hold trades for it intact
-# (`ledger_screen.py`) -- `turn_in`'s ordinary goal_item/goal_qty count works
+# (`ledger.py`) -- `turn_in`'s ordinary goal_item/goal_qty count works
 # unchanged, it just counts a letter instead of hides. No copper reward: the
 # point is the trust, not the pay (see factions.py's `bankers_trust` deed).
 # Aurochs, the immortal ox, is the chain's end: found only by tracking him in the

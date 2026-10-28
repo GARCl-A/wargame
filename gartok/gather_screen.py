@@ -10,24 +10,20 @@ from .ui.hub_frame import MARGIN, hub_button
 from .ui.primitives import footer_bar, header, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .work_desk import SHIFTS, GatherDesk
 
-SHIFTS = (4, 8, 12, 16)
 
-
-class GatherScreen(Screen):
+class GatherScreen(Screen, GatherDesk):
     native = True
 
     def __init__(self, fonts, guild, group, node, on_done):
         super().__init__()
+        GatherDesk.__init__(self, guild, group, node)   # Screen ends the cooperative chain
         self.fonts = fonts
         self._F = ui_fonts()
-        self.guild = guild
-        self.group = group
-        self.node = node
         self.on_done = on_done
         self.buttons = []
         self._hot = False
-        self.notice = None
 
     def tutorial_key(self):
         return "gathering"
@@ -47,10 +43,7 @@ class GatherScreen(Screen):
         if key == "leave":
             self.on_done()
         elif key == "buy_licence":
-            if self.guild.buy_licence(self.node.id, self.group):
-                self.notice = f"{self.node.name}: Gathering licence acquired!"
-            else:
-                self.notice = "Not enough funds to buy the licence."
+            self.buy_licence()
         elif key.startswith("gather:"):
             hours = int(key.split(":")[1])
             self.group.order = orders.work(self.guild, self.group, hours, gather=True)
@@ -59,30 +52,11 @@ class GatherScreen(Screen):
     def update(self, dt):
         pass
 
-    def _payback_line(self, price):
-        """A full day's haul against the wage for this group, and the days a licence takes to pay."""
-        haul, wage, risk = self.guild.shift_worth(self.group, self.node.id, gather.DAY_HOURS)
-        line = (f"{gather.DAY_HOURS} h for this group: haul ~{fmt_money(round(haul))} sold, "
-                f"wage {fmt_money(round(wage))}, {risk * 100:.0f}% ambush")
-        if self.guild.has_licence(self.node.id):
-            return line
-        if haul <= wage:
-            return line + " · the licence never pays back"
-        return line + f" · licence pays back in ~{price / (haul - wage):.0f} days"
-
     def add_button(self, surf, rect, key, label, enabled=True, primary=False, danger=False):
         self.buttons.append((key, rect))
         hub_button(surf, self._F, rect, label, primary=primary, enabled=enabled, mpos=self.mouse)
 
     framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
-
-    def hub_cards(self):
-        price = gather.licence_price(self.node.id)
-        held = self.guild.has_licence(self.node.id)
-        purse = sum(u.money for u in self.group.members)
-        return [{"label": "licence", "value": "held" if held else fmt_money(price),
-                 "tone": "good" if held else None},
-                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
 
     def draw(self, surf):
         W, H = surf.get_size()

@@ -8,7 +8,7 @@ underlying mechanism (`missions.accept`/`can_turn_in`/`turn_in`) is identical.
 Accepting hands the signer a sealed chest (`missions.TRUST_CHEST.starting_item`)
 instead of asking the guild to gather anything; the "goal" `turn_in` counts is
 a letter of receipt, traded for the chest at Ledger Hold
-(`ledger_screen.py`) once the group gets there safely.
+(`ledger.py`) once the group gets there safely.
 """
 
 from . import missions

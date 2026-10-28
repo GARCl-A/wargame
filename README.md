@@ -146,7 +146,7 @@ World systems, outside combat:
   `solo` order (`medic.py`, `solo.py`).
 - **Wagons and animals**: a group keeps livestock (Donkey, Ox, Horse) and wagons
   (cart, carriage) that carry cargo and passengers by weight, eat, wear down on the
-  road and are lost with the group (`wagon.py`, `animals.py`, `stables_screen.py`,
+  road and are lost with the group (`wagon.py`, `animals.py`, `stables.py`,
   `garage_screen.py`).
 - **Recruitment**: a tavern pool refreshed weekly (no money, a Charisma-vs-
   Charisma pitch) or the prison's bail-and-pitch alternative (pay first, then
@@ -233,8 +233,13 @@ gartok/
   trade.py          a shop's counter: buying, selling, the purse, the deal, the moves between packs
                     (`Counter`, the Library's `LibraryCounter`); no pygame, both front-ends trade through it
   hub_screen.py     a node's screens behind one row of tabs, in the frame it owns (keeper header, tab row, back); `for_node` builds the hub of every node with a shop
-  work_screen.py    the Work tab of a work node (Lumber Yard, Mine): paid shifts, each worker's tool and wage
-  gather_screen.py  the Gathering tab of a work node (Lumber Yard, Mine): licence purchase and shift picker
+  work_desk.py      a work node's desks (Lumber Yard, Mine), no pygame: WORK (`WorkDesk`: paid shifts, each
+                    worker's tool and wage) and GATHERING (`GatherDesk`: the licence, what a shift is worth);
+                    work_screen.py / gather_screen.py are pygame's tabs over them
+  stables.py        the Farm's stables and the Carpenter's wagon yard, no pygame (`Stables`, `WagonYard`:
+                    the purse, the herd limit, the tack, the resale); stables_screen.py is pygame's tab
+  ledger.py         Ledger Hold's desk, no pygame (`LedgerDesk`: the chest, the mentorship, the supply run);
+                    ledger_screen.py is pygame's tab
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
@@ -247,8 +252,8 @@ gartok/
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk
                     (7-day notice, loot by alignment)
   solo.py           solo tasks (hospital stay, craft): one member busy apart from the group on a `solo` order
-  medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; medic_screen.py is its tab
-  rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; initiation_screen.py is its tab
+  medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab with no pygame, medic_screen.py pygame's
+  rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab with no pygame, initiation_screen.py pygame's
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   rest.py           what a rest order costs in rations and how long "until full" lasts
   factions.py       factions and their deeds (one-shot achievements that grant reputation)

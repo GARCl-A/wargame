@@ -10,23 +10,19 @@ from .ui.hub_frame import MARGIN
 from .ui.primitives import set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .work_desk import SHIFTS, WorkDesk
 
-SHIFTS = (4, 8, 12, 16)
 
-
-class WorkScreen(Screen):
+class WorkScreen(Screen, WorkDesk):
     native = True
     framed = True           # only ever a hub's tab: the hub draws the keeper, the tabs and the back
 
     def __init__(self, fonts, guild, group, node, on_done, on_work=None):
         super().__init__()
+        WorkDesk.__init__(self, guild, group, node)     # Screen ends the cooperative chain
         self._F = ui_fonts()
-        self.guild = guild
-        self.group = group
-        self.node = node
         self.on_done = on_done
         self.on_work = on_work          # runs the shift and keeps the tab up (App._work_shift)
-        self.report = []                # what the last shift paid
         self.buttons = []
         self._hot = False
 
@@ -51,26 +47,6 @@ class WorkScreen(Screen):
                 return
             self.group.order = order
             self.on_done()
-
-    def _wage(self, hours):
-        return sum(economy.work_pay(self.node.id, hours, economy.work_level(u, self.node.id))
-                   for u in self.group.members)
-
-    def hub_cards(self):
-        return [{"label": f"wage for {SHIFTS[-1]} h", "value": fmt_money(self._wage(SHIFTS[-1])), "tone": "money"},
-                {"label": "party purse", "value": fmt_money(sum(u.money for u in self.group.members)),
-                 "tone": "money"},
-                {"label": "rations", "value": f"{self.group.rations}  ·  {self.group.rations_days} d",
-                 "tone": "bad" if self.group.rations_days < 1 else None}]
-
-    def _crew_note(self, u, tool):
-        level = economy.work_level(u, self.node.id)
-        own = level >= economy.LUMBER_LEVEL_OWN_AXE
-        if own and u.work_level > level:
-            return f"has outgrown this job even with their own {tool}: no more work XP here", "money"
-        if not own and u.work_level > 0:
-            return f"past this job bare-handed: their own {tool} pays more and keeps the work XP", "money"
-        return None
 
     def draw(self, surf):
         W, H = surf.get_size()

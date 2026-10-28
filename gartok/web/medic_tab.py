@@ -2,28 +2,20 @@
 what each one costs), the bill on paper (the picked patients, the total, who waits) and the button that
 treats them, or admits the one picked for a hospital stay.
 
-The reads and the pick rule are pygame's own (`MedicScreen`), borrowed as `work_tab` borrows
-`WorkScreen`'s. The verb that may hand the band to the clock lives on `HubSession`, which holds the map.
+The reads and the pick rule are `medic.Ward`'s, which pygame's tab reads too. The verb that may hand the band
+to the clock lives on `HubSession`, which holds the map.
 """
 
 from .. import economy, medic
-from ..medic_screen import MedicScreen
 from .shop_tab import _portrait
 
 
-class MedicTab:
-    _quotes = MedicScreen._quotes
-    _picked_quotes = MedicScreen._picked_quotes
-    _stay = MedicScreen._stay
-    _stay_where = MedicScreen._stay_where
-    _treat = MedicScreen._treat
-    pick = MedicScreen._toggle
-    hub_cards = MedicScreen.hub_cards
+class MedicTab(medic.Ward):
+    pick = medic.Ward._toggle
 
     def __init__(self, guild, group, node):
-        self.guild, self.group, self.node = guild, group, node
-        self.picked = set()
-        self.notice = None
+        super().__init__(guild, group)
+        self.node = node
         self.report = []                # what the last treatment said
 
     def treat(self):
