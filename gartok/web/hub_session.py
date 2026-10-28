@@ -46,6 +46,7 @@ HUBS = {
     "library": (("shop", "Shop"), ("craft", "Write"), ("jobs", "Jobs")),
     "prison": (("prison", "The Cells"),),
     "bank": (("vault", "Vault"), ("jobs", "Jobs")),
+    "trust": (("jobs", "Jobs"),),
     "ledger": (("ledger", "The Desk"),),
     "campfire": (("kitchen", "Campfire"),),
 }

@@ -881,6 +881,21 @@ def test_the_bankers_test_of_trust_is_taken_on_the_jobs_tab():
     assert job["taken"] and g.leader.count_of(data.MISSION_CHEST_ITEM) == 1
 
 
+def test_a_trust_order_opens_the_bankers_jobs_alone():
+    guild = _guild("city")
+    game = Game(MapSession(guild))
+    g = guild.groups[0]
+    assert game.session.act(g.gid, "trust") == {"screen": "hub"}
+    hub = game.session
+    st = hub.state()
+    assert [t["key"] for t in st["tabs"]] == ["jobs"] and st["tab"] == "jobs"
+    assert st["keeper"]["name"] == world.vendor("city", "trust").name
+    assert [j["id"] for j in st["jobs"]["jobs"]] == ["bankers_trust_chest"]
+    st = hub.verb("accept", True)(hub, {"id": "bankers_trust_chest"})
+    assert st["jobs"]["jobs"][0]["taken"] and g.leader.count_of(data.MISSION_CHEST_ITEM) == 1
+    assert hub.verb("back", True)(hub, {})["screen"] == "map" and isinstance(game.session, MapSession)
+
+
 def _house(coins=1000, owned=True, oven=False, rep=economy.CITY_PROPERTY_REP_GATE):
     guild = _guild("city", coins)
     guild.reputation["bankers"] = rep
@@ -1006,7 +1021,7 @@ def test_a_house_too_far_behind_on_the_tax_meets_the_bankers_notice_first():
 def test_a_place_with_no_hub_in_the_browser_still_opens_the_away_card():
     guild = _guild("city")
     game = Game(MapSession(guild))
-    assert game.session.act(guild.groups[0].gid, "trust") == {"screen": "away"}
+    assert game.session.act(guild.groups[0].gid, "arena") == {"screen": "away"}
     assert isinstance(game.session, AwaySession)
 
 

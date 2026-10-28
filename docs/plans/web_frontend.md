@@ -374,7 +374,7 @@ As built:
   of an ambush; the Wildfire talk; leaving a broken wagon (travel is refused with a note);
   the camp kitchen; the guild and group sheets; the map's tutorial card.
 
-### 9. Hubs, then the rest — under way
+### 9. Hubs, then the rest — done (2026-10-28)
 
 - **Hubs:** one tabbed frame (the `TabbedHubScreen` equivalent) with the shop as its
   first tab, following [market_mockup/](references/market_mockup/). The other tabs (work,
@@ -846,6 +846,16 @@ As built:
   trees were looked at in headless Edge at 1920x1080 on a copy of the day-70 save, driven over the DevTools protocol.
 - **Next:** what still opens the away card is `trust` (the City's Test of Trust as its own order) and the campaign
   fights. `trust` is the last screen of step 9 the campaign reaches; step 10 follows it.
+
+**9r. The Test of Trust — done (2026-10-28).** No mockup: it is the Bankers' board the bank's JOBS tab already draws.
+A `trust` order (pygame's `App._open_trust_offer`, `TrustScreen` alone) opens a hub with that one tab
+(`hub_session.HUBS["trust"]`), Elysia in the header. Tests: `tests/test_web_hub.py` (the one tab, the keeper, the
+job taken, back to the map); the map's tests of the away card now enter the arena, which still opens it.
+
+- **Step 9 is closed.** What opens the away card now is only the campaign fights (the arena, the hunt, the
+  searches' finds, the Ruins, the Nest, the Lair, the skirmish, the Wildfire's fights, the forced fights after
+  their talk). They are step 10's seam: `app_battle` hands the battle to `BattleSession` and settles it through
+  `campaign.absorb_battle`, then `ReportSession` plays the aftermath.
 
 ### 10. The swap — todo
 
