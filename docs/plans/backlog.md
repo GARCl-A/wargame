@@ -65,7 +65,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   `data.OCCUPATIONS`, `Unit` (roll, save, `unit_edit`), `artwork.OCCUPATION_ICON` and `role_for` (the
   member's icon needs another source: the race's, or the weapon's), every label that prints
   "Race Occupation" (tavern, guild, squad, medic, initiation, crafting, watch, `dialogue.py`, the web
-  board), `aftermath.Memorial` and the memorial screen, `recorder.py`, `npc_lib` / `npcs/*.json`,
+  board and talk), `aftermath.Memorial` and the memorial screen, `recorder.py`, `npc_lib` / `npcs/*.json`,
   `outfit.py` (level 0 keeps the occupation's kit), `reference.py` / REFERENCE.md, the sims' rankings
   (`economy_guild.py`, `balance_sim.py`, `unit_compare.py`) and their tests. Saves of the old shape stop
   loading unless the key gets a default. The occupation-unique items lose their reason to exist: drop

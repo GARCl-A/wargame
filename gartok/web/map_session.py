@@ -408,7 +408,10 @@ class MapSession(MapInspectorMixin, Session):
     def act(self, gid, key):
         g = self._group(gid)
         if key == "resolve_event":
-            return self._away(g, g.pending, fight=True)
+            if not g.fight_due:
+                raise ValueError(f"{g.display_name} has no fight to face")
+            from .dialogue_session import forced_talk
+            return self._talk(forced_talk(self, g)) or self._away(g, g.pending, fight=True)
         if key == "guild":
             return self._sheet("members", g.gid)
         if g.fight_due:
@@ -437,7 +440,8 @@ class MapSession(MapInspectorMixin, Session):
         elif key == "wf_put_out":
             g.order = orders.put_out(self.guild, g)
         elif key == "wf_talk":
-            return self._away(g, None, title="Talk at the fire", what="the talk at the wildfire")
+            from .dialogue_session import wildfire_talk
+            return self._talk(wildfire_talk(self, g))
         elif key == "manage_group":
             return self._sheet("bands", g.gid)
         elif key == "campfire_cook":
@@ -560,6 +564,13 @@ class MapSession(MapInspectorMixin, Session):
         from .guild_session import GuildSession
         self.game.open(GuildSession(self, tab, gid))
         return {"screen": GuildSession.screen}
+
+    def _talk(self, session):
+        """Open the talk before a fight, or None when there is none to have."""
+        if session is None:
+            return None
+        self.game.open(session)
+        return {"screen": session.screen}
 
     def _away(self, group, order, fight=False, title=None, what=None):
         from .away_session import AwaySession

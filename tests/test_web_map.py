@@ -166,7 +166,9 @@ def test_split_and_merge_shuffle_the_bands_where_they_stand():
 def test_a_fight_due_stops_the_band_and_the_seal_opens_it_without_settling_it():
     guild = _guild("road", "city")
     a = guild.groups[0]
-    a.pending = orders.Order("ambush", pack=(Unit("Fighter"),))
+    mute = Unit("Fighter")
+    mute.languages = []                     # nobody to talk to: the seal goes straight to the fight
+    a.pending = orders.Order("ambush", pack=(mute,))
     game = _game(guild)
     s = game.session
     st = s.state()

@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen and the guild's sheet are in; the dialogues come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen, the guild's sheet and the talk before a fight are in; the report after a fight comes next.
 
 ## Decisions so far
 
@@ -119,6 +119,8 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   `LedgerScreen` held headless: its panels are data (`LedgerScreen.panels`) that both draw.
 - **`gartok/web/guild_session.py`** + `screens/guild/` (`guild.js` the frame, members, charter and reputations,
   `bands.js` the band's packs) is the guild's sheet (9n), on pygame's own `GuildScreen` and `GroupScreen` held headless.
+- **`gartok/web/dialogue_session.py`** + `screens/talk/` are the talk before a fight (9o), on pygame's own
+  `DialogueScreen` held headless.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -695,7 +697,7 @@ As built:
   then the report after a fight. What still opens the away card: the talent tree, the wildfire's talk, the campaign
   fights (step 10), `trust`.
 
-**9o. The dialogues — mockup made (2026-10-27), the screens next.**
+**9o. The dialogues — done (2026-10-27).** The mockup came first:
 [references/dialogue_mockup/](references/dialogue_mockup/) `dialogue.html` (built on the day-70 save `35d38388`;
 `data.js` is a real `Ambush`, `Patrol` and `BossTalk` read through `DialogueScreen._data()`, with every member's
 options) has four frames, one per `?state=`. Read left to right: they speak, you answer, who answers.
@@ -713,8 +715,28 @@ options) has four frames, one per `?state=`. Read left to right: they speak, you
 - `guard` (`dialogue_guard.png`): the same table for the City's patrol; the wanted member carries the crime.
 - `boss` (`dialogue_boss.png`): no verbs; the middle is the order of speakers (who speaks now, who waits) and GO ON.
 
-- **Next:** the screens: a `DialogueSession` for the forced talks (guard, the ambushes), the wildfire's talk and an
-  arena boss's lines, then the report after a fight.
+As built:
+
+- **The server** (`DialogueSession`, screen `talk`): it holds pygame's `DialogueScreen` headless (who speaks, the
+  verbs, the result) and answers `speaker`, `choose` and `go_on`. Three talks open it: `forced_talk` (the map's Fight
+  on a band with a fight due, when the pack has a speaker: the guard and the ambushes, as `App._open_dialogue`),
+  `wildfire_talk` (the map's TALK at a focus, as `MapScreen._wildfire_talk`) and `boss_talk` (an arena boss's lines;
+  nothing opens it yet, the bout is step 10's). A pack with nobody who speaks goes straight to the fight's away card.
+- **How each talk ends:** a fight goes to the away card with the roll kept on the order (`Order.parley`, saved the
+  moment it is rolled), so Fight again opens the talk on its result and never rolls anew; peace settles the order
+  (`forced.settle_talk`), surrender jails the wanted, Run falls back (a re-catch is the band's next fight), and the clock
+  runs on from the map; the Wildfire's fight is the map's ATTACK THE CAMP (or STORM THE FORTRESS), its last lesson puts
+  the fire out.
+- **The roll** is read off the result's line (`d20(n) +m = t vs DC d`), never re-rolled; the stamp follows the die
+  (an Intimidate that lands still fights, with them shaken), and the answer played is kept as it read before the roll.
+- **The layout** follows the mockup's four frames; the d20 tumbles when it is thrown, not on a reload.
+- Left out: a tutorial card (no web screen has one yet).
+- Tests: `tests/test_web_talk.py` (the map's Fight opens the talk, the language gate, a bribe, an empty purse, a failed
+  bluff kept on the order and in the save, Intimidate's two openings, a pack that cannot talk, the guard's wanted, the
+  cells, Run, no second Run, the Wildfire's two checks and its miss, a boss's lines, the roll read off the line). The
+  ambush, the roll, the guard and the boss were looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
+- **Next (9p):** the report after a fight (`aftermath.py`'s memorials, report, level-ups, loot), the next family that
+  needs a mockup. What still opens the away card: the talent tree, the campaign fights (step 10), `trust`.
 
 ### 10. The swap — todo
 
