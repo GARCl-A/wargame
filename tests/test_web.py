@@ -457,7 +457,7 @@ def test_every_file_the_shell_routes_to_is_served(server):
     import re
     shell = _get(server + "/client/shell.js")[1].decode()
     manifest = re.findall(r'(\w+): \{css: \[(.*?)\], js: \[(.*?)\]\}', shell)
-    assert {screen for screen, _, _ in manifest} == {"title", "battle", "map", "hub", "guild", "talk", "report", "talents", "arena", "hunt", "watch"}
+    assert {screen for screen, _, _ in manifest} == {"title", "draft", "battle", "map", "hub", "guild", "talk", "report", "talents", "arena", "hunt", "watch"}
     for screen, css, js in manifest:
         for name in ["screen.html", *re.findall(r'"([^"]+)"', css + js)]:
             assert _get(f"{server}/client/screens/{screen}/{name}")[0] == 200

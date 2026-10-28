@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 is under way:
 every campaign fight (forced, the Claim's, the arena, the hunt, the searches' finds, the errands') is played
-in the browser from the map to the report, and the title screen opens it; the draft is next, then the swap.
+in the browser from the map to the report, the title screen opens it and a new guild is drafted there; the settings and the wiki are next, then the swap.
 
 ## Decisions so far
 
@@ -46,7 +46,8 @@ in the browser from the map to the report, and the title screen opens it; the dr
   the fallen, the report with its blows in ink, the level-up, the field, the arena's
   purse; one frame per `report.html?state=`) and [talents_mockup/](references/talents_mockup/) (the talent
   tree: the member and the four tracks on leather, the tree on paper, the talent in hand; one frame per
-  `talents.html?state=`). Each folder is one HTML
+  `talents.html?state=`) and [draft_mockup/](references/draft_mockup/) (a new guild: the founding on leather, the
+  vocations, the pool's dossiers, the commission, the charter with its banner; one frame per `draft.html?state=`). Each folder is one HTML
   page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
   the item glyphs there stand in for art not made yet.
 - **Paper is for what you read, leather is for what you act on.** The board, the
@@ -993,7 +994,7 @@ the window. The map's top bar has MENU (save, then the title, as pygame's pause 
 there too, with the wipe as the title's notice.
 
 - `Sheet.labelSides` (where each place's name goes) moved from `map.js` into `sheet.js`, which both read.
-- Not in the browser yet, so shown off with a note: New guild (10g), Wiki, Settings, Editor. Settings and the wiki
+- Not in the browser yet, so shown off with a note: New guild (10g, since built), Wiki, Settings, Editor. Settings and the wiki
   are pygame's pause menu too; the swap needs them (10h), the editor stays a pygame tool until then.
 - Left out: a tutorial card.
 - Tests: `tests/test_web_title.py` (no guild, the invitation; the last guild's charter and map; Continue to the map;
@@ -1003,6 +1004,47 @@ there too, with the wipe as the title's notice.
 - **Next (10g):** the draft (`vocation_screen`, `draft_screen`: the vocation, the pool of nine with the commission
   tokens, the name, banner and leader). A new family: its mockup comes first, for the author's approval. Then 10h,
   the settings and the wiki, then the swap below.
+
+**10g. The draft — done (2026-10-28).** The mockup came first and the author approved it as it stands.
+[references/draft_mockup/](references/draft_mockup/) `draft.html` is built off the real draft (`data.js`: the six
+vocations, a Caravan pool of nine through `vocations.draft_pool`, a candidate commissioned for LEADER + WISE through
+`archetypes.generate_candidate`, the banner colours and emblems). Frames, one per `?state=`: `vocation`, `pick`,
+`commission`, `replace`, `charter` (`draft_<state>.png`). Proposed, against pygame's three screens:
+
+- **One founding column on leather** for all three steps: the steps (I Vocation, II The squad, III The charter) with
+  what each settled, the step's choices, a back to the step before (pygame cannot go back to the vocation) and the
+  seal that moves on.
+- **The vocation:** six paper cards (emblem, motto, the six races' faces, the perk); the chosen one lifts under a
+  CHOSEN seal and its perk and races are repeated on leather.
+- **The pool:** nine paper dossiers (vitals, attributes, weapon and its action, ability, languages); archetypes as
+  ink stamps, a commissioned one in red with a star; a pick is a numbered blue ribbon and a slot on leather; the
+  tokens are three coins.
+- **A commission** is a paper slip over the pool (tick archetypes, a coin each), then a red bar "pick the one to
+  replace" with a REPLACE stamp on the card under the mouse.
+- **The charter:** the guild's name written on a charter, its arms (the shield, colour, emblem), the founders'
+  signatures with the leader first as Master of the guild, the banner hanging beside it; who leads is picked on
+  leather (can recruit, why, the six modifiers), a pencil renames a founder.
+
+As built:
+
+- **The server** (`draft_session.py`, screen `draft`) holds the step and, once the vocation is settled, pygame's
+  `DraftScreen` headless for the pool's rules (the picks, the tokens, `_replace`, what was commissioned for whom).
+  Verbs: `vocation`, `next`, `back` (from the vocation, the title; the pool stays while the vocation does, a new
+  vocation draws a new pool), `pick` (with a commission waiting, it replaces that candidate), `commission`,
+  `cancel`, `name`, `rename`, `color`, `emblem`, `leader`, `found`. FOUND founds the guild as `App._draft_done`
+  (a new world id, `wildfire.sync_world`, the play log when it is on) and lands on the map, which saves it.
+- **What opens it:** the title's New guild (`TitleSession.new_guild`).
+- **The client** follows the mockup; the commission slip is the client's until Call them. The guild's name and
+  FOUND wait their turn instead of being dropped while a call is out (leaving the name field posts it just as the
+  seal is pressed), and FOUND carries the name as last written.
+- Left out: a tutorial card (`draft.intro`, `draft.pick`, `draft.identity` are pygame's).
+- Tests: `tests/test_web_draft.py` (the title opens it and its first back returns; the vocation first, one of each
+  of its races; a pick toggles, the squad is three; a commission spends its tokens on the card it replaces, a
+  picked card leaves the squad, the refusals; back keeps the pool, a new vocation draws a new one; the charter's
+  name, colour, emblem, rename and leader with their refusals; FOUND saves the guild and opens its map, and the
+  title shows it; an unnamed guild is The Guild; the routing). The vocation, the pool, a replacement, the charter
+  and the map after FOUND were looked at in headless Edge at 1920x1080.
+- **Next (10h):** the settings and the wiki (pygame's pause menu too), then the swap below.
 
 **10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as

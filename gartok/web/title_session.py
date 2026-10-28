@@ -35,6 +35,7 @@ class TitleSession(Session):
     POST: ClassVar[dict] = {
         "page": lambda s, b: s.page(b["page"], b.get("world")),
         "continue": lambda s, b: s.load(s.latest["world"] if s.latest else None),
+        "new": lambda s, b: s.new_guild(),
         "load": lambda s, b: s.load(b["world"], b.get("save", persist.CURRENT)),
         "delete_world": lambda s, b: s.delete_world(b["world"]),
         "delete_save": lambda s, b: s.delete_save(b["world"], b["save"]),
@@ -81,6 +82,11 @@ class TitleSession(Session):
             raise ValueError("that save is gone") from None
         return {"screen": self.game.session.screen}
 
+    def new_guild(self):
+        from .draft_session import DraftSession
+        self.game.open(DraftSession())
+        return {"screen": DraftSession.screen}
+
     def delete_world(self, world_id):
         persist.delete_world(world_id)
         self._refresh()
@@ -120,7 +126,7 @@ class TitleSession(Session):
             {"key": "continue", "label": "Continue", "primary": True, "enabled": latest is not None,
              "hint": f"{latest['name'] or 'Unnamed guild'} · day {latest.get('day') or 1}" if latest else None,
              "emblem": _banner(latest)["emblem"] if latest else None},
-            {"key": "new", "label": "New guild", "enabled": False, "hint": "the draft comes next"},
+            {"key": "new", "label": "New guild", "enabled": True},
             {"key": "load", "label": "Load game", "enabled": n > 0, "hint": _plural(n, "guild") if n else None},
             None,
             {"key": "wiki", "label": "Wiki & compendium", "enabled": False, "hint": later},

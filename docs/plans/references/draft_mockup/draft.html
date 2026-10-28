@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Found a Guild</title>
+<link rel="stylesheet" href="../../../../gartok/web/client/fonts/fonts.css">
+<script src="icons.js"></script>
+<script src="data.js"></script>
+<style>
+:root{
+  --ink:#24180e; --ink-2:#4a3522; --paper:#eadcbc; --paper-2:#d9c49b; --paper-3:#bfa477;
+  --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
+  --blood:#9a2f22; --blood-hi:#c9473a; --enamel:#2e5f8e; --enamel-hi:#5b8fc0;
+  --green:#7fa557; --greenink:#3f6b2a; --redink:#8e2a1e; --blueink:#2b4f78;
+  --verdigris:#6f948c; --verdigris-lo:#3d5752;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  font-family:"EB Garamond",serif;color:var(--paper);
+  background:radial-gradient(ellipse 70% 60% at 58% 45%,#2a2b2b 0%,#17191a 55%,#08090a 100%);overflow:hidden}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:overlay;z-index:30;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .35' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .35  0 0 0 0 .2  0 0 0 1.2 -.2'/></filter><rect width='600' height='600' filter='url(%23n)'/></svg>")}
+#vignette{position:absolute;inset:0;pointer-events:none;z-index:29;
+  background:radial-gradient(ellipse 85% 80% at 55% 46%,transparent 55%,rgba(0,0,0,.72) 100%)}
+.ico{display:inline-block;flex:none}
+.ico svg{width:100%;height:100%;display:block}
+.lbl{font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:var(--verdigris);text-transform:uppercase}
+
+.paper{position:absolute;color:var(--ink);border-radius:2px;
+  background:radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.25),transparent 60%),
+    radial-gradient(ellipse at 90% 100%,rgba(120,80,30,.22),transparent 55%),linear-gradient(175deg,#efe2c3,#dcc79d);
+  box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #5d4426,0 14px 24px rgba(0,0,0,.6)}
+.paper:before{content:"";position:absolute;inset:7px;border:1px solid rgba(80,52,24,.45);pointer-events:none}
+.kicker{font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#7d5c37;display:flex;align-items:center;gap:10px;text-transform:uppercase}
+.kicker:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.5),transparent)}
+.kicker em{font:italic 14px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;order:2;text-transform:none}
+.leather{position:absolute;border-radius:4px;background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(200,225,215,.12),inset 0 0 0 1px rgba(111,148,140,.35),0 10px 22px rgba(0,0,0,.6)}
+.ghost-btn{height:38px;padding:0 16px;display:inline-grid;place-items:center;border-radius:3px;
+  font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#a9bdb6;text-transform:uppercase;
+  border:1px solid rgba(111,148,140,.4);background:linear-gradient(#1c1e1d,#121413)}
+.ghost-btn.hot{color:var(--brass-hi);border-color:rgba(240,215,158,.6)}
+.btn{height:42px;padding:0 22px;display:inline-grid;place-items:center;border-radius:2px;
+  font:700 12px/1 Cinzel,serif;letter-spacing:.2em;color:#fbe9dd;text-transform:uppercase;
+  background:linear-gradient(#b0402f,#7a2218);box-shadow:0 0 0 1px #3a0c06,0 6px 12px rgba(0,0,0,.4)}
+.seal{position:relative;width:142px;height:142px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 38% 32%,#d0574a,#9a2f22 45%,#5a160f 85%);
+  box-shadow:inset 0 0 0 7px rgba(70,15,10,.55),inset 0 0 0 9px rgba(255,170,150,.18),0 10px 20px rgba(0,0,0,.65)}
+.seal.off{filter:grayscale(.85) brightness(.55)}
+.seal:before{content:"";position:absolute;inset:-6px;border-radius:50%;
+  background:radial-gradient(circle,transparent 66%,#8e2a1e 67%,#7a2218 72%,transparent 73%);
+  -webkit-mask:repeating-conic-gradient(#000 0 9deg,transparent 9deg 15deg);mask:repeating-conic-gradient(#000 0 9deg,transparent 9deg 15deg)}
+.seal .ico{width:42px;height:42px;margin:0 auto;color:#f3d6c6}
+.seal b{display:block;font:700 15px/1 Cinzel,serif;letter-spacing:.16em;color:#fff3ea;margin-top:6px;text-shadow:0 1px 0 #3a0c06;text-transform:uppercase}
+.seal small{display:block;font:600 10px/1.2 Cinzel,serif;color:#f1b6a6;margin-top:4px;letter-spacing:.2em;text-transform:uppercase}
+.medal{border-radius:50%;overflow:hidden;flex:none;
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--side,var(--brass)),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.5)}
+.medal img{width:100%;height:100%;display:block;border-radius:50%}
+
+/* ---------- the founding: the leather column on the left ---------- */
+#side{left:40px;top:40px;width:440px;height:1000px;padding:34px 34px 30px;display:flex;flex-direction:column}
+#side h1{font:700 40px/1 Cinzel,serif;color:var(--brass-hi);margin-top:14px;letter-spacing:.02em}
+#side .intro{margin-top:12px;font:italic 18px/1.35 "IM Fell English",serif;color:#bda57d}
+.steps{margin-top:26px;border-top:1px solid rgba(111,148,140,.25)}
+.step{display:grid;grid-template-columns:34px 1fr;align-items:center;min-height:52px;padding:8px 0;border-bottom:1px solid rgba(111,148,140,.18)}
+.step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 11px/1 Cinzel,serif;
+  color:#7f8e89;box-shadow:inset 0 0 0 1px rgba(111,148,140,.45)}
+.step b{font:700 14px/1 Cinzel,serif;letter-spacing:.16em;color:#8e9c97;text-transform:uppercase}
+.step small{display:block;margin-top:5px;font:italic 15px/1.1 "IM Fell English",serif;color:#7f8e89;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step.done .n{background:var(--verdigris-lo);color:#dfeee9;box-shadow:none}
+.step.done b{color:#b9cbc5}
+.step.now .n{background:var(--brass);color:#2a1a0e;box-shadow:0 0 12px rgba(240,215,158,.45)}
+.step.now b{color:var(--brass-hi)}
+.step.now small{color:#c9b38c}
+#body{flex:1;margin-top:24px;min-height:0}
+#foot{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px}
+#foot .left{display:flex;flex-direction:column;gap:10px;padding-bottom:6px}
+#foot .esc{font:italic 14px/1 "IM Fell English",serif;color:#6f7a76}
+
+/* the vocation in hand, on the side */
+.chosen{display:flex;gap:16px;align-items:center}
+.chosen .em{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;color:#2a1a0e;
+  background:radial-gradient(circle at 38% 32%,#f6e6bf,#cfae6c 60%,#8a6a30);box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass),0 6px 12px rgba(0,0,0,.5)}
+.chosen .em .ico{width:36px;height:36px}
+.chosen b{display:block;font:700 24px/1 Cinzel,serif;color:var(--paper)}
+.chosen small{display:block;margin-top:6px;font:italic 16px/1.25 "IM Fell English",serif;color:#bda57d}
+.clause{margin-top:18px;padding:14px 16px;border-radius:3px;background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(201,163,94,.25)}
+.clause .lbl{color:var(--brass)}
+.clause p{margin-top:8px;font:17px/1.35 "EB Garamond",serif;color:#e6d6b2}
+.racesline{margin-top:16px;font:15px/1.4 "EB Garamond",serif;color:#a99876}
+.racesline b{color:#d9c49b;font-weight:600}
+
+/* the squad, on the side */
+.slot{display:flex;gap:14px;align-items:center;height:96px;padding:0 14px;margin-top:10px;border-radius:3px;
+  background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(91,143,192,.45)}
+.slot .num{width:22px;font:700 18px/1 Cinzel,serif;color:var(--enamel-hi);text-align:center}
+.slot b{display:block;font:700 16px/1 Cinzel,serif;color:var(--paper)}
+.slot small{display:block;margin-top:4px;font:italic 15px/1 "IM Fell English",serif;color:#a99876}
+.slot .mini{margin-top:7px;display:flex;gap:9px;font:600 10px/1 Cinzel,serif;letter-spacing:.06em;color:#7f8e89}
+.slot .mini i{font-style:normal;color:#d9c49b;margin-left:2px}
+.slot.empty{box-shadow:none;border:1px dashed rgba(111,148,140,.35);justify-content:center;color:#6f7a76;font:italic 17px/1 "IM Fell English",serif}
+.tokens{margin-top:26px;padding-top:18px;border-top:1px solid rgba(111,148,140,.25)}
+.coins{display:flex;gap:10px;margin:12px 0 10px}
+.coin{width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff1c8,#d5a94f 45%,#7a5520 100%);
+  box-shadow:0 0 0 1.5px #3a2610,0 3px 5px rgba(0,0,0,.6),inset 0 0 0 4px rgba(122,85,32,.35)}
+.coin.spent{background:none;box-shadow:inset 0 0 0 1.5px rgba(201,163,94,.35)}
+.tokens p{font:15px/1.35 "EB Garamond",serif;color:#a99876;margin-bottom:14px}
+
+/* who leads, on the side */
+.lead{position:relative;display:grid;grid-template-columns:56px 1fr;gap:6px 14px;padding:11px 12px 10px;margin-top:10px;border-radius:3px;
+  background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(111,148,140,.3)}
+.lead.on{background:linear-gradient(90deg,rgba(201,163,94,.16),rgba(201,163,94,.04));box-shadow:inset 0 0 0 1px var(--brass),0 0 18px rgba(240,215,158,.12)}
+.lead .nm{display:flex;align-items:center;gap:8px;font:700 16px/1 Cinzel,serif;color:var(--paper)}
+.lead .nm .ico{width:14px;height:14px;color:#7f8e89}
+.lead small{display:block;margin-top:4px;font:italic 14px/1.1 "IM Fell English",serif;color:#a99876}
+.lead .rec{margin-top:8px;font:600 11px/1 Cinzel,serif;letter-spacing:.14em;color:#c9b38c}
+.lead .rec i{font:italic 14px/1 "IM Fell English",serif;letter-spacing:0;color:#8f7a59;margin-left:6px}
+.lead.on .rec{color:var(--brass-hi)}
+.lead .mods{grid-column:1/3;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:2px}
+.lead .mods div{text-align:center;padding:4px 0 3px;border-radius:2px;background:rgba(0,0,0,.25)}
+.lead .mods span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.1em;color:#7f8e89}
+.lead .mods b{display:block;margin-top:2px;font:700 14px/1 Cinzel,serif;color:#d9c49b}
+.lead .mods b.up{color:#9cc274}.lead .mods b.dn{color:#d0675a}
+.lead .tag{position:absolute;right:12px;top:12px;font:700 10px/1 Cinzel,serif;letter-spacing:.2em;color:#2a1a0e;
+  padding:5px 8px;border-radius:2px;background:linear-gradient(#f0d79e,#c9a35e)}
+
+/* ---------- the right side: the table ---------- */
+#head{position:absolute;left:530px;top:46px;right:40px;display:flex;align-items:baseline;gap:18px}
+#head h2{font:700 26px/1 Cinzel,serif;color:var(--paper);letter-spacing:.06em}
+#head span{font:italic 18px/1 "IM Fell English",serif;color:#9a9f9c}
+#head .right{margin-left:auto;font:600 11px/1 Cinzel,serif;letter-spacing:.22em;color:var(--verdigris)}
+
+/* vocation cards */
+.voc{width:432px;height:372px;padding:28px 28px 24px;transition:transform .2s}
+.voc .top{display:flex;gap:16px;align-items:center}
+.voc .em{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;color:#3a2614;flex:none;
+  background:radial-gradient(circle at 40% 35%,#f4e7c8,#d8c193);box-shadow:inset 0 0 0 1px rgba(80,52,24,.5),0 0 0 3px rgba(80,52,24,.15)}
+.voc .em .ico{width:36px;height:36px}
+.voc h3{font:700 28px/1 Cinzel,serif;color:#2a1a0e}
+.voc .motto{margin-top:7px;font:italic 16px/1.2 "IM Fell English",serif;color:#5b4630}
+.voc .rlabel{margin-top:22px}
+.voc .races{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:12px}
+.voc .race{text-align:center}
+.voc .race .medal{width:58px;height:58px;margin:0 auto;--side:#7b5a33;box-shadow:0 0 0 1.5px #2a1c10,0 0 0 3px #b8995f,0 0 0 4.5px #2a1c10,0 4px 6px rgba(40,20,5,.35)}
+.voc .race span{display:block;margin-top:8px;font:13px/1 "EB Garamond",serif;color:#4a3522}
+.voc .perk{margin-top:26px;padding:14px 4px 13px;border-top:1px solid rgba(90,60,30,.35);border-bottom:1px solid rgba(90,60,30,.35)}
+.voc .perk .k{font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:var(--redink)}
+.voc .perk p{margin-top:8px;font:17px/1.3 "EB Garamond",serif;color:#2c1c0e}
+.voc.dim{filter:brightness(.82) saturate(.8)}
+.voc.on{transform:translateY(-6px) rotate(-.6deg);
+  box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #5d4426,0 0 0 4px var(--brass),0 0 34px rgba(240,215,158,.3),0 22px 30px rgba(0,0,0,.7)}
+.voc.hover{transform:translateY(-3px)}
+.voc .chip{position:absolute;right:-20px;top:-22px;width:96px;height:96px;transform:rotate(10deg)}
+.voc .chip .seal{width:96px;height:96px}
+.voc .chip .seal .ico{width:30px;height:30px}
+.voc .chip .seal b{font-size:11px;margin-top:3px}
+
+/* pool dossiers */
+.dos{width:432px;height:300px;padding:18px 20px 14px}
+.dos .top{display:flex;gap:14px;align-items:center}
+.dos .medal{width:68px;height:68px;--side:#7b5a33}
+.dos .who{flex:1;min-width:0}
+.dos h4{font:700 19px/1 Cinzel,serif;color:#2a1a0e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dos .ro{margin-top:5px;font:italic 15px/1 "IM Fell English",serif;color:#5b4630}
+.dos .al{margin-top:4px;font:12px/1 "EB Garamond",serif;color:#7b6142}
+.stamps{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.stamp{font:700 9.5px/1 Cinzel,serif;letter-spacing:.14em;padding:4px 6px 3px;border:1.5px solid currentColor;border-radius:2px;transform:rotate(-1.5deg)}
+.stamp.brass{color:#8a5a12}.stamp.green{color:var(--greenink)}.stamp.muted{color:var(--ink-2)}
+.stamp.star{color:var(--redink);background:rgba(142,42,30,.08)}
+.vit{display:grid;grid-template-columns:repeat(5,1fr);margin-top:12px;border-top:1px solid rgba(90,60,30,.35);border-bottom:1px solid rgba(90,60,30,.35)}
+.vit div{padding:6px 0 5px;text-align:center}
+.vit div+div{border-left:1px dashed rgba(90,60,30,.3)}
+.vit span{font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:#7b6142;margin-right:6px}
+.vit b{font:700 17px/1 Cinzel,serif;color:var(--ink)}
+.att{display:grid;grid-template-columns:repeat(6,1fr);margin-top:8px}
+.att div{text-align:center}
+.att span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.16em;color:#7b6142}
+.att b{font:700 18px/1 Cinzel,serif;color:var(--ink)}
+.att i{font:600 12px/1 Cinzel,serif;font-style:normal;margin-left:3px;color:#7b6142}
+.att i.up{color:var(--greenink)}.att i.dn{color:var(--redink)}
+.wpn{display:flex;align-items:baseline;gap:8px;margin-top:10px;padding-top:8px;border-top:1px dashed rgba(90,60,30,.3)}
+.wpn b{font:600 16px/1 "EB Garamond",serif;color:#2a1a0e}
+.wpn span{font:14px/1 "EB Garamond",serif;color:#5b4630;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wpn em{margin-left:auto;font:700 10px/1 Cinzel,serif;font-style:normal;letter-spacing:.16em;color:var(--redink);white-space:nowrap}
+.dos .ab{margin-top:7px;font:italic 14px/1.1 "IM Fell English",serif;color:#5b4630;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dos .ab b{font:600 14px/1 "EB Garamond",serif;font-style:normal;color:#2a1a0e}
+.dos.picked{box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #1c3d5e,0 0 0 4px var(--enamel-hi),0 0 26px rgba(91,143,192,.3),0 14px 24px rgba(0,0,0,.6)}
+.ribbon{position:absolute;right:22px;top:-6px;width:38px;height:58px;display:grid;place-items:start center;padding-top:12px;
+  font:700 19px/1 Cinzel,serif;color:#e8f1fa;background:linear-gradient(90deg,#1f4a70,#3a72a6,#1f4a70);
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%);filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
+.dos.target{box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #3a0c06,0 0 0 4px var(--blood-hi),0 0 26px rgba(201,71,58,.35),0 14px 24px rgba(0,0,0,.6)}
+.dos .xstamp{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%) rotate(-12deg);padding:10px 22px 8px;
+  font:900 34px/1 Cinzel,serif;letter-spacing:.2em;color:rgba(154,47,34,.82);border:4px double rgba(154,47,34,.8);border-radius:4px;
+  background:rgba(239,226,195,.35);mix-blend-mode:multiply}
+.dos.ghosted{filter:brightness(.62) saturate(.6)}
+.dos.fresh .newmark{position:absolute;right:20px;top:18px;font:italic 15px/1 "IM Fell English",serif;color:var(--redink)}
+
+/* the replace banner and the commission slip */
+.targetbar{position:absolute;left:530px;right:40px;top:30px;height:58px;display:flex;align-items:center;gap:16px;padding:0 20px;z-index:4;
+  border-radius:3px;background:linear-gradient(90deg,#5e1810,#3a0f0a);box-shadow:inset 0 0 0 1px rgba(201,71,58,.6),0 8px 16px rgba(0,0,0,.5)}
+.targetbar b{font:700 15px/1 Cinzel,serif;letter-spacing:.16em;color:#fbe1d6}
+.targetbar span{font:italic 17px/1 "IM Fell English",serif;color:#e7b3a6}
+.targetbar .ghost-btn{margin-left:auto}
+#veil{position:absolute;inset:0;background:rgba(6,6,6,.62);z-index:5}
+.slip{width:760px;padding:34px 40px 30px;z-index:6;left:830px;top:120px;transform:rotate(-.6deg)}
+.slip h3{font:700 30px/1 Cinzel,serif;color:#2a1a0e;margin-top:16px}
+.slip .why{margin-top:10px;font:italic 18px/1.35 "IM Fell English",serif;color:#5b4630}
+.arcs{margin-top:20px;border-top:1px solid rgba(90,60,30,.35)}
+.arc{display:grid;grid-template-columns:30px 120px 1fr;gap:12px;align-items:center;padding:12px 6px;border-bottom:1px dashed rgba(90,60,30,.3)}
+.arc .box{width:20px;height:20px;border:1.5px solid #5b4630;border-radius:2px;display:grid;place-items:center;font:700 16px/1 Cinzel,serif;color:var(--redink)}
+.arc p{font:16px/1.3 "EB Garamond",serif;color:#3a2a1a}
+.arc.on{background:rgba(142,42,30,.07)}
+.arc.on .box{border-color:var(--redink)}
+.arc.off{opacity:.42}
+.slipfoot{display:flex;align-items:center;gap:16px;margin-top:22px}
+.slipfoot .cost{font:italic 18px/1 "IM Fell English",serif;color:#5b4630}
+.slipfoot .cost b{font:700 16px/1 Cinzel,serif;font-style:normal;color:var(--redink)}
+.slipfoot .coins{margin:0}
+.slipfoot .coin{width:26px;height:26px}
+.slipfoot .coin.spent{box-shadow:inset 0 0 0 1.5px rgba(90,60,30,.4)}
+.slipfoot .coin.use{box-shadow:0 0 0 1.5px #3a2610,0 0 0 3.5px var(--redink),0 3px 5px rgba(0,0,0,.4)}
+.slipfoot .sp{flex:1}
+.ghost-btn.ink{color:#5b4630;border-color:rgba(90,60,30,.5);background:none}
+
+/* the charter */
+#charter{left:560px;top:150px;width:930px;height:740px;padding:46px 56px 40px;transform:rotate(-.7deg)}
+#charter .sealmark{position:absolute;right:46px;top:40px;font:italic 15px/1 "IM Fell English",serif;color:#7b6142}
+.bek{margin-top:34px;font:italic 21px/1 "IM Fell English",serif;color:#5b4630}
+.gname{display:flex;align-items:flex-end;margin-top:12px;height:66px;border-bottom:1.5px solid #3a2614}
+.gname b{font:700 52px/1 Cinzel,serif;color:#1d120a}
+.gname .caret{width:2px;height:46px;margin:0 0 8px 6px;background:#2a1a0e}
+.gname .pen{margin-left:auto;margin-bottom:12px;width:26px;height:26px;color:#7b6142}
+.trade{margin-top:18px;font:19px/1.4 "EB Garamond",serif;color:#2c1c0e}
+.trade b{font:700 15px/1 Cinzel,serif;letter-spacing:.2em;color:var(--redink)}
+.trade i{font-family:"IM Fell English",serif;color:#5b4630}
+.sec{margin-top:30px}
+.arms{display:grid;grid-template-columns:170px 1fr;gap:34px;margin-top:16px}
+.shield{position:relative;width:150px;height:178px;filter:drop-shadow(0 8px 10px rgba(40,20,5,.45))}
+.shield .rim{position:absolute;inset:0;background:linear-gradient(160deg,var(--brass-hi),var(--brass-lo));
+  clip-path:path("M0 0 H150 V88 C150 138 112 162 75 178 C38 162 0 138 0 88 Z")}
+.shield .body{position:absolute;inset:6px;clip-path:path("M0 0 H138 V82 C138 128 103 150 69 166 C35 150 0 128 0 82 Z")}
+.shield .ico{position:absolute;left:35px;top:30px;width:80px;height:80px;color:#f3e3bd;filter:drop-shadow(0 2px 0 rgba(0,0,0,.4))}
+.picks .lbl{color:#7d5c37}
+.swatches{display:flex;gap:12px;margin:12px 0 22px}
+.sw{text-align:center;width:52px}
+.sw div{width:40px;height:40px;margin:0 auto;border-radius:50%;box-shadow:0 0 0 1.5px #2a1c10,inset 0 -6px 10px rgba(0,0,0,.3),inset 0 4px 6px rgba(255,255,255,.25)}
+.sw span{display:block;margin-top:6px;font:12px/1 "EB Garamond",serif;color:#5b4630}
+.sw.on div{box-shadow:0 0 0 1.5px #2a1c10,0 0 0 4px var(--brass),0 0 0 5.5px #2a1c10,inset 0 -6px 10px rgba(0,0,0,.3)}
+.sw.on span{font-weight:600;color:#2a1a0e}
+.emblems{display:grid;grid-template-columns:repeat(10,56px);gap:8px;margin-top:12px}
+.emb{width:56px;height:56px;border-radius:3px;display:grid;place-items:center;color:#4a3522;box-shadow:inset 0 0 0 1px rgba(90,60,30,.4)}
+.emb .ico{width:34px;height:34px}
+.emb.on{color:#f3e3bd;box-shadow:0 0 0 2px var(--brass),0 0 0 3.5px #2a1c10}
+.embname{margin-top:8px;font:italic 15px/1 "IM Fell English",serif;color:#5b4630}
+.sigs{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:18px}
+.sig{position:relative;padding-top:6px}
+.sig .hand{font:italic 30px/1 "IM Fell English",serif;color:#1d2f4a;height:40px;display:flex;align-items:flex-end;padding-left:6px;transform:rotate(-2deg)}
+.sig .line{border-top:1.2px solid #3a2614;margin-top:4px}
+.sig b{display:block;margin-top:8px;font:600 12px/1 Cinzel,serif;letter-spacing:.14em;color:#2a1a0e}
+.sig small{display:block;margin-top:5px;font:italic 14px/1 "IM Fell English",serif;color:#7b6142}
+.sig .master{position:absolute;right:4px;top:-2px;width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#d0574a,#9a2f22 50%,#5a160f 90%);box-shadow:0 3px 6px rgba(0,0,0,.4),inset 0 0 0 3px rgba(70,15,10,.5)}
+.sig .master:after{content:"";position:absolute;inset:12px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(255,200,180,.4)}
+.sig.first b{color:var(--redink)}
+
+/* the banner hanging beside the charter */
+#banner{position:absolute;left:1560px;top:140px;width:280px;height:640px}
+#banner .rod{position:absolute;left:-14px;right:-14px;top:0;height:14px;border-radius:7px;background:linear-gradient(#f0d79e,#8a6a30);box-shadow:0 4px 8px rgba(0,0,0,.6)}
+#banner .rod:before,#banner .rod:after{content:"";position:absolute;top:-5px;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff0c4,#b0853d 60%,#5e3f16)}
+#banner .rod:before{left:-10px}#banner .rod:after{right:-10px}
+#banner .cloth{position:absolute;left:12px;right:12px;top:10px;bottom:0;
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+#banner .cloth:before{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(90deg,rgba(0,0,0,.10) 0 2px,transparent 2px 7px),
+  linear-gradient(90deg,rgba(0,0,0,.35),rgba(255,255,255,.08) 35%,rgba(0,0,0,.05) 60%,rgba(0,0,0,.4))}
+#banner .trim{position:absolute;left:24px;right:24px;top:26px;bottom:40px;clip-path:polygon(0 0,100% 0,100% 100%,50% 88%,0 100%);
+  box-shadow:inset 0 0 0 3px rgba(240,215,158,.75)}
+#banner .ico{position:absolute;left:50%;top:130px;width:150px;height:150px;transform:translateX(-50%);color:#f3e3bd;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
+#banner .motto{position:absolute;left:40px;right:40px;top:330px;text-align:center;font:700 22px/1.15 Cinzel,serif;letter-spacing:.06em;color:#f3e3bd;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+#banner .cap{position:absolute;left:0;right:0;top:672px;text-align:center;font:italic 16px/1.3 "IM Fell English",serif;color:#9a9f9c}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="leather" id="side"></div>
+  <div id="right"></div>
+  <div id="grain"></div>
+  <div id="vignette"></div>
+</div>
+<script>
+const D=window.DATA, Q=new URLSearchParams(location.search), STATE=Q.get("state")||"vocation";
+const ic=(k,cls="ico")=>`<span class="${cls}"><svg viewBox="0 0 512 512">${ICONS[k]||""}</svg></span>`;
+const sgn=n=>(n>=0?"+":"")+n;
+const rgb=c=>`rgb(${c.join(",")})`;
+const shade=(c,f)=>`rgb(${c.map(v=>Math.round(v*f)).join(",")})`;
+
+/* what each frame has chosen so far */
+const VOC=D.vocations.find(v=>v.id===D.chosen);
+const pool=D.pool.slice();
+const fresh=D.commissioned.card;
+const afterCommission=["pick","charter"].includes(STATE);
+if(afterCommission)pool[D.commissioned.index]=fresh;
+const picks = STATE==="charter" ? [1,3,D.commissioned.index] : STATE==="vocation" ? [] : [1,3];
+const leader = D.commissioned.index;
+const tokensLeft = afterCommission||STATE==="replace" ? (STATE==="replace"?D.tokens:D.tokens-D.commissioned.labels.length) : D.tokens;
+const COLOR=D.colors[0].rgb, EMBLEM=D.emblems[8];
+const GNAME="The Ashen Lantern";
+
+function steps(){
+  const now={vocation:0,pick:1,commission:1,replace:1,charter:2}[STATE];
+  const sq=picks.map(i=>pool[i].name).join(", ");
+  const rows=[["Vocation",now>0?VOC.name:"The trade it is founded on"],
+              ["The squad",now>1?sq:now===1?`${picks.length} of 3 picked from the nine`:"Three of nine"],
+              ["The charter","Its name, its arms, who leads"]];
+  return `<div class="steps">${rows.map(([t,s],i)=>`<div class="step ${i<now?"done":i===now?"now":""}">
+    <span class="n">${i<now?"✓":["I","II","III"][i]}</span><div><b>${t}</b><small>${s}</small></div></div>`).join("")}</div>`;
+}
+function foot(seal,back){
+  return `<div id="foot"><div class="left">${back?`<span class="ghost-btn">◂ ${back}</span>`:""}<span class="esc">Esc · back to the title</span></div>${seal}</div>`;
+}
+function sealHtml(word,sub,icon,off){
+  return `<div class="seal ${off?"off":""}"><div>${ic(icon)}<b>${word}</b><small>${sub}</small></div></div>`;
+}
+const vitals=c=>`<div class="vit"><div><span>HP</span><b>${c.hp}</b></div><div><span>AC</span><b>${c.ac}</b></div><div><span>MD</span><b>${c.md}</b></div><div><span>SPD</span><b>${c.spd}</b></div><div><span>INIT</span><b>${c.init}</b></div></div>`;
+const attrs=c=>`<div class="att">${c.attrs.map(a=>`<div><span>${a.k}</span><b>${a.v}</b><i class="${a.mod>0?"up":a.mod<0?"dn":""}">${sgn(a.mod)}</i></div>`).join("")}</div>`;
+const stamps=c=>`<div class="stamps">${c.tags.map(t=>`<span class="stamp ${t.commissioned?"star":t.style}">${t.commissioned?"★ ":""}${t.label}</span>`).join("")}</div>`;
+
+/* ---------------- the side ---------------- */
+function side(){
+  let body="", seal="", back="";
+  if(STATE==="vocation"){
+    body=`<div class="chosen"><div class="em">${ic(VOC.icon)}</div><div><b>${VOC.name}</b><small>${VOC.motto}</small></div></div>
+      <div class="clause"><div class="lbl">The guild's perk</div><p>${VOC.perk}</p></div>
+      <div class="racesline">The draft brings one of each of <b>${VOC.races.map(r=>r.race).join(", ")}</b>; three more come from anywhere.</div>
+      <div class="racesline" style="margin-top:12px">Chosen once. It cannot be changed later.</div>`;
+    seal=sealHtml("Continue","to the draft","contract");
+  }else if(STATE==="charter"){
+    body=`<div class="lbl">Who leads the guild</div>
+      <div class="racesline" style="margin-top:6px">The leader haggles for the guild and sponsors its recruits.</div>
+      ${picks.map(i=>{const c=pool[i];return `<div class="lead ${i===leader?"on":""}">${i===leader?`<span class="tag">Leader</span>`:""}
+        <div class="medal" style="width:52px;height:52px;--side:${i===leader?"var(--brass)":"#5b8fc0"}"><img src="${c.portrait}"></div>
+        <div><div class="nm">${c.name}${ic("pencil")}</div><small>${c.race} · ${c.occ} · ${c.align}</small>
+        <div class="rec">Can recruit ${c.recruits}<i>${c.recruits_why}</i></div></div>
+        <div class="mods">${c.attrs.map(a=>`<div><span>${a.k}</span><b class="${a.mod>0?"up":a.mod<0?"dn":""}">${sgn(a.mod)}</b></div>`).join("")}</div></div>`}).join("")}`;
+    seal=sealHtml("Found","the guild","castle"in ICONS?"castle":"city");
+    back="The squad";
+  }else{
+    const slots=[0,1,2].map(k=>{const i=picks[k];if(i===undefined)return `<div class="slot empty">pick a ${["first","second","third"][k]} from the pool</div>`;
+      const c=pool[i];return `<div class="slot"><span class="num">${k+1}</span><div class="medal" style="width:60px;height:60px;--side:#5b8fc0"><img src="${c.portrait}"></div>
+      <div><b>${c.name}</b><small>${c.race} · ${c.occ}</small><div class="mini">${c.attrs.map(a=>`<span>${a.k}<i>${a.v}</i></span>`).join("")}</div></div></div>`}).join("");
+    const coins=[0,1,2].map(k=>`<div class="coin ${k<tokensLeft?"":"spent"}"></div>`).join("");
+    body=`<div class="lbl">The squad · ${picks.length} of 3</div>${slots}
+      <div class="tokens"><div class="lbl">Commission tokens · ${tokensLeft} of ${D.tokens}</div><div class="coins">${coins}</div>
+      <p>Call for what the pool lacks (a leader, the strong, the wise). Each archetype costs a token; the card you click next is replaced.</p>
+      <span class="ghost-btn ${STATE==="commission"?"hot":""}">${tokensLeft?"Commission…":"No tokens left"}</span></div>`;
+    seal=sealHtml("Continue",picks.length<3?`${picks.length} of 3 picked`:"to the charter","contract",picks.length<3);
+    back="Vocation";
+  }
+  document.getElementById("side").innerHTML=`<div class="kicker" style="color:#8f7a59">A new guild<em>day 1</em></div>
+    <h1>Found a Guild</h1>${steps()}<div id="body">${body}</div>${foot(seal,back)}`;
+}
+
+/* ---------------- the right side ---------------- */
+function vocations(){
+  const pos=(i)=>[530+(i%3)*452, 170+Math.floor(i/3)*412];
+  const hover="wilds";
+  const cards=D.vocations.map((v,i)=>{const [x,y]=pos(i),on=v.id===D.chosen;
+    return `<div class="paper voc ${on?"on":v.id===hover?"hover":""}" style="left:${x}px;top:${y}px">
+      ${on?`<div class="chip"><div class="seal"><div>${ic(v.icon)}<b>Chosen</b></div></div></div>`:""}
+      <div class="top"><div class="em">${ic(v.icon)}</div><div><h3>${v.name}</h3><div class="motto">${v.motto}</div></div></div>
+      <div class="kicker rlabel">Its races</div>
+      <div class="races">${v.races.map(r=>`<div class="race"><div class="medal"><img src="${r.img}"></div><span>${r.race}</span></div>`).join("")}</div>
+      <div class="perk"><div class="k">Guild perk</div><p>${v.perk}</p></div></div>`}).join("");
+  return `<div id="head"><h2>Choose a Vocation</h2><span>the trade your guild is founded on</span><span class="right">Six trades</span></div>${cards}`;
+}
+function dossier(c,i,extra=""){
+  const k=picks.indexOf(i);
+  const cls=[k>=0?"picked":"", STATE==="replace"&&i===5?"target":"", STATE==="replace"&&i!==5?"ghosted":"", afterCommission&&i===D.commissioned.index?"fresh":""].join(" ");
+  const w=c.weapon;
+  return `<div class="paper dos ${cls}" style="${extra}">
+    ${k>=0?`<div class="ribbon">${k+1}</div>`:""}
+    ${afterCommission&&i===D.commissioned.index&&k<0?`<span class="newmark">commissioned</span>`:""}
+    <div class="top"><div class="medal"><img src="${c.portrait}"></div>
+      <div class="who"><h4>${c.name}</h4><div class="ro">${c.race} · ${c.occ}</div><div class="al">${c.align} · ${c.size} · age ${c.age}</div>${stamps(c)}</div></div>
+    ${vitals(c)}${attrs(c)}
+    <div class="wpn"><b>${w.nm}</b><span>${w.hit} · ${w.dmg} · ${w.tags.replace(/\s*·\s*/g," · ")}</span>${w.action?`<em>${w.action}</em>`:""}</div>
+    <div class="ab"><b>${c.ability[0]}</b> · ${c.langs.join(", ")||"no languages"}</div>
+    ${STATE==="replace"&&i===5?`<div class="xstamp">Replace</div>`:""}</div>`;
+}
+function draft(){
+  const cards=pool.map((c,i)=>dossier(c,i,`left:${530+(i%3)*452}px;top:${108+Math.floor(i/3)*314}px;position:absolute`)).join("");
+  let head=`<div id="head"><h2>The Pool</h2><span>pick three of nine · a click picks, a second click lets go</span><span class="right">${VOC.name} · one of each of its races</span></div>`;
+  if(STATE==="replace")head=`<div class="targetbar"><b>Pick the one to replace</b><span>for ${D.commissioned.labels.join(" + ")} · ${D.commissioned.labels.length} tokens</span><span class="ghost-btn">Cancel</span></div>`;
+  let slip="";
+  if(STATE==="commission"){
+    const sel=D.commissioned.labels;
+    slip=`<div id="veil"></div><div class="paper slip">
+      <div class="kicker">Commission<em>${tokensLeft} tokens left</em></div>
+      <h3>Call for what the pool lacks</h3>
+      <div class="why">Tick the archetypes you want in one candidate, a token each. Then click the card they replace; a picked card leaves the squad.</div>
+      <div class="arcs">${D.archetypes.map(a=>{const on=sel.includes(a.key),full=!on&&sel.length>=tokensLeft;
+        return `<div class="arc ${on?"on":full?"off":""}"><span class="box">${on?"✓":""}</span><span class="stamp ${on?"star":a.style}" style="justify-self:start">${a.label}</span><p>${a.desc}</p></div>`}).join("")}</div>
+      <div class="slipfoot"><span class="cost">Costs <b>${sel.length}</b> of ${tokensLeft}</span>
+        <div class="coins">${[0,1,2].map(k=>`<div class="coin ${k<sel.length?"use":""}"></div>`).join("")}</div>
+        <span class="sp"></span><span class="ghost-btn ink">Cancel</span><span class="btn">Call them</span></div></div>`;
+  }
+  return head+cards+slip;
+}
+function charter(){
+  const c=COLOR, emb=EMBLEM, sq=picks.map(i=>pool[i]);
+  const order=[leader,...picks.filter(i=>i!==leader)];
+  return `<div class="paper" id="charter">
+    <div class="kicker">Charter of the guild<em>drawn up at Ankareth, on the first day</em></div>
+    <div class="bek">Be it known that the undersigned found the guild of</div>
+    <div class="gname"><b>${GNAME}</b><span class="caret"></span>${ic("quill-ink","ico pen")}</div>
+    <div class="trade">in the trade of <b>${VOC.name.toUpperCase()}</b>, under the word <i>“${VOC.motto}”</i></div><div class="trade" style="margin-top:6px"><b>Perk</b> &nbsp;${VOC.perk} <i>(every member)</i></div>
+    <div class="sec"><div class="kicker">Its arms</div>
+      <div class="arms"><div class="shield"><div class="rim"></div><div class="body" style="background:linear-gradient(160deg,${shade(c,1.15)},${rgb(c)} 50%,${shade(c,.55)})"></div>${ic(emb.slug)}</div>
+        <div class="picks"><div class="lbl">Colour</div>
+          <div class="swatches">${D.colors.map((k,i)=>`<div class="sw ${i===0?"on":""}"><div style="background:${rgb(k.rgb)}"></div><span>${k.name}</span></div>`).join("")}</div>
+          <div class="lbl">Emblem</div>
+          <div class="emblems">${D.emblems.map(e=>`<div class="emb ${e===emb?"on":""}" style="${e===emb?`background:${rgb(c)}`:""}">${ic(e.slug)}</div>`).join("")}</div>
+          <div class="embname">${emb.label}</div></div></div></div>
+    <div class="sec"><div class="kicker">Signed</div>
+      <div class="sigs">${order.map(i=>{const m=pool[i];return `<div class="sig ${i===leader?"first":""}">${i===leader?`<span class="master"></span>`:""}
+        <div class="hand">${m.name}</div><div class="line"></div><b>${i===leader?"Master of the guild":"Founder"}</b><small>${m.race} · ${m.occ}</small></div>`}).join("")}</div></div>
+  </div>
+  <div id="banner"><div class="cloth" style="background:linear-gradient(180deg,${rgb(c)},${shade(c,.72)})"></div><div class="trim"></div><div class="rod"></div>
+    ${ic(emb.slug)}<div class="motto">${GNAME}</div></div>
+  <div style="position:absolute;left:1520px;top:816px;width:360px;text-align:center;font:italic 16px/1.35 'IM Fell English',serif;color:#9a9f9c">
+    The banner flies over the squad's tokens on the board and its pennants on the map.</div>`;
+}
+
+side();
+document.getElementById("right").innerHTML = STATE==="vocation"?vocations():STATE==="charter"?charter():draft();
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=document.getElementById("stage");
+  st.style.transform=`scale(${s})`;st.style.left=(innerWidth-1920*s)/2+"px";st.style.top=(innerHeight-1080*s)/2+"px";}
+addEventListener("resize",fit);fit();
+</script>
+</body>
+</html>

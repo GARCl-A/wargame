@@ -53,6 +53,7 @@ function choose(key) {
   const m = T.menu.find(x => x && x.key === key);
   if (!m || !m.enabled) return;
   if (key === "continue") post("continue");
+  else if (key === "new") post("new");
   else if (key === "load") post("page", {page: T.mode === "guilds" ? "home" : "guilds"});
   else if (key === "quit") post("quit");
 }

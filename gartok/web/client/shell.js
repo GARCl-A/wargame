@@ -42,6 +42,7 @@ const Shell = {screen: null, lab: false};
 // each screen lives in screens/<id>/: screen.html, then these stylesheets and scripts in order
 const SCREENS = {
   title: {css: ["title.css"], js: ["../map/sheet.js", "title.js"]},
+  draft: {css: ["draft.css"], js: ["draft.js"]},
   battle: {css: ["battle.css"], js: ["board.js", "battle.js"]},
   map: {css: ["map.css"], js: ["sheet.js", "map.js"]},
   hub: {css: ["hub.css"], js: ["shop.js", "labor.js", "medic.js", "jobs.js", "craft.js", "stables.js", "tavern.js", "initiation.js", "vault.js", "claim.js", "ledger.js", "hub.js"]},
