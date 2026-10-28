@@ -30,15 +30,14 @@ from gartok.web.away_session import AwaySession
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game, serve
+from tests.helpers import standard_unit
 
 
 def _guild(node, coins=200):
-    units = [Unit("Fighter") for _ in range(2)]
+    units = [standard_unit() for _ in range(2)]
     for u in units:
         u.money = coins
-        u.give_to_pack("Potato", 4 - u.count_of("Potato"))
-        for name in ("Lumber", economy.CLAIM_OVEN_BRICK):     # a random kit can carry them
-            u.remove_named(name, u.count_of(name))
+        u.give_to_pack("Potato", 4)
     return Guild(None, groups=[Group(units, node=node, leader=units[0])], name="Ink Hands")
 
 

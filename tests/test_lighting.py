@@ -3,6 +3,7 @@
 import os
 
 import pygame
+import pytest
 
 from gartok import lighting
 from gartok.ground import GroundObject
@@ -66,6 +67,7 @@ def test_a_remembered_cell_shows_dimmer_than_one_in_sight():
     assert now > remembered > never
 
 
+@pytest.mark.slow
 def test_the_fast_sight_matches_the_rule_cell_by_cell():
     from gartok import ai, combat_lab, vision
     for fight in ("dungeon", "necromancer"):

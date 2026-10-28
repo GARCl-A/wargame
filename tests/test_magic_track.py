@@ -5,11 +5,11 @@ from unittest.mock import patch
 
 from gartok import ai, campaign, data, magic, progression, talents
 from gartok.board import cone_cells
-from tests.helpers import Battle, Combatant, Unit, actions, persist
+from tests.helpers import Battle, Combatant, Unit, actions, persist, standard_unit
 
 
 def _mage(level=3, *picks):
-    u = Unit("player")
+    u = standard_unit()
     u.add_magic_source("blood")
     u.add_magic_source("faith")
     u.set_track_level("magic", level)
@@ -46,7 +46,7 @@ def test_spell_focus_destructive_casting_blessed_hands_and_far_cast():
     caster = _mage(4, "arcane_mind", "spell_focus", "destructive_casting", "far_cast")
     caster.set_spell_known("magic_missile", True)
     caster.set_spell_known("healing_touch", True)
-    foe = Unit("enemy")
+    foe = standard_unit("enemy")
     batt = Battle([caster], [foe])
     batt.board.walls.clear()
     me, target = batt.player_units[0], batt.enemy_units[0]

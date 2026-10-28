@@ -439,6 +439,7 @@ def _lab_log(tmp_path, name, controllers, seed=5):
     return battle
 
 
+@pytest.mark.slow
 def test_the_pairs_script_replays_only_logged_fights_a_person_played_against_the_ai(tmp_path):
     battle = _lab_log(tmp_path, "mine.jsonl", HUMAN_AI)
     _lab_log(tmp_path, "two.jsonl", {"player": "human", "enemy": "human"})

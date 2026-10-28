@@ -9,6 +9,7 @@ import os
 import random
 
 import pygame
+import pytest
 
 from gartok import (
     ai,
@@ -370,6 +371,7 @@ def test_aurochs_turns_and_fights_when_cornered_or_winded():
     assert any("winded" in ln for ln in b.log_lines)
 
 
+@pytest.mark.slow
 def test_the_ai_plays_the_chase_to_a_result():
     b = _fight(level=8, size=6, seed=2)
     guard = 0

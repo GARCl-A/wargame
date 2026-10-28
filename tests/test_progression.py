@@ -19,6 +19,7 @@ from tests.helpers import (
     economy,
     persist,
     recruit,
+    standard_unit,
     talents,
 )
 
@@ -609,19 +610,20 @@ def test_eligible_work_activities():
 
     # Level 0
     jobs_0 = progression.eligible_work_activities(0)
-    assert any("Lumber Yard" in j for j in jobs_0)
+    assert any("Lumber Yard" in j for j in jobs_0) and any("Mine" in j for j in jobs_0)
     assert any("Crafting" in j for j in jobs_0)
     assert any("Hunting" in j for j in jobs_0)
 
-    # Level 1 without axe
-    u = Unit("worker")
-    jobs_1_no_axe = progression.eligible_work_activities(1, u)
-    assert any("requires owning an Axe" in j for j in jobs_1_no_axe)
-
-    # Level 1 with axe
+    # Level 1: each work node asks for its own tool
+    u = standard_unit()
+    jobs_1 = progression.eligible_work_activities(1, u)
+    assert "Lumber Yard (requires owning an Axe)" in jobs_1 and "Mine (requires owning a Pick)" in jobs_1
+    u.equipped_weapon = "Pick"
+    jobs_1 = progression.eligible_work_activities(1, u)
+    assert "Mine (with your Pick)" in jobs_1 and "Lumber Yard (requires owning an Axe)" in jobs_1
     u.equipped_weapon = "Axe"
-    jobs_1_axe = progression.eligible_work_activities(1, u)
-    assert any("with your Axe" in j for j in jobs_1_axe)
+    jobs_1 = progression.eligible_work_activities(1, u)
+    assert "Lumber Yard (with your Axe)" in jobs_1 and "Mine (requires owning a Pick)" in jobs_1
 
     # Level 2: Lumber Yard is out
     jobs_2 = progression.eligible_work_activities(2, u)

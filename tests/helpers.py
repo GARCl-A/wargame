@@ -44,6 +44,30 @@ def _unit(**over):
     return u
 
 
+def standard_unit(team="player"):
+    """The one test body, rolled by nothing: a Human Guide, every attribute 10, the hit die at its
+    top (8 HP), a Quarterstaff in hand, an empty pack, no coin, one language. A test that is not
+    about a roll starts here and sets what it is about on top; each call is a fresh copy."""
+    u = Unit(team, name="Standard")
+    u.set_race("Human")
+    u.set_occupation("Guide")
+    for a in data.ATTRIBUTES:
+        u.base_attributes[a] = 10
+    u.languages = ["Ankarin"]
+    u.recipes = []
+    u._sync_dictionary_recipes()
+    u.alignment = "Neutral and Neutral"
+    u._age_base = u.age = 30
+    u._hp_roll = u.race["hd"]
+    u._base_inventory = []
+    u.magic_sources, u.spells_known = [], []
+    u.magic_blood = False
+    u._apply_attributes()
+    u._derive_combat()
+    u.hp = u.hp_max
+    return u
+
+
 def _combatant(**over):
     """A Combatant wrapping a deterministic Unit -- for battle-behaviour tests."""
     return Combatant(_unit(**over))

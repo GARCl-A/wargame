@@ -59,6 +59,10 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Medium
 
+- **Test suite: one seed per test, xdist and the skills' gates (found 2026-10-28).** Tests that
+  pass only by the order they run in, the `slow` / `balance` markers and how `pre-commit` and
+  `check_backlog` should use them; the steps are in [test_suite.md](test_suite.md).
+
 - **Remove occupations (decided 2026-10-23).** The first step of *Needs more information -> Loyalty,
   the oath and who the members are*: an occupation is only a preset of the starting weapon and item
   (`unit.py`), so the starting kit is rolled at random and nothing is written on the character. Touches

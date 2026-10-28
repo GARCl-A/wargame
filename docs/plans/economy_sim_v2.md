@@ -29,7 +29,7 @@ validating the work: [Decisions made without asking](#decisions-made-without-ask
 | `scripts/economy_activities.py` | **layer 1**: what each activity pays a squad per day in copper and XP, risk, days to the next level, the floor check; the Pit and the Games; the tavern against the yard | `--level 0\|3 --skills 0.8,0.95 [--medic]` |
 | `scripts/economy_guild.py` | **layer 2**: a whole guild lives 7 and 30 days under a policy on the real engine; sustain curve, milestone, ranking, restock sweep, upkeep, the Games ladder, the Wilds claim, the Medic | `--policies ... --skill 0.95 [--curve] [--ranking] [--medic] [--level 3 --capital 250]` |
 | `scripts/economy_exploits.py` | the exploit detector: loops, barriers, dominance, route, conservation fuzz | `--fuzz 200` |
-| `tests/test_economy_sim.py`, `test_economy_exploits.py`, `test_craft_level.py` | pytest on seeded short runs; the detector tests break the rules on purpose to prove each scan can fail | `python -m pytest tests/` |
+| `tests/test_economy_sim.py`, `test_economy_exploits.py`, `test_craft_level.py` | pytest on seeded short runs; the detector tests break the rules on purpose to prove each scan can fail; the ones that judge a design number off a sim are marked `balance` | `python -m pytest tests/` (`-m balance` for those) |
 
 `AGENTS.md` now says to re-run `economy_guild.py`, `economy_activities.py` and
 `economy_exploits.py` (or just `economy_report.py`) after touching wages, purses, prices or loot.

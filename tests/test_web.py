@@ -287,6 +287,7 @@ def test_each_side_has_its_own_colour_and_only_your_squad_shows_its_level():
     assert s._sheet(foe)["level"] is None
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("fight", sorted(combat_lab.FIGHTS))
 def test_every_lab_fight_plays_to_its_end_with_a_person_on_every_human_choice(fight):
     battle, meta = combat_lab.build(fight, 2, combat_lab.FIGHTS[fight].squad, seed=1)
@@ -310,6 +311,7 @@ def test_every_lab_fight_plays_to_its_end_with_a_person_on_every_human_choice(fi
         assert "setup" in asked
 
 
+@pytest.mark.slow
 def test_the_boss_ctf_ends_when_its_flag_runners_fall():
     battle, meta = combat_lab.build("boss", 2, 6, seed=7)       # stalled 1,400 rounds once
     s = BattleSession(battle, meta)

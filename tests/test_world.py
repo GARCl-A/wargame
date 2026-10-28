@@ -2,6 +2,8 @@
 
 import random
 
+import pytest
+
 from tests.helpers import (
     COLS,
     ROWS,
@@ -397,6 +399,7 @@ def test_compute_layout_no_overlapping_nodes():
     assert _min_separation(layout) >= 0.09
 
 
+@pytest.mark.slow
 def test_a_growing_map_spreads_out_instead_of_piling_up():
     import random
 

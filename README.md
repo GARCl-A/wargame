@@ -43,7 +43,8 @@ Dev tools (pytest, ruff) live apart from the game's own requirements:
 `pip install -r requirements-dev.txt`.
 
 Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
-(200 headless AI-vs-AI battles). `python -m gartok.reference` regenerates
+(200 headless AI-vs-AI battles). `-m "not slow and not balance"` skips the whole AI fights
+and the sims' design numbers; the tiers are in [docs/plans/test_suite.md](docs/plans/test_suite.md). `python -m gartok.reference` regenerates
 [`REFERENCE.md`](REFERENCE.md).
 
 ## Controls

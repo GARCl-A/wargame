@@ -161,6 +161,7 @@ def test_routed_on_the_way_back_the_escort_is_at_the_outpost():
     assert grp.node == "frontier_outpost" and "Frontier Outpost" in events[0]
 
 
+@pytest.mark.balance
 def test_the_ambush_is_four_to_ten_soldiers_of_level_three_to_eight_mostly_low():
     rng = random.Random(7)
     packs = [encounters.roll_supply_ambush(rng) for _ in range(60)]

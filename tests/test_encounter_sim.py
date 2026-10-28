@@ -4,6 +4,8 @@ always be in the sweep."""
 import importlib.util
 import os
 
+import pytest
+
 SCRIPT = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "encounter_sim.py")
 
 
@@ -14,6 +16,7 @@ def _sim():
     return mod
 
 
+@pytest.mark.slow
 def test_every_kind_finishes_a_level_5_battle_in_each_section():
     sim = _sim()
     for kind in sim.KINDS:

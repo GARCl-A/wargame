@@ -277,6 +277,7 @@ def test_the_economy_report_prices_every_work_talent():
     assert set(economy_talents.ROWS) == {t.id for t in talents.TREE["work"]}
 
 
+@pytest.mark.balance
 def test_a_work_talent_is_priced_against_the_same_member_without_it():
     import os
     import sys

@@ -11,12 +11,12 @@ from gartok.animals import HARNESS, PACK_SADDLE, STARVE_DAYS, Animal
 from gartok.group import HERD_BASE, Group
 from gartok.guild import Guild
 from gartok.wagon import VEHICLES, Wagon
-from tests.helpers import Unit, packed
+from tests.helpers import packed, standard_unit
 
 
 def _unit(size="Huge"):
     """A Huge member weighs more than any cart can draw, so nobody boards unless a test says so."""
-    u = Unit("player")
+    u = standard_unit()
     u.size = size
     return u
 

@@ -14,12 +14,11 @@ from gartok.taverna_screen import TavernaScreen
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.wagon import Wagon
 from gartok.wilds_claim_screen import WildsClaimScreen
-from tests.helpers import Unit, packed
+from tests.helpers import standard_unit
 
 
 def _party(carried=()):
-    u = Unit("player")
-    u._base_inventory = packed([])
+    u = standard_unit()
     cart = Wagon("Cart")
     if carried:
         cart.give_to_pack(*carried)

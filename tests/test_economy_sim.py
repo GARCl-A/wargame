@@ -70,23 +70,31 @@ def _rows(level, skill=None, trials=25):
     return [act.lumber_row(probe), *fights]
 
 
+def _floor_rows():
+    """At level 0 only the yard is judged (the Scrapper levels, it is not paid): no fight to play."""
+    random.seed(0)
+    return [act.lumber_row(act.make_squad(3, 0))]
+
+
 def test_the_floor_a_level_0_squad_eats_and_keeps_a_copper_at_the_lumber_yard():
-    checks = act.judge(_rows(0), act.cheapest_meal(), 0)
+    checks = act.judge(_floor_rows(), act.cheapest_meal(), 0)
     assert checks and all(ok for _, ok in checks), checks
 
 
 def test_the_floor_check_fails_when_the_wage_stops_covering_the_meal(monkeypatch):
     monkeypatch.setattr(economy, "LUMBER_WAGE", 0)
-    checks = act.judge(_rows(0), act.cheapest_meal(), 0)
+    checks = act.judge(_floor_rows(), act.cheapest_meal(), 0)
     assert any(not ok for _, ok in checks)
 
 
+@pytest.mark.balance
 def test_the_wilds_beat_the_lumber_floor_for_a_level_3_squad_that_wins_most_fights():
     checks = act.judge(_rows(3, skill=0.8), act.cheapest_meal(), 3)
     assert any("Wilds hunt" in text for text, _ in checks)
     assert all(ok for _, ok in checks), checks
 
 
+@pytest.mark.balance
 def test_the_scrapper_is_a_leveling_job_not_judged_for_money():
     rows = {r.name: r for r in _rows(0, skill=0.95)}
     assert rows["Arena: Scrapper"].role == "leveling"
@@ -94,6 +102,7 @@ def test_the_scrapper_is_a_leveling_job_not_judged_for_money():
     assert rows["Arena: Scrapper"].combat_xp > 0
 
 
+@pytest.mark.balance
 def test_the_wilds_cost_a_long_walk_that_the_per_day_figure_pays_for():
     assert act.trip_hours(3, 3, "wilds") >= 8
     hunt = act.hunt_row(3, 3, 20, skill=0.8, samples=act.hunt_row(3, 3, 20).samples)
@@ -402,6 +411,7 @@ def test_an_unknown_asset_is_refused():
         _sim(assets=["Dragon"])
 
 
+@pytest.mark.balance
 def test_the_report_runs_every_part_in_the_plans_order_and_names_what_failed():
     import economy_report as report
     tiny = report.Settings(skill=0.8, trials=6, guilds=2, ranking_guilds=4, fuzz=10,
@@ -879,6 +889,7 @@ def test_the_balanced_opening_buys_an_axe_for_everyone_it_can():
     assert all(economy.lumber_level(u) for u in sim.members)
 
 
+@pytest.mark.balance
 def test_the_sprint_goes_for_the_champion_at_combat_zero_and_signs_no_one(monkeypatch):
     sim = _sim("balanced", capital=300, library=_WON)
     for u in sim.members:

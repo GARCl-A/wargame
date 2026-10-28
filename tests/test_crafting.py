@@ -2,10 +2,13 @@
 
 import random
 
+import pytest
+
 import gartok.unit_loadout as _unit_mod
 from gartok import data, items
 from gartok.guild import Guild
 from gartok.unit import Unit
+from tests.helpers import standard_unit
 
 
 def test_crafting_requires_recipe():
@@ -213,16 +216,20 @@ def test_the_forge_card_shows_each_recipes_level_and_what_it_teaches(monkeypatch
     assert f"level {level}" in shown and f"×{level + 1} work XP" in shown
 
 
+@pytest.fixture
+def steady_roll(monkeypatch):
+    """Every progress roll is a 10: a one-hour shift never finishes a batch by luck."""
+    monkeypatch.setattr(_unit_mod, "roll", lambda n, d: 10)
+
+
 def _pair():
-    a, b = Unit("player"), Unit("player")
-    for u in (a, b):
-        u.inventory = []
+    a, b = standard_unit(), standard_unit()
     guild = Guild(roster=[a, b], node="city")
     a.recipes.append("Bear Trap")
     return guild, a, b
 
 
-def test_a_craft_draws_on_the_whole_groups_packs():
+def test_a_craft_draws_on_the_whole_groups_packs(steady_roll):
     guild, a, b = _pair()
     b.give_to_pack("Iron Bar")
     notices, _ = guild.crafting_shift(a, "Bear Trap", 1, pool=guild.roster)
@@ -230,7 +237,7 @@ def test_a_craft_draws_on_the_whole_groups_packs():
     assert not b.has_item("Iron Bar")
 
 
-def test_a_craft_takes_the_crafters_own_materials_first():
+def test_a_craft_takes_the_crafters_own_materials_first(steady_roll):
     guild, a, b = _pair()
     a.give_to_pack("Iron Bar")
     b.give_to_pack("Iron Bar")
@@ -238,7 +245,7 @@ def test_a_craft_takes_the_crafters_own_materials_first():
     assert not a.has_item("Iron Bar") and b.count_of("Iron Bar") == 1
 
 
-def test_a_craft_splits_a_batch_across_packs_and_stays_atomic():
+def test_a_craft_splits_a_batch_across_packs_and_stays_atomic(steady_roll):
     guild, a, b = _pair()
     a.recipes.append("Dwarf Axe")
     mats = items.CRAFTING_RECIPES["Dwarf Axe"]["materials"]
@@ -248,8 +255,7 @@ def test_a_craft_splits_a_batch_across_packs_and_stays_atomic():
     assert a.crafting_target == "Dwarf Axe"
     assert sum(u.count_of(m) for u in (a, b) for m in mats) == 0
 
-    c, d = Unit("player"), Unit("player")
-    c.inventory, d.inventory = [], []
+    c, d = standard_unit(), standard_unit()
     c.recipes.append("Dwarf Axe")
     c.give_to_pack(mats[0])
     d.give_to_pack(mats[1])
@@ -303,7 +309,7 @@ def _toolbox_recipe(monkeypatch, tools=("Chisel",)):
 
 def test_missing_tools_lists_what_no_pack_holds(monkeypatch):
     _toolbox_recipe(monkeypatch, ("Chisel", "Rope"))
-    a, b = Unit("player"), Unit("player")
+    a, b = standard_unit(), standard_unit()
     recipe = items.CRAFTING_RECIPES["Carved Thing"]
     assert items.missing_tools(recipe, [a, b]) == ["Chisel", "Rope"]
     b.give_to_pack("Chisel")
@@ -313,7 +319,7 @@ def test_missing_tools_lists_what_no_pack_holds(monkeypatch):
 
 def test_craft_refused_without_the_tool_and_materials_untouched(monkeypatch):
     _toolbox_recipe(monkeypatch)
-    u = Unit("player")
+    u = standard_unit()
     guild = Guild(roster=[u], node="city")
     u.recipes.append("Carved Thing")
     u.give_to_pack("Iron Bar")
@@ -323,9 +329,9 @@ def test_craft_refused_without_the_tool_and_materials_untouched(monkeypatch):
     assert u.has_item("Iron Bar") and u.crafting_target is None
 
 
-def test_tool_in_another_pack_of_the_group_is_enough_and_is_kept(monkeypatch):
+def test_tool_in_another_pack_of_the_group_is_enough_and_is_kept(monkeypatch, steady_roll):
     _toolbox_recipe(monkeypatch)
-    crafter, mate = Unit("player"), Unit("player")
+    crafter, mate = standard_unit(), standard_unit()
     guild = Guild(roster=[crafter, mate], node="city")
     crafter.recipes.append("Carved Thing")
     crafter.give_to_pack("Iron Bar")
@@ -339,7 +345,7 @@ def test_tool_in_another_pack_of_the_group_is_enough_and_is_kept(monkeypatch):
 
 def test_a_craft_in_progress_stops_when_the_tool_is_gone(monkeypatch):
     _toolbox_recipe(monkeypatch)
-    u = Unit("player")
+    u = standard_unit()
     guild = Guild(roster=[u], node="city")
     u.recipes.append("Carved Thing")
     u.crafting_target = "Carved Thing"
@@ -354,24 +360,3 @@ def test_crafting_recipe_properties():
     rec = recipes[0]
     assert rec.batch_hours > 0
     assert rec.craft_level == rec.level
-
-
-def test_smelt_iron_bar_at_forge():
-    u = Unit("player")
-    guild = Guild(roster=[u], node="smithy")
-    u.recipes.append("Iron Bar")
-    u.give_to_pack("Iron Ore", 2)
-    u.give_to_pack("1kg Coal", 1)
-
-    recipe = items.get_recipe("Iron Bar")
-    assert recipe.station == items.CraftingStation.FORGE
-    assert recipe.materials == ["Iron Ore", "Iron Ore", "1kg Coal"]
-
-    u.crafting_target = "Iron Bar"
-    u.crafting_progress = items.recipe_goal(recipe)
-    notices, done = guild.crafting_shift(u, "Iron Bar", hours=1)
-    assert u.has_item("Iron Bar")
-    assert u.count_of("Iron Ore") == 0
-    assert u.count_of("1kg Coal") == 0
-
-

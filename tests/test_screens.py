@@ -3,7 +3,9 @@
 import os
 import random
 
-from tests.helpers import Unit, click_menu, data, economy, packed
+import pytest
+
+from tests.helpers import Unit, click_menu, data, economy, packed, standard_unit
 from gartok.guild import Guild
 from gartok.holdings import Stash
 
@@ -246,6 +248,7 @@ def test_every_race_has_a_token_icon_that_loads():
     assert artwork.icon("head", "no-such-glyph", 24) is None                   # graceful
 
 
+@pytest.mark.slow
 def test_every_screen_draws_native_at_any_window_size():
     """Every screen is `native`: it draws straight to the real window and lays
     itself out from `screen.get_size()`. Render each at a few sizes -- catches a
@@ -727,12 +730,7 @@ def test_gear_screen_distribute_load():
     from gartok.group_screen import GroupScreen
     from gartok.ui.tokens import fonts as ui_fonts
     from gartok.guild import Guild
-    from gartok import data
-    r = data.race_by_name("Human")
-    u1 = Unit("player", race=r)
-    u2 = Unit("player", race=r)
-    u1.set_base_attribute("strength", 10)
-    u2.set_base_attribute("strength", 10)
+    u1, u2 = standard_unit(), standard_unit()
     u1._base_inventory = packed(["Stone Brick", "Stone Brick"])
     u2._base_inventory = []
     g = Guild([u1, u2])

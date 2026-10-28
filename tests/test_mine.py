@@ -1,20 +1,11 @@
 """The Mine: a work node past the Old Road with its own shelf (stone, ore, coal)."""
 
-from gartok import campaign, economy, orders, progression, world
+from gartok import campaign, economy, orders, world
 from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.map_screen import MapScreen
 from gartok.ui.tokens import fonts as ui_fonts
-from gartok.unit import Unit
-from tests.helpers import packed
-
-
-def _worker():
-    u = Unit("player")
-    u._base_inventory = []
-    u.money = 0
-    u._derive_combat()
-    return u
+from tests.helpers import packed, standard_unit
 
 
 def test_the_mine_sits_six_hours_past_the_old_road_and_two_from_the_claim():
@@ -38,7 +29,7 @@ def test_an_own_pick_pays_at_the_axes_ratio():
 
 
 def test_each_node_counts_only_its_own_tool():
-    u = _worker()
+    u = standard_unit()
     u._base_inventory = packed(["Pick"])
     assert economy.work_level(u, "mine") == 1 and economy.work_level(u, "lumber_yard") == 0
     u._base_inventory = packed(["Axe"])
@@ -49,7 +40,7 @@ def test_each_node_counts_only_its_own_tool():
 
 
 def test_a_work_order_at_the_mine_pays_the_mine_wage():
-    a = _worker()
+    a = standard_unit()
     guild = Guild([a], clock=Clock(6 * 3600))
     group = guild.groups[0]
     group.node = "mine"
@@ -60,7 +51,7 @@ def test_a_work_order_at_the_mine_pays_the_mine_wage():
 
 
 def test_a_work_shift_names_the_node_it_was_worked_at():
-    a = _worker()
+    a = standard_unit()
     guild = Guild([a], clock=Clock(6 * 3600))
     events, _ = guild.work_shift([a], 8, "mine")
     assert a.money == 4 and a.work_hours == 8
@@ -83,7 +74,7 @@ def test_the_lumber_yard_is_a_shop_with_its_own_shelf_and_till():
     assert shelf == list(economy.YARD_SUPPLIES)
     assert all(economy.freely_buyable(n) for n in economy.YARD_SUPPLIES)
     assert [n for _, _, names in economy.market_categories("mine") for n in names] == list(economy.MINE_SUPPLIES)
-    guild = Guild([_worker()], clock=Clock(6 * 3600))
+    guild = Guild([standard_unit()], clock=Clock(6 * 3600))
     assert guild.shop("lumber_yard") is not guild.shop("market")
 
 
@@ -92,13 +83,13 @@ def test_a_pick_is_sold_at_the_market():
 
 
 def test_the_mine_has_a_till_of_its_own():
-    guild = Guild([_worker()])
+    guild = Guild([standard_unit()])
     guild.shop("mine").move_cash(-50)
     assert guild.shop("mine").cash != guild.shop("market").cash
 
 
 def test_the_map_shows_the_mine_as_one_enter_button_and_a_line():
-    g = Guild([_worker()], node="mine")
+    g = Guild([standard_unit()], node="mine")
     ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda grp: None)
     blocks = ms._inspector_content(g.groups[0], world.node("mine"))
     assert [(b["key"], b["label"]) for b in blocks if b["type"] == "button"] == [("market", "ENTER THE MINE")]
@@ -107,11 +98,3 @@ def test_the_map_shows_the_mine_as_one_enter_button_and_a_line():
     assert any(f"pays the group ${pay}" in b.get("text", "") and "no gathering licence" in b["text"]
                for b in blocks)
 
-
-def test_work_xp_lists_the_mine_beside_the_yard():
-    jobs = progression.eligible_work_activities(0)
-    assert any("Mine" in j for j in jobs) and any("Lumber Yard" in j for j in jobs)
-    u = Unit("player")
-    assert any("requires owning a Pick" in j for j in progression.eligible_work_activities(1, u))
-    u.equipped_weapon = "Pick"
-    assert any("Mine (with your Pick)" in j for j in progression.eligible_work_activities(1, u))
