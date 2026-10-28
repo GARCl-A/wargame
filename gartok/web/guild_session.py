@@ -289,14 +289,14 @@ class GuildSession(Session):
         return self.state()
 
     def talents(self):
-        """The talent tree is its own screen, still pygame's: the away card says so and comes back here."""
-        from .away_session import AwaySession
+        from .talent_session import TalentSession
         m = self.sheet.member
         if m is None or isinstance(m, Animal):
             raise ValueError("pick a member first")
-        self.map.game.open(AwaySession(self.map, self.guild.group_of(m), None, title="The talent tree",
-                                       what=f"{m.name}'s talent tree", resume=self._resume))
-        return {"screen": AwaySession.screen}
+        g = self.guild.group_of(m)
+        self.map.game.open(TalentSession(self.map, m, g.members if g else [m], self._resume,
+                                         back_label="Back to the guild"))
+        return {"screen": TalentSession.screen}
 
     def _resume(self):
         self.map.game.open(self)

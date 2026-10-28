@@ -6,7 +6,6 @@ import pytest
 from gartok import campaign, items, persist, recorder
 from gartok.clock import Clock
 from gartok.guild import Guild
-from gartok.web.away_session import AwaySession
 from gartok.web.map_session import MapSession
 from gartok.web.report_session import ReportSession
 from gartok.web.server import Game
@@ -141,16 +140,18 @@ def test_the_level_up_has_the_ledger_the_bar_to_next_and_the_talent_pick():
     assert lv["picks"] == len(squad[0].pending_picks)
 
 
-def test_pick_talents_opens_the_away_card_and_comes_back_to_the_same_level_up():
+def test_pick_talents_opens_the_tree_and_comes_back_to_the_same_level_up():
     guild, squad, battle, outcome = _fight(level=True)
     game, s = _open(guild, battle, outcome)
     s.next()
     if not squad[0].pending_picks:
         pytest.skip("this unit has no talent to pick at its new level")
-    assert s.talents() == {"screen": "away"}
-    away = game.session
-    assert isinstance(away, AwaySession) and "talent tree" in away.state()["line"]
-    back = away.resume()
+    assert s.talents() == {"screen": "talents"}
+    tree = game.session
+    st = tree.state()
+    assert tree.unit is squad[0] and st["back"] == "Back to the level-up"
+    assert [(c["id"], c["at"]) for c in st["chain"]][:3] == [("report", "done"), ("level", "done"), ("talents", "now")]
+    back = tree.back()
     assert back["screen"] == "report" and back["stage"] == "level" and game.session is s
 
 

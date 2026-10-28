@@ -794,7 +794,7 @@ As built:
 - **Next:** what still opens the away card is the talent tree, `trust` and the campaign fights. The talent tree is the
   last screen family of step 9 that the campaign reaches; step 10 follows it.
 
-**9q. The talent tree — mockup approved (2026-10-28), screen next.**
+**9q. The talent tree — done (2026-10-28).** The mockup came first:
 [references/talents_mockup/](references/talents_mockup/) `talents.html` is built on the day-70 save `35d38388`: Ylhel
 after the report's fight (combat 2, one pick). `data.js` is the real trees read through `talents.TREE` /
 `racial_tree`, each node's state off `Unit.holds_talent` / `offerable`, and for an open node the sheet before and
@@ -820,6 +820,32 @@ Decided with the author (2026-10-28):
   (STR 8 → 9, and when the modifier does not move), the branch, and what the talent opens.
 - **On leather:** the member, the four tracks with their picks, CAN TAKE NOW (every open talent; a click takes it in
   hand), the band's faces with their waiting picks.
+
+As built:
+
+- **The server** (`TalentSession`, screen `talents`) holds the member, the track on the page and the talent in hand.
+  Each node's state: taken, open (a pick can take it), waiting (it could, with a pick), locked (what it needs is not
+  held), granted (a school's root). The talent in hand carries its status, the branch above it, what it opens, and for
+  an open one the sheet's numbers that move (`delta`): read off a deep copy with the talent added and the sheet
+  derived again, not through `choose_talent`, which would write a pick to the play log. Verbs: `look` (another member
+  of the band, another track, a talent in hand), `take` (`Unit.choose_talent`; a refusal says why: needs X first, no
+  pick, no school yet, the next racial pick's level), `back`. The save is written on each pick.
+- **What opens it:** the member's sheet (`GuildSession.talents`, back to the sheet) and a level-up's Pick talents
+  (`ReportSession.talents`, back to the same level-up, with the report's chain and Talents marked now). It lands on
+  the first track with a pick waiting, the talent in hand its first open one.
+- **The client** follows THE MAP and THE BRANCH. The rings are leaf columns round the portrait, the depth off
+  `requires`; zoomed out, a name that hits another hides (the talent in hand first, then what can be taken); the
+  camera is kept while the same member's same tree is shown. The view last used is in `localStorage`. TAKE (or Enter)
+  spends the pick, Escape goes back. There is no second requirement in the data yet, so no red dotted line is drawn.
+- Left out: a tutorial card (no web screen has one yet).
+- Tests: `tests/test_web_talents.py` (the sheet opens it on the track with a pick, open / locked / waiting, the delta
+  without touching the member, the branch and what it opens, a pick that opens what hangs from it and lands in the
+  save, each refusal with why, CAN TAKE NOW across tracks, the racial track's next pick, the magic tree with no
+  school, back, the routing); the level-up's round trip in `tests/test_web_report.py`, the sheet's in
+  `tests/test_web_guild.py`. THE MAP, a zoom, THE BRANCH, a locked talent, a pick taken, the magic and the racial
+  trees were looked at in headless Edge at 1920x1080 on a copy of the day-70 save, driven over the DevTools protocol.
+- **Next:** what still opens the away card is `trust` (the City's Test of Trust as its own order) and the campaign
+  fights. `trust` is the last screen of step 9 the campaign reaches; step 10 follows it.
 
 ### 10. The swap — todo
 

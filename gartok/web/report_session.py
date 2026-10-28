@@ -101,17 +101,21 @@ class ReportSession(Session):
         return self.state()
 
     def talents(self):
-        """The talent tree is still pygame's: the away card says so and comes back to this level-up."""
-        from .away_session import AwaySession
+        from .talent_session import TalentSession
         kind, i = self.stage
         if kind != "level":
             raise ValueError("no level-up on the table")
         unit = self.outcome.level_ups[i].unit
         if not unit.pending_picks:
             raise ValueError(f"{unit.name} has no talent to pick")
-        self.map.game.open(AwaySession(self.map, self.group, None, title="The talent tree",
-                                       what=f"{unit.name}'s talent tree", resume=self._resume))
-        return {"screen": AwaySession.screen}
+        chain = []
+        for c in self._chain():
+            chain.append({**c, "at": "done"} if c["id"] == "level" else c)
+            if c["id"] == "level":
+                chain.append({"id": "talents", "label": "Talents", "at": "now"})
+        self.map.game.open(TalentSession(self.map, unit, self.outcome.survivors, self._resume,
+                                         back_label="Back to the level-up", chain=chain))
+        return {"screen": TalentSession.screen}
 
     def _resume(self):
         self.map.game.open(self)

@@ -1,0 +1,220 @@
+/* A member's talents: the tracks on leather, the tree on paper (the map or the branch), the talent in hand. */
+#talents{position:absolute;inset:0;--greenink:#3f6b2a;--redink:#8e2a1e;
+  background:radial-gradient(ellipse 70% 60% at 50% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+#talents .ico{display:inline-block}
+#talents .leather,#talents .paper{position:absolute}
+#talents .leather .kicker{color:#8f7652}
+#talents .leather .kicker:after{background:linear-gradient(90deg,rgba(201,163,94,.3),transparent)}
+#talents .kicker em{order:2;font:italic 15px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;text-transform:none}
+#talents .leather .kicker em{color:#a08a68}
+#toast[hidden]{display:none}
+#toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:30;padding:12px 22px;border-radius:3px;
+  background:#2a1a10;border:1px solid rgba(201,71,58,.6);font:italic 18px/1.3 "IM Fell English",serif;color:#efc0b5}
+#talents .medal{border-radius:50%;overflow:hidden;flex:none;position:relative;
+  box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--side,var(--enamel-hi)),0 0 0 5px #120d08,0 4px 8px rgba(0,0,0,.6)}
+#talents .medal img,#talents .medal .initial{width:100%;height:100%;display:block}
+#talents .initial{display:grid;place-items:center;background:#33261a;font:700 22px/1 Cinzel,serif;color:var(--brass-hi)}
+.bigbtn{height:58px;padding:0 24px;display:flex;align-items:center;justify-content:center;gap:12px;border-radius:3px;cursor:pointer;
+  font:700 13px/1 Cinzel,serif;letter-spacing:.14em;color:#24180e;text-transform:uppercase;white-space:nowrap;
+  background:linear-gradient(#f0d79e,#c9a35e);box-shadow:0 0 0 1px #5d4426,0 0 0 3px rgba(36,24,14,.2),0 8px 16px rgba(0,0,0,.45);transition:transform .12s}
+.bigbtn:hover{transform:translateY(-2px)}
+.bigbtn .ico{width:22px;height:22px}
+.bigbtn.ghost{background:transparent;color:#d9c49b;box-shadow:inset 0 0 0 1px rgba(201,163,94,.45)}
+.bigbtn.ghost:hover{color:var(--brass-hi);box-shadow:inset 0 0 0 1px rgba(240,215,158,.7)}
+.bigbtn.small{height:44px;font-size:12px}
+.bigbtn.off{background:transparent;color:#6f5a40;box-shadow:inset 0 0 0 1px rgba(201,163,94,.18);cursor:default;transform:none}
+
+/* the top bar */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center;z-index:2}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.12em;color:var(--brass-hi);text-transform:uppercase;
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+.cartouche .sub{margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+#topright{margin-left:auto}
+.chain{display:flex;align-items:center;gap:8px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;color:#6f5a40;text-transform:uppercase}
+.chain span{padding:6px 9px 5px;border-radius:2px;border:1px solid rgba(201,163,94,.16)}
+.chain span.done{color:#8f7652;text-decoration:line-through;text-decoration-color:rgba(143,118,82,.6)}
+.chain span.now{color:#24180e;background:var(--brass);border-color:var(--brass)}
+.chain i{color:#5d4a33;font-style:normal}
+
+/* left: the member, the tracks, what can be taken, the band */
+#who{left:32px;top:108px;width:356px;height:944px;padding:24px 22px;display:flex;flex-direction:column}
+.plate{display:flex;gap:16px;align-items:center}
+.plate .medal{width:92px;height:92px}
+.plate b{display:block;font:700 24px/1 Cinzel,serif;letter-spacing:.05em;color:var(--brass-hi)}
+.plate span{display:block;margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.plate small{display:block;margin-top:8px;font:600 10px/1 Cinzel,serif;letter-spacing:.2em;color:#8f7652;text-transform:uppercase}
+.attrs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:18px}
+.attr{text-align:center;padding:8px 0 7px;border-radius:2px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(201,163,94,.16)}
+.attr span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.18em;color:#8f7652}
+.attr b{display:block;margin-top:6px;font:700 19px/1 Cinzel,serif;color:#e8d6ae}
+.attr i{display:block;margin-top:4px;font:italic 13px/1 "IM Fell English",serif;color:#a08a68}
+.attr.hot{box-shadow:inset 0 0 0 1px var(--brass),0 0 10px rgba(201,163,94,.35)}
+.attr.hot b{color:var(--brass-hi)}
+#who .kicker{margin:20px 0 10px;flex:none}
+.track{position:relative;flex:none;padding:11px 16px 10px;margin-bottom:8px;border-radius:3px;cursor:pointer;
+  background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(201,163,94,.16)}
+.track:hover{box-shadow:inset 0 0 0 1px rgba(240,215,158,.5)}
+.track.on{background:linear-gradient(90deg,rgba(201,163,94,.2),rgba(201,163,94,.05));box-shadow:inset 0 0 0 1px var(--brass),inset 4px 0 0 var(--brass)}
+.track .row{display:flex;align-items:baseline}
+.track .nm{font:700 14px/1 Cinzel,serif;letter-spacing:.2em;color:#d9c49b;text-transform:uppercase}
+.track.on .nm{color:var(--brass-hi)}
+.track .lv{margin-left:auto;font:600 11px/1 Cinzel,serif;letter-spacing:.16em;color:#8f7652}
+.track .lv b{font-size:17px;color:#e8d6ae;letter-spacing:0;margin-left:4px}
+.tbar{margin-top:8px;height:5px;border-radius:1px;background:rgba(0,0,0,.4);box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden}
+.tbar i{display:block;height:100%;background:linear-gradient(#f0d79e,#c9a35e)}
+.track .note{margin-top:7px;font:italic 14px/1.2 "IM Fell English",serif;color:#a08a68}
+.track .pick{position:absolute;right:-8px;top:-8px;padding:5px 8px 4px;border-radius:2px;transform:rotate(3deg);
+  font:700 10px/1 Cinzel,serif;letter-spacing:.14em;color:#fff3dc;background:linear-gradient(#b0402f,#7a2218);box-shadow:0 2px 4px rgba(0,0,0,.5)}
+.canlist{flex:1 1 auto;min-height:60px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,163,94,.35) transparent}
+.crow{display:flex;align-items:center;gap:10px;height:30px;cursor:pointer;border-bottom:1px dotted rgba(201,163,94,.14)}
+.crow:hover span,.crow.on span{color:var(--brass-hi)}
+.crow i{width:10px;height:10px;border-radius:50%;background:#d4ad66;flex:none}
+.crow span{font:600 12.5px/1 Cinzel,serif;letter-spacing:.04em;color:#e8d6ae}
+.crow em{margin-left:auto;font:italic 13.5px/1 "IM Fell English",serif;color:#a08a68}
+.none{font:italic 15px/1.3 "IM Fell English",serif;color:#8f7652}
+.band{display:flex;flex-wrap:wrap;gap:9px 6px;flex:none}
+.band.many .mate{width:40px}
+.band.many .mate .medal{width:38px;height:38px}
+.mate{position:relative;text-align:center;width:44px;cursor:pointer}
+.mate .medal{width:44px;height:44px}
+.mate.dim .medal{opacity:.55}
+.mate.on .medal{--side:var(--brass-hi)}
+.mate span{display:block;margin-top:7px;font:600 9px/1 Cinzel,serif;letter-spacing:.06em;color:#8f7652;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mate.on span{color:var(--brass-hi)}
+.mate em{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;z-index:1;
+  font:700 11px/1 Cinzel,serif;font-style:normal;color:#fff3dc;background:radial-gradient(circle at 40% 35%,#c9473a,#7a2218);box-shadow:0 0 0 2px #120d08}
+#who .foot{flex:none;margin-top:18px}
+
+/* centre: the tree on paper */
+#sheet{left:408px;top:108px;width:1084px;height:944px;padding:34px 40px}
+.head{display:flex;align-items:flex-start;gap:24px}
+.head h1{margin-top:14px;font:700 40px/1 Cinzel,serif;letter-spacing:.08em;color:#1c140c}
+.head p{margin-top:12px;max-width:640px;font:italic 18px/1.35 "IM Fell English",serif;color:#4a3522}
+.head .seals{margin-left:auto;display:flex;gap:26px;align-items:center;padding-top:4px}
+.head .seals > div{text-align:center}
+.head .seals small{display:block;margin-top:12px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#6b5236;text-transform:uppercase}
+.wax{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 38% 32%,#f0d79e,#c9a35e 55%,#7d5c28);
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6),inset 0 -8px 14px rgba(0,0,0,.35)}
+.wax b{font:900 26px/1 Cinzel,serif;color:#1a0d08}
+.wax.black{background:radial-gradient(circle at 38% 32%,#4a3f36,#1e1813 60%,#0a0806)}
+.wax.black b{color:#8f7652}
+.held b{display:block;font:700 34px/1 Cinzel,serif;color:#1c140c}
+.held span{font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+#tree{position:absolute;left:40px;right:40px;top:200px;bottom:40px}
+.mode{position:absolute;right:0;top:-34px;display:flex;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(80,52,24,.45);overflow:hidden;z-index:3}
+.mode span{padding:8px 16px 7px;font:700 11px/1 Cinzel,serif;letter-spacing:.2em;color:#6b5236;text-transform:uppercase;cursor:pointer}
+.mode span.on{background:#2b1d10;color:#efe2c3}
+.pencil{position:absolute;left:0;right:0;bottom:70px;text-align:center;font:italic 22px/1.4 "IM Fell English",serif;color:#7b6142;z-index:2;pointer-events:none}
+.pencil small{display:block;font-size:16px;color:#8a7154}
+
+/* a talent's disc, on the map, the branch and the slip */
+.node{position:absolute;width:156px;transform:translate(-50%,-30px);text-align:center}
+.node[data-id]{cursor:pointer}
+.disc{position:relative;width:60px;height:60px;margin:0 auto;border-radius:50%;display:grid;place-items:center}
+.disc .ico{width:34px;height:34px}
+.node .nm{margin-top:8px;font:600 12.5px/1.1 Cinzel,serif;letter-spacing:.03em;color:#2b1d10;white-space:nowrap}
+.taken .disc{background:radial-gradient(circle at 40% 34%,#5a4129,#2b1d10 70%);color:#efe2c3;
+  box-shadow:0 0 0 2px #efe2c3,0 0 0 4px #2b1d10,0 4px 8px rgba(40,24,10,.45)}
+.taken .disc:after{content:"";position:absolute;right:-4px;top:-4px;width:26px;height:26px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#c9473a,#7a2218);box-shadow:0 0 0 2px #efe2c3}
+.chk{position:absolute;right:-1px;top:2px;width:20px;height:16px;z-index:2}
+.open .disc{background:radial-gradient(circle at 40% 32%,#f6e2b0,#d4ad66 60%,#9a7434);color:#2b1d10;
+  box-shadow:0 0 0 2px #5d4426,0 0 0 6px rgba(201,163,94,.35),0 0 18px rgba(201,163,94,.65)}
+.node.open .nm{color:#1c140c}
+.waiting .disc{background:rgba(255,255,255,.12);color:#5a4330;box-shadow:inset 0 0 0 1.5px #5a4330}
+.locked .disc,.granted .disc{background:transparent;color:rgba(80,52,24,.38);box-shadow:inset 0 0 0 1.5px rgba(80,52,24,.32)}
+.locked .disc{border:1.5px dashed rgba(80,52,24,.35);box-shadow:none}
+.node.locked .nm,.node.granted .nm{color:#8a7154}
+.node:hover .disc{filter:brightness(1.08)}
+.ring{position:absolute;left:50%;top:-12px;width:126px;height:104px;transform:translateX(-50%) rotate(-8deg);pointer-events:none}
+.node.sib{opacity:.55}
+
+/* the map: a camera over rings */
+.view{position:absolute;left:0;top:0;width:1004px;height:664px;overflow:hidden;cursor:grab}
+.view.grabbing{cursor:grabbing}
+.world{position:absolute;left:0;top:0;transform-origin:0 0}
+.world > svg{position:absolute;overflow:visible}
+.world.far .nm{display:none}
+.world.far .node.taken .nm,.world.far .node.open .nm,.world.far .node.sel .nm{display:block;width:max-content;margin-left:50%;
+  transform:translateX(-50%);font-size:calc(11px * var(--inv));margin-top:calc(4px * var(--inv));
+  padding:0 calc(3px * var(--inv));background:rgba(239,226,195,.82);border-radius:2px}
+.world.far .node .nm.hide{display:none}
+.world.dots .disc .ico{display:none}
+.world.dots .disc{transform:scale(.8)}
+.world.dots .node.locked .disc,.world.dots .node.waiting .disc{border:none;background:rgba(80,52,24,.3)}
+.world.dots .node.sel .ring{transform:translateX(-50%) scale(1.6)}
+.hubface{position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;overflow:hidden;
+  box-shadow:0 0 0 3px #efe2c3,0 0 0 5px #2b1d10,0 0 0 9px rgba(80,52,24,.25)}
+.hubface img,.hubface .initial{width:100%;height:100%;filter:sepia(.35)}
+.orbit{position:absolute;left:0;top:0;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(80,52,24,.13);pointer-events:none}
+.cam{position:absolute;right:0;bottom:-6px;display:flex;gap:6px;align-items:center}
+.cam .cb{min-width:34px;height:30px;padding:0 10px;display:grid;place-items:center;border-radius:2px;cursor:pointer;
+  font:700 12px/1 Cinzel,serif;letter-spacing:.14em;color:#4a3522;box-shadow:inset 0 0 0 1px rgba(80,52,24,.45);background:rgba(255,255,255,.2)}
+.cam .cb:hover{background:rgba(255,255,255,.4)}
+.cam .scale{margin-left:8px;min-width:44px;font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+.legend{position:absolute;left:0;bottom:0;display:flex;gap:20px;font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+.legend span{display:flex;align-items:center;gap:7px}
+.lg{display:inline-block;width:14px;height:14px;border-radius:50%}
+.lg.taken{background:#2b1d10}.lg.open{background:#d4ad66;box-shadow:0 0 0 1px #5d4426}
+.lg.waiting{box-shadow:inset 0 0 0 1.5px #5a4330}.lg.locked{border:1.5px dashed rgba(80,52,24,.5)}
+
+/* the branch: an outline and the talent's neighbourhood */
+.outline{position:absolute;left:0;top:0;width:340px;bottom:0}
+.orows{margin-top:12px;height:640px;overflow-y:auto;border-right:1px dotted rgba(80,52,24,.35);padding-right:10px;
+  scrollbar-width:thin;scrollbar-color:rgba(80,52,24,.35) transparent}
+.orow{display:flex;align-items:center;gap:7px;height:25px;font:15.5px/1 "EB Garamond",serif;color:#2b1d10;white-space:nowrap;cursor:pointer}
+.orow:hover{background:rgba(80,52,24,.07)}
+.orow .tw{width:10px;font-style:normal;color:#8a6c48;font-size:11px}
+.orow .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.orow.taken .dot{background:#2b1d10}.orow.open .dot{background:#d4ad66;box-shadow:0 0 0 1px #5d4426}
+.orow.waiting .dot{box-shadow:inset 0 0 0 1.5px #5a4330}
+.orow.locked .dot,.orow.granted .dot{border:1.5px dashed rgba(80,52,24,.5)}
+.orow.locked span,.orow.granted span{color:#8a7154}
+.orow.on{background:rgba(142,42,30,.1);box-shadow:inset 3px 0 0 #8e2a1e}
+.orow em{margin-left:auto;font:italic 13.5px/1 "IM Fell English",serif;color:#8a6c48}
+.orow em b{font-weight:400;color:#8a5d16}
+.hood{position:absolute;left:370px;right:0;top:0;bottom:0}
+.hoodbox{position:relative;margin-top:12px;height:640px}
+.hoodbox > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hoodbox .node{width:132px}
+.hoodbox .node .nm{white-space:normal;line-height:1.15}
+
+/* right: the talent in hand */
+#hand{left:1512px;top:108px;width:376px;height:944px;padding:24px 22px}
+.slip{position:relative;margin-top:14px;padding:28px 26px 24px;color:var(--ink);border-radius:2px;transform:rotate(.6deg);
+  background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.3),transparent 60%),linear-gradient(176deg,#efe2c3,#d9c49b);
+  box-shadow:inset 0 0 30px rgba(110,70,25,.25),0 0 0 1px #5d4426,0 10px 18px rgba(0,0,0,.55)}
+.slip .big{display:flex;gap:16px;align-items:center}
+.slip .big .disc{width:76px;height:76px;flex:none}
+.slip .big .disc .ico{width:44px;height:44px}
+.slip h2{font:700 24px/1.05 Cinzel,serif;letter-spacing:.04em;color:#1c140c}
+.slip .tt{margin-top:7px;font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:#7d5c37;text-transform:uppercase}
+.slip .eff{margin-top:18px;font:19px/1.35 "EB Garamond",serif;color:#2b1d10}
+.slip .status{margin-top:16px;font:700 11px/1.3 Cinzel,serif;letter-spacing:.2em;text-transform:uppercase}
+.status.open{color:#8a5d16}.status.taken{color:var(--greenink)}.status.locked,.status.waiting,.status.granted{color:var(--redink)}
+.slip .k{margin:20px 0 10px;font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:#7d5c37;text-transform:uppercase;display:flex;gap:10px;align-items:center}
+.slip .k:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.45),transparent)}
+.led{display:grid;grid-template-columns:1fr auto auto auto;gap:8px 12px;align-items:baseline;font:17px/1 "EB Garamond",serif}
+.led span{font:600 11px/1 Cinzel,serif;letter-spacing:.12em;color:#4a3522}
+.led s{color:#8a7154}
+.led b{font:700 18px/1 Cinzel,serif;color:#1c140c}
+.led i{font:italic 15px/1 "IM Fell English",serif;color:var(--greenink)}
+.led i.flat{color:#8a7154}
+.slip .gloss{margin-top:12px;font:italic 15.5px/1.3 "IM Fell English",serif;color:#6b5236}
+.step{display:flex;align-items:center;gap:12px;height:38px;position:relative;cursor:pointer}
+.step:not(:last-child):after{content:"";position:absolute;left:13px;top:30px;height:16px;width:2px;background:rgba(80,52,24,.35)}
+.step .disc{width:28px;height:28px;margin:0}
+.step .disc .ico{width:17px;height:17px}
+.step .disc:after{display:none}
+.step b{font:600 14px/1 Cinzel,serif;letter-spacing:.03em;color:#2b1d10}
+.step.locked b,.step.granted b{color:#8a7154}
+.step em{margin-left:auto;font:italic 14px/1 "IM Fell English",serif;color:#6b5236}
+#hand .act{position:absolute;left:22px;right:22px;bottom:22px}
+#hand .act .bigbtn{width:100%}
+#hand .act p{margin-bottom:14px;text-align:center;font:italic 15.5px/1.3 "IM Fell English",serif;color:#a08a68}
+#hand .after{margin-top:22px;font:italic 16px/1.35 "IM Fell English",serif;color:#b9a27c}
+#hand .after b{font-style:normal;font-family:Cinzel;font-size:13px;letter-spacing:.06em;color:#e8d6ae}
+@keyframes inked{from{transform:scale(1.5);opacity:0}to{transform:scale(1);opacity:1}}
+.node.fresh .disc{animation:inked .45s ease-out}

@@ -11,7 +11,6 @@ from gartok.guild import Guild
 from gartok.guild_screen import _needs_attention
 from gartok.unit import Unit
 from gartok.wagon import Wagon
-from gartok.web.away_session import AwaySession
 from gartok.web.guild_session import GuildSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game
@@ -121,12 +120,12 @@ def test_a_role_changes_the_band_and_one_the_sheet_greys_out_is_refused():
     assert st["members"]["sheet"]["uid"] == u.uid
 
 
-def test_the_talent_tree_is_an_away_card_that_comes_back_to_the_sheet():
-    sheet, guild, g = _sheet()
+def test_the_talent_tree_opens_on_the_member_and_comes_back_to_the_sheet():
+    sheet, _guild, _g = _sheet()
     game = sheet.map.game
-    assert sheet.talents() == {"screen": "away"}
-    assert isinstance(game.session, AwaySession) and "talent tree" in game.session.state()["line"]
-    back = game.session.resume()
+    assert sheet.talents() == {"screen": "talents"}
+    assert game.session.unit is sheet.sheet.member and game.session.state()["back"] == "Back to the guild"
+    back = game.session.back()
     assert back["screen"] == "guild" and game.session is sheet
 
 
