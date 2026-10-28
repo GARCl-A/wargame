@@ -1,5 +1,6 @@
 """The hubs' desks (`work_desk`, `medic.Ward`, `stables`, `ledger`, `rite.Initiation`, `workbench.Bench`,
-`job_board`, `holdings.GarageDesk`, `claim_desk.ClaimDesk`): the rules both front-ends read, with no window."""
+`job_board`, `holdings.GarageDesk`, `claim_desk.ClaimDesk`, `vault`, `tavern`): the rules the web's tabs read,
+with no window."""
 
 import subprocess
 import sys
@@ -40,7 +41,8 @@ def _band(node_id, copper=0):
 def test_the_desks_load_without_pygame():
     code = ("import sys; sys.modules['pygame'] = None; "
             "import gartok.work_desk, gartok.medic, gartok.stables, gartok.ledger, gartok.rite, "
-            "gartok.workbench, gartok.job_board, gartok.holdings, gartok.claim_desk")
+            "gartok.workbench, gartok.job_board, gartok.holdings, gartok.claim_desk, gartok.vault, "
+            "gartok.tavern, gartok.loadout_move")
     subprocess.run([sys.executable, "-c", code], check=True)
 
 

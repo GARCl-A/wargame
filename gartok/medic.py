@@ -8,8 +8,8 @@ The clock moves for the whole group by the longest treatment picked. Anything pa
 into a group of their own on a `solo` order and leaves cured when it runs out (`solo.finish`). With
 no free group slot the whole group waits with them instead. Either way the price is the quote's.
 
-`Ward` is the Medic's tab with no window: who needs care, who is picked, the bill. `MedicScreen` is the
-pygame window over it and `web/medic_tab.py` the browser's.
+`Ward` is the Medic's tab with no window: who needs care, who is picked, the bill. `web/medic_tab.py` draws
+it.
 """
 
 import math

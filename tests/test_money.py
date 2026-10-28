@@ -1,19 +1,14 @@
 """Money is `$`: Copper Coin = $1, Gold Coin = $100, made and melted only at the bank."""
 
-import os
 import random
 
-import pygame
-
-from gartok import economy, items, loot, persist
-from gartok.bank_screen import BankScreen
+from gartok import economy, items, loot, persist, world
 from gartok.constants import fmt_money
 from gartok.guild import Guild
 from gartok.holdings import Stash
-from gartok.market_screen import MarketScreen
+from gartok.trade import Counter
 from gartok.unit import Unit, distribute_load, flatten_pack
-
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+from gartok.vault import BankVault
 
 COPPER, GOLD = items.COIN_ITEM, items.GOLD_ITEM
 
@@ -170,110 +165,42 @@ def test_the_chest_exchanges_too_but_melting_must_fit_it():
 def _bank(party, chest=None):
     random.seed(5)
     guild = Guild(list(party), bank=chest if chest is not None else Stash(30))
-    s = BankScreen(None, guild, list(party), lambda: None)
-    s.mouse = (0, 0)
-    pygame.display.set_mode((1, 1))
-    surf = pygame.Surface((1400, 900))
-    s.draw(surf)
-    return s, surf
+    return BankVault(guild, list(party))
 
 
-def _click(s, surf, pos):
-    s.mouse = pos
-    s.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
-    s.draw(surf)
-
-
-def _menu_kinds(s, pick):
-    s._open_menu((400, 300), s._menu_picks_for(pick))
-    return [r[0] for r in s.menu["rows"]]
-
-
-def _idx(holder, name):
-    inv = holder.items if isinstance(holder, Stash) else holder._base_inventory
-    return next(i for i, (n, _) in enumerate(inv) if n == name)
-
-
-def test_a_copper_stack_offers_to_mint_and_a_gold_stack_to_melt():
-    u = _purse(500, 2)
-    s, _ = _bank([u])
-    assert "buy_gold" in _menu_kinds(s, (u, _idx(u, COPPER)))
-    assert "sell_gold" in _menu_kinds(s, (u, _idx(u, GOLD)))
-
-
-def test_too_little_copper_offers_no_minting():
-    u = _purse(100)
-    s, _ = _bank([u])
-    assert "buy_gold" not in _menu_kinds(s, (u, _idx(u, COPPER)))
-
-
-def test_ordinary_items_get_no_exchange_row():
-    u = _purse(500)
-    u.give_to_pack("Rope", 2)
-    s, _ = _bank([u])
-    kinds = _menu_kinds(s, (u, _idx(u, "Rope")))
-    assert "buy_gold" not in kinds and "sell_gold" not in kinds
-
-
-def _run_exchange(s, surf, pick, kind, plus=0):
-    s._open_menu((400, 300), s._menu_picks_for(pick))
-    s.draw(surf)
-    rect = next(r for r, k, _ in s.menu["hits"] if k == kind)
-    _click(s, surf, rect.center)
-    assert s.exchange is not None
-    for _ in range(plus):
-        _click(s, surf, next(r for r, k in s.exchange["hits"] if k == "plus").center)
-    _click(s, surf, next(r for r, k in s.exchange["hits"] if k == "confirm").center)
-
-
-def test_minting_through_the_picker_pays_the_fee():
+def test_minting_at_the_bank_pays_the_fee():
     u = _purse(1000)
-    s, surf = _bank([u])
-    _run_exchange(s, surf, (u, _idx(u, COPPER)), "buy_gold", plus=2)      # 3 coins
-    assert s.exchange is None and _held(u) == (1000 - 303, 3)
-    assert "minted 3 gold coins" in s.notice
+    s = _bank([u])
+    assert s._exchange(u, "buy_gold", 3)
+    assert _held(u) == (1000 - 303, 3) and "minted 3 gold coins" in s.notice
 
 
-def test_melting_through_the_picker_returns_copper_less_the_fee():
+def test_melting_at_the_bank_returns_copper_less_the_fee():
     u = _purse(0, 5)
-    s, surf = _bank([u])
-    _run_exchange(s, surf, (u, _idx(u, GOLD)), "sell_gold", plus=1)       # 2 coins
+    s = _bank([u])
+    assert s._exchange(u, "sell_gold", 2)
     assert _held(u) == (198, 3)
 
 
-def test_the_picker_cannot_go_past_what_is_held():
+def test_the_bank_cannot_mint_past_what_is_held():
     u = _purse(250)
-    s, surf = _bank([u])
-    s._open_menu((400, 300), s._menu_picks_for((u, 0)))
-    s.draw(surf)
-    _click(s, surf, next(r for r, k, _ in s.menu["hits"] if k == "buy_gold").center)
-    for _ in range(5):
-        _click(s, surf, next(r for r, k in s.exchange["hits"] if k == "plus").center)
-    assert s.exchange["amount"] == 2
+    s = _bank([u])
+    assert not s._exchange(u, "buy_gold", 3)
+    assert _held(u) == (250, 0)
 
 
-def test_the_chest_stack_can_be_exchanged_from_its_own_row():
-    u = _purse()
+def test_the_chest_stack_can_be_exchanged_in_the_chest():
     chest = Stash(30)
     chest.put(COPPER, 404)
-    s, surf = _bank([u], chest)
-    _run_exchange(s, surf, (BankScreen.OWNER, 0), "buy_gold", plus=3)
+    s = _bank([_purse()], chest)
+    assert s._exchange(s._holder_of(s.OWNER), "buy_gold", 4)
     assert _held(chest) == (0, 4)
-
-
-def test_escape_cancels_the_picker():
-    u = _purse(500)
-    s, _ = _bank([u])
-    s._menu_run([(u, 0)], "buy_gold", u)
-    assert s.handle_escape() is True and s.exchange is None
-    assert _held(u) == (500, 0)
 
 
 def test_the_market_will_not_buy_coins():
     u = _purse(50, 5)
     u.give_to_pack("Rope")
     random.seed(2)
-    from gartok import world
-    s = MarketScreen(None, Guild([u]), [u], world.node("city"), lambda: None)
+    s = Counter(Guild([u]), [u], world.node("city"))
     picks = [(u, i) for i in range(len(u._base_inventory))]
     assert [s._name_of(p) for p in s._goods(picks)] == ["Rope"]

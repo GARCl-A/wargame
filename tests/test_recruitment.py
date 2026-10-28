@@ -57,19 +57,19 @@ def test_enlist_pulls_the_recruit_out_of_the_pool():
     assert cand in g.roster and cand not in g.taverna_pool and len(g.taverna_pool) == 2
 
 
-def test_taverna_screen_pitch_does_not_double_pop_the_shared_pool():
-    """Regression: TavernaScreen(candidates=None) hands out the live
+def test_taverna_pitch_does_not_double_pop_the_shared_pool():
+    """Regression: Tavern(candidates=None) hands out the live
     guild.taverna_pool -- the same list `recruit.enlist` already trims on a
     win. Popping self.sel again on top of that used to raise IndexError."""
     from gartok.clock import Clock
     from gartok.guild import Guild
-    from gartok.taverna_screen import TavernaScreen
+    from gartok.tavern import Tavern
 
     random.seed(4)
     recruiter = _person(1, cha=100)                    # always wins the contest
     g = Guild([recruiter], clock=Clock())
-    scr = TavernaScreen(fonts=None, guild=g, party=[recruiter], node=None, on_done=lambda: None)
-    assert scr.candidates is g.taverna_pool
+    scr = Tavern(g, g.groups[0])
+    assert scr.candidates == g.taverna_pool
 
     scr.sel = len(scr.candidates) - 1                  # click the last stranger in the row
     cand = scr.candidates[scr.sel]
@@ -237,44 +237,10 @@ def test_pitch_block_reasons():
     assert recruit.pitch_block_reason(g2, [r3, r5_speaker], cand_elfico) == "speakers already tried or have no room"
 
 
-def test_taverna_screen_renders_archetype_badges():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
+def test_prison_pitch_removes_candidate_without_index_error(monkeypatch):
     from gartok.guild import Guild
-    from gartok.taverna_screen import TavernaScreen
-    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.tavern import Prison
     from gartok.unit import Unit
-
-    pygame.init()
-    surf = pygame.display.set_mode((1024, 768))
-    F = ui_fonts()
-
-    g = Guild([Unit("player")])
-    c1 = Unit("player")
-    c1.mod_charisma = 3
-    c2 = Unit("player")
-
-    scr = TavernaScreen(F, g, g.roster, None, lambda *a: None, candidates=[c1, c2])
-    scr.draw(surf)
-    card = scr.cand_cards[0][0]
-    assert any("LEADER" in str(tip) and card.contains(r) for r, tip in scr._tooltips)
-
-
-def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.guild import Guild
-    from gartok.prison_screen import PrisonScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.unit import Unit
-
-    pygame.init()
-    surf = pygame.display.set_mode((1024, 768))
-    F = ui_fonts()
 
     recruiter = Unit("player")
     recruiter.money = 500
@@ -285,8 +251,7 @@ def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
     assert len(g.prison_pool) >= 2
 
     # Test selecting the LAST candidate in the pool (e.g. index PRISON_SIZE - 1)
-    scr = PrisonScreen(F, g, g.roster, None, lambda *a: None)
-    scr.draw(surf)
+    scr = Prison(g, g.groups[0])
     last_idx = len(scr.candidates) - 1
     scr.sel = last_idx
     target_cand = scr.candidates[last_idx]
@@ -301,8 +266,6 @@ def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
     assert target_cand not in g.prison_pool
     assert target_cand not in scr.candidates
     assert scr.sel == len(scr.candidates) - 1            # the selection follows the shrunken list
-    # Verify screen still draws safely without error
-    scr.draw(surf)
 
     # Calling pitch with sel=None or out of bounds is safe
     scr.sel = None
@@ -321,37 +284,30 @@ def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
     assert remaining_cand not in g.roster
     assert remaining_cand in scr.candidates
     assert scr.sel == 0                                   # still looking at them after the failed pitch
-    scr.draw(surf)
 
 
 
 
 
 def _prison(party_gold=500):
-    from gartok.unit import Unit
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
     from gartok.guild import Guild
-    from gartok.prison_screen import PrisonScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
+    from gartok.tavern import Prison
+    from gartok.unit import Unit
     recruiter = Unit("player")
     recruiter.money = party_gold
     recruiter.mod_charisma = 5
     recruiter.languages = ["Common"]
     g = Guild([recruiter])
-    scr = PrisonScreen(ui_fonts(), g, g.roster, None, lambda *a: None)
+    scr = Prison(g, g.groups[0])
     scr.candidates[0].languages = ["Common"]
     return scr, g, recruiter
 
 
-def test_the_prison_is_the_taverna_screen_with_a_bail_and_a_bonus():
-    from gartok.taverna_screen import TavernaScreen
+def test_the_prison_is_the_tavern_with_a_bail_and_a_bonus():
+    from gartok.tavern import Tavern
     scr, g, recruiter = _prison()
     cand = scr.candidates[0]
-    assert isinstance(scr, TavernaScreen)
+    assert isinstance(scr, Tavern)
     assert scr._bail(cand) == recruit.bail_cost(cand)
     base = (recruiter.mod_charisma - recruit.size_penalty(len(g.roster))
             + recruiter.talent_bonus("recruit_cha"))
@@ -387,17 +343,15 @@ def test_a_prison_pitch_charges_the_bail_and_adds_the_bonus(monkeypatch):
 
 
 def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     from gartok.guild import Guild
-    from gartok.taverna_screen import TavernaScreen
+    from gartok.tavern import Tavern
     recruiter = standard_unit()
     recruiter.money = 50
     recruiter.languages = ["Common"]
     g = Guild([recruiter])
     cand = standard_unit()
     cand.languages = ["Common"]
-    scr = TavernaScreen(None, g, g.roster, None, lambda *a: None, candidates=[cand])
+    scr = Tavern(g, g.groups[0], candidates=[cand])
     seen = {}
     monkeypatch.setattr(recruit, "convince",
                         lambda *a, **kw: seen.update(kw) or recruit.Pitch(False, 5, 12, -7, 2, []))
@@ -405,39 +359,28 @@ def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
     assert recruiter.money == 50 and seen["extra_mods"] == []
 
 
-def _taverna(guild, cand, monkeypatch):
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.taverna_screen import TavernaScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    pygame.init()
-    surf = pygame.display.set_mode((1024, 768))
-    scr = TavernaScreen(ui_fonts(), guild, guild.roster, None, lambda *a: None, candidates=[cand])
-    scr.sel = 0
-    scr.selected_recruiter = guild.roster[0]
-    drawn = []
-    import gartok.taverna_draw as mod
-    real = mod.text
-    monkeypatch.setattr(mod, "text", lambda s, f, t, *a, **k: (drawn.append(t), real(s, f, t, *a, **k))[1])
-    scr.draw(surf)
-    return drawn
+def _hint(guild, group, cand):
+    """What the Tavern's dossier says under the pitch, with the first member picked to make it."""
+    from gartok import world
+    from gartok.web.tavern_tab import TavernTab
+    tab = TavernTab(guild, group, world.node("tavern"), candidates=[cand])
+    tab.recruiter(group.members[0].uid)
+    hint = tab.state("recruits")["dossier"]["hint"]
+    return hint and hint["text"]
 
 
-def test_taverna_says_why_nobody_can_pitch(monkeypatch):
+def test_taverna_says_why_nobody_can_pitch():
     from gartok.guild import Guild
     r = _person(1, lang="Comum")
     cand = _person(2, lang="Orque")
-    assert "No one in the party can speak with them" in _taverna(Guild([r]), cand, monkeypatch)
+    g = Guild([r])
+    assert "no one in the party can speak with them" in _hint(g, g.groups[0], cand)
 
 
-def test_taverna_warns_when_the_recruit_overflows_the_group(monkeypatch):
+def test_taverna_warns_when_the_recruit_overflows_the_group():
     from tests.test_cohesion import _full_guild, _unit
-    guild, _group, _m = _full_guild(extra=0)
-    drawn = _taverna(guild, _unit(1), monkeypatch)
-    assert any("group is full" in str(t) for t in drawn)
+    guild, group, _m = _full_guild(extra=0)
+    assert "group is full" in _hint(guild, group, _unit(1))
 
 
 def test_no_slots_is_the_first_reason_even_when_the_language_is_missing_too():
@@ -452,13 +395,12 @@ def test_no_slots_is_the_first_reason_even_when_the_language_is_missing_too():
 def test_map_flags_a_pool_that_turned_over_until_the_guild_walks_in():
     from gartok.clock import Clock
     from gartok.guild import Guild
-    from gartok.prison_screen import PrisonScreen
-    from gartok.taverna_screen import TavernaScreen
+    from gartok.tavern import Prison, Tavern
     g = Guild([_person(1)], clock=Clock())
     assert recruit.has_new_faces(g, "taverna") and recruit.has_new_faces(g, "prison")
-    TavernaScreen(None, g, g.roster, None, lambda *a: None)
+    Tavern(g, g.groups[0])
     assert not recruit.has_new_faces(g, "taverna") and recruit.has_new_faces(g, "prison")
-    PrisonScreen(None, g, g.roster, None, lambda *a: None)
+    Prison(g, g.groups[0])
     assert not recruit.has_new_faces(g, "prison")
     g.clock.advance_hours(24 * recruit.REFRESH_DAYS)
     assert recruit.has_new_faces(g, "taverna") and recruit.has_new_faces(g, "prison")

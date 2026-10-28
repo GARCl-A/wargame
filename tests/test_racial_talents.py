@@ -248,8 +248,8 @@ def test_large_weapon_combat_and_load():
 
 def test_large_weapon_pickup_and_dragselect():
     from gartok.actions import _pickable
-    from gartok.dragselect import LoadoutMoveMixin
     from gartok.ground import GroundObject
+    from gartok.loadout_move import LoadoutMoveMixin
 
     human = _human()
     centaur = _centaur()

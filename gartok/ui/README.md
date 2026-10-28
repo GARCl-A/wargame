@@ -55,23 +55,15 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `sheet_card.py` | the character sheet at three densities |
 | `foe_panel.py` | what a side knows of a foe: its visible traits and the fields Intelligence opened, `?` for the rest |
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
-| `hub_frame.py` | the hub screens' frame: `hub_layout`, the keeper header with its cards, the tab row, the footer, `hub_button`, `MARGIN` (the side margin a tab's body lines up with); the `hub_*` fonts (a step above the base set, serif small caps for names via `primitives.small_caps`) |
-| `hub_body.py` | a hub tab's body in the shop's type: `draw_panel` (serif small-caps title, an aside, the head rule), `draw_person` (portrait, name, a line, chips, a status), `draw_offer` (the shelf's row: icon, name, a line, price, buttons), `draw_items` (item names behind their icons, counted), `draw_chip`, `draw_toggle`, `draw_bar`, `draw_facts` (label / value rows), `draw_section` |
-| `shop_shelf.py` | a hub's FOR SALE panel: category chips, the shelf rows with their steppers, the cart / sell / auto-sell footer |
-| `hub_party.py` | a party member as a hub card (`member_card`, same contract as `loadout_panel.column`): load bar, the slots two by two, the pack, a drop area; `container_card` is a stash (the bank's strongbox, the house) as a hub panel, same contract as `loadout_panel.container_panel` |
-| `initiation_panel.py` | a sanctuary's initiation on the hub kit: The Terms (label / value, what is short in red) beside Who Stays (one member row each, where they stand or why they cannot) and the begin footer |
 | `load_meter.py` | what a body carries, the one way every screen shows it: a bar as long as `carry_max` with a tick at `carry_normal`, green / amber (slowed) / blood (full), the figure always `kg / max` |
 | `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal; the founding screen (the banner on a shield beside the name, colour and emblem, one card per leader candidate with portrait, recruits and attributes) and `draw_shield` |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |
-| `market_panel.py` | the market's drag ghost (the shelf itself is `shop_shelf.py`) |
 | `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
 | `board_render.py` | the battle board: terrain (the floor from `floors.py`, then pits, water, fire, ropes), props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
 | `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, log well, and the crit banner across the board |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |
-| `medic_panel.py` | the Apothecary's Medic tab on the hub kit: one patient row each (ailments as chips, price and hours), the till footer with the total and treat / admit |
 | `title_panel.py` | the title screen: the game's name, the grouped main menu, the last guild played (banner shield, figures, the roster's faces) or the invitation to found one |
-| `mission_offer_screen.py` | base class for NPC job boards, the window over `job_board.Board`: a Jobs panel with one card per job the giver has (`get_templates`) in as many columns as fit (up to 3), scrolls when they do not fit, a keeper's extra button in its footer |
 
 ## Adding to the kit
 

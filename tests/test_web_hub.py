@@ -1272,3 +1272,16 @@ def test_the_library_hub_has_no_second_copy_of_its_shop():
     node = world.node("library")
     assert [k for k, _ in tabs_for("market", node)] == ["shop", "jobs"]
     assert [k for k, _ in tabs_for("library", node)] == ["shop", "craft", "jobs"]
+
+
+def test_every_hub_a_node_offers_opens_on_every_one_of_its_tabs():
+    from gartok import node_functions
+    from gartok.web.hub_session import HUB_KINDS
+    for node in world.NODES:
+        for f in node_functions.offered(node):
+            if f.order_kind not in HUB_KINDS:
+                continue
+            guild = _guild(node.id)
+            hub = HubSession(MapSession(guild), guild.groups[0], orders.Order(f.order_kind))
+            for key, _label in hub.tabs:
+                assert hub.pick_tab(key)["tab"] == key, (node.id, f.order_kind, key)

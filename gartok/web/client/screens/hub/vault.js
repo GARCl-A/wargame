@@ -3,8 +3,8 @@
 // the common purse. Drag an item onto the chest to stow it,
 // onto a pack or a worn slot to hand it over; a chest row's stepper takes part of the stack. A click
 // picks, a second click on the chest or a pack drops; Shift picks several. Right-click an item for its
-// menu (where to send it; at the bank, on a coin stack, mint or melt gold). The server does every move, as
-// the pygame stash does it.
+// menu (where to send it; at the bank, on a coin stack, mint or melt gold). The server does every move
+// (`vault.py`).
 "use strict";
 
 const Vault = (() => {

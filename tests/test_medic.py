@@ -8,8 +8,6 @@ from gartok import economy, items, medic
 from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.medic_screen import MedicScreen
-from gartok.ui.tokens import fonts
 from tests.helpers import Unit
 
 VENOM = "giant_spider_venom"
@@ -136,24 +134,6 @@ def test_treating_nobody_does_nothing():
     assert medic.treat(guild, g, [])[0] is False
 
 
-def test_screen_picks_and_treats():
-    u = _unit(missing=2)
-    guild, g = _setup(u)
-    done = []
-    scr = MedicScreen(fonts(), guild, g, lambda: done.append(1))
-    import pygame
-    surf = pygame.Surface((1280, 720))
-    scr.draw(surf)
-    (uid, rect), = scr.row_rects
-    scr._click(rect.center)
-    assert scr.picked == {uid}
-    scr.draw(surf)
-    scr._click(scr.treat_rect.center)
-    assert u.hp == u.hp_max and not scr.picked
-    assert scr.tutorial_key() == "medic"
-    assert scr.handle_escape() and done
-
-
 def test_the_sim_prices_the_same_hp_the_same():
     import sys
     sys.path.insert(0, "scripts")
@@ -268,24 +248,18 @@ def test_a_hospital_order_survives_a_save():
     assert back.task == "hospital" and back.who == u.uid and back.remaining == g.order.remaining
 
 
-def test_screen_admits_a_long_poison_alone():
-    import pygame
+def test_the_ward_picks_a_stay_alone_and_admits_it():
     sick, hurt = _poisoned(), _unit(missing=2)
     guild, g = _setup(sick, hurt)
-    scr = MedicScreen(fonts(), guild, g, lambda: None)
-    surf = pygame.Surface((1280, 720))
-    scr.draw(surf)
-    rects = dict(scr.row_rects)
-    scr._click(rects[hurt.uid].center)
-    scr._click(rects[sick.uid].center)
-    assert scr.picked == {sick.uid}
-    scr.draw(surf)
-    scr._click(rects[hurt.uid].center)
-    assert scr.picked == {hurt.uid}
-    scr.picked = {sick.uid}
-    scr.draw(surf)
-    scr._click(scr.treat_rect.center)
-    assert any(x.order and x.order.task == "hospital" for x in guild.groups) and not scr.picked
+    ward = medic.Ward(guild, g)
+    ward._toggle(hurt.uid)
+    ward._toggle(sick.uid)
+    assert ward.picked == {sick.uid}
+    ward._toggle(hurt.uid)
+    assert ward.picked == {hurt.uid}
+    ward.picked = {sick.uid}
+    ward._treat()
+    assert any(x.order and x.order.task == "hospital" for x in guild.groups) and not ward.picked
 
 
 def test_a_rotten_meal_weakens_the_attributes_at_once_and_the_cure_restores_them():
@@ -297,13 +271,3 @@ def test_a_rotten_meal_weakens_the_attributes_at_once_and_the_cure_restores_them
     assert u.sick and u.constitution == con - 4
     medic.cure(u)
     assert not u.sick and u.constitution == con
-
-
-def test_screen_has_a_button_back_to_the_map():
-    import pygame
-    guild, g = _setup(_unit(missing=2))
-    done = []
-    scr = MedicScreen(fonts(), guild, g, lambda: done.append(1))
-    scr.draw(pygame.Surface((1280, 720)))
-    scr._click(scr.leave_rect.center)
-    assert done == [1]

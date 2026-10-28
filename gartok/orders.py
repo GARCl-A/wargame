@@ -7,9 +7,8 @@ done with a solo task (`solo.finish`: discharged cured, or a craft rolled). Ever
 kind (`market`,
 `bank`, `recruit`, `hunt`, `arena`, `tanner`) is interactive: the order only
 covers *getting to* the activity, then `campaign.advance` hands the group back
-as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
-`TavernaScreen`, `HuntScreen`, `TannerScreen`, the squad picker into
-`BattleScreen`) to actually play it.
+as `TickResult.pending` for the place's screen (the web's hub, hunt or
+arena session) to actually play it.
 
 `group.order is None` means idle -- eligible for a fresh order, and (unlike an
 active order) never blocks `campaign.advance` from jumping straight past it to

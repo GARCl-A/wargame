@@ -1,6 +1,6 @@
 """The RAIL / column / CARGO pieces `group_screen.py`'s BAGS and CARGO
 views are built from -- factored out so a future screen that needs the
-same "member as a bag of gear" view (`stash_screen.py`, `loot_screen.py`) reuses
+same "member as a bag of gear" view (`loot_screen.py`) reuses
 these instead of forking `group_screen.py`'s copy.
 
 Purely presentational, same contract as the rest of `gartok.ui`: every

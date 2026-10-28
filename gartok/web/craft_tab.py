@@ -3,7 +3,7 @@ the Library's WRITE, the house's KITCHEN): on leather who in the band can work h
 made, on paper the picked crafter's recipes (what each uses, what the band lacks, the progress) and the hours
 to put in, with the group waiting or the crafter gone off alone.
 
-The reads and rules are `workbench.Bench`'s, which pygame's `CraftingScreen` reads too. The verb that runs the
+The reads and rules are `workbench.Bench`'s. The verb that runs the
 clock lives on `HubSession`, which holds the map.
 """
 

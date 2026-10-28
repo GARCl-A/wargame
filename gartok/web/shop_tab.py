@@ -1,6 +1,6 @@
 """A hub's shop tab in the browser: the shelf, every shopper's whole kit, the purse and the till.
 
-The trades are `trade.Counter`'s, the same counter pygame's `MarketScreen` draws: a verb sets the
+The trades are `trade.Counter`'s: a verb sets the
 counter's pick the way a drop would and calls the same method, so the prices, the stock, the till,
 the purse and the deeds stay one source.
 """
@@ -51,7 +51,7 @@ class ShopTab:
         }
 
     def _voice(self):
-        """Who haggles for the band and how far their bent is from the keeper's, as pygame's deal reads it."""
+        """Who haggles for the band and how far their bent is from the keeper's."""
         lang, bent = getattr(self.node, "language", None), getattr(self.node, "alignment", None)
         if not lang or not bent:
             return None, None
@@ -81,7 +81,7 @@ class ShopTab:
         targets = shop.targets if shop else {}
         cats = []
         for label, key, names in m.get_categories():
-            if key == "weapons":       # pygame folds a Large weapon into its Medium row; here each is a row
+            if key == "weapons":       # a Large weapon is a row of its own beside its Medium one
                 names = [n for b in names for n in (b, f"Large {b}")
                          if items.get(n) and (n == b or (shop and n in shop.stock))]
             cats.append({"key": key, "label": label.title().replace(" And ", " & "),

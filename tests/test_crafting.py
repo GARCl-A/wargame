@@ -167,14 +167,9 @@ def test_crafting_shift_awards_work_xp():
     assert u.work_hours == spent * (level + 1) and 0 < spent <= 16    # a level 0 worker gains x(level + 1)
 
 
-def test_crafting_screen_station_filtering():
-    import os
-
-    import pygame
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    pygame.font.init()
-    from gartok.crafting_screen import CraftingScreen
+def test_the_bench_takes_only_the_crafters_of_its_station():
     from gartok.group import Group
+    from gartok.workbench import Bench
 
     u1 = Unit("player")
     u1.recipes.append("Minor Healing Potion")
@@ -184,36 +179,13 @@ def test_crafting_screen_station_filtering():
     group = Group([u1, u2], node="city")
     guild = Guild(roster=[u1, u2], node="city")
 
-    # Apothecary screen should only pick up u1 as crafter
-    apoth_screen = CraftingScreen(None, guild, group, on_done=lambda: None, station="apothecary")
+    apoth_screen = Bench(guild, group, station="apothecary")
     assert u1 in apoth_screen.crafters
     assert u2 not in apoth_screen.crafters
 
-    # Forge screen should only pick up u2 as crafter
-    forge_screen = CraftingScreen(None, guild, group, on_done=lambda: None, station="forge")
+    forge_screen = Bench(guild, group, station="forge")
     assert u2 in forge_screen.crafters
     assert u1 not in forge_screen.crafters
-
-
-def test_the_forge_card_shows_each_recipes_level_and_what_it_teaches(monkeypatch):
-    import pygame
-
-    import gartok.crafting_screen as mod
-    pygame.init()
-    u = Unit("player")
-    u.recipes.append("Bear Trap")
-    guild = Guild(roster=[u], node="city")
-    shown, real_chip = [], mod.hb.draw_chip
-
-    def recording_chip(surf, F, pos, label, *a, **kw):
-        shown.append(label)
-        return real_chip(surf, F, pos, label, *a, **kw)
-
-    monkeypatch.setattr(mod.hb, "draw_chip", recording_chip)
-    mod.CraftingScreen(None, guild, guild.group_of(u), on_done=lambda: None,
-                       station="forge").draw(pygame.Surface((1280, 720)))
-    level = items.CRAFTING_RECIPES["Bear Trap"].level
-    assert f"level {level}" in shown and f"×{level + 1} work XP" in shown
 
 
 @pytest.fixture
@@ -289,11 +261,11 @@ def test_a_partly_locked_stack_gives_only_the_free_part():
     assert a.count_of("Iron Bar") == 1 and a.locked_of("Iron Bar") == 1
 
 
-def test_the_crafting_screen_counts_the_groups_materials():
-    from gartok.crafting_screen import CraftingScreen
+def test_the_bench_counts_the_groups_materials():
+    from gartok.workbench import Bench
     guild, a, b = _pair()
     group = guild.group_of(a)
-    screen = CraftingScreen(None, guild, group, on_done=lambda: None, station="forge")
+    screen = Bench(guild, group, station="forge")
     assert screen._get_missing_materials("Bear Trap")
     b.give_to_pack("Iron Bar")
     assert not screen._get_missing_materials("Bear Trap")

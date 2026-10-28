@@ -2,7 +2,7 @@
 // Drag a ware onto a pack to buy it there (onto a worn slot to wear it, onto the purse to share it out
 // by room); drag a pack item onto another pack or slot to hand it over, onto the shelf or Sell to sell
 // it. A click picks, a second click on a pack drops; Shift picks several. Right-click an item for its
-// menu. The server does every trade, as the pygame shop does it.
+// menu. The server does every trade (`trade.Counter`).
 "use strict";
 
 const Shop = (() => {

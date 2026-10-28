@@ -74,8 +74,8 @@ from gartok import (
 from gartok.clock import SECONDS_PER_DAY
 from gartok.group import NORMAL
 from gartok.guild import Guild
-from gartok.prison_screen import BAIL_BONUS
 from gartok.scenario import ErmosScenario, Scenario
+from gartok.tavern import BAIL_BONUS
 
 SHIFT_HOURS = 16                     # a work shift; the other 8 h of the day are sleep
 SLEEP_HOURS = 24 - SHIFT_HOURS        # a night's rest, for the wounded: the game has no fatigue

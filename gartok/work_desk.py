@@ -1,7 +1,6 @@
 """A work node's two desks (the Lumber Yard, the Mine), with no window: WORK, the paid shifts with each
 worker's tool and wage, and GATHERING, the licence and what a shift of keeping the finds is worth.
-
-`WorkScreen` / `GatherScreen` are the pygame windows over them and `web/work_tab.py` the browser's.
+`web/work_tab.py` draws them.
 """
 
 from . import economy, gather

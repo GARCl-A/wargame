@@ -3,8 +3,7 @@ kitchen): who in the band works at this station, their recipes, what the band's 
 in with the group waiting or the crafter gone off alone.
 
 Materials come from the whole group's packs, wagons and animals (padlocked items excepted) and are consumed
-immediately; progress is 1d20+INT an hour. pygame's `CraftingScreen` is the window over `Bench` and
-`web/craft_tab.py` the browser's.
+immediately; progress is 1d20+INT an hour. `web/craft_tab.py` draws `Bench`.
 """
 
 from collections import Counter

@@ -21,7 +21,7 @@ A deed check reads a `factions.Event` -- what just happened. `settle` is called
 after any moment a deed might fire on: a battle (`campaign.absorb_battle`, the
 event carries the `campaign.BattleOutcome`), arriving somewhere on the map
 (`map_screen`), a mission turned in (`missions.turn_in`, the event carries the
-template's `tag`), and a market visit (`market_screen`, after a buy or sell). A
+template's `tag`), and a market visit (`trade.Counter`, after a buy or sell). A
 check keys off `event.kind` first, then reads only the fields its own kind sets;
 it also gets `guild`, so a "visited every node" or "banked 1000 copper" deed
 reads campaign state straight off that.

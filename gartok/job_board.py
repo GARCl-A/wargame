@@ -1,9 +1,7 @@
 """A giver's jobs board with no window: which jobs it shows, which are on offer, the leader signing for one,
 the turn-in and its notice, each card's line and button. `Board` is what every giver shares; `TannerBoard`,
 `ApothecaryBoard`, `LibraryBoard`, `ShrineBoard` and `TrustBoard` say what each one asks for and pays.
-
-pygame's `ui/mission_offer_screen.MissionOfferScreen` and its subclasses are the windows over these, and
-`web/jobs_tab.py` the browser's.
+`web/jobs_tab.py` draws them.
 """
 
 from . import factions, lair, missions, wildfire, world
@@ -333,6 +331,6 @@ class TrustBoard(Board):
         return "the Bankers accept the letter -- your trust is earned."
 
 
-# a node's function -> its giver's board, in the order `TabbedHubScreen.for_node` checks them
+# a node's function -> its giver's board, in the order a node's tabs list them
 BOARDS = (("tanner", TannerBoard), ("apothecary", ApothecaryBoard), ("library", LibraryBoard),
           ("shrine", ShrineBoard), ("trust", TrustBoard))

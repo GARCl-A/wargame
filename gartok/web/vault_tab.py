@@ -2,25 +2,23 @@
 a coin stack) and the City house's THE HOUSE (its stash, the tax, the oven, the debt), each on paper with
 every pack of the band beside it.
 
-The moves are pygame's own (`BankScreen` / `CityPropertyScreen` and their `StashScreen`, held
-headless): a verb sets the screen's pick the way a drop would and calls the same
-method, so the stash's weight cap, the load limit on what comes out, the slots, the fee and the purse stay
-one source until step 10 of `docs/plans/web_frontend.md` moves them here.
+The moves are `vault.BankVault` / `HouseVault`'s: a verb sets the vault's pick and calls its move, so
+the stash's weight cap, the load limit on what comes out, the slots, the fee and the purse are the
+vault's.
 """
 
 from .. import economy, item_icon, items, store_column
-from ..bank_screen import BankScreen
-from ..city_property_screen import CityPropertyScreen
 from ..data import role_for
+from ..vault import BankVault, HouseVault
 from .shop_tab import SLOTS, _portrait, _tip
 
 # what each stash says of itself: where it is held, and what stands in for it before the guild has one
 COPY = {
-    BankScreen.OWNER: {"title": "The strongbox", "where": "held in the City", "closed": "No strongbox yet",
+    BankVault.OWNER: {"title": "The strongbox", "where": "held in the City", "closed": "No strongbox yet",
                        "closed_line": "The guild keeps nothing of its own until it rents a chest from the Bankers. Rent "
                                       "one below: what goes in stays in the City, safe from the road, and any band that "
                                       "visits the bank can take it out."},
-    CityPropertyScreen.OWNER: {"title": "The house", "where": "the guild's house in the City", "closed": "No house yet",
+    HouseVault.OWNER: {"title": "The house", "where": "the guild's house in the City", "closed": "No house yet",
                                "closed_line": "The Bankers sell the guild a house in the City once they trust it. It "
                                               "stores far more than the strongbox, takes an oven and a garage, and owes "
                                               "the Bankers a tax every cycle."},
@@ -28,10 +26,10 @@ COPY = {
 
 
 class VaultTab:
-    def __init__(self, guild, group, node, screen=BankScreen):
-        self.s = screen(None, guild, list(group.members), lambda: None)
+    def __init__(self, guild, group, node, desk=BankVault):
+        self.s = desk(guild, list(group.members))
         self.chest = self.s.OWNER
-        self.exchanges = isinstance(self.s, BankScreen)
+        self.exchanges = isinstance(self.s, BankVault)
         self.guild, self.group, self.node = guild, group, node
 
     # ------------------------------------------------------------------ #

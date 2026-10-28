@@ -8,8 +8,6 @@ from gartok import campaign, dialogue, factions, hunt, missions, orders, wildfir
 from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.map_view import node_icon
-from gartok.ui.tokens import fonts as ui_fonts
-
 from tests.helpers import Unit, _FixedRNG
 
 DAY = 24 * 3600
@@ -80,9 +78,9 @@ def test_taking_it_lights_three_foci_and_the_great_focus_an_hour_off_the_wilds()
 
 
 def test_the_shrine_board_tells_the_errand_and_never_hands_it_in():
-    from gartok.shrine_screen import ShrineMissionScreen
+    from gartok.job_board import ShrineBoard
     guild, _, m, _ = _started()
-    scr = ShrineMissionScreen(ui_fonts(), guild, guild.groups[0], on_done=lambda: None)
+    scr = ShrineBoard(guild, guild.groups[0])
     t = missions.NATURE_WILDFIRE
     assert "Ogre" in scr.get_req_str(t) and wildfire.REWARD in scr.get_req_str(t)
     assert "day(s) left" in scr.get_status_str(t, 0, False, missions.days_left(guild, m))
@@ -278,7 +276,7 @@ def test_the_wildfire_dialogue_walks_the_two_checks_to_the_lesson():
 
 def test_the_friendly_ogre_sells_the_large_forge_weapons_and_restocks_them():
     from gartok import economy, items
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
 
     guild, (a, b), _m, state = _started()
     wildfire.talk(guild, state.great, a, _FixedRNG(20))
@@ -295,24 +293,18 @@ def test_the_friendly_ogre_sells_the_large_forge_weapons_and_restocks_them():
     assert shop.stock["Large Axe"] > 0
 
     a.give_to_pack(items.COIN_ITEM, 500)
-    s = MarketScreen(None, guild, [a], world.node(wildfire.FORTRESS_ID), lambda: None)
-    rows = s._stock_data()["rows"]
-    assert s.weapon_size == "Large" and all(r["name"].startswith("Large ") for r in rows)
-    assert all(not r["base_name"].startswith("Large ") for r in rows)
-    s._set_weapon_size("Axe", "Medium")
-    assert s._active_stock_name("Axe") == "Axe" and s._stock_of("Axe") == 0
+    s = Counter(guild, [a], world.node(wildfire.FORTRESS_ID))
+    assert s._stock_of("Large Axe") > 0 and s._stock_of("Axe") == 0
 
 
 def test_a_town_shop_has_no_large_weapon_until_a_player_sells_one():
     from gartok import items
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
 
     guild, (a, _b) = _guild(node="smith")
     a.give_to_pack(items.COIN_ITEM, 500)
-    s = MarketScreen(None, guild, [a], world.node("smith"), lambda: None)
-    assert s.weapon_size == "Medium"
-    s._set_weapon_size("Axe", "Large")
-    assert s._active_stock_name("Axe") == "Large Axe" and s._stock_of("Large Axe") == 0
+    s = Counter(guild, [a], world.node("smith"))
+    assert s._stock_of("Axe") > 0 and s._stock_of("Large Axe") == 0
 
     guild.shop("smith").add("Large Axe", 1)
     names = next(n for _l, k, n in s.get_categories() if k == "weapons")

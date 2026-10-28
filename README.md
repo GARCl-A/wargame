@@ -128,7 +128,7 @@ World systems, outside combat:
   its own level and its own talent tree (`progression.py`, `talents.py`,
   `web/talent_session.py`).
 - **Magic**: twelve spells across three schools (`nature`, `blood`, `faith`),
-  initiated at the schools' hidden sanctuaries (`rite.py`, `initiation_screen.py`),
+  initiated at the schools' hidden sanctuaries (`rite.py`),
   learned by studying at the taverna over several in-game days (`magic.py`), and
   cast in battle (`actions.CastSpellAction`, `ai.py`).
 - **Economy**: money lives on the character as `Copper Coin` ($1) and `Gold Coin`
@@ -140,7 +140,7 @@ World systems, outside combat:
   materials into gear and battlefield traps (`workbench.py`). The numbers are
   kept honest by an economy sim (`scripts/economy_report.py`).
 - **Bank**: a rented strongbox at the City, the gold exchange and the Bankers'
-  trust mission (`bank_screen.py`, `economy.buy_gold`/`sell_gold`).
+  trust mission (`vault.py`, `economy.buy_gold`/`sell_gold`).
 - **Medic**: a quick treatment at the Apothecary that mends HP, sickness and poison
   for the potions it would take at a discount; a long one is a hospital stay on a
   `solo` order (`medic.py`, `solo.py`).
@@ -160,7 +160,7 @@ World systems, outside combat:
   finish — a taxed house bought from the Bankers in the City, or a Wilds
   claim fenced and garrisoned by hand through a scout/clear/fence/sweep/
   sustain campaign, contestable by raids and seizure once established
-  (`city_property_screen.py`, `claim_desk.py`).
+  (`vault.py`, `claim_desk.py`).
 - **Crime & justice**: a personal rap sheet that can get a character caught by
   the City guard at a jurisdiction node — accept prison time, fight the
   patrol, flee, or talk (bluff or bribe) your way out; the Old Road carries its own ambush risk regardless of
@@ -217,7 +217,7 @@ gartok/
   weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
   craft_level.py    a recipe's difficulty level, worked out from its requirements, reagents and batch time
   workbench.py      a station's bench, no pygame (`Bench`: the crafters, their recipes, what the packs lack,
-                    a stint waited out or alone); crafting_screen.py is pygame's tab
+                    a stint waited out or alone)
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
@@ -233,16 +233,18 @@ gartok/
   node_functions.py what a node can offer (shop, bank, forge...): order kind + map button, one entry each
   shop.py           a shop's own till and finite shelf, one per node that offers `shop`
   trade.py          a shop's counter: buying, selling, the purse, the deal, the moves between packs
-                    (`Counter`, the Library's `LibraryCounter`); no pygame, both front-ends trade through it
-  hub_screen.py     a node's screens behind one row of tabs, in the frame it owns (keeper header, tab row, back); `for_node` builds the hub of every node with a shop
+                    (`Counter`, the Library's `LibraryCounter`); no pygame, web/shop_tab.py trades through it
+  vault.py          a stash's counter, no pygame: the Bank's strongbox and gold exchange (`BankVault`),
+                    the City house's stash, oven and debt (`HouseVault`)
+  tavern.py         the Tavern's counter, no pygame (`Tavern`: the pitch, the study rooms, the stage;
+                    `Prison`: the cells, with a bail)
   work_desk.py      a work node's desks (Lumber Yard, Mine), no pygame: WORK (`WorkDesk`: paid shifts, each
-                    worker's tool and wage) and GATHERING (`GatherDesk`: the licence, what a shift is worth);
-                    work_screen.py / gather_screen.py are pygame's tabs over them
+                    worker's tool and wage) and GATHERING (`GatherDesk`: the licence, what a shift is worth)
   stables.py        the Farm's stables and the Carpenter's wagon yard, no pygame (`Stables`, `WagonYard`:
-                    the purse, the herd limit, the tack, the resale); stables_screen.py is pygame's tab
+                    the purse, the herd limit, the tack, the resale)
   ledger.py         Ledger Hold's desk, no pygame (`LedgerDesk`: the chest, the mentorship, the supply run);
   job_board.py      each giver's jobs board, no pygame (`Board`, `TannerBoard`, `ShrineBoard`, ...: the offers,
-                    the signing, the turn-in and its notice); ui/mission_offer_screen.py and its subclasses draw them
+                    the signing, the turn-in and its notice)
   claim_desk.py     the Wilds Claim's work, no pygame (`ClaimDesk`: scouting, the fences, the garrison, the hearth);
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
@@ -250,14 +252,14 @@ gartok/
   holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals); GarageDesk is a garage's counter, no pygame
   creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
   animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role
-  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at the Carpenter (stables_screen.WagonYardScreen); wagon_watch.py / watch_screen.py handle the wagon left outside the Ruins or a hunt
+  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at the Carpenter (stables.WagonYard); wagon_watch.py / watch_screen.py handle the wagon left outside the Ruins or a hunt
   group.py          Group = a physical subset of the guild: its own node + squad + order;
                     fame buys group slots (`BASE_SLOTS`, `group_slots`)
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk
                     (7-day notice, loot by alignment)
   solo.py           solo tasks (hospital stay, craft): one member busy apart from the group on a `solo` order
-  medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab with no pygame, medic_screen.py pygame's
-  rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab with no pygame, initiation_screen.py pygame's
+  medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab with no pygame
+  rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab with no pygame
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   rest.py           what a rest order costs in rations and how long "until full" lasts
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
@@ -310,11 +312,6 @@ gartok/
   start_screen.py (three constants) / wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
   draft_screen.py / guild_screen.py / group_screen.py + group_draw.py / dialogue_screen.py
   battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / memorial_screen.py
-  market_screen.py (input over `trade.Counter`) + market_draw.py (painting) / taverna_screen.py + taverna_draw.py (painting)
-  prison_screen.py / bank_screen.py / city_property_screen.py / stash_screen.py
-  hub_screen.py (the tabbed hubs) and its tabs: crafting_screen.py / gather_screen.py / work_screen.py / medic_screen.py
-  stables_screen.py / initiation_screen.py / library_screen.py / tanner_screen.py / shrine_screen.py
-  library_mission_screen.py / apothecary_mission_screen.py
   the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 
   # shared presentation
@@ -337,9 +334,9 @@ gartok/
                     name over its actor and the flight of a shot (`battle.announce`), combat sounds
   sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the Editor enables it, `volume` setting
   dragselect.py     shared press/drag/drop plumbing for the item screens
+  loadout_move.py   the moves between a member's hands, armour and pack, no pygame (the group screen, the vaults)
   packbox.py        shared drag bookkeeping for the gear and group screens
-  store_column.py   shared wagon/animal store column for group, market and stash screens
-  stash_screen.py   shared body of the bank / city-property screens (move gear party <-> Stash)
+  store_column.py   a wagon or an animal as one more pack (the group screen, the web's shop and vault)
   sheet_panel.py    the full drawn character sheet (guild-screen modal)
 
 main.py             entry point (gartok/__main__.py: the browser, or --editor)

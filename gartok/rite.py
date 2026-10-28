@@ -146,8 +146,7 @@ def daily(group):
 
 class Initiation:
     """A sanctuary's INITIATION tab with no window: the school's terms, who may stay to board and why not,
-    the pick and the begin. `InitiationScreen` is the pygame window over it and `web/initiation_tab.py`
-    the browser's."""
+    the pick and the begin. `web/initiation_tab.py` draws it."""
 
     def __init__(self, guild, group):
         self.guild, self.group = guild, group

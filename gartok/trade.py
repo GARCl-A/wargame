@@ -3,8 +3,8 @@
 The rules only, with no window: the shelf (`economy.market_categories`, the Library's own), the
 haggled deal, the party purse (the members' coin, `economy.PartyPurse`), the till and the stock
 (`Guild.shop(node_id)`), the auto-sell marks, the moves between packs and slots and the deeds and
-objectives a trade can meet. `MarketScreen` is the pygame window over it and `web/shop_tab.py` the
-browser's; both set `selected` / `_sel_qty` / `qty` the way a pick would and call the same methods.
+objectives a trade can meet. `web/shop_tab.py` draws it, setting `selected` / `_sel_qty` / `qty` the
+way a pick would and calling its methods.
 
 A pick is `("stock", name)` for a shelf row, or `(owner, loc)` with `loc` a pack index or a slot
 (`"hand"`, `"offhand"`, `"tongue"`, `"artifact"`, `"armor"`).

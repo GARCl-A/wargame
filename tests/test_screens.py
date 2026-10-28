@@ -3,15 +3,16 @@
 import os
 import random
 
-
-from tests.helpers import Unit, click_menu, data, economy, packed, standard_unit
 from gartok.guild import Guild
+from tests.helpers import Unit, click_menu, data, economy, packed, standard_unit
 
 
 def test_battle_export_state_writes_a_json_snapshot(tmp_path, monkeypatch):
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import json
+
     import pygame
+
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
     from gartok.ui.tokens import fonts as ui_fonts
@@ -38,6 +39,7 @@ def test_battle_log_wheel_scroll_over_the_log_panel():
     of zooming the board (the board still zooms everywhere else)."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
     from gartok.ui.tokens import fonts as ui_fonts
@@ -75,6 +77,7 @@ def test_daylight_fog_dims_cells_outside_los():
     one inside it, even under full ambient light."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.lighting import LightRenderer
     from gartok.ui.board_style import BoardView
     pygame.init()
@@ -99,39 +102,14 @@ def test_daylight_fog_dims_cells_outside_los():
     assert tuple(unseen)[:3] != (255, 255, 255)          # outside LOS: dimmed
 
 
-def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
-    from gartok.market_screen import MarketScreen
-    assert economy.sell_price("Axe") < economy.buy_price("Axe")
-    random.seed(1)
-    shoppers = [Unit("player") for _ in range(3)]
-    for m in shoppers:
-        m.money = 10
-    ms = MarketScreen.__new__(MarketScreen)           # no draw in this test
-    ms.shoppers = shoppers
-    ms.stores = []
-    assert ms.purse == 30
-    ms.on_done = lambda: None
-    ms._checkout()
-    assert sorted(m.money for m in shoppers) == [10, 10, 10] and sum(m.money for m in shoppers) == 30
-    ms.purse = 31
-    ms._checkout()
-    assert sorted(m.money for m in shoppers) == [10, 10, 11]   # equal shares -> still an even-ish split
-
-
 def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
     random.seed(2)
     buyer = Unit("player")
     buyer._base_inventory = []
     buyer.carry_max = 10_000                          # keep load out of this test
-    ms = MarketScreen.__new__(MarketScreen)
-    ms.guild = Guild([buyer])
-    ms.node = None
-    ms.shoppers = [buyer]
-    ms.stores = []
+    ms = Counter(Guild([buyer]), [buyer], None)
     ms.deal = []
-    ms.qty = {}
-    ms.notice = None
     unit_price = economy.buy_price("Meat")
 
     ms.purse = unit_price * 100                       # plenty of coin and carry
@@ -151,49 +129,13 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     assert ms.purse == 0 and "3 of 10" in ms.notice
 
 
-def test_market_pack_scrolls_and_the_sheet_badge_opens_the_full_sheet():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import world
-    from gartok.market_screen import MarketScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    random.seed(3)
-    mnode = next(n for n in world.NODES if n.kind == "market")
-    shopper = Unit("player")
-    shopper._base_inventory = packed([f"Trinket{i}" for i in range(30)])   # distinct: forces overflow
-    ms = MarketScreen(ui_fonts(), None, [shopper], mnode, lambda: None)
-    ms.mouse = (0, 0)
-    surf = pygame.Surface((1600, 1000))
-    ms.draw(surf)
-    pack_rows = [idx for _, _, idx in ms.item_rows if isinstance(idx, int)]
-    assert 0 < len(pack_rows) < 30                    # a real overflow, not "everything fits"
-
-    ms._pack_scroll[id(shopper)] = 4
-    ms.draw(surf)
-    pack_rows = [idx for _, _, idx in ms.item_rows if isinstance(idx, int)]
-    assert pack_rows[0] == 4                          # the list actually scrolled
-
-    assert ms.info_hits, "the card should offer an 'i' sheet badge"
-    badge_rect, who = ms.info_hits[0]
-    assert who is shopper
-    ms._drop(badge_rect.center, dragging=False, src=None)
-    assert ms.sheet_open
-
-
-def test_market_pack_stacks_identical_items_with_a_count():
-    from gartok.market_screen import MarketScreen
-    ms = MarketScreen.__new__(MarketScreen)
-    assert ms._stacks(packed(["Potato"] * 4)) == [("Potato", 0, 4)]
-
-
 def test_dragselect_ignores_a_mouseup_with_no_matching_press():
     """Entering the market via the squad picker's GO SHOPPING button leaves the
     left button down; the release then lands on the scene that just replaced it.
     That stray MOUSEBUTTONUP must not count as a click (which would fire
     LEAVE THE MARKET and bounce the player straight back out)."""
     import pygame
+
     from gartok.dragselect import DragSelectMixin
     from gartok.screen import Screen
 
@@ -232,6 +174,7 @@ def test_every_race_has_a_token_icon_that_loads():
     the token, so pin both here."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok import artwork
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -251,6 +194,7 @@ def test_guild_screen_member_detail_renders():
     ensures _draw_detail runs without crashing."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
     from gartok.ui.tokens import fonts as ui_fonts
@@ -289,8 +233,8 @@ def test_guild_screen_member_detail_renders():
 
 
 def test_group_screen_multidrop_moves_every_picked_pack_item():
-    from gartok.guild import Guild
     from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
     random.seed(4)
     a, b = Unit("player"), Unit("player")
     a._base_inventory = packed(["Rope", "Meat", "Torch"])
@@ -305,8 +249,8 @@ def test_group_screen_multidrop_moves_every_picked_pack_item():
 
 
 def test_group_screen_multidrop_on_a_hand_takes_the_first_that_fits():
-    from gartok.guild import Guild
     from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
     random.seed(4)
     a = Unit("player")
     a.equipped_weapon = None
@@ -319,8 +263,8 @@ def test_group_screen_multidrop_on_a_hand_takes_the_first_that_fits():
 
 
 def test_pack_stacks_group_identical_items_with_their_indices():
-    from gartok.guild import Guild
     from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
     a = Unit("player")
     a._base_inventory = packed(["Potato"] * 3 + ["Rope"] + ["Potato"] * 2)
     g = Guild([a])
@@ -332,8 +276,9 @@ def test_pack_stacks_group_identical_items_with_their_indices():
 def SKIP_test_shift_click_a_stack_row_grabs_every_index_in_it():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.guild import Guild
+
     from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
     pygame.init()
     pygame.display.set_mode((1, 1))
     a = Unit("player")
@@ -355,8 +300,9 @@ def SKIP_test_shift_click_a_stack_row_grabs_every_index_in_it():
 def SKIP_test_group_pack_list_scrolls_instead_of_hiding_items_past_the_first_screenful():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.guild import Guild
+
     from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -379,8 +325,9 @@ def SKIP_test_group_pack_list_scrolls_instead_of_hiding_items_past_the_first_scr
 def test_char_editor_duplicate_forks_an_unsaved_copy():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.ui.tokens import fonts as ui_fonts
+
     from gartok.char_editor_screen import CharEditorScreen
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
     scr = CharEditorScreen(ui_fonts(), lambda: None)
@@ -402,12 +349,13 @@ def test_char_editor_duplicate_forks_an_unsaved_copy():
 def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
+
     from gartok.char_editor_screen import CharEditorScreen
-    from gartok.group_screen import GroupScreen
-    from gartok.sheet_panel import draw_sheet
     from gartok.combatant import Combatant
+    from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
+    from gartok.sheet_panel import draw_sheet
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
     F = ui_fonts()
@@ -433,8 +381,8 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
 
 def test_gear_screen_distribute_load():
     from gartok.group_screen import GroupScreen
-    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.guild import Guild
+    from gartok.ui.tokens import fonts as ui_fonts
     u1, u2 = standard_unit(), standard_unit()
     u1._base_inventory = packed(["Stone Brick", "Stone Brick"])
     u2._base_inventory = []
@@ -452,6 +400,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     picking the item up -- and distribute_load then leaves it where it is."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok import data
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
@@ -492,6 +441,7 @@ def test_group_screen_wheel_scroll_reveals_items_below_the_fold():
     did (see `packbox.PackColumnMixin`)."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
@@ -525,6 +475,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     menu, mirroring the sandbox character editor's toggle."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
@@ -559,6 +510,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
 def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     pygame.init()
@@ -582,6 +534,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     no `magic_source` required, unlike scrolls."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
@@ -617,6 +570,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
 def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
@@ -637,6 +591,7 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
 def test_group_screen_cargo_search_filter():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
@@ -700,71 +655,6 @@ def test_factions_get_unlocks():
     assert any(u.title == "Rare Manuscripts" and u.rep_required == 2 for u in library_unlocks)
 
 
-def test_market_screen_draw_multiple_shoppers_hover():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import world
-    from gartok.market_screen import MarketScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    mnode = next(n for n in world.NODES if n.kind == "market")
-    shoppers = [Unit("player"), Unit("player")]
-    ms = MarketScreen(ui_fonts(), None, shoppers, mnode, lambda: None)
-    surf = pygame.Surface((1200, 800))
-    ms.mouse = (surf.get_width() - 50, 80)
-    ms.draw(surf)
-    for label, rect in ms.buttons:
-        if label == "distribute":
-            ms.mouse = rect.center
-            ms.draw(surf)
-
-
-def _pack_rows_of(rows, unit):
-    return {unit._base_inventory[loc][0] for _, m, loc in rows if m is unit and isinstance(loc, int)}
-
-
-def test_market_lists_the_coin_stack_and_it_is_pickable_like_any_item():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import items, world
-    from gartok.market_screen import MarketScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    mnode = next(n for n in world.NODES if n.kind == "market")
-    u = Unit("player")
-    u.money = 50
-    u.give_to_pack("Torch")
-    u.give_to_pack("Rope")
-    ms = MarketScreen(ui_fonts(), None, [u], mnode, lambda: None)
-    assert any(name == items.COIN_ITEM for name, *_ in ms._member_dict(u, [])["pack"])
-    ms.draw(pygame.Surface((1400, 1000)))
-    assert _pack_rows_of(ms.item_rows, u) >= {"Torch", "Rope"}
-    assert items.COIN_ITEM in _pack_rows_of(ms.item_rows, u)
-    assert items.COIN_ITEM in {name for _, _, name in ms.lock_hits}
-
-
-def test_stash_screen_lists_the_coin_stack_and_it_is_pickable_like_any_item():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import items
-    from gartok.bank_screen import BankScreen
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    u = Unit("player")
-    u.money = 50
-    u.give_to_pack("Torch")
-    u.give_to_pack("Rope")
-    s = BankScreen(ui_fonts(), Guild([u]), [u], on_done=lambda: None)
-    assert any(name == items.COIN_ITEM for name, *_ in s._member_dict(u, [])["pack"])
-    s.draw(pygame.Surface((1400, 900)))
-    assert _pack_rows_of([(r, o, loc) for r, o, loc in s.sources], u) >= {"Torch", "Rope"}
-    assert items.COIN_ITEM in _pack_rows_of(s.sources, u)
-
-
 def test_attribute_and_derived_help_catalogs():
     for k in ("STR", "DEX", "CON", "INT", "WIS", "CHA"):
         assert k in data.ATTRIBUTE_HELP
@@ -778,8 +668,9 @@ def test_attribute_and_derived_help_catalogs():
 
 
 def test_leshy_icon_asset():
-    from gartok import artwork
     import pygame
+
+    from gartok import artwork
     assert artwork.RACE_ICON["Leshy"] == "sprout"
     assert artwork.RACE_ICON["Treefolk"] == "sprout"
     surf = artwork.race_icon("Treefolk", 24)
@@ -789,8 +680,9 @@ def test_leshy_icon_asset():
 
 
 def test_treefolk_race_and_portraits():
-    from gartok import artwork, data, persist, unit
     import pygame
+
+    from gartok import artwork, data, persist, unit
     # 1. Race definition
     tf = data.race_by_name("Treefolk")
     assert tf is not None
@@ -832,8 +724,9 @@ def test_treefolk_race_and_portraits():
 
 
 def test_goblin_portraits():
-    from gartok import artwork, data, unit
     import pygame
+
+    from gartok import artwork, data, unit
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
     # 1. Loader returns scaled surface
@@ -860,6 +753,7 @@ def test_goblin_portraits():
 def test_draft_screen_attribute_and_stat_hover_tooltips():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.draft_screen import DraftScreen
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
@@ -898,6 +792,7 @@ def test_draft_screen_attribute_and_stat_hover_tooltips():
 def test_sheet_panel_attribute_hover_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok import sheet_panel
     from gartok.combatant import Combatant
     from gartok.ui.tokens import fonts as ui_fonts
@@ -921,6 +816,7 @@ def test_sheet_panel_attribute_hover_tooltip():
 def test_char_editor_attribute_hover_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.char_editor_screen import CharEditorScreen
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
@@ -943,114 +839,11 @@ def test_char_editor_attribute_hover_tooltip():
                     break
     assert found_tooltip, "Character editor attribute cells should set tooltip on hover"
 
-def test_market_screen_item_hover_tooltip():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.market_screen import MarketScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.guild import Guild
-    from gartok.world import NODES
-    from tests.helpers import Unit
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    shopper = Unit("player")
-    shopper.give_to_pack("Dagger")
-    guild = Guild([shopper])
-    node = next(n for n in NODES if n.kind == "market")
-    guild.shop(node.id).stock = {"Dagger": 5, "Meat": 10}
-    
-    ms = MarketScreen(ui_fonts(), guild, [shopper], node, lambda: None)
-    surf = pygame.Surface((1280, 720))
-    ms.mouse = (0, 0)
-    ms.draw(surf)
-
-    found_stock_tooltip = False
-    for r, name in ms.stock_rows:
-        ms.mouse = r.center
-        ms.draw(surf)
-        if ms.tooltip and isinstance(ms.tooltip, list):
-            if ms.tooltip[0][0] == name:
-                found_stock_tooltip = True
-                break
-
-    found_pack_tooltip = False
-    for r, member, loc in ms.item_rows:
-        ms.mouse = r.center
-        ms.draw(surf)
-        if ms.tooltip and isinstance(ms.tooltip, list):
-            found_pack_tooltip = True
-            break
-            
-    assert found_stock_tooltip, "MarketScreen stock rows should set tooltip on hover"
-    assert found_pack_tooltip, "MarketScreen pack items should set tooltip on hover"
-
-
-def test_market_screen_weapon_size_toggle():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.market_screen import MarketScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.guild import Guild
-    from gartok.world import NODES
-    from tests.helpers import Unit
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    shopper = Unit("player")
-    guild = Guild([shopper])
-    node = next(n for n in NODES if n.id == "smith")
-    
-    ms = MarketScreen(ui_fonts(), guild, [shopper], node, lambda: None)
-    surf = pygame.Surface((1280, 720))
-    ms.mouse = (0, 0)
-    ms.draw(surf)
-
-    # Initial state: weapons tab, Medium by default
-    assert ms.tab == "weapons"
-    assert ms.weapon_size == "Medium"
-    assert ms._active_stock_name("Axe") == "Axe"
-    assert any(name == "Axe" for _, name in ms.stock_rows)
-    assert not any(name == "Large Axe" for _, name in ms.stock_rows)
-
-    # Size hits and header size hits were populated during draw
-    assert len(ms.header_size_hits) == 2
-    assert len(ms.size_hits) > 0
-
-    # Click row toggle 'L' for Axe
-    axe_l_hit = next(rect for rect, b, sz in ms.size_hits if b == "Axe" and sz == "Large")
-    ms._drop(axe_l_hit.center, False, None)
-    assert ms._active_stock_name("Axe") == "Large Axe"
-    assert ms._active_stock_name("Dagger") == "Dagger"  # other weapons stay Medium
-
-    # Selection updates automatically when size is toggled
-    ms.selected = [("stock", "Large Axe")]
-    axe_m_hit = next(rect for rect, b, sz in ms.size_hits if b == "Axe" and sz == "Medium")
-    ms._drop(axe_m_hit.center, False, None)
-    assert ms._active_stock_name("Axe") == "Axe"
-    assert ms.selected == [("stock", "Axe")]
-
-    # Header toggle to Large sets all weapons to Large
-    lrg_hdr = next(rect for rect, sz in ms.header_size_hits if sz == "Large")
-    ms._drop(lrg_hdr.center, False, None)
-    assert ms.weapon_size == "Large"
-    assert ms._active_stock_name("Axe") == "Large Axe"
-    assert ms._active_stock_name("Dagger") == "Large Dagger"
-    assert ms.selected == [("stock", "Large Axe")]
-
-    # Redraw with Large: stock_rows now lists "Large Axe", "Large Dagger", etc.
-    ms.draw(surf)
-    assert any(name == "Large Axe" for _, name in ms.stock_rows)
-    assert any(name == "Large Dagger" for _, name in ms.stock_rows)
-    assert not any(name == "Axe" for _, name in ms.stock_rows)
-
-
 def test_sheet_panel_hp_breakdown_tooltip():
 
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok import sheet_panel
     from gartok.combatant import Combatant
     from gartok.ui.sheet_card import hp_tooltip
@@ -1082,6 +875,7 @@ def test_sheet_panel_hp_breakdown_tooltip():
 def test_char_editor_screen_hp_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.char_editor_screen import CharEditorScreen
     from gartok.ui.tokens import fonts as ui_fonts
     from tests.helpers import Unit
@@ -1102,11 +896,13 @@ def test_char_editor_screen_hp_tooltip():
 def test_footer_bar_hint_offsets_when_back_button_present():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
     from unittest.mock import patch
+
+    import pygame
+
+    from gartok.ui.primitives import FOOTER_HINT, LEFT_W, footer_bar
     from gartok.ui.tokens import T
     from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.ui.primitives import footer_bar, LEFT_W, FOOTER_HINT
 
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -1145,6 +941,7 @@ def test_footer_bar_hint_offsets_when_back_button_present():
 
 def test_battle_screen_victory_card_with_stabilized():
     import pygame
+
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
     from gartok.ui.tokens import fonts as ui_fonts
@@ -1161,6 +958,7 @@ def test_battle_screen_victory_card_with_stabilized():
 
 def test_guild_screen_level_up_observability():
     import pygame
+
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
     from gartok.ui.tokens import fonts as ui_fonts
@@ -1198,6 +996,7 @@ def test_guild_screen_level_up_observability():
 
 def test_guild_screen_study_track_rendered():
     import pygame
+
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
     from gartok.ui.tokens import fonts as ui_fonts
@@ -1219,10 +1018,10 @@ def test_guild_screen_study_track_rendered():
 
 
 def test_starvation_loot_screen_instantiation():
-    from gartok.loot_screen import LootScreen
     from gartok.guild import Guild
-    from gartok.unit import Unit
+    from gartok.loot_screen import LootScreen
     from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.unit import Unit
     u1 = Unit("player")
     u2 = Unit("player")
     guild = Guild([u1, u2])
@@ -1235,10 +1034,11 @@ def test_starvation_loot_screen_instantiation():
 def test_battle_screen_tabs_and_hotkeys():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
+    from gartok import actions
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
     from gartok.ui.tokens import fonts as ui_fonts
-    from gartok import actions
     pygame.init()
     surf = pygame.display.set_mode((1280, 800))
 
@@ -1270,6 +1070,7 @@ def test_battle_screen_tabs_and_hotkeys():
 def test_battle_screen_actions_wheel_scroll():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
     from gartok.ui.tokens import fonts as ui_fonts
@@ -1297,6 +1098,7 @@ def test_battle_screen_actions_wheel_scroll():
 def test_battle_screen_16_9_monitor_no_overflow():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
     from gartok.ui.tokens import T
@@ -1334,20 +1136,16 @@ def test_battle_screen_16_9_monitor_no_overflow():
             assert rect.bottom <= h, f"Utility button {key} bottom {rect.bottom} below window {h} in {w}x{h}"
 
 
-def test_market_screen_equipping_stack_preserves_remainder():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.market_screen import MarketScreen
-    from gartok.ui.tokens import fonts as ui_fonts
+def test_market_equipping_stack_preserves_remainder():
     from gartok import items, world
-    pygame.init()
+    from gartok.trade import Counter
 
     mnode = next(n for n in world.NODES if n.kind == "market")
     shopper = Unit("player")
     shopper.equipped_offhand = None
     shopper._base_inventory = [items.create_instance("Torch", qty=5)]
 
-    ms = MarketScreen(ui_fonts(), None, [shopper], mnode, lambda: None)
+    ms = Counter(None, [shopper], mnode)
     ms.selected = [(shopper, 0)]
     ms._drop_on_zone(shopper, "offhand")
 
@@ -1358,10 +1156,12 @@ def test_market_screen_equipping_stack_preserves_remainder():
 
 def test_loot_screen_equipping_stack_preserves_remainder():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    from types import SimpleNamespace
+
     import pygame
+
     from gartok.loot_screen import LootScreen
     from gartok.ui.tokens import fonts as ui_fonts
-    from types import SimpleNamespace
     pygame.init()
 
     u = Unit("player")
@@ -1377,20 +1177,15 @@ def test_loot_screen_equipping_stack_preserves_remainder():
     assert ls.pool == [("Torch", 4)]
 
 
-def test_bank_screen_equipping_stack_preserves_remainder():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.bank_screen import BankScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.guild import Guild
-    pygame.init()
+def test_bank_equipping_stack_preserves_remainder():
+    from gartok.vault import BankVault
 
     u = Unit("player")
     u.equipped_offhand = None
     guild = Guild([u])
     guild.bank.put("Torch", 5)
 
-    bs = BankScreen(ui_fonts(), guild, [u], lambda: None)
+    bs = BankVault(guild, [u])
     bs.selected = [("bank", 0)]
     bs._give_many(u, "offhand")
 
@@ -1399,13 +1194,8 @@ def test_bank_screen_equipping_stack_preserves_remainder():
     assert guild.bank.items[0][1] == 4
 
 
-def test_city_property_screen_equipping_stack_preserves_remainder():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.city_property_screen import CityPropertyScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.guild import Guild
-    pygame.init()
+def test_house_equipping_stack_preserves_remainder():
+    from gartok.vault import HouseVault
 
     u = Unit("player")
     u.equipped_offhand = None
@@ -1413,7 +1203,7 @@ def test_city_property_screen_equipping_stack_preserves_remainder():
     guild.house.owned = True
     guild.house.stash.put("Torch", 5)
 
-    cps = CityPropertyScreen(ui_fonts(), guild, [u], lambda: None)
+    cps = HouseVault(guild, [u])
     cps.selected = [("house", 0)]
     cps._give_many(u, "offhand")
 
@@ -1425,7 +1215,8 @@ def test_city_property_screen_equipping_stack_preserves_remainder():
 def test_primitives_text_and_ellipsize_none_resilience():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.ui.primitives import ellipsize, text, caps
+
+    from gartok.ui.primitives import caps, ellipsize, text
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     surf = pygame.Surface((100, 100))

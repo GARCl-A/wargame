@@ -1,29 +1,17 @@
 """The City property: buying it from the Bankers, the recurring tax, the
 repossession/squat choice, debt escalating to the guard, and a squat drawing
 periodic guard raids. See [[gartok-property-two-paths]] and
-`gartok/city_property_screen.py`/`gartok/campaign.py`'s "eviction" pause --
-same shape as `test_bank.py` (the screen) and `test_justice_integration.py` /
+`gartok/vault.py` / `gartok/campaign.py`'s "eviction" pause -- same shape as
+`test_bank.py` (the counter) and `test_justice_integration.py` /
 `test_road_ambush.py` (the pause/resolve seam)."""
 
 import random
 
 from gartok import campaign, forced, orders
-from gartok.city_property_screen import CityPropertyScreen, RepossessionScreen
 from gartok.group import Group
 from gartok.guild import Guild
+from gartok.vault import BankVault, HouseVault
 from tests.helpers import Unit, economy, packed
-
-
-def _screen(guild, party):
-    s = CityPropertyScreen.__new__(CityPropertyScreen)
-    s.guild = guild
-    s.party = party
-    s.stores = []
-    s.selected = []
-    s._sel_qty = {}
-    s.notice = None
-    s.on_done = lambda: None
-    return s
 
 
 def _at_gate(gold=economy.CITY_PROPERTY_PRICE):
@@ -41,7 +29,7 @@ def _at_gate(gold=economy.CITY_PROPERTY_PRICE):
 def test_buying_debits_the_pooled_purse_and_starts_the_tax_clock():
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 20)
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
 
     s._run_service("buy")
     assert guild.house.owned
@@ -56,7 +44,7 @@ def test_buying_is_refused_below_the_reputation_gate():
     p = Unit("player")
     p.money = economy.CITY_PROPERTY_PRICE
     guild = Guild([p], reputation={"bankers": economy.CITY_PROPERTY_REP_GATE - 1})
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
 
     s._run_service("buy")
     assert not guild.house.owned and s.purse == economy.CITY_PROPERTY_PRICE
@@ -65,7 +53,7 @@ def test_buying_is_refused_below_the_reputation_gate():
 def test_buying_is_refused_when_the_party_is_short():
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE - 1)
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
 
     s._run_service("buy")
     assert not guild.house.owned and "$" in s.notice
@@ -75,7 +63,7 @@ def test_buying_is_refused_while_bankers_debt_is_outstanding():
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 20)
     guild.bankers_debt = 10
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
 
     s._run_service("buy")
     assert not guild.house.owned and s.purse == economy.CITY_PROPERTY_PRICE + 20
@@ -86,7 +74,7 @@ def test_deposit_is_capped_by_the_property_and_withdraw_by_the_members_load():
     guild, p = _at_gate()
     guild.buy_city_property()
     p._base_inventory = packed(["Chainmail"])              # 10.0 kg
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
 
     s._deposit([(p, 0)])
     assert guild.house.stash.items == [("Chainmail", 1)] and p._base_inventory == []
@@ -168,7 +156,7 @@ def test_paying_off_the_debt_unblocks_bankers_services():
     guild = Guild([p])
     guild.bankers_debt = 120
     guild.bankers_debt_since = guild.clock.day
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
 
     s._run_service("pay_debt")
     assert guild.bankers_debt == 0 and not guild.bankers_services_blocked
@@ -185,7 +173,7 @@ def test_the_debt_and_the_tax_show_in_the_hub_header_and_the_debt_is_a_service()
     guild.buy_city_property()
     guild.house.missed_payments = 1
     guild.bankers_debt = 120
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
     s.on_cook = s.on_garage = None
 
     cards = {c["label"]: c for c in s.hub_cards()}
@@ -206,7 +194,7 @@ def test_paying_off_the_debt_never_overpays():
     p.money = 1000
     guild = Guild([p])
     guild.bankers_debt = 30
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
 
     s._run_service("pay_debt")
     assert guild.bankers_debt == 0 and s.purse == 1000 - 30
@@ -234,11 +222,6 @@ def test_ignored_debt_eventually_reaches_the_guard():
 
     guild.pass_time(economy.CITY_PROPERTY_DEBT_GRACE_DAYS * 24)
     assert p.crime == 1
-
-
-# --------------------------------------------------------------------------- #
-# app wiring: RepossessionScreen pre-empts the normal property screen         #
-# --------------------------------------------------------------------------- #
 
 
 # --------------------------------------------------------------------------- #
@@ -306,77 +289,12 @@ def test_winning_the_raid_keeps_the_squat_losing_ends_it_for_good():
 
 
 # --------------------------------------------------------------------------- #
-# real draw + click, through pygame (same technique test_bank.py uses)        #
-# --------------------------------------------------------------------------- #
-
-def test_drawing_and_clicking_buy_then_stashing_an_item():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    random.seed(1)
-    guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 50)
-    purse = p.money
-    p._base_inventory = packed(["Rope"])
-    p.money = purse
-    s = CityPropertyScreen(ui_fonts(), guild, [p], on_done=lambda: None)
-    surf = pygame.Surface((1280, 800))
-    s.mouse = (0, 0)
-
-    s.draw(surf)                                      # buy-offer state
-    buy = next(r for r, key in s._service_hits if key == "buy")
-    s._drop(buy.center, False, None)
-    assert guild.house.owned
-
-    s.draw(surf)                                      # now the storage view
-    s.selected = [(p, 0)]
-    house_zone = next(r for r, owner, zone in s.zones if zone == "house")
-    s._drop(house_zone.center, True, (p, 0))
-    assert guild.house.stash.items == [("Rope", 1)]
-
-
-def test_drawing_the_repossession_screen_and_choosing_squat():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    random.seed(1)
-    p = Unit("player")
-    guild = Guild([p])
-    guild.buy_city_property()
-    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
-
-    chosen = []
-    s = RepossessionScreen(ui_fonts(), guild, on_return=lambda: chosen.append("return"),
-                          on_squat=lambda: chosen.append("squat"))
-    s.mouse = (0, 0)
-    surf = pygame.Surface((1280, 800))
-    s.draw(surf)
-    squat = next(r for k, r in s.buttons if k == "squat")
-    s._click(squat.center)
-    assert chosen == ["squat"]
-
-
-# --------------------------------------------------------------------------- #
 # bankers_services_blocked gates property purchase at the bank                #
 # --------------------------------------------------------------------------- #
 
 def test_bankers_debt_blocks_buying_the_property():
     """After a repossession the guild owes a debt; that flag must prevent
-    re-buying the property at the bank screen."""
-    import pygame
-
-    from gartok.bank_screen import BankScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
+    re-buying the property at the bank."""
     p = Unit("player")
     p.money = economy.CITY_PROPERTY_PRICE + 100
     g = Group([p], node="city")
@@ -385,18 +303,13 @@ def test_bankers_debt_blocks_buying_the_property():
     guild.bankers_debt = 50
     assert guild.bankers_services_blocked
 
-    s = BankScreen(ui_fonts(), guild, [p], on_done=lambda: None)
-    surf = pygame.Surface((1280, 800))
-    s.mouse = (0, 0)
-    s.draw(surf)
-
+    s = BankVault(guild, [p])
     assert not guild.house.owned
-    buy_hit = next((key for r, key in s._service_hits if key == "buy_property"), None)
-    assert buy_hit is None
+    assert "buy_property" not in [key for key, *_ in s._services()]
 
 
-def test_buying_the_house_debits_the_party_without_leaving_the_screen():
+def test_buying_the_house_debits_the_party_at_once():
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 40)
-    s = _screen(guild, [p])
+    s = HouseVault(guild, [p])
     s._run_service("buy")
     assert guild.house.owned and p.money == 40

@@ -2,14 +2,12 @@
 a Dictionary at the tavern, Lumber at the Wilds claim."""
 
 
-from gartok import economy, items, magic, medic, orders, world
+from gartok import economy, items, magic, medic, orders, stables, world
 from gartok.animals import Animal
 from gartok.group import Group
 from gartok.guild import Guild
+from gartok.tavern import Tavern
 from gartok.trade import Counter
-from gartok.stables_screen import StablesScreen
-from gartok.taverna_screen import TavernaScreen
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.wagon import Wagon
 from tests.helpers import standard_unit
 
@@ -61,7 +59,7 @@ def test_a_pack_animal_also_counts_toward_the_purse():
 def test_a_dictionary_in_the_cart_is_a_study_option_and_moves_to_the_student():
     guild, group, u, cart = _party(("Dictionary of Elvish", 1))
     u.languages = ["Ankarin"]
-    screen = TavernaScreen(ui_fonts(), guild, list(group.members), "city", lambda: None, group=group)
+    screen = Tavern(guild, group)
     options = screen._available_study_options(u)
     assert [o["id"] for o in options] == ["Elvish"]
 
@@ -94,7 +92,7 @@ def test_cart_coins_pay_for_medic_treatment():
 def test_cart_coins_pay_for_buying_at_the_stables():
     guild, group, u, cart = _party((items.COIN_ITEM, 100))
     u.money = 0
-    scr = StablesScreen(ui_fonts(), guild, group, lambda: None)
+    scr = stables.Stables(guild, group)
     assert scr.wealth == 100
     assert scr._pay(40, "Donkey")
     assert cart.money == 60
@@ -123,5 +121,5 @@ def test_cart_coins_pay_for_daily_study_rent():
 def test_cart_coins_pay_for_bail_in_taverna():
     guild, group, u, cart = _party((items.COIN_ITEM, 100))
     u.money = 0
-    scr = TavernaScreen(ui_fonts(), guild, list(group.members), "city", lambda: None, group=group)
+    scr = Tavern(guild, group)
     assert scr._wealth() == 100

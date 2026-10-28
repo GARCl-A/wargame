@@ -429,7 +429,7 @@ level-0 and a level-1 spell of its own.
   - **Share Magic** — a Sprite Nature Initiate's own action: spends a point
     to teach a random ally one of its known spells for the rest of the
     battle.
-- **Initiation** (`rite.py`, the INITIATION tab of each hidden sanctuary, `initiation_screen.py`). A
+- **Initiation** (`rite.py`, the INITIATION tab of each hidden sanctuary, `rite.Initiation`). A
   school takes a character once the guild has **2 reputation** with its faction: a threshold, never
   spent. The character stays to **board** at the sanctuary: they split off into a group of their own
   on a `garrison("rite")` order (`Guild.send_alone`), or the whole group waits when there is no free
@@ -446,7 +446,7 @@ level-0 and a level-1 spell of its own.
   The rite grants the school and its root in the magic talent track, **no spell**: spells are still
   studied from scrolls (below). A race or talent that already holds a school skips its rite.
 - **Learning a spell** happens outside combat, at the Tavern
-  (`taverna_screen.py`'s "rent a quiet room" button issues an
+  (`tavern.Tavern`'s "rent a quiet room" issues an
   `orders.garrison("study")` order — the same engine the garrison jobs use,
   see Property below). Each day the order holds, a member with a
   `study_target` set and the matching `Scroll of <Spell>` in their pack pays
@@ -1471,7 +1471,7 @@ map; `orders.work(..., gather=True)`) instead of the wage.
 
 ### The tavern stage: busking for tips 🟡
 
-The PERFORM tab of the Tavern (`taverna_screen.py`). Rule in
+The PERFORM tab of the Tavern (`tavern.Tavern`). Rule in
 `Guild.perform_shift` / `economy.perform_pay`; unlike the yard it resolves
 right now (clock advanced through `pass_time`), no order.
 
@@ -1525,7 +1525,7 @@ abandoned craft doesn't get them back.
 
 ### The Medic: quick treatment and the hospital 🟡
 
-`medic.py`, a tab of the Apothecary hub (`medic_screen.py`). A patient's cost is the
+`medic.py`, a tab of the Apothecary hub (`medic.Ward`). A patient's cost is the
 *expected* consumables: Minor Healing Potions for lost HP (`MEDIC_POTION_HP` = 3.5 each),
 one First Aid Kit charge for sickness, Antidotes for poison, all at
 `MEDIC_PRICE_FACTOR` (0.7) of the catalogue price. Treating HP takes
@@ -1596,7 +1596,7 @@ hostile a hunt meets **1.5×** the ambushes, half of them his goblins (`wildfire
 ### Market and haggling 🟡
 
 Rule in `economy.py` (`market_deal` / `buy_price` / `sell_price`); screen in
-`market_screen.py`. A `market` node carries the vendor's **language** and
+`trade.py`. A `market` node carries the vendor's **language** and
 **alignment** (today: the Market speaks **Ankarin**, alignment **Lawful and
 Neutral**).
 
@@ -1633,12 +1633,12 @@ Neutral**).
   Library's Kobold in Draconic, the Lumber Yard's Orc in Orcish, the Mine's Goblin in Goblin; the Apothecary's
   Gnome (Gnomish), the Tavern's Halfling (Halfling) and the Farm's Human (Ankarin and Sylvan; `Node.language`
   may be a tuple). Every shop has a tongue and a bent (a test fails for one without). A guild with nobody who
-  speaks it pays the tabled price. The hub's header shows the keeper big (`ui.hub_frame`): portrait, their
+  speaks it pays the tabled price. The hub's header shows the keeper big (`web/hub_session.py`): portrait, their
   line, their bent, and the shop's cards -- the deal (who haggles for the party, `economy.haggle_voice`, their
   Charisma and how far their bent sits from the keeper's), the party's purse and the shop's till. The shelf
-  has a cart: a click puts a row in it, BUY shares it out to whoever has room (`MarketScreen._buy_cart`); a
+  has a cart: a click puts a row in it, BUY shares it out to whoever has room (`trade.Counter._buy_cart`); a
   drag still buys for one member, and pack items dropped on the shelf are sold. A shop with a trade (Smithy, Tannery, Apothecary) is one hub screen with a SHOP tab
-  (`hub_screen.py`); the Farm and the Tavern show the shop beside their stables / recruiting.
+  (`web/hub_session.py`); the Farm and the Tavern show the shop beside their stables / recruiting.
   A tab with nothing on it is not listed.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a
   parameter — the Provisioner talent adds one scoped to food, buy-side.
@@ -1668,10 +1668,10 @@ can still try.
   leader adds their own racial level on top — the mechanical reason the title
   is worth keeping past the draft (see Leadership above). This is what caps
   the roster: every new member needs a living sponsor with room left.
-- **The Tavern** (`taverna_screen.py`): a free pool of `TAVERNA_SIZE` (3)
+- **The Tavern** (`tavern.py`): a free pool of `TAVERNA_SIZE` (3)
   strangers, re-rolled every `REFRESH_DAYS` (7) days (`recruit.refresh_pool`).
   No money changes hands.
-- **The Prison** (`prison_screen.py`, at the City's `prison` node): a second,
+- **The Prison** (`tavern.Prison`, at the City's `prison` node): a second,
   separate weekly pool (`recruit.refresh_prison_pool`) of minor criminals.
   Both pools show a red "!" on their map node once they turn over, until the
   guild next walks in (`recruit.has_new_faces`, `Guild.recruit_seen`).
@@ -1756,7 +1756,7 @@ the way out, the Outpost on the way back). Every completed run counts toward
 What they sell today is the guild's **first shared property**: a **strongbox** at the bank.
 
 - The `city` node carries `bank=True`; **VISIT THE BANK** on the map opens
-  `bank_screen` for the chosen party (the market's party-picker path).
+  the Bank's VAULT (`vault.BankVault`) for the chosen band.
 - The chest is **guild state** (`guild.bank`, a `holdings.Stash`) —
   the guild owns nothing else as a body but the City house. `bank.capacity == 0` = not rented.
 - **Gold exchange.** Money is `$`: a Copper Coin is $1, a Gold Coin $100 (same
@@ -1851,7 +1851,7 @@ instance of a given template can be active guild-wide at a time
     a pack) completes the job and banks `tanners_ox`. Once he is dead the trail is
     closed for good (`missions.slay_ox`); a hide that is nowhere in the guild fails
     the job forever (`missions.fail_if_hide_lost`).
-- **The Apothecary** (`apothecary_mission_screen.py`, at the Apothecary node): wants 15×
+- **The Apothecary** (`job_board.ApothecaryBoard`, at the Apothecary node): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
 - **The Bankers' trust mission** (`job_board.TrustBoard` at the City,
   `ledger.py` at Ledger Hold): hands the signer a sealed chest
@@ -1860,7 +1860,7 @@ instance of a given template can be active guild-wide at a time
   carried back. Opening the sealed chest early — mistaking it for an
   ordinary locked one, see Crime below — fails the mission and marks the
   opener a criminal instead of paying out.
-- **The Library** (`library_mission_screen.py`, at the Library):
+- **The Library** (`job_board.LibraryBoard`, at the Library):
   - **A New Translation:** wants 1× `Dictionary of <Language>` (any tongue) to
     expand the archives, pays $250, 15 days.
   - **The Lost Codex:** unlocked after `library_initiate` is completed; asks the
@@ -1873,7 +1873,7 @@ instance of a given template can be active guild-wide at a time
 Two mutually-affordable-but-not-mutually-exclusive paths to guild land, both
 shipped start to finish (buy/claim, use, lose, recover):
 
-- **City Property** (`city_property_screen.py`). Bought from the Bankers at
+- **City Property** (`vault.HouseVault`). Bought from the Bankers at
   the City once `guild.reputation["bankers"] ≥ economy.CITY_PROPERTY_REP_GATE`
   (4) — the Bankers' trust mission (see Missions) is the gate's real
   prerequisite. `economy.CITY_PROPERTY_PRICE` = **$1,440**, one-time,

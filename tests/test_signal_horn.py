@@ -68,7 +68,7 @@ def test_horn_is_tagged_artifact_and_not_sold_at_the_market():
 
 
 def test_drag_into_the_artifact_slot_only_takes_artifacts():
-    from gartok.dragselect import LoadoutMoveMixin as DragSelectMixin
+    from gartok.loadout_move import LoadoutMoveMixin as DragSelectMixin
     u = Unit("player")
     assert DragSelectMixin._fits_slot(u, "artifact", "Signal Horn")
     assert not DragSelectMixin._fits_slot(u, "artifact", "Axe")

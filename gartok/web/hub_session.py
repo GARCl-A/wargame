@@ -6,21 +6,15 @@ recruits, study rooms and stage (`tavern_tab`), the City Prison its cells (`tave
 sanctuary its initiation (`initiation_tab`), the Bank its strongbox (`vault_tab`) beside the Bankers' jobs, the
 City house its stash (`vault_tab` again), its kitchen (`craft_tab`) and its garage (`garage_tab`), the Wilds
 Claim its stages (`claim_tab`) with the same kitchen and garage, Ledger Hold its desk (`ledger_tab`), and a
-band's campfire in the field the same kitchen; a tab the browser does not draw yet says so
-inside the frame, and its screen is played in pygame until its part of step 9 of `docs/plans/web_frontend.md`
-lands.
-
-The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_screen.TabbedHubScreen`).
+band's campfire in the field the same kitchen; a tab the browser does not draw says so inside the frame.
 """
 
 from typing import ClassVar
 
 from .. import artwork, economy, orders, world
-from ..bank_screen import BankScreen
-from ..city_property_screen import CityPropertyScreen
 from ..constants import fmt_money
-from ..hub_screen import TabbedHubScreen
 from ..map_view import node_icon
+from ..vault import BankVault, HouseVault
 from ..work_desk import SHIFTS
 from .claim_tab import ClaimTab
 from .craft_tab import CRAFT_TABS, CraftTab
@@ -58,15 +52,20 @@ LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiati
 WHAT = {"tavern": "the tavern"}
 
 
-# tab -> its tutorial card, as the pygame screen behind it names it
+# tab -> its tutorial card
 TUTORIAL = {"shop": "market", "work": "work", "gather": "gathering", "medic": "medic", "jobs": "missions",
             "stable": "stable", "wagons": "wagon_yard", "initiation": "initiation", "prison": "prison",
             "vault": "bank", "property": "property", "garage": "garage", "claim": "claim", "ledger": "ledger",
             "tavern": "taverna", **dict.fromkeys(CRAFT_TABS, "craft"), **dict.fromkeys(TAVERN_TABS, "taverna")}
 
 
+# which keeper a tab shows when the node has one per function
+TAB_FUNCTION = {"shop": "shop", "forge": "forge", "craft": "forge", "carpenter": "carpenter", "wagons": "carpenter",
+                "jobs": "tanner", "library": "library", "study": "library", "initiation": "shrine"}
+
+
 def _node_tabs(node):
-    """The tabs `TabbedHubScreen.for_node` builds for `node`, in its order."""
+    """The tabs a node's functions open, in order."""
     tabs = []
     if node.has("shop"):
         tabs.append(("shop", "Food & Drink" if node.id == "tavern" else "Farm" if node.id == "farm" else "Shop"))
@@ -84,7 +83,7 @@ def _node_tabs(node):
     if node.has("apothecary"):
         tabs += (("medic", "Medic"), ("jobs", "Jobs"))
     if node.has("library"):
-        tabs.append(("jobs", "Jobs"))       # pygame's STUDY repeats the Library's shop, which the shop tab already is
+        tabs.append(("jobs", "Jobs"))
     if node.has("shrine"):
         tabs += (("jobs", "Jobs"), ("initiation", "Initiation"))
     if node.has("work"):
@@ -96,15 +95,14 @@ def _node_tabs(node):
 
 
 def _house_tabs(guild):
-    """The City house's tabs, as `CityPropertyScreen` offers them: the kitchen once it has an oven, the
-    garage once it is owned."""
+    """The City house's tabs: the kitchen once it has an oven, the garage once it is owned."""
     house = guild.house
     return [("property", "The House"), *((("kitchen", "Kitchen"),) if house.owned and house.oven else ()),
             *((("garage", "Garage"),) if house.owned else ())]
 
 
 def _claim_tabs(guild):
-    """The Wilds Claim's tabs, as `WildsClaimScreen` offers them: the kitchen once the hearth can cook, the
+    """The Wilds Claim's tabs: the kitchen once the hearth can cook, the
     garage once the garrison opens it."""
     return [("claim", "The Claim"), *((("kitchen", "Kitchen"),) if guild.wilds_claim_can_cook else ()),
             *((("garage", "Garage"),) if guild.claim_garage_open else ())]
@@ -189,7 +187,22 @@ class HubSession(Session):
         "ledger": lambda s, b: s.ledger_act(b["key"]),
     }
 
-    keeper = TabbedHubScreen.keeper         # reads `node` and `tab`
+    def keeper(self):
+        """The header's keeper: the vendor behind the tab in view, else the node's first."""
+        node = self.node
+        if node is None:
+            return {"place": ""}
+        vendor = world.vendor(node.id, TAB_FUNCTION.get(self.tab, self.tab))
+        if vendor is None and getattr(node, "vendors", None):
+            vendor = next(iter(node.vendors.values()))
+        if vendor is None:
+            return {"place": node.name}
+        bent = ""
+        if node.alignment:
+            law, moral = node.alignment.split(" and ")
+            bent = law if law == moral else f"{law} {moral}"
+        return {"place": node.name, "name": vendor.name, "caption": f"{vendor.race} {vendor.role}",
+                "bent": bent, "line": vendor.line, "portrait": vendor.portrait}
 
     def __init__(self, map_session, group, order, candidates=None):
         self.map = map_session
@@ -311,8 +324,8 @@ class HubSession(Session):
 
     @property
     def vault(self):
-        screen = CityPropertyScreen if self.order.kind == "property" else BankScreen
-        return self._tab(self.stash_key, "_vault", lambda g, grp, n: VaultTab(g, grp, n, screen))
+        desk = HouseVault if self.order.kind == "property" else BankVault
+        return self._tab(self.stash_key, "_vault", lambda g, grp, n: VaultTab(g, grp, n, desk))
 
     @property
     def garage(self):
@@ -334,7 +347,7 @@ class HubSession(Session):
 
     def repossess(self, choice):
         """The Bankers' notice once too many tax cycles went unpaid: hand the house back and owe them, or
-        squat in it; either way back to the map, as pygame's `RepossessionScreen` does."""
+        squat in it; either way back to the map."""
         g, m = self.guild, self.map
         if not self.repossession_due:
             raise ValueError("the Bankers want nothing of the house now")

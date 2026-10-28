@@ -196,11 +196,8 @@ def test_quest_panel_draws_tags_pills():
     quest_panel.quest_list(surf, UI_F, area, quests)
 
 
-def test_completed_mission_shows_completed_label():
-    import pygame
-
-    from gartok.tanner_screen import TannerScreen
-    from gartok.ui.tokens import fonts as ui_fonts
+def test_the_tanner_board_moves_down_its_chain_to_completed():
+    from gartok.job_board import TannerBoard
     guild, hunters, _home = _guild_with_two_groups()
     signer = hunters.members[0]
     m = missions.accept(guild, signer, missions.TANNER_HIDES)
@@ -210,64 +207,20 @@ def test_completed_mission_shows_completed_label():
     assert m.state == "done"
 
     hunters.node = "tanner"
-    screen = TannerScreen(ui_fonts(), guild, hunters, None)
+    screen = TannerBoard(guild, hunters)
     assert screen._template is missions.TANNER_BIWOLF       # the chain moves on
     assert screen._offered
-    surf = pygame.Surface((800, 600))
-    screen.draw(surf)
 
     biwolf = missions.accept(guild, signer, missions.TANNER_BIWOLF)
     signer.give_to_pack(items.BIWOLF_LEATHER_ITEM)
     missions.turn_in(guild, biwolf)
-    screen = TannerScreen(ui_fonts(), guild, hunters, None)
+    screen = TannerBoard(guild, hunters)
     assert screen._template is missions.TANNER_OX            # and on to the ox
     assert screen._offered
 
     ox = missions.accept(guild, signer, missions.TANNER_OX)
     signer.give_to_pack(items.THUNDERHIDE_ITEM)
     missions.turn_in(guild, ox)
-    screen = TannerScreen(ui_fonts(), guild, hunters, None)
+    screen = TannerBoard(guild, hunters)
     assert screen._completed
     assert not screen._offered
-    screen.draw(surf)
-
-
-def test_mission_offer_screen_containment_and_notice():
-    import pygame
-
-    from gartok.library_mission_screen import LibraryMissionScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    guild, scholars, _home = _guild_with_two_groups()
-    scholars.node = "library"
-    done_called = False
-
-    def on_done():
-        nonlocal done_called
-        done_called = True
-
-    screen = LibraryMissionScreen(ui_fonts(), guild, scholars, on_done)
-    surf = pygame.Surface((1280, 720))
-
-    # 1. Draw fresh offer and verify all button bounds
-    screen.draw(surf)
-    accept_btn = next((r for k, r in screen.buttons if k[0] == "accept"), None)
-    leave_btn = next((r for k, r in screen.buttons if k == "done"), None)
-    assert accept_btn is not None
-    assert leave_btn is not None
-    assert accept_btn.bottom < leave_btn.top
-
-    # 2. Set notice (reproducing user's screenshot where notice pushed footer out)
-    screen.notice = "paid out 250 copper, split across the group. · DEED · Library Initiate +1 reputation with The Library"
-    screen.draw(surf)
-
-    leave_btn_after = next((r for k, r in screen.buttons if k == "done"), None)
-    assert leave_btn_after is not None
-    # All buttons must be well within the screen surface and leave button must have clearance from bottom
-    for _k, r in screen.buttons:
-        assert r.top >= 0 and r.bottom <= 720, f"Button {_k} rect {r} out of bounds"
-
-    # 3. Test handle_escape
-    assert screen.handle_escape() is True
-    assert done_called is True
-

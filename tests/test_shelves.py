@@ -84,12 +84,12 @@ def test_the_guild_makes_each_shop_with_its_own_shelf():
 
 def test_an_item_sold_to_a_shop_off_its_shelf_is_listed_and_resold():
     from gartok import world
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
     seller = Unit("player")
     guild = Guild([seller])
     seller.give_to_pack("Iron Ore")
     node = world.node("lumber_yard")
-    screen = MarketScreen(None, guild, [seller], node, lambda: None)
+    screen = Counter(guild, [seller], node)
     assert "Iron Ore" not in [n for _, _, names in screen.get_categories() for n in names]
     screen.selected = [(seller, i) for i, (n, _q) in enumerate(seller._base_inventory) if n == "Iron Ore"]
     screen._sell()
@@ -101,7 +101,7 @@ def test_an_item_sold_to_a_shop_off_its_shelf_is_listed_and_resold():
 
 def test_a_stray_stays_on_the_shelf_and_the_library_lists_it():
     from gartok import world
-    from gartok.library_screen import LibraryScreen
+    from gartok.trade import LibraryCounter
     seller = Unit("player")
     guild = Guild([seller])
     shop = guild.shop("library")
@@ -109,5 +109,5 @@ def test_a_stray_stays_on_the_shelf_and_the_library_lists_it():
     for _ in range(5):
         shop.refill()
     assert shop.stock["Dagger"] == 2
-    screen = LibraryScreen(None, guild, [seller], world.node("library"), lambda: None)
+    screen = LibraryCounter(guild, [seller], world.node("library"))
     assert ("RESALE", "resale", ["Dagger"]) in screen.get_categories()

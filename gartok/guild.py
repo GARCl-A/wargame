@@ -28,9 +28,9 @@ in the game renders in it. A guild from before this existed falls back to
 
 What the guild owns as a body lives in `holdings.py`: the **bank chest**
 (`bank`, a `Stash` rented from the Bankers in the City -- capacity 0 means no
-chest yet; `bank_screen` rents it and moves gear in and out) and the **City
+chest yet; `vault.BankVault` rents it and moves gear in and out) and the **City
 property** (`house`, a `CityProperty` bought from the Bankers; see
-[[gartok-property-two-paths]] and `city_property_screen.py`), taxed on a cycle
+[[gartok-property-two-paths]] and `vault.HouseVault`), taxed on a cycle
 (`_city_property_upkeep`, called from `_daily_upkeep` below). Missing enough
 cycles (`house.missed_payments`) offers a choice next visit: return it
 (`repossess_city_property`, banking `bankers_debt`) or squat
@@ -138,7 +138,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.items_sold_kinds = set(items_sold_kinds or ())  # distinct item names ever sold
         self.bestiary = bestiary if bestiary is not None else intel.Bestiary()   # what it has learned of foes, see intel.py
         self.licences = set(licences or ())   # node ids whose gathering licence the guild bought, see gather.py
-        self.autosell = set(autosell or ())   # item names the Market's SELL MARKED button takes, see market_screen.py
+        self.autosell = set(autosell or ())   # item names the shop's SELL MARKED takes, see trade.Counter
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
         self.taverna_week = taverna_week      # week index the pool was rolled for, or None
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)

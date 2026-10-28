@@ -1,6 +1,6 @@
 """Shared drag bookkeeping for the pack screens.
 
-`group_screen.GroupScreen` and `market_screen.MarketScreen` both show a per-member
+`group_screen.GroupScreen` shows a per-member
 loadout column (header, load bar, HANDS/OFF/(TONGUE), BODY, PACK) via
 `gartok.ui.loadout_panel.column()` now, but still share the padlock hit-testing
 (exempt an item from `unit.distribute_load`), the item-tag lookup `column()`'s
@@ -18,17 +18,13 @@ and `self._pack_areas = []` at the top of `draw()` alongside their other
 per-frame lists, append to `self._pack_areas` as they draw each column (see
 `GroupScreen._draw_bags`), and route a click through `self._lock_at(px)`
 before treating it as an item pick (see `GroupScreen._source_at`/`_drop`).
-
-`stash_screen.py` (the bank and the house) doesn't mix this in -- it keeps
-its own smaller `_item_tag` since it doesn't need the rest of this contract
-(no lock toggling, no per-column wheel scroll on a shopping visit).
 """
 
 import pygame
 
 from . import items
 
-LOCK_W = 18                          # padlock hit-box width, left of the item name -- market_screen.py still draws its own row by hand and reuses this
+LOCK_W = 18                          # padlock hit-box width, left of the item name
 
 
 class PackColumnMixin:

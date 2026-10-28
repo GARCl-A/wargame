@@ -1,25 +1,12 @@
 """The Bankers' strongbox: renting it, moving gear in and out under the cap,
 and the pooled/proportional purse the visit settles back out on the way out."""
 
-import os
 import random
 
-from gartok.bank_screen import BankScreen
 from gartok.guild import Guild
 from gartok.holdings import Stash
+from gartok.vault import BankVault
 from tests.helpers import Unit, economy, packed
-
-
-def _screen(guild, party):
-    """A BankScreen with just the state the move logic needs (no draw)."""
-    s = BankScreen.__new__(BankScreen)
-    s.guild = guild
-    s.party = party
-    s.selected = []
-    s._sel_qty = {}
-    s.notice = None
-    s.on_done = lambda: None
-    return s
 
 
 def test_renting_debits_the_pooled_purse_and_flips_the_capacity_on():
@@ -28,7 +15,7 @@ def test_renting_debits_the_pooled_purse_and_flips_the_capacity_on():
     for m in party:
         m.money = 60
     guild = Guild(list(party))
-    s = BankScreen(None, guild, party, on_done=lambda: None)
+    s = BankVault(guild, party)
 
     s._run_service("rent")
     assert guild.bank.open and guild.bank.capacity == economy.BANK_CHEST_CAPACITY
@@ -41,7 +28,7 @@ def test_a_payment_comes_out_in_proportion_to_what_each_member_brought():
     rich, broke = Unit("player"), Unit("player")
     rich.money, broke.money = 90, 30
     guild = Guild([rich, broke])
-    s = BankScreen(None, guild, [rich, broke], on_done=lambda: None)
+    s = BankVault(guild, [rich, broke])
 
     s.purse -= 40
     assert rich.money + broke.money == 80
@@ -53,7 +40,7 @@ def test_deposit_is_capped_by_the_chest():
     p = Unit("player")
     p._base_inventory = packed(["Chainmail", "Rope"])        # 10.0 kg + 2.0 kg
     guild = Guild([p], bank=Stash(10))
-    s = _screen(guild, [p])
+    s = BankVault(guild, [p])
 
     s._deposit([(p, 0)])              # Chainmail -- exactly fills the chest
     assert guild.bank.items == [("Chainmail", 1)] and p._base_inventory == packed(["Rope"])
@@ -67,7 +54,7 @@ def test_withdraw_is_capped_by_the_members_load():
     p = Unit("player")
     p._base_inventory = []
     guild = Guild([p], bank=Stash(30, packed(["Rope"])))
-    s = _screen(guild, [p])
+    s = BankVault(guild, [p])
 
     p.carry_max = 0.5                                 # can't take on even a rope
     s.selected = [("bank", 0)]
@@ -81,14 +68,12 @@ def test_withdraw_is_capped_by_the_members_load():
 
 
 def test_equip_straight_out_of_the_chest():
-    """The equip slots are live drop zones on this screen too now -- taking a
-    weapon out of the chest can land it straight in a member's hand instead
-    of always going through the pack first."""
+    """Taking a weapon out of the chest can land it straight in a member's hand."""
     random.seed(2)
     p = Unit("player")
     p._base_inventory = []
     guild = Guild([p], bank=Stash(30, packed(["Dagger"])))
-    s = _screen(guild, [p])
+    s = BankVault(guild, [p])
 
     s.selected = [("bank", 0)]
     s._give_many(p, "hand")
@@ -100,7 +85,7 @@ def test_stashing_an_equipped_weapon_unequips_it():
     p = Unit("player")
     p.give_to_hand("Dagger")
     guild = Guild([p], bank=Stash(30))
-    s = _screen(guild, [p])
+    s = BankVault(guild, [p])
 
     s._deposit([(p, "hand")])
     assert p.equipped_weapon is None and guild.bank.items == [("Dagger", 1)]
@@ -111,7 +96,7 @@ def test_multi_select_stashes_several_stacks_in_one_move():
     p = Unit("player")
     p._base_inventory = packed(["Rope", "Rope", "Torch"])     # merges to [("Rope", 2), ("Torch", 1)]
     guild = Guild([p], bank=Stash(30))
-    s = _screen(guild, [p])
+    s = BankVault(guild, [p])
 
     picks = [(p, i) for i in range(len(p._base_inventory))]
     s._deposit(picks)
@@ -127,7 +112,7 @@ def test_multi_select_deposit_is_all_or_nothing():
     p = Unit("player")
     p._base_inventory = packed(["Chainmail", "Rope"])        # 10.0 kg + 2.0 kg -- 12 kg total
     guild = Guild([p], bank=Stash(10))
-    s = _screen(guild, [p])
+    s = BankVault(guild, [p])
 
     picks = [(p, 0), (p, 1)]
     s._deposit(picks)
@@ -144,7 +129,7 @@ def test_partial_qty_deposit_via_the_chest_stepper():
     p = Unit("player")
     p._base_inventory = []
     guild = Guild([p], bank=Stash(30, packed(["Rope"] * 3)))
-    s = _screen(guild, [p])
+    s = BankVault(guild, [p])
 
     s.selected = [("bank", 0)]
     s._sel_qty[("bank", 0)] = 2
@@ -163,7 +148,7 @@ def test_locked_item_stays_selectable_but_distribute_load_leaves_it():
     b._base_inventory = []
     a.toggle_lock("Rope")
     guild = Guild([a, b])
-    s = _screen(guild, [a, b])
+    s = BankVault(guild, [a, b])
 
     unit_module.distribute_load([a, b])
     assert a._base_inventory == packed(["Rope"]) and b._base_inventory == []   # stayed put
@@ -171,32 +156,3 @@ def test_locked_item_stays_selectable_but_distribute_load_leaves_it():
     s.selected = [(a, 0)]
     s._give_many(b, "pack")                           # still movable by hand
     assert a._base_inventory == [] and b._base_inventory == packed(["Rope"])
-
-
-def test_clicking_rent_then_a_pack_item_onto_the_chest_stashes_it():
-    """End to end through draw + click: the RENT service and the chest as a
-    drop target, not just the move helpers."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    random.seed(5)
-    p = Unit("player")
-    p._base_inventory = packed(["Rope"])
-    p.money = 200
-    guild = Guild([p])
-    s = BankScreen(None, guild, [p], on_done=lambda: None)
-    surf = pygame.Surface((1280, 800))
-    s.mouse = (0, 0)
-
-    s.draw(surf)
-    rent_r = next(r for r, key in s._service_hits if key == "rent")
-    s._drop(rent_r.center, False, None)
-    assert guild.bank.open
-
-    s.draw(surf)                                      # chest is now the stash view
-    s.selected = [(p, 0)]
-    chest_zone = next(r for r, owner, zone in s.zones if zone == "bank")
-    s._drop(chest_zone.center, True, (p, 0))
-    assert guild.bank.items == [("Rope", 1)]

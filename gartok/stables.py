@@ -3,8 +3,7 @@ decides what each one does, and the wagons.
 
 Nothing is stored here -- the wagons and the animals live on the `Group` and travel with it (see
 `wagon.py`, `animals.py`). The party pays out of its pooled coin, richest first; selling back returns
-`economy.SELL_FACTOR` of the price to the group's leader. `StablesScreen` / `WagonYardScreen` are the
-pygame windows over them and `web/stable_tab.py` the browser's.
+`economy.SELL_FACTOR` of the price to the group's leader. `web/stable_tab.py` draws them.
 """
 
 from . import animals, economy, items, recorder, wagon

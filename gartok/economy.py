@@ -260,7 +260,7 @@ def _stock_category(name):
 
 def market_categories(node_id=None, extra=()):
     """`[(label, key, [names])]` for the market tabs, in display order -- the
-    active tab's list is what `market_screen` lays out. Each shop lists its own shelf, and a
+    active tab's list is what the shop tab lays out. Each shop lists its own shelf, and a
     tab only shows if it has something on it; `extra` are the strays the player sold it (`Shop.strays`), listed after the shelf."""
     groups = {key: [] for _lbl, key in _MARKET_TABS}
     shelf = list(targets_of(node_id))

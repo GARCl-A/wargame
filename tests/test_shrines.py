@@ -1,13 +1,10 @@
 """The three hidden sanctuaries: revealed by the Library's Codex turn-in, each takes
 the Codex for its school, and only one ever can."""
 
-import pygame
 
-from gartok import data, factions, missions, world
+from gartok import data, factions, job_board, missions, world
 from gartok.guild import Guild
-from gartok.hub_screen import TabbedHubScreen
-from gartok.shrine_screen import ShrineMissionScreen
-from gartok.ui.tokens import fonts as ui_fonts
+from gartok.web.hub_session import tabs_for
 from tests.helpers import Unit
 
 SHRINES = ("blood_sanctuary", "nature_grove", "faith_cathedral")
@@ -71,51 +68,28 @@ def test_a_deed_for_another_school_cannot_fire_after_the_first():
     assert factions.settle(guild, event) == []
 
 
-def test_the_shrine_screen_lists_its_job_and_hands_the_codex_over():
+def test_the_shrine_board_lists_its_job_and_hands_the_codex_over():
     guild, u = _library_done()
     group = guild.groups[0]
     group.node = "blood_sanctuary"
-    screen = ShrineMissionScreen(ui_fonts(), guild, group, lambda: None)
-    surf = pygame.Surface((1280, 720))
-    screen.draw(surf)
-    assert screen.title_text == "BLOOD SANCTUARY"
-    accept = next(r for k, r in screen.buttons if k == ("accept", "blood_codex"))
-    screen._click(accept.center)
-    screen.draw(surf)
-    turn_in = next(r for k, r in screen.buttons if k == ("turn_in", "blood_codex"))
-    screen._click(turn_in.center)
+    board = job_board.ShrineBoard(guild, group)
+    codex = missions.TEMPLATES["blood_codex"]
+    assert codex in board.get_templates()
+    assert board.accept(codex) and board.turn_in(codex)
     assert "blood_codex" in guild.deeds_done
-    assert "The Codex Delivered" in screen.notice
+    assert "The Codex Delivered" in board.notice
 
 
 def test_the_hub_for_a_shrine_node_opens_on_its_job_board_beside_the_initiation():
-    guild, _u = _library_done()
-    group = guild.groups[0]
-    group.node = "faith_cathedral"
-    hub = TabbedHubScreen.for_node(ui_fonts(), guild, group, world.node("faith_cathedral"), lambda: None)
-    assert [k for k, _label, _s in hub.tabs] == ["jobs", "initiation"]
-    assert isinstance(hub.active_screen(), ShrineMissionScreen)
-    assert hub.active_screen().vendor_card["name"] == "Brother Quillon"
+    assert [k for k, _label in tabs_for("shrine", world.node("faith_cathedral"))] == ["jobs", "initiation"]
+    assert world.vendor("faith_cathedral", "shrine").name == "Brother Quillon"
 
 
-def test_a_board_with_two_jobs_shows_both_and_scrolls_when_too_tall():
+def test_the_library_board_shows_both_its_jobs():
     u = Unit("player")
     guild = Guild([u], node="library")
     guild.deeds_done.append("library_initiate")
     group = guild.groups[0]
     group.node = "library"
-    from gartok.library_mission_screen import LibraryMissionScreen
-    screen = LibraryMissionScreen(ui_fonts(), guild, group, lambda: None)
-    assert len(screen.get_templates()) == 2
-    surf = pygame.Surface((1280, 720))
-    screen.draw(surf)
-    keys = {k for k, _r in screen.buttons if k != "done"}
-    assert keys == {("accept", "library_dictionary"), ("accept", "library_ancient_codex")}
-    small = pygame.Surface((1000, 480))
-    screen.draw(small)
-    assert screen._max_scroll > 0
-    screen.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, x=0, y=-3))
-    assert screen.scroll > 0
-    screen.draw(small)
-    assert any(k == "done" for k, _r in screen.buttons)
-
+    board = job_board.LibraryBoard(guild, group)
+    assert {t.id for t in board.get_templates()} == {"library_dictionary", "library_ancient_codex"}

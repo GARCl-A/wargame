@@ -391,10 +391,10 @@ def test_the_clutch_is_offered_once_the_codex_is_recovered_and_pays_a_scroll():
 
 
 def test_the_keepers_pay_more_for_an_egg_than_the_market():
-    from gartok.shrine_screen import ShrineMissionScreen
+    from gartok.job_board import ShrineBoard
     guild, g = _guild(node="nature_grove")
     g.members[0].give_to_pack(lair.EGG)
-    scr = ShrineMissionScreen(None, guild, g, on_done=lambda: None)
+    scr = ShrineBoard(guild, g)
     label, enabled = scr.footer_action()
     assert enabled and str(lair.SHRINE_EGG_PRICE) in label
     before = g.members[0].money
@@ -405,22 +405,12 @@ def test_the_keepers_pay_more_for_an_egg_than_the_market():
 
 
 def test_the_cult_will_not_buy_the_egg_it_asked_for():
-    from gartok.shrine_screen import ShrineMissionScreen
+    from gartok.job_board import ShrineBoard
     guild, g = _guild(node="blood_sanctuary")
     _take_clutch(guild, g)
     g.members[0].give_to_pack(lair.EGG)
-    scr = ShrineMissionScreen(None, guild, g, on_done=lambda: None)
+    scr = ShrineBoard(guild, g)
     assert scr.footer_action()[1] is False
-
-
-def test_the_shrine_board_draws_with_the_egg_sale():
-    from gartok.shrine_screen import ShrineMissionScreen
-    guild, g = _guild(node="faith_cathedral")
-    g.members[0].give_to_pack(lair.EGG)
-    scr = ShrineMissionScreen(None, guild, g, on_done=lambda: None)
-    pygame.font.init()
-    scr.draw(pygame.Surface((1280, 720)))
-    assert any(k == "footer_action" for k, _ in scr.buttons)
 
 
 def test_the_egg_is_worth_a_lot_and_weighs_on_its_carrier():

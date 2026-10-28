@@ -5,7 +5,6 @@ import pytest
 from gartok import node_functions, orders, persist, world
 from gartok.guild import Guild
 from gartok.shop import Shop
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 
 
@@ -31,20 +30,14 @@ def test_a_node_with_independent_functions_gets_both_buttons():
     assert [f.id for f in node_functions.offered(node)] == ["prison", "hunt"]
 
 
-def test_tabbed_hub_screen_for_node():
-    from gartok.hub_screen import TabbedHubScreen
-    g = Guild([Unit("player")], node="tavern")
-    hub = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("tavern"), lambda: None)
-    assert isinstance(hub, TabbedHubScreen)
-    assert [k for k, _, _ in hub.tabs] == ["shop", "recruits", "rooms", "perform"]
+def test_a_nodes_hub_lists_a_tab_per_function():
+    from gartok.web.hub_session import tabs_for
 
-    hub_farm = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("farm"), lambda: None)
-    assert isinstance(hub_farm, TabbedHubScreen)
-    assert [k for k, _, _ in hub_farm.tabs] == ["shop", "stable"]
-
-    hub_yard = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("lumber_yard"), lambda: None)
-    assert isinstance(hub_yard, TabbedHubScreen)
-    assert [k for k, _, _ in hub_yard.tabs] == ["shop", "work", "gather"]
+    def keys(node_id):
+        return [k for k, _ in tabs_for("market", world.node(node_id))]
+    assert keys("tavern") == ["shop", "recruits", "rooms", "perform"]
+    assert keys("farm") == ["shop", "stable"]
+    assert keys("lumber_yard") == ["shop", "work", "gather"]
 
 
 def test_every_shop_node_has_its_till_refilled_each_day():

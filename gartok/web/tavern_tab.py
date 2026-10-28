@@ -1,20 +1,16 @@
 """The Tavern's three tabs in the browser: RECRUIT (the strangers drinking here on leather, the picked
 one's dossier and who makes the pitch on paper), STUDY (the rooms to rent and each member's study
 target) and PERFORM (the stage: the show's length and who plays); the City Prison's cells are RECRUIT
-with a bail paid before the pitch (`PrisonScreen`).
+with a bail paid before the pitch (`tavern.Prison`).
 
-The rules are pygame's own `TavernaScreen`, held headless as `jobs_tab` holds a board: the pool, the
-pitch, the bars, the study targets and the show stay one source until step 10 of
-`docs/plans/web_frontend.md` moves them here. The verb that runs the clock (`perform`) lives on
-`HubSession`, which holds the map.
+The rules are `tavern.Tavern`'s: the pool, the pitch, the bars, the study targets and the show. The
+verb that runs the clock (`perform`) lives on `HubSession`, which holds the map.
 """
 
 from .. import economy, item_icon, magic, recruit
 from ..archetypes import unit_archetypes
 from ..constants import fmt_money
-from ..prison_screen import PrisonScreen
-from ..taverna_draw import _ARCHETYPE_TONE
-from ..taverna_screen import TavernaScreen
+from ..tavern import ARCHETYPE_TONE, Prison, Tavern
 from .shop_tab import _portrait
 
 TABS = ("recruits", "rooms", "perform")
@@ -22,7 +18,7 @@ TABS = ("recruits", "rooms", "perform")
 
 def _chips(u, limit=None):
     tags = unit_archetypes(u)
-    return [{"label": label, "tone": _ARCHETYPE_TONE.get(style, "muted"), "tip": desc}
+    return [{"label": label, "tone": ARCHETYPE_TONE.get(style, "muted"), "tip": desc}
             for label, style, desc in (tags[:limit] if limit else tags)]
 
 
@@ -32,11 +28,7 @@ def _kind(u):
 
 class TavernTab:
     def __init__(self, guild, group, node, prison=False, candidates=None):
-        if prison:
-            self.s = PrisonScreen(None, guild, list(group.members), node, lambda: None, group=group)
-        else:
-            self.s = TavernaScreen(None, guild, list(group.members), node, lambda: None, group=group, hide_tabs=True,
-                                   candidates=candidates)
+        self.s = Prison(guild, group) if prison else Tavern(guild, group, candidates)
         self.prison = prison
         self.guild, self.group, self.node = guild, group, node
         self.report = []                    # what the last show said
@@ -138,7 +130,7 @@ class TavernTab:
     def _recruits(self):
         s = self.s
         out = {"strangers": [self._stranger(i, c) for i, c in enumerate(s.candidates)],
-               "empty": s.EMPTY_LIST.replace("\n", " "), "signed": self._signed(), "dossier": None,
+               "empty": s.EMPTY_LIST, "signed": self._signed(), "dossier": None,
                "prison": self.prison}
         if s.sel is not None and s.sel < len(s.candidates):
             c = s.candidates[s.sel]

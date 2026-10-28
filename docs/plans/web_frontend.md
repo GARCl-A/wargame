@@ -1127,11 +1127,8 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
   auto-win of an ambush or a hunt (`autowin.py` is still there). The old screens are in git before this cut.
 - **Held headless by the web, deleted as their family's rules move out (step 2):** `battle_screen` +
   `battle_draw`; `dialogue_screen`; `draft_screen`; `guild_screen`, `group_screen` + `group_draw`;
-  `loot_screen`, `memorial_screen`; `taverna_screen` + `taverna_draw`, `prison_screen`; `bank_screen`,
-  `city_property_screen`, `stash_screen`; `start_screen` (three constants); `hub_screen`, which pulls in
-  `market_screen` + `market_draw`, `crafting_screen`, `gather_screen`, `work_screen`, `medic_screen`,
-  `stables_screen`, `initiation_screen`, `library_screen`, the four mission screens and
-  `ui/mission_offer_screen`.
+  `loot_screen`, `memorial_screen`; `start_screen` (three constants). The hubs' screens are gone (the
+  hubs III below).
 - **Kept until step 3:** `editor_app`, `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`,
   `combat_lab_screen`, and `battle_screen` for the lab's fights.
 
@@ -1212,9 +1209,32 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
        recipes and refresh; the Tanner's board signs and pays; every giver has its board; the garage parks,
        takes out, refuses a bay; the Claim scouts, banks the Lumber, garrisons and stands down; the pygame
        screens are the same desks).
-     - **Next:** the hubs III (`vault_tab` on `BankScreen` / `CityPropertyScreen`, `tavern_tab` on
-       `TavernaScreen` / `PrisonScreen`, `hub_session` on `TabbedHubScreen`, `BankScreen`,
-       `CityPropertyScreen`), then the draft, the report.
+   - **The hubs III, the stashes and the Tavern — done (2026-10-28).** `vault.py` (`Vault`, `BankVault`,
+     `HouseVault`: the moves between a stash and the packs under the weight cap and the load limit, the
+     services, the gold exchange, the debt) and `tavern.py` (`Tavern`, `Prison`: the pool, the pitch and its
+     bail, the bars, the study rooms, the stage; `ARCHETYPE_TONE`, `BAIL_BONUS`) hold what `StashScreen`,
+     `BankScreen`, `CityPropertyScreen`, `TavernaScreen` and `PrisonScreen` held for the rules;
+     `loadout_move.LoadoutMoveMixin` left `dragselect` (which imports pygame), and `HubSession` has its own
+     `keeper` (with `TAB_FUNCTION`). With nothing in the web left on `hub_screen`, the whole hub family went
+     in the same commit: `hub_screen`, `market_screen` + `market_draw`, `crafting_screen`, `gather_screen`,
+     `work_screen`, `medic_screen`, `stables_screen`, `initiation_screen`, `library_screen`, the mission
+     screens (`tanner_screen`, `apothecary_mission_screen`, `library_mission_screen`, `shrine_screen`,
+     `ui/mission_offer_screen`), `taverna_screen` + `taverna_draw`, `prison_screen`, `bank_screen`,
+     `city_property_screen` (its `RepossessionScreen` too: the web's hub asks the question), `stash_screen`,
+     and the `ui/` pieces only they drew (`hub_frame`, `hub_body`, `hub_party`, `shop_shelf`,
+     `market_panel`, `medic_panel`, `initiation_panel`). Dropped with them: pygame's weapon size toggle on
+     the shelf (the web lists a Large weapon as its own row of the shop).
+     - Tests: the rule tests that went through a screen now press the desk (`test_bank`,
+       `test_city_property`, `test_cooking`, `test_money`, `test_recruitment`, `test_hubs`, `test_medic`,
+       `test_solo`, `test_rite`, `test_shrines`, `test_lair`, `test_missions`, `test_gather`,
+       `test_crafting`, `test_wagon`, `test_wildfire`, `test_economy`, `test_shelves`, `test_autosell`,
+       `test_cart_pooled`, `test_column_scroll`, `test_screens`); `test_stables` presses the web's
+       `StableTab` / `WagonTab`; `test_item_menu` became `test_party_purse`, `test_hub_shop`
+       `test_keepers`, `test_shelf_layout` `test_quantity_prompt`. New: `test_web_hub` opens every hub a
+       node offers on every one of its tabs (the old "every node builds a tabbed hub"). About 40 tests that
+       only drew or clicked a pygame screen went.
+     - **Next:** the draft (`draft_session` on `DraftScreen`, `ui.sheet_card.unit_to_ch`,
+       `ui.banner.BANNER_COLORS`), then the report, the guild.
    - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
      these into the families above where they share code, the rest after them:
      - **The character sheet as a modal, opened from anywhere.** pygame opened a member's sheet from the band

@@ -1,15 +1,12 @@
 """Solo tasks: a member crafts apart from the group, on a `solo` order the clock settles."""
 
-import pygame
 import pytest
 
 import gartok.unit_loadout as _unit_mod
-from gartok import campaign, persist, solo
+from gartok import campaign, persist, solo, workbench
 from gartok.clock import Clock
-from gartok.crafting_screen import CraftingScreen
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.ui.tokens import fonts
 from tests.helpers import Unit
 
 RECIPE = "Bear Trap"
@@ -116,24 +113,17 @@ def test_a_craft_order_survives_a_save():
 def test_the_forge_sends_a_crafter_off_alone():
     u = _crafter()
     guild, g = _setup(u)
-    done = []
-    scr = CraftingScreen(fonts(), guild, g, lambda: done.append(1))
-    surf = pygame.Surface((1280, 900))
-    scr.draw(surf)
-    keys = dict(scr.buttons)
-    assert f"alone:8:{RECIPE}" in keys
-    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=keys[f"alone:8:{RECIPE}"].center))
-    assert done and g.order.task == "craft" and g.order.hours == 8
+    bench = workbench.Bench(guild, g)
+    assert bench.alone_blocker(u, RECIPE) is None
+    ok, _ = bench._alone(RECIPE, 8)
+    assert ok and g.order.task == "craft" and g.order.hours == 8
 
 
 def test_the_forge_does_not_offer_alone_without_a_free_slot():
     u, mate = _crafter(), Unit("player")
     guild, g = _setup(u, mate)
     guild.groups += [Group([Unit("player")], node="city") for _ in range(guild.group_slots)]
-    scr = CraftingScreen(fonts(), guild, g, lambda: None)
-    scr.draw(pygame.Surface((1280, 900)))
-    keys = dict(scr.buttons)
-    assert f"work:8:{RECIPE}" in keys and f"alone:8:{RECIPE}" not in keys
+    assert workbench.Bench(guild, g).alone_blocker(u, RECIPE) == "no free group slot"
 
 
 def test_a_waiting_group_heals_everyone_but_the_worker(monkeypatch):

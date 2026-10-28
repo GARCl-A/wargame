@@ -39,7 +39,7 @@ function drawFrame() {
   $("place").textContent = H.place;
   $("sub").innerHTML = `<b>${esc(H.band)}</b> · ${esc(H.sub)}`;
   $("tabs").innerHTML = H.tabs.map(t =>
-    `<span class="${t.key === H.tab ? "on" : ""} ${t.live ? "" : "away"}" data-tab="${t.key}" title="${t.live ? "" : "played in pygame for now"}">${esc(t.label)}</span>`).join("");
+    `<span class="${t.key === H.tab ? "on" : ""} ${t.live ? "" : "away"}" data-tab="${t.key}" title="${t.live ? "" : "not in the browser yet"}">${esc(t.label)}</span>`).join("");
   const k = H.keeper;
   $("kmed").innerHTML = k.portrait ? `<img src="${k.portrait}" draggable="false">` : `<div class="ico">${ico(H.icon, "ico")}</div>`;
   $("kname").textContent = k.name || H.place;

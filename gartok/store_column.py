@@ -1,7 +1,7 @@
 """The loadout column of a group's own storage -- a wagon or an animal's back.
 
-Shared by `group_screen` and `market_screen`: both show a wagon or an animal
-beside the members as one more pack, in `ui.loadout_panel.column`'s dict shape.
+`group_screen` shows a wagon or an animal beside the members as one more pack, in
+`ui.loadout_panel.column`'s dict shape; the web's shop and vault tabs read `store_dict` too.
 """
 
 from . import items

@@ -230,32 +230,6 @@ def test_the_licences_and_a_gather_order_survive_a_save():
     assert persist.PAYLOAD_DEFAULTS["licences"] == []
 
 
-def test_gather_screen_interaction():
-    import pygame
-
-    from gartok import world
-    from gartok.gather_screen import GatherScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    guild, group = _crew("lumber_yard", licensed=False, money=500)
-    node = world.node("lumber_yard")
-    done = []
-    gs = GatherScreen(ui_fonts(), guild, group, node, on_done=lambda: done.append(True))
-    surf = pygame.Surface((1280, 720))
-    gs.draw(surf)
-
-    assert gs.tutorial_key() == "gathering"
-    assert any(k == "buy_licence" for k, _ in gs.buttons)
-    gs._on_button("buy_licence")
-    assert guild.has_licence("lumber_yard")
-
-    gs.draw(surf)
-    assert any(k == "gather:8" for k, _ in gs.buttons)
-    gs._on_button("gather:8")
-    assert group.order.kind == "work" and group.order.gather and group.order.hours == 8
-    assert done == [True]
-
-
 def test_ambush_chance_is_the_odds_of_at_least_one_hours_roll():
     per_hour = gather.RISK_PER_HOUR["mine"]
     assert gather.ambush_chance("mine", 16) == pytest.approx(1 - (1 - per_hour) ** 16)
@@ -295,16 +269,12 @@ def test_a_cautious_crew_weighs_lower_ambush_odds():
     assert cautious < normal
 
 
-def test_the_shift_buttons_show_each_shift_against_the_wage():
-    import pygame
-
+def test_the_licence_says_when_it_pays_back():
     from gartok import world
-    from gartok.gather_screen import GatherScreen
-    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.work_desk import GatherDesk
 
     guild, group = _crew("mine", 3)
-    gs = GatherScreen(ui_fonts(), guild, group, world.node("mine"), on_done=lambda: None)
-    gs.draw(pygame.Surface((1280, 720)))
+    gs = GatherDesk(guild, group, world.node("mine"))
     assert "pays back" not in gs._payback_line(gather.licence_price("mine"))
     guild.licences.clear()
     assert "licence pays back in ~" in gs._payback_line(gather.licence_price("mine"))

@@ -47,8 +47,9 @@ import pygame
 
 from . import captives, chest, data, items, magic, missions
 from .animals import Animal
-from .dragselect import DragSelectMixin, LoadoutMoveMixin
+from .dragselect import DragSelectMixin
 from .group_draw import GroupDrawMixin
+from .loadout_move import LoadoutMoveMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin

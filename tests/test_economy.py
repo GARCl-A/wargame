@@ -41,12 +41,12 @@ def test_charisma_and_alignment_bend_the_price_but_resale_stays_a_loss():
 
 def test_market_deal_picks_the_best_speaker():
     from gartok import world
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
     random.seed(1)
     loud = Unit("player"); loud.languages = ["Ankarin"]; loud.charisma = 17
     loud.alignment = "Lawful and Neutral"; loud._derive_combat()
     mute = Unit("player"); mute.languages = ["Orcish"]; mute.charisma = 20
-    ms = MarketScreen.__new__(MarketScreen)
+    ms = Counter.__new__(Counter)
     ms.shoppers = [loud, mute]
     ms.node = world.node("market")
     ms.deal = economy.market_deal(ms.shoppers, ms.node.language, ms.node.alignment)
@@ -126,12 +126,12 @@ def test_a_used_quiver_sells_for_the_share_of_its_charges_left():
 def test_selling_a_used_quiver_at_the_market_pays_pro_rata():
     from gartok import items
     from gartok.guild import Guild
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
     u = Unit("player")
     u._base_inventory = []
     u.give_to_pack("Quiver")
     u.quiver_charges = 5
-    s = MarketScreen.__new__(MarketScreen)
+    s = Counter.__new__(Counter)
     s.guild, s.shoppers, s.deal, s.stores = Guild([u]), [u], [], []
     s.purse = 0
     s.selected, s._sel_qty, s.notice = [(u, 0)], {}, None
@@ -144,11 +144,11 @@ def test_selling_a_used_quiver_at_the_market_pays_pro_rata():
 
 def test_the_sell_total_multiplies_by_the_quantity_picked():
     from gartok.guild import Guild
-    from gartok.market_screen import MarketScreen
+    from gartok.trade import Counter
     u = Unit("player")
     u._base_inventory = []
     u.give_to_pack("Rope", 3)
-    s = MarketScreen.__new__(MarketScreen)
+    s = Counter.__new__(Counter)
     s.guild, s.shoppers, s.deal = Guild([u]), [u], []
     s.selected, s._sel_qty = [(u, 0)], {}
     assert s._sell_total() == economy.sell_price("Rope") * 3

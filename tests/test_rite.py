@@ -7,14 +7,10 @@ from types import SimpleNamespace
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-import pygame
 
 from gartok import data, items, magic, orders, persist, rite, world
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.hub_screen import TabbedHubScreen
-from gartok.initiation_screen import InitiationScreen
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 
 
@@ -215,25 +211,14 @@ def test_each_sanctuary_has_its_keeper_and_its_school():
     assert all(world.node(n).garrison_job == rite.JOB for n in rite.SANCTUARY)
 
 
-def test_the_sanctuary_hub_has_an_initiation_tab_that_starts_the_rite():
-    pygame.init()
+def test_the_initiation_picks_a_member_and_begins_the_rite():
     guild, g, (a, b) = _guild()
     b.give_to_pack("Holy Symbol")
-    done = []
-    hub = TabbedHubScreen.for_node(ui_fonts(), guild, g, world.node("faith_cathedral"), on_done=lambda: done.append(1))
-    hub.tab = "initiation"
-    screen = hub.active_screen()
-    assert isinstance(screen, InitiationScreen)
-    surf = pygame.Surface((1920, 1080))
-    hub.mouse = (0, 0)
-    hub.draw(surf)
-    row = dict(screen.row_rects)[a.uid]
-    screen._click(row.center)
-    assert screen._action() == "BEGIN THE RITE"
-    hub.draw(surf)
-    screen._click(screen.begin_rect.center)
-    assert a.rite_school == "faith" and not done and "Holy Symbol" in screen.notice
-    assert screen.tutorial_key() == "initiation"
+    desk = rite.Initiation(guild, g)
+    desk._pick(a.uid)
+    assert desk._action() == "BEGIN THE RITE"
+    ok, _ = desk._begin()
+    assert ok and a.rite_school == "faith" and "Holy Symbol" in desk.notice
 
 
 def test_a_defeated_priest_is_where_the_holy_symbol_comes_from():

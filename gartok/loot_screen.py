@@ -10,7 +10,8 @@ you finish is left behind.
 import pygame
 
 from . import items
-from .dragselect import DragSelectMixin, LoadoutMoveMixin
+from .dragselect import DragSelectMixin
+from .loadout_move import LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
 from .ui import loadout_panel

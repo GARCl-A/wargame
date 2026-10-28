@@ -929,25 +929,16 @@ def test_wagon_capacity_carries_no_float_noise(monkeypatch):
 # --------------------------------------------------------------------------- #
 
 def _market(*animals, **kw):
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
     from gartok import world
-    from gartok.market_screen import MarketScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
+    from gartok.trade import Counter
     guild, g = _group(*animals, **kw)
     node = next(n for n in world.NODES if n.kind == "market")
-    scr = MarketScreen(ui_fonts(), guild, list(g.members), node, lambda: None)
-    scr.draw(pygame.Surface((1800, 900)))
-    return scr, g
+    return Counter(guild, list(g.members), node), g
 
 
-def test_the_market_shows_the_wagon_and_the_herd_beside_the_shoppers():
+def test_the_market_holds_the_wagon_and_the_herd_beside_the_shoppers():
     scr, g = _market(_animal("Ox", HARNESS), wagon=True)
     assert scr.stores == [*g.herd, *g.wagons]
-    assert any(o is g.wagons[0] for _, o in scr._pack_areas)
 
 
 def test_a_purchase_can_be_dropped_on_the_wagon_and_stops_at_its_room():
@@ -1137,11 +1128,11 @@ def test_the_gear_screen_draws_with_a_lit_campfire():
 
 
 def test_the_campfire_cooks_meat_carried_on_the_wagon():
-    from gartok.crafting_screen import CraftingScreen
+    from gartok.workbench import Bench
     guild, g = _group(_animal("Ox", tack=HARNESS), wagon=True, cargo=("Meat",))
     cook = g.members[0]
     cook._base_inventory = []
-    scr = CraftingScreen(None, guild, g, on_done=lambda: None, station="cooking")
+    scr = Bench(guild, g, station="cooking")
     assert not scr._get_missing_materials("Roast Meat")
     guild.crafting_shift(cook, "Roast Meat", 1, pool=scr._packs)
     assert g.wagons[0].count_of("Meat") == 0

@@ -8,10 +8,10 @@ import random
 import pygame
 
 from gartok import data, items, orders, persist
-from gartok.city_property_screen import CityPropertyScreen
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.ui.tokens import fonts as ui_fonts
+from gartok.vault import HouseVault
 from tests.helpers import Unit, economy, packed, world
 
 NODE = world.WILDS_TERRITORY_NODE
@@ -96,40 +96,33 @@ def test_a_garrison_fed_on_jerky_holds_the_full_sustain():
 # the house oven                                                              #
 # --------------------------------------------------------------------------- #
 
-def _house_screen(coins, owned=True, oven=False, on_cook=lambda: None):
+def _house(coins, owned=True, oven=False):
     p = Unit("player")
     p.money = coins
     guild = Guild([p])
     guild.house.owned = owned
     guild.house.oven = oven
-    return guild, CityPropertyScreen(ui_fonts(), guild, [p], lambda: None, on_cook=on_cook)
+    return guild, HouseVault(guild, [p])
 
 
-def test_the_oven_is_bought_from_the_house_screen_and_charged():
-    guild, scr = _house_screen(economy.OVEN_PRICE + 5)
+def test_the_oven_is_bought_at_the_house_and_charged():
+    guild, scr = _house(economy.OVEN_PRICE + 5)
     assert [s[0] for s in scr._services()] == ["oven"]
     scr._run_service("oven")
     assert guild.house.oven
     assert scr.purse == 5
-    assert [s[0] for s in scr._services()] == ["cook"]
+    assert scr._services() == []
 
 
 def test_the_oven_is_refused_when_the_party_cannot_pay():
-    guild, scr = _house_screen(economy.OVEN_PRICE - 1)
+    guild, scr = _house(economy.OVEN_PRICE - 1)
     assert not scr._services()[0][3]
     scr._run_service("oven")
     assert not guild.house.oven
 
 
-def test_the_cook_button_opens_the_kitchen():
-    calls = []
-    _, scr = _house_screen(0, oven=True, on_cook=lambda: calls.append(1))
-    scr._run_service("cook")
-    assert calls == [1]
-
-
 def test_losing_the_house_loses_the_oven():
-    guild, _ = _house_screen(0, oven=True)
+    guild, _ = _house(0, oven=True)
     guild.house.repossess()
     assert not guild.house.oven
     guild.house.oven = True

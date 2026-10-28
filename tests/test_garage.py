@@ -3,13 +3,10 @@ them safe, feeds the animals from the house stash and gives them back to the gro
 
 import os
 
-
 from gartok import persist
 from gartok.animals import HARNESS, STARVE_DAYS, Animal
-from gartok.city_property_screen import CityPropertyScreen
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.wagon import Wagon
 from tests.helpers import Unit
 
@@ -128,16 +125,6 @@ def test_losing_the_house_loses_the_garage():
     guild.house.garage.herd.append(Animal("Ox"))
     guild.house.abandon()
     assert guild.house.garage.herd == [] and guild.house.garage.tier == 0
-
-
-def test_the_house_screen_offers_the_garage_once_it_is_wired():
-    guild, g, _ = _setup(bays=0)
-    calls = []
-    scr = CityPropertyScreen(ui_fonts(), guild, list(g.members), lambda: None,
-                             on_garage=lambda: calls.append(1))
-    assert "garage" in [s[0] for s in scr._services()]
-    scr._run_service("garage")
-    assert calls == [1]
 
 
 def test_the_garage_survives_a_save_round_trip():

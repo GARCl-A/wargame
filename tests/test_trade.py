@@ -6,8 +6,6 @@ import sys
 from gartok import economy, items, trade, world
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.library_screen import LibraryScreen
-from gartok.market_screen import MarketScreen
 from tests.helpers import standard_unit
 
 
@@ -57,9 +55,3 @@ def test_the_library_keeps_its_own_counter():
     guild.reputation["library"] = 1
     c.sync_group()
     assert [key for _l, key, _n in c.get_categories()] == ["supplies", "dictionaries"]
-
-
-def test_the_pygame_screens_are_the_same_counter():
-    guild, u = _band("library")
-    assert isinstance(MarketScreen(None, guild, [u], world.node("market"), lambda: None), trade.Counter)
-    assert isinstance(LibraryScreen(None, guild, [u], world.node("library"), lambda: None), trade.LibraryCounter)

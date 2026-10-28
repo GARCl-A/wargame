@@ -1,7 +1,5 @@
 import os
 
-import pygame
-
 from gartok import artwork, data, persist, unit
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -333,28 +331,17 @@ def test_portrait_id_survives_a_save_round_trip():
     assert v.portrait_id == u.portrait_id
 
 
-def test_squad_and_prison_cards_carry_the_units_portrait():
-    from unittest.mock import patch
-
+def test_the_prison_tab_carries_the_units_portrait():
     from gartok import world
     from gartok.guild import Guild
-    from gartok.prison_screen import PrisonScreen
-    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.web.shop_tab import _portrait
+    from gartok.web.tavern_tab import TavernTab
 
-    pygame.init()
     u = unit.Unit("player")
     guild = Guild([u], node="prison")
-    screen = PrisonScreen(ui_fonts(), guild, [u], world.node("prison"), on_done=lambda: None)
-    seen = []
-    real = artwork.portrait
-
-    def spy(race, pid, px):
-        seen.append(pid)
-        return real(race, pid, px)
-
-    with patch.object(artwork, "portrait", spy):
-        screen.draw(pygame.Surface((1280, 800)))
-    assert u.portrait_id in seen
+    tab = TavernTab(guild, guild.groups[0], world.node("prison"), prison=True)
+    pitchers = tab.state("recruits")["dossier"]["pitchers"]
+    assert [p["portrait"] for p in pitchers] == [_portrait(u)] and _portrait(u)
 
 
 def test_pinned_named_portraits():

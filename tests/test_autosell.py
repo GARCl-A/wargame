@@ -1,16 +1,9 @@
 """The Market's auto-sell marks: mark an item kind once, SELL MARKED takes it from every pack."""
 
-import os
-
-import pygame
-
 from gartok import economy, items, persist, world
 from gartok.guild import Guild
-from gartok.market_screen import MarketScreen
-from gartok.ui.tokens import fonts as ui_fonts
+from gartok.trade import Counter
 from gartok.unit import Unit
-
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 COPPER = items.COIN_ITEM
 NODE = world.node("market")
@@ -28,7 +21,7 @@ def _screen(*units, marked=()):
     guild = Guild(list(units))
     guild.autosell = set(marked)
     guild.shop(NODE.id).cash = 10_000
-    return MarketScreen(None, guild, list(units), NODE, lambda: None)
+    return Counter(guild, list(units), NODE)
 
 
 def _count(units, name):
@@ -55,7 +48,7 @@ def test_autosell_includes_wagons_and_pack_animals():
     cart = Wagon("Cart")
     cart.give_to_pack("Dagger", 4)
     grp.wagons.append(cart)
-    s = MarketScreen(None, guild, [a], NODE, lambda: None)
+    s = Counter(guild, [a], NODE)
     assert cart in s.stores
     assert s._marked_total() == economy.sell_price("Dagger", s.deal) * 4
     s._sell_marked()
@@ -86,26 +79,13 @@ def test_nothing_marked_in_the_packs_sells_nothing_and_says_so():
     assert u.count_of("Club") == 1 and "nothing marked" in s.notice
 
 
-def test_the_menu_marks_and_unmarks_an_item_kind():
+def test_marking_an_item_kind_twice_unmarks_it():
     u = _unit(("Dagger", 1))
     s = _screen(u)
-    rows = s._menu_rows([(u, 0)])
-    assert ("mark", "mark to auto-sell", "Dagger") in rows
-    s._menu_run([(u, 0)], "mark", "Dagger")
+    s._toggle_marked("Dagger")
     assert s.guild.autosell == {"Dagger"}
-    assert ("mark", "unmark auto-sell", "Dagger") in s._menu_rows([(u, 0)])
-    s._menu_run([(u, 0)], "mark", "Dagger")
+    s._toggle_marked("Dagger")
     assert s.guild.autosell == set()
-
-
-def test_a_marked_item_wears_an_auto_sell_tag_and_the_screen_draws_the_button():
-    pygame.init()
-    u = _unit(("Dagger", 1))
-    s = _screen(u, marked={"Dagger"})
-    s.fonts = ui_fonts()
-    assert s._pack_tag(u, "Dagger").endswith("AUTO-SELL")
-    s.draw(pygame.Surface((1280, 720)))
-    assert any(key == "sell_marked" for key, _ in s.buttons)
 
 
 def test_marks_survive_a_save():

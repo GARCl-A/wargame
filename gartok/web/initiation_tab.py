@@ -2,7 +2,7 @@
 school's rite, where each one stands in it, or why they cannot), the school's terms on paper and the
 button that leaves the picked one boarding.
 
-The rules are `rite.Initiation`'s, which pygame's `InitiationScreen` reads too: the terms, the blockers,
+The rules are `rite.Initiation`'s: the terms, the blockers,
 the pick and the begin. The verb that may hand the band to the clock (`begin`) lives on `HubSession`, which holds the map.
 """
 
