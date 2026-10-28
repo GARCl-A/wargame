@@ -181,7 +181,7 @@ silhouettes. Order is the suggested priority.
 
 - **Riding and mounts.** Riding a Centaur ally is built. Left: riding animals (a riding saddle enters
   `animals.TACK`; the rider and animal pair goes into combat), and controllable / AI-driven animals in
-  combat (today the Shepherd's Sheep only stands still). The creature abstraction should not make it harder.
+  combat (today a neutral creature only stands still and blocks its cell). The creature abstraction should not make it harder.
 - **Auto battler with priority programming** (Siralim Ultimate style). Its own arc and
   branch: UI, AI and tests.
 

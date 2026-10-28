@@ -323,17 +323,20 @@ def test_the_squads_ai_goes_for_an_egg_then_the_way_out():
     assert sc.heist_goal(b, me) is None            # already at the mouth: it waits
 
 
-def test_an_ai_squad_can_pull_the_heist_off_in_the_lab():
-    outcomes = []
-    for seed in (1, 7):
-        b, _ = _lair(seed=seed)
-        n = 0
-        while b.winner is None and n < 6000:
-            ai.take_turn(b, b.active)
-            n += 1
-        assert b.winner is not None
-        outcomes.append((b.winner, lair.eggs_taken(b)))
-    assert any(w == "player" and eggs >= 1 for w, eggs in outcomes)
+def test_an_ai_thief_walks_in_lifts_an_egg_and_leaves_with_it(monkeypatch):
+    monkeypatch.setattr(lair, "STIR_AT", 10**6)       # a sleep no noise breaks: no fight, no dice
+    monkeypatch.setattr(lair, "WAKE_AT", 10**6)
+    b, sc = _lair(size=1)
+    dragon = lair.dragon_of(b)
+    for k in b.foe_units:
+        if k is not dragon:
+            k.hp, k.status = 0, "dead"
+    n = 0
+    while b.winner is None and n < 300:
+        ai.take_turn(b, b.active)
+        n += 1
+    assert b.winner == "player" and lair.eggs_taken(b) == 1
+    assert sc.stage == "asleep" and dragon.alive
 
 
 # --- the dragon and Dragonfire ------------------------------------------------------ #

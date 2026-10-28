@@ -526,7 +526,7 @@ and neutral creatures in `gartok/ground.py`, map assembly in
     Held in `Combatant.diag_steps`; a route's cost comes from `board.path_cost`
     (which also adds `+1` for each difficult-terrain cell entered).
   - **Enemies block completely:** you cannot stop **or pass through** an enemy's
-    cell (nor a neutral creature's, like the Sheep).
+    cell (nor a neutral creature's).
   - **Allies you can cross**, but not end your move on.
   - The pathfinding is Dijkstra over `(cell, diagonal parity)`.
 - **Defend** (1 point) = **+1 circumstance bonus** to AC until the start of your

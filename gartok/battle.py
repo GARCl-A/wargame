@@ -102,7 +102,7 @@ class Battle:
             u.reset_battle_state()           # fresh state (also full heal on a rematch)
             u.nonlethal = not self.lethal    # 0 HP -> knocked out instead of dying
 
-        self.creatures = []                  # neutral bodies (e.g. the Shepherd's sheep)
+        self.creatures = []                  # neutral bodies that block their cells
         self.fire = set()                    # burning cells (a scenario lights them and spreads them)
         self._pf_cache = {}                   # per-turn Dijkstra field cache (see _pf_field)
         # capture-the-flag: {"player": cell|None, "enemy": cell|None}, else None.

@@ -12,7 +12,7 @@ def test_unit_save_round_trip_keeps_rolled_values():
     from gartok.unit import ATTRIBUTES
     random.seed(7)
     u = Unit("player")
-    u._base_inventory = packed(["Rope", "Map"])
+    u._base_inventory = packed(["Rope", "Torch"])
     v = Unit.from_save(persist.unit_to_dict(u))
     for f in ("name", "alignment", "age", "hp_max", "ac", "speed",
               "mental_defense", "languages", "_base_inventory", "money",
@@ -108,7 +108,7 @@ def test_save_slot_file_round_trip():
     guild = Guild([Unit("player") for _ in range(3)], battles_won=4,
                   reputation={"arena": 3}, deeds_done=["arena_first_blood"],
                   arena_challenge_day=12, clock=Clock(30 * 3600), node="wilds",
-                  bank=Stash(10, packed(["Rope", "Shovel"])))
+                  bank=Stash(10, packed(["Rope", "Torch"])))
     guild.roster[0].money = 42
     guild.roster[0].arena_title = True
     guild.roster[0].bio = "kept the belt through a lean winter"
@@ -124,7 +124,7 @@ def test_save_slot_file_round_trip():
         assert back.arena_challenge_day == 12
         assert back.roster[0].arena_title and "belt" in back.roster[0].bio
         assert back.clock.seconds == 30 * 3600 and back.groups[0].node == "wilds"
-        assert back.bank.capacity == 10 and back.bank.items == [("Rope", 1), ("Shovel", 1)]
+        assert back.bank.capacity == 10 and back.bank.items == [("Rope", 1), ("Torch", 1)]
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
         assert back.roster[0].money == 42

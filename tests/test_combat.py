@@ -100,9 +100,9 @@ def test_load_sums_weapon_torch_and_items():
     u = _combatant()
     u.equip_weapon("Axe")
     u.torch_hand = True
-    u.inventory = ["Rope", "Map"]
+    u.inventory = ["Rope", "Torch"]
     expected = round(WEAPONS["Axe"]["weight"] + TORCH_WEIGHT
-                     + item_weight("Rope") + item_weight("Map"), 1)
+                     + item_weight("Rope") + item_weight("Torch"), 1)
     assert u.load == expected
 
 
@@ -137,19 +137,16 @@ def test_two_handed_weapon_bumps_lantern_to_pack_not_ground():
     assert u.inventory.count(data.LANTERN_ITEM) == n_lanterns + 1
 
 
-def test_shepherd_spawns_neutral_sheep_that_blocks():
-    random.seed(0)
-    shepherd = _unit()
-    shepherd.set_occupation("Shepherd")
-    assert shepherd.starting_creature == "Sheep" and shepherd._base_inventory == []
-    batt = Battle([shepherd], [Unit("enemy")])
+def test_neutral_creature_blocks_cell():
+    from gartok.ground import Creature
+    batt = Battle([_combatant()], [_combatant()])
+    batt.creatures = [Creature("Dummy", "o", (8, 6), 1)]
     assert len(batt.creatures) == 1 and batt.creatures[0] not in batt.units
 
     batt.board.walls = set()
-    batt.creatures[0].pos = (8, 6)                    # pin the sheep for the test
     p = batt.units[0]
     p.pos, p.ap, p.walking = (7, 6), 2, False
-    assert (8, 6) not in batt.reachable(p)            # the sheep's cell blocks
+    assert (8, 6) not in batt.reachable(p)            # the creature's cell blocks
     assert (9, 6) in batt.reachable(p)                # but you can go around
 
 

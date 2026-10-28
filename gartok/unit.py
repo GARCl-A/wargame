@@ -304,7 +304,6 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.equipped_offhand = None
         self.equipped_armor = None
         self.item = None
-        self.starting_creature = None
         self._base_inventory = []
         self.locked_items = {}
 
@@ -316,11 +315,9 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.equipped_offhand = None                  # off hand: a torch or a light source
         self.equipped_armor = None                    # body slot: bought at the market
         self.item = self.occupation["item"]
-        if self.item in data.CREATURE_ITEMS:         # e.g. the Shepherd's sheep
-            self.starting_creature = self.item
+        if self.item is None:
             self._base_inventory = []
         else:
-            self.starting_creature = None
             if self.item == "Scroll":
                 nature_spells = [s for s in magic.SPELLS.values() if "nature" in s.sources and s.level == 0]
                 if nature_spells:

@@ -416,10 +416,10 @@ def test_the_gear_screen_hitch_button_cycles_an_animal_between_wagons_and_none()
 
 
 def test_a_member_item_can_be_dragged_into_the_wagon():
-    scr, g = _gear(_animal(tack=HARNESS), wagon=True, carried=["Rope", "Map"])
+    scr, g = _gear(_animal(tack=HARNESS), wagon=True, carried=["Rope", "Torch"])
     scr.selected = [(g.members[0], 0)]
     scr._give_many(g.wagons[0], "pack")
-    assert g.members[0]._base_inventory == packed(["Map"]) and g.wagons[0].stash.items[0].name == "Rope"
+    assert g.members[0]._base_inventory == packed(["Torch"]) and g.wagons[0].stash.items[0].name == "Rope"
 
 
 def test_the_wagon_refuses_more_than_it_can_carry():

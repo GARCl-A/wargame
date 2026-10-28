@@ -17,7 +17,7 @@ def test_every_race_ability_and_starting_gear_is_a_real_catalog_entry():
         assert race["language"] in data.LANGUAGES
     for _thr, _name, weapon, item in data.OCCUPATIONS:
         assert weapon in data.WEAPONS, weapon
-        assert data.item_weight(item) > 0, item
+        assert item is None or data.item_weight(item) > 0, item
 
 
 def test_every_talent_requires_a_talent_that_exists():

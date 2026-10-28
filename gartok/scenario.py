@@ -24,7 +24,7 @@ import random
 
 from . import data, encounters
 from .board import COLS, ROWS, Board, cells
-from .ground import Creature, GroundObject
+from .ground import GroundObject
 
 
 class Scenario:
@@ -41,7 +41,6 @@ class Scenario:
         battle.board = self._make_board()
         battle.ambient_light = battle.daylight if self.outdoor else self.ambient_light
         self._deploy(battle)
-        self._place_creatures(battle)
         self._scatter_torches(battle)
         self._place_ai_traps(battle)
 
@@ -135,20 +134,6 @@ class Scenario:
                 taken.update(shape)
                 return
         u.pos = candidates[0] if candidates else (0, 0)    # fallback: crowded map
-
-    def _place_creatures(self, battle):
-        """Neutral creatures that come with a unit (e.g. the Shepherd's sheep)."""
-        taken = battle.occupied() | battle.board.walls
-        for u in battle.units:
-            name = getattr(u, "starting_creature", None)
-            if not name:
-                continue
-            base = data.CREATURE_ITEMS[name]
-            candidates = [p for c in battle.cells_of(u) for p in battle.board.neighbors(c)
-                          if p not in taken and battle.board.in_bounds(p)]
-            pos = random.choice(candidates) if candidates else u.pos
-            taken.add(pos)
-            battle.creatures.append(Creature(name, base["token"], pos, base["footprint"]))
 
     def _scatter_torches(self, battle):
         if not self.torch_count or battle.ambient_light:

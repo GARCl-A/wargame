@@ -585,14 +585,14 @@ def test_group_screen_multidrop_moves_every_picked_pack_item():
     from gartok.group_screen import GroupScreen
     random.seed(4)
     a, b = Unit("player"), Unit("player")
-    a._base_inventory = packed(["Rope", "Meat", "Map"])
+    a._base_inventory = packed(["Rope", "Meat", "Torch"])
     b._base_inventory = []
     g = Guild([a, b])
     scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
-    scr.selected = [(a, 0), (a, 2)]                       # Corda + Mapa, indices bracket a keeper
+    scr.selected = [(a, 0), (a, 2)]                       # indices bracket a keeper
     scr._give_many(b, "pack")
     assert a._base_inventory == packed(["Meat"])     # the un-picked row is untouched
-    assert sorted(b._base_inventory) == [("Map", 1), ("Rope", 1)]
+    assert sorted(b._base_inventory) == [("Rope", 1), ("Torch", 1)]
     assert scr.selected == []
 
 

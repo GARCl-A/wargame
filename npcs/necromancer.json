@@ -109,11 +109,6 @@
   "equipped_armor": null,
   "inventory": [
     {
-      "id": "shovel",
-      "name": "Shovel",
-      "qty": 1
-    },
-    {
       "id": "semi_precious_gemstone",
       "name": "Semi-precious Gemstone",
       "qty": 2

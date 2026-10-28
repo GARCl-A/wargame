@@ -94,22 +94,22 @@ Each occupation grants one starting weapon and one starting item.
 | Butcher | Hatchet | Meat |
 | Farmer | Hatchet | Potato |
 | Craftsman | Light Hammer | Chisel |
-| Barber | Dagger | Scissors |
+| Barber | Dagger | -- |
 | Crossbowman | Light Crossbow | Quiver |
 | Hunter | Shortspear | Bear Trap |
 | Jailer | Club | Chains |
-| Cartographer | Dagger | Map |
+| Cartographer | Dagger | -- |
 | Brewer | Dagger | 1L Beer |
 | Merchant | Dagger | Semi-precious Gemstone |
 | Builder | Hammer | Stone Brick |
 | Tanner | Dagger | 1sqm Hide |
-| Gravedigger | Light Pick | Shovel |
+| Gravedigger | Light Pick | -- |
 | Slave | Club | Rotten Food |
 | Scribe | Dagger | Scroll |
 | Blacksmith | Hammer | Iron Bar |
 | Guard | Club | Lantern |
-| Guide | Quarterstaff | Compass |
-| Gambler | Dagger | Deck of Cards |
+| Guide | Quarterstaff | -- |
+| Gambler | Dagger | -- |
 | Thief | Dagger | Cloak |
 | Woodcutter | Axe | Lumber |
 | Linguist | Dagger | Dictionary |
@@ -118,9 +118,9 @@ Each occupation grants one starting weapon and one starting item.
 | Mercenary | Axe | Rope |
 | Miner | Pick | 1kg Coal |
 | Musician | Dagger | Musical Instrument |
-| Goldsmith | Dagger | Pliers |
+| Goldsmith | Dagger | -- |
 | Priest | Quarterstaff | Holy Symbol |
-| Shepherd | Quarterstaff | Sheep |
+| Shepherd | Quarterstaff | -- |
 | Innkeeper | Dagger | Salt |
 
 ## Weapons
@@ -260,10 +260,8 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Chisel | 0.3 kg | -- |
 | Cloak | 1 kg | -- |
 | Club | 1.5 kg | -- |
-| Compass | 0.2 kg | -- |
 | Copper Coin | 0.005 kg | -- |
 | Dagger | 0.5 kg | -- |
-| Deck of Cards | 0.2 kg | -- |
 | Dictionary | 2 kg | -- |
 | Dictionary of Ankarin | 2 kg | -- |
 | Dictionary of Draconic | 2 kg | -- |
@@ -341,7 +339,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Locked Chest | 8 kg | -- |
 | Longbow | 1.5 kg | -- |
 | Lumber | 2 kg | material |
-| Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable, material |
 | Minor Healing Potion | 0.2 kg | consumable |
 | Musical Instrument | 2 kg | -- |
@@ -349,7 +346,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Paper | 0.1 kg | material |
 | Pick | 3 kg | -- |
 | Plate Armor | 28 kg | -- |
-| Pliers | 0.3 kg | -- |
 | Potato | 1 kg | food, consumable |
 | Precious Gemstone | 0.1 kg | -- |
 | Quarterstaff | 2 kg | -- |
@@ -360,7 +356,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Rope | 2 kg | material |
 | Rotten Food | 1 kg | food, consumable |
 | Salt | 0.5 kg | material |
-| Scissors | 0.2 kg | -- |
 | Scroll | 0.1 kg | -- |
 | Scroll of Dragonfire | 0.1 kg | -- |
 | Scroll of Floating Disk | 0.1 kg | -- |
@@ -378,7 +373,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Semi-precious Gemstone | 0.1 kg | -- |
 | Shortbow | 1 kg | -- |
 | Shortspear | 1.5 kg | -- |
-| Shovel | 2 kg | -- |
 | Signal Horn | 1 kg | -- |
 | Snake Dragon Corpse | 12 kg | -- |
 | Snake Venom Gland | 0.1 kg | material |

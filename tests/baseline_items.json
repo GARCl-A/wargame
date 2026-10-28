@@ -526,12 +526,6 @@
     "food": false,
     "lifespan": null
   },
-  "Scissors": {
-    "weight": 0.2,
-    "price": 1,
-    "food": false,
-    "lifespan": null
-  },
   "Ancient Codex": {
     "weight": 2.0,
     "price": 4,
@@ -547,12 +541,6 @@
   "Paper": {
     "weight": 0.1,
     "price": 10,
-    "food": false,
-    "lifespan": null
-  },
-  "Map": {
-    "weight": 0.1,
-    "price": 1,
     "food": false,
     "lifespan": null
   },
@@ -598,21 +586,9 @@
     "food": false,
     "lifespan": null
   },
-  "Shovel": {
-    "weight": 2.0,
-    "price": 4,
-    "food": false,
-    "lifespan": null
-  },
   "Iron Bar": {
     "weight": 5.0,
     "price": 15,
-    "food": false,
-    "lifespan": null
-  },
-  "Pliers": {
-    "weight": 0.3,
-    "price": 2,
     "food": false,
     "lifespan": null
   },
@@ -661,18 +637,6 @@
   "Iron Ore": {
     "weight": 4.0,
     "price": 8,
-    "food": false,
-    "lifespan": null
-  },
-  "Compass": {
-    "weight": 0.2,
-    "price": 1,
-    "food": false,
-    "lifespan": null
-  },
-  "Deck of Cards": {
-    "weight": 0.2,
-    "price": 1,
     "food": false,
     "lifespan": null
   },

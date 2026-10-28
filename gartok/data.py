@@ -420,13 +420,6 @@ def alignment_distance(a, b):
     return abs(ax - bx) + abs(ay - by)
 
 
-# Items from the occupation table that are actually creatures on the battlefield
-# (not controllable, standing still for now). They stay out of the inventory / carry.
-CREATURE_ITEMS = {
-    "Sheep": {"name": "Sheep", "token": "o", "footprint": 1},
-}
-
-
 # --------------------------------------------------------------------------- #
 # Occupations   (threshold = upper bound on a d100 roll)                       #
 # --------------------------------------------------------------------------- #
@@ -435,22 +428,22 @@ OCCUPATIONS = [
     (5,   "Butcher",  "Hatchet",    "Meat"),
     (11,  "Farmer",  "Hatchet",    "Potato"),
     (14,  "Craftsman",     "Light Hammer",  "Chisel"),
-    (19,  "Barber",    "Dagger",         "Scissors"),
+    (19,  "Barber",    "Dagger",         None),
     (21,  "Crossbowman",    "Light Crossbow",    "Quiver"),
     (25,  "Hunter",     "Shortspear",   "Bear Trap"),
     (27,  "Jailer",  "Club",         "Chains"),
-    (28,  "Cartographer",  "Dagger",         "Map"),
+    (28,  "Cartographer",  "Dagger",         None),
     (29,  "Brewer",  "Dagger",         "1L Beer"),
     (32,  "Merchant", "Dagger",         "Semi-precious Gemstone"),
     (35,  "Builder",  "Hammer",       "Stone Brick"),
     (38,  "Tanner",    "Dagger",         "1sqm Hide"),
-    (40,  "Gravedigger",     "Light Pick", "Shovel"),
+    (40,  "Gravedigger",     "Light Pick", None),
     (42,  "Slave",     "Club",         "Rotten Food"),
     (43,  "Scribe",     "Dagger",         "Scroll"),
     (46,  "Blacksmith",    "Hammer",       "Iron Bar"),
     (48,  "Guard",      "Club",         "Lantern"),
-    (51,  "Guide",        "Quarterstaff",        "Compass"),
-    (55,  "Gambler",     "Dagger",         "Deck of Cards"),
+    (51,  "Guide",        "Quarterstaff",        None),
+    (55,  "Gambler",     "Dagger",         None),
     (61,  "Thief",      "Dagger",         "Cloak"),
     (67,  "Woodcutter",    "Axe",       "Lumber"),
     (68,  "Linguist",   "Dagger",         "Dictionary"),
@@ -459,9 +452,9 @@ OCCUPATIONS = [
     (77,  "Mercenary",  "Axe",       "Rope"),
     (81,  "Miner",   "Pick",      "1kg Coal"),
     (85,  "Musician",      "Dagger",         "Musical Instrument"),
-    (88,  "Goldsmith",     "Dagger",         "Pliers"),
+    (88,  "Goldsmith",     "Dagger",         None),
     (91,  "Priest",       "Quarterstaff",        "Holy Symbol"),
-    (96,  "Shepherd",      "Quarterstaff",        "Sheep"),
+    (96,  "Shepherd",      "Quarterstaff",        None),
     (100, "Innkeeper",  "Dagger",         "Salt"),
 ]
 

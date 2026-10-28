@@ -98,7 +98,7 @@ def _vocations():
 
 
 def _occupations():
-    rows = [(o[1], o[2], o[3]) for o in data.OCCUPATIONS]
+    rows = [(o[1], o[2], o[3] or '--') for o in data.OCCUPATIONS]
     return "## Occupations\n\nEach occupation grants one starting weapon and one " \
            "starting item.\n\n" + _table(("Occupation", "Weapon", "Item"), rows)
 
