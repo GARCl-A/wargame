@@ -1,0 +1,291 @@
+/* After a fight: the fallen, the report with its blows in ink, the level-up, the field, the purse. */
+#report{position:absolute;inset:0;--greenink:#3f6b2a;--redink:#8e2a1e;--blueink:#2b4f78;
+  background:radial-gradient(ellipse 70% 60% at 50% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+#report.mourning{background:radial-gradient(ellipse 60% 55% at 50% 48%,#2a2019 0%,#15100c 60%,#070504 100%)}
+#report .lbl{color:#8f7652}
+#report .ico{display:inline-block}
+#report .g{display:block;flex:none}
+#report .g .ico{display:block;width:100%;height:100%}
+#slip[hidden],#toast[hidden]{display:none}
+#report .kicker em{order:2;font:italic 15px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;text-transform:none}
+#report .leather{position:absolute}
+#report .leather .kicker{color:#8f7652}
+#report .leather .kicker:after{background:linear-gradient(90deg,rgba(201,163,94,.3),transparent)}
+#report .leather .kicker em{color:#a08a68}
+#report .paper{position:absolute}
+#report .medal{position:relative;box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--side,var(--enamel-hi)),0 0 0 5px #120d08,0 4px 8px rgba(0,0,0,.6)}
+#report .medal.foe{--side:var(--blood-hi)}
+#report .medal.dead img,#report .medal.dead .initial{filter:grayscale(1) contrast(.9) brightness(.8)}
+#report .medal.dead:after{content:"";position:absolute;inset:0;border-radius:50%;background:
+  linear-gradient(45deg,transparent 46%,rgba(142,42,30,.9) 46%,rgba(142,42,30,.9) 54%,transparent 54%),
+  linear-gradient(-45deg,transparent 46%,rgba(142,42,30,.9) 46%,rgba(142,42,30,.9) 54%,transparent 54%)}
+.bigbtn{height:58px;padding:0 40px;display:inline-flex;align-items:center;gap:12px;border-radius:3px;cursor:pointer;
+  font:700 16px/1 Cinzel,serif;letter-spacing:.24em;color:#24180e;text-transform:uppercase;white-space:nowrap;
+  background:linear-gradient(#f0d79e,#c9a35e);box-shadow:0 0 0 1px #5d4426,0 0 0 3px rgba(36,24,14,.2),0 8px 16px rgba(0,0,0,.45);transition:transform .12s}
+.bigbtn:hover{transform:translateY(-2px)}
+.bigbtn .ico{width:24px;height:24px}
+.bigbtn.ghost{background:transparent;color:#d9c49b;box-shadow:inset 0 0 0 1px rgba(201,163,94,.45)}
+.bigbtn.ghost:hover{color:var(--brass-hi);box-shadow:inset 0 0 0 1px rgba(240,215,158,.7)}
+.bigbtn.small{height:44px;padding:0 24px;font-size:13px}
+.bigbtn.off{opacity:.45;cursor:default;transform:none}
+#toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:30;padding:12px 22px;border-radius:3px;
+  background:#2a1a10;border:1px solid rgba(201,71,58,.6);font:italic 18px/1.3 "IM Fell English",serif;color:#efc0b5}
+
+/* the top bar */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center;z-index:2}
+.rseal{width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;margin-right:18px;
+  background:radial-gradient(circle at 38% 32%,#f0d79e,#c9a35e 55%,#7d5c28);
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6),inset 0 -8px 14px rgba(0,0,0,.35)}
+.rseal.black{background:radial-gradient(circle at 38% 32%,#4a3f36,#1e1813 60%,#0a0806)}
+.rseal .ico{width:36px;height:36px;color:#1a0d08}
+.rseal.black .ico{color:#bfb3a3}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.12em;color:var(--brass-hi);text-transform:uppercase;
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25)}
+.cartouche .sub{margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+#topright{margin-left:auto;display:flex;gap:34px;align-items:center}
+.stat{text-align:right}
+.stat b{display:block;font:700 22px/1 Cinzel,serif;color:var(--brass-hi)}
+.stat span{font:600 9.5px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;text-transform:uppercase}
+.chain{display:flex;align-items:center;gap:8px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;color:#6f5a40;text-transform:uppercase}
+.chain span{padding:6px 9px 5px;border-radius:2px;border:1px solid rgba(201,163,94,.16)}
+.chain span.done{color:#8f7652;text-decoration:line-through;text-decoration-color:rgba(143,118,82,.6)}
+.chain span.now{color:#24180e;background:var(--brass);border-color:var(--brass)}
+.chain i{color:#5d4a33;font-style:normal}
+
+/* the fallen */
+#graves{position:absolute;left:0;right:0;top:118px;display:flex;justify-content:center;gap:56px}
+#graves.many{gap:28px}
+.grave{position:relative;width:560px;height:820px;padding:46px 54px;color:var(--ink);text-align:center;border-radius:2px;
+  background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.18),transparent 60%),linear-gradient(176deg,#e6dbc4,#cbbd9f);
+  box-shadow:inset 0 0 50px rgba(60,40,20,.35),0 0 0 1px #2a1d12,0 0 0 9px #17110c,0 0 0 10px #4a3d30,0 22px 36px rgba(0,0,0,.7)}
+.grave:nth-child(odd){transform:rotate(-.8deg)}.grave:nth-child(even){transform:rotate(.7deg)}
+#graves.many .grave{width:420px;padding:40px 30px}
+.grave .tag{font:600 11px/1 Cinzel,serif;letter-spacing:.42em;color:#5a4a3a;text-transform:uppercase}
+.grave .oval{width:210px;height:258px;margin:24px auto 0;border-radius:50%;overflow:hidden;position:relative;
+  box-shadow:0 0 0 3px #17110c,0 0 0 7px #8a7a66,0 0 0 9px #17110c,0 10px 18px rgba(0,0,0,.45)}
+.grave .oval img,.grave .oval .initial{width:100%;height:100%;object-fit:cover;border-radius:0;font-size:60px;filter:grayscale(1) sepia(.25) contrast(1.05) brightness(.92)}
+.grave h2{margin-top:30px;font:700 34px/1.05 Cinzel,serif;letter-spacing:.06em;color:#1c140c}
+.grave .cap{margin-top:10px;font:italic 19px/1 "IM Fell English",serif;color:#5a4632}
+.grave .days{margin-top:24px;font:700 46px/1 Cinzel,serif;color:#1c140c}
+.grave .days small{display:block;margin-top:8px;font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#6b5540;text-transform:uppercase}
+.grave .span{margin-top:12px;font:italic 17px/1 "IM Fell English",serif;color:#6b5540}
+.grave .rule{height:1px;margin:28px 30px 0;background:linear-gradient(90deg,transparent,rgba(40,28,16,.55),transparent)}
+.grave .cause{margin-top:24px;font:600 14px/1 Cinzel,serif;letter-spacing:.2em;color:var(--redink);text-transform:uppercase}
+.grave .killer{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;text-align:left}
+.grave .killer .medal{width:50px;height:50px}
+.grave .killer b{display:block;font:600 16px/1 Cinzel,serif;letter-spacing:.04em}
+.grave .killer span{display:block;margin-top:5px;font:italic 15px/1 "IM Fell English",serif;color:#6b5540}
+.grave .line{margin-top:22px;font:italic 18px/1.35 "IM Fell English",serif;color:#3d2e20}
+.grave .left{position:absolute;left:64px;right:64px;bottom:40px;padding-top:16px;border-top:1px dotted rgba(40,28,16,.35);font:15px/1.35 "EB Garamond",serif;color:#5a4632}
+.grave .left b{font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:#6b5540;text-transform:uppercase;margin-right:6px}
+#memfoot{position:absolute;left:0;right:0;bottom:56px;display:flex;justify-content:center;align-items:center;gap:30px}
+#memfoot i{font:italic 18px/1 "IM Fell English",serif;color:#9b8a74}
+
+/* the report */
+#roll{left:32px;top:108px;width:1240px;height:944px;padding:34px 40px}
+.verdict{display:flex;align-items:center;gap:26px}
+.stamp{display:inline-block;transform:rotate(-4deg);font:900 44px/1 Cinzel,serif;letter-spacing:.16em;text-transform:uppercase;
+  padding:12px 26px 10px;border:3px solid var(--brass-lo);border-radius:4px;color:#6e4e1c;opacity:.88;box-shadow:inset 0 0 0 2px rgba(125,92,40,.35)}
+.stamp.DEFEAT{border-color:var(--redink);color:var(--redink);box-shadow:inset 0 0 0 2px rgba(142,42,30,.35)}
+.stamp.FLED{border-color:#6b5236;color:#6b5236}
+.verdict p{font:italic 21px/1.35 "IM Fell English",serif;color:#4a3522;max-width:760px}
+.verdict p b{font-style:normal;font-family:Cinzel;font-weight:600;font-size:17px;letter-spacing:.04em;color:var(--ink)}
+.sides{position:relative;display:grid;grid-template-columns:520px 1fr 330px;margin-top:30px}
+.sides .kicker{margin-bottom:6px}
+.sq,.fo{display:flex;align-items:center;gap:14px;border-bottom:1px dotted rgba(80,52,24,.35);position:relative}
+.sq .medal{width:62px;height:62px}
+.sq .nm{width:178px;flex:none}
+.sq .nm b,.fo b{display:block;font:600 16px/1.05 Cinzel,serif;letter-spacing:.03em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sq .nm span,.fo span{display:block;margin-top:5px;font:italic 14.5px/1 "IM Fell English",serif;color:#6b5236}
+.st{margin-top:8px;display:inline-block;font:700 10px/1 Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;padding:4px 6px 3px;border:1.5px solid currentColor;border-radius:2px}
+.st.standing{color:var(--greenink)}.st.stable{color:#8a5d16}.st.fallen{color:var(--redink)}.st.fled,.st.bound{color:#6b5236}
+.bars{flex:1;min-width:0;padding-right:16px}
+.bar{position:relative;height:9px;border-radius:1px;background:rgba(80,52,24,.16);box-shadow:inset 0 0 0 1px rgba(80,52,24,.35);overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;left:0}
+.bar.hp i{background:linear-gradient(#7fa557,#4e7530)}
+.bar.hp.low i{background:linear-gradient(#c9473a,#8e2a1e)}
+.bar.xp i.was{background:#8d7651}
+.bar.xp i.gain{background:linear-gradient(#f0d79e,#c9a35e);box-shadow:0 0 6px rgba(201,163,94,.7);transition:width 1.2s ease-out}
+.barlbl{display:flex;justify-content:space-between;margin:9px 0 4px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.16em;color:#7d5c37;text-transform:uppercase}
+.barlbl b{font:600 12px/1 "EB Garamond",serif;letter-spacing:0;color:var(--ink);text-transform:none}
+.barlbl b.up{color:#8a5d16}
+.barlbl b.red{color:var(--redink)}
+.sq.gone .nm b,.sq.gone .nm span{opacity:.6}
+.sq.gone .bars{opacity:.45}
+.lvmark{margin-left:auto;font:700 10px/1 Cinzel,serif;letter-spacing:.16em;color:#fff3dc;background:linear-gradient(#b0402f,#7a2218);padding:5px 7px 4px;border-radius:2px;transform:rotate(-2deg);text-transform:uppercase}
+.downs{display:flex;align-items:center;margin-top:8px;min-height:20px;font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+.fo{gap:16px}
+.fo .medal{width:56px;height:56px}
+.fo b{font-size:15.5px}
+.fo .st.stable{color:#6b5236}
+#blows{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.legend{display:flex;justify-content:center;gap:24px;margin-top:4px;font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+.legend i{display:inline-block;width:26px;height:0;border-top:2px solid;vertical-align:4px;margin-right:8px}
+.rollfoot{position:absolute;left:40px;right:40px;bottom:30px;padding-top:14px;border-top:1px solid rgba(80,52,24,.35);display:flex;gap:40px;
+  font:16px/1.35 "EB Garamond",serif;color:#4a3522}
+.rollfoot b{font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;text-transform:uppercase;margin-right:8px}
+
+#next{left:1296px;top:108px;width:592px;height:944px;padding:26px}
+.step{display:flex;align-items:center;gap:16px;padding:14px;margin-top:10px;border-radius:3px;border:1px solid rgba(201,163,94,.16)}
+.step .n{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font:700 13px/1 Cinzel,serif;color:#8f7652;box-shadow:inset 0 0 0 1px rgba(201,163,94,.35)}
+.step .d{width:52px;height:52px;flex:none;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 38% 32%,#4a3522,#24180e);box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--brass-lo)}
+.step .d .ico{width:30px;height:30px;color:var(--brass-hi)}
+.step .tx{flex:1;min-width:0}
+.step .tx b{display:block;font:600 15px/1.1 Cinzel,serif;letter-spacing:.06em;color:#ecdcb9}
+.step .tx span{display:block;margin-top:6px;font:italic 15.5px/1.25 "IM Fell English",serif;color:#a08a68}
+.step.done{opacity:.55}.step.done .n{background:rgba(201,163,94,.2);color:#ecdcb9}
+.step.now{border-color:var(--brass);background:linear-gradient(90deg,rgba(201,163,94,.16),rgba(201,163,94,.03));box-shadow:inset 3px 0 0 var(--brass)}
+.step.now .n{background:var(--brass);color:#24180e}
+.step .faces{display:flex}
+.step .faces .medal{width:34px;height:34px}
+.cond{margin-top:26px}
+.cond .row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid rgba(201,163,94,.1)}
+.cond .row .medal{width:38px;height:38px}
+.cond .row b{font:600 14px/1 Cinzel,serif;letter-spacing:.04em;color:#ecdcb9;width:150px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cond .row .bar{flex:1;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px rgba(201,163,94,.2)}
+.cond .row em{width:118px;flex:none;text-align:right;font:italic 15px/1 "IM Fell English",serif;color:#a08a68}
+.cond .row em.red{color:#e2a194}
+.nextfoot{position:absolute;left:26px;right:26px;bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.nextfoot i{font:italic 15.5px/1.3 "IM Fell English",serif;color:#8f7652;max-width:270px}
+
+/* the level-up */
+#sheet{left:250px;top:120px;width:1420px;height:860px;padding:52px 64px;display:grid;grid-template-columns:430px 1fr;gap:64px}
+.plate{position:relative;text-align:center}
+.plate .big{width:400px;height:400px;margin:10px auto 0;border-radius:50%;overflow:hidden;
+  box-shadow:0 0 0 3px #120d08,0 0 0 6px var(--enamel-hi),0 0 0 9px #120d08,0 14px 24px rgba(0,0,0,.45)}
+.plate .big img,.plate .big .initial{width:100%;height:100%;font-size:120px}
+.wax{position:absolute;right:-6px;top:300px;width:150px;height:150px;border-radius:50%;display:grid;place-items:center;transform:rotate(-10deg);
+  background:radial-gradient(circle at 38% 32%,#d3584a,#9a2f22 55%,#5a160f);animation:press .5s ease-out;
+  box-shadow:0 0 0 3px rgba(90,22,15,.55),0 8px 14px rgba(0,0,0,.45),inset 0 -10px 18px rgba(0,0,0,.35),inset 0 6px 10px rgba(255,200,180,.25)}
+@keyframes press{from{transform:rotate(-10deg) scale(1.5)}to{transform:rotate(-10deg) scale(1)}}
+.wax b{font:900 70px/1 Cinzel,serif;color:#fbe9dd;text-shadow:0 2px 0 #4a0f08}
+.wax span{position:absolute;bottom:26px;left:0;right:0;font:700 10px/1 Cinzel,serif;letter-spacing:.3em;color:#f5cdbf}
+.plate h2{margin-top:40px;font:700 38px/1 Cinzel,serif;letter-spacing:.06em;color:var(--ink)}
+.plate .cap{margin-top:10px;font:italic 20px/1 "IM Fell English",serif;color:#5a4632}
+.plate .tag{margin-top:26px;font:600 11px/1 Cinzel,serif;letter-spacing:.36em;color:#7d5c37;text-transform:uppercase}
+.gains h3{font:700 30px/1.1 Cinzel,serif;letter-spacing:.08em;color:var(--ink);margin-top:18px;text-transform:uppercase}
+.gains h3 small{display:block;margin-top:10px;font:italic 19px/1.2 "IM Fell English",serif;letter-spacing:0;color:#5a4632;text-transform:none}
+.ledger{margin-top:34px}
+.ledger .row{display:grid;grid-template-columns:1fr 90px 60px 110px 120px;align-items:center;height:74px;border-bottom:1px dotted rgba(80,52,24,.4)}
+.ledger .row .l{font:600 15px/1 Cinzel,serif;letter-spacing:.12em;color:#4a3522;text-transform:uppercase}
+.ledger .row .l small{display:block;margin-top:6px;font:italic 15px/1 "IM Fell English",serif;letter-spacing:0;color:#7b6142;text-transform:none}
+.ledger .row .a{font:700 30px/1 Cinzel,serif;color:#8d7651;text-align:right;text-decoration:line-through;text-decoration-color:rgba(142,42,30,.6);text-decoration-thickness:2px}
+.ledger .row .ar{font:24px/1 "EB Garamond";color:#8d7651;text-align:center}
+.ledger .row .b{font:700 40px/1 Cinzel,serif;color:var(--ink)}
+.ledger .row .dl{justify-self:end;font:700 13px/1 Cinzel,serif;letter-spacing:.12em;color:var(--greenink);padding:6px 9px 5px;border:1.5px solid currentColor;border-radius:2px}
+.tonext{margin-top:34px}
+.tonext .bar{height:12px}
+.tonext .barlbl b{font-size:15px}
+.picks{display:flex;align-items:center;gap:22px;margin-top:40px;padding:22px 26px;border-radius:3px;background:linear-gradient(175deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.3),0 8px 16px rgba(0,0,0,.4)}
+.picks .d{width:60px;height:60px;flex:none;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 38% 32%,#f0d79e,#c9a35e 55%,#7d5c28);box-shadow:0 0 0 2px #120d08}
+.picks .d .ico{width:34px;height:34px;color:#24180e}
+.picks .tx{flex:1}
+.picks .tx b{display:block;font:700 18px/1 Cinzel,serif;letter-spacing:.08em;color:var(--brass-hi);text-transform:uppercase}
+.picks .tx span{display:block;margin-top:8px;font:italic 16px/1.3 "IM Fell English",serif;color:#b9a27c}
+.lvfoot{position:absolute;right:64px;bottom:48px;display:flex;gap:22px;align-items:center}
+.lvfoot i{font:italic 16px/1 "IM Fell English",serif;color:#6b5236}
+
+/* the field */
+#field{left:32px;top:108px;width:660px;height:944px;padding:30px 34px}
+#field.target{box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 2px var(--brass),0 14px 24px rgba(0,0,0,.6)}
+.fhead{display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;padding-bottom:12px;border-bottom:1px solid rgba(80,52,24,.35)}
+.fhead b{font:700 30px/1 Cinzel,serif;color:var(--ink);text-transform:uppercase}
+.fhead span{font:italic 16px/1.2 "IM Fell English",serif;color:#6b5236;text-align:right}
+.wares{position:absolute;left:34px;right:34px;top:150px;bottom:90px;overflow-y:auto}
+.ware{display:grid;grid-template-columns:38px 1fr 70px 70px 108px;align-items:center;gap:10px;height:38px;border-bottom:1px dotted rgba(80,52,24,.3);padding:0 2px;cursor:pointer}
+.ware:hover{background:rgba(201,163,94,.12)}
+.ware .g{width:30px;height:30px;color:#4a3522}
+.ware .nm{font:17px/1 "EB Garamond",serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ware .nm small{margin-left:8px;font:italic 14px/1 "IM Fell English",serif;color:#7b6142}
+.ware .q{font:700 16px/1 Cinzel,serif;color:var(--ink);text-align:right}
+.ware .kg{font:15px/1 "EB Garamond",serif;color:#6b5236;text-align:right}
+.ware .take{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.ware .take i{width:24px;height:24px;border-radius:2px;display:grid;place-items:center;font:700 15px/1 "EB Garamond";font-style:normal;color:#4a3522;box-shadow:inset 0 0 0 1px rgba(80,52,24,.45)}
+.ware .take i:hover{background:rgba(80,52,24,.15)}
+.ware .take b{width:30px;text-align:center;font:700 15px/1 Cinzel,serif;color:#8d7651}
+.ware.on{background:linear-gradient(90deg,rgba(201,163,94,.32),rgba(201,163,94,.08));box-shadow:inset 3px 0 0 var(--brass-lo)}
+.ware.on .take b{color:var(--ink)}
+.ware.drag{opacity:.35}
+.ware.coins .nm{font-weight:600}
+.cat{margin-top:10px;margin-bottom:2px;font:600 10px/1 Cinzel,serif;letter-spacing:.26em;color:#8d7651;text-transform:uppercase}
+.empty-field{margin-top:60px;text-align:center;font:italic 20px/1.4 "IM Fell English",serif;color:#7b6142}
+.fieldfoot{position:absolute;left:34px;right:34px;bottom:26px;padding-top:12px;border-top:1px solid rgba(80,52,24,.35)}
+.fieldfoot p{font:italic 16px/1.35 "IM Fell English",serif;color:var(--redink)}
+#packs{position:absolute;left:716px;right:32px;top:108px;height:840px;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 48px) / 4);gap:16px;overflow-x:auto}
+#packs .leather{position:relative}
+.col{padding:16px 14px;cursor:pointer;display:flex;flex-direction:column}
+.col.target{box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 2px var(--brass),0 10px 22px rgba(0,0,0,.6)}
+.col .who{display:flex;align-items:center;gap:12px}
+.col .who .medal{width:52px;height:52px}
+.col .who b{display:block;font:600 15px/1.05 Cinzel,serif;letter-spacing:.04em;color:#ecdcb9}
+.col .who span{display:block;margin-top:5px;font:italic 14px/1 "IM Fell English",serif;color:#a08a68}
+.col .meter{margin-top:12px}
+.col .meter .barlbl{color:#8f7652;margin:7px 0 4px}
+.col .meter .barlbl b{color:#ecdcb9}
+.col .meter .barlbl b.red{color:#e2a194}
+.col .meter .bar{background:rgba(0,0,0,.4);box-shadow:inset 0 0 0 1px rgba(201,163,94,.22);overflow:visible}
+.bar.load i{background:linear-gradient(#c9a35e,#7d5c28)}
+.bar.load i.over{background:linear-gradient(#c9473a,#8e2a1e)}
+.bar.load .norm{position:absolute;top:-2px;bottom:-2px;width:2px;background:#ecdcb9;opacity:.6}
+.slots{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.slot{height:50px;border-radius:3px;padding:6px 8px;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px rgba(201,163,94,.16)}
+.slot:hover,.slot.target{box-shadow:inset 0 0 0 1px var(--brass)}
+.slot.new{box-shadow:inset 0 0 0 1px var(--brass);background:linear-gradient(90deg,rgba(201,163,94,.2),rgba(0,0,0,.28))}
+.slot .g{width:26px;height:26px;flex:none;color:#d9c49b}
+.slot div{min-width:0}
+.slot em{display:block;font:600 8.5px/1 Cinzel,serif;letter-spacing:.18em;color:#7d6a4c;font-style:normal;text-transform:uppercase}
+.slot b{display:block;margin-top:4px;font:14px/1 "EB Garamond",serif;color:#ecdcb9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot.empty b{color:#6f5a40;font-style:italic}
+.rows{margin-top:12px;flex:1;min-height:0;overflow-y:auto}
+.row-it{display:flex;align-items:center;gap:9px;height:34px;padding:0 6px;border-bottom:1px solid rgba(201,163,94,.08)}
+.row-it:hover{background:rgba(201,163,94,.08)}
+.row-it .g{width:22px;height:22px;flex:none;color:#d9c49b}
+.row-it span{flex:1;min-width:0;font:15px/1 "EB Garamond",serif;color:#ecdcb9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-it small{font:600 12px/1 Cinzel,serif;color:#b9a27c}
+.row-it small b{color:var(--brass-hi)}
+.row-it em{width:46px;text-align:right;font:italic 13px/1 "IM Fell English",serif;color:#8f7652}
+.row-it.new{background:linear-gradient(90deg,rgba(201,163,94,.2),transparent);box-shadow:inset 2px 0 0 var(--brass)}
+.row-it.on{background:rgba(240,215,158,.14);box-shadow:inset 2px 0 0 var(--brass-hi)}
+.col.refuse{box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 2px var(--blood-hi),0 10px 22px rgba(0,0,0,.6)}
+.col .why{position:absolute;left:14px;right:14px;bottom:14px;z-index:2;padding:10px 12px;border-radius:2px;background:rgba(60,18,12,.92);border:1px solid rgba(201,71,58,.5);
+  font:italic 15px/1.3 "IM Fell English",serif;color:#efc0b5}
+.col .why b{font:700 10px/1 Cinzel,serif;letter-spacing:.2em;color:#f0b0a2;font-style:normal;display:block;margin-bottom:5px;text-transform:uppercase}
+#slip{position:absolute;z-index:25;display:flex;align-items:center;gap:10px;padding:10px 16px;color:var(--ink);transform:rotate(-3deg);pointer-events:none;
+  background:linear-gradient(175deg,#f1e5c8,#d9c398);box-shadow:0 0 0 1px #5d4426,0 18px 26px rgba(0,0,0,.6)}
+#slip .g{width:30px;height:30px}
+#slip b{font:600 16px/1 Cinzel,serif}
+#slip span{font:italic 15px/1 "IM Fell English",serif;color:#6b5236}
+#lootfoot{left:716px;right:32px;bottom:28px;height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+#lootfoot i{flex:1;margin:0 24px;font:italic 16px/1.3 "IM Fell English",serif;color:#a08a68}
+#lootfoot i b{font:700 16px/1 Cinzel,serif;font-style:normal;color:#ecdcb9}
+
+/* the purse */
+#pit{left:300px;top:130px;width:1320px;height:300px;padding:40px 56px;display:flex;align-items:center;gap:56px}
+.pile{width:190px;height:190px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 38% 32%,#f0d79e,#c9a35e 55%,#7d5c28);box-shadow:0 0 0 3px #120d08,0 0 0 6px var(--brass-lo),0 12px 22px rgba(0,0,0,.5)}
+.pile b{font:900 52px/1 Cinzel,serif;color:#24180e}
+.pile span{display:block;text-align:center;margin-top:6px;font:700 11px/1 Cinzel,serif;letter-spacing:.3em;color:#4a3522}
+#pit h2{font:700 34px/1 Cinzel,serif;letter-spacing:.08em;color:var(--ink)}
+#pit p{margin-top:16px;font:italic 21px/1.35 "IM Fell English",serif;color:#4a3522;max-width:760px}
+.sums{display:flex;gap:40px;margin-top:24px}
+.sums div{font:600 10.5px/1 Cinzel,serif;letter-spacing:.24em;color:#7d5c37;text-transform:uppercase}
+.sums b{display:block;margin-top:8px;font:700 28px/1 Cinzel,serif;letter-spacing:0;color:var(--ink)}
+.sums b.good{color:var(--greenink)}
+.sums b.bad{color:var(--redink)}
+.deedline{margin-top:14px;font:16px/1.3 "EB Garamond",serif;color:var(--greenink)}
+#hands{position:absolute;left:300px;width:1320px;top:470px;display:flex;justify-content:center;gap:28px}
+#hands .leather{position:relative}
+.hand{width:420px;height:340px;padding:30px 28px;text-align:center;transition:transform .15s}
+.hand .medal{width:128px;height:128px;margin:0 auto}
+.hand>b{display:block;margin-top:20px;font:700 22px/1 Cinzel,serif;letter-spacing:.05em;color:#ecdcb9}
+.hand>span{display:block;margin-top:8px;font:italic 16px/1 "IM Fell English",serif;color:#a08a68}
+.hand .was{margin-top:22px;font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:#8f7652;text-transform:uppercase}
+.hand .was b{display:inline;font-size:18px;margin:0 0 0 8px;letter-spacing:0;color:#ecdcb9}
+.hand .was b.after{color:var(--brass-hi)}
+.hand.hot,.hand.paid{box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 2px var(--brass),0 0 0 3px #120d08,0 18px 28px rgba(0,0,0,.65);transform:translateY(-8px)}
+.hand.spent{opacity:.55}
+.hand .give{position:absolute;left:28px;right:28px;bottom:26px;display:flex;justify-content:center}
+#pursefoot{position:absolute;left:300px;width:1320px;bottom:60px;display:flex;justify-content:space-between;align-items:center}
+#pursefoot i{font:italic 17px/1.3 "IM Fell English",serif;color:#a08a68;max-width:820px}

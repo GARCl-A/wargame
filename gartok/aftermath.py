@@ -48,6 +48,15 @@ class LevelUp:
         return [(label, self.before.get(k, 0), self.after.get(k, 0)) for k, label in LEVEL_FIELDS
                 if self.after.get(k, 0) != self.before.get(k, 0)]
 
+    @property
+    def headline(self):
+        """`(track, level)` the card is about: combat first, work second, else magic."""
+        if self.after["combat"] > self.before["combat"]:
+            return "COMBAT", self.after["combat"]
+        if self.after.get("work", 0) > self.before.get("work", 0):
+            return "WORK", self.after["work"]
+        return "MAGIC", self.after["magic"]
+
 
 LEVEL_FIELDS = (("combat", "Combat level"), ("work", "Work level"), ("magic", "Magic level"),
                 ("racial", "Racial level"), ("hit_dice", "Hit dice"), ("hp_max", "Max HP"))

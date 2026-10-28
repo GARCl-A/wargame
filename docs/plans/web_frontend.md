@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen, the guild's sheet and the talk before a fight are in; the report after a fight is mocked and awaits the author.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen, the guild's sheet, the talk before a fight and the screens after one are in; nothing opens the report from a campaign fight until step 10 brings the fight itself.
 
 ## Decisions so far
 
@@ -123,6 +123,8 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   `bands.js` the band's packs) is the guild's sheet (9n), on pygame's own `GuildScreen` and `GroupScreen` held headless.
 - **`gartok/web/dialogue_session.py`** + `screens/talk/` are the talk before a fight (9o), on pygame's own
   `DialogueScreen` held headless.
+- **`gartok/web/report_session.py`** + `screens/report/` are the screens after a fight (9p): the fallen, the report, each
+  level-up, the field (pygame's own `LootScreen` held headless) or the arena's purse, then the map.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -740,7 +742,7 @@ As built:
 - **Next (9p):** the report after a fight (`aftermath.py`'s memorials, report, level-ups, loot), the next family that
   needs a mockup. What still opens the away card: the talent tree, the campaign fights (step 10), `trust`.
 
-**9p. The report after a fight — mockup made, awaiting the author.**
+**9p. The report after a fight — done (2026-10-28).** The mockup came first:
 [references/report_mockup/](references/report_mockup/) `report.html` is built on the day-70 save `35d38388`: band 1
 against a five-strong ambush on the Old Road, played AI against AI until a seed gave a win with deaths, a level-up and
 loot (seed 30 under `PYTHONHASHSEED=0`; the fight is not the same across processes otherwise). `data.js` is that
@@ -761,15 +763,33 @@ loot pool; the purse is `arena.brawl_bout()` with the same survivors. Five frame
   with why; Take what fits and Leave the rest on leather.
 - `purse` (`report_purse.png`): the purse against the stake (staked, won, net) and one card per fighter, Give on each.
 
-Proposed, for the author to settle:
+The author approved its proposals (2026-10-28): the dead on one page, not one card per death; the blows as lines with
+the pack listed beside the band; HP after the fight and the chain of screens on the report. Unchanged rules: the purse
+lands whole on one fighter, the loot's ceiling is each one's hard load limit, whatever stays on the field is lost.
 
-- **The dead on one page**, not one card per death (pygame's `memorial_screen.chain`).
-- **The blows as lines**, and the pack listed beside the band (pygame lists the takedowns as text and never shows the
-  pack). The stable foes are named as ones that could have been bound.
-- **HP after the fight and the chain of screens** on the report; pygame shows neither.
-- Unchanged rules: the purse lands whole on one fighter; the loot's ceiling is each one's hard load limit; whatever
-  stays on the field is lost.
-- Not mocked: the Adelio and Ribbit recruit prompts after an arena win (they open the Tavern's RECRUIT, which is built).
+As built:
+
+- **The server** (`ReportSession`, screen `report`) takes the battle and `campaign.absorb_battle`'s outcome and lays out
+  the chain as `app_battle._battle_end` plays it: the fallen (when any), the report, one page per level-up, then the
+  arena's purse or the field (only with loot and survivors), then `then()` (the map by default). A full wipe shows only
+  the fallen. Verbs: `next`, `talents` (the away card, which comes back to the same level-up), `take`, `auto`, `give`.
+- **The field** is pygame's own `LootScreen` held headless: `take` sets its picks (a field stack with a quantity, a pack
+  row, a worn slot) and calls `_give_many` onto a member's pack or slot, or back onto the field; a load past the hard
+  limit is refused with why (`refused`), shown on that column; what each member took this page is marked new and
+  summed in the footer. Take what fits is `_auto_pick`.
+- **The purse** lands as `RewardScreen` lands it, once, and the save is written; Continue waits for it.
+- `aftermath.LevelUp.headline` (which track the card is about) moved out of `LevelUpScreen`, which reads it now.
+- **What opens it:** nothing yet. The campaign fight is step 10's; it hands this session the battle and the outcome
+  (and the arena's offer for the purse). The Adelio and Ribbit recruit prompts are not drawn: they open the Tavern's
+  RECRUIT, which is built.
+- Left out: a tutorial card (no web screen has one yet).
+- Tests: `tests/test_web_report.py` (the chain in order, a quiet win, a full wipe, the killer on the fallen page, the
+  report's band, pack, blows and HP, a foe left stable, the level-up's ledger and pick, the talents round trip, the
+  field's kinds, part of a stack, a refusal with why, a worn slot and back to the field, Take what fits, what is left
+  is lost, the purse instead of the field, once only). All five pages were looked at in headless Edge at 1920x1080
+  on a copy of the day-70 save, on an Old Road ambush played AI against AI.
+- **Next:** what still opens the away card is the talent tree, `trust` and the campaign fights. The talent tree is the
+  last screen family of step 9 that the campaign reaches; step 10 follows it.
 
 ### 10. The swap — todo
 

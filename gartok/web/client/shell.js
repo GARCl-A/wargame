@@ -46,6 +46,7 @@ const SCREENS = {
   hub: {css: ["hub.css"], js: ["shop.js", "labor.js", "medic.js", "jobs.js", "craft.js", "stables.js", "tavern.js", "initiation.js", "vault.js", "claim.js", "ledger.js", "hub.js"]},
   guild: {css: ["guild.css"], js: ["bands.js", "guild.js"]},
   talk: {css: ["talk.css"], js: ["talk.js"]},
+  report: {css: ["report.css"], js: ["report.js"]},
   away: {css: ["away.css"], js: ["away.js"]},
 };
 

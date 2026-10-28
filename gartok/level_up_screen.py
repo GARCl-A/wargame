@@ -35,18 +35,9 @@ class LevelUpScreen(Screen):
     def progress(self):
         return min(1.0, self.elapsed / CLIMB_MS)
 
-    def headline(self):
-        """`(track, level)` the card is about: combat first, work second, else magic."""
-        lu = self.level_up
-        if lu.after["combat"] > lu.before["combat"]:
-            return "COMBAT", lu.after["combat"]
-        if lu.after.get("work", 0) > lu.before.get("work", 0):
-            return "WORK", lu.after["work"]
-        return "MAGIC", lu.after["magic"]
-
     def data(self):
         lu, t = self.level_up, self.progress
-        track, level = self.headline()
+        track, level = lu.headline
         unit = lu.unit
         picks = self.on_talents is not None and bool(unit.pending_picks)
         return {"name": unit.name, "race": unit.race["name"], "portrait_id": unit.portrait_id,
