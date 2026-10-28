@@ -24,7 +24,8 @@ zoom, the battle's parity with pygame and the shared base (the shell every scree
 the art as far as Gemini got and the board's colour and light are done (the battle is
 finished), the campaign map is in (`--save <world>`) and so is every screen the campaign reaches
 (step 9). Step 10 brings the campaign's fights: the forced ones, the Claim's, the arena, the hunt, the searches'
-finds and the errands' fights are in; next are the title and the draft, then the swap.
+finds and the errands' fights are in, and the title screen opens it all (`python -m gartok.web`); next is
+the draft (mockup first), then settings and the wiki, then the swap.
 
 ---
 

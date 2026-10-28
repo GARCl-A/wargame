@@ -239,6 +239,23 @@ const Sheet = (() => {
     Sheet.onmove && Sheet.onmove();
   }
 
+  // which side of its mark each place's name goes (below, up, right, left), kept off the marks and the
+  // names already set
+  const NAME_W = 7.6;   // px per letter
+  function labelSides() {
+    const boxes = M.nodes.map(n => { const [x, y] = P(n.id); const r = n.id === "city" ? 30 : 20; return [x - r, y - r, x + r, y + r]; });
+    const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+    const out = {};
+    for (const n of M.nodes) {
+      const [x, y] = P(n.id), w = n.name.length * (n.id === "city" ? 10 : NAME_W), big = n.id === "city" ? 12 : 0;
+      const opts = {"": [x - w / 2, y + 22 + big, x + w / 2, y + 40 + big], up: [x - w / 2, y - 40 - big, x + w / 2, y - 22 - big],
+                    r: [x + 24, y - 10, x + 24 + w, y + 8], l: [x - 24 - w, y - 10, x - 24, y + 8]};
+      const pick = Object.keys(opts).find(k => !boxes.some(b => hit(opts[k], b))) ?? "";
+      boxes.push(opts[pick]); out[n.id] = pick;
+    }
+    return out;
+  }
+
   function fit() { cam.z = 1; cam.x = 0; cam.y = 0; draw(); }
   function zoomAt(px, py, f) {
     const z = Math.max(.7, Math.min(4, cam.z * f));
@@ -271,7 +288,7 @@ const Sheet = (() => {
   $("zfit").onclick = fit;
 
   return {
-    selected: null, onmove: null, dragged: 0, P, bandPoint, fit, draw,
+    selected: null, onmove: null, dragged: 0, P, bandPoint, fit, draw, labelSides,
     zoomIn: () => zoomAt(W / 2, H / 2, 1.3), zoomOut: () => zoomAt(W / 2, H / 2, 1 / 1.3),
     set(state) {
       M = state;

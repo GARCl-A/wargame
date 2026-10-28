@@ -131,23 +131,8 @@ function drawBands() {
 }
 
 // ---------------------------------------------------------------- places and pawns
-const NAME_W = 7.6;   // px per letter of a place's label, for keeping labels off each other
-function placeLabels() {
-  const boxes = M.nodes.map(n => { const [x, y] = Sheet.P(n.id); const r = n.id === "city" ? 30 : 20; return [x - r, y - r, x + r, y + r]; });
-  const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
-  const out = {};
-  for (const n of M.nodes) {
-    const [x, y] = Sheet.P(n.id), w = n.name.length * (n.id === "city" ? 10 : NAME_W), big = n.id === "city" ? 12 : 0;
-    const opts = {"": [x - w / 2, y + 22 + big, x + w / 2, y + 40 + big], up: [x - w / 2, y - 40 - big, x + w / 2, y - 22 - big],
-                  r: [x + 24, y - 10, x + 24 + w, y + 8], l: [x - 24 - w, y - 10, x - 24, y + 8]};
-    const pick = Object.keys(opts).find(k => !boxes.some(b => hit(opts[k], b))) ?? "";
-    boxes.push(opts[pick]); out[n.id] = pick;
-  }
-  return out;
-}
-
 function drawPlaces() {
-  const b = band(sel), side = placeLabels();
+  const b = band(sel), side = Sheet.labelSides();
   let html = M.nodes.map(n => {
     const [x, y] = Sheet.P(n.id);
     const cls = ["node", n.id === "city" ? "city" : "", /fort|outpost/.test(n.icon || "") || n.id === "ledger_hold" ? "fort" : "",
@@ -332,6 +317,7 @@ $("nodes").addEventListener("pointerover", e => { const n = e.target.closest(".n
 $("nodes").addEventListener("pointerleave", () => hover(null));
 
 $("guildbtn").onclick = () => post("act", {gid: sel, key: "guild"});
+$("titlebtn").onclick = $("wipedbtn").onclick = () => post("title", {});
 $("seal").onclick = () => {
   const t = M && M.cta;
   if (!t || !t.enabled) return;

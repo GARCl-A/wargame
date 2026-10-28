@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 is under way:
 every campaign fight (forced, the Claim's, the arena, the hunt, the searches' finds, the errands') is played
-in the browser from the map to the report; the title screen and the draft are next, then the swap.
+in the browser from the map to the report, and the title screen opens it; the draft is next, then the swap.
 
 ## Decisions so far
 
@@ -979,6 +979,30 @@ it cannot play (`hub_session.opens_hub` went with it: no node has a stable witho
   the board (`test_web_talk.py`).
 - **Next (10f):** the title screen and the draft (`start_screen`, the draft and `vocation_screen`, the saves
   browser), so a new guild starts in the browser; then the swap below.
+
+**10f. The title screen, the guilds and their saves — done (2026-10-28).** `title_session.py` (screen `title`) is
+pygame's `StartScreen`, `MenuScreen` and `SavesScreen` on one page, after the [menu mockup](references/menu_mockup/):
+the menu on the left; the last guild played on the right, its charter (banner, vocation and motto, day, members,
+wins, bands, four faces and a count of the rest, where its biggest band stands) over the map it has walked (the
+map's own `sheet.js`, read-only, its bands as pennants). LOAD GAME turns the right side into a ledger page: the
+guilds kept, newest first (Continue, Saves, Delete with a yes), then one guild's saves (Load, Delete with a yes; the
+live state cannot be deleted). Continue and Load go through `Game.load`, as `App._continue_game`: an earlier save
+becomes the live state and the rest stay; a save of another version is shown on the charter and refused.
+`python -m gartok.web` with no argument opens it (`--fight` is now the lab's flag); QUIT stops the server and closes
+the window. The map's top bar has MENU (save, then the title, as pygame's pause menu); a wiped guild's card goes
+there too, with the wipe as the title's notice.
+
+- `Sheet.labelSides` (where each place's name goes) moved from `map.js` into `sheet.js`, which both read.
+- Not in the browser yet, so shown off with a note: New guild (10g), Wiki, Settings, Editor. Settings and the wiki
+  are pygame's pause menu too; the swap needs them (10h), the editor stays a pygame tool until then.
+- Left out: a tutorial card.
+- Tests: `tests/test_web_title.py` (no guild, the invitation; the last guild's charter and map; Continue to the map;
+  the guilds newest first; an earlier save loaded becomes live; deleting a save and a guild; another version
+  refused; the map's MENU saves and comes back, with the wipe's notice; the router, the files, QUIT). The title, the
+  guilds and the saves were looked at in headless Edge at 1920x1080 on a copy of the saves, and Continue into the map.
+- **Next (10g):** the draft (`vocation_screen`, `draft_screen`: the vocation, the pool of nine with the commission
+  tokens, the name, banner and leader). A new family: its mockup comes first, for the author's approval. Then 10h,
+  the settings and the wiki, then the swap below.
 
 **10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
 hands the web session a battle and settles it through `campaign.absorb_battle` as

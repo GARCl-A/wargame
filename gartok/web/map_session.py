@@ -67,6 +67,7 @@ class MapSession(MapInspectorMixin, Session):
         "split": lambda s, b: s.split(b["gid"], b["uids"]),
         "merge": lambda s, b: s.merge(b["gid"], b["other"]),
         "advance": lambda s, b: s.advance_world(),
+        "title": lambda s, b: s.to_title(),
     }
 
     _order_status = MapScreen._order_status
@@ -584,6 +585,14 @@ class MapSession(MapInspectorMixin, Session):
             return None
         self.game.open(session)
         return {"screen": session.screen}
+
+    def to_title(self):
+        """To the title screen, the world saved first (pygame's pause menu, MAIN MENU)."""
+        from .title_session import TitleSession
+        self._save()
+        notice = "The guild was wiped out. Load an earlier save to try again." if self.wiped else None
+        self.game.open(TitleSession(notice))
+        return {"screen": "title"}
 
     def back(self):
         """Back from a screen: on to whatever else the clock left due."""

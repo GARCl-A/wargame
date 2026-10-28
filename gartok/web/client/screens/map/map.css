@@ -289,3 +289,4 @@
 #wiped{position:absolute;inset:0;display:grid;place-items:center;background:rgba(8,6,4,.7);z-index:20}
 #wiped .paper{width:560px;padding:30px 34px}
 #wiped p{margin-top:14px;font:italic 19px/1.4 "IM Fell English",serif;color:#4a3522}
+#wiped .ghost-btn{margin-top:20px;width:max-content}

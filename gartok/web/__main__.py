@@ -1,6 +1,7 @@
 """`python -m gartok.web`: serve a combat-lab fight, or a screen of a saved guild, and open it in a
 browser window.
 
+    python -m gartok.web                     the title screen: continue or load a guild
     python -m gartok.web --fight fortress --level 2 --squad 4 [--seed N] [--players 2] [--no-log] [--no-window]
     python -m gartok.web --save <world> [--screen map]
 
@@ -12,6 +13,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 import webbrowser
 
 from .. import combat_lab
@@ -38,7 +40,7 @@ def open_window(url):
 
 def main():
     p = argparse.ArgumentParser(prog="python -m gartok.web")
-    p.add_argument("--fight", default="fortress", choices=sorted(combat_lab.FIGHTS))
+    p.add_argument("--fight", choices=sorted(combat_lab.FIGHTS), help="a combat-lab fight instead of the title")
     p.add_argument("--level", type=int, default=2)
     p.add_argument("--squad", type=int, default=4)
     p.add_argument("--seed", type=int)
@@ -51,10 +53,13 @@ def main():
     args = p.parse_args()
     if args.save:
         game = Game.from_save(args.save, args.screen)
+    elif args.fight is None:
+        game = Game.title()
     else:
         game = Game.fight(args.fight, args.level, args.squad, args.seed, args.players,
                           None if args.no_log else combat_lab.ROOT)
     server = serve(game, args.port)
+    game.quit = lambda: threading.Thread(target=server.shutdown, daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"
     print(f"GARTOK web: {url}  (Ctrl+C to stop)")
     if not args.no_window:

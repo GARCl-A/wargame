@@ -20,6 +20,7 @@ from .battle_session import BattleSession
 from .guild_session import GuildSession
 from .map_session import MapSession
 from .session import ASSETS
+from .title_session import TitleSession
 
 CLIENT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "client")
 ART = ("portraits", "icons", "sounds")    # the asset folders the client may read
@@ -54,6 +55,7 @@ class Game:
     def __init__(self, session, lab=None):
         self.lock = threading.Lock()
         self.lab = lab
+        self.quit = lambda: None      # the window's QUIT; `__main__` stops the server with it
         self.open(session)
 
     def open(self, session):
@@ -71,14 +73,29 @@ class Game:
 
     @classmethod
     def from_save(cls, world, screen="map"):
-        guild = persist.load_game(world)
-        if settings.get("record_play") == "ON":
-            recorder.attach(persist.world_dir(world), guild)
-        return cls(SCREENS[screen](guild, world))
+        return cls(SCREENS[screen](_load(world), world))
+
+    @classmethod
+    def title(cls, notice=None):
+        return cls(TitleSession(notice))
+
+    def load(self, world, save_id=persist.CURRENT):
+        """The map on a save of `world`, as `App._continue_game`: a snapshot becomes the live state."""
+        guild = _load(world, save_id)
+        if save_id != persist.CURRENT:
+            persist.save_game(world, guild)
+        self.open(MapSession(guild, world))
 
     def new_fight(self, fight, level, squad, seed=None, players=1):
         self.open(self.lab.fight(fight, level, squad, seed, players))
         return {"steps": self.session.snapshot()}
+
+
+def _load(world, save_id=persist.CURRENT):
+    guild = persist.load_game(world, save_id)
+    if settings.get("record_play") == "ON":
+        recorder.attach(persist.world_dir(world), guild)
+    return guild
 
 
 def _inside(root, rel):
