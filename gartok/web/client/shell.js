@@ -44,6 +44,7 @@ const SCREENS = {
   battle: {css: ["battle.css"], js: ["board.js", "battle.js"]},
   map: {css: ["map.css"], js: ["sheet.js", "map.js"]},
   hub: {css: ["hub.css"], js: ["shop.js", "labor.js", "medic.js", "jobs.js", "craft.js", "stables.js", "tavern.js", "initiation.js", "vault.js", "claim.js", "ledger.js", "hub.js"]},
+  guild: {css: ["guild.css"], js: ["bands.js", "guild.js"]},
   away: {css: ["away.css"], js: ["away.js"]},
 };
 

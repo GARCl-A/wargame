@@ -4,7 +4,7 @@
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
 to 3 and 5 to 8 are done; step 4 (the art) is done as far as it got. Step 9 is under way:
 the hub frame, its shop tab, a work node's Work and Gathering tabs, the Medic, the jobs
-boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold and the campfire's kitchen are in; the guild and group sheets come next.
+boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the initiation, the prison's cells, the Bank's vault, the City house, the Wilds Claim, Ledger Hold, the campfire's kitchen and the guild's sheet are in; the dialogues come next.
 
 ## Decisions so far
 
@@ -115,6 +115,8 @@ boards, the workbenches, the stables and the wagon yard, the Tavern's tabs, the 
   `WildsClaimScreen` held headless; its KITCHEN is `craft_tab` at `cooking` and its GARAGE `garage_tab` with `claim=True`.
 - **`gartok/web/ledger_tab.py`** + `screens/hub/ledger.js` are Ledger Hold's THE DESK (9m), on pygame's own
   `LedgerScreen` held headless: its panels are data (`LedgerScreen.panels`) that both draw.
+- **`gartok/web/guild_session.py`** + `screens/guild/` (`guild.js` the frame, members, charter and reputations,
+  `bands.js` the band's packs) is the guild's sheet (9n), on pygame's own `GuildScreen` and `GroupScreen` held headless.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
@@ -630,7 +632,7 @@ As built:
   the map's Gear & quests and the guild's tabs), one mockup first, then the screens. What still opens the away card
   after that: the wildfire's talk, the campaign fights (step 10), `trust` (the City's Test of Trust as its own order).
 
-**9n. The guild and group sheets — mockup made (2026-10-27), the screens next.**
+**9n. The guild and group sheets — done (2026-10-27).** The mockup came first:
 [references/sheets_mockup/](references/sheets_mockup/) `sheets.html` (built on the day-70 save `35d38388`; `data.js`
 is the save read through `GuildScreen`'s own adapters) has four frames, one per `?state=`:
 
@@ -658,6 +660,38 @@ Decided with the author (2026-10-27):
   the charter's band table go there too. A band with a fight due shows read-only (`Group.locked`).
 - **A member is hungry from the first hunger level**, when the attributes already drop; pygame waited for the second
   (`guild_screen._needs_attention`, `hunger_level >= 2`), a bug to fix with the screen.
+
+As built:
+
+- **The server** (`GuildSession`, screen `guild`): the map's Guild button opens it on MEMBERS, Gear & quests on BANDS
+  with that band picked. It holds pygame's `GuildScreen` headless for the roster, the sheet, the roles, the charter
+  and the reputations, and one `GroupScreen` per picked band for the kit: the moves (`_give_many`, onto a worn slot, an
+  animal's tack, a wagon's room, an animal onto a wagon to hitch it), the item menu (`_menu_rows` / `_menu_run`: drop,
+  open a chest, drink, study, hand to whom), the split, the lock, the band's buttons (distribute, treat sickness and
+  poison, ride, hitch, repair, release). A band with a fight due answers every kit verb with pygame's refusal. A repair's
+  hour runs through `MapSession.tick_outside` (moved there from `HubSession._tick`, which now calls it). The campfire
+  opens the hub's kitchen as the map's does.
+- **The talent tree** is still pygame's: its button opens the away card, which now takes a `resume` and comes back to
+  the sheet instead of the map.
+- **The layout** follows the mockup: the roster on leather (filters, a fold per band, badges), the sheet as an open
+  book (plate, attributes, the fight boxes with each breakdown as its tooltip, the weapon, the kit, the race; the
+  careers, the talents, the record), the roles beside it; one band's chips, load, rations and pace, one column per
+  member and animal, the wagons with their hull, hitched animals and cargo, the jobs in hand and the captives; the
+  charter with fame, the band slots as wax seals, standing, the bands (a row opens that band), the notices; the
+  holdings, the strongbox's contents behind Look inside; the objectives and one card per known faction.
+- **Hungry from the first level:** `guild_screen._needs_attention` and the HUNGRY badge now read `hunger_level >= 1`,
+  in pygame too.
+- Left out: pygame's CARGO view (every stack of the band in one sorted table) and the mockup's "road ahead" card;
+  an item's tooltip is the browser's own `title`. A band's tab has no tutorial card yet (no web screen has one).
+- Tests: `tests/test_web_guild.py` (the two ways in, the roster and the sheet, hunger at the first level and the
+  alerts filter, the fold and the idle filter, a role and its refusal, the talent tree's away card and its way back,
+  moves within a band and onto a hand, no move across bands, the item menu, split and lock, the read-only band, the
+  wagon's room and the hitch, rename and release, the charter and the strongbox, the reputations, back and the save).
+  The four tabs were looked at in headless Edge at 1920x1080 on a copy of the day-70 save, and a drag between packs,
+  the item menu, a member picked in the roster and a role were driven over the DevTools protocol.
+- **Next (9o):** the dialogues (`dialogue_screen.py`: the talk before a fight), the next family that needs a mockup;
+  then the report after a fight. What still opens the away card: the talent tree, the wildfire's talk, the campaign
+  fights (step 10), `trust`.
 
 ### 10. The swap — todo
 

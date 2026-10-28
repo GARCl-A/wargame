@@ -17,12 +17,14 @@ from urllib.parse import parse_qs, urlparse
 from .. import combat_lab, persist, recorder, settings, sound
 from ..combat_log import CombatLog
 from .battle_session import BattleSession
+from .guild_session import GuildSession
 from .map_session import MapSession
 from .session import ASSETS
 
 CLIENT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "client")
 ART = ("portraits", "icons", "sounds")    # the asset folders the client may read
-SCREENS = {"map": MapSession}             # the screens a save opens; a battle comes from the lab or the campaign
+SCREENS = {"map": MapSession, "guild": lambda guild, world: GuildSession(MapSession(guild, world))}
+# the screens a save opens; a battle comes from the lab or the campaign
 
 
 class Lab:
@@ -58,6 +60,8 @@ class Game:
         """Make `session` the open screen; a verb that changes screen calls this, and the client
         reloads on the screen its answer names."""
         session.game = self
+        if getattr(session, "map", None) is not None:      # a screen over the map opens with it
+            session.map.game = self
         self.session = session
 
     @classmethod

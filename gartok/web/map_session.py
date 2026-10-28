@@ -410,7 +410,7 @@ class MapSession(MapInspectorMixin, Session):
         if key == "resolve_event":
             return self._away(g, g.pending, fight=True)
         if key == "guild":
-            return self._away(g, None, title="The guild", what="the guild's roster and talents")
+            return self._sheet("members", g.gid)
         if g.fight_due:
             raise ValueError(f"{g.display_name} has a fight to face first")
         if key in ("stop_rest", "recall_garrison"):
@@ -439,7 +439,7 @@ class MapSession(MapInspectorMixin, Session):
         elif key == "wf_talk":
             return self._away(g, None, title="Talk at the fire", what="the talk at the wildfire")
         elif key == "manage_group":
-            return self._away(g, None, title="Gear & quests", what="the band's packs and jobs")
+            return self._sheet("bands", g.gid)
         elif key == "campfire_cook":
             now = self.guild.clock.seconds
             if not g.has_campfire(now):
@@ -519,6 +519,15 @@ class MapSession(MapInspectorMixin, Session):
                     self.focus = next(iter(idle))
                 return idle, dead
 
+    def tick_outside(self, hours, busy=()):
+        """Hours spent off the map (a repair), run through `campaign.advance` as `App._tick_outside_map`
+        does, so the other bands keep in step and what falls due waits for the map."""
+        result = campaign.advance(self.guild, dt=hours, busy=busy)
+        self.pending += result.pending
+        self.notices += [f"{u.name} died." for u in result.casualties]
+        self.wiped = self.wiped or result.wiped
+        return result.events, result.casualties
+
     def _land(self):
         """Open the next screen the clock left due, or land on the map; the answer is the screen open."""
         if self.wiped:
@@ -546,6 +555,11 @@ class MapSession(MapInspectorMixin, Session):
             self.game.open(HubSession(self, group, order))
             return {"screen": HubSession.screen}
         return self._away(group, order)
+
+    def _sheet(self, tab, gid):
+        from .guild_session import GuildSession
+        self.game.open(GuildSession(self, tab, gid))
+        return {"screen": GuildSession.screen}
 
     def _away(self, group, order, fight=False, title=None, what=None):
         from .away_session import AwaySession

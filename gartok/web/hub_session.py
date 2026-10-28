@@ -15,7 +15,7 @@ The tabs follow the hub pygame opens for the same order (`app_nodes`, `hub_scree
 
 from typing import ClassVar
 
-from .. import artwork, campaign, economy, orders, solo, world
+from .. import artwork, economy, orders, solo, world
 from ..bank_screen import BankScreen
 from ..city_property_screen import CityPropertyScreen
 from ..constants import fmt_money
@@ -317,14 +317,7 @@ class HubSession(Session):
                                                                        claim=self.order.kind == "claim"))
 
     def _tick(self, hours, busy=()):
-        """An hour the garage spends off the map (a repair), run through `campaign.advance` as
-        `App._tick_outside_map` does, so the other bands keep in step and what falls due waits for the map."""
-        m = self.map
-        result = campaign.advance(self.guild, dt=hours, busy=busy)
-        m.pending += result.pending
-        m.notices += [f"{u.name} died." for u in result.casualties]
-        m.wiped = m.wiped or result.wiped
-        return result.events, result.casualties
+        return self.map.tick_outside(hours, busy)
 
     def on_garage(self, verb, *args):
         verb(self.garage, *args)

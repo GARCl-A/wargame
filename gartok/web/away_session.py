@@ -25,10 +25,11 @@ def _label(order, here):
 class AwaySession(Session):
     screen = "away"
     GET: ClassVar[dict] = {"state": lambda s, q: s.state()}
-    POST: ClassVar[dict] = {"back": lambda s, b: s.map.back()}
+    POST: ClassVar[dict] = {"back": lambda s, b: s.resume() if s.resume else s.map.back()}
 
-    def __init__(self, map_session, group, order, fight=False, title=None, what=None):
+    def __init__(self, map_session, group, order, fight=False, title=None, what=None, resume=None):
         self.map = map_session
+        self.resume = resume              # the screen that sent it, when it is not the map
         self.group = group
         self.order = order
         self.fight = fight

@@ -83,7 +83,7 @@ def _is_idle(group):
 
 
 def _needs_attention(unit):
-    return bool(unit.pending_picks) or unit.hunger_level >= 2 or unit.sick
+    return bool(unit.pending_picks) or unit.hunger_level >= 1 or unit.sick
 
 
 class GuildScreen(Screen):
@@ -295,7 +295,7 @@ class GuildScreen(Screen):
         badges = []
         if unit.pending_picks:
             badges.append(("LEVEL UP", T.BRASS))
-        if unit.hunger_level >= 2:
+        if unit.hunger_level >= 1:
             badges.append(("HUNGRY", T.BLOOD))
         if unit.sick:
             badges.append(("SICK", T.BLOOD))
