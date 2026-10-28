@@ -175,7 +175,7 @@ Two rules hold for every step:
   its `*_draw` mixin, the `app*` path that opens it and the tests that only test it are deleted
   in the commit that moves its rules (the cut list is in 10z). A test that checked a rule through
   a screen moves onto the core module or the web session only if nothing else covers the rule.
-  `--pygame` may break and nothing guards it; only the Editor (10z step 3) is kept able to open.
+  The pygame campaign is gone; only the Editor (`python main.py --editor`, `editor_app.py`) still opens.
 
 ## Next steps, in order
 
@@ -1102,16 +1102,29 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
 
 **The cut list (2026-10-28, from the import graph of `gartok/web/`).** Under "pygame is abandoned" above:
 
-- **Dead now, the web has its own:** `map_screen` + `map_inspector`, `hunt_screen`, `watch_screen`,
-  `garage_screen`, `ledger_screen`, `wilds_claim_screen`, `trust_screen`, `squad_screen`, `level_screen`,
-  `level_up_screen`, `report_screen`, `reward_screen`, `adelio_prompt_screen`, `ribbit_prompt_screen`,
-  `vocation_screen`, `menu_screen`, `pause_screen`, `saves_screen`, `settings_screen`, `wiki_screen`,
-  `alert_screen`, the per-node `*_hub_screen` modules (`apothecary`, `bank`, `forge`, `library`, `tanner`:
-  the web builds hubs from `TabbedHubScreen.for_node`). No web module imports them; only `app*.py` and tests
-  do, so they go with the campaign half of `app*.py` in one commit.
-- **pygame only, port or drop first:** `abandon_screen` (leaving a broken wagon: `map_session` refuses the
-  trip and says "pygame's map, for now"), `group_turn_screen` (the hand-over card between groups),
-  `bank_view_screen` (the vault read from the map), the auto-win of an ambush or a hunt.
+- **The campaign's pygame shell — cut (2026-10-28).** `app.py` and the four `app_*` mixins went, with every
+  screen only they opened: `map_screen` + `map_inspector`, `hunt_screen`, `watch_screen`, `garage_screen`,
+  `ledger_screen`, `wilds_claim_screen`, `trust_screen`, `squad_screen`, `level_screen`, `level_up_screen`,
+  `report_screen`, `reward_screen`, the Adelio and Ribbit prompts, `vocation_screen`, `menu_screen`,
+  `pause_screen`, `saves_screen`, `settings_screen`, `wiki_screen`, `alert_screen`, the five per-node
+  `*_hub_screen` modules, `abandon_screen`, `group_turn_screen`, `bank_view_screen`, `tutorial_card` and the
+  `ui/` pieces only they drew (`camera`, `combat_card`, `command_bar`, `intro_card`, `map_panel`,
+  `party_panel`, `roster_panel`, `turn_card`, `vocation_panel`). The Editor got its own window
+  (`editor_app.EditorApp`, `--editor` in place of `--pygame`).
+  - Tests: about 250 that drove pygame went. Those that checked a rule through a screen and that no web test
+    covered moved: the bay paid from the cart's coins, the cart's Lumber banked at the Claim and the Lumber a
+    pack can carry off it (`test_desks.py`), the bestiary and the Scholars' bonus bound on a campaign fight
+    (`test_web_campaign_fight.py`), the lab fight's log (on `EditorApp`) and the campaign log's path (on
+    `recorder`) in `test_combat_log.py`; the "every order has a screen" checks read `HUB_KINDS` and the web
+    map's dispatch instead of `App._ACTIVITY_OPENERS`.
+  - Coverage lost, no web test yet: the clock run while a screen is open (`App._tick_outside_map`), a guild
+    with every member jailed waiting out the sentence on the map, the save refused mid-battle or mid-hunt
+    (`App._can_save`), two due screens draining one at a time, the REST row's wording (how many meals, the
+    days of rations still short), a trip cancelled to the next node.
+- **Not in the browser, pygame had them (port or drop):** leaving a broken wagon behind (the map refuses a
+  trip with one until it is mended, so a band with no Lumber and no garage is stuck), the hand-over card
+  between groups (its tutorial card `group_turn` is still registered), the vault read from the map, the
+  auto-win of an ambush or a hunt (`autowin.py` is still there). The old screens are in git before this cut.
 - **Held headless by the web, deleted as their family's rules move out (step 2):** `battle_screen` +
   `battle_draw`; `dialogue_screen`; `draft_screen`; `guild_screen`, `group_screen` + `group_draw`;
   `loot_screen`, `memorial_screen`; `taverna_screen` + `taverna_draw`, `prison_screen`; `bank_screen`,
@@ -1119,8 +1132,8 @@ import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_c
   `market_screen` + `market_draw`, `crafting_screen`, `gather_screen`, `work_screen`, `medic_screen`,
   `stables_screen`, `initiation_screen`, `library_screen`, the four mission screens and
   `ui/mission_offer_screen`.
-- **Kept until step 3:** `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`
-  (the menu needs only `screen`; the editors are wired in `app.py`).
+- **Kept until step 3:** `editor_app`, `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`,
+  `combat_lab_screen`, and `battle_screen` for the lab's fights.
 
 1. **The tutorial cards in the browser — done (2026-10-28).** A session names its card in `tutorial_key()` (the id
    its pygame screen names; a hub by its tab, the guild sheet by its tab, the report by its stage, the draft by its

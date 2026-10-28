@@ -18,7 +18,7 @@ from gartok import (
 from gartok.clock import Clock
 from gartok.conditions import Invisible
 from gartok.guild import Guild
-from tests.helpers import Battle, Unit, make_app
+from tests.helpers import Battle, Unit
 
 RAISE = "raise_dead"
 
@@ -413,17 +413,3 @@ def test_a_fight_he_survives_fails_the_errand_until_the_order_asks_again():
     m = missions.accept(guild, signer, missions.FAITH_NECROMANCER)
     notice, deeds = missions.settle_necromancer(guild, m, fallen=False)
     assert m.state == "failed" and not deeds and "14 days" in notice
-
-
-def test_the_app_sends_the_errand_to_the_necromancers_field(monkeypatch):
-    guild, (signer, _) = _guild()
-    missions.accept(guild, signer, missions.FAITH_NECROMANCER)
-    group = guild.group_of(signer)
-    app = make_app(guild)
-    fought = []
-    monkeypatch.setattr(type(app), "_enter_battle", lambda self, battle, node: fought.append(battle))
-    monkeypatch.setattr(type(app), "_leave_outside", lambda self, *a: None)
-    from gartok import world
-    app._skirmish_fight(group, world.node("battlefield"), list(group.members), True)
-    assert isinstance(fought[0].scenario, necromancer.NecromancerScenario)
-    assert app._skirmish.template_id == missions.FAITH_NECROMANCER.id

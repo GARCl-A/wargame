@@ -265,7 +265,7 @@ game:
 
 Curves and the XP rule in `gartok/progression.py`; trees in `gartok/talents.py`;
 state on the `Unit` (`talents`, `_level_hp_rolls`); screen in
-`gartok/level_screen.py` (opened from the member card on the Guild screen).
+`gartok/web/talent_session.py` (opened from the member card on the Guild sheet).
 
 > **No classes, no class level.** Each **XP track** has its own level and its own
 > **talent tree**. The more a character does a job, the better they get at it.
@@ -1488,7 +1488,7 @@ right now (clock advanced through `pass_time`), no order.
 
 ### The Forge: crafting 🟡
 
-`workbench.py`, at the Smithy (the `forge` function of node `smith`; `forge_hub_screen.py` puts the smith's shop beside it). A member needs a
+`workbench.py`, at the Smithy (the `forge` function of node `smith`). A member needs a
 learned recipe (`Unit.recipes`) before they can start; the recipe's materials
 are consumed the moment `crafting_target` is set, not on completion — an
 abandoned craft doesn't get them back.
@@ -1563,7 +1563,7 @@ race itself has none). Both work the same way:
 
 ### The Apothecary: brewing and foraging 🟡
 
-`apothecary_hub_screen.py`, at the Apothecary node (`apothecary`). Integrates
+the Apothecary hub, at the Apothecary node (`apothecary`). Integrates
 shop, potion brewing, the Medic and jobs.
 
 - **Brewing:** Members who have learned alchemical recipes (via the `Apothecary`
@@ -1578,7 +1578,7 @@ shop, potion brewing, the Medic and jobs.
 ### The Wilds: hunting 🟡
 
 The `wilds` node (`kind = "wilds"`). Its first activity is **Hunt**: `hunt.py` +
-`hunt_screen.py`. Pick a party and a shift; the hunt spends hours one at a time,
+`web/hunt_session.py`. Pick a party and a shift; the hunt spends hours one at a time,
 with a per-hour **ambush** chance (`hunt.AMBUSH_CHANCE_PER_HOUR`). An ambush drops
 the party into a **lethal** fight against a scaled pack (`encounters.roll_pack`,
 mean level 0–4). Win it → field loot, and if daylight is left you may keep
@@ -1689,7 +1689,7 @@ might fire on and banks the ones whose condition now holds; a `factions.Event`
 carries `kind` ("battle", "travel", …), the `node`, and per-kind payload (a
 battle event carries the `campaign.BattleOutcome`). Live call sites: after a
 battle (`campaign.absorb_battle`) and on arriving somewhere on the map
-(`map_screen`). A market / hunt / hire trigger is one `settle` line at that flow
+(`forced.py`). A market / hunt / hire trigger is one `settle` line at that flow
 when a non-arena faction grows a deed that needs it.
 
 **Hidden factions.** Every faction but the Pits and the Bankers starts unknown to the guild

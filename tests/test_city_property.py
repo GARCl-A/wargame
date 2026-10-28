@@ -8,32 +8,10 @@ same shape as `test_bank.py` (the screen) and `test_justice_integration.py` /
 import random
 
 from gartok import campaign, forced, orders
-from gartok.app import App
 from gartok.city_property_screen import CityPropertyScreen, RepossessionScreen
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Unit, economy, packed, world
-
-
-def _app(guild):
-    app = App.__new__(App)
-    app.world = "testworld"
-    app.scene = None
-    app.fonts = None
-    app.ui_fonts = None
-    app.guild = guild
-    app._battle_squad = []
-    app._battle_node = None
-    app._arena_offer = None
-    app._hunt = None
-    app._pause_order = None
-    app._pause_group = None
-    app._claim_stage_pending = None
-    app._map_notices = []
-    app._pending = []
-    app._pending_event = None
-    app._save = lambda: None
-    return app
+from tests.helpers import Unit, economy, packed
 
 
 def _screen(guild, party):
@@ -262,35 +240,6 @@ def test_ignored_debt_eventually_reaches_the_guard():
 # app wiring: RepossessionScreen pre-empts the normal property screen         #
 # --------------------------------------------------------------------------- #
 
-def test_app_opens_repossession_screen_once_it_is_due():
-    import pygame
-    pygame.font.init()
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node="city")
-    guild = Guild(None, groups=[g])
-    guild.buy_city_property()
-    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
-    app = _app(guild)
-
-    app._open_city_property(g, world.node("city"))
-    assert isinstance(app.scene, RepossessionScreen)
-
-    app.scene.on_return()
-    assert not guild.house.owned and guild.bankers_debt > 0
-    assert isinstance(app.scene, CityPropertyScreen) or app._pending == []
-
-
-def test_app_opens_the_normal_property_screen_otherwise():
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node="city")
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-
-    app._open_city_property(g, world.node("city"))
-    assert isinstance(app.scene.active_screen(), CityPropertyScreen)
-
 
 # --------------------------------------------------------------------------- #
 # squatting draws a guard raid on arrival ("eviction" pause)                  #
@@ -416,35 +365,6 @@ def test_drawing_the_repossession_screen_and_choosing_squat():
     assert chosen == ["squat"]
 
 
-def test_app_runs_the_raid_battle_and_resolves_it_through_battle_end():
-    random.seed(1)
-    orig = _forced_raid_chance(1.0)
-    try:
-        p = Unit("player")
-        g = Group([p], node="market")
-        guild = Guild(None, groups=[g])
-        guild.buy_city_property()
-        guild.house.squat()
-        app = _app(guild)
-        g.order = orders.travel(g, "city")
-        app._advance()
-    finally:
-        forced.CITY_RAID_CHANCE = orig
-
-    assert app._pause_order is not None and app._pause_order.kind == "eviction"
-    battle = app.scene.battle
-    battle.winner = "player"
-    battle.round_no = 1
-    for c in battle.player_units:
-        c.status = "up"
-    app._battle_squad = [p]
-    app._battle_node = world.node("city")
-    app._battle_end(battle)
-
-    assert app._pause_order is None and guild.house.squatting
-    assert g.order.kind == "idle"
-
-
 # --------------------------------------------------------------------------- #
 # bankers_services_blocked gates property purchase at the bank                #
 # --------------------------------------------------------------------------- #
@@ -473,7 +393,6 @@ def test_bankers_debt_blocks_buying_the_property():
     assert not guild.house.owned
     buy_hit = next((key for r, key in s._service_hits if key == "buy_property"), None)
     assert buy_hit is None
-
 
 
 def test_buying_the_house_debits_the_party_without_leaving_the_screen():

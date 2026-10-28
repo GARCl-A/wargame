@@ -10,7 +10,7 @@ import random
 from gartok import campaign, forced, orders
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Battle, Unit, make_app, world
+from tests.helpers import Battle, Unit, world
 
 
 def _forced_chance(value):
@@ -150,44 +150,3 @@ def test_fleeing_a_guard_catch_back_onto_an_unsafe_node_can_ambush():
 
     assert g.node == "road" and g.order is None
     assert pause is not None and pause.kind == "ambush" and len(pause.pack) > 0
-
-
-def test_app_lands_on_the_map_with_the_ambush_pending_then_resolves_it_on_click():
-    """No more "AMBUSH! [FIGHT]" screen: `_advance` lands back on the map
-    with the group's fight stashed in `_pending_event` -- MapScreen's own
-    red CTA (`_resolve_pending_event`) is what actually starts the battle."""
-    random.seed(1)
-    orig = _forced_chance(1.0)
-    try:
-        a, b = Unit("player"), Unit("player")
-        g = Group([a, b], node="city")
-        guild = Guild(None, groups=[g])
-        app = make_app(guild)
-        g.order = orders.travel(g, "road")
-        app._advance()
-    finally:
-        world.ROAD_AMBUSH_CHANCE = orig
-
-    assert app.scene.__class__.__name__ == "MapScreen"
-    assert app._pending_event is not None
-    pending_group, pending_order = app._pending_event
-    assert pending_group is g and pending_order.kind == "ambush"
-
-    app._resolve_pending_event()
-
-    assert app._pending_event is None
-    assert app._pause_order is not None and app._pause_group is g
-    battle = app.scene.battle
-    assert [u for u in battle.player_units] and battle.player_units[0].team == "player"
-    assert len(battle.enemy_units) == len(app._pause_order.pack)
-
-    battle.winner = "player"
-    battle.round_no = 1
-    for c in battle.player_units:
-        c.status = "up"
-    app._battle_squad = [a, b]
-    app._battle_node = world.node("road")
-    app._battle_end(battle)
-
-    assert app._pause_order is None and app._pause_group is None
-    assert g.order.kind == "idle"

@@ -1,11 +1,9 @@
 """What the group's wagons and animals hold counts like a member's pack: coins at the shops,
 a Dictionary at the tavern, Lumber at the Wilds claim."""
 
-import pygame
 
 from gartok import economy, items, magic, medic, orders, world
 from gartok.animals import Animal
-from gartok.garage_screen import GarageScreen
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.trade import Counter
@@ -13,7 +11,6 @@ from gartok.stables_screen import StablesScreen
 from gartok.taverna_screen import TavernaScreen
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.wagon import Wagon
-from gartok.wilds_claim_screen import WildsClaimScreen
 from tests.helpers import standard_unit
 
 
@@ -83,19 +80,6 @@ def test_studying_goes_on_with_the_dictionary_left_in_the_cart():
     assert u.study_progress > 0
 
 
-def test_lumber_in_the_cart_counts_and_goes_into_the_claim_fences():
-    guild, group, u, cart = _party(("Lumber", 3))
-    u.give_to_pack("Lumber", 2)
-    group.node = world.WILDS_TERRITORY_NODE
-    guild.wilds_claim_stage = "CLEARED"
-    pygame.init()
-    scr = WildsClaimScreen(ui_fonts(), guild, group, lambda: None, lambda g: None, lambda g: None)
-    assert scr._party_lumber() == 5
-    scr._deposit_lumber()
-    assert guild.wilds_claim_fence_lumber == 5
-    assert cart.count_of("Lumber") == 0 and u.count_of("Lumber") == 0
-
-
 def test_cart_coins_pay_for_medic_treatment():
     guild, group, u, cart = _party((items.COIN_ITEM, 200))
     u.hp = 1
@@ -114,17 +98,6 @@ def test_cart_coins_pay_for_buying_at_the_stables():
     assert scr.wealth == 100
     assert scr._pay(40, "Donkey")
     assert cart.money == 60
-
-
-def test_cart_coins_pay_for_buying_a_garage_bay():
-    guild, group, u, cart = _party((items.COIN_ITEM, economy.GARAGE_PRICE))
-    guild.house.owned = True
-    u.money = 0
-    scr = GarageScreen(ui_fonts(), guild, group, lambda: None)
-    assert scr.wealth == economy.GARAGE_PRICE
-    scr._click("bay")
-    assert guild.house.garage.tier == 1
-    assert cart.money == 0
 
 
 def test_cart_coins_pay_for_gathering_licence():
@@ -152,4 +125,3 @@ def test_cart_coins_pay_for_bail_in_taverna():
     u.money = 0
     scr = TavernaScreen(ui_fonts(), guild, list(group.members), "city", lambda: None, group=group)
     assert scr._wealth() == 100
-

@@ -1,7 +1,6 @@
 """The Snake Dragon's job (serpent_nest.py, the two exclusive missions in missions.py)."""
 
 import random
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from gartok import captives, factions, loot, missions, npc_lib, serpent_nest, world
@@ -127,18 +126,3 @@ def test_a_closed_codex_delivery_shows_as_failed():
 def test_an_emptied_lair_has_no_dragon():
     batt = _nest_battle(dragon=False)
     assert serpent_nest.dragon_of(batt) is None
-
-
-def test_entering_the_nest_wants_the_dragon_alive_for_the_grove():
-    guild, u = _sanctuaries_open()
-    missions.accept(guild, u, missions.NATURE_SNAKE)
-    entered = SimpleNamespace(battle=None)
-
-    from gartok.app import App
-    app = App.__new__(App)
-    app.guild, app._map_notices = guild, []
-    app._leave_outside = lambda *a: None
-    app._enter_battle = lambda battle, node: setattr(entered, "battle", battle)
-    app._delve_nest(guild.groups[0], world.node(serpent_nest.NODE), [u], True)
-    dragon = serpent_nest.dragon_of(entered.battle)
-    assert dragon in entered.battle.wanted_alive

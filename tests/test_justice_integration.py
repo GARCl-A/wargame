@@ -15,31 +15,9 @@ discarding it -- see the regression test below.
 import random
 
 from gartok import campaign, forced, orders
-from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Battle, Unit, fixed_d20, world
-
-
-def _app(guild):
-    app = App.__new__(App)
-    app.world = "testworld"
-    app.scene = None
-    app.fonts = None
-    app.ui_fonts = None
-    app.guild = guild
-    app._battle_squad = []
-    app._battle_node = None
-    app._arena_offer = None
-    app._hunt = None
-    app._pause_order = None
-    app._pause_group = None
-    app._claim_stage_pending = None
-    app._map_notices = []
-    app._pending = []
-    app._pending_event = None
-    app._save = lambda: None
-    return app
+from tests.helpers import Unit, fixed_d20
 
 
 def _caught(guild, g):
@@ -147,36 +125,6 @@ def test_resolve_guard_prison_jails_and_resumes_to_idle_at_the_final_stop():
     assert any("cells" in e for e in events)
 
 
-def test_mass_arrest_emptying_the_only_group_does_not_crash_the_map():
-    """Regression: jailing an entire group can leave `guild.groups` empty
-    without anyone dying (nobody's wiped -- they're all coming back).
-    `MapScreen.__init__` assumes at least one group exists to select
-    (`guild.groups[0]`) and would raise `IndexError` otherwise -- `_start_map`
-    has to notice this and fast-forward the clock until release stands a
-    fresh group back up, instead of either crashing or treating it as a
-    wipe."""
-    random.seed(1)
-    a, b = Unit("player"), Unit("player")
-    a.crime = b.crime = 5
-    g = Group([a, b], node="city")
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-    g.order = orders.travel(g, "market")
-    with fixed_d20(20):
-        _result, order = _caught(guild, g)
-
-    forced.resolve_guard_prison(guild, g, order)
-    assert guild.groups == [] and len(guild.jailed) == 2   # both jailed -- the group emptied out
-
-    app._start_map()                            # must not IndexError
-
-    assert len(guild.groups) == 1 and guild.groups[0].node == "city"
-    assert {u.uid for u in guild.groups[0].members} == {a.uid, b.uid}
-    assert guild.jailed == []
-    from gartok.map_screen import MapScreen
-    assert isinstance(app.scene, MapScreen)
-
-
 def test_resolve_guard_flee_falls_back_and_can_chain_into_another_catch():
     random.seed(1)
     culprit = Unit("player")
@@ -229,81 +177,3 @@ def test_resolve_guard_fight_aftermath_only_banks_crime_for_the_caught_survivor(
     assert culprit.crime == 3 + 1 + 1          # brawled + 1 guard downed
     assert mate.crime == 0                     # bystander, untouched
     assert g.order.kind == "idle"
-
-
-def test_app_opens_guard_dialogue_then_the_patrol_fight_resolves_through_battle_end():
-    import gartok.app_forced as app_mod
-    from gartok import dialogue
-    random.seed(1)
-    culprit = Unit("player")
-    culprit.crime = 4
-    g = Group([culprit], node="city")
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-    g.order = orders.travel(g, "market")
-
-    saved = {}
-    orig = app_mod.DialogueScreen
-    app_mod.DialogueScreen = lambda fonts, guild_, group, enc, **kw: saved.update(
-        group=group, order=group.pending, enc=enc, kw=kw) or object()
-    try:
-        with fixed_d20(20):
-            app._advance()
-    finally:
-        app_mod.DialogueScreen = orig
-
-    assert saved["enc"].caught == [culprit]
-    guard_order = saved["order"]
-    assert guard_order.kind == "guard" and g.order is None
-
-    # ATTACK: the app drops the whole present squad into a real, lethal fight
-    # against the patrol that talked -- resolved the same way any other
-    # battle folds back into the guild (campaign.absorb_battle).
-    saved["kw"]["on_done"](dialogue.Result("fight", "", dialogue.Opening()))
-    assert app._pause_order is guard_order and app._pause_group is g
-
-    # BattleScreen isn't monkeypatched here -- build the battle result by hand,
-    # same technique test_campaign.py uses for absorb_battle.
-    fought = Battle([culprit], [Unit("enemy")])
-    fought.winner = "player"
-    fought.round_no = 1
-    fought.player_units[0].status = "up"
-    app._battle_squad = [culprit]
-    app._battle_node = world.node("market")
-
-    app._battle_end(fought)
-
-    assert culprit.crime == 4 + 1              # brawled, no kills credited
-    assert app._pause_order is None and app._pause_group is None
-    assert g.order.kind == "idle"
-
-
-def test_fleeing_into_a_recatch_reopens_the_guard_dialogue_instead_of_dropping_it():
-    """Regression: `_resolve_guard_flee` used to leave a re-catch sitting on
-    `group.order` without ever showing it -- the player would just be dropped
-    back on the map with an unresolved arrest nobody could see. RUN's result
-    now flows through the same `_pending` dispatch as any fresh catch."""
-    import gartok.app_forced as app_mod
-    random.seed(1)
-    culprit = Unit("player")
-    culprit.crime = 5
-    g = Group([culprit], node="city")
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-    g.order = orders.travel(g, "market")
-
-    opened = []
-    orig = app_mod.DialogueScreen
-    app_mod.DialogueScreen = lambda fonts, guild_, group, enc, **kw: (
-        opened.append(group.pending), object())[1]
-    try:
-        with fixed_d20(20):
-            app._advance()                    # first catch, at "market"
-        assert len(opened) == 1 and opened[0].prev_node == "city"
-        with fixed_d20(20):                   # RUN, then caught again right back at "city"
-            app._resolve_guard_flee(g, opened[0])
-    finally:
-        app_mod.DialogueScreen = orig
-
-    assert len(opened) == 2                   # the re-catch reopened the screen, not silently lost
-    assert opened[1].prev_node is None and g.node == "city"

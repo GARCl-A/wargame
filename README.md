@@ -37,7 +37,7 @@ and animals, and a growing set of groups run in parallel.
 ```
 pip install -r requirements.txt
 python main.py              # the game, in a browser window (Edge or Chrome in app mode)
-python main.py --pygame     # the old pygame window: the Editor (characters, maps, the combat lab) lives there
+python main.py --editor     # the Editor's pygame window: characters, maps, the combat lab
 ```
 
 `python -m gartok` is the same as `python main.py`; `python -m gartok.web --help` lists the
@@ -126,7 +126,7 @@ World systems, outside combat:
   up to death.
 - **Progression**: no classes — each XP track (combat, work, racial, magic) has
   its own level and its own talent tree (`progression.py`, `talents.py`,
-  `level_screen.py`).
+  `web/talent_session.py`).
 - **Magic**: twelve spells across three schools (`nature`, `blood`, `faith`),
   initiated at the schools' hidden sanctuaries (`rite.py`, `initiation_screen.py`),
   learned by studying at the taverna over several in-game days (`magic.py`), and
@@ -168,7 +168,7 @@ World systems, outside combat:
 - **Editors**: sandbox character and map creators (`char_editor_screen.py`,
   `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`. The
   map editor sets the grid size and paints walls / pits / water / torches / zones.
-- **Onboarding**: a modal, once-per-slot tutorial (`tutorial.py`/`tutorial_card.py`)
+- **Onboarding**: a modal, once-per-slot tutorial (`tutorial.py`, drawn by the web shell)
   teaching how to play and how to use each screen (draft, map with the clock and
   hunger, each guild-screen tab, group gear, squad, battle, loot, reward, market,
   taverna, the wilds, the bank, paid jobs, the forge, the house, the claim, the
@@ -241,11 +241,9 @@ gartok/
   stables.py        the Farm's stables and the Carpenter's wagon yard, no pygame (`Stables`, `WagonYard`:
                     the purse, the herd limit, the tack, the resale); stables_screen.py is pygame's tab
   ledger.py         Ledger Hold's desk, no pygame (`LedgerDesk`: the chest, the mentorship, the supply run);
-                    ledger_screen.py is pygame's tab
   job_board.py      each giver's jobs board, no pygame (`Board`, `TannerBoard`, `ShrineBoard`, ...: the offers,
                     the signing, the turn-in and its notice); ui/mission_offer_screen.py and its subclasses draw them
   claim_desk.py     the Wilds Claim's work, no pygame (`ClaimDesk`: scouting, the fences, the garrison, the hearth);
-                    wilds_claim_screen.py is pygame's screen
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
@@ -307,20 +305,17 @@ gartok/
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
   text_field.py     a one-line text box's buffer + caret (every name field types through it)
-  start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py + wiki_rules.py / wiki_races.py (its RULES / RACES tabs)
-  combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector, on map_view.py) / guild_screen.py
-  group_screen.py + group_draw.py (everything it paints)
-  squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
-  memorial_screen.py / report_screen.py / level_up_screen.py (after a fight: the fallen, the after-action report, each level-up; data in aftermath.py)
+  # pygame is abandoned (docs/plans/web_frontend.md): what is left is held headless by web/ for its
+  # rules until they move out, or is the Editor's
+  start_screen.py (three constants) / wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
+  draft_screen.py / guild_screen.py / group_screen.py + group_draw.py / dialogue_screen.py
+  battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / memorial_screen.py
   market_screen.py (input over `trade.Counter`) + market_draw.py (painting) / taverna_screen.py + taverna_draw.py (painting)
-  prison_screen.py / hunt_screen.py / level_screen.py
-  bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / shrine_screen.py / crafting_screen.py
-  city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / dialogue_screen.py
-  alert_screen.py / ribbit_prompt_screen.py / group_turn_screen.py
-  bank_hub_screen.py / forge_hub_screen.py / tanner_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py
-  (tabbed hubs wrapping a shop/strongbox, crafting and a mission board)
-  library_screen.py / library_mission_screen.py / apothecary_mission_screen.py
-  pause_screen.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py
+  prison_screen.py / bank_screen.py / city_property_screen.py / stash_screen.py
+  hub_screen.py (the tabbed hubs) and its tabs: crafting_screen.py / gather_screen.py / work_screen.py / medic_screen.py
+  stables_screen.py / initiation_screen.py / library_screen.py / tanner_screen.py / shrine_screen.py
+  library_mission_screen.py / apothecary_mission_screen.py
+  the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 
   # shared presentation
   ui/               the war-table component kit -- the source of truth for screen
@@ -331,7 +326,7 @@ gartok/
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
                     Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
                     by screen), client/ (the shell + one folder per screen under screens/);
-                    `python main.py` / `python -m gartok` (the title; `--pygame` the old window),
+                    `python main.py` / `python -m gartok` (the title; `--editor` the Editor),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   icons.py          vector action icons (pygame.draw) -- no asset file
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
@@ -340,20 +335,14 @@ gartok/
   lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; LightRenderer paints it
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, the action's
                     name over its actor and the flight of a shot (`battle.announce`), combat sounds
-  sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the app enables it, `volume` setting
+  sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the Editor enables it, `volume` setting
   dragselect.py     shared press/drag/drop plumbing for the item screens
   packbox.py        shared drag bookkeeping for the gear and group screens
   store_column.py   shared wagon/animal store column for group, market and stash screens
   stash_screen.py   shared body of the bank / city-property screens (move gear party <-> Stash)
   sheet_panel.py    the full drawn character sheet (guild-screen modal)
-  tutorial_card.py  draws the current screen's tutorial card + its `?` badge
 
-  app.py            the pygame shell: resizable window, loop, screen switching,
-                    the campaign <-> battle loop, the dispatch tables; its methods live in
-                    mixins: app_nodes.py (a node's screens), app_forced.py (guard, ambush,
-                    raid and Claim fights), app_hunt.py (the hunt), app_battle.py
-                    (entering a battle and settling it)
-main.py             entry point (gartok/__main__.py: the browser, or --pygame)
+main.py             entry point (gartok/__main__.py: the browser, or --editor)
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
 scripts/            balance_sim.py (race / occupation / combo rankings; --level / --racial
@@ -408,7 +397,7 @@ docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and i
 - **New place on the map**: a `Node` in `world.NODES` listing its `functions` + edges in
   `world.EDGES` (cost in hours). Offering something already built is only the id in the list.
   A new kind of service is one `NodeFunction` in `node_functions.FUNCTIONS` (order kind, button
-  label) plus its opener in `app.App._FUNCTION_OPENERS`.
+  label) plus its tab in `web/hub_session.py`.
 - **New threat** (a fight the world forces on a group): a catch function (on arrival or daily)
   and a resolve function in `forced.py`, plus one `ForcedEvent` in `forced.EVENTS`.
 - **New world system** (outside combat): the routine that passes time in
@@ -424,10 +413,7 @@ docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and i
 - **New tutorial card** (a screen or a tab/phase of one): an id in
   `tutorial.TUTORIALS`, a `title`/`body`/optional `suggestion` block under
   `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
-  screen (and `tutorial_badge_rect()` if the default top-right `?` would
-  collide with something clickable). `app.py`'s draw/input hooks pick it up for
-  free — see `screen.py`'s two defaults for the contract. In the browser the
-  screen's session names the same id in its own `tutorial_key()` (`web/session.py`).
+  screen's session (`web/session.py`).
 - **New translated string anywhere else**: a key under its own namespace in
   `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` is the only
   namespace actually converted so far; the rest of the game's text is still

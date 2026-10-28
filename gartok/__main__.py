@@ -1,12 +1,12 @@
-"""`python -m gartok`: the game in a browser window (`gartok.web`). `--pygame` opens the pygame window
-instead, where the Editor (characters, maps, the combat lab) still lives."""
+"""`python -m gartok`: the game in a browser window (`gartok.web`). `--editor` opens the Editor
+(characters, maps, the combat lab) in a pygame window instead."""
 
 import sys
 
 
-def _pygame():
+def _editor():
     # Windows treats an unmanifested process as DPI-unaware, so on a scaled display (125%/150%/...) the
-    # compositor bitmap-stretches the whole window. Must run before pygame.init() (App.__init__).
+    # compositor bitmap-stretches the whole window. Must run before pygame.init() (EditorApp.__init__).
     if sys.platform == "win32":
         import ctypes
         try:
@@ -16,13 +16,13 @@ def _pygame():
                 ctypes.windll.user32.SetProcessDPIAware()
             except OSError:
                 pass
-    from .app import App
-    App().run()
+    from .editor_app import EditorApp
+    EditorApp().run()
 
 
 def main():
-    if "--pygame" in sys.argv[1:]:
-        _pygame()
+    if "--editor" in sys.argv[1:]:
+        _editor()
         return
     from .web.__main__ import main as web
     web()

@@ -386,25 +386,6 @@ def test_a_guild_starts_with_an_empty_bestiary_and_saves_it():
     assert again.races == {"Orc"} and again.named == {"ribit": 9}
 
 
-def test_a_campaign_fight_binds_the_guilds_bestiary_and_the_scholars_bonus(monkeypatch):
-    from gartok import recorder, vocations, world
-    from gartok.app import App
-    from gartok.guild import Guild
-    pygame.init()
-    app = App.__new__(App)
-    app.guild = Guild([Unit("player")], node="road")
-    app.guild.vocation = vocations.SCHOLARS
-    app.ui_fonts, app._battle_squad = ui_fonts(), []
-    app._autosave_before = lambda battle, node: None
-    app._log_fight = lambda battle, node: None
-    monkeypatch.setattr(recorder, "before_fight", lambda squad: None)
-    batt, _hero, _ = _fight()
-    app._enter_battle(batt, world.node("road"))
-    assert batt.intel.bestiary["player"] is app.guild.bestiary
-    assert batt.intel.bonus["player"] == vocations.INFO_BONUS
-    assert batt.intel.bestiary["enemy"] is None and batt.intel.bonus["enemy"] == 0
-
-
 # ---- attackers search, defenders group up ----------------------------------- #
 
 
@@ -536,38 +517,6 @@ def test_the_lab_fights_say_who_brought_them():
     assert combat_lab.build("dungeon", 2, 2, seed=1)[0].aggressor == "player"
     assert combat_lab.build("road", 2, 2, seed=1)[0].aggressor == "enemy"
     assert combat_lab.build("scrapper", 0, 3, seed=1)[0].aggressor is None
-
-
-def _app_for_fights(monkeypatch):
-    from gartok import world
-    from gartok.app import App
-    from gartok.guild import Guild
-    pygame.init()
-    app = App.__new__(App)
-    app.guild = Guild([Unit("player"), Unit("player")], node="wilds_territory")
-    app.ui_fonts, app._battle_squad, app._arena_offer, app._claim_stage_pending = ui_fonts(), [], None, None
-    app._pause_order = app._pause_group = None
-    caught = []
-    app._enter_battle = lambda battle, node: caught.append(battle)
-    return app, caught, world
-
-
-def test_the_map_names_who_brought_each_fight(monkeypatch):
-    from gartok import hunt
-    from gartok.orders import Order
-    app, caught, world = _app_for_fights(monkeypatch)
-    group = app.guild.groups[0]
-    app._start_claim_battle(group, "SWEPT", 1, 2)
-    assert caught[-1].aggressor == "player"                       # the guild sweeps its claim
-    foes = [Unit("enemy")]
-    app._start_forced_battle(group, Order("travel", dest="road"), foes)
-    assert caught[-1].aggressor == "enemy"                        # an ambush, a patrol, a raid
-    state = hunt.begin(app.guild, list(group.members), world.node("wilds"), "normal", hours_left=0)
-    app._start_hunt_battle(state, [Unit("enemy")])
-    assert caught[-1].aggressor == "enemy"                        # the pack found the hunters
-    state.target = "ox"
-    app._start_hunt_battle(state, [Unit("enemy")])
-    assert caught[-1].aggressor == "player"                       # the guild tracked the Aurochs down
 
 
 def test_a_lab_seed_rebuilds_the_same_fight_names_and_opening_reads_included():

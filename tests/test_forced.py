@@ -5,8 +5,6 @@ import random
 from types import SimpleNamespace
 
 from gartok import campaign, forced, orders
-from gartok.app import App
-from gartok.app_forced import FORCED_PLAYERS
 from gartok.group import Group
 from gartok.guild import Guild
 from tests.helpers import Unit, world
@@ -15,8 +13,7 @@ from tests.helpers import Unit, world
 def test_every_event_has_a_way_to_be_played_and_an_opener():
     for kind, event in forced.EVENTS.items():
         assert event.kind == kind
-        assert event.play in FORCED_PLAYERS
-        assert kind in App._ACTIVITY_OPENERS
+        assert event.play in ("battle", "map", "talk")
 
 
 def test_no_forced_kind_doubles_as_a_player_order():

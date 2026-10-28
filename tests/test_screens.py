@@ -3,11 +3,9 @@
 import os
 import random
 
-import pytest
 
 from tests.helpers import Unit, click_menu, data, economy, packed, standard_unit
 from gartok.guild import Guild
-from gartok.holdings import Stash
 
 
 def test_battle_export_state_writes_a_json_snapshot(tmp_path, monkeypatch):
@@ -248,210 +246,6 @@ def test_every_race_has_a_token_icon_that_loads():
     assert artwork.icon("head", "no-such-glyph", 24) is None                   # graceful
 
 
-@pytest.mark.slow
-def test_every_screen_draws_native_at_any_window_size():
-    """Every screen is `native`: it draws straight to the real window and lays
-    itself out from `screen.get_size()`. Render each at a few sizes -- catches a
-    stray fixed constant, an out-of-scope `screen`, or a layout that divides by
-    something that goes to zero on a small window."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import world
-    from gartok.guild import Guild
-    from gartok.battle import Battle
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    F = ui_fonts()
-
-    random.seed(0)
-    roster = [Unit("player") for _ in range(5)]
-    guild = Guild(list(roster), node=world.START_NODE)
-    noop = lambda *a, **k: None
-    bnode = next(n for n in world.NODES if n.kind == "battle")
-    mnode = next(n for n in world.NODES if n.kind == "market")
-    tnode = next(n for n in world.NODES if n.kind == "tavern")
-    wnode = next(n for n in world.NODES if n.kind == "wilds")
-    batt = Battle(list(roster[:3]), [Unit("enemy") for _ in range(3)],
-                  scenario=bnode.scenario(), daylight=True, lethal=True)
-    from gartok.scenario import FlagScenario
-    ctf_batt = Battle(list(roster[:2]), [Unit("enemy") for _ in range(2)],
-                      scenario=FlagScenario(), lethal=False, arena=True)
-
-    from gartok.menu_screen import MenuScreen
-    from gartok.bank_screen import BankScreen
-    from gartok.draft_screen import DraftScreen
-    from gartok.map_screen import MapScreen
-    from gartok.squad_screen import SquadScreen
-    from gartok.battle_screen import BattleScreen
-    from gartok.loot_screen import LootScreen
-    from gartok.reward_screen import RewardScreen
-    from gartok.market_screen import MarketScreen
-    from gartok.taverna_screen import TavernaScreen
-    from gartok.hunt import HuntState
-    from gartok.hunt_screen import HuntScreen
-    from gartok.guild_screen import GuildScreen
-    from gartok.group_screen import GroupScreen
-    from gartok.level_screen import LevelScreen
-    from gartok.pause_screen import PauseScreen
-    from gartok.editor_menu_screen import EditorMenuScreen
-    from gartok.char_editor_screen import CharEditorScreen
-    from gartok.map_editor_screen import MapEditorScreen
-    from gartok.start_screen import StartScreen
-    from gartok.settings_screen import SettingsScreen
-    from gartok.wiki_screen import WikiScreen
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    UI_F = ui_fonts()
-
-    scenes = [
-        StartScreen(UI_F, noop, noop, noop, noop, noop, noop, noop),
-        SettingsScreen(UI_F, noop),
-        WikiScreen(UI_F, noop),
-        MenuScreen(UI_F, noop, noop, noop, noop, on_editor=noop),
-        EditorMenuScreen(UI_F, noop, noop, on_scenario=noop),
-        CharEditorScreen(UI_F, noop),
-        MapEditorScreen(UI_F, noop),
-        DraftScreen(UI_F, noop),
-        MapScreen(F, guild, noop, noop, noop, noop),
-        SquadScreen(F, roster, bnode, noop, noop),
-        BattleScreen(UI_F, batt, noop),
-        BattleScreen(UI_F, ctf_batt, noop),                  # capture the flag: setup + pennants
-        LootScreen(F, guild, list(roster[:3]), ["Axe", "Rope"], noop),
-        RewardScreen(F, guild, list(roster[:3]), 120, noop),
-        MarketScreen(F, guild, list(roster[:3]), mnode, noop),
-        TavernaScreen(F, guild, list(roster[:3]), tnode, noop),
-        HuntScreen(F, guild, HuntState(list(roster[:3]), wnode, hours_left=8),
-                   phase="setup", on_ambush=noop, on_done=noop),
-        HuntScreen(F, guild, HuntState(list(roster[:3]), wnode, hours_left=4, hours_hunted=6),
-                   phase="interlude", on_ambush=noop, on_done=noop),
-        GuildScreen(F, guild, noop, noop),
-        GroupScreen(F, guild, guild.groups[0], noop),
-        LevelScreen(F, roster[0], noop, noop),
-        BankScreen(F, guild, list(roster[:3]), noop),          # locked: no chest yet
-    ]
-
-    stocked = Guild(list(roster), node=world.START_NODE, bank=Stash(10, packed(["Rope", "Dagger"])))
-    scenes.append(BankScreen(F, stocked, list(roster[:2]), noop))   # rented + stashed
-    scenes.append(PauseScreen(UI_F, scenes[2], noop, noop, noop))
-
-    from gartok.alert_screen import AlertScreen
-    scenes.append(AlertScreen(F, scenes[2], "DEATH ALERT",
-                              ["Someone starved.", "The guild mourns."], noop, is_danger=True))
-    scenes.append(AlertScreen(F, scenes[2], "HUNGER ALERT", ["Rations ran out."], noop))
-
-    from gartok.ledger_screen import LedgerScreen
-    from gartok.trust_screen import TrustScreen
-    from gartok.tanner_screen import TannerScreen
-    from gartok.apothecary_mission_screen import ApothecaryMissionScreen
-    from gartok.library_mission_screen import LibraryMissionScreen
-    scenes.append(TrustScreen(UI_F, guild, guild.groups[0], noop))          # nothing accepted yet
-    scenes.append(TannerScreen(UI_F, guild, guild.groups[0], noop))
-    scenes.append(ApothecaryMissionScreen(UI_F, guild, guild.groups[0], noop))
-    scenes.append(LibraryMissionScreen(UI_F, guild, guild.groups[0], noop))
-    scenes.append(LedgerScreen(F, guild, guild.groups[0], noop))         # nothing to hand over
-
-    from gartok import missions as _missions
-    accepted = Guild(list(roster), node=world.START_NODE)
-    _missions.accept(accepted, accepted.roster[0], _missions.TRUST_CHEST)
-    scenes.append(TrustScreen(UI_F, accepted, accepted.groups[0], noop))    # carrying the chest
-    scenes.append(LedgerScreen(F, accepted, accepted.groups[0], noop))   # something to hand over
-
-    for tab in ("armor", "kit"):                      # the other market category tabs
-        mkt = MarketScreen(F, guild, list(roster[:3]), mnode, noop)
-        mkt.tab = tab
-        mkt.qty["Meat"] = 12
-        scenes.append(mkt)
-
-    for wtab in ("recipes", "actions", "talents", "beasts", "rules"):
-        ws = WikiScreen(UI_F, noop)
-        ws.tab = wtab
-        scenes.append(ws)
-
-    guild.reputation = {"arena": 1}
-    guild.deeds_done = ["arena_first_blood"]
-    rep_tab = GuildScreen(F, guild, noop, noop)
-    rep_tab.tab = "reputations"                       # the faction-standing view
-    scenes.append(rep_tab)
-
-    from gartok.group import Group
-    guild_tab = GuildScreen(F, guild, noop, noop)
-    guild_tab.tab = "guild"                           # fame, slots, groups, holdings
-    scenes.append(guild_tab)
-
-    fraying = Guild(list(roster), node=world.START_NODE)       # one overextended group, no spare slot
-    fraying.groups.append(Group([Unit("player")], node=world.START_NODE))
-    fraying.leaving[roster[1].uid] = fraying.clock.day + 3
-    fraying.house.owned, fraying.house.squatting = True, True
-    fraying.wilds_claim_stage, fraying.wilds_claim_owner = "ESTABLISHED", "seized"
-    fraying.bank.capacity = 10
-    fraying_tab = GuildScreen(F, fraying, noop, noop)
-    fraying_tab.tab = "guild"
-    scenes.append(fraying_tab)
-    apart = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
-                                Group(list(roster[2:]), node="market")])
-    scenes.append(MapScreen(F, apart, noop, noop, noop, noop))
-
-    together = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
-                                   Group(list(roster[2:]), node=world.START_NODE)])
-    scenes.append(MapScreen(F, together, noop, noop, noop, noop))   # +N badge, MERGE button
-    split_scene = MapScreen(F, together, noop, noop, noop, noop)
-    split_scene._split_target = split_scene.selected.gid
-    scenes.append(split_scene)
-
-    crowded = Guild(None, groups=[Group([roster[0], roster[1]], node=world.START_NODE),
-                                  Group([roster[2], roster[3]], node=world.START_NODE),
-                                  Group([roster[4]], node=world.START_NODE)])
-    scenes.append(MapScreen(F, crowded, noop, noop, noop, noop))    # +2 badge, two MERGE rows
-
-    for scene in scenes:
-        assert getattr(scene, "native", False), type(scene).__name__
-        for size in ((1280, 800), (1920, 1080), (1024, 640)):
-            surf = pygame.Surface(size)
-            scene.mouse = (size[0] // 2, size[1] // 2)
-            scene.draw(surf)
-
-
-def test_map_screen_heals_a_selected_group_pruned_mid_tick():
-    """`Guild.remove_members` (permadeath/starvation) can prune whichever
-    group it empties out -- not necessarily the one the map screen has
-    `selected` -- while that same `MapScreen` instance stays on screen across
-    frames (e.g. an ambush CTA pending on a *different* group). Draw used to
-    hand `selected.gid` straight to `draw_map`, which does a bare
-    `next(g for g in groups if g["key"] == selected)` with no fallback, so a
-    stale `selected` crashed with `StopIteration` the moment it drew again.
-    `draw()` now re-derives `selected` the same way `_confirm_merge` already
-    did for the group it folds away."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import world
-    from gartok.group import Group
-    from gartok.guild import Guild
-    from gartok.map_screen import MapScreen
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    F = ui_fonts()
-    noop = lambda *a, **k: None
-
-    g1 = Group([Unit("player")], node=world.START_NODE)
-    g2 = Group([Unit("player")], node=world.START_NODE)
-    guild = Guild(None, groups=[g1, g2])
-
-    scr = MapScreen(F, guild, noop, noop, noop, noop)
-    scr.selected = g1
-
-    guild.remove_members(g1.members)   # empties and prunes g1, same as a casualty mid-tick
-    assert g1 not in guild.groups
-
-    surf = pygame.Surface((1280, 800))
-    scr.mouse = (640, 400)
-    scr.draw(surf)                     # used to raise StopIteration in draw_map
-
-    assert scr.selected is g2
-
-
 def test_guild_screen_member_detail_renders():
     """GuildScreen only draws the detail panel if a member is selected. This test
     ensures _draw_detail runs without crashing."""
@@ -492,95 +286,6 @@ def test_guild_screen_member_detail_renders():
     scr.mouse = (bx + 10, 350)
     scr.draw(surf)
     assert scr.tooltip is not None
-
-
-
-def test_squad_and_reward_screens_pop_the_sheet_modal():
-    """The card's 'i' disc opens the sheet; the dismiss click is spent only on
-    closing it, not on picking a fighter / paying the purse."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import world
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.squad_screen import SquadScreen
-    from gartok.reward_screen import RewardScreen
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    F = ui_fonts()
-
-    random.seed(1)
-    roster = [Unit("player") for _ in range(3)]
-    guild = Guild(list(roster), node=world.START_NODE)
-    surf = pygame.Surface((1280, 800))
-    noop = lambda *a, **k: None
-
-    sq = SquadScreen(F, roster, next(n for n in world.NODES if n.kind == "battle"), noop, noop)
-    sq.mouse = (0, 0)
-    sq.draw(surf)
-    badge = next(r for r, u in sq.info_hits if u is roster[0])
-    picked_before = list(sq.picked)
-    sq._click(badge.center)
-    assert sq.sheet_open and sq._sheet_unit is roster[0]
-    sq.draw(surf)                                     # renders the modal
-    sq._click((5, 5))                                 # a click just closes it
-    assert not sq.sheet_open
-    assert sq.picked == picked_before                # the dismiss click didn't toggle
-
-    rw = RewardScreen(F, guild, list(roster), 120, noop)
-    rw.mouse = (0, 0)
-    rw.draw(surf)
-    rbadge = next(r for r, m in rw.info_hits if m is roster[0])
-    rw._click(rbadge.center)
-    assert rw.sheet_open
-    rw._click((5, 5))
-    assert not rw.sheet_open and rw.paid_to is None   # the dismiss click didn't pay the purse
-
-
-def test_level_screen_pops_the_sheet_modal():
-    """The character card's inspect badge opens the sheet; dismiss click closes it;
-    escape key closes it; and footer button also opens it."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.level_screen import LevelScreen
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    F = ui_fonts()
-
-    random.seed(1)
-    u = Unit("player")
-    surf = pygame.Surface((1280, 800))
-    noop = lambda *a, **k: None
-
-    lvl = LevelScreen(F, u, on_back=noop, on_change=noop)
-    lvl.mouse = (0, 0)
-    lvl.draw(surf)
-
-    sheet_btn = next((r for k, r in lvl.buttons if k == "sheet"), None)
-    assert sheet_btn is not None
-
-    # Clicking the header row opens sheet
-    lvl._click(sheet_btn.center)
-    assert lvl.sheet_open and lvl._sheet_unit is u
-
-    # Draw modal while open
-    lvl.draw(surf)
-
-    # Dismiss click closes sheet
-    lvl._click((10, 10))
-    assert not lvl.sheet_open
-
-    # Footer button opens sheet
-    lvl.draw(surf)
-    sheet_btn = next(r for key, r in lvl.buttons if key == "sheet")
-    lvl._click(sheet_btn.center)
-    assert lvl.sheet_open
-
-    # Escape key dismisses sheet
-    assert lvl.handle_escape() is True
-    assert not lvl.sheet_open
-    assert lvl.handle_escape() is False
 
 
 def test_group_screen_multidrop_moves_every_picked_pack_item():
@@ -982,10 +687,6 @@ def test_group_screen_cargo_search_filter():
     assert gs.editing_search is False
 
 
-
-
-
-
 def test_factions_get_unlocks():
     from gartok import factions
     bank_unlocks = factions.get_unlocks("bankers")
@@ -1017,7 +718,6 @@ def test_market_screen_draw_multiple_shoppers_hover():
         if label == "distribute":
             ms.mouse = rect.center
             ms.draw(surf)
-
 
 
 def _pack_rows_of(rows, unit):
@@ -1132,7 +832,7 @@ def test_treefolk_race_and_portraits():
 
 
 def test_goblin_portraits():
-    from gartok import artwork, data, persist, unit
+    from gartok import artwork, data, unit
     import pygame
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
@@ -1379,7 +1079,6 @@ def test_sheet_panel_hp_breakdown_tooltip():
     sheet_panel.draw_sheet(surf, rect, Combatant(u), fonts, mouse=hp_chip_pos)
 
 
-
 def test_char_editor_screen_hp_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
@@ -1398,31 +1097,6 @@ def test_char_editor_screen_hp_tooltip():
     cs.draw(surf)
     found_hp_tooltip = bool(cs.tooltip and any("HIT POINTS (HP)" in item[0] for item in cs.tooltip if isinstance(item, tuple)))
     assert found_hp_tooltip, "CharEditorScreen should display HP breakdown tooltip on hover"
-
-
-def test_map_screen_split_panel_shows_racial_level():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import world
-    from gartok.guild import Guild
-    from gartok.group import Group
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.map_screen import MapScreen
-    from tests.helpers import Unit
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    F = ui_fonts()
-
-    u1, u2 = Unit("player"), Unit("player")
-    u1.set_track_level("combat", 3)
-    group = Group([u1, u2], node=world.START_NODE)
-    g = Guild(None, groups=[group])
-    ms = MapScreen(F, g, lambda: None, lambda: None, lambda: None, lambda: None)
-    ms._split_target = group.gid
-    surf = pygame.Surface((1280, 800))
-    ms.draw(surf)
-    assert len(ms._split_member_rects) == 2
-    assert ms._split_member_rects[0][0] == u1.uid
 
 
 def test_footer_bar_hint_offsets_when_back_button_present():
@@ -1519,61 +1193,6 @@ def test_guild_screen_level_up_observability():
     assert level_called == [u1]
 
 
-def test_map_screen_level_up_observability():
-    import pygame
-    from gartok.guild import Guild
-    from gartok.map_screen import MapScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.unit import Unit
-    pygame.init()
-    surf = pygame.Surface((1280, 800))
-    u = Unit("player")
-    u.combat_xp = 15
-    u.collect_levels()
-    guild = Guild([u], node="city")
-
-    scr = MapScreen(ui_fonts(), guild, on_guild=lambda: None, on_wipe=lambda: None,
-                    on_advance=lambda *a, **k: None, on_manage_group=lambda g: None)
-    scr.mouse = (0, 0)
-    scr.draw(surf)
-
-    guild_btn = next((r for k, r in scr.buttons if k == "guild"), None)
-    assert guild_btn is not None
-
-    # a guild with nobody pending a level-up gets the plain, narrower label
-    plain_guild = Guild([Unit("player")], node="city")
-    plain_scr = MapScreen(ui_fonts(), plain_guild, on_guild=lambda: None, on_wipe=lambda: None,
-                          on_advance=lambda *a, **k: None, on_manage_group=lambda g: None)
-    plain_scr.mouse = (0, 0)
-    plain_scr.draw(surf)
-    plain_btn = next((r for k, r in plain_scr.buttons if k == "guild"), None)
-
-    # the pending-level-up badge widens the button -- not pinned to an exact
-    # pixel count, which would just be re-asserting whatever font renders it
-    assert guild_btn.w > plain_btn.w
-
-
-def test_squad_screen_level_up_observability():
-    from gartok import world
-    from gartok.squad_screen import SquadScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.unit import Unit
-    u = Unit("player")
-    u.combat_xp = 15
-    u.collect_levels()
-    assert u.pending_picks
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    bnode = next(n for n in world.NODES if n.kind == "battle")
-    scr = SquadScreen(ui_fonts(), [u], bnode, lambda s: None, lambda: None)
-    
-    surf = pygame.Surface((1024, 768))
-    scr.mouse = (0, 0)
-    scr.draw(surf)
     # Renders without crashing and card lines include the talent line
 
 
@@ -1715,42 +1334,6 @@ def test_battle_screen_16_9_monitor_no_overflow():
             assert rect.bottom <= h, f"Utility button {key} bottom {rect.bottom} below window {h} in {w}x{h}"
 
 
-def test_alert_screen_dismissal_methods():
-    import pygame
-    from gartok.alert_screen import AlertScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    surf = pygame.Surface((1280, 800))
-    F = ui_fonts()
-
-    done_count = 0
-    def on_done():
-        nonlocal done_count
-        done_count += 1
-
-    # 1. Test clicking OK button
-    alert = AlertScreen(F, None, "CRITICAL WARNING", ["A hero fell in battle."], on_done, is_danger=True)
-    alert.draw(surf)
-    ok_btn = next(r for k, r in alert.buttons if k == "ok")
-    ev_click = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": ok_btn.center})
-    alert.handle_event(ev_click)
-    assert done_count == 1
-
-    # 2. Test Enter key
-    ev_enter = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RETURN})
-    alert.handle_event(ev_enter)
-    assert done_count == 2
-
-    # 3. Test Space key
-    ev_space = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_SPACE})
-    alert.handle_event(ev_space)
-    assert done_count == 3
-
-    # 4. Test Escape handling
-    alert.handle_escape()
-    assert done_count == 4
-
-
 def test_market_screen_equipping_stack_preserves_remainder():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
@@ -1858,24 +1441,3 @@ def test_primitives_text_and_ellipsize_none_resilience():
     assert r.width == 0
     rc = caps(surf, f, None, (0, 0), (255, 255, 255))
     assert rc.width == 0
-
-
-def test_pause_screen_wiki_callback():
-    from gartok.pause_screen import PauseScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    opened = []
-    pause = PauseScreen(ui_fonts(), None, lambda: None, lambda: None, lambda: None,
-                        on_wiki=lambda: opened.append(True))
-    class _Rect:
-        def collidepoint(self, _p):
-            return True
-    pause._buttons = [("wiki", _Rect())]
-    pause._click((0, 0))
-    assert opened == [True]
-
-
-
-
-
-
-

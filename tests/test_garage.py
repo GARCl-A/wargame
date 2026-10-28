@@ -3,12 +3,10 @@ them safe, feeds the animals from the house stash and gives them back to the gro
 
 import os
 
-import pygame
 
-from gartok import economy, persist
+from gartok import persist
 from gartok.animals import HARNESS, STARVE_DAYS, Animal
 from gartok.city_property_screen import CityPropertyScreen
-from gartok.garage_screen import GarageScreen
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.ui.tokens import fonts as ui_fonts
@@ -26,35 +24,6 @@ def _setup(coins=0, bays=1, wagons=1, animals=1, wise=0):
     guild.house.owned = True
     guild.house.garage.tier = bays
     return guild, g, u
-
-
-def _screen(guild, g):
-    return GarageScreen(ui_fonts(), guild, g, lambda: None)
-
-
-def _keys(scr):
-    pygame.init()
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface((1280, 800)))
-    return {k for k, _ in scr.buttons}
-
-
-def test_a_bay_costs_the_flat_price_and_adds_room_for_one_of_each():
-    guild, g, u = _setup(coins=economy.GARAGE_PRICE + 4, bays=0)
-    scr = _screen(guild, g)
-    assert "bay" in _keys(scr)
-    scr._click("bay")
-    garage = guild.house.garage
-    assert garage.tier == 1 and garage.wagon_room == 1 and garage.animal_room == 1
-    assert u.money == 4
-
-
-def test_a_bay_is_refused_when_the_party_cannot_pay():
-    guild, g, u = _setup(coins=economy.GARAGE_PRICE - 1, bays=0)
-    scr = _screen(guild, g)
-    assert "bay" not in _keys(scr)
-    scr._click("bay")
-    assert guild.house.garage.tier == 0 and u.money == economy.GARAGE_PRICE - 1
 
 
 def test_parking_moves_the_wagon_and_the_animal_out_of_the_group_and_keeps_the_cargo():
@@ -169,27 +138,6 @@ def test_the_house_screen_offers_the_garage_once_it_is_wired():
     assert "garage" in [s[0] for s in scr._services()]
     scr._run_service("garage")
     assert calls == [1]
-
-
-def test_the_screen_draws_with_and_without_a_garage():
-    for bays in (0, 2):
-        guild, g, _ = _setup(bays=bays, wagons=2, animals=2)
-        guild.park_wagon(g, g.wagons[0]) if bays else None
-        _keys(_screen(guild, g))
-
-
-def test_the_screen_buttons_park_and_take_out():
-    guild, g, _ = _setup()
-    scr = _screen(guild, g)
-    keys = _keys(scr)
-    assert {"park_wagon:0", "park_animal:0"} <= keys
-    scr._click("park_wagon:0")
-    scr._click("park_animal:0")
-    keys = _keys(scr)
-    assert {"take_wagon:0", "take_animal:0"} <= keys and "park_wagon:0" not in keys
-    scr._click("take_wagon:0")
-    scr._click("take_animal:0")
-    assert len(g.wagons) == 1 and len(g.herd) == 1
 
 
 def test_the_garage_survives_a_save_round_trip():

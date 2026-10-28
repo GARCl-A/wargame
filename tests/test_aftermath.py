@@ -5,18 +5,12 @@ import os
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-import pygame
 
 from gartok import aftermath, campaign, persist
 from gartok.clock import Clock
 from gartok.guild import Guild
-from gartok.level_screen import LevelScreen
-from gartok.level_up_screen import LevelUpScreen
-from gartok.loot_screen import LootScreen
-from gartok.memorial_screen import MemorialScreen
-from gartok.report_screen import ReportScreen
 from gartok.unit import Unit
-from tests.helpers import Battle, _unit, make_app, world
+from tests.helpers import Battle, _unit, world
 
 NODE = "wilds"
 
@@ -153,105 +147,11 @@ def test_a_starved_member_gets_a_memorial_with_where_they_fell():
 # --------------------------------------------------------------------------- #
 # the flow                                                                     #
 # --------------------------------------------------------------------------- #
-def _app_fight(level=False, death=False):
-    guild, squad, battle = _fight(n=2)
-    app = make_app(guild)
-    app._battle_squad = list(squad)
-    app._battle_node = world.node(NODE)
-    app._skirmish = None
-    app._wildfire_node = None
-    app._left_outside = None
-    app._open_level = lambda unit, on_back=None: setattr(app, "scene", LevelScreen(None, unit, on_back))
-    app._after_activity = lambda: setattr(app, "scene", "map")
-    if death:
-        _death(battle, battle.player_units[1], battle.enemy_units[0])
-    _won(battle)
-    if level:
-        battle.player_units[0].combat_xp_earned = 50
-    return app, squad, battle
-
-
-def test_the_flow_runs_memorial_then_report_then_level_up_then_loot():
-    app, squad, battle = _app_fight(level=True, death=True)
-    app._battle_end(battle)
-    assert isinstance(app.scene, MemorialScreen) and app.scene.memorial.name == squad[1].name
-    app.scene.on_done()
-    assert isinstance(app.scene, ReportScreen)
-    app.scene.on_done()
-    assert isinstance(app.scene, LevelUpScreen) and app.scene.level_up.unit is squad[0]
-    app.scene.on_done()
-    assert isinstance(app.scene, LootScreen) or app.scene == "map"
-
-
-def test_a_quiet_win_opens_on_the_report():
-    app, _, battle = _app_fight()
-    app._battle_end(battle)
-    assert isinstance(app.scene, ReportScreen)
-    app.scene.on_done()
-    assert not isinstance(app.scene, (ReportScreen, LevelUpScreen, MemorialScreen))
-
-
-def test_pick_talents_goes_to_the_tree_and_back_to_the_queue():
-    app, squad, battle = _app_fight(level=True)
-    app._battle_end(battle)
-    app.scene.on_done()
-    lu_screen = app.scene
-    assert isinstance(lu_screen, LevelUpScreen)
-    lu_screen.on_talents()
-    assert isinstance(app.scene, LevelScreen) and app.scene.unit is squad[0]
-    app.scene.on_back()
-    assert not isinstance(app.scene, (LevelScreen, LevelUpScreen))
-
-
-def test_a_full_wipe_mourns_everyone_before_the_campaign_ends():
-    guild, squad, battle = _fight(n=1)
-    app = make_app(guild)
-    app._battle_squad, app._battle_node = list(squad), world.node(NODE)
-    app._skirmish = app._wildfire_node = app._left_outside = None
-    ended = []
-    app._campaign_over = lambda: ended.append(True)
-    _death(battle, battle.player_units[0], battle.enemy_units[0])
-    battle.winner = "enemy"
-    app._battle_end(battle)
-    assert isinstance(app.scene, MemorialScreen) and not ended
-    app.scene.on_done()
-    assert ended == [True]
 
 
 # --------------------------------------------------------------------------- #
 # the screens                                                                  #
 # --------------------------------------------------------------------------- #
-def test_the_level_up_numbers_climb_from_before_to_after():
-    lu = aftermath.LevelUp(_unit(seed=4), {"combat": 1, "magic": 0, "racial": 0, "hit_dice": 1, "hp_max": 8},
-                           {"combat": 2, "magic": 0, "racial": 1, "hit_dice": 2, "hp_max": 14})
-    scr = LevelUpScreen(None, lu, lambda: None)
-    assert [g[2] for g in scr.data()["gains"]] == [1, 0, 1, 8]
-    scr.update(10_000)
-    assert [g[2] for g in scr.data()["gains"]] == [2, 1, 2, 14]
-    assert scr.data()["stamp"] == "LEVEL 2" and scr.data()["talents"] is None
-
-
-def test_the_report_bar_fills_over_time():
-    app, _, battle = _app_fight(level=True)
-    outcome = campaign.absorb_battle(app.guild, app._battle_squad, battle, node=world.node(NODE))
-    scr = ReportScreen(None, outcome, lambda: None)
-    start = scr.data()["rows"][0]
-    scr.update(10_000)
-    end = scr.data()["rows"][0]
-    assert end["level"] > start["level"] and end["xp_note"] == "+50 XP"
-
-
-def test_the_screens_draw_headless():
-    pygame.init()
-    surf = pygame.Surface((1280, 800))
-    small = pygame.Surface((800, 600))
-    app, _, battle = _app_fight(level=True, death=True)
-    outcome = campaign.absorb_battle(app.guild, app._battle_squad, battle, node=world.node(NODE))
-    for s in (surf, small):
-        MemorialScreen(None, outcome.memorials[0], lambda: None).draw(s)
-        ReportScreen(None, outcome, lambda: None, place="The Wilds", rounds=4,
-                     notes=["A captive is led away."]).draw(s)
-        LevelUpScreen(None, outcome.level_ups[0], lambda: None, on_talents=lambda: None).draw(s)
 
 
 def test_work_shift_level_up_queues_pending_level_up():

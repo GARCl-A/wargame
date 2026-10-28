@@ -248,7 +248,6 @@ def test_champion_pushed_into_pit_awards_title_to_pusher():
     assert "lands the finishing blow and takes the Champion of the Pit" in out.arena_title_event
 
 
-
 def test_champion_title_stays_vacant_on_a_messy_finish():
 
     from gartok import arena, campaign, world
@@ -323,33 +322,6 @@ def test_arena_title_only_bites_inside_the_arena():
         ac.ap, ac.torch_hand = 2, True
         ac.pos, dc.pos = (5, 5), (6, 5)
         assert actions.DEMORALIZE.can(batt, ac, dc) is expected
-
-
-
-
-
-def test_arena_entry_is_staked_per_fighter():
-    from gartok import arena, world
-    from gartok.squad_screen import SquadScreen
-    
-    roster = [Unit("player") for _ in range(3)]
-    for u in roster:
-        u.money = 50
-    iron = arena.scrapper_bout()
-    
-    scr = SquadScreen(None, roster, world.node("arena"), on_confirm=lambda *a: None,
-                      on_back=lambda: None, arena_offers=[iron])
-    assert scr.picked == roster                       # roster fits the cap, all auto-picked
-    assert scr.entry_cost == iron.entry * 3
-    assert scr.ok and scr.picked_gold >= scr.entry_cost
-
-    scr.picked = roster[:1]                           # solo pays a third
-    assert scr.entry_cost == iron.entry
-
-    from gartok import economy
-    # the app bills that whole stake off the squad, richest first
-    economy.charge_richest_first(roster, iron.entry * 3)
-    assert sum(u.money for u in roster) == 150 - iron.entry * 3
 
 
 def test_absorb_battle_carries_quiver_charges_forward():

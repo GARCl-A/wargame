@@ -3,16 +3,12 @@ garrisons it, one silent roll a day when nobody does, and its food feeds the gar
 
 import os
 
-import pygame
 
 from gartok import economy, forced, orders, persist, world
 from gartok.animals import Animal
-from gartok.garage_screen import GarageScreen
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.wagon import Wagon
-from gartok.wilds_claim_screen import WildsClaimScreen
 from tests.helpers import Unit
 
 
@@ -39,13 +35,6 @@ def _park_all(guild, g):
 
 def _roll(monkeypatch, value):
     monkeypatch.setattr("random.random", lambda: value)
-
-
-def _keys(scr):
-    pygame.init()
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface((1280, 800)))
-    return {k for k, _ in scr.buttons}
 
 
 def test_the_garage_opens_with_the_garrison_and_closes_when_the_claim_is_seized():
@@ -191,34 +180,6 @@ def test_parked_food_rots_like_any_other():
     assert [n for n, _ in wagon.stash.items] == ["Rotten Food"]
 
 
-def test_the_garage_screen_draws_and_parks_at_the_claim():
-    guild, g, _ = _setup()
-    scr = GarageScreen(ui_fonts(), guild, g, lambda: None, claim=True)
-    keys = _keys(scr)
-    assert {"park_wagon:0", "park_animal:0"} <= keys and "bay" not in keys
-    scr._click("park_wagon:0")
-    scr._click("park_animal:0")
-    assert {"take_wagon:0", "take_animal:0"} <= _keys(scr)
-    g.order = None
-    _keys(scr)
-    scr._click("take_wagon:0")
-    scr._click("take_animal:0")
-    assert len(g.wagons) == 1 and len(g.herd) == 1
-
-
-def test_the_claim_screen_offers_the_garage_only_once_it_is_open():
-    calls = []
-    for stage, offered in (("SWEPT", False), ("SUSTAINING", True)):
-        guild, g, _ = _setup(stage)
-        scr = WildsClaimScreen(ui_fonts(), guild, g, lambda: None, lambda g: None, lambda g: None,
-                               on_garage=lambda: calls.append(1))
-        assert ("garage" in _keys(scr)) is offered
-    for key, rect in scr.buttons:
-        if key == "garage":
-            scr._click(rect.center)
-    assert calls == [1]
-
-
 def test_the_claim_garage_survives_a_save_round_trip():
     slot = "testworld_claim_garage"
     if os.path.exists(persist.save_path(slot)):
@@ -234,5 +195,3 @@ def test_the_claim_garage_survives_a_save_round_trip():
         assert [a.species for a in garage.herd] == ["Ox"]
     finally:
         persist.delete_world(slot)
-
-

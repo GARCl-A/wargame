@@ -44,22 +44,3 @@ def test_the_quantity_box_keeps_the_amount_clear_of_its_buttons():
     amount = ui_fonts()["bodyb"].size("12 / 40")
     assert minus.right < 320 - amount[0] // 2 and plus.left > 320 + amount[0] // 2
     assert confirm.top > minus.bottom and res["rect"].contains(confirm)
-
-
-def test_a_world_card_shows_the_member_count_not_their_names(monkeypatch):
-    from gartok import persist
-    from gartok.menu_screen import MenuScreen
-
-    world = {"world": "w1", "name": "G" * 80, "squad": ["Aaaa Bbbb", "Cccc Dddd", "Eeee Ffff"],
-             "battles_won": 2, "saves": 1, "saved_at": 0}
-    monkeypatch.setattr(persist, "list_worlds", lambda: [world])
-    pygame.init()
-    screen = MenuScreen(ui_fonts(), *[lambda *a: None] * 4)
-    shown = []
-    import gartok.menu_screen as menu_module
-    real = menu_module.text
-    monkeypatch.setattr(menu_module, "text", lambda s, f, t, *a, **k: shown.append(t) or real(s, f, t, *a, **k))
-    screen.mouse = (0, 0)
-    screen.draw(pygame.Surface((1024, 640)))
-    assert "3 members" in shown and not any("Aaaa" in str(t) for t in shown)
-    assert all(ui_fonts()["bodyb"].size(t)[0] < 1024 for t in shown if isinstance(t, str) and t.startswith("G"))

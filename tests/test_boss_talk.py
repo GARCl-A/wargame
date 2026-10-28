@@ -4,10 +4,10 @@ It is a `dialogue.BossTalk`: no verbs, the dialogue screen walks the lines and t
 
 import pygame
 
-from gartok import arena, economy, i18n, persist, world
+from gartok import arena, i18n, persist
 from gartok.dialogue_screen import DialogueScreen
 from gartok.guild import Guild
-from tests.helpers import Unit, make_app
+from tests.helpers import Unit
 
 
 def test_adelio_speaks_before_the_first_champion_bout():
@@ -70,23 +70,3 @@ def test_the_screen_walks_the_lines_with_no_answer_and_starts_the_fight_once():
     screen.draw(surf)
     _press(screen, pygame.K_SPACE)
     assert [r.kind for r in done] == ["fight"]
-
-
-def test_the_first_champion_bout_opens_on_the_talk_and_the_second_goes_straight_in(monkeypatch):
-    guild = Guild([Unit("a"), Unit("b")], node="arena")
-    app = make_app(guild)
-    app._arena_purse = None
-    entered = []
-    monkeypatch.setattr(economy, "charge_richest_first", lambda *a: None)
-    app._enter_battle = lambda battle, node: entered.append(battle)
-    node = world.node("arena")
-
-    app._start_battle(guild.roster, node, arena.champion_bout())
-    assert isinstance(app.scene, DialogueScreen) and app.scene.encounter.kind == "boss" and not entered
-    assert "champion" in guild.boss_talks_seen
-    assert not app._can_save()
-    app.scene.go_on()
-    assert len(entered) == 1
-
-    app._start_battle(guild.roster, node, arena.champion_bout())
-    assert len(entered) == 2

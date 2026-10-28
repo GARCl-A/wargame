@@ -20,7 +20,6 @@ from tests.helpers import (
     persist,
     recruit,
     standard_unit,
-    talents,
 )
 
 # --------------------------------------------------------------------------- #
@@ -457,27 +456,6 @@ def test_tier2_talent_effect_survives_a_save():
     assert back.ac == ac
 
 
-def test_tree_layout_places_every_node_below_its_parent():
-    """`level_screen._tree_layout` positions the talent graph: every node placed,
-    roots on top, each child one tier below its `requires` and its parent
-    centred over its children. Tier-agnostic -- a deeper tree lays out the same."""
-    from gartok.level_screen import _tree_layout
-    cases = [(t, talents.TREE[t], None) for t in talents.XP_TRACKS]
-    cases.append(("racial", talents.racial_tree("Grippli"), "Grippli"))
-    for track, nodes, race in cases:
-        pos, span, depths = _tree_layout(track, race)
-        assert set(pos) == {t.id for t in nodes}
-        assert depths >= 1
-        for t in nodes:
-            col, depth = pos[t.id]
-            assert 0 <= col <= span
-            assert depth == (0 if t.requires is None
-                             else pos[t.requires][1] + 1)
-            kids = [c for c in nodes if c.requires == t.id]
-            if kids:
-                assert col == sum(pos[k.id][0] for k in kids) / len(kids)
-
-
 def _work_ready(*picks):
     """A fresh Unit at enough work level with the given work talents spent."""
     u = Unit("player")
@@ -652,7 +630,6 @@ def test_eligible_work_activities():
     assert jobs_6 == []
 
 
-
 def test_work_xp_hours_scale_like_combat_xp():
     from gartok import progression
     assert progression.work_xp_hours(4, 1, 0) == 4 * 2      # (1 - 0) + 1
@@ -696,4 +673,3 @@ def test_armor_bearer_requires_bulwark_and_reduces_armor_weight():
     u._derive_combat()
     u_no_armor = _unit(seed=1)
     assert u.load == u_no_armor.load
-

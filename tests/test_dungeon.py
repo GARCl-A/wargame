@@ -438,34 +438,3 @@ def test_the_ruins_remember_across_a_save():
     world_id = persist.new_world_id()
     persist.save_game(world_id, guild)
     assert persist.load_game(world_id).ruins_cleared == {"npc:0", "chest:0"}
-
-
-def _clear_the_ruins(guild):
-    guild.ruins_cleared.update(_ruins_keys())
-
-
-def test_the_map_offers_no_way_into_empty_ruins():
-    from gartok.map_screen import MapScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    guild = Guild([Unit("player")], node="ancient_ruins")
-    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda grp: None)
-
-    def blocks():
-        return ms._inspector_content(guild.groups[0], world.node("ancient_ruins"))
-    assert any(b.get("key") == "ancient_ruins" for b in blocks())
-    _clear_the_ruins(guild)
-    assert not any(b.get("key") == "ancient_ruins" for b in blocks())
-    assert any("ruins lie silent" in b.get("text", "") for b in blocks())
-
-
-def test_entering_empty_ruins_starts_no_fight():
-    from tests.helpers import make_app
-    guild = Guild([Unit("player")], node="ancient_ruins")
-    _clear_the_ruins(guild)
-    app = make_app(guild)
-    app._map_notices = []
-    done = []
-    app._after_activity = lambda: done.append(True)
-    app._enter_ancient_ruins(guild.groups[0], world.node("ancient_ruins"))
-    assert done and app.scene is None
-    assert any("silent" in n for n in app._map_notices)

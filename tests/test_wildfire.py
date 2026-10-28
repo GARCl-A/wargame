@@ -3,12 +3,11 @@ spreading clock, the talk chain, the fights' aftermath, putting a fire out, the 
 what it leaves on The Wilds."""
 
 import random
-from unittest.mock import patch
 
 from gartok import campaign, dialogue, factions, hunt, missions, orders, wildfire, world
 from gartok.clock import Clock
 from gartok.guild import Guild
-from gartok.map_screen import MapScreen, node_icon
+from gartok.map_view import node_icon
 from gartok.ui.tokens import fonts as ui_fonts
 
 from tests.helpers import Unit, _FixedRNG
@@ -259,32 +258,6 @@ def test_a_save_on_disk_round_trips_the_wildfire(tmp_path, monkeypatch):
 
 # --- the map's inspector --------------------------------------------------------- #
 
-def _map(guild):
-    return MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda grp: None)
-
-
-def test_the_map_offers_one_talk_button_that_opens_the_dialogue_and_a_miss_starts_the_fight():
-    guild, (a, b), _, state = _started()
-    f = _small(state)[0]
-    group = guild.groups[0]
-    group.node = f.id
-    talks = []
-    ms = _map(guild)
-    ms.on_dialogue = lambda g, enc, done: talks.append((g, enc, done))
-    blocks = ms._inspector_content(group, world.node(f.id))
-    keys = [blk.get("key") for blk in blocks]
-    assert "wf_talk" in keys and "camp_fight" in keys
-    assert any("burns through" in blk.get("text", "") for blk in blocks)
-    ms.selected = group
-    ms._handle_button("wf_talk")
-    g, enc, done = talks[0]
-    assert g is group and [o.verb for o in enc.options(a, [a, b])] == ["persuade", "bribe", "attack"]
-    assert enc.option("bribe", a, [a, b]).block == "they want to learn, not be paid"
-    with patch("gartok.wildfire.random.randint", return_value=1):
-        result = enc.choose("persuade", a, [a, b], rng=_FixedRNG(1))
-    done(result)
-    assert f.hostile and group.order is not None and group.order.kind == "camp_fight"
-
 
 def test_the_wildfire_dialogue_walks_the_two_checks_to_the_lesson():
     guild, (a, b), _, state = _started()
@@ -298,69 +271,7 @@ def test_the_wildfire_dialogue_walks_the_two_checks_to_the_lesson():
     assert second.kind == "peace" and not world.exists(f.id)
 
 
-def test_the_map_offers_the_put_out_once_the_crew_is_beaten():
-    guild, _, _, state = _started()
-    f = _small(state)[0]
-    group = guild.groups[0]
-    group.node = f.id
-    wildfire.settle_fight(guild, f.id, won=True)
-    ms = _map(guild)
-    blocks = ms._inspector_content(group, world.node(f.id))
-    keys = [blk.get("key") for blk in blocks]
-    assert "wf_put_out" in keys and "camp_fight" not in keys
-    ms.selected = group
-    ms._handle_button("wf_put_out")
-    assert group.order.kind == "work" and group.order.task == "put_out"
-
-
-def test_the_map_refreshes_when_a_focus_comes_or_goes():
-    guild, *_ = _started()
-    ms = _map(guild)
-    assert wildfire.GREAT_ID in ms._nodes
-    wildfire.settle_fight(guild, wildfire.GREAT_ID, won=True)
-    import pygame
-    ms.draw(pygame.Surface((1280, 800)))
-    assert wildfire.GREAT_ID not in ms._nodes
-
-
 # --- the app opens the fight ---------------------------------------------------- #
-
-def _opened_battle(guild, node_id):
-    from tests.helpers import make_app
-    app = make_app(guild)
-    app._wildfire_node = None
-    app._left_outside = None
-    seen = []
-    app._enter_battle = lambda battle, node: seen.append(battle)
-    group = guild.groups[0]
-    group.node = node_id
-    app._ACTIVITY_OPENERS[world.node(node_id).functions[0]](app, group, world.node(node_id), None)
-    return app, seen
-
-
-def test_attacking_a_camp_opens_its_crew_and_the_great_focus_opens_the_fortress():
-    from gartok.fortress_scenario import FortressScenario
-    guild, _, _, state = _started()
-    f = _small(state)[0]
-    app, seen = _opened_battle(guild, f.id)
-    assert app._wildfire_node == f.id
-    assert [u.race["name"] for u in seen[0].enemy_units] == ["Goblin"] * 3 + ["Hobgoblin"]
-    app, seen = _opened_battle(guild, wildfire.GREAT_ID)
-    assert isinstance(seen[0].scenario, FortressScenario) and not seen[0].scenario.finished
-    assert wildfire.ogre_of(seen[0]) is not None
-
-
-def test_a_cleared_camp_opens_no_fight():
-    guild, _, _, state = _started()
-    f = _small(state)[0]
-    wildfire.settle_fight(guild, f.id, won=True)
-    from tests.helpers import make_app
-    app = make_app(guild)
-    app._wildfire_node = None
-    calls = []
-    app._after_activity = lambda: calls.append("back")
-    app._enter_wildfire_fight(guild.groups[0], world.node(f.id))
-    assert calls == ["back"] and app._wildfire_node is None
 
 
 # --- the friendly fortress: the only shelf of Large weapons ------------------------- #

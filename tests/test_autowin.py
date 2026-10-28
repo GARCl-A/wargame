@@ -129,51 +129,6 @@ def test_combatant_respects_char_current_hp():
     assert c.hp_max == 20
 
 
-def test_autowin_hunt_screen_flow():
-    import sys
-    from unittest.mock import MagicMock
-    if "pygame" not in sys.modules:
-        try:
-            pass
-        except Exception:
-            sys.modules["pygame"] = MagicMock()
-            sys.modules["pygame.base"] = MagicMock()
-
-    from gartok import hunt
-    from gartok.hunt_screen import HuntScreen
-
-    hero = _make_fighter(level=4, hp=20)
-    guild = Guild([hero])
-    group = guild.groups[0]
-    group.node = "wilds"
-    state = hunt.HuntState(list(group.members), world.node("wilds"), hours_left=4)
-
-    autowin_called = []
-    def on_autowin(st, pack, res):
-        autowin_called.append((st, pack, res))
-
-    def on_ambush(st, pack):
-        pass
-
-    screen = HuntScreen(None, guild, state, phase="setup",
-                        on_ambush=on_ambush, on_done=lambda: None,
-                        on_autowin=on_autowin)
-    
-    # Simulate an ambush triggering
-    screen.ambush_pack = [_make_scrapper(hp=2)]
-    screen.phase = "ambush"
-    screen.autowin_estimator.result = autowin.AutoWinResult(eligible=True, win_rate=1.0)
-
-    # Click autowin
-    btn_rect = MagicMock()
-    btn_rect.collidepoint.return_value = True
-    screen.buttons = [("autowin_ambush", btn_rect)]
-    screen._click((0, 0))
-    assert len(autowin_called) == 1
-    assert autowin_called[0][2].eligible is True
-
-
-
 def test_a_won_fight_that_is_no_stomp_still_counts_toward_the_odds():
     random.seed(4)
     squad = [_make_fighter(hp=25) for _ in range(4)]

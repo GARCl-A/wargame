@@ -105,59 +105,6 @@ def test_a_won_ambush_lets_the_hunt_carry_on_from_where_it_stopped():
     assert all(u.work_hours == 8 * 4 for u in party)          # the whole hunt, both stretches, x4
 
 
-def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
-    import os
-
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok import hunt, world
-    from gartok.clock import Clock
-    from gartok.guild import Guild
-    from gartok.hunt_screen import HuntScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    random.seed(0)
-
-    party = [Unit("player")]
-    party[0]._base_inventory = []
-    party[0].work_hours = 0
-    guild = Guild(list(party), node="wilds", clock=Clock(6 * 3600))
-    st = hunt.HuntState(list(party), world.node("wilds"), hours_left=0)
-    fired = []
-    scr = HuntScreen(ui_fonts(), guild, st, phase="setup",
-                     on_ambush=lambda s, pack: fired.append(s.hours_hunted),
-                     on_done=lambda: fired.append("done"))
-
-    def scripted(state, rng=None, **_):
-        step = 3 if not state.fights else state.hours_left
-        state.hours_left -= step
-        state.hours_hunted += step
-        state.yield_hours += step
-        return step, state.fights == 0                    # ambush only on the first stretch
-
-    orig, hunt.hunt_stretch = hunt.hunt_stretch, scripted
-    try:
-        scr.hours = 8
-        scr._do_stretch()                                # setup -> a pack after 3 h
-        assert scr.phase == "ambush" and st.fights == 1
-        surf = pygame.Surface((1280, 800))
-        scr.draw(surf)
-        scr._click(next(r.center for k, r in scr.buttons if k == "fight_ambush"))
-        assert fired == [3]
-
-        st.hours_left = 5                                 # app rebuilds the screen at interlude
-        scr.phase = "interlude"
-        scr._do_stretch()                                # KEEP HUNTING -> daylight runs out
-    finally:
-        hunt.hunt_stretch = orig
-
-    assert scr.phase == "done"
-    assert st.hours_hunted == 8 and party[0].count_of("Meat") == 4
-    assert party[0].work_hours == 8 * 4                   # grant_meat banked the full hunt, x4
-
-
 def test_forage_stretch_finds_shrooms_and_fruit():
     from gartok import hunt
 
@@ -192,31 +139,6 @@ def test_grant_forage_distributes_both_shrooms_and_fruit():
     assert sum(u.count_of("Red Mushroom") for u in party) == 2
     assert sum(u.count_of("Fruit") for u in party) == 2
     assert any("Red Mushroom" in ln and "Fruit" in ln for ln in lines)
-
-
-
-def test_the_setup_screen_can_be_left_without_spending_time():
-    import pygame
-
-    from gartok import hunt, world
-    from gartok.guild import Guild
-    from gartok.hunt_screen import HuntScreen
-    from gartok.unit import Unit
-
-    guild = Guild([Unit("player")])
-    state = hunt.HuntState(list(guild.roster), world.node("wilds"), hours_left=0)
-    left = []
-    screen = HuntScreen(None, guild, state, phase="setup", on_ambush=lambda *a: None,
-                        on_done=lambda: left.append(True))
-    screen.draw(pygame.Surface((1280, 720)))
-    clock_before = guild.clock.seconds
-
-    rect = dict(screen.buttons)["leave"]
-    screen._click(rect.center)
-
-    assert left == [True]
-    assert guild.clock.seconds == clock_before
-    assert state.hours_hunted == 0
 
 
 def test_party_yield_curve_is_one_at_three_and_saturates_at_seven():
@@ -280,93 +202,6 @@ def test_forage_chances_scale_with_the_party_and_match_what_the_stretch_rolls():
     assert (st.shrooms_found, st.fruit_found) == (0, 0)
 
 
-def test_the_hunt_screen_prints_the_forage_chance():
-    import pygame
-    from gartok import hunt, world
-    from gartok.guild import Guild
-    from gartok.hunt_screen import HuntScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    party = [Unit("player") for _ in range(3)]
-    st = hunt.HuntState(party, world.node("wilds"), hours_left=8, target="shrooms")
-    shown = []
-    from gartok import hunt_screen
-    real = hunt_screen.text
-    hunt_screen.text = lambda s, f, t, *a, **k: (shown.append(t), real(s, f, t, *a, **k))[1]
-    try:
-        scr = HuntScreen(ui_fonts(), Guild(party), st, phase="setup", on_ambush=lambda *_: None, on_done=lambda: None)
-        scr.mouse = (0, 0)
-        scr.draw(pygame.Surface((1280, 800)))
-    finally:
-        hunt_screen.text = real
-    assert any("10% mushroom, 15% fruit" in t for t in shown)
-
-
-def test_the_hunt_screen_meat_estimate_includes_the_guilds_gathering_bonus():
-    import pygame
-    from gartok import hunt, world
-    from gartok.guild import Guild
-    from gartok import hunt_screen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    party = [Unit("player") for _ in range(3)]
-
-    def shown_for(mult):
-        st = hunt.HuntState(party, world.node("wilds"), hours_left=8, yield_mult=mult)
-        lines = []
-        real = hunt_screen.text
-        hunt_screen.text = lambda s, f, t, *a, **k: (lines.append(t), real(s, f, t, *a, **k))[1]
-        try:
-            scr = hunt_screen.HuntScreen(ui_fonts(), Guild(party), st, phase="setup",
-                                         on_ambush=lambda *_: None, on_done=lambda: None)
-            scr.mouse = (0, 0)
-            scr.draw(pygame.Surface((1280, 800)))
-        finally:
-            hunt_screen.text = real
-        return next(t for t in lines if "kg per hour" in t)
-
-    assert "meat: 0.50 kg per hour" in shown_for(1.0)
-    assert "meat: 0.75 kg per hour" in shown_for(1.5)
-
-
-def test_hunt_screen_level_up_and_sheet_modal():
-    import pygame
-    from gartok import hunt, hunt_screen, progression, world
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    u = Unit("player")
-    u.combat_xp = progression.COMBAT_XP_THRESHOLDS[1]
-    assert u.pending_picks == ["combat"]
-
-    st = hunt.HuntState([u], world.node("wilds"), hours_left=8)
-    levelled = []
-    scr = hunt_screen.HuntScreen(ui_fonts(), Guild([u]), st, phase="setup",
-                                 on_ambush=lambda *_: None, on_done=lambda: None,
-                                 on_level=lambda member: levelled.append(member))
-    surf = pygame.Surface((1280, 800))
-    scr.draw(surf)
-
-    # Level up button is present in buttons
-    lvl_btn = next((r for k, r in scr.buttons if k.startswith("level:")), None)
-    assert lvl_btn is not None
-    scr._click(lvl_btn.center)
-    assert levelled == [u]
-
-    # Sheet badge is present and opens modal
-    assert scr.sheet_hits
-    badge_r, unit_hit = scr.sheet_hits[0]
-    assert unit_hit is u
-    scr._click(badge_r.center)
-    assert scr.sheet_open
-    assert scr.handle_escape()
-    assert not scr.sheet_open
-
-
 def test_a_wolf_never_hunts_alone():
     from gartok import encounters
     rng = random.Random(7)
@@ -378,46 +213,3 @@ def test_a_wolf_never_hunts_alone():
                 assert len(pack) == encounters.WOLF_PACK_MIN
             else:
                 assert len(pack) == 1
-
-
-def test_distribute_load_on_the_hunt_spreads_the_packs():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    pygame.init()
-
-    from gartok import hunt, world
-    from gartok.guild import Guild
-    from gartok.hunt_screen import HuntScreen
-
-    a, b = Unit("player"), Unit("player")
-    a._base_inventory = [("Lumber", 20)]
-    b._base_inventory = []
-    a._derive_combat()
-    b._derive_combat()
-    guild = Guild([a, b])
-    state = hunt.HuntState([a, b], world.node("wilds"), hours_left=0)
-    for phase in ("setup", "interlude"):
-        screen = HuntScreen(None, guild, state, phase=phase, on_ambush=lambda *_: None,
-                            on_done=lambda: None)
-        screen.draw(pygame.Surface((1280, 720)))
-        assert "distribute" in dict(screen.buttons)
-    screen._click(dict(screen.buttons)["distribute"].center)
-    assert b.load > 0 and screen.notice
-    assert state.hours_hunted == 0
-
-
-def test_a_lone_hunter_gets_no_distribute():
-    import pygame
-    pygame.init()
-
-    from gartok import hunt, world
-    from gartok.guild import Guild
-    from gartok.hunt_screen import HuntScreen
-
-    guild = Guild([Unit("player")])
-    state = hunt.HuntState(list(guild.roster), world.node("wilds"), hours_left=0)
-    screen = HuntScreen(None, guild, state, phase="setup", on_ambush=lambda *_: None,
-                        on_done=lambda: None)
-    screen.draw(pygame.Surface((1280, 720)))
-    assert "distribute" not in dict(screen.buttons)

@@ -5,7 +5,7 @@ import random
 
 import pytest
 
-from gartok import ai, economy, orders, persist, recorder, world
+from gartok import ai, economy, orders, persist, recorder, vocations, world
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
@@ -65,6 +65,15 @@ def test_a_fight_with_nobody_to_talk_to_opens_the_board_and_the_report_ends_on_t
     while game.session is report:
         report.next()
     assert game.session.screen == "map" and not persist.load_game("w1").groups[0].fight_due
+
+
+def test_a_campaign_fight_binds_the_guilds_bestiary_and_the_scholars_bonus():
+    game, guild, g = _ambushed()
+    guild.vocation = vocations.SCHOLARS
+    game.session.act(g.gid, "resolve_event")
+    intel = game.session.battle.intel
+    assert intel.bestiary["player"] is guild.bestiary and intel.bonus["player"] == vocations.INFO_BONUS
+    assert intel.bestiary["enemy"] is None and intel.bonus["enemy"] == 0
 
 
 def test_a_fight_played_out_by_the_ai_on_both_sides_is_settled():

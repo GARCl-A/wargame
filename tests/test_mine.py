@@ -3,8 +3,6 @@
 from gartok import campaign, economy, orders, world
 from gartok.clock import Clock
 from gartok.guild import Guild
-from gartok.map_screen import MapScreen
-from gartok.ui.tokens import fonts as ui_fonts
 from tests.helpers import packed, standard_unit
 
 
@@ -86,15 +84,3 @@ def test_the_mine_has_a_till_of_its_own():
     guild = Guild([standard_unit()])
     guild.shop("mine").move_cash(-50)
     assert guild.shop("mine").cash != guild.shop("market").cash
-
-
-def test_the_map_shows_the_mine_as_one_enter_button_and_a_line():
-    g = Guild([standard_unit()], node="mine")
-    ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda grp: None)
-    blocks = ms._inspector_content(g.groups[0], world.node("mine"))
-    assert [(b["key"], b["label"]) for b in blocks if b["type"] == "button"] == [("market", "ENTER THE MINE")]
-    assert not any(b["type"] == "button_row" for b in blocks)
-    pay = economy.work_pay("mine", 16, 0)
-    assert any(f"pays the group ${pay}" in b.get("text", "") and "no gathering licence" in b["text"]
-               for b in blocks)
-

@@ -31,7 +31,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
      `draw_roster`, `draw_inspector`).
 6. **No module globals, no fixed pixel panel sizes.** Lay out relative to the
    rect you were given. For anything window-size-dependent use
-   proportional-with-clamp, the way `map_panel.draw_minimap` does.
+   proportional-with-clamp.
 7. **Reuse before you draw.** Buttons, panels, modals, tabs, tooltips and
    scrollbars already exist in `primitives.py`. A second button style is a bug.
 
@@ -46,17 +46,12 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
 | `board_style.py` | the battle board's palette (each place's floor in `FLOOR_STYLES`), `battle_layout`, `BoardView` (pan/zoom camera) |
 | `floors.py` | each place's floor (flagstones, Arena sand and stone, grass and trees, packed earth, cobbles, cave rock): the board painted once at `TEX` px a cell, cached, and scaled to the view (`blit_board`); `ground` is the editor's; a scenario names its `floor`, a node or an authored map may override it |
-| `camera.py` | `MapCamera`: pan / zoom around a screen-space centre |
-| `map_panel.py` | the MAP zone: `draw_map`, `draw_minimap`, node glyphs, pawns, `place_labels` (names that overlap neither each other nor a mark; one with no room waits for the hover, the selected node and where a band stands always show) |
-| `command_bar.py` | the COMMAND zone: clock, alerts, headline stats |
-| `roster_panel.py` | the ROSTER zone: one card per group, events timeline |
 | `inspector_panel.py` | the INSPECTOR zone: selected band, status, available orders |
 | `quest_panel.py` | active-mission cards with deadline and progress |
 | `guild_roster.py` | the guild roster: filter pills, band accordions, member cards with status pills |
 | `member_panel.py` | the guild member sheet, one `draw_*` per block (vitals, weapon, load, tracks, roles) |
 | `guild_panel.py` | the guild overview: fame, group slots, each group's task and warnings, holdings |
 | `reputation_panel.py` | faction cards (deeds, unlocks) in as many columns as fit |
-| `combat_card.py` | unit cards for recruit / squad lists and party rows |
 | `sheet_card.py` | the character sheet at three densities |
 | `foe_panel.py` | what a side knows of a foe: its visible traits and the fields Intelligence opened, `?` for the rest |
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
@@ -66,20 +61,16 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `hub_party.py` | a party member as a hub card (`member_card`, same contract as `loadout_panel.column`): load bar, the slots two by two, the pack, a drop area; `container_card` is a stash (the bank's strongbox, the house) as a hub panel, same contract as `loadout_panel.container_panel` |
 | `initiation_panel.py` | a sanctuary's initiation on the hub kit: The Terms (label / value, what is short in red) beside Who Stays (one member row each, where they stand or why they cannot) and the begin footer |
 | `load_meter.py` | what a body carries, the one way every screen shows it: a bar as long as `carry_max` with a tick at `carry_normal`, green / amber (slowed) / blood (full), the figure always `kg / max` |
-| `party_panel.py` | the figures on a party row (HP, AC, load, rations, work-XP bar) and the party's total load |
 | `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal; the founding screen (the banner on a shield beside the name, colour and emblem, one card per leader candidate with portrait, recruits and attributes) and `draw_shield` |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |
 | `market_panel.py` | the market's drag ghost (the shelf itself is `shop_shelf.py`) |
-| `intro_card.py` | the centred, veiled card (title, paragraphs, optional brass note, one button) used by every tutorial card |
 | `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
-| `turn_card.py` | the group hand-over card: band tag, name, node, what is about to open, the crew, one button (blood for a forced fight) |
 | `board_render.py` | the battle board: terrain (the floor from `floors.py`, then pits, water, fire, ropes), props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
 | `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, log well, and the crit banner across the board |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |
 | `medic_panel.py` | the Apothecary's Medic tab on the hub kit: one patient row each (ailments as chips, price and hours), the till footer with the total and treat / admit |
 | `title_panel.py` | the title screen: the game's name, the grouped main menu, the last guild played (banner shield, figures, the roster's faces) or the invitation to found one |
-| `vocation_panel.py` | the founding vocation picker: six vocation cards (motto, the six races' faces, the guild perk), a dense layout when the room is short; the founding's step row (`draw_steps`) |
 | `mission_offer_screen.py` | base class for NPC job boards, the window over `job_board.Board`: a Jobs panel with one card per job the giver has (`get_templates`) in as many columns as fit (up to 3), scrolls when they do not fit, a keeper's extra button in its footer |
 
 ## Adding to the kit

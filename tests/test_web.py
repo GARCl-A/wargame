@@ -549,16 +549,16 @@ def test_the_server_stops_once_the_window_is_closed_and_not_on_a_reload(monkeypa
         srv.server_close()
 
 
-def test_the_game_opens_in_the_browser_and_pygame_only_when_asked(monkeypatch):
+def test_the_game_opens_in_the_browser_and_the_editor_only_when_asked(monkeypatch):
     import sys
 
     from gartok import __main__ as entry
     from gartok.web import __main__ as launcher
     opened = []
     monkeypatch.setattr(launcher, "main", lambda: opened.append("web"))
-    monkeypatch.setattr(entry, "_pygame", lambda: opened.append("pygame"))
+    monkeypatch.setattr(entry, "_editor", lambda: opened.append("editor"))
     monkeypatch.setattr(sys, "argv", ["main.py"])
     entry.main()
-    monkeypatch.setattr(sys, "argv", ["main.py", "--pygame"])
+    monkeypatch.setattr(sys, "argv", ["main.py", "--editor"])
     entry.main()
-    assert opened == ["web", "pygame"]
+    assert opened == ["web", "editor"]

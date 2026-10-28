@@ -11,7 +11,7 @@ import pytest
 from gartok import campaign, economy, encounters, forced, orders, persist, world
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Unit, fixed_d20, make_app
+from tests.helpers import Unit, fixed_d20
 
 
 def _reload(group):
@@ -244,106 +244,6 @@ def test_a_wilds_raid_on_a_garrison_is_parked_too():
 # the app: loading picks the fight back up, nothing mid-battle is saved       #
 # --------------------------------------------------------------------------- #
 
-def test_loading_a_save_with_an_ambush_pending_lands_on_the_map_with_the_cta():
-    guild, _ = _ambushed()
-    world_id = persist.new_world_id()
-    persist.save_game(world_id, guild)
-    app = make_app(persist.load_game(world_id))
-
-    app._resume_pending()
-
-    assert app.scene.__class__.__name__ == "MapScreen"
-    loaded = app.guild.groups[0]
-    assert app._pending_event == (loaded, loaded.pending)
-    assert loaded.locked and loaded.pending.kind == "ambush"
-
-
-def test_loading_a_save_with_a_guard_pending_reopens_the_guard_dialogue():
-    culprit = Unit("player")
-    culprit.crime = 5
-    g = Group([culprit], node="city")
-    g.pending = orders.Order("guard", caught=(culprit.uid,), prev_node="road")
-    app = make_app(Guild(None, groups=[g]))
-
-    app._resume_pending()
-
-    assert app.scene.__class__.__name__ == "DialogueScreen"
-
-
-def test_loading_a_save_with_nothing_pending_just_lands_on_the_map():
-    g = Group([Unit("player")], node="city")
-    g.order = orders.rest(8)
-    app = make_app(Guild(None, groups=[g]))
-
-    app._resume_pending()
-
-    assert app.scene.__class__.__name__ == "MapScreen" and app._pending_event is None
-
-
-def test_the_fight_is_no_longer_pending_once_the_battle_is_over():
-    """The memorials and the report play before the loot -- a save taken there
-    must not replay a fight that already happened."""
-    guild, g = _ambushed(members=2)
-    app = make_app(guild)
-    app._pending_event = (g, g.pending)
-    app._resolve_pending_event()
-    battle = app.scene.battle
-    battle.winner = "player"
-    battle.round_no = 1
-    for c in battle.player_units:
-        c.status = "up"
-    battle.player_units[1].status = "dead"
-    app._battle_squad = list(g.members)
-    app._battle_node = world.node("road")
-
-    app._battle_end(battle)
-
-    assert app.scene.__class__.__name__ == "MemorialScreen"
-    assert g.pending is None
-
-
-def _attack(app):
-    """Past the ambush's talk, if its pack talks, into the fight."""
-    if app.scene.__class__.__name__ == "DialogueScreen":
-        app.scene.choose("attack")
-        app.scene.go_on()
-
-
-def test_no_save_is_allowed_in_a_battle_or_a_hunt_but_is_on_the_map():
-    guild, g = _ambushed()
-    app = make_app(guild)
-    app._start_map()
-    assert app._can_save()
-
-    app._pending_event = (g, g.pending)
-    app._resolve_pending_event()
-    if app.scene.__class__.__name__ == "DialogueScreen":
-        assert app._can_save()             # the talk is in the save: the pending order reopens it
-    _attack(app)
-    assert app.scene.__class__.__name__ == "BattleScreen" and not app._can_save()
-
-    app._hunt = object()
-    app.scene = None
-    assert not app._can_save()
-
-
-def test_leaving_to_the_menu_mid_battle_writes_nothing():
-    guild, g = _ambushed()
-    app = make_app(guild)
-    saves = []
-    app._save = lambda: saves.append(1)
-    app._start_menu = lambda: None
-    app._pending_event = (g, g.pending)
-    app._resolve_pending_event()
-    _attack(app)
-
-    app._pause_to_menu()
-    assert saves == []
-
-    app.scene = None
-    app._pause_to_menu()
-    assert saves == [1]
-
 
 # --------------------------------------------------------------------------- #
 # the kit is frozen while a fight is due                                      #
@@ -374,14 +274,3 @@ def test_the_guild_screen_freezes_gear_leader_and_load_for_a_group_with_a_fight_
     g.pending = orders.Order("ambush", pack=(encounters.build_enemy(1),))
     frozen = _draw_guild_screen(guild, b)
     assert not {"manage", "distribute", "group_leader"} & frozen
-
-
-def test_the_app_will_not_open_the_group_screen_for_a_group_with_a_fight_due():
-    guild, g = _ambushed()
-    app = make_app(guild)
-    app.scene = "untouched"
-
-    app._open_group(g, back=app._open_guild)
-    app._open_group(g)
-
-    assert app.scene == "untouched"

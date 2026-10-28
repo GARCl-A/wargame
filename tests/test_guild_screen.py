@@ -37,7 +37,6 @@ except ImportError:
     pygame = mock_pg
 
 
-
 from unittest.mock import MagicMock
 
 from gartok.guild import Guild
@@ -139,8 +138,6 @@ def test_guild_screen_reputations_scrolling():
     assert gs._rep_scroll == 0
 
 
-
-
 def _two_band_guild():
     from gartok.group import Group
     from gartok.orders import Order
@@ -227,20 +224,6 @@ def test_guild_screen_renders_at_small_window_and_scrolls_detail():
     gs.mouse = (900, 300)
     gs.handle_event(MagicMock(type=pygame.MOUSEWHEEL, y=-1))
     assert gs._detail_scroll > 0
-
-
-def test_bank_view_screen_lists_stash_without_any_move_button():
-    from gartok.bank_view_screen import BankViewScreen
-    g, *_ = _two_band_guild()
-    g.bank.capacity = 30
-    g.bank.items = packed(["Rope", "Rope", "Torch"])
-    done = []
-    scr = BankViewScreen(MagicMock(), g, on_done=lambda: done.append(1))
-    pygame.font.init()
-    scr.draw(pygame.Surface((1280, 720)))
-    assert [k for k, _ in scr.buttons] == ["done"]
-    scr._click(scr.buttons[0][1].center)
-    assert done == [1]
 
 
 def test_stat_breakdowns_sum_to_the_stat_they_explain():
@@ -365,16 +348,3 @@ def test_a_sick_member_wears_the_badge_and_is_an_alert():
     assert {u.uid for _, u in gs.member_hits} == {b.uid}
     assert ("SICK", T.BLOOD) in gs._member_data(b, False)["badges"]
     assert "SICK" not in [lbl for lbl, _ in gs._member_data(a, False)["badges"]]
-
-
-def test_a_sick_member_is_marked_on_the_map_party_and_the_sheet():
-    from gartok.combatant import Combatant
-    from gartok.map_screen import MapScreen
-    from gartok.ui import sheet_card
-    from gartok.ui.tokens import fonts as ui_fonts
-    g, a, b, c = _two_band_guild()
-    b.sick = True
-    ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda gr: None)
-    party = ms._group_dict(g.groups[0])["party"]
-    assert [p[4] for p in party] == ["", "SICK"]
-    assert "sick" in sheet_card.unit_to_ch(Combatant(b))["status"]

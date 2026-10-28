@@ -15,13 +15,10 @@ from gartok import (
     items,
     orders,
     persist,
-    world,
 )
 from gartok.battle import Battle
 from gartok.clock import Clock
 from gartok.guild import Guild
-from gartok.map_screen import MapScreen
-from gartok.ui.tokens import fonts as ui_fonts
 from tests.helpers import standard_unit
 
 SHIFTS = (4, 8, 12, 16)
@@ -233,31 +230,6 @@ def test_the_licences_and_a_gather_order_survive_a_save():
     assert persist.PAYLOAD_DEFAULTS["licences"] == []
 
 
-def _blocks(guild, node_id):
-    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda grp: None)
-    return ms, ms._inspector_content(guild.groups[0], world.node(node_id))
-
-
-def test_the_map_names_the_licence_and_leaves_the_shifts_to_the_hub():
-    guild, group = _crew("mine", licensed=False, money=100)
-    _ms, blocks = _blocks(guild, "mine")
-    assert not any(b.get("key") in ("buy_licence",) or b["type"] == "button_row" for b in blocks)
-    assert any("no gathering licence" in b.get("text", "") for b in blocks)
-    guild.licences.add("mine")
-    _ms, blocks = _blocks(guild, "mine")
-    assert any("gathering licence held" in b.get("text", "") for b in blocks)
-
-
-def test_a_gathering_order_from_the_hub_is_named_on_the_map():
-    from gartok.gather_screen import GatherScreen
-    guild, group = _crew("lumber_yard")
-    ms, _ = _blocks(guild, "lumber_yard")
-    GatherScreen(ui_fonts(), guild, group, world.node("lumber_yard"), lambda: None)._on_button("gather:8")
-    assert group.order.kind == "work" and group.order.gather and group.order.hours == 8
-    assert ms._order_status(group).startswith("gathering")
-    assert ms._state(group)[0] == "GATHER"
-
-
 def test_gather_screen_interaction():
     import pygame
 
@@ -282,7 +254,6 @@ def test_gather_screen_interaction():
     gs._on_button("gather:8")
     assert group.order.kind == "work" and group.order.gather and group.order.hours == 8
     assert done == [True]
-
 
 
 def test_ambush_chance_is_the_odds_of_at_least_one_hours_roll():

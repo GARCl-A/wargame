@@ -332,25 +332,6 @@ def test_a_flag_capture_with_a_knockout_misses_untouchable():
     assert "arena_untouchable" not in guild.deeds_done
 
 
-def test_arena_squad_cap_follows_the_selected_bout():
-    from gartok.squad_screen import SquadScreen
-    roster = [Unit("player") for _ in range(6)]
-    scr = SquadScreen(None, roster, world.node("arena"), on_confirm=lambda *a: None,
-                      on_back=lambda: None,
-                      arena_offers=[arena.brawl_bout(), arena.boss_bout()])
-    assert scr.max_pick == 3                              # brawl: 3 opponents, squad of 3
-    for u in roster:
-        scr._toggle(u)
-    assert len(scr.picked) == 3                           # capped at the tier
-
-    scr.offer_idx = 1                                     # the boss bout: 6 a side
-    assert scr.max_pick == 6
-    for u in roster:
-        if u not in scr.picked:
-            scr._toggle(u)
-    assert len(scr.picked) == 6
-
-
 def test_beating_the_ribbit_brothers_banks_their_deed():
     guild, out = _games_win(arena.boss_bout(), kos=0)
     earned = {d.id for d in out.deeds_earned}
@@ -373,39 +354,6 @@ def test_a_lost_games_bout_banks_nothing():
 # --------------------------------------------------------------------------- #
 # the arena node offers the Games once the champion is down                     #
 # --------------------------------------------------------------------------- #
-def test_arena_node_swaps_the_champion_bout_for_the_games_after_dethroning():
-    from gartok.app import App
-
-    app = App.__new__(App)
-    app.world = "testworld"
-    app.scene = None
-    app.fonts = None
-    app.ui_fonts = None
-    app.guild = Guild([Unit("player")], node="arena")
-    app.guild.reputation = {"arena": 3}
-
-    captured = {}
-    def fake_screen(fonts, roster, node, **kw):
-        captured["offers"] = kw["arena_offers"]
-        return object()
-    import gartok.app_nodes as app_mod
-    orig = app_mod.SquadScreen
-    app_mod.SquadScreen = fake_screen
-    try:
-        group = app.guild.groups[0]
-        app.guild.deeds_done = []
-        app._open_arena(group, world.node("arena"))
-        assert any(o.champion for o in captured["offers"])
-        assert not any(o.stage2 for o in captured["offers"])
-
-        app.guild.deeds_done = ["arena_dethrone"]
-        app._open_arena(group, world.node("arena"))
-        assert not any(o.champion for o in captured["offers"])
-        names = {o.name for o in captured["offers"] if o.stage2}
-        assert names == {"Games: Brawl", "Games: Capture the Flag",
-                         "Games: The Ribbit Brothers"}
-    finally:
-        app_mod.SquadScreen = orig
 
 
 def test_bout_max_combat_level():
@@ -416,65 +364,6 @@ def test_bout_max_combat_level():
     assert arena.bout_max_combat_level(arena.ctf_bout()) == 7
     assert arena.bout_max_combat_level(world.Bout("Custom", entry=0, purse=0, enemies=2, level=2)) == 4
     assert arena.bout_max_combat_level(None) == 0
-
-
-def test_squad_screen_shows_no_xp_warning_for_higher_level_units():
-    from gartok.squad_screen import SquadScreen
-
-    rookie = Unit("player", name="Rookie")
-    rookie.combat_xp = 0
-    vet = Unit("player", name="Veteran")
-    vet.combat_xp = 3
-    master = Unit("player", name="Master")
-    master.combat_xp = 10
-
-    roster = [rookie, vet, master]
-    scrapper = arena.scrapper_bout()
-    champion = arena.champion_bout()
-
-    scr = SquadScreen(None, roster, world.node("arena"),
-                      on_confirm=lambda *a: None, on_back=lambda: None,
-                      arena_offers=[scrapper, champion])
-
-    # Scrapper bout: max enemy combat level is 0
-    assert not scr.unit_outlevels_bout(rookie)
-    assert scr.unit_outlevels_bout(vet)
-    assert scr.unit_outlevels_bout(master)
-
-    scr.picked = [rookie, vet]
-    assert scr.no_xp_picked == [vet]
-
-    # Switch to champion bout: max enemy combat level is 1
-    scr.offer_idx = 1
-    assert not scr.unit_outlevels_bout(rookie)
-    assert not scr.unit_outlevels_bout(vet)
-    assert scr.unit_outlevels_bout(master)
-    assert scr.no_xp_picked == []
-
-    scr.picked = [vet, master]
-    assert scr.no_xp_picked == [master]
-
-
-def test_squad_screen_renders_arena_no_xp_notice():
-    import pygame
-
-    from gartok.squad_screen import SquadScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    pygame.init()
-    surf = pygame.Surface((1024, 768))
-    fonts = ui_fonts()
-
-    rookie = Unit("player", name="Rookie")
-    vet = Unit("player", name="Veteran")
-    vet.combat_xp = 3
-
-    scr = SquadScreen(fonts, [rookie, vet], world.node("arena"),
-                      on_confirm=lambda *a: None, on_back=lambda: None,
-                      arena_offers=[arena.scrapper_bout()])
-    scr.picked = [rookie, vet]
-    scr.draw(surf)
-
 
 
 def test_the_champion_title_demoralizes_in_a_ctf_bout_without_a_shared_language():
@@ -514,4 +403,3 @@ def test_a_defender_holds_position_on_own_flag_square():
     d.walking = False
     ai.take_turn(b, d)
     assert d.pos == (12, 5)
-

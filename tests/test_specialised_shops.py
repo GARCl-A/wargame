@@ -4,30 +4,13 @@ import os
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-import pygame
 import pytest
 
 from gartok import economy, missions, node_functions, world
-from gartok.apothecary_hub_screen import ApothecaryHubScreen
-from gartok.forge_hub_screen import ForgeHubScreen
 from gartok.guild import Guild
-from gartok.hub_screen import TabbedHubScreen
-from gartok.tanner_hub_screen import TannerHubScreen
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 
-HUBS = {"smith": ("forge", ForgeHubScreen), "tanner": ("tanner", TannerHubScreen),
-        "apothecary": ("apothecary", ApothecaryHubScreen)}
-
-
-def _hub(node_id):
-    pygame.init()
-    guild = Guild([Unit("player")], node=node_id)
-    node = world.node(node_id)
-    cls = HUBS[node_id][1]
-    args = (ui_fonts(), guild, guild.groups[0])
-    return guild, (cls(*args, lambda: None, node=node) if node_id == "apothecary"
-                   else cls(*args, node, lambda: None))
+HUBS = {"smith": "forge", "tanner": "tanner", "apothecary": "apothecary"}
 
 
 def test_the_city_no_longer_holds_the_trades():
@@ -37,8 +20,8 @@ def test_the_city_no_longer_holds_the_trades():
 @pytest.mark.parametrize("node_id", HUBS)
 def test_each_trade_has_its_own_node_with_a_shop_a_shelf_and_a_walk_from_the_city(node_id):
     node = world.node(node_id)
-    assert node.has(HUBS[node_id][0]) and node.has("shop")
-    assert [f.id for f in node_functions.offered(node)] == [HUBS[node_id][0]]
+    assert node.has(HUBS[node_id]) and node.has("shop")
+    assert [f.id for f in node_functions.offered(node)] == [HUBS[node_id]]
     assert economy.targets_of(node_id)
     path, distance = world.route("city", node_id)
     assert path[0] == "city" and path[-1] == node_id and distance == 0.5
@@ -80,29 +63,6 @@ def test_a_shop_only_lists_the_tabs_it_has_something_on():
     tabs = lambda node_id: [key for _label, key, _names in economy.market_categories(node_id)]
     assert tabs("apothecary") == ["kit"]
     assert tabs("market") == ["kit"]
-
-
-@pytest.mark.parametrize("node_id", HUBS)
-def test_the_hub_opens_on_a_tab_and_switches_when_clicked(node_id):
-    _guild, hub = _hub(node_id)
-    assert isinstance(hub, TabbedHubScreen)
-    surf = pygame.Surface((1280, 800))
-    hub.mouse = (0, 0)
-    hub.draw(surf)
-    others = [(key, rect) for rect, key in hub._tab_hits if key != hub.tab]
-    assert others
-    key, rect = others[0]
-    hub.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=rect.center))
-    assert hub.tab == key
-    hub.draw(surf)
-
-
-@pytest.mark.parametrize("node_id", ["smith", "tanner"])
-def test_the_shop_tab_buys_from_the_nodes_own_till(node_id):
-    guild, hub = _hub(node_id)
-    shop_screen = {k: s for k, _l, s in hub.tabs}["shop"]
-    assert shop_screen.node.id == node_id
-    assert shop_screen._shop() is guild.shop(node_id)
 
 
 def test_the_tanners_job_is_offered_at_the_tannery_not_the_city():

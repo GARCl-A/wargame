@@ -71,37 +71,6 @@ def test_icon_strip_stacks_equal_items_and_sums_up_what_does_not_fit():
     assert any(narrow.get_at((x, y))[:3] != (0, 0, 0) for x in range(28, 60) for y in range(10, 30))
 
 
-def test_the_vault_the_forge_the_quest_card_and_the_sheet_draw_with_icons():
-    from gartok import items
-    from gartok.bank_view_screen import BankViewScreen
-    from gartok.combatant import Combatant
-    from gartok.crafting_screen import CraftingScreen
-    from gartok.guild import Guild
-    from gartok.holdings import Stash
-    from gartok.sheet_panel import draw_sheet
-    from gartok.ui import quest_panel
-    from gartok.ui.tokens import fonts
-    from gartok.unit import Unit
-    from tests.helpers import packed
-    pygame.init()
-    F = fonts()
-    u = Unit("player")
-    u._base_inventory = packed(["Rope", "Torch", "Torch"])
-    u.recipes = list(items.CRAFTING_RECIPES)[:2]
-    g = Guild([u])
-    g.bank = Stash(50, packed(["Rope", "Axe"]))
-    surf = pygame.Surface((1400, 900))
-    vault = BankViewScreen(None, g, lambda: None)
-    vault.mouse = (0, 0)
-    vault.draw(surf)
-    forge = CraftingScreen(None, g, g.groups[0], lambda: None)
-    forge.mouse = (0, 0)
-    forge.draw(surf)
-    draw_sheet(surf, pygame.Rect(0, 0, 520, 900), Combatant(u), F)
-    quest_panel.quest_list(surf, F, pygame.Rect(0, 0, 600, 100),
-                           [{"name": "Hides", "accepted_by": "A", "days_left": 2, "progress": (1, 3, "1sqm Hide"), "tags": ()}])
-
-
 def test_icon_list_draws_each_item_and_cuts_off_at_the_edge():
     import pygame
 

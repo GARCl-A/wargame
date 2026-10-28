@@ -22,23 +22,9 @@ from gartok import (
     workbench,
     world,
 )
-from gartok.apothecary_mission_screen import ApothecaryMissionScreen
-from gartok.crafting_screen import CraftingScreen
-from gartok.garage_screen import GarageScreen
-from gartok.gather_screen import GatherScreen
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.initiation_screen import InitiationScreen
-from gartok.ledger_screen import LedgerScreen
-from gartok.library_mission_screen import LibraryMissionScreen
-from gartok.medic_screen import MedicScreen
-from gartok.shrine_screen import ShrineMissionScreen
-from gartok.stables_screen import StablesScreen, WagonYardScreen
-from gartok.tanner_screen import TannerScreen
-from gartok.trust_screen import TrustScreen
 from gartok.wagon import Wagon
-from gartok.wilds_claim_screen import WildsClaimScreen
-from gartok.work_screen import WorkScreen
 from tests.helpers import standard_unit
 
 
@@ -117,19 +103,6 @@ def test_the_initiation_names_its_school_and_terms():
     assert desk._terms()[0][0] == "The school" and desk._action() is None
 
 
-def test_the_pygame_screens_are_the_same_desks():
-    guild, g, _ = _band("lumber_yard")
-    node = world.node("lumber_yard")
-    assert isinstance(WorkScreen(None, guild, g, node, lambda: None), work_desk.WorkDesk)
-    assert isinstance(GatherScreen(None, guild, g, node, lambda: None), work_desk.GatherDesk)
-    assert isinstance(MedicScreen(None, guild, g, lambda: None), medic.Ward)
-    assert isinstance(StablesScreen(None, guild, g, lambda: None), stables.Stables)
-    assert isinstance(WagonYardScreen(None, guild, g, lambda: None), stables.WagonYard)
-    assert isinstance(LedgerScreen(None, guild, g, lambda: None), ledger.LedgerDesk)
-    guild, g, _ = _band("nature_grove")
-    assert isinstance(InitiationScreen(None, guild, g, lambda: None), rite.Initiation)
-
-
 def test_the_bench_lists_who_works_here_and_rolls_a_stint():
     guild, g, u = _band("smith")
     u.recipes.append("Bear Trap")
@@ -192,6 +165,44 @@ def test_the_garage_desk_refuses_a_bay_the_party_cannot_pay():
     assert desk.garage.tier == 0 and "a bay costs" in desk.notice
 
 
+def test_a_bay_is_paid_from_the_coins_in_the_cart_and_adds_room_for_one_of_each():
+    guild, g, u = _band("city")
+    guild.house.owned = True
+    u.money = 0
+    cart = Wagon("Cart")
+    cart.give_to_pack(items.COIN_ITEM, economy.GARAGE_PRICE + 4)
+    g.wagons.append(cart)
+    desk = holdings.GarageDesk(guild, g)
+    assert desk.wealth == economy.GARAGE_PRICE + 4
+    desk._act("bay")
+    garage = guild.house.garage
+    assert garage.tier == 1 and garage.wagon_room == 1 and garage.animal_room == 1 and cart.money == 4
+
+
+def test_the_claim_desk_banks_the_lumber_in_the_cart_too():
+    guild, g, u = _band(world.WILDS_TERRITORY_NODE)
+    guild.wilds_claim_stage = "CLEARED"
+    cart = Wagon("Cart")
+    cart.give_to_pack("Lumber", 3)
+    g.wagons.append(cart)
+    u.give_to_pack("Lumber", 2)
+    desk = claim_desk.ClaimDesk(guild, g)
+    assert desk._party_lumber() == 5
+    desk._deposit_lumber()
+    assert guild.wilds_claim_fence_lumber == 5 and not cart.count_of("Lumber") and not u.count_of("Lumber")
+
+
+def test_the_claim_desk_hands_out_only_the_lumber_a_pack_can_carry():
+    guild, g, u = _band(world.WILDS_TERRITORY_NODE)
+    u._base_inventory = []
+    u._derive_combat()
+    room = int((u.carry_max - u.load) // items.item_weight("Lumber"))
+    guild.garrison_stock[world.WILDS_TERRITORY_NODE] = ["Lumber"] * (room + 3)
+    claim_desk.ClaimDesk(guild, g)._collect_lumber()
+    assert u.count_of("Lumber") == room
+    assert guild.garrison_stock[world.WILDS_TERRITORY_NODE] == ["Lumber"] * 3
+
+
 def test_the_claim_desk_scouts_and_banks_the_carried_lumber():
     guild, g, u = _band(world.WILDS_TERRITORY_NODE)
     desk = claim_desk.ClaimDesk(guild, g)
@@ -214,17 +225,3 @@ def test_the_claim_desk_garrisons_and_stands_down():
     assert g.order.job == "hold"
     desk._leave_garrison()
     assert g.order.kind != "garrison"
-
-
-def test_the_pygame_workbench_boards_garage_and_claim_are_the_same_desks():
-    guild, g, _ = _band("tanner")
-    assert isinstance(CraftingScreen(None, guild, g, lambda: None), workbench.Bench)
-    assert isinstance(TannerScreen(None, guild, g, lambda: None), job_board.TannerBoard)
-    assert isinstance(ApothecaryMissionScreen(None, guild, g, lambda: None), job_board.ApothecaryBoard)
-    assert isinstance(LibraryMissionScreen(None, guild, g, lambda: None), job_board.LibraryBoard)
-    assert isinstance(TrustScreen(None, guild, g, lambda: None), job_board.TrustBoard)
-    assert isinstance(GarageScreen(None, guild, g, lambda: None), holdings.GarageDesk)
-    assert isinstance(WildsClaimScreen(None, guild, g, lambda: None, None, None), claim_desk.ClaimDesk)
-    guild, g, _ = _band("nature_grove")
-    scr = ShrineMissionScreen(None, guild, g, lambda: None)
-    assert isinstance(scr, job_board.ShrineBoard) and scr.subtitle_text == job_board.KEEPER_LINE["nature"]

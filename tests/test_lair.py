@@ -27,7 +27,7 @@ from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.scenario import ErmosScenario
-from tests.helpers import Unit, _FixedRNG, make_app
+from tests.helpers import Unit, _FixedRNG
 
 
 def _lair(seed=6, level=3, size=4):
@@ -70,18 +70,6 @@ def test_searching_with_the_job_out_rolls_wisdom_and_reveals_it():
     assert not found and "DC 12" in msg
     found, _ = lair.search(guild, g, _FixedRNG(20))
     assert found and guild.is_node_revealed(lair.NODE)
-
-
-def test_the_map_offers_the_search_at_the_mine_while_the_job_is_out():
-    from gartok.map_screen import MapScreen
-    from gartok.ui.tokens import fonts
-    guild, g = _guild()
-    ms = MapScreen(fonts(), guild, on_guild=None, on_wipe=None, on_advance=None, on_manage_group=None)
-    keys = [b.get("key") for b in ms._inspector_content(g, world.node("mine"))]
-    assert "search_lair" not in keys
-    _take_clutch(guild, g)
-    keys = [b.get("key") for b in ms._inspector_content(g, world.node("mine"))]
-    assert "search_lair" in keys
 
 
 # --- the board ------------------------------------------------------------------ #
@@ -433,14 +421,6 @@ def test_the_shrine_board_draws_with_the_egg_sale():
     pygame.font.init()
     scr.draw(pygame.Surface((1280, 720)))
     assert any(k == "footer_action" for k, _ in scr.buttons)
-
-
-def test_entering_the_lair_from_the_map_starts_the_heist():
-    guild, g = _guild(node=lair.NODE)
-    app = make_app(guild)
-    app._enter_lair(g, world.node(lair.NODE))
-    battle = app.scene.battle
-    assert isinstance(battle.scenario, lair.LairScenario) and battle.talk_handler is not None
 
 
 def test_the_egg_is_worth_a_lot_and_weighs_on_its_carrier():

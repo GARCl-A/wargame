@@ -10,7 +10,6 @@ import pytest
 from gartok import campaign, economy, encounters, forced, orders, persist, world
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.ledger_screen import LedgerScreen
 from gartok.map_view import position
 from tests.helpers import Unit
 
@@ -193,17 +192,6 @@ def test_a_held_caravan_survives_a_save():
     assert loaded.kind == "supply_ambush" and loaded.dest == "frontier_outpost"
     assert loaded.owed == pytest.approx(grp.pending.owed) and loaded.resume_path == ("ledger_hold",)
     assert len(loaded.pack) == len(grp.pending.pack)
-
-
-def test_ledger_screen_sends_the_caravan_out():
-    import pygame
-    g, grp, _ = _make_guild(deeds=["bankers_trust"])
-    done = []
-    screen = LedgerScreen(None, g, grp, lambda: done.append(1))
-    screen.draw(pygame.Surface((1000, 700)))
-    supply_rect = next(r for k, r in screen.buttons if k == "supply_run")
-    screen._click(supply_rect.center)
-    assert grp.order.kind == "travel" and grp.order.task == "supply_run" and done == [1]
 
 
 def test_supply_run_count_survives_a_save(tmp_path, monkeypatch):

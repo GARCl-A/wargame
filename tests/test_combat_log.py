@@ -355,9 +355,9 @@ def test_the_editor_menu_opens_the_lab():
 
 
 def test_starting_a_lab_fight_opens_a_battle_with_a_log_at_the_chosen_path(tmp_path, monkeypatch):
-    from tests.helpers import make_app
+    from gartok.editor_app import EditorApp
     monkeypatch.setattr(combat_lab, "ROOT", str(tmp_path))
-    app = make_app(None)
+    app = EditorApp.__new__(EditorApp)
     app.ui_fonts = ui_fonts()
     app._start_lab_fight({"fight": "scrapper", "level": 1, "squad": 3,
                           "controllers": {"player": "human", "enemy": "ai"}, "name": "first try"})
@@ -372,28 +372,16 @@ def test_starting_a_lab_fight_opens_a_battle_with_a_log_at_the_chosen_path(tmp_p
 # ---- the campaign's own fights ------------------------------------------- #
 
 def test_a_campaign_fight_logs_into_the_world_folder_only_while_recording(tmp_path):
-    from tests.helpers import make_app, world
-    guild = Guild(None, groups=[], clock=Clock(86400 * 11))
-    app = make_app(guild)
-    battle = _fight()
-    node = world.node("wilds")
-    app._log_fight(battle, node)
-    assert battle.sink is None                                  # the recorder is off
-
     from gartok.group import Group
-    unit = encounters.build_enemy(1)
-    guild = Guild(None, groups=[Group([unit], node="wilds")], clock=Clock(86400 * 11))
-    app.guild = guild
+    assert recorder.combat_log_path("d012-wilds-hunt") is None                 # the recorder is off
+    guild = Guild(None, groups=[Group([encounters.build_enemy(1)], node="wilds")], clock=Clock(86400 * 11))
     assert recorder.attach(str(tmp_path / "world"), guild)
     try:
-        app._log_fight(battle, node)
-        path = battle.sink.path
-        assert path == os.path.join(str(tmp_path / "world"), "combat_logs", "d012-wilds-hunt.jsonl") or \
-            os.path.basename(path).startswith("d012-wilds-")
-        assert os.path.dirname(path).endswith("combat_logs")
-        second = _fight()
-        app._log_fight(second, node)
-        assert second.sink.path != path
+        path = recorder.combat_log_path("d012-wilds-hunt")
+        assert path == os.path.join(str(tmp_path / "world"), "combat_logs", "d012-wilds-hunt.jsonl")
+        os.makedirs(os.path.dirname(path))
+        open(path, "w").close()
+        assert recorder.combat_log_path("d012-wilds-hunt").endswith("d012-wilds-hunt-2.jsonl")
     finally:
         recorder.detach()
 

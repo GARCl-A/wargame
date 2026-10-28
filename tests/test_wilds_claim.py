@@ -8,45 +8,11 @@ first node with a `garrison_job` actually set)."""
 import random
 
 from gartok import campaign, forced, orders
-from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.wilds_claim_screen import WildsClaimScreen
 from tests.helpers import Unit, economy, packed, world
 
 NODE = world.WILDS_TERRITORY_NODE
-
-
-def _app(guild):
-    app = App.__new__(App)
-    app.world = "testworld"
-    app.scene = None
-    app.fonts = None
-    app.ui_fonts = None
-    app.guild = guild
-    app._battle_squad = []
-    app._battle_node = None
-    app._arena_offer = None
-    app._hunt = None
-    app._pause_order = None
-    app._pause_group = None
-    app._claim_stage_pending = None
-    app._map_notices = []
-    app._pending = []
-    app._pending_event = None
-    app._save = lambda: None
-    return app
-
-
-def _screen(guild, group):
-    s = WildsClaimScreen.__new__(WildsClaimScreen)
-    s.guild = guild
-    s.group = group
-    s.notice = None
-    s.on_done = lambda: None
-    s.on_fight_clear = lambda g: None
-    s.on_fight_sweep = lambda g: None
-    return s
 
 
 # --------------------------------------------------------------------------- #
@@ -134,128 +100,10 @@ def test_a_garrison_elsewhere_does_not_count_toward_sustaining_here():
 # the screen: scouting, depositing/building, garrisoning                      #
 # --------------------------------------------------------------------------- #
 
-def test_screen_scout_advances_the_stage_and_spends_time():
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    s = _screen(guild, g)
-
-    day_before = guild.clock.day
-    s._scout()
-    assert guild.wilds_claim_stage == "SCOUTED"
-    assert guild.clock.seconds > 0 or guild.clock.day >= day_before
-
-
-def test_screen_deposit_moves_all_carried_lumber_into_the_fence_bank():
-    random.seed(1)
-    a, b = Unit("player"), Unit("player")
-    a._base_inventory = packed(["Lumber", "Lumber", "Rope"])
-    b._base_inventory = packed(["Lumber"])
-    g = Group([a, b], node=NODE)
-    guild = Guild(None, groups=[g])
-    s = _screen(guild, g)
-
-    s._deposit_lumber()
-    assert guild.wilds_claim_fence_lumber == 3
-    assert a._base_inventory == packed(["Rope"]) and b._base_inventory == []
-
-
-def test_screen_build_fences_is_refused_below_the_threshold():
-    random.seed(1)
-    g = Group([Unit("player")], node=NODE)
-    guild = Guild(None, groups=[g])
-    guild.wilds_claim_deposit_lumber(economy.WILDS_CLAIM_FENCE_LUMBER - 1)
-    s = _screen(guild, g)
-
-    s._build_fences()
-    assert guild.wilds_claim_stage != "FENCED"
-
-
-def test_screen_garrison_issues_the_order_and_starts_sustaining():
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    guild.wilds_claim_stage = "SWEPT"
-    done = []
-    s = _screen(guild, g)
-    s.on_done = lambda: done.append(True)
-
-    s._start_garrison()
-    assert g.order.kind == "garrison" and g.order.job == "lumber"
-    assert guild.wilds_claim_stage == "SUSTAINING"
-    assert done == [True]
-
-
-def test_screen_collect_lumber_respects_carry_capacity():
-    """`carry_max` is re-derived from Strength on every `_derive_combat()` call
-    (`Unit._derive_carry`) -- it can't just be assigned and expected to stick
-    through a pickup loop that calls it each time (unlike `bank_screen`'s own
-    capacity test, which only ever hits the *refusal* path, never a
-    successful pickup in between). Filling the pack with same-weight Rope
-    instead leaves a real, predictable amount of headroom."""
-    random.seed(1)
-    p = Unit("player")
-    p._base_inventory = []
-    p._derive_combat()
-    base_load = p.load                          # equipped weapon/armor already counts toward it
-    filler = max(0, int((p.carry_max - base_load - 4.0) // 2))   # leaves room for exactly 2 Lumber (2 kg each)
-    p._base_inventory = packed(["Rope"] * filler)
-    p._derive_combat()
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    guild.garrison_stock[NODE] = ["Lumber"] * 5
-    s = _screen(guild, g)
-
-    s._collect_lumber()
-    assert p.count_of("Lumber") == 2
-    assert guild.garrison_stock[NODE] == ["Lumber"] * 3
-
 
 # --------------------------------------------------------------------------- #
 # claim battles (CLEAR / SWEEP) through app._battle_end                       #
 # --------------------------------------------------------------------------- #
-
-def test_winning_the_clear_battle_advances_the_stage():
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    guild.wilds_claim_stage = "SCOUTED"
-    app = _app(guild)
-
-    app._start_claim_clear_battle(g)
-    battle = app.scene.battle
-    battle.winner, battle.round_no = "player", 1
-    for c in battle.player_units:
-        c.status = "up"
-    app._battle_squad = [p]
-    app._battle_node = world.node(NODE)
-    app._battle_end(battle)
-
-    assert guild.wilds_claim_stage == "CLEARED"
-    assert app._claim_stage_pending is None
-
-
-def test_losing_the_sweep_battle_leaves_the_stage_unchanged():
-    random.seed(1)
-    a, b = Unit("player"), Unit("player")
-    g = Group([a, b], node=NODE)
-    guild = Guild(None, groups=[g])
-    guild.wilds_claim_stage = "FENCED"
-    app = _app(guild)
-
-    app._start_claim_sweep_battle(g)
-    battle = app.scene.battle
-    battle.winner, battle.round_no = "enemy", 1
-    battle.player_units[0].status = "up"        # one survivor -- not a full wipe
-    battle.player_units[1].status = "dead"
-    app._battle_squad = [a, b]
-    app._battle_node = world.node(NODE)
-    app._battle_end(battle)
-
-    assert guild.wilds_claim_stage == "FENCED"
 
 
 # --------------------------------------------------------------------------- #
@@ -331,46 +179,9 @@ def test_losing_the_raid_resets_the_sustain_countdown():
     assert any("scattered" in e for e in events)
 
 
-def test_app_runs_the_wilds_raid_battle_end_to_end():
-    random.seed(1)
-    orig = _forced_raid_chance(1.0)
-    try:
-        p = Unit("player")
-        g = Group([p], node=NODE)
-        guild = Guild(None, groups=[g])
-        guild.wilds_claim_start_sustaining()
-        g.order = orders.garrison("lumber")
-        app = _app(guild)
-        app._advance(dt=24)
-    finally:
-        economy.WILDS_RAID_CHANCE = orig
-
-    assert app._pause_order is not None and app._pause_order.kind == "wilds_raid"
-    battle = app.scene.battle
-    battle.winner, battle.round_no = "player", 1
-    for c in battle.player_units:
-        c.status = "up"
-    app._battle_squad = [p]
-    app._battle_node = world.node(NODE)
-    app._battle_end(battle)
-
-    assert app._pause_order is None
-    assert g.order.kind == "garrison"
-
-
 # --------------------------------------------------------------------------- #
 # app wiring: opening the screen                                              #
 # --------------------------------------------------------------------------- #
-
-def test_app_opens_the_claim_screen():
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-
-    app._open_wilds_claim(g, world.node(NODE))
-    assert isinstance(app.scene, WildsClaimScreen)
 
 
 # --------------------------------------------------------------------------- #
@@ -391,89 +202,6 @@ def test_a_garrison_at_the_real_claim_node_produces_lumber():
 # --------------------------------------------------------------------------- #
 # real draw, through pygame -- every stage panel at least once                #
 # --------------------------------------------------------------------------- #
-
-def test_drawing_every_stage_does_not_crash():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    surf = pygame.Surface((1280, 800))
-
-    for stage in ("NONE", "SCOUTED", "CLEARED", "FENCED", "SWEPT", "SUSTAINING", "ESTABLISHED"):
-        guild.wilds_claim_stage = stage
-        if stage == "SUSTAINING":
-            guild.wilds_claim_sustain_days_left = 3
-            g.order = orders.garrison("lumber")
-        elif stage == "ESTABLISHED":
-            guild.garrison_stock[NODE] = ["Lumber", "Lumber"]
-            g.order = orders.idle()
-        else:
-            g.order = None
-        s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
-                             on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
-        s.mouse = (0, 0)
-        s.draw(surf)                            # must not raise for any stage
-
-
-def test_drawing_and_clicking_scout_through_pygame():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
-                         on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
-    surf = pygame.Surface((1280, 800))
-    s.mouse = (0, 0)
-
-    s.draw(surf)
-    scout = next(r for k, r in s.buttons if k == "scout")
-    s._click(scout.center)
-    assert guild.wilds_claim_stage == "SCOUTED"
-
-
-def test_standing_down_mid_sustain_leaves_a_button_to_garrison_again():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    random.seed(1)
-    g = Group([Unit("player")], node=NODE)
-    guild = Guild(None, groups=[g])
-    guild.wilds_claim_stage = "SUSTAINING"
-    guild.wilds_claim_sustain_days_left = 4
-    g.order = orders.garrison("lumber")
-    s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
-                         on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
-    s.mouse = (0, 0)
-    surf = pygame.Surface((1280, 800))
-
-    s.draw(surf)
-    s._click(next(r for k, r in s.buttons if k == "leave_garrison").center)
-    s.draw(surf)
-    s._click(next(r for k, r in s.buttons if k == "garrison").center)
-
-    assert g.order.kind == "garrison"
-    assert guild.wilds_claim_sustain_days_left == economy.WILDS_CLAIM_SUSTAIN_DAYS
 
 
 # --------------------------------------------------------------------------- #
@@ -504,50 +232,6 @@ def test_wilds_claim_state_survives_a_save_round_trip():
 # --------------------------------------------------------------------------- #
 # a garrisoned group is still reachable from the map                          #
 # --------------------------------------------------------------------------- #
-
-def _garrisoned_map():
-    from gartok.map_screen import MapScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    p = Unit("player")
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    guild.wilds_claim_start_sustaining()
-    g.order = orders.garrison("lumber")
-    calls = []
-    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None,
-                   lambda dt=None: calls.append(("advance", dt)), lambda grp: None,
-                   on_visit_claim=lambda grp: calls.append(("claim", grp)))
-    ms.selected = g
-    return ms, g, calls
-
-
-def test_a_garrisoned_group_can_reopen_the_claim_screen():
-    ms, g, calls = _garrisoned_map()
-    keys = [b.get("key") for b in ms._inspector_content(g, world.node(NODE))]
-    assert "visit_claim" in keys
-    ms._handle_button("visit_claim")
-    assert calls == [("claim", g)]
-    assert g.order.kind == "garrison"           # looking never cancels the garrison
-
-
-def test_with_every_group_garrisoned_the_cta_advances_the_whole_world():
-    ms, g, calls = _garrisoned_map()
-    items = ms._inspector_bottom(g)
-    keys = [b.get("key") for b in items]
-    assert "manage_group" not in keys and "rest_menu" not in keys     # a garrison is recalled, not rested
-    cta = next(b for b in items if b.get("key") == "advance_world")
-    assert "WHOLE WORLD" in cta["label"] and cta["enabled"]
-    ms._handle_button("advance_world")
-    assert calls == [("advance", 24)]
-
-
-def test_waiting_on_the_map_counts_the_sustain_days_down():
-    random.seed(1)
-    ms, g, _ = _garrisoned_map()
-    g.members[0]._base_inventory = packed(["Meat"] * 4)
-    ms.guild.pass_time(24)
-    assert ms.guild.wilds_claim_sustain_days_left == economy.WILDS_CLAIM_SUSTAIN_DAYS - 1
 
 
 # --------------------------------------------------------------------------- #
@@ -602,14 +286,3 @@ def test_hold_is_a_known_garrison_job_that_produces_nothing():
     assert orders.is_resting(orders.garrison("hold"))
     assert not orders.is_resting(orders.garrison("lumber"))
     assert orders.is_resting(orders.rest(8))
-
-
-def test_the_claim_screen_toggles_the_garrison_job():
-    from gartok.wilds_claim_screen import WildsClaimScreen
-    _, g = _sustaining_guild()
-    screen = WildsClaimScreen.__new__(WildsClaimScreen)
-    screen.group = g
-    screen._toggle_garrison_job()
-    assert g.order.job == "hold"
-    screen._toggle_garrison_job()
-    assert g.order.job == "lumber"

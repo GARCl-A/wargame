@@ -5,7 +5,6 @@ from types import SimpleNamespace
 
 import pygame
 
-from gartok import app as app_mod
 from gartok import battle_fx, settings, sound
 from gartok.actions.base import _resolve_hit
 from gartok.ui import battle_panel, board_render
@@ -167,28 +166,3 @@ def test_volume_label():
         assert settings.label("volume") == "VOLUME: 50%"
     finally:
         settings._values = monkey
-
-
-def _dispatcher(money_after):
-    guild = SimpleNamespace(money=10)
-
-    def handle(_event):
-        guild.money = money_after
-    return SimpleNamespace(guild=guild, scene=SimpleNamespace(handle_event=handle))
-
-
-def test_a_click_on_a_button_clicks_and_money_moving_chinks(monkeypatch):
-    played = []
-    monkeypatch.setattr(app_mod.sound, "play", played.append)
-    click = pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(0, 0))
-
-    fake = _dispatcher(4)
-    monkeypatch.setattr(app_mod, "_pointer_hot", lambda: True)
-    app_mod.App._dispatch(fake, click)
-    assert played == ["click", "coins"]
-
-    played.clear()
-    fake = _dispatcher(10)
-    monkeypatch.setattr(app_mod, "_pointer_hot", lambda: False)
-    app_mod.App._dispatch(fake, click)
-    assert played == []

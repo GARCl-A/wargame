@@ -1,51 +1,11 @@
 import pygame
 
 from gartok import world
-from gartok.apothecary_hub_screen import ApothecaryHubScreen
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.library_hub_screen import LibraryHubScreen
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 from tests.helpers import packed
-
-
-def test_apothecary_hub_screen_loads():
-    pygame.init()
-    surf = pygame.Surface((1280, 800))
-    F = ui_fonts()
-
-    u = Unit("player")
-    g = Guild([u])
-    group = Group(list(g.roster), "city")
-    
-    done_called = False
-    def on_done():
-        nonlocal done_called
-        done_called = True
-
-    screen = ApothecaryHubScreen(F, g, group, on_done)
-    screen.mouse = (100, 100)
-    screen.draw(surf)
-
-def test_library_hub_screen_loads():
-    pygame.init()
-    surf = pygame.Surface((1280, 800))
-    F = ui_fonts()
-
-    u = Unit("player")
-    g = Guild([u])
-    group = Group(list(g.roster), "library")
-    
-    done_called = False
-    def on_done():
-        nonlocal done_called
-        done_called = True
-
-    node = world.node("library")
-    screen = LibraryHubScreen(F, g, group, node, on_done)
-    screen.mouse = (100, 100)
-    screen.draw(surf)
 
 
 def test_library_dictionary_mission_flow():
@@ -98,21 +58,6 @@ def test_library_shop_locked_before_rep_and_rejects_stocked_dictionaries():
     u.give_to_pack(stocked_dict)
     assert missions.progress(g, m) == 0
     assert not missions.can_turn_in(g, m)
-
-
-
-def test_map_screen_library_button_label():
-    from gartok.map_screen import MapScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    u = Unit("player")
-    g = Guild([u])
-    grp = Group(list(g.roster), "library")
-    g.active_group = grp
-    ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda g: None)
-    blocks = ms._inspector_content(grp, world.node("library"))
-    btn = next((b for b in blocks if b.get("key") == "library"), None)
-    assert btn is not None
-    assert btn["label"] == "VISIT THE LIBRARY"
 
 
 def test_taverna_hub_screen_flow():
@@ -219,7 +164,6 @@ def test_taverna_hub_screen_flow():
         assert convince_btn is not None
 
 
-
 def test_taverna_perform_tab_plays_a_show():
     from gartok.taverna_screen import TavernaScreen
     from tests.helpers import fixed_d20
@@ -268,35 +212,7 @@ def test_every_node_builds_as_a_tabbed_hub():
         scr.draw(surf)
 
 
-def test_a_work_node_opened_from_the_map_shows_its_gathering_tab():
-    from types import SimpleNamespace
-
-    from gartok.app_nodes import NodeScreensMixin
-    pygame.init()
-    guild = Guild([Unit("player")], node="mine")
-    app = SimpleNamespace(guild=guild, ui_fonts=ui_fonts(), scene=None, _after_activity=lambda: None)
-    for node_id in ("mine", "lumber_yard"):
-        NodeScreensMixin._open_market_stalls(app, list(guild.roster), world.node(node_id), None)
-        assert [k for k, _l, _s in app.scene.tabs] == ["shop", "work", "gather"]
-
-
-def test_a_work_node_opens_for_the_group_that_clicked_not_the_first_one_there():
-    from types import SimpleNamespace
-
-    from gartok.app import App
-    pygame.init()
-    guild = Guild([Unit("player"), Unit("player")], node="lumber_yard")
-    second = guild.split_group(guild.groups[0], [guild.roster[1]])
-    app = SimpleNamespace(guild=guild, ui_fonts=ui_fonts(), scene=None, _after_activity=lambda: None,
-                          _work_shift=lambda *a: None)
-    app._open_market_stalls = lambda *a, **k: App._open_market_stalls(app, *a, **k)
-    App._FUNCTION_OPENERS["shop"](app, second, world.node("lumber_yard"), None)
-    work = next(s for k, _l, s in app.scene.tabs if k == "work")
-    assert work.group is second
-
-
 def _work_screen(node_id="mine"):
-    from gartok.group import Group
     from gartok.work_screen import WorkScreen
     pygame.init()
     u = Unit("player")

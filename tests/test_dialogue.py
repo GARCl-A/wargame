@@ -5,14 +5,13 @@ the save carrying it, the forced events that open it, and the squad's AI."""
 import random
 from types import SimpleNamespace
 
-import pygame
 import pytest
 
 from gartok import combat_log, dialogue, forced, justice, orders, persist
 from gartok.battle import Battle
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Unit, _FixedRNG, make_app
+from tests.helpers import Unit, _FixedRNG
 
 
 def _speaker(lang="Common", money=0, seed=1):
@@ -267,54 +266,6 @@ def test_a_rolled_talk_is_saved_on_the_order_so_a_reload_cannot_roll_again():
     again = dialogue.Result.from_dict(back.parley)
     assert again.kind == "fight" and again.opening.surprised == "player"
     assert persist.order_from_dict({**persist.order_to_dict(orders.Order("ambush")), "parley": None}).parley is None
-
-
-def _ambushed_app(money=0):
-    me = _speaker(money=money)
-    g = Group([me], node="road")
-    guild = Guild(None, groups=[g])
-    order = orders.Order("ambush", pack=tuple(_pack()))
-    g.pending = order
-    app = make_app(guild)
-    app._pending_event = (g, order)
-    return app, g, order, me
-
-
-def test_the_road_ambush_cta_opens_the_talk_and_a_bribe_sends_the_group_on():
-    app, g, order, me = _ambushed_app(money=500)
-    app._resolve_pending_event()
-    scr = app.scene
-    assert scr.__class__.__name__ == "DialogueScreen" and app._pending_event is None
-    scr.choose("bribe")
-    assert order.parley["kind"] == "peace"
-    scr.go_on()
-    assert g.pending is None and g.order.kind == "idle" and me.money < 500
-
-
-def test_a_reloaded_talk_opens_on_its_result_and_its_fight_keeps_the_opening():
-    app, g, order, _ = _ambushed_app()
-    order.parley = dialogue.Result("fight", "seen through", dialogue.Opening(surprised="player")).to_dict()
-    app._open_dialogue(g, order)
-    assert app.scene.result.kind == "fight"
-    app.scene.go_on()
-    battle = app.scene.battle
-    assert app.scene.__class__.__name__ == "BattleScreen" and battle.opening["surprised"] == "player"
-    assert battle.active.team == "enemy"
-
-
-def test_the_dialogue_screen_draws_choosing_and_after_the_roll():
-    app, g, order, _ = _ambushed_app(money=500)
-    app._open_dialogue(g, order)
-    scr = app.scene
-    pygame.font.init()
-    surf = pygame.Surface((1280, 720))
-    scr.draw(surf)
-    assert scr.hits["options"] and scr.hits["speakers"] and scr.tutorial_key() == "dialogue"
-    _, rect = scr.hits["options"][0]
-    scr._click(rect.center)
-    assert scr.result is not None
-    scr.draw(pygame.Surface((1000, 640)))
-    assert scr.hits["button"] is not None
 
 
 # --- the squad's AI ----------------------------------------------------------- #

@@ -8,12 +8,10 @@ chain and teaches the Signal Horn."""
 import os
 import random
 
-import pygame
 import pytest
 
 from gartok import (
     ai,
-    campaign,
     data,
     encounters,
     factions,
@@ -30,7 +28,7 @@ from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.hunt import HuntState
 from gartok.unit import Unit
-from tests.helpers import fixed_d20, skip_aftermath
+from tests.helpers import fixed_d20
 
 
 def _guild(hour=9, node="country_roads"):
@@ -243,49 +241,6 @@ def test_the_trail_is_only_read_by_day():
     assert ox.daylight_hours(19) == 0
 
 
-def test_the_hunt_screen_tracks_then_hands_over_aurochs():
-    from gartok.hunt_screen import HuntScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    guild, (signer, mate) = _guild(hour=8, node="ox_fields")
-    guild.reveal_node("ox_fields")
-    _job(guild, signer)
-    st = HuntState([signer, mate], world.node("ox_fields"), hours_left=0, target="ox")
-    scr = HuntScreen(ui_fonts(), guild, st, phase="setup",
-                     on_ambush=lambda *_: None, on_done=lambda: None)
-    surf = pygame.Surface((1100, 700))
-    scr.draw(surf)
-    st.hours_left = 4
-    random.seed(1)
-    signer.mod_wisdom = 30                                     # any roll finds the trail
-    scr._do_stretch()
-    assert scr.phase == "ambush" and scr.ambush_pack[0].name == "Aurochs"
-    assert st.fights == 1 and guild.ox_trails == 1
-    scr.draw(surf)
-
-
-def test_the_hunt_screen_will_not_start_a_search_after_dark():
-    from gartok.hunt_screen import HuntScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    guild, (signer, _) = _guild(hour=21, node="ox_fields")
-    st = HuntState([signer], world.node("ox_fields"), hours_left=0, target="ox")
-    scr = HuntScreen(ui_fonts(), guild, st, phase="setup",
-                     on_ambush=lambda *_: None, on_done=lambda: None)
-    scr.draw(pygame.Surface((1100, 700)))
-    assert "confirm" not in {k for k, _r in scr.buttons}
-
-
-def test_a_lost_search_wraps_up_without_a_fight():
-    from gartok.hunt_screen import HuntScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    guild, (signer, _) = _guild(hour=8, node="ox_fields")
-    st = HuntState([signer], world.node("ox_fields"), hours_left=2, target="ox")
-    scr = HuntScreen(ui_fonts(), guild, st, phase="setup",
-                     on_ambush=lambda *_: None, on_done=lambda: None)
-    signer.mod_wisdom = -30
-    scr._do_stretch()
-    assert scr.phase == "done" and any("trail of the ox" in ln for ln in scr.result)
-
-
 # --- the field ----------------------------------------------------------- #
 
 def _fight(level=5, size=4, seed=1):
@@ -394,134 +349,8 @@ def test_reinforce_places_a_fresh_enemy_and_gives_it_a_turn():
 
 # --- the app wiring ------------------------------------------------------ #
 
-def _app(guild):
-    from gartok.app import App
-    app = App.__new__(App)
-    app.world = "testworld"
-    app.scene = None
-    app.fonts = None
-    app.ui_fonts = None
-    app.guild = guild
-    app._battle_squad = []
-    app._battle_node = None
-    app._arena_offer = None
-    app._hunt = None
-    app._pause_order = None
-    app._pause_group = None
-    app._claim_stage_pending = None
-    app._left_outside = None
-    app._map_notices = []
-    app._pending = []
-    app._pending_event = None
-    app._save = lambda: None
-    app._autosave = lambda *_a, **_k: None
-    return app
-
-
-def test_the_ox_node_order_opens_the_tracking_screen():
-    import gartok.hunt_screen as hunt_screen_mod
-    from gartok import orders
-    from gartok.group import Group
-    random.seed(1)
-    g = Group([Unit("player")], node="ox_fields")
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-    g.order = orders.interactive("ox_hunt")
-    app._advance()
-    assert isinstance(app.scene, hunt_screen_mod.TrackScreen)
-    assert app._hunt.target == "ox" and app.scene.tutorial_key() == "ox_hunt"
-
-
-def test_killing_aurochs_closes_the_trail_and_losing_the_hide_fails_the_job():
-    import gartok.hunt_screen as hunt_screen_mod
-    import gartok.loot_screen as loot_screen_mod
-    guild, (signer, mate) = _guild(hour=10, node="ox_fields")
-    m = _job(guild, signer)
-    app = _app(guild)
-    app._hunt = HuntState([signer, mate], world.node("ox_fields"), hours_left=4, target="ox")
-    app._battle_squad = [signer, mate]
-    app._battle_node = world.node("ox_fields")
-    battle = Battle([signer, mate], ox.aurochs_pack(), scenario=ox_fields.OxFieldsScenario(),
-                    daylight=True, lethal=True)
-    boss = battle.enemy_units[0]
-    boss.hp, boss.status = 0, "dead"
-    battle.winner = "player"
-    app._battle_end(battle)
-    assert missions.pending_ox(guild) is None and m.ambush_done
-    assert app._hunt.hours_left == 0
-    skip_aftermath(app)
-    assert isinstance(app.scene, loot_screen_mod.LootScreen)             # the hide and the horn on the field
-    app.scene.on_done()                                          # ...left lying
-    assert m.state == "failed"
-    assert any("hide is lost" in n for n in app._map_notices)
-    assert isinstance(app.scene, hunt_screen_mod.TrackScreen) and app.scene.phase == "done"
-
-
-def test_a_lost_chase_leaves_the_trail_open_and_the_next_one_harder():
-    guild, (signer, mate) = _guild(hour=10, node="ox_fields")
-    m = _job(guild, signer)
-    app = _app(guild)
-    app._hunt = HuntState([signer, mate], world.node("ox_fields"), hours_left=4, target="ox")
-    guild.ox_trails = 1
-    app._battle_squad = [signer, mate]
-    app._battle_node = world.node("ox_fields")
-    battle = Battle([signer, mate], ox.aurochs_pack(), scenario=ox_fields.OxFieldsScenario(),
-                    daylight=True, lethal=True)
-    for c in battle.player_units:
-        c.hp, c.status = 0, "dead"
-    battle.winner = "enemy"
-    app._battle_end(battle)
-    assert m.state == "active" and not m.ambush_done and missions.pending_ox(guild) is m
-    assert ox.track_dc(guild) == ox.TRACK_DC + ox.TRACK_DC_STEP
-
 
 # --- the map ------------------------------------------------------------- #
-
-def _inspect(guild, node_id):
-    from gartok.map_screen import MapScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda grp: None)
-    return ms, ms._inspector_content(guild.groups[0], world.node(node_id))
-
-
-def test_the_country_roads_offer_a_search_until_the_fields_are_found():
-    guild, _ = _guild(node="country_roads")
-    _, blocks = _inspect(guild, "country_roads")
-    assert "scout_fields" in [b.get("key") for b in blocks]
-    guild.reveal_node("ox_fields")
-    _, blocks = _inspect(guild, "country_roads")
-    assert "scout_fields" not in [b.get("key") for b in blocks]
-
-
-def test_the_search_button_reveals_the_fields_on_the_map():
-    guild, (signer, mate) = _guild(node="country_roads")
-    signer.mod_wisdom = mate.mod_wisdom = 10
-    _job(guild, signer)
-    ms, _ = _inspect(guild, "country_roads")
-    ms.selected = guild.groups[0]
-    before = guild.clock.seconds
-    ms._handle_button("scout_fields")
-    assert guild.groups[0].order.remaining == ox.SCOUT_HOURS and not guild.is_node_revealed("ox_fields")
-    with fixed_d20(20):
-        campaign.advance(guild)
-    assert guild.is_node_revealed("ox_fields") and guild.groups[0].order is None
-    assert guild.clock.seconds - before == ox.SCOUT_HOURS * 3600
-    ms, _ = _inspect(guild, "country_roads")
-    assert "ox_fields" in ms._nodes
-
-
-def test_the_fields_offer_the_track_button_only_with_the_job_out():
-    guild, (signer, _) = _guild(node="ox_fields")
-    guild.reveal_node("ox_fields")
-    _, blocks = _inspect(guild, "ox_fields")
-    assert "ox_hunt" not in [b.get("key") for b in blocks]
-    assert any("trail is cold" in b.get("text", "") for b in blocks)
-    _job(guild, signer)
-    _, blocks = _inspect(guild, "ox_fields")
-    assert "ox_hunt" in [b.get("key") for b in blocks]
-    missions.slay_ox(guild)
-    _, blocks = _inspect(guild, "ox_fields")
-    assert "ox_hunt" not in [b.get("key") for b in blocks]
 
 
 def test_aurochs_is_an_ox_with_aurochs_might():

@@ -12,7 +12,6 @@ from gartok.city_property_screen import CityPropertyScreen
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.ui.tokens import fonts as ui_fonts
-from gartok.wilds_claim_screen import WildsClaimScreen
 from tests.helpers import Unit, economy, packed, world
 
 NODE = world.WILDS_TERRITORY_NODE
@@ -198,40 +197,6 @@ def test_a_seized_claim_cannot_cook():
     assert not guild.wilds_claim_can_cook
 
 
-def _claim_screen(guild, group, on_cook=lambda: None):
-    return WildsClaimScreen(ui_fonts(), guild, group, lambda: None, lambda g: None,
-                            lambda g: None, on_cook=on_cook)
-
-
-def _button_keys(scr):
-    pygame.init()
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface((1280, 800)))
-    return {k for k, _ in scr.buttons}
-
-
-def test_the_claim_screen_offers_a_campfire_then_the_kitchen():
-    guild, g, _ = _claim()
-    scr = _claim_screen(guild, g)
-    keys = _button_keys(scr)
-    assert "campfire" in keys and "cook" not in keys
-
-    guild.wilds_claim_campfire = True
-    keys = _button_keys(scr)
-    assert "cook" in keys and "campfire" not in keys
-
-
-def test_the_campfire_button_is_off_without_fuel():
-    guild, g, _ = _claim(fuel=0)
-    assert "campfire" not in _button_keys(_claim_screen(guild, g))
-
-
-def test_no_hearth_before_the_land_is_swept():
-    guild, g, _ = _claim()
-    guild.wilds_claim_stage = "FENCED"
-    assert not {"campfire", "cook"} & _button_keys(_claim_screen(guild, g))
-
-
 # --------------------------------------------------------------------------- #
 # saves                                                                       #
 # --------------------------------------------------------------------------- #
@@ -376,17 +341,6 @@ def test_the_bricks_are_sold_at_the_mine():
     assert economy.CLAIM_OVEN_BRICK not in economy.MARKET_STOCK
 
 
-def test_the_claim_screen_offers_the_oven_only_with_enough_bricks():
-    guild, g, _ = _bricked(economy.CLAIM_OVEN_BRICKS - 1)
-    assert "oven" not in _button_keys(_claim_screen(guild, g))
-    guild, g, _ = _bricked()
-    scr = _claim_screen(guild, g)
-    assert "oven" in _button_keys(scr)
-    scr._build_oven()
-    keys = _button_keys(scr)
-    assert "cook" in keys and not {"oven", "campfire"} & keys
-
-
 def test_the_claim_oven_survives_a_save_round_trip():
     slot = "testworld_claim_oven"
     if os.path.exists(persist.save_path(slot)):
@@ -495,26 +449,3 @@ def test_field_campfire_in_group_screen_actions():
     scr._handle_button("campfire_cook")
     assert g.has_campfire(guild.clock.seconds)
     assert cook_opened == [True]
-
-
-def test_field_campfire_in_map_screen_inspector():
-    from gartok.map_screen import MapScreen
-    pygame.init()
-    u = Unit("player")
-    u._base_inventory = packed(["Flint and Steel", "Lumber", "1kg Coal"])
-    g = Group([u], node="wilds")
-    guild = Guild([u], groups=[g])
-
-    cook_opened = []
-    scr = MapScreen(ui_fonts(), guild, on_guild=lambda: None, on_wipe=lambda: None,
-                    on_advance=lambda: None, on_manage_group=lambda g: None,
-                    on_cook=lambda grp: cook_opened.append(grp))
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface((1280, 800)))
-
-    # Inspector shows campfire button and triggers it
-    keys = {k for k, _ in scr.buttons}
-    assert "campfire_cook" in keys
-    scr._handle_button("campfire_cook")
-    assert g.has_campfire(guild.clock.seconds)
-    assert cook_opened == [g]

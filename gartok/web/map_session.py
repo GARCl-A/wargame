@@ -387,7 +387,7 @@ class MapSession(MapView, Session):
         elif g.busy:
             out["why"] = f"{g.display_name} is busy"
         elif any(w.broken for w in g.wagons):
-            out["why"] = "a broken wagon must be left behind first (pygame's map, for now)"
+            out["why"] = "a broken wagon must be mended first (leaving it behind is not in the browser yet)"
         return out
 
     def travel(self, gid, node_id):
@@ -395,7 +395,7 @@ class MapSession(MapView, Session):
         if node_id == g.node:
             raise ValueError(f"{g.display_name} is already there")
         if any(w.broken for w in g.wagons):
-            raise ValueError("a broken wagon must be left behind first; pygame's map asks about it for now")
+            raise ValueError("a broken wagon must be mended first; leaving it behind is not in the browser yet")
         g.order = orders.travel(g, node_id, self._pace(g))
         self.focus = g.gid
         return self._after_order()

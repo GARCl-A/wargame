@@ -582,7 +582,6 @@ class HubSession(Session):
             out["ledger"] = self.desk.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
-            out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is played "
-                                                    "in pygame for now: the hub's other tabs follow the shop in "
-                                                    "step 9.")}
+            out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is not "
+                                                    "in the browser yet.")}
         return out

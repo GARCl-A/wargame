@@ -25,7 +25,7 @@ the art as far as Gemini got and the board's colour and light are done (the batt
 finished), the campaign map is in (`--save <world>`) and so is every screen the campaign reaches
 (step 9). Step 10 brings the campaign's fights: the forced ones, the Claim's, the arena, the hunt, the searches'
 finds and the errands' fights are in, the title screen opens it all and a new guild is drafted there, the
-settings, the wiki and the map's menu too, and `python main.py` opens the browser (`--pygame` the old window).
+settings, the wiki and the map's menu too, and `python main.py` opens the browser (`--editor` the Editor's pygame window; the pygame campaign is gone).
 Next is retiring pygame (step 10z): the rules the web borrows from pygame's screens move out first.
 
 ---
@@ -60,6 +60,14 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   swap the Kenney variants in `assets/sounds/`.
 
 ## Medium
+
+- **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** Most urgent: a
+  band with a broken wagon cannot travel (`map_session.travel` refuses it until it is mended), so one with no Lumber
+  and no garage is stuck; pygame's `abandon_screen` asked to leave the wagon, its cargo first. Then the hand-over
+  card between groups (`group_turn`, its tutorial card still registered), the vault read from the map, the auto-win
+  of an ambush or a hunt (`autowin.py`). And the tests the cut lost (web_frontend.md 10z, the cut list): the clock
+  while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
+  cancelled. The old screens are in git before the cut.
 
 - **The AI stalls with every foe out of sight in the Pit (found 2026-10-28).** In an arena bout nobody brought the
   fight (`Battle.aggressor` is None), so `ai._target` walks toward the nearest foe even unseen, but a foe it cannot

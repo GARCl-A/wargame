@@ -212,47 +212,6 @@ def test_a_good_unit_with_a_potion_feeds_it_to_a_dying_neighbour():
 
 # --- the app ----------------------------------------------------------------------- #
 
-def _app(guild):
-    from gartok.app import App
-    app = App.__new__(App)
-    app.world, app.scene, app.fonts, app.ui_fonts = "testworld", None, None, None
-    app.guild = guild
-    app._battle_squad, app._battle_node, app._arena_offer = [], None, None
-    app._hunt = app._pause_order = app._pause_group = app._claim_stage_pending = None
-    app._left_outside = None
-    app._map_notices = []
-    app._after_activity = lambda: None
-    app._save = lambda: None
-    app._autosave = lambda label: None
-    return app
-
-
-def test_the_app_fights_the_skirmish_with_the_soldiers_and_settles_the_errand():
-    guild, squad = _guild(node="battlefield")
-    m = missions.accept(guild, squad[0], missions.FAITH_BATTLEFIELD)
-    app = _app(guild)
-    entered = SimpleNamespace(battle=None)
-    app._enter_battle = lambda battle, node: setattr(entered, "battle", battle)
-    app._enter_skirmish(guild.groups[0], world.node("battlefield"))
-    batt = entered.battle
-    assert sum(c.ai_ally for c in batt.player_units) == battlefield.SOLDIERS
-    assert batt.lethal and app._skirmish is m
-    for c in batt.enemy_units:
-        c.hp, c.status = 0, "dead"
-    batt.winner = "player"
-    app._battle_end(batt)
-    assert m.state == "done" and "faith_battlefield" in guild.deeds_done
-    assert app._skirmish is None
-    assert any("Faith Order" in n for n in app._map_notices)
-
-
-def test_without_the_errand_the_skirmish_does_not_open():
-    guild, _ = _guild(node="battlefield")
-    app = _app(guild)
-    app._enter_battle = lambda battle, node: (_ for _ in ()).throw(AssertionError("no fight"))
-    app._enter_skirmish(guild.groups[0], world.node("battlefield"))
-    assert app._skirmish is None
-
 
 def test_battlefield_defeated_enemies_can_drop_scroll_of_spare_the_dying():
     from gartok import loot

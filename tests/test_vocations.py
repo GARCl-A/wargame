@@ -24,11 +24,8 @@ from gartok.clock import Clock
 from gartok.draft_screen import DraftScreen
 from gartok.group import BASE_CAPACITY, CAUTIOUS, NORMAL, Group
 from gartok.guild import Guild
-from gartok.map_screen import MapScreen
-from gartok.tutorial import TutorialState
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
-from gartok.vocation_screen import VocationScreen
 
 SIZE = (1280, 800)
 
@@ -103,44 +100,6 @@ def test_the_draft_hands_the_vocation_to_on_done():
 
 
 # ---- the picker screen --------------------------------------------------- #
-
-def test_the_vocation_screen_needs_a_pick_before_it_goes_on():
-    pygame.init()
-    chosen = []
-    vs = VocationScreen(ui_fonts(), chosen.append)
-    surf = pygame.Surface(SIZE)
-    vs.draw(surf)
-    vs._click(vs.continue_rect.center)
-    assert chosen == []
-    assert len(vs.card_rects) == 6
-    rect, vid = vs.card_rects[2]
-    vs._click(rect.center)
-    vs.draw(surf)
-    assert vs.selected == vid == "wilds"
-    vs._click(vs.continue_rect.center)
-    assert chosen == ["wilds"]
-
-
-def test_a_new_game_opens_the_vocation_screen_then_the_draft_with_that_pool():
-    from tests.helpers import make_app
-    app = make_app(None)
-    app.ui_fonts = ui_fonts()
-    app._new_game()
-    assert isinstance(app.scene, VocationScreen)
-    app.scene.on_done("scholars")
-    assert isinstance(app.scene, DraftScreen) and app.scene.vocation == "scholars"
-
-
-def test_the_founded_guild_keeps_the_vocation():
-    from tests.helpers import make_app
-    app = make_app(None)
-    app.ui_fonts = ui_fonts()
-    app._draft_tutorial = TutorialState()
-    app._start_map = lambda: None
-    app._record_play = lambda: None
-    units = [Unit("player") for _ in range(3)]
-    app._draft_done(units, units[0], "Crew", (1, 2, 3), "shield-bash", "delvers")
-    assert app.guild.vocation == "delvers"
 
 
 def test_the_guild_tab_shows_the_vocation_and_carries_its_dormant_flag():
@@ -228,21 +187,6 @@ def test_delvers_gather_more_meat_and_forage_on_a_hunt():
     assert boosted.yield_hours == base.yield_hours * 1.15
 
 
-def test_the_hunt_the_app_starts_carries_the_vocation_and_the_group_stance():
-    from tests.helpers import make_app
-    guild = _guild("wilds")
-    group = guild.groups[0]
-    group.stance = CAUTIOUS
-    app = make_app(guild)
-    app._leave_outside = lambda *a: None
-    app._hunt_screen = lambda phase: None
-    app._begin_hunt(list(group.members), world.node("wilds"), group, True)
-    assert app._hunt.ambush_mult == vocations.CAUTIOUS_AMBUSH
-    group.stance = NORMAL
-    app._begin_hunt(list(group.members), world.node("wilds"), group, True)
-    assert app._hunt.ambush_mult == 1.0
-
-
 def test_caravan_travels_fifteen_percent_faster():
     walker = Unit("player")
     slow, fast = Guild([walker], node="city"), Guild([walker], node="city", vocation="caravan")
@@ -268,13 +212,6 @@ def test_caravan_keeps_the_pace_on_every_leg_of_a_route():
     assert len(legs[None]) == len(legs["caravan"]) == 2
     for plain, fast in zip(legs[None], legs["caravan"]):
         assert abs(fast - plain * vocations.TRAVEL_FACTOR) < 1e-9
-
-
-def test_the_map_pace_shows_the_caravan_discount():
-    guild = _guild("caravan")
-    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda g: None)
-    g = guild.groups[0]
-    assert ms._group_dict(g)["pace"] == world.hours(1, g.speed) * vocations.TRAVEL_FACTOR
 
 
 def test_marsh_food_does_not_age_on_every_tenth_day():
@@ -335,38 +272,6 @@ def test_the_stance_does_not_touch_the_guards_or_the_claim_raids():
     assert order is not None and order.kind == "eviction"
 
 
-def test_the_map_button_flips_the_selected_groups_stance():
-    guild = _guild()
-    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda g: None)
-    group = guild.groups[0]
-    ms.selected = group
-    assert group.stance == NORMAL
-    keys = [b.get("key") for b in ms._inspector_bottom(group)]
-    assert "stance" in keys
-    ms._handle_button("stance")
-    assert group.stance == CAUTIOUS
-    ms._handle_button("stance")
-    assert group.stance == NORMAL
-
-
-def test_a_busy_group_has_no_stance_button():
-    guild = _guild()
-    group = guild.groups[0]
-    group.order = orders.rest(4)
-    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda g: None)
-    assert "stance" not in [b.get("key") for b in ms._inspector_bottom(group)]
-
-
-def test_the_hunt_screen_notes_a_changed_ambush_chance():
-    from gartok.hunt_screen import HuntScreen
-    pygame.init()
-    guild = _guild("wilds", n=3)
-    state = hunt.HuntState(list(guild.roster), world.node("wilds"), hours_left=0, ambush_mult=0.8)
-    hs = HuntScreen(ui_fonts(), guild, state, phase="setup", on_ambush=lambda p: None,
-                    on_done=lambda: None)
-    hs.draw(pygame.Surface(SIZE))
-
-
 # ---- the save ------------------------------------------------------------ #
 
 def test_the_vocation_and_the_stance_survive_a_save():
@@ -403,14 +308,3 @@ def test_a_save_without_the_new_fields_loads_as_no_vocation_and_normal():
 
 def test_every_vocation_has_a_motto():
     assert all(v.motto for v in vocations.VOCATIONS.values())
-
-
-def test_the_vocation_cards_fit_the_window_between_header_and_footer():
-    pygame.init()
-    for size in ((1024, 640), (1280, 720), (1920, 1080)):
-        vs = VocationScreen(ui_fonts(), lambda v: None)
-        vs.draw(pygame.Surface(size))
-        assert len(vs.card_rects) == 6
-        assert all(r.bottom < vs.continue_rect.y for r, _ in vs.card_rects), size
-        rects = [r for r, _ in vs.card_rects]
-        assert not any(a.colliderect(b) for i, a in enumerate(rects) for b in rects[i + 1:]), size

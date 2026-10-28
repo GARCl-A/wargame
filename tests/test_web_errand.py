@@ -4,8 +4,7 @@ fought as a campaign fight and settled as pygame settles them."""
 
 import pytest
 
-from gartok import forced, missions, persist, recorder, wildfire, world
-from gartok.app import App
+from gartok import missions, orders, persist, recorder, wildfire, world
 from gartok.battlefield import BattlefieldScenario
 from gartok.clock import Clock
 from gartok.fortress_scenario import FortressScenario
@@ -71,7 +70,7 @@ def _end(game, won=True, dead=()):
 def test_every_activity_the_campaign_reaches_has_a_screen_in_the_browser():
     played = {"arena", "hunt", "ox_hunt", "ancient_ruins", "serpents_nest", "dragon_lair",
               "skirmish", "camp_fight", "ogre_fight"}
-    assert set(App._ACTIVITY_OPENERS) - set(forced.EVENTS) <= HUB_KINDS | played
+    assert orders.INTERACTIVE_KINDS <= HUB_KINDS | played
     guild, g = _guild("city")
     with pytest.raises(ValueError):
         MapSession(guild)._enter(g, type("O", (), {"kind": "nowhere"})())

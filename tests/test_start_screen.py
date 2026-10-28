@@ -1,13 +1,10 @@
 import pygame
 import pytest
 
-from gartok import persist, settings
-from gartok.app import App
-from gartok.settings_screen import SettingsScreen
+from gartok import persist
 from gartok.start_screen import StartScreen
 from gartok.ui.tokens import T
 from gartok.ui.tokens import fonts as ui_fonts
-from gartok.wiki_screen import WikiScreen
 
 
 @pytest.fixture(autouse=True)
@@ -109,90 +106,6 @@ def test_start_screen_continue_with_and_without_worlds(monkeypatch, tmp_path):
     assert btn_map2["continue"][1] is True
     screen_with_world._click(btn_map2["continue"][0].center)
     assert actions == ["continue"]
-
-
-def test_settings_screen():
-    F = ui_fonts()
-    surf = pygame.Surface((1280, 720))
-    back = []
-
-    screen = SettingsScreen(F, on_back=lambda: back.append(1))
-    screen.draw(surf)
-
-    # Click back button
-    back_rect = next(r for k, r in screen.buttons if k == "back")
-    screen._click(back_rect.center)
-    assert back == [1]
-
-    # Test escape
-    screen.handle_escape()
-    assert back == [1, 1]
-
-
-def test_wiki_screen_navigation():
-    F = ui_fonts()
-    surf = pygame.Surface((1280, 720))
-    back = []
-
-    screen = WikiScreen(F, on_back=lambda: back.append(1))
-    screen.draw(surf)
-    assert screen.tab == "items"
-
-    # Switch tabs and verify drawing works on each
-    recipes_rect = next(r for tid, r in screen.tab_buttons if tid == "recipes")
-    screen._click(recipes_rect.center)
-    assert screen.tab == "recipes"
-    screen.draw(surf)
-
-    talents_rect = next(r for tid, r in screen.tab_buttons if tid == "talents")
-    screen._click(talents_rect.center)
-    assert screen.tab == "talents"
-    screen.draw(surf)
-
-    beasts_rect = next(r for tid, r in screen.tab_buttons if tid == "beasts")
-    screen._click(beasts_rect.center)
-    assert screen.tab == "beasts"
-    screen.draw(surf)
-
-    rules_rect = next(r for tid, r in screen.tab_buttons if tid == "rules")
-    screen._click(rules_rect.center)
-    assert screen.tab == "rules"
-    screen.draw(surf)
-
-    # Search filter keydown and redraw
-    event = pygame.event.Event(pygame.KEYDOWN, unicode="a", key=pygame.K_a)
-    screen.handle_event(event)
-    assert screen.search_query == "a"
-    screen.draw(surf)
-
-    # Back
-    back_rect = next(r for k, r in screen.buttons if k == "back")
-    screen._click(back_rect.center)
-    assert back == [1]
-
-
-def test_app_start_screen_integration():
-    app = App()
-    assert isinstance(app.scene, StartScreen)
-
-    # Open settings from start screen
-    app._open_settings()
-    assert isinstance(app.scene, SettingsScreen)
-    app.scene.handle_escape()
-    assert isinstance(app.scene, StartScreen)
-
-    # Open wiki from start screen
-    app._open_wiki()
-    assert isinstance(app.scene, WikiScreen)
-    app.scene.handle_escape()
-    assert isinstance(app.scene, StartScreen)
-
-    # Open load game (MenuScreen) from start screen
-    app._start_menu()
-    from gartok.menu_screen import MenuScreen
-    assert isinstance(app.scene, MenuScreen)
-    app.scene.handle_escape()
-    assert isinstance(app.scene, StartScreen)
 
 
 def test_the_world_row_carries_the_banner_vocation_and_faces(tmp_path, monkeypatch):

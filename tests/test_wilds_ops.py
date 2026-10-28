@@ -7,33 +7,11 @@ Sistema 3 left open once a claim is finally the guild's own ground.
 import random
 
 from gartok import campaign, forced, orders
-from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Unit, economy, packed, world
+from tests.helpers import Unit, economy, world
 
 NODE = world.WILDS_TERRITORY_NODE
-
-
-def _app(guild):
-    app = App.__new__(App)
-    app.world = "testworld"
-    app.scene = None
-    app.fonts = None
-    app.ui_fonts = None
-    app.guild = guild
-    app._battle_squad = []
-    app._battle_node = None
-    app._arena_offer = None
-    app._hunt = None
-    app._pause_order = None
-    app._pause_group = None
-    app._claim_stage_pending = None
-    app._map_notices = []
-    app._pending = []
-    app._pending_event = None
-    app._save = lambda: None
-    return app
 
 
 def _established_guild(*, garrisoned=False):
@@ -165,39 +143,6 @@ def test_a_full_wipe_during_the_seizure_fight_still_seizes_the_claim():
     assert any("seized" in e for e in events)        # must not crash on an emptied group
 
 
-def test_app_runs_the_seizure_battle_end_to_end():
-    """Two members in the garrison, only one dies in the loss -- a lone
-    survivor keeps the guild alive so this exercises the ordinary "seized,
-    not wiped" path rather than `_campaign_over`."""
-    random.seed(1)
-    orig = _forced_raid_chance(1.0)
-    try:
-        a, b = Unit("player"), Unit("player")
-        g = Group([a, b], node=NODE)
-        guild = Guild(None, groups=[g])
-        guild.wilds_claim_stage = "ESTABLISHED"
-        guild.wilds_claim_owner = "guild"
-        g.order = orders.garrison("lumber")
-        app = _app(guild)
-        app._advance(dt=24)
-    finally:
-        economy.WILDS_RAID_CHANCE = orig
-
-    assert app._pause_order is not None and app._pause_order.kind == "wilds_seizure"
-    battle = app.scene.battle
-    battle.winner, battle.round_no = "enemy", 1
-    battle.player_units[0].status = "up"
-    battle.player_units[1].status = "dead"
-    app._battle_squad = [a, b]
-    app._battle_node = world.node(NODE)
-    app._battle_end(battle)
-    if getattr(app.scene, "title", None) == "DEATH ALERT":
-        app.scene.on_done()
-
-    assert app._pause_order is None
-    assert guild.wilds_claim_owner == "seized"
-
-
 # --------------------------------------------------------------------------- #
 # retaking a seized claim on arrival                                          #
 # --------------------------------------------------------------------------- #
@@ -260,125 +205,14 @@ def test_losing_the_retake_leaves_the_claim_seized():
     assert any("stays lost" in e for e in events)
 
 
-def test_app_runs_the_retake_battle_end_to_end():
-    random.seed(1)
-    p = Unit("player")
-    g = Group([p], node="wilds")
-    guild = Guild(None, groups=[g])
-    guild.wilds_claim_stage = "ESTABLISHED"
-    guild.wilds_claim_owner = "seized"
-    app = _app(guild)
-    g.order = orders.travel(g, NODE)
-    app._advance()
-
-    assert app._pause_order is not None and app._pause_order.kind == "wilds_retake"
-    battle = app.scene.battle
-    battle.winner, battle.round_no = "player", 1
-    for c in battle.player_units:
-        c.status = "up"
-    app._battle_squad = [p]
-    app._battle_node = world.node(NODE)
-    app._battle_end(battle)
-
-    assert guild.wilds_claim_owner == "guild"
-    assert g.order.kind == "idle"
-
-
 # --------------------------------------------------------------------------- #
 # the screen reflects a seized claim without offering to collect from it      #
 # --------------------------------------------------------------------------- #
-
-def test_screen_shows_seized_state_with_no_collect_button():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.wilds_claim_screen import WildsClaimScreen
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    random.seed(1)
-    guild, g, p = _established_guild(garrisoned=False)
-    guild.wilds_claim_owner = "seized"
-    guild.garrison_stock[NODE] = ["Lumber"]
-    s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
-                         on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
-    s.mouse = (0, 0)
-    surf = pygame.Surface((1280, 800))
-    s.draw(surf)
-    assert not any(k == "collect" for k, _ in s.buttons)
 
 
 # --------------------------------------------------------------------------- #
 # the full lifecycle, seam to seam (Sistemas 1+3+4 chained together)          #
 # --------------------------------------------------------------------------- #
-
-def test_the_full_wilds_claim_lifecycle_end_to_end():
-    """Scout -> clear -> fence -> sweep -> garrison -> sustain -> established
-    -> seized -> retaken -> guild's again, all through the real screen/app/
-    campaign wiring (battle outcomes forced by hand, same technique every
-    other integration test here uses) -- catches a seam bug none of the
-    narrower tests above would."""
-    random.seed(1)
-    from gartok.wilds_claim_screen import WildsClaimScreen
-
-    p = Unit("player")
-    p._base_inventory = packed(["Lumber"] * economy.WILDS_CLAIM_FENCE_LUMBER)
-    g = Group([p], node=NODE)
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-    screen = WildsClaimScreen.__new__(WildsClaimScreen)
-    screen.guild, screen.group, screen.notice = guild, g, None
-    screen.on_done = lambda: None
-
-    screen._scout()
-    assert guild.wilds_claim_stage == "SCOUTED"
-
-    app._start_claim_clear_battle(g)
-    battle = app.scene.battle
-    battle.winner, battle.round_no = "player", 1
-    for c in battle.player_units:
-        c.status = "up"
-    app._battle_squad = [p]
-    app._battle_node = world.node(NODE)
-    app._battle_end(battle)
-    assert guild.wilds_claim_stage == "CLEARED"
-
-    screen._deposit_lumber()
-    screen._build_fences()
-    assert guild.wilds_claim_stage == "FENCED"
-
-    app._start_claim_sweep_battle(g)
-    battle = app.scene.battle
-    battle.winner, battle.round_no = "player", 1
-    for c in battle.player_units:
-        c.status = "up"
-    app._battle_squad = [p]
-    app._battle_node = world.node(NODE)
-    app._battle_end(battle)
-    assert guild.wilds_claim_stage == "SWEPT"
-
-    screen._start_garrison()
-    assert guild.wilds_claim_stage == "SUSTAINING" and g.order.kind == "garrison"
-    for _ in range(economy.WILDS_CLAIM_SUSTAIN_DAYS):
-        p.give_to_pack("Meat")                      # never starves mid-sustain
-        guild.pass_time(24)
-    assert guild.wilds_claim_stage == "ESTABLISHED" and guild.wilds_claim_owner == "guild"
-
-    guild.wilds_claim_owner = "seized"              # Sistema 4 takes it (unit-level, tested above)
-    rescuer = Unit("player")
-    g2 = Group([rescuer], node="wilds")
-    guild.groups.append(g2)
-    g2.order = orders.travel(g2, NODE)
-    result = campaign.advance(guild)
-    order = next(o for grp, o in result.pending if grp is g2)
-    assert order.kind == "wilds_retake"
-
-    events = forced.resolve_wilds_claim_retake(
-        guild, g2, order, campaign.BattleOutcome(won=True, survivors=[rescuer], fallen=[]))
-    assert guild.wilds_claim_owner == "guild"
-    assert any("retaken" in e for e in events)
 
 
 # --------------------------------------------------------------------------- #

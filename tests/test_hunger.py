@@ -258,7 +258,7 @@ def test_food_consumption_priority_shelf_life_then_cheapest():
 
 
 def test_rotten_food_eaten_only_as_last_resort_against_starvation():
-    from gartok import data, items
+    from gartok import items
     u = Unit("player")
     u._base_inventory = [items.create_instance("Rotten Food")]
 
@@ -382,7 +382,6 @@ def test_natural_rest_healing_caps_at_hp_max():
     assert u.consecutive_rest_hours == 0
 
 
-
 def _guild_with_food(*meals):
     from gartok.guild import Guild
     crew = [Unit("player") for _ in meals]
@@ -410,44 +409,3 @@ def test_the_starving_alert_counts_the_days_to_the_first_death():
     assert title == "STARVING: first death in 3 days"
     crew[1].unfed_days = 3
     assert "2 members hungry" in guild.food_alert()[1] and "dies in 1 day." in guild.food_alert()[1]
-
-
-def test_the_food_alert_is_one_card_in_the_command_bar_and_takes_no_strip():
-    import pygame
-
-    from gartok.map_screen import MapScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    rich, _ = _guild_with_food(9, 9)
-    poor, _ = _guild_with_food(0, 0)
-    tops, cards = [], []
-    for guild in (rich, poor):
-        ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda g: None)
-        ms.mouse = (0, 0)
-        surf = pygame.Surface((1500, 900))
-        ms.draw(surf)
-        tops.append(min(r.y for r, *_ in ms._roster_rects))
-        cards.append(ms._messages())
-    assert tops[0] == tops[1]
-    assert all("larder" not in m[0] for m in cards[1])
-
-
-def test_the_command_bar_draws_the_card_and_shows_the_full_line_on_hover():
-    import pygame
-
-    from gartok.ui.command_bar import draw_command
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    F = ui_fonts()
-    rect = pygame.Rect(0, 0, 1500, 72)
-    card = ("NO FOOD LEFT", "the whole guild goes hungry", True)
-    plain = pygame.Surface((1500, 72))
-    draw_command(plain, F, rect, "1", "08:00", [], [("members", "3")])
-    with_card = pygame.Surface((1500, 72))
-    hovered, buttons = draw_command(with_card, F, rect, "1", "08:00", [], [("members", "3")], card=card)
-    assert hovered is None
-    assert pygame.image.tobytes(plain, "RGB") != pygame.image.tobytes(with_card, "RGB")
-    hovered, _ = draw_command(with_card, F, rect, "1", "08:00", [], [("members", "3")], mpos=buttons["card"].center, card=card)
-    assert hovered and hovered[2] == card[1]

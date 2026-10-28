@@ -3,25 +3,13 @@ from pathlib import Path
 import pytest
 
 from gartok import node_functions, orders, persist, world
-from gartok.app import App
 from gartok.guild import Guild
-from gartok.map_screen import MapScreen
 from gartok.shop import Shop
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 
 
-def _buttons(node_id):
-    g = Guild([Unit("player")], node=node_id)
-    g.house.owned = True
-    ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda grp: None)
-    blocks = ms._inspector_content(g.groups[0], world.node(node_id))
-    return [b["key"] for b in blocks if b["type"] == "button"]
-
-
 def test_every_function_has_an_opener_and_its_order_kind_is_interactive():
-    with_screen = {f.id for f in node_functions.FUNCTIONS.values() if f.order_kind}
-    assert with_screen == set(App._FUNCTION_OPENERS)
     assert node_functions.order_kinds() <= orders.INTERACTIVE_KINDS
     assert orders.INTERACTIVE_KINDS - node_functions.order_kinds() == {"arena"}
 
@@ -36,18 +24,6 @@ def test_a_function_that_hosts_another_hides_its_button():
     assert library.has("shop") and library.has("library")
     assert [f.id for f in node_functions.offered(library)] == ["library"]
     assert [f.id for f in node_functions.offered(world.node("market"))] == ["shop"]
-
-
-def test_the_map_shows_one_button_per_offered_function():
-    assert _buttons("market") == ["market"]
-    assert _buttons("library") == ["library"]
-    assert _buttons("lumber_yard") == ["market"]
-    assert _buttons("tavern") == ["recruit"]
-    assert _buttons("farm") == ["stable"]
-    assert _buttons("smith") == ["forge"]
-    assert _buttons("tanner") == ["tanner"]
-    assert _buttons("apothecary") == ["apothecary"]
-    assert _buttons("city") == ["bank", "property"]
 
 
 def test_a_node_with_independent_functions_gets_both_buttons():
@@ -69,14 +45,6 @@ def test_tabbed_hub_screen_for_node():
     hub_yard = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("lumber_yard"), lambda: None)
     assert isinstance(hub_yard, TabbedHubScreen)
     assert [k for k, _, _ in hub_yard.tabs] == ["shop", "work", "gather"]
-
-
-def test_a_place_with_nothing_to_offer_says_so():
-    g = Guild([Unit("player")], node="road")
-    ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda grp: None)
-    texts = [b["text"] for b in ms._inspector_content(g.groups[0], world.node("road"))
-             if b["type"] == "text"]
-    assert any("Nothing happens here" in t for t in texts)
 
 
 def test_every_shop_node_has_its_till_refilled_each_day():
@@ -139,4 +107,3 @@ def test_shop_stock_reaches_the_market_screen():
     screen = Counter(guild, [shopper], node)
     assert screen._stock_of("Vial") == 0
     assert Counter(guild, [shopper], world.node("apothecary"))._stock_of("Vial") > 0
-

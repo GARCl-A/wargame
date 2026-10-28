@@ -212,30 +212,6 @@ def test_the_spent_ambush_survives_a_save():
     assert back.ambush_done and back.deadline_day is None
 
 
-def test_the_hunt_screen_sends_the_biwolf_pack_at_night_and_the_ordinary_one_otherwise():
-    from gartok.hunt_screen import HuntScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    def run(hour, meat):
-        guild, (signer, _) = _guild(hour)
-        _job(guild, signer)
-        _stock_meat(signer, meat)
-        st = hunt.HuntState([signer], world.node("wilds"), hours_left=0)
-        scr = HuntScreen(ui_fonts(), guild, st, phase="setup",
-                         on_ambush=lambda *_: None, on_done=lambda: None)
-        st.hours_left = 8
-        scr._do_stretch()
-        return scr, st
-
-    scr, st = run(hour=14, meat=15)
-    assert scr.phase == "ambush" and st.biwolf
-    assert scr.ambush_pack[0].name == "Biwolf" and len(scr.ambush_pack) == 4
-
-    scr, st = run(hour=14, meat=14)
-    assert not st.biwolf
-    assert scr.phase != "ambush" or all(u.name != "Biwolf" for u in scr.ambush_pack)
-
-
 def test_the_two_tanner_jobs_are_worth_two_reputation():
     guild, (signer, _) = _guild()
     hides = missions.accept(guild, signer, missions.TANNER_HIDES)
