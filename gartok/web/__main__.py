@@ -1,5 +1,5 @@
-"""`python -m gartok.web`: serve a combat-lab fight, or a screen of a saved guild, and open it in a
-browser window.
+"""`python -m gartok.web` (and `python -m gartok`, `python main.py`): serve the game and open it in a
+browser window; the server stops when the window is closed.
 
     python -m gartok.web                     the title screen: continue or load a guild
     python -m gartok.web --fight fortress --level 2 --squad 4 [--seed N] [--players 2] [--no-log] [--no-window]
@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+import time
 import webbrowser
 
 from .. import combat_lab
@@ -38,8 +39,17 @@ def open_window(url):
                       "--no-first-run", "--no-default-browser-check"])
 
 
+CLOSE_GRACE = 5      # seconds between the page's bye and the stop: a reload onto another screen is back by then
+
+
+def _stop_when_closed(game, stop):
+    while not game.closed(CLOSE_GRACE):
+        time.sleep(1)
+    stop()
+
+
 def main():
-    p = argparse.ArgumentParser(prog="python -m gartok.web")
+    p = argparse.ArgumentParser(prog="python -m gartok")
     p.add_argument("--fight", choices=sorted(combat_lab.FIGHTS), help="a combat-lab fight instead of the title")
     p.add_argument("--level", type=int, default=2)
     p.add_argument("--squad", type=int, default=4)
@@ -64,6 +74,7 @@ def main():
     print(f"GARTOK web: {url}  (Ctrl+C to stop)")
     if not args.no_window:
         open_window(url)
+        threading.Thread(target=_stop_when_closed, args=(game, game.quit), daemon=True).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

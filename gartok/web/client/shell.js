@@ -37,6 +37,9 @@ const Sound = (() => {
   };
 })();
 
+// the server stops once the window is closed; a reload onto another screen asks again before it does
+addEventListener("pagehide", () => navigator.sendBeacon("/api/bye"));
+
 const Shell = {screen: null, lab: false};
 
 // each screen lives in screens/<id>/: screen.html, then these stylesheets and scripts in order

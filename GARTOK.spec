@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('locales', 'locales'), ('maps', 'maps'), ('npcs', 'npcs'), ('gartok/assets', 'gartok/assets')],
+    datas=[('locales', 'locales'), ('maps', 'maps'), ('npcs', 'npcs'), ('gartok/assets', 'gartok/assets'), ('gartok/web/client', 'gartok/web/client')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

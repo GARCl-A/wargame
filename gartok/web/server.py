@@ -3,6 +3,7 @@ and a JSON API over the screen being played. Standard library only.
 
     GET  /api/screen              -> which screen is open (the client's router reads it first)
     GET  /api/sounds              -> the sound cues
+    POST /api/bye                 -> the page is going (closed, or reloaded on another screen)
     *    /api/<screen>/<verb>     -> that screen's session (`session.Session`)
     *    /api/lab/fights, /new    -> the combat lab, when the game was opened on one
 """
@@ -11,6 +12,7 @@ import json
 import mimetypes
 import os
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -56,7 +58,13 @@ class Game:
         self.lock = threading.Lock()
         self.lab = lab
         self.quit = lambda: None      # the window's QUIT; `__main__` stops the server with it
+        self.gone_at = None           # when the page last said bye with no request since
         self.open(session)
+
+    def closed(self, grace):
+        """The page said bye `grace` seconds ago and nothing came after it: the window was closed, not
+        reloaded on another screen."""
+        return self.gone_at is not None and time.monotonic() - self.gone_at > grace
 
     def open(self, session):
         """Make `session` the open screen; a verb that changes screen calls this, and the client
@@ -136,6 +144,9 @@ def make_handler(game):
         def _api(self, parts, args, post):
             """`parts` past /api/; the lock is held."""
             s = game.session
+            if parts == ["bye"] and post:
+                game.gone_at = time.monotonic()
+                return self._json({})
             if parts == ["screen"] and not post:
                 return self._json({"screen": s.screen, "lab": game.lab is not None,
                                    "volume": settings.get("volume")})
@@ -165,6 +176,7 @@ def make_handler(game):
                 return self._json({"error": str(e)}, 409)
 
         def do_GET(self):
+            game.gone_at = None
             url = urlparse(self.path)
             parts = url.path.strip("/").split("/")
             if url.path in ("/", "/index.html"):
@@ -179,6 +191,7 @@ def make_handler(game):
             self._missing()
 
         def do_POST(self):
+            game.gone_at = None
             parts = urlparse(self.path).path.strip("/").split("/")
             if parts[0] != "api":
                 return self._missing()

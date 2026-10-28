@@ -2,10 +2,11 @@
 
 **Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
 than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 is under way:
-every campaign fight (forced, the Claim's, the arena, the hunt, the searches' finds, the errands') is played
-in the browser from the map to the report, the title screen opens it, a new guild is drafted there, and the settings, the wiki
-and the map's menu are there too; the swap is next.
+to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 met its **Done when**
+(2026-10-28): every campaign fight, the title, the draft, the settings, the wiki and the map's menu are in the
+browser, and `python main.py` opens it there; a new guild's first ten days are played with no pygame window (a
+test). What is left is retiring pygame (10z), which needs the rules the web still borrows from pygame's
+screens moved out first.
 
 ## Decisions so far
 
@@ -133,7 +134,8 @@ and the map's menu are there too; the swap is next.
 - **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
   tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
   verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
-- **Launch:** `python -m gartok.web --fight <lab fight>`, `python -m gartok.web --save
+- **Launch:** `python main.py` or `python -m gartok` (the title in the browser; `--pygame` the old window,
+  where the Editor lives), `python -m gartok.web --fight <lab fight>`, `python -m gartok.web --save
   <world>` (a guild's folder under `saves/`; `--screen` picks the screen), or double-click
   [references/battle_mockup/play_battle.bat](references/battle_mockup/play_battle.bat) and pick a fight.
 - **Tests:** `tests/test_web.py`.
@@ -1070,13 +1072,37 @@ language (the menu mockup), a page of paper on the table, the chapters on leathe
   1920x1080.
 - **Next (10z):** the swap below: every screen the loop reaches now runs in the browser.
 
-**10z. The swap.** The campaign hook is the seam between `app_battle` and `BattleScreen`: the campaign
-hands the web session a battle and settles it through `campaign.absorb_battle` as
-today. A window cannot mix pygame and the browser, so the swap is one move once the
-whole loop (title, map, hub, battle, report, map) runs in the browser:
+**10i. The launch — done (2026-10-28).** `python main.py` (and `python -m gartok`, `gartok/__main__.py`) opens the
+title in the browser window; `--pygame` opens the pygame window, where the Editor (characters, maps, the combat lab)
+still lives. The PyInstaller build (`build_exe.bat`, `GARTOK.spec`) carries `gartok/web/client`. The server now stops
+when the window is closed: the page sends `/api/bye` on `pagehide` (`shell.js`), and `__main__` stops the server
+once `CLOSE_GRACE` (5 s) passes with no request after it, so a reload onto another screen keeps it up. Edge's
+launcher hands off and exits at once, so the browser process cannot be watched instead.
 
-- the web front-end becomes `python -m gartok`;
-- pygame and `ui/` are retired;
-- `AGENTS.md` (the `ui/` rules) and `gartok/ui/README.md` are rewritten for the new layer.
+- Tests: `tests/test_web_first_days.py` (step 10's **Done when**: a guild drafted from the title lives ten days fed
+  from the Farm, paid at the Lumber Yard, with two bouts in the Pit and their reports, and back to the title; a hunt in
+  the Wilds comes home or wipes onto the title; `pygame.display.set_mode` refuses to open a window throughout; 120
+  runs over 60 seeds pass); `tests/test_web.py` (the bye and a reload after it, the stop; `main` opens the browser,
+  `--pygame` the old window). `python main.py` was launched for real: the title in Edge, and the window closed with
+  `WM_CLOSE` stopped the server.
+- Found: the AI standing in for a player stalls in the Pit when the foes are out of sight (in the dark, or behind
+  walls): nobody brought the fight, so nobody searches. pygame plays the same AI; it is in the backlog. The test
+  ends such a fight after 40 rounds.
+- Not checked: the PyInstaller build itself (not run).
 
-**Done when:** a new guild plays its first ten days with no pygame window.
+**10z. The swap — next.** pygame and `ui/` cannot go yet: the web still holds about thirty pygame screens headless
+for their rules (`MarketScreen`, `DraftScreen`, `MapScreen`, `CraftingScreen`, `TavernaScreen`, ...; `grep "_screen
+import" gartok/web/*.py` lists them), reads `ui/` helpers (`sheet_card.unit_to_ch`, `inspector_panel.role_for`,
+`banner.BANNER_COLORS`, `tokens.T`, `floors`), and the Editor has no browser screen. Cut as step 10 was:
+
+1. **The tutorial cards in the browser** (every screen left them out): `tutorial_key()` and `locales/en.json`'s
+   `tutorial.<id>` are already the data; one card component in the shell.
+2. **The rules out of the screens**, family by family (the shop, the map, the hubs, the draft, the report): what a web
+   tab borrows from a pygame screen moves to a core module that both read, as `actions.panel` and
+   `LedgerScreen.panels` already did; the `ui/` helpers the web reads move with them.
+3. **The Editor in the browser** (the character creator, the map editor, the combat lab's menu), or the author keeps
+   it as a pygame tool apart from the game.
+4. **The retirement:** the pygame screens, `app*.py`, `ui/` and `--pygame` go; `AGENTS.md` (the `ui/` rules, the
+   module table) and `gartok/ui/README.md` are rewritten for the web layer.
+
+**Done when:** no module of the game imports pygame.

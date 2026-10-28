@@ -519,3 +519,46 @@ def test_a_fight_by_day_says_so_and_a_burning_cell_is_a_fire():
     st = s.state()
     fire = {tuple(c) for c in st["board"]["fire"]}
     assert fire and all(k == "fire" for x, y, _, k in st["lights"] if (x, y) in fire)
+
+
+def test_the_server_stops_once_the_window_is_closed_and_not_on_a_reload(monkeypatch):
+    from gartok.web import __main__ as launcher
+    from gartok.web import server as srv_mod
+    game = Game.fight("wilds", 2, 3, seed=4)
+    srv = serve(game)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        now = [100.0]
+        monkeypatch.setattr(srv_mod.time, "monotonic", lambda: now[0])
+        assert not game.closed(launcher.CLOSE_GRACE)
+        assert _post(url + "/api/bye", {}) == {}
+        now[0] += launcher.CLOSE_GRACE - 1
+        assert not game.closed(launcher.CLOSE_GRACE)
+        _get(url + "/api/screen")                  # the page came back: a reload onto another screen
+        now[0] += 60
+        assert not game.closed(launcher.CLOSE_GRACE)
+        _post(url + "/api/bye", {})
+        now[0] += launcher.CLOSE_GRACE + 1
+        assert game.closed(launcher.CLOSE_GRACE)
+        stopped = []
+        launcher._stop_when_closed(game, lambda: stopped.append(True))
+        assert stopped == [True]
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_the_game_opens_in_the_browser_and_pygame_only_when_asked(monkeypatch):
+    import sys
+
+    from gartok import __main__ as entry
+    from gartok.web import __main__ as launcher
+    opened = []
+    monkeypatch.setattr(launcher, "main", lambda: opened.append("web"))
+    monkeypatch.setattr(entry, "_pygame", lambda: opened.append("pygame"))
+    monkeypatch.setattr(sys, "argv", ["main.py"])
+    entry.main()
+    monkeypatch.setattr(sys, "argv", ["main.py", "--pygame"])
+    entry.main()
+    assert opened == ["web", "pygame"]

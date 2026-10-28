@@ -36,8 +36,13 @@ and animals, and a growing set of groups run in parallel.
 
 ```
 pip install -r requirements.txt
-python main.py
+python main.py              # the game, in a browser window (Edge or Chrome in app mode)
+python main.py --pygame     # the old pygame window: the Editor (characters, maps, the combat lab) lives there
 ```
+
+`python -m gartok` is the same as `python main.py`; `python -m gartok.web --help` lists the
+browser's own flags (`--save <world>`, `--fight <lab fight>`, `--no-window`). The server stops
+when the window is closed.
 
 Dev tools (pytest, pytest-xdist, ruff) live apart from the game's own requirements:
 `pip install -r requirements-dev.txt`.
@@ -313,7 +318,8 @@ gartok/
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
                     Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
                     by screen), client/ (the shell + one folder per screen under screens/);
-                    `python -m gartok.web` (the title), `--fight <lab fight>` or `--save <world>`
+                    `python main.py` / `python -m gartok` (the title; `--pygame` the old window),
+                    `python -m gartok.web --fight <lab fight>` or `--save <world>`
   icons.py          vector action icons (pygame.draw) -- no asset file
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
                     portraits under assets/portraits/; `RACE_ICON` and `OCCUPATION_ICON`
@@ -334,7 +340,7 @@ gartok/
                     mixins: app_nodes.py (a node's screens), app_forced.py (guard, ambush,
                     raid and Claim fights), app_hunt.py (the hunt), app_battle.py
                     (entering a battle and settling it)
-main.py             entry point
+main.py             entry point (gartok/__main__.py: the browser, or --pygame)
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
 scripts/            balance_sim.py (race / occupation / combo rankings; --level / --racial

@@ -24,8 +24,9 @@ zoom, the battle's parity with pygame and the shared base (the shell every scree
 the art as far as Gemini got and the board's colour and light are done (the battle is
 finished), the campaign map is in (`--save <world>`) and so is every screen the campaign reaches
 (step 9). Step 10 brings the campaign's fights: the forced ones, the Claim's, the arena, the hunt, the searches'
-finds and the errands' fights are in, the title screen opens it all (`python -m gartok.web`) and a new
-guild is drafted there, the settings, the wiki and the map's menu too; next is the swap.
+finds and the errands' fights are in, the title screen opens it all and a new guild is drafted there, the
+settings, the wiki and the map's menu too, and `python main.py` opens the browser (`--pygame` the old window).
+Next is retiring pygame (step 10z): the rules the web borrows from pygame's screens move out first.
 
 ---
 
@@ -59,6 +60,13 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   swap the Kenney variants in `assets/sounds/`.
 
 ## Medium
+
+- **The AI stalls with every foe out of sight in the Pit (found 2026-10-28).** In an arena bout nobody brought the
+  fight (`Battle.aggressor` is None), so `ai._target` walks toward the nearest foe even unseen, but a foe it cannot
+  see it cannot strike: two sides adjacent in the dark Pit (the floor torches all taken or dropped out of reach), or
+  a lone fighter walled off from the rest, pass their turns forever. Only AI against AI shows it (a person goes
+  looking): the combat lab, `sim_test.py`, `tests/test_web_first_days.py` (which ends such a fight after 40
+  rounds). Same family as the Ribbit Brothers' capture the flag at seed 7 (web_frontend.md step 3).
 
 - **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per
   test, runs under `pytest-xdist` and the skills use it; four tests still lean on luck and the
