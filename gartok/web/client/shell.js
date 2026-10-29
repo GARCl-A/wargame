@@ -15,7 +15,8 @@ async function api(path, body) {
 }
 
 // the open screen's tutorial card, named in every answer's X-Tutorial header ("key|1" while it is up):
-// a veiled card that swallows every click and key until it is closed, then a ? that opens it again
+// a veiled card that swallows every click and key until it is closed, then a ? that opens it again: at the
+// end of the screen's header when it has one (#top), else in the window's corner
 const Tutorial = (() => {
   let key = null, up = false, shown = null;
   const card = c => `<div id="tut-card" class="paper"><div class="kicker">The guild's notes</div>
@@ -38,11 +39,16 @@ const Tutorial = (() => {
     const r = await api("/api/tutorial/dismiss", {});
     if (r.screen && r.screen !== Shell.screen) location.reload();
   }
+  function place() {
+    const b = document.getElementById("tut-badge"), top = $("screen").querySelector("#top");
+    if (b && top && b.parentNode !== top) top.appendChild(b);
+  }
   function badge() {
     const b = node("tut-badge");
     b.textContent = "?";
     b.title = "How this screen works";
     b.onclick = () => api("/api/tutorial/reopen", {}).catch(() => {});
+    place();
   }
   addEventListener("keydown", e => {
     if (!up) return;
@@ -51,6 +57,7 @@ const Tutorial = (() => {
     if (["Enter", " ", "Escape"].includes(e.key)) close();
   }, true);
   return {
+    place,
     sync(header) {
       const [k, flag] = (header || "").split("|");
       key = k || null;
@@ -228,6 +235,7 @@ async function open(id) {
   const res = await fetch(dir + "screen.html");
   if (!res.ok) throw new Error(`could not load ${dir}screen.html`);
   $("screen").innerHTML = await res.text();
+  Tutorial.place();
   await document.fonts.ready;
   for (const f of spec.js) await attach("script", {src: dir + f});
 }

@@ -61,16 +61,16 @@ function choose(key) {
 
 // ---------------------------------------------------------------- home: the map and the charter
 function places() {
-  const side = Sheet.labelSides(), M = T.map;
+  const side = MapSheet.labelSides(), M = T.map;
   let html = M.nodes.map(n => {
-    const [x, y] = Sheet.P(n.id);
+    const [x, y] = MapSheet.P(n.id);
     return `<div class="node ${n.id === "city" ? "city" : ""}" style="left:${x}px;top:${y}px"><div class="m">${n.icon ? ico(n.icon) : ""}</div>
       <div class="n ${side[n.id]}">${esc(n.name)}</div></div>`;
   }).join("");
   const at = {};
   for (const g of M.groups) (at[g.at] = at[g.at] || []).push(g);
   for (const list of Object.values(at)) list.forEach((g, i) => {
-    const [x, y] = Sheet.P(g.at);
+    const [x, y] = MapSheet.P(g.at);
     html += `<div class="flag" style="left:${x + 4 + i * 16}px;top:${y - 8}px"></div>`;
   });
   $("nodes").innerHTML = html;
@@ -148,7 +148,7 @@ function render(state) {
   $("page").hidden = T.mode === "home";
   if (T.mode === "home") {
     $("sheet").hidden = !T.map;
-    if (T.map) { Sheet.set(T.map); places(); }
+    if (T.map) { MapSheet.set(T.map); places(); }
     charter();
   } else if (T.mode === "guilds") guilds();
   else saves();

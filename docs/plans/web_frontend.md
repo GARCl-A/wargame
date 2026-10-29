@@ -1001,7 +1001,7 @@ becomes the live state and the rest stay; a save of another version is shown on 
 the window. The map's top bar has MENU (save, then the title, as pygame's pause menu); a wiped guild's card goes
 there too, with the wipe as the title's notice.
 
-- `Sheet.labelSides` (where each place's name goes) moved from `map.js` into `sheet.js`, which both read.
+- `MapSheet.labelSides` (where each place's name goes) moved from `map.js` into `sheet.js`, which both read.
 - Not in the browser yet, so shown off with a note: New guild (10g, since built), Wiki, Settings (10h, since built), Editor. Settings and the wiki
   are pygame's pause menu too; the swap needs them (10h), the editor stays a pygame tool until then.
 - Left out: a tutorial card.
@@ -1329,9 +1329,15 @@ screen. Cut as step 10 was:
        level-up's subtitle reads `after`).
        - Tests: `test_web_report.py` (a work level from the map's clock, its page and back to the map, no
          notice; one on the WORK tab and back to the tab); the supply run's test walks the pages it now opens.
-     - **The tutorial `?` in the header.** Most screens have a header; the corner button floats over it and
-       does not look part of the game. Move it into each screen's header (the hub frame's, the guild's, the
-       map's top bar), keep the corner only where there is none. A shell change across every screen.
+     - **The tutorial `?` in the header — done (2026-10-28).** The shell puts the `?` at the end of the screen's
+       `#top` (every screen with a card has one but the draft, which keeps the corner): `Tutorial.place` runs
+       when the badge is drawn and once the screen's HTML is in, as a round brass button the height of the
+       header's ghost buttons. Found on the way: the member sheet's `Sheet` in `shell.js` (the guild family)
+       clashed with the map's `Sheet` in `screens/map/sheet.js`, so the map and the title's map never drew;
+       the map's is `MapSheet` now.
+       - Tests: `test_web.py`'s `test_no_two_scripts_of_one_page_declare_the_same_name` (fails on the old
+         clash). The map, a hub, the guild, the title and the draft were looked at in headless Edge at
+         1920x1080 on a copy of the day-70 save.
      - **Type for reading.** The deeds' lines on REPUTATIONS are small and in a face that is hard to read at
        that size. A pass over `shell.css`: one body face and a minimum size for running text, then the
        screens that set their own.

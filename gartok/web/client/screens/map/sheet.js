@@ -3,7 +3,7 @@
 // and the places and pawns are HTML over it (map.js).
 "use strict";
 
-const Sheet = (() => {
+const MapSheet = (() => {
   const W = 1060, H = 946;
   const INNER = {l: 80, r: W - 80, t: 140, b: H - 90};   // the fit leaves the title and the scale clear
   const cv = $("map"), g = cv.getContext("2d");
@@ -222,7 +222,7 @@ const Sheet = (() => {
 
     g.strokeStyle = "rgba(42,26,12,.72)";
     for (const [a, b] of M.edges) inkLine([P(a), P(b)], 1.6, [7, 5]);
-    for (const b of M.groups) drawWay(b, b.gid === Sheet.selected);
+    for (const b of M.groups) drawWay(b, b.gid === MapSheet.selected);
     if (hoverPath && hoverPath.length > 1) { g.strokeStyle = "rgba(122,35,24,.85)"; inkLine(hoverPath.map(P), 2.6, [2, 5]); }
 
     g.save(); g.translate(40, H - 120); g.rotate(-.04);
@@ -232,11 +232,11 @@ const Sheet = (() => {
     text(`THE ENVIRONS OF ${(city ? city.name : "the guild").toUpperCase()}`, 46, 64, "700 25px Cinzel", "#2c1c0e");
     text(`as walked by ${M.meta.name}, to the ${ordinal(M.meta.day)} day`, 48, 88, "italic 17px 'IM Fell English'", "#5b4630");
     g.strokeStyle = "rgba(42,26,12,.6)"; g.lineWidth = 1; g.beginPath(); g.moveTo(46, 100); g.lineTo(420, 100); g.stroke();
-    scaleBar(M.groups.find(b => b.gid === Sheet.selected));
+    scaleBar(M.groups.find(b => b.gid === MapSheet.selected));
     g.strokeStyle = "rgba(42,26,12,.55)"; g.lineWidth = 1.4; g.strokeRect(20, 20, W - 40, H - 40);
     g.lineWidth = .8; g.strokeRect(26, 26, W - 52, H - 52);
     g.restore();
-    Sheet.onmove && Sheet.onmove();
+    MapSheet.onmove && MapSheet.onmove();
   }
 
   // which side of its mark each place's name goes (below, up, right, left), kept off the marks and the
@@ -281,7 +281,7 @@ const Sheet = (() => {
     drag.moved = true; sheet.classList.add("grab");
     cam.x = drag.cx + dx; cam.y = drag.cy + dy; draw();
   });
-  addEventListener("pointerup", () => { if (drag && drag.moved) Sheet.dragged = performance.now(); drag = null; sheet.classList.remove("grab"); });
+  addEventListener("pointerup", () => { if (drag && drag.moved) MapSheet.dragged = performance.now(); drag = null; sheet.classList.remove("grab"); });
   sheet.addEventListener("contextmenu", e => e.preventDefault());
   $("zin").onclick = () => zoomAt(W / 2, H / 2, 1.3);
   $("zout").onclick = () => zoomAt(W / 2, H / 2, 1 / 1.3);

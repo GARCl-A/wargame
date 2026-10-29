@@ -132,9 +132,9 @@ function drawBands() {
 
 // ---------------------------------------------------------------- places and pawns
 function drawPlaces() {
-  const b = band(sel), side = Sheet.labelSides();
+  const b = band(sel), side = MapSheet.labelSides();
   let html = M.nodes.map(n => {
-    const [x, y] = Sheet.P(n.id);
+    const [x, y] = MapSheet.P(n.id);
     const cls = ["node", n.id === "city" ? "city" : "", /fort|outpost/.test(n.icon || "") || n.id === "ledger_hold" ? "fort" : "",
                  n.ethereal ? "ethereal" : "", b && b.node === n.id ? "here" : "", hoverNode === n.id ? "hover" : ""].join(" ");
     return `<div class="${cls}" data-node="${n.id}" style="left:${x}px;top:${y}px"><div class="m">${n.icon ? ico(n.icon) : ""}</div>
@@ -146,7 +146,7 @@ function drawPlaces() {
     (at[key] = at[key] || []).push(g);
   }
   for (const list of Object.values(at)) list.forEach((g, i) => {
-    const [x, y] = Sheet.bandPoint(g), dx = (i - (list.length - 1) / 2) * 46;
+    const [x, y] = MapSheet.bandPoint(g), dx = (i - (list.length - 1) / 2) * 46;
     const lead = g.members.find(m => m.lead) || g.members[0];
     html += `<div class="pawn ${g.gid === sel ? "sel" : ""} ${g.blocked ? "bad" : ""}" data-band="${g.gid}" title="${esc(g.name)}"
       style="left:${x + dx}px;top:${y + (typeof g.at === "string" ? -6 : 14)}px"><div class="pin"></div><div class="p">${face(lead.portrait, lead.name)}</div></div>`;
@@ -161,7 +161,7 @@ function drawSlip() {
   if (!hoverNode || !sel) { slip.hidden = true; return; }
   const key = sel + "|" + hoverNode, p = previews.get(key), n = node(hoverNode);
   if (!n) { slip.hidden = true; return; }
-  const [x, y] = Sheet.P(hoverNode);
+  const [x, y] = MapSheet.P(hoverNode);
   slip.style.left = Math.min(x + 30, 1060 - 310) + "px";
   slip.style.top = (y + 26 > 946 - 180 ? y - 190 : y + 26) + "px";
   const b = band(sel);
@@ -181,7 +181,7 @@ async function hover(id) {
   if (hoverNode === id) return;
   hoverNode = id;
   document.querySelectorAll(".node.hover").forEach(e => e.classList.remove("hover"));
-  if (!id || !sel) { Sheet.hover(null); drawSlip(); return; }
+  if (!id || !sel) { MapSheet.hover(null); drawSlip(); return; }
   document.querySelector(`.node[data-node="${id}"]`)?.classList.add("hover");
   const key = sel + "|" + id;
   if (!previews.has(key)) {
@@ -190,7 +190,7 @@ async function hover(id) {
   }
   if (hoverNode !== id) return;
   const p = previews.get(key);
-  Sheet.hover(p.path.length && !p.why ? p.path : null);
+  MapSheet.hover(p.path.length && !p.why ? p.path : null);
   drawSlip();
 }
 
@@ -258,8 +258,8 @@ function show(state) {
   if (state.focus && band(state.focus)) sel = state.focus;
   if (!band(sel)) sel = (M.groups.find(b => b.blocked) || M.groups.find(b => b.idle) || M.groups[0] || {}).gid;
   if (splitting && !band(splitting)) splitting = null;
-  Sheet.selected = sel;
-  Sheet.set(M);
+  MapSheet.selected = sel;
+  MapSheet.set(M);
   drawTop(); drawBands(); drawPlaces(); drawInspector();
   news(state.notices || []);
   $("wiped").hidden = !M.wiped;
@@ -267,8 +267,8 @@ function show(state) {
 }
 
 function redraw() {
-  Sheet.selected = sel;
-  Sheet.draw(); drawBands(); drawInspector();
+  MapSheet.selected = sel;
+  MapSheet.draw(); drawBands(); drawInspector();
 }
 
 let busy = false;
@@ -282,11 +282,11 @@ async function post(verb, body) {
 
 function pickBand(gid) {
   if (!gid || gid === sel) return;
-  sel = gid; splitting = null; hoverNode = null; Sheet.hover(null);
+  sel = gid; splitting = null; hoverNode = null; MapSheet.hover(null);
   redraw();
 }
 
-Sheet.onmove = () => { if (M) drawPlaces(); };
+MapSheet.onmove = () => { if (M) drawPlaces(); };
 
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-act],[data-band],[data-node],[data-split],[data-merge],[data-pick],[data-cancel-split],[data-confirm-split]");
@@ -305,7 +305,7 @@ document.addEventListener("click", e => {
   if (t.dataset.merge !== undefined) { post("merge", {gid: sel, other: t.dataset.merge}); return; }
   if (t.dataset.act !== undefined) { if (!t.classList.contains("off")) post("act", {gid: sel, key: t.dataset.act}); return; }
   if (t.dataset.node !== undefined) {
-    if (performance.now() - Sheet.dragged < 200) return;
+    if (performance.now() - MapSheet.dragged < 200) return;
     const b = band(sel);
     if (b && b.node !== t.dataset.node && b.idle) post("travel", {gid: sel, node: t.dataset.node});
     return;
@@ -368,9 +368,9 @@ addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT") return;
   if (e.key === "Escape" && splitting) { splitting = null; drawBands(); }
   else if (e.key === "Escape") pause(true);
-  else if (e.key === "+" || e.key === "=") Sheet.zoomIn();
-  else if (e.key === "-") Sheet.zoomOut();
-  else if (e.key === "f" || e.key === "F") Sheet.fit();
+  else if (e.key === "+" || e.key === "=") MapSheet.zoomIn();
+  else if (e.key === "-") MapSheet.zoomOut();
+  else if (e.key === "f" || e.key === "F") MapSheet.fit();
 });
 
 api("/api/map/state").then(show).catch(e => news([e.message], true));

@@ -479,6 +479,20 @@ def test_every_file_the_shell_routes_to_is_served(server):
         assert _get(server + path)[0] == 200
 
 
+def test_no_two_scripts_of_one_page_declare_the_same_name():
+    """A screen's scripts share the page with the shell's: a second top-level `const` of a name throws
+    and the screen never draws (the map's sheet once clashed with the member sheet)."""
+    import re
+    client = os.path.join(os.path.dirname(__file__), "..", "gartok", "web", "client")
+    read = lambda p: open(os.path.join(client, p), encoding="utf-8").read()
+    declared = lambda src: re.findall(r"^(?:const|let|class|function)\s+(\w+)", src, re.M)
+    shell = read("shell.js")
+    for screen, _, js in re.findall(r'(\w+): \{css: \[(.*?)\], js: \[(.*?)\]\}', shell):
+        names = declared(shell) + [n for f in re.findall(r'"([^"]+)"', js)
+                                   for n in declared(read(f"screens/{screen}/{f}"))]
+        assert len(names) == len(set(names)), (screen, sorted({n for n in names if names.count(n) > 1}))
+
+
 def test_a_save_opens_the_map_through_the_same_router(tmp_path, monkeypatch):
     from gartok import persist
     from gartok.group import Group
