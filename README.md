@@ -312,7 +312,6 @@ gartok/
   # pygame is abandoned (docs/plans/web_frontend.md): what is left is held headless by web/ for its
   # rules until they move out, or is the Editor's
   wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
-  dialogue_screen.py
   battle_screen.py (input + turn flow) / battle_draw.py (everything it paints)
   the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 

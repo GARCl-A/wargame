@@ -1,6 +1,6 @@
 """The talk before a fight (`dialogue.py`) in the browser: the foe's leader as a bestiary page, the
-answers as cards with their odds, the band choosing who speaks, and the roll on a slip. It holds
-pygame's own `DialogueScreen` headless for who speaks, the verbs and the result.
+answers as cards with their odds, the band choosing who speaks, and the roll on a slip, over a
+`dialogue.Talk` (who speaks, the verbs and the result).
 
 Three talks open it: a forced fight's (the guard, the ambushes: `forced_talk`), the Wildfire's
 (`wildfire_talk`) and an arena boss's lines before the bout (`boss_talk`, `arena_session`)."""
@@ -10,7 +10,6 @@ from typing import ClassVar
 
 from .. import dialogue, encounters, forced, orders, recorder, wildfire, world
 from ..constants import fmt_money
-from ..dialogue_screen import _BUTTON_LABEL, DialogueScreen
 from .map_session import _portrait, _when
 from .session import Session
 
@@ -67,10 +66,8 @@ class DialogueSession(Session):
         self.map = map_session
         self.guild = map_session.guild
         self.group = group
-        self.done = done                  # result -> the answer, once the person reads how it ended
         self.caught = set(caught)
-        self.talk = DialogueScreen(None, self.guild, group, encounter, on_done=done,
-                                   on_decided=on_decided, decided=decided)
+        self.talk = dialogue.Talk(encounter, group.members, on_done=done, on_decided=on_decided, decided=decided)
         self.played = None                # the answer whose roll is on the table, as it read before the roll
 
     @property
@@ -79,34 +76,20 @@ class DialogueSession(Session):
 
     # ------------------------------------------------------------------ #
     def pick(self, uid):
-        if self.talk.result is not None:
-            raise ValueError("the die is cast")
-        if not self.enc.offered():
-            raise ValueError("nobody answers here")
-        who = next((u for u in self.talk.members if u.uid == uid), None)
-        if who is None:
-            raise ValueError("no such member")
-        self.talk.speaker = who
+        self.talk.pick(next((u for u in self.talk.members if u.uid == uid), None))
         return self.state()
 
     def choose(self, verb):
-        if self.talk.result is not None:
-            raise ValueError("the die is cast")
-        if self.talk.speaker is None:
-            raise ValueError("nobody to speak")
         who = self.talk.speaker
-        opt = self.enc.option(verb, who, self.talk.members)
+        opt = None if who is None else self.enc.option(verb, who, self.talk.members)
         self.talk.choose(verb)
         self.played = {"verb": verb, "label": opt.label, "icon": VERB_ICONS[verb], "speaker": who.name,
                        "note": opt.note.partition(" · ")[0], "check": opt.check}
         return self.state()
 
     def go_on(self):
-        result = self.talk.result
-        if result is None:
-            raise ValueError("nothing has been said yet")
-        if result.over:
-            return self.done(result)
+        if self.talk.result is not None and self.talk.result.over:
+            return self.talk.go_on()
         self.talk.go_on()
         self.played = None
         return self.state()
@@ -170,7 +153,7 @@ class DialogueSession(Session):
         roll, text = _roll(r.text)
         won = roll["total"] >= roll["dc"] if roll else r.kind != "fight"
         return {"kind": r.kind, "text": text, "full": r.text, "roll": roll, "played": self.played, "won": won,
-                "button": _BUTTON_LABEL[r.kind], "paid": r.paid,
+                "button": dialogue.BUTTON_LABEL[r.kind], "paid": r.paid,
                 "opening": _opening(r.opening) if r.kind == "fight" and self.enc.kind != "boss" else []}
 
 

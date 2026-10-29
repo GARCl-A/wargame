@@ -1,11 +1,10 @@
 """The line each arena boss says before the guild's first bout against them: Adelio before the
 champion bout, the three Ribbit brothers (eldest first) before the Games' capstone; once a guild.
-It is a `dialogue.BossTalk`: no verbs, the dialogue screen walks the lines and the last one fights."""
+It is a `dialogue.BossTalk`: no verbs, the talk walks the lines and the last one fights."""
 
-import pygame
+import pytest
 
-from gartok import arena, i18n, persist
-from gartok.dialogue_screen import DialogueScreen
+from gartok import arena, dialogue, i18n, persist
 from gartok.guild import Guild
 from tests.helpers import Unit
 
@@ -47,26 +46,16 @@ def test_what_was_heard_survives_a_save():
     assert persist.load_game(world_id).boss_talks_seen == {"champion", "boss"}
 
 
-def _press(screen, key):
-    screen.handle_event(pygame.event.Event(pygame.KEYDOWN, key=key))
-
-
-def test_the_screen_walks_the_lines_with_no_answer_and_starts_the_fight_once():
-    pygame.init()
-    from gartok.ui import tokens
+def test_the_talk_walks_the_lines_with_no_answer_and_starts_the_fight_once():
     guild = Guild([Unit("a")])
     talk = arena.boss_talk(guild, arena.boss_bout())
     done = []
-    screen = DialogueScreen(tokens.fonts(), guild, guild.groups[0], talk, done.append, decided=talk.current())
-    assert screen.tutorial_key() is None
-    surf = pygame.Surface((1000, 640))
-    screen.draw(surf)
-    assert screen.hits["speakers"] == [] and screen.hits["options"] == []
-    button = screen.hits["button"]
-    screen.mouse = button.center
-    screen.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=button.center))
-    _press(screen, pygame.K_RETURN)
+    played = dialogue.Talk(talk, guild.groups[0].members, done.append, decided=talk.current())
+    with pytest.raises(ValueError):
+        played.choose("persuade")
+    played.go_on()
+    assert talk.leader.name == "Bufo" and not done
+    played.go_on()
     assert talk.leader.name == "Peep" and not done
-    screen.draw(surf)
-    _press(screen, pygame.K_SPACE)
+    played.go_on()
     assert [r.kind for r in done] == ["fight"]

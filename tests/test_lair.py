@@ -4,7 +4,6 @@ an egg, what the squad keeps, the dragon itself, Dragonfire, and the keepers who
 
 import random
 
-import pygame
 import pytest
 
 from gartok import (
@@ -423,27 +422,6 @@ def test_the_lab_builds_the_lair(fight):
     assert fight in combat_lab.FIGHTS
     b, meta = combat_lab.build(fight, 3, 4, seed=1)
     assert isinstance(b.scenario, lair.LairScenario) and meta["fight"] == fight
-
-
-def test_the_battle_screen_hosts_a_challenge_over_the_board_and_waits_on_it(monkeypatch):
-    from gartok.battle_screen import BattleScreen
-    from gartok.ui.tokens import fonts
-    pygame.font.init()
-    monkeypatch.setattr(pygame.mouse, "get_pos", lambda: (0, 0))
-    b, sc = _lair()
-    scr = BattleScreen(fonts(), b, on_battle_end=lambda battle: None,
-                       controllers={"player": "human", "enemy": "ai"})
-    got = []
-    enc = dialogue.Challenge(sc.patrol(b, 0))
-    b.talk_handler(enc, [c.char for c in b.player_units], got.append)
-    active = b.active
-    scr.update(10_000)
-    assert scr._talk is not None and b.active is active
-    scr.draw(pygame.Surface((1280, 720)))
-    assert scr._talk.hits["options"]
-    scr._talk.choose("attack")
-    scr._talk.go_on()
-    assert scr._talk is None and got[0].kind == "fight"
 
 
 def test_only_the_first_kobold_of_each_patrol_holds_a_torch_however_it_is_outfitted():

@@ -51,7 +51,6 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
 | `load_meter.py` | what a body carries, the one way every screen shows it: a bar as long as `carry_max` with a tick at `carry_normal`, green / amber (slowed) / blood (full), the figure always `kg / max` |
 | `loadout_panel.py` | bag / cargo pieces (rail, column, send menu) |
-| `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
 | `board_render.py` | the battle board: terrain (the floor from `floors.py`, then pits, water, fire, ropes), props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, log well, and the crit banner across the board |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |

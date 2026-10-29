@@ -7,7 +7,6 @@ import json
 import os
 import random
 import time
-from types import SimpleNamespace
 
 import pygame
 
@@ -15,7 +14,6 @@ from . import actions, ai, intel, settings, vision
 from .battle_draw import BattleDrawMixin
 from .battle_fx import BattleFX
 from .board import cells
-from .dialogue_screen import DialogueScreen
 from .foe_card import foe_card
 from .fog import FogMemory
 from .lighting import LightRenderer
@@ -87,29 +85,11 @@ class BattleScreen(BattleDrawMixin, Screen):
 
         self.fx = BattleFX()    # combat juice: floaters + hit reactions (battle_fx.py)
         self.fog = FogMemory()
-        self._talk = None       # a challenge on the board being answered (`DialogueScreen`)
-        if self._human("player"):
-            battle.talk_handler = self._open_talk
-
-    def _open_talk(self, encounter, members, done):
-        """A foe on the board challenges the squad (`lair.py`'s patrols): the player answers it on
-        the dialogue screen, over the board, while the fight waits."""
-        squad = SimpleNamespace(members=members, node="", display_name="The squad")
-
-        def finish(result):
-            self._talk = None
-            done(result)
-
-        self._talk = DialogueScreen(self.F, None, squad, encounter, on_done=finish)
 
     # ------------------------------------------------------------------ #
     # events                                                             #
     # ------------------------------------------------------------------ #
     def handle_event(self, event):
-        if self._talk is not None:
-            self._talk.mouse = self.mouse
-            self._talk.handle_event(event)
-            return
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and self._is_player_turn():
                 self.aim_action = None
@@ -173,8 +153,6 @@ class BattleScreen(BattleDrawMixin, Screen):
         return False
 
     def update(self, dt):
-        if self._talk is not None:
-            return
         b = self.battle
         self.fx.advance(dt)
         if self._chord:

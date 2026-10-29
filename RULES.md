@@ -644,7 +644,7 @@ another circumstance bonus to attack.
 
 ### Dialogue before initiative 🟡
 
-Rule in `dialogue.py`, screen `dialogue_screen.py`. When the guild meets foes who can talk, a
+Rule in `dialogue.py`, screen `web/dialogue_session.py`. When the guild meets foes who can talk, a
 **dialogue** comes before anyone rolls initiative: the City guard's catch, the road ambush (its red
 CTA, **AMBUSHED -- FACE THEM**), a pack that finds a crew gathering or a supply caravan, and a
 Wildfire focus (**TALK**). A pack with **nobody who speaks** (beasts, the dead) opens none: straight

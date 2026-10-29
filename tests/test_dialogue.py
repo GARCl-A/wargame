@@ -3,6 +3,8 @@ bribes, what each answer does to the fight that follows (Battle.open_with), the 
 the save carrying it, the forced events that open it, and the squad's AI."""
 
 import random
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -305,11 +307,14 @@ def test_ai_play_walks_a_wildfire_talk_to_its_end(monkeypatch):
     assert dialogue.ai_play(_Enc(), [_speaker()]).kind == "peace" and calls == ["persuade", "persuade"]
 
 
-def test_the_screen_hands_the_word_to_someone_the_leader_understands():
-    from gartok.dialogue_screen import DialogueScreen
+def test_the_talk_loads_without_pygame():
+    code = "import sys; sys.modules['pygame'] = None; import gartok.dialogue, gartok.web.dialogue_session"
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_the_talk_hands_the_word_to_someone_the_leader_understands():
     charmer, linguist = _speaker("Elvish", seed=1), _speaker("Common", seed=3)
     charmer.base_attributes["charisma"] = 18
     charmer._apply_attributes()
     g = Group([charmer, linguist], node="road")
-    scr = DialogueScreen(None, Guild(None, groups=[g]), g, _ambush(), on_done=lambda r: None)
-    assert scr.speaker is linguist
+    assert dialogue.Talk(_ambush(), g.members, on_done=lambda r: None).speaker is linguist

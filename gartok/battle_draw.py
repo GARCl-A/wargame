@@ -69,9 +69,6 @@ class BattleDrawMixin:
             self._draw_tooltips(screen)
         if self._handoff is not None:
             self._draw_handoff(screen)
-        if getattr(self, "_talk", None) is not None:
-            self._talk.mouse = self.mouse
-            self._talk.draw(screen)
 
     def _draw_grid(self, screen):
         b = self.battle.board

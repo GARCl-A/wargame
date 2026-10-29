@@ -442,6 +442,55 @@ class BossTalk(Encounter):
 
 
 # --------------------------------------------------------------------------- #
+# one talk being played by a person                                           #
+# --------------------------------------------------------------------------- #
+BUTTON_LABEL = {"peace": "GO ON", "fight": "FIGHT", "leave": "RUN", "surrender": "GO WITH THEM", "next": "GO ON"}
+
+
+class Talk:
+    """An encounter as a person plays it: who speaks (`first_speaker` until picked), the verb rolled,
+    the result shown until they go on. `on_decided(result)` fires the moment a roll ends it (the caller
+    stores it, so a reload cannot roll again); `on_done(result)` once the person reads how it ended.
+    A `decided` result opens the talk already showing it."""
+
+    def __init__(self, encounter, members, on_done, on_decided=None, decided=None):
+        self.encounter = encounter
+        self.members = list(members)
+        self.on_done = on_done
+        self.on_decided = on_decided
+        self.result = decided
+        self.speaker = first_speaker(encounter, self.members)
+
+    def pick(self, unit):
+        if self.result is not None:
+            raise ValueError("the die is cast")
+        if not self.encounter.offered():
+            raise ValueError("nobody answers here")
+        if unit not in self.members:
+            raise ValueError("no such member")
+        self.speaker = unit
+
+    def choose(self, verb):
+        if self.result is not None:
+            raise ValueError("the die is cast")
+        if self.speaker is None:
+            raise ValueError("nobody to speak")
+        self.result = self.encounter.choose(verb, self.speaker, self.members)
+        if self.result.over and self.on_decided is not None:
+            self.on_decided(self.result)
+        return self.result
+
+    def go_on(self):
+        """The result's button: the end handed to `on_done` (its answer returned), or the next step."""
+        if self.result is None:
+            raise ValueError("nothing has been said yet")
+        if self.result.over:
+            return self.on_done(self.result)
+        self.result = self.encounter.advance()
+        return None
+
+
+# --------------------------------------------------------------------------- #
 # the squad's side, when nobody plays it                                       #
 # --------------------------------------------------------------------------- #
 _VALUE = {"peace": 1.0, "fight": 0.0, "surprised": -0.5, "shaken": 0.4, "jumped": -0.2}

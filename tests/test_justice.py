@@ -133,10 +133,8 @@ def test_resolve_fight_crime_adds_for_the_brawl_and_every_guard_downed():
     assert u.crime == 2 + 1 + 2               # untouched + brawled + 2 guards downed
 
 
-def test_guard_dialogue_draws_the_patrol_and_its_answers():
-    import pygame
+def test_guard_dialogue_brings_the_patrol_and_its_answers():
     from gartok import forced
-    from gartok.dialogue_screen import DialogueScreen
     from gartok.guild import Guild
     from gartok.orders import Order
     from gartok.unit import Unit
@@ -148,7 +146,4 @@ def test_guard_dialogue_draws_the_patrol_and_its_answers():
     enc = forced.encounter(g, g.groups[0], order)
     assert len(order.pack) == justice.PATROL_SIZE
     assert [o.verb for o in enc.options(u, [u])] == ["surrender", "bluff", "bribe", "attack", "leave"]
-    scr = DialogueScreen(None, g, g.groups[0], enc, on_done=lambda r: None)
-    assert scr.tutorial_key() == "guard"
-    pygame.font.init()
-    scr.draw(pygame.Surface((1280, 720)))
+    assert enc.kind == "guard"

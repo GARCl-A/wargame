@@ -318,40 +318,36 @@ class BattleSession(Session):
                     "cells": [_cell(c) for c in board if b.can_plant_trap(trapper, c)]}
         return None
 
-    # -- a challenge on the board (`lair.py`'s patrols), as `DialogueScreen` plays it -------- #
+    # -- a challenge on the board (`lair.py`'s patrols) ----------------------------------- #
     def _open_talk(self, encounter, members, done):
-        self.talk = {"enc": encounter, "members": list(members), "done": done,
-                     "speaker": dialogue.first_speaker(encounter, members), "result": None}
+        def finish(result):
+            self.talk = None
+            done(result)
+
+        self.talk = dialogue.Talk(encounter, members, on_done=finish)
 
     def _answer(self, verb, speaker, go_on):
         talk = self.talk
         if talk is None:
             raise ValueError("nobody is talking")
         if go_on:
-            result = talk["result"]
-            if result is None:
-                raise ValueError("nothing said yet")
-            if result.over:
-                self.talk = None
-                talk["done"](result)
-            else:
-                talk["result"] = talk["enc"].advance()
+            talk.go_on()
             return
-        if talk["result"] is not None:
+        if talk.result is not None:
             raise ValueError("go on first")
         if speaker is not None:
-            if not 0 <= int(speaker) < len(talk["members"]):
+            if not 0 <= int(speaker) < len(talk.members):
                 raise ValueError("no such speaker")
-            talk["speaker"] = talk["members"][int(speaker)]
+            talk.pick(talk.members[int(speaker)])
         if verb is not None:
-            talk["result"] = talk["enc"].choose(verb, talk["speaker"], talk["members"])
+            talk.choose(verb)
 
     def _talk_state(self):
         talk = self.talk
         if talk is None:
             return None
-        enc, speaker, members = talk["enc"], talk["speaker"], talk["members"]
-        lead, result = enc.leader, talk["result"]
+        enc, speaker, members = talk.encounter, talk.speaker, talk.members
+        lead, result = enc.leader, talk.result
         return {
             "title": enc.title, "line": enc.line,
             "leader": None if lead is None else {
