@@ -1252,7 +1252,21 @@ screen. Cut as step 10 was:
      - Left: `title_session` still loads pygame through the wiki (`item_icon` imports `ui.item_icons`), a later
        family's. The sheet as a modal (the playtest below) waits for the guild family, which reads
        `unit_to_ch` too.
-     - **Next:** the report (`report_session` on `LootScreen`, `memorial_screen.card`), then the guild.
+   - **The report — done (2026-10-28).** `spoils.py` is the field's loot with no pygame: `Spoils` holds what
+     `LootScreen` held for the rules (the pile as stacks, part of a stack picked, `_give_many` onto a pack or a
+     worn slot under `carry_max` and back to the field, `_auto_pick`); the memorial's `card` moved to
+     `aftermath`. `report_session` holds a `Spoils`. Gone in the same commit: `loot_screen`, `memorial_screen`
+     (and its `chain`), `ui/aftermath_panel`, and `loadout_panel`'s `container_panel` / `shop_row`, which only
+     the loot screen drew; `test_loot_screen` and three tests in `test_screens` / `test_column_scroll` that drove
+     or drew the screen.
+     - Tests: `tests/test_spoils.py` (`spoils` and `aftermath` load with pygame blocked; the stacks, part of a
+       stack, one of a stack into a worn slot with the rest left on the field, a load past the limit kept
+       picked, a pack item back to the field, take what fits, the memorial's days); `test_web_report` covers
+       the page.
+     - Left: `report_session` still loads pygame through `item_icon` (which reads `ui.item_icons`' `TONES` and
+       `ui.tokens`), the same knot as the wiki's; untie it once for both.
+     - **Next:** the guild (`guild_session` on `GuildScreen` and `GroupScreen` + `group_draw`), with the sheet as
+       a modal from the playtest below.
    - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
      these into the families above where they share code, the rest after them:
      - **The character sheet as a modal, opened from anywhere.** pygame opened a member's sheet from the band

@@ -2,7 +2,7 @@
 with their before / after numbers, and the memorial of a lost character (in battle or not).
 
 Pure data, filled in by `campaign.absorb_battle` (and by the daily upkeep for a death off the
-field); `report_screen`, `level_up_screen` and `memorial_screen` draw it."""
+field); `web/report_session.py` reads it."""
 
 from dataclasses import dataclass, field
 
@@ -28,6 +28,14 @@ class Memorial:
 def memorial(unit, *, day, cause, place=None, killer=None, line=None):
     return Memorial(unit.name, unit.race["name"], unit.occupation["name"], unit.portrait_id,
                     unit.joined_day, day, cause, place, killer, line)
+
+
+def card(m, tag="IN MEMORIAM", button="CONTINUE"):
+    days = m.days_lived
+    return {"name": m.name, "race": m.race, "occupation": m.occupation, "portrait_id": m.portrait_id,
+            "cause": m.cause, "days": f"{days} day{'s' if days != 1 else ''} with the guild",
+            "span": f"DAY {m.joined_day} TO DAY {m.day}", "place": m.place, "killer": m.killer,
+            "line": m.line, "tag": tag, "button": button}
 
 
 def starved(unit, *, day, place=None):

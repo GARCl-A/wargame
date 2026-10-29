@@ -7,9 +7,7 @@ from gartok.animals import PACK_SADDLE, Animal
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.holdings import Stash
-from gartok.loot_screen import LootScreen
 from gartok.ui.hscroll import ColumnScroll
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.vault import BankVault
 from gartok.wagon import Wagon
 from tests.helpers import Unit, packed
@@ -42,24 +40,6 @@ def test_a_sideways_wheel_moves_the_row_and_a_plain_one_only_where_asked():
     one = ColumnScroll()
     one.fit(2, 1000, 16, 300, 420)
     assert not one.wheel(pygame.event.Event(pygame.MOUSEWHEEL, {"x": 1, "y": 0}))
-
-
-def test_the_loot_screen_reaches_members_past_the_window_edge():
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    crew = [Unit("player") for _ in range(7)]
-    ls = LootScreen(ui_fonts(), Guild(list(crew)), crew, ["Axe"], lambda: None)
-    surf = pygame.Surface((1280, 800))
-    ls.mouse = (0, 0)
-    ls.draw(surf)
-    seen = {u for _, u, _ in ls.zones if isinstance(u, Unit)}
-    assert crew[0] in seen and crew[-1] not in seen and ls._cols.max > 0
-
-    for _ in range(ls._cols.max):
-        _wheel(ls, x=1)
-    ls.draw(surf)
-    seen = {u for _, u, _ in ls.zones if isinstance(u, Unit)}
-    assert crew[-1] in seen and crew[0] not in seen
 
 
 def _crew_with_gear():

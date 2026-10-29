@@ -1,16 +1,16 @@
 """After a fight in the browser: the fallen on one page, the report with its blows in ink, each
-level-up, then the field's loot or the arena's purse, then the map -- in the order `app_battle` plays
-them. It reads `campaign.absorb_battle`'s outcome (`aftermath.py`); the loot's moves are pygame's own
-`LootScreen` held headless, the purse lands as `RewardScreen` lands it.
+level-up, then the field's loot or the arena's purse, then the map -- in the order `app_battle` played
+them. It reads `campaign.absorb_battle`'s outcome (`aftermath.py`); the loot's moves are `spoils.Spoils`,
+the purse lands whole on one fighter.
 
 `campaign_fight` opens it once a campaign fight is settled."""
 
 from typing import ClassVar
 
 from .. import art_files, factions, item_icon, items, progression
+from ..aftermath import card
 from ..constants import fmt_money
-from ..loot_screen import LootScreen
-from ..memorial_screen import card
+from ..spoils import Spoils
 from .map_session import _portrait, _when
 from .session import Session, asset_url
 from .shop_tab import SLOTS, _tip
@@ -76,7 +76,7 @@ class ReportSession(Session):
                 stages.append(("loot", None))
         self.stages = [*stages, ("map", None)]
         self.at_stage = 0
-        self.loot = (LootScreen(None, self.guild, list(o.survivors), list(o.loot_pool), lambda: None)
+        self.loot = (Spoils(list(o.survivors), list(o.loot_pool))
                      if ("loot", None) in self.stages else None)
         self.taken = {}                          # uid -> {item: qty} taken off the field this screen
         self.refused = None                      # {"uid", "item", "why"}: the last drop that would not fit
@@ -153,7 +153,7 @@ class ReportSession(Session):
 
     def take(self, picks, to, zone="pack"):
         """Move `picks` onto `to` (a member's pack or worn `zone`, or back to the field), by
-        `LootScreen._give_many`; a load the member cannot carry is refused with why."""
+        `Spoils._give_many`; a load the member cannot carry is refused with why."""
         ls = self.loot
         if self.stage[0] != "loot" or ls is None:
             raise ValueError("the field is not on the table")
@@ -224,7 +224,7 @@ class ReportSession(Session):
         return self.state()
 
     def give(self, uid):
-        """The purse lands whole on one fighter, as `RewardScreen` lands it."""
+        """The purse lands whole on one fighter."""
         if self.stage[0] != "purse":
             raise ValueError("there is no purse on the table")
         if self.paid_to is not None:

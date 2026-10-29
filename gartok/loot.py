@@ -4,7 +4,7 @@ The loot pool is everything left on the battlefield once the enemies are down:
 the gear each defeated enemy still had on them, everything the party's own dead
 carried -- purse included, the coins being items too (their body is right there;
 an enemy's purse is not looted) -- and loose objects on the ground -- weapons
-that were dropped or thrown, torches. `LootScreen` lets the survivors take what
+that were dropped or thrown, torches. `spoils.Spoils` lets the survivors take what
 fits under `carry_max`; the rest is left behind.
 
 Read off the *battle* combatants, never the roster: a weapon a unit threw is on

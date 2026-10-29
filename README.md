@@ -222,6 +222,7 @@ gartok/
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
   loot.py           gathers the field loot after a lethal win
+  spoils.py         the field's loot split among the survivors (no pygame; the report's FIELD)
   progression.py    XP curves + the combat-XP rule (pure data, no gartok imports)
   talents.py        the talent trees: one per XP track, Effect(channel, amount, stat)
   magic.py          spell registry (level, sources) + study-difficulty math -- casting
@@ -312,7 +313,7 @@ gartok/
   # rules until they move out, or is the Editor's
   wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
   guild_screen.py / group_screen.py + group_draw.py / dialogue_screen.py
-  battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / memorial_screen.py
+  battle_screen.py (input + turn flow) / battle_draw.py (everything it paints)
   the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 
   # shared presentation

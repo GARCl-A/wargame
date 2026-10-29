@@ -980,20 +980,6 @@ def test_guild_screen_study_track_rendered():
     assert scr.member == u
 
 
-def test_starvation_loot_screen_instantiation():
-    from gartok.guild import Guild
-    from gartok.loot_screen import LootScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.unit import Unit
-    u1 = Unit("player")
-    u2 = Unit("player")
-    guild = Guild([u1, u2])
-    pool = ["Rations", "Dagger"]
-    ls = LootScreen(ui_fonts(), guild, guild.roster, pool, on_done=lambda: None)
-    assert ls.guild == guild
-    assert len(ls.survivors) == 2
-
-
 def test_battle_screen_tabs_and_hotkeys():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
@@ -1115,29 +1101,6 @@ def test_market_equipping_stack_preserves_remainder():
     assert shopper.equipped_offhand == "Torch"
     assert len(shopper._base_inventory) == 1
     assert shopper._base_inventory[0].qty == 4
-
-
-def test_loot_screen_equipping_stack_preserves_remainder():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    from types import SimpleNamespace
-
-    import pygame
-
-    from gartok.loot_screen import LootScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-
-    u = Unit("player")
-    u.equipped_offhand = None
-    guild = SimpleNamespace(roster=[u])
-    pool = ["Torch"] * 5
-
-    ls = LootScreen(ui_fonts(), guild, [u], pool, lambda: None)
-    ls.selected = [("pool", 0)]
-    ls._give_many(u, "offhand")
-
-    assert u.equipped_offhand == "Torch"
-    assert ls.pool == [("Torch", 4)]
 
 
 def test_bank_equipping_stack_preserves_remainder():
