@@ -1246,6 +1246,8 @@ def test_the_supply_run_needs_the_cargo_and_sends_the_band_off_on_the_map(monkey
     run = next(p for p in hub.state()["ledger"]["panels"] if p["key"] == "supply_run")
     assert run["button"]["can"] and run["warn"]
     st = hub.verb("ledger", True)(hub, {"key": "supply_run"})
+    while st.get("screen", "report") == "report":
+        st = hub.game.session.next()
     assert st["screen"] == "map" and g.node == "ledger_hold" and guild.supply_runs_completed == 1
 
 

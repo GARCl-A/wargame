@@ -203,7 +203,7 @@ const ROLE = {COMBAT: "fighter", WORK: "worker", MAGIC: "caster"};
 
 function level() {
   const L = R.level;
-  header("Level up", `<b>${esc(L.name)}</b> · after the fight on the <b>${esc(R.place)}</b>`);
+  header("Level up", `<b>${esc(L.name)}</b> · after ${esc(L.after)}`);
   const head = L.gains.find(([l]) => l.toUpperCase().startsWith(L.track)) || L.gains[0];
   const delta = (l, a, b) => l === "Max HP" ? `+${b - a} HP` : `+${b - a}`;
   const next = L.next ? `<div class="tonext"><div class="barlbl"><span>Toward level ${L.level + 1}</span><b>${L.next[0]} / ${L.next[1]} XP</b></div>

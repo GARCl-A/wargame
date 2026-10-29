@@ -3,13 +3,14 @@ the order `app_battle` plays them, through the same session the server routes to
 
 import pytest
 
-from gartok import campaign, items, persist, recorder
+from gartok import campaign, economy, items, orders, persist, progression, recorder
 from gartok.clock import Clock
+from gartok.group import Group
 from gartok.guild import Guild
 from gartok.web.map_session import MapSession
 from gartok.web.report_session import ReportSession
 from gartok.web.server import Game
-from tests.helpers import Battle, _unit, world
+from tests.helpers import Battle, _unit, standard_unit, world
 
 NODE = "wilds"
 
@@ -288,3 +289,49 @@ def test_the_server_routes_the_report_verbs():
     guild, _, battle, outcome = _fight()
     _, s = _open(guild, battle, outcome)
     assert s.verb("state", False) and s.verb("next", True) and s.verb("take", True) and s.verb("give", True)
+
+
+# --------------------------------------------------------------------------- #
+# the clock's level-ups                                                        #
+# --------------------------------------------------------------------------- #
+def _worker_on_the_edge():
+    u = standard_unit()
+    u.give_to_pack("Potato", 4)
+    u.work_hours = progression.WORK_XP_THRESHOLDS[0] * economy.LUMBER_XP_HOURS - 1
+    guild = Guild(None, groups=[Group([u], node="lumber_yard", leader=u)], name="Ink Hands")
+    return guild, u
+
+
+def test_a_work_level_from_the_clock_gets_its_page_then_the_map():
+    guild, u = _worker_on_the_edge()
+    game = Game(MapSession(guild))
+    m = game.session
+    g = guild.groups[0]
+    g.order = orders.work(guild, g, 8)
+    assert m._after_order() == {"screen": "report"}
+    s = game.session
+    st = s.state()
+    lv = st["level"]
+    assert st["stage"] == "level" and lv["track"] == "WORK" and lv["level"] == u.work_level == 1
+    assert ["Work level", 0, 1] in lv["gains"] and lv["after"] == "the work at Lumber Yard"
+    assert [c["id"] for c in st["chain"]] == ["level", "map"] and s.tutorial_key() == "level_up"
+    assert not any("grows" in n for n in m.notices)
+    back = s.next()
+    assert back["screen"] == "map" and game.session is m and not m.level_ups
+
+
+def test_a_work_level_on_the_work_tab_comes_back_to_the_tab():
+    guild, u = _worker_on_the_edge()
+    game = Game(MapSession(guild))
+    hub = game.session
+    hub.act(guild.groups[0].gid, "market")
+    hub = game.session
+    hub.pick_tab("work")
+    assert hub.work(8) == {"screen": "report"}
+    s = game.session
+    assert s.state()["level"]["track"] == "WORK"
+    if u.pending_picks:
+        assert s.talents() == {"screen": "talents"}
+        assert game.session.back()["stage"] == "level"
+    back = s.next()
+    assert back["screen"] == "hub" and game.session is hub and back["tab"] == "work" and back["work"]["report"]

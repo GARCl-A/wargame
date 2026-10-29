@@ -501,7 +501,13 @@ class HubSession(Session):
         del m.notices[before:]
         m._save()
         self.tab = "work"
+        if m.level_ups:
+            return m.open_level_ups(self._resume)
         return self.state()
+
+    def _resume(self):
+        self.map.game.open(self)
+        return {"screen": self.screen, **self.state()}
 
     def licence(self):
         self.gathering.buy_licence()

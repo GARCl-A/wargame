@@ -1319,10 +1319,16 @@ screen. Cut as step 10 was:
    - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
      these into the families above where they share code, the rest after them:
      - **The character sheet as a modal, opened from anywhere — done (2026-10-28)** with the guild above.
-     - **The work level-up has no screen.** A work track's level-up is only a map notice
-       (`MapSession._advance`, "X grows: ..."); pygame opened `level_up_screen` and then the talent pick.
-       Port it (it joins "Not in the browser, pygame had them" above): the numbers before and after, then
-       `TalentSession` when there is a pick, back to the map.
+     - **The work level-up — done (2026-10-28).** The clock's level-ups (a work shift, a study, a long walk that
+       banks hours) are no longer a map notice: `MapSession` keeps them in `level_ups` (from `_advance` and
+       `tick_outside`) and `_land` opens them before anything else due, through `open_level_ups(then)`.
+       `report_session.LevelUps` is the report's level-up pages with no fight before them (its chain is
+       Level up, Go on; the subtitle is the server's `after`: "the work at Lumber Yard"), PICK TALENTS and back
+       as after a fight, then the map. A paid shift on the WORK tab that levels someone shows the pages and
+       comes back to the tab with what it paid, as pygame's `_work_shift` did. The client changed one line (the
+       level-up's subtitle reads `after`).
+       - Tests: `test_web_report.py` (a work level from the map's clock, its page and back to the map, no
+         notice; one on the WORK tab and back to the tab); the supply run's test walks the pages it now opens.
      - **The tutorial `?` in the header.** Most screens have a header; the corner button floats over it and
        does not look part of the game. Move it into each screen's header (the hub frame's, the guild's, the
        map's top bar), keep the corner only where there is none. A shell change across every screen.

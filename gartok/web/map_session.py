@@ -73,6 +73,7 @@ class MapSession(MapView, Session):
         self.world_id = world_id
         self.notices = []
         self.pending = []
+        self.level_ups = []                      # aftermath.LevelUp the clock brought, each its own page
         self.wiped = False
         due = self._pending_event              # a save taken with a fight due opens on that band
         self.focus = due[0].gid if due else None
@@ -504,9 +505,7 @@ class MapSession(MapView, Session):
             self.notices += result.events
             self.notices += [f"{u.name} died." for u in result.casualties]
             dead += result.casualties
-            for lu in result.level_ups:
-                gains = ", ".join(f"{label} {a} → {b}" for label, a, b in lu.gains)
-                self.notices.append(f"{lu.unit.name} grows: {gains}.")
+            self.level_ups += result.level_ups
             if result.wiped:
                 self.wiped = True
                 return set(), dead
@@ -524,6 +523,7 @@ class MapSession(MapView, Session):
         does, so the other bands keep in step and what falls due waits for the map."""
         result = campaign.advance(self.guild, dt=hours, busy=busy)
         self.pending += result.pending
+        self.level_ups += result.level_ups
         self.notices += [f"{u.name} died." for u in result.casualties]
         self.wiped = self.wiped or result.wiped
         return result.events, result.casualties
@@ -532,6 +532,8 @@ class MapSession(MapView, Session):
         """Open the next screen the clock left due, or land on the map; the answer is the screen open."""
         if self.wiped:
             return {"screen": self.screen, **self.state()}
+        if self.level_ups:
+            return self.open_level_ups(self.back)
         while self.pending:
             group, order = self.pending.pop(0)
             if group.empty or group not in self.guild.groups:
@@ -547,6 +549,14 @@ class MapSession(MapView, Session):
             return self._land()
         self._save()
         return {"screen": self.screen, **self.state()}
+
+    def open_level_ups(self, then):
+        """The level-ups the clock brought, a page each as after a fight, then `then`."""
+        from .report_session import LevelUps
+        self._save()
+        self.game.open(LevelUps(self, self.level_ups, then))
+        self.level_ups = []
+        return {"screen": LevelUps.screen}
 
     def _enter(self, group, order):
         """The screen `order` plays: the arena, the hunt, a search's find, an errand's fight, else its hub."""

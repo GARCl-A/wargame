@@ -5,9 +5,10 @@ the purse lands whole on one fighter.
 
 `campaign_fight` opens it once a campaign fight is settled."""
 
+from types import SimpleNamespace
 from typing import ClassVar
 
-from .. import art_files, factions, item_icon, items, progression
+from .. import art_files, factions, item_icon, items, progression, world
 from ..aftermath import card
 from ..constants import fmt_money
 from ..spoils import Spoils
@@ -43,6 +44,7 @@ def _kg(v):
 
 class ReportSession(Session):
     screen = "report"
+    labels: ClassVar[dict] = LABELS
     GET: ClassVar[dict] = {"state": lambda s, q: s.state()}
     POST: ClassVar[dict] = {
         "next": lambda s, b: s.next(),
@@ -252,7 +254,7 @@ class ReportSession(Session):
         out = []
         for kind in dict.fromkeys(k for k, _ in self.stages):
             at = [n for n, (k, _) in enumerate(self.stages) if k == kind]
-            out.append({"id": kind, "label": LABELS[kind],
+            out.append({"id": kind, "label": self.labels[kind],
                         "at": "done" if self.at_stage > at[-1] else "now" if self.at_stage >= at[0] else "later"})
         return out
 
@@ -340,9 +342,12 @@ class ReportSession(Session):
         total = sum(1 for k, _ in self.stages if k == "level")
         return {"uid": u.uid, "name": u.name, "race": u.race["name"], "occupation": u.occupation["name"],
                 "portrait": _portrait(u), "track": track, "level": level,
-                "tag": "Level up" if total <= 1 else f"Level up · {i + 1} of {total}",
+                "tag": "Level up" if total <= 1 else f"Level up · {i + 1} of {total}", "after": self._after(lu),
                 "gains": [[label, a, b] for label, a, b in lu.gains], "next": nxt,
                 "xp_gain": row.xp_gain if row else 0, "picks": len(u.pending_picks), "hp": [u.hp, u.hp_max]}
+
+    def _after(self, lu):
+        return f"the fight on the {self.place}"
 
     def _loot(self):
         ls = self.loot
@@ -394,3 +399,32 @@ class ReportSession(Session):
                 "deeds": [{"name": d.name, "blurb": d.blurb, "rep": d.rep,
                            "faction": factions.faction(d.faction).name} for d in o.deeds_earned],
                 "note": o.arena_title_event}
+
+
+AFTER = {"WORK": "the work at", "MAGIC": "the study at", "COMBAT": "the days at"}
+
+
+class LevelUps(ReportSession):
+    """The level-ups the clock brought (a work shift, a study), a page each as after a fight, then `then`
+    (the map, or the work tab that ran the shift), as pygame's `_chain_level_ups` played them."""
+
+    labels: ClassVar[dict] = {"level": "Level up", "map": "Go on"}
+
+    def __init__(self, map_session, level_ups, then):
+        self.map = map_session
+        self.guild = map_session.guild
+        self.outcome = SimpleNamespace(level_ups=list(level_ups), report=[],
+                                       survivors=[lu.unit for lu in level_ups])
+        self.then = then
+        self.day, self.at = _when(self.guild, 0)
+        self.stages = [*(("level", i) for i in range(len(level_ups))), ("map", None)]
+        self.at_stage = 0
+
+    def state(self):
+        _, i = self.stage
+        return {"stage": "level", "day": self.day, "at": self.at, "chain": self._chain(), "level": self._level(i)}
+
+    def _after(self, lu):
+        g = self.guild.group_of(lu.unit)
+        where = world.node(g.node).name if g is not None and g.node else "the guild"
+        return f"{AFTER[lu.headline[0]]} {where}"
