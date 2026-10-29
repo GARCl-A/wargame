@@ -19,13 +19,11 @@ from .. import (
     lighting,
     vision,
 )
-from ..battle_screen import BattleScreen
 from ..board import cells
 from ..combatant import AP_PER_TURN
 from ..foe_card import foe_card
 from ..fog import FogMemory
-from ..scenario import own_half
-from ..ui import floors
+from ..scenario import own_half, wall_kind
 from .session import Session, asset_url
 
 LOG_LINES = 120
@@ -419,7 +417,7 @@ class BattleSession(Session):
                 if len(opts) > 1:
                     heights[f"{c[0]},{c[1]}"] = [[z, label] for z, label in opts]
         return {"cells": [_cell(c) for c in shown], "targets": targets,
-                "kind": BattleScreen._aim_kind(action), "heights": heights}
+                "kind": actions.aim_kind(action), "heights": heights}
 
     def _observers(self):
         return vision.observers(self.battle, False, self.team)
@@ -475,7 +473,7 @@ class BattleSession(Session):
             "board": {
                 "cols": board.cols, "rows": board.rows,
                 "floor": b.scenario.floor,
-                "wall_kind": floors.style(b.scenario.floor)["wall"],
+                "wall_kind": wall_kind(b.scenario.floor),
                 "walls": [_cell(c) for c in sorted(board.walls & known)],
                 "water": [_cell(c) for c in sorted(set(getattr(board, "water", ())) & known)],
                 "elevation": [[x, y, z] for (x, y), z in sorted(board.elevation.items()) if (x, y) in known],

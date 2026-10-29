@@ -2,12 +2,11 @@
 (Kenney, CC0, `LICENSE.txt` there) at the player's `volume` setting.
 
 Silent until `enable()` (the app calls it once), so tests and headless tools never
-open an audio device; a machine with none stays silent too."""
+open an audio device; a machine with none stays silent too. pygame loads only there: the web reads
+`CUES` and plays them in the browser."""
 
 import os
 import random
-
-import pygame
 
 from . import settings
 
@@ -34,6 +33,8 @@ _rng = random.Random()      # its own stream: a sound never moves the game's dic
 def enable():
     """Open the mixer and load every cue; on a machine with no audio the game stays silent."""
     global _sounds
+    import pygame
+
     _sounds = {}
     try:
         if not pygame.mixer.get_init():

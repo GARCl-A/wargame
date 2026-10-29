@@ -10,12 +10,14 @@ from gartok import map_lib, world
 from gartok.battlefield import BattlefieldScenario
 from gartok.lair import LairScenario
 from gartok.scenario import (
+    WALL_KIND,
     ArenaScenario,
     CustomScenario,
     Scenario,
     StreetScenario,
     WildsScenario,
     scenario_for,
+    wall_kind,
 )
 from gartok.serpent_nest import NestScenario
 from gartok.ui import board_render, floors
@@ -67,6 +69,11 @@ def test_an_unknown_floor_falls_back_to_the_flagstones():
     pygame.init()
     assert floors.style("marble") is floors.style(floors.DEFAULT)
     floors.texture("marble", 4, 4, set())
+
+
+def test_every_floor_has_its_wall_and_an_unknown_one_has_the_flagstones():
+    assert set(WALL_KIND) == set(floors.FLOORS)
+    assert wall_kind("grass") == "tree" and wall_kind("marble") == wall_kind(floors.DEFAULT) == "block"
 
 
 def test_the_board_draws_the_scenarios_floor_at_the_views_zoom():

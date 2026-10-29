@@ -18,6 +18,7 @@ from collections import OrderedDict
 
 import pygame
 
+from ..scenario import wall_kind
 from .board_style import FLOOR_GRID, FLOOR_STYLES, WALL_SHADOW
 from .tokens import mix
 
@@ -273,7 +274,7 @@ def _paint(floor, cols, rows, walls, tile, with_walls):
     for y in range(rows + 1):
         pygame.draw.line(grid, FLOOR_GRID, (0, y * tile), (cols * tile, y * tile))
     surf.blit(grid, (0, 0))
-    kind = s["wall"]
+    kind = wall_kind(floor)
     if walls:
         surf.blit(_shadows(cols, rows, tile, walls, kind != "block"), (0, 0))
     draw_wall = _WALL[kind]

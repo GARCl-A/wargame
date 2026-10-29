@@ -11,12 +11,11 @@ import time
 import pygame
 
 from . import actions, ai, intel, settings, vision
-from .battle_draw import BattleDrawMixin
+from .battle_draw import BattleDrawMixin, LightRenderer
 from .battle_fx import BattleFX
 from .board import cells
 from .foe_card import foe_card
 from .fog import FogMemory
-from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
 from .ui import board_render, board_style, foe_panel
@@ -490,22 +489,6 @@ class BattleScreen(BattleDrawMixin, Screen):
         if tile is None:
             return None
         return self._anchor_of_click(self.battle.active, tile)
-
-    @staticmethod
-    def _aim_kind(action):
-        if action in (actions.STABILIZE, actions.FIRST_AID, actions.DRINK_POTION,
-                      actions.MOUNT, actions.WAKE_UP, actions.CAPTURE):
-            return "heal"
-        if action in (actions.DEMORALIZE, actions.EAT_CORPSE):
-            return "demo"
-        if action in (actions.ATTACK, actions.ATTACK_TONGUE, actions.DRAGON_BREATH):
-            return "attack"
-        if action in (actions.CLIMB, actions.DROP, actions.JUMP,
-                      actions.SWIM, actions.DISMOUNT, actions.PUSH):
-            return "move"
-        if getattr(action, "spell_id", None) is not None:
-            return "spell"
-        return "throw"
 
     def _hint_message(self):
         if not self._is_player_turn():

@@ -1125,8 +1125,8 @@ screen. Cut as step 10 was:
   trip with one until it is mended, so a band with no Lumber and no garage is stuck), the hand-over card
   between groups (its tutorial card `group_turn` is still registered), the vault read from the map, the
   auto-win of an ambush or a hunt (`autowin.py` is still there). The old screens are in git before this cut.
-- **Held headless by the web, deleted as their family's rules move out (step 2):** `battle_screen` +
-  `battle_draw`. The dialogues' screen is gone (below), the hubs' screens are gone (the hubs III below), and so are the draft's
+- **Held headless by the web, deleted as their family's rules move out (step 2):** none left (the battle's
+  rules moved out 2026-10-28; `battle_screen` + `battle_draw` stay for the Editor). The dialogues' screen is gone (below), the hubs' screens are gone (the hubs III below), and so are the draft's
   and the title's (the draft below), the report's and the guild's.
 - **Kept until step 3:** `editor_app`, `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`,
   `combat_lab_screen`, and `battle_screen` for the lab's fights.
@@ -1304,8 +1304,18 @@ screen. Cut as step 10 was:
        the leader understands), `test_boss_talk` (the lines walked with no answer, the fight started once) and
        `test_justice` press `Talk` or the encounter; the lair test that drove pygame's board talk went
        (`test_web`'s challenge test covers it through the session).
-     - **Next:** the battle (`battle_session` on `BattleScreen` + `battle_draw`, which the Editor's lab still
-       opens; it also reads `ui.floors`).
+   - **The battle — done (2026-10-28).** `battle_session` borrowed three things, now in modules with no pygame:
+     `actions.aim_kind` (was `BattleScreen._aim_kind`: how aiming an action is marked), `scenario.wall_kind` /
+     `WALL_KIND` (was the `"wall"` key of `board_style.FLOOR_STYLES`, which `ui.floors` now reads back), and
+     `lighting.py` is only the rule (`cell_levels`): `LightRenderer` moved into `battle_draw`, with its two
+     remembered-cell tones. `sound.py` imports pygame only inside `enable()`, so the server reads `CUES` without
+     it. With that, **the whole web (`gartok.web.server`, `python main.py`) loads with pygame blocked.**
+     `battle_screen` + `battle_draw` stay: the Editor's lab still opens them (step 3).
+     - Tests: `test_web` (the server and the battle session load with pygame blocked; `aim_kind`),
+       `test_floors` (every floor has its wall, an unknown one the flagstones); `test_lighting` and
+       `test_screens` read `LightRenderer` from `battle_draw`. The lab's board was drawn headless at 1920x1080.
+     - **Next:** with every family's rules out, what is left of step 2 is the playtest's items below (the work
+       level-up, the `?` in the header, the type, the talent map), then step 3, the Editor.
    - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
      these into the families above where they share code, the rest after them:
      - **The character sheet as a modal, opened from anywhere — done (2026-10-28)** with the guild above.

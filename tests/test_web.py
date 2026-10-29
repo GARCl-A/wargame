@@ -3,6 +3,8 @@ local server in front of it."""
 
 import json
 import os
+import subprocess
+import sys
 import threading
 import urllib.error
 import urllib.request
@@ -13,6 +15,18 @@ import pytest
 from gartok import actions, ai, artwork, combat_lab, lighting, recorder, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
+
+
+def test_the_web_loads_without_pygame():
+    code = "import sys; sys.modules['pygame'] = None; import gartok.web.server, gartok.web.battle_session"
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_each_action_is_aimed_as_what_it_does():
+    assert actions.aim_kind(actions.ATTACK) == "attack"
+    assert actions.aim_kind(actions.FIRST_AID) == "heal"
+    assert actions.aim_kind(actions.CLIMB) == "move"
+    assert actions.aim_kind(actions.THROW) == "throw"
 
 
 def _session(fight="dungeon", seed=3):

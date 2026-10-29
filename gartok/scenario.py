@@ -26,6 +26,13 @@ from . import data, encounters
 from .board import COLS, ROWS, Board, cells
 from .ground import GroundObject
 
+WALL_KIND = {"stone": "block", "arena": "block", "grass": "tree", "earth": "rock", "cobble": "block", "cave": "rock"}
+
+
+def wall_kind(floor):
+    """What a wall is on `floor` (block, rock or tree): the web draws it, `ui/floors.py` paints it."""
+    return WALL_KIND.get(floor, WALL_KIND[Scenario.floor])
+
 
 class Scenario:
     """Base scenario: side deployment + the unit's own creatures. Subclasses set

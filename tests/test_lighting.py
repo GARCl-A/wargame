@@ -5,9 +5,10 @@ import os
 import pygame
 import pytest
 
-from gartok import lighting
+from gartok import battle_draw
+from gartok.battle_draw import LightRenderer
 from gartok.ground import GroundObject
-from gartok.lighting import LightRenderer, cell_levels
+from gartok.lighting import cell_levels
 from gartok.ui.board_style import BoardView
 from tests.helpers import _melee_battle
 
@@ -32,7 +33,7 @@ def test_a_cell_near_the_torch_is_brighter_than_one_at_its_edge():
 def test_a_cell_in_sight_never_reads_as_remembered():
     batt, a = _night()
     levels = cell_levels(batt, {(9, 4)}, [a])
-    assert 255 * (1 - levels[(9, 4)]) < lighting._NIGHT_SEEN
+    assert 255 * (1 - levels[(9, 4)]) < battle_draw._NIGHT_SEEN
 
 
 def test_by_day_every_cell_in_sight_is_in_full_light():

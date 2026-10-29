@@ -229,6 +229,21 @@ FIXED_HOTKEYS = {"delay": 9, "end": 0}   # off the 1-8 count, so the rest never 
 CONTEXTUAL = (CLIMB, DROP, SWIM)         # shown only while they can be taken
 
 
+def aim_kind(action):
+    """How aiming `action` is marked on the board: heal, demo, attack, move, spell or throw."""
+    if action in (STABILIZE, FIRST_AID, DRINK_POTION, MOUNT, WAKE_UP, CAPTURE):
+        return "heal"
+    if action in (DEMORALIZE, EAT_CORPSE):
+        return "demo"
+    if action in (ATTACK, ATTACK_TONGUE, DRAGON_BREATH):
+        return "attack"
+    if action in (CLIMB, DROP, JUMP, SWIM, DISMOUNT, PUSH):
+        return "move"
+    if getattr(action, "spell_id", None) is not None:
+        return "spell"
+    return "throw"
+
+
 def panel(battle, actor, tab, my_turn, show_blocked=False):
     """The action bar for `actor` on `tab` ("combat" | "utility"): one entry per action it shows,
     `{"action", "applies", "reason", "enabled", "hotkey"}`, the free hotkeys 1-8 in order."""

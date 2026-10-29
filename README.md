@@ -332,7 +332,7 @@ gartok/
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
                     portraits under assets/portraits/ for pygame
   sheet.py          a character's sheet as a plain dict (unit_to_ch), no pygame
-  lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; LightRenderer paints it
+  lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; battle_draw.LightRenderer paints it
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, the action's
                     name over its actor and the flight of a shot (`battle.announce`), combat sounds
   sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the Editor enables it, `volume` setting

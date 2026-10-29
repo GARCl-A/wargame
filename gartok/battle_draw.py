@@ -5,13 +5,17 @@ Mixed into `battle_screen.BattleScreen`; input and turn flow stay there."""
 import pygame
 
 from . import actions, aftermath, data, vision
+from .lighting import cell_levels
 from .scenario import own_half
 from .sheet import unit_to_ch
 from .ui import battle_panel, board_render, board_style, floors, foe_panel
 from .ui import primitives as ui_primitives
-from .ui.board_style import battle_layout
+from .ui.board_style import NIGHT, battle_layout
 from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.tokens import T
+
+_NIGHT_SEEN = 200     # a remembered cell at night: the terrain just shows through
+_DAY_SEEN = 110       # a remembered cell by day: a haze over it
 
 
 class BattleDrawMixin:
@@ -212,7 +216,7 @@ class BattleDrawMixin:
         actor = b.active
 
         if self.aim_action is not None:
-            kind = self._aim_kind(self.aim_action)
+            kind = actions.aim_kind(self.aim_action)
             color = board_style.aim_color(kind)
             highlight_cells = [
                 pos for pos in self.aim_action.highlight_cells(b, actor)
@@ -449,7 +453,7 @@ class BattleDrawMixin:
                 "icon": action.id,
                 "cost": action.cost,
                 "cost_style": "pips",
-                "aim": self._aim_kind(action),
+                "aim": actions.aim_kind(action),
                 "center": False,
             })
 
@@ -551,3 +555,61 @@ class BattleDrawMixin:
         ui_primitives.text(screen, self.F["titleb"], f"{seat}'s turn", (W // 2, H // 2 - 24), T.TX, center=True)
         ui_primitives.text(screen, self.F["body"], "Click when only you are looking at the screen",
                            (W // 2, H // 2 + 12), T.TX_MUTED, center=True)
+
+
+class LightRenderer:
+    def __init__(self):
+        self.view = None               # BoardView, set each frame by `draw`
+        self._tiles = {}               # (size, alpha) -> a NIGHT tile
+
+    def _tile(self, size, alpha):
+        key = (size, alpha)
+        tile = self._tiles.get(key)
+        if tile is None:
+            if len(self._tiles) > 512:
+                self._tiles.clear()
+            tile = pygame.Surface(size, pygame.SRCALPHA)
+            tile.fill((*NIGHT, alpha))
+            self._tiles[key] = tile
+        return tile
+
+    def draw(self, screen, battle, visible, observers, view, seen=None):
+        """Darken each cell for what `observers` see now. `seen` is the side's fog memory
+        (`fog.FogMemory.seen`): a cell out of sight is dimmed if seen before and black if
+        never; None treats every cell as seen."""
+        self.view = view
+        vr = view.rect
+        if vr.w < 4 or vr.h < 4:
+            return
+        ambient = getattr(battle, "ambient_light", False)
+        remembered = _DAY_SEEN if ambient else _NIGHT_SEEN
+        levels = cell_levels(battle, visible, observers)
+        board = battle.board
+        if not ambient:                       # off the board is night too
+            area = pygame.Rect(view.cell_rect(0, 0).topleft, (board.cols * view.tile, board.rows * view.tile))
+            for strip in _outside(vr, area):
+                screen.fill(NIGHT, strip)
+        for cx in range(board.cols):
+            for cy in range(board.rows):
+                r = view.cell_rect(cx, cy)
+                if not r.colliderect(vr):
+                    continue
+                light = levels.get((cx, cy))
+                if light is not None:
+                    alpha = int(255 * (1 - light))
+                else:
+                    alpha = remembered if (seen is None or (cx, cy) in seen) else 255
+                if alpha:
+                    screen.blit(self._tile(r.size, alpha), r)
+
+
+def _outside(area, board):
+    """The strips of `area` off the `board` rect."""
+    inner = board.clip(area)
+    if not inner.w or not inner.h:
+        return [area]
+    strips = (pygame.Rect(area.x, area.y, inner.x - area.x, area.h),
+              pygame.Rect(inner.right, area.y, area.right - inner.right, area.h),
+              pygame.Rect(inner.x, area.y, inner.w, inner.y - area.y),
+              pygame.Rect(inner.x, inner.bottom, inner.w, area.bottom - inner.bottom))
+    return [r for r in strips if r.w > 0 and r.h > 0]
