@@ -17,16 +17,10 @@ Parts:
 
 # Web front-end (decided 2026-10-23)
 
-The presentation moves from pygame to HTML/CSS/Canvas, and the Python core stays. The battle
-spike is built (`python -m gartok.web`), and the author's verdict is go. The decisions so far
-and the steps are in [web_frontend.md](web_frontend.md) ("Next steps"): fluidity, speed and
-zoom, the battle's parity with pygame and the shared base (the shell every screen runs in)
-the art as far as Gemini got and the board's colour and light are done (the battle is
-finished), the campaign map is in (`--save <world>`) and so is every screen the campaign reaches
-(step 9). Step 10 brings the campaign's fights: the forced ones, the Claim's, the arena, the hunt, the searches'
-finds and the errands' fights are in, the title screen opens it all and a new guild is drafted there, the
-settings, the wiki and the map's menu too, and `python main.py` opens the browser (`--editor` the Editor's pygame window; the pygame campaign is gone).
-Next is retiring pygame (step 10z): the rules the web borrows from pygame's screens move out first.
+The presentation moved from pygame to HTML/CSS/Canvas, and the Python core stays. Every screen the
+campaign reaches is in the browser and `python main.py` opens it (`--editor` the Editor's pygame window; the
+pygame campaign is gone). The rules for new UI work and what is left (a broken wagon left behind, what else
+only pygame had, the board's fog and pits, the Editor, retiring pygame) are in [web_frontend.md](web_frontend.md).
 
 ---
 
@@ -65,7 +59,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   band with a broken wagon cannot travel (`map_session.travel` refuses it until it is mended), so one with no Lumber
   and no garage is stuck; pygame's `abandon_screen` asked to leave the wagon, its cargo first. Then the hand-over
   card between groups (`group_turn`, its tutorial card still registered), the vault read from the map, the auto-win
-  of an ambush or a hunt (`autowin.py`). And the tests the cut lost (web_frontend.md 10z, the cut list): the clock
+  of an ambush or a hunt (`autowin.py`). And the tests the cut lost (web_frontend.md, What is left): the clock
   while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
   cancelled. The old screens are in git before the cut.
 
@@ -74,7 +68,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   see it cannot strike: two sides adjacent in the dark Pit (the floor torches all taken or dropped out of reach), or
   a lone fighter walled off from the rest, pass their turns forever. Only AI against AI shows it (a person goes
   looking): the combat lab, `sim_test.py`, `tests/test_web_first_days.py` (which ends such a fight after 40
-  rounds). Same family as the Ribbit Brothers' capture the flag at seed 7 (web_frontend.md step 3).
+  rounds). Same family as the Ribbit Brothers' capture the flag, which stalls AI against AI at seed 7.
 
 - **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per
   test, runs under `pytest-xdist` and the skills use it; four tests still lean on luck and the
@@ -109,7 +103,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 A short run in the browser. Its local bugs are fixed (the draft's COMMISSION hit area and cut weapon lines, the
 food alert's overflow, the Chronicle's scroll, every condition on the foe card, Edge's
 translate prompt). What needs a design call, a shared component or a behaviour pygame had is in
-[web_frontend.md](web_frontend.md) (10z's *Playtest 2026-10-28* list: the sheet as a modal, the work level-up, the tutorial
+[web_frontend.md](web_frontend.md) (the sheet as a modal, the work level-up, the tutorial
 button in the header, the type and the talent map, all done; the fog, the pit, the map's walking bands).
 
 ## Playtest notes 2026-10-21 (guild Herança)
@@ -180,7 +174,7 @@ Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png` from
 skill (about 7 minutes of GPU a portrait, curated by hand); the rest is game-icons.net SVG
 silhouettes. Order is the suggested priority.
 
-- **Art to generate for the web board and UI** (step 4 of [web_frontend.md](web_frontend.md);
+- **Art to generate for the web board and UI** (the art direction in [web_frontend.md](web_frontend.md);
   files go in `gartok/web/client/img/`). Each is one seamless 1024 texture in the sepia
   engraving of the reference portraits, seen from above, mid value, with no 2x2 copies of
   its motif inside (Gemini's habit: the 2026-10-23 batch was four copies of a 512 block).

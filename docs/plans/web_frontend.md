@@ -1,1376 +1,189 @@
 # Web front-end: keep the Python core, replace the pygame presentation
 
-**Status:** the battle spike is built and the author's verdict (2026-10-23) is go: better
-than pygame already, but with a lot left to fix in colour, fluidity and light. Steps 1
-to 3 and 5 to 9 are done; step 4 (the art) is done as far as it got. Step 10 met its **Done when**
-(2026-10-28): every campaign fight, the title, the draft, the settings, the wiki and the map's menu are in the
-browser, and `python main.py` opens it there; a new guild's first ten days are played with no pygame window (a
-test). What is left is retiring pygame (10z), which needs the rules the web still borrows from pygame's
-screens moved out first.
+**Status (2026-10-29):** the game is in the browser. `python main.py` opens the title; every screen the
+campaign reaches (the map, every hub tab, the guild's sheet, the talk, the fights, the report, the talents,
+the title, the draft, the settings, the wiki) is a web screen, and `gartok.web.server` loads with pygame
+blocked. The pygame campaign is gone; only the Editor (`python main.py --editor`) still opens a pygame window.
 
-## Decisions so far
-
-| Date | Decision | Why |
-|---|---|---|
-| 2026-10-23 | The art is not drawn in code. Code composes images (textures, frames, portraits) and draws only state (health, ranges, highlights). | `pygame.draw` art always reads as programmer art. That, more than any single screen, is why the game looked ugly. |
-| 2026-10-23 | Gemini makes the art, not the local SD + LoRA. | The author's best images came from Gemini. |
-| 2026-10-23 | The style anchor is the four engraved portraits in [references/](references/): Gnoll 10, Grippli 13, Kenku 4, Ogre 0. | Sepia engraving on parchment is nearly one colour, so AI output stays consistent with it. It also tells the game's story: this is the lost RPG's own material. |
-| 2026-10-23 | No tile sheets. The floor is one seamless texture that crosses the cell lines, and code tints it. | The first 4x4 tile sheet was rejected: each tile was a picture of its own, and side by side they did not fit together. |
-| 2026-10-23 | The floor sits in a lower value band than the tokens. | Cream tokens vanished on a cream floor. |
-| 2026-10-23 | Keep 2D engraving. Isometric, 3D and pixel art are out. | Isometric means many angles per unit, which is where AI is least consistent. 3D is months of art for one person. AI is bad at true pixel art, and the 400 portraits would be lost. |
-| 2026-10-23 | Keep the Python core and replace pygame with an HTML/CSS/Canvas client. Option 2 of 3. | The rules, sim, AI and tests are the game's value. Presentation is pygame's weakest side: the mockup took an afternoon in HTML. The `ui/` contract (plain dicts in) is already the API. |
-| 2026-10-23 | The transport is a stdlib HTTP server and the window is Edge or Chrome in `--app` mode; shipping is pywebview or Tauri, decided at the end. | No new dependency for the spike. pywebview's `pythonnet` is unverified on Python 3.14. |
-| 2026-10-23 | The server filters fog, sight and intel; the client never gets what the side does not know. | The client is untrusted. It is also the same rule `ai.py` lives by (`intel.known_fields`). |
-| 2026-10-23 | Fonts (Cinzel, EB Garamond, IM Fell English) ship in `gartok/web/client/fonts/`. | They must not be fetched at runtime. |
-| 2026-10-23 | The style holds off the board: the title screen and a shop were mocked in it, and the author approved both. | The battle alone did not prove the direction for the rest of the game; the menu and the market are its two most different screens. |
-| 2026-10-23 | A shop shows every shopper's whole kit as a readable list, one column per pack: worn slots and pack rows, each with icon, name, quantity and weight. The keeper is a strip across the top, not a column. | The first market mockup shrank the packs to rows of icon tiles beside a tall keeper page, and the author lost sight of the inventory, which is what the screen is for. |
-| 2026-10-28 | The talent tree is a graph laid out from `requires` alone, in two views behind one toggle: THE MAP (radial round the character, with a camera) and THE BRANCH (an outline and the talent's neighbourhood). | The trees will reach about 100 talents each, wider and deeper, and may not keep six attribute families; a fixed page holds 30 to 35. A 100-node load test fitted top-down and left-to-right at 15% and radial at 29%; the outline holds any size. |
-| 2026-10-24 | The map mockup is approved, with four changes from pygame's map: the minimap goes (the known world fits; zoom, pan and FIT stay); hovering a place shows a paper slip with the walk's hours and arrival and the way there in red ink; Split and Merge open inside the picked band's card instead of behind a gear; the REST choices and the travel stance are always shown, as segmented rows. | The whole known world fits one sheet at 1920x1080, so the minimap only duplicated it; pygame never said how long a walk takes before it was ordered; the gear and the REST drop-down hid what a band can do. |
-
-## Art direction
-
-- **The table.** The game looks like the RPG's physical material (an engraved bestiary,
-  a map inked by hand, character sheets) laid on a dark wooden table. The target is
-  [references/battle_mockup/](references/battle_mockup/) (`battle.html`,
-  `battle_mockup.png`). The same language off the board:
-  [menu_mockup/](references/menu_mockup/) (the title screen: the menu beside the last
-  guild's charter, laid on the map it has walked) and
-  [market_mockup/](references/market_mockup/) (a shop: the keeper and the deal, the
-  shelf as a ledger page, the shoppers' packs, a ware in hand) and
-  [map_mockup/](references/map_mockup/) (the campaign map: the sheet inked by hand
-  between the bands and the inspector; `map.html?state=split` and `?state=merge` are its
-  two other frames, `map_split.png` and `map_merge.png`) and
-  [sheets_mockup/](references/sheets_mockup/) (the guild's sheet: a member's character
-  sheet as an open book, a band's packs, the charter, the reputations; one frame per
-  `sheets.html?state=`) and [dialogue_mockup/](references/dialogue_mockup/) (the talk
-  before a fight: the foe's page, the answers as cards, who speaks; one frame per
-  `dialogue.html?state=`) and [report_mockup/](references/report_mockup/) (after a fight:
-  the fallen, the report with its blows in ink, the level-up, the field, the arena's
-  purse; one frame per `report.html?state=`) and [talents_mockup/](references/talents_mockup/) (the talent
-  tree: the member and the four tracks on leather, the tree on paper, the talent in hand; one frame per
-  `talents.html?state=`) and [draft_mockup/](references/draft_mockup/) (a new guild: the founding on leather, the
-  vocations, the pool's dossiers, the commission, the charter with its banner; one frame per `draft.html?state=`). Each folder is one HTML
-  page at 1920x1080 with its PNG, its portraits and the game-icons.net glyphs it uses;
-  the item glyphs there stand in for art not made yet.
-- **Paper is for what you read, leather is for what you act on.** The board, the
-  bestiary, the shelf and the guild's charter are paper; the unit panel, the packs, the
-  purse and the buttons are dark leather and brass. A dragged ware is a paper slip.
-- **Rock** is ink hatching that fades away from the rooms. Walls are masonry, trees or
-  boulders by place.
-- **Fog of war** reads the way a map would:
-  - never seen is blank paper, with a margin note or sound rings for what is only heard;
-  - seen before is a sepia wash;
-  - in sight is lit.
-- **UI materials** are leather, paper and brass, with a wax seal for End Turn.
-- **Colour is still state:** blue is your side, blood red is the foe, brass is focus.
-
-## Architecture (as built)
-
-- **Core:** `gartok/*`. The spike changed it in two places, both refactors that the
-  pygame screen uses too:
-  - `actions.panel`: the action bar's entries, enabled state and hotkeys;
-  - `artwork.portrait_path`: a portrait's file, split from loading it.
-- **The shell** (step 7): `gartok/web/session.py` is what every screen's server half is (a
-  `Session` with a `screen` id, a `state`, and its verbs in `GET` / `POST`); the server
-  routes `/api/<screen>/<verb>` to the open session and refuses another screen's verbs
-  (409). `/api/screen` says which one is open; `/api/lab/...` is the combat lab's (fights,
-  a new one), there only when the game was opened on a lab fight. On the client,
-  `index.html` + `shell.js` + `shell.css` are the shell: the helpers (`$`, `api`, `esc`,
-  `face`, `Sound`), the stage scaled to the window (the 1920x1080 `#screen` centred, its
-  backdrop and full-screen veils bleeding to the edges, `--bleed`), the palette, and the materials
-  (`.paper`, `.kicker`, `.leather`, `.ghost-btn`, `.btn`, `.brass-btn`, `.seal`, `.medal`,
-  the `.it` item row). Each screen is `client/screens/<id>/`: `screen.html` and the files
-  `SCREENS` in `shell.js` names. A screen's scripts declare top-level names, so it opens
-  once per page load; moving to another screen reloads the page on it.
-- **`gartok/web/battle_session.py`** runs one fight: the turn flow `BattleScreen` runs,
-  and the board as the side knows it, as JSON (`state`, `act`, `advance`, `route`,
-  `aim`). `act` and `advance` return *steps*, one per decision: a `_StepTap` sits in
-  front of `battle.sink` (the combat log's seam, which it passes through) and cuts a
-  step after each recorded action, with the walks (cut to what the side sees), the
-  events and the state after it. Sight and light are cached between steps while the
-  observers, the lights and the walls stay the same.
-- **The camera** (`screens/battle/board.js`): the board is painted once per state into a world canvas
-  at a fixed cell size (capped by a pixel budget); zoom and pan only crop and scale it.
-  The wheel zooms round the cursor, a drag pans, the arrows pan, `+`/`-` zoom, `C`
-  centres the active unit; zoomed in, the camera follows whoever walks or acts.
-- **`gartok/web/server.py`** is the JSON API over the open session, plus the client's
-  files and the game's art.
-- **`gartok/web/client/screens/battle/`** is the fight: `board.js` paints the board and
-  `battle.js` handles input, tokens, panels and effects.
-- **`gartok/web/map_session.py`** + `screens/map/` (`sheet.js` the sheet and its camera,
-  `map.js` the rest) is the campaign map (step 8). Every order it opens has a screen (the away
-  card that stood in for the rest is gone since 10e); a kind with none is a `ValueError`. A session
-  holds its `game` (`Game.open`), so a verb can open another screen; its answer names the screen
-  open and the client reloads on it.
-- **`gartok/web/hub_session.py`** + `screens/hub/` (`hub.js` the frame, `shop.js` the shop tab) is a
-  place's hub (step 9): the tabs pygame's hub shows for the same order, the keeper, the way back.
-  `shop_tab.py` drives a headless `MarketScreen` (or `LibraryScreen`), as the map borrows pygame's
-  reads. Item glyphs are game-icons.net SVGs in `assets/icons/item/`, one per `item_icon` kind
-  (`item_icon.glyph`).
-- **`gartok/web/jobs_tab.py`** + `screens/hub/jobs.js` are a giver's jobs board (9d), on pygame's own
-  `MissionOfferScreen` held headless.
-- **`gartok/web/craft_tab.py`** + `screens/hub/craft.js` are a workbench (9e: the forge, the carpentry,
-  the Apothecary's craft, the Library's writing desk), on pygame's own `CraftingScreen` held headless.
-- **`gartok/web/stable_tab.py`** + `screens/hub/stables.js` are the Farm's STABLES and the Carpenter's WAGONS
-  (9f), on pygame's own `StablesScreen` / `WagonYardScreen` rules, borrowed as `medic_tab` borrows the Medic's.
-- **`gartok/web/tavern_tab.py`** + `screens/hub/tavern.js` are the Tavern's RECRUIT, STUDY and PERFORM (9g), on pygame's
-  own `TavernaScreen` held headless; the City Prison's THE CELLS (9i) is the same tab on `PrisonScreen`.
-- **`gartok/web/initiation_tab.py`** + `screens/hub/initiation.js` are a sanctuary's INITIATION (9h), on pygame's own
-  `InitiationScreen` held headless.
-- **`gartok/web/vault_tab.py`** + `screens/hub/vault.js` are a stash: the Bank's VAULT (9j) on pygame's own
-  `BankScreen` held headless, and the City house's THE HOUSE (9k) on `CityPropertyScreen`; the Bankers' JOBS beside the
-  vault is `jobs_tab` on `TrustScreen`.
-- **`gartok/web/garage_tab.py`** + `Stables.garage` in `screens/hub/stables.js` are the house's GARAGE (9k), on pygame's
-  own `GarageScreen` held headless; the house's KITCHEN is `craft_tab` at the `cooking` station.
-- **`gartok/web/claim_tab.py`** + `screens/hub/claim.js` are the Wilds Claim's THE CLAIM (9l), on pygame's own
-  `WildsClaimScreen` held headless; its KITCHEN is `craft_tab` at `cooking` and its GARAGE `garage_tab` with `claim=True`.
-- **`gartok/web/ledger_tab.py`** + `screens/hub/ledger.js` are Ledger Hold's THE DESK (9m), on pygame's own
-  `LedgerScreen` held headless: its panels are data (`LedgerScreen.panels`) that both draw.
-- **`gartok/web/guild_session.py`** + `screens/guild/` (`guild.js` the frame, members, charter and reputations,
-  `bands.js` the band's packs) is the guild's sheet (9n), on pygame's own `GuildScreen` and `GroupScreen` held headless.
-- **`gartok/web/dialogue_session.py`** + `screens/talk/` are the talk before a fight (9o), on pygame's own
-  `DialogueScreen` held headless.
-- **`gartok/web/report_session.py`** + `screens/report/` are the screens after a fight (9p): the fallen, the report, each
-  level-up, the field (pygame's own `LootScreen` held headless) or the arena's purse, then the map.
-- **`gartok/web/work_tab.py`** + `screens/hub/labor.js` are a work node's Work and Gathering
-  tabs (9b): `WorkTab` / `GatherTab` borrow `WorkScreen`'s and `GatherScreen`'s reads; the
-  verbs that run the clock (`work`, `gather`, `licence`) are `HubSession`'s, which holds the map.
-- **Launch:** `python main.py` or `python -m gartok` (the title in the browser; `--pygame` the old window,
-  where the Editor lives), `python -m gartok.web --fight <lab fight>`, `python -m gartok.web --save
-  <world>` (a guild's folder under `saves/`; `--screen` picks the screen), or double-click
-  [references/battle_mockup/play_battle.bat](references/battle_mockup/play_battle.bat) and pick a fight.
-- **Tests:** `tests/test_web.py`.
-
-## Spike result (2026-10-23)
-
-- **Cost:** about 520 lines of Python and about 1,040 of client code, against about
-  2,500 for the pygame battle screen.
-- **Latency:** five lab fights were played end to end through the API with no errors.
-
-  | Fight | Median | Worst |
-  |---|---|---|
-  | Wilds | 7 ms | 15 ms |
-  | Dungeon | 13 ms | 30 ms |
-  | Fortress | 12 ms | 46 ms |
-  | Necromancer (48x30 board, three sides) | 218 ms | 485 ms |
-
-- **Look:** it reaches the mockup's direction on live data. The author's verdict:
-  better, but a lot to improve in colour, fluidity and light.
+What is left is below, under **What is left**. The record of how each step was built (steps 1 to 10,
+2026-10-23 to 2026-10-29) is in git: `git log -p -- docs/plans/web_frontend.md`.
 
 ## How to continue
 
-"Seguir com plano de ui" means: take the first step below not marked done whose inputs
-exist, do only that step, meet its **Done when**,
-commit, then mark it done here and note anything it changed for the steps after it. One step per session. Start from this file, not from
-exploring the code.
-
-Two rules hold for every step:
-
-- **Tests first, screenshots at milestones.** A step's rules are tested in pytest
-  through the API (`tests/test_web.py`). A screenshot (1920x1080) is taken only when the
-  step is about the look.
-- **pygame is abandoned (since 2026-10-28).** The web is the front-end; every pygame screen goes
-  to the bin at the end, so none is kept working on the way. No new pygame screen, no pygame
-  change for a new feature, no rewiring a pygame screen onto a rule moved out of it: the screen,
-  its `*_draw` mixin, the `app*` path that opens it and the tests that only test it are deleted
-  in the commit that moves its rules (the cut list is in 10z). A test that checked a rule through
-  a screen moves onto the core module or the web session only if nothing else covers the rule.
-  The pygame campaign is gone; only the Editor (`python main.py --editor`, `editor_app.py`) still opens.
-
-## Next steps, in order
-
-The order puts the steps with a clear test first and the ones tuned by eye last. Light
-and colour wait for the art, because tuning them before the textures exist is work
-that the real art throws away.
-
-### 1. Battle: fluidity — done (2026-10-23)
-
-- Each decision of a turn is a step (see Architecture). The client plays them in order:
-  the token walks its path cell by cell (110 ms a cell), then the board after the step,
-  then its numbers and callouts, with 260 ms between steps.
-- An AI turn that shows the side nothing plays with no pause, so a big fight's unseen
-  turns do not drag.
-- Tests: the steps of AI turns add up to the same fight as plain `take_turn`; a foe's
-  walk never shows a cell the side does not know; the player's move walks its path.
-- Not done: the fog and light layer is still redrawn on every step. It costs about 5 ms
-  in the browser, so it was left.
-
-### 2. Battle: speed on big boards — done (2026-10-23)
-
-`vision.visible_cells` and `lighting.cell_levels` walked every light source for every
-cell. Now each source lights its own reach once (`vision.lit_cells`), the line of sight
-is tried only where light or dark range allows, and the session caches sight between
-steps. The output is identical (a test checks it cell by cell against `can_see`).
-
-| Necromancer, 300 requests | Median | Worst |
-|---|---|---|
-| Spike | 218 ms | 485 ms |
-| With steps, before the fix | 237 ms | 688 ms |
-| Now | 27 ms | 159 ms |
-
-The worst requests are about half `ai.take_turn` itself (path fields on a 48x30 board,
-about 85 ms for one turn), which pygame pays too. The client spends that time inside
-the 480 ms pause before the turn, so nobody sees it. If it ever shows, the next cost is
-`battle._pf_field` / `board._dijkstra`.
-
-### 3. Battle: parity with pygame — done (2026-10-23)
-
-- Zoom and pan (with step 1).
-- **A question put to a person stops the fight until it is answered.** The state
-  carries `setup` (the flag, a trapper's trap: the cells it may go on, Skip traps),
-  `talk` (a patrol's challenge, played as `DialogueScreen` plays it: speaker, verbs
-  with their check and odds, the line it got, Go on) and `handoff`. `advance` never
-  answers them for the person.
-- **Two players at one screen.** `BattleSession` takes controllers per side, as
-  `BattleScreen` does. Between two people's turns the board hides behind a hand-over
-  card (`take_seat`). Pick it in New fight, or with `--players 2`.
-- **The Floating Disk** offers its heights per cell in `aim`. The rule moved to
-  `FloatingDiskAction.heights`, which pygame now reads too. Light Globe and the disk
-  now mark their reach while aiming, which they never did, in pygame either.
-- **Crit banner and sound.** Each step says what it sounded like (heard even when
-  unseen, as `BattleFX` plays it). The client plays `sound.py`'s own cues from
-  `/api/sounds` at the settings volume.
-- **Combat log.** Every fight from `python -m gartok.web` is logged to
-  `combat_lab/<date>/` as the pygame lab logs its own (`--no-log` to skip it).
-- **Withdraw**, missing before, is a button once the scenario allows it.
-- **The action bar.** Delay sits apart, beside the seal. Spells fold into one plate
-  that opens a list. Past the width, the row scrolls sideways, with arrows and the
-  wheel. The unit card shows the level (racial, the one the bestiary shows of a foe),
-  and each side has its own colour (squad, ally, foe, third side).
-- Tests: every lab fight plays to its end through the session with every human choice
-  answered through the API; the challenge, the flag, the hand-over, the disk's height,
-  the sounds and the log each have their own.
-- Left as is: with seed 7, the Ribbit Brothers' capture the flag stalls AI against AI
-  (two survivors, one sitting on its own flag). That is the AI, not the web; it is in
-  the backlog.
-
-### 4. Art for the board — done as far as it got (2026-10-23)
-
-Anchored on the reference portraits: a wall sheet, UI frames (9-slice), and outdoor
-floors (earth, grass, sand). Files go in `gartok/web/client/img/`. As built: rock, grass and
-sand floors, three trees, one boulder and the UI materials (paper, leather, brass button,
-wax seal, portrait frame). Gemini ran out before earth, cobbles, the wall and two more
-boulders; they stay unchecked under Art in [backlog.md](backlog.md). Steps 5 and 6 work
-with what is in and keep today's drawing where a file is missing.
-
-**Done when:** the files are in the repo. Steps 5 and 6 need them.
-
-### 5. Battle: colour — done (2026-10-23)
-
-Floor, walls, blank paper and remembered ground sat in nearly the same beige, and the
-UI was warm on warm. As built (`screens/battle/board.js`, the tables at its top):
-
-- **One value scale:** never-seen paper is the lightest, the floor mid, walls dark, the
-  tokens the strongest contrast.
-- **Each place tints one texture** (`FLOORS`): a `color` blend gives the place's hue and
-  keeps the engraving's values, a multiply sinks it into the floor's band. Cave is cool
-  rock, the dungeon's flagstones neutral grey, the arena warm sand, grass green-grey.
-  Earth borrows the sand, darker, and cobbles the flagstones, smaller, until their art
-  exists. Broad soft-light patches hide the tile's repeat.
-- **Walls** (`WALL`): trees and boulders are the art, turned at random and tinted the
-  same way into the dark band; masonry is drawn, dark (its art is still missing).
-- **Remembered ground** is the board itself washed to sepia, darker, and hatched; it
-  was a beige multiply barely apart from the paper.
-- **The chrome** gets a cool verdigris accent (`--verdigris` in `shell.css`) on idle
-  edges, labels, plates and the initiative chain, on a charcoal table. Brass stays
-  the focus: the active unit, the chosen action.
-- Left open: at the fit zoom the trees lose their leaf detail. (The torchlight that
-  turned the grey back to brown and the remembered wash's cost were step 6's.)
-
-### 6. Battle: light — done (2026-10-24)
-
-The light was one flat level per cell, blurred: blocky, flat in daylight, too weak in
-the dark. As built:
-
-- **The server** sends `lights`, the sources the side sees (torch, fire, a lit unit) with
-  their reach, and `daylight`. The per-cell levels leave those sources out
-  (`lighting.cell_levels(..., sources)`), so a light out of sight is only a glow on the
-  cells and never shows where it stands. The walls are the ones the side already knows.
-- **The client** (`board.js`) casts each light as a polygon from its cell's middle,
-  stopped by the known walls (only their exposed faces turned to the light), filled with
-  a warm falloff; overlapping lights keep the brightest, as the rules do. What the
-  levels leave (the eyes' own sight, a far glow) is cool and dim, so the dark has
-  weight. Light paints only the cells in sight and never past the board.
-- **By day** a sun stands up and to the left: each known wall or tree throws a soft
-  shadow down and right.
-- **Flicker:** the pools brighten and dim a little, about 15 times a second, drawn over
-  the last paint (each pool's polygon is kept) instead of painting the board again; off
-  by day and under `prefers-reduced-motion`.
-- **Cost**, measured in Edge with the GPU, forcing the canvas to finish (a bare redraw
-  of the sheet is about 14 ms of that): a state's paint went from about 50 ms to about
-  30 ms once the blurs ran on the small cell grid, the remembered wash was cached per
-  board and the world-sized canvases were reused; forty torches add about 12 ms; a
-  flicker frame costs about what a bare redraw does.
-- Left as is: a wall the side never saw can stand between a light it sees and a cell in
-  sight; that cell then reads a little brighter than the rules have it. No information
-  leaks (the cell is in sight); it is rare.
-
-The battle is finished.
-
-### 7. The shared base — done (2026-10-23)
-
-- As built: see **The shell** under Architecture. The battle moved onto it with no change
-  in look (a screenshot of the same fight before and after matches but for the portraits,
-  which are drawn at random), and `--save <world>` opens the map screen on a save.
-- Tests: the router names the open screen and refuses another screen's verbs; every file
-  the shell's manifest names is served; a save opens the map through the router.
-- For step 8: fill `MapSession.state` and `screens/map/`. The session is built from a
-  loaded `Guild` (`Game.from_save`); nothing yet saves it back, which the map's orders
-  will need (`persist.save_game`, as `App` does after each tick). Moving between screens
-  (map → hub → battle) is a page reload on the screen the server opened; a verb that
-  changes screen sets `game.session` and the client reloads.
-
-The plan as written before it was built:
-
-Before the second screen, so each screen after it is a small adapter and not a rewrite.
-
-- **Server:** the `state` / `act` pattern of `battle_session` becomes generic: one
-  session class per screen that turns the domain into JSON (as `ui/` turns it into
-  dicts today) and applies its actions. The server routes by screen and can open any
-  screen on a save: `python -m gartok.web --save <world> --screen <id>`.
-- **Client:** a shell with a screen router, the CSS tokens (the mockups' palette and
-  the fonts), and the materials as components: paper panel, leather panel, brass
-  button, wax seal, item row, portrait frame.
-- The battle moves onto it with no change in look.
-
-**Done when:** the battle runs on the shell, and an empty second screen opens from a
-save through the same router.
-
-### 8. Map — done (2026-10-24)
-
-1. A mockup at 1920x1080 in `references/map_mockup/`, in the menu mockup's language
-   (the map inked by hand), approved by the author before any code. Done: built on the
-   day-70 save `35d38388`; the decisions it took are in the table above. Not drawn, but
-   decided: the seal is the CTA (`_footer_cta`), live red with "Fight" on an ambush and
-   "Advance 24 h" once every band is garrisoned; a busy band's inspector shows its stop
-   (Stop at, Stop resting, Recall from garrison) where the camp section is.
-2. The screen on the shared base, on a real save: groups, orders, travel, the
-   inspector, entering a node.
-
-**Done when:** a pygame session's map loop (move a group, issue each order kind, advance
-time, open a node) works in the browser, pygame's `map_screen.py` checked as the list.
-
-As built:
-
-- **The server** (`MapSession`) reads the map as pygame does: it mixes in
-  `MapInspectorMixin` and borrows three `MapScreen` reads (`_order_status`, `_mates_for`,
-  `_rest_plans`), so a node's buttons, the searches, the Wildfire and the REST rows stay
-  one source. Step 10 moves them here when pygame goes. The state is the whole map for
-  the side: the known nodes and roads, every band with its way ahead (each stop and when
-  it gets there), its inspector and camp, the hours ahead, the seal. `preview` is the
-  slip over a place (the path, its hours, the arrival).
-- **The clock** runs as `App._advance` runs it: an order that leaves no band idle runs it
-  to the next band gone idle or the next screen due; the seal passes 24 h once every band
-  holds a post. A screen that falls due opens `AwaySession`; back from it, the next one
-  due opens, then the map. Every order saves the world (`persist.save_game`, as `App`
-  does), and `record_play` attaches the recorder as `App` does.
-- **A forced fight** (ambush, guard, raid) stops its band on the map, as pygame's ambush
-  does: no order, split or merge, and the seal turns red and opens it. The fight itself
-  waits for step 10 (the web battle in the campaign): the away card says so, and the band
-  keeps its fight due in the save, where pygame picks it up.
-- **The client** follows the mockup: the sheet painted once, the land, roads and ways
-  inked through the camera; places and pawns are HTML over it, each label set where it
-  does not hit another place; the slip and the red ink on hover; Split and Merge in the
-  picked band's card; stance and REST as segmented rows. The news of a run of the clock
-  (meals, arrivals, deaths, level-ups) is a paper slip over the sheet.
-- Tests: `tests/test_web_map.py` (travel, the clock waiting on an idle band, rest,
-  search, stance, the stops, a busy band, entering a place, a screen due on the clock,
-  split and merge, a fight due, the 24 h seal, the routing and the save).
-- **Not in the browser yet**, each a pygame screen the away card stands in for until step
-  9 or 10: the hand-over card between bands (the map just moves to the band, with the
-  news slip); level-ups and memorials (a line in the news); the starved's belongings
-  (pygame's loot screen; the browser does not offer them, so they are lost); the auto-win
-  of an ambush; the Wildfire talk; leaving a broken wagon (travel is refused with a note);
-  the camp kitchen; the guild and group sheets; the map's tutorial card.
-
-### 9. Hubs, then the rest — done (2026-10-28)
-
-- **Hubs:** one tabbed frame (the `TabbedHubScreen` equivalent) with the shop as its
-  first tab, following [market_mockup/](references/market_mockup/). The other tabs (work,
-  gathering, medic, jobs, initiation) then reuse the frame.
-- **The rest, by family:** each family not yet mocked gets one mockup before its first
-  screen (the guild and group sheets, the dialogues, the report after a fight); its
-  other screens follow without one. The title screen follows the menu mockup.
-
-**Done when:** every `*_screen.py` that the campaign can reach has a web screen.
-
-**9a. The hub frame and the shop tab — done (2026-10-24).** As built:
-
-- **The server** (`HubSession`): an order whose kind has a hub in pygame (market, forge,
-  carpenter, apothecary, tanner, library, the Farm's stables, a sanctuary) opens it from the
-  map, on the tab pygame opens first. The tabs are `hub_session.HUBS` (the hubs with their own
-  class) or the node's own list as `TabbedHubScreen.for_node` builds it. A tab not drawn yet
-  is a note inside the frame; the bank, the tavern's recruits, the property, the Claim and the
-  rest still open the away card. Back lands on the map and saves.
-- **The shop** (`ShopTab`): pygame's own trades on a headless `MarketScreen`: buy into a pack,
-  onto a worn slot or shared out by room; hand items over, whole or part of a stack; sell (the
-  till refuses what it cannot pay); lock, mark for auto-sell and sell the marked; distribute
-  the load. Every verb answers the whole hub.
-- **The client** follows the mockup: the keeper's strip with the deal (who speaks, you pay,
-  they pay) and the till; the shelf on paper with its categories, stock pips and steppers; one
-  leather column per pack (wagons and animals too) that scroll sideways past four; the sell
-  plate and the purse with each pack's share. Drag a ware or an item where it goes, or click
-  it and click where; Shift picks several; right-click an item for its menu. A Large weapon is
-  its own row (pygame folds it into a size toggle).
-- **Item glyphs:** 59 game-icons.net SVGs (CC BY 3.0, `assets/icons/LICENSE.txt`) in
-  `assets/icons/item/`, one per `item_icon` kind; a test fails for a kind with no file.
-- Tests: `tests/test_web_hub.py` (tabs and keeper, buy into a pack / by room / onto a hand,
-  refusals, hand over part of a stack, sell and the till's limit, lock and auto-sell, back and
-  the save, the routing). The drags, clicks and menu were also driven in headless Edge over
-  the DevTools protocol on a copy of the day-70 save.
-- **Next (9b):** the other tabs, one per session, in the order a guild meets them: work and
-  gathering (the Lumber Yard), the Medic, the jobs boards, the forge and carpentry, the
-  stables and wagon yard, the tavern's tabs, initiation. The mockup's open question is
-  settled: a weapons shelf (damage, hands, range) reads in the 660px shelf. Left as is: an
-  item's tooltip is the browser's own `title`.
-
-**9b. Work and Gathering (the Lumber Yard, the Mine) — done (2026-10-27).** As built:
-
-- **The layout** every tab after it can follow: the hub's cards are the tab's `hub_cards()`
-  (`{label, value, tone}`, drawn by `labor.js`'s `cards`), the people or the thing you buy on
-  leather at the left (660px, where the shelf sits), the ledger of choices on paper at the right.
-- **Work:** the crew with each one's tool (own or the foreman's), wage and note; the four
-  shifts. A shift runs the clock as `App._work_shift` does: the tab stays up with what the
-  shift paid when its end is all that stopped the clock; another band idle (before or during
-  the shift), a screen or a fight due, or a death lands on the map with the shift still running.
-  `MapSession._advance` now answers `(idle gids, the dead)` for that.
-- **Gathering:** the licence (status, the band's purse, buy) and the drop table; the shifts
-  with haul, wage and ambush odds, live only with the licence. A gathering shift goes back to
-  the map and the clock runs there, as pygame's does.
-- Tests: `tests/test_web_hub.py` (the crew and shifts, a paid shift's pay and clock, a shift
-  that lands on the map, the licence bought and refused, a gathering shift). The clicks were
-  driven in headless Edge on a copy of the day-70 save.
-- **Next (9c):** the Medic (the Apothecary's MEDIC tab), then the jobs boards.
-
-**9c. The Medic — done (2026-10-27).** As built:
-
-- **The server** (`MedicTab`) borrows `MedicScreen`'s reads and its pick rule (`_toggle`: visits
-  combine, a hospital stay is picked alone) and `_treat`, now methods pygame calls too. The pick lives
-  on the server (`patient`), so both front-ends hold one rule.
-- **The layout** is 9b's: the ward on leather (each patient with an ailment chip per part, the price
-  and hours, a red chip for a stay; the healthy ones in a line under it), the bill on paper (the picked
-  ones itemised, the total, who waits, Treat or Admit), the last visit's lines under it.
-- **The clock:** a visit passes its hours as pygame's does (`medic.treat` -> `guild.pass_time`) and
-  the tab stays up; a stay that splits the patient off stays up too; a stay the whole band waits out
-  (no free slot, or a lone patient) is an order, and the band goes back to the map where the clock runs.
-- Tests: `tests/test_web_hub.py` (the ward and the bill, the pick rule, a visit paid and cured, a
-  bill the band cannot pay, a stay split off, a stay the band waits). The two states were looked at in
-  headless Edge at 1920x1080.
-- **Next (9d):** the jobs boards (the Apothecary's, the Tanner's, the Library's, the sanctuaries').
-
-**9d. The jobs boards — done (2026-10-27).** As built:
-
-- **The server** (`JobsTab`) holds the giver's own pygame board headless (`TannerScreen`,
-  `ApothecaryMissionScreen`, `LibraryMissionScreen`, `ShrineMissionScreen`, picked by the node's function as
-  `TabbedHubScreen.for_node` picks it), as `ShopTab` holds a `MarketScreen`: the board, the terms, the labels
-  and the notices are pygame's. Accepting and handing over moved out of `MissionOfferScreen._click` into
-  `accept` / `turn_in`, which pygame calls too. A sanctuary's dragon-egg sale is its `footer_action`.
-- **The layout** is 9b's: on leather who signs (the leader; the job travels with them) and what the packs
-  already carry toward each job the band can take or hand over; on paper the board, one row per job (glyph,
-  name, tags, blurb, terms, button). A job whose goal is a fight (the Battlefield, the Necromancer, the
-  Wildfire) keeps its button off: the fight is met on the map.
-- Tests: `tests/test_web_hub.py` (the board, the signer and the carried goods; accepting; handing over and
-  the pay; refusals; a sanctuary's egg sale). The open and the taken board were looked at in headless Edge at
-  1920x1080 on a copy of the day-70 save.
-- **Next (9e):** the forge and carpentry (the workbench), then the stables and the wagon yard.
-
-**9e. The workbenches — done (2026-10-27).** As built:
-
-- **The server** (`CraftTab`) holds pygame's `CraftingScreen` headless at the station of the node's function
-  (the Smithy's forge, the Carpenter, the Apothecary, the Library's scriptorium): one tab class for every
-  `craft`, `forge` and `carpenter` tab key. The hour sets (`WAIT_HOURS`, `ALONE_HOURS`) and the rule that
-  keeps a crafter from going alone (`alone_blocker`) moved out of pygame's draw into names both front-ends use.
-- **The layout** is 9b's: the crafters on leather (click to pick; each with d20 + INT and the batch under way)
-  and the last stint's lines under them; on paper the picked crafter's recipes, one row each (glyph, level,
-  work XP, yield, what it uses with what the band holds, the tools, the progress bar of a batch under way) with
-  the two rows of hours: the group waits (1 / 4 / 8 h) or the crafter goes alone (4 / 8 / 16 h), or why not.
-- **The clock:** a stint the group waits is rolled now and passes its hours as pygame's does
-  (`Guild.crafting_shift`) and the tab stays up with its lines; alone is `solo.craft` (a solo task with its own
-  group slot) and the band goes back to the map, as pygame's does. The Claim kitchen (station `cooking`) is not
-  a hub tab: it waits for the Claim's screen.
-- Tests: `tests/test_web_hub.py` (the crafters and the recipes with what they use, a stint the group waits, a
-  stint alone and its refusal with no slot, each bench at its own station). Looked at in headless Edge at 1920x1080.
-- **Next (9f):** the stables and the wagon yard (the Farm's STABLES, the Carpenter's WAGONS).
-
-**9f. The stables and the wagon yard — done (2026-10-27).** As built:
-
-- **The server** (`StableTab`, `WagonTab`) borrows `StablesScreen`'s and `WagonYardScreen`'s rules (the pooled purse
-  paid richest first, the herd limit, the tack fitted once, the resale to the leader, nothing sold while it carries
-  cargo). Buying and selling a wagon moved out of `WagonYardScreen._click` into `_buy_wagon` / `_sell_wagon`, which
-  pygame calls too; a loaded wagon now says why it will not sell, in both. A purchase resyncs the shop tab, where
-  animals and wagons shop as packs.
-- **The layout** is 9b's: what the band keeps on leather (each animal with its portrait, tack, job, hunger and the
-  tack it can still take; each wagon with what pulls it, its cargo, HP and meals aboard) with its Sell; on paper what
-  is for sale, with why a row is off (the herd full, the purse short). Wagons use game-icons.net's `old-wagon`
-  (`assets/icons/item/old-wagon.svg`).
-- The Farm's subtitle printed its languages as a Python tuple; it reads "Ankarin or Sylvan" now.
-- Tests: `tests/test_web_hub.py` (the Farm's tabs and the offers, buying an animal and the shop seeing it, a full herd
-  and a short purse, tack and a sale back only unloaded, the wagon yard's buy and sell). Both tabs were looked at in
-  headless Edge at 1920x1080; the clicks were not driven, the verbs are tested through the session.
-- **Next (9g):** the tavern's tabs (Recruit, Study, Perform), then initiation.
-
-**9g. The Tavern — done (2026-10-27).** As built:
-
-- **The server** (`TavernTab`) holds pygame's `TavernaScreen` headless, one object for the three tabs as pygame's hub
-  shares one screen: the pool, the pitch and its bars, the study targets and the show are its. Picking a stranger, renting
-  and cancelling the rooms, setting and stopping a study target moved out of `TavernaScreen.handle_event` into
-  `_pick_candidate`, `_rent_study`, `_cancel_study`, `_set_target`, `_stop_study`, which pygame calls too; `_perform`
-  answers the show's lines. The map's ENTER THE TAVERN (order `recruit`) and the garrisoned band's `visit_tavern` open it
-  on RECRUIT, beside the Food & Drink shop.
-- **The layout** is 9b's. RECRUIT: the strangers on leather (status, archetype chips with their tooltips); on paper the
-  picked one's dossier (HP, AC, speed, attack, kit glyphs, the racial ability), the last pitch's two rolls with every
-  modifier, who makes the pitch (each one's odds or why not) and the button. STUDY: the rent on leather with Rent or
-  Cancel; on paper each member's target and progress, Set target opening the scrolls and dictionaries the band carries in
-  place (pygame's modal). PERFORM: the players on leather (click to seat; who has no instrument is dimmed); on paper the
-  rules, the show's length as a segmented row, Play and the last show's lines.
-- **The clock:** a show passes its hours here (`Guild.perform_shift`) and the tab stays up with what it paid; a death
-  that empties the band lands on the map. Renting the rooms puts the band on its garrison post and stays.
-- Tests: `tests/test_web_hub.py` (the tabs and the dossier, a pitch won and saved, a pitch lost and the bar, the study
-  target and the rooms, a show and its seats, entering from a study post). The three tabs were looked at in headless
-  Edge at 1920x1080 on a copy of the day-70 save.
-- Left as is: `test_buying_into_a_pack_pays_from_the_purse_into_the_till...` fails about one run in five, before this
-  step too (a random ware); it is not the tavern's.
-- **Next (9h):** initiation (a sanctuary's INITIATION tab), then the prison's cells.
-
-**9h. The initiation — done (2026-10-27).** As built:
-
-- **The server** (`InitiationTab`) holds pygame's `InitiationScreen` headless: the school's terms, the blockers (no standing,
-  no Holy Symbol, a tested blood with no magic, a band with an order in flight), the status line and the begin are its.
-  Picking and beginning moved out of `InitiationScreen._click` into `_pick` / `_begin`, which pygame calls too.
-- **The layout** is 9b's: the band on leather (click who stays; a chip for where each one stands, initiated or the stage
-  and its points, or the reason the school will not take them, dimmed); on paper the terms as a ledger, the picked one's
-  bar and status (points and days left) and BEGIN or RESUME THE RITE, the sanctuary's lines under it.
-- **The clock:** a novice split off into a group of their own leaves the tab up; a band that boards whole (a lone
-  member, or no free group slot) goes back to the map, where the clock runs.
-- Tests: `tests/test_web_hub.py` (the terms and the pick, a school with no standing, the Faith's symbol, a novice split
-  off, a band that boards whole). Looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
-- **Next (9i):** the prison's cells (`PrisonScreen` is the Tavern's RECRUIT with a bail, so it can reuse `TavernTab`).
-
-**9i. The prison's cells — done (2026-10-27).** As built:
-
-- **The server:** the order `prison` opens a hub with one tab, THE CELLS (`hub_session.HUBS["prison"]`), and the
-  keeper is the warden. `TavernTab(prison=True)` holds pygame's `PrisonScreen` headless, so the weekly pool, the bail
-  (`recruit.bail_cost`, paid richest first before the roll), the +2 it buys and the bar after a lost pitch are its; the
-  tavern's verbs (`candidate`, `recruiter`, `convince`) serve it as they are.
-- **The layout** is the Tavern's RECRUIT: each prisoner's bail beside their tongues, a bail line in the dossier (gold
-  when the band can pay it, red when not), the button "Pay the $N bail and convince" or "Cannot afford", and the cells'
-  own rule in the footer.
-- Tests: `tests/test_web_hub.py` (the cells and the warden, each bail, a bail paid and the prisoner signed with the
-  objective, a lost pitch that keeps the coin, a purse too short). Looked at in headless Edge at 1920x1080 on a copy of
-  the day-70 save.
-- **Next (9j):** the bank (`bank_screen.py`, the City's VISIT THE BANK), the first of the holdings: the strongbox, then
-  the house and the Claim.
-
-**9j. The Bank — done (2026-10-27).** As built:
-
-- **The server:** the order `bank` opens a hub with VAULT and JOBS (`hub_session.HUBS["bank"]`), the keeper Elysia.
-  `VaultTab` holds pygame's `BankScreen` headless: the chest's weight cap, the hard load limit on what comes out, the
-  slots, the services (rent the strongbox, buy the house: refused when off, as pygame's button is) and the purse are its.
-  The gold exchange moved out of `BankScreen._exchange_click` into `_exchange`, which pygame calls too. JOBS is `JobsTab`
-  on `TrustScreen` (the Test of Trust), added to `jobs_tab.BOARDS` as `trust`.
-- **The layout** is the shop's: the strongbox on paper where the shelf sits (each stack with its weight, how many are
-  held and a Take stepper, the chest's load as a bar that shows what a pick would add), one leather column per pack, the
-  Bankers' services on the sell plate (or, once rented and with no house to buy, the exchange's rates), the purse with
-  Distribute and Done. Drag onto the chest to stow, out of it onto a pack or a worn slot; click and click; Shift picks
-  several; right-click for the menu (where to send it; on a coin stack, mint or melt gold).
-- The shop's pointer handlers answered on every tab of the hub (a Done elsewhere would have gone back twice); they now
-  answer only on the shop.
-- Tests: `tests/test_web_hub.py` (the tabs and keeper, the rent and a short purse, part of a stack in and out, the chest
-  and a pack that will not hold it, a weapon from the chest into a hand, minting and melting, the Test of Trust). The
-  map's away-card tests now use the property. Looked at in headless Edge at 1920x1080 on a copy of the day-70 save, and
-  a drag in, a click out, the menu, a mint and Done were driven over the DevTools protocol.
-- **Next (9k):** the house (`city_property_screen.py`, VISIT THE PROPERTY): the stash, the tax, the oven and its
-  kitchen, the garage; `RepossessionScreen` before it when the tax is too far behind.
-
-**9k. The City house — done (2026-10-27).** As built:
-
-- **The server:** the order `property` opens a hub whose tabs follow the house (`hub_session._house_tabs`): THE HOUSE
-  always, KITCHEN once it has an oven, GARAGE once it is owned, so buying the house or the oven adds its tab at once.
-  pygame's COOK and GARAGE services are tabs here (the screen is built without `on_cook` / `on_garage`).
-- **The house** is `VaultTab` on `CityPropertyScreen`: the stash, the tax and debt cards, buying the house, the oven and
-  paying the debt are pygame's. `VaultTab` takes the screen class; the gold exchange and Distribute stay the bank's only
-  (`exchanges`, `CAN_DISTRIBUTE`), and `vault.js` reads the stash's owner, title and copy off the state.
-- **The kitchen** is `CraftTab` at the `cooking` station (`craft_tab.STATIONS["kitchen"]`).
-- **The garage** (`GarageTab`) holds `GarageScreen` headless and calls its own click by index from a uid: the bays, the
-  herd limit, the pooled purse, parking and taking out, and the repair, whose hour runs through `HubSession._tick` (as
-  `App._tick_outside_map`: the other bands keep in step, what falls due waits for the map). On leather what is parked; on
-  paper the next bay and what the band has with it.
-- **Repossession:** with the tax too far behind, the hub shows the Bankers' notice in place of the tabs (no tabs, every
-  tab verb refused); return (the debt) or squat, both back to the map with pygame's notice.
-- The map's away-card tests now use the Test of Trust. `test_the_faith_rite_asks_for_a_holy_symbol` failed when a random
-  Priest carried his own Holy Symbol; the test takes them away first.
-- Tests: `tests/test_web_hub.py` (the house before and after it is bought, stowing with no gold exchange, the oven and a
-  stint of Jerky, the debt, the garage's bays, parking and taking out, a repair and its hour, both answers to the notice).
-  The three tabs and the notice were looked at in headless Edge at 1920x1080.
-- **Next (9l):** the Wilds Claim (`wilds_claim_screen.py`, the Claim's own screen: its stages and their fights, the
-  kitchen at the `cooking` station, the Claim's garage with `GarageTab(claim=True)`).
-
-**9l. The Wilds Claim — done (2026-10-27).** As built:
-
-- **The server:** the map's THE WILDS CLAIM (order `claim`) opens a hub whose tabs follow the claim
-  (`hub_session._claim_tabs`, beside `_house_tabs` in `DYNAMIC`): THE CLAIM always, KITCHEN once the hearth can cook
-  (a fire or the oven), GARAGE once the garrison opens it. `ClaimTab` holds pygame's `WildsClaimScreen` headless and
-  calls its own methods, so scouting, the fences' Lumber, the garrison and its job, the campfire's WIS roll, the oven and
-  the banked Lumber stay one source; a verb the stage does not offer is refused. The kitchen is `craft_tab`'s
-  `kitchen`; the garage is `GarageTab(claim=True)`: no bays, no limit, the bolt chance while nobody holds it.
-- **The clock:** scouting, the fences and the hearth pass their hours here (`guild.pass_time`, as pygame's do) and the
-  tab stays up with what came of it; garrisoning is an order, so the band goes back to the map. The two fights (CLEAR,
-  SWEEP) are campaign fights: the away card says so (`AwaySession` with `fight=True` and no order) and nothing changes
-  until step 10.
-- **The layout** is 9b's: the band on leather (a chip for the Lumber and Stone Brick each carries); on paper the six
-  stages as a track (done, in hand, to come, seized), the stage's lines, its progress (the fences' Lumber, the days left
-  and who holds it, the banked Lumber), its buttons and the hearth's two builds.
-- The hub frame's fallback glyph (a place with no keeper) was painted in the medallion's own gradient and never showed;
-  it is dark now.
-- The test guild's Fighters now carry no Lumber or Stone Brick (a random kit could, and failed the garage's mend test
-  about one run in eight). `test_the_house_stows_and_gives_back_but_mints_no_gold` still fails about one run in twenty
-  (a random kit); it was left.
-- Tests: `tests/test_web_hub.py` (the claim's hub and scouting, the fights on the away card, the fences, the garrison
-  and its garage, the fire, the kitchen and the oven, the established and the seized claim, the claim garage). Looked at
-  in headless Edge at 1920x1080.
-- **Next (9m):** the places left behind the away card: Ledger Hold (`ledger_screen.py`: the Bankers' chest exchange,
-  Commander Varkas, the supply runs), the Library's study desk, the map's campfire cooking (`craft_tab` at `cooking`);
-  then the first family that needs a mockup, the guild and group sheets.
-
-**9m. Ledger Hold and the campfire — done (2026-10-27).** As built:
-
-- **Ledger Hold:** the order `ledger` opens a hub with one tab, THE DESK (`hub_session.HUBS["ledger"]`), the keeper
-  Commander Varkas. `LedgerScreen` lost its per-panel draws: `panels()` returns the desk's panels as data (the chest
-  while someone carries it, the mentorship and the supply run once the Bankers vouch, else the gatehouse) and `_act`
-  is what its buttons do; pygame draws the panels from that and `LedgerTab` sends them. A button the desk does not offer,
-  or offers greyed out, is refused. The supply run is an order: the band goes back to the map, where the clock runs.
-- **The layout:** the band on leather (a chip on whoever carries the chest or the letter); on paper the panels side by
-  side, each with its facts, its button and the ambush warning under the supply run.
-- **The campfire:** the map's campfire (lit, or lit first) opens a hub with one tab, CAMPFIRE: `craft_tab`'s `kitchen`
-  at the `cooking` station, with no keeper (the band's own fire). Back lands on the map.
-- **The Library's study:** pygame's STUDY tab (`TabbedHubScreen.for_node`) is the Library's shop a second time, and the
-  map only ever opens the Library's own hub (shop, write, jobs); the browser's node tabs drop it.
-- Tests: `tests/test_web_hub.py` (the desk and the gate, the chest for a letter, the mentorship accepted and delivered
-  once trained, the supply run refused short of cargo and sent off, the campfire's kitchen, the Library's tabs). Looked
-  at in headless Edge at 1920x1080.
-- **Next (9n):** the first family that needs a mockup: the guild and group sheets (`guild_screen.py`, `group_screen.py`:
-  the map's Gear & quests and the guild's tabs), one mockup first, then the screens. What still opens the away card
-  after that: the wildfire's talk, the campaign fights (step 10), `trust` (the City's Test of Trust as its own order).
-
-**9n. The guild and group sheets — done (2026-10-27).** The mockup came first:
-[references/sheets_mockup/](references/sheets_mockup/) `sheets.html` (built on the day-70 save `35d38388`; `data.js`
-is the save read through `GuildScreen`'s own adapters) has four frames, one per `?state=`:
-
-- `members` (`sheets_mockup.png`): the roster on leather (filters, each band and its herd, HP, badges); the member's
-  sheet as an open book on paper, the RPG's own character sheet: the engraved plate, attributes and fight boxes, the
-  weapon, the kit, the race's gift on the left page; the three careers, the talents and the record on the right; on
-  leather beside it what can be done for them: the talent tree, the roles (guild leader, group leader, rations, pack
-  load) and the way to the band's gear.
-- `guild` (`sheets_guild.png`): the charter on paper (banner, founding trade, fame and the band slots as wax seals,
-  standing per faction, the bands, the notices); the holdings on leather, each with its stamp.
-- `reputations` (`sheets_reputations.png`): the objectives as a checklist page; each faction a paper card with its
-  rep as a wax seal, its deeds ticked in red ink and its unlocks.
-- `bands` (`sheets_bands.png`): one band at a time. A chip per band across the top (its faces, where, what it does,
-  how full; the picked one carries the rename pencil), then the band's load, rations and pace and its two actions;
-  one leather column per member as the shop's; on the right the wagon (hull, the hitched animal, the cargo) above the
-  band's jobs in hand and its captives. The item menu (drop, split, lock, send to whom with the room each has) is a
-  paper slip, and only the picked band's packs are on the table.
-
-Decided with the author (2026-10-27):
-
-- **One sheet, four tabs: Members, Bands, The Guild, Reputations.** pygame's separate Manage Gear screen
-  (`group_screen.py`) becomes the Bands tab. An item moves only between people in one place, and one place is one
-  band, so the tab shows one band at a time: no trade can cross bands, and the rule shows on the table instead of as
-  a refusal. The map's Gear & quests opens the sheet on Bands with that band picked; the member sheet's button and
-  the charter's band table go there too. A band with a fight due shows read-only (`Group.locked`).
-- **A member is hungry from the first hunger level**, when the attributes already drop; pygame waited for the second
-  (`guild_screen._needs_attention`, `hunger_level >= 2`), a bug to fix with the screen.
-
-As built:
-
-- **The server** (`GuildSession`, screen `guild`): the map's Guild button opens it on MEMBERS, Gear & quests on BANDS
-  with that band picked. It holds pygame's `GuildScreen` headless for the roster, the sheet, the roles, the charter
-  and the reputations, and one `GroupScreen` per picked band for the kit: the moves (`_give_many`, onto a worn slot, an
-  animal's tack, a wagon's room, an animal onto a wagon to hitch it), the item menu (`_menu_rows` / `_menu_run`: drop,
-  open a chest, drink, study, hand to whom), the split, the lock, the band's buttons (distribute, treat sickness and
-  poison, ride, hitch, repair, release). A band with a fight due answers every kit verb with pygame's refusal. A repair's
-  hour runs through `MapSession.tick_outside` (moved there from `HubSession._tick`, which now calls it). The campfire
-  opens the hub's kitchen as the map's does.
-- **The talent tree** is still pygame's: its button opens the away card, which now takes a `resume` and comes back to
-  the sheet instead of the map.
-- **The layout** follows the mockup: the roster on leather (filters, a fold per band, badges), the sheet as an open
-  book (plate, attributes, the fight boxes with each breakdown as its tooltip, the weapon, the kit, the race; the
-  careers, the talents, the record), the roles beside it; one band's chips, load, rations and pace, one column per
-  member and animal, the wagons with their hull, hitched animals and cargo, the jobs in hand and the captives; the
-  charter with fame, the band slots as wax seals, standing, the bands (a row opens that band), the notices; the
-  holdings, the strongbox's contents behind Look inside; the objectives and one card per known faction.
-- **Hungry from the first level:** `guild_screen._needs_attention` and the HUNGRY badge now read `hunger_level >= 1`,
-  in pygame too.
-- Left out: pygame's CARGO view (every stack of the band in one sorted table) and the mockup's "road ahead" card;
-  an item's tooltip is the browser's own `title`. A band's tab has no tutorial card yet (no web screen has one).
-- Tests: `tests/test_web_guild.py` (the two ways in, the roster and the sheet, hunger at the first level and the
-  alerts filter, the fold and the idle filter, a role and its refusal, the talent tree's away card and its way back,
-  moves within a band and onto a hand, no move across bands, the item menu, split and lock, the read-only band, the
-  wagon's room and the hitch, rename and release, the charter and the strongbox, the reputations, back and the save).
-  The four tabs were looked at in headless Edge at 1920x1080 on a copy of the day-70 save, and a drag between packs,
-  the item menu, a member picked in the roster and a role were driven over the DevTools protocol.
-- **Next (9o):** the dialogues (`dialogue_screen.py`: the talk before a fight), the next family that needs a mockup;
-  then the report after a fight. What still opens the away card: the talent tree, the wildfire's talk, the campaign
-  fights (step 10), `trust`.
-
-**9o. The dialogues — done (2026-10-27).** The mockup came first:
-[references/dialogue_mockup/](references/dialogue_mockup/) `dialogue.html` (built on the day-70 save `35d38388`;
-`data.js` is a real `Ambush`, `Patrol` and `BossTalk` read through `DialogueScreen._data()`, with every member's
-options) has four frames, one per `?state=`. Read left to right: they speak, you answer, who answers.
-
-- `ambush` (`dialogue_mockup.png`): the leader on paper as a bestiary page (the engraved plate, race and trade, the
-  tongues they speak, their line in large type, the rest of the pack below), and why the checks moved (the
-  `Ambush.edge` the squad's look gives, which pygame never shows). In the middle, one paper card per verb: what a
-  pass does in green ink and a miss in red, the odds, the check, and the d20's twenty faces with the ones that pass
-  inked ("8 or more on the die"); the bribe's price against the band's purses; Attack as "roll initiative". On
-  leather, the band: CHA, INT and tongues, the one shared with the leader underlined; a member with no shared tongue
-  is dimmed ("no Goblin"); a click picks who answers.
-- `result` (`dialogue_roll.png`): the card played, then a slip with the d20 drawn, the sum against the DC, a stamp
-  (SEEN THROUGH / IT HOLDS), what happened, and "how the fight opens" read off the `Opening` (caught off guard,
-  they come on shaken, they get the jump), then the result's one button.
-- `guard` (`dialogue_guard.png`): the same table for the City's patrol; the wanted member carries the crime.
-- `boss` (`dialogue_boss.png`): no verbs; the middle is the order of speakers (who speaks now, who waits) and GO ON.
-
-As built:
-
-- **The server** (`DialogueSession`, screen `talk`): it holds pygame's `DialogueScreen` headless (who speaks, the
-  verbs, the result) and answers `speaker`, `choose` and `go_on`. Three talks open it: `forced_talk` (the map's Fight
-  on a band with a fight due, when the pack has a speaker: the guard and the ambushes, as `App._open_dialogue`),
-  `wildfire_talk` (the map's TALK at a focus, as `MapScreen._wildfire_talk`) and `boss_talk` (an arena boss's lines;
-  nothing opens it yet, the bout is step 10's). A pack with nobody who speaks goes straight to the fight's away card.
-- **How each talk ends:** a fight goes to the away card with the roll kept on the order (`Order.parley`, saved the
-  moment it is rolled), so Fight again opens the talk on its result and never rolls anew; peace settles the order
-  (`forced.settle_talk`), surrender jails the wanted, Run falls back (a re-catch is the band's next fight), and the clock
-  runs on from the map; the Wildfire's fight is the map's ATTACK THE CAMP (or STORM THE FORTRESS), its last lesson puts
-  the fire out.
-- **The roll** is read off the result's line (`d20(n) +m = t vs DC d`), never re-rolled; the stamp follows the die
-  (an Intimidate that lands still fights, with them shaken), and the answer played is kept as it read before the roll.
-- **The layout** follows the mockup's four frames; the d20 tumbles when it is thrown, not on a reload.
-- Left out: a tutorial card (no web screen has one yet).
-- Tests: `tests/test_web_talk.py` (the map's Fight opens the talk, the language gate, a bribe, an empty purse, a failed
-  bluff kept on the order and in the save, Intimidate's two openings, a pack that cannot talk, the guard's wanted, the
-  cells, Run, no second Run, the Wildfire's two checks and its miss, a boss's lines, the roll read off the line). The
-  ambush, the roll, the guard and the boss were looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
-- **Next (9p):** the report after a fight (`aftermath.py`'s memorials, report, level-ups, loot), the next family that
-  needs a mockup. What still opens the away card: the talent tree, the campaign fights (step 10), `trust`.
-
-**9p. The report after a fight — done (2026-10-28).** The mockup came first:
-[references/report_mockup/](references/report_mockup/) `report.html` is built on the day-70 save `35d38388`: band 1
-against a five-strong ambush on the Old Road, played AI against AI until a seed gave a win with deaths, a level-up and
-loot (seed 30 under `PYTHONHASHSEED=0`; the fight is not the same across processes otherwise). `data.js` is that
-outcome read through pygame's own `ReportScreen.data()`, `LevelUpScreen.data()`, `memorial_screen.card()` and the
-loot pool; the purse is `arena.brawl_bout()` with the same survivors. Five frames, one per `?state=`, in the order
-`app_battle` plays them; a strip at the top right names where each frame sits in that chain:
-
-- `memorial` (`report_memorial.png`): the fight's dead lie together, one mourning card each (the portrait in grey,
-  days with the guild, "one of the founders" for a day-1 member, who put them down with their medal, the line of the
-  fall, and that their kit lies on the field).
-- `report` (`report_mockup.png`): VICTORY stamped on a muster roll; the band on the left (status, combat XP before
-  and after, takedowns, a LEVEL mark), the pack on the right, and every takedown drawn between them in ink (blue the
-  band's, dashed red the pack's). On leather: what follows, in order, and each survivor's HP after the fight.
-- `level` (`report_level.png`): the plate with a wax seal of the new level, the gains as a ledger (struck before,
-  after, the delta), the bar to the next level, the talent pick that waits.
-- `loot` (`report_loot.png`): the shop's layout: the field's stacks on paper by kind, one leather column per survivor
-  (HP, load against the hard limit, worn slots, pack); a dragged Brigandine refused on the column that cannot carry it,
-  with why; Take what fits and Leave the rest on leather.
-- `purse` (`report_purse.png`): the purse against the stake (staked, won, net) and one card per fighter, Give on each.
-
-The author approved its proposals (2026-10-28): the dead on one page, not one card per death; the blows as lines with
-the pack listed beside the band; HP after the fight and the chain of screens on the report. Unchanged rules: the purse
-lands whole on one fighter, the loot's ceiling is each one's hard load limit, whatever stays on the field is lost.
-
-As built:
-
-- **The server** (`ReportSession`, screen `report`) takes the battle and `campaign.absorb_battle`'s outcome and lays out
-  the chain as `app_battle._battle_end` plays it: the fallen (when any), the report, one page per level-up, then the
-  arena's purse or the field (only with loot and survivors), then `then()` (the map by default). A full wipe shows only
-  the fallen. Verbs: `next`, `talents` (the away card, which comes back to the same level-up), `take`, `auto`, `give`.
-- **The field** is pygame's own `LootScreen` held headless: `take` sets its picks (a field stack with a quantity, a pack
-  row, a worn slot) and calls `_give_many` onto a member's pack or slot, or back onto the field; a load past the hard
-  limit is refused with why (`refused`), shown on that column; what each member took this page is marked new and
-  summed in the footer. Take what fits is `_auto_pick`.
-- **The purse** lands as `RewardScreen` lands it, once, and the save is written; Continue waits for it.
-- `aftermath.LevelUp.headline` (which track the card is about) moved out of `LevelUpScreen`, which reads it now.
-- **What opens it:** nothing yet. The campaign fight is step 10's; it hands this session the battle and the outcome
-  (and the arena's offer for the purse). The Adelio and Ribbit recruit prompts are not drawn: they open the Tavern's
-  RECRUIT, which is built.
-- Left out: a tutorial card (no web screen has one yet).
-- Tests: `tests/test_web_report.py` (the chain in order, a quiet win, a full wipe, the killer on the fallen page, the
-  report's band, pack, blows and HP, a foe left stable, the level-up's ledger and pick, the talents round trip, the
-  field's kinds, part of a stack, a refusal with why, a worn slot and back to the field, Take what fits, what is left
-  is lost, the purse instead of the field, once only). All five pages were looked at in headless Edge at 1920x1080
-  on a copy of the day-70 save, on an Old Road ambush played AI against AI.
-- **Next:** what still opens the away card is the talent tree, `trust` and the campaign fights. The talent tree is the
-  last screen family of step 9 that the campaign reaches; step 10 follows it.
-
-**9q. The talent tree — done (2026-10-28).** The mockup came first:
-[references/talents_mockup/](references/talents_mockup/) `talents.html` is built on the day-70 save `35d38388`: Ylhel
-after the report's fight (combat 2, one pick). `data.js` is the real trees read through `talents.TREE` /
-`racial_tree`, each node's state off `Unit.holds_talent` / `offerable`, and for an open node the sheet before and
-after the pick (`choose_talent` on a copy). `big.js` is the load test: a made-up combat tree of 100 talents (8 roots,
-8 tiers, 40 leaves, 6 with two requirements). Frames, one per `?state=`:
-
-- `combat` (`talents_mockup.png`), `locked`, `racial`, `magic`: the first layout, one track per paper page with the
-  trees in attribute families. Kept as the record of what a fixed page holds (about 30).
-- `big_down`, `big_zoom`, `big_right`: the 100 top-down and left-to-right with a camera; discarded (15% at FIT).
-- `big_radial` (THE MAP) and `big_focus` (THE BRANCH), with the toggle between them; `&real=1` puts today's 30
-  real talents in them (`talents_real_radial.png`, `talents_real_focus.png`); `&sel=<id>` picks the talent in hand.
-
-Decided with the author (2026-10-28):
-
-- **Two views, one toggle.** THE MAP is the default: the portrait at the centre, the roots on the first ring, each
-  tier one ring out; a camera as the map's (wheel, drag, FIT); at FIT the names of what is held and what can be taken
-  stay (a name that hits another hides until zoomed), the rest wait for the zoom. THE BRANCH: every talent as an
-  outline open along the picked branch (a closed branch shows held/total and how many are open), and round the
-  talent in hand what it needs above, its siblings, what it opens below. The view last used is remembered.
-- **The layout reads only `requires`**, so the tree may grow wider, deeper or lose its families; a second
-  requirement is a red dotted line.
-- **Click picks, TAKE confirms** (pygame takes on click; a pick is for good). The card shows what moves on the sheet
-  (STR 8 → 9, and when the modifier does not move), the branch, and what the talent opens.
-- **On leather:** the member, the four tracks with their picks, CAN TAKE NOW (every open talent; a click takes it in
-  hand), the band's faces with their waiting picks.
-
-As built:
-
-- **The server** (`TalentSession`, screen `talents`) holds the member, the track on the page and the talent in hand.
-  Each node's state: taken, open (a pick can take it), waiting (it could, with a pick), locked (what it needs is not
-  held), granted (a school's root). The talent in hand carries its status, the branch above it, what it opens, and for
-  an open one the sheet's numbers that move (`delta`): read off a deep copy with the talent added and the sheet
-  derived again, not through `choose_talent`, which would write a pick to the play log. Verbs: `look` (another member
-  of the band, another track, a talent in hand), `take` (`Unit.choose_talent`; a refusal says why: needs X first, no
-  pick, no school yet, the next racial pick's level), `back`. The save is written on each pick.
-- **What opens it:** the member's sheet (`GuildSession.talents`, back to the sheet) and a level-up's Pick talents
-  (`ReportSession.talents`, back to the same level-up, with the report's chain and Talents marked now). It lands on
-  the first track with a pick waiting, the talent in hand its first open one.
-- **The client** follows THE MAP and THE BRANCH. The rings are leaf columns round the portrait, the depth off
-  `requires`; zoomed out, a name that hits another hides (the talent in hand first, then what can be taken); the
-  camera is kept while the same member's same tree is shown. The view last used is in `localStorage`. TAKE (or Enter)
-  spends the pick, Escape goes back. There is no second requirement in the data yet, so no red dotted line is drawn.
-- Left out: a tutorial card (no web screen has one yet).
-- Tests: `tests/test_web_talents.py` (the sheet opens it on the track with a pick, open / locked / waiting, the delta
-  without touching the member, the branch and what it opens, a pick that opens what hangs from it and lands in the
-  save, each refusal with why, CAN TAKE NOW across tracks, the racial track's next pick, the magic tree with no
-  school, back, the routing); the level-up's round trip in `tests/test_web_report.py`, the sheet's in
-  `tests/test_web_guild.py`. THE MAP, a zoom, THE BRANCH, a locked talent, a pick taken, the magic and the racial
-  trees were looked at in headless Edge at 1920x1080 on a copy of the day-70 save, driven over the DevTools protocol.
-- **Next:** what still opens the away card is `trust` (the City's Test of Trust as its own order) and the campaign
-  fights. `trust` is the last screen of step 9 the campaign reaches; step 10 follows it.
-
-**9r. The Test of Trust — done (2026-10-28).** No mockup: it is the Bankers' board the bank's JOBS tab already draws.
-A `trust` order (pygame's `App._open_trust_offer`, `TrustScreen` alone) opens a hub with that one tab
-(`hub_session.HUBS["trust"]`), Elysia in the header. Tests: `tests/test_web_hub.py` (the one tab, the keeper, the
-job taken, back to the map); the map's tests of the away card now enter the arena, which still opens it.
-
-- **Step 9 is closed.** What opens the away card now is only the campaign fights (the arena, the hunt, the
-  searches' finds, the Ruins, the Nest, the Lair, the skirmish, the Wildfire's fights, the forced fights after
-  their talk). They are step 10's seam: `app_battle` hands the battle to `BattleSession` and settles it through
-  `campaign.absorb_battle`, then `ReportSession` plays the aftermath.
-
-### 10. The swap — in progress
-
-Too big for one session, so it is cut as step 9 was: first the campaign's fights, family by family,
-then the title and the draft, then the swap itself.
-
-**10a. The forced fights and the Claim's — done (2026-10-28).** `campaign_fight.py` is the seam
-`app_battle` was: `forced_fight` builds the fight as `App._start_forced_battle` does (after the talk with
-its `Opening`, or straight from the map's seal when nobody in the pack speaks), `claim_fight` the
-Claim's CLEAR and SWEEP as `_start_claim_battle`; `_enter` saves the snapshot before it, writes the
-play log's combat log, binds the bestiary and opens `BattleSession` with a `then`. A campaign fight's
-state says `campaign` and its header is the place and the event (`meta.sub`); once it is over the end
-card's Go on posts `done`, which settles it: `campaign.absorb_battle`, the `fight` row of the play log,
-`group.pending` cleared and `forced.resolve` (or the Claim's stage), the save, then `ReportSession`,
-whose chain ends on the map through the clock (`_to_map`), or on the wiped map. The away card now
-only stands for the fights still left; it lost its forced-fight forms. A window closed mid-fight
-leaves the fight due on the map, as in pygame.
-
-- Left out: the map's auto-resolve (`autowin_ambush`, pygame's Monte Carlo) has no button in the
-  browser yet.
-- Tests: `tests/test_web_campaign_fight.py` (the seal with nobody to talk to opens the board, the
-  snapshot, `done` refused before the end, the report and back to the map with the fight gone from
-  the save; a whole fight played by the AI on both sides through the session; a talk lost into a
-  fight keeps its opening; the Claim's fight won moves the stage; a lab fight has nothing after it);
-  the old away-card tests in `test_web_map.py`, `test_web_talk.py`, `test_web_hub.py` now land on the
-  board. The end card and the report after it were looked at in headless Edge at 1920x1080.
-- **Next (10b):** the arena (`_start_battle` with a `Bout`: the entry fee, a boss's lines, the purse
-  on the report, Adelio's and the Ribbit Brothers' recruit offers, the title defense). Then the hunt
-  (its ambushes and the ox chase), the searches' finds (the Ruins, the Nest, the Lair), the errands'
-  fights (the battlefield, the necromancer, the Wildfire's camp and fortress), then the title screen
-  and the draft, then the swap below.
-
-**10b. The arena — done (2026-10-28).** `arena_session.py` (screen `arena`) is pygame's `SquadScreen` in arena
-mode as `App._open_arena` opens it: the bouts in the arena's story (the Scrapper and the champion, then the Games
-and the Ribbit Brothers until they fall), who fights (a band that fits the bout is picked whole, a smaller bout
-trims the overflow, a member collapsed from hunger cannot be picked) and the stake (a head, out of the whole band's
-purses, richest first). STAKE AND FIGHT builds the bout through `matchup.build`; the guild's first bout against a
-boss opens the boss's lines first (`dialogue_session.boss_talk`, `guild.boss_talks_seen`). The bout is a campaign
-fight: `campaign_fight._enter` takes the picked `squad`, the `offer` (to `absorb_battle` and the report's purse)
-and `after`, where the report ends. Settled, it marks `obj_arena_bout`; a title note with no purse goes to the
-map's notices. Won against Adelio (not yet in the roster) or the Ribbit Brothers, the report ends on the offer to
-recruit them (`AdelioPromptScreen`, `RibbitPromptScreen`), whose yes opens the Tavern's RECRUIT with them as the
-only strangers (`hub_session.HUBS["pit_recruit"]`, `HubSession(candidates=...)`, `TavernTab(candidates=...)`).
-A due title defense goes straight to the board, the champion alone, not to the death, as
-`App._start_title_defense`, but only when the champion stands in the band that entered (pygame takes them from
-anywhere); otherwise the bouts say who must come and by when.
-
-- The client follows the talk's frame: the pit master and the bouts on paper, the band's cards on leather, the
-  stake's ledger and the seal at its foot; the offer is a paper card. No mockup: it is the squad picker the other
-  screens already drew in parts (the band's cards, the keeper, the seal).
-- Left out: a tutorial card (no web screen has one yet).
-- Tests: `tests/test_web_arena.py` (the bouts by the guild's deeds, the band picked whole and the stake a head, the
-  cap, the trim and the unfit, a stake the band cannot pay, a Scrapper won to the purse and the map with the
-  snapshot and the objective, a bout lost with no purse, the champion's lines once, his fall and the offer into
-  RECRUIT with Adelio alone, the offer turned down, the defense with the champion here and elsewhere, the routing);
-  the map's and the hub's away-card tests now enter the hunt. The bouts (the Pit, the Games with the Ribbit
-  Brothers picked) and the offer were looked at in headless Edge at 1920x1080 on a copy of the day-70 save.
-- **Next (10c):** the hunt (`app_hunt`: the Wilds' hunt for meat with its ambushes, the Biwolf, the ox chase), then
-  the searches' finds (the Ruins, the Nest, the Lair), the errands' fights (the battlefield, the necromancer, the
-  Wildfire's camp and fortress), then the title screen and the draft, then the swap below.
-
-**10c. The hunt — done (2026-10-28).** `hunt_session.py` (screen `hunt`) is pygame's `HuntScreen` and `TrackScreen`
-as `app_hunt` plays them, for the Wilds' `hunt` and the Ox Fields' `ox_hunt`: a band with a wagon first says who
-minds it (`watch_screen`: someone must go in, one guard keeps it safe), then the quarry (meat or forage) and the
-shift (the ox's shifts only as long as the daylight left), each stretch on the clock through
-`MapSession.tick_outside` (the other bands keep in step, what falls due waits for the map), an ambush (the wolves,
-the Ogre's goblins, the Biwolf after dark with the meat) or the ox's trail fought as a campaign fight
-(`campaign_fight._enter` with the party as `squad` and an `after` that comes back to the hunt), won with hours left
-to KEEP HUNTING or HEAD BACK, then the haul banked (`hunt.grant_haul`) and the wagon rolled for on the way out. A
-member with a talent pick opens the talent tree and comes back to the hunt.
-
-- One change from pygame: a hunt left before any hour was spent does not roll for the wagon (pygame rolls it even
-  then). Like pygame, a hunt is never saved: a window closed mid-hunt drops it.
-- Left out: the auto-resolve of an ambush (pygame's AUTO-WIN, its Monte Carlo); a tutorial card.
-- The client is the arena's frame: the choices and the news on paper, the party on leather, a green seal to set out
-  and a red one to fight. No mockup.
-- Tests: `tests/test_web_hunt.py` (the quarry and the shift, a quiet shift banks the meat and returns to the map, an
-  ambush to the board with the snapshot and back to the interlude, heading back, a lost ambush, the wagon's watch, an
-  unguarded wagon lost and a guarded one kept, the ox by daylight only, the ox's chase is the player's and his fall
-  closes the job, the talents and back, an order due on the clock, the routing); the away-card tests now enter the
-  Ancient Ruins. The watch, the setup, the ambush and the haul were looked at in headless Edge at 1920x1080.
-- **Next (10d):** the searches' finds (the Ancient Ruins, the Serpent's Nest, the Dragon's Lair: each its own
-  scenario behind the wagon's watch), then the errands' fights (the battlefield, the necromancer, the Wildfire's
-  camp and fortress), then the title screen and the draft, then the swap below.
-
-**10d. The searches' finds — done (2026-10-28).** `campaign_fight.delve` is `App._enter_ancient_ruins`,
-`_enter_nest` and `_enter_lair`: the Ancient Ruins, the Serpent's Nest and the Dragon's Lair (`DELVES`: the seal's
-label, the header, what waits inside, the scenario), in the dark, lethal, the squad the aggressor; the Nest wants the
-Snake Dragon alive while the Nature Coven's job is out; ruins with nothing left say so on the map. A band with a wagon
-first opens `watch_session.py` (screen `watch`), pygame's `WatchScreen`: who goes in, who minds it, GO IN hands the
-party to the place; the fight's settle rolls for a wagon left unguarded (`wagon_watch.leave_outside`). The hunt's
-watch now reads the same `watch_state` / `toggle`. The Lair's patrol challenges and the withdraw were already the
-battle session's.
-
-- The client is the hunt's watch page on its own screen (`watch.css` imports `hunt.css`, with a darker ground).
-- Left out: a tutorial card.
-- Tests: `tests/test_web_delve.py` (each place straight in with no wagon, in the dark with the snapshot; the watch
-  and the guards out of the fight; back changes nothing; an unguarded wagon lost and a guarded one kept; the Ruins
-  remember and once empty lie silent; the Nest's dragon wanted alive; a wipe; the routing); the away-card tests now
-  enter the skirmish. The watch was looked at in headless Edge at 1920x1080.
-- **Next (10e):** the errands' fights (the skirmish: the battlefield and the necromancer; the Wildfire's camp and
-  fortress), each behind the same `WatchSession`; then the title screen and the draft, then the swap below.
-
-**10e. The errands' fights — done (2026-10-28).** `campaign_fight.errand` is `App._enter_skirmish` and
-`_enter_wildfire_fight`: `skirmish` at the Battlefield is the Faith Order's Mercy at the Front (four Ledger Hold
-soldiers at the band's side, played by the AI) or, once that errand is out, the necromancer's night (three sides);
-`camp_fight` is a Wildfire camp, `ogre_fight` the Great Focus or the hostile fortress left standing. Each goes behind
-the same `WatchSession` (`_watched`, which `delve` uses too) and is settled as `_battle_end` does: the errand
-(`settle_battlefield` with the soldiers lost, `settle_necromancer` on his fall, with the deed's notice) or
-`wildfire.settle_fight`; a band with nothing to fight there is back on the map. With that, every order the campaign
-reaches has a browser screen: `AwaySession` and `screens/away/` are gone, and `MapSession._enter` raises on a kind
-it cannot play (`hub_session.opens_hub` went with it: no node has a stable without a shop).
-
-- The client is unchanged: the watch and the board already drew all of it (the allies and a third side came with the
-  lab fights).
-- Left out: a tutorial card.
-- Tests: `tests/test_web_errand.py` (every activity kind of `App._ACTIVITY_OPENERS` has a screen; the skirmish with
-  the soldiers and the snapshot; every soldier home is the deed, one lost fails it even on a win; the necromancer's
-  night and his fall; no errand, back on the map; the wagon's watch; a camp, a cleared camp, a camp lost; the Great
-  Focus and the standing fortress); the map's away-card tests now open the Bank, and a missed Wildfire talk lands on
-  the board (`test_web_talk.py`).
-- **Next (10f):** the title screen and the draft (`start_screen`, the draft and `vocation_screen`, the saves
-  browser), so a new guild starts in the browser; then the swap below.
-
-**10f. The title screen, the guilds and their saves — done (2026-10-28).** `title_session.py` (screen `title`) is
-pygame's `StartScreen`, `MenuScreen` and `SavesScreen` on one page, after the [menu mockup](references/menu_mockup/):
-the menu on the left; the last guild played on the right, its charter (banner, vocation and motto, day, members,
-wins, bands, four faces and a count of the rest, where its biggest band stands) over the map it has walked (the
-map's own `sheet.js`, read-only, its bands as pennants). LOAD GAME turns the right side into a ledger page: the
-guilds kept, newest first (Continue, Saves, Delete with a yes), then one guild's saves (Load, Delete with a yes; the
-live state cannot be deleted). Continue and Load go through `Game.load`, as `App._continue_game`: an earlier save
-becomes the live state and the rest stay; a save of another version is shown on the charter and refused.
-`python -m gartok.web` with no argument opens it (`--fight` is now the lab's flag); QUIT stops the server and closes
-the window. The map's top bar has MENU (save, then the title, as pygame's pause menu); a wiped guild's card goes
-there too, with the wipe as the title's notice.
-
-- `MapSheet.labelSides` (where each place's name goes) moved from `map.js` into `sheet.js`, which both read.
-- Not in the browser yet, so shown off with a note: New guild (10g, since built), Wiki, Settings (10h, since built), Editor. Settings and the wiki
-  are pygame's pause menu too; the swap needs them (10h), the editor stays a pygame tool until then.
-- Left out: a tutorial card.
-- Tests: `tests/test_web_title.py` (no guild, the invitation; the last guild's charter and map; Continue to the map;
-  the guilds newest first; an earlier save loaded becomes live; deleting a save and a guild; another version
-  refused; the map's MENU saves and comes back, with the wipe's notice; the router, the files, QUIT). The title, the
-  guilds and the saves were looked at in headless Edge at 1920x1080 on a copy of the saves, and Continue into the map.
-- **Next (10g):** the draft (`vocation_screen`, `draft_screen`: the vocation, the pool of nine with the commission
-  tokens, the name, banner and leader). A new family: its mockup comes first, for the author's approval. Then 10h,
-  the settings and the wiki, then the swap below.
-
-**10g. The draft — done (2026-10-28).** The mockup came first and the author approved it as it stands.
-[references/draft_mockup/](references/draft_mockup/) `draft.html` is built off the real draft (`data.js`: the six
-vocations, a Caravan pool of nine through `vocations.draft_pool`, a candidate commissioned for LEADER + WISE through
-`archetypes.generate_candidate`, the banner colours and emblems). Frames, one per `?state=`: `vocation`, `pick`,
-`commission`, `replace`, `charter` (`draft_<state>.png`). Proposed, against pygame's three screens:
-
-- **One founding column on leather** for all three steps: the steps (I Vocation, II The squad, III The charter) with
-  what each settled, the step's choices, a back to the step before (pygame cannot go back to the vocation) and the
-  seal that moves on.
-- **The vocation:** six paper cards (emblem, motto, the six races' faces, the perk); the chosen one lifts under a
-  CHOSEN seal and its perk and races are repeated on leather.
-- **The pool:** nine paper dossiers (vitals, attributes, weapon and its action, ability, languages); archetypes as
-  ink stamps, a commissioned one in red with a star; a pick is a numbered blue ribbon and a slot on leather; the
-  tokens are three coins.
-- **A commission** is a paper slip over the pool (tick archetypes, a coin each), then a red bar "pick the one to
-  replace" with a REPLACE stamp on the card under the mouse.
-- **The charter:** the guild's name written on a charter, its arms (the shield, colour, emblem), the founders'
-  signatures with the leader first as Master of the guild, the banner hanging beside it; who leads is picked on
-  leather (can recruit, why, the six modifiers), a pencil renames a founder.
-
-As built:
-
-- **The server** (`draft_session.py`, screen `draft`) holds the step and, once the vocation is settled, pygame's
-  `DraftScreen` headless for the pool's rules (the picks, the tokens, `_replace`, what was commissioned for whom).
-  Verbs: `vocation`, `next`, `back` (from the vocation, the title; the pool stays while the vocation does, a new
-  vocation draws a new pool), `pick` (with a commission waiting, it replaces that candidate), `commission`,
-  `cancel`, `name`, `rename`, `color`, `emblem`, `leader`, `found`. FOUND founds the guild as `App._draft_done`
-  (a new world id, `wildfire.sync_world`, the play log when it is on) and lands on the map, which saves it.
-- **What opens it:** the title's New guild (`TitleSession.new_guild`).
-- **The client** follows the mockup; the commission slip is the client's until Call them. The guild's name and
-  FOUND wait their turn instead of being dropped while a call is out (leaving the name field posts it just as the
-  seal is pressed), and FOUND carries the name as last written.
-- Left out: a tutorial card (`draft.intro`, `draft.pick`, `draft.identity` are pygame's).
-- Tests: `tests/test_web_draft.py` (the title opens it and its first back returns; the vocation first, one of each
-  of its races; a pick toggles, the squad is three; a commission spends its tokens on the card it replaces, a
-  picked card leaves the squad, the refusals; back keeps the pool, a new vocation draws a new one; the charter's
-  name, colour, emblem, rename and leader with their refusals; FOUND saves the guild and opens its map, and the
-  title shows it; an unnamed guild is The Guild; the routing). The vocation, the pool, a replacement, the charter
-  and the map after FOUND were looked at in headless Edge at 1920x1080.
-- **Next (10h):** the settings and the wiki (pygame's pause menu too), then the swap below.
-
-**10h. The settings, the wiki and the map's menu — done (2026-10-28).** No new mockup: both follow the title's
-language (the menu mockup), a page of paper on the table, the chapters on leather.
-
-- **The settings** (`settings_session.py`, screen `settings`): one ruled row per `settings.SPEC` entry, each with a
-  line on what it does and its choices as stamps (press one to keep it, where pygame cycles); with a guild open,
-  its tutorial cards (on/off, and reset), saved with the guild. Opened from the title (no tutorial rows) or the
-  map's menu. Verbs: `set`, `tutorial`, `reset_tutorial`, `back`. The volume reaches the shell's sounds at once.
-- **The wiki** (`wiki_session.py`, screen `wiki`): pygame's seven tabs as chapters on leather (items, recipes,
-  actions, talents, races, beasts, rules), a filter field, the chapter's entries as cards in columns on paper
-  (glyph, name, kind, a line of numbers, the text, the traits as stamps; the match marked). The filter reads the
-  text too, as pygame's does, and holds across chapters. Verbs: `chapter`, `find`, `back`.
-- **The map's menu** (pygame's pause menu): MENU or Esc opens it over the map. Resume, Save as… (a named manual
-  save, `MapSession.save_as`), Settings, Wiki & compendium, Main menu (saved first, as before), Quit (saved first).
-  Back from the settings or the wiki lands on the map as `back` does.
-- Left out: a tutorial card.
-- Tests: `tests/test_web_settings_wiki.py` (the title opens both and they come back; a choice is kept and saved, a
-  refusal for one not offered or a tutorial with no guild; the guild's tutorial toggled and reset into its save;
-  every chapter reads its catalog, the filter past the name, across chapters, capped; Save as names a save, an
-  empty name is Manual save, a wiped guild has nothing to save; Quit saves; the routing). The wiki (items, rules,
-  a filtered chapter), the settings from the map and the menu over the map were looked at in headless Edge at
-  1920x1080.
-- **Next (10z):** the swap below: every screen the loop reaches now runs in the browser.
-
-**10i. The launch — done (2026-10-28).** `python main.py` (and `python -m gartok`, `gartok/__main__.py`) opens the
-title in the browser window; `--pygame` opens the pygame window, where the Editor (characters, maps, the combat lab)
-still lives. The PyInstaller build (`build_exe.bat`, `GARTOK.spec`) carries `gartok/web/client`. The server now stops
-when the window is closed: the page sends `/api/bye` on `pagehide` (`shell.js`), and `__main__` stops the server
-once `CLOSE_GRACE` (5 s) passes with no request after it, so a reload onto another screen keeps it up. Edge's
-launcher hands off and exits at once, so the browser process cannot be watched instead.
-
-- Tests: `tests/test_web_first_days.py` (step 10's **Done when**: a guild drafted from the title lives ten days fed
-  from the Farm, paid at the Lumber Yard, with two bouts in the Pit and their reports, and back to the title; a hunt in
-  the Wilds comes home or wipes onto the title; `pygame.display.set_mode` refuses to open a window throughout; 120
-  runs over 60 seeds pass); `tests/test_web.py` (the bye and a reload after it, the stop; `main` opens the browser,
-  `--pygame` the old window). `python main.py` was launched for real: the title in Edge, and the window closed with
-  `WM_CLOSE` stopped the server.
-- Found: the AI standing in for a player stalls in the Pit when the foes are out of sight (in the dark, or behind
-  walls): nobody brought the fight, so nobody searches. pygame plays the same AI; it is in the backlog. The test
-  ends such a fight after 40 rounds.
-- Not checked: the PyInstaller build itself (not run).
-
-**10z. The swap — next.** pygame and `ui/` cannot go yet: the web still holds about thirty pygame screens headless
-for their rules (`GuildScreen`, `GroupScreen`, `DialogueScreen`, `LootScreen`, `BattleScreen`; `grep "_screen
-import" gartok/web/*.py` lists them), reads `ui/` helpers (`tokens.T`, `floors`), and the Editor has no browser
-screen. Cut as step 10 was:
-
-**The cut list (2026-10-28, from the import graph of `gartok/web/`).** Under "pygame is abandoned" above:
-
-- **The campaign's pygame shell — cut (2026-10-28).** `app.py` and the four `app_*` mixins went, with every
-  screen only they opened: `map_screen` + `map_inspector`, `hunt_screen`, `watch_screen`, `garage_screen`,
-  `ledger_screen`, `wilds_claim_screen`, `trust_screen`, `squad_screen`, `level_screen`, `level_up_screen`,
-  `report_screen`, `reward_screen`, the Adelio and Ribbit prompts, `vocation_screen`, `menu_screen`,
-  `pause_screen`, `saves_screen`, `settings_screen`, `wiki_screen`, `alert_screen`, the five per-node
-  `*_hub_screen` modules, `abandon_screen`, `group_turn_screen`, `bank_view_screen`, `tutorial_card` and the
-  `ui/` pieces only they drew (`camera`, `combat_card`, `command_bar`, `intro_card`, `map_panel`,
-  `party_panel`, `roster_panel`, `turn_card`, `vocation_panel`). The Editor got its own window
-  (`editor_app.EditorApp`, `--editor` in place of `--pygame`).
-  - Tests: about 250 that drove pygame went. Those that checked a rule through a screen and that no web test
-    covered moved: the bay paid from the cart's coins, the cart's Lumber banked at the Claim and the Lumber a
-    pack can carry off it (`test_desks.py`), the bestiary and the Scholars' bonus bound on a campaign fight
-    (`test_web_campaign_fight.py`), the lab fight's log (on `EditorApp`) and the campaign log's path (on
-    `recorder`) in `test_combat_log.py`; the "every order has a screen" checks read `HUB_KINDS` and the web
-    map's dispatch instead of `App._ACTIVITY_OPENERS`.
-  - Coverage lost, no web test yet: the clock run while a screen is open (`App._tick_outside_map`), a guild
-    with every member jailed waiting out the sentence on the map, the save refused mid-battle or mid-hunt
-    (`App._can_save`), two due screens draining one at a time, the REST row's wording (how many meals, the
-    days of rations still short), a trip cancelled to the next node.
-- **Not in the browser, pygame had them (port or drop):** leaving a broken wagon behind (the map refuses a
-  trip with one until it is mended, so a band with no Lumber and no garage is stuck), the hand-over card
-  between groups (its tutorial card `group_turn` is still registered), the vault read from the map, the
-  auto-win of an ambush or a hunt (`autowin.py` is still there). The old screens are in git before this cut.
-- **Held headless by the web, deleted as their family's rules move out (step 2):** none left (the battle's
-  rules moved out 2026-10-28; `battle_screen` + `battle_draw` stay for the Editor). The dialogues' screen is gone (below), the hubs' screens are gone (the hubs III below), and so are the draft's
-  and the title's (the draft below), the report's and the guild's.
-- **Kept until step 3:** `editor_app`, `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`,
-  `combat_lab_screen`, and `battle_screen` for the lab's fights.
-
-1. **The tutorial cards in the browser — done (2026-10-28).** A session names its card in `tutorial_key()` (the id
-   its pygame screen names; a hub by its tab, the guild sheet by its tab, the report by its stage, the draft by its
-   step) and reads it in `tutorials()` (the guild's `TutorialState`, the draft's own before the guild exists). Every
-   answer carries `X-Tutorial: <key>|<1 while up>` (`server.tutorial_header`), so a tab or a phase that changes the
-   card needs no verb of its own; `/api/tutorial` serves the copy (`tutorial.card`, which pygame's `tutorial_card`
-   now reads too), `/dismiss` and `/reopen` close and open it, and `tutorial_closed` lets the map's first close open
-   the objectives as pygame does. The shell (`Tutorial` in `shell.js`) draws the card on paper over a veil that
-   swallows every click and key (Enter, Space or Esc closes it) and, once closed, a small `?` in the window's top
-   right corner that opens it again; `body[data-screen]` is there for a screen whose corner is ever taken.
-   - No card on the title, the wiki, the settings or a lab fight (no guild); `group_turn` and `combat_lab` wait for
-     their screens.
-   - Tests: `tests/test_web_tutorial.py` (the header and the copy, the map's first close to the objectives and a later
-     one staying, switched off, every key a screen names has its copy, a hub's, the guild sheet's, the draft's and the
-     report's card following their tab, step or stage). The map's and the draft's cards and the `?` on the map, a hub,
-     the guild and the draft were looked at in headless Edge at 1920x1080.
-2. **The rules out of the screens**, family by family (the shop, the map, the hubs, the draft, the report): what a web
-   tab borrows from a pygame screen moves to a core module that both read, as `actions.panel` and
-   `LedgerScreen.panels` already did; the `ui/` helpers the web reads move with them. One family per session.
-   - **The shop — done (2026-10-28).** `trade.py` is the counter, with no pygame: `Counter` holds what
-     `MarketScreen` and `MarketTradeMixin` held for the rules (the shelf, the deal and `_deal_card`, the
-     purse, the till and the stock, the picks, `_buy` / `_buy_cart` / `_sell` / `_drop_on_zone`, the
-     auto-sell marks, `_distribute_load`, `_stock_spec`, `BENT_WORDS`); `LibraryCounter` the Library's
-     shelf, with `library_stock_dictionaries`; `counter_for` picks one. `MarketScreen` is now the window
-     over it (`Counter` last in its bases, after `Screen`, which ends the cooperative `__init__` chain,
-     so the screen calls `Counter.__init__` itself); `market_trade.py` is gone, its `_drop` (the mouse)
-     is the screen's. `shop_tab.py`, `scripts/economy_guild.py` and `economy_exploits.py` trade on the
-     counter, and so do the tests that were only about the rules (`test_market_cash`, `test_cart_pooled`,
-     a test each in `test_node_functions` and `test_objectives`). `trade.collect` is the pick-lifting
-     `DragSelectMixin._collect` now calls. `role_for` moved from `ui/inspector_panel` to `data`.
-     - Tests: `tests/test_trade.py` (`trade` loads with pygame blocked; a buy into the roomiest pack, a
-       sale into the seller's purse; the Library's counter and its dictionaries; the pygame screens are
-       the same counter).
-     - Left for later families: `shop_tab` still reads `artwork.portrait_path`, and `artwork` imports
-       pygame (it tints and caches the glyphs too); the path half goes with the guild or the draft family.
-   - **The map — done (2026-10-28).** `map_view.py` is what the map shows of a band and its node, with no
-     pygame: `MapView` holds what `MapInspectorMixin` and `MapScreen` held for the rules (the inspector's
-     blocks, the Wildfire's, a function's notes, the work line, `_order_status`, `_mates_for`,
-     `_rest_plans`, `_rest_urgent`, `_everyone_garrisoned`), beside `ADVANCE_HOURS`, `STANCE_NOTES`,
-     `NODE_ICON` / `node_icon` and `position` (was `map_screen._position`). A block says its `tone`
-     (`bad`, `warn`, `good`, `faint`) where it held a palette colour, so the web's `TONES` (the colour read
-     back into a word) is gone; pygame paints them (`MapInspectorMixin._painted`, `TONE_COLORS`), and
-     keeps for itself the auto-win of an ambush, the REST rows and the bottom buttons. `MapSession` is a
-     `MapView` and no longer reads `ui.tokens`; `MAX_SAVE_NAME` moved to `persist`. The hub, hunt and
-     watch sessions read `node_icon` from `map_view`.
-     - Tests: `tests/test_map_view.py` (`map_view` loads with pygame blocked; the blocks carry a tone and
-       no colour; both maps read the same blocks and pygame paints them; a walking band stands part way).
-     - Left: `map_session` still reads `artwork.portrait_path` (the guild or the draft family). The
-       layout hints (`gap_before`, `height`) stay in the blocks as plain numbers, which the web ignores;
-       they go with pygame.
-   - **The hubs** are twelve tabs over some 4,600 lines of pygame screens, too big for one session, so they
-     are cut in three: the simple desks, then the workbenches and boards (craft, jobs, garage, claim),
-     then the stashes and the Tavern (vault, tavern, `hub_screen`'s `TabbedHubScreen` and the crafting
-     constants `hub_session` reads).
-   - **The hubs I, the simple desks — done (2026-10-28).** Each desk's rules are a class with no pygame,
-     which its pygame screen inherits (`Screen` first, calling the desk's `__init__` itself, as
-     `MarketScreen` does with `Counter`) and its web tab subclasses or holds: `work_desk.py` (`WorkDesk`,
-     `GatherDesk`, `SHIFTS`), `medic.Ward`, `stables.py` (`Stables`, `WagonYard`, `resale`,
-     `tack_price`), `ledger.py` (`LedgerDesk`, its `panels` and `_act`), `rite.Initiation`. The tabs no
-     longer borrow methods off the screens. One wording change: pygame's Gathering now says the web's
-     notice when the licence is bought or refused. `scripts/economy_exploits.py` reads `stables.resale`.
-     - Tests: `tests/test_desks.py` (the desks load with pygame blocked; a wage, the licence bought or
-       refused, a patient treated, an animal sold back at a loss, two carts numbered, the Ledger's gate,
-       a sanctuary's terms; the pygame screens are the same desks); the Ledger's two rule tests in
-       `test_trust_mission` and `test_treefolk_mentorship` press the desk instead of a faked screen.
-   - **The hubs II, the workbenches and boards — done (2026-10-28).** Same shape as the desks: `workbench.Bench`
-     (the crafters, their recipes, what the packs lack, `_work` / `_alone` for a stint; `WAIT_HOURS`,
-     `ALONE_HOURS`; `refresh` is what `craft_tab._refresh` was), `job_board.py` (`Board` and the five givers'
-     boards, `TannerBoard` ... `TrustBoard`, with `TAG_TONE`, `KEEPER_LINE` and `BOARDS`), `holdings.GarageDesk`
-     (the verbs by `kind:index`, as pygame's buttons name them) and `claim_desk.ClaimDesk` (scouting, the fences,
-     the garrison and its job, the hearth, the banked Lumber). `CraftingScreen`, `MissionOfferScreen` and its five
-     subclasses (now only their title, leave label and keeper), `GarageScreen` and `WildsClaimScreen` inherit them;
-     `craft_tab`, `jobs_tab`, `garage_tab` and `claim_tab` hold the desk, not a screen. `HubSession.craft` runs
-     the bench's `_work` / `_alone`, so the stint's hours are checked in one place.
-     - Tests: `tests/test_desks.py` grew (the four modules load with pygame blocked; the bench's crafters,
-       recipes and refresh; the Tanner's board signs and pays; every giver has its board; the garage parks,
-       takes out, refuses a bay; the Claim scouts, banks the Lumber, garrisons and stands down; the pygame
-       screens are the same desks).
-   - **The hubs III, the stashes and the Tavern — done (2026-10-28).** `vault.py` (`Vault`, `BankVault`,
-     `HouseVault`: the moves between a stash and the packs under the weight cap and the load limit, the
-     services, the gold exchange, the debt) and `tavern.py` (`Tavern`, `Prison`: the pool, the pitch and its
-     bail, the bars, the study rooms, the stage; `ARCHETYPE_TONE`, `BAIL_BONUS`) hold what `StashScreen`,
-     `BankScreen`, `CityPropertyScreen`, `TavernaScreen` and `PrisonScreen` held for the rules;
-     `loadout_move.LoadoutMoveMixin` left `dragselect` (which imports pygame), and `HubSession` has its own
-     `keeper` (with `TAB_FUNCTION`). With nothing in the web left on `hub_screen`, the whole hub family went
-     in the same commit: `hub_screen`, `market_screen` + `market_draw`, `crafting_screen`, `gather_screen`,
-     `work_screen`, `medic_screen`, `stables_screen`, `initiation_screen`, `library_screen`, the mission
-     screens (`tanner_screen`, `apothecary_mission_screen`, `library_mission_screen`, `shrine_screen`,
-     `ui/mission_offer_screen`), `taverna_screen` + `taverna_draw`, `prison_screen`, `bank_screen`,
-     `city_property_screen` (its `RepossessionScreen` too: the web's hub asks the question), `stash_screen`,
-     and the `ui/` pieces only they drew (`hub_frame`, `hub_body`, `hub_party`, `shop_shelf`,
-     `market_panel`, `medic_panel`, `initiation_panel`). Dropped with them: pygame's weapon size toggle on
-     the shelf (the web lists a Large weapon as its own row of the shop).
-     - Tests: the rule tests that went through a screen now press the desk (`test_bank`,
-       `test_city_property`, `test_cooking`, `test_money`, `test_recruitment`, `test_hubs`, `test_medic`,
-       `test_solo`, `test_rite`, `test_shrines`, `test_lair`, `test_missions`, `test_gather`,
-       `test_crafting`, `test_wagon`, `test_wildfire`, `test_economy`, `test_shelves`, `test_autosell`,
-       `test_cart_pooled`, `test_column_scroll`, `test_screens`); `test_stables` presses the web's
-       `StableTab` / `WagonTab`; `test_item_menu` became `test_party_purse`, `test_hub_shop`
-       `test_keepers`, `test_shelf_layout` `test_quantity_prompt`. New: `test_web_hub` opens every hub a
-       node offers on every one of its tabs (the old "every node builds a tabbed hub"). About 40 tests that
-       only drew or clicked a pygame screen went.
-   - **The draft and the title — done (2026-10-28).** `draft.py` is the draft with no pygame: `Draft` holds what
-     `DraftScreen` held for the rules (the pool of nine by vocation, the picks, the tokens, `replace` for a
-     commission, the charter's name, banner and leader; `leader_recruits`, `TEAM_SIZE`, `POOL_SIZE`,
-     `COMMISSION_TOKENS`, `MAX_GUILD_NAME`). Three reads left `ui/` and `artwork` for modules with no pygame:
-     `sheet.unit_to_ch` (was `ui.sheet_card`'s; the pygame sheet, the battle and the Editor read it there now),
-     `guild.BANNER_COLORS` (was `ui.banner`'s, which keeps only the token colour), and `art_files.py`
-     (`portrait_path`, `BANNER_ICONS`, `RACE_ICON`, `OCCUPATION_ICON`; `artwork` imports them back), so no web
-     session reads `artwork` any more. `title_session` holds the title's three constants. Gone in the same
-     commit: `draft_screen`, `start_screen`, `ui/draft_panel`, `ui/title_panel`, `test_start_screen`, and what
-     only they used (`primitives.medallion`, `primitives.small_caps`, `tokens.ARCHETYPE_COLORS`);
-     `scripts/economy_activities.py` reads `draft`.
-     - Tests: the rule tests in `test_draft_commission` (the pool, the picks, a commission and its tokens, a
-       picked card replaced, each founder's recruits) and `test_vocations` (the pool by vocation) press `Draft`;
-       `gartok.draft`, `sheet`, `art_files` and `web.draft_session` load with pygame blocked. About fifteen
-       tests that only clicked or drew the pygame draft or title went (`test_web_draft` and `test_web_tutorial`
-       cover the steps, the charter and the cards).
-     - Left: `title_session` still loads pygame through the wiki (`item_icon` imports `ui.item_icons`), a later
-       family's. The sheet as a modal (the playtest below) waits for the guild family, which reads
-       `unit_to_ch` too.
-   - **The report — done (2026-10-28).** `spoils.py` is the field's loot with no pygame: `Spoils` holds what
-     `LootScreen` held for the rules (the pile as stacks, part of a stack picked, `_give_many` onto a pack or a
-     worn slot under `carry_max` and back to the field, `_auto_pick`); the memorial's `card` moved to
-     `aftermath`. `report_session` holds a `Spoils`. Gone in the same commit: `loot_screen`, `memorial_screen`
-     (and its `chain`), `ui/aftermath_panel`, and `loadout_panel`'s `container_panel` / `shop_row`, which only
-     the loot screen drew; `test_loot_screen` and three tests in `test_screens` / `test_column_scroll` that drove
-     or drew the screen.
-     - Tests: `tests/test_spoils.py` (`spoils` and `aftermath` load with pygame blocked; the stacks, part of a
-       stack, one of a stack into a worn slot with the rest left on the field, a load past the limit kept
-       picked, a pack item back to the field, take what fits, the memorial's days); `test_web_report` covers
-       the page.
-     - Left: `report_session` still loads pygame through `item_icon` (which reads `ui.item_icons`' `TONES` and
-       `ui.tokens`), the same knot as the wiki's; untie it once for both. (Untied with the guild below.)
-   - **The guild — done (2026-10-28).** `guild_sheet.py` is the guild's sheet with no pygame: `GuildSheet` holds
-     what `GuildScreen` held for the rules (the roster's filters and folds, the badges as tone words, a member's
-     weapon, kit, careers and roles and what pressing one does, an animal's work, the charter's bands, notices
-     and holdings, the founding trade; `FILTERS`, `FIGHT_DUE_TIP`, `needs_attention`, `node_label`). `band_kit.py`
-     is one band's kit: `BandKit` holds what `GroupScreen` held (the moves with the tack, the hitch and the hard
-     room of a wagon or an animal's back, the item menu with the chest, the potion and the study rows, ride,
-     hitch, repair, release, distribute, first aid and the antidote, the campfire). `guild_session` holds one of
-     each (`self.desk`, `self.gear`). Gone in the same commit: `guild_screen`, `group_screen` + `group_draw`,
-     `packbox`, `dragselect`, `sheet_panel`, and the `ui/` pieces only they drew (`guild_roster`,
-     `member_panel`, `guild_panel`, `reputation_panel`, `quest_panel`, `hscroll`); `test_guild_screen` became
-     `test_guild_sheet`. The `item_icon` knot is untied: `TONES` lives in `item_icon`, `ui.item_icons` reads it
-     back, and `ui.tokens` imports pygame only inside `fonts()`, so `T` loads anywhere; the guild, report,
-     wiki and talent sessions load with pygame blocked.
-     - **The sheet as a modal (the playtest's first item).** `web/sheet_view.py` builds a member's (or an
-       animal's) sheet read-only; the guild's MEMBERS page adds the roles to it. Every session answers a `sheet`
-       verb (`GET /api/<screen>/sheet?uid=`) for whoever it lists in `sheet_units` (the guild: everyone and the
-       herds; a hub: the band at the place; the draft: the pool, before any guild). `Sheet` in `shell.js` draws
-       the book (moved out of `guild.js`, its CSS out of `guild.css` into `shell.css` under `.book`) and opens it
-       over the screen on a click on any portrait marked `data-sheet` (a band's columns, every shop's pack
-       columns, the draft's cards); the press that starts on a portrait is the sheet's, so it never picks a card
-       or drops a pick. The modal is a shadow root with the shell's styles only: each screen's own `.chip`,
-       `.kit` or `.stamp` never reaches it. Esc, the ✕ or the veil closes it.
-     - Tests: `tests/test_guild_sheet.py` (the two load with pygame blocked, and the web sessions above; the
-       filters, a fold, distribute, the breakdowns, the charter's notices and holdings, the sponsor line, the
-       sick badge), `tests/test_web_sheet.py` (the guild, a hub and the draft open their own people and refuse
-       anyone else, the route, the portraits marked); the band tests in `test_wagon`, `test_chest`,
-       `test_coins`, `test_poison`, `test_wagon_broken`, `test_cooking` and `test_screens` press `BandKit`. The
-       MEMBERS page and the modal over a band, the market and the draft were looked at in headless Edge at
-       1920x1080, the clicks driven over the DevTools protocol.
-   - **The dialogues — done (2026-10-28).** `dialogue.Talk` is one talk as a person plays it, with no pygame: what
-     `DialogueScreen` held for the rules (the first speaker, `pick`, `choose` with `on_decided` the moment a roll
-     ends it, `go_on` to the next step or to `on_done`; `BUTTON_LABEL`). `dialogue_session` holds a `Talk`, and so
-     does `battle_session`'s challenge on the board (`lair.py`'s patrols), which was a dict copying the screen.
-     Gone in the same commit: `dialogue_screen`, `ui/dialogue_panel`, and `BattleScreen`'s own talk over the board
-     (the Editor's lab no longer sets `talk_handler`, so the AI answers a patrol's challenge there, as it does for
-     an AI side).
-     - Tests: `test_dialogue` (`dialogue` and `dialogue_session` load with pygame blocked; the first speaker is one
-       the leader understands), `test_boss_talk` (the lines walked with no answer, the fight started once) and
-       `test_justice` press `Talk` or the encounter; the lair test that drove pygame's board talk went
-       (`test_web`'s challenge test covers it through the session).
-   - **The battle — done (2026-10-28).** `battle_session` borrowed three things, now in modules with no pygame:
-     `actions.aim_kind` (was `BattleScreen._aim_kind`: how aiming an action is marked), `scenario.wall_kind` /
-     `WALL_KIND` (was the `"wall"` key of `board_style.FLOOR_STYLES`, which `ui.floors` now reads back), and
-     `lighting.py` is only the rule (`cell_levels`): `LightRenderer` moved into `battle_draw`, with its two
-     remembered-cell tones. `sound.py` imports pygame only inside `enable()`, so the server reads `CUES` without
-     it. With that, **the whole web (`gartok.web.server`, `python main.py`) loads with pygame blocked.**
-     `battle_screen` + `battle_draw` stay: the Editor's lab still opens them (step 3).
-     - Tests: `test_web` (the server and the battle session load with pygame blocked; `aim_kind`),
-       `test_floors` (every floor has its wall, an unknown one the flagstones); `test_lighting` and
-       `test_screens` read `LightRenderer` from `battle_draw`. The lab's board was drawn headless at 1920x1080.
-     - **Next:** with every family's rules out, what is left of step 2 is the playtest's items below (the work
-       level-up, the `?` in the header, the type, the talent map), then step 3, the Editor.
-   - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
-     these into the families above where they share code, the rest after them:
-     - **The character sheet as a modal, opened from anywhere — done (2026-10-28)** with the guild above.
-     - **The work level-up — done (2026-10-28).** The clock's level-ups (a work shift, a study, a long walk that
-       banks hours) are no longer a map notice: `MapSession` keeps them in `level_ups` (from `_advance` and
-       `tick_outside`) and `_land` opens them before anything else due, through `open_level_ups(then)`.
-       `report_session.LevelUps` is the report's level-up pages with no fight before them (its chain is
-       Level up, Go on; the subtitle is the server's `after`: "the work at Lumber Yard"), PICK TALENTS and back
-       as after a fight, then the map. A paid shift on the WORK tab that levels someone shows the pages and
-       comes back to the tab with what it paid, as pygame's `_work_shift` did. The client changed one line (the
-       level-up's subtitle reads `after`).
-       - Tests: `test_web_report.py` (a work level from the map's clock, its page and back to the map, no
-         notice; one on the WORK tab and back to the tab); the supply run's test walks the pages it now opens.
-     - **The tutorial `?` in the header — done (2026-10-28).** The shell puts the `?` at the end of the screen's
-       `#top` (every screen with a card has one but the draft, which keeps the corner): `Tutorial.place` runs
-       when the badge is drawn and once the screen's HTML is in, as a round brass button the height of the
-       header's ghost buttons. Found on the way: the member sheet's `Sheet` in `shell.js` (the guild family)
-       clashed with the map's `Sheet` in `screens/map/sheet.js`, so the map and the title's map never drew;
-       the map's is `MapSheet` now.
-       - Tests: `test_web.py`'s `test_no_two_scripts_of_one_page_declare_the_same_name` (fails on the old
-         clash). The map, a hub, the guild, the title and the draft were looked at in headless Edge at
-         1920x1080 on a copy of the day-70 save.
-     - **Type for reading — done (2026-10-28).** `shell.css` names the body face once, `--read` (EB Garamond),
-       and its header says the rule: anything that runs past one line is `--read` at 16px or more; IM Fell
-       English is a voice (a keeper's line, a dialogue, a flavour line), never under 17px; Cinzel stays for
-       names and labels. Every screen's CSS went through it in one pass: about 170 IM Fell lines under 17px
-       became `--read` (their style and colour kept), and running text under 16px rose to 16px (the deeds'
-       lines on REPUTATIONS were 14px IM Fell italic). Labels on one line kept their size. Not touched: the
-       map sheet's own lettering in `map/sheet.js` (it is the chart's hand, drawn on the canvas).
-       - The members, reputations and charter pages, the map, the wiki, the Tannery's shop and the Bank were
-         looked at in headless Edge at 1920x1080 before and after (day-70 and day-12 saves): nothing overflows.
-         The draft, the talk, the report, the talents and the battle were not looked at; their running text
-         grew by at most 2px.
-     - **The talent map shows more of the tree — done (2026-10-29).** No tree is deeper than three rings, so
-       what is in reach plus two rings is the whole tree: the work was making it fill the box. THE MAP's view is
-       the whole `#tree` box (was a fixed 1004x664, 40px short), the rings are ellipses squashed to the box's
-       shape (`AY = 0.8`, `AX` from the box's aspect), and FIT reads both axes. The combat and work trees open at
-       73% (were 57%), past the 62% where every name shows, so the whole tree is named from the start.
-       - The four trees of a day-70 dwarf were looked at in headless Edge at 1920x1080 before and after. Only
-         the client changed; no test reads the layout.
-       - What the author meant was THE BRANCH (the map's change stayed): its neighbourhood showed only the
-         line above, the siblings and two generations below. It now shows the family within reach: the line to
-         the root with each one's siblings (the uncles), and two generations under the talent and its siblings
-         (the nephews), each layer under its parents; kin off the line and its descendants are dimmed. Piecework
-         shows Steady Pace under Brisk Hands, Steady Pace shows Piecework. Cousins (an uncle's children) stay
-         out. Looked at in headless Edge on the same save.
-   - **After the families, by eye** (screenshots, a mockup first for the board):
-     - **The board's fog.** Grey (seen before), paper (never seen) and the dark (seen, unlit) stack into too
-       many layers: it is hard to tell what is dark, what is fog and what is unknown (the 2026-10-21 playtest
-       said it too). Reopens steps 5 and 6.
-     - **A pit reads as a pit, and how deep.** The board must show a pit and its depth (`board.py` elevation).
-     - **The bands walk on the map** as tokens do on the board, from node to node along the edge.
-3. **The Editor in the browser** (the character creator, the map editor, the combat lab's menu), or the author keeps
-   it as a pygame tool apart from the game.
-4. **The retirement:** the pygame screens, `app*.py`, `ui/` and `--pygame` go; `AGENTS.md` (the `ui/` rules, the
-   module table) and `gartok/ui/README.md` are rewritten for the web layer.
-
-**Done when:** no module of the game imports pygame.
+"Seguir com plano de ui" means: take the first item under **What is left** whose inputs exist, do only
+that item, meet its **Done when**, commit, then delete it from this file (one line in the commit says
+what changed for the items after it). One item per session. Start from this file, not from exploring the
+code.
+
+## Rules for new work
+
+### pygame is abandoned (since 2026-10-28)
+
+- No new pygame screen, no pygame change for a new feature, no rewiring a pygame screen onto a rule moved
+  out of it.
+- When a screen's rules move out, the screen, its `*_draw` mixin and the tests that only test it are
+  deleted in the same commit. A test that checked a rule through a screen moves onto the core module or
+  the web session, only if nothing else covers the rule.
+
+### A screen is a session, a client folder and a rules module
+
+- **Rules** live in a core module with no pygame (a *desk*: `trade.Counter`, `workbench.Bench`,
+  `guild_sheet.GuildSheet`, `dialogue.Talk`, `spoils.Spoils` ...). A test loads it with pygame blocked.
+- **The server half** is a `web/session.Session`: a `screen` id, `state`, its verbs, `tutorial_key()` and
+  `sheet_units` (who its `sheet` verb may open). It holds the desk; it never borrows a method off a screen.
+  The server routes `/api/<screen>/<verb>` to the open session and refuses another screen's verbs. A verb
+  that changes screen sets `game.session`; the client reloads on it.
+- **The client half** is `client/screens/<id>/`, with its files named in `SCREENS` in `shell.js`. A
+  screen's scripts declare top-level names, so two scripts of one page must not share one (a test checks
+  it). Shared pieces live in the shell: `$`, `api`, `esc`, `face`, `Sound`, `Tutorial`, `Sheet` (the
+  member's book as a modal, opened by any portrait marked `data-sheet`).
+- **The server filters** fog, sight and intel: the client never gets what the side does not know (the
+  rule `ai.py` lives by, `intel.known_fields`).
+- **A new screen has a tutorial card:** `tutorial_key()` plus a `tutorial.<id>` block in
+  `locales/en.json`. The shell puts the `?` at the end of the screen's `#top`.
+
+### How a step is checked
+
+- **Tests first**, in pytest through the API (`tests/test_web_*.py`).
+- **Screenshots at milestones**, only when the step is about the look: headless Edge at 1920x1080 on a copy
+  of a real save (the day-70 save `35d38388` is the usual one); clicks and drags driven over the DevTools
+  protocol when they matter.
+- **A new family of screens gets a mockup first**, one HTML page at 1920x1080 with its PNG in
+  `references/<family>_mockup/`, approved by the author before any code. Its other screens follow without
+  one.
+
+### Art direction
+
+- **The table.** The game looks like the RPG's own material (an engraved bestiary, a map inked by hand,
+  character sheets) laid on a dark wooden table.
+- **Paper is for what you read, leather is for what you act on.** The board, the bestiary, a shelf, a
+  charter are paper; panels of people and packs, the purse and the buttons are dark leather and brass. A
+  dragged ware is a paper slip. End Turn and a screen's main action are a wax seal.
+- **Colour is state:** blue your side, blood red the foe, brass the focus (the active unit, the chosen
+  action), cool verdigris for idle edges, labels and plates.
+- **Fog of war** reads as a map would: never seen is blank paper (a margin note or sound rings for what is
+  only heard), seen before is a sepia wash, in sight is lit.
+- **Type:** running text is `--read` (EB Garamond) at 16px or more; IM Fell English is a voice (a keeper's
+  line, a dialogue, a flavour line), never under 17px; Cinzel is for names and labels. The map sheet's
+  lettering is the chart's hand, drawn on the canvas.
+- **The art is not drawn in code.** Code composes images (textures, frames, portraits) and draws only state
+  (health, ranges, highlights): `pygame.draw` art is why the game looked like programmer art.
+- **Gemini makes the art**, anchored on the four engraved portraits in [references/](references/) (Gnoll 10,
+  Grippli 13, Kenku 4, Ogre 0). 2D engraving only: no isometric, 3D or pixel art.
+- **No tile sheets.** A floor is one seamless texture across the cell lines, tinted per place in code, in a
+  lower value band than the tokens (cream tokens vanished on a cream floor). Files go in
+  `gartok/web/client/img/`; what is still missing is under Art in [backlog.md](backlog.md).
+- **Item glyphs** are game-icons.net SVGs (CC BY 3.0) in `assets/icons/item/`, one per `item_icon` kind; a
+  test fails for a kind with no file.
+- **Fonts** ship in `gartok/web/client/fonts/`, never fetched at runtime.
+
+### Layouts that hold
+
+- **A hub tab:** the hub's cards from the tab's `hub_cards()`; the people or the thing you act on on leather
+  at the left (660px, where the shop's shelf sits); the ledger of choices on paper at the right.
+- **A shop or stash** shows every shopper's whole kit as a readable list, one leather column per pack
+  (worn slots and pack rows, each with icon, name, quantity and weight; past four, the columns scroll
+  sideways); the keeper is a strip across the top, not a column. Drag where it goes, or click and click;
+  Shift picks several; right-click for the item's menu.
+- **One band at a time** where items move: an item moves only between people in one place, so the screen
+  shows one band and the rule shows on the table instead of as a refusal.
+- **A pick that is for good** is click to pick, a button to confirm (the talent tree's TAKE).
+
+### The mockups
+
+Each folder under [references/](references/) is the approved look of a family, one frame per `?state=`:
+
+| Folder | Family |
+|---|---|
+| `battle_mockup/` | the board |
+| `menu_mockup/` | the title: the menu beside the last guild's charter on its map |
+| `market_mockup/` | a shop: the keeper, the shelf, the packs |
+| `map_mockup/` | the campaign map (`?state=split`, `merge`) |
+| `sheets_mockup/` | the guild's sheet: members, bands, the guild, reputations |
+| `dialogue_mockup/` | the talk before a fight |
+| `report_mockup/` | after a fight: the fallen, the report, a level-up, the field, the purse |
+| `talents_mockup/` | the talent tree: THE MAP and THE BRANCH |
+| `draft_mockup/` | a new guild: vocation, pool, commission, charter |
+
+## What is left
+
+In order. The board items are tuned by eye, so each takes a mockup first.
+
+### 1. Leaving a broken wagon behind
+
+A band with a broken wagon cannot travel (`map_session.travel` refuses it, "leaving it behind is not in the
+browser yet"), so a band with no Lumber and no garage is stuck. pygame's `abandon_screen` asked to leave the
+wagon, its cargo first (the old screen is in git before the cut of 2026-10-28).
+
+**Done when:** the map offers to leave the wagon (what happens to its cargo and hitched animals is shown
+before the yes) and the band then travels; tested through the map session.
+
+### 2. What else only pygame had: port or drop
+
+Each needs the author's call (port, or drop and delete what is left of it):
+
+- **The hand-over card between groups** (`group_turn`): today the map just moves to the next band with the
+  news slip. Its tutorial card is still registered in `tutorial.py` and `locales/en.json`.
+- **The vault read from the map** (pygame showed the strongbox's contents without going to the Bank).
+- **The auto-win of an ambush or a hunt** (`autowin.py`, a Monte Carlo estimate; no button in the
+  browser).
+
+**Done when:** each is in the browser with its tests, or deleted from the code and its tutorial copy.
+
+### 3. The tests the pygame cut lost
+
+No web test covers these yet: the clock run while a screen is open (`MapSession.tick_outside`); a guild with
+every member jailed waiting out the sentence on the map; the save refused mid-battle or mid-hunt; two due
+screens draining one at a time; the REST row's wording (how many meals, the days of rations still short); a
+trip cancelled to the next node.
+
+**Done when:** each has a test through the web sessions.
+
+### 4. The board, by eye
+
+- **The fog.** Seen before (grey), never seen (paper) and seen but unlit (dark) stack into too many layers:
+  it is hard to tell what is dark, what is fog and what is unknown (the playtests of 2026-10-21 and
+  2026-10-28 both said it). Reopens the board's colour and light (`screens/battle/board.js`).
+- **A pit reads as a pit, and how deep** (`board.py` elevation).
+- **The bands walk on the map** from node to node along the edge, as tokens walk on the board.
+
+**Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
+
+### 5. The Editor
+
+The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
+`editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
+`battle_draw` for the lab's fights). The author's call: port them to the browser (the lab's fights already
+run there: `python -m gartok.web --fight <lab fight>`), or keep the Editor as a pygame tool apart from the
+game.
+
+**Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
+
+### 6. The retirement
+
+Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
+`icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.
+They go with the last screen that reads them. Then `AGENTS.md` (the UI conventions, the `ui/` rows of the
+module table, the pygame rule) and `gartok/ui/README.md` are rewritten for the web layer.
+
+**Done when:** no module of the game imports pygame (or, if the Editor stays pygame, none outside it).
+
+### Loose ends
+
+Small, take them when passing by:
+
+- The map's blocks still carry pygame's layout hints (`gap_before`, `height`); the web ignores them. They
+  go with pygame.
+- An item's tooltip is the browser's own `title`.
+- Not ported from pygame's guild sheet: the CARGO view (every stack of a band in one sorted table). The
+  sheets mockup's "road ahead" card was never built.
+- The talent tree draws a second requirement as a red dotted line, but no talent has one yet: check it the
+  day one exists.
+- At the battle's fit zoom the trees lose their leaf detail.
+- A hunt is never saved: a window closed mid-hunt drops it (as pygame did).
+- Shipping: the PyInstaller build (`build_exe.bat`, `GARTOK.spec`) carries `gartok/web/client` but was never
+  run; pywebview or Tauri is decided at the end (pywebview's `pythonnet` is unverified on Python 3.14).
+- Accepted, written down so nobody chases them: the fog and light layer is redrawn on every step (about
+  5 ms); a wall the side never saw can stand between a light it sees and a cell in sight, which then reads a
+  little brighter (no information leaks). If big boards ever feel slow, the next cost is `ai.take_turn`'s
+  path fields (`battle._pf_field` / `board._dijkstra`).

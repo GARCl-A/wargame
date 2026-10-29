@@ -23,8 +23,8 @@ When the two disagree, `REFERENCE.md` wins.
   `sim_test.py` is a secondary check for combat/AI changes. Tiers and what is left:
   `docs/plans/test_suite.md`.
 - **pygame is abandoned.** Never update, rewire or add a pygame screen; when a screen's rules move
-  out, delete the screen and its tests in the same commit. `docs/plans/web_frontend.md` (How to
-  continue, 10z's cut list) has the rule and what is left.
+  out, delete the screen and its tests in the same commit. `docs/plans/web_frontend.md` (Rules for
+  new work, What is left) has the rule and what is left.
 - Work and commit straight on `main`; no feature branches unless the user asks for one.
   A teammate works on `main` in parallel, so `git pull` before committing.
 
