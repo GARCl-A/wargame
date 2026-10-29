@@ -109,8 +109,8 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 A short run in the browser. Its local bugs are fixed (the draft's COMMISSION hit area and cut weapon lines, the
 food alert's overflow, the Chronicle's scroll, every condition on the foe card, Edge's
 translate prompt). What needs a design call, a shared component or a behaviour pygame had is in
-[web_frontend.md](web_frontend.md) (10z's *Playtest 2026-10-28* list: the sheet as a modal, the work level-up and the tutorial
-button in the header, all done; the type, the fog, the pit, the talent map, the map's walking bands).
+[web_frontend.md](web_frontend.md) (10z's *Playtest 2026-10-28* list: the sheet as a modal, the work level-up, the tutorial
+button in the header and the type, all done; the fog, the pit, the talent map, the map's walking bands).
 
 ## Playtest notes 2026-10-21 (guild Herança)
 

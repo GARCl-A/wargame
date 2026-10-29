@@ -1338,9 +1338,17 @@ screen. Cut as step 10 was:
        - Tests: `test_web.py`'s `test_no_two_scripts_of_one_page_declare_the_same_name` (fails on the old
          clash). The map, a hub, the guild, the title and the draft were looked at in headless Edge at
          1920x1080 on a copy of the day-70 save.
-     - **Type for reading.** The deeds' lines on REPUTATIONS are small and in a face that is hard to read at
-       that size. A pass over `shell.css`: one body face and a minimum size for running text, then the
-       screens that set their own.
+     - **Type for reading — done (2026-10-28).** `shell.css` names the body face once, `--read` (EB Garamond),
+       and its header says the rule: anything that runs past one line is `--read` at 16px or more; IM Fell
+       English is a voice (a keeper's line, a dialogue, a flavour line), never under 17px; Cinzel stays for
+       names and labels. Every screen's CSS went through it in one pass: about 170 IM Fell lines under 17px
+       became `--read` (their style and colour kept), and running text under 16px rose to 16px (the deeds'
+       lines on REPUTATIONS were 14px IM Fell italic). Labels on one line kept their size. Not touched: the
+       map sheet's own lettering in `map/sheet.js` (it is the chart's hand, drawn on the canvas).
+       - The members, reputations and charter pages, the map, the wiki, the Tannery's shop and the Bank were
+         looked at in headless Edge at 1920x1080 before and after (day-70 and day-12 saves): nothing overflows.
+         The draft, the talk, the report, the talents and the battle were not looked at; their running text
+         grew by at most 2px.
      - **The talent map shows more of the tree.** THE MAP has room, across and down, for one or two more rings
        around what is in reach; widen the starting view (`talents.js`).
    - **After the families, by eye** (screenshots, a mockup first for the board):

@@ -68,7 +68,7 @@
   box-shadow:0 0 0 2px #2a1c10,0 0 0 5px var(--side,var(--blood)),0 0 0 7px #2a1c10,0 6px 12px rgba(40,20,5,.45)}
 .foehead .med img,.foehead .med .initial{width:100%;height:100%;border-radius:50%}
 .foehead h2{font:700 23px/1.08 Cinzel,serif;color:#2a1a0e}
-.foehead .race{font:italic 16px/1.25 "IM Fell English",serif;color:#5b4630;margin-top:6px}
+.foehead .race{font:italic 16px/1.25 var(--read);color:#5b4630;margin-top:6px}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .chip{font:700 9.5px/1 Cinzel,serif;letter-spacing:.16em;color:#f3e1d2;background:var(--blood);padding:5px 7px 4px;border-radius:2px;text-transform:uppercase}
 .chip.muted{background:#7d6748}
@@ -77,15 +77,15 @@
 .health i.on{background:var(--blood)}
 .tier{display:grid;grid-template-columns:74px 1fr;gap:8px;padding:7px 0;border-top:1px dashed rgba(90,60,30,.3)}
 .tier>span{font:600 10px/1.9 Cinzel,serif;letter-spacing:.2em;color:#8a6c47;text-transform:uppercase}
-.facts{display:flex;flex-wrap:wrap;gap:4px 14px;font:16px/1.4 "EB Garamond",serif;color:#3a2918}
+.facts{display:flex;flex-wrap:wrap;gap:4px 14px;font:16px/1.4 var(--read);color:#3a2918}
 .facts b{font-weight:600;color:#24170c}
 .facts .q{color:#9b8565;font-style:italic}
 .facts .q:after{content:" ?";font-family:"IM Fell English";color:#7a2318}
 .known{margin-top:14px}
-.assess{margin-top:10px;font:italic 15px/1.3 "IM Fell English",serif;color:#5b4630}
+.assess{margin-top:10px;font:italic 16px/1.3 var(--read);color:#5b4630}
 .empty{margin-top:16px;font:italic 17px/1.4 "IM Fell English",serif;color:#6b5438}
 .chron{flex:1;padding:20px 24px 16px;overflow:hidden;display:flex;flex-direction:column}
-.chron .entries{margin-top:10px;font:16px/1.36 "IM Fell English",serif;color:#3a2918;overflow-y:auto;min-height:0;
+.chron .entries{margin-top:10px;font:16px/1.36 var(--read);color:#3a2918;overflow-y:auto;min-height:0;
   display:flex;flex-direction:column;flex:1;padding-right:6px;scrollbar-width:thin;scrollbar-color:rgba(90,60,30,.35) transparent}
 .chron .entries>:first-child{margin-top:auto}
 .chron .rnd{display:flex;align-items:center;gap:10px;margin:8px 0 5px;font:700 11px/1 Cinzel,serif;letter-spacing:.3em;color:#8a6c47;text-transform:uppercase}
@@ -107,7 +107,7 @@
   box-shadow:0 0 0 1.5px #3a2610,0 4px 8px rgba(0,0,0,.6);cursor:help}
 .unit .lvl small{font-size:9px;letter-spacing:.14em;margin-right:3px}
 .unit h1{font:700 28px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
-.unit .race{font:italic 16px/1 "IM Fell English",serif;color:#b59c76;margin-top:6px}
+.unit .race{font:italic 16px/1 var(--read);color:#b59c76;margin-top:6px}
 .unit .waiting{position:absolute;left:192px;top:54px;font:italic 20px/1.3 "IM Fell English",serif;color:#b59c76}
 .stats{display:flex;gap:9px;margin-top:10px}
 .stat{min-width:58px;padding:6px 8px 5px;text-align:center;border-radius:2px;
@@ -120,7 +120,7 @@
 .drops i.off{background:#3a2a1e}
 .hpbar{height:8px;margin-top:6px;border-radius:2px;background:#3a2a1e;overflow:hidden}
 .hpbar i{display:block;height:100%;background:var(--blood-hi)}
-.weapon{margin-top:8px;font:15px/1.1 "EB Garamond",serif;color:#c9b38c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.weapon{margin-top:8px;font:16px/1.1 var(--read);color:#c9b38c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .weapon b{font:600 13px/1 Cinzel,serif;letter-spacing:.08em;color:#f0dfb8;margin-right:6px}
 .weapon em{color:var(--brass-hi);font-style:normal;font-family:Cinzel;font-size:11px;letter-spacing:.16em;margin-left:4px;text-transform:uppercase}
 .ap{position:absolute;right:18px;top:16px;text-align:right}
@@ -131,7 +131,7 @@
 .ap .coins i.spent{background:#2a2017;box-shadow:inset 0 0 0 1.5px #4a3a28}
 
 .bar{position:absolute;left:584px;top:0;width:1090px;height:150px}
-.bar .hint{display:flex;align-items:center;gap:12px;height:24px;font:italic 16px/1 "IM Fell English",serif;color:#a9bdb6}
+.bar .hint{display:flex;align-items:center;gap:12px;height:24px;font:italic 16px/1 var(--read);color:#a9bdb6}
 .bar .tabs{margin-left:auto;display:flex;gap:2px}
 .bar .tabs span{font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:var(--verdigris);padding:6px 12px;border-bottom:1px solid rgba(111,148,140,.3);cursor:pointer;text-transform:uppercase}
 .bar .tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
@@ -193,7 +193,7 @@
 .ask{width:760px;padding:30px 36px 28px}
 .ask h2{font:700 30px/1.1 Cinzel,serif;color:#2a1a0e}
 .ask .line{margin-top:10px;font:italic 20px/1.35 "IM Fell English",serif;color:#5b4630}
-.ask .foes{margin-top:8px;font:13px/1.3 "EB Garamond",serif;color:#7d5c37}
+.ask .foes{margin-top:8px;font:16px/1.3 var(--read);color:#7d5c37}
 .ask .head{display:flex;gap:20px;align-items:center;margin-top:14px}
 .ask .face{width:96px;height:96px;flex:none;border-radius:50%;overflow:hidden;
   box-shadow:0 0 0 2px #2a1c10,0 0 0 5px var(--blood),0 0 0 7px #2a1c10,0 6px 12px rgba(40,20,5,.45)}
@@ -201,7 +201,7 @@
 .ask .cols{display:grid;grid-template-columns:230px 1fr;gap:20px;margin-top:20px}
 .ask .who,.ask .opt{padding:9px 10px;border-radius:2px;cursor:pointer;border:1px solid rgba(90,60,30,.25);margin-bottom:6px}
 .ask .who b,.ask .opt b{display:block;font:700 14px/1.1 Cinzel,serif;color:#2a1a0e}
-.ask .who small,.ask .opt small{display:block;margin-top:3px;font:13px/1.25 "EB Garamond",serif;color:#6b5236}
+.ask .who small,.ask .opt small{display:block;margin-top:3px;font:16px/1.25 var(--read);color:#6b5236}
 .ask .who.sel{background:rgba(201,163,94,.35);border-color:#7d5c37}
 .ask .opt:hover,.ask .who:hover{background:rgba(201,163,94,.2)}
 .ask .opt .check{float:right;font:600 12px/1 Cinzel,serif;color:#7d5c37}
@@ -217,4 +217,4 @@
 .endcard h1.lost{color:var(--blood)}
 .endcard p{margin-top:14px;font:italic 19px/1.4 "IM Fell English",serif;color:#5b4630}
 .endcard .row{margin-top:26px;display:flex;gap:10px;justify-content:center;align-items:center}
-.endcard select{height:40px;padding:0 10px;font:16px "EB Garamond",serif;background:#f4e9cf;border:1px solid #6b4f2c;color:#2a1a0e}
+.endcard select{height:40px;padding:0 10px;font:16px var(--read);background:#f4e9cf;border:1px solid #6b4f2c;color:#2a1a0e}
