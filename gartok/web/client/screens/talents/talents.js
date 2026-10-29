@@ -250,13 +250,17 @@ function branch(tree) {
   };
   T.nodes.filter(n => !n.requires || !B[n.requires]).forEach(r => row(r, 0));
 
-  const anc = [];
-  for (let c = B[sel.requires]; c; c = B[c.requires]) anc.unshift(c);
-  const sib = sel.requires ? kids(sel.requires).filter(n => n !== sel) : [];
-  const down = kids(sel.id), grand = down.flatMap(k => kids(k.id));
-  const layers = [...anc.map(n => [n]), [...sib.slice(0, Math.ceil(sib.length / 2)), sel, ...sib.slice(Math.ceil(sib.length / 2))]];
-  if (down.length) layers.push(down);
-  if (grand.length) layers.push(grand);
+  // the family within a reasonable reach: the line to the root with each one's siblings (uncles), and two
+  // generations under the talent and its siblings (nephews)
+  const kin = new Set(line);
+  for (const id of line) if (B[id].requires) kids(B[id].requires).forEach(k => kin.add(k.id));
+  let gen = sel.requires ? kids(sel.requires) : [sel];
+  for (let g = 0; g < 2; g++) { gen = gen.flatMap(n => kids(n.id)); gen.forEach(n => kin.add(n.id)); }
+  let root = sel;
+  while (B[root.requires]) root = B[root.requires];
+  const layers = [];
+  for (let L = [root]; L.length; L = L.flatMap(n => kids(n.id)).filter(n => kin.has(n.id))) layers.push(L);
+  const near = new Set([...line, ...below(sel).map(n => n.id)]);
   const W = 620, P = Math.min(120, 600 / layers.length), XY = {};
   layers.forEach((L, i) => L.forEach((n, j) => { XY[n.id] = [W / (L.length + 1) * (j + 1), 40 + P * i]; }));
   let lines = "", html = "";
@@ -266,7 +270,7 @@ function branch(tree) {
       const [px, py] = XY[n.requires], [qx, qy] = XY[id];
       lines += `<path d="M${px} ${py + 32} C${px} ${(py + qy) / 2} ${qx} ${(py + qy) / 2} ${qx} ${qy - 32}" fill="none" ${stroke(n.state)}/>`;
     }
-    html += nodeHtml(n, ...XY[id], sib.includes(n) ? "sib" : "");
+    html += nodeHtml(n, ...XY[id], near.has(id) ? "" : "sib");
   }
   tree.insertAdjacentHTML("beforeend", `<div class="outline"><div class="kicker">All ${T.nodes.length}<em>open along this branch</em></div><div class="orows">${rows}</div></div>
     <div class="hood"><div class="kicker">Around ${esc(sel.name)}<em>needs above · opens below</em></div>

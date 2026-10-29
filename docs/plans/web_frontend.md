@@ -1356,6 +1356,12 @@ screen. Cut as step 10 was:
        73% (were 57%), past the 62% where every name shows, so the whole tree is named from the start.
        - The four trees of a day-70 dwarf were looked at in headless Edge at 1920x1080 before and after. Only
          the client changed; no test reads the layout.
+       - What the author meant was THE BRANCH (the map's change stayed): its neighbourhood showed only the
+         line above, the siblings and two generations below. It now shows the family within reach: the line to
+         the root with each one's siblings (the uncles), and two generations under the talent and its siblings
+         (the nephews), each layer under its parents; kin off the line and its descendants are dimmed. Piecework
+         shows Steady Pace under Brisk Hands, Steady Pace shows Piecework. Cousins (an uncle's children) stay
+         out. Looked at in headless Edge on the same save.
    - **After the families, by eye** (screenshots, a mockup first for the board):
      - **The board's fog.** Grey (seen before), paper (never seen) and the dark (seen, unlit) stack into too
        many layers: it is hard to tell what is dark, what is fog and what is unknown (the 2026-10-21 playtest
