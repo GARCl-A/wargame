@@ -6,9 +6,17 @@ or Huge weapon, a spell scroll and a language dictionary share the icon of their
 """
 
 from . import items
-from .ui.item_icons import TONES, draw_item_icon
 from .ui.tokens import T
 
+TONES = {
+    "iron": (150, 158, 170), "steel": (190, 198, 210), "wood": (150, 108, 66), "oak": (112, 78, 46),
+    "leather": (160, 120, 76), "brass": T.BRASS, "gold": (226, 186, 72), "copper": (190, 112, 68),
+    "cloth": (156, 146, 126), "bone": (216, 208, 186), "stone": (132, 132, 138), "coal": (74, 74, 82),
+    "paper": (214, 200, 164), "glass": (190, 205, 215), "red": (176, 66, 58), "green": (106, 146, 98),
+    "purple": (150, 100, 182), "blue": (84, 124, 176), "flesh": (196, 98, 84), "salt": (226, 226, 222),
+    "fruit": (190, 62, 52), "potato": (176, 140, 86), "mushroom": (190, 70, 62), "rot": (118, 130, 80),
+    "amber": (214, 150, 52), "jerky": (128, 72, 54), "fur": (140, 118, 98), "storm": (122, 150, 196),
+}
 RIM = {items.ItemRarity.UNCOMMON: T.GREEN, items.ItemRarity.RARE: T.BRASS, items.ItemRarity.UNIQUE: T.BLOOD}
 SCALE = 0.8
 
@@ -179,6 +187,7 @@ def vocation_icon(vocation_id):
 
 
 def draw_icon(surf, rect, name):
+    from .ui.item_icons import draw_item_icon
     if hasattr(name, "name"):
         name = name.name
     kind, tone, rim, scale, shape = icon_spec(name)

@@ -94,7 +94,7 @@ const Shop = (() => {
   function column(p) {
     const head = p.store
       ? `<div class="med store">${ico(p.glyph)}</div>`
-      : `<div class="med ${p.hurt ? "hurt" : ""}">${face(p.portrait, p.name)}</div>`;
+      : `<div class="med ${p.hurt ? "hurt" : ""}" data-sheet="${p.id}" title="Open ${esc(p.name)}'s sheet">${face(p.portrait, p.name)}</div>`;
     let add = 0;
     if (picks && picks.ware) add = ware(picks.ware).weight * (qty[picks.ware] || 1);
     const tight = p.kg > p.normal, over = p.kg + add > p.max;

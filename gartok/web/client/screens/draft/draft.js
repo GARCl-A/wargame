@@ -126,7 +126,7 @@ function dossier(c, i) {
   const stamps = c.tags.map(t => `<span class="stamp ${t.commissioned ? "star" : t.style}" title="${esc(t.desc)}">${t.commissioned ? "★ " : ""}${esc(t.label)}</span>`).join("");
   return `<div class="paper dos ${k >= 0 ? "picked" : ""}" data-pick="${i}" style="left:${530 + (i % 3) * 452}px;top:${108 + Math.floor(i / 3) * 314}px">
     ${k >= 0 ? `<div class="ribbon">${k + 1}</div>` : c.commissioned ? `<span class="newmark">commissioned</span>` : ""}
-    <div class="top">${medal(c.portrait, c.name, 68)}
+    <div class="top"><div data-sheet="${c.uid}" title="Open ${esc(c.name)}'s whole sheet">${medal(c.portrait, c.name, 68)}</div>
       <div class="who"><h4>${esc(c.name)}</h4><div class="ro">${esc(c.race)} · ${esc(c.occ)}</div>
         <div class="al">${esc(c.align)} · ${esc(c.size)} · age ${c.age}</div><div class="stamps">${stamps}</div></div></div>
     <div class="vit"><div><span>HP</span><b>${c.hp}</b></div><div><span>AC</span><b>${c.ac}</b></div><div><span>MD</span><b>${c.md}</b></div><div><span>SPD</span><b>${c.spd}</b></div><div><span>INIT</span><b>${esc(c.init)}</b></div></div>

@@ -47,23 +47,3 @@ def test_the_cap_and_the_filter_hold():
 def test_enter_is_left_to_the_screen():
     f = TextField(8)
     assert not f.key(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN, unicode="\r"))
-
-
-def test_renaming_a_group_inserts_where_the_caret_is():
-    from gartok.group import Group
-    from gartok.group_screen import GroupScreen
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    from tests.helpers import Unit
-
-    pygame.init()
-    g = Group([Unit("player")], node="market")
-    g.name = "Wolfs"
-    scr = GroupScreen(ui_fonts(), Guild(None, groups=[g]), g, lambda: None)
-    scr._handle_button("rename")
-    for k in (pygame.K_LEFT, "e"):
-        ev = (pygame.event.Event(pygame.KEYDOWN, key=0, unicode=k) if isinstance(k, str)
-              else pygame.event.Event(pygame.KEYDOWN, key=k, unicode=""))
-        scr.handle_event(ev)
-    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN, unicode=""))
-    assert g.name == "Wolfes"

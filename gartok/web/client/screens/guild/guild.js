@@ -69,43 +69,6 @@ function roster(M) {
     <div class="rfoot"><b>${G.count}</b> members · <b>${M.slots[0]}</b> of <b>${M.slots[1]}</b> bands in the field</div></div>`;
 }
 
-function memberPages(u) {
-  const lowAll = u.attrs.some(a => a.low);
-  const where = u.band ? `Rides with <b>${esc(u.band)}</b><br>at the ${esc(u.where)}, ${esc(u.task)}` : esc(u.where);
-  const L = `<div class="who"><div class="plate">${face(u.portrait, u.name)}</div><div>
-      <h1>${esc(u.name)}</h1>
-      <div class="race"><b>${esc(u.race)} ${esc(u.occ)}</b><br>${u.age} years · ${esc(u.align)}</div>
-      <div class="pos">${where}</div>
-      <div class="stamps">${u.stamps.map(s => `<span class="stamp ${s.tone}">${esc(s.text)}</span>`).join("")}</div>
-    </div></div>
-    <div class="sec2"><div class="kicker">Attributes${lowAll ? "<em>hungry: they count lower</em>" : ""}</div>
-    <div class="boxes attrs">${u.attrs.map(a => `<div class="box ${a.low ? "low" : ""}"><div class="k">${a.k}</div><div class="v">${a.v}</div><div class="m">${sign(a.mod)}</div></div>`).join("")}</div></div>
-    <div class="sec2"><div class="kicker">In a fight${u.status.length ? `<em>${esc(u.status.join(", "))}</em>` : ""}</div>
-    <div class="boxes vitals">
-      <div class="box" title="${esc(u.hp_tip)}"><div class="k">HIT POINTS</div><div class="hp"><span class="v">${u.hp[0]}</span><small>/ ${u.hp[1]}</small></div><div class="hpline"><i class="${hpcls(...u.hp)}" style="width:${u.hp[0] / u.hp[1] * 100}%"></i></div></div>
-      ${u.stats.map(s => `<div class="box" title="${esc(s.tip)}"><div class="k">${s.k}</div><div class="v">${esc(String(s.v).replace("-", "−"))}</div></div>`).join("")}
-    </div>
-    <div class="weapon">${ico(u.weapon.glyph)}<div><h3>${esc(u.weapon.name)}</h3><div class="tags">${esc(u.weapon.tags.replace(/ {2}· {2}/g, " · "))} · ${esc(u.weapon.crit)}</div></div></div>
-    <div class="chips">${u.weapon.chips.map(c => `<div class="chip" title="${esc(c.tip)}"><span>${c.k}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"><span>ACTION</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
-    <div class="sec2"><div class="kicker">Kit</div><div class="kit">
-      ${u.kit.map(r => `<div class="r"><span>${r.k}</span><b>${r.k === "Purse" ? `<i class="coindot"></i> ` : ""}${esc(r.v)}</b><em class="${r.bad ? "bad" : ""}">${esc(r.note)}</em></div>`).join("")}
-    </div></div>
-    <div class="sec2"><div class="kicker">Of the ${esc(u.race)}</div>
-      <div class="ab"><b>${esc(u.ability[0])}</b>: <i>${esc(u.ability[1])}</i></div>
-      <div class="ab"><b>Speaks</b>: <i>${esc(u.langs.join(", "))}</i></div></div>`;
-  const R = `<div class="kicker">Career<em>racial level ${u.racial}</em></div>
-    ${u.tracks.map(t => {
-      const [lv, ...rest] = t.value.split("  ");
-      return `<div class="track" title="${esc(t.tip)}"><div class="h"><b>${esc(t.label)}</b><span>${esc(lv.replace("LVL", "Lv"))}<small>${esc(rest.join(" ").replace(/[()]/g, ""))}</small></span></div>
-        <div class="bar2"><i style="width:${Math.max(2, t.frac * 100)}%"></i></div><p>${esc(t.text)}</p></div>`;
-    }).join("")}
-    <div class="sec2"><div class="kicker">Talents<em>${u.talents.length} taken</em></div>
-    ${u.talents.length ? `<div class="tal">${u.talents.map(t => `<div><span><b>${esc(t.name)}</b><br><em>${esc(t.desc)}</em></span></div>`).join("")}</div>`
-      : `<div class="none">None taken yet.</div>`}</div>
-    <div class="sec2"><div class="kicker">Record</div><div class="rec">${u.record.map(p => `<p>${esc(p)}</p>`).join("")}</div></div>`;
-  return [L, R];
-}
-
 function memberActs(u) {
   const role = r => `<div class="role" title="${esc(r.tip)}"><div class="t"><b>${esc(r.title)}</b>${r.current ? `<span class="mark good">current</span>` : ""}</div>
       <p>${esc(r.sub)}</p>${r.action ? `<div class="act"><div class="ghost-btn ${r.action.on ? "" : "off"}" data-role="${r.key}">${esc(r.action.label)}</div></div>` : ""}</div>`;
@@ -114,30 +77,18 @@ function memberActs(u) {
   return `<div class="leather" id="acts">${tree}<div class="lbl" style="margin:24px 2px 0">Roles</div>${u.roles.map(role).join("")}${open}</div>`;
 }
 
-function animalPages(a) {
-  const L = `<div class="who"><div class="plate">${face(a.portrait, a.name)}</div><div>
-      <h1>${esc(a.name)}</h1><div class="race"><b>${esc(a.sub)}</b></div>
-      <div class="pos">${a.band ? `Kept by <b>${esc(a.band)}</b><br>at the ${esc(a.where)}` : esc(a.where)}</div></div></div>
-    <div class="sec2"><div class="kicker">Attributes</div>
-    <div class="boxes attrs">${a.attrs.map(x => `<div class="box"><div class="k">${x.k}</div><div class="v">${x.v}</div><div class="m">${sign(x.mod)}</div></div>`).join("")}</div></div>
-    <div class="sec2"><div class="kicker">Body</div><div class="boxes vitals">
-      <div class="box"><div class="k">HIT POINTS</div><div class="hp"><span class="v">${a.hp[0]}</span><small>/ ${a.hp[1]}</small></div><div class="hpline"><i class="${hpcls(...a.hp)}" style="width:${a.hp[0] / a.hp[1] * 100}%"></i></div></div>
-      <div class="box"><div class="k">SPD</div><div class="v">${esc(a.speed)}</div></div></div></div>
-    ${a.ability ? `<div class="sec2"><div class="kicker">Its nature</div><div class="ab"><b>${esc(a.ability[0])}</b>: <i>${esc(a.ability[1])}</i></div></div>` : ""}`;
-  const R = `<div class="kicker">At work</div>${a.work.map(w => `<div class="kit"><div class="r"><span>${esc(w.k)}</span><b style="white-space:normal;font-weight:400;color:${w.tone === "bad" ? "#8e2a1e" : "#24170c"}">${esc(w.v)}</b><em></em></div></div>`).join("")}`;
-  const acts = `<div class="leather" id="acts"><div class="lbl" style="margin:4px 2px 0">An animal of the band</div>
+function animalActs(a) {
+  return `<div class="leather" id="acts"><div class="lbl" style="margin:4px 2px 0">An animal of the band</div>
     <div class="empty-note">It has no talents or roles. Its tack, its load and what it pulls are set on the band's table.</div>
     ${a.band ? `<div class="acts-foot"><div class="ghost-btn" data-open="${a.gid}">${ico("item/knapsack")}Open ${esc(a.band)}</div></div>` : ""}</div>`;
-  return [L, R, acts];
 }
 
 function drawMembers() {
   const M = G.members, u = M.sheet;
-  let pages = ["", ""], acts = "";
-  if (u && u.beast) { const [L, R, A] = animalPages(u); pages = [L, R]; acts = A; }
-  else if (u) { pages = memberPages(u); acts = memberActs(u); }
+  const pages = u ? Sheet.pages(u) : ["", ""];
+  const acts = !u ? "" : u.beast ? animalActs(u) : memberActs(u);
   const keep = $("roster") ? $("roster").querySelector(".rlist").scrollTop : 0;
-  $("body").innerHTML = roster(M) + `<div class="paper" id="sheet"><div class="lpage">${pages[0]}</div><div class="rpage">${pages[1]}</div></div>` + acts;
+  $("body").innerHTML = roster(M) + `<div class="paper book" id="sheet"><div class="lpage">${pages[0]}</div><div class="rpage">${pages[1]}</div></div>` + acts;
   $("roster").querySelector(".rlist").scrollTop = keep;
 }
 

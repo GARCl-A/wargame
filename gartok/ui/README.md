@@ -42,16 +42,10 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `tokens.py` | `T` palette / spacing / font sizes, `fonts()`, `mix()` |
 | `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize` / `with_caret`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
 | `item_icons.py` | item silhouettes drawn in code (`draw_item_icon`: ~50 kinds, one generator each, a `wagon` for the Stables; `gartok/item_icon.py` maps items and the six vocations to them) |
-| `hscroll.py` | `ColumnScroll`: sideways scroll over a row of equal columns (`fit`, `wheel`, `hint`, `click`) |
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
 | `board_style.py` | the battle board's palette (each place's floor in `FLOOR_STYLES`), `battle_layout`, `BoardView` (pan/zoom camera) |
 | `floors.py` | each place's floor (flagstones, Arena sand and stone, grass and trees, packed earth, cobbles, cave rock): the board painted once at `TEX` px a cell, cached, and scaled to the view (`blit_board`); `ground` is the editor's; a scenario names its `floor`, a node or an authored map may override it |
 | `inspector_panel.py` | the INSPECTOR zone: selected band, status, available orders |
-| `quest_panel.py` | active-mission cards with deadline and progress |
-| `guild_roster.py` | the guild roster: filter pills, band accordions, member cards with status pills |
-| `member_panel.py` | the guild member sheet, one `draw_*` per block (vitals, weapon, load, tracks, roles) |
-| `guild_panel.py` | the guild overview: fame, group slots, each group's task and warnings, holdings |
-| `reputation_panel.py` | faction cards (deeds, unlocks) in as many columns as fit |
 | `sheet_card.py` | the character sheet at three densities |
 | `foe_panel.py` | what a side knows of a foe: its visible traits and the fields Intelligence opened, `?` for the rest |
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |

@@ -117,7 +117,7 @@ def check_and_bank(guild):
 
 
 def card_data(guild) -> dict:
-    """Format objectives into a card dictionary for `reputation_panel.draw_reputation`."""
+    """The objectives as a card: the count done, the blurb and one row per objective."""
     check_and_bank(guild)
     done_set = set(guild.objectives_done)
     deeds = []

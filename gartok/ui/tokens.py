@@ -4,8 +4,6 @@ The "steel desk + paper map" language: the one palette, spacing grid and
 font set every screen draws from (see `README.md` next to this file).
 """
 
-import pygame
-
 
 class T:
     # --- table (chrome: darkened steel) --------------------------------
@@ -68,6 +66,7 @@ _font_cache = None
 def _hub_fonts(serif):
     """The hub screens' set (`hub_*`): plain sans (not condensed) for text, serif small caps
     for names and headings -- each small-caps size comes with its `_sc` lower-case partner."""
+    import pygame
     sans = "dejavusans,arial"
     out = {}
     for key, size in (("hub_title", T.F_HUB_TITLE), ("hub_head", T.F_HUB_HEAD), ("hub_card", T.F_HUB_CARD),
@@ -91,6 +90,7 @@ def fonts():
     frame without re-hitting `pygame.font.SysFont` each time."""
     global _font_cache
     if _font_cache is None:
+        import pygame  # only the fonts need it: T is read where pygame never loads
         if not pygame.font.get_init():
             pygame.font.init()
         cond = "dejavusanscondensed,dejavusans,arial"

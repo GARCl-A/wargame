@@ -323,9 +323,8 @@ def column(surf, F, rect, member, scroll, mouse):
                 "dots_hits": dots_hits, "scroll": 0, "action_rect": action_rect}
 
     # `scroll` is an item-index offset (rows scrolled past), not pixels --
-    # it's `PackColumnMixin`'s own wheel handler that owns this value
-    # (`gartok/packbox.py`, shared with the pack screens), one row per wheel
-    # tick, clamped only to `len(items)-1`; re-clamp here to what actually
+    # one row per wheel tick, clamped only to `len(items)-1` by its caller;
+    # re-clamp here to what actually
     # fits so a stale value from a shorter previous list can't skip rows
     row_h = T.S * 6 + T.S
     visible_n = max(1, list_rect.h // row_h)

@@ -38,8 +38,7 @@ class Screen:
     def tutorial_key(self):
         """The id (`tutorial.TUTORIALS`) of the tutorial card that applies
         to this screen right now, or None for no card. A screen with more than
-        one teachable moment (a tab, a phase) reads its own state here -- see
-        `GuildScreen.tutorial_key` switching on `self.tab`. The default is None:
+        one teachable moment (a tab, a phase) reads its own state here. The default is None:
         most screens (the menu, the editors, ...) never get one."""
         return
 

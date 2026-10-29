@@ -4,7 +4,7 @@ import os
 import random
 
 from gartok.guild import Guild
-from tests.helpers import Unit, click_menu, data, economy, packed, standard_unit
+from tests.helpers import Unit, data, economy, packed, standard_unit
 
 
 def test_battle_export_state_writes_a_json_snapshot(tmp_path, monkeypatch):
@@ -129,44 +129,6 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     assert ms.purse == 0 and "3 of 10" in ms.notice
 
 
-def test_dragselect_ignores_a_mouseup_with_no_matching_press():
-    """Entering the market via the squad picker's GO SHOPPING button leaves the
-    left button down; the release then lands on the scene that just replaced it.
-    That stray MOUSEBUTTONUP must not count as a click (which would fire
-    LEAVE THE MARKET and bounce the player straight back out)."""
-    import pygame
-
-    from gartok.dragselect import DragSelectMixin
-    from gartok.screen import Screen
-
-    class Probe(DragSelectMixin, Screen):
-        def __init__(self):
-            super().__init__()
-            self.drops = 0
-            self.tab_hits = []              # [(rect, unit)]
-            self.buttons = []                  # [(key, rect)]
-            self._pack_scroll = {}
-            self._pack_area = None
-            self.managed = []
-            self._cap = len(self.managed)
-            self._hot = False         # columns that fit (recomputed each frame)
-
-        def _source_at(self, px):
-            return None
-
-        def _drop(self, px, dragging, src):
-            self.drops += 1
-
-    p = Probe()
-    up = pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": (10, 10)})
-    p.handle_event(up)
-    assert p.drops == 0                               # stray release: no-op
-
-    down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (5, 5)})
-    p.handle_event(down)
-    p.handle_event(up)
-    assert p.drops == 1                               # a real press/release still lands
-
 
 def test_every_race_has_a_token_icon_that_loads():
     """`theme.token_badge` draws `artwork.RACE_ICON[race]` -> a file under
@@ -189,58 +151,16 @@ def test_every_race_has_a_token_icon_that_loads():
     assert artwork.icon("head", "no-such-glyph", 24) is None                   # graceful
 
 
-def test_guild_screen_member_detail_renders():
-    """GuildScreen only draws the detail panel if a member is selected. This test
-    ensures _draw_detail runs without crashing."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
 
-    from gartok.guild import Guild
-    from gartok.guild_screen import GuildScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    roster = [Unit("player")]
-    guild = Guild(roster)
-    scr = GuildScreen(ui_fonts(), guild, lambda *args: None, lambda: None)
-    scr.member = roster[0]
-    
-    surf = pygame.Surface((1280, 800))
-    scr.mouse = (0, 0)
-    scr.draw(surf)
-
-    # Test with experienced unit
-    u2 = Unit("veteran")
-    u2.combat_xp = 12   # Combat Lv 2
-    u2.work_hours = 32  # Work Lv 1 (2 marks)
-    roster.append(u2)
-    scr.member = u2
-    scr.draw(surf)
-
-    # Find progression track coordinates and test tooltips
-    pad = 16
-    list_w = int(min(max(1280 * 0.24, 264), 380))
-    det_w = min(1120, 1280 - 2 * pad - list_w - 16)
-    inner = det_w - 2 * 16
-    col_a = min(440, int(inner * 0.55))
-    bx = pad + list_w + 16 + 16 + col_a + 24
-    
-    # Hover around progression tracks area
-    scr.mouse = (bx + 10, 350)
-    scr.draw(surf)
-    assert scr.tooltip is not None
-
-
-def test_group_screen_multidrop_moves_every_picked_pack_item():
-    from gartok.group_screen import GroupScreen
+def test_the_band_multidrop_moves_every_picked_pack_item():
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
     random.seed(4)
     a, b = Unit("player"), Unit("player")
     a._base_inventory = packed(["Rope", "Meat", "Torch"])
     b._base_inventory = []
     g = Guild([a, b])
-    scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
+    scr = BandKit(g, g.groups[0])
     scr.selected = [(a, 0), (a, 2)]                       # indices bracket a keeper
     scr._give_many(b, "pack")
     assert a._base_inventory == packed(["Meat"])     # the un-picked row is untouched
@@ -248,78 +168,21 @@ def test_group_screen_multidrop_moves_every_picked_pack_item():
     assert scr.selected == []
 
 
-def test_group_screen_multidrop_on_a_hand_takes_the_first_that_fits():
-    from gartok.group_screen import GroupScreen
+def test_the_band_multidrop_on_a_hand_takes_the_first_that_fits():
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
     random.seed(4)
     a = Unit("player")
     a.equipped_weapon = None
     a._base_inventory = packed(["Rope", "Dagger"])
     g = Guild([a])
-    scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
+    scr = BandKit(g, g.groups[0])
     scr.selected = [(a, 0), (a, 1)]
     scr._give_many(a, "hand")
     assert a.equipped_weapon == "Dagger" and a._base_inventory == packed(["Rope"])
 
 
-def test_pack_stacks_group_identical_items_with_their_indices():
-    from gartok.group_screen import GroupScreen
-    from gartok.guild import Guild
-    a = Unit("player")
-    a._base_inventory = packed(["Potato"] * 3 + ["Rope"] + ["Potato"] * 2)
-    g = Guild([a])
-    scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
-    assert scr._stacks(a._base_inventory) == [
-        ("Potato", 0, 5), ("Rope", 1, 1)]
 
-
-def SKIP_test_shift_click_a_stack_row_grabs_every_index_in_it():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.group_screen import GroupScreen
-    from gartok.guild import Guild
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    a = Unit("player")
-    a._base_inventory = ["Potato"] * 3
-    g = Guild([a])
-    scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
-    
-    # mock the drawn source row
-    scr.sources = [(pygame.Rect(0, 0, 10, 10), a, 2)]
-    
-    try:
-        pygame.key.set_mods(pygame.KMOD_LSHIFT)
-        scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, pos=(5, 5), button=1))
-    finally:
-        pygame.key.set_mods(pygame.KMOD_NONE)
-    assert sorted(idx for _, idx in scr.selected) == [0, 1, 2]
-
-
-def SKIP_test_group_pack_list_scrolls_instead_of_hiding_items_past_the_first_screenful():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.group_screen import GroupScreen
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    a = Unit("player")
-    a._base_inventory = [f"Scroll{i}" for i in range(40)]      # 40 distinct items: no stacking
-    g = Guild([a])
-    scr = GroupScreen(ui_fonts(), g, g.groups[0], on_back=lambda: None)
-    scr.mouse = (0, 0)
-    surf = pygame.Surface((1600, 1000))
-    scr.draw(surf)
-    pack_rows = [idx for _, _, idx in scr.sources if isinstance(idx, int)]
-    assert 0 < len(pack_rows) < 40                    # a real overflow, not "everything fits"
-
-    scr._pack_scroll[id(a)] = 5
-    scr.draw(surf)
-    pack_rows = [idx for _, _, idx in scr.sources if isinstance(idx, int)]
-    assert pack_rows[:2] == [5, 6]                    # the list actually scrolled
 
 
 def test_char_editor_duplicate_forks_an_unsaved_copy():
@@ -346,20 +209,14 @@ def test_char_editor_duplicate_forks_an_unsaved_copy():
     assert scr.unit.combat_level == 2
 
 
-def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
+def test_tongue_grippli_renders_in_the_editor():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
 
     from gartok.char_editor_screen import CharEditorScreen
-    from gartok.combatant import Combatant
-    from gartok.group_screen import GroupScreen
-    from gartok.guild import Guild
-    from gartok.sheet_panel import draw_sheet
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
-    F = ui_fonts()
-    from gartok.ui.tokens import fonts as ui_fonts
 
     u = Unit("player")
     u.set_race("Grippli")
@@ -368,26 +225,20 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
     u.give_to_tongue("Dagger")
     u.equipped_weapon = "Broadsword"                     # 2-handed in the hands, dagger on the tongue
 
-    solo = Guild([u])
-    surf = pygame.Surface((1600, 1000))
-    for scr in (GroupScreen(F, solo, solo.groups[0], lambda: None),
-                CharEditorScreen(ui_fonts(), lambda: None)):
-        if isinstance(scr, CharEditorScreen):
-            scr._load_unit(u)
-        scr.mouse = (0, 0)
-        scr.draw(surf)
-    draw_sheet(surf, pygame.Rect(0, 0, 520, 900), Combatant(u), F)
+    scr = CharEditorScreen(ui_fonts(), lambda: None)
+    scr._load_unit(u)
+    scr.mouse = (0, 0)
+    scr.draw(pygame.Surface((1600, 1000)))
 
 
-def test_gear_screen_distribute_load():
-    from gartok.group_screen import GroupScreen
+def test_the_band_distributes_its_load():
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
     u1, u2 = standard_unit(), standard_unit()
     u1._base_inventory = packed(["Stone Brick", "Stone Brick"])
     u2._base_inventory = []
     g = Guild([u1, u2])
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
+    gs = BandKit(g, g.groups[0])
     gs._handle_button("distribute")
     # Heaviest items should be shared across members
     assert len(u1._base_inventory) == 1
@@ -395,18 +246,10 @@ def test_gear_screen_distribute_load():
     assert gs.notice is not None
 
 
-def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
-    """Clicking the padlock on a pack row toggles `Unit.locked_items` without
-    picking the item up -- and distribute_load then leaves it where it is."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
+def test_a_locked_item_is_exempt_from_distributing_the_load():
     from gartok import data
-    from gartok.group_screen import GroupScreen
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
 
     human = data.race_by_name("Human")
     u1 = Unit("player", race=human)
@@ -417,229 +260,87 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     u1._base_inventory = packed(["Rope"])
     u2._base_inventory = []
     g = Guild([u1, u2])
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
-    surf = pygame.Surface((1600, 900))
-    gs.mouse = (0, 0)
-    gs.draw(surf)
-
-    assert u1.locked_of("Rope") == 0
-    lock_rect, member, name = gs._lock_hits[0]
-    assert member is u1 and name == "Rope"
-    gs.mouse = lock_rect.center
-    gs.draw(surf)                                         # refresh hit-lists at this mouse pos
-    gs._drop(lock_rect.center, False, None)
+    gs = BandKit(g, g.groups[0])
+    u1.toggle_lock("Rope")
     assert u1.locked_of("Rope") == 1
-    assert gs.selected == []                              # a lock click never picks the item up
 
     gs._handle_button("distribute")
     assert u1._base_inventory == packed(["Rope"])          # stayed put, still locked
 
 
-def test_group_screen_wheel_scroll_reveals_items_below_the_fold():
-    """Before the fix, a long pack just truncated at '+N more' with no way to
-    reach the rest; the wheel now scrolls the column like the Market already
-    did (see `packbox.PackColumnMixin`)."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
 
-    from gartok.group_screen import GroupScreen
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    u = Unit("player")
-    u._base_inventory = packed([f"Rope{i}" for i in range(40)])   # 40 distinct stacks: no merging, far more than one column can show
-    g = Guild([u])
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
-    surf = pygame.Surface((1280, 720))
-    gs.mouse = (0, 0)
-    gs.draw(surf)
-
-    visible_before = {idx for _r, unit, idx in gs.sources if unit is u and isinstance(idx, int)}
-    last_idx = len(u._base_inventory) - 1
-    assert last_idx not in visible_before                 # off the bottom of the column
-
-    area = next(r for r, who in gs._pack_areas if who is u)
-    gs.mouse = area.center
-    gs.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, y=-100))  # scroll far down
-    gs.draw(surf)
-
-    visible_after = {idx for _r, unit, idx in gs.sources if unit is u and isinstance(idx, int)}
-    assert last_idx in visible_after
-
-
-def test_gear_screen_scroll_right_click_offers_and_toggles_study():
+def test_the_band_scroll_right_click_offers_and_toggles_study():
     """The only in-game path to set `Unit.study_target` (see the Magic section
-    of RULES.md): right-click a known scroll for a "study" row on the send-to
+    of RULES.md): a known scroll offers a "study" row on the item
     menu, mirroring the sandbox character editor's toggle."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.group_screen import GroupScreen
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
 
     u = Unit("player")
     u.magic_sources = ["nature"]
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
-    gs.mouse = (5, 5)
-    gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
+    gs = BandKit(g, g.groups[0])
 
-    surf = pygame.Surface((800, 600))
+    def study():
+        kind, _label, arg = next(r for r in gs._menu_rows([(u, 0)]) if r[0] == "study")
+        gs._menu_run([(u, 0)], kind, arg)
 
-    gs._open_menu((5, 5))
-    assert "study" in [kind for kind, _label, _arg in gs.menu["rows"]]
-    gs._draw_menu(surf)
-    study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
-
-    click_menu(gs, study_row.center)
+    study()
     assert u.study_target == "light_globe"
 
-    gs._open_menu((5, 5))                    # re-open: still offered, now toggles off
-    gs._draw_menu(surf)
-    study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
-    click_menu(gs, study_row.center)
+    study()                                  # still offered, now toggles off
     assert u.study_target is None
 
 
-def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.group_screen import GroupScreen
+def test_the_band_scroll_menu_hidden_without_a_magic_source():
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
-    pygame.init()
-    pygame.display.set_mode((1, 1))
 
     u = Unit("player")
     u.magic_sources = []
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
-    from gartok.ui.tokens import fonts as ui_fonts
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
-    gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
-
-    gs._open_menu((5, 5))
-    assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]
+    gs = BandKit(g, g.groups[0])
+    assert "study" not in [kind for kind, _label, _arg in gs._menu_rows([(u, 0)])]
 
 
-def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
+def test_the_band_dictionary_right_click_offers_and_toggles_study():
     """Learning a language mirrors learning a spell (see RULES.md "Learning a
-    language"): right-click a `Dictionary of <Language>` for a "study" row --
+    language"): a `Dictionary of <Language>` offers a "study" row --
     no `magic_source` required, unlike scrolls."""
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.group_screen import GroupScreen
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
 
     u = Unit("player")
     u.magic_sources = []
     u.languages = ["Ankarin"]
     u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
-    gs.mouse = (5, 5)
-    gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
+    gs = BandKit(g, g.groups[0])
 
-    surf = pygame.Surface((800, 600))
+    def study():
+        kind, _label, arg = next(r for r in gs._menu_rows([(u, 0)]) if r[0] == "study")
+        gs._menu_run([(u, 0)], kind, arg)
 
-    gs._open_menu((5, 5))
-    assert "study" in [kind for kind, _label, _arg in gs.menu["rows"]]
-    gs._draw_menu(surf)
-    study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
-
-    click_menu(gs, study_row.center)
+    study()
     assert u.study_target == "Elvish"
 
-    gs._open_menu((5, 5))                    # re-open: still offered, now toggles off
-    gs._draw_menu(surf)
-    study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
-    click_menu(gs, study_row.center)
+    study()                                  # still offered, now toggles off
     assert u.study_target is None
 
 
-def test_gear_screen_dictionary_hidden_once_the_language_is_known():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.group_screen import GroupScreen
+def test_the_band_dictionary_hidden_once_the_language_is_known():
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
 
     u = Unit("player")
     u.languages = ["Ankarin", "Elvish"]
     u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
-    gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
+    gs = BandKit(g, g.groups[0])
+    assert "study" not in [kind for kind, _label, _arg in gs._menu_rows([(u, 0)])]
 
-    gs._open_menu((5, 5))
-    assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]
-
-
-def test_group_screen_cargo_search_filter():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.group_screen import GroupScreen
-    from gartok.guild import Guild
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    surf = pygame.display.set_mode((1280, 720))
-
-    u = Unit("player")
-    u._base_inventory = packed(["Salt", "Iron Bar", "Dagger"])
-    g = Guild([u])
-    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
-    gs.tab = "gear"
-    gs.view = "cargo"
-
-    # All items visible with empty search
-    rows = gs._cargo_rows()
-    assert len(rows) == 3
-
-    # Filter by name
-    gs.cargo_search = "salt"
-    rows = gs._cargo_rows()
-    assert len(rows) == 1
-    assert rows[0][1] == "Salt"
-
-    # Filter with no matches
-    gs.cargo_search = "unknown item xyz"
-    rows = gs._cargo_rows()
-    assert len(rows) == 0
-
-    # Draw test
-    gs.cargo_search = "iron"
-    gs.draw(surf)
-    assert gs._search_rect is not None
-    assert gs._search_clear_rect is not None
-
-    # Clicking clear rect clears search
-    gs._click(gs._search_clear_rect.center)
-    assert gs.cargo_search == ""
-    assert gs.editing_search is False
-
-    # Keyboard typing
-    gs.editing_search = True
-    event_type = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_d, unicode="d")
-    gs.handle_event(event_type)
-    assert gs.cargo_search == "d"
-    event_esc = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)
-    gs.handle_event(event_esc)
-    assert gs.cargo_search == ""
-    assert gs.editing_search is False
 
 
 def test_factions_get_unlocks():
@@ -752,29 +453,6 @@ def test_goblin_portraits():
 
 
 
-def test_sheet_panel_attribute_hover_tooltip():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok import sheet_panel
-    from gartok.combatant import Combatant
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    u = Unit("player")
-    c = Combatant(u)
-    fonts = ui_fonts()
-    surf = pygame.Surface((1280, 720))
-    rect = pygame.Rect(100, 50, sheet_panel.PANEL_W, sheet_panel.PANEL_H)
-
-    # Directly verify the attribute cell collision logic
-    w = rect.w - 32
-    aw = w // 6
-    attr_cell = pygame.Rect(rect.x + 16 + 1, rect.y + 16 + 52 + 44 + 8 + 20, aw - 2, 48)
-    sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=attr_cell.center)
-    sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=(rect.x + 20, rect.y + 40))
-
 
 def test_char_editor_attribute_hover_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -801,38 +479,6 @@ def test_char_editor_attribute_hover_tooltip():
                     found_tooltip = True
                     break
     assert found_tooltip, "Character editor attribute cells should set tooltip on hover"
-
-def test_sheet_panel_hp_breakdown_tooltip():
-
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok import sheet_panel
-    from gartok.combatant import Combatant
-    from gartok.ui.sheet_card import hp_tooltip
-    from gartok.ui.tokens import fonts as ui_fonts
-    from tests.helpers import Unit
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    u = Unit("player")
-    u._hp_roll = 7
-    u._level_hp_rolls = [6, 8]
-    u.recalculate_hp()
-
-    fonts = ui_fonts()
-    lines = hp_tooltip(u, ui_fonts())
-    assert any("HIT POINTS (HP)" in text for text, _, _ in lines)
-    assert any("Base (L0): 7" in text for text, _, _ in lines)
-    assert any("L1: 6" in text for text, _, _ in lines)
-    assert any("L2: 8" in text for text, _, _ in lines)
-    assert any(f"Max HP: {u.hp_max}" in text for text, _, _ in lines)
-
-    # Hovering over HP chip in draw_sheet
-    surf = pygame.Surface((1280, 720))
-    rect = pygame.Rect(100, 50, sheet_panel.PANEL_W, sheet_panel.PANEL_H)
-    hp_chip_pos = (rect.x + 30, rect.y + 16 + 52 + 20)
-    sheet_panel.draw_sheet(surf, rect, Combatant(u), fonts, mouse=hp_chip_pos)
 
 
 def test_char_editor_screen_hp_tooltip():
@@ -919,65 +565,17 @@ def test_battle_screen_victory_card_with_stabilized():
     scr.draw(surf)
 
 
-def test_guild_screen_level_up_observability():
-    import pygame
-
-    from gartok.guild import Guild
-    from gartok.guild_screen import GuildScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.unit import Unit
-    pygame.init()
-    surf = pygame.Surface((1280, 800))
-    u0 = Unit("player")
-    u1 = Unit("player")
-    u1.combat_xp = 15
-    u1.collect_levels()
-    assert u1.pending_picks
-
-    guild = Guild([u0, u1])
-    level_called = []
-    scr = GuildScreen(ui_fonts(), guild, on_back=lambda: None, on_level=lambda u: level_called.append(u))
-
-    # Smart selection: picked u1 because u1 has pending picks
-    assert scr.member == u1
-
-    scr.mouse = (0, 0)
-    scr.draw(surf)
-
-    # Management card button for level up exists
-    btn = next((r for k, r in scr.buttons if k == "level"), None)
-    assert btn is not None
-
-    # Clicking it triggers on_level
-    evt = pygame.event.Event(pygame.MOUSEBUTTONUP, pos=btn.center, button=1)
-    scr.handle_event(evt)
-    assert level_called == [u1]
-
 
     # Renders without crashing and card lines include the talent line
 
 
-def test_guild_screen_study_track_rendered():
-    import pygame
-
-    from gartok.guild import Guild
-    from gartok.guild_screen import GuildScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    from gartok.unit import Unit
-    pygame.init()
-    surf = pygame.Surface((1280, 800))
+def test_a_member_studying_shows_the_study_track():
+    from gartok.guild_sheet import GuildSheet
     u = Unit("player")
     u.study_target = "magic_missile"
     u.study_progress = 30
-    guild = Guild([u])
-    scr = GuildScreen(ui_fonts(), guild, on_back=lambda: None)
-    scr.mouse = (0, 0)
-    scr.draw(surf)
-
-    # Hover over study section to check tooltip
-    scr.mouse = (surf.get_width() - 200, 500)
-    scr.draw(surf)
-    assert scr.member == u
+    tracks = GuildSheet._tracks(u)
+    assert tracks[-1]["label"] == "Academic study" and "Magic Missile" in tracks[-1]["value"]
 
 
 def test_battle_screen_tabs_and_hotkeys():

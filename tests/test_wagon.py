@@ -354,28 +354,18 @@ def test_a_group_without_either_still_loads():
 
 
 # --------------------------------------------------------------------------- #
-# the gear screen                                                             #
+# the band's kit                                                              #
 # --------------------------------------------------------------------------- #
 
 def _gear(*animals, wagon=False, cargo=(), carried=()):
-    from gartok.group_screen import GroupScreen
+    from gartok.band_kit import BandKit
     guild, g = _group(*animals, wagon=wagon, cargo=cargo, members=2)
     g.members[0]._base_inventory = packed(list(carried))
     g.members[1]._base_inventory = []
-    return GroupScreen(None, guild, g, on_back=lambda: None), g
-
-
-def _draw(scr):
-    import pygame
-    pygame.init()
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface((1900, 900)))
+    return BandKit(guild, g), g
 
 
 def _click_button(scr, key):
-    """The button must be on screen (drawn and live); the click itself is the screen's handler."""
-    _draw(scr)
-    assert key in {k for k, _ in scr.buttons}
     scr._handle_button(key)
 
 
@@ -396,11 +386,6 @@ def test_the_gear_screen_lets_a_member_walk_beside_the_wagon_and_frees_the_cargo
     _click_button(scr, f"ride:{walker.uid}")
     assert not walker.afoot and walker in g.riders
 
-
-def test_the_gear_screen_has_no_ride_button_without_a_wagon():
-    scr, g = _gear(_animal(tack=HARNESS))
-    _draw(scr)
-    assert not [k for k, _ in scr.buttons if k.startswith("ride:")]
 
 
 def test_the_gear_screen_hitch_button_cycles_an_animal_between_wagons_and_none():
@@ -480,25 +465,12 @@ def test_tack_can_be_taken_off_by_dragging_it_to_a_pack():
     assert g.herd[0].tack is None and g.members[0].count_of(PACK_SADDLE) == 1
 
 
-def test_the_gear_screen_draws_animal_and_wagon_columns_and_their_cargo_rows():
-    scr, g = _gear(_animal(tack=PACK_SADDLE, cargo=["Rope"]), wagon=True, cargo=["Rope"])
-    _draw(scr)
-    owners = {id(o) for _, o, zone in scr.zones if zone == "pack"}
-    assert id(g.wagons[0]) in owners and id(g.herd[0]) in owners
-    assert any(o is g.herd[0] and zone == "tack" for _, o, zone in scr.zones)
-    scr.view = "cargo"
-    _draw(scr)
-    assert any(o is g.wagons[0] for _, o, _loc in scr.sources)
-    assert any(o is g.herd[0] for _, o, _loc in scr.sources)
-
 
 def test_the_send_to_menu_offers_the_stores_but_no_member_only_actions_on_their_cargo():
     scr, g = _gear(_animal(tack=PACK_SADDLE), wagon=True, carried=["Rope"], cargo=["Minor Healing Potion"])
-    scr._open_menu((10, 10), picks=[(g.members[0], 0)])
-    labels = [r[1] for r in scr.menu["rows"]]
+    labels = [r[1] for r in scr._menu_rows([(g.members[0], 0)])]
     assert "to Cart" in labels and "to Donkey" in labels
-    scr._open_menu((10, 10), picks=[(g.wagons[0], 0)])
-    assert not any(r[0] == "drink" for r in scr.menu["rows"])
+    assert not any(r[0] == "drink" for r in scr._menu_rows([(g.wagons[0], 0)]))
 
 
 def test_a_stack_in_the_wagon_can_be_split():
@@ -708,14 +680,8 @@ def test_an_animal_without_a_harness_cannot_be_hitched_or_swapped_in():
 
 
 def _drag(scr, src, dst):
-    import pygame
-    scr.pinned = []                       # leave room for every animal and wagon column
-    _draw(scr)
-    a = next(r for r, o, loc in scr.sources if o is src and loc == "hitch")
-    b = next(r for r, o, zone in scr.zones if o is dst and zone == "hitch")
-    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=a.center))
-    scr.handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=b.center, rel=(0, 0), buttons=(1, 0, 0)))
-    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=b.center))
+    scr.selected = [(src, "hitch")]
+    scr._give_many(dst, "hitch")
 
 
 def test_dragging_an_animal_header_onto_a_wagon_header_hitches_it():
@@ -737,22 +703,12 @@ def test_dragging_swaps_when_the_wagon_is_full():
     assert g.pulling(a) is g.wagons[1] and g.pulling(b) is g.wagons[0]
 
 
-def test_only_harnessed_animals_can_be_picked_up_by_the_header_and_cargo_still_drops_in_the_wagon():
-    pack = _animal(tack=PACK_SADDLE)
-    scr, g = _gear(pack, _animal(tack=HARNESS), wagon=True, carried=["Rope"])
-    _draw(scr)
-    assert not any(o is pack and loc == "hitch" for _, o, loc in scr.sources)
+def test_cargo_still_drops_in_the_wagon_beside_a_pack_animal():
+    scr, g = _gear(_animal(tack=PACK_SADDLE), _animal(tack=HARNESS), wagon=True, carried=["Rope"])
     scr.selected = [(g.members[0], 0)]
     scr._give_many(g.wagons[0], "pack")
     assert g.wagons[0].stash.items[0].name == "Rope"
 
-
-def test_the_animal_header_says_what_it_pulls():
-    d = _animal("Donkey", HARNESS)
-    scr, _g = _gear(d, wagon=True)
-    assert scr._store_dict(d, [])["name"].endswith("pulls cart")
-    d.hitch = None
-    assert scr._store_dict(d, [])["name"].endswith("unhitched")
 
 
 def test_group_speed_is_the_slowest_of_members_and_animals():
@@ -975,40 +931,21 @@ def test_the_wagon_column_names_who_is_riding():
 
 
 # --------------------------------------------------------------------------- #
-# the Guild screen shows an animal like a member                              #
+# the guild's roster shows an animal like a member                           #
 # --------------------------------------------------------------------------- #
 
 def _guild_screen(*animals, **kw):
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.guild_screen import GuildScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
+    from gartok.guild_sheet import GuildSheet
     guild, g = _group(*animals, **kw)
-    scr = GuildScreen(ui_fonts(), guild, on_back=lambda: None, on_manage=lambda grp: None)
-    scr.draw(pygame.Surface((1700, 950)))
-    return scr, g
+    return GuildSheet(guild), g
 
-
-def test_the_guild_roster_lists_the_herd_and_its_sheet_opens():
-    import pygame
-    ox = _animal("Ox", HARNESS)
-    scr, g = _guild_screen(ox, wagon=True)
-    hit = next(r for r, o in scr.member_hits if o is ox)
-    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=hit.center))
-    assert scr.member is ox
-    surf = pygame.Surface((1700, 950))
-    scr.draw(surf)
-    assert scr.member is ox                          # the draw keeps an animal selected
 
 
 def test_an_animal_selected_in_the_guild_ignores_member_only_buttons():
     ox = _animal("Ox")
     scr, g = _guild_screen(ox)
     scr.member = ox
-    for key in ("level", "share_food", "group_leader", "guild_leader"):
+    for key in ("share_food", "group_leader", "guild_leader"):
         scr._press(key)
     assert g.leader is not ox
 
@@ -1029,32 +966,6 @@ def test_the_band_header_counts_people_not_animals():
     assert band["count"] == 1 and len(band["members"]) == 3
 
 
-def test_the_animal_sheet_scrolls_when_the_window_is_short():
-    import pygame
-    ox = _animal("Ox", HARNESS)
-    scr, _g = _guild_screen(ox, wagon=True)
-    scr.member = ox
-    scr.draw(pygame.Surface((1700, 950)))
-    assert scr._detail_max_scroll == 0
-    scr.draw(pygame.Surface((1700, 420)))
-    assert scr._detail_max_scroll > 0
-
-
-def test_wagon_container_renders_on_the_right_of_group_screen_in_bags_and_cargo():
-    import pygame
-    scr, g = _gear(wagon=True)
-    wagon = g.wagons[0]
-    surf = pygame.Surface((1280, 720))
-
-    scr.view = "bags"
-    scr.draw(surf)
-    assert any(o is wagon and zone == "pack" for _, o, zone in scr.zones)
-    wagon_pack_rect = next(r for r, o, zone in scr.zones if o is wagon and zone == "pack")
-    assert wagon_pack_rect.right >= 1280 - 400
-
-    scr.view = "cargo"
-    scr.draw(surf)
-    assert any(o is wagon and zone == "pack" for _, o, zone in scr.zones)
 
 
 def test_wagon_and_animal_toggle_lock():
@@ -1117,14 +1028,6 @@ def test_wagon_locked_items_persistence(tmp_path, monkeypatch):
     assert loaded_ox.count_of("Iron Bar") == 2
     assert loaded_ox.locked_of("Iron Bar") == 2
 
-
-def test_the_gear_screen_draws_with_a_lit_campfire():
-    """The campfire button's hours once shadowed the rail's rect and crashed the draw."""
-    scr, g = _gear(wagon=True)
-    scr.on_cook = lambda: None
-    g.campfire_node, g.campfire_expires = g.node, scr.guild.clock.seconds + 3600
-    _draw(scr)
-    assert "campfire_cook" in {k for k, _ in scr.buttons}
 
 
 def test_the_campfire_cooks_meat_carried_on_the_wagon():

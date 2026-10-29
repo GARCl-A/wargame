@@ -67,7 +67,7 @@ const Bands = (() => {
 
   function column(p) {
     const tight = p.kg > p.normal * .85, overload = p.kg > p.normal;
-    const med = `<div class="medal ${p.beast ? "beastmed" : ""} ${p.hurt ? "hurt" : ""}" ${p.beast ? `data-owner="${p.id}" data-loc="hitch"` : ""}>${face(p.portrait, p.name)}</div>`;
+    const med = `<div class="medal ${p.beast ? "beastmed" : ""} ${p.hurt ? "hurt" : ""}" ${p.beast ? `data-owner="${p.id}" data-loc="hitch"` : `data-sheet="${p.id}" title="Open ${esc(p.name)}'s sheet"`}>${face(p.portrait, p.name)}</div>`;
     const worn = p.worn.length ? `<div class="csec lbl">${p.beast ? "Tack" : "Worn"}</div>` + p.worn.map(w => row(p, w.name ? w : null, w.zone, w)).join("") : "";
     const rows = p.pack.length ? p.pack.map(r => row(p, r, r.loc, null)).join("")
       : `<div class="it empty"><span></span><div class="n">nothing carried</div><span></span><span></span></div>`;

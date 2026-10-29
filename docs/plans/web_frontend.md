@@ -1126,9 +1126,8 @@ screen. Cut as step 10 was:
   between groups (its tutorial card `group_turn` is still registered), the vault read from the map, the
   auto-win of an ambush or a hunt (`autowin.py` is still there). The old screens are in git before this cut.
 - **Held headless by the web, deleted as their family's rules move out (step 2):** `battle_screen` +
-  `battle_draw`; `dialogue_screen`; `guild_screen`, `group_screen` + `group_draw`; `loot_screen`,
-  `memorial_screen`. The hubs' screens are gone (the hubs III below), and so are the draft's and the
-  title's (the draft below).
+  `battle_draw`; `dialogue_screen`. The hubs' screens are gone (the hubs III below), and so are the draft's
+  and the title's (the draft below), the report's and the guild's.
 - **Kept until step 3:** `editor_app`, `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`,
   `combat_lab_screen`, and `battle_screen` for the lab's fights.
 
@@ -1264,16 +1263,41 @@ screen. Cut as step 10 was:
        picked, a pack item back to the field, take what fits, the memorial's days); `test_web_report` covers
        the page.
      - Left: `report_session` still loads pygame through `item_icon` (which reads `ui.item_icons`' `TONES` and
-       `ui.tokens`), the same knot as the wiki's; untie it once for both.
-     - **Next:** the guild (`guild_session` on `GuildScreen` and `GroupScreen` + `group_draw`), with the sheet as
-       a modal from the playtest below.
+       `ui.tokens`), the same knot as the wiki's; untie it once for both. (Untied with the guild below.)
+   - **The guild — done (2026-10-28).** `guild_sheet.py` is the guild's sheet with no pygame: `GuildSheet` holds
+     what `GuildScreen` held for the rules (the roster's filters and folds, the badges as tone words, a member's
+     weapon, kit, careers and roles and what pressing one does, an animal's work, the charter's bands, notices
+     and holdings, the founding trade; `FILTERS`, `FIGHT_DUE_TIP`, `needs_attention`, `node_label`). `band_kit.py`
+     is one band's kit: `BandKit` holds what `GroupScreen` held (the moves with the tack, the hitch and the hard
+     room of a wagon or an animal's back, the item menu with the chest, the potion and the study rows, ride,
+     hitch, repair, release, distribute, first aid and the antidote, the campfire). `guild_session` holds one of
+     each (`self.desk`, `self.gear`). Gone in the same commit: `guild_screen`, `group_screen` + `group_draw`,
+     `packbox`, `dragselect`, `sheet_panel`, and the `ui/` pieces only they drew (`guild_roster`,
+     `member_panel`, `guild_panel`, `reputation_panel`, `quest_panel`, `hscroll`); `test_guild_screen` became
+     `test_guild_sheet`. The `item_icon` knot is untied: `TONES` lives in `item_icon`, `ui.item_icons` reads it
+     back, and `ui.tokens` imports pygame only inside `fonts()`, so `T` loads anywhere; the guild, report,
+     wiki and talent sessions load with pygame blocked.
+     - **The sheet as a modal (the playtest's first item).** `web/sheet_view.py` builds a member's (or an
+       animal's) sheet read-only; the guild's MEMBERS page adds the roles to it. Every session answers a `sheet`
+       verb (`GET /api/<screen>/sheet?uid=`) for whoever it lists in `sheet_units` (the guild: everyone and the
+       herds; a hub: the band at the place; the draft: the pool, before any guild). `Sheet` in `shell.js` draws
+       the book (moved out of `guild.js`, its CSS out of `guild.css` into `shell.css` under `.book`) and opens it
+       over the screen on a click on any portrait marked `data-sheet` (a band's columns, every shop's pack
+       columns, the draft's cards); the press that starts on a portrait is the sheet's, so it never picks a card
+       or drops a pick. The modal is a shadow root with the shell's styles only: each screen's own `.chip`,
+       `.kit` or `.stamp` never reaches it. Esc, the ✕ or the veil closes it.
+     - Tests: `tests/test_guild_sheet.py` (the two load with pygame blocked, and the web sessions above; the
+       filters, a fold, distribute, the breakdowns, the charter's notices and holdings, the sponsor line, the
+       sick badge), `tests/test_web_sheet.py` (the guild, a hub and the draft open their own people and refuse
+       anyone else, the route, the portraits marked); the band tests in `test_wagon`, `test_chest`,
+       `test_coins`, `test_poison`, `test_wagon_broken`, `test_cooking` and `test_screens` press `BandKit`. The
+       MEMBERS page and the modal over a band, the market and the draft were looked at in headless Edge at
+       1920x1080, the clicks driven over the DevTools protocol.
+     - **Next:** the dialogues (`dialogue_session` on `DialogueScreen`), then the battle (`battle_session` on
+       `BattleScreen` + `battle_draw`, which the Editor's lab still opens).
    - **Playtest 2026-10-28** (the author's first run in the browser; its local bugs were fixed at once, see the backlog). Fold
      these into the families above where they share code, the rest after them:
-     - **The character sheet as a modal, opened from anywhere.** pygame opened a member's sheet from the band
-       tab and the shops; the browser shows it only on the guild's MEMBERS page, and the draft shows a short
-       dossier with no way to the whole sheet. One shell component, opened from the guild's band tab, every
-       shop's pack column and the draft's pool. It reads `sheet.unit_to_ch` (out of `ui/` with the draft);
-       build it with the guild family.
+     - **The character sheet as a modal, opened from anywhere — done (2026-10-28)** with the guild above.
      - **The work level-up has no screen.** A work track's level-up is only a map notice
        (`MapSession._advance`, "X grows: ..."); pygame opened `level_up_screen` and then the talent pick.
        Port it (it joins "Not in the browser, pygame had them" above): the numbers before and after, then

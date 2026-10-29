@@ -195,38 +195,20 @@ def test_a_broken_save_stays_broken():
 
 
 # --------------------------------------------------------------------------- #
-# screens                                                                      #
+# the band's kit                                                               #
 # --------------------------------------------------------------------------- #
 
-def _draw(scr, size=(1280, 800)):
-    import pygame
-    pygame.init()
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface(size))
-    return {k for k, _ in scr.buttons}
-
-
-def test_the_group_screen_shows_the_wagon_hp_and_repairs_it():
-    from gartok.group_screen import GroupScreen
+def test_the_band_repairs_a_broken_wagon_and_rehitches_it():
+    from gartok.band_kit import BandKit
     guild, group, wagon, horse = _setup("Cart", lumber=1)
     wagon.hp = 0
     group.wear_wagons(0)
-    scr = GroupScreen(None, guild, group, on_back=lambda: None)
-    scr.pinned = list(group.members)
-    keys = _draw(scr)
-    assert f"repair:{wagon.uid}" in keys
+    scr = BandKit(guild, group)
+    assert wagon.needs_repair
     with fixed_d20(20):
         scr._handle_button(f"repair:{wagon.uid}")
     assert wagon.hp == 3 and group.pulling(horse) is wagon
-    assert f"repair:{wagon.uid}" not in _draw(scr)         # the one Lumber is spent
-
-
-def test_the_group_screen_hides_repair_on_a_sound_wagon():
-    from gartok.group_screen import GroupScreen
-    guild, group, wagon, _ = _setup("Cart", lumber=1)
-    scr = GroupScreen(None, guild, group, on_back=lambda: None)
-    scr.pinned = list(group.members)
-    assert f"repair:{wagon.uid}" not in _draw(scr)
+    assert not any(u.count_of("Lumber") for u in group.members)
 
 
 # --------------------------------------------------------------------------- #

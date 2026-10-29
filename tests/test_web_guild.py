@@ -8,7 +8,7 @@ from gartok.animals import HARNESS, Animal
 from gartok.captives import Captive
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.guild_screen import _needs_attention
+from gartok.guild_sheet import needs_attention as _needs_attention
 from gartok.unit import Unit
 from gartok.wagon import Wagon
 from gartok.web.guild_session import GuildSession
@@ -124,7 +124,7 @@ def test_the_talent_tree_opens_on_the_member_and_comes_back_to_the_sheet():
     sheet, _guild, _g = _sheet()
     game = sheet.map.game
     assert sheet.talents() == {"screen": "talents"}
-    assert game.session.unit is sheet.sheet.member and game.session.state()["back"] == "Back to the guild"
+    assert game.session.unit is sheet.desk.member and game.session.state()["back"] == "Back to the guild"
     back = game.session.back()
     assert back["screen"] == "guild" and game.session is sheet
 

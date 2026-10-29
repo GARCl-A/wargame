@@ -30,15 +30,6 @@ def test_has_tells_a_real_string_apart_from_one_that_only_looks_like_its_key():
 
 
 
-def test_guild_screen_key_follows_the_active_tab():
-    from gartok.guild_screen import GuildScreen
-    gs = GuildScreen.__new__(GuildScreen)
-    gs.tab = "members"
-    gs.selected = []
-    assert gs.tutorial_key() == "guild.members" and gs.tutorial_key() in TUTORIALS
-    gs.tab = "reputations"
-    assert gs.tutorial_key() == "guild.reputations" and gs.tutorial_key() in TUTORIALS
-
 
 def test_should_show_tracks_seen_enabled_and_a_forced_reopen():
     st = TutorialState()
@@ -77,35 +68,6 @@ def test_save_round_trips_tutorial_state_by_slot():
     finally:
         persist.delete_world(slot)
 
-
-def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.guild import Guild
-    from gartok.guild_screen import GuildScreen
-    from gartok.ui.tokens import T
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    pygame.init()
-    g = Guild([Unit("Alice"), Unit("Bob")], node="city")
-    gs = GuildScreen(ui_fonts(), g, on_back=lambda: None)
-    W, H = 1280, 800
-    surf = pygame.Surface((W, H))
-    gs.draw(surf)
-
-    badge_rect = gs.tutorial_badge_rect((W, H))
-    assert badge_rect.width == 28 and badge_rect.height == 28
-
-    # Ensure tabs do not collide with tutorial badge
-    for rect, key in gs.tab_hits:
-        assert not rect.colliderect(badge_rect), f"Tab {key} collided with tutorial badge"
-        assert rect.top == badge_rect.top, f"Tab {key} top {rect.top} != badge top {badge_rect.top}"
-
-    # REPUTATIONS should be immediately to the left of the badge, separated by T.S
-    rep_rect = next(r for r, k in gs.tab_hits if k == "reputations")
-    assert rep_rect.right + T.S == badge_rect.left
 
 
 def test_header_reserves_space_when_has_tutorial_is_true():

@@ -1,18 +1,13 @@
 """Money as an item: `Unit.money` is the count of "Copper Coin" in the pack."""
 
-import os
 import random
 
-import pygame
-
 from gartok import items, persist, unit_loadout
-from gartok.group_screen import GroupScreen
+from gartok.band_kit import BandKit
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit, distribute_load, flatten_pack
 from tests.helpers import standard_unit
-
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 
 def _bare(gold=0):
@@ -119,22 +114,13 @@ def test_coins_are_not_for_sale_at_the_market_or_the_stash():
     assert items.COIN_ITEM not in economy.MARKET_STOCK
 
 
-def test_gear_screen_splits_a_purse_and_hands_part_of_it_to_a_mate():
-    pygame.init()
+def test_the_band_splits_a_purse_and_hands_part_of_it_to_a_mate():
     a, b = _bare(100), _bare(0)
     g = Group([a, b], node="city")
     guild = Guild(None, groups=[g])
-    s = GroupScreen(None, guild, g, lambda: None)
-    s.draw(pygame.Surface((1400, 900)))
-
-    s.selected = [(a, 0)]
-    s._open_menu((10, 10), picks=[(a, 0)])
-    assert any(kind == "split" for kind, _, _ in s.menu["rows"])
-    s._open_split_prompt()
-    s.split_prompt["amount"] = 40
-    s.draw(pygame.Surface((1400, 900)))
-    confirm = next(r for r, key in s.split_prompt["hits"] if key == "confirm")
-    s._split_prompt_click(confirm.center)
+    s = BandKit(guild, g)
+    assert s._splittable((a, 0))
+    assert a.split_pack(0, 40)
     assert sorted(q for _, q in a._base_inventory) == [40, 60]
 
     idx = next(i for i, (_, q) in enumerate(a._base_inventory) if q == 40)

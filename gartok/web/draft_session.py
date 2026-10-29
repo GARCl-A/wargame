@@ -57,6 +57,9 @@ class DraftSession(Session):
     def tutorials(self):
         return self.tutorial
 
+    def sheet_units(self):
+        return self.draft.pool if self.draft is not None else []
+
     def tutorial_key(self):
         """The welcome first, then the card of the step."""
         if "draft.intro" not in self.tutorial.seen:
@@ -245,7 +248,7 @@ class DraftSession(Session):
         tags = [{"label": lb, "style": st, "desc": ds, "commissioned": lb in called} for lb, st, ds in unit_archetypes(u)]
         tags.sort(key=lambda t: not t["commissioned"])
         w = ch["weapon"]
-        return {"name": u.name, "race": ch["race"], "occ": ch["occ"], "align": ch["align"], "size": ch["size"],
+        return {"uid": u.uid, "name": u.name, "race": ch["race"], "occ": ch["occ"], "align": ch["align"], "size": ch["size"],
                 "age": ch["age"], "portrait": _portrait(u), "hp": ch["hp"][1], "ac": ch["ac"], "md": ch["md"],
                 "spd": ch["spd"], "init": ch["init"],
                 "attrs": [{"k": k, "v": v, "mod": m} for k, v, m, _ in ch["attrs"]],

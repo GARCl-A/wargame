@@ -273,7 +273,7 @@ gartok/
                     how it is played and settled, one `ForcedEvent` per kind in `EVENTS`
   economy.py        prices, market stock, haggling (language + Charisma + alignment)
   constants.py      tuning knobs shared by economy/justice/campaign (bail, patrols, taxes)
-  chest.py          a generic locked pack item (d20+DEX vs DC), opened via group_screen
+  chest.py          a generic locked pack item (d20+DEX vs DC), opened from the band's item menu
   justice.py        crime per character, City jurisdiction, the guard's catch/patrol/prison
   lair.py           the Dragon's Lair under the Mine: a heist past kobold patrols and a sleeping dragon
   dialogue.py       the talk before a fight: the verbs (persuade, bluff, intimidate, bribe...),
@@ -312,7 +312,7 @@ gartok/
   # pygame is abandoned (docs/plans/web_frontend.md): what is left is held headless by web/ for its
   # rules until they move out, or is the Editor's
   wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
-  guild_screen.py / group_screen.py + group_draw.py / dialogue_screen.py
+  dialogue_screen.py
   battle_screen.py (input + turn flow) / battle_draw.py (everything it paints)
   the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 
@@ -323,7 +323,7 @@ gartok/
                     session.py (a screen's server half), battle_session.py (one fight as the side
                     knows it), map_session.py (the map), hub_session.py + shop_tab.py (a place's
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
-                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
+                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), sheet_view.py (a member's sheet, the book any screen opens), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
                     by screen), client/ (the shell + one folder per screen under screens/);
                     `python main.py` / `python -m gartok` (the title; `--editor` the Editor),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
@@ -337,11 +337,10 @@ gartok/
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, the action's
                     name over its actor and the flight of a shot (`battle.announce`), combat sounds
   sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the Editor enables it, `volume` setting
-  dragselect.py     shared press/drag/drop plumbing for the item screens
-  loadout_move.py   the moves between a member's hands, armour and pack, no pygame (the group screen, the vaults)
-  packbox.py        shared drag bookkeeping for the gear and group screens
-  store_column.py   a wagon or an animal as one more pack (the group screen, the web's shop and vault)
-  sheet_panel.py    the full drawn character sheet (guild-screen modal)
+  loadout_move.py   the moves between a member's hands, armour and pack, no pygame (the band's kit, the vaults)
+  guild_sheet.py    the guild's sheet, no pygame: the roster, a member's sheet and roles, the charter
+  band_kit.py       one band's kit, no pygame: the moves, the tack and the hitch, the item menu, first aid
+  store_column.py   a wagon or an animal as one more pack (the web's shop and vault)
 
 main.py             entry point (gartok/__main__.py: the browser, or --editor)
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)

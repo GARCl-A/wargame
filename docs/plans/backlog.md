@@ -41,7 +41,7 @@ a floor per place in `ui/floors.py`, every screen on the hub kit) are done; what
    teaches (~4,800 words -> ~3,000); the map's card closes onto the objectives (17, all open,
    `gartok/objectives.py`); the wounded group's Medic line and the Library's WRITE hint are in.
    Left: the author reads every card in play and flags what still rings false.
-6. **Big screen files:** split `guild_screen.py` (~800 lines) when phase 5 touches it; the two editors
+6. **Big screen files:** the two editors
    (`map_editor_screen.py`, `char_editor_screen.py`, ~800-970) stay out. When any of them takes a new
    node or tab, split by concern instead of growing it.
 

@@ -172,29 +172,6 @@ def test_mission_template_tags_and_tag_back_compat():
     assert t3.tag == "economic"
 
 
-def test_quest_panel_draws_tags_pills():
-    import pygame
-    pygame.font.init()
-    from gartok.ui import quest_panel
-    from gartok.ui.tokens import fonts as ui_fonts
-    UI_F = ui_fonts()
-    surf = pygame.Surface((800, 600))
-    area = pygame.Rect(10, 10, 500, 400)
-    quests = [{
-        "name": "Fifteen Hides",
-        "tags": ("economic", "tanner"),
-        "accepted_by": "Adelio",
-        "days_left": 4,
-        "progress": (5, 15, "1sqm Hide"),
-    }, {
-        "name": "A Test of Trust",
-        "tags": ("trust", "bankers"),
-        "accepted_by": "Valdo",
-        "days_left": 2,
-        "progress": None,
-    }]
-    quest_panel.quest_list(surf, UI_F, area, quests)
-
 
 def test_the_tanner_board_moves_down_its_chain_to_completed():
     from gartok.job_board import TannerBoard

@@ -249,28 +249,20 @@ def test_a_wilds_raid_on_a_garrison_is_parked_too():
 # the kit is frozen while a fight is due                                      #
 # --------------------------------------------------------------------------- #
 
-def _draw_guild_screen(guild, member):
-    from unittest.mock import MagicMock
-
-    import pygame
-
-    from gartok.guild_screen import GuildScreen
-
-    pygame.font.init()
-    gs = GuildScreen(MagicMock(), guild, on_back=lambda: None, on_manage=lambda g: None)
-    gs.member = member
-    gs.draw(pygame.Surface((1920, 1080)))
-    return {key for key, _ in gs.buttons}
+def _live_roles(guild, member):
+    from gartok.guild_sheet import GuildSheet
+    gs = GuildSheet(guild)
+    return {r["key"] for r in gs._role_rows(member, guild.group_of(member)) if r["action"] and r["action"][1]}
 
 
-def test_the_guild_screen_freezes_gear_leader_and_load_for_a_group_with_a_fight_due():
+def test_the_guild_sheet_freezes_leader_and_load_for_a_group_with_a_fight_due():
     a, b = Unit("player"), Unit("player")
     g = Group([a, b], node="city", leader=a)
     guild = Guild(None, groups=[g])
 
-    free = _draw_guild_screen(guild, b)
-    assert {"manage", "distribute", "group_leader"} <= free
+    free = _live_roles(guild, b)
+    assert {"distribute", "group_leader"} <= free
 
     g.pending = orders.Order("ambush", pack=(encounters.build_enemy(1),))
-    frozen = _draw_guild_screen(guild, b)
-    assert not {"manage", "distribute", "group_leader"} & frozen
+    frozen = _live_roles(guild, b)
+    assert not {"distribute", "group_leader"} & frozen

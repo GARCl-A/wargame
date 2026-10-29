@@ -5,7 +5,7 @@ pins it, same as a death save or the guard test)."""
 import random
 
 from gartok import chest, data
-from tests.helpers import Unit, click_menu, fixed_d20, packed
+from tests.helpers import Unit, fixed_d20, packed
 
 
 def test_a_clean_pick_consumes_the_chest_and_hands_over_gems():
@@ -49,32 +49,17 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
     send-to menu (a design decision the plan doc left open) -- OPEN THE CHEST
     only appears when the single thing picked is a chest, and clicking it
     rolls `chest.try_open` in place rather than moving the item anywhere."""
-    import os
-
-    import pygame
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    from gartok.group_screen import GroupScreen
-    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.band_kit import BandKit
 
     random.seed(1)
     u = Unit("player")
     u.mod_dexterity = 0
     u._base_inventory = packed([data.CHEST_ITEM])
     guild = _guild_of(u)
-    gs = GroupScreen(ui_fonts(), guild, guild.groups[0], lambda: None)
-    surface = pygame.Surface((1600, 900))
-    gs.draw(surface)                              # populates self.sources
-
-    rect, unit, loc = next(s for s in gs.sources if s[1] is u and s[2] == 0)
-    gs._open_menu(rect.center)
-    assert any(kind == "open" for kind, _label, _arg in gs.menu["rows"])
-    gs.draw(surface)                              # populates menu["hits"]
-
-    open_hit = next(r for r, kind, _arg in gs.menu["hits"] if kind == "open")
+    gs = BandKit(guild, guild.groups[0])
+    assert any(kind == "open" for kind, _label, _arg in gs._menu_rows([(u, 0)]))
     with fixed_d20(data.CHEST_DC):
-        click_menu(gs, open_hit.center)
+        gs._menu_run([(u, 0)], "open", None)
 
     assert not u.has_item(data.CHEST_ITEM)
     assert u.has_item(data.GEM_ITEM)
@@ -87,30 +72,16 @@ def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
     of looking at the item actually right-clicked -- a unit carrying both
     (e.g. via the sandbox editor) would always resolve as the sealed one,
     even when the player opened the ordinary Locked Chest."""
-    import os
-
-    import pygame
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    from gartok.group_screen import GroupScreen
-    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.band_kit import BandKit
 
     random.seed(1)
     u = Unit("player")
     u.mod_dexterity = 0
     u._base_inventory = packed([data.MISSION_CHEST_ITEM, data.CHEST_ITEM])
     guild = _guild_of(u)
-    gs = GroupScreen(ui_fonts(), guild, guild.groups[0], lambda: None)
-    surface = pygame.Surface((1600, 900))
-    gs.draw(surface)
-
-    rect, _unit, _loc = next(s for s in gs.sources if s[1] is u and s[2] == 1)  # the CHEST_ITEM row
-    gs._open_menu(rect.center)
-    gs.draw(surface)
-    open_hit = next(r for r, kind, _arg in gs.menu["hits"] if kind == "open")
+    gs = BandKit(guild, guild.groups[0])
     with fixed_d20(data.CHEST_DC):
-        click_menu(gs, open_hit.center)
+        gs._menu_run([(u, 1)], "open", None)                 # the CHEST_ITEM row
 
     assert not u.has_item(data.CHEST_ITEM)
     assert u.has_item(data.MISSION_CHEST_ITEM)   # untouched -- the sealed one stays sealed

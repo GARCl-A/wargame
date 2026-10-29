@@ -20,7 +20,6 @@ Design, carried over from the planning pass in
      it stays reusable the way every other `gartok/ui` component is.
 
 Who uses what (today; more lands as screens migrate):
-    density="full"     sheet modal (`sheet_panel.SheetModalMixin`)
     density="compact"  battle inspect panel, character creator preview
 
 `density="normal"` (draft card / band column / guild panel) and

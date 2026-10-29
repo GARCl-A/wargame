@@ -26,7 +26,7 @@ def _open(combat_xp=10, n=3):
     game = Game(MapSession(guild, "w1"))
     sheet = game.session.act(guild.groups[0].gid, "guild")
     assert sheet == {"screen": "guild"}
-    game.session.sheet.member = units[0]
+    game.session.desk.member = units[0]
     assert game.session.talents() == {"screen": "talents"}
     return game, game.session, units
 

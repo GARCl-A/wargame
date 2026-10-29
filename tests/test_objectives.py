@@ -126,21 +126,6 @@ def test_objectives_persistence():
         persist.delete_world(world)
 
 
-def test_guild_screen_reputations_shows_objectives_card_first():
-    import pygame
-    from gartok.guild_screen import GuildScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.font.init()
-    u = Unit("player")
-    g = Guild([u])
-    fonts = ui_fonts()
-    gs = GuildScreen(fonts, g, on_back=lambda: None)
-    gs.tab = "reputations"
-
-    surf = pygame.Surface((1280, 720))
-    gs.draw(surf)
-    assert gs._rep_scroll == 0
-
 
 def test_market_buy_completes_objectives():
     from gartok import world

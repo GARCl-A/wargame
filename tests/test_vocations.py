@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-import pygame
 
 from gartok import (
     campaign,
@@ -24,10 +23,7 @@ from gartok.clock import Clock
 from gartok.draft import Draft
 from gartok.group import BASE_CAPACITY, CAUTIOUS, NORMAL, Group
 from gartok.guild import Guild
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
-
-SIZE = (1280, 800)
 
 
 def _guild(vocation=None, n=1, **kw):
@@ -86,19 +82,14 @@ def test_a_commission_replaces_the_card_from_the_natural_table():
 # ---- the picker screen --------------------------------------------------- #
 
 
-def test_the_guild_tab_shows_the_vocation_and_carries_its_dormant_flag():
-    from gartok.guild_screen import GuildScreen
-    pygame.init()
+def test_the_charter_shows_the_vocation_and_carries_its_dormant_flag():
+    from gartok.guild_sheet import GuildSheet
     for vid, dormant in (("marsh", False), ("scholars", False), (None, False)):
-        guild = _guild(vid)
-        gs = GuildScreen(ui_fonts(), guild, lambda: None)
-        v = gs._vocation()
+        v = GuildSheet(_guild(vid))._vocation()
         if vid is None:
             assert v is None
         else:
             assert v["name"] == vocations.get(vid).name and v["dormant"] is dormant
-        gs.tab = "guild"
-        gs.draw(pygame.Surface(SIZE))
 
 
 # ---- the perks ----------------------------------------------------------- #

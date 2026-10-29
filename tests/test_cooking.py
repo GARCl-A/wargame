@@ -5,12 +5,9 @@ garrison outlast the 10-day sustain without hauling fresh meat."""
 import os
 import random
 
-import pygame
-
 from gartok import data, items, orders, persist
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.vault import HouseVault
 from tests.helpers import Unit, economy, packed, world
 
@@ -425,20 +422,12 @@ def test_field_campfire_survives_save_round_trip():
         persist.delete_world(slot)
 
 
-def test_field_campfire_in_group_screen_actions():
-    from gartok.group_screen import GroupScreen
-    pygame.init()
+def test_the_band_lights_a_field_campfire():
+    from gartok.band_kit import BandKit
     u = Unit("player")
     u._base_inventory = packed(["Flint and Steel", "Lumber", "1kg Coal"])
     g = Group([u], node="wilds")
     guild = Guild([u], groups=[g])
-
-    cook_opened = []
-    scr = GroupScreen(ui_fonts(), guild, g, on_back=lambda: None, on_cook=lambda: cook_opened.append(True))
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface((1280, 800)))
-    
-    # Click campfire action in toolbar
+    scr = BandKit(guild, g)
     scr._handle_button("campfire_cook")
-    assert g.has_campfire(guild.clock.seconds)
-    assert cook_opened == [True]
+    assert g.has_campfire(guild.clock.seconds) and "lit" in scr.notice

@@ -229,6 +229,9 @@ class HubSession(Session):
         self._claim = None
         self._ledger = None
 
+    def sheet_units(self):
+        return [*self.group.members, *self.group.herd]
+
     @property
     def tabs(self):
         tabs = DYNAMIC.get(self.order.kind)

@@ -7,65 +7,40 @@
                  and the holdings
     REPUTATIONS  the objectives and each known faction's deeds and unlocks
 
-The reads and the rules are pygame's own: `GuildScreen` for the roster, the sheet, the roles, the charter
-and the reputations, `GroupScreen` for the band's kit (the moves, the item menu, the wagon and the herd),
-both held headless as the hub's tabs hold theirs, until step 10 of `docs/plans/web_frontend.md`.
+The reads and the rules are `guild_sheet.GuildSheet` for the roster, the sheet, the roles and the charter,
+and `band_kit.BandKit` for the band's kit (the moves, the item menu, the wagon and the herd).
 """
 
 from typing import ClassVar
 
 from .. import (
     art_files,
-    data,
     factions,
     item_icon,
     items,
     missions,
     objectives,
     store_column,
-    talents,
 )
 from .. import wagon as wagon_mod
 from ..animals import Animal
-from ..combatant import Combatant
-from ..constants import fmt_money
+from ..band_kit import BandKit
 from ..data import role_for
-from ..group_screen import GroupScreen
-from ..guild_screen import (
-    ATTRIBUTE_LABELS,
+from ..guild_sheet import (
     FIGHT_DUE_TIP,
     FILTERS,
-    GuildScreen,
-    _needs_attention,
-    _node_label,
+    GuildSheet,
+    needs_attention,
+    node_label,
 )
-from ..sheet import unit_to_ch
-from ..ui.tokens import T
 from .map_session import _icon, _portrait
 from .session import Session
+from .sheet_view import animal_sheet, member_sheet
 from .stable_tab import WAGON_GLYPH, _face
 
 TABS = (("members", "Members"), ("bands", "Bands"), ("guild", "The Guild"), ("reputations", "Reputations"))
-TONES = {T.BRASS: "warn", T.BLOOD: "bad", T.GREEN: "good"}
 ZONES = ("pack", "hand", "offhand", "tongue", "artifact", "armor", "tack", "hitch")
 WORN = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Body"), ("artifact", "Artifact"))
-
-
-def _breakdown(title, terms, total):
-    lines = [title] + [f"{label}: {v}" if i == 0 else f"{label}: {v:+}" for i, (label, v) in enumerate(terms)]
-    return "\n".join([*lines, f"= {total}"])
-
-
-def _hp_tip(u):
-    b = u.hp_breakdown()
-    lines = [f"{b['hit_dice']} hit dice of d{b['hd']}: {b['dice_sum']}", f"CON {b['con_total']:+}"]
-    if b["talent_total"]:
-        lines.append(f"Talents {b['talent_total']:+}")
-    if b["ability_bonus"]:
-        lines.append(f"{b['ability_name']} {b['ability_bonus']:+}")
-    if b["starving"]:
-        lines.append("Starving: held at 1")
-    return "\n".join([*lines, f"= {b['final_max']}"])
 
 
 def _tip(name):
@@ -96,19 +71,19 @@ class GuildSession(Session):
     def __init__(self, map_session, tab="members", gid=None):
         self.map = map_session
         self.guild = map_session.guild
-        self.sheet = GuildScreen(None, self.guild, on_back=lambda: None)
+        self.desk = GuildSheet(self.guild)
         self.tab = tab
         self.notice = None
         self.gear = None
         self._set_band(gid or self._default_band())
         if tab == "bands" and self.gear.group.members:
-            self.sheet.member = self.gear.group.members[0]
+            self.desk.member = self.gear.group.members[0]
 
     # ------------------------------------------------------------------ #
     # the frame                                                           #
     # ------------------------------------------------------------------ #
     def _default_band(self):
-        g = self.sheet._group_of(self.sheet.member) if self.sheet.member is not None else None
+        g = self.desk._group_of(self.desk.member) if self.desk.member is not None else None
         return (g or self.guild.groups[0]).gid
 
     def state(self):
@@ -117,7 +92,7 @@ class GuildSession(Session):
         if self.gear is not None and self.gear.notice:
             notice, self.gear.notice = self.gear.notice, None
         pending = sum(1 for u in g.roster if u.pending_picks)
-        alerts = sum(1 for u in self.sheet._everyone() if self._alert(u))
+        alerts = sum(1 for u in self.desk._everyone() if self._alert(u))
         out = {
             "name": g.name or "The Guild",
             "banner": list(g.banner_color) if g.banner_color else None,
@@ -135,6 +110,9 @@ class GuildSession(Session):
     def tutorial_key(self):
         return {"bands": "group", "guild": "guild.overview"}.get(self.tab, f"guild.{self.tab}")
 
+    def sheet_units(self):
+        return self.desk._everyone()
+
     def pick_tab(self, key):
         if key not in dict(TABS):
             raise ValueError(f"no such tab: {key}")
@@ -146,17 +124,17 @@ class GuildSession(Session):
     # ------------------------------------------------------------------ #
     @staticmethod
     def _alert(u):
-        return bool(u.unfed_days) if isinstance(u, Animal) else _needs_attention(u)
+        return bool(u.unfed_days) if isinstance(u, Animal) else needs_attention(u)
 
     def _row(self, d, u):
         hurt = u.hp < u.hp_max
         return {"uid": d["key"], "name": d["name"], "sub": d["sub"], "selected": d["selected"],
                 "hp": list(d["hp"]), "hurt": hurt, "beast": isinstance(u, Animal),
                 "portrait": _face(u.species, u.uid) if isinstance(u, Animal) else _portrait(u),
-                "badges": [{"text": t.lower(), "tone": TONES.get(c, "")} for t, c in d["badges"]]}
+                "badges": [{"text": t.lower(), "tone": tone} for t, tone in d["badges"]]}
 
     def _members(self):
-        s = self.sheet
+        s = self.desk
         if s.member not in s._everyone():
             s.member = s.roster[0] if s.roster else None
         by_uid = {u.uid: u for u in s._everyone()}
@@ -167,121 +145,45 @@ class GuildSession(Session):
         return {"filters": [{"mode": k, "label": label.title(), "tip": tip} for k, label, tip in FILTERS],
                 "filter": s.filter_mode, "roster": bands,
                 "slots": [len(self.guild.groups), self.guild.group_slots],
-                "sheet": None if m is None else self._animal_sheet(m) if isinstance(m, Animal) else self._sheet(m)}
+                "sheet": None if m is None else animal_sheet(m, self.guild) if isinstance(m, Animal) else self._sheet(m)}
 
     def _task(self, gid):
         return self.map._chip(self.map._group(gid))[0]
 
     def pick_member(self, uid):
-        u = next((u for u in self.sheet._everyone() if u.uid == uid), None)
+        u = next((u for u in self.desk._everyone() if u.uid == uid), None)
         if u is None:
             raise ValueError("no such member")
-        self.sheet.member = u
+        self.desk.member = u
         return self.state()
 
     def set_filter(self, mode):
         if mode not in {k for k, _, _ in FILTERS}:
             raise ValueError(f"no such filter: {mode}")
-        self.sheet.filter_mode = mode
+        self.desk.filter_mode = mode
         return self.state()
 
     def fold(self, gid):
-        self.sheet.collapsed_groups ^= {gid}
+        self.desk.collapsed_groups ^= {gid}
         return self.state()
 
     def _sheet(self, u):
-        s, g = self.sheet, self.guild
-        c = Combatant(u)
-        ch = unit_to_ch(c)
+        s, g = self.desk, self.guild
         grp = g.group_of(u)
-        w = ch["weapon"]
-        weapon = s._weapon_data(u, c, ch)
-        gear = s._gear_data(u, c)
-        load = gear["load"]
-        rations, autotroph = gear["rations"]
-        return {
-            "uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race["name"],
-            "occ": u.occupation["name"], "age": u.age, "align": u.alignment.capitalize(),
-            "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
-            "where": _node_label(grp.node) if grp else "Camp",
-            "task": self._task(grp.gid) if grp else "no orders",
-            "stamps": ([{"text": "Guild leader", "tone": "leader"}] if u is g.leader else [])
-                      + ([{"text": "Leads the band", "tone": "leader"}]
-                         if u is not g.leader and s._is_group_leader(u) else [])
-                      + ([{"text": "Champion of the Pit", "tone": ""}] if getattr(u, "arena_title", False) else []),
-            "status": ch["status"],
-            "hungry": u.hunger_level > 0,
-            "attrs": [{"k": k, "v": v, "mod": mod, "low": low} for k, v, mod, low in ch["attrs"]],
-            "hp": list(ch["hp"]), "hp_tip": _hp_tip(u),
-            "stats": [{"k": "AC", "v": ch["ac"], "tip": _breakdown("Armour class", u.ac_breakdown(), c.ac)},
-                      {"k": "MD", "v": ch["md"], "tip": _breakdown("Mental defense", u.md_breakdown(),
-                                                                   c.mental_defense)},
-                      {"k": "SPD", "v": ch["spd"], "tip": _breakdown("Speed (squares)", u.speed_breakdown(), c.speed)},
-                      {"k": "INIT", "v": ch["init"], "tip": _breakdown("Initiative", u.initiative_breakdown(),
-                                                                       ch["init"])}],
-            "weapon": {"name": weapon["name"], "tags": weapon["tags"], "crit": w["crit"], "action": w["action"],
-                       "glyph": item_icon.glyph(u.equipped_weapon) if u.equipped_weapon else "item/knapsack",
-                       "chips": [{"k": k, "v": v, "tip": t} for k, v, t in weapon["chips"]]},
-            "kit": [{"k": "Hands", "v": gear["hands"], "note": ""},
-                    {"k": "Body", "v": gear["armor"], "note": gear["armor_note"]},
-                    {"k": "Purse", "v": fmt_money(gear["coins"]), "note": ""},
-                    {"k": "Rations", "v": "Feeds on light" if autotroph else str(rations or "None"),
-                     "note": "" if autotroph else "days of food" if rations else "nothing to eat in the pack",
-                     "bad": not autotroph and not rations},
-                    {"k": "Load", "v": f"{load[0]:.1f} kg",
-                     "note": f"of {load[1]:g} at a normal pace, {load[2]:g} at most", "bad": load[0] > load[1]}],
-            "ability": list(ch["ability"]), "langs": ch["langs"],
-            "racial": u.racial_level,
-            "tracks": [{"label": t["label"], "value": t["value"], "frac": t["frac"], "text": t["text"],
-                        "tip": t["tip"]} for t in s._tracks(u)],
-            "talents": [{"name": n, "desc": d} for n, d in self._talents(u)],
-            "record": self._record(u),
-            "picks": len(u.pending_picks),
-            "roles": [self._role(r) for r in s._role_rows(u, grp)],
-            "locked": bool(grp and grp.fight_due),
-        }
-
-    @staticmethod
-    def _talents(u):
-        return [(talents.get(t).name if talents.get(t) else t.title(), talents.get(t).desc if talents.get(t) else "")
-                for track in talents.TRACKS for t in u.talents.get(track, [])]
-
-    def _record(self, u):
-        s = self.sheet
-        who = s._recruited_by(u)
-        out = [f"Recruited by {who}." if who else "A founding member of the guild.",
-               s._sponsor_line(u)[0].replace(" -- ", ": ") + "."]
-        if getattr(u, "arena_title", False):
-            out.append("Holds the title Champion of the Pit.")
-        if getattr(u, "bio", ""):
-            out.append(u.bio)
-        return out
+        return {**member_sheet(u, g, self._task(grp.gid) if grp else None),
+                "picks": len(u.pending_picks),
+                "roles": [self._role(r) for r in s._role_rows(u, grp)],
+                "locked": bool(grp and grp.fight_due)}
 
     @staticmethod
     def _role(r):
         act = r["action"]
-        return {"key": r["key"], "title": r["title"].replace("★ ", ""), "sub": r["sub"].replace(" -- ", ": "),
-                "current": bool(r["badge"]), "tip": r["tip"],
+        return {"key": r["key"], "title": r["title"], "sub": r["sub"].replace(" -- ", ": "),
+                "current": r["current"], "tip": r["tip"],
                 "action": None if act is None else {"label": act[0].capitalize(), "on": act[1]}}
 
-    def _animal_sheet(self, a):
-        s = self.sheet
-        grp = s._group_of(a)
-        pulled = grp.pulling(a) if grp else None
-        return {
-            "uid": a.uid, "beast": True, "name": a.species, "portrait": _face(a.species, a.uid),
-            "sub": f"{a.size} animal", "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
-            "where": _node_label(grp.node) if grp else "Camp",
-            "hp": [max(0, a.hp), a.hp_max],
-            "attrs": [{"k": k, "v": a.attributes[n], "mod": data.mod(a.attributes[n]), "low": False}
-                      for k, n in ATTRIBUTE_LABELS],
-            "speed": f"{a.speed:g} m",
-            "ability": [a.ability.name, a.ability.effect] if a.race["ability"] else None,
-            "work": [{"k": k.title(), "v": v, "tone": TONES.get(c, "")} for k, v, c in s._animal_work_rows(a, pulled)],
-        }
-
     def role(self, key):
-        s = self.sheet
+        s = self.desk
         rows = {r["key"]: r for r in s._role_rows(s.member, s._group_of(s.member))} \
             if s.member is not None and not isinstance(s.member, Animal) else {}
         row = rows.get(key)
@@ -293,7 +195,7 @@ class GuildSession(Session):
 
     def talents(self):
         from .talent_session import TalentSession
-        m = self.sheet.member
+        m = self.desk.member
         if m is None or isinstance(m, Animal):
             raise ValueError("pick a member first")
         g = self.guild.group_of(m)
@@ -312,7 +214,7 @@ class GuildSession(Session):
         g = next((g for g in self.guild.groups if g.gid == gid and not g.empty), None)
         if g is None:
             raise ValueError("no such band")
-        self.gear = GroupScreen(None, self.guild, g, on_back=lambda: None, on_tick=self.map.tick_outside)
+        self.gear = BandKit(self.guild, g, on_tick=self.map.tick_outside)
 
     def pick_band(self, gid):
         self._set_band(gid)
@@ -415,7 +317,7 @@ class GuildSession(Session):
         return out
 
     def _chip(self, g):
-        return {"gid": g.gid, "name": g.display_name, "where": _node_label(g.node), "task": self._task(g.gid),
+        return {"gid": g.gid, "name": g.display_name, "where": node_label(g.node), "task": self._task(g.gid),
                 "size": len(g.members), "capacity": g.capacity, "faces": [_portrait(u) for u in g.members[:4]],
                 "locked": g.fight_due}
 
@@ -554,7 +456,7 @@ class GuildSession(Session):
     # THE GUILD                                                           #
     # ------------------------------------------------------------------ #
     def _charter(self):
-        g, s = self.guild, self.sheet
+        g, s = self.guild, self.desk
         known = factions.known(g)
         bank = g.bank
         holds = s._holdings()
@@ -564,7 +466,7 @@ class GuildSession(Session):
                 h["inside"] = [{"name": items.stack_name(e), "qty": e[1], "glyph": item_icon.glyph(items.stack_name(e))}
                                for e in bank.items]
         return {
-            "vocation": s._vocation() and {k: v for k, v in s._vocation().items() if k != "icon"},
+            "vocation": s._vocation(),
             "fame": g.fame, "fame_next": g.fame_to_next_slot, "slots": [len(g.groups), g.group_slots],
             "standing": [{"name": f.name, "rep": g.reputation.get(f.id, 0)} for f in known],
             "groups": [{**r, "gid": gr.gid, "task": self._task(gr.gid).capitalize()}

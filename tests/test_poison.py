@@ -278,15 +278,13 @@ def test_one_antidote_a_day_per_character_and_none_for_the_healthy():
     assert not u.can_take_antidote
 
 
-def test_the_group_screen_offers_an_antidote_from_anyones_pack():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    from gartok.group_screen import GroupScreen
+def test_the_band_offers_an_antidote_from_anyones_pack():
+    from gartok.band_kit import BandKit
     from gartok.guild import Guild
     g = Guild([Unit("player"), Unit("player")])
     grp = g.groups[0]
     patient = grp.members[0]
-    scr = GroupScreen(None, g, grp, on_back=lambda: None)
+    scr = BandKit(g, grp)
     assert not scr._can_treat_poison()
     patient.add_poison(VENOM, 11)
     assert not scr._can_treat_poison()                       # poisoned, but nobody holds an antidote
