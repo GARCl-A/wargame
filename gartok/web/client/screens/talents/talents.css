@@ -132,7 +132,7 @@
 .node.sib{opacity:.55}
 
 /* the map: a camera over rings */
-.view{position:absolute;left:0;top:0;width:1004px;height:664px;overflow:hidden;cursor:grab}
+.view{position:absolute;inset:0;overflow:hidden;cursor:grab}
 .view.grabbing{cursor:grabbing}
 .world{position:absolute;left:0;top:0;transform-origin:0 0}
 .world > svg{position:absolute;overflow:visible}

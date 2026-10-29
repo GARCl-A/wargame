@@ -1349,8 +1349,13 @@ screen. Cut as step 10 was:
          looked at in headless Edge at 1920x1080 before and after (day-70 and day-12 saves): nothing overflows.
          The draft, the talk, the report, the talents and the battle were not looked at; their running text
          grew by at most 2px.
-     - **The talent map shows more of the tree.** THE MAP has room, across and down, for one or two more rings
-       around what is in reach; widen the starting view (`talents.js`).
+     - **The talent map shows more of the tree — done (2026-10-29).** No tree is deeper than three rings, so
+       what is in reach plus two rings is the whole tree: the work was making it fill the box. THE MAP's view is
+       the whole `#tree` box (was a fixed 1004x664, 40px short), the rings are ellipses squashed to the box's
+       shape (`AY = 0.8`, `AX` from the box's aspect), and FIT reads both axes. The combat and work trees open at
+       73% (were 57%), past the 62% where every name shows, so the whole tree is named from the start.
+       - The four trees of a day-70 dwarf were looked at in headless Edge at 1920x1080 before and after. Only
+         the client changed; no test reads the layout.
    - **After the families, by eye** (screenshots, a mockup first for the board):
      - **The board's fog.** Grey (seen before), paper (never seen) and the dark (seen, unlit) stack into too
        many layers: it is hard to tell what is dark, what is fog and what is unknown (the 2026-10-21 playtest

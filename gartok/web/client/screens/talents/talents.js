@@ -140,7 +140,8 @@ function sheet() {
   }));
 }
 
-// THE MAP: the roots on the first ring round the portrait, each step deeper one ring out
+// THE MAP: the roots on the first ring round the portrait, each step deeper one ring out; the rings are
+// squashed to the box's shape, so the whole tree fills it across and down
 function map(tree) {
   const B = byId(), roots = T.nodes.filter(n => !n.requires || !B[n.requires]);
   const col = {}, depth = {};
@@ -151,15 +152,15 @@ function map(tree) {
     return col[n.id];
   };
   roots.forEach((r, i) => { if (i) leaf += 0.6; place(r); });
-  const XY = {};
+  const VW = tree.clientWidth, VH = tree.clientHeight, AY = 0.8, AX = AY * VW / VH, XY = {};
   for (const n of T.nodes) {
     depth[n.id] = depthOf(n, B);
     const a = (col[n.id] + 0.5) / Math.max(leaf, 1) * Math.PI * 2 - Math.PI / 2, r = 190 + depth[n.id] * 150;
-    XY[n.id] = [Math.cos(a) * r, Math.sin(a) * r];
+    XY[n.id] = [Math.cos(a) * r * AX, Math.sin(a) * r * AY];
   }
   const deepest = Math.max(...Object.values(depth));
   let lines = "", html = "", hub = `<div class="hubface" style="left:0;top:0">${face(T.unit.portrait, T.unit.name)}</div>`;
-  for (let d = 0; d <= deepest; d++) hub += `<div class="orbit" style="width:${2 * (190 + d * 150)}px;height:${2 * (190 + d * 150)}px"></div>`;
+  for (let d = 0; d <= deepest; d++) hub += `<div class="orbit" style="width:${2 * (190 + d * 150) * AX}px;height:${2 * (190 + d * 150) * AY}px"></div>`;
   for (const n of T.nodes) {
     if (n.requires && B[n.requires]) {
       const [px, py] = XY[n.requires], [qx, qy] = XY[n.id];
@@ -167,18 +168,18 @@ function map(tree) {
     }
     html += nodeHtml(n, ...XY[n.id]);
   }
-  const R = 190 + deepest * 150 + 90;
+  const R = 190 + deepest * 150, RX = R * AX + 90, RY = R * AY + 90;
   tree.insertAdjacentHTML("beforeend", `<div class="view"><div class="world">${hub}
-      <svg style="left:${-R}px;top:${-R}px;width:${2 * R}px;height:${2 * R}px" viewBox="${-R} ${-R} ${2 * R} ${2 * R}">${lines}</svg>${html}</div></div>
+      <svg style="left:${-RX}px;top:${-RY}px;width:${2 * RX}px;height:${2 * RY}px" viewBox="${-RX} ${-RY} ${2 * RX} ${2 * RY}">${lines}</svg>${html}</div></div>
     <div class="cam"><span class="cb" data-z="out">−</span><span class="cb" data-z="in">+</span><span class="cb" data-z="fit">FIT</span><b class="scale"></b></div>
     <div class="legend"><span><i class="lg taken"></i>held</span><span><i class="lg open"></i>can take</span><span><i class="lg waiting"></i>needs a pick</span><span><i class="lg locked"></i>not yet</span></div>`);
-  camera(tree, R);
+  camera(tree, RX, RY);
 }
 
-function camera(tree, R) {
+function camera(tree, RX, RY) {
   const vw = tree.querySelector(".view"), world = tree.querySelector(".world"), scale = tree.querySelector(".scale");
-  const VW = 1004, VH = 664, key = T.unit.uid + "/" + T.track;
-  const fitAll = () => { const s = Math.min(VW / (2 * R), VH / (2 * R), 1.1); Object.assign(cam, {s, tx: VW / 2, ty: VH / 2}); };
+  const VW = vw.clientWidth, VH = vw.clientHeight, key = T.unit.uid + "/" + T.track;
+  const fitAll = () => { const s = Math.min(VW / (2 * RX), VH / (2 * RY), 1.1); Object.assign(cam, {s, tx: VW / 2, ty: VH / 2}); };
   if (!cam || camKey !== key) { cam = {s: 1, tx: 0, ty: 0, dragged: false}; camKey = key; fitAll(); }
   const apply = () => {
     world.style.transform = `translate(${cam.tx}px,${cam.ty}px) scale(${cam.s})`;

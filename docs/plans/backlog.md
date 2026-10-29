@@ -110,7 +110,7 @@ A short run in the browser. Its local bugs are fixed (the draft's COMMISSION hit
 food alert's overflow, the Chronicle's scroll, every condition on the foe card, Edge's
 translate prompt). What needs a design call, a shared component or a behaviour pygame had is in
 [web_frontend.md](web_frontend.md) (10z's *Playtest 2026-10-28* list: the sheet as a modal, the work level-up, the tutorial
-button in the header and the type, all done; the fog, the pit, the talent map, the map's walking bands).
+button in the header, the type and the talent map, all done; the fog, the pit, the map's walking bands).
 
 ## Playtest notes 2026-10-21 (guild Herança)
 
