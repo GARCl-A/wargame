@@ -1,7 +1,7 @@
 """Read combat logs (`gartok/combat_log.py`) back: who decided what, and where a person parts from the AI.
 
 For every log: the fight, who played each side, the result, and the decisions by controller. For
-the person's decisions it prints how often they matched what `ai.py` would have done from the same
+the person's decisions it prints how often they matched what `ai/` would have done from the same
 state (same action, then same action and target) and the pairs they differed on most. `--show`
 replays one fight from the file alone, a line per decision.
 

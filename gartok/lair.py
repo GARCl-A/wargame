@@ -4,7 +4,7 @@
   the Mine searches the deep galleries (`search`, a Wisdom check); found, it stays on the map.
 - **Inside** (`LairScenario`), one dark, hot cave: the way in, the kobolds' warren, the hoard, the
   clutch, and the dragon (`npcs/dragon.json`, racial 20) asleep in the hall beside them.
-- **Kobold patrols** walk their rounds (their `patrol_route`, `ai._patrol`). One that sees the
+- **Kobold patrols** walk their rounds (their `patrol_route`, `ai.scripted._patrol`). One that sees the
   squad challenges it before ringing the alarm (`contact`: a dialogue on the board,
   `dialogue.Challenge`): a Draconic speaker can bluff (+2 DC for every bluff already told here)
   or pay; anyone can fight, and a patrol not silenced before its next turn rings the alarm. A
@@ -211,7 +211,7 @@ class LairScenario(Scenario):
         self.stage = "awake"
         dragon.dormant = False
         dragon.alerted = True
-        battle.aggressor = "enemy"         # the lair hunts the thieves now (`ai._search`)
+        battle.aggressor = "enemy"         # the lair hunts the thieves now (`ai.target._search`)
         battle.log(f"*** {dragon.name} wakes! ***")
         battle.fx(dragon.pos, "AWAKE!", "crit")
 
@@ -332,7 +332,7 @@ class LairScenario(Scenario):
         return [o.item_name for o in battle.ground if o.is_relic and o.item_name == EGG]
 
     def heist_goal(self, battle, unit):
-        """`(cell, reach)` the squad's AI heads for (`ai._heist`): a free cell of the way out once
+        """`(cell, reach)` the squad's AI heads for (`ai.scripted._heist`): a free cell of the way out once
         anyone holds an egg, else beside the nearest egg still on the ground; None for neither."""
         standing = [u for u in battle.player_units if u.alive]
         if any(carries_egg(u) for u in standing):

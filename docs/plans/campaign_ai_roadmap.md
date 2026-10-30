@@ -15,7 +15,7 @@ The goal of this AI is not just to play, but to:
 
 GARTOK is uniquely suited for AI training and fast simulation due to key architectural decisions:
 - **Headless Core by Design:** The core game logic ([battle.py](../../gartok/battle.py), [campaign.py](../../gartok/campaign.py), [guild.py](../../gartok/guild.py), [orders.py](../../gartok/orders.py), [progression.py](../../gartok/progression.py)) is pure Python with **zero** `pygame` dependencies.
-- **Blazing Fast Simulation:** While a human playthrough takes hours, a headless simulation of an entire 30-day campaign (with combat auto-resolved by [ai.py](../../gartok/ai.py)) executes in **~1 to 3 seconds** on CPU.
+- **Blazing Fast Simulation:** While a human playthrough takes hours, a headless simulation of an entire 30-day campaign (with combat auto-resolved by [ai/](../../gartok/ai/)) executes in **~1 to 3 seconds** on CPU.
 - **Deterministic & Seedable:** Simulations can be seeded (`random.seed`) for exact reproducibility.
 
 ---
@@ -76,7 +76,7 @@ At each map node or day transition:
 2. Score each option:
    $$\text{Utility}(\text{Option}) = f(\text{Game State}, \text{Genome})$$
 3. Pick the highest utility action and dispatch it via [orders.py](../../gartok/orders.py).
-4. Run combat automatically with [ai.py](../../gartok/ai.py).
+4. Run combat automatically with [ai/](../../gartok/ai/).
 
 ### C. The Fitness Function
 ```python

@@ -130,7 +130,7 @@ World systems, outside combat:
 - **Magic**: twelve spells across three schools (`nature`, `blood`, `faith`),
   initiated at the schools' hidden sanctuaries (`rite.py`),
   learned by studying at the taverna over several in-game days (`magic.py`), and
-  cast in battle (`actions.CastSpellAction`, `ai.py`).
+  cast in battle (`actions.CastSpellAction`, `ai/`).
 - **Economy**: money lives on the character as `Copper Coin` ($1) and `Gold Coin`
   ($100) items in the pack (they weigh and split like any item); gold only exists
   through the bank's exchange. A market with haggling by language + Charisma +
@@ -211,7 +211,13 @@ gartok/
   poisons.py        persistent poisons (Snake Venom, Spider Venom): levels, saves, Antidote
   combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
-  ai.py             enemy squad AI (over actions/); alignment tempers the edges
+  ai/               enemy squad AI (over actions/); alignment tempers the edges. `turn.take_turn` runs one turn
+                    over the rest: common (shared helpers), reckon (hit odds and what a blow, spell or shove
+                    is worth), attack (which attack or special move), support (allies, mounts, potions),
+                    target (who to fight, searching, flanking), flee (running, delaying, skittish beasts),
+                    movement (steps, terrain, traps, picking things up), scripted (capture the flag,
+                    patrols, the heist, the necromancer). A threshold lives in the module that uses it
+                    (`ai.module_of(name)`); a test patches a function in the module that calls it
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
   item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for the Editor's code-drawn icons (editor/ui/item_icons.py)
   weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
@@ -229,7 +235,7 @@ gartok/
   talents.py        the talent trees: one per XP track, Effect(channel, amount, stat)
   magic.py          spell registry (level, sources) + study-difficulty math -- casting
                     lives in actions/spells.py CastSpellAction, learned via the taverna's
-                    "study" garrison job (guild.py), AI use in ai.py
+                    "study" garrison job (guild.py), AI use in ai/
 
   # world + campaign
   world.py          the map graph: nodes, edges (distance), route (Dijkstra), Bout (arena offers)
@@ -361,7 +367,7 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     what losing each costs it), unit_stats.py (creation-stat spread), unit_compare.py,
                     crafting_cost.py, vocation_report.py (each vocation perk's value as a share of the guild's daily wage),
                     combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay),
-                    combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai.py change),
+                    combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai/ change),
                     archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks),
                     gen_portrait.py (medallion portraits from a local Stable Diffusion + the style LoRA, driven by
                     the /gen-portrait skill; portrait_lora/ has the setup and the Colab notebook that trains the LoRA)

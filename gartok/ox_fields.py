@@ -3,7 +3,7 @@
 Daylight, no torches: the tracks that led the party here were read by day, and the
 fight starts the moment they are found. Terrain is what the hunt is played on --
 groves (walls that block sight), mud (difficult ground) and two box canyons
-opening west, the only places the Aurochs can be pinned (`ai.py` makes it run
+opening west, the only places the Aurochs can be pinned (`ai/` makes it run
 from anyone near, so a straight chase never lands a blow).
 
 Pressure is the herd: every `CALL_EVERY` rounds Aurochs bellows and an ox joins the

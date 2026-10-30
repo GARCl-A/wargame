@@ -51,7 +51,7 @@ class Battle:
         self.daylight = daylight              # outdoor scenarios read this for ambient light
         self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
         self.arena = arena                   # True = fought in the pits: the Champion of the Pit title bites here
-        self.aggressor = aggressor           # "player" | "enemy": who brought the fight (ai.py: it searches, the other side groups); None = neither
+        self.aggressor = aggressor           # "player" | "enemy": who brought the fight (ai/: it searches, the other side groups); None = neither
         self.wanted_alive = set()            # foes the player's side means to capture: its AI pulls its blows on them
         self.scenario = scenario or ArenaScenario()
         for band in (enemy_units, allies, *(others or {}).values()):
@@ -59,7 +59,7 @@ class Battle:
         self.player_units = ([Combatant(u, "player") for u in player_units]
                              + [Combatant(u, "player", ai_ally=True) for u in allies])
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
-        # further sides, hostile to everyone else and played by ai.py: {team: [units]}
+        # further sides, hostile to everyone else and played by ai/: {team: [units]}
         self.other_units = [Combatant(u, team) for team, units in (others or {}).items() for u in units]
         self.setup()
 

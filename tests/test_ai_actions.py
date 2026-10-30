@@ -44,7 +44,7 @@ def test_parry_and_strike_when_the_swing_barely_lands_and_foes_crowd_in(monkeypa
     batt, e, p = _duel("Broadsword")
     for pos in ((4, 5), (5, 4)):
         _recruit(batt, team="player").pos = pos
-    monkeypatch.setattr(ai, "_reckoned_ac", _ac(40))
+    monkeypatch.setattr(ai.reckon, "_reckoned_ac", _ac(40))
     assert ai._pick_attack(batt, e, p) is actions.PARRY_STRIKE
 
 
@@ -61,9 +61,9 @@ def test_a_lone_foe_takes_two_axe_swings_not_a_cleave():
 
 def test_armor_pierce_when_the_armour_is_most_of_the_ac(monkeypatch):
     batt, e, p = _duel("Pick")
-    monkeypatch.setattr(ai, "_reckoned_ac", _ac(26, pierced=10))
+    monkeypatch.setattr(ai.reckon, "_reckoned_ac", _ac(26, pierced=10))
     assert ai._pick_attack(batt, e, p) is actions.ARMOR_PIERCE
-    monkeypatch.setattr(ai, "_reckoned_ac", _ac(14, pierced=12))
+    monkeypatch.setattr(ai.reckon, "_reckoned_ac", _ac(14, pierced=12))
     assert ai._pick_attack(batt, e, p) is actions.ATTACK
 
 
@@ -105,7 +105,7 @@ def test_parry_and_strike_with_a_sword_when_foes_crowd_in(monkeypatch):
     assert ai._pick_attack(batt, e, p) is actions.ATTACK
     for pos in ((4, 5), (5, 4)):
         _recruit(batt, team="player").pos = pos
-    monkeypatch.setattr(ai, "_reckoned_ac", _ac(40))
+    monkeypatch.setattr(ai.reckon, "_reckoned_ac", _ac(40))
     assert ai._pick_attack(batt, e, p) is actions.PARRY_STRIKE
 
 
@@ -190,7 +190,7 @@ def test_ai_jumps_a_trench_it_cannot_walk_round():
 def test_ai_shoves_a_foe_into_a_deep_pit(monkeypatch):
     batt, e, p = _duel("Club")
     batt.board.elevation = {(7, 5): -4}
-    monkeypatch.setattr(ai, "_shove_odds", lambda unit, foe: 0.9)
+    monkeypatch.setattr(ai.reckon, "_shove_odds", lambda unit, foe: 0.9)
     assert ai._try_shove(batt, e)
     assert batt.elevation(p) < 0 or p.pos == (6, 5)
 
@@ -344,7 +344,7 @@ def test_every_weapon_action_loses_to_two_attacks_out_of_its_case_and_wins_in_it
         act = next(a for a in actions.WEAPON_ACTIONS if a.id == aid)
         for strength in (10, 14, 18):
             for ac in (10, 13, 16, 19):
-                monkeypatch.setattr(ai, "_reckoned_ac", _ac(ac, pierced=ac - 3))
+                monkeypatch.setattr(ai.reckon, "_reckoned_ac", _ac(ac, pierced=ac - 3))
                 for favoured in (False, True):
                     batt, e, p = _case(aid, favoured)
                     e.char.strength = strength

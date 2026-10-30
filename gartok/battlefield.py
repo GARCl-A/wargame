@@ -2,7 +2,7 @@
 
 A known node from the start, but for now its only fight is the Faith Order's errand
 (`missions.FAITH_BATTLEFIELD`): the group joins a skirmish beside a squad of Ledger
-Hold soldiers that `ai.py` plays (`Battle(allies=...)`, `Combatant.ai_ally`), against a
+Hold soldiers that `ai/` plays (`Battle(allies=...)`, `Combatant.ai_ally`), against a
 frontier warband. The errand is the soldiers: it fails if any of them dies, whatever
 happens to the guild's own people.
 
@@ -26,7 +26,7 @@ SOLDIERS = 4
 WARBAND = 6
 SOLDIER_GAP = 2                        # soldiers are this many levels under the squad
 WARBAND_EDGE = 1                       # the warband this many over
-SOLDIER_ALIGNMENT = "Lawful and Good"   # ai.py: a good unit stabilizes a downed ally first
+SOLDIER_ALIGNMENT = "Lawful and Good"   # ai/: a good unit stabilizes a downed ally first
 SOLDIER_ARMOR = "Leather Jerkin"
 
 COLS, ROWS = 32, 18

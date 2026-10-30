@@ -14,7 +14,7 @@ class SpellAction(Action):
     """Shared plumbing for a spell cast as a combat action: one subclass per
     spell (same "one class = one mechanic" rule as the rest of this file),
     looked up once against `magic.SPELLS` by `spell_id`. Built through the
-    `CastSpellAction(spell_id)` factory below, so `ai.py` / `battle_screen.py`
+    `CastSpellAction(spell_id)` factory below, so `ai/` / `battle_screen.py`
     don't need to know the id -> class mapping."""
     spell_id = ""
     cost = 1

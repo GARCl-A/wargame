@@ -79,17 +79,13 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   `wiki_rules.py`) becomes one keyword with its own wiki entry, and the descriptions say only the
   keyword: shorter text, and the rules become a set of words that always mean the same thing. Start with
   *Double blow* (the name is open) and look for the next ones (Flanked, Prone, the conditions already
-  are). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai.py` and the numbers do not change.
+  are). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai/` and the numbers do not change.
 
 - **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
   wagon left behind, the hand-over card between groups, the vault read from the guild screen and the auto-win
   are done (2026-10-30). Left: the tests the cut lost: the clock
   while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
   cancelled. The old screens are in git before the cut.
-
-- **Split `ai.py` by concern (author 2026-10-30).** The file is ~1750 lines and ~94 functions; cut it
-  into target choice, movement and action choice, with the same behaviour (`tests/test_ai_actions`,
-  `sim_test.py`), before the temperament per trait goes in.
 
 - **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per
   test, runs under `pytest-xdist` and the skills use it; four tests still lean on luck and the
@@ -311,7 +307,7 @@ Keep these while building them:
       Steadfast / Fickle on the law axis, Merciful / Ruthless on the moral one). What alignment does
       today, in the author's words: keeping one's word, holding the formation (law); not killing, not
       stealing (moral). The traits carry both halves: how the member **behaves** when the player is not
-      in control (`ai.py`'s temper, what a deserter takes, `dialogue.py`) and what they **value**
+      in control (`ai/`'s temper, what a deserter takes, `dialogue.py`) and what they **value**
       (loyalty inputs: a Merciful one suffers a captive left to die). Further personality traits, if
       ever, are more inputs of the same bar.
   - **Loyalty: one bar per member, shown as a number** (the author likes a transparent game). Inputs:

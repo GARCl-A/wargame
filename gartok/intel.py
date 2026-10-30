@@ -310,7 +310,7 @@ def has_full_intel(battle, team, target):
 
 
 def known_fields(battle, team, target):
-    """What `team` knows of `target`: the one read the modal, the board and `ai.py` share."""
+    """What `team` knows of `target`: the one read the modal, the board and `ai/` share."""
     observe(battle, team)
     opened = _open(battle, team, target)
     fields = {name: (_value(name, target) if name in opened else None)

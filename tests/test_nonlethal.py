@@ -84,6 +84,6 @@ def test_the_ai_switches_the_toggle_when_its_target_is_wanted():
     batt, a, d = _sturdy_battle()
     d.hp = 40
     batt.wanted_alive.add(d)
-    with patch("gartok.ai._target", return_value=d), patch.object(batt, "end_turn"):
+    with patch("gartok.ai.turn._target", return_value=d), patch.object(batt, "end_turn"):
         ai.take_turn(batt, a)
     assert a.nonlethal_blows

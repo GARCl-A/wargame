@@ -116,7 +116,7 @@ meters; unset, it is the size's (the Wolf walks 10.5 m / 7 cells). Switching a
 character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** and the **Snake** are beasts too (the Snake is Small, +4 Dex, and every attack it makes is a finesse attack with its *Fangs*). The **Skeleton** and the **Zombie** are
 `kind = "undead"` (the `data.UNDEAD` table): not animals, so they keep a job — an
 occupation with its weapon and item. The Zombie is slow and tough (STR +2, DEX −2, CON +4, 6 m / 4
-cells, Darkvision, Sleep Immunity); the undead never break and run (`ai._mindless`). Neither rolls in a locality's encounter table
+cells, Darkvision, Sleep Immunity); the undead never break and run (`ai.common._mindless`). Neither rolls in a locality's encounter table
 (`data.WILD_POOL` is wolves only); they are authored in the creator or placed by hand.
 The **Ogre** (the `data.GIANTS` table) is the same: a humanoid with a job, never a
 player's race. Large, `d12` Hit Die, STR +4 DEX −2 CON +2 INT −2 WIS +2 CHA −2, Jotun,
@@ -353,7 +353,7 @@ character creator. `mean_level` survives only as the encounter-difficulty scalar
 State on `unit.py` (`magic_sources`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
 sources)`); casting in `actions/spells.py`'s `CastSpellAction` (+ `ShareMagicAction`
-for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
+for the Sprite); AI use in `ai/`; the `Sleeping` condition in
 `conditions.py`. A first foothold, not a full system — twelve spells today, and each school has a
 level-0 and a level-1 spell of its own.
 
@@ -401,7 +401,7 @@ level-0 and a level-1 spell of its own.
   - **Grasping Roots** (level 0, **Nature only**) — a foe within 6 cells and in sight, `d20 + INT`
     vs AC: on a hit it walks **1 cell** at most until the end of its next turn (`conditions.Rooted`).
     Recast, it refreshes. The AI weighs it in hit points against what the point buys as a strike
-    (`ai._roots_worth`): a foe carrying a flag or a walk from one (as much as Maiming Strike's stop), or a
+    (`ai.reckon._roots_worth`): a foe carrying a flag or a walk from one (as much as Maiming Strike's stop), or a
     melee foe a walk from the AI's side held out of reach, the two blows it would have landed.
   - **Hex** (level 0, **Blood only**) — a foe within 6 cells and in sight, `d20 + INT` vs Mental
     Defense: on a hit, **-1 on each of its six attribute scores** until the end of its next turn
@@ -413,7 +413,7 @@ level-0 and a level-1 spell of its own.
     damage equal to the level. Reading the foe's attributes (Assess) tells whether it is worth it: the
     AI casts it only on a foe whose attributes its side has read, when its worth in hit points (the
     Constitution loss, the blows its side lands more often on the lower AC, the foe's own blows
-    landing less often and for less, `ai._hex_worth`) beats what the point buys as a strike.
+    landing less often and for less, `ai.reckon._hex_worth`) beats what the point buys as a strike.
   - **Spare the Dying** (level 0, **Faith only**) — touch: a **dying** ally in reach is stable, no
     check (Stabilize is a coin flip). A good AI casts it instead of Stabilize.
   - **Healing Touch** (level 1, **Faith only**) — touch: an ally in reach, or the caster, heals **1d6**,
@@ -622,7 +622,7 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   a rider who is up climbs down with Dismount. The AI centaur lifts a dying ally beside it.
 - **Tail Sweep** (2 points) = a Lizardfolk with the talent strikes two adjacent foes with the
   tail (the unarmed die, Strength) and then shoves each (`Push`, its own roll). The AI sweeps
-  when the strikes and the shoves beat two plain attacks (`ai._tail_sweep_pays`).
+  when the strikes and the shoves beat two plain attacks (`ai.attack._tail_sweep_pays`).
 - **Pixie Dust** (1 point) = a Sprite with the talent lets an adjacent ally fly through the end
   of that ally's next turn (`PixieFlight`): over pits and deep water, no fall. The AI dusts an
   ally whose walk to every foe it sees is cut.
@@ -888,7 +888,7 @@ triples.
   or foe), which takes **1d6** too -- deals **1d6 more**. Over a pit lip it falls
   in and the throw ends there; onto burning cells it burns (Fire, below). The AI
   shoves when the throw is worth more than a swing: into the flames, a pit deep enough to hurt,
-  a bear trap, out of a flank on itself, or a Mighty Shove into a wall (`ai._try_shove`).
+  a bear trap, out of a flank on itself, or a Mighty Shove into a wall (`ai.attack._try_shove`).
 - **Vertical combat.** Melee reaches between two elevations if the difference is
   **≤ 1** (a fight at the lip). A difference of **2 or more** takes the target
   out of melee reach until someone climbs — a **ranged** attack still connects.
@@ -930,8 +930,8 @@ A battle can have **burning cells** (`Battle.fire`); for now only the Ogre's for
   (`Battle.spread_fire`, never a wall or water).
 - **Light.** A burning cell lights 2 squares around it (`data.FIRE_LIGHT`).
 - **Walking.** A walk goes round the flames when that costs no more than going through
-  (`Battle._walk_path`); the AI steps out of the fire first thing (`ai._leave_fire`) and routes round
-  it when there is a way (`ai._step_toward`).
+  (`Battle._walk_path`); the AI steps out of the fire first thing (`ai.flee._leave_fire`) and routes round
+  it when there is a way (`ai.movement._step_toward`).
 
 ### Three sides 🟡
 
@@ -1036,7 +1036,7 @@ shown (`intel.known_fields`).**
   (free on the next of the race) and the best margin read of each authored NPC (the Ribbit
   Brothers, the Aurochs, Adelio), which stays known in every later fight against it. An
   individual's stats are known for that fight only.
-- The Aurochs' run from the hunters (`ai._skitter`) is a beast's senses, not a player's, and still measures
+- The Aurochs' run from the hunters (`ai.flee._skitter`) is a beast's senses, not a player's, and still measures
   every foe.
 
 ### Throwing 🟡
@@ -1838,7 +1838,7 @@ instance of a given template can be active guild-wide at a time
   - *The field.* A 48x30 daylight map (the tracks were read by day, so no torches
     are needed): groves that block sight, mud, and two box canyons opening west.
     Aurochs (`npcs/aurochs.json`, an Ox by race, level 13, Large, 119 HP, Strength 20,
-    faster than any hunter: his racial talent *Aurochs Might* gives +5 squares of speed and +3 melee damage) is **skittish** (`ai._skitter`):
+    faster than any hunter: his racial talent *Aurochs Might* gives +5 squares of speed and +3 melee damage) is **skittish** (`ai.flee._skitter`):
     anyone within 12 squares sends him for open ground far from the party, so a
     straight chase herds him round the groves. He turns and fights when cornered
     -- a canyon, the map edge, a pincer -- or winded (3 turns of running), and then

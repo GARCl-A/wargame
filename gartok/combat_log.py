@@ -2,7 +2,7 @@
 
 A `CombatLog` is attached to a `Battle` as `battle.sink`. Every action a unit performs
 (`Action.execute`, ending a turn, planting a flag or a trap) goes through `CombatLog.record`,
-whether a person clicked it or `ai.py` chose it, so both sides' decisions land in the same
+whether a person clicked it or `ai/` chose it, so both sides' decisions land in the same
 rows. `scripts/combat_analysis.py` reads them back.
 
 Rows (all carry `e`):
@@ -13,7 +13,7 @@ Rows (all carry `e`):
   act    one decision: `n`, `round`, `actor` (index into `units`), `team`, `by` (who decided),
          `action` (an Action id, "end_turn", "plant_flag", "plant_trap", "skip_traps"), `target`
          ({"unit": i} | {"cell": [x, y]}), `kw`, `ap`, `options` (what was legal), `ai`
-         (what `ai.py` would have done in the same state, human rows only), `state` after it,
+         (what `ai/` would have done in the same state, human rows only), `state` after it,
          the `log` lines it produced, and `winner` once the fight is decided. `new_units` adds
          the static data of anyone who joined mid-fight (reinforcements).
   end    the result: `winner`, `rounds`, `survivors`, `seconds`.
@@ -226,7 +226,7 @@ class _Probe:
 
 
 def ai_choice(battle, actor):
-    """What `ai.py` would do first from this exact state, played out on a copy so nothing real
+    """What `ai/` would do first from this exact state, played out on a copy so nothing real
     changes and the dice the fight goes on to roll are the ones it would have rolled anyway."""
     from . import ai
     state = random.getstate()

@@ -5,7 +5,7 @@ against them); `build` makes one on demand at a chosen level and squad size, fro
 `log_path` says where its `combat_log` goes: `combat_lab/<date>/<name>.jsonl` beside the repo.
 The campaign's own fights log into the world folder instead (`recorder.combat_log_path`).
 
-Either side can be a person or `ai.py` (`controllers`), so the same fight yields a person's
+Either side can be a person or `ai/` (`controllers`), so the same fight yields a person's
 decisions against the AI, or two people's against each other.
 """
 

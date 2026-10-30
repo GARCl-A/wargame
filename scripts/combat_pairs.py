@@ -1,13 +1,13 @@
-"""The AI against the same squads a person played: the win rate to move when `ai.py` changes.
+"""The AI against the same squads a person played: the win rate to move when `gartok/ai` changes.
 
 Each log is put back at its opening (`combat_log.rebuild`: the same characters, board and cells), and
-the AI plays it many times over, both sides driven by `ai.py`. Each trial reseeds the dice the same way,
-so a before and an after differ only by the code. Run it before and after an `ai.py` change. Campaign
+the AI plays it many times over, both sides driven by `gartok/ai`. Each trial reseeds the dice the same way,
+so a before and an after differ only by the code. Run it before and after a `gartok/ai` change. Campaign
 fights (`saves/<world>/combat_logs`) and lab fights both work; a fight with an objective of its own
 (the Ruins, a mission's) is skipped; capture the flag comes back with both flags planted. `--fresh`
 plays unseen lab squads instead. Besides the win rate it counts the player's side's dead a fight.
 
-`--set NAME=VALUE` changes one of `ai.py`'s thresholds for the player's side only (the other side
+`--set NAME=VALUE` changes one of `gartok/ai`'s thresholds for the player's side only (the other side
 plays the code as it is), so a threshold is weighed head to head; `FLAG_RUNNERS` retags the
 player's runners (`battle.tag_flag_runners`).
 
@@ -37,20 +37,21 @@ MAX_DECISIONS = 400
 
 
 def _turn(overrides):
-    """`ai.take_turn` with `overrides` (NAME -> value of `ai`'s module constants) in force on the
+    """`ai.take_turn` with `overrides` (NAME -> value of a threshold in an `ai` module) in force on the
     player's side's turns only."""
     if not overrides:
         return ai.take_turn
-    base = {name: getattr(ai, name) for name in overrides}
+    homes = {name: ai.module_of(name) for name in overrides}
+    base = {name: getattr(homes[name], name) for name in overrides}
 
     def turn(battle, unit):
         for name, value in (overrides if unit.team == "player" else base).items():
-            setattr(ai, name, value)
+            setattr(homes[name], name, value)
         try:
             ai.take_turn(battle, unit)
         finally:
             for name, value in base.items():
-                setattr(ai, name, value)
+                setattr(homes[name], name, value)
     return turn
 
 
@@ -141,13 +142,16 @@ def main():
     ap.add_argument("--fresh", metavar="FIGHT:LEVEL:SQUAD", help="unseen squads instead of the logged ones")
     ap.add_argument("--seeds", type=int, default=30, help="how many unseen squads with --fresh")
     ap.add_argument("--set", action="append", default=[], metavar="NAME=VALUE",
-                    help="an ai.py threshold for the player's side only (repeatable)")
+                    help="an `ai` threshold for the player's side only (repeatable)")
     args = ap.parse_args()
     overrides = {}
     for item in args.set:
         name, _, value = item.partition("=")
-        if name != "FLAG_RUNNERS" and not hasattr(ai, name):
-            ap.error(f"ai.py has no {name}")
+        if name != "FLAG_RUNNERS":
+            try:
+                ai.module_of(name)
+            except AttributeError:
+                ap.error(f"gartok/ai has no {name}")
         overrides[name] = float(value) if "." in value else int(value)
     if args.fresh:
         report_fresh(args.fresh, args.seeds, args.trials, overrides)

@@ -37,7 +37,7 @@ Leave it alone: it is only maintained, and porting it is deprioritised in the ba
   `${tip(text)}` on the element, `tip(text, "item")` for an item's name over its lines,
   `tip(text, "sum")` for a breakdown (a title, `label: value` rows, `= total`).
 - **The server filters** fog, sight and intel: the client never gets what the side does not know (the
-  rule `ai.py` lives by, `intel.known_fields`).
+  rule `ai/` lives by, `intel.known_fields`).
 - **A new screen has a tutorial card:** `tutorial_key()` plus a `tutorial.<id>` block in
   `locales/en.json`. The shell puts the `?` at the end of the screen's `#top`.
 

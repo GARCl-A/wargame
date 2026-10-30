@@ -44,7 +44,7 @@ module's description in the README, not here.
   wages and rewards are copper.
 - **Vision is per-character.** The map is always dark; on your turn you see what the active unit
   sees. The drawing never shows what the rules hide: the web board is sent only as the side
-  knows it, and `ai.py` reads a foe only through `intel.known_fields`.
+  knows it, and `ai/` reads a foe only through `intel.known_fields`.
 - **Adventure out-earns day labour.** Lumber is only a survival floor (16 h = cheapest meal + $1);
   the arena and the wilds pay more. No fatigue, so the Yard pays ~50% over that floor: accepted
   (2026-10-22), hunger is the one upkeep. Re-run `scripts/economy_report.py` after touching
