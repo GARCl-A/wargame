@@ -118,7 +118,6 @@ In order. The board items are tuned by eye, so each takes a mockup first.
 
 ### 1. The board, by eye
 
-- **A pit reads as a pit, and how deep** (`board.py` elevation).
 - **The bands walk on the map** from node to node along the edge, as tokens walk on the board.
 
 **Done when:** a mockup of each is approved, then built and looked at at 1920x1080.

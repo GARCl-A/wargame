@@ -231,14 +231,21 @@ const Board = (() => {
     }
     for (const [x, y, z] of b.elevation) {
       if (z < 0) {
-        g.fillStyle = "rgba(30,18,8,.45)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
-        hatch(g, wx(x), wy(y), L.cell, L.cell, .9, 8, rng(x * 13 + y * 7), L.cell / 60);
+        g.fillStyle = "rgba(16,9,4,.30)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
+        g.save(); g.beginPath(); g.rect(wx(x), wy(y), L.cell, L.cell); g.clip();
+        g.strokeStyle = "rgba(26,16,9,.22)"; g.lineWidth = 1.2;
+        const gap = L.cell * .14;
+        for (let k = -L.cell; k < L.cell; k += gap) {
+          g.beginPath(); g.moveTo(wx(x) + k, wy(y) + L.cell); g.lineTo(wx(x) + k + L.cell, wy(y)); g.stroke();
+        }
+        g.restore();
       } else {
         g.fillStyle = "rgba(40,25,10,.22)"; g.fillRect(wx(x) + 4, wy(y) + 6, L.cell, L.cell);
         g.fillStyle = "rgba(250,238,210,.35)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
         g.strokeStyle = "#2a1a0c"; g.lineWidth = 1.6; g.strokeRect(wx(x) + 1, wy(y) + 1, L.cell - 2, L.cell - 2);
       }
     }
+    drawPitLips(g, b);
     drawWalls(g, b, new Set(b.walls.map(([x, y]) => K(x, y))));
     if (INDOOR.has(b.floor)) {
       g.strokeStyle = "#1a1009";
@@ -253,7 +260,50 @@ const Board = (() => {
     return c;
   }
 
-  const SUB = 4;          // mask pixels a cell: the edges soften over a quarter cell, not a whole one
+  function drawPitLips(g, b) {
+    const Z = new Map(b.elevation.filter(e => e[2] < 0).map(([x, y, z]) => [K(x, y), z]));
+    if (!Z.size) return;
+    const zAt = (x, y) => Z.get(K(x, y)) ?? 0, c = L.cell;
+    g.save(); g.strokeStyle = "#2a1a0c"; g.lineCap = "round";
+    for (const [k, z] of Z) {
+      const [x, y] = k.split(",").map(Number);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        if (zAt(x + dx, y + dy) <= z) continue;
+        const px = wx(x), py = wy(y);
+        g.lineWidth = Math.max(2, c * .052); g.beginPath();
+        if (dx) { const X = dx > 0 ? px + c : px; g.moveTo(X, py); g.lineTo(X, py + c); }
+        else { const Y = dy > 0 ? py + c : py; g.moveTo(px, Y); g.lineTo(px + c, Y); }
+        g.stroke(); g.lineWidth = Math.max(1.4, c * .036);
+        for (const t of [.25, .75]) {
+          g.beginPath();
+          if (dx) { const X = dx > 0 ? px + c : px; g.moveTo(X, py + t * c); g.lineTo(X - dx * c * .2, py + t * c); }
+          else { const Y = dy > 0 ? py + c : py; g.moveTo(px + t * c, Y); g.lineTo(px + t * c, Y - dy * c * .2); }
+          g.stroke();
+        }
+      }
+    }
+    const seen = new Set();
+    g.font = `700 ${Math.round(c * .34)}px "Cinzel", Georgia, serif`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.shadowColor = "#000"; g.shadowBlur = 3; g.fillStyle = "#f0d79e";
+    for (const k of Z.keys()) {
+      if (seen.has(k)) continue;
+      const cells = [], stack = [k]; seen.add(k);
+      while (stack.length) {
+        const cur = stack.pop(); cells.push(cur.split(",").map(Number));
+        const [x, y] = cells[cells.length - 1];
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const n = K(x + dx, y + dy);
+          if (Z.has(n) && !seen.has(n)) { seen.add(n); stack.push(n); }
+        }
+      }
+      const mx = cells.reduce((s, p) => s + p[0], 0) / cells.length, my = cells.reduce((s, p) => s + p[1], 0) / cells.length;
+      const [lx, ly] = cells.reduce((best, p) => Math.hypot(p[0] - mx, p[1] - my) < Math.hypot(best[0] - mx, best[1] - my) ? p : best);
+      g.fillText("−" + -Z.get(k), wx(lx) + c / 2, wy(ly) + c / 2);
+    }
+    g.restore();
+  }
+
+  const SUB = 4;         // mask pixels a cell: the edges soften over a quarter cell, not a whole one
   const PAD = 4;          // cells of margin the fog also covers: the rock round a delve shows only where it was seen
   function cellGrid(colorOf) {
     const [s, sm] = canvas((L.cols + 2 * PAD) * SUB, (L.rows + 2 * PAD) * SUB);

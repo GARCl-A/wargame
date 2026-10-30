@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pit on the real maps</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;color:#eadcbc;
+  font-family:Georgia,serif;background:radial-gradient(ellipse 70% 60% at 38% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+h1{position:absolute;left:40px;top:22px;font:700 26px/1 Georgia,serif;letter-spacing:.14em;color:#f0d79e}
+h1 small{display:block;margin-top:8px;font:17px/1 Georgia,serif;letter-spacing:0;color:#b9a27c}
+canvas{position:absolute;left:40px;top:96px}
+#legend{position:absolute;left:1500px;top:96px;width:380px;font-size:17px;line-height:1.35}
+#legend div{margin-bottom:18px}
+#legend b{color:#f0d79e;display:block}
+</style>
+</head>
+<body>
+<div id="stage">
+<h1 id="title"></h1>
+<canvas id="c" width="1420" height="900"></canvas>
+<div id="legend"></div>
+</div>
+<script src="pit_maps.js"></script>
+<script>
+const q=new URLSearchParams(location.search).get("state")||"pit", M=MAPS[q];
+document.getElementById("title").innerHTML="CONTOURS · "+M.name.toUpperCase()+"<small>The real board, the real hole: one drop of N, no steps. One inked contour, tick marks pointing downhill, the depth written once.</small>";
+const cv=document.getElementById("c"), g=cv.getContext("2d"), C=Math.floor(Math.min(1420/M.cols,900/M.rows));
+cv.width=M.cols*C;cv.height=M.rows*C;
+const K=(x,y)=>x+","+y, S=a=>new Set(a.map(([x,y])=>K(x,y)));
+const walls=S(M.walls), water=S(M.water), Z={};
+for(const [x,y,z] of M.elevation)Z[K(x,y)]=z;
+const z=(x,y)=>Z[K(x,y)]||0;
+const img=new Image();img.src="img/floor.jpg";
+const names=q==="pit"?["ogre","human","gob0","gnoll"]:["ogre","human","gob0","gob1","gnoll","kenku"];
+const tok=names.map(n=>{const i=new Image();i.src="img/"+n+".png";return i;});
+img.onload=()=>Promise.all(tok.map(i=>new Promise(r=>i.complete?r():i.onload=r))).then(draw);
+function tex(x,y){g.drawImage(img,((x*37+3)%18)*50,((y*53+5)%18)*50,100,100,x*C,y*C,C,C);}
+function hatch(x,y,w,h,a,gap){g.save();g.beginPath();g.rect(x,y,w,h);g.clip();g.strokeStyle=`rgba(26,16,9,${a})`;g.lineWidth=1.2;
+  for(let k=-h;k<w;k+=gap){g.beginPath();g.moveTo(x+k,y+h);g.lineTo(x+k+h,y);g.stroke();}g.restore();}
+const xy=k=>k.split(",").map(Number);
+function draw(){
+  for(let y=0;y<M.rows;y++)for(let x=0;x<M.cols;x++){tex(x,y);g.fillStyle="rgba(48,30,14,.38)";g.fillRect(x*C,y*C,C,C);}
+  for(const k of water){const [x,y]=xy(k);
+    g.fillStyle="rgba(70,96,110,.45)";g.fillRect(x*C,y*C,C,C);
+    g.strokeStyle="rgba(40,60,72,.6)";g.lineWidth=1.1;
+    for(let j=1;j<=3;j++){const yy=y*C+j*C/4;g.beginPath();for(let t=0;t<=6;t++)g.lineTo(x*C+4+t*(C-8)/6,yy+Math.sin(t*1.7+x+j)*2);g.stroke();}}
+  for(const k in Z){const [x,y]=xy(k);g.fillStyle="rgba(16,9,4,.30)";g.fillRect(x*C,y*C,C,C);hatch(x*C,y*C,C,C,.22,7);}
+  g.strokeStyle="#2a1a0c";g.lineCap="round";
+  for(const k in Z){const [x,y]=xy(k);
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      if(z(x+dx,y+dy)===Z[k])continue;
+      const px=x*C,py=y*C;g.lineWidth=2.6;g.beginPath();
+      if(dx){const X=dx>0?px+C:px;g.moveTo(X,py);g.lineTo(X,py+C);}else{const Y=dy>0?py+C:py;g.moveTo(px,Y);g.lineTo(px+C,Y);}
+      g.stroke();g.lineWidth=1.8;
+      for(const t of [.25,.75]){g.beginPath();
+        if(dx){const X=dx>0?px+C:px;g.moveTo(X,py+t*C);g.lineTo(X-dx*C*.2,py+t*C);}
+        else{const Y=dy>0?py+C:py;g.moveTo(px+t*C,Y);g.lineTo(px+t*C,Y-dy*C*.2);}
+        g.stroke();}}}
+  for(const k of walls){const [x,y]=xy(k);g.fillStyle="#2b221a";g.fillRect(x*C,y*C,C,C);g.strokeStyle="#0b0806";g.lineWidth=1.5;g.strokeRect(x*C+1,y*C+1,C-2,C-2);}
+  const seen=new Set();g.font=`700 ${Math.round(C*.34)}px Georgia`;g.textAlign="center";g.textBaseline="middle";g.shadowColor="#000";g.shadowBlur=3;g.fillStyle="#f0d79e";
+  for(const k in Z){if(seen.has(k))continue;const cells=[],st=[k];seen.add(k);
+    while(st.length){const c=st.pop();cells.push(c);const [x,y]=xy(c);
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const n=K(x+dx,y+dy);if(Z[n]!==undefined&&!seen.has(n)){seen.add(n);st.push(n);}}}
+    const cx=cells.reduce((a,c)=>a+xy(c)[0],0)/cells.length, cy=cells.reduce((a,c)=>a+xy(c)[1],0)/cells.length;
+    cells.sort((a,b)=>Math.hypot(xy(a)[0]-cx,xy(a)[1]-cy)-Math.hypot(xy(b)[0]-cx,xy(b)[1]-cy));
+    const [lx,ly]=xy(cells[0]);g.fillText("−"+(-Z[k]),lx*C+C/2,ly*C+C/2);}
+  g.shadowBlur=0;
+  for(const [x,y] of M.torches){g.fillStyle="#ffb04a";g.beginPath();g.arc(x*C+C/2,y*C+C/2,8,0,7);g.fill();
+    const r=g.createRadialGradient(x*C+C/2,y*C+C/2,0,x*C+C/2,y*C+C/2,C*1.4);r.addColorStop(0,"rgba(255,160,70,.45)");r.addColorStop(1,"rgba(255,160,70,0)");g.fillStyle=r;g.fillRect(x*C-C,y*C-C,C*3,C*3);}
+  const P=M.deploy_player.slice(0,q==="pit"?3:6), E=M.deploy_enemy.slice(0,q==="pit"?2:5), N=M.deploy_npc;
+  const all=[...P.map(c=>[c,"#5b8fc0"]),...E.map(c=>[c,"#c9473a"]),...N.map(c=>[c,"#c9473a"])];
+  all.forEach(([c,col],i)=>{const cx=c[0]*C+C/2,cy=c[1]*C+C/2,im=tok[i%tok.length];
+    g.save();g.beginPath();g.arc(cx,cy,C*.42,0,7);g.clip();g.drawImage(im,cx-C*.42,cy-C*.42,C*.84,C*.84);g.restore();
+    g.strokeStyle=col;g.lineWidth=4;g.beginPath();g.arc(cx,cy,C*.42,0,7);g.stroke();});
+  document.getElementById("legend").innerHTML=
+   `<div><b>THE HOLE</b>One tone, light hatching, an inked lip with tick marks pointing down. The number is the drop in cells.</div>`+
+   (q==="ribbit"?`<div><b>WITH WATER</b>The ripple still draws over the hole: deep water is a pit with water in it, and the lip still reads.</div>`:`<div><b>THE PIT</b>8 cells, 4 by 2, −2 deep, between the two sides.</div>`)+
+   `<div style="font-size:15px;color:#b9a27c">Walls and torches are simplified; they are not what is under test. Tokens sit at the deploy cells.</div>`;
+}
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);document.getElementById("stage").style.transform=`scale(${s})`;}
+fit();addEventListener("resize",fit);
+</script>
+</body>
+</html>

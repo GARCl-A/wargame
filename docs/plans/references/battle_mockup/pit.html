@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pit mockup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;color:#eadcbc;
+  font-family:Georgia,serif;background:radial-gradient(ellipse 70% 60% at 38% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+h1{position:absolute;left:40px;top:22px;font:700 26px/1 Georgia,serif;letter-spacing:.14em;color:#f0d79e}
+h1 small{display:block;margin-top:8px;font:17px/1 Georgia,serif;letter-spacing:0;color:#b9a27c}
+canvas{position:absolute;left:40px;top:96px}
+#legend{position:absolute;left:1500px;top:96px;width:380px;font-size:17px;line-height:1.35}
+#legend div{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+#legend i{flex:none;width:64px;height:64px;border:2px solid #7d5c28;border-radius:3px}
+#legend b{color:#f0d79e;display:block}
+</style>
+</head>
+<body>
+<div id="stage">
+<h1 id="title"></h1>
+<canvas id="c" width="1420" height="900"></canvas>
+<div id="legend"></div>
+</div>
+<script>
+const VARIANTS={
+  a:{name:"A · THE CLIFF FACE",sub:"Depth is dark: every level down is a darker wash, and the wall you look into is drawn as a cliff face with its drop in cells. A rim line marks where the floor ends.",mode:"face"},
+  b:{name:"B · CONTOURS",sub:"The pit is a survey: one inked contour per level, nested like a topographic map, and the depth written in the middle of each cell it changes.",mode:"contour"},
+  c:{name:"C · SHADOW WELL",sub:"The pit swallows light: a soft inner shadow falls from the north and west rim, deeper cells fade to black, a number only on the floor of each level.",mode:"well"}
+};
+const q=new URLSearchParams(location.search).get("state")||"a", V=VARIANTS[q]||VARIANTS.a;
+document.getElementById("title").innerHTML=V.name+"<small>"+V.sub+"</small>";
+const W=28,H=18,C=50, cv=document.getElementById("c"), g=cv.getContext("2d");
+// a pit 9x7 with three tiers (-1 rim, -2, -3 floor), a raised ledge (+1) to the east
+const Z={};
+for(let y=4;y<=10;y++)for(let x=6;x<=14;x++)Z[x+","+y]=-1;
+for(let y=5;y<=9;y++)for(let x=7;x<=13;x++)Z[x+","+y]=-2;
+for(let y=6;y<=8;y++)for(let x=9;x<=11;x++)Z[x+","+y]=-3;
+for(let y=3;y<=6;y++)for(let x=20;x<=24;x++)Z[x+","+y]=1;
+const z=(x,y)=>Z[x+","+y]||0;
+function rnd(n){const s=Math.sin(n*127.1)*43758.5453;return s-Math.floor(s);}
+const img=new Image();img.src="img/floor.jpg";
+const tok=["ogre","human","gob0","gnoll"].map(n=>{const i=new Image();i.src="img/"+n+".png";return i;});
+img.onload=()=>Promise.all(tok.map(i=>new Promise(r=>i.complete?r():i.onload=r))).then(draw);
+function tex(x,y){g.drawImage(img,(x*37%20)*50,(y*53%20)*50,C*2,C*2,x*C,y*C,C,C);}
+function hatch(x,y,w,h,a,gap){g.save();g.beginPath();g.rect(x,y,w,h);g.clip();g.strokeStyle=`rgba(26,16,9,${a})`;g.lineWidth=1.2;
+  for(let k=-h;k<w;k+=gap){g.beginPath();g.moveTo(x+k,y+h);g.lineTo(x+k+h,y);g.stroke();}g.restore();}
+function draw(){
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){tex(x,y);g.fillStyle="rgba(48,30,14,.38)";g.fillRect(x*C,y*C,C,C);}
+  const dark=[0,.30,.52,.72];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const d=z(x,y), px=x*C, py=y*C;
+    if(d>0){ // ledge: paper-lit top, drop shadow SE, inked border
+      g.fillStyle="rgba(40,25,10,.28)";g.fillRect(px+5,py+7,C,C);
+      g.fillStyle="rgba(250,238,210,.38)";g.fillRect(px,py,C,C);
+    }
+    if(d<0){
+      const n=-d;
+      if(V.mode==="face"){
+        g.fillStyle=`rgba(16,9,4,${dark[n]})`;g.fillRect(px,py,C,C);
+        // cliff face: where the cell north of this one is higher, a stone face with hatching
+        const drop=z(x,y-1)-d;
+        if(drop>0){const fh=C*.34;g.fillStyle="rgba(70,52,34,.85)";g.fillRect(px,py,C,fh);
+          hatch(px,py,C,fh,.7,5);g.fillStyle="rgba(0,0,0,.35)";g.fillRect(px,py+fh-4,C,4);}
+      }else if(V.mode==="contour"){
+        g.fillStyle=`rgba(16,9,4,${dark[n]*.45})`;g.fillRect(px,py,C,C);
+        hatch(px,py,C,C,.12*n,9-n*2);
+      }else{
+        g.fillStyle=`rgba(8,4,2,${dark[n]*1.05})`;g.fillRect(px,py,C,C);
+      }
+    }
+  }
+  // edges between unequal heights
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const d=z(x,y);
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const e=z(x+dx,y+dy); if(e===d)continue;
+      const lo=Math.min(d,e), steps=Math.abs(d-e);
+      if(d<e && !(d<0))continue;
+      if(d>e && d<=0)continue;
+      g.strokeStyle=V.mode==="contour"?"#2a1a0c":"rgba(20,12,6,.9)";
+      g.lineWidth=V.mode==="contour"?1.5+steps*.8:(V.mode==="face"?2.2:1.2);
+      if(V.mode==="contour")g.setLineDash([]);
+      g.beginPath();
+      const px=x*C,py=y*C;
+      if(dx){const X=(dx>0?px+C:px);g.moveTo(X,py);g.lineTo(X,py+C);}
+      else{const Y=(dy>0?py+C:py);g.moveTo(px,Y);g.lineTo(px+C,Y);}
+      g.stroke();
+    }
+  }
+  if(V.mode==="well"){ // inner shadow cast from north/west rims
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+      const d=z(x,y);if(d>=0)continue;
+      const px=x*C,py=y*C;
+      if(z(x,y-1)>d){const gr=g.createLinearGradient(0,py,0,py+C*.7);gr.addColorStop(0,"rgba(0,0,0,.55)");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(px,py,C,C*.7);}
+      if(z(x-1,y)>d){const gr=g.createLinearGradient(px,0,px+C*.7,0);gr.addColorStop(0,"rgba(0,0,0,.45)");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(px,py,C*.7,C);}
+    }
+  }
+  // ledge border
+  g.strokeStyle="#2a1a0c";g.lineWidth=1.6;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(z(x,y)>0)g.strokeRect(x*C+1,y*C+1,C-2,C-2);
+  // depth numbers
+  g.font="700 15px Georgia";g.textAlign="center";g.textBaseline="middle";
+  const lab=[[7,5,-1],[7,6,-2],[10,7,-3],[22,4,1]];
+  g.shadowColor="#000";g.shadowBlur=3;g.fillStyle="#f0d79e";
+  const show=V.mode==="contour"?[[6,4,-1],[7,5,-2],[9,6,-3],[10,7,-3],[22,4,1]]:V.mode==="well"?[[10,7,-3]]:[[6,5,-1],[7,6,-2],[9,7,-3],[22,4,1]];
+  for(const [x,y,n] of show)g.fillText(n>0?"+"+n:String(n),x*C+C/2,y*C+C/2+ (V.mode==="face"?8:0));
+  g.shadowBlur=0;
+  // tokens: one on the rim, one in the middle tier, one on the floor of the pit, one on the ledge
+  const T=[[5,3,0,"#5b8fc0"],[8,7,1,"#5b8fc0"],[10,7,2,"#c9473a"],[22,5,3,"#c9473a"]];
+  for(const [x,y,i,col] of T){const cx=x*C+C/2,cy=y*C+C/2;
+    g.save();g.beginPath();g.arc(cx,cy,C*.42,0,7);g.clip();g.drawImage(tok[i],cx-C*.42,cy-C*.42,C*.84,C*.84);g.restore();
+    g.strokeStyle=col;g.lineWidth=4;g.beginPath();g.arc(cx,cy,C*.42,0,7);g.stroke();}
+  g.textAlign="left";g.font="700 15px Georgia";g.fillStyle="#f0d79e";g.shadowColor="#000";g.shadowBlur=4;
+  g.fillText("A PIT, THREE LEVELS DEEP",6*C,3.2*C);g.fillText("A LEDGE, ONE UP",20*C,2.5*C);
+  g.shadowBlur=0;
+  const L=document.getElementById("legend");
+  const sw=[["LEDGE +1","Paper-lit top, inked border, a shadow falling away.","linear-gradient(#e8dcb8,#a99468)"],
+    ["PIT −1","Rim of the pit: a step down.","rgba(16,9,4,.3)"],
+    ["PIT −2","Halfway down.","rgba(16,9,4,.52)"],
+    ["PIT −3","The floor. Darkest, but a token still reads.","rgba(16,9,4,.72)"]];
+  L.innerHTML=sw.map(([t,d,c])=>`<div><i style="background:${c.startsWith("rgba")?`linear-gradient(${c},${c}),#8c7248`:c}"></i><span><b>${t}</b>${d}</span></div>`).join("");
+}
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);document.getElementById("stage").style.transform=`scale(${s})`;}
+fit();addEventListener("resize",fit);
+</script>
+</body>
+</html>
