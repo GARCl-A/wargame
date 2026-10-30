@@ -2,7 +2,8 @@
 title, fed from the Farm, paid at the Lumber Yard, blooded in the Pit and the Wilds, every screen on the way
 answered as a person would (the board by the AI as a stand-in player)."""
 
-import pygame
+import sys
+
 import pytest
 
 from gartok import ai, vocations
@@ -12,10 +13,8 @@ STALL_ROUNDS = 40       # the AI standing in for the player can stall on foes ou
 
 
 @pytest.fixture(autouse=True)
-def no_window(monkeypatch):
-    def refuse(*a, **k):
-        raise AssertionError("a pygame window was opened")
-    monkeypatch.setattr(pygame.display, "set_mode", refuse)
+def no_pygame(monkeypatch):
+    monkeypatch.setitem(sys.modules, "pygame", None)
 
 
 class Player:

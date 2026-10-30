@@ -9,30 +9,14 @@ import threading
 import urllib.error
 import urllib.request
 from itertools import pairwise
-
 import pytest
-
-from gartok import actions, ai, artwork, combat_lab, data, lighting, recorder, vision
+from gartok import actions, ai, combat_lab, data, lighting, recorder, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
-
-
-def test_the_web_loads_without_pygame():
-    code = "import sys; sys.modules['pygame'] = None; import gartok.web.server, gartok.web.battle_session"
-    subprocess.run([sys.executable, "-c", code], check=True)
-
-
-def test_each_action_is_aimed_as_what_it_does():
-    assert actions.aim_kind(actions.ATTACK) == "attack"
-    assert actions.aim_kind(actions.FIRST_AID) == "heal"
-    assert actions.aim_kind(actions.CLIMB) == "move"
-    assert actions.aim_kind(actions.THROW) == "throw"
-
 
 def _session(fight="dungeon", seed=3):
     battle, meta = combat_lab.build(fight, 2, 4, seed=seed)
     return BattleSession(battle, meta)
-
 
 def _settle(s):
     """Answer what a person must before the fight goes on: the flag, the traps, a challenge.
@@ -49,13 +33,59 @@ def _settle(s):
         return True
     return False
 
-
 def _to_my_turn(s, limit=200):
     for _ in range(limit):
         if s.my_turn() or s.battle.winner is not None:
             return
         _settle(s) or s.advance()
     raise AssertionError("the AI never handed the turn back")
+
+def _snapshot(battle):
+    return [(u.pos, u.hp, u.ap, u.alive) for u in battle.units] + [battle.round_no, battle.winner]
+
+@pytest.fixture
+def server():
+    srv = serve(Game.fight("wilds", 2, 3, seed=4))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{srv.server_address[1]}"
+    srv.shutdown()
+    srv.server_close()
+
+def _get(url):
+    with urllib.request.urlopen(url) as r:
+        return r.status, r.read()
+
+def _post(url, body):
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req) as r:
+        return json.loads(r.read())
+
+def _to_talk(seed=1):
+    battle, meta = combat_lab.build("lair", 2, 4, seed=seed)
+    s = BattleSession(battle, meta)
+    for _ in range(300):
+        st = s.state()
+        if st["talk"]:
+            return s
+        if st["setup"]:
+            _settle(s)
+        elif s.my_turn():
+            s._stepped(lambda: ai.take_turn(battle, battle.active), None)
+        else:
+            s.advance()
+    raise AssertionError("no patrol challenged the squad")
+
+
+def test_the_web_loads_without_pygame():
+    code = "import sys; sys.modules['pygame'] = None; import gartok.web.server, gartok.web.battle_session"
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_each_action_is_aimed_as_what_it_does():
+    assert actions.aim_kind(actions.ATTACK) == "attack"
+    assert actions.aim_kind(actions.FIRST_AID) == "heal"
+    assert actions.aim_kind(actions.CLIMB) == "move"
+    assert actions.aim_kind(actions.THROW) == "throw"
 
 
 def test_state_holds_only_what_the_side_knows():
@@ -161,10 +191,6 @@ def test_events_drain_what_the_step_did():
     assert not s.battle.fx_events and not s.battle.acts and not s.battle.cues
 
 
-def _snapshot(battle):
-    return [(u.pos, u.hp, u.ap, u.alive) for u in battle.units] + [battle.round_no, battle.winner]
-
-
 def test_the_steps_of_ai_turns_add_up_to_the_same_fight_as_plain_take_turn():
     stepped, plain = [], []
     s = _session("fortress", seed=11)
@@ -260,32 +286,6 @@ def test_the_action_bar_numbers_its_free_actions_one_to_eight():
     assert fixed == {"delay": 9, "end": 0}
 
 
-def test_portrait_path_names_the_file_portrait_loads():
-    path = artwork.portrait_path("Gnoll", 10)
-    assert path and os.path.isfile(path)
-    assert artwork.portrait_path("No Such Race", 1) is None
-
-
-@pytest.fixture
-def server():
-    srv = serve(Game.fight("wilds", 2, 3, seed=4))
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
-    yield f"http://127.0.0.1:{srv.server_address[1]}"
-    srv.shutdown()
-    srv.server_close()
-
-
-def _get(url):
-    with urllib.request.urlopen(url) as r:
-        return r.status, r.read()
-
-
-def _post(url, body):
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())
-
-
 def test_server_serves_the_client_the_art_and_the_state(server):
     assert _get(server + "/")[0] == 200
     assert _get(server + "/client/screens/battle/battle.js")[0] == 200
@@ -372,22 +372,6 @@ def test_the_boss_ctf_ends_when_its_flag_runners_fall():
             else:
                 s.advance()
     assert battle.winner is not None
-
-
-def _to_talk(seed=1):
-    battle, meta = combat_lab.build("lair", 2, 4, seed=seed)
-    s = BattleSession(battle, meta)
-    for _ in range(300):
-        st = s.state()
-        if st["talk"]:
-            return s
-        if st["setup"]:
-            _settle(s)
-        elif s.my_turn():
-            s._stepped(lambda: ai.take_turn(battle, battle.active), None)
-        else:
-            s.advance()
-    raise AssertionError("no patrol challenged the squad")
 
 
 def test_a_challenge_waits_for_the_person_and_their_answer_settles_it():
@@ -611,16 +595,32 @@ def test_the_server_stops_once_the_window_is_closed_and_not_on_a_reload(monkeypa
         srv.server_close()
 
 
-def test_the_game_opens_in_the_browser_and_the_editor_only_when_asked(monkeypatch):
+def test_portrait_path_names_the_file_portrait_loads():
+    from gartok import art_files
+    path = art_files.portrait_path("Gnoll", 10)
+    assert path and os.path.isfile(path)
+    assert art_files.portrait_path("No Such Race", 1) is None
+
+
+def test_the_game_has_no_pygame_and_never_reaches_the_editor():
+    import ast
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent / "gartok"
+    for path in root.rglob("*.py"):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8-sig"))):
+            names = ([a.name for a in node.names] if isinstance(node, ast.Import)
+                     else [node.module or ""] if isinstance(node, ast.ImportFrom) and not node.level else [])
+            for name in names:
+                assert name.split(".")[0] not in ("pygame", "editor"), f"{path.name} imports {name}"
+
+
+def test_the_game_entry_opens_the_browser(monkeypatch):
     import sys
 
     from gartok import __main__ as entry
     from gartok.web import __main__ as launcher
     opened = []
     monkeypatch.setattr(launcher, "main", lambda: opened.append("web"))
-    monkeypatch.setattr(entry, "_editor", lambda: opened.append("editor"))
-    monkeypatch.setattr(sys, "argv", ["main.py"])
-    entry.main()
     monkeypatch.setattr(sys, "argv", ["main.py", "--editor"])
     entry.main()
-    assert opened == ["web", "editor"]
+    assert opened == ["web"]

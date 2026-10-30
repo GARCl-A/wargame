@@ -1,11 +1,9 @@
 """Test trap mechanics in battle: trigger on movement, trigger on push, shield AC."""
 
-
 from gartok.actions import Push
 from gartok.ground import GroundObject
 from gartok.unit import Unit
 from tests.helpers import _melee_battle, fixed_d20
-
 
 def test_bear_trap_trigger_on_movement():
     """Walking into an enemy bear trap deals damage and stops movement."""
@@ -87,19 +85,3 @@ def test_dwarf_shield_ac():
 
     # Dwarf Shield gives +2 AC
     assert u.ac == base_ac + 2
-
-
-def test_battle_screen_draws_traps():
-    import pygame
-    pygame.font.init()
-    from gartok.battle_screen import BattleScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    batt, actor, defender = _melee_battle()
-    batt.ground.append(GroundObject.trap((1, 1), "bear trap", "enemy"))
-    batt.ground.append(GroundObject.trap((2, 2), "alarm trap", "player"))
-    batt.ground.append(GroundObject.trap((3, 3), "unknown trap", "enemy"))
-    bs = BattleScreen(ui_fonts(), batt, lambda w: None)
-    bs._visible = {(1, 1), (2, 2), (3, 3)}
-    surf = pygame.Surface((1024, 768))
-    bs._draw_ground(surf)
-

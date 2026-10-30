@@ -2,10 +2,8 @@
 +2 initiative to every ally within 10 squares (which can reorder the turns)."""
 
 import random
-
 from gartok import ai
 from tests.helpers import Battle, Unit, actions, items, persist
-
 
 def _band(n_allies=3, horn=True):
     random.seed(5)
@@ -24,10 +22,27 @@ def _band(n_allies=3, horn=True):
     blower.ap = 2
     return batt, blower, allies, foe
 
+def _enemy_band(horn=True, allies=2):
+    random.seed(7)
+    foes = [Unit("enemy") for _ in range(allies + 1)]
+    if horn:
+        foes[0].give_to_artifact("Signal Horn")
+    batt = Battle([Unit("player")], foes)
+    batt.ambient_light = True                      # daylight: the band sees the hero across the field
+    batt.board.walls = set()
+    lead, *rest = batt.enemy_units
+    hero = batt.player_units[0]
+    hero.pos = (0, 5)
+    lead.pos = (14, 5)
+    for i, u in enumerate(rest):
+        u.pos = (15, 5 + i)
+    for i, u in enumerate(batt.units):
+        u.initiative = 20 - i
+    batt.order = [lead, *rest, hero]
+    batt.turn_idx = 0
+    lead.ap = 2
+    return batt, lead, rest, hero
 
-# --------------------------------------------------------------------------- #
-# the slot                                                                     #
-# --------------------------------------------------------------------------- #
 
 def test_horn_is_an_artifact_and_only_artifacts_fit_the_slot():
     u = Unit("player")
@@ -73,26 +88,6 @@ def test_drag_into_the_artifact_slot_only_takes_artifacts():
     assert DragSelectMixin._fits_slot(u, "artifact", "Signal Horn")
     assert not DragSelectMixin._fits_slot(u, "artifact", "Axe")
 
-
-
-def test_editor_draws_the_artifact_row():
-    import pygame
-
-    from gartok.char_editor_screen import CharEditorScreen
-    from gartok.ui.tokens import fonts as ui_fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    scr = CharEditorScreen(ui_fonts(), lambda: None)
-    u = Unit("player")
-    u.give_to_artifact("Signal Horn")
-    scr._load_unit(u)
-    scr.mouse = (0, 0)
-    scr.draw(pygame.Surface((1600, 1000)))
-
-
-# --------------------------------------------------------------------------- #
-# the action                                                                   #
-# --------------------------------------------------------------------------- #
 
 def test_horn_costs_two_points_and_gives_allies_two_initiative():
     batt, blower, allies, foe = _band()
@@ -202,32 +197,6 @@ def test_the_active_turn_goes_on_with_the_new_order():
     actions.SIGNAL_HORN.execute(batt, blower)
     batt.end_turn()
     assert batt.active is c
-
-
-# --------------------------------------------------------------------------- #
-# the AI                                                                       #
-# --------------------------------------------------------------------------- #
-
-def _enemy_band(horn=True, allies=2):
-    random.seed(7)
-    foes = [Unit("enemy") for _ in range(allies + 1)]
-    if horn:
-        foes[0].give_to_artifact("Signal Horn")
-    batt = Battle([Unit("player")], foes)
-    batt.ambient_light = True                      # daylight: the band sees the hero across the field
-    batt.board.walls = set()
-    lead, *rest = batt.enemy_units
-    hero = batt.player_units[0]
-    hero.pos = (0, 5)
-    lead.pos = (14, 5)
-    for i, u in enumerate(rest):
-        u.pos = (15, 5 + i)
-    for i, u in enumerate(batt.units):
-        u.initiative = 20 - i
-    batt.order = [lead, *rest, hero]
-    batt.turn_idx = 0
-    lead.ap = 2
-    return batt, lead, rest, hero
 
 
 def test_ai_blows_the_horn_while_the_fight_is_still_far():

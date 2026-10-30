@@ -1,1 +1,1 @@
-pygame-ce>=2.5
+# The game runs on the standard library alone. The Editor (pygame) is in editor/requirements.txt.

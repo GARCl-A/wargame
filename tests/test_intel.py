@@ -1,19 +1,9 @@
 """What a side knows of a foe: the opening read, the bands it opens, Assess, the bestiary."""
 
-import os
-
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-
-import pygame
 import pytest
-
-from gartok import actions, ai, conditions, foe_card, intel
+from gartok import actions, ai, conditions, intel
 from gartok.battle import Battle
-from gartok.ui import foe_panel
-from gartok.ui.board_render import hp_bar
-from gartok.ui.tokens import fonts as ui_fonts
 from tests.helpers import Unit
-
 
 def _fight(foes=1, hidden=False):
     """A hero and `foes` enemies in daylight; `hidden` puts a wall between them."""
@@ -26,13 +16,33 @@ def _fight(foes=1, hidden=False):
         e.pos = (8, 5 + i)
     return batt, hero, batt.enemy_units
 
-
 def _read(batt, team, foe, margin):
     """Pin `team`'s margin on `foe`."""
     batt.intel.margin[team][foe] = margin
 
+def _stand_off(aggressor, foes=1):
+    """A hero hiding at (2, 0) behind a wall, `foes` enemies on the far side, a gap at the bottom."""
+    batt = Battle([Unit("player")], [Unit("enemy") for _ in range(foes)], aggressor=aggressor)
+    batt.ambient_light = True
+    batt.board.walls = {(5, y) for y in range(10)}
+    hero = batt.player_units[0]
+    hero.pos = (2, 0)
+    hero.hp = max(hero.hp, 10)
+    hero.status = "up"
+    for i, e in enumerate(batt.enemy_units):
+        e.pos = (10, 2 + 4 * i)
+        e.hp = max(e.hp, 10)
+        e.status = "up"
+    batt.intel = intel.Intel(batt)
+    return batt, hero, batt.enemy_units
 
-# ---- health in steps ------------------------------------------------------ #
+def _act(batt, unit):
+    batt.turn_idx = batt.order.index(unit)
+    unit.ap = 2
+    ai.take_turn(batt, unit)
+
+def _dist(a, b):
+    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
 
 def test_health_fills_one_to_five_steps_and_a_standing_unit_keeps_one():
@@ -41,9 +51,6 @@ def test_health_fills_one_to_five_steps_and_a_standing_unit_keeps_one():
     for hp, steps in ((20, 5), (17, 5), (16, 4), (10, 3), (5, 2), (1, 1), (0, 0)):
         foe.hp = hp
         assert intel.health_steps(foe) == steps, hp
-
-
-# ---- the opening read ----------------------------------------------------- #
 
 
 def test_a_foe_nobody_sees_is_not_read():
@@ -85,9 +92,6 @@ def test_the_foe_side_reads_the_hero_the_same_way():
     assert intel.known_fields(batt, "enemy", hero).margin is not None
 
 
-# ---- the bands ------------------------------------------------------------ #
-
-
 @pytest.mark.parametrize("margin, opened", [
     (-1, set()),
     (0, {"damage_die", "speed", "level", "racial_ability"}),
@@ -124,9 +128,6 @@ def test_your_own_side_is_fully_known():
     known = intel.known_fields(batt, "player", hero)
     assert known.full
     assert all(v is not None for v in known.fields.values())
-
-
-# ---- the bestiary --------------------------------------------------------- #
 
 
 def test_every_condition_on_a_foe_shows_on_sight():
@@ -180,9 +181,6 @@ def test_the_bestiary_round_trips_through_a_dict():
     assert (again.races, again.abilities, again.named) == ({"Orc"}, {"orc_ferocity"}, {"ribit": 7})
 
 
-# ---- Assess ---------------------------------------------------------------- #
-
-
 def test_assess_costs_a_point_rolls_with_a_bonus_and_never_lowers_the_margin():
     batt, hero, (foe,) = _fight()
     _read(batt, "player", foe, 4)
@@ -221,9 +219,6 @@ def test_assess_is_on_the_action_panel():
     assert actions.ASSESS in actions.PANEL_ACTIONS
 
 
-# ---- the log hides what is not known --------------------------------------- #
-
-
 def test_an_attack_log_says_question_mark_for_an_unread_ac_and_the_number_once_read():
     batt, hero, (foe,) = _fight()
     foe.pos = (3, 5)
@@ -246,9 +241,6 @@ def test_an_attack_on_your_own_unit_always_shows_its_ac():
     foe.ap = 2
     actions.ATTACK.execute(batt, foe, hero)
     assert f"vs AC {hero.ac}" in next(ln for ln in batt.log_lines if "vs AC" in ln)
-
-
-# ---- the AI reads only what it may ----------------------------------------- #
 
 
 def test_the_ai_ranks_foes_by_health_step_not_by_hidden_hit_points():
@@ -305,83 +297,6 @@ def test_the_ai_does_not_assess_a_foe_it_has_fully_read():
     assert not ai._try_assess(batt, hero)
 
 
-# ---- what the player sees --------------------------------------------------- #
-
-
-def test_a_stepped_bar_leaves_gaps_a_continuous_one_does_not():
-    pygame.init()
-    stepped, smooth = pygame.Surface((100, 6)), pygame.Surface((100, 6))
-    hp_bar(stepped, pygame.Rect(0, 0, 100, 6), 0.6, 5)
-    hp_bar(smooth, pygame.Rect(0, 0, 100, 6), 0.6)
-    row = [stepped.get_at((x, 2))[:3] for x in range(60)]
-    assert len(set(row)) == 2                  # the fill and the gap between steps
-    assert len({smooth.get_at((x, 2))[:3] for x in range(60)}) == 1
-
-
-def test_the_foe_card_shows_a_question_mark_for_what_it_has_not_learned():
-    pygame.init()
-    batt, _hero, (foe,) = _fight()
-    _read(batt, "player", foe, intel.EASY)
-    card = foe_card.foe_card(intel.known_fields(batt, "player", foe))
-    bands = {b["label"]: b for b in card["bands"]}
-    assert bands["EASY"]["open"] and not bands["MEDIUM"]["open"] and not bands["HARD"]["open"]
-    assert all(r["value"] is None for r in bands["MEDIUM"]["rows"])
-    surf = pygame.Surface((320, foe_panel.card_height(card)))
-    foe_panel.draw_foe_card(surf, ui_fonts(), surf.get_rect(), card, (0, 0))
-
-
-def test_the_foe_card_grows_as_more_of_the_foe_is_read():
-    batt, _hero, (foe,) = _fight()
-    heights = []
-    for margin in (-1, 0, 5, 10):
-        _read(batt, "player", foe, margin)
-        heights.append(foe_panel.card_height(foe_card.foe_card(intel.known_fields(batt, "player", foe))))
-    assert heights == sorted(heights) and heights[0] < heights[-1]
-
-
-def test_the_battle_screen_inspects_a_foe_through_its_card_and_an_ally_through_the_sheet():
-    from gartok.battle_screen import BattleScreen
-    pygame.init()
-    batt, hero, (foe,) = _fight()
-    scr = BattleScreen(ui_fonts(), batt, on_battle_end=lambda b: None)
-    surf = pygame.Surface((1400, 800))
-    for who in (foe, hero):
-        scr.inspect = who
-        scr.inspect_open = True
-        scr.mouse = (0, 0)
-        scr.draw(surf)
-    assert scr._hp_bar(foe)["hp_steps"] == intel.STEPS and scr._hp_bar(hero)["hp_steps"] is None
-    assert scr._inspect_body_h(foe) == foe_panel.card_height(scr._foe_card(foe))
-
-
-def test_foe_card_scrolls_and_clamps_at_720p():
-    from gartok.battle_screen import BattleScreen
-    pygame.init()
-    batt, hero, (foe,) = _fight()
-    _read(batt, "player", foe, intel.HARD)
-    card = foe_card.foe_card(intel.known_fields(batt, "player", foe))
-
-    # 1. Direct draw_foe_card test with constrained height and scroll
-    surf = pygame.Surface((300, 150))
-    rect = pygame.Rect(0, 0, 300, 150)
-    tip = foe_panel.draw_foe_card(surf, ui_fonts(), rect, card, (0, 0), scroll=50)
-    assert tip is None
-
-    # 2. BattleScreen at 720p clamps inspect so actions has room and foe panel is scrollable
-    scr = BattleScreen(ui_fonts(), batt, on_battle_end=lambda b: None)
-    screen_720 = pygame.Surface((1280, 720))
-    scr.inspect = foe
-    scr.inspect_open = True
-    scr.mouse = (0, 0)
-    scr.draw(screen_720)
-    assert getattr(scr, "_foe_max_scroll", 0) > 0
-    assert getattr(scr, "_actions_scroll_rect", None) is not None
-    assert scr._actions_scroll_rect.h >= 140
-
-
-# ---- the guild keeps what it learned ----------------------------------------- #
-
-
 def test_a_guild_starts_with_an_empty_bestiary_and_saves_it():
     from gartok import persist
     from gartok.guild import Guild
@@ -393,36 +308,6 @@ def test_a_guild_starts_with_an_empty_bestiary_and_saves_it():
     persist.save_game(wid, guild)
     again = persist.load_game(wid).bestiary
     assert again.races == {"Orc"} and again.named == {"ribit": 9}
-
-
-# ---- attackers search, defenders group up ----------------------------------- #
-
-
-def _stand_off(aggressor, foes=1):
-    """A hero hiding at (2, 0) behind a wall, `foes` enemies on the far side, a gap at the bottom."""
-    batt = Battle([Unit("player")], [Unit("enemy") for _ in range(foes)], aggressor=aggressor)
-    batt.ambient_light = True
-    batt.board.walls = {(5, y) for y in range(10)}
-    hero = batt.player_units[0]
-    hero.pos = (2, 0)
-    hero.hp = max(hero.hp, 10)
-    hero.status = "up"
-    for i, e in enumerate(batt.enemy_units):
-        e.pos = (10, 2 + 4 * i)
-        e.hp = max(e.hp, 10)
-        e.status = "up"
-    batt.intel = intel.Intel(batt)
-    return batt, hero, batt.enemy_units
-
-
-def _act(batt, unit):
-    batt.turn_idx = batt.order.index(unit)
-    unit.ap = 2
-    ai.take_turn(batt, unit)
-
-
-def _dist(a, b):
-    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
 
 def test_the_side_that_brought_the_fight_remembers_where_its_prey_started():

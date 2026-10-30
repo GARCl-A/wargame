@@ -2,17 +2,36 @@
 the flag-seeking AI and the three second-stage deeds."""
 
 import random
-
 from gartok import actions, ai, arena, campaign, encounters, factions, world
 from gartok.battle import COLS, Battle
 from gartok.guild import Guild
 from gartok.scenario import FlagScenario, own_half
 from gartok.unit import Unit
 
+def _ctf_battle(n_enemy=1):
+    random.seed(0)
+    b = Battle([Unit("player")], [Unit("enemy") for _ in range(n_enemy)],
+               scenario=FlagScenario(), lethal=False, arena=True)
+    return b
 
-# --------------------------------------------------------------------------- #
-# scaled opponents                                                             #
-# --------------------------------------------------------------------------- #
+def _games_win(tier, *, kos=0, won=True):
+    """Resolve a Games bout for a guild that has already dethroned the champion."""
+    random.seed(1)
+    guild = Guild([Unit("player")], node="arena")
+    guild.deeds_done = ["arena_first_blood", "arena_lone_wolf", "arena_dethrone"]
+    guild.reputation = {"arena": 3}
+    squad = [Unit("player")]
+    guild.groups[0].members = list(squad)
+    battle = Battle(squad, [Unit("enemy")], lethal=False, arena=True)
+    battle.winner = "player" if won else "enemy"
+    for u in battle.player_units:
+        u.status = "up"
+    battle.player_units[0].kills = kos
+    out = campaign.absorb_battle(guild, squad, battle, node=world.node("arena"),
+                                 arena_offer=tier)
+    return guild, out
+
+
 def test_stage2_pack_rolls_every_fighter_level_one_to_six():
     rng = random.Random(4)
     seen = set()
@@ -43,16 +62,6 @@ def test_the_boss_bout_is_a_six_a_side_ctf_on_the_authored_map():
     assert boss.player_cap == arena.BOSS_SQUAD == 6         # brothers + lackeys, matched
     assert boss.purse == arena.BOSS_PURSE
     assert "Lackeys" in arena.bout_level_range(boss, [])
-
-
-# --------------------------------------------------------------------------- #
-# the capture-the-flag scenario                                                #
-# --------------------------------------------------------------------------- #
-def _ctf_battle(n_enemy=1):
-    random.seed(0)
-    b = Battle([Unit("player")], [Unit("enemy") for _ in range(n_enemy)],
-               scenario=FlagScenario(), lethal=False, arena=True)
-    return b
 
 
 def test_flag_scenario_drops_the_enemy_flag_in_the_right_half():
@@ -128,9 +137,6 @@ def test_standing_on_your_own_flag_does_nothing():
     assert b._check_winner() is None
 
 
-# --------------------------------------------------------------------------- #
-# the flag-seeking AI                                                          #
-# --------------------------------------------------------------------------- #
 def test_each_side_s_fastest_is_its_one_flag_runner():
     b = _ctf_battle(n_enemy=3)
     b.enemy_units[0].char.speed = 3
@@ -273,46 +279,6 @@ def test_a_defender_chases_whoever_is_carrying_the_enemys_flag():
     assert ai._target(b, d) is carrier
 
 
-def test_the_enemy_flag_stays_hidden_until_you_can_see_its_cell():
-    from gartok.battle_screen import BattleScreen
-    b = _ctf_battle(n_enemy=1)
-    b.flags["player"] = (2, 2)
-    scr = BattleScreen(None, b, on_battle_end=lambda *a: None)
-
-    drawn = []
-    scr._draw_pennant = lambda screen, pos, color: drawn.append(pos)
-
-    scr._visible = {b.flags["player"]}                      # own flag in sight, enemy's not
-    scr._draw_flags(None)
-    assert drawn == [b.flags["player"]]                     # enemy flag withheld
-
-    drawn.clear()
-    scr._visible = {b.flags["player"], b.flags["enemy"]}    # now its cell is lit
-    scr._draw_flags(None)
-    assert set(drawn) == {b.flags["player"], b.flags["enemy"]}
-
-
-# --------------------------------------------------------------------------- #
-# the three second-stage deeds                                                 #
-# --------------------------------------------------------------------------- #
-def _games_win(tier, *, kos=0, won=True):
-    """Resolve a Games bout for a guild that has already dethroned the champion."""
-    random.seed(1)
-    guild = Guild([Unit("player")], node="arena")
-    guild.deeds_done = ["arena_first_blood", "arena_lone_wolf", "arena_dethrone"]
-    guild.reputation = {"arena": 3}
-    squad = [Unit("player")]
-    guild.groups[0].members = list(squad)
-    battle = Battle(squad, [Unit("enemy")], lethal=False, arena=True)
-    battle.winner = "player" if won else "enemy"
-    for u in battle.player_units:
-        u.status = "up"
-    battle.player_units[0].kills = kos
-    out = campaign.absorb_battle(guild, squad, battle, node=world.node("arena"),
-                                 arena_offer=tier)
-    return guild, out
-
-
 def test_a_brawl_win_banks_bloodsport_only():
     guild, out = _games_win(arena.brawl_bout())
     assert {d.id for d in out.deeds_earned} == {"arena_bloodsport"}
@@ -349,11 +315,6 @@ def test_games_deeds_are_locked_until_the_champion_is_beaten():
 def test_a_lost_games_bout_banks_nothing():
     guild, out = _games_win(arena.ctf_bout(), won=False)
     assert out.deeds_earned == [] and guild.reputation["arena"] == 3
-
-
-# --------------------------------------------------------------------------- #
-# the arena node offers the Games once the champion is down                     #
-# --------------------------------------------------------------------------- #
 
 
 def test_bout_max_combat_level():

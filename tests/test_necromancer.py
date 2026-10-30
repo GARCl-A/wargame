@@ -7,7 +7,7 @@ import random
 from gartok import (
     actions,
     ai,
-    artwork,
+    art_files,
     data,
     factions,
     loot,
@@ -245,8 +245,8 @@ def test_the_zombie_is_a_slow_tough_undead_with_its_own_portraits():
     assert zombie["speed"] < data.race_by_name("Skeleton")["speed"]
     assert zombie["mods"][2] == 4
     assert "Zombie" not in data.RACE_NAMES and "Zombie" in data.ALL_RACE_NAMES
-    assert artwork.RACE_ICON["Zombie"]
-    assert artwork.portrait("Zombie", 0, 32) is not None
+    assert art_files.RACE_ICON["Zombie"]
+    assert art_files.portrait_path("Zombie", 0) is not None
 
 
 def test_the_dead_do_not_run():

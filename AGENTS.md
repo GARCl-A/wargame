@@ -2,8 +2,8 @@
 
 Python turn-based squad wargame rebuilding a lost tabletop RPG from its character generator.
 Sandbox guild manager — no win condition, no campaign end screen. Run ends only on a full wipe.
-The game is the web client (`python main.py`); pygame survives only as the Editor
-(`python main.py --editor`) and as screens the web still holds headless.
+The game is the web client (`python main.py`); pygame survives only as the Editor, a
+separate package (`editor/`, `python -m editor`) the game never imports.
 
 **Source of truth:** `RULES.md` = design prose (combat, world systems); `REFERENCE.md` = generated
 catalog data (`python -m gartok.reference`, never edited by hand). When the two disagree,
@@ -22,11 +22,12 @@ module's description in the README, not here.
   prices or loot. A test that is not about a roll builds its characters from
   `tests.helpers.standard_unit`, never a rolled `Unit(...)`. `sim_test.py` is a secondary check
   for combat/AI changes. Tiers and what is left: `docs/plans/test_suite.md`.
-- **pygame is abandoned.** Never update, rewire or add a pygame screen; when a screen's rules move
-  out, delete the screen and its tests in the same commit. Rules and what is left:
-  `docs/plans/web_frontend.md`. New UI is the web client (`gartok/web/client/`: `shell.js`,
-  `kit.js` for pieces two screens share, one folder per screen); the Editor's pygame UI follows
-  `gartok/ui/README.md`.
+- **pygame lives only in `editor/`**, a separate program (`python -m editor`, its tests
+  `python -m pytest editor/ -n auto`). `gartok/` never imports `editor` or pygame (a test checks it):
+  never add a pygame screen to the game, and when a screen's rules move out, delete the screen and its
+  tests in the same commit. Rules and what is left: `docs/plans/web_frontend.md`. New UI is the web
+  client (`gartok/web/client/`: `shell.js`, `kit.js` for pieces two screens share, one folder per
+  screen); the Editor's pygame UI follows `editor/ui/README.md`.
 - Work and commit straight on `main`; no feature branches unless the user asks for one.
   A teammate works on `main` in parallel, so `git pull` before committing.
 

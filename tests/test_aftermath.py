@@ -1,11 +1,6 @@
 """The screens after a fight: the memorial, the after-action report, the level-up card, and the
 VICTORY / FLED / DEFEAT word the battle screen and the report share."""
 
-import os
-
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-
-
 from gartok import aftermath, campaign, persist
 from gartok.clock import Clock
 from gartok.guild import Guild
@@ -14,14 +9,12 @@ from tests.helpers import Battle, _unit, world
 
 NODE = "wilds"
 
-
 def _fight(n=2, foes=1, seed=0):
     squad = [_unit(seed=seed + i) for i in range(n)]
     enemies = [_unit(team="enemy", seed=100 + seed + i) for i in range(foes)]
     guild = Guild(squad, node=NODE)
     battle = Battle(squad, enemies, lethal=True)
     return guild, squad, battle
-
 
 def _won(battle, killer=0):
     hand = battle.player_units[killer]
@@ -30,16 +23,12 @@ def _won(battle, killer=0):
         hand.credit_kill(c)
     battle.winner = "player"
 
-
 def _death(battle, victim, by):
     victim.hp, victim.status = 0, "dead"
     victim.downed_by = by
     battle.log(f"{victim.name} goes down.")
 
 
-# --------------------------------------------------------------------------- #
-# the data                                                                     #
-# --------------------------------------------------------------------------- #
 def test_the_report_names_who_downed_whom_and_the_squad_status():
     guild, squad, battle = _fight(n=2)
     foe = battle.enemy_units[0]
@@ -101,18 +90,6 @@ def test_the_result_word_reads_the_side_not_just_a_winner():
     assert aftermath.result_word(battle) == "VICTORY"
 
 
-def test_the_battle_screen_says_the_squad_fled():
-    from gartok.battle_screen import BattleScreen
-    _, _, battle = _fight(n=1)
-    battle.player_units[0].status = "fled"
-    battle.winner = "enemy"
-    scr = BattleScreen(None, battle, on_battle_end=lambda *a: None)
-    assert scr._winner_text() == "You fled"
-
-
-# --------------------------------------------------------------------------- #
-# joining day                                                                  #
-# --------------------------------------------------------------------------- #
 def test_a_recruit_signs_on_the_day_it_joins_and_keeps_it_through_a_save():
     guild, squad, _ = _fight(n=1)
     guild.clock = Clock(24 * 6 * 3600)
@@ -142,16 +119,6 @@ def test_a_starved_member_gets_a_memorial_with_where_they_fell():
     assert u not in guild.roster
     assert u.memorial.cause == "Starved to death" and u.memorial.place == world.node("market").name
     assert "without a meal" in u.memorial.line
-
-
-# --------------------------------------------------------------------------- #
-# the flow                                                                     #
-# --------------------------------------------------------------------------- #
-
-
-# --------------------------------------------------------------------------- #
-# the screens                                                                  #
-# --------------------------------------------------------------------------- #
 
 
 def test_work_shift_level_up_queues_pending_level_up():

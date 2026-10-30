@@ -3,15 +3,12 @@
 
 import random
 from types import SimpleNamespace
-
 from gartok import actions, ai, battlefield, factions, missions, world
-from gartok.battle_screen import BattleScreen
 from gartok.clock import Clock
 from gartok.guild import Guild
 from tests.helpers import Battle, Unit
 
 POTION = "Minor Healing Potion"
-
 
 def _guild(node="faith_cathedral"):
     random.seed(5)
@@ -21,13 +18,10 @@ def _guild(node="faith_cathedral"):
                                            state="done"))
     return guild, members
 
-
 def _skirmish(squad, rng=None):
     sc = battlefield.BattlefieldScenario(squad, rng or random.Random(2))
     return Battle(squad, sc.enemies, scenario=sc, allies=sc.allies, aggressor="enemy"), sc
 
-
-# --- the world --------------------------------------------------------------- #
 
 def test_the_battlefield_lies_past_the_frontier_outpost_and_is_known_from_the_start():
     for nid in ("frontier_outpost", "battlefield"):
@@ -37,8 +31,6 @@ def test_the_battlefield_lies_past_the_frontier_outpost_and_is_known_from_the_st
     assert world.node("battlefield").has("skirmish")
     assert world.node("frontier_outpost").functions == ()
 
-
-# --- the mission ------------------------------------------------------------- #
 
 def test_the_cathedral_offers_the_errand_once_the_sanctuaries_are_open():
     guild, _ = _guild()
@@ -99,8 +91,6 @@ def test_a_lost_fight_fails_it():
     assert m.state == "failed"
 
 
-# --- the field --------------------------------------------------------------- #
-
 def test_soldiers_two_under_the_squad_and_the_warband_one_over():
     squad = [Unit("player") for _ in range(2)]
     for u in squad:
@@ -149,17 +139,6 @@ def test_the_soldiers_are_not_the_guilds_after_the_fight():
     assert len(guild.roster) == 2
 
 
-# --- who plays the soldiers ---------------------------------------------------- #
-
-def test_the_screen_hands_a_soldiers_turn_to_the_ai():
-    batt, _ = _skirmish([Unit("player")])
-    screen = BattleScreen.__new__(BattleScreen)
-    screen.controllers = {"player": "human", "enemy": "ai"}
-    me, soldier = batt.player_units[0], batt.player_units[1]
-    assert screen._plays(me) and not screen._plays(soldier)
-    assert not screen._plays(batt.enemy_units[0])
-
-
 def test_a_soldier_stops_to_save_a_dying_comrade():
     batt, _ = _skirmish([Unit("player")])
     soldier, comrade = batt.player_units[1], batt.player_units[2]
@@ -178,8 +157,6 @@ def test_the_warband_goes_after_the_soldiers_too():
     raider = batt.enemy_units[0]
     assert batt.player_units[1] in [u for u in batt.units if u.team != raider.team]
 
-
-# --- the potions ----------------------------------------------------------------- #
 
 def test_a_potion_fed_to_a_dying_ally_puts_them_back_on_their_feet():
     medic, soldier = Unit("player"), Unit("player")
@@ -208,9 +185,6 @@ def test_a_good_unit_with_a_potion_feeds_it_to_a_dying_neighbour():
     batt.turn_idx, me.ap = batt.order.index(me), 2
     ai.take_turn(batt, me)
     assert him.alive
-
-
-# --- the app ----------------------------------------------------------------------- #
 
 
 def test_battlefield_defeated_enemies_can_drop_scroll_of_spare_the_dying():

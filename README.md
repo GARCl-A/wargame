@@ -35,9 +35,9 @@ and animals, and a growing set of groups run in parallel.
 ## Run
 
 ```
-pip install -r requirements.txt
+pip install -r requirements.txt      # the game needs nothing but the standard library
 python main.py              # the game, in a browser window (Edge or Chrome in app mode)
-python main.py --editor     # the Editor's pygame window: characters, maps, the combat lab
+pip install -r editor/requirements.txt && python -m editor   # the Editor, a separate pygame program: characters, maps, the combat lab
 ```
 
 `python -m gartok` is the same as `python main.py`; `python -m gartok.web --help` lists the
@@ -213,7 +213,7 @@ gartok/
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
   ai.py             enemy squad AI (over actions/); alignment tempers the edges
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
-  item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for ui/item_icons.py's code-drawn icons
+  item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for the Editor's code-drawn icons (editor/ui/item_icons.py)
   weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
   craft_level.py    a recipe's difficulty level, worked out from its requirements, reagents and batch time
   workbench.py      a station's bench, no pygame (`Bench`: the crafters, their recipes, what the packs lack,
@@ -310,26 +310,24 @@ gartok/
   i18n.py           dotted-key string catalogs (locales/*.json), language fallback
   tutorial.py       the tutorial's ids + TutorialState (seen/enabled, pygame-free)
 
-  # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
-  # every screen draws straight to the real window and lays out from screen.get_size()
-  screen.py         the screens' base class (click dispatch -> self._click)
-  text_field.py     a one-line text box's buffer + caret (every name field types through it)
-  # pygame is abandoned (docs/plans/web_frontend.md): what is left is held headless by web/ for its
-  # rules until they move out, or is the Editor's
   wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
-  battle_screen.py (input + turn flow) / battle_draw.py (everything it paints)
-  the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 
-  # shared presentation
-  ui/               the war-table component kit -- the source of truth for screen
-                    presentation (rules + catalog in ui/README.md)
+  # the Editor lives apart, in editor/ (a sibling package): the one pygame program of the repo.
+  # gartok/ never imports it or pygame (a test checks it); the Editor reads gartok, and gartok/assets
+  editor/           `python -m editor`: editor_app / editor_menu_screen / char_editor_screen /
+                    map_editor_screen / combat_lab_screen, battle_screen + battle_draw + battle_fx (the lab's
+                    fights), screen (base class), text_field, artwork + icons (pygame art), sound (mixer),
+                    ui/ (the war-table component kit; rules + catalog in editor/ui/README.md),
+                    tests/ (`python -m pytest editor/ -n auto`), item_icon_preview.py, requirements.txt (pygame-ce)
+
+  # presentation of the game
   web/              the web front-end replacing pygame, battle first (docs/plans/web_frontend.md):
                     session.py (a screen's server half), battle_session.py (one fight as the side
                     knows it), map_session.py (the map), hub_session.py + shop_tab.py (a place's
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
                     Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), sheet_view.py (a member's sheet, the book any screen opens), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), campaign_fight.py (a campaign fight entered and settled, then handed to the report), hunt_session.py (the hunt), swift.py (the clean-stomp estimate of a fight due, behind its AUTO-WIN button), watch_session.py (who minds the wagon), dialogue_session.py (the talk before a fight), report_session.py (the screens after a fight, and the clock's level-ups), talent_session.py (a member's talent trees), draft_session.py (a new guild), settings_session.py, wiki_session.py, title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
                     by screen), client/ (the shell + one folder per screen under screens/);
-                    `python main.py` / `python -m gartok` (the title; `--editor` the Editor),
+                    `python main.py` / `python -m gartok` (the title),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   icons.py          vector action icons (pygame.draw) -- no asset file
   art_files.py      where the art is, no pygame: portrait_path, BANNER_ICONS, `RACE_ICON` and
@@ -346,7 +344,7 @@ gartok/
   band_kit.py       one band's kit, no pygame: the moves, the tack and the hitch, the item menu, first aid
   store_column.py   a wagon or an animal as one more pack (the web's shop and vault)
 
-main.py             entry point (gartok/__main__.py: the browser, or --editor)
+main.py             entry point (gartok/__main__.py: the browser)
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
 scripts/            balance_sim.py (race / occupation / combo rankings; --level / --racial
@@ -363,7 +361,6 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     what losing each costs it), unit_stats.py (creation-stat spread), unit_compare.py,
                     crafting_cost.py, vocation_report.py (each vocation perk's value as a share of the guild's daily wage),
                     combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay),
-                    item_icon_preview.py (contact sheet of every item's code-drawn icon, ui/item_icons.py + item_icon.py),
                     combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai.py change),
                     archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks),
                     gen_portrait.py (medallion portraits from a local Stable Diffusion + the style LoRA, driven by

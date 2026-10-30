@@ -1,0 +1,57 @@
+"""Common plumbing for the menu / campaign screens.
+
+Every screen owns its own layout and drawing. This base only folds the three
+things they all repeated verbatim: the canvas-space cursor `self.mouse` (the app
+loop writes it each frame), the left-click -> `self._click(pos)` dispatch, and a
+no-op `update`. Screens that need more (the battle screen also reads the
+keyboard) override `handle_event` / `update` and still get `self.mouse` and the
+contract.
+
+The app loop calls `handle_event(event)`, `update(dt)` and `draw(surface)` on
+whatever `self.scene` is, and sets `scene.mouse` before each frame.
+"""
+
+import pygame
+
+from editor.ui.tokens import T
+
+MARGIN = T.S * 2
+
+
+class Screen:
+    def __init__(self):
+        self.mouse = (0, 0)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._click(event.pos)
+
+    def update(self, dt):
+        pass
+
+    def handle_escape(self):
+        """Esc was pressed. Return True to consume it (e.g. cancel an aimed
+        action or back out of a sub-mode) so the app does not also open the
+        pause menu; False (the default) lets Esc fall through to pause."""
+        return False
+
+    def tutorial_key(self):
+        """The id (`tutorial.TUTORIALS`) of the tutorial card that applies
+        to this screen right now, or None for no card. A screen with more than
+        one teachable moment (a tab, a phase) reads its own state here. The default is None:
+        most screens (the menu, the editors, ...) never get one."""
+        return
+
+    def tutorial_badge_rect(self, size):
+        """Where the reopen `?` badge sits when the tutorial card is dismissed.
+        Default is top-right aligned with standard header margins:
+        `size_px` = 28, sitting at (W - 28 - MARGIN, MARGIN - 4).
+        Screens with tabs or header widgets can override this (or reserve space)
+        so the badge sits on the same line to the right of header elements."""
+        W, H = size
+        size_px = 28
+        return pygame.Rect(W - size_px - MARGIN, MARGIN - 4, size_px, size_px)
+
+    def _click(self, pos):
+        """Left click at canvas-space `pos`. Screens rebuild their hit lists in
+        `draw` and test them here."""

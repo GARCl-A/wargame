@@ -1,15 +1,7 @@
 """Player preferences (settings.py) and what reads them."""
 
-import os
-
-import pygame
 import pytest
-
 from gartok import settings
-from tests.test_battle_input import _screen
-
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-
 
 @pytest.fixture(autouse=True)
 def _tmp_settings(tmp_path, monkeypatch):
@@ -41,14 +33,3 @@ def test_a_corrupt_or_foreign_value_falls_back_to_the_default():
         f.write("not json")
     settings.reload()
     assert settings.get("chord_ms") == 40
-
-
-def test_the_chord_window_follows_the_setting():
-    scr, _ = _screen()
-    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT))
-    assert scr._chord_ms == 40
-    while settings.get("chord_ms") != 100:
-        settings.cycle("chord_ms")
-    scr._chord = set()
-    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT))
-    assert scr._chord_ms == 100

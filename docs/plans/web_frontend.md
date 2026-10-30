@@ -3,7 +3,7 @@
 **Status (2026-10-29):** the game is in the browser. `python main.py` opens the title; every screen the
 campaign reaches (the map, every hub tab, the guild's sheet, the talk, the fights, the report, the talents,
 the title, the draft, the settings, the wiki) is a web screen, and `gartok.web.server` loads with pygame
-blocked. The pygame campaign is gone; only the Editor (`python main.py --editor`) still opens a pygame window.
+blocked. The pygame campaign is gone; only the Editor (`python -m editor`) still opens a pygame window.
 
 What is left is below, under **What is left**. The record of how each step was built (steps 1 to 10,
 2026-10-23 to 2026-10-29) is in git: `git log -p -- docs/plans/web_frontend.md`.
@@ -116,24 +116,13 @@ Each folder under [references/](references/) is the approved look of a family, o
 
 In order.
 
-### 1. The Editor
+The Editor (character creator, map editor, combat lab's menu: `editor_app`, `editor_menu_screen`,
+`char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` + `battle_draw` for the
+lab's fights) **stays pygame** (author, 2026-10-30). Porting it is in `backlog.md`, deprioritised.
 
-The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
-`editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
-`battle_draw` for the lab's fights). The author's call: port them to the browser (the lab's fights already
-run there: `python -m gartok.web --fight <lab fight>`), or keep the Editor as a pygame tool apart from the
-game.
-
-**Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
-
-### 2. The retirement
-
-Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
-`icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.
-They go with the last screen that reads them. Then `AGENTS.md` (the pygame rule), the `ui/` lines of
-`README.md`'s *Structure* and `gartok/ui/README.md` are rewritten for the web layer.
-
-**Done when:** no module of the game imports pygame (or, if the Editor stays pygame, none outside it).
+Nothing is left in order: the retirement is done (2026-10-30). The Editor and every pygame module it reads
+moved to `editor/`, a sibling package the game never imports (a test in `tests/test_web.py` checks it,
+and `tests/` passes with pygame unimportable).
 
 ### Loose ends
 

@@ -3,11 +3,9 @@ catalog backing every id a screen can hand back, and save/load round-tripping
 the seen/enabled state by slot."""
 
 import random
-
 from gartok import i18n, persist
 from gartok.tutorial import TUTORIALS, TutorialState
 from tests.helpers import Unit
-
 
 def test_every_registered_id_resolves_real_copy_not_the_key_itself():
     for tid in TUTORIALS:
@@ -26,9 +24,6 @@ def test_has_tells_a_real_string_apart_from_one_that_only_looks_like_its_key():
     assert i18n.has("tutorial.work.suggestion")           # work's card really has one
     assert not i18n.has("tutorial.squad.suggestion")       # squad's doesn't
     assert not i18n.has("tutorial.does_not_exist.title")
-
-
-
 
 
 def test_should_show_tracks_seen_enabled_and_a_forced_reopen():
@@ -67,32 +62,6 @@ def test_save_round_trips_tutorial_state_by_slot():
         assert loaded.tutorial.enabled is False
     finally:
         persist.delete_world(slot)
-
-
-
-def test_header_reserves_space_when_has_tutorial_is_true():
-    import os
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-
-    from gartok.ui.primitives import header
-    from gartok.ui.tokens import T
-    from gartok.ui.tokens import fonts as ui_fonts
-
-    pygame.init()
-    F = ui_fonts()
-    surf = pygame.Surface((1000, 600))
-    head_rect = pygame.Rect(0, 0, 1000, 72)
-
-    tabs_normal = header(surf, F, head_rect, "Title", "Sub", ("gear", "quests"), "gear", has_tutorial=False)
-    tabs_tut = header(surf, F, head_rect, "Title", "Sub", ("gear", "quests"), "gear", has_tutorial=True)
-
-    # The rightmost tab with tutorial should be shifted left by 28 + T.S
-    assert tabs_tut["quests"].right == tabs_normal["quests"].right - (28 + T.S)
-
-
-
-
 
 
 def test_no_registered_card_is_orphaned():

@@ -1,13 +1,7 @@
 """Tests for the founding draft: a pool of nine, pick three, and the commission tokens."""
 
-import os
 import subprocess
 import sys
-
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-
-import pygame
-
 from gartok import archetypes, recruit
 from gartok.draft import (
     COMMISSION_TOKENS,
@@ -17,9 +11,7 @@ from gartok.draft import (
     leader_recruits,
 )
 from gartok.guild import Guild
-from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
-
 
 def _commission(d, labels, target):
     d.pending_labels = list(labels)
@@ -142,16 +134,3 @@ def test_strong_is_about_strength_not_size():
     assert archetypes.ARCHETYPES["STRONG"].predicate(u)
     u.set_base_attribute("strength", 6)
     assert not archetypes.ARCHETYPES["STRONG"].predicate(u)
-
-
-def test_compact_weapon_block_is_two_lines():
-    from gartok.combatant import Combatant
-    from gartok.sheet import unit_to_ch
-    from gartok.ui import sheet_card
-    assert sheet_card.H["compact"]["weapon"] == 32
-    ch = unit_to_ch(Combatant(Unit("player")))
-    pygame.init()
-    surf = pygame.Surface((600, 80))
-    sheet_card.draw_sheet(surf, ui_fonts(), pygame.Rect(0, 0, 400, 80), ch, density="compact", only=("weapon",))
-
-

@@ -18,9 +18,9 @@ Parts:
 # Web front-end (decided 2026-10-23)
 
 The presentation moved from pygame to HTML/CSS/Canvas, and the Python core stays. Every screen the
-campaign reaches is in the browser and `python main.py` opens it (`--editor` the Editor's pygame window; the
+campaign reaches is in the browser and `python main.py` opens it (the Editor, a separate pygame program, is `python -m editor`; the
 pygame campaign is gone). The rules for new UI work and what is left (the wiki's links, what else only pygame
-had, the board's fog and pits, the Editor, retiring pygame) are in [web_frontend.md](web_frontend.md).
+had, the board's fog and pits, the Editor) are in [web_frontend.md](web_frontend.md).
 
 ---
 
@@ -108,10 +108,19 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   of the AI's losses in every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0,
   `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later.
 
+## Deprioritised
+
+- **Port the Editor to the web (author 2026-10-30: wanted one day, not now).** The character creator, the map
+  editor and the combat lab's menu stay pygame (the `editor/` package, `python -m editor`: `editor_app`, `editor_menu_screen`,
+  `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` + `battle_draw` for the
+  lab's fights). Until then they are only maintained, not extended; nothing in `gartok/` may import them. When picked up, each Editor screen becomes a web screen (a session, a client folder, the
+  rules in a pygame-free module) and its pygame screen and tests are deleted; the lab's fights already run in
+  the browser (`python -m gartok.web --fight <lab fight>`). Porting it deletes `editor/` and drops pygame from the repo.
+
 ## Playtest notes 2026-10-30
 
 Sorted out of the raw notes: the browser's items (the wiki's links, the reading face, a body under a
-fighter, the initiative's states) are items 1, 2 and 5 of [web_frontend.md](web_frontend.md); the
+fighter, the initiative's states) are done; the
 component kit with a game tooltip, long names, the field's Distribute load and every hub opening on
 its shop are done; the tutorial's black screen did not reproduce and was dropped (reopen it if it comes
 back); the name generator and the rules as keywords are in *Ready to do*.
