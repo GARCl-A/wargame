@@ -117,6 +117,7 @@ function party() {
   h += `<div class="grid">${list.map(watching ? watcher : hunter).join("")}</div>`;
   const A = ACTS[H.phase]();
   h += `<div class="foot"><div class="notice">${esc(H.notice || "")}</div>
+    <div class="ghost-btn" id="swift" hidden></div>
     ${H.can_distribute ? `<div class="ghost-btn" id="distribute">Distribute load</div>` : ""}
     ${A.back ? `<div class="ghost-btn" id="back">${esc(A.back[1])}</div>` : ""}
     <div class="seal ${A.off ? "off" : ""} ${H.phase === "ambush" ? "" : "calm"}" id="go">${ico(H.phase === "ambush" ? "body/sword-tie" : H.icon)}<b>${esc(A.go[1])}</b><small>${esc(A.go[2])}</small></div></div>`;
@@ -126,6 +127,9 @@ function party() {
   if ($("distribute")) $("distribute").onclick = () => post("distribute");
   if ($("back")) $("back").onclick = () => post(A.back[0]);
   $("go").onclick = () => { if (!A.off) post(A.go[0]); };
+  const sw = H.phase === "ambush" && H.ambush.swift;
+  Kit.swift($("swift"), sw, () => api("/api/hunt/state").then(render));
+  if (sw && sw.eligible) $("swift").onclick = () => post("swift_win");
 }
 
 function render(state) {

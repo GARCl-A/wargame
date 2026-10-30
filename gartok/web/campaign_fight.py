@@ -36,9 +36,9 @@ from .report_session import ReportSession
 AFTER_CLAIM_FIGHT = {"SCOUTED": "CLEARED", "FENCED": "SWEPT"}
 
 
-def forced_fight(map_session, group, order, opening=None):
+def forced_fight(map_session, group, order, opening=None, swift=None):
     """`group`'s forced fight (`group.pending`), as `App._start_forced_battle` plays it; `opening` is how
-    the talk before it ended (`dialogue.Opening`)."""
+    the talk before it ended (`dialogue.Opening`), `swift` the clean-stomp estimate that settles it unplayed."""
     guild, node = map_session.guild, world.node(group.node)
     battle = Battle(list(group.members), list(order.pack), scenario=scenario_for(node),
                     daylight=guild.clock.is_daylight, lethal=True, arena=False,
@@ -50,7 +50,8 @@ def forced_fight(map_session, group, order, opening=None):
         group.pending = None
         return forced.resolve(guild, group, order, outcome)
 
-    return _enter(map_session, group, battle, node, order.kind, forced.EVENTS[order.kind].label.capitalize(), settle)
+    return _enter(map_session, group, battle, node, order.kind, forced.EVENTS[order.kind].label.capitalize(), settle,
+                  swift=swift)
 
 
 def claim_fight(map_session, group):
@@ -197,15 +198,36 @@ def _wildfire(map_session, group, kind, focus, squad, guarded):
     return _enter(map_session, group, battle, node, kind, title, settle, squad=squad)
 
 
-def _enter(map_session, group, battle, node, kind, title, settle, *, squad=None, offer=None, after=None):
+def _swift(battle, squad, result):
+    """`battle` won unplayed, as `autowin` promised: the foes down, the band worn by the average damage of
+    the simulated fights, no combat XP."""
+    for u in squad:
+        u.hp = max(1, u.hp - round(result.avg_damage.get(u.uid, 0.0)))
+    for c in battle.enemy_units:
+        c.hp = 0
+        c.status = "dead"
+    for c, u in zip(battle.player_units, squad):
+        c.status = "up"
+        c.hp = u.hp
+        c.combat_xp_earned = c.magic_xp_earned = 0
+    battle.winner = "player"
+    battle.round_no = max(1, round(result.avg_rounds))
+
+
+def _enter(map_session, group, battle, node, kind, title, settle, *, squad=None, offer=None, after=None, swift=None):
     """Every campaign fight starts here, as `App._enter_battle`: the world is saved first, so a bad
     fight can be undone. `squad` is who fights (the whole band unless an arena bout picked), `offer` the
-    arena's `world.Bout`, `after(outcome)` where the report ends (the map, unless the fight says)."""
+    arena's `world.Bout`, `after(outcome)` where the report ends (the map, unless the fight says). With
+    `swift` (an `autowin.AutoWinResult`) the fight is settled at once, unplayed."""
     guild, squad = map_session.guild, list(squad if squad is not None else group.members)
     if map_session.world_id is not None:
         foes = len(battle.enemy_units)
         persist.save_game(map_session.world_id, guild, kind="auto",
-                          label=f"Before a fight at {node.name}: {foes} foe{'s' if foes != 1 else ''}")
+                          label=f"Before a fight at {node.name}: {foes} foe{'s' if foes != 1 else ''}"
+                                f"{' (auto-resolved)' if swift is not None else ''}")
+    if swift is not None:
+        _swift(battle, squad, swift)
+        return _settle(map_session, group, squad, battle, node, kind, settle, offer, after)
     recorder.before_fight(squad)
     day = guild.clock.day
     path = recorder.combat_log_path(f"d{day:03d}-{combat_lab.slug(f'{node.id}-{kind}')}")

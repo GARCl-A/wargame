@@ -73,6 +73,21 @@ const Kit = {
       ${foot ? `<div class="cfoot">${foot}</div>` : ""}</div>`;
   },
 
+  // the swift resolution of a fight (`swift.Look`): the clean-stomp estimate on a ghost button `el`, which is
+  // AUTO-WIN once every simulated fight was one; `again()` redraws the screen while the estimate is still
+  // running. The screen answers a press on `el` when `sw.eligible`.
+  swift(el, sw, again) {
+    clearTimeout(Kit.swiftTimer);
+    el.hidden = !sw;
+    if (!sw) return;
+    el.classList.toggle("off", !sw.eligible);
+    el.innerHTML = sw.computing ? "Reading the odds…" : sw.eligible ? "Auto-win · no XP" : `Clean stomp ${sw.pct}%`;
+    el.dataset.tip = sw.computing ? "Fighting it headless to see whether it is a clean stomp"
+      : sw.eligible ? `All ${sw.runs} simulated fights were a clean stomp: settle this one at once, with no combat XP`
+      : `${sw.pct}% of ${sw.runs} simulated fights were a clean stomp: play this one`;
+    if (sw.computing) Kit.swiftTimer = setTimeout(again, sw.poll);
+  },
+
   // the button that shares a band's load out by what each can carry; the screen answers `#spread`
   distribute: (cls = "ghost-btn") => `<div class="${cls}" id="spread"${tip("Share the load out by what each can carry")}>Distribute load</div>`,
 

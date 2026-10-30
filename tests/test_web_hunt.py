@@ -261,3 +261,41 @@ def test_the_server_routes_the_hunt_verbs(saves):
         assert post("/api/hunt/leave", {})["screen"] == "map"
     finally:
         srv.shutdown()
+
+
+def _stomp(s, eligible=True):
+    from gartok import autowin
+    s.look.estimator.result = autowin.AutoWinResult(
+        eligible=eligible, iterations=5, win_rate=1.0, stomp_rate=1.0 if eligible else 0.4,
+        avg_damage={u.uid: 3.0 for u in s.state_.party}, avg_rounds=2.0)
+
+
+def test_a_clean_stomp_settles_the_hunts_ambush_unplayed_and_the_hunt_goes_on(saves):
+    guild, g = _guild()
+    persist.save_game("w1", guild)
+    game, s = _hunt(guild, g, world_id="w1")
+    _ambush_on(s)
+    s.set_hours(8)
+    st = s.start()
+    assert st["phase"] == "ambush" and st["ambush"]["swift"] is not None
+    hp = {u.uid: u.hp for u in s.state_.party}
+    _stomp(s)
+    assert s.state()["ambush"]["swift"]["eligible"]
+    assert s.fight(swift=True) == {"screen": "report"}
+    assert isinstance(game.session, ReportSession)
+    while game.session is not s:
+        game.session.next()
+    assert s.phase == "interlude" and s.state_.fights == 1
+    assert all(u.hp == max(1, hp[u.uid] - 3) for u in s.state_.party)
+
+
+def test_a_hunt_ambush_that_is_not_a_clean_stomp_must_be_played(saves):
+    guild, g = _guild()
+    game, s = _hunt(guild, g)
+    _ambush_on(s)
+    s.start()
+    _stomp(s, eligible=False)
+    with pytest.raises(ValueError):
+        s.fight(swift=True)
+    assert s.phase == "ambush"
+

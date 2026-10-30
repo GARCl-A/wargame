@@ -1131,7 +1131,7 @@ moral axis:
 
 ### Auto-Win (Monte Carlo Stomp Simulation) 🟡
 
-Rule in `gartok/autowin.py`, integrated into map ambush CTAs and the Wilds hunt.
+Rule in `gartok/autowin.py`; the browser asks it through `web/swift.py` on the map's forced fights and the Wilds hunt's ambush.
 Evaluates whether a battle is an overwhelming stomp that can be resolved
 immediately without manual combat grind.
 
@@ -1140,7 +1140,7 @@ immediately without manual combat grind.
   2. **Zero player casualties** (every squad member remains standing and alive).
   3. **Zero consumables used** (no ammo fired from quivers, no potions drunk, no
      first aid charges used).
-- **What the screen shows:** the hunt's ambush reads **CLEAN STOMP: N% OF M SIMULATED FIGHTS**,
+- **What the screen shows:** the AUTO-WIN button reads **Clean stomp N%** (**Auto-win** once it is 100%),
   the share of runs that met all three criteria. It is not the odds of winning: a fight the squad
   always wins with one potion drunk reads 0%.
 - **Trade-off when accepted:**

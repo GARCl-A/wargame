@@ -16,6 +16,7 @@ from .. import (
     forced,
     gather,
     missions,
+    node_functions,
     orders,
     persist,
     recruit,
@@ -26,7 +27,9 @@ from .. import (
 from ..constants import fmt_money
 from ..group import CAUTIOUS, NORMAL
 from ..map_view import ADVANCE_HOURS, STANCE_NOTES, MapView, node_icon, position
+from ..scenario import scenario_for
 from .session import Session, asset_url
+from .swift import Look
 
 REST_ROWS = (("rest:1", "1 h"), ("rest:8", "8 h"), ("rest:full", "Until full"))
 
@@ -61,6 +64,7 @@ class MapSession(MapView, Session):
         "split": lambda s, b: s.split(b["gid"], b["uids"]),
         "merge": lambda s, b: s.merge(b["gid"], b["other"]),
         "advance": lambda s, b: s.advance_world(),
+        "go_on": lambda s, b: s.go_on(),
         "title": lambda s, b: s.to_title(),
         "save_as": lambda s, b: s.save_as(b.get("name", "")),
         "wiki": lambda s, b: s.aside("wiki"),
@@ -75,6 +79,9 @@ class MapSession(MapView, Session):
         self.pending = []
         self.level_ups = []                      # aftermath.LevelUp the clock brought, each its own page
         self.wiped = False
+        self.look = Look()
+        self.turn = None                         # the hand-over card up: {"gid", "action", "danger", "go"}
+        self.seen = None                         # the band last in view
         self._wait_out_the_sentence()
         due = self._pending_event              # a save taken with a fight due opens on that band
         self.focus = due[0].gid if due else None
@@ -97,6 +104,7 @@ class MapSession(MapView, Session):
         g = next((g for g in self.guild.groups if g.gid == gid), None)
         if g is None:
             raise ValueError("no such band")
+        self.seen = g.gid
         return g
 
     def _free(self, gid):
@@ -128,8 +136,50 @@ class MapSession(MapView, Session):
             "cta": self._cta(),
             "notices": notices,
             "focus": focus,
+            "turn": self._turn_card(),
             "wiped": self.wiped,
         }
+
+    def _turn_card(self):
+        """The hand-over card: whose turn it is, when the clock moved the person off the band in view."""
+        t = self.turn
+        group = next((g for g in self.guild.groups if t and g.gid == t["gid"]), None)
+        if group is None:
+            return None
+        live = [g for g in self.guild.groups if not g.empty]
+        return {"band": f"Band {live.index(group) + 1} of {len(live)} · its turn", "name": group.display_name,
+                "node": world.node(group.node).name, "action": t["action"], "danger": t["danger"],
+                "members": [u.name for u in group.members]}
+
+    def _hand_over(self, group, action, danger=False, go=None):
+        """Put the hand-over card up for `group` when the clock moved the person off the band in view and
+        the guild keeps more than one; True when it is up, `go` waiting for GO ON."""
+        moved = self.seen is not None and group.gid != self.seen
+        self.seen = group.gid
+        if not moved or sum(1 for g in self.guild.groups if not g.empty) < 2:
+            return False
+        self.turn = {"gid": group.gid, "action": action, "danger": danger, "go": go}
+        return True
+
+    def go_on(self):
+        """GO ON on the hand-over card: on to the screen the band's order was waiting to open."""
+        t, self.turn = self.turn, None
+        if t is None:
+            raise ValueError("no band is waiting")
+        if t["go"] is not None:
+            return t["go"]()
+        return {"screen": self.screen, **self.state()}
+
+    @staticmethod
+    def _activity_label(order):
+        """The card's headline for an order about to open: the forced event's, the arena's, the node
+        button's, or the kind itself."""
+        if order.kind in forced.EVENTS:
+            return forced.EVENTS[order.kind].label or order.kind.upper()
+        if order.kind == "arena":
+            return "ENTER THE ARENA"
+        return next((f.label for f in node_functions.FUNCTIONS.values()
+                     if f.order_kind == order.kind and f.label), order.kind.replace("_", " ").upper())
 
     def _meta(self):
         g, c = self.guild, self.guild.clock
@@ -349,11 +399,16 @@ class MapSession(MapView, Session):
             return f"{idle[0].display_name} waits for orders" if len(idle) == 1 else f"{len(idle)} bands wait for orders"
         return "Every band is about its work"
 
+    def _swift_look(self, group, order):
+        node = world.node(group.node)
+        return self.look.of((group.gid, id(order)), group.members, order.pack, lambda: scenario_for(node),
+                            self.guild.clock.is_daylight, True)
+
     def _cta(self):
         due = self._pending_event
         if due is not None:
             return {"key": "resolve_event", "label": "Fight", "sub": f"{len(due[1].pack)} foes", "danger": True,
-                    "enabled": True, "gid": due[0].gid,
+                    "enabled": True, "gid": due[0].gid, "swift": self._swift_look(*due),
                     "text": f"{due[0].display_name} is stopped. Nothing moves on until it is faced."}
         idle = [g for g in self.guild.groups if self._is_idle(g)]
         if not idle and self._everyone_garrisoned():
@@ -426,6 +481,16 @@ class MapSession(MapView, Session):
             from .campaign_fight import forced_fight
             from .dialogue_session import forced_talk
             return self._talk(forced_talk(self, g)) or forced_fight(self, g, g.pending)
+        if key == "swift_win":
+            if not g.fight_due:
+                raise ValueError(f"{g.display_name} has no fight to face")
+            self._swift_look(g, g.pending)
+            if self.look.result is None:
+                raise ValueError("this fight is not a clean stomp")
+            from .campaign_fight import forced_fight
+            result = self.look.result
+            self.look.clear()
+            return forced_fight(self, g, g.pending, swift=result)
         if key == "guild":
             return self._sheet("members", g.gid)
         if g.fight_due:
@@ -567,11 +632,19 @@ class MapSession(MapView, Session):
                 self.focus = group.gid
                 continue
             self._save()
+            if self._hand_over(group, self._activity_label(order), go=lambda g=group, o=order: self._enter(g, o)):
+                return {"screen": self.screen, **self.state()}
             return self._enter(group, order)
         self.notices += arena.sync(self.guild)
         if self.guild.can_auto_advance:
             self._advance()
             return self._land()
+        self._save()
+        due = self._pending_event
+        band = next((g for g in self.guild.groups if g.gid == self.focus), None)
+        if band is not None and self.turn is None:
+            ambushed = due is not None and due[0] is band
+            self._hand_over(band, "Ambushed: fight when ready" if ambushed else "Awaits orders", danger=ambushed)
         self._save()
         return {"screen": self.screen, **self.state()}
 
@@ -647,11 +720,11 @@ class MapSession(MapView, Session):
         return {"quit": True}
 
     def tutorial_key(self):
-        return "map"
+        return "group_turn" if self.turn is not None else "map"
 
     def tutorial_closed(self, key, first):
         """The map's card is the first after the draft: its first close opens the objectives, as pygame's."""
-        return self._sheet("reputations", None) if first else None
+        return self._sheet("reputations", None) if first and key == "map" else None
 
     def back(self):
         """Back from a screen: on to whatever else the clock left due."""

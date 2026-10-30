@@ -97,11 +97,10 @@ def test_header_reserves_space_when_has_tutorial_is_true():
 
 def test_no_registered_card_is_orphaned():
     """Every id must be named by some screen -- the map's card once sat registered and never showed.
-    `guild.*` and `draft.*` ids are picked per tab/phase and covered by their own tests; `group_turn`
-    waits for its browser screen."""
+    `guild.*` and `draft.*` ids are picked per tab/phase and covered by their own tests."""
     import pathlib
     files = [p for p in pathlib.Path("gartok").rglob("*.py") if p.name != "tutorial.py"]
     src = "".join(p.read_text(encoding="utf-8") for p in files)
     for tid in TUTORIALS:
-        if not tid.startswith(("guild.", "draft.")) and tid != "group_turn":
+        if not tid.startswith(("guild.", "draft.")):
             assert f'"{tid}"' in src, tid

@@ -272,8 +272,10 @@
 .seg div.off:hover{background:none}
 .seg.starving{box-shadow:inset 0 0 0 1px rgba(201,71,58,.6)}
 
-#cta{flex:none;margin-top:12px;height:104px;display:flex;align-items:center;gap:18px;padding:0 20px 0 24px}
-#cta p{flex:1;font:16px/1.3 var(--read);color:#c9b38c}
+#cta{flex:none;margin-top:12px;min-height:104px;display:flex;align-items:center;gap:18px;padding:8px 20px 8px 24px}
+#cta .ctacol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#cta .ctacol .ghost-btn{height:30px;font-size:10px}
+#cta p{font:16px/1.3 var(--read);color:#c9b38c}
 #cta p b{font:600 11.5px/1 Cinzel,serif;letter-spacing:.16em;color:#f0dfb8;font-style:normal;text-transform:uppercase}
 #cta .seal{width:92px;height:92px;flex:none;transform:rotate(-6deg)}
 #cta .seal:hover{transform:rotate(-6deg) scale(1.05)}
@@ -316,3 +318,16 @@
 #saveform[hidden]{display:none}
 #saveform input{flex:1;min-width:0;height:38px;padding:0 12px;border:0;outline:0;border-radius:3px;
   font:18px/1 var(--read);color:#eadcbc;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--brass-lo)}
+
+/* the hand-over card: whose turn it is when the clock moves the screen to another band */
+#turn[hidden]{display:none}
+#turn{position:absolute;inset:var(--bleed);display:grid;place-items:center;background:rgba(8,6,4,.7);z-index:21}
+#turn .paper{width:520px;padding:30px 34px}
+#turn .kicker{color:#7b6142}
+#turn h2{margin-top:10px;font:600 26px/1.15 Cinzel,serif;color:#2a1c0f}
+#turn .where{margin-top:4px;font:17px/1.3 var(--read);color:#5a4128}
+#turn .act{margin-top:18px;padding-top:14px;border-top:1px solid rgba(90,65,40,.4);font:600 14px/1.2 Cinzel,serif;letter-spacing:.14em;text-transform:uppercase;color:#7a5a22}
+#turn.danger .kicker,#turn.danger .act{color:#8a2a1c}
+#turn p{margin-top:10px;font:17px/1.45 var(--read);color:#3b2a1a}
+#turn .lbtns{display:flex;margin-top:22px}
+#turn .brass-btn{margin-left:auto;height:44px;min-width:0;padding:0 24px}

@@ -68,9 +68,8 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   are). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai.py` and the numbers do not change.
 
 - **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
-  wagon left behind is done (2026-10-30). Left: the hand-over
-  card between groups (`group_turn`, its tutorial card still registered), the vault read from the map, the auto-win
-  of an ambush or a hunt (`autowin.py`). And the tests the cut lost (web_frontend.md, What is left): the clock
+  wagon left behind, the hand-over card between groups, the vault read from the guild screen and the auto-win
+  are done (2026-10-30). Left: the tests the cut lost (web_frontend.md, What is left): the clock
   while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
   cancelled. The old screens are in git before the cut.
 

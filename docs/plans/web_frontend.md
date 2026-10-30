@@ -115,19 +115,7 @@ Each folder under [references/](references/) is the approved look of a family, o
 
 In order. The board items are tuned by eye, so each takes a mockup first.
 
-### 1. What else only pygame had: port or drop
-
-Each needs the author's call (port, or drop and delete what is left of it):
-
-- **The hand-over card between groups** (`group_turn`): today the map just moves to the next band with the
-  news slip. Its tutorial card is still registered in `tutorial.py` and `locales/en.json`.
-- **The vault read from the map** (pygame showed the strongbox's contents without going to the Bank).
-- **The auto-win of an ambush or a hunt** (`autowin.py`, a Monte Carlo estimate; no button in the
-  browser).
-
-**Done when:** each is in the browser with its tests, or deleted from the code and its tutorial copy.
-
-### 2. The board, by eye
+### 1. The board, by eye
 
 - **The fog.** Seen before (grey), never seen (paper) and seen but unlit (dark) stack into too many layers:
   it is hard to tell what is dark, what is fog and what is unknown (the playtests of 2026-10-21 and
@@ -145,7 +133,7 @@ Each needs the author's call (port, or drop and delete what is left of it):
 
 **Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
 
-### 3. The Editor
+### 2. The Editor
 
 The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
 `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
@@ -155,7 +143,7 @@ game.
 
 **Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
 
-### 4. The retirement
+### 3. The retirement
 
 Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
 `icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.

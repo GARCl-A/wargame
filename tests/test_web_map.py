@@ -359,10 +359,53 @@ def test_two_due_screens_open_one_at_a_time_and_the_map_comes_back_after_the_las
     assert s._land() == {"screen": "hub"} and game.session.order.kind == "bank"
     assert s.pending and s.pending[0][1].kind == "market"
     a.order = orders.idle()
-    assert s.back() == {"screen": "hub"} and game.session.order.kind == "market"
+    assert s.back() == {"screen": "map", **s.state()} and s.turn["gid"] == b.gid
+    assert s.go_on() == {"screen": "hub"} and game.session.order.kind == "market"
     assert not s.pending
     b.order = orders.idle()
     assert s.back()["screen"] == "map"
+
+
+def test_the_clock_handing_the_screen_to_another_band_puts_up_the_hand_over_card():
+    guild = _guild("city", "market")
+    a, b = guild.groups
+    a.order = orders.interactive("bank")
+    b.order = orders.interactive("market")
+    game = _game(guild)
+    s = game.session
+    s.pending = [(a, a.order), (b, b.order)]
+    assert s._land() == {"screen": "hub"}                   # nothing was in view yet: no card for the first
+    a.order = orders.idle()
+    s.back()
+    card = s.state()["turn"]
+    assert card["name"] == b.display_name and card["node"] == world.node("market").name
+    assert card["band"] == "Band 2 of 2 · its turn" and card["action"] == s._activity_label(b.order)
+    assert not card["danger"] and card["members"] == [u.name for u in b.members]
+    assert s.tutorial_key() == "group_turn"
+    assert s.go_on()["screen"] == "hub"
+    assert s.state()["turn"] is None and s.tutorial_key() == "map"
+    with pytest.raises(ValueError):
+        s.go_on()
+
+
+def test_an_ambushed_band_handed_the_screen_gets_a_danger_card_and_a_lone_band_none():
+    guild = _guild("city", "road")
+    a, b = guild.groups
+    s = _game(guild).session
+    s.seen = a.gid
+    b.pending = orders.Order("ambush", pack=(standard_unit(),))
+    s.focus = b.gid
+    s._land()
+    card = s.state()["turn"]
+    assert card["danger"] and card["action"] == "Ambushed: fight when ready"
+    s.go_on()
+
+    solo = _guild("city")
+    s = _game(solo).session
+    s.seen = solo.groups[0].gid
+    s.focus = solo.groups[0].gid
+    s._land()
+    assert s.state()["turn"] is None
 
 
 def test_a_guild_with_every_member_jailed_waits_out_the_sentence_and_stands_a_band_up(saves):

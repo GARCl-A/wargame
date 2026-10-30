@@ -36,12 +36,16 @@
       <div class="party leather" id="party"></div>
       <div class="camp leather" id="camp"></div>
     </div>
-    <div id="cta" class="leather"><p id="ctatext"></p><div class="seal" id="seal"></div></div>
+    <div id="cta" class="leather"><div class="ctacol"><p id="ctatext"></p><div class="ghost-btn" id="swift" hidden></div></div><div class="seal" id="seal"></div></div>
   </div>
 
   <div id="wiped" hidden><div class="paper"><div class="kicker">The guild is gone</div>
     <p>No one is left to carry the banner. The world keeps its last save; load an earlier one to try again.</p>
     <div class="ghost-btn" id="wipedbtn">To the title</div></div></div>
+  <div id="turn" hidden><div class="paper"><div class="kicker" id="turnband"></div>
+    <h2 id="turnname"></h2><div class="where" id="turnnode"></div>
+    <div class="act" id="turnact"></div><p id="turncrew"></p>
+    <div class="lbtns"><div class="brass-btn" id="turngo">Go on</div></div></div></div>
   <div id="leave" hidden><div class="paper"><div class="kicker">Leave the wagon behind?</div>
     <div id="leavebody"></div>
     <div class="lbtns"><div class="ghost-btn" data-leave="stay">Stay</div><div class="ghost-btn" data-leave="cargo">Manage cargo</div>

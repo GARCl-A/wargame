@@ -14,6 +14,7 @@ from ..unit import distribute_load
 from .campaign_fight import _enter
 from .map_session import _portrait, _when
 from .session import Session
+from .swift import Look
 from .watch_session import toggle, watch_state
 
 
@@ -36,6 +37,7 @@ class HuntSession(Session):
         "hunt_on": lambda s, b: s.hunt_on(),
         "head_back": lambda s, b: s.head_back(),
         "fight": lambda s, b: s.fight(),
+        "swift_win": lambda s, b: s.fight(swift=True),
         "talents": lambda s, b: s.talents(b["uid"]),
         "done": lambda s, b: s.done(),
         "leave": lambda s, b: s.leave(),
@@ -58,6 +60,7 @@ class HuntSession(Session):
         self.events = []                   # what the clock did during the last stretch
         self.result = None                 # `hunt.grant_haul`'s lines, once banked
         self.pack = None                   # the ambush waiting to be fought
+        self.look = Look()                 # its clean-stomp estimate
         self.notice = None
         if self.phase is None:
             self._begin()
@@ -183,6 +186,9 @@ class HuntSession(Session):
             s.fights += 1
             self.pack = pack()
             self.phase = "ambush"
+            self.look.clear()
+            if not self.tracking:
+                self.look.of(s.fights, s.party, self.pack, self.node.scenario, guild.clock.is_daylight, self.node.lethal)
         return self.state()
 
     def _wrap_up(self):
@@ -195,9 +201,12 @@ class HuntSession(Session):
     # ------------------------------------------------------------------ #
     # the fight                                                           #
     # ------------------------------------------------------------------ #
-    def fight(self):
+    def fight(self, swift=False):
         self._phase("ambush")
         s, guild, node = self.state_, self.guild, self.node
+        result = self.look.result if swift else None
+        if swift and result is None:
+            raise ValueError("this fight is not a clean stomp")
         battle = Battle(list(s.party), self.pack, scenario=node.scenario(), daylight=guild.clock.is_daylight,
                         lethal=node.lethal, arena=False, clock_day=guild.clock.day,
                         aggressor="player" if self.tracking else "enemy")
@@ -230,7 +239,8 @@ class HuntSession(Session):
             return self._resume()
 
         title = "The ox's trail" if self.tracking else "The Biwolf" if s.biwolf else "Ambush in the Wilds"
-        return _enter(self.map, self.group, battle, node, "hunt", title, settle, squad=list(s.party), after=after)
+        return _enter(self.map, self.group, battle, node, "hunt", title, settle, squad=list(s.party), after=after,
+                      swift=result)
 
     def done(self):
         """Back to the map: the wagon left at the door is rolled for, silently, as `App._end_hunt`; a
@@ -345,5 +355,6 @@ class HuntSession(Session):
                 f"A pack of {n} hostile{'s' * (n != 1)} cuts across the trail: a lethal fight, and victory leaves "
                 "the field to loot.")
         return {"title": "The Biwolf!" if s.biwolf else "Ambush in the Wilds!", "lead": lead, "line": None,
+                "swift": self.look.state(),
                 "foes": [{"name": u.name, "race": u.race["name"], "portrait": _portrait(u),
                           "weapon": u.equipped_weapon or "Claws and teeth"} for u in foes]}

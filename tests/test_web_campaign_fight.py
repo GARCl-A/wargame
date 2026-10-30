@@ -127,3 +127,46 @@ def test_a_lab_fight_has_nothing_after_it():
     with pytest.raises(ValueError):
         s.done()
     assert not s.state()["campaign"]
+
+
+def _stomp(session, eligible=True):
+    """Settle the fight's estimate without running it: the map's `Look` answers as if it had finished."""
+    from gartok import autowin
+    session.look.estimator.result = autowin.AutoWinResult(
+        eligible=eligible, iterations=5, win_rate=1.0, stomp_rate=1.0 if eligible else 0.4,
+        avg_damage={u.uid: 2.0 for u in session.guild.roster}, avg_rounds=3.0)
+
+
+def test_a_clean_stomp_settles_the_ambush_unplayed_with_no_xp_and_the_band_worn():
+    game, guild, g = _ambushed("w1")
+    s = game.session
+    cta = s.state()["cta"]
+    assert cta["swift"]["computing"] or cta["swift"]["eligible"] is not None
+    hp = {u.uid: u.hp for u in g.members}
+    xp = {u.uid: u.combat_xp for u in g.members}
+    _stomp(s)
+    assert s.state()["cta"]["swift"]["eligible"]
+    assert s.act(g.gid, "swift_win") == {"screen": "report"}
+    report = game.session
+    assert isinstance(report, ReportSession) and report.state()["result"] == "VICTORY"
+    assert all(u.hp == max(1, hp[u.uid] - 2) for u in g.members)
+    assert all(u.combat_xp == xp[u.uid] for u in g.members)
+    assert not g.fight_due and g.pending is None
+    assert any("auto-resolved" in x["label"] for x in persist.list_saves("w1"))
+
+
+def test_a_fight_that_is_not_a_clean_stomp_cannot_be_settled_unplayed():
+    game, _, g = _ambushed()
+    s = game.session
+    _stomp(s, eligible=False)
+    assert not s.state()["cta"]["swift"]["eligible"]
+    with pytest.raises(ValueError):
+        s.act(g.gid, "swift_win")
+    assert g.fight_due
+
+
+def test_a_band_with_no_fight_due_has_no_swift_win():
+    guild = Guild(None, groups=[_band("road")], name="Ink Hands")
+    s = MapSession(guild)
+    with pytest.raises(ValueError):
+        s.act(guild.groups[0].gid, "swift_win")

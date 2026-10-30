@@ -87,3 +87,7 @@
 #tip .sum .tot{margin-top:4px;padding-top:4px;border-top:1px solid rgba(90,60,30,.45)}
 #tip .sum .tot span{font:600 10px/2.2 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;text-transform:uppercase}
 #tip .sum .note{color:#6b5233}
+
+/* the swift resolution's button (`Kit.swift`) */
+.ghost-btn[hidden]{display:none}
+.ghost-btn.off{opacity:.55;cursor:default}

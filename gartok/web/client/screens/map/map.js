@@ -236,6 +236,7 @@ function drawInspector() {
   const t = M.cta, seal = $("seal");
   $("ctatext").innerHTML = t.key === "cycle_idle" && /^The clock waits on /.test(t.text)
     ? `<b>The clock waits</b><br>${esc(t.text.replace(/^The clock waits /, ""))}` : esc(t.text);
+  Kit.swift($("swift"), t.swift, () => api("/api/map/state").then(show));
   seal.className = `seal ${t.enabled ? "" : "cold"} ${t.key === "advance_world" ? "calm" : ""}`;
   seal.innerHTML = `<div><b>${esc(t.label).replace(" ", "<br>")}</b><small>${esc(t.sub || "")}</small></div>`;
 }
@@ -262,7 +263,20 @@ function show(state) {
   drawTop(); drawBands(); drawPlaces(); drawInspector();
   news(state.notices || []);
   $("wiped").hidden = !M.wiped;
+  drawTurn();
   if (hoverNode) { const h = hoverNode; hoverNode = null; hover(h); }
+}
+
+function drawTurn() {
+  const t = M.turn;
+  $("turn").hidden = !t;
+  if (!t) return;
+  $("turn").classList.toggle("danger", t.danger);
+  $("turnband").textContent = t.band;
+  $("turnname").textContent = t.name;
+  $("turnnode").textContent = `at ${t.node}`;
+  $("turnact").textContent = t.action;
+  $("turncrew").textContent = t.members.join(", ");
 }
 
 function redraw() {
@@ -382,6 +396,11 @@ $("pause").addEventListener("click", e => {
 });
 $("savego").onclick = saveAs;
 $("saveform").addEventListener("submit", e => { e.preventDefault(); saveAs(); });
+$("turngo").onclick = () => post("go_on", {});
+$("swift").onclick = () => {
+  const t = M && M.cta;
+  if (t && t.swift && t.swift.eligible) post("act", {gid: t.gid, key: "swift_win"});
+};
 $("seal").onclick = () => {
   const t = M && M.cta;
   if (!t || !t.enabled) return;
@@ -393,6 +412,7 @@ $("seal").onclick = () => {
 };
 
 addEventListener("keydown", e => {
+  if (!$("turn").hidden) { if (["Enter", " ", "Escape"].includes(e.key)) { e.preventDefault(); post("go_on", {}); } return; }
   if (!$("leave").hidden) { if (e.key === "Escape") closeLeave(); return; }
   if (!$("pause").hidden) {
     if (e.key === "Escape") { if (!$("saveform").hidden) $("saveform").hidden = true; else pause(false); }
