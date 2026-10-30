@@ -2,8 +2,6 @@
 "use strict";
 
 let T = null, busy = false;
-const ico = name => `<span class="ico mask" style="--icon:url(/assets/icons/${name}.svg)"></span>`;
-const sgn = v => (v >= 0 ? "+" : "−") + Math.abs(v);
 const caps = s => String(s || "").toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
 const STAMPS = {bluff: ["It holds", "Seen through"], persuade: ["Heard out", "Not heard"],
   intimidate: ["They waver", "Laughed off"], teach: ["Taken in", "Not heard"]};
@@ -170,7 +168,7 @@ function band() {
     h += `<div class="mem ${sel ? "sel" : ""} ${mute ? "mute" : ""} ${reading ? "" : "pick"}" data-uid="${u.uid}">
       <div class="medal ours">${face(u.portrait, u.name)}</div>
       <div class="nm"><b>${esc(u.name)}</b><span>${esc(u.race)} ${esc(u.occupation)}</span><div class="tongues">${langs}</div></div>
-      <div class="mods"><div class="mod lead"><b>${sgn(u.cha)}</b><span>CHA</span></div><div class="mod"><b>${sgn(u.int)}</b><span>INT</span></div></div>
+      <div class="mods"><div class="mod lead"><b>${sign(u.cha)}</b><span>CHA</span></div><div class="mod"><b>${sign(u.int)}</b><span>INT</span></div></div>
       ${tags.length ? `<div class="tagrow">${tags.join("")}</div>` : ""}</div>`;
   }
   const hp = T.members.reduce((a, u) => a + u.hp[0], 0), hpm = T.members.reduce((a, u) => a + u.hp[1], 0);

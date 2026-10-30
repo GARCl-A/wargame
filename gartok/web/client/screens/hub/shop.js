@@ -6,9 +6,8 @@
 "use strict";
 
 const Shop = (() => {
-  let S = null, cat = null, picks = null, drag = null, over = null;
-  const qty = {};
-  const kg = (q, w) => { const t = q * w; return t < 0.05 ? "—" : t.toFixed(1) + " kg"; };
+  let S = null, cat = null, picks = null, drag = null;
+  const qty = {}, mark = dropMarker();
   const allRows = () => S.shelf.flatMap(c => c.rows);
   const ware = name => allRows().find(r => r.name === name);
   const pack = id => S.packs.find(p => p.id === id);
@@ -46,8 +45,8 @@ const Shop = (() => {
     const stock = r.stock === null ? "—" : `${r.stock}${r.target ? ` <small>/ ${r.target}</small>` : ""}`;
     const tone = r.price < r.list ? "off" : r.price > r.list ? "up" : "";
     const buy = out ? `<div class="soldout">Sold out</div>`
-      : `<div class="qty"><span data-q="-1">−</span><span class="n">${q}</span><span data-q="1">+</span></div>`;
-    return `<div class="row ${out ? "out" : ""} ${sel ? "picked" : ""}" data-ware="${esc(r.name)}" title="${esc(r.tip)}">
+      : Kit.stepper(q);
+    return `<div class="row ${out ? "out" : ""} ${sel ? "picked" : ""}" data-ware="${esc(r.name)}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
       <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${esc(r.use)}</div></div>
       <div class="wt r">${r.weight.toFixed(1)} <small>kg</small></div>
@@ -68,13 +67,8 @@ const Shop = (() => {
 
   // ---------------------------------------------------------------- the packs
   function itemRow(p, it, loc, slot) {
-    if (!it || !it.name)
-      return `<div class="it empty" data-owner="${p.id}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(slot.label)}</span>empty</div><span></span><span></span></div>`;
-    const zone = slot ? `data-zone="${slot.zone}"` : "";
-    const tags = (it.locked ? `<span class="tag">locked</span>` : "") + (it.marked ? `<span class="tag auto">auto-sell</span>` : "");
-    return `<div class="it ${it.coin ? "coin" : ""} ${picked(p.id, loc) ? "sel" : ""}" data-owner="${p.id}" data-loc="${loc}" ${zone} title="${esc(it.tip || "")}">
-      ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(slot.label)}</span>` : ""}${esc(it.name)}${tags}</div>
-      <span class="q">${(it.qty || 1) > 1 ? "×" + it.qty : ""}</span><span class="kg">${kg(it.qty || 1, it.kg)}</span></div>`;
+    const tags = it && Kit.tag(it.locked, "locked") + Kit.tag(it.marked, "auto-sell", "auto");
+    return Kit.item(p.id, it, loc, slot, {sel: picked(p.id, loc), tags});
   }
 
   function foot(p) {
@@ -92,24 +86,8 @@ const Shop = (() => {
   }
 
   function column(p) {
-    const head = p.store
-      ? `<div class="med store">${ico(p.glyph)}</div>`
-      : `<div class="med ${p.hurt ? "hurt" : ""}" data-sheet="${p.id}" title="Open ${esc(p.name)}'s sheet">${face(p.portrait, p.name)}</div>`;
-    let add = 0;
-    if (picks && picks.ware) add = ware(picks.ware).weight * (qty[picks.ware] || 1);
-    const tight = p.kg > p.normal, over = p.kg + add > p.max;
-    const pct = x => Math.min(100, x / p.max * 100).toFixed(1);
-    const worn = p.worn.length ? `<div class="sec lbl">Worn</div>` + p.worn.map(w => itemRow(p, w.name ? w : null, w.zone, w)).join("") : "";
-    const rows = p.pack.length ? p.pack.map(r => itemRow(p, r, r.loc, null)).join("")
-      : `<div class="it empty"><span></span><div class="n">nothing carried</div><span></span><span></span></div>`;
-    const f = foot(p);
-    return `<div class="col" data-owner="${p.id}">
-      <div class="chead">${head}<div style="min-width:0"><h3>${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${p.voice ? `<span class="voice">Speaks for the band</span>` : ""}</div></div>
-      <div class="cstat"><div class="money"><i class="coindot"></i>${p.money}</div>
-        <div class="load ${over ? "over" : tight ? "tight" : ""}"><b>${(p.kg + add).toFixed(1)}</b> / ${p.max} kg</div></div>
-      <div class="bar"><i class="${tight ? "tight" : ""}" style="width:${pct(p.kg)}%"></i>${add ? `<i class="add" style="width:${pct(add)}%"></i>` : ""}<em style="left:${pct(p.normal)}%"></em></div>
-      ${worn}<div class="sec lbl">Pack</div><div class="packlist">${rows}</div>
-      ${f ? `<div class="cfoot">${f}</div>` : ""}</div>`;
+    const add = picks && picks.ware ? ware(picks.ware).weight * (qty[picks.ware] || 1) : 0;
+    return Kit.column(p, {add, foot: foot(p), voice: p.voice ? "Speaks for the band" : "", row: itemRow});
   }
 
   // ---------------------------------------------------------------- the bottom
@@ -140,14 +118,7 @@ const Shop = (() => {
       const t = sellTotal(picks.items);
       if (t) after = S.purse + t;
     }
-    const shares = S.packs.filter(p => !p.store || p.money).map(p =>
-      `<div class="share"><span>${esc(short(p.name))}</span><b>${p.money}</b></div>`).join("");
-    const members = S.packs.filter(p => !p.store).length;
-    const tools = members > 1 ? `<div class="tools"><div class="ghost-btn" id="spread" title="Share the load out by what each can carry">Distribute load</div></div>` : "";
-    return `<div class="leather" id="purse"><div><div class="lbl">Common purse</div>
-      <div class="sum"><b>${money(S.purse)}</b>${after === null ? "" : `<s class="${bad ? "bad" : ""}">${money(after)}</s>`}</div></div>
-      <div class="split">${shares}</div>${tools}
-      <div class="brass-btn" id="done"><div>${ico("gui/exit-door")}<b>Done</b></div></div></div>`;
+    return Kit.purse({sum: S.purse, after, bad, packs: S.packs, spread: S.packs.filter(p => !p.store).length > 1});
   }
 
   // ---------------------------------------------------------------- drawing
@@ -256,22 +227,10 @@ const Shop = (() => {
     $("ghost").innerHTML = `${ico(glyph)}<div><b>${esc(name)}</b><span>${esc(line)}</span></div>${tag ? `<em class="${gain ? "gain" : ""}">${tag}</em>` : ""}`;
   }
 
-  function stagePoint(e) {
-    const r = $("screen").getBoundingClientRect(), s = r.width / 1920;
-    return [(e.clientX - r.left) / s, (e.clientY - r.top) / s];
-  }
-
   function target(el) {
     if (!el) return null;
     if (drag.src.ware) return el.closest(".it[data-zone]") || el.closest(".col") || el.closest("#purse");
     return el.closest(".it[data-zone]") || el.closest(".col") || el.closest("#sell") || el.closest("#shelf");
-  }
-
-  function mark(el) {
-    if (over === el) return;
-    if (over) over.classList.remove("drop");
-    over = el;
-    if (over) over.classList.add("drop");
   }
 
   // ---------------------------------------------------------------- the item menu
@@ -302,10 +261,7 @@ const Shop = (() => {
       m.hidden = true;
       acts[Number(d.dataset.i)]();
     };
-    const [x, y] = stagePoint(e);
-    m.hidden = false;
-    m.style.left = Math.min(x, 1920 - m.offsetWidth - 12) + "px";
-    m.style.top = Math.min(y, 1080 - m.offsetHeight - 12) + "px";
+    popAt(m, e);
   }
 
   // ---------------------------------------------------------------- the pointer

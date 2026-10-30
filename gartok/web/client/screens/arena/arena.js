@@ -2,7 +2,6 @@
 "use strict";
 
 let A = null, busy = false;
-const ico = name => `<span class="ico mask" style="--icon:url(/assets/icons/${name}.svg)"></span>`;
 const TAGS = {champion: "the title", boss: "the Games' capstone", brawl: "the Games", ctf: "the Games"};
 
 function toast(text) {

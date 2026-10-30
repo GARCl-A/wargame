@@ -97,11 +97,6 @@
 .row .price:before{content:"$";font-size:13px;color:#8a6c47;margin-right:1px}
 .row .price.off{color:#2f5a22}
 .row .price.up{color:#7a2318}
-.qty{display:flex;justify-content:flex-end}
-.qty span{width:27px;height:27px;display:grid;place-items:center;font:700 15px/1 Cinzel,serif;color:#4a3420;cursor:pointer;
-  border:1px solid rgba(90,60,30,.45);background:rgba(255,250,235,.35)}
-.qty span:hover{background:rgba(255,250,235,.7)}
-.qty span.n{width:34px;border-left:0;border-right:0;color:#24170c;background:rgba(255,250,235,.6);cursor:default}
 .row:hover{background:linear-gradient(90deg,rgba(201,163,94,0),rgba(201,163,94,.22) 20%,rgba(201,163,94,.22) 80%,rgba(201,163,94,0))}
 .row.picked{background:rgba(90,60,30,.10)}
 .row.picked:after{content:"";position:absolute;inset:5px 2px;border:2px dashed rgba(122,35,24,.6);border-radius:3px;pointer-events:none}
@@ -116,50 +111,17 @@
 .shelffoot b{font:600 10.5px/1 Cinzel,serif;letter-spacing:.2em;color:#4a3420;font-style:normal;text-transform:uppercase}
 #shelf.drop{box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 2px var(--blood-hi),0 0 30px rgba(201,71,58,.35),0 14px 24px rgba(0,0,0,.6)}
 
-/* ---------- the shoppers: one column per pack ---------- */
-#band{position:absolute;left:712px;top:0;width:1176px;height:656px;display:flex;gap:12px;overflow-x:auto;
-  scrollbar-width:thin;scrollbar-color:rgba(201,163,94,.35) transparent}
-.col{position:relative;flex:1 0 276px;display:flex;flex-direction:column;border-radius:4px;padding:14px 14px 0;
-  background:linear-gradient(180deg,#2c2117,#1a130d);
-  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
-.col.drop{box-shadow:inset 0 1px 0 rgba(240,215,158,.25),inset 0 0 0 1px rgba(240,215,158,.55),0 0 0 2px var(--brass-hi),0 0 34px rgba(240,215,158,.3)}
-.chead{display:flex;gap:12px;align-items:center}
-.chead .med{position:relative;width:62px;height:62px;border-radius:50%;flex:none;overflow:hidden;
-  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--enamel-hi),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6)}
-.chead .med img,.chead .med .initial{width:100%;height:100%;border-radius:50%;display:block}
-.chead .med.store{display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#3a2b1d,#1a130d);box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass-lo),0 0 0 6px #120d08}
-.chead .med.store .ico{width:36px;height:36px;color:#d8bd86}
-.chead .med.hurt img{filter:sepia(.35) brightness(.85)}
-.chead h3{font:700 18px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
-.chead .race{margin-top:4px;font:italic 14.5px/1 var(--read);color:#b59c76;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
-.chead .voice{display:inline-block;margin-top:6px;font:600 8.5px/1 Cinzel,serif;letter-spacing:.18em;color:#1a120a;background:var(--brass);padding:3px 5px 2px;border-radius:2px;text-transform:uppercase}
-.cstat{display:flex;align-items:flex-end;gap:10px;margin-top:14px}
-.cstat .money{display:flex;align-items:center;gap:6px;font:700 20px/1 Cinzel,serif;color:#f0dfb8}
-.coindot{display:inline-block;width:17px;height:17px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f6c39a,#b56a3a 45%,#5e2f15 100%);box-shadow:0 0 0 1.5px #3a1e0c}
-.cstat .load{margin-left:auto;text-align:right;font:14px/1 var(--read);color:#c9b38c}
-.cstat .load b{font:600 15px/1 Cinzel,serif;color:#f0dfb8}
-.cstat .load.tight b{color:#e0a85a}
-.cstat .load.over b{color:var(--blood-hi)}
-.bar{position:relative;height:6px;margin-top:7px;border-radius:3px;background:#120d08;box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden;display:flex}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,#8d6a30,var(--brass))}
-.bar i.tight{background:linear-gradient(90deg,#9a6a2a,#e0a85a)}
-.bar i.add{background:repeating-linear-gradient(135deg,var(--brass-hi) 0 4px,#c9a35e 4px 8px);box-shadow:0 0 8px rgba(240,215,158,.6)}
-.bar em{position:absolute;top:0;bottom:0;width:1px;background:rgba(240,215,158,.5)}
+/* a section label on leather, every tab's */
 .sec{display:flex;align-items:center;gap:8px;margin:16px 0 4px;text-transform:uppercase}
 .sec:after{content:"";flex:1;height:1px;background:rgba(201,163,94,.2)}
-.packlist{flex:1;min-height:0;overflow-y:auto;margin:0 -4px;padding:0 4px 48px;scrollbar-width:thin;scrollbar-color:rgba(201,163,94,.3) transparent}
+
+/* ---------- the shoppers: one column per pack (kit.css) ---------- */
 #hub .it{cursor:grab}
 #hub .it.empty{cursor:default}
 #hub .it .ico{width:22px;height:22px;color:#d8bd86}
-.it .slotname{font:600 8.5px/1 Cinzel,serif;letter-spacing:.16em;color:#7f6747;margin-right:6px;text-transform:uppercase}
-.it .tag{margin-left:6px;font:600 8px/1 Cinzel,serif;letter-spacing:.14em;color:#8f7a59;border:1px solid rgba(201,163,94,.25);padding:2px 4px 1px;border-radius:2px;text-transform:uppercase;vertical-align:2px}
-.it .tag.auto{color:#e0a85a;border-color:rgba(224,168,90,.45)}
 #hub .it.coin .ico{color:#c98a5a}
-.it:hover:not(.empty){background:rgba(240,215,158,.07)}
-.it.drop{background:rgba(240,215,158,.16);box-shadow:inset 0 0 0 1px var(--brass-hi)}
-.cfoot{position:absolute;left:14px;right:14px;bottom:12px;font:italic 16px/1.25 var(--read);color:#8f7a59;
-  border-top:1px dashed rgba(201,163,94,.2);padding-top:9px;background:linear-gradient(transparent,#1a130d 30%)}
-.cfoot b{font:700 12px/1 Cinzel,serif;color:var(--brass-hi);font-style:normal}
+#band{position:absolute;left:712px;top:0;width:1176px;height:656px;display:flex;gap:12px;overflow-x:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(201,163,94,.35) transparent}
 
 /* ---------- the bottom: the sell plate and the purse ---------- */
 #sell{left:32px;top:672px;width:660px;height:142px;display:flex;align-items:center;gap:20px;padding:0 28px;cursor:pointer}
@@ -172,17 +134,6 @@
 #sell p b{font:700 13px/1 Cinzel,serif;color:var(--brass-hi);font-style:normal}
 #purse{left:712px;top:672px;width:1176px;height:142px;display:flex;align-items:center;padding:0 26px;gap:30px}
 #purse.drop{box-shadow:inset 0 0 0 1px rgba(240,215,158,.55),0 0 0 2px var(--brass-hi),0 0 30px rgba(240,215,158,.25)}
-#purse .sum{display:flex;align-items:baseline;gap:14px;margin-top:9px;white-space:nowrap}
-#purse .sum b{font:900 44px/1 Cinzel,serif;color:var(--brass-hi);text-shadow:0 2px 0 #000}
-#purse .sum s{font:700 24px/1 Cinzel,serif;color:#8f7652;text-decoration:none}
-#purse .sum s:before{content:"→ ";color:#6f5a3e}
-#purse .sum s.bad{color:var(--blood-hi)}
-#purse .split{flex:1;display:flex;gap:10px;min-width:0;overflow:hidden}
-#purse .share{flex:1;min-width:0;padding:10px 12px;border-radius:3px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(201,163,94,.15)}
-#purse .share span{display:block;font:600 11px/1 Cinzel,serif;letter-spacing:.08em;color:#c9b38c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
-#purse .share b{display:block;margin-top:6px;font:700 19px/1 Cinzel,serif;color:#f0dfb8}
-#purse .tools{display:flex;flex-direction:column;gap:8px;flex:none}
-#purse .tools .ghost-btn{height:32px;font-size:10px}
 #hub .brass-btn{flex:none}
 
 /* ---------- the Bank's strongbox (vault.js): the chest on the shelf's paper, the services on the sell plate ---------- */
@@ -202,16 +153,6 @@
 .svc.off .ghost-btn{cursor:default}
 
 /* ---------- what follows the pointer, the item menu and the notice ---------- */
-#ghost{position:absolute;z-index:20;width:240px;padding:10px 13px;display:flex;gap:12px;align-items:center;color:var(--ink);
-  transform:translate(-50%,-70%) rotate(-4deg);pointer-events:none;
-  background:linear-gradient(170deg,#f2e6c9,#e2d0a7);border-radius:2px;
-  box-shadow:0 0 0 1px #6b4f2c,0 0 0 4px #efe2c4,0 0 0 5px #6b4f2c,0 22px 30px rgba(0,0,0,.6)}
-#ghost .ico{width:42px;height:42px;color:#5a2116;flex:none}
-#ghost b{display:block;font:700 14px/1.1 Cinzel,serif;letter-spacing:.08em}
-#ghost span{display:block;margin-top:5px;font:italic 14.5px/1 var(--read);color:#5b4630}
-#ghost em{position:absolute;right:-14px;top:-14px;font:700 14px/1 Cinzel,serif;font-style:normal;color:#fff3ea;background:var(--blood);
-  padding:7px 9px 6px;border-radius:2px;box-shadow:0 4px 8px rgba(0,0,0,.4);transform:rotate(6deg)}
-#ghost em.gain{background:#3f6b2a}
 #menu{position:absolute;z-index:30;min-width:230px;padding:6px}
 #menu div{padding:9px 12px;font:16px/1 var(--read);color:#eadcbc;border-radius:2px;cursor:pointer;white-space:nowrap}
 #menu div:hover{background:rgba(240,215,158,.12);color:var(--brass-hi)}
@@ -347,7 +288,7 @@
 .mats span.short{color:#7a2318;font-weight:600}
 .recipe .use{margin-top:7px;font:italic 16px/1.3 var(--read);color:#6b5233}
 .prog{margin-top:9px;display:flex;align-items:center;gap:14px}
-.prog .bar{width:240px;height:7px;border-radius:2px;background:rgba(90,60,30,.22);overflow:hidden}
+.prog .bar{position:relative;display:flex;width:240px;height:7px;margin-top:7px;border-radius:2px;background:rgba(90,60,30,.22);box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden}
 .prog .bar i{display:block;height:100%;background:linear-gradient(90deg,#8a6420,#c9a35e)}
 .prog span{font:600 15px/1 var(--read);color:#7a5a12}
 .acts{display:flex;flex-direction:column;gap:8px}

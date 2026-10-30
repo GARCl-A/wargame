@@ -5,10 +5,8 @@
 
 let M = null, sel = null, splitting = null, picks = new Set(), hoverNode = null;
 const previews = new Map();
-const ico = (path, cls = "ico") => `<span class="${cls} mask" style="--icon:url(/assets/icons/${path}.svg)"></span>`;
 const band = gid => M.groups.find(b => b.gid === gid);
 const node = id => M.nodes.find(n => n.id === id);
-const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const title = s => s.toLowerCase().replace(/(^|[\s(·-])(\w)/g, (m, a, b) => a + b.toUpperCase());
 
 // a portrait ringed by its health, with the leader's crown and a hunger mark
@@ -16,7 +14,7 @@ function ring(m) {
   const f = m.hp_max ? m.hp / m.hp_max : 0, c = f < .34 ? "#c9473a" : f < .67 ? "#c9a35e" : "#7fa557";
   return `conic-gradient(${c} 0 ${f * 360}deg, rgba(0,0,0,.55) ${f * 360}deg 360deg)`;
 }
-const medal = m => `<div class="fm${m.hungry ? " hungry" : ""}${m.lead ? " lead" : ""}" style="background:${ring(m)}" title="${esc(m.name)}">${face(m.portrait, m.name)}</div>`;
+const medal = m => `<div class="fm${m.hungry ? " hungry" : ""}${m.lead ? " lead" : ""}" style="background:${ring(m)}"${tip(m.name)}>${face(m.portrait, m.name)}</div>`;
 
 // ---------------------------------------------------------------- the top bar
 function shade(rgb, k) { return `rgb(${rgb.map(v => Math.max(0, Math.min(255, Math.round(v * k)))).join(",")})`; }
@@ -33,8 +31,7 @@ function drawTop() {
   $("time").textContent = t.time;
   $("part").textContent = `${t.part} · ${t.turn}`;
   $("dial").innerHTML = dial(t.hour);
-  $("alerts").innerHTML = M.alerts.map(a => `<div class="alert ${a.tone === "warn" ? "warn" : ""}" title="${esc(a.text)}">${ico(a.icon)}
-    <div><b>${esc(a.title)}</b><small>${esc(a.text)}</small></div></div>`).join("");
+  $("alerts").innerHTML = M.alerts.map(a => `<div class="alert ${a.tone === "warn" ? "warn" : ""}"${tip(a.text)}>${ico(a.icon)}<b>${esc(a.title)}</b></div>`).join("");
   $("ledger").innerHTML = M.ledger.map(([k, v]) => `<div><b>${esc(v)}</b><span class="lbl">${esc(k)}</span></div>`).join("");
   $("guildlbl").textContent = t.level_ups ? `Guild · ${t.level_ups} level up` : "Guild";
   $("guildbtn").classList.toggle("lit", !!t.level_ups);
@@ -91,7 +88,7 @@ function bandCard(b) {
       ${b.mates.map(m => { const o = band(m.gid); return `<div class="mate">${o ? medal(o.members.find(x => x.lead) || o.members[0]) : ""}
         <div><b>${esc(m.name)}</b><small>${o ? plural(o.members.length, "soul") + " · " + esc(o.chip.toLowerCase()) : ""} · here</small></div>
         <div class="brass-btn" data-merge="${m.gid}">Fold in</div></div>`; }).join("")}
-      <div class="bactions"><div class="ghost-btn ${canSplit ? "" : "off"}" data-split="${b.gid}" title="${esc(b.can_split || (b.members.length > 1 ? "" : "one soul cannot split"))}">${ico("body/split-body")}Split</div>
+      <div class="bactions"><div class="ghost-btn ${canSplit ? "" : "off"}" data-split="${b.gid}"${tip(b.can_split || (b.members.length > 1 ? "" : "one soul cannot split"))}>${ico("body/split-body")}Split</div>
       ${b.mates.length ? "" : `<div class="ghost-btn off">${ico("body/three-friends")}Merge · none here</div>`}</div>`;
   }
   return `<div class="${cls}" data-band="${b.gid}">
@@ -148,7 +145,7 @@ function drawPlaces() {
   for (const list of Object.values(at)) list.forEach((g, i) => {
     const [x, y] = MapSheet.bandPoint(g), dx = (i - (list.length - 1) / 2) * 46;
     const lead = g.members.find(m => m.lead) || g.members[0];
-    html += `<div class="pawn ${g.gid === sel ? "sel" : ""} ${g.blocked ? "bad" : ""}" data-band="${g.gid}" title="${esc(g.name)}"
+    html += `<div class="pawn ${g.gid === sel ? "sel" : ""} ${g.blocked ? "bad" : ""}" data-band="${g.gid}"${tip(g.name)}
       style="left:${x + dx}px;top:${y + (typeof g.at === "string" ? -6 : 14)}px"><div class="pin"></div><div class="p">${face(lead.portrait, lead.name)}</div></div>`;
   });
   $("nodes").innerHTML = html;
@@ -200,7 +197,7 @@ async function hover(id) {
 function block(k) {
   if (k.t === "section") return `<div class="kicker psec">${esc(k.label)}</div>`;
   if (k.t === "note") return `<div class="pnote-line ${k.tone}">${esc(k.text)}</div>`;
-  return `<div class="pbtn ${k.danger ? "danger" : ""} ${k.enabled ? "" : "off"}" data-act="${esc(k.key)}" title="${esc(k.sub || "")}">${esc(title(k.label))}</div>`;
+  return `<div class="pbtn ${k.danger ? "danger" : ""} ${k.enabled ? "" : "off"}" data-act="${esc(k.key)}"${tip(k.sub || "")}>${esc(title(k.label))}</div>`;
 }
 
 function drawInspector() {
@@ -231,9 +228,9 @@ function drawInspector() {
       <div class="duo"><div class="tile" data-act="manage_group"><div class="t">${ico("gui/checklist")}Gear &amp; quests</div><small>packs, loads, the jobs held</small></div>
         <div class="tile ${c.fire.enabled ? "" : "off"} ${/burning/.test(c.fire.sub) ? "lit" : ""}" ${c.fire.enabled ? 'data-act="campfire_cook"' : ""}><div class="t">${ico("body/fire-silhouette")}Campfire</div><small>${esc(c.fire.sub)}</small></div></div>
       <div class="lk sub">Travel <em>how the band walks</em></div>
-      <div class="seg">${c.stance.map(s => `<div class="${s.on ? "on" : ""}" data-act="${s.key}" title="${esc(s.tip)}"><b>${esc(s.label)}</b><small>${esc(s.sub)}</small></div>`).join("")}</div>
+      <div class="seg">${c.stance.map(s => `<div class="${s.on ? "on" : ""}" data-act="${s.key}"${tip(s.tip)}><b>${esc(s.label)}</b><small>${esc(s.sub)}</small></div>`).join("")}</div>
       <div class="lk sub">Rest <em>eat first, then sleep</em></div>
-      <div class="seg ${c.starving ? "starving" : ""}">${c.rest.map(r => `<div class="${r.rec ? "rec" : ""} ${r.enabled ? "" : "off"}" ${r.enabled ? `data-act="${r.key}"` : ""} title="${esc(r.tip || r.sub || "")}"><b>${esc(r.label)}</b><small>${esc(r.sub || "")}</small></div>`).join("")}</div>`;
+      <div class="seg ${c.starving ? "starving" : ""}">${c.rest.map(r => `<div class="${r.rec ? "rec" : ""} ${r.enabled ? "" : "off"}" ${r.enabled ? `data-act="${r.key}"` : ""}${tip(r.tip || r.sub || "")}><b>${esc(r.label)}</b><small>${esc(r.sub || "")}</small></div>`).join("")}</div>`;
   }
 
   const t = M.cta, seal = $("seal");

@@ -4,8 +4,6 @@
 "use strict";
 
 const Claim = (() => {
-  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-
   function member(u) {
     const held = u.held.map(h => `<span class="chip money">${h.qty} ${esc(h.name)}</span>`).join("");
     return `<div class="worker">
@@ -37,7 +35,7 @@ const Claim = (() => {
     return `<p class="aside">This band garrisons the claim: ${C.job === "hold" ? "it holds and rests" : "it gathers Lumber"}.</p>`;
   }
 
-  const action = a => `<div class="brass-btn ${a.can ? "" : "off"}" data-claim="${a.verb}" title="${esc(a.why || "")}"><div><b>${esc(a.label)}</b></div></div>`;
+  const action = a => `<div class="brass-btn ${a.can ? "" : "off"}" data-claim="${a.verb}"${tip(a.why || "")}><div><b>${esc(a.label)}</b></div></div>`;
 
   function hearth(C) {
     const h = C.hearth;

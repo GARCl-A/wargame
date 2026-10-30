@@ -7,8 +7,8 @@
 "use strict";
 
 const Bands = (() => {
-  let B = null, picks = null, drag = null, over = null, naming = false;
-  const kg = (q, w) => { const t = q * w; return t < 0.05 ? "—" : t.toFixed(1) + " kg"; };
+  let B = null, picks = null, drag = null, naming = false;
+  const mark = dropMarker();
   const owners = () => [...B.packs, ...B.wagons];
   const owner = id => owners().find(p => p.id === id);
   const same = (a, b) => a.from === b.from && a.loc === b.loc;
@@ -26,7 +26,7 @@ const Bands = (() => {
     const on = c.gid === B.gid;
     const name = on && naming
       ? `<input id="rename" maxlength="24" value="${esc(B.custom)}" placeholder="${esc(B.name)}">`
-      : `<b title="${esc(c.name)}"><em class="bn">${esc(c.name)}</em>${on ? `<i class="pen" id="pen" title="Rename the band">✎</i>` : ""}</b>`;
+      : `<b${tip(c.name)}><em class="bn">${esc(c.name)}</em>${on ? `<i class="pen" id="pen" data-tip="Rename the band">✎</i>` : ""}</b>`;
     return `<div class="bchip ${on ? "on" : ""} ${c.locked ? "fight" : ""}" data-band="${c.gid}">
       <div class="medals">${c.faces.map(f => `<div class="medal">${face(f, c.name)}</div>`).join("")}</div>
       <div>${name}<span>${esc(c.where)} · ${esc(c.task)} · ${c.size} of ${c.capacity}</span></div></div>`;
@@ -34,24 +34,17 @@ const Bands = (() => {
 
   function bar() {
     const [l, n] = B.load, tight = l > n * .9;
-    const acts = B.actions.map(a => `<div class="ghost-btn ${a.on && !B.locked ? "" : "off"}" data-btn="${a.key}" title="${esc(a.tip)}">${ico(a.glyph)}${esc(a.label)}</div>`).join("");
+    const acts = B.actions.map(a => `<div class="ghost-btn ${a.on && !B.locked ? "" : "off"}" data-btn="${a.key}"${tip(a.tip)}>${ico(a.glyph)}${esc(a.label)}</div>`).join("");
     return `<div class="leather" id="bar"><div class="chips2">${B.chips.map(chip).join("")}</div><div class="vline"></div>
       <div class="metric ${l > n ? "bad" : tight ? "tight" : ""}"><span class="lbl">Band load</span><b>${l} <small>/ ${n} kg</small></b></div>
       <div class="metric ${B.rations ? "" : "bad"}"><span class="lbl">Rations</span><b>${plural(B.rations, "day")}</b></div>
       <div class="metric"><span class="lbl">Pace</span><b>${esc(B.speed)}</b></div>
-      ${B.over ? `<div class="metric bad" title="Past the leader's hold: −${B.over} mental defense"><span class="lbl">Over its hold</span><b>${B.over}</b></div>` : ""}
+      ${B.over ? `<div class="metric bad"${tip(`Past the leader's hold: −${B.over} mental defense`)}><span class="lbl">Over its hold</span><b>${B.over}</b></div>` : ""}
       <div class="acts">${acts}</div></div>`;
   }
 
   // ---------------------------------------------------------------- the columns
-  function row(p, it, loc, slot) {
-    if (!it || !it.name)
-      return `<div class="it empty" data-owner="${p.id}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(slot.label)}</span>empty</div><span></span><span></span></div>`;
-    const zone = slot ? `data-zone="${slot.zone}"` : "";
-    return `<div class="it ${it.coin ? "coin" : ""} ${picked(p.id, loc) ? "sel" : ""}" data-owner="${p.id}" data-loc="${loc}" ${zone} title="${esc(it.tip || "")}">
-      ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(slot.label)}</span>` : ""}${esc(it.name)}${it.locked ? `<span class="tag">locked</span>` : ""}</div>
-      <span class="q">${(it.qty || 1) > 1 ? "×" + it.qty : ""}</span><span class="kg">${kg(it.qty || 1, it.kg)}</span></div>`;
-  }
+  const row = (p, it, loc, slot) => Kit.item(p.id, it, loc, slot, {sel: picked(p.id, loc), tags: it ? Kit.tag(it.locked, "locked") : ""});
 
   function foot(p) {
     const mine = picks ? picks.filter(x => x.from === p.id) : [];
@@ -67,15 +60,15 @@ const Bands = (() => {
 
   function column(p) {
     const tight = p.kg > p.normal * .85, overload = p.kg > p.normal;
-    const med = `<div class="medal ${p.beast ? "beastmed" : ""} ${p.hurt ? "hurt" : ""}" ${p.beast ? `data-owner="${p.id}" data-loc="hitch"` : `data-sheet="${p.id}" title="Open ${esc(p.name)}'s sheet"`}>${face(p.portrait, p.name)}</div>`;
+    const med = `<div class="medal ${p.beast ? "beastmed" : ""} ${p.hurt ? "hurt" : ""}" ${p.beast ? `data-owner="${p.id}" data-loc="hitch"` : `data-sheet="${p.id}"${tip(`Open ${p.name}'s sheet`)}`}>${face(p.portrait, p.name)}</div>`;
     const worn = p.worn.length ? `<div class="csec lbl">${p.beast ? "Tack" : "Worn"}</div>` + p.worn.map(w => row(p, w.name ? w : null, w.zone, w)).join("") : "";
     const rows = p.pack.length ? p.pack.map(r => row(p, r, r.loc, null)).join("")
       : `<div class="it empty"><span></span><div class="n">nothing carried</div><span></span><span></span></div>`;
-    const btns = [p.ride && `<div class="ghost-btn ${p.ride.on ? "" : "off"}" data-btn="ride:${p.id}" title="${esc(p.ride.tip)}">${esc(p.ride.label)}</div>`,
-      p.hitch && `<div class="ghost-btn" data-btn="hitch:${p.id}" title="Hitch it to the next wagon">${esc(p.hitch.label)}</div>`].filter(Boolean).join("");
+    const btns = [p.ride && `<div class="ghost-btn ${p.ride.on ? "" : "off"}" data-btn="ride:${p.id}"${tip(p.ride.tip)}>${esc(p.ride.label)}</div>`,
+      p.hitch && `<div class="ghost-btn" data-btn="hitch:${p.id}" data-tip="Hitch it to the next wagon">${esc(p.hitch.label)}</div>`].filter(Boolean).join("");
     const f = foot(p);
     return `<div class="col" data-owner="${p.id}">
-      <div class="colh">${med}<div style="min-width:0"><h3 title="${esc(p.name)}">${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${p.lead ? `<span class="voice">Leads the band</span>` : ""}</div></div>
+      <div class="colh">${med}<div style="min-width:0"><h3${tip(p.name)}>${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${p.lead ? `<span class="voice">Leads the band</span>` : ""}</div></div>
       <div class="cst"><div class="money"><i class="coindot"></i>${p.money}</div><div class="load ${overload ? "over" : tight ? "tight" : ""}"><b>${p.kg.toFixed(1)}</b> / ${p.normal} kg</div></div>
       <div class="cbar"><i class="${overload ? "over" : tight ? "tight" : ""}" style="width:${Math.min(100, p.kg / Math.max(p.normal, .1) * 100)}%"></i></div>
       ${btns ? `<div class="cbtn">${btns}</div>` : ""}
@@ -88,7 +81,7 @@ const Bands = (() => {
         <p class="${a.unfed ? "bad" : ""}">${a.unfed ? `unfed ${plural(a.unfed, "day")}` : "fed"}</p></div></div>`).join("")
       : `<div class="empty-note">Nothing pulls it. Drag a harnessed animal's portrait here.</div>`;
     const rows = w.pack.length ? w.pack.map(r => row(w, r, r.loc, null)).join("") : `<div class="empty-note">No cargo.</div>`;
-    const repair = w.repair ? `<div class="cbtn"><div class="ghost-btn ${w.repair.on ? "" : "off"}" data-btn="repair:${w.id}" title="${w.repair.cost} ${esc(w.repair.item)} and ${w.repair.hours} h, then an INT check">Repair · ${w.repair.cost} ${esc(w.repair.item)}</div></div>` : "";
+    const repair = w.repair ? `<div class="cbtn"><div class="ghost-btn ${w.repair.on ? "" : "off"}" data-btn="repair:${w.id}"${tip(`${w.repair.cost} ${w.repair.item} and ${w.repair.hours} h, then an INT check`)}>Repair · ${w.repair.cost} ${esc(w.repair.item)}</div></div>` : "";
     return `<div class="col wag" data-owner="${w.id}" data-hitch="${w.id}">
       <div class="colh"><div class="medal beastmed">${ico(w.glyph)}</div><div style="min-width:0"><h3>${esc(w.name)}</h3><div class="race">${w.drawn.length ? "pulled by the " + esc(w.drawn.map(a => a.name.toLowerCase()).join(" and ")) : "nothing hitched"}</div></div></div>
       <div class="whp">${Array.from({length: w.hp[1]}, (_, i) => `<i class="${i < w.hp[0] ? "" : "off"}"></i>`).join("")}</div>
@@ -197,22 +190,10 @@ const Bands = (() => {
     $("ghost").innerHTML = `${ico(it.glyph)}<div><b>${esc(list.length > 1 ? list.length + " items" : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name)}</b><span>${src.loc === "hitch" ? "onto a wagon to pull it" : kg(it.qty, it.kg)}</span></div>`;
   }
 
-  function stagePoint(e) {
-    const r = $("screen").getBoundingClientRect(), s = r.width / 1920;
-    return [(e.clientX - r.left) / s, (e.clientY - r.top) / s];
-  }
-
   function target(el) {
     if (!el) return null;
     if (drag.src.loc === "hitch") return el.closest("[data-hitch]");
     return el.closest(".it[data-zone]") || el.closest(".col[data-owner]");
-  }
-
-  function mark(el) {
-    if (over === el) return;
-    if (over) over.classList.remove("drop");
-    over = el;
-    if (over) over.classList.add("drop");
   }
 
   // ---------------------------------------------------------------- the item menu: a paper slip
@@ -235,7 +216,7 @@ const Bands = (() => {
       if (d.dataset.lock) return act("lock", {owner: it.from, name: it.name});
       run(Number(d.dataset.row));
     };
-    place(m, e);
+    popAt(m, e);
   }
 
   function splitter(it, held) {
@@ -252,13 +233,6 @@ const Bands = (() => {
       if (q) { n = Math.max(1, Math.min(held - 1, n + Number(q.dataset.q) * (ev.shiftKey ? 5 : 1))); return paint(); }
       if (ev.target.closest("[data-go]")) { m.hidden = true; act("split", {pick: {from: it.from, loc: it.loc}, qty: n}); }
     };
-  }
-
-  function place(m, e) {
-    const [x, y] = stagePoint(e);
-    m.hidden = false;
-    m.style.left = Math.min(x, 1920 - m.offsetWidth - 12) + "px";
-    m.style.top = Math.min(y, 1080 - m.offsetHeight - 12) + "px";
   }
 
   // ---------------------------------------------------------------- the pointer

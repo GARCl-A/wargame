@@ -1014,9 +1014,15 @@ def armor_note(it: ItemDef) -> str:
 
 def item_tooltip(name: str) -> tuple[str, str]:
     """Returns (title, description) for an item's tooltip."""
+    title, *lines = item_tip_lines(name)
+    return title, " ".join(lines)
+
+
+def item_tip_lines(name: str) -> list[str]:
+    """An item's tooltip as its name, then one line per fact (a trait, an action, the weight)."""
     it = get(name)
     if it is None:
-        return name, ""
+        return [name]
 
     desc = []
     if it.type == ItemType.WEAPON:
@@ -1073,8 +1079,7 @@ def item_tooltip(name: str) -> tuple[str, str]:
     if is_material(it) and it.type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.SHIELD):
         desc.append("Crafting material: used in workshop recipes.")
 
-    wt = it.weight
-    desc.append(f"Weight: {wt:g} kg.")
-    return it.name, " ".join(desc)
+    desc.append(f"Weight: {it.weight:g} kg.")
+    return [it.name, *desc]
 
 

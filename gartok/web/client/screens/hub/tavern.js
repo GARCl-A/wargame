@@ -9,7 +9,7 @@ const Tavern = (() => {
   let picking = null;               // the member whose study target list is open
   const status = s => `<span class="tstat ${s.tone}">${esc(s.text)}</span>`;
   const chips = list => list.length
-    ? `<div class="chips">${list.map(c => `<span class="chip ${c.tone}" title="${esc(c.tip)}">${esc(c.label)}</span>`).join("")}</div>` : "";
+    ? `<div class="chips">${list.map(c => `<span class="chip ${c.tone}"${tip(c.tip)}>${esc(c.label)}</span>`).join("")}</div>` : "";
   const report = (title, lines) => lines.length
     ? `<div class="report"><div class="kicker">${title}</div>${lines.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
 
@@ -37,7 +37,7 @@ const Tavern = (() => {
 
   function dossier(d) {
     const facts = d.facts.map(([k, v]) => `<span><em>${esc(k)}</em>${esc(v)}</span>`).join("");
-    const kit = d.kit.map(i => `<span class="ico mask" title="${esc(i.name)}" style="--icon:url(/assets/icons/${i.glyph}.svg)"></span>`).join("");
+    const kit = d.kit.map(i => `<span class="ico mask"${tip(i.name)} style="--icon:url(/assets/icons/${i.glyph}.svg)"></span>`).join("");
     const pitchers = d.pitchers.map(m => `<div class="pitcher ${m.picked ? "on" : ""} ${m.signed ? "signed" : ""}" data-pitcher="${esc(m.uid)}">
         <div class="medal">${face(m.portrait, m.name)}</div>
         <div><div class="nm">${esc(m.name)}${m.signed ? " · signed" : ""}</div><div class="use">${esc(m.sub)}</div></div>
@@ -45,7 +45,7 @@ const Tavern = (() => {
     return `<div class="dossier"><div class="medal">${face(d.portrait, d.name)}</div>
         <div><div class="jhead"><span class="nm">${esc(d.name)}</span></div><p class="use">${esc(d.sub)}</p>
           <div class="dfacts">${facts}<span class="kit">${kit}</span></div>
-          <div class="chips">${d.chips.map(c => `<span class="tag ${c.tone}" title="${esc(c.tip)}">${esc(c.label)}</span>`).join("")}</div>
+          <div class="chips">${d.chips.map(c => `<span class="tag ${c.tone}"${tip(c.tip)}>${esc(c.label)}</span>`).join("")}</div>
           <p class="ability"><b>${esc(d.ability.name)}</b> ${esc(d.ability.effect)}</p></div></div>
       ${d.bail ? `<p class="lastpitch ${d.bail.ok ? "money" : "bad"}">Bail <b>${esc(d.bail.cost)}</b> · the band holds ${esc(d.bail.held)}</p>` : ""}
       ${last(d.last)}

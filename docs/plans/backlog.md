@@ -19,8 +19,7 @@ Parts:
 
 The presentation moved from pygame to HTML/CSS/Canvas, and the Python core stays. Every screen the
 campaign reaches is in the browser and `python main.py` opens it (`--editor` the Editor's pygame window; the
-pygame campaign is gone). The rules for new UI work and what is left (the 2026-10-30 playtest's
-fixes, a component kit with a game tooltip, the wiki's links, what else only pygame
+pygame campaign is gone). The rules for new UI work and what is left (the wiki's links, what else only pygame
 had, the board's fog and pits, the Editor, retiring pygame) are in [web_frontend.md](web_frontend.md).
 
 ---
@@ -112,9 +111,9 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Playtest notes 2026-10-30
 
-Sorted out of the raw notes: the browser's items (a component kit with a game tooltip, the wiki's
-links, the reading face, a body under a fighter, the initiative's states) are items 1 to 3 and 6 of
-[web_frontend.md](web_frontend.md); long names, the field's Distribute load and every hub opening on
+Sorted out of the raw notes: the browser's items (the wiki's links, the reading face, a body under a
+fighter, the initiative's states) are items 1, 2 and 5 of [web_frontend.md](web_frontend.md); the
+component kit with a game tooltip, long names, the field's Distribute load and every hub opening on
 its shop are done; the tutorial's black screen did not reproduce and was dropped (reopen it if it comes
 back); the name generator and the rules as keywords are in *Ready to do*.
 

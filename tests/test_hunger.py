@@ -405,7 +405,6 @@ def test_the_starving_alert_counts_the_days_to_the_first_death():
     guild, crew = _guild_with_food(0, 0, 0)
     crew[0].unfed_days = 1
     level, text, title = guild.food_alert()
-    assert level == "critical" and "1 member hungry" in text and "dies in 3 days" in text
-    assert title == "STARVING: first death in 3 days"
+    assert level == "critical" and "1 member hungry" in text and "dies in 3 days" in text and title == "STARVING"
     crew[1].unfed_days = 3
     assert "2 members hungry" in guild.food_alert()[1] and "dies in 1 day." in guild.food_alert()[1]

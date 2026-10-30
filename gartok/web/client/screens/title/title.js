@@ -2,7 +2,6 @@
 "use strict";
 
 let T = null, busy = false, asking = null;   // asking: the delete waiting for its yes ("w:<world>" / "s:<save>")
-const ico = name => `<span class="ico mask" style="--icon:url(/assets/icons/${name}.svg)"></span>`;
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
 
 function toast(text) {

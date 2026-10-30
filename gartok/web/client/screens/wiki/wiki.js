@@ -3,7 +3,6 @@
 
 let W = null, busy = false, typed = null;
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
-const ico = (name, cls = "") => name ? `<span class="${cls} mask" style="--icon:url(/assets/icons/${name}.svg)"></span>` : "";
 
 function toast(text) {
   const t = $("toast");

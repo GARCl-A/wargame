@@ -52,7 +52,7 @@ class UpkeepMixin:
     def food_alert(self):
         """`(level, text, title)` for the map's food card, or None: "critical" with no food left,
         "warning" with about a day of it. Meals count rations across the whole guild. `title`
-        is the card's few words, `text` the full line shown on hover."""
+        is the card's few words, `text` the full line its tooltip shows."""
         mouths, rations = len(self.roster), self.rations
         if not mouths or rations > mouths:
             return None
@@ -67,7 +67,7 @@ class UpkeepMixin:
         days = max(1, data.STARVATION_DEATH_DAYS - max(u.unfed_days for u in hungry))
         return ("critical", (f"STARVING: {len(hungry)} member{'s' * (len(hungry) != 1)} hungry and no food left. "
                              f"The first one dies in {days} day{'s' * (days != 1)}. Buy food now."),
-                f"STARVING: first death in {days} day{'s' * (days != 1)}")
+                "STARVING")
 
     # ------------------------------------------------------------------ #
     # time + daily upkeep                                                #

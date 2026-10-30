@@ -36,7 +36,13 @@ code.
 - **The client half** is `client/screens/<id>/`, with its files named in `SCREENS` in `shell.js`. A
   screen's scripts declare top-level names, so two scripts of one page must not share one (a test checks
   it). Shared pieces live in the shell: `$`, `api`, `esc`, `face`, `Sound`, `Tutorial`, `Sheet` (the
-  member's book as a modal, opened by any portrait marked `data-sheet`).
+  member's book as a modal, opened by any portrait marked `data-sheet`); what two screens draw is in
+  `kit.js` / `kit.css`, one function each on plain data (`Kit.item`, `Kit.column`, `Kit.purse`, `Kit.stepper`,
+  `ico`, `money`, `plural`, `kg`, `stagePoint`, `popAt`, `dropMarker`). A piece a second screen needs moves
+  there; a screen never keeps its own copy (a test checks the helpers).
+- **Every hover is the game's tooltip** (`Tip` in `kit.js`), never the browser's `title` (a test checks it):
+  `${tip(text)}` on the element, `tip(text, "item")` for an item's name over its lines,
+  `tip(text, "sum")` for a breakdown (a title, `label: value` rows, `= total`).
 - **The server filters** fog, sight and intel: the client never gets what the side does not know (the
   rule `ai.py` lives by, `intel.known_fields`).
 - **A new screen has a tutorial card:** `tutorial_key()` plus a `tutorial.<id>` block in
@@ -109,38 +115,16 @@ Each folder under [references/](references/) is the approved look of a family, o
 
 In order. The board items are tuned by eye, so each takes a mockup first.
 
-### 1. The client's component kit and a game tooltip
-
-The playtest of 2026-10-30 asked whether the client is really made of components: today the shell shares
-only `face`, `Sheet`, `Tutorial` and `Sound`, and each screen builds its HTML from template strings
-(`innerHTML` in about 130 places), so the same piece is written twice (the pack column and its Distribute
-load button in `shop.js` and `vault.js`) and a fix to one copy misses the other. The hover is the browser's
-own `title` everywhere (a shop item, the sheet's computed fields with their `?` cursor, which only shows on
-one exact spot), and it looks like no part of the game.
-
-- **Audit the screens** for the pieces two or more of them draw (a pack column, an item row, a portrait
-  card, a stat with its breakdown, a button bar, a tab strip) and move each into the shell as one function
-  that takes plain data, the way `face` and `Sheet` already are. No framework: the rule is one piece, one
-  function, its CSS beside it.
-- **A tooltip of the game's own** in the shell: paper, the reading face, opened by a `data-tip` (plain text)
-  or a `data-tip-*` the screen fills (an item, a stat's breakdown, a rule), shown on the whole element with
-  a short delay, kept inside the window. Every `title=` moves onto it.
-- **The food alert** shows only "Low on food"; the rest (who, how many days) is its tooltip.
-
-**Done when:** no `title=` is left in the client, the shared pieces each live once in the shell, and a
-shop item, a computed field on the sheet and the food alert show the game's tooltip, looked at at
-1920x1080.
-
-### 2. The wiki links its own entries
+### 1. The wiki links its own entries
 
 On an item's page (weapons most of all) a trait or an action is a link to its own entry, and hovering it
-shows the entry in the tooltip of item 1; any screen that names a trait or action (the shop, the sheet)
+shows the entry in the game's tooltip (`tip`); any screen that names a trait or action (the shop, the sheet)
 gets the same hover. Builds on the backlog's *Rules as keywords* where a keyword gets its own entry.
 
 **Done when:** every trait and action named on an item's page opens its entry and shows it on hover;
 tested through `wiki_session`.
 
-### 3. The reading face is still too thin
+### 2. The reading face is still too thin
 
 On the REPUTATIONS tab a deed's name ("Buy Food") reads easily, its line ("Everyone eats...") takes an
 effort though it is legible: EB Garamond at 16px is too light on the dark table. Try a heavier weight
@@ -149,7 +133,7 @@ side by side on the reputations tab and one hub tab.
 
 **Done when:** the author picks one from the screenshots and `--read` changes everywhere.
 
-### 4. What else only pygame had: port or drop
+### 3. What else only pygame had: port or drop
 
 Each needs the author's call (port, or drop and delete what is left of it):
 
@@ -161,7 +145,7 @@ Each needs the author's call (port, or drop and delete what is left of it):
 
 **Done when:** each is in the browser with its tests, or deleted from the code and its tutorial copy.
 
-### 5. The tests the pygame cut lost
+### 4. The tests the pygame cut lost
 
 No web test covers these yet: the clock run while a screen is open (`MapSession.tick_outside`); a guild with
 every member jailed waiting out the sentence on the map; the save refused mid-battle or mid-hunt; two due
@@ -170,7 +154,7 @@ trip cancelled to the next node.
 
 **Done when:** each has a test through the web sessions.
 
-### 6. The board, by eye
+### 5. The board, by eye
 
 - **The fog.** Seen before (grey), never seen (paper) and seen but unlit (dark) stack into too many layers:
   it is hard to tell what is dark, what is fog and what is unknown (the playtests of 2026-10-21 and
@@ -188,7 +172,7 @@ trip cancelled to the next node.
 
 **Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
 
-### 7. The Editor
+### 6. The Editor
 
 The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
 `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
@@ -198,7 +182,7 @@ game.
 
 **Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
 
-### 8. The retirement
+### 7. The retirement
 
 Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
 `icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.

@@ -475,7 +475,7 @@ def test_every_file_the_shell_routes_to_is_served(server):
     for screen, css, js in manifest:
         for name in ["screen.html", *re.findall(r'"([^"]+)"', css + js)]:
             assert _get(f"{server}/client/screens/{screen}/{name}")[0] == 200
-    for path in ("/client/shell.css", "/client/fonts/fonts.css"):
+    for path in ("/client/shell.css", "/client/kit.css", "/client/kit.js", "/client/fonts/fonts.css"):
         assert _get(server + path)[0] == 200
 
 
@@ -488,7 +488,7 @@ def test_no_two_scripts_of_one_page_declare_the_same_name():
     declared = lambda src: re.findall(r"^(?:const|let|class|function)\s+(\w+)", src, re.M)
     shell = read("shell.js")
     for screen, _, js in re.findall(r'(\w+): \{css: \[(.*?)\], js: \[(.*?)\]\}', shell):
-        names = declared(shell) + [n for f in re.findall(r'"([^"]+)"', js)
+        names = declared(read("kit.js")) + declared(shell) + [n for f in re.findall(r'"([^"]+)"', js)
                                    for n in declared(read(f"screens/{screen}/{f}"))]
         assert len(names) == len(set(names)), (screen, sorted({n for n in names if names.count(n) > 1}))
 

@@ -70,7 +70,7 @@ const Stables = (() => {
 
   function repairBtn(o) {
     const r = o.repair;
-    return r ? `<div class="ghost-btn ${r.can ? "" : "off"}" data-verb="garage_repair" data-uid="${esc(o.uid)}" title="${r.can ? "an hour and an INT check" : `the band carries too little ${esc(r.item)}`}">Repair</div>` : "";
+    return r ? `<div class="ghost-btn ${r.can ? "" : "off"}" data-verb="garage_repair" data-uid="${esc(o.uid)}"${tip(r.can ? "An hour and an INT check" : `The band carries too little ${r.item}`)}>Repair</div>` : "";
   }
   const mend = o => o.repair ? ` · mends with ${o.repair.cost} ${esc(o.repair.item)}` : "";
 

@@ -36,15 +36,12 @@ from ..guild_sheet import (
 from .map_session import _icon, _portrait
 from .session import Session
 from .sheet_view import animal_sheet, member_sheet
+from .shop_tab import _tip
 from .stable_tab import WAGON_GLYPH, _face
 
 TABS = (("members", "Members"), ("bands", "Bands"), ("guild", "The Guild"), ("reputations", "Reputations"))
 ZONES = ("pack", "hand", "offhand", "tongue", "artifact", "armor", "tack", "hitch")
 WORN = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Body"), ("artifact", "Artifact"))
-
-
-def _tip(name):
-    return "\n".join(items.item_tooltip(name))
 
 
 class GuildSession(Session):

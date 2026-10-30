@@ -151,7 +151,7 @@ function renderTop() {
   const coins = S.initiative.map(c => {
     if (!c.id) return `<div class="coin unknown">?</div>`;
     const hp = c.hp_frac == null ? "" : `<div class="hp" style="--c:${c.hp_frac > .5 ? "#7fa557" : "#d0493a"}"><i style="width:${c.hp_frac * 100}%"></i></div>`;
-    return `<div class="coin seat-${c.seat}${c.active ? " now" : ""}" title="${esc(c.name)}">${face(c.portrait, c.name)}${hp}</div>`;
+    return `<div class="coin seat-${c.seat}${c.active ? " now" : ""}"${tip(c.name)}>${face(c.portrait, c.name)}${hp}</div>`;
   }).join("");
   $("init").innerHTML = `<div class="round"><div><small>Round</small><span>${ROMAN(S.round)}</span></div></div><div class="chain">${coins}</div>`;
 }
@@ -208,7 +208,7 @@ function renderUnit() {
        : `<div class="hpbar"><i style="width:${a.hp_frac * 100}%"></i></div>`)
     : `<div class="hpbar"><i style="width:${a.hp_frac * 100}%"></i></div>`;
   const w = a.weapon;
-  const lvl = a.level == null ? "" : `<div class="lvl" title="Racial level ${a.level} (hit dice) · combat ${a.tracks.combat} · work ${a.tracks.work} · magic ${a.tracks.magic}"><small>LV</small>${a.level}</div>`;
+  const lvl = a.level == null ? "" : `<div class="lvl"${tip(`Racial level ${a.level} (hit dice) · combat ${a.tracks.combat} · work ${a.tracks.work} · magic ${a.tracks.magic}`)}><small>LV</small>${a.level}</div>`;
   box.innerHTML = `<div class="med" style="--side:${SEAT[a.seat]}">${face(a.portrait, a.name)}</div>${lvl}
     <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · ${esc(a.occupation)} · ${esc(a.alignment)}</div>
     ${S.my_turn ? `<div class="stats"><div class="stat hp"><span>Hit points${own ? ` · ${a.hp}/${a.hp_max}` : ""}</span>${hp}</div>
@@ -220,7 +220,7 @@ function renderUnit() {
 
 function plate(a, {id = a.id, name = a.toggle ? a.label : a.name, sel = ui.aim && ui.aim.id === a.id} = {}) {
   const cls = ["plate", a.enabled ? "" : "off", sel ? "sel" : "", a.toggle && /ON/.test(a.label) ? "on" : ""].join(" ");
-  return `<div class="${cls}" data-action="${esc(id)}" title="${esc(a.label)}">
+  return `<div class="${cls}" data-action="${esc(id)}"${tip(a.label)}>
     <div class="key">${a.hotkey ?? ""}</div><div class="cost">${"<i></i>".repeat(a.cost)}</div>
     <div class="ico mask" style="--icon:${iconOf(id)}"></div><div class="nm">${esc(name)}</div></div>`;
 }

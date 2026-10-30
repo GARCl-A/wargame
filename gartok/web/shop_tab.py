@@ -17,7 +17,7 @@ def _portrait(u):
 
 
 def _tip(name):
-    return "\n".join(items.item_tooltip(name))
+    return "\n".join(items.item_tip_lines(name))
 
 
 def _first_line(name):

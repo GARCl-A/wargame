@@ -4,8 +4,6 @@
 let D = null, busy = false;
 let slip = null;            // the commission slip while open: the archetypes ticked
 let renaming = null;        // the founder whose name is being written
-const ico = name => `<span class="ico mask" style="--icon:url(/assets/icons/${name}.svg)"></span>`;
-const sgn = n => (n >= 0 ? "+" : "") + n;
 const ROMAN = ["I", "II", "III"];
 
 function toast(text) {
@@ -92,10 +90,10 @@ function side() {
         ${medal(f.portrait, f.name, 52, f.leader ? "var(--brass)" : "var(--enamel-hi)")}
         <div><div class="nm">${renaming === i
           ? `<input id="rename" maxlength="${C.max_founder}" value="${esc(f.name)}">`
-          : `${esc(f.name)}<span class="pen" data-rename="${i}" title="Rename">${ico("gui/pencil")}</span>`}</div>
+          : `${esc(f.name)}<span class="pen" data-rename="${i}" data-tip="Rename">${ico("gui/pencil")}</span>`}</div>
           <small>${esc(f.race)} · ${esc(f.occ)} · ${esc(f.align)}</small>
           <div class="rec">Can recruit ${f.recruits}<i>${esc(f.recruits_why)}</i></div></div>
-        <div class="mods">${f.attrs.map(a => `<div><span>${a.k}</span><b class="${modCls(a.mod)}">${sgn(a.mod)}</b></div>`).join("")}</div></div>`).join("")}`;
+        <div class="mods">${f.attrs.map(a => `<div><span>${a.k}</span><b class="${modCls(a.mod)}">${sign(a.mod)}</b></div>`).join("")}</div></div>`).join("")}`;
     sealHtml("Found", C.can_found ? "the guild" : "pick a leader", "map/city", !C.can_found);
   }
   $("body").innerHTML = body;
@@ -123,16 +121,16 @@ function vocations() {
 
 function dossier(c, i) {
   const k = D.squad.indexOf(i), w = c.weapon;
-  const stamps = c.tags.map(t => `<span class="stamp ${t.commissioned ? "star" : t.style}" title="${esc(t.desc)}">${t.commissioned ? "★ " : ""}${esc(t.label)}</span>`).join("");
+  const stamps = c.tags.map(t => `<span class="stamp ${t.commissioned ? "star" : t.style}"${tip(t.desc)}>${t.commissioned ? "★ " : ""}${esc(t.label)}</span>`).join("");
   return `<div class="paper dos ${k >= 0 ? "picked" : ""}" data-pick="${i}" style="left:${530 + (i % 3) * 452}px;top:${108 + Math.floor(i / 3) * 314}px">
     ${k >= 0 ? `<div class="ribbon">${k + 1}</div>` : c.commissioned ? `<span class="newmark">commissioned</span>` : ""}
-    <div class="top"><div data-sheet="${c.uid}" title="Open ${esc(c.name)}'s whole sheet">${medal(c.portrait, c.name, 68)}</div>
+    <div class="top"><div data-sheet="${c.uid}"${tip(`Open ${c.name}'s whole sheet`)}>${medal(c.portrait, c.name, 68)}</div>
       <div class="who"><h4>${esc(c.name)}</h4><div class="ro">${esc(c.race)} · ${esc(c.occ)}</div>
         <div class="al">${esc(c.align)} · ${esc(c.size)} · age ${c.age}</div><div class="stamps">${stamps}</div></div></div>
     <div class="vit"><div><span>HP</span><b>${c.hp}</b></div><div><span>AC</span><b>${c.ac}</b></div><div><span>MD</span><b>${c.md}</b></div><div><span>SPD</span><b>${c.spd}</b></div><div><span>INIT</span><b>${esc(c.init)}</b></div></div>
-    <div class="att">${c.attrs.map(a => `<div><span>${a.k}</span><b>${a.v}</b><i class="${modCls(a.mod)}">${sgn(a.mod)}</i></div>`).join("")}</div>
+    <div class="att">${c.attrs.map(a => `<div><span>${a.k}</span><b>${a.v}</b><i class="${modCls(a.mod)}">${sign(a.mod)}</i></div>`).join("")}</div>
     <div class="wpn"><b>${esc(w.name)}</b><span>${esc(w.hit)} · ${esc(w.dmg)} · ${esc(w.tags)}</span>${w.action ? `<em>${esc(w.action)}</em>` : ""}</div>
-    <div class="ab" title="${esc(c.ability.text)}"><b>${esc(c.ability.name)}</b> · ${c.langs.map(esc).join(", ") || "no languages"}</div>
+    <div class="ab"${tip(c.ability.text)}><b>${esc(c.ability.name)}</b> · ${c.langs.map(esc).join(", ") || "no languages"}</div>
     <div class="xstamp">Replace</div></div>`;
 }
 
@@ -176,7 +174,7 @@ function charter() {
         <div class="picks"><div class="lbl">Colour</div>
           <div class="swatches">${C.colors.map((k, i) => `<div class="sw ${k.on ? "on" : ""}" data-color="${i}"><div style="background:rgb(${k.rgb.join(",")})"></div><span>${esc(k.name)}</span></div>`).join("")}</div>
           <div class="lbl">Emblem</div>
-          <div class="emblems">${C.emblems.map(e => `<div class="emb ${e.on ? "on" : ""}" data-emblem="${e.slug}" title="${esc(e.label)}">${ico(e.icon)}</div>`).join("")}</div>
+          <div class="emblems">${C.emblems.map(e => `<div class="emb ${e.on ? "on" : ""}" data-emblem="${e.slug}"${tip(e.label)}>${ico(e.icon)}</div>`).join("")}</div>
           <div class="embname">${esc(emb.label)}</div></div></div></div>
     <div class="sec"><div class="kicker">Signed</div>
       <div class="sigs">${order.map(i => { const f = C.founders[i];

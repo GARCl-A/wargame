@@ -2,7 +2,6 @@
 "use strict";
 
 let H = null, busy = false;
-const ico = name => `<span class="ico mask" style="--icon:url(/assets/icons/${name}.svg)"></span>`;
 
 function toast(text) {
   const t = $("toast");

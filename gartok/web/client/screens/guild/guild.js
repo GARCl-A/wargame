@@ -5,10 +5,6 @@
 "use strict";
 
 let G = null;
-const ico = (path, cls = "ico") => `<span class="${cls} mask" style="--icon:url(/assets/icons/${path}.svg)"></span>`;
-const money = n => "$" + n;
-const sign = n => n >= 0 ? "+" + n : "−" + (-n);
-const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const hpcls = (h, m) => h / m < .34 ? "low" : h / m < .67 ? "mid" : "";
 const rgb = c => `rgb(${c.join(",")})`;
 const showing = new Set();          // holdings opened to look inside
@@ -52,14 +48,14 @@ function drawFrame() {
 
 // ---------------------------------------------------------------- MEMBERS
 function roster(M) {
-  const filters = M.filters.map(f => `<span class="${f.mode === M.filter ? "on" : ""}" data-filter="${f.mode}" title="${esc(f.tip)}">${esc(f.label)}${f.mode === "alerts" && G.alerts ? `<em>${G.alerts}</em>` : ""}</span>`).join("");
+  const filters = M.filters.map(f => `<span class="${f.mode === M.filter ? "on" : ""}" data-filter="${f.mode}"${tip(f.tip)}>${esc(f.label)}${f.mode === "alerts" && G.alerts ? `<em>${G.alerts}</em>` : ""}</span>`).join("");
   let h = "";
   for (const b of M.roster) {
-    h += `<div class="bandh" data-fold="${b.gid}"><span class="caret">${b.folded ? "▸" : "▾"}</span><b title="${esc(b.name)}">${esc(b.name)}</b><span>${esc(b.where)} · ${esc(b.task.toLowerCase())}</span><small>${b.count}</small></div>`;
+    h += `<div class="bandh" data-fold="${b.gid}"><span class="caret">${b.folded ? "▸" : "▾"}</span><b${tip(b.name)}>${esc(b.name)}</b><span>${esc(b.where)} · ${esc(b.task.toLowerCase())}</span><small>${b.count}</small></div>`;
     if (b.folded) continue;
     for (const m of b.rows) {
       const med = `<div class="medal ${m.beast ? "beastmed" : ""} ${m.hurt ? "hurt" : ""}">${face(m.portrait, m.name)}</div>`;
-      h += `<div class="mem ${m.selected ? "sel" : ""}" data-uid="${m.uid}">${med}<div style="min-width:0"><div class="nm" title="${esc(m.name)}">${esc(m.name)}</div><div class="sb">${esc(m.sub)}</div>
+      h += `<div class="mem ${m.selected ? "sel" : ""}" data-uid="${m.uid}">${med}<div style="min-width:0"><div class="nm"${tip(m.name)}>${esc(m.name)}</div><div class="sb">${esc(m.sub)}</div>
         <div class="hpbar"><i class="${hpcls(...m.hp)}" style="width:${m.hp[0] / m.hp[1] * 100}%"></i></div></div>
         <div class="bdg">${m.badges.map(x => `<span class="mark ${x.tone}">${esc(x.text)}</span>`).join("")}</div></div>`;
     }
@@ -70,7 +66,7 @@ function roster(M) {
 }
 
 function memberActs(u) {
-  const role = r => `<div class="role" title="${esc(r.tip)}"><div class="t"><b>${esc(r.title)}</b>${r.current ? `<span class="mark good">current</span>` : ""}</div>
+  const role = r => `<div class="role"${tip(r.tip)}><div class="t"><b>${esc(r.title)}</b>${r.current ? `<span class="mark good">current</span>` : ""}</div>
       <p>${esc(r.sub)}</p>${r.action ? `<div class="act"><div class="ghost-btn ${r.action.on ? "" : "off"}" data-role="${r.key}">${esc(r.action.label)}</div></div>` : ""}</div>`;
   const tree = `<div class="tree ${u.picks ? "ready" : ""}" id="tree">${ico("action/skills")}<div><b>Talent tree</b><span>${u.picks ? `${plural(u.picks, "pick")} waiting` : "Review the build"}</span></div></div>`;
   const open = u.band ? `<div class="acts-foot"><div class="ghost-btn" data-open="${u.gid}">${ico("item/knapsack")}Open ${esc(u.band)}</div></div>` : "";
@@ -110,7 +106,7 @@ function drawCharter() {
     : `<div class="quiet">All quiet. Nobody has given notice, no band is over its hold, and every herd follows its keepers.</div>`;
   const charter = `<div class="paper" id="charter">
     <div class="chead"><div class="banner" style="${bannerStyle()}">${G.emblem ? ico(G.emblem) : ""}</div>
-      <div><h1 title="${esc(G.name)}">${esc(G.name)}</h1><p>A guild of ${G.count}, ${plural(G.day, "day")} on the road · ${plural(G.won, "fight")} won</p></div>${voc}</div>
+      <div><h1${tip(G.name)}>${esc(G.name)}</h1><p>A guild of ${G.count}, ${plural(G.day, "day")} on the road · ${plural(G.won, "fight")} won</p></div>${voc}</div>
     <div class="cgrid">
       <div>
         <div class="kicker">Fame</div>

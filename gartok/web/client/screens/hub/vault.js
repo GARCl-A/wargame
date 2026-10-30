@@ -8,10 +8,9 @@
 "use strict";
 
 const Vault = (() => {
-  let V = null, picks = null, drag = null, over = null;
-  const take = {};
+  let V = null, picks = null, drag = null;
+  const take = {}, mark = dropMarker();
   let CHEST = null;
-  const kg = (q, w) => { const t = q * w; return t < 0.05 ? "—" : t.toFixed(1) + " kg"; };
   const short = name => name.split(" ")[0];
   const pack = id => V.packs.find(p => p.id === id);
   const chestRow = loc => V.chest.rows.find(r => r.loc === loc);
@@ -33,8 +32,8 @@ const Vault = (() => {
   function chestLine(r) {
     const q = Math.min(r.qty, take[r.loc] || r.qty);
     const step = r.qty > 1
-      ? `<div class="qty"><span data-q="-1">−</span><span class="n">${q}</span><span data-q="1">+</span></div>` : "<span></span>";
-    return `<div class="row ${picked(CHEST, r.loc) ? "picked" : ""}" data-owner="${CHEST}" data-loc="${r.loc}" title="${esc(r.tip)}">
+      ? Kit.stepper(q) : "<span></span>";
+    return `<div class="row ${picked(CHEST, r.loc) ? "picked" : ""}" data-owner="${CHEST}" data-loc="${r.loc}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
       <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${esc(kg(r.qty, r.kg))} in all</div></div>
       <div class="wt r">${r.kg.toFixed(r.kg < 0.1 ? 3 : 1)} <small>kg</small></div>
@@ -58,14 +57,7 @@ const Vault = (() => {
   }
 
   // ---------------------------------------------------------------- the packs
-  function itemRow(p, it, loc, slot) {
-    if (!it || !it.name)
-      return `<div class="it empty" data-owner="${p.id}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(slot.label)}</span>empty</div><span></span><span></span></div>`;
-    const zone = slot ? `data-zone="${slot.zone}"` : "";
-    return `<div class="it ${it.coin ? "coin" : ""} ${picked(p.id, loc) ? "sel" : ""}" data-owner="${p.id}" data-loc="${loc}" ${zone} title="${esc(it.tip || "")}">
-      ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(slot.label)}</span>` : ""}${esc(it.name)}</div>
-      <span class="q">${(it.qty || 1) > 1 ? "×" + it.qty : ""}</span><span class="kg">${kg(it.qty || 1, it.kg)}</span></div>`;
-  }
+  const itemRow = (p, it, loc, slot) => Kit.item(p.id, it, loc, slot, {sel: picked(p.id, loc)});
 
   function foot(p) {
     const mine = picks ? picks.filter(x => x.from === p.id) : [];
@@ -78,23 +70,7 @@ const Vault = (() => {
     return "";
   }
 
-  function column(p) {
-    const head = p.store
-      ? `<div class="med store">${ico(p.glyph)}</div>`
-      : `<div class="med ${p.hurt ? "hurt" : ""}">${face(p.portrait, p.name)}</div>`;
-    const tight = p.kg > p.normal, pct = x => Math.min(100, x / p.max * 100).toFixed(1);
-    const worn = p.worn.length ? `<div class="sec lbl">Worn</div>` + p.worn.map(w => itemRow(p, w.name ? w : null, w.zone, w)).join("") : "";
-    const rows = p.pack.length ? p.pack.map(r => itemRow(p, r, r.loc, null)).join("")
-      : `<div class="it empty"><span></span><div class="n">nothing carried</div><span></span><span></span></div>`;
-    const f = foot(p);
-    return `<div class="col" data-owner="${p.id}">
-      <div class="chead">${head}<div style="min-width:0"><h3>${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div></div></div>
-      <div class="cstat"><div class="money"><i class="coindot"></i>${p.money}</div>
-        <div class="load ${p.kg > p.max ? "over" : tight ? "tight" : ""}"><b>${p.kg.toFixed(1)}</b> / ${p.max} kg</div></div>
-      <div class="bar"><i class="${tight ? "tight" : ""}" style="width:${pct(p.kg)}%"></i><em style="left:${pct(p.normal)}%"></em></div>
-      ${worn}<div class="sec lbl">Pack</div><div class="packlist">${rows}</div>
-      ${f ? `<div class="cfoot">${f}</div>` : ""}</div>`;
-  }
+  const column = p => Kit.column(p, {foot: foot(p), row: itemRow});
 
   // ---------------------------------------------------------------- the bottom
   function services() {
@@ -110,15 +86,7 @@ const Vault = (() => {
         <div class="ghost-btn">${s.on ? "Agree" : "Not yet"}</div></div>`).join("")}</div></div>`;
   }
 
-  function purse() {
-    const shares = V.packs.filter(p => !p.store || p.money).map(p =>
-      `<div class="share"><span>${esc(short(p.name))}</span><b>${p.money}</b></div>`).join("");
-    const tools = V.distribute && V.packs.length > 1 ? `<div class="tools"><div class="ghost-btn" id="spread" title="Share the load out by what each can carry">Distribute load</div></div>` : "";
-    return `<div class="leather" id="purse"><div><div class="lbl">Common purse</div>
-      <div class="sum"><b>${money(V.purse)}</b></div></div>
-      <div class="split">${shares}</div>${tools}
-      <div class="brass-btn" id="done"><div>${ico("gui/exit-door")}<b>Done</b></div></div></div>`;
-  }
+  const purse = () => Kit.purse({sum: V.purse, packs: V.packs, spread: V.distribute && V.packs.length > 1});
 
   // ---------------------------------------------------------------- drawing
   function draw(st) {
@@ -192,19 +160,7 @@ const Vault = (() => {
     $("ghost").innerHTML = `${ico(list[0].glyph)}<div><b>${esc(name)}</b><span>${esc(kg(1, weight(list)))}</span></div>`;
   }
 
-  function stagePoint(e) {
-    const r = $("screen").getBoundingClientRect(), s = r.width / 1920;
-    return [(e.clientX - r.left) / s, (e.clientY - r.top) / s];
-  }
-
   const target = el => el && (el.closest(".it[data-zone]") || el.closest(".col") || (V.chest.open && el.closest("#shelf")));
-
-  function mark(el) {
-    if (over === el) return;
-    if (over) over.classList.remove("drop");
-    over = el;
-    if (over) over.classList.add("drop");
-  }
 
   // ---------------------------------------------------------------- the item menu
   function menu(e, it) {
@@ -237,10 +193,7 @@ const Vault = (() => {
       m.hidden = true;
       acts[Number(d.dataset.i)]();
     };
-    const [x, y] = stagePoint(e);
-    m.hidden = false;
-    m.style.left = Math.min(x, 1920 - m.offsetWidth - 12) + "px";
-    m.style.top = Math.min(y, 1080 - m.offsetHeight - 12) + "px";
+    popAt(m, e);
   }
 
   // ---------------------------------------------------------------- the pointer

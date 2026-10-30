@@ -20,7 +20,7 @@ def _breakdown(title, terms, total):
 
 def _hp_tip(u):
     b = u.hp_breakdown()
-    lines = [f"{b['hit_dice']} hit dice of d{b['hd']}: {b['dice_sum']}", f"CON {b['con_total']:+}"]
+    lines = ["Hit points", f"{b['hit_dice']} hit dice of d{b['hd']}: {b['dice_sum']}", f"CON {b['con_total']:+}"]
     if b["talent_total"]:
         lines.append(f"Talents {b['talent_total']:+}")
     if b["ability_bonus"]:

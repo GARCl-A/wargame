@@ -7,8 +7,6 @@
 "use strict";
 
 let H = null;
-const ico = (path, cls = "ico") => `<span class="${cls} mask" style="--icon:url(/assets/icons/${path}.svg)"></span>`;
-const money = n => "$" + n;
 const card = c => `<div class="hcard"><div class="lbl">${esc(c.label)}</div><b class="${c.tone || ""}">${esc(c.value)}</b></div>`;
 const cards = list => { $("cards").innerHTML = `<div class="vsep"></div>` + list.map(card).join(`<div class="vsep"></div>`); };
 
@@ -39,7 +37,7 @@ function drawFrame() {
   $("place").textContent = H.place;
   $("sub").innerHTML = `<b>${esc(H.band)}</b> · ${esc(H.sub)}`;
   $("tabs").innerHTML = H.tabs.map(t =>
-    `<span class="${t.key === H.tab ? "on" : ""} ${t.live ? "" : "away"}" data-tab="${t.key}" title="${t.live ? "" : "not in the browser yet"}">${esc(t.label)}</span>`).join("");
+    `<span class="${t.key === H.tab ? "on" : ""} ${t.live ? "" : "away"}" data-tab="${t.key}"${t.live ? "" : tip("Not in the browser yet")}>${esc(t.label)}</span>`).join("");
   const k = H.keeper;
   $("kmed").innerHTML = k.portrait ? `<img src="${k.portrait}" draggable="false">` : `<div class="ico">${ico(H.icon, "ico")}</div>`;
   $("kname").textContent = k.name || H.place;

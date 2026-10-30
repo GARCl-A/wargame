@@ -8,7 +8,6 @@ let cam = null, camKey = null;                 // the map's camera, kept while t
 let view = "map";
 try { view = localStorage.getItem("talents.view") === "branch" ? "branch" : "map"; } catch (e) { /* no storage */ }
 
-const ico = name => name ? `<span class="ico mask" style="--icon:url(/assets/icons/${name}.svg)"></span>` : "";
 const mod = v => { const m = Math.floor((v - 10) / 2); return (m >= 0 ? "+" : "−") + Math.abs(m); };
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 const ATTR = {STR: "Strength", DEX: "Dexterity", CON: "Constitution", INT: "Intelligence", WIS: "Wisdom", CHA: "Charisma"};

@@ -46,7 +46,7 @@ const Tutorial = (() => {
   function badge() {
     const b = node("tut-badge");
     b.textContent = "?";
-    b.title = "How this screen works";
+    b.dataset.tip = "How this screen works";
     b.onclick = () => api("/api/tutorial/reopen", {}).catch(() => {});
     place();
   }
@@ -77,15 +77,13 @@ function face(src, name, cls = "") {
 // a member's (or an animal's) sheet as an open book: its two pages, and the modal any screen opens on a
 // portrait marked data-sheet="<uid>" (the screen's `sheet` verb answers who it shows)
 const Sheet = (() => {
-  const ico = path => `<span class="ico mask" style="--icon:url(/assets/icons/${path}.svg)"></span>`;
-  const sign = n => n >= 0 ? "+" + n : "−" + (-n);
   const hpcls = (h, m) => h / m < .34 ? "low" : h / m < .67 ? "mid" : "";
   const nameSize = n => { const w = Math.max(...n.split(" ").map(p => p.length)); return w > 15 ? "xlong" : w > 11 ? "long" : ""; };
   function memberPages(u) {
     const lowAll = u.attrs.some(a => a.low);
     const where = u.band ? `Rides with <b>${esc(u.band)}</b><br>at the ${esc(u.where)}, ${esc(u.task)}` : esc(u.where);
     const L = `<div class="who"><div class="plate">${face(u.portrait, u.name)}</div><div>
-        <h1 class="${nameSize(u.name)}" title="${esc(u.name)}">${esc(u.name)}</h1>
+        <h1 class="${nameSize(u.name)}"${tip(u.name)}>${esc(u.name)}</h1>
         <div class="race"><b>${esc(u.race)} ${esc(u.occ)}</b><br>${u.age} years · ${esc(u.align)}</div>
         <div class="pos">${where}</div>
         <div class="stamps">${u.stamps.map(s => `<span class="stamp ${s.tone}">${esc(s.text)}</span>`).join("")}</div>
@@ -94,11 +92,11 @@ const Sheet = (() => {
       <div class="boxes attrs">${u.attrs.map(a => `<div class="box ${a.low ? "low" : ""}"><div class="k">${a.k}</div><div class="v">${a.v}</div><div class="m">${sign(a.mod)}</div></div>`).join("")}</div></div>
       <div class="sec2"><div class="kicker">In a fight${u.status.length ? `<em>${esc(u.status.join(", "))}</em>` : ""}</div>
       <div class="boxes vitals">
-        <div class="box" title="${esc(u.hp_tip)}"><div class="k">HIT POINTS</div><div class="hp"><span class="v">${u.hp[0]}</span><small>/ ${u.hp[1]}</small></div><div class="hpline"><i class="${hpcls(...u.hp)}" style="width:${u.hp[0] / u.hp[1] * 100}%"></i></div></div>
-        ${u.stats.map(s => `<div class="box" title="${esc(s.tip)}"><div class="k">${s.k}</div><div class="v">${esc(String(s.v).replace("-", "−"))}</div></div>`).join("")}
+        <div class="box"${tip(u.hp_tip, "sum")}><div class="k">HIT POINTS</div><div class="hp"><span class="v">${u.hp[0]}</span><small>/ ${u.hp[1]}</small></div><div class="hpline"><i class="${hpcls(...u.hp)}" style="width:${u.hp[0] / u.hp[1] * 100}%"></i></div></div>
+        ${u.stats.map(s => `<div class="box"${tip(s.tip, "sum")}><div class="k">${s.k}</div><div class="v">${esc(String(s.v).replace("-", "−"))}</div></div>`).join("")}
       </div>
       <div class="weapon">${ico(u.weapon.glyph)}<div><h3>${esc(u.weapon.name)}</h3><div class="tags">${esc(u.weapon.tags.replace(/ {2}· {2}/g, " · "))} · ${esc(u.weapon.crit)}</div></div></div>
-      <div class="chips">${u.weapon.chips.map(c => `<div class="chip" title="${esc(c.tip)}"><span>${c.k}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"><span>ACTION</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
+      <div class="chips">${u.weapon.chips.map(c => `<div class="chip"${tip(c.tip)}><span>${c.k}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"><span>ACTION</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
       <div class="sec2"><div class="kicker">Kit</div><div class="kit">
         ${u.kit.map(r => `<div class="r"><span>${r.k}</span><b>${r.k === "Purse" ? `<i class="coindot"></i> ` : ""}${esc(r.v)}</b><em class="${r.bad ? "bad" : ""}">${esc(r.note)}</em></div>`).join("")}
       </div></div>
@@ -108,7 +106,7 @@ const Sheet = (() => {
     const R = `<div class="kicker">Career<em>racial level ${u.racial}</em></div>
       ${u.tracks.map(t => {
         const [lv, ...rest] = t.value.split("  ");
-        return `<div class="track" title="${esc(t.tip)}"><div class="h"><b>${esc(t.label)}</b><span>${esc(lv.replace("LVL", "Lv"))}<small>${esc(rest.join(" ").replace(/[()]/g, ""))}</small></span></div>
+        return `<div class="track"${tip(t.tip)}><div class="h"><b>${esc(t.label)}</b><span>${esc(lv.replace("LVL", "Lv"))}<small>${esc(rest.join(" ").replace(/[()]/g, ""))}</small></span></div>
           <div class="bar2"><i style="width:${Math.max(2, t.frac * 100)}%"></i></div><p>${esc(t.text)}</p></div>`;
       }).join("")}
       <div class="sec2"><div class="kicker">Talents<em>${u.talents.length} taken</em></div>
@@ -120,7 +118,7 @@ const Sheet = (() => {
 
   function animalPages(a) {
     const L = `<div class="who"><div class="plate">${face(a.portrait, a.name)}</div><div>
-        <h1 class="${nameSize(a.name)}" title="${esc(a.name)}">${esc(a.name)}</h1><div class="race"><b>${esc(a.sub)}</b></div>
+        <h1 class="${nameSize(a.name)}"${tip(a.name)}>${esc(a.name)}</h1><div class="race"><b>${esc(a.sub)}</b></div>
         <div class="pos">${a.band ? `Kept by <b>${esc(a.band)}</b><br>at the ${esc(a.where)}` : esc(a.where)}</div></div></div>
       <div class="sec2"><div class="kicker">Attributes</div>
       <div class="boxes attrs">${a.attrs.map(x => `<div class="box"><div class="k">${x.k}</div><div class="v">${x.v}</div><div class="m">${sign(x.mod)}</div></div>`).join("")}</div></div>
@@ -141,7 +139,7 @@ const Sheet = (() => {
     const host = $("stage").appendChild(Object.assign(document.createElement("div"), {id: "sheet-veil"}));
     const root = host.attachShadow({mode: "open"});
     root.innerHTML = `<link rel="stylesheet" href="/client/shell.css"><div class="veil">
-      <div class="paper book"><div class="shut" title="Close">✕</div><div class="lpage">${L}</div><div class="rpage">${R}</div></div></div>`;
+      <div class="paper book"><div class="shut" data-tip="Close">✕</div><div class="lpage">${L}</div><div class="rpage">${R}</div></div></div>`;
     root.addEventListener("click", e => {
       if (e.target.classList.contains("veil") || e.target.closest(".shut")) close();
     });

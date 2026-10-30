@@ -4,11 +4,8 @@
 
 let R = null, busy = false, pick = null, drag = null;
 const qty = {};
-const ico = name => `<span class="ico mask" style="--icon:url(/assets/icons/${name}.svg)"></span>`;
 const g = glyph => glyph ? ico(glyph) : "";
-const money = v => "$" + Number(v).toLocaleString("en-US");
-const kg = v => (Math.round(v * 10) / 10).toString().replace(/\.0$/, "") + " kg";
-const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const kilos = v => (Math.round(v * 10) / 10).toString().replace(/\.0$/, "") + " kg";
 const names = list => list.map(n => `<b>${esc(n)}</b>`).join(list.length > 2 ? ", " : " and ");
 const STATUS = {standing: "Standing", stable: "Down, stable", fallen: "Fallen", fled: "Fled", bound: "Bound"};
 const FOE_STATUS = {standing: "Standing", stable: "Down, stable", fallen: "Dead", fled: "Fled", bound: "Bound"};
@@ -230,23 +227,23 @@ const isPicked = (from, loc) => pick && pick.from === from && pick.loc === loc;
 
 function ware(w) {
   const on = isPicked("field", w.loc), n = qty[w.name] ?? w.qty;
-  return `<div class="ware ${on ? "on" : ""} ${w.coin ? "coins" : ""}" data-from="field" data-loc="${w.loc}" title="${esc(w.tip)}">
+  return `<div class="ware ${on ? "on" : ""} ${w.coin ? "coins" : ""}" data-from="field" data-loc="${w.loc}"${tip(w.tip, "item")}>
     <span class="g">${g(w.glyph)}</span><span class="nm">${esc(w.name)}${w.coin ? `<small>${money(w.coin)}</small>` : ""}</span>
-    <span class="q">×${w.qty}</span><span class="kg">${kg(w.qty * w.kg)}</span>
+    <span class="q">×${w.qty}</span><span class="kg">${kilos(w.qty * w.kg)}</span>
     <span class="take"><i data-q="-1">−</i><b>${on ? Math.min(n, w.qty) : "·"}</b><i data-q="1">+</i></span></div>`;
 }
 
 function column(p, refused) {
   const hp = p.hp[0] * 3 < p.hp[1], over = p.kg > p.normal;
   const worn = p.worn.map(w => `<div class="slot ${w.name ? "" : "empty"} ${w.new ? "new" : ""} ${isPicked(p.uid, w.zone) ? "on" : ""}" data-zone="${w.zone}"
-      ${w.name ? `data-from="${p.uid}" data-loc="${w.zone}"` : ""} title="${esc(w.tip)}"><span class="g">${g(w.glyph)}</span><div><em>${esc(w.label)}</em><b>${esc(w.name || "empty")}</b></div></div>`).join("");
-  const rows = p.pack.map(r => `<div class="row-it ${r.new ? "new" : ""} ${isPicked(p.uid, r.loc) ? "on" : ""}" data-from="${p.uid}" data-loc="${r.loc}" title="${esc(r.tip)}">
-      <span class="g">${g(r.glyph)}</span><span>${esc(r.name)}</span>${r.qty > 1 || r.new ? `<small>×${r.qty}${r.new ? ` <b>+${r.new}</b>` : ""}</small>` : ""}<em>${kg(r.qty * r.kg)}</em></div>`).join("");
+      ${w.name ? `data-from="${p.uid}" data-loc="${w.zone}"` : ""}${tip(w.tip, "item")}><span class="g">${g(w.glyph)}</span><div><em>${esc(w.label)}</em><b>${esc(w.name || "empty")}</b></div></div>`).join("");
+  const rows = p.pack.map(r => `<div class="row-it ${r.new ? "new" : ""} ${isPicked(p.uid, r.loc) ? "on" : ""}" data-from="${p.uid}" data-loc="${r.loc}"${tip(r.tip, "item")}>
+      <span class="g">${g(r.glyph)}</span><span>${esc(r.name)}</span>${r.qty > 1 || r.new ? `<small>×${r.qty}${r.new ? ` <b>+${r.new}</b>` : ""}</small>` : ""}<em>${kilos(r.qty * r.kg)}</em></div>`).join("");
   return `<div class="leather col ${refused ? "refuse" : ""}" data-col="${p.uid}">
     <div class="who"><div class="medal">${face(p.portrait, p.name)}</div><div><b>${esc(p.name)}</b><span>${esc(p.sub)}</span></div></div>
     <div class="meter"><div class="barlbl"><span>Hit points</span><b class="${hp ? "red" : ""}">${p.hp[0]} / ${p.hp[1]}</b></div>
       <div class="bar hp ${hp ? "low" : ""}"><i style="width:${p.hp[0] / p.hp[1] * 100}%"></i></div>
-      <div class="barlbl"><span>Load</span><b class="${over ? "red" : ""}">${kg(p.kg)} / ${kg(p.normal)} · max ${kg(p.max)}</b></div>
+      <div class="barlbl"><span>Load</span><b class="${over ? "red" : ""}">${kilos(p.kg)} / ${kilos(p.normal)} · max ${kilos(p.max)}</b></div>
       <div class="bar load"><i class="${over ? "over" : ""}" style="width:${Math.min(100, p.kg / p.max * 100)}%"></i><span class="norm" style="left:${p.normal / p.max * 100}%"></span></div></div>
     <div class="slots">${worn}</div><div class="rows">${rows}</div>
     ${refused ? `<div class="why"><b>Won't fit</b>${esc(refused.why)}</div>` : ""}</div>`;
@@ -256,14 +253,14 @@ function loot() {
   const L = R.loot;
   header("The field", `${where()} · what the dead and the fallen left`);
   let h = `<div class="paper" id="field" data-col="field"><div class="kicker">Left on the field<em>drag to a pack, or click, then click where</em></div>
-    <div class="fhead"><b>${plural(L.stacks, "stack")}</b><span>${L.things} things · ${kg(L.kg)}<br>the pack's kit and your own dead's</span></div><div class="wares">`;
+    <div class="fhead"><b>${plural(L.stacks, "stack")}</b><span>${L.things} things · ${kilos(L.kg)}<br>the pack's kit and your own dead's</span></div><div class="wares">`;
   if (!L.cats.length) h += `<div class="empty-field">Nothing is left on the field.</div>`;
   for (const c of L.cats) h += `<div class="cat">${esc(c.label)}</div>` + c.rows.map(ware).join("");
   h += `</div><div class="fieldfoot"><p>Whatever is still here when the band goes on is left behind for good.</p></div></div><div id="packs">`;
   for (const p of L.packs) h += column(p, L.refused && L.refused.uid === p.uid ? L.refused : null);
   const took = L.taken.map(t => `${t.items.map(([n, q]) => `${q > 1 ? q + " " : "the "}${esc(n)}`).join(", ")} to <b>${esc(t.name)}</b>`).join(" · ");
   h += `</div><div class="leather" id="lootfoot"><div class="bigbtn ghost small" data-go="auto">${ico("item/knapsack")}Take what fits</div>
-    ${L.can_distribute ? `<div class="bigbtn ghost small" data-go="distribute" title="Share the load out by what each can carry">${ico("action/rally-the-troops")}Distribute load</div>` : ""}
+    ${L.can_distribute ? `<div class="bigbtn ghost small" data-go="distribute"${tip("Share the load out by what each can carry")}>${ico("action/rally-the-troops")}Distribute load</div>` : ""}
     <i>${took ? `${took} · ` : ""}${L.stacks ? `${plural(L.stacks, "stack")} still on the field` : "the field is bare"}</i>
     <div class="bigbtn" data-go="next">${L.stacks ? "Leave the rest · go on" : "Go on"}</div></div>`;
   $("body").innerHTML = h;

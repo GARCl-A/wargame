@@ -1,0 +1,89 @@
+/* The kit's pieces (kit.js), one block each, and the game's tooltip. */
+
+/* an item in a pack (Kit.item): the row itself is shell.css's .it */
+.it .slotname{font:600 8.5px/1 Cinzel,serif;letter-spacing:.16em;color:#7f6747;margin-right:6px;text-transform:uppercase}
+.it .tag{margin-left:6px;font:600 8px/1 Cinzel,serif;letter-spacing:.14em;color:#8f7a59;border:1px solid rgba(201,163,94,.25);padding:2px 4px 1px;border-radius:2px;text-transform:uppercase;vertical-align:2px}
+.it .tag.auto{color:#e0a85a;border-color:rgba(224,168,90,.45)}
+.it:hover:not(.empty){background:rgba(240,215,158,.07)}
+.it.drop{background:rgba(240,215,158,.16);box-shadow:inset 0 0 0 1px var(--brass-hi)}
+
+/* a pack as a leather column (Kit.column) */
+.col.pack{position:relative;flex:1 0 276px;display:flex;flex-direction:column;border-radius:4px;padding:14px 14px 0;
+  background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.col.pack.drop{box-shadow:inset 0 1px 0 rgba(240,215,158,.25),inset 0 0 0 1px rgba(240,215,158,.55),0 0 0 2px var(--brass-hi),0 0 34px rgba(240,215,158,.3)}
+.col.pack .chead{display:flex;gap:12px;align-items:center}
+.col.pack .chead .med{position:relative;width:62px;height:62px;border-radius:50%;flex:none;overflow:hidden;
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--enamel-hi),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6)}
+.col.pack .chead .med img,.col.pack .chead .med .initial{width:100%;height:100%;border-radius:50%;display:block}
+.col.pack .chead .med.store{display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#3a2b1d,#1a130d);box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass-lo),0 0 0 6px #120d08}
+.col.pack .chead .med.store .ico{width:36px;height:36px;color:#d8bd86}
+.col.pack .chead .med.hurt img{filter:sepia(.35) brightness(.85)}
+.col.pack .chead h3{font:700 18px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.col.pack .chead .race{margin-top:4px;font:italic 14.5px/1 var(--read);color:#b59c76;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.col.pack .chead .voice{display:inline-block;margin-top:6px;font:600 8.5px/1 Cinzel,serif;letter-spacing:.18em;color:#1a120a;background:var(--brass);padding:3px 5px 2px;border-radius:2px;text-transform:uppercase}
+.col.pack .cstat{display:flex;align-items:flex-end;gap:10px;margin-top:14px}
+.col.pack .cstat .money{display:flex;align-items:center;gap:6px;font:700 20px/1 Cinzel,serif;color:#f0dfb8}
+.col.pack .coindot{display:inline-block;width:17px;height:17px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f6c39a,#b56a3a 45%,#5e2f15 100%);box-shadow:0 0 0 1.5px #3a1e0c}
+.col.pack .cstat .load{margin-left:auto;text-align:right;font:14px/1 var(--read);color:#c9b38c}
+.col.pack .cstat .load b{font:600 15px/1 Cinzel,serif;color:#f0dfb8}
+.col.pack .cstat .load.tight b{color:#e0a85a}
+.col.pack .cstat .load.over b{color:var(--blood-hi)}
+.col.pack .bar{position:relative;height:6px;margin-top:7px;border-radius:3px;background:#120d08;box-shadow:inset 0 0 0 1px rgba(201,163,94,.2);overflow:hidden;display:flex}
+.col.pack .bar i{display:block;height:100%;background:linear-gradient(90deg,#8d6a30,var(--brass))}
+.col.pack .bar i.tight{background:linear-gradient(90deg,#9a6a2a,#e0a85a)}
+.col.pack .bar i.add{background:repeating-linear-gradient(135deg,var(--brass-hi) 0 4px,#c9a35e 4px 8px);box-shadow:0 0 8px rgba(240,215,158,.6)}
+.col.pack .bar em{position:absolute;top:0;bottom:0;width:1px;background:rgba(240,215,158,.5)}
+.col.pack .psec{display:flex;align-items:center;gap:8px;margin:16px 0 4px;text-transform:uppercase}
+.col.pack .psec:after{content:"";flex:1;height:1px;background:rgba(201,163,94,.2)}
+.col.pack .packlist{flex:1;min-height:0;overflow-y:auto;margin:0 -4px;padding:0 4px 48px;scrollbar-width:thin;scrollbar-color:rgba(201,163,94,.3) transparent}
+.col.pack .cfoot{position:absolute;left:14px;right:14px;bottom:12px;font:italic 16px/1.25 var(--read);color:#8f7a59;
+  border-top:1px dashed rgba(201,163,94,.2);padding-top:9px;background:linear-gradient(transparent,#1a130d 30%)}
+.col.pack .cfoot b{font:700 12px/1 Cinzel,serif;color:var(--brass-hi);font-style:normal}
+
+/* the stepper (Kit.stepper), on paper */
+.stepper{display:flex;justify-content:flex-end}
+.stepper span{width:27px;height:27px;display:grid;place-items:center;font:700 15px/1 Cinzel,serif;color:#4a3420;cursor:pointer;
+  border:1px solid rgba(90,60,30,.45);background:rgba(255,250,235,.35)}
+.stepper span:hover{background:rgba(255,250,235,.7)}
+.stepper span.n{width:34px;border-left:0;border-right:0;color:#24170c;background:rgba(255,250,235,.6);cursor:default}
+
+/* the common purse (Kit.purse); where it sits is the screen's */
+#purse .sum{display:flex;align-items:baseline;gap:14px;margin-top:9px;white-space:nowrap}
+#purse .sum b{font:900 44px/1 Cinzel,serif;color:var(--brass-hi);text-shadow:0 2px 0 #000}
+#purse .sum s{font:700 24px/1 Cinzel,serif;color:#8f7652;text-decoration:none}
+#purse .sum s:before{content:"→ ";color:#6f5a3e}
+#purse .sum s.bad{color:var(--blood-hi)}
+#purse .split{flex:1;display:flex;gap:10px;min-width:0;overflow:hidden}
+#purse .share{flex:1;min-width:0;padding:10px 12px;border-radius:3px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(201,163,94,.15)}
+#purse .share span{display:block;font:600 11px/1 Cinzel,serif;letter-spacing:.08em;color:#c9b38c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+#purse .share b{display:block;margin-top:6px;font:700 19px/1 Cinzel,serif;color:#f0dfb8}
+#purse .tools{display:flex;flex-direction:column;gap:8px;flex:none}
+#purse .tools .ghost-btn{height:32px;font-size:10px}
+
+/* the paper slip that follows a dragged item */
+#ghost{position:absolute;z-index:20;width:240px;padding:10px 13px;display:flex;gap:12px;align-items:center;color:var(--ink);
+  transform:translate(-50%,-70%) rotate(-4deg);pointer-events:none;
+  background:linear-gradient(170deg,#f2e6c9,#e2d0a7);border-radius:2px;
+  box-shadow:0 0 0 1px #6b4f2c,0 0 0 4px #efe2c4,0 0 0 5px #6b4f2c,0 22px 30px rgba(0,0,0,.6)}
+#ghost .ico{width:42px;height:42px;color:#5a2116;flex:none}
+#ghost b{display:block;font:700 14px/1.1 Cinzel,serif;letter-spacing:.08em}
+#ghost span{display:block;margin-top:5px;font:italic 14.5px/1 var(--read);color:#5b4630}
+#ghost em{position:absolute;right:-14px;top:-14px;font:700 14px/1 Cinzel,serif;font-style:normal;color:#fff3ea;background:var(--blood);
+  padding:7px 9px 6px;border-radius:2px;box-shadow:0 4px 8px rgba(0,0,0,.4);transform:rotate(6deg)}
+#ghost em.gain{background:#3f6b2a}
+
+/* the tooltip (Tip): a paper note in the reading face */
+#tip{position:absolute;z-index:95;max-width:420px;padding:14px 18px 13px;pointer-events:none;
+  box-shadow:inset 0 0 30px rgba(110,70,25,.22),0 0 0 1px #5d4426,0 12px 22px rgba(0,0,0,.6)}
+#tip:before{inset:5px}
+#tip h4{font:700 15px/1.15 Cinzel,serif;letter-spacing:.06em;color:#24170c;margin-bottom:6px}
+#tip p{font:16px/1.35 var(--read);color:#3a2410}
+#tip p+p{margin-top:5px}
+#tip p b{font-weight:600;color:#24170c}
+#tip .sum{min-width:220px}
+#tip .sum div{display:flex;gap:18px;justify-content:space-between;font:16px/1.5 var(--read);color:#3a2410}
+#tip .sum b{font:600 15px/1.5 Cinzel,serif;color:#24170c}
+#tip .sum .tot{margin-top:4px;padding-top:4px;border-top:1px solid rgba(90,60,30,.45)}
+#tip .sum .tot span{font:600 10px/2.2 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;text-transform:uppercase}
+#tip .sum .note{font-style:italic;color:#6b5233}
