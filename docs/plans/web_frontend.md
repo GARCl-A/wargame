@@ -67,8 +67,9 @@ code.
   dragged ware is a paper slip. End Turn and a screen's main action are a wax seal.
 - **Colour is state:** blue your side, blood red the foe, brass the focus (the active unit, the chosen
   action), cool verdigris for idle edges, labels and plates.
-- **Fog of war** reads as a map would: never seen is blank paper (a margin note or sound rings for what is
-  only heard), seen before is a sepia wash, in sight is lit.
+- **Fog of war** (approved 2026-10-30, `battle_mockup/fog_b.png`): never seen is the dark table, empty
+  (a margin note or sound rings for what is only heard); seen before is a pale paper survey with the walls
+  inked; in sight is the real floor, warm where lit and cool and dim where not.
 - **Type:** running text is `--read` (EB Garamond Medium, never italic) at 16px or more; IM Fell English is a voice (a keeper's
   line, a dialogue, a flavour line), never under 17px; Cinzel is for names and labels. The map sheet's
   lettering is the chart's hand, drawn on the canvas.
@@ -117,9 +118,6 @@ In order. The board items are tuned by eye, so each takes a mockup first.
 
 ### 1. The board, by eye
 
-- **The fog.** Seen before (grey), never seen (paper) and seen but unlit (dark) stack into too many layers:
-  it is hard to tell what is dark, what is fog and what is unknown (the playtests of 2026-10-21 and
-  2026-10-28 both said it). Reopens the board's colour and light (`screens/battle/board.js`).
 - **A pit reads as a pit, and how deep** (`board.py` elevation).
 - **The bands walk on the map** from node to node along the edge, as tokens walk on the board.
 - **A body and a fighter in one cell** (playtest 2026-10-30). A fighter may stand on a body (dying,

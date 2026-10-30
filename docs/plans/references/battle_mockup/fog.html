@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fog mockup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;color:#eadcbc;
+  font-family:Georgia,serif;background:radial-gradient(ellipse 70% 60% at 38% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+h1{position:absolute;left:40px;top:22px;font:700 26px/1 Georgia,serif;letter-spacing:.14em;color:#f0d79e}
+h1 small{display:block;margin-top:8px;font:17px/1 Georgia,serif;letter-spacing:0;color:#b9a27c}
+canvas{position:absolute;left:40px;top:96px}
+#legend{position:absolute;left:1500px;top:96px;width:380px;font-size:17px;line-height:1.35}
+#legend div{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+#legend i{flex:none;width:64px;height:64px;border:2px solid #7d5c28;border-radius:3px}
+#legend b{color:#f0d79e;display:block;font-family:Georgia,serif}
+</style>
+</head>
+<body>
+<div id="stage">
+<h1 id="title"></h1>
+<canvas id="c" width="1420" height="900"></canvas>
+<div id="legend"></div>
+</div>
+<script>
+const VARIANTS={
+  a:{name:"A · INK ON PAPER",sub:"Two materials, paper and floor. Light is only brightness. What you remember is inked on paper, unlit is the real floor, cool and dim.",
+     void:"#e4d3ab", mem:"ink", dim:.55},
+  b:{name:"B · THE VOID",sub:"Never seen is the dark table: the unknown is empty, as in every dungeon crawler. Remembered is a pale paper survey; unlit keeps its colour.",
+     void:"#0e0b08", mem:"paper", dim:.55},
+  c:{name:"C · WASH",sub:"Paper for the unknown; what you remember is the floor washed pale (no hatching, no grey); unlit is the real floor, dim and cool.",
+     void:"#e4d3ab", mem:"wash", dim:.55}
+};
+const q=new URLSearchParams(location.search).get("state")||"a", V=VARIANTS[q]||VARIANTS.a;
+document.getElementById("title").innerHTML=V.name+"<small>"+V.sub+"</small>";
+const W=28,H=18,C=50, cv=document.getElementById("c"), g=cv.getContext("2d");
+// map: 0 void,1 floor. a hall (lit by torches), a corridor, a side room (remembered), a hall to the east (never seen)
+const rooms=[[1,2,11,13],[12,7,17,8],[17,3,22,12],[22,7,27,8]];
+const fl=new Set(), K=(x,y)=>x+","+y;
+for(const [x0,y0,x1,y1] of rooms)for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)fl.add(K(x,y));
+const pillars=[[5,5],[5,10],[8,5],[8,10]];pillars.forEach(([x,y])=>fl.delete(K(x,y)));
+const torches=[[2,3],[10,3],[2,12]];
+const lit=(x,y)=>x<=11&&y>=2&&y<=13&&torches.some(([a,b])=>Math.hypot(x-a,y-b)<4.6);
+const insight=(x,y)=>x<=12&&y>=2&&y<=13;           // the hall is in sight
+const seen=(x,y)=>(x>=12&&x<=22)&&fl.has(K(x,y));   // corridor + middle room: seen before
+function rnd(n){const s=Math.sin(n*127.1)*43758.5453;return s-Math.floor(s);}
+const img=new Image();img.src="img/floor.jpg";
+const tok=["ogre","human","gob0","gnoll"].map(n=>{const i=new Image();i.src="img/"+n+".png";return i;});
+img.onload=()=>Promise.all(tok.map(i=>new Promise(r=>i.complete?r():i.onload=r))).then(draw);
+function tex(x,y){g.drawImage(img,(x*37%20)*50,(y*53%20)*50,C*2,C*2,x*C,y*C,C,C);}
+function draw(){
+  g.fillStyle=V.void;g.fillRect(0,0,cv.width,cv.height);
+  const isWallEdge=(x,y)=>!fl.has(K(x,y))&&[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]].some(([a,b])=>fl.has(K(x+a,y+b))&&(insight(x+a,y+b)||seen(x+a,y+b)));
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const px=x*C,py=y*C, f=fl.has(K(x,y)), vis=insight(x,y)&&f, mem=seen(x,y)&&!vis;
+    if(vis){
+      tex(x,y);
+      g.fillStyle="rgba(48,30,14,.5)";g.fillRect(px,py,C,C);
+      const d=Math.min(...torches.map(([a,b])=>Math.hypot(x-a,y-b)));
+      if(lit(x,y)){g.fillStyle=`rgba(255,185,95,${Math.max(0,.5-d*.09)})`;g.fillRect(px,py,C,C);}
+      else{g.fillStyle="rgba(10,18,44,.55)";g.fillRect(px,py,C,C);}
+    }else if(mem){
+      if(V.mem==="ink"){g.fillStyle="#d8c598";g.fillRect(px,py,C,C);}
+      else if(V.mem==="paper"){g.fillStyle="#cdb98c";g.fillRect(px,py,C,C);}
+      else{tex(x,y);g.fillStyle="rgba(228,211,171,.72)";g.fillRect(px,py,C,C);}
+    }else if(!f&&isWallEdge(x,y)){
+      g.fillStyle=insight(x,y)||(insight(x+1,y)||insight(x,y+1)||insight(x-1,y))?"#2b221a":(V.mem==="ink"?"#bba67a":"#a98f5e");
+      g.fillRect(px,py,C,C);
+    }
+  }
+  // pillars
+  for(const [x,y] of pillars){g.fillStyle="#2b221a";g.fillRect(x*C,y*C,C,C);g.strokeStyle="#0b0806";g.strokeRect(x*C+1,y*C+1,C-2,C-2);}
+  // ink lines round the remembered rooms
+  g.strokeStyle="#3b2a18";g.lineWidth=2;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(!seen(x,y)||insight(x,y))continue;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      if(fl.has(K(x+dx,y+dy)))continue;
+      g.beginPath();
+      const j=()=>(rnd(x*7+y*13+dx)*2-1)*1.5;
+      if(dx){const X=(dx>0?x+1:x)*C;g.moveTo(X+j(),y*C);g.lineTo(X+j(),(y+1)*C);}
+      else{const Y=(dy>0?y+1:y)*C;g.moveTo(x*C,Y+j());g.lineTo((x+1)*C,Y+j());}
+      g.stroke();
+    }
+  }
+  // the edge of sight: a fine brass line, so "what I see now" never needs a colour guess
+  g.strokeStyle="rgba(201,163,94,.75)";g.lineWidth=2;g.setLineDash([6,5]);
+  g.beginPath();g.moveTo(12*C,2*C);g.lineTo(12*C,7*C);g.moveTo(12*C,9*C);g.lineTo(12*C,14*C);g.stroke();g.setLineDash([]);
+  // torches
+  for(const [x,y] of torches){g.fillStyle="#ffb04a";g.beginPath();g.arc(x*C+C/2,y*C+C/2,8,0,7);g.fill();
+    const r=g.createRadialGradient(x*C+25,y*C+25,0,x*C+25,y*C+25,70);r.addColorStop(0,"rgba(255,160,70,.5)");r.addColorStop(1,"rgba(255,160,70,0)");g.fillStyle=r;g.fillRect(x*C-45,y*C-45,140,140);}
+  // tokens: allies in the light, a foe in the dark you can see, a foe lurking out of sight is not drawn
+  const T=[[3,5,0,"#5b8fc0"],[4,8,1,"#5b8fc0"],[9,6,2,"#c9473a"],[10,12,3,"#c9473a"]];
+  for(const [x,y,i,col] of T){const cx=x*C+C/2,cy=y*C+C/2;
+    g.save();g.beginPath();g.arc(cx,cy,C*.42,0,7);g.clip();g.drawImage(tok[i],cx-C*.42,cy-C*.42,C*.84,C*.84);g.restore();
+    g.strokeStyle=col;g.lineWidth=4;g.beginPath();g.arc(cx,cy,C*.42,0,7);g.stroke();}
+  // labels
+  g.font="700 15px Georgia";g.fillStyle="#f0d79e";g.shadowColor="#000";g.shadowBlur=4;
+  const lab=[["IN SIGHT, LIT",3,4],["IN SIGHT, UNLIT",8,15],["SEEN BEFORE",15,5],["NEVER SEEN",24,5]];
+  for(const [t,x,y] of lab){g.fillStyle=(V.void==="#0e0b08"&&t==="NEVER SEEN")?"#8a7a5a":(t==="NEVER SEEN"||t==="SEEN BEFORE"&&V.mem!=="paper"?"#3b2a18":"#f0d79e");
+    g.shadowBlur=(t==="NEVER SEEN"||t==="SEEN BEFORE")?0:4;g.fillText(t,x*C,y*C);}
+  // legend
+  const L=document.getElementById("legend");
+  const sw=[["IN SIGHT, LIT","Warm, full colour. The brightest the board gets.","linear-gradient(#e8c58a,#a77c42)"],
+    ["IN SIGHT, UNLIT","Real floor, cool and dim. Always darker than lit, always brighter than remembered.","linear-gradient(#3a4660,#222a3c)"],
+    ["SEEN BEFORE",V.mem==="ink"?"Ink walls on pale paper: the floor is a drawing, not a place.":V.mem==="paper"?"Flat paper survey, walls inked.":"Floor washed to pale paper, walls inked.","#d8c598"],
+    ["NEVER SEEN",V.void==="#0e0b08"?"The dark table. Nothing is there to show.":"Blank paper, the lightest of all.",V.void]];
+  L.innerHTML=sw.map(([t,d,c])=>`<div><i style="background:${c}"></i><span><b>${t}</b>${d}</span></div>`).join("")+
+    `<div style="font-size:15px;color:#b9a27c;display:block">The dashed brass line is the edge of what you see now. The same four values hold in every variant.</div>`;
+}
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);document.getElementById("stage").style.transform=`scale(${s})`;}
+fit();addEventListener("resize",fit);
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 // The board painted as an inked map: paper, hatched rock, the floor of the place, and over it
-// the fog (blank paper where the side has never looked) and the light, smoothed from the
+// the fog (the dark table where the side has never looked) and the light, smoothed from the
 // per-cell levels the server sends.
 //
 // The map is painted once per state into a "world" canvas at a fixed cell size; the camera
@@ -24,8 +24,8 @@ const Board = (() => {
     const im = new Image(); im.onload = () => { IMG[f.split(".")[0]] = im; r(); }; im.onerror = r;
     im.src = "/client/img/" + f;
   })));
-  // One value scale holds every layer apart: never-seen paper is the lightest, the floor sits mid,
-  // walls are dark and the tokens carry the strongest contrast. Each place tints one texture:
+  // One value scale holds every layer apart: what was seen before is pale paper, the lit floor sits
+  // mid, the never seen is the dark table, walls are dark and the tokens carry the strongest contrast. Each place tints one texture:
   // `hue` gives it the place's colour (a "color" blend keeps the engraving's values), `mul` then
   // pulls it down into the floor's band. `cells` is the texture's span on the board.
   const FLOORS = {
@@ -39,7 +39,7 @@ const Board = (() => {
   // walls by kind: the masonry's fill, and the tint (as the floors') that sinks a tree or a boulder into the dark band
   const WALL = {block: "#4b3f33", tree: {hue: "#4e5f3c", mul: "#9da38c"}, rock: {hue: "#6d6f73", mul: "#8e8b86"}};
 
-  let staticKey = null, staticCanvas = null, paperCanvas = null, worldPaper = null, worldCanvas = null;
+  let staticKey = null, staticCanvas = null, paperCanvas = null, worldVoid = null, worldCanvas = null;
 
   const K = (x, y) => x + "," + y;
   function hash(x, y, s = 0) {
@@ -363,10 +363,8 @@ const Board = (() => {
   function memory(g, s) {
     if (memKey !== staticKey) {
       const [m, mc] = canvas();
-      mc.filter = "grayscale(1) sepia(.6) brightness(.58) contrast(.8)";
+      mc.filter = "grayscale(1) sepia(.8) brightness(1.55) contrast(.4)";
       mc.drawImage(staticCanvas, 0, 0); mc.filter = "none";
-      mc.strokeStyle = "rgba(30,20,10,.22)"; mc.lineWidth = 1;
-      for (let k = -WH; k < WW; k += 7) { mc.beginPath(); mc.moveTo(k, 0); mc.lineTo(k + WH, WH); mc.stroke(); }
       memKey = staticKey; memCanvas = m;
     }
     const seen = new Set(s.seen.map(([x, y]) => K(x, y)));
@@ -434,8 +432,8 @@ const Board = (() => {
     g.save(); g.beginPath(); g.rect(L.ox, L.oy, L.cols * L.cell, L.rows * L.cell); g.clip();
     g.globalCompositeOperation = "multiply"; g.drawImage(lit, 0, 0); g.restore();
 
-    // never seen: plain paper laid over the board
-    g.drawImage(masked(worldPaper, cellGrid((x, y) => !vis.has(K(x, y)) && !seen.has(K(x, y)) ? "#fff" : null), blur), 0, 0);
+    // never seen: the dark table, empty
+    g.drawImage(masked(worldVoid, cellGrid((x, y) => !vis.has(K(x, y)) && !seen.has(K(x, y)) ? "#fff" : null), blur), 0, 0);
 
     // the glow of what burns
     g.save(); g.globalCompositeOperation = "screen";
@@ -505,17 +503,17 @@ const Board = (() => {
   async function draw(s) {
     await ready;
     const b = s.board;
-    if (layout(b.cols, b.rows) || !worldPaper) {
-      const [pc, p] = canvas(); paper(p, WW, WH, "#e6d5b0", 13);
+    if (layout(b.cols, b.rows) || !worldVoid) {
+      const [pc, p] = canvas(); paper(p, WW, WH, "#0e0b08", 13);
       const r = rng(77);
       for (let i = 0; i < 260; i++) {
         const x = L.ox + r() * L.cols * L.cell, y = L.oy + r() * L.rows * L.cell;
-        p.strokeStyle = `rgba(90,65,40,${.04 + r() * .07})`; p.lineWidth = .8;
+        p.strokeStyle = `rgba(150,115,70,${.03 + r() * .04})`; p.lineWidth = .8;
         p.beginPath(); p.moveTo(x, y); p.lineTo(x + 8 + r() * 14, y - 2 - r() * 8); p.stroke();
       }
-      worldPaper = pc;
+      worldVoid = pc;
     }
-    if (!paperCanvas) { const [pc, p] = canvas(W, H); paper(p, W, H, "#e6d5b0", 11); paperCanvas = pc; }
+    if (!paperCanvas) { const [pc, p] = canvas(W, H); paper(p, W, H, "#16110c", 11); paperCanvas = pc; }
     const key = [b.cols, b.rows, L.cell, b.floor, b.walls.length, b.water.length, b.elevation.length].join("|");
     if (key !== staticKey) { staticCanvas = drawStatic(b); staticKey = key; }
     const [wc, g] = scratch("world");
