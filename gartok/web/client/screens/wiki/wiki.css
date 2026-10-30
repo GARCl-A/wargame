@@ -40,6 +40,9 @@
 .e .tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
 .e .tags span{padding:4px 7px;border-radius:2px;font:600 10px/1 Cinzel,serif;letter-spacing:.12em;color:#7a2318;
   border:1px solid rgba(122,35,24,.55);transform:rotate(-1deg)}
+.e .tags .ref{cursor:pointer;color:#2c4f4a;border-color:rgba(44,79,74,.6);text-decoration:underline dotted rgba(44,79,74,.6);text-underline-offset:2px}
+.e .tags .ref:hover{color:#1d3733;background:rgba(111,148,140,.18)}
+.e.focus{background:linear-gradient(90deg,rgba(201,163,94,.28),rgba(201,163,94,0) 90%);box-shadow:inset 3px 0 0 var(--brass)}
 .e mark{background:rgba(201,163,94,.45);color:inherit;border-radius:2px}
 .none{margin-top:30px;font:italic 20px/1.4 "IM Fell English",serif;color:#7b6142}
 

@@ -79,7 +79,8 @@ def test_the_sheet_and_the_foe_card_carry_the_weapon_and_its_action():
     d.weapon_hand = True
     assert unit_to_ch(a)["weapon"]["action"] == "Cleave"
     card = foe_card.foe_card(intel.known_fields(batt, "player", d))
-    assert card["weapon"] == {"name": "Broadsword", "action": "Parry & Strike"}
+    assert card["weapon"]["name"] == "Broadsword" and card["weapon"]["action"] == "Parry & Strike"
+    assert card["weapon"]["action_tip"].startswith("Parry & Strike\nWeapon action")
     assert all(label != "weapon" for label, _ in card["equipment"])
 
 
@@ -88,7 +89,7 @@ def test_a_disarmed_foe_shows_bare_hands():
     d.equip_weapon("Broadsword")
     d.disarm()
     card = foe_card.foe_card(intel.known_fields(batt, "player", d))
-    assert card["weapon"] == {"name": "unarmed", "action": None}
+    assert card["weapon"] == {"name": "unarmed", "action": None, "action_tip": ""}
 
 
 # --------------------------------------------------------------------------- #

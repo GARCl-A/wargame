@@ -38,9 +38,11 @@ function entry(e) {
   const list = W.chapter === "rules" || e.body.length > 1;
   const body = list ? `<ul>${e.body.map(l => `<li>${lit(l)}</li>`).join("")}</ul>` : e.body.map(l => `<p>${lit(l)}</p>`).join("");
   const track = e.track && e.track.length ? `<p><i>Racial track:</i> ${e.track.map(lit).join(", ")}</p>` : "";
-  return `<div class="e"><div class="hd">${ico(e.glyph, "gl")}<div><b>${lit(e.name)}</b>${e.kind ? `<span class="k">${esc(e.kind)}</span>` : ""}</div></div>
+  const tags = e.tags.map(t => `<span>${esc(t)}</span>`).join("")
+    + e.links.map(l => `<span class="ref" data-ref="${esc(l.ref)}"${tip(l.tip, "item")}>${lit(l.label)}</span>`).join("");
+  return `<div class="e ${e.id === W.focus ? "focus" : ""}" data-id="${esc(e.id)}"><div class="hd">${ico(e.glyph, "gl")}<div><b>${lit(e.name)}</b>${e.kind ? `<span class="k">${esc(e.kind)}</span>` : ""}</div></div>
     ${e.meta.length ? `<div class="m">${e.meta.map(lit).join(" · ")}</div>` : ""}${body}${track}
-    ${e.tags.length ? `<div class="tags">${e.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}</div>`;
+    ${tags ? `<div class="tags">${tags}</div>` : ""}</div>`;
 }
 
 function render(state) {
@@ -57,11 +59,17 @@ function render(state) {
   el.className = W.chapter === "rules" ? "rules" : "";
   el.innerHTML = W.entries.length ? `<div class="cols">${W.entries.map(entry).join("")}</div>`
     : `<div class="none">Nothing in ${esc(label.toLowerCase())} reads “${esc(W.query.trim())}”.</div>`;
+  const at = W.focus && [...el.querySelectorAll(".e")].find(x => x.dataset.id === W.focus);
+  if (at) at.scrollIntoView({block: "center"});
 }
 
 $("chapters").addEventListener("click", e => {
   const t = e.target.closest("[data-ch]");
   if (t && t.dataset.ch !== W.chapter) { Sound.play("click"); $("entries").scrollTop = 0; post("chapter", {chapter: t.dataset.ch}); }
+});
+$("entries").addEventListener("click", e => {
+  const t = e.target.closest("[data-ref]");
+  if (t) { Sound.play("click"); post("open", {ref: t.dataset.ref}); }
 });
 // a find dropped while another was on its way is sent again once the answer shows the page behind
 function find() {

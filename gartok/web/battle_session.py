@@ -18,6 +18,7 @@ from .. import (
     intel,
     lighting,
     vision,
+    wiki_terms,
 )
 from ..board import cells
 from ..combatant import AP_PER_TURN
@@ -590,7 +591,8 @@ class BattleSession(Session):
             "weapon": None if w is None else {
                 "name": w.name, "damage": f"{w.damage[0]}d{w.damage[1]}" if w.damage else None,
                 "thrown": w.thrown or None, "range": w.range or None,
-                "action": next((a.name for a in actions.WEAPON_ACTIONS if w.has_trait(a.id)), None),
+                "action": (act := next((a.name for a in actions.WEAPON_ACTIONS if w.has_trait(a.id)), None)),
+                "action_tip": wiki_terms.action_tip(act),
             },
             "conditions": [intel.CONDITION_LABELS.get(c.id, c.id) for c in u.conditions],
         }

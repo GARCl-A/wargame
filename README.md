@@ -311,7 +311,7 @@ gartok/
   text_field.py     a one-line text box's buffer + caret (every name field types through it)
   # pygame is abandoned (docs/plans/web_frontend.md): what is left is held headless by web/ for its
   # rules until they move out, or is the Editor's
-  wiki_rules.py / wiki_races.py (the compendium's RULES / RACES)
+  wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
   battle_screen.py (input + turn flow) / battle_draw.py (everything it paints)
   the Editor: editor_app.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py / combat_lab_screen.py
 

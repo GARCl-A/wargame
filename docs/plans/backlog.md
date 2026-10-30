@@ -65,7 +65,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   `wiki_rules.py`) becomes one keyword with its own wiki entry, and the descriptions say only the
   keyword: shorter text, and the rules become a set of words that always mean the same thing. Start with
   *Double blow* (the name is open) and look for the next ones (Flanked, Prone, the conditions already
-  are). The wiki links them (web_frontend.md, item 2); `ai.py` and the numbers do not change.
+  are). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai.py` and the numbers do not change.
 
 - **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
   wagon left behind is done (2026-10-30). Left: the hand-over

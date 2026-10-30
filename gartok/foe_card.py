@@ -1,6 +1,6 @@
 """Adapter: what `intel.known_fields` says of a foe, as the plain dict `ui/foe_panel` draws."""
 
-from . import intel
+from . import intel, wiki_terms
 
 
 def _row(label, value, tip=None):
@@ -51,5 +51,6 @@ def foe_card(known):
             else f"INT read {known.margin:+} on DC {known.dc}")
     return {"name": v["name"], "race": v["race"], "size": v["size"], "alignment": v["alignment"],
             "conditions": v["conditions"], "steps": known.steps, "steps_max": intel.STEPS,
-            "weapon": {"name": v["weapon"] or "unarmed", "action": v["weapon_action"]},
+            "weapon": {"name": v["weapon"] or "unarmed", "action": v["weapon_action"],
+                       "action_tip": wiki_terms.action_tip(v["weapon_action"])},
             "equipment": equipment, "read": read, "bands": bands}

@@ -7,7 +7,7 @@ import urllib.request
 
 import pytest
 
-from gartok import items, persist, recorder, settings, talents, wiki_rules
+from gartok import items, persist, recorder, settings, talents, weapon_traits, wiki_rules, wiki_terms
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.web.map_session import MapSession
@@ -130,6 +130,57 @@ def test_the_wiki_filter_reads_more_than_the_name_and_holds_across_chapters(save
     assert w.find("")["entries"]
 
 
+def test_every_trait_and_action_an_item_names_opens_its_entry_and_shows_it_on_hover(saves):
+    w = WikiSession(lambda: {"screen": "title"})
+    pages = w.state()["entries"]
+    named = 0
+    for it in items.all_items().values():
+        page = next(e for e in pages if e["name"] == it.name)
+        for tid in it.traits:
+            if weapon_traits.get(tid):
+                assert f"actions:{tid}" in [x["ref"] for x in page["links"]], (it.name, tid)
+        for link in page["links"]:
+            named += 1
+            st = w.open(link["ref"])
+            entry = next(e for e in st["entries"] if e["id"] == st["focus"])
+            assert st["chapter"] == "actions" and link["tip"].startswith(entry["name"] + "\n")
+            assert entry["body"] == [] or entry["body"][0] in link["tip"]
+        w.chapter("items")
+    assert named > 50
+
+
+def test_the_wiki_links_what_an_item_brings_besides_its_traits(saves):
+    w = WikiSession(lambda: {"screen": "title"})
+    links = {e["name"]: [x["label"] for x in e["links"]] for e in w.state()["entries"]}
+    assert links["Axe"] == ["Cleave"]
+    assert links[items.FIRST_AID_ITEM] == ["First Aid", "Stabilize"]
+    assert links[items.SIGNAL_HORN_ITEM] == ["Signal Horn"]
+    dagger = next(it for it in items.all_items().values() if it.finesse and it.thrown)
+    assert "Finesse" in links[dagger.name] and f"Thrown {dagger.thrown} sq" in links[dagger.name]
+    assert "Throw" in links[dagger.name]
+    sword = next(e for e in w.state()["entries"] if e["name"] == "Broadsword")
+    assert links["Broadsword"] == ["Parry & Strike"] and "Parry & Strike" not in sword["tags"]
+    assert w.find("cleave")["entries"] and all("Cleave" in json.dumps(e) for e in w.state()["entries"])
+
+
+def test_opening_an_entry_turns_to_it_with_the_filter_cleared(saves):
+    w = WikiSession(lambda: {"screen": "title"})
+    w.find("axe")
+    st = w.open("actions:cleave")
+    assert (st["chapter"], st["query"], st["focus"]) == ("actions", "", "cleave")
+    assert st["focus"] in [e["id"] for e in st["entries"]]
+    assert w.chapter("items")["focus"] is None
+    for bad in ("actions:nothing", "spells:cleave", "cleave"):
+        with pytest.raises(ValueError, match="no entry"):
+            w.open(bad)
+    assert w.state()["chapter"] == "items"
+
+
+def test_a_sheet_names_its_weapon_action_with_the_entry_on_hover():
+    assert wiki_terms.action_tip("Cleave") == wiki_terms.tip("cleave")
+    assert wiki_terms.action_tip(None) == "" and wiki_terms.action_tip("Nothing") == ""
+
+
 # ---------------------------------------------------------------- the map's menu
 def test_the_maps_menu_saves_under_a_name_and_comes_back_from_the_wiki(saves):
     game = _map()
@@ -172,6 +223,7 @@ def test_the_router_serves_both_screens(saves):
             assert urllib.request.urlopen(f"{url}/client/screens/{f}").status == 200
         assert post("/api/title/wiki", {}) == {"screen": "wiki"}
         assert post("/api/wiki/chapter", {"chapter": "beasts"})["chapter"] == "beasts"
+        assert post("/api/wiki/open", {"ref": "actions:cleave"})["focus"] == "cleave"
         assert post("/api/wiki/back", {}) == {"screen": "title"}
         assert post("/api/title/settings", {}) == {"screen": "settings"}
         assert post("/api/settings/set", {"key": "volume", "value": 50})["volume"] == 50

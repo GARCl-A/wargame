@@ -96,7 +96,7 @@ const Sheet = (() => {
         ${u.stats.map(s => `<div class="box"${tip(s.tip, "sum")}><div class="k">${s.k}</div><div class="v">${esc(String(s.v).replace("-", "−"))}</div></div>`).join("")}
       </div>
       <div class="weapon">${ico(u.weapon.glyph)}<div><h3>${esc(u.weapon.name)}</h3><div class="tags">${esc(u.weapon.tags.replace(/ {2}· {2}/g, " · "))} · ${esc(u.weapon.crit)}</div></div></div>
-      <div class="chips">${u.weapon.chips.map(c => `<div class="chip"${tip(c.tip)}><span>${c.k}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"><span>ACTION</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
+      <div class="chips">${u.weapon.chips.map(c => `<div class="chip"${tip(c.tip)}><span>${c.k}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"${tip(u.weapon.action_tip, "item")}><span>ACTION</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
       <div class="sec2"><div class="kicker">Kit</div><div class="kit">
         ${u.kit.map(r => `<div class="r"><span>${r.k}</span><b>${r.k === "Purse" ? `<i class="coindot"></i> ` : ""}${esc(r.v)}</b><em class="${r.bad ? "bad" : ""}">${esc(r.note)}</em></div>`).join("")}
       </div></div>

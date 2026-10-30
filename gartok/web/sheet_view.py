@@ -3,7 +3,7 @@ screen that shows a person opens (`Session.sheet`, `Sheet` in `shell.js`). A uni
 draft's pool) has no band, roles or record of who brought them in.
 """
 
-from .. import data, item_icon, talents
+from .. import data, item_icon, talents, wiki_terms
 from ..animals import Animal
 from ..combatant import Combatant
 from ..constants import fmt_money
@@ -79,6 +79,7 @@ def member_sheet(u, guild=None, task=None):
                   {"k": "SPD", "v": ch["spd"], "tip": _breakdown("Speed (squares)", u.speed_breakdown(), c.speed)},
                   {"k": "INIT", "v": ch["init"], "tip": _breakdown("Initiative", u.initiative_breakdown(), ch["init"])}],
         "weapon": {"name": weapon["name"], "tags": weapon["tags"], "crit": w["crit"], "action": w["action"],
+                   "action_tip": wiki_terms.action_tip(w["action"]),
                    "glyph": item_icon.glyph(u.equipped_weapon) if u.equipped_weapon else "item/knapsack",
                    "chips": [{"k": k, "v": v, "tip": t} for k, v, t in weapon["chips"]]},
         "kit": [{"k": "Hands", "v": gear["hands"], "note": ""},

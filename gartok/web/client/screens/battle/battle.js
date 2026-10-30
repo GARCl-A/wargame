@@ -168,7 +168,7 @@ function renderInspect() {
       <div><h2>${esc(t.name)}</h2><div class="race">${esc(t.race)} · ${esc(t.occupation)} · ${esc(t.alignment)}</div>
       <div class="chips">${(t.conditions || []).map(c => `<span class="chip muted">${esc(c)}</span>`).join("")}</div></div></div>
       <div class="known"><div class="tier"><span>Vitals</span><div class="facts"><span>HP <b>${t.hp}/${t.hp_max}</b></span><span>AC <b>${t.ac}</b></span><span>MD <b>${t.md}</b></span><span>Speed <b>${t.speed}</b></span></div></div>
-      ${t.weapon ? `<div class="tier"><span>Weapon</span><div class="facts"><span><b>${esc(t.weapon.name)}</b> ${esc(t.weapon.damage || "")}</span>${t.weapon.action ? `<span>${esc(t.weapon.action)}</span>` : ""}</div></div>` : ""}</div>`;
+      ${t.weapon ? `<div class="tier"><span>Weapon</span><div class="facts"><span><b>${esc(t.weapon.name)}</b> ${esc(t.weapon.damage || "")}</span>${t.weapon.action ? `<span${tip(t.weapon.action_tip, "item")}>${esc(t.weapon.action)}</span>` : ""}</div></div>` : ""}</div>`;
     return;
   }
   const bars = Array.from({length: t.steps_max}, (_, i) => `<i class="${i < t.steps ? "on" : ""}"></i>`).join("");
@@ -179,7 +179,7 @@ function renderInspect() {
     <div class="foehead"><div class="med" style="--side:${SEAT[t.seat] || "var(--blood)"}">${face(t.portrait, t.name)}</div>
     <div><h2>${esc(t.name)}</h2><div class="race">${esc(t.race)} · ${esc(t.alignment)}</div>
     <div class="chips">${chips}</div><div class="health">${bars}</div></div></div>
-    <div class="known"><div class="tier"><span>Arms</span><div class="facts"><span><b>${esc(t.weapon.name)}</b></span>${t.weapon.action ? `<span>${esc(t.weapon.action)}</span>` : ""}
+    <div class="known"><div class="tier"><span>Arms</span><div class="facts"><span><b>${esc(t.weapon.name)}</b></span>${t.weapon.action ? `<span${tip(t.weapon.action_tip, "item")}>${esc(t.weapon.action)}</span>` : ""}
     ${t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")}</div></div>${bands}</div>
     <div class="assess">${esc(t.read)} — Assess to read more.</div>`;
 }

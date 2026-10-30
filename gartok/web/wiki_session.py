@@ -6,7 +6,6 @@ from typing import ClassVar
 
 from .. import (
     abilities,
-    actions,
     art_files,
     data,
     item_icon,
@@ -15,6 +14,7 @@ from .. import (
     weapon_traits,
     wiki_races,
     wiki_rules,
+    wiki_terms,
 )
 from .session import Session
 
@@ -23,10 +23,15 @@ CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), 
 MAX_QUERY = 24
 
 
-def _entry(name, kind="", meta=(), body=(), tags=(), glyph=None, find=()):
-    """One card: `find` is what the filter reads besides the name and the kind."""
-    return {"name": name, "kind": kind, "meta": [m for m in meta if m], "body": list(body), "tags": list(tags),
-            "glyph": glyph, "_find": " ".join([name, kind, *find]).lower()}
+def _entry(name, kind="", meta=(), body=(), tags=(), glyph=None, find=(), eid=None, links=()):
+    """One card: `find` is what the filter reads besides the name and the kind; `links` are the terms
+    it names, each a tag that opens the term's entry and shows it on hover."""
+    return {"id": eid or name, "name": name, "kind": kind, "meta": [m for m in meta if m], "body": list(body),
+            "tags": list(tags), "links": list(links), "glyph": glyph, "_find": " ".join([name, kind, *find]).lower()}
+
+
+def _link(tid, label):
+    return {"ref": f"actions:{tid}", "label": label, "tip": wiki_terms.tip(tid)}
 
 
 def _item(it):
@@ -35,17 +40,14 @@ def _item(it):
         tags.append(f"{it.damage[0]}d{it.damage[1]}")
     if it.ac:
         tags.append(f"AC +{it.ac}")
-    tags += [(t.name if (t := weapon_traits.get(tid)) else tid.replace("_", " ").title()) for tid in it.traits]
-    if it.finesse and not it.traits:
-        tags.append("Finesse")
-    if it.thrown:
-        tags.append(f"Thrown {it.thrown} sq")
+    tags += [tid.replace("_", " ").title() for tid in it.traits if not weapon_traits.get(tid)]
+    links = [_link(tid, label) for tid, label in wiki_terms.of_item(it)]
     if it.range:
         tags.append(f"Range {it.range} sq")
     if it.hands == 2:
         tags.append("Two-handed")
     return _entry(it.name, it.type.value, [f"{it.weight:g} kg", f"${it.price}", it.rarity.value], tags=tags,
-                  glyph=item_icon.glyph(it.name))
+                  glyph=item_icon.glyph(it.name), links=links, find=[x["label"] for x in links])
 
 
 def _recipe(target, rec):
@@ -57,19 +59,8 @@ def _recipe(target, rec):
 
 
 def _actions():
-    out, seen = [], set()
-    for tr in weapon_traits.all_traits():
-        if tr.id not in seen:
-            seen.add(tr.id)
-            out.append(_entry(tr.name, "Weapon action · 2 AP" if tr.action_id else "Weapon trait", body=[tr.desc],
-                              find=[tr.desc]))
-    for a in actions.PANEL_ACTIONS:
-        if a.id not in seen:
-            seen.add(a.id)
-            kind = "Combat" if a in actions.COMBAT_ACTIONS else "Utility"
-            desc = getattr(a, "desc", "") or ""
-            out.append(_entry(a.name, f"{kind} · {a.cost} AP", body=[desc] if desc else [], find=[desc]))
-    return sorted(out, key=lambda e: e["name"])
+    return sorted((_entry(t["name"], t["kind"], body=[t["text"]] if t["text"] else [], find=[t["text"]], eid=tid)
+                   for tid, t in wiki_terms.terms().items()), key=lambda e: e["name"])
 
 
 def _talents():
@@ -124,6 +115,7 @@ class WikiSession(Session):
     POST: ClassVar[dict] = {
         "chapter": lambda s, b: s.chapter(b["chapter"]),
         "find": lambda s, b: s.find(b.get("q", "")),
+        "open": lambda s, b: s.open(b["ref"]),
         "back": lambda s, b: s.back_to(),
     }
 
@@ -132,15 +124,26 @@ class WikiSession(Session):
         self.back_label = back_label
         self.tab = "items"
         self.query = ""
+        self.focus = None
 
     def chapter(self, tab):
         if tab not in BUILD:
             raise ValueError(f"no chapter called {tab}")
         self.tab = tab
+        self.focus = None
+        return self.state()
+
+    def open(self, ref):
+        """Turn to the entry `ref` ("chapter:id") names, the filter cleared so it shows."""
+        tab, _, eid = str(ref).partition(":")
+        if tab not in BUILD or not any(e["id"] == eid for e in BUILD[tab]()):
+            raise ValueError(f"no entry called {ref}")
+        self.tab, self.query, self.focus = tab, "", eid
         return self.state()
 
     def find(self, q):
         self.query = str(q)[:MAX_QUERY].lower()
+        self.focus = None
         return self.state()
 
     def state(self):
@@ -148,4 +151,5 @@ class WikiSession(Session):
         q = self.query.strip()
         shown = [{k: v for k, v in e.items() if k != "_find"} for e in rows if not q or q in e["_find"]]
         return {"chapters": [{"id": c, "label": label} for c, label in CHAPTERS], "chapter": self.tab,
-                "query": self.query, "entries": shown, "total": len(rows), "back": self.back_label}
+                "query": self.query, "entries": shown, "total": len(rows), "back": self.back_label,
+                "focus": self.focus}
