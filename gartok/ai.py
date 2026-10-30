@@ -643,6 +643,8 @@ def _recover_torch(battle, unit):
     any enemies, prioritize fetching a torch on the ground to illuminate."""
     if getattr(battle, "ambient_light", False) or vision.dark_range(unit) or unit.torch_hand:
         return False
+    if unit.free_hands < 1:               # the torch would drop a two-hander, which it would then fetch back
+        return False
     if any(battle.can_see_unit(unit, e) for e in battle.units if e.alive and e.team != unit.team):
         return False
     torches = _torches_on_ground(battle)
@@ -1428,6 +1430,18 @@ def _fetch(battle, unit):
     return True
 
 
+def _sight_cell(battle, unit, target):
+    """A step toward a cell beside `target` with a clear line to it, for a unit that stands next to a
+    foe it cannot see (across a wall corner); None when it sees the foe or no such cell is reachable."""
+    if battle.can_see_unit(unit, target):
+        return None
+    board = battle.board
+    goals = [p for p in board.neighbors(target.pos)
+             if p not in board.walls and (battle.unit_at(p) in (None, unit)) and board.los_clear(p, target.pos)]
+    dest = _reachable_step(battle, unit, goals, reach=0)
+    return dest if dest is not None and dest != unit.pos else None
+
+
 def _reachable_step(battle, unit, goals, reach=1):
     """The step toward the nearest of `goals` (ground objects or cells) the unit can get to, or None."""
     cells = [getattr(g, "pos", g) for g in goals]
@@ -1713,6 +1727,11 @@ def take_turn(battle, unit):
 
         dest = _step_toward(battle, unit, target.pos, _approach_reach(unit))
         if dest == unit.pos:
+            sight = _sight_cell(battle, unit, target)
+            if sight is not None:
+                actions.MOVE.execute(battle, unit, sight)
+                unit.walking = False
+                continue
             # can't walk any closer -- maybe a pit or deep water is in the way.
             
             if "floating_disk" in getattr(unit, "spells_known", []):

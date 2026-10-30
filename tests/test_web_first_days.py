@@ -9,8 +9,6 @@ import pytest
 from gartok import ai, vocations
 from gartok.web.server import Game
 
-STALL_ROUNDS = 40       # the AI standing in for the player can stall on foes out of sight (backlog); a person would not
-
 
 @pytest.fixture(autouse=True)
 def no_pygame(monkeypatch):
@@ -47,10 +45,6 @@ class Player:
                 return
             if s.screen == "battle":
                 b = s.battle
-                if b.winner is None and b.round_no > STALL_ROUNDS:
-                    for c in b.foe_units:
-                        c.hp, c.status = 0, "dead"
-                    b.winner = "player"
                 if b.winner is not None:
                     s.done()
                 elif s._setup() == "trap":

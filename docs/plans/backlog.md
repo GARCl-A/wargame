@@ -87,15 +87,9 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
   cancelled. The old screens are in git before the cut.
 
-- **The AI stalls with every foe out of sight in the Pit (found 2026-10-28).** In an arena bout nobody brought the
-  fight (`Battle.aggressor` is None), so `ai._target` walks toward the nearest foe even unseen, but a foe it cannot
-  see it cannot strike: two sides adjacent in the dark Pit (the floor torches all taken or dropped out of reach), or
-  a lone fighter walled off from the rest, pass their turns forever. Only AI against AI shows it (a person goes
-  looking): the combat lab, `sim_test.py`, `tests/test_web_first_days.py` (which ends such a fight after 40
-  rounds). Same family as the Ribbit Brothers' capture the flag, which stalls AI against AI at seed 7.
-  Fix it together with the `ai.py` split (author 2026-10-30): the file is ~1750 lines and ~94 functions, the
-  stall lives in `_target`, so the fix is the moment to cut the file by concern (target choice, movement,
-  action choice) and leave it smaller, with the same behaviour (`tests/test_ai_actions`, `sim_test.py`).
+- **Split `ai.py` by concern (author 2026-10-30).** The file is ~1750 lines and ~94 functions; cut it
+  into target choice, movement and action choice, with the same behaviour (`tests/test_ai_actions`,
+  `sim_test.py`), before the temperament per trait goes in.
 
 - **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per
   test, runs under `pytest-xdist` and the skills use it; four tests still lean on luck and the

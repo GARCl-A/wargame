@@ -5,6 +5,7 @@ import random
 from tests.helpers import (
     Battle,
     CustomScenario,
+    GroundObject,
     Unit,
     _melee_battle,
     _recruit,
@@ -299,3 +300,34 @@ def test_the_ai_takes_the_flank_and_then_strikes():
     foe.add_condition(Demoralized())                          # so the spare point is not spent shouting
     ai.take_turn(batt, b)
     assert any("Flank" in line for line in batt.log_lines)    # it walked round and struck with the +2
+
+
+def _dark_pair():
+    batt, a, d = _melee_battle()
+    batt.ambient_light = False
+    batt.board.walls = {(5, 6), (6, 5)}
+    batt.ground.clear()
+    a.pos, d.pos = (5, 5), (6, 6)
+    a.torch_hand = d.torch_hand = False
+    a.ap = 2
+    return batt, a, d
+
+
+def test_a_fighter_beside_a_foe_it_cannot_see_walks_to_where_it_can():
+    from gartok import ai
+    batt, a, d = _dark_pair()
+    batt.turn_idx = batt.order.index(a)
+    assert batt.aggressor is None and not batt.can_see_unit(a, d)
+    ai.take_turn(batt, a)
+    assert a.pos != (5, 5)                                    # it did not stand and defend in place
+    assert batt.can_see_unit(a, d) or d.hp < d.hp_max         # it can see the foe now, or already struck it
+
+
+def test_a_two_handed_fighter_does_not_trade_its_weapon_for_a_torch():
+    from gartok import ai
+    batt, a, d = _dark_pair()
+    batt.ground.append(GroundObject.torch((5, 4)))
+    a.equip_weapon("Glaive")
+    assert a.free_hands < 1 and not ai._recover_torch(batt, a)
+    a.equip_weapon("Dagger")
+    assert ai._recover_torch(batt, a)                         # a free hand: it does fetch the light
