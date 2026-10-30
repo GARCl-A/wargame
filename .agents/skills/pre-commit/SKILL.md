@@ -119,7 +119,9 @@ only makes sense historically is the expensive one.
    - **Docs that describe what changed.** For each flag, function, constant,
      module or behaviour the diff adds, removes or renames, `grep` the names
      (and the old prose, such as "never heals") across `RULES.md`,
-     `README.md`, `AGENTS.md` (the module table, the design premises), `docs/plans/*.md` and
+     `README.md` (the *Structure* module list), `AGENTS.md` (conventions, premises,
+     load-bearing rules only: it rides on every request, so a module's description never
+     goes there), `docs/plans/*.md` and
      `locales/en.json` tutorial copy. Fix every sentence that is now false.
      `REFERENCE.md` is generated: regenerate it, never edit it by hand.
    - **Follow-ups the diff creates.** Debt left on purpose, a split-off task

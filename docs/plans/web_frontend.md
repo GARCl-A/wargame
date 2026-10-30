@@ -177,8 +177,8 @@ game.
 
 Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
 `icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.
-They go with the last screen that reads them. Then `AGENTS.md` (the UI conventions, the `ui/` rows of the
-module table, the pygame rule) and `gartok/ui/README.md` are rewritten for the web layer.
+They go with the last screen that reads them. Then `AGENTS.md` (the pygame rule), the `ui/` lines of
+`README.md`'s *Structure* and `gartok/ui/README.md` are rewritten for the web layer.
 
 **Done when:** no module of the game imports pygame (or, if the Editor stays pygame, none outside it).
 

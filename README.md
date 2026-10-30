@@ -223,6 +223,8 @@ gartok/
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
   loot.py           gathers the field loot after a lethal win
   spoils.py         the field's loot split among the survivors (no pygame; the report's FIELD)
+  aftermath.py      what the screens after a fight read (report rows, takedowns, LevelUp, Memorial,
+                    result_word), filled by campaign.absorb_battle
   progression.py    XP curves + the combat-XP rule (pure data, no gartok imports)
   talents.py        the talent trees: one per XP track, Effect(channel, amount, stat)
   magic.py          spell registry (level, sources) + study-difficulty math -- casting
@@ -232,6 +234,8 @@ gartok/
   # world + campaign
   world.py          the map graph: nodes, edges (distance), route (Dijkstra), Bout (arena offers)
   node_functions.py what a node can offer (shop, bank, forge...): order kind + map button, one entry each
+  map_view.py       what the map shows of a band and its node, no pygame (`MapView`: inspector blocks,
+                    the order's status, the REST plans, `NODE_ICON`), read by web/map_session.py
   shop.py           a shop's own till and finite shelf, one per node that offers `shop`
   trade.py          a shop's counter: buying, selling, the purse, the deal, the moves between packs
                     (`Counter`, the Library's `LibraryCounter`); no pygame, web/shop_tab.py trades through it
@@ -264,6 +268,7 @@ gartok/
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   rest.py           what a rest order costs in rations and how long "until full" lasts
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
+  objectives.py     the guild's 17 small orientation tasks (REPUTATIONS tab), each teaching a system
   missions.py       paid, deadlined jobs from a named giver (the Tanner, the Bankers'
                     trust chest) -- distinct from a Deed: has a reward and can fail
   arena.py          the Champion of the Pit title: dethrone, defend, the 15/7-day cycle
@@ -322,7 +327,7 @@ gartok/
                     session.py (a screen's server half), battle_session.py (one fight as the side
                     knows it), map_session.py (the map), hub_session.py + shop_tab.py (a place's
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
-                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), sheet_view.py (a member's sheet, the book any screen opens), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
+                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), sheet_view.py (a member's sheet, the book any screen opens), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), campaign_fight.py (a campaign fight entered and settled, then handed to the report), hunt_session.py (the hunt), watch_session.py (who minds the wagon), dialogue_session.py (the talk before a fight), report_session.py (the screens after a fight, and the clock's level-ups), talent_session.py (a member's talent trees), draft_session.py (a new guild), settings_session.py, wiki_session.py, title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
                     by screen), client/ (the shell + one folder per screen under screens/);
                     `python main.py` / `python -m gartok` (the title; `--editor` the Editor),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
