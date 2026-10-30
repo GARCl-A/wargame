@@ -3,13 +3,15 @@
 The one place for open work. What is already built is in the code, its tests and the git
 log; the long-range AI plan is [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-22. When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do* items again on 2026-10-30). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
 
 - **Pre-playtest plan** — what is left before the author's playtest, in order.
 - **Ready to do** — the task is defined enough to start, sorted by size.
+- **Deprioritised** and **Notes to remember** — wanted one day, not now.
+- **Playtest notes** — raw notes by date, sized as they are picked up.
 - **Needs more information** — a design question, a repro or another system has to land
   before the task can be sized.
 
@@ -164,7 +166,7 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   aspiration takes their place (*Needs more information -> Loyalty, the oath and who the members are*).
 - **Combat board:**
   - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
-  - Hit sounds do not fit the game (the UI sounds are fine); swap the Kenney variants in `assets/sounds/`.
+  - Hit sounds: in *Ready to do -> Small*.
 
 ## Playtest notes 2026-10-12
 
@@ -180,11 +182,16 @@ map**: a node has one "Enter" button and its functions are tabs inside.
 - **The Battlefield beyond the Faith mission.** For now its only use is the Faith Order's errands, and
   it stays that way (author 2026-10-17). Later it becomes one more place of Ledger Hold work and missions:
   what an open skirmish pays, how often the front has a fight. The supply run's walked order with an
-  ambush part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse.
+  ambush part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse. Ledger Hold would then have
+  two jobs, the supply run and the front itself (author 2026-10-30): the player enlists as reinforcement,
+  is paid to arrive and to fight in the skirmish already under way, and the job is to win it. That is
+  not a walked order with an ambush: the battle is the job, so it needs its own order kind.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there. Postponed (2026-10-12 &
   2026-10-19) to design an excavation system with tools (Shovel / Pick), multi-step iterations,
   artifacts, money and lost lore. The Ruins now remember a raid (`Guild.ruins_cleared`) and drop off the
   inspector once empty, so a dig needs the node to keep offering something after it is cleared.
+  Author 2026-10-30: still no idea of how archaeology should work to be interesting; nothing to size
+  until that answer exists.
 - **The Claim:** let the player build their own farm to stock food.
 - **Combat leveling (Lv 1 -> 2):** the Wilds weights were fixed (`142b6f5`); assist XP or an
   intermediate arena bout wait on future playtests.
@@ -376,7 +383,7 @@ Keep these while building them:
     deadline) are all ones the player chooses. Lumber saturating the wood price enters with the production chain.
   - **Weather fog**, if it ever exists: how it looks apart from darkness. Questions for the author:
     (1) does weather live on the world map, on the board, or both? (2) does it change rules (sight, shots)
-    or only the look? (3) before the playtest or after (proposed: after)?
+    or only the look? (3) before the playtest or after: decided 2026-10-30, after the playtest; nothing exists yet.
 
 - **Magic as the vertical progression.** The arc's work is in *Ready to do -> Medium*. The schools are
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
