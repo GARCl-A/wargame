@@ -39,7 +39,7 @@ const Board = (() => {
   // walls by kind: the masonry's fill, and the tint (as the floors') that sinks a tree or a boulder into the dark band
   const WALL = {block: "#4b3f33", tree: {hue: "#4e5f3c", mul: "#9da38c"}, rock: {hue: "#6d6f73", mul: "#8e8b86"}};
 
-  let staticKey = null, staticCanvas = null, paperCanvas = null, worldVoid = null, worldCanvas = null;
+  let staticKey = null, staticCanvas = null, paperCanvas = null, worldVoid = null, worldCanvas = null, mips = [];
 
   const K = (x, y) => x + "," + y;
   function hash(x, y, s = 0) {
@@ -571,7 +571,7 @@ const Board = (() => {
     memory(g, s);
     drawProps(g, s);
     fogAndLight(g, s);
-    worldCanvas = wc;
+    worldCanvas = wc; mips = [wc];
     blit();
     if (flames.length && !STILL && !running) { running = true; requestAnimationFrame(animate); }
   }
@@ -583,9 +583,23 @@ const Board = (() => {
     if (!worldCanvas) return;
     base.save(); deckle(base, rng(7919)); base.clip();
     base.imageSmoothingEnabled = true; base.imageSmoothingQuality = "high";
-    base.drawImage(worldCanvas, V.x, V.y, WW * V.s, WH * V.s);
+    const k = mipLevel(V.s);
+    base.drawImage(mips[k], V.x, V.y, WW * V.s, WH * V.s);
     base.restore();
     flicker(now);
+  }
+
+  // one drawImage shrinks by 2x at most without aliasing: a smaller view steps the world down by halves, each cached until the next paint
+  function mipLevel(s) {
+    const k = Math.max(0, Math.floor(Math.log2(1 / s)));
+    for (let i = mips.length; i <= k; i++) {
+      const prev = mips[i - 1];
+      const [c, g] = canvas(Math.max(1, Math.ceil(prev.width / 2)), Math.max(1, Math.ceil(prev.height / 2)));
+      g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+      g.drawImage(prev, 0, 0, c.width, c.height);
+      mips[i] = c;
+    }
+    return k;
   }
 
   let onView = null;

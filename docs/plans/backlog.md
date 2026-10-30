@@ -64,11 +64,6 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   playtesters, not the official release. Left: play a whole session in the exe, put `build_exe.bat` in English,
   rebuild `dist/GARTOK.exe` (still the 2026-10-10 pygame one).
 
-- **Trees keep their detail at the battle's fit zoom.** The board paints the whole world on one canvas at
-  14 to 72 px a cell and the camera shrinks it in a single `drawImage` (`board.js`, `layout` and the final
-  blit), so on a big board the leaves blur. Keep the best quality possible instead of stretching: repaint the
-  sprites at the zoom's scale, or step the canvas down by halves. The art (512 px) is not the limit.
-
 - **Map blocks: drop pygame's layout hints.** `gap_before` and `height` in `map_view.py`'s blocks are
   ignored by the web; the Editor does not count (author 2026-10-30). Delete them.
 
