@@ -20,7 +20,7 @@
 .col.pack .chead .med.store .ico{width:36px;height:36px;color:#d8bd86}
 .col.pack .chead .med.hurt img{filter:sepia(.35) brightness(.85)}
 .col.pack .chead h3{font:700 18px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
-.col.pack .chead .race{margin-top:4px;font:italic 14.5px/1 var(--read);color:#b59c76;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.col.pack .chead .race{margin-top:4px;font:14.5px/1 var(--read);color:#b59c76;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
 .col.pack .chead .voice{display:inline-block;margin-top:6px;font:600 8.5px/1 Cinzel,serif;letter-spacing:.18em;color:#1a120a;background:var(--brass);padding:3px 5px 2px;border-radius:2px;text-transform:uppercase}
 .col.pack .cstat{display:flex;align-items:flex-end;gap:10px;margin-top:14px}
 .col.pack .cstat .money{display:flex;align-items:center;gap:6px;font:700 20px/1 Cinzel,serif;color:#f0dfb8}
@@ -37,7 +37,7 @@
 .col.pack .psec{display:flex;align-items:center;gap:8px;margin:16px 0 4px;text-transform:uppercase}
 .col.pack .psec:after{content:"";flex:1;height:1px;background:rgba(201,163,94,.2)}
 .col.pack .packlist{flex:1;min-height:0;overflow-y:auto;margin:0 -4px;padding:0 4px 48px;scrollbar-width:thin;scrollbar-color:rgba(201,163,94,.3) transparent}
-.col.pack .cfoot{position:absolute;left:14px;right:14px;bottom:12px;font:italic 16px/1.25 var(--read);color:#8f7a59;
+.col.pack .cfoot{position:absolute;left:14px;right:14px;bottom:12px;font:16px/1.25 var(--read);color:#8f7a59;
   border-top:1px dashed rgba(201,163,94,.2);padding-top:9px;background:linear-gradient(transparent,#1a130d 30%)}
 .col.pack .cfoot b{font:700 12px/1 Cinzel,serif;color:var(--brass-hi);font-style:normal}
 
@@ -68,7 +68,7 @@
   box-shadow:0 0 0 1px #6b4f2c,0 0 0 4px #efe2c4,0 0 0 5px #6b4f2c,0 22px 30px rgba(0,0,0,.6)}
 #ghost .ico{width:42px;height:42px;color:#5a2116;flex:none}
 #ghost b{display:block;font:700 14px/1.1 Cinzel,serif;letter-spacing:.08em}
-#ghost span{display:block;margin-top:5px;font:italic 14.5px/1 var(--read);color:#5b4630}
+#ghost span{display:block;margin-top:5px;font:14.5px/1 var(--read);color:#5b4630}
 #ghost em{position:absolute;right:-14px;top:-14px;font:700 14px/1 Cinzel,serif;font-style:normal;color:#fff3ea;background:var(--blood);
   padding:7px 9px 6px;border-radius:2px;box-shadow:0 4px 8px rgba(0,0,0,.4);transform:rotate(6deg)}
 #ghost em.gain{background:#3f6b2a}
@@ -86,4 +86,4 @@
 #tip .sum b{font:600 15px/1.5 Cinzel,serif;color:#24170c}
 #tip .sum .tot{margin-top:4px;padding-top:4px;border-top:1px solid rgba(90,60,30,.45)}
 #tip .sum .tot span{font:600 10px/2.2 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;text-transform:uppercase}
-#tip .sum .note{font-style:italic;color:#6b5233}
+#tip .sum .note{color:#6b5233}

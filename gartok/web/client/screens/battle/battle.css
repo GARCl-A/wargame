@@ -68,7 +68,7 @@
   box-shadow:0 0 0 2px #2a1c10,0 0 0 5px var(--side,var(--blood)),0 0 0 7px #2a1c10,0 6px 12px rgba(40,20,5,.45)}
 .foehead .med img,.foehead .med .initial{width:100%;height:100%;border-radius:50%}
 .foehead h2{font:700 23px/1.08 Cinzel,serif;color:#2a1a0e}
-.foehead .race{font:italic 16px/1.25 var(--read);color:#5b4630;margin-top:6px}
+.foehead .race{font:16px/1.25 var(--read);color:#5b4630;margin-top:6px}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .chip{font:700 9.5px/1 Cinzel,serif;letter-spacing:.16em;color:#f3e1d2;background:var(--blood);padding:5px 7px 4px;border-radius:2px;text-transform:uppercase}
 .chip.muted{background:#7d6748}
@@ -79,10 +79,10 @@
 .tier>span{font:600 10px/1.9 Cinzel,serif;letter-spacing:.2em;color:#8a6c47;text-transform:uppercase}
 .facts{display:flex;flex-wrap:wrap;gap:4px 14px;font:16px/1.4 var(--read);color:#3a2918}
 .facts b{font-weight:600;color:#24170c}
-.facts .q{color:#9b8565;font-style:italic}
+.facts .q{color:#9b8565}
 .facts .q:after{content:" ?";font-family:"IM Fell English";color:#7a2318}
 .known{margin-top:14px}
-.assess{margin-top:10px;font:italic 16px/1.3 var(--read);color:#5b4630}
+.assess{margin-top:10px;font:16px/1.3 var(--read);color:#5b4630}
 .empty{margin-top:16px;font:italic 17px/1.4 "IM Fell English",serif;color:#6b5438}
 .chron{flex:1;padding:20px 24px 16px;overflow:hidden;display:flex;flex-direction:column}
 .chron .entries{margin-top:10px;font:16px/1.36 var(--read);color:#3a2918;overflow-y:auto;min-height:0;
@@ -107,7 +107,7 @@
   box-shadow:0 0 0 1.5px #3a2610,0 4px 8px rgba(0,0,0,.6);cursor:help}
 .unit .lvl small{font-size:9px;letter-spacing:.14em;margin-right:3px}
 .unit h1{font:700 28px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
-.unit .race{font:italic 16px/1 var(--read);color:#b59c76;margin-top:6px}
+.unit .race{font:16px/1 var(--read);color:#b59c76;margin-top:6px}
 .unit .waiting{position:absolute;left:192px;top:54px;font:italic 20px/1.3 "IM Fell English",serif;color:#b59c76}
 .stats{display:flex;gap:9px;margin-top:10px}
 .stat{min-width:58px;padding:6px 8px 5px;text-align:center;border-radius:2px;
@@ -131,7 +131,7 @@
 .ap .coins i.spent{background:#2a2017;box-shadow:inset 0 0 0 1.5px #4a3a28}
 
 .bar{position:absolute;left:584px;top:0;width:1090px;height:150px}
-.bar .hint{display:flex;align-items:center;gap:12px;height:24px;font:italic 16px/1 var(--read);color:#a9bdb6}
+.bar .hint{display:flex;align-items:center;gap:12px;height:24px;font:16px/1 var(--read);color:#a9bdb6}
 .bar .tabs{margin-left:auto;display:flex;gap:2px}
 .bar .tabs span{font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:var(--verdigris);padding:6px 12px;border-bottom:1px solid rgba(111,148,140,.3);cursor:pointer;text-transform:uppercase}
 .bar .tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}

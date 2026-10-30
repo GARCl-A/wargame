@@ -11,7 +11,7 @@
 .find:focus-within{box-shadow:inset 0 0 0 1px var(--brass)}
 .find .ico{width:20px;height:20px;color:var(--verdigris);flex:none}
 .find input{flex:1;min-width:0;background:none;border:0;outline:0;font:19px/1 var(--read);color:#eadcbc}
-.find input::placeholder{color:#6f5f48;font-style:italic}
+.find input::placeholder{color:#6f5f48}
 #chapters{margin-top:22px;flex:1}
 .ch{position:relative;display:flex;align-items:center;height:50px;padding:0 16px 0 20px;cursor:pointer;
   font:700 17px/1 Cinzel,serif;letter-spacing:.16em;color:#d9c8a2;text-transform:uppercase}
@@ -32,7 +32,7 @@
 .e .gl{width:34px;height:34px;flex:none;color:#5a2116}
 .e b{display:block;font:700 18px/1.15 Cinzel,serif;color:#2a1a0e}
 .e .k{display:block;margin-top:3px;font:600 10px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;text-transform:uppercase}
-.e .m{margin-top:8px;font:italic 16px/1.3 var(--read);color:#6b5233}
+.e .m{margin-top:8px;font:16px/1.3 var(--read);color:#6b5233}
 .e p{margin-top:6px;font:16px/1.35 var(--read);color:#3a2918}
 .e ul{margin-top:8px;padding-left:18px}
 .e li{margin-top:6px;font:16px/1.4 var(--read);color:#3a2918}

@@ -13,6 +13,7 @@
   --moss:#4f7d5a; --moss-hi:#70ba96; --violet:#6c4f9a; --violet-hi:#a680d6;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+em,i{font-style:normal}
 html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;--bleed:calc(-1*var(--by,0px)) calc(-1*var(--bx,0px));
   font-family:var(--read);color:var(--paper);user-select:none;
@@ -85,7 +86,7 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .it .n{font:16px/1 var(--read);color:#eadcbc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .it .q{font:600 12px/1 Cinzel,serif;color:var(--brass-hi)}
 .it .kg{font:14px/1 var(--read);color:#8f7a59;text-align:right}
-.it.empty .n{font-style:italic;color:#6f5a3e}
+.it.empty .n{color:#6f5a3e}
 .it.empty .ico{color:#4e3e2a}
 .it.sel{background:rgba(240,215,158,.12);box-shadow:inset 2px 0 0 var(--brass-hi)}
 
@@ -108,7 +109,7 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 
 /* a member's sheet as an open book: the guild's MEMBERS page, and the modal any screen opens on a portrait */
 .book{width:1092px;height:944px}
-.book .kicker em{order:2;font:italic 15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}
+.book .kicker em{order:2;font:15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}
 .book:after{content:"";position:absolute;left:50%;top:14px;bottom:14px;width:28px;margin-left:-14px;pointer-events:none;
   background:linear-gradient(90deg,transparent,rgba(90,55,20,.18) 40%,rgba(60,35,12,.32) 50%,rgba(90,55,20,.18) 60%,transparent)}
 .book .lpage,.book .rpage{position:absolute;top:30px;width:474px;bottom:24px;overflow-y:auto;scrollbar-width:none}
@@ -149,7 +150,7 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .book .weapon{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:center;margin-top:12px}
 .book .weapon .ico{width:52px;height:52px;color:#3a2410}
 .book .weapon h3{font:700 20px/1 Cinzel,serif;color:#24170c}
-.book .weapon .tags{margin-top:5px;font:italic 15px/1 var(--read);color:#6b5233}
+.book .weapon .tags{margin-top:5px;font:15px/1 var(--read);color:#6b5233}
 .book .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
 .book .chip{border-top:1.5px solid #5d4426;padding-top:6px}
 .book .chip span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37}
@@ -159,7 +160,7 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .book .kit .r{display:grid;grid-template-columns:96px 1fr auto;gap:8px;align-items:center;height:33px;border-bottom:1px dashed rgba(90,60,30,.28)}
 .book .kit .r span{font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;text-transform:uppercase}
 .book .kit .r b{font:600 16px/1 var(--read);color:#24170c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.book .kit .r em{font:italic 15px/1 var(--read);color:#6b5233;white-space:nowrap}
+.book .kit .r em{font:15px/1 var(--read);color:#6b5233;white-space:nowrap}
 .book .kit .r em.bad{color:#8e2a1e}
 .book .ab{margin-top:10px;font:16px/1.35 var(--read);color:#3a2410}
 .book .ab b{font:700 15px/1 Cinzel,serif;letter-spacing:.04em;color:#24170c}
@@ -171,13 +172,13 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .book .track .h span small{font:14px/1 var(--read);color:#7b6142;margin-left:6px}
 .book .track .bar2{height:7px;margin-top:7px;border-radius:4px;background:rgba(60,35,12,.16);box-shadow:inset 0 0 0 1px rgba(60,35,12,.25);overflow:hidden}
 .book .track .bar2 i{display:block;height:100%;background:linear-gradient(90deg,#7d5c28,#b0894a)}
-.book .track p{margin-top:6px;font:italic 16px/1.3 var(--read);color:#5b4630}
+.book .track p{margin-top:6px;font:16px/1.3 var(--read);color:#5b4630}
 .book .tal{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;margin-top:10px}
 .book .tal div{display:flex;gap:9px;align-items:baseline;padding:6px 0;border-bottom:1px dashed rgba(90,60,30,.25)}
 .book .tal div:before{content:"✓";font:700 14px/1 serif;color:#8e2a1e}
 .book .tal b{font:600 14.5px/1 Cinzel,serif;letter-spacing:.02em;color:#24170c}
-.book .tal em{font:italic 16px/1.15 var(--read);color:#6b5233}
-.book .none{margin-top:10px;font:italic 16px/1.3 var(--read);color:#7b6142}
+.book .tal em{font:16px/1.15 var(--read);color:#6b5233}
+.book .none{margin-top:10px;font:16px/1.3 var(--read);color:#7b6142}
 .book .rec{margin-top:10px;font:16px/1.45 var(--read);color:#3a2410}
 .book .rec p+p{margin-top:2px}
 .book .ico{display:inline-block}

@@ -27,7 +27,7 @@
 .master .cap{margin-top:6px;font:600 13px/1.2 Cinzel,serif;letter-spacing:.08em;color:var(--ink-2);text-transform:capitalize}
 .master q{display:block;margin-top:10px;font:italic 17px/1.3 "IM Fell English",serif;color:#5b4329}
 #bouts .kicker{margin:30px 0 14px}
-#bouts .kicker em{order:2;font:italic 15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}
+#bouts .kicker em{order:2;font:15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}
 .bout{position:relative;padding:16px 20px 14px 22px;margin-bottom:12px;border-radius:3px;cursor:pointer;transition:transform .12s,box-shadow .12s;
   background:linear-gradient(175deg,rgba(255,250,235,.5),rgba(255,250,235,.18));box-shadow:0 0 0 1px rgba(93,68,38,.55)}
 .bout:hover{transform:translateX(6px)}
@@ -35,7 +35,7 @@
 .bout.on:before{content:"";position:absolute;left:-1px;top:10px;bottom:10px;width:5px;background:var(--redink);border-radius:0 2px 2px 0}
 .bout h3{display:flex;align-items:baseline;gap:10px;font:700 19px/1 Cinzel,serif;letter-spacing:.06em;color:var(--ink)}
 .bout h3 .tag{margin-left:auto;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;color:var(--redink);text-transform:uppercase}
-.bout p{margin-top:8px;font:italic 16px/1.3 var(--read);color:#4a3522}
+.bout p{margin-top:8px;font:16px/1.3 var(--read);color:#4a3522}
 .bout .terms{display:flex;gap:22px;margin-top:12px;font:15px/1 var(--read);color:#5b4329}
 .bout .terms b{font:600 14px/1 Cinzel,serif;color:var(--ink);margin-right:5px}
 .bout .terms .purse b{color:var(--greenink)}
@@ -48,7 +48,7 @@
 #band .head .count{margin-left:auto;font:700 20px/1 Cinzel,serif;color:var(--brass-hi)}
 #band .head .count small{font:600 10px/1 Cinzel,serif;letter-spacing:.2em;color:#8f7652;margin-left:6px}
 .defnote{margin-top:14px;padding:10px 14px;border-radius:3px;border:1px solid rgba(224,168,90,.45);background:rgba(224,168,90,.08);
-  font:italic 16px/1.3 var(--read);color:#e8c48a}
+  font:16px/1.3 var(--read);color:#e8c48a}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px;max-height:680px;overflow-y:auto;align-content:start;padding:4px 6px 4px 4px}
 .mem{position:relative;padding:14px 16px;border-radius:3px;cursor:pointer;min-height:206px;
   background:linear-gradient(180deg,#2a1f15,#1b140d);box-shadow:0 0 0 1px rgba(111,148,140,.3),0 6px 12px rgba(0,0,0,.45);transition:box-shadow .12s,transform .12s}
@@ -60,7 +60,7 @@
 .mem .medal{width:62px;height:62px}
 .mem.on .medal{--side:var(--enamel-hi)}
 .mem .who b{display:block;font:700 16px/1.1 Cinzel,serif;letter-spacing:.04em;color:var(--paper)}
-.mem .who span{display:block;margin-top:5px;font:italic 16px/1.1 var(--read);color:#b9a27c}
+.mem .who span{display:block;margin-top:5px;font:16px/1.1 var(--read);color:#b9a27c}
 .mem .mark{position:absolute;right:12px;top:12px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;color:#8f7652}
 .mem.on .mark{color:var(--brass-hi)}
 .vit{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px}
@@ -96,7 +96,7 @@
 #offer .faces > div{text-align:center}
 #offer .faces .medal{width:118px;height:118px;--side:var(--blood-hi)}
 #offer .faces b{display:block;margin-top:14px;font:600 14px/1.1 Cinzel,serif;color:var(--ink)}
-#offer .faces span{font:italic 14px/1 var(--read);color:#6b5236}
+#offer .faces span{font:14px/1 var(--read);color:#6b5236}
 #offer p{margin-top:8px;font:italic 19px/1.4 "IM Fell English",serif;color:#4a3522}
 #offer .faces + p{margin-top:26px}
 #offer .acts{display:flex;gap:18px;margin-top:30px}

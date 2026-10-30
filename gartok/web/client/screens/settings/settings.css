@@ -8,7 +8,7 @@
 .row:last-child{border-bottom:1px solid rgba(90,60,30,.3)}
 .row .txt{flex:1;min-width:0}
 .row b{display:block;font:700 20px/1.1 Cinzel,serif;color:#2a1a0e}
-.row span{display:block;margin-top:6px;font:italic 16px/1.3 var(--read);color:#5b4630}
+.row span{display:block;margin-top:6px;font:16px/1.3 var(--read);color:#5b4630}
 .opts{display:flex;gap:6px;flex:none}
 .opt{min-width:62px;height:36px;padding:0 12px;display:grid;place-items:center;border-radius:2px;cursor:pointer;
   font:600 12px/1 Cinzel,serif;letter-spacing:.12em;color:#4a3522;text-transform:uppercase;

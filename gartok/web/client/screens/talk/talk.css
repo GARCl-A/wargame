@@ -7,7 +7,7 @@
 #talk .medal.foe{--side:var(--blood-hi)}
 #talk .medal.guard{--side:var(--brass)}
 #talk .medal.ours{--side:var(--enamel-hi)}
-#talk .kicker em{order:2;font:italic 15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}
+#talk .kicker em{order:2;font:15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}
 #talk .mark{display:inline-block;font:600 9.5px/1 Cinzel,serif;letter-spacing:.14em;padding:5px 7px 4px;border-radius:2px;border:1px solid rgba(201,163,94,.3);color:#b9a27c;text-transform:uppercase;white-space:nowrap;background:#1e160e}
 #talk .mark.bad{border-color:rgba(201,71,58,.5);color:#e2a194}
 #talk .mark.warn{border-color:rgba(224,168,90,.55);color:#e8c48a}
@@ -30,7 +30,7 @@
 .stat{text-align:right}
 .stat b{display:block;font:700 22px/1 Cinzel,serif;color:var(--brass-hi)}
 .stat span{font:600 9.5px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;text-transform:uppercase}
-.still{font:italic 16px/1.25 var(--read);color:#8f7652;max-width:230px;text-align:right}
+.still{font:16px/1.25 var(--read);color:#8f7652;max-width:230px;text-align:right}
 
 /* the foe: a page of the bestiary */
 #foe{position:absolute;left:32px;top:108px;width:560px;height:944px;padding:34px 38px}
@@ -47,7 +47,7 @@
 .pack .row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px dotted rgba(80,52,24,.35)}
 .pack .medal{width:46px;height:46px}
 .pack .row b{font:600 15.5px/1 Cinzel,serif;letter-spacing:.04em;color:var(--ink)}
-.pack .row span{display:block;margin-top:5px;font:italic 15px/1 var(--read);color:#6b5236}
+.pack .row span{display:block;margin-top:5px;font:15px/1 var(--read);color:#6b5236}
 .pack .row .tag{margin-left:auto;font:600 9.5px/1 Cinzel,serif;letter-spacing:.16em;color:var(--redink);text-transform:uppercase}
 .scale{position:absolute;left:38px;right:38px;bottom:34px;padding-top:14px;border-top:1px solid rgba(80,52,24,.35);
   font:16px/1.4 var(--read);color:#4a3522}
@@ -74,7 +74,7 @@
 .card.yield .disc .ico{color:#e6f0fa}
 .cbody{flex:1;min-width:0}
 .cbody h3{font:700 22px/1 Cinzel,serif;letter-spacing:.08em;color:var(--ink)}
-.cbody .if{margin-top:9px;font:italic 16.5px/1.25 var(--read);color:#4a3522}
+.cbody .if{margin-top:9px;font:16.5px/1.25 var(--read);color:#4a3522}
 .cbody .if.pass{color:var(--greenink)}
 .cbody .if.miss{color:var(--redink);margin-top:4px}
 .cbody .if:before{display:inline-block;width:18px;font-style:normal;font-family:var(--read);font-weight:600}
@@ -88,14 +88,14 @@
 .pips{display:flex;gap:2px;justify-content:flex-end;margin-top:10px}
 .pips i{width:9px;height:14px;border-radius:1px;border:1px solid rgba(80,52,24,.5)}
 .pips i.on{background:var(--greenink);border-color:#2b4a1c}
-.odds .need{margin-top:6px;font:italic 14px/1 var(--read);color:#6b5236}
+.odds .need{margin-top:6px;font:14px/1 var(--read);color:#6b5236}
 .price{font:700 30px/1 Cinzel,serif;color:var(--ink)}
 .price .coin{width:22px;height:22px;vertical-align:-3px;margin-right:6px}
-.cost{margin-top:8px;font:italic 16px/1.2 var(--read);color:#6b5236}
+.cost{margin-top:8px;font:16px/1.2 var(--read);color:#6b5236}
 .verdict{font:700 13px/1 Cinzel,serif;letter-spacing:.2em;text-transform:uppercase}
 .verdict.red{color:var(--redink)}
 .verdict.blue{color:var(--enamel)}
-.footnote{position:absolute;left:4px;right:4px;bottom:0;font:italic 16px/1.35 var(--read);color:#8f7652;text-align:center}
+.footnote{position:absolute;left:4px;right:4px;bottom:0;font:16px/1.35 var(--read);color:#8f7652;text-align:center}
 
 /* the roll */
 .card.played{min-height:92px;padding:0 22px;opacity:.9;transform:scale(.97);transform-origin:left;cursor:default}
@@ -124,7 +124,7 @@
 .opens .row b{display:block;font:700 17px/1 Cinzel,serif;letter-spacing:.06em}
 .opens .row span{display:block;margin-top:6px;font:17px/1.3 var(--read);color:#4a3522}
 .go{position:absolute;left:52px;right:52px;bottom:40px;display:flex;align-items:center;gap:24px}
-.go small{flex:1;font:italic 16px/1.3 var(--read);color:#6b5236}
+.go small{flex:1;font:16px/1.3 var(--read);color:#6b5236}
 .bigbtn{height:58px;padding:0 40px;display:flex;align-items:center;gap:12px;border-radius:3px;cursor:pointer;flex:none;
   font:700 16px/1 Cinzel,serif;letter-spacing:.24em;color:#fbe9dd;text-transform:uppercase;
   background:linear-gradient(#b0402f,#7a2218);box-shadow:0 0 0 1px #3a0c06,0 0 0 3px rgba(201,163,94,.35),0 8px 16px rgba(0,0,0,.45)}
@@ -137,7 +137,7 @@
   background:linear-gradient(175deg,#efe2c3,#d8c296);box-shadow:inset 0 0 26px rgba(110,70,25,.25),0 0 0 1px #5d4426,0 10px 18px rgba(0,0,0,.55)}
 .script .line .medal{width:76px;height:76px;--side:var(--brass)}
 .script .line b{font:700 19px/1 Cinzel,serif;letter-spacing:.06em}
-.script .line em{margin-left:10px;font:italic 16px/1 var(--read);color:#6b5236}
+.script .line em{margin-left:10px;font:16px/1 var(--read);color:#6b5236}
 .script .line p{margin-top:12px;font:italic 23px/1.3 "IM Fell English",serif;color:#2b1d10}
 .script .line p span{font-style:normal;color:#8f7652}
 .script .line.now{box-shadow:inset 0 0 26px rgba(110,70,25,.25),0 0 0 2px var(--brass),0 0 0 4px #120d08,0 14px 26px rgba(0,0,0,.65)}
@@ -151,7 +151,7 @@
 /* the band */
 #band{position:absolute;left:1392px;top:108px;width:496px;height:944px;padding:22px 18px}
 .bandhead{display:flex;align-items:baseline;justify-content:space-between;padding:0 6px 14px;border-bottom:1px solid rgba(201,163,94,.18)}
-.bandhead i{font:italic 16px/1 var(--read);color:#b9a27c}
+.bandhead i{font:16px/1 var(--read);color:#b9a27c}
 .mems{max-height:780px;overflow-y:auto;padding-top:4px}
 .mem{position:relative;display:flex;align-items:center;gap:14px;padding:12px 12px;margin-top:8px;border-radius:3px;border:1px solid transparent}
 .mem.pick{cursor:pointer}
@@ -162,9 +162,9 @@
 .mem .nm{flex:1;min-width:0}
 .mem .nm b{display:block;font:600 16px/1 Cinzel,serif;letter-spacing:.05em;color:#ecdcb9}
 .mem.sel .nm b{color:var(--brass-hi)}
-.mem .nm span{display:block;margin-top:6px;font:italic 15px/1 var(--read);color:#a08a68}
+.mem .nm span{display:block;margin-top:6px;font:15px/1 var(--read);color:#a08a68}
 .mem .nm .tongues{margin-top:7px;font:14px/1 var(--read);color:#8f7652;font-style:normal}
-.mem .nm .tongues em{font:italic 14px/1 var(--read);color:#c9473a;opacity:.9}
+.mem .nm .tongues em{font:14px/1 var(--read);color:#c9473a;opacity:.9}
 .mem .nm .tongues u{text-decoration:none;color:var(--brass-hi);border-bottom:1px solid rgba(240,215,158,.5)}
 .mem .mods{display:flex;gap:6px;flex:none}
 .mod{width:46px;text-align:center;padding:6px 0 5px;border:1px solid rgba(201,163,94,.25);border-radius:2px}
@@ -174,7 +174,7 @@
 .mem.sel .mod.lead b{color:var(--brass-hi)}
 .mem .tagrow{position:absolute;right:12px;top:-7px;display:flex;gap:6px}
 .bandfoot{position:absolute;left:24px;right:24px;bottom:22px;padding-top:14px;border-top:1px solid rgba(201,163,94,.18);
-  display:flex;justify-content:space-between;font:italic 16px/1.3 var(--read);color:#a08a68}
+  display:flex;justify-content:space-between;font:16px/1.3 var(--read);color:#a08a68}
 .bandfoot b{font:700 18px/1 Cinzel,serif;font-style:normal;color:#ecdcb9}
 
 #toast{position:absolute;left:50%;bottom:40px;transform:translateX(-50%);z-index:30;padding:14px 26px;border-radius:3px;

@@ -69,7 +69,7 @@ code.
   action), cool verdigris for idle edges, labels and plates.
 - **Fog of war** reads as a map would: never seen is blank paper (a margin note or sound rings for what is
   only heard), seen before is a sepia wash, in sight is lit.
-- **Type:** running text is `--read` (EB Garamond) at 16px or more; IM Fell English is a voice (a keeper's
+- **Type:** running text is `--read` (EB Garamond Medium, never italic) at 16px or more; IM Fell English is a voice (a keeper's
   line, a dialogue, a flavour line), never under 17px; Cinzel is for names and labels. The map sheet's
   lettering is the chart's hand, drawn on the canvas.
 - **The art is not drawn in code.** Code composes images (textures, frames, portraits) and draws only state
@@ -115,16 +115,7 @@ Each folder under [references/](references/) is the approved look of a family, o
 
 In order. The board items are tuned by eye, so each takes a mockup first.
 
-### 1. The reading face is still too thin
-
-On the REPUTATIONS tab a deed's name ("Buy Food") reads easily, its line ("Everyone eats...") takes an
-effort though it is legible: EB Garamond at 16px is too light on the dark table. Try a heavier weight
-(EB Garamond Medium or SemiBold ship as files), a little more size or a lighter ink on paper, compared
-side by side on the reputations tab and one hub tab.
-
-**Done when:** the author picks one from the screenshots and `--read` changes everywhere.
-
-### 2. What else only pygame had: port or drop
+### 1. What else only pygame had: port or drop
 
 Each needs the author's call (port, or drop and delete what is left of it):
 
@@ -136,7 +127,7 @@ Each needs the author's call (port, or drop and delete what is left of it):
 
 **Done when:** each is in the browser with its tests, or deleted from the code and its tutorial copy.
 
-### 3. The tests the pygame cut lost
+### 2. The tests the pygame cut lost
 
 No web test covers these yet: the clock run while a screen is open (`MapSession.tick_outside`); a guild with
 every member jailed waiting out the sentence on the map; the save refused mid-battle or mid-hunt; two due
@@ -145,7 +136,7 @@ trip cancelled to the next node.
 
 **Done when:** each has a test through the web sessions.
 
-### 4. The board, by eye
+### 3. The board, by eye
 
 - **The fog.** Seen before (grey), never seen (paper) and seen but unlit (dark) stack into too many layers:
   it is hard to tell what is dark, what is fog and what is unknown (the playtests of 2026-10-21 and
@@ -163,7 +154,7 @@ trip cancelled to the next node.
 
 **Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
 
-### 5. The Editor
+### 4. The Editor
 
 The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
 `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
@@ -173,7 +164,7 @@ game.
 
 **Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
 
-### 6. The retirement
+### 5. The retirement
 
 Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
 `icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.
