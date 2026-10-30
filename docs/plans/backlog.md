@@ -66,7 +66,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   `wiki_rules.py`) becomes one keyword with its own wiki entry, and the descriptions say only the
   keyword: shorter text, and the rules become a set of words that always mean the same thing. Start with
   *Double blow* (the name is open) and look for the next ones (Flanked, Prone, the conditions already
-  are). The wiki links them (web_frontend.md, item 3); `ai.py` and the numbers do not change.
+  are). The wiki links them (web_frontend.md, item 2); `ai.py` and the numbers do not change.
 
 - **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
   wagon left behind is done (2026-10-30). Left: the hand-over
@@ -112,10 +112,11 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Playtest notes 2026-10-30
 
-Sorted out of the raw notes: the browser's items (the tutorial's black screen, a
-component kit with a game tooltip, the wiki's links, the reading
-face, a body under a fighter, the initiative's states) are items 1 to 4 and 7 of
-[web_frontend.md](web_frontend.md); long names, the field's Distribute load and every hub opening on its shop are done; the name generator and the rules as keywords are in *Ready to do*.
+Sorted out of the raw notes: the browser's items (a component kit with a game tooltip, the wiki's
+links, the reading face, a body under a fighter, the initiative's states) are items 1 to 3 and 6 of
+[web_frontend.md](web_frontend.md); long names, the field's Distribute load and every hub opening on
+its shop are done; the tutorial's black screen did not reproduce and was dropped (reopen it if it comes
+back); the name generator and the rules as keywords are in *Ready to do*.
 
 ## Playtest notes 2026-10-28 (save "Polissexus playtest 1", after 9c3ed73)
 
