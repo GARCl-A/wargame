@@ -110,7 +110,7 @@
 .ribbon{position:absolute;right:4px;bottom:-96px;width:22px;height:84px;background:linear-gradient(90deg,#6b1a12,#9a2f22,#6b1a12);
   clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);transform:rotate(14deg);z-index:-1}
 .invite p{margin-top:18px;font:italic 21px/1.4 "IM Fell English",serif;color:#4a3522}
-.invite .roster{gap:18px 26px}
+.invite .roster{flex-wrap:wrap;gap:18px 26px}
 
 /* ---------- the guilds kept, one guild's saves ---------- */
 .ledgerpage{position:absolute;left:880px;top:84px;width:920px;height:880px;padding:34px 40px;display:flex;flex-direction:column}
