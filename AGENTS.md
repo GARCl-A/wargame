@@ -25,7 +25,7 @@ module's description in the README, not here.
 - **pygame lives only in `editor/`**, a separate program (`python -m editor`, its tests
   `python -m pytest editor/ -n auto`). `gartok/` never imports `editor` or pygame (a test checks it):
   never add a pygame screen to the game, and when a screen's rules move out, delete the screen and its
-  tests in the same commit. Rules and what is left: `docs/plans/web_frontend.md`. New UI is the web
+  tests in the same commit. Rules for it: `docs/web_client.md`. New UI is the web
   client (`gartok/web/client/`: `shell.js`, `kit.js` for pieces two screens share, one folder per
   screen); the Editor's pygame UI follows `editor/ui/README.md`.
 - Work and commit straight on `main`; no feature branches unless the user asks for one.

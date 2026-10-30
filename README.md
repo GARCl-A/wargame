@@ -321,7 +321,7 @@ gartok/
                     tests/ (`python -m pytest editor/ -n auto`), item_icon_preview.py, requirements.txt (pygame-ce)
 
   # presentation of the game
-  web/              the web front-end replacing pygame, battle first (docs/plans/web_frontend.md):
+  web/              the web client (guide: docs/web_client.md):
                     session.py (a screen's server half), battle_session.py (one fight as the side
                     knows it), map_session.py (the map), hub_session.py + shop_tab.py (a place's
                     tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
@@ -367,6 +367,7 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     the /gen-portrait skill; portrait_lora/ has the setup and the Colab notebook that trains the LoRA)
 docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and its findings),
                     campaign_ai_roadmap.md (the long-range AI plan)
+docs/web_client.md  the guide to building a web screen: the rules, the look, the layouts that hold
 ```
 
 > Rendering is procedural, with two asset-backed exceptions: `artwork.py` loads

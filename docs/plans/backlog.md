@@ -19,8 +19,7 @@ Parts:
 
 The presentation moved from pygame to HTML/CSS/Canvas, and the Python core stays. Every screen the
 campaign reaches is in the browser and `python main.py` opens it (the Editor, a separate pygame program, is `python -m editor`; the
-pygame campaign is gone). The rules for new UI work and what is left (the wiki's links, what else only pygame
-had, the board's fog and pits, the Editor) are in [web_frontend.md](web_frontend.md).
+pygame campaign is gone). The rules for new UI work are in [../web_client.md](../web_client.md); what was left of the port is in this file.
 
 ---
 
@@ -58,6 +57,19 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   (letters, not only syllables), weigh 2 syllables over 3 and 4, and keep two heavy consonant clusters
   ("gorm", "throg", "skel") from meeting. The guild's sheet holds a long name anyway (2026-10-30: ellipsis, the whole name on hover, the book's heading shrinks).
 
+- **Playtest build for friends (checked 2026-10-30).** `build_exe.bat` (PyInstaller `--onefile`, stdlib
+  only) builds a `GARTOK.exe` that opens and serves the client; it is only the way to hand the game to
+  playtesters, not the official release. Left: play a whole session in the exe, put `build_exe.bat` in English,
+  rebuild `dist/GARTOK.exe` (still the 2026-10-10 pygame one).
+
+- **Trees keep their detail at the battle's fit zoom.** The board paints the whole world on one canvas at
+  14 to 72 px a cell and the camera shrinks it in a single `drawImage` (`board.js`, `layout` and the final
+  blit), so on a big board the leaves blur. Keep the best quality possible instead of stretching: repaint the
+  sprites at the zoom's scale, or step the canvas down by halves. The art (512 px) is not the limit.
+
+- **Map blocks: drop pygame's layout hints.** `gap_before` and `height` in `map_view.py`'s blocks are
+  ignored by the web; the Editor does not count (author 2026-10-30). Delete them.
+
 ## Medium
 
 - **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
@@ -69,7 +81,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 - **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
   wagon left behind, the hand-over card between groups, the vault read from the guild screen and the auto-win
-  are done (2026-10-30). Left: the tests the cut lost (web_frontend.md, What is left): the clock
+  are done (2026-10-30). Left: the tests the cut lost: the clock
   while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
   cancelled. The old screens are in git before the cut.
 
@@ -117,6 +129,14 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   rules in a pygame-free module) and its pygame screen and tests are deleted; the lab's fights already run in
   the browser (`python -m gartok.web --fight <lab fight>`). Porting it deletes `editor/` and drops pygame from the repo.
 
+- **Native window for the web client (pywebview or Tauri).** Today the game opens in an Edge or Chrome app
+  window. pywebview's `pythonnet` is unverified on Python 3.14. Wanted one day, not now.
+
+## Notes to remember when the case comes up
+
+- **A talent with more than one prerequisite.** The tree already draws the second requirement as a red dotted
+  line, but no talent has one yet. The day one does, check that this is how it reads.
+
 ## Playtest notes 2026-10-30
 
 Sorted out of the raw notes: the browser's items (the wiki's links, the reading face, a body under a
@@ -129,9 +149,9 @@ back); the name generator and the rules as keywords are in *Ready to do*.
 
 A short run in the browser. Its local bugs are fixed (the draft's COMMISSION hit area and cut weapon lines, the
 food alert's overflow, the Chronicle's scroll, every condition on the foe card, Edge's
-translate prompt). What needs a design call, a shared component or a behaviour pygame had is in
-[web_frontend.md](web_frontend.md) (the sheet as a modal, the work level-up, the tutorial
-button in the header, the type and the talent map, all done; the fog, the pit, the map's walking bands).
+translate prompt). What needed a design call, a shared component or a behaviour pygame had is done (the sheet as a
+modal, the work level-up, the tutorial button in the header, the type and the talent map, the fog, the pit,
+the map's walking bands).
 
 ## Playtest notes 2026-10-21 (guild Herança)
 
@@ -201,7 +221,7 @@ Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png` from
 skill (about 7 minutes of GPU a portrait, curated by hand); the rest is game-icons.net SVG
 silhouettes. Order is the suggested priority.
 
-- **Art to generate for the web board and UI** (the art direction in [web_frontend.md](web_frontend.md);
+- **Art to generate for the web board and UI** (the art direction in [../web_client.md](../web_client.md);
   files go in `gartok/web/client/img/`). Each is one seamless 1024 texture in the sepia
   engraving of the reference portraits, seen from above, mid value, with no 2x2 copies of
   its motif inside (Gemini's habit: the 2026-10-23 batch was four copies of a 512 block).

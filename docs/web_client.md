@@ -1,28 +1,21 @@
-# Web front-end: keep the Python core, replace the pygame presentation
+# Web client guide: how to build a screen
 
-**Status (2026-10-29):** the game is in the browser. `python main.py` opens the title; every screen the
-campaign reaches (the map, every hub tab, the guild's sheet, the talk, the fights, the report, the talents,
-the title, the draft, the settings, the wiki) is a web screen, and `gartok.web.server` loads with pygame
-blocked. The pygame campaign is gone; only the Editor (`python -m editor`) still opens a pygame window.
+The game is a web client over a Python core: `python main.py` serves it and opens it in a browser window.
+Read this before you add or change a screen. It is a standing guide (the rules, the look, the layouts that
+hold); open work is in [plans/backlog.md](plans/backlog.md), and how each step was built is in
+`git log -p -- docs/web_client.md`.
 
-What is left is below, under **What is left**. The record of how each step was built (steps 1 to 10,
-2026-10-23 to 2026-10-29) is in git: `git log -p -- docs/plans/web_frontend.md`.
+The Editor (`python -m editor`) is the one pygame program left, a separate package the game never imports.
+Leave it alone: it is only maintained, and porting it is deprioritised in the backlog.
 
-## How to continue
+## Rules
 
-"Seguir com plano de ui" means: take the first item under **What is left** whose inputs exist, do only
-that item, meet its **Done when**, commit, then delete it from this file (one line in the commit says
-what changed for the items after it). One item per session. Start from this file, not from exploring the
-code.
+### No pygame in the game
 
-## Rules for new work
-
-### pygame is abandoned (since 2026-10-28)
-
-- No new pygame screen, no pygame change for a new feature, no rewiring a pygame screen onto a rule moved
-  out of it.
-- When a screen's rules move out, the screen, its `*_draw` mixin and the tests that only test it are
-  deleted in the same commit. A test that checked a rule through a screen moves onto the core module or
+- No new pygame screen, and no pygame change for a new feature. `gartok/` never imports pygame or `editor`
+  (a test checks it).
+- When a screen's rules move out of a pygame screen, delete the screen, its `*_draw` mixin and the tests that
+  only test it in the same commit. A test that checked a rule through a screen moves onto the core module or
   the web session, only if nothing else covers the rule.
 
 ### A screen is a session, a client folder and a rules module
@@ -48,14 +41,14 @@ code.
 - **A new screen has a tutorial card:** `tutorial_key()` plus a `tutorial.<id>` block in
   `locales/en.json`. The shell puts the `?` at the end of the screen's `#top`.
 
-### How a step is checked
+### How a screen is checked
 
 - **Tests first**, in pytest through the API (`tests/test_web_*.py`).
 - **Screenshots at milestones**, only when the step is about the look: headless Edge at 1920x1080 on a copy
   of a real save (the day-70 save `35d38388` is the usual one); clicks and drags driven over the DevTools
   protocol when they matter.
 - **A new family of screens gets a mockup first**, one HTML page at 1920x1080 with its PNG in
-  `references/<family>_mockup/`, approved by the author before any code. Its other screens follow without
+  `plans/references/<family>_mockup/`, approved by the author before any code. Its other screens follow without
   one.
 
 ### Art direction
@@ -75,11 +68,11 @@ code.
   lettering is the chart's hand, drawn on the canvas.
 - **The art is not drawn in code.** Code composes images (textures, frames, portraits) and draws only state
   (health, ranges, highlights): `pygame.draw` art is why the game looked like programmer art.
-- **Gemini makes the art**, anchored on the four engraved portraits in [references/](references/) (Gnoll 10,
+- **Gemini makes the art**, anchored on the four engraved portraits in [plans/references/](plans/references/) (Gnoll 10,
   Grippli 13, Kenku 4, Ogre 0). 2D engraving only: no isometric, 3D or pixel art.
 - **No tile sheets.** A floor is one seamless texture across the cell lines, tinted per place in code, in a
   lower value band than the tokens (cream tokens vanished on a cream floor). Files go in
-  `gartok/web/client/img/`; what is still missing is under Art in [backlog.md](backlog.md).
+  `gartok/web/client/img/`; what is still missing is under Art in [plans/backlog.md](plans/backlog.md).
 - **Item glyphs** are game-icons.net SVGs (CC BY 3.0) in `assets/icons/item/`, one per `item_icon` kind; a
   test fails for a kind with no file.
 - **Fonts** ship in `gartok/web/client/fonts/`, never fetched at runtime.
@@ -98,7 +91,7 @@ code.
 
 ### The mockups
 
-Each folder under [references/](references/) is the approved look of a family, one frame per `?state=`:
+Each folder under [plans/references/](plans/references/) is the approved look of a family, one frame per `?state=`:
 
 | Folder | Family |
 |---|---|
@@ -112,33 +105,12 @@ Each folder under [references/](references/) is the approved look of a family, o
 | `talents_mockup/` | the talent tree: THE MAP and THE BRANCH |
 | `draft_mockup/` | a new guild: vocation, pool, commission, charter |
 
-## What is left
+## Known limits
 
-In order.
+Accepted, written down so nobody chases them:
 
-The Editor (character creator, map editor, combat lab's menu: `editor_app`, `editor_menu_screen`,
-`char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` + `battle_draw` for the
-lab's fights) **stays pygame** (author, 2026-10-30). Porting it is in `backlog.md`, deprioritised.
-
-Nothing is left in order: the retirement is done (2026-10-30). The Editor and every pygame module it reads
-moved to `editor/`, a sibling package the game never imports (a test in `tests/test_web.py` checks it,
-and `tests/` passes with pygame unimportable).
-
-### Loose ends
-
-Small, take them when passing by:
-
-- The map's blocks still carry pygame's layout hints (`gap_before`, `height`); the web ignores them. They
-  go with pygame.
-- Not ported from pygame's guild sheet: the CARGO view (every stack of a band in one sorted table). The
-  sheets mockup's "road ahead" card was never built.
-- The talent tree draws a second requirement as a red dotted line, but no talent has one yet: check it the
-  day one exists.
-- At the battle's fit zoom the trees lose their leaf detail.
-- A hunt is never saved: a window closed mid-hunt drops it (as pygame did).
-- Shipping: the PyInstaller build (`build_exe.bat`, `GARTOK.spec`) carries `gartok/web/client` but was never
-  run; pywebview or Tauri is decided at the end (pywebview's `pythonnet` is unverified on Python 3.14).
-- Accepted, written down so nobody chases them: the fog and light layer is redrawn on every step (about
-  5 ms); a wall the side never saw can stand between a light it sees and a cell in sight, which then reads a
-  little brighter (no information leaks). If big boards ever feel slow, the next cost is `ai.take_turn`'s
-  path fields (`battle._pf_field` / `board._dijkstra`).
+- The fog and light layer is redrawn on every step (about 5 ms); a wall the side never saw can stand between
+  a light it sees and a cell in sight, which then reads a little brighter (no information leaks). If big
+  boards ever feel slow, the next cost is `ai.take_turn`'s path fields (`battle._pf_field` /
+  `board._dijkstra`).
+- A hunt is never saved (a rule, see `AGENTS.md`): a window closed mid-hunt drops it.
