@@ -292,6 +292,15 @@
 #wiped p{margin-top:14px;font:italic 19px/1.4 "IM Fell English",serif;color:#4a3522}
 #wiped .ghost-btn{margin-top:20px;width:max-content}
 
+/* setting out with a broken wagon: what stays behind, before the yes */
+#leave[hidden]{display:none}
+#leave{position:absolute;inset:var(--bleed);display:grid;place-items:center;background:rgba(8,6,4,.7);z-index:22}
+#leave .paper{width:600px;padding:30px 34px}
+#leave p{margin-top:14px;font:17px/1.45 var(--read);color:#3b2a1a}
+#leave p.cargo{font-style:italic;color:#5a4128}
+#leave .lbtns{display:flex;gap:12px;margin-top:22px;align-items:center}
+#leave .brass-btn{margin-left:auto;height:44px;min-width:0;padding:0 20px}
+
 /* the menu over the map: pygame's pause menu */
 #pause[hidden]{display:none}
 #pause{position:absolute;inset:var(--bleed);display:grid;place-items:center;background:rgba(8,6,4,.72);z-index:25}

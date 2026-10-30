@@ -19,8 +19,9 @@ Parts:
 
 The presentation moved from pygame to HTML/CSS/Canvas, and the Python core stays. Every screen the
 campaign reaches is in the browser and `python main.py` opens it (`--editor` the Editor's pygame window; the
-pygame campaign is gone). The rules for new UI work and what is left (a broken wagon left behind, what else
-only pygame had, the board's fog and pits, the Editor, retiring pygame) are in [web_frontend.md](web_frontend.md).
+pygame campaign is gone). The rules for new UI work and what is left (the 2026-10-30 playtest's
+fixes, a component kit with a game tooltip, the wiki's links, what else only pygame
+had, the board's fog and pits, the Editor, retiring pygame) are in [web_frontend.md](web_frontend.md).
 
 ---
 
@@ -53,11 +54,22 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 - **Hit sounds swap (`assets/sounds/`).** Hit sounds do not fit the game (the UI sounds are fine);
   swap the Kenney variants in `assets/sounds/`.
 
+- **Name generator: shorter names (playtest 2026-10-30).** `names.random_name` strings 2 to 4 syllables,
+  so "Othgormskelther" and "Dralothcazthrog" come out: pronounceable but long and ugly. Cap the length
+  (letters, not only syllables), weigh 2 syllables over 3 and 4, and keep two heavy consonant clusters
+  ("gorm", "throg", "skel") from meeting. The screens hold a long name anyway (web_frontend.md, item 1).
+
 ## Medium
 
-- **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** Most urgent: a
-  band with a broken wagon cannot travel (`map_session.travel` refuses it until it is mended), so one with no Lumber
-  and no garage is stuck; pygame's `abandon_screen` asked to leave the wagon, its cargo first. Then the hand-over
+- **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
+  second roll of the weapon's damage)" in `weapon_traits.py`, `actions/weapon_actions.py`,
+  `wiki_rules.py`) becomes one keyword with its own wiki entry, and the descriptions say only the
+  keyword: shorter text, and the rules become a set of words that always mean the same thing. Start with
+  *Double blow* (the name is open) and look for the next ones (Flanked, Prone, the conditions already
+  are). The wiki links them (web_frontend.md, item 3); `ai.py` and the numbers do not change.
+
+- **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
+  wagon left behind is done (2026-10-30). Left: the hand-over
   card between groups (`group_turn`, its tutorial card still registered), the vault read from the map, the auto-win
   of an ambush or a hunt (`autowin.py`). And the tests the cut lost (web_frontend.md, What is left): the clock
   while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
@@ -97,6 +109,13 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   40 die by day 60, all hunting: a lost lethal fight takes the whole group. The sim gives the player `SKILL = 0.5`
   of the AI's losses in every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0,
   `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later.
+
+## Playtest notes 2026-10-30
+
+Sorted out of the raw notes: the browser's items (the tutorial's black screen, a hub's first tab, long
+names, the field's Distribute load, a component kit with a game tooltip, the wiki's links, the reading
+face, a body under a fighter, the initiative's states) are items 1 to 4 and 7 of
+[web_frontend.md](web_frontend.md); the name generator and the rules as keywords are in *Ready to do*.
 
 ## Playtest notes 2026-10-28 (save "Polissexus playtest 1", after 9c3ed73)
 
@@ -341,3 +360,4 @@ Keep these while building them:
   attribute, advantage on a named kind of action...), and only the most recent meal's buff is active.
   Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
   the one price of a meal). Marsh's slower rot is priced low until this lands.
+

@@ -9,9 +9,11 @@ import urllib.request
 import pytest
 
 from gartok import orders, persist, recorder, world
+from gartok.animals import Animal
 from gartok.group import CAUTIOUS, Group
 from gartok.guild import Guild
 from gartok.unit import Unit
+from gartok.wagon import Wagon
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game, serve
@@ -124,6 +126,58 @@ def test_a_busy_band_refuses_a_new_order():
         s.travel(a.gid, "arena")
     with pytest.raises(ValueError):
         s.act(a.gid, "rest:1")
+
+
+def _broken_cart(guild):
+    g = guild.groups[0]
+    cart, ox = Wagon("Cart"), Animal("Ox")
+    cart.give_to_pack("Lumber", 3)
+    g.add_wagon(cart)
+    g.herd.append(ox)
+    cart.hp = 0
+    return g, cart, ox
+
+
+def test_a_broken_wagon_is_left_behind_only_after_the_card_says_what_goes_with_it():
+    guild = _guild("lumber_yard", "lumber_yard")
+    s = _game(guild).session
+    g, cart, ox = _broken_cart(guild)
+    p = s.preview(g.gid, "market")
+    assert "why" not in p and p["path"]
+    (w,) = p["leave"]["wagons"]
+    assert w["name"] == "Cart" and w["items"] == 3 and w["kg"] == round(cart.stash.load, 1)
+    assert w["cargo"] == ["3 Lumber"] and p["leave"]["animals"] == [ox.name]
+    with pytest.raises(ValueError, match="leave it behind"):
+        s.travel(g.gid, "market")
+    assert g.order is None and cart in g.wagons
+    st = s.travel(g.gid, "market", leave=True)
+    assert g.wagons == [] and ox in g.herd and ox.hitch is None
+    assert g.order.kind == "travel" and g.order.final_dest == "market"
+    assert any("leaves its broken cart behind" in n for n in st["notices"])
+
+
+def test_a_sound_wagon_is_never_left_and_its_team_is_not_named_as_walking():
+    guild = _guild("lumber_yard", "lumber_yard")
+    s = _game(guild).session
+    g, _, ox = _broken_cart(guild)
+    sound, horse = Wagon("Cart"), Animal("Horse")
+    horse.tack = "Harness"
+    g.add_wagon(sound)
+    g.herd.append(horse)
+    assert g.hitch(horse, sound)
+    assert s.preview(g.gid, "market")["leave"]["animals"] == [ox.name]
+    s.travel(g.gid, "market", leave=True)
+    assert g.wagons == [sound] and horse.hitch == sound.uid
+
+
+def test_with_no_road_the_wagon_is_kept(monkeypatch):
+    guild = _guild("lumber_yard", "lumber_yard")
+    s = _game(guild).session
+    g, cart, _ = _broken_cart(guild)
+    monkeypatch.setattr(world, "route", lambda a, b: ([], float("inf")))
+    with pytest.raises(ValueError, match="no road"):
+        s.travel(g.gid, "market", leave=True)
+    assert cart in g.wagons
 
 
 def test_entering_a_place_opens_its_screen_and_coming_back_changes_nothing(saves):

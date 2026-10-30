@@ -109,16 +109,65 @@ Each folder under [references/](references/) is the approved look of a family, o
 
 In order. The board items are tuned by eye, so each takes a mockup first.
 
-### 1. Leaving a broken wagon behind
+### 1. The playtest of 2026-10-30: quick fixes
 
-A band with a broken wagon cannot travel (`map_session.travel` refuses it, "leaving it behind is not in the
-browser yet"), so a band with no Lumber and no garage is stuck. pygame's `abandon_screen` asked to leave the
-wagon, its cargo first (the old screen is in git before the cut of 2026-10-28).
+Each one is small and checked through the API (and once by eye at 1920x1080):
 
-**Done when:** the map offers to leave the wagon (what happens to its cargo and hitched animals is shown
-before the yes) and the band then travels; tested through the map session.
+- **The tutorial's black screen.** Clicking the "What you're playing for" card (the REPUTATIONS tab's,
+  `tutorial.reputations`) from the skip list left a black screen with only the tutorial badge and no
+  way out; F5 fixed it. Find the repro first (the card's `close` reloads when `/api/tutorial/dismiss`
+  answers another screen).
+- **A hub opens on its shop.** "Visit the forge" opens on the Smithy's shop, not the forge's craft;
+  "visit the tavern" on its shop, not the recruits (`hub_session`, the `first` tab per order kind).
+- **A long name never overflows.** A generated name like "Dralothcazthrog" is cut at the right edge of
+  the guild's sheet: every name cell ellipsizes and shows the whole name on hover (shorter names are the
+  backlog's *Name generator*, this holds whatever the length).
+- **The field's loot has Distribute load** (the report's field, on `spoils.Spoils`), as the shop, the
+  vault and the hunt already have.
 
-### 2. What else only pygame had: port or drop
+**Done when:** each has its test and is looked at once.
+
+### 2. The client's component kit and a game tooltip
+
+The playtest of 2026-10-30 asked whether the client is really made of components: today the shell shares
+only `face`, `Sheet`, `Tutorial` and `Sound`, and each screen builds its HTML from template strings
+(`innerHTML` in about 130 places), so the same piece is written twice (the pack column and its Distribute
+load button in `shop.js` and `vault.js`) and a fix to one copy misses the other. The hover is the browser's
+own `title` everywhere (a shop item, the sheet's computed fields with their `?` cursor, which only shows on
+one exact spot), and it looks like no part of the game.
+
+- **Audit the screens** for the pieces two or more of them draw (a pack column, an item row, a portrait
+  card, a stat with its breakdown, a button bar, a tab strip) and move each into the shell as one function
+  that takes plain data, the way `face` and `Sheet` already are. No framework: the rule is one piece, one
+  function, its CSS beside it.
+- **A tooltip of the game's own** in the shell: paper, the reading face, opened by a `data-tip` (plain text)
+  or a `data-tip-*` the screen fills (an item, a stat's breakdown, a rule), shown on the whole element with
+  a short delay, kept inside the window. Every `title=` moves onto it.
+- **The food alert** shows only "Low on food"; the rest (who, how many days) is its tooltip.
+
+**Done when:** no `title=` is left in the client, the shared pieces each live once in the shell, and a
+shop item, a computed field on the sheet and the food alert show the game's tooltip, looked at at
+1920x1080.
+
+### 3. The wiki links its own entries
+
+On an item's page (weapons most of all) a trait or an action is a link to its own entry, and hovering it
+shows the entry in the tooltip of item 2; any screen that names a trait or action (the shop, the sheet)
+gets the same hover. Builds on the backlog's *Rules as keywords* where a keyword gets its own entry.
+
+**Done when:** every trait and action named on an item's page opens its entry and shows it on hover;
+tested through `wiki_session`.
+
+### 4. The reading face is still too thin
+
+On the REPUTATIONS tab a deed's name ("Buy Food") reads easily, its line ("Everyone eats...") takes an
+effort though it is legible: EB Garamond at 16px is too light on the dark table. Try a heavier weight
+(EB Garamond Medium or SemiBold ship as files), a little more size or a lighter ink on paper, compared
+side by side on the reputations tab and one hub tab.
+
+**Done when:** the author picks one from the screenshots and `--read` changes everywhere.
+
+### 5. What else only pygame had: port or drop
 
 Each needs the author's call (port, or drop and delete what is left of it):
 
@@ -130,7 +179,7 @@ Each needs the author's call (port, or drop and delete what is left of it):
 
 **Done when:** each is in the browser with its tests, or deleted from the code and its tutorial copy.
 
-### 3. The tests the pygame cut lost
+### 6. The tests the pygame cut lost
 
 No web test covers these yet: the clock run while a screen is open (`MapSession.tick_outside`); a guild with
 every member jailed waiting out the sentence on the map; the save refused mid-battle or mid-hunt; two due
@@ -139,17 +188,25 @@ trip cancelled to the next node.
 
 **Done when:** each has a test through the web sessions.
 
-### 4. The board, by eye
+### 7. The board, by eye
 
 - **The fog.** Seen before (grey), never seen (paper) and seen but unlit (dark) stack into too many layers:
   it is hard to tell what is dark, what is fog and what is unknown (the playtests of 2026-10-21 and
   2026-10-28 both said it). Reopens the board's colour and light (`screens/battle/board.js`).
 - **A pit reads as a pit, and how deep** (`board.py` elevation).
 - **The bands walk on the map** from node to node along the edge, as tokens walk on the board.
+- **A body and a fighter in one cell** (playtest 2026-10-30). A fighter may stand on a body (dying,
+  stable or dead), and today the two tokens overlap so neither reads. Both must show, and what lies
+  underneath must be readable: options for the mockup, e.g. the body drawn as a small fallen token or a
+  mark on the floor under a standing token, a corner badge counting what is underneath, the cell's
+  hover listing the stack.
+- **The initiative shows each one's state** (playtest 2026-10-30): the green bar under a portrait
+  does not say whether the fighter is dead, down and dying, or down and stable, and it must be obvious
+  at a glance (the portrait greyed or struck, a mark per state).
 
 **Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
 
-### 5. The Editor
+### 8. The Editor
 
 The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
 `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
@@ -159,7 +216,7 @@ game.
 
 **Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
 
-### 6. The retirement
+### 9. The retirement
 
 Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
 `icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.
@@ -174,7 +231,6 @@ Small, take them when passing by:
 
 - The map's blocks still carry pygame's layout hints (`gap_before`, `height`); the web ignores them. They
   go with pygame.
-- An item's tooltip is the browser's own `title`.
 - Not ported from pygame's guild sheet: the CARGO view (every stack of a band in one sorted table). The
   sheets mockup's "road ahead" card was never built.
 - The talent tree draws a second requirement as a red dotted line, but no talent has one yet: check it the

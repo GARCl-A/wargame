@@ -171,7 +171,9 @@ function drawSlip() {
   else {
     const via = p.via.length ? ` by ${esc(p.via.join(", "))}` : "";
     body = `<p>Walk ${esc(b.name)} there: <b>${p.hours} h</b>${via}, in by <b>${esc(p.at)}</b>${p.day !== M.meta.day ? ` on day ${p.day}` : ""}. ${esc(n.blurb)}</p>
-      ${p.why ? `<div class="click no">${esc(p.why)}</div>` : `<div class="click">Click<span>to give the order</span></div>`}`;
+      ${p.why ? `<div class="click no">${esc(p.why)}</div>`
+        : p.leave ? `<div class="click no">Click<span>the broken ${esc(p.leave.wagons.map(w => w.name.toLowerCase()).join(" and "))} cannot come</span></div>`
+        : `<div class="click">Click<span>to give the order</span></div>`}`;
   }
   slip.innerHTML = `<h4>${esc(n.name)}</h4>${body}`;
   slip.hidden = false;
@@ -307,10 +309,43 @@ document.addEventListener("click", e => {
   if (t.dataset.node !== undefined) {
     if (performance.now() - MapSheet.dragged < 200) return;
     const b = band(sel);
-    if (b && b.node !== t.dataset.node && b.idle) post("travel", {gid: sel, node: t.dataset.node});
+    if (b && b.node !== t.dataset.node && b.idle) setOut(sel, t.dataset.node);
     return;
   }
   if (t.dataset.band !== undefined) pickBand(t.dataset.band);
+});
+
+// ---------------------------------------------------------------- a broken wagon stays behind
+let leaving = null;
+async function setOut(gid, id) {
+  const key = gid + "|" + id;
+  if (!previews.has(key)) {
+    try { previews.set(key, await api(`/api/map/preview?gid=${encodeURIComponent(gid)}&node=${encodeURIComponent(id)}`)); }
+    catch (e) { news([e.message], true); return; }
+  }
+  const p = previews.get(key);
+  if (!p.leave || p.why) { post("travel", {gid, node: id}); return; }
+  leaving = {gid, node: id};
+  const b = band(gid), plural = p.leave.wagons.length > 1;
+  const wagons = p.leave.wagons.map(w => `<p><b>The ${esc(w.name.toLowerCase())} is broken</b> and cannot move. ${w.items
+    ? `It still holds ${w.items} item${w.items > 1 ? "s" : ""}, ${w.kg} kg, and they stay with it unless you move them into the packs first.</p><p class="cargo">${esc(w.cargo.join(", "))}</p>`
+    : "It carries nothing.</p>"}`).join("");
+  const animals = p.leave.animals.length
+    ? `<p>${esc(p.leave.animals.join(", "))} walk${p.leave.animals.length > 1 ? "" : "s"} on with ${esc(b.name)}.</p>` : "";
+  $("leavebody").innerHTML = `${wagons}${animals}<p>${esc(b.name)} sets out for <b>${esc(p.name)}</b> (${p.hours} h) and ${plural ? "the wagons are" : "the wagon is"} lost for good.</p>`;
+  $("leave").querySelector('[data-leave="cargo"]').hidden = !p.leave.wagons.some(w => w.items);
+  $("leave").hidden = false;
+}
+
+function closeLeave() { $("leave").hidden = true; leaving = null; }
+
+$("leave").addEventListener("click", e => {
+  const t = e.target.closest("[data-leave]");
+  if (!t || !leaving) return;
+  const {gid, node} = leaving;
+  closeLeave();
+  if (t.dataset.leave === "go") post("travel", {gid, node, leave: true});
+  else if (t.dataset.leave === "cargo") post("act", {gid, key: "manage_group"});
 });
 
 $("nodes").addEventListener("pointerover", e => { const n = e.target.closest(".node"); hover(n ? n.dataset.node : null); });
@@ -361,6 +396,7 @@ $("seal").onclick = () => {
 };
 
 addEventListener("keydown", e => {
+  if (!$("leave").hidden) { if (e.key === "Escape") closeLeave(); return; }
   if (!$("pause").hidden) {
     if (e.key === "Escape") { if (!$("saveform").hidden) $("saveform").hidden = true; else pause(false); }
     return;

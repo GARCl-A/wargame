@@ -56,7 +56,7 @@ class MapSession(MapView, Session):
         "preview": lambda s, q: s.preview(q["gid"], q["node"]),
     }
     POST: ClassVar[dict] = {
-        "travel": lambda s, b: s.travel(b["gid"], b["node"]),
+        "travel": lambda s, b: s.travel(b["gid"], b["node"], bool(b.get("leave"))),
         "act": lambda s, b: s.act(b["gid"], b["key"]),
         "split": lambda s, b: s.split(b["gid"], b["uids"]),
         "merge": lambda s, b: s.merge(b["gid"], b["other"]),
@@ -388,15 +388,31 @@ class MapSession(MapView, Session):
         elif g.busy:
             out["why"] = f"{g.display_name} is busy"
         elif any(w.broken for w in g.wagons):
-            out["why"] = "a broken wagon must be mended first (leaving it behind is not in the browser yet)"
+            out["leave"] = self._left_behind(g)
         return out
 
-    def travel(self, gid, node_id):
+    def _left_behind(self, g):
+        """What setting out with a broken wagon costs, told before the yes: each wagon and the
+        cargo that goes with it, and the animals that walk on with the band."""
+        wagons = [{"name": w.kind, "items": sum(q for _, q in w.stash.items),
+                   "kg": round(w.stash.load, 1), "cargo": [f"{q} {n}" if q > 1 else n for n, q in w.stash.items]}
+                  for w in g.wagons if w.broken]
+        pulling = {a.uid for w in g.wagons if not w.broken for a in w.draft}
+        walk = [a.name for a in g.herd if a.uid not in pulling]
+        return {"wagons": wagons, "animals": walk}
+
+    def travel(self, gid, node_id, leave=False):
         g = self._free(gid)
         if node_id == g.node:
             raise ValueError(f"{g.display_name} is already there")
-        if any(w.broken for w in g.wagons):
-            raise ValueError("a broken wagon must be mended first; leaving it behind is not in the browser yet")
+        if world.route(g.node, node_id)[1] == float("inf"):
+            raise ValueError(f"no road leads to {world.node(node_id).name}")
+        broken = [w for w in g.wagons if w.broken]
+        if broken and not leave:
+            raise ValueError("a broken wagon cannot move: mend it, or leave it behind")
+        for w in broken:
+            self.guild.abandon_wagon(g, w)
+            self.notices.append(f"{g.display_name} leaves its broken {w.kind.lower()} behind.")
         g.order = orders.travel(g, node_id, self._pace(g))
         self.focus = g.gid
         return self._after_order()
