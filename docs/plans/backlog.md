@@ -93,12 +93,18 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   a lone fighter walled off from the rest, pass their turns forever. Only AI against AI shows it (a person goes
   looking): the combat lab, `sim_test.py`, `tests/test_web_first_days.py` (which ends such a fight after 40
   rounds). Same family as the Ribbit Brothers' capture the flag, which stalls AI against AI at seed 7.
+  Fix it together with the `ai.py` split (author 2026-10-30): the file is ~1750 lines and ~94 functions, the
+  stall lives in `_target`, so the fix is the moment to cut the file by concern (target choice, movement,
+  action choice) and leave it smaller, with the same behaviour (`tests/test_ai_actions`, `sim_test.py`).
 
 - **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per
   test, runs under `pytest-xdist` and the skills use it; four tests still lean on luck and the
   rest move to `standard_unit` as they are touched; the steps are in [test_suite.md](test_suite.md).
 
-- **Remove occupations (decided 2026-10-23).** The first step of *Needs more information -> Loyalty,
+- **Remove occupations (decided 2026-10-23). Close this soon, and until then do not maintain the idea.**
+  Occupations are going, so no new code, label, icon, test or sim ranking may lean on them (author
+  2026-10-30): every new screen that prints "Race Occupation" raises the cost of this removal. It is spread
+  over five core modules plus the labels below. The first step of *Needs more information -> Loyalty,
   the oath and who the members are*: an occupation is only a preset of the starting weapon and item
   (`unit.py`), so the starting kit is rolled at random and nothing is written on the character. Touches
   `data.OCCUPATIONS`, `Unit` (roll, save, `unit_edit`), `artwork.OCCUPATION_ICON` and `role_for` (the
@@ -232,6 +238,11 @@ silhouettes. Order is the suggested priority.
   files go in `gartok/web/client/img/`). Each is one seamless 1024 texture in the sepia
   engraving of the reference portraits, seen from above, mid value, with no 2x2 copies of
   its motif inside (Gemini's habit: the 2026-10-23 batch was four copies of a 512 block).
+  **Prompts and references are not kept in the repo yet** (the Gemini prompts for the finished textures
+  were not saved). What exists: the four engraved portraits in `docs/plans/references/` (Gnoll 10, Grippli 13,
+  Kenku 4, Ogre 0) as the style anchor, the rules above and the failures listed below. From now on save each
+  prompt that works (and the reference images attached) next to the texture, in `docs/art/<name>_options/`,
+  and write the prompt that failed under its item.
   - [x] Cave rock floor — `rock.jpg`
   - [x] Grass floor — `grass.jpg`
   - [x] Stone floor — `flagstones.jpg`
