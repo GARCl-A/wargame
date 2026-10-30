@@ -57,7 +57,7 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 - **Name generator: shorter names (playtest 2026-10-30).** `names.random_name` strings 2 to 4 syllables,
   so "Othgormskelther" and "Dralothcazthrog" come out: pronounceable but long and ugly. Cap the length
   (letters, not only syllables), weigh 2 syllables over 3 and 4, and keep two heavy consonant clusters
-  ("gorm", "throg", "skel") from meeting. The screens hold a long name anyway (web_frontend.md, item 1).
+  ("gorm", "throg", "skel") from meeting. The guild's sheet holds a long name anyway (2026-10-30: ellipsis, the whole name on hover, the book's heading shrinks).
 
 ## Medium
 
@@ -112,10 +112,10 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Playtest notes 2026-10-30
 
-Sorted out of the raw notes: the browser's items (the tutorial's black screen, a hub's first tab, long
-names, the field's Distribute load, a component kit with a game tooltip, the wiki's links, the reading
+Sorted out of the raw notes: the browser's items (the tutorial's black screen, a
+component kit with a game tooltip, the wiki's links, the reading
 face, a body under a fighter, the initiative's states) are items 1 to 4 and 7 of
-[web_frontend.md](web_frontend.md); the name generator and the rules as keywords are in *Ready to do*.
+[web_frontend.md](web_frontend.md); long names, the field's Distribute load and every hub opening on its shop are done; the name generator and the rules as keywords are in *Ready to do*.
 
 ## Playtest notes 2026-10-28 (save "Polissexus playtest 1", after 9c3ed73)
 

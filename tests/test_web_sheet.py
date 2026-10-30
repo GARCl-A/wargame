@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import threading
 import urllib.error
 import urllib.request
@@ -105,3 +106,13 @@ def test_the_shell_draws_the_book_and_the_screens_mark_their_portraits():
         assert "data-sheet=" in _client(path), path
     guild = _client("screens/guild/guild.js")
     assert "Sheet.pages(" in guild and "function memberPages" not in guild
+
+
+def test_a_long_name_on_the_guild_sheet_shows_whole_on_hover_and_the_book_shrinks_its_heading():
+    cells = re.compile(r'<(h1|h3|div class="nm")[^>]*>\$\{esc\([umpa]\.name\)\}')
+    for path in ("shell.js", "screens/guild/guild.js", "screens/guild/bands.js"):
+        for m in cells.finditer(_client(path)):
+            assert "title=" in m.group(0), f"{path}: {m.group(0)}"
+    assert '<b title="${esc(c.name)}"><em class="bn">' in _client("screens/guild/bands.js")
+    shell, css = _client("shell.js"), _client("shell.css")
+    assert "nameSize(u.name)" in shell and ".book .who h1.xlong" in css

@@ -211,8 +211,9 @@ class HubSession(Session):
         self.order = order
         self.node = world.node(group.node)
         self._tabs = tabs_for(order.kind, self.node)
-        first = "shop" if order.kind in ("market", "stable") else {"forge": "craft", "recruit": "recruits", "pit_recruit": "recruits", "bank": "vault"}.get(order.kind, order.kind)
-        self.tab = first if any(k == first for k, _ in self.tabs) else self.tabs[0][0]
+        keys = [k for k, _ in self.tabs]
+        first = "shop" if "shop" in keys else {"pit_recruit": "recruits", "bank": "vault"}.get(order.kind, order.kind)
+        self.tab = first if first in keys else keys[0]
         self._shop = None
         self._work = None
         self._gather = None

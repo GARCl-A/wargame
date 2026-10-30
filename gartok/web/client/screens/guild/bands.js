@@ -26,7 +26,7 @@ const Bands = (() => {
     const on = c.gid === B.gid;
     const name = on && naming
       ? `<input id="rename" maxlength="24" value="${esc(B.custom)}" placeholder="${esc(B.name)}">`
-      : `<b>${esc(c.name)}${on ? `<i class="pen" id="pen" title="Rename the band">✎</i>` : ""}</b>`;
+      : `<b title="${esc(c.name)}"><em class="bn">${esc(c.name)}</em>${on ? `<i class="pen" id="pen" title="Rename the band">✎</i>` : ""}</b>`;
     return `<div class="bchip ${on ? "on" : ""} ${c.locked ? "fight" : ""}" data-band="${c.gid}">
       <div class="medals">${c.faces.map(f => `<div class="medal">${face(f, c.name)}</div>`).join("")}</div>
       <div>${name}<span>${esc(c.where)} · ${esc(c.task)} · ${c.size} of ${c.capacity}</span></div></div>`;
@@ -75,7 +75,7 @@ const Bands = (() => {
       p.hitch && `<div class="ghost-btn" data-btn="hitch:${p.id}" title="Hitch it to the next wagon">${esc(p.hitch.label)}</div>`].filter(Boolean).join("");
     const f = foot(p);
     return `<div class="col" data-owner="${p.id}">
-      <div class="colh">${med}<div style="min-width:0"><h3>${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${p.lead ? `<span class="voice">Leads the band</span>` : ""}</div></div>
+      <div class="colh">${med}<div style="min-width:0"><h3 title="${esc(p.name)}">${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${p.lead ? `<span class="voice">Leads the band</span>` : ""}</div></div>
       <div class="cst"><div class="money"><i class="coindot"></i>${p.money}</div><div class="load ${overload ? "over" : tight ? "tight" : ""}"><b>${p.kg.toFixed(1)}</b> / ${p.normal} kg</div></div>
       <div class="cbar"><i class="${overload ? "over" : tight ? "tight" : ""}" style="width:${Math.min(100, p.kg / Math.max(p.normal, .1) * 100)}%"></i></div>
       ${btns ? `<div class="cbtn">${btns}</div>` : ""}

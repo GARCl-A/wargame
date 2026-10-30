@@ -263,6 +263,7 @@ function loot() {
   for (const p of L.packs) h += column(p, L.refused && L.refused.uid === p.uid ? L.refused : null);
   const took = L.taken.map(t => `${t.items.map(([n, q]) => `${q > 1 ? q + " " : "the "}${esc(n)}`).join(", ")} to <b>${esc(t.name)}</b>`).join(" · ");
   h += `</div><div class="leather" id="lootfoot"><div class="bigbtn ghost small" data-go="auto">${ico("item/knapsack")}Take what fits</div>
+    ${L.can_distribute ? `<div class="bigbtn ghost small" data-go="distribute" title="Share the load out by what each can carry">${ico("action/rally-the-troops")}Distribute load</div>` : ""}
     <i>${took ? `${took} · ` : ""}${L.stacks ? `${plural(L.stacks, "stack")} still on the field` : "the field is bare"}</i>
     <div class="bigbtn" data-go="next">${L.stacks ? "Leave the rest · go on" : "Go on"}</div></div>`;
   $("body").innerHTML = h;

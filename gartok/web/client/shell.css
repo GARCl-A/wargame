@@ -114,14 +114,16 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 .book .lpage,.book .rpage{position:absolute;top:30px;width:474px;bottom:24px;overflow-y:auto;scrollbar-width:none}
 .book .lpage{left:36px}.book .rpage{right:36px}
 .book .who{display:flex;gap:22px;align-items:flex-start}
+.book .who>div:last-child{min-width:0}
 .book .plate{width:150px;height:186px;flex:none;padding:6px;background:#efe2c3;box-shadow:0 0 0 1px #5d4426,0 0 0 4px #e6d6b1,0 0 0 5px #5d4426,2px 4px 8px rgba(60,35,12,.35)}
 .book .plate img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.15)}
 .book .plate .initial{font-size:60px}
 .book .plate.beastmed .ico{width:70%;height:70%;color:#3a2410}
-.book .who h1{font:700 32px/1 Cinzel,serif;color:#24170c;letter-spacing:.03em;margin-top:6px}
+.book .who h1{font:700 32px/1 Cinzel,serif;color:#24170c;letter-spacing:.03em;margin-top:6px;overflow:hidden;text-overflow:ellipsis}
+.book .who h1.long{font-size:26px}.book .who h1.xlong{font-size:21px}
 .book .who .race{margin-top:8px;font:italic 19px/1.2 "IM Fell English",serif;color:#5b4630}
 .book .who .race b{font:600 17px/1 Cinzel,serif;color:#3a2410;letter-spacing:.04em;font-style:normal}
-.book .who .pos{margin-top:12px;font:16px/1.35 var(--read);color:#4a3522}
+.book .who .pos{margin-top:12px;font:16px/1.35 var(--read);color:#4a3522;overflow-wrap:anywhere}
 .book .who .pos b{font-weight:600;color:#24170c}
 .book .stamps{display:flex;flex-wrap:wrap;gap:8px}
 .book .stamp{display:inline-block;margin-top:12px;transform:rotate(-4deg);font:700 11px/1 Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;

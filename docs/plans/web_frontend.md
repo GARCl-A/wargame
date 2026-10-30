@@ -111,19 +111,14 @@ In order. The board items are tuned by eye, so each takes a mockup first.
 
 ### 1. The playtest of 2026-10-30: quick fixes
 
-Each one is small and checked through the API (and once by eye at 1920x1080):
+Checked through the API (and once by eye at 1920x1080). It did not reproduce on 2026-10-30, so it
+waits on the author's steps:
 
 - **The tutorial's black screen.** Clicking the "What you're playing for" card (the REPUTATIONS tab's,
   `tutorial.reputations`) from the skip list left a black screen with only the tutorial badge and no
-  way out; F5 fixed it. Find the repro first (the card's `close` reloads when `/api/tutorial/dismiss`
-  answers another screen).
-- **A hub opens on its shop.** "Visit the forge" opens on the Smithy's shop, not the forge's craft;
-  "visit the tavern" on its shop, not the recruits (`hub_session`, the `first` tab per order kind).
-- **A long name never overflows.** A generated name like "Dralothcazthrog" is cut at the right edge of
-  the guild's sheet: every name cell ellipsizes and shows the whole name on hover (shorter names are the
-  backlog's *Name generator*, this holds whatever the length).
-- **The field's loot has Distribute load** (the report's field, on `spoils.Spoils`), as the shop, the
-  vault and the hunt already have.
+  way out; F5 fixed it. Not reproduced in headless Edge: the map's first card closing onto the
+  reputations tab, then its card closed (click, Enter, three fast clicks, the `?` reopened), on a new
+  guild and on the day-70 save, all draw the tab. What "the skip list" is decides the next try.
 
 **Done when:** each has its test and is looked at once.
 

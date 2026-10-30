@@ -55,11 +55,11 @@ function roster(M) {
   const filters = M.filters.map(f => `<span class="${f.mode === M.filter ? "on" : ""}" data-filter="${f.mode}" title="${esc(f.tip)}">${esc(f.label)}${f.mode === "alerts" && G.alerts ? `<em>${G.alerts}</em>` : ""}</span>`).join("");
   let h = "";
   for (const b of M.roster) {
-    h += `<div class="bandh" data-fold="${b.gid}"><span class="caret">${b.folded ? "▸" : "▾"}</span><b>${esc(b.name)}</b><span>${esc(b.where)} · ${esc(b.task.toLowerCase())}</span><small>${b.count}</small></div>`;
+    h += `<div class="bandh" data-fold="${b.gid}"><span class="caret">${b.folded ? "▸" : "▾"}</span><b title="${esc(b.name)}">${esc(b.name)}</b><span>${esc(b.where)} · ${esc(b.task.toLowerCase())}</span><small>${b.count}</small></div>`;
     if (b.folded) continue;
     for (const m of b.rows) {
       const med = `<div class="medal ${m.beast ? "beastmed" : ""} ${m.hurt ? "hurt" : ""}">${face(m.portrait, m.name)}</div>`;
-      h += `<div class="mem ${m.selected ? "sel" : ""}" data-uid="${m.uid}">${med}<div style="min-width:0"><div class="nm">${esc(m.name)}</div><div class="sb">${esc(m.sub)}</div>
+      h += `<div class="mem ${m.selected ? "sel" : ""}" data-uid="${m.uid}">${med}<div style="min-width:0"><div class="nm" title="${esc(m.name)}">${esc(m.name)}</div><div class="sb">${esc(m.sub)}</div>
         <div class="hpbar"><i class="${hpcls(...m.hp)}" style="width:${m.hp[0] / m.hp[1] * 100}%"></i></div></div>
         <div class="bdg">${m.badges.map(x => `<span class="mark ${x.tone}">${esc(x.text)}</span>`).join("")}</div></div>`;
     }
@@ -110,7 +110,7 @@ function drawCharter() {
     : `<div class="quiet">All quiet. Nobody has given notice, no band is over its hold, and every herd follows its keepers.</div>`;
   const charter = `<div class="paper" id="charter">
     <div class="chead"><div class="banner" style="${bannerStyle()}">${G.emblem ? ico(G.emblem) : ""}</div>
-      <div><h1>${esc(G.name)}</h1><p>A guild of ${G.count}, ${plural(G.day, "day")} on the road · ${plural(G.won, "fight")} won</p></div>${voc}</div>
+      <div><h1 title="${esc(G.name)}">${esc(G.name)}</h1><p>A guild of ${G.count}, ${plural(G.day, "day")} on the road · ${plural(G.won, "fight")} won</p></div>${voc}</div>
     <div class="cgrid">
       <div>
         <div class="kicker">Fame</div>

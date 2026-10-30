@@ -233,6 +233,34 @@ def test_take_what_fits_empties_what_the_packs_can_carry():
     assert st["loot"]["taken"]
 
 
+def test_distribute_load_evens_the_packs_and_leaves_the_field_alone():
+    _, s, squad = _field()
+    heavy, light = squad
+    heavy.give_to_pack("Rope", 6)
+    while light._base_inventory:
+        light.take_from_pack(0, light._base_inventory[0][1])
+    axes = _stack(s.state(), "Axe")
+    s.take([{"from": "field", "loc": axes["loc"]}], heavy.uid)
+    on_field = s.state()["loot"]["things"]
+    st = s.distribute()
+    assert st["loot"]["can_distribute"] and st["loot"]["things"] == on_field
+    assert light.load > 0 and heavy.load <= heavy.carry_max
+    assert sum(u.count_of("Axe") for u in squad) >= axes["qty"]
+    marked = {n: q for t in st["loot"]["taken"] for n, q in t["items"]}
+    assert marked.get("Axe") == axes["qty"]
+
+
+def test_distribute_load_needs_two_survivors_and_the_field_on_the_table():
+    _, s, _squad = _field(n=1)
+    assert not s.state()["loot"]["can_distribute"]
+    with pytest.raises(ValueError, match="nobody"):
+        s.distribute()
+    guild, _, battle, outcome = _fight(loot=["Axe"])
+    _, s = _open(guild, battle, outcome)
+    with pytest.raises(ValueError, match="not on the table"):
+        s.distribute()
+
+
 def test_what_is_left_on_the_field_is_lost_when_the_band_goes_on():
     _game, s, squad = _field()
     before = sum(u.count_of("Axe") for u in squad)

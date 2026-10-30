@@ -80,11 +80,12 @@ const Sheet = (() => {
   const ico = path => `<span class="ico mask" style="--icon:url(/assets/icons/${path}.svg)"></span>`;
   const sign = n => n >= 0 ? "+" + n : "−" + (-n);
   const hpcls = (h, m) => h / m < .34 ? "low" : h / m < .67 ? "mid" : "";
+  const nameSize = n => { const w = Math.max(...n.split(" ").map(p => p.length)); return w > 15 ? "xlong" : w > 11 ? "long" : ""; };
   function memberPages(u) {
     const lowAll = u.attrs.some(a => a.low);
     const where = u.band ? `Rides with <b>${esc(u.band)}</b><br>at the ${esc(u.where)}, ${esc(u.task)}` : esc(u.where);
     const L = `<div class="who"><div class="plate">${face(u.portrait, u.name)}</div><div>
-        <h1>${esc(u.name)}</h1>
+        <h1 class="${nameSize(u.name)}" title="${esc(u.name)}">${esc(u.name)}</h1>
         <div class="race"><b>${esc(u.race)} ${esc(u.occ)}</b><br>${u.age} years · ${esc(u.align)}</div>
         <div class="pos">${where}</div>
         <div class="stamps">${u.stamps.map(s => `<span class="stamp ${s.tone}">${esc(s.text)}</span>`).join("")}</div>
@@ -119,7 +120,7 @@ const Sheet = (() => {
 
   function animalPages(a) {
     const L = `<div class="who"><div class="plate">${face(a.portrait, a.name)}</div><div>
-        <h1>${esc(a.name)}</h1><div class="race"><b>${esc(a.sub)}</b></div>
+        <h1 class="${nameSize(a.name)}" title="${esc(a.name)}">${esc(a.name)}</h1><div class="race"><b>${esc(a.sub)}</b></div>
         <div class="pos">${a.band ? `Kept by <b>${esc(a.band)}</b><br>at the ${esc(a.where)}` : esc(a.where)}</div></div></div>
       <div class="sec2"><div class="kicker">Attributes</div>
       <div class="boxes attrs">${a.attrs.map(x => `<div class="box"><div class="k">${x.k}</div><div class="v">${x.v}</div><div class="m">${sign(x.mod)}</div></div>`).join("")}</div></div>

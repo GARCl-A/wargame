@@ -1,12 +1,14 @@
 """The field's loot split among the survivors, with no pygame: the pile (`loot.field_loot`) as
 stacks, a pick of part of a stack, the moves onto a member's pack or worn slot and back to the
-field under each one's `carry_max`, and "take what fits". Whatever is still in the pile when the
-report moves on is left behind. `web/report_session.py` holds one."""
+field under each one's `carry_max`, "take what fits" and sharing the packs out by what each can
+carry. Whatever is still in the pile when the report moves on is left behind.
+`web/report_session.py` holds one."""
 
 from collections import Counter
 
 from . import items
 from .loadout_move import LoadoutMoveMixin
+from .unit_loadout import distribute_load
 
 WORN = ("hand", "offhand", "tongue", "artifact", "armor")
 
@@ -126,5 +128,13 @@ class Spoils(LoadoutMoveMixin):
                 taker.give_to_pack(name)
                 taker._derive_combat()
         self.pool = list(Counter(leftover).items())
+        self.selected = []
+        self._sel_qty = {}
+
+    def distribute(self):
+        """Even the survivors' packs out by free carrying capacity, coins too; the field stays put."""
+        if len(self.survivors) < 2:
+            raise ValueError("nobody to share the load with")
+        distribute_load(self.survivors)
         self.selected = []
         self._sel_qty = {}

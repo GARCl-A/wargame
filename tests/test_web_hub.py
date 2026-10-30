@@ -69,11 +69,11 @@ def test_a_shop_opens_as_a_hub_with_the_tabs_and_keeper_of_its_place():
     hub, _, _ = _hub("smith", "forge")
     assert isinstance(hub, HubSession)
     st = hub.state()
-    assert [t["key"] for t in st["tabs"]] == ["shop", "craft"] and st["tab"] == "craft"
+    assert [t["key"] for t in st["tabs"]] == ["shop", "craft"] and st["tab"] == "shop"
     assert st["keeper"]["name"] and st["keeper"]["portrait"].startswith("/assets/portraits/npc/")
-    assert "craft" in st and "shop" not in st
-    st = hub.pick_tab("shop")
-    assert st["tab"] == "shop" and {c["key"] for c in st["shop"]["shelf"]} >= {"weapons", "armor"}
+    assert {c["key"] for c in st["shop"]["shelf"]} >= {"weapons", "armor"} and "craft" not in st
+    st = hub.pick_tab("craft")
+    assert st["tab"] == "craft" and "craft" in st and "shop" not in st
     with pytest.raises(ValueError):
         hub.pick_tab("stable")
 
@@ -459,6 +459,7 @@ def test_a_job_won_by_a_fight_is_taken_here_and_met_on_the_map(monkeypatch):
 
 def _bench(node="carpenter", kind="carpenter", lumber=3):
     hub, guild, g = _hub(node, kind)
+    hub.pick_tab("craft" if kind == "forge" else kind)
     g.members[0].recipes.append("Club")
     for u in g.members:
         u.remove_named("Lumber", u.count_of("Lumber"))
@@ -622,9 +623,10 @@ def _roll(monkeypatch, ours, theirs):
     monkeypatch.setattr(recruit, "capacity", lambda guild, u: 3)
 
 
-def test_the_tavern_opens_on_its_recruits_with_the_strangers_and_the_picked_ones_dossier():
+def test_the_tavern_opens_on_its_shop_and_its_recruits_show_the_strangers_and_the_picked_ones_dossier():
     hub, guild, g = _tavern()
-    st = hub.state()
+    assert hub.state()["tab"] == "shop"
+    st = hub.pick_tab("recruits")
     assert st["tab"] == "recruits" and [t["key"] for t in st["tabs"]] == ["shop", "recruits", "rooms", "perform"]
     assert all(t["live"] for t in st["tabs"])
     t = st["tavern"]
@@ -720,7 +722,7 @@ def test_a_band_studying_at_the_tavern_enters_it_from_the_map():
     g = guild.groups[0]
     g.order = orders.garrison("study")
     assert game.session.act(g.gid, "visit_tavern") == {"screen": "hub"}
-    assert game.session.state()["tab"] == "recruits" and game.session.tavern.s._studying()
+    assert game.session.state()["tab"] == "shop" and game.session.tavern.s._studying()
 
 
 def _cells(monkeypatch, coins=1000):

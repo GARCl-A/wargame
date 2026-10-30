@@ -51,6 +51,7 @@ class ReportSession(Session):
         "talents": lambda s, b: s.talents(),
         "take": lambda s, b: s.take(b.get("picks", []), b["to"], b.get("zone", "pack")),
         "auto": lambda s, b: s.auto(),
+        "distribute": lambda s, b: s.distribute(),
         "give": lambda s, b: s.give(b["uid"]),
     }
 
@@ -225,6 +226,26 @@ class ReportSession(Session):
         self.refused = None
         return self.state()
 
+    def distribute(self):
+        """The packs evened out; what came off the field stays marked on whoever holds it now."""
+        ls = self.loot
+        if self.stage[0] != "loot" or ls is None:
+            raise ValueError("the field is not on the table")
+        owed = {}
+        for got in self.taken.values():
+            for name, n in got.items():
+                owed[name] = owed.get(name, 0) + n
+        ls.distribute()
+        self.taken = {}
+        for u in ls.survivors:
+            for name, held in self._counts(u).items():
+                n = min(held, owed.get(name, 0))
+                if n:
+                    self.taken.setdefault(u.uid, {})[name] = n
+                    owed[name] -= n
+        self.refused = None
+        return self.state()
+
     def give(self, uid):
         """The purse lands whole on one fighter."""
         if self.stage[0] != "purse":
@@ -367,6 +388,7 @@ class ReportSession(Session):
         return {"cats": cats, "stacks": len(ls.pool), "things": sum(q for _, q in ls.pool),
                 "kg": round(sum(items.item_weight(n) * q for n, q in ls.pool), 2),
                 "packs": [self._column(u) for u in ls.survivors], "refused": self.refused,
+                "can_distribute": len(ls.survivors) > 1,
                 "taken": [{"name": u.name, "items": [[n, q] for n, q in self.taken.get(u.uid, {}).items() if q > 0]}
                           for u in ls.survivors if any(q > 0 for q in self.taken.get(u.uid, {}).values())]}
 
