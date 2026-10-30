@@ -143,8 +143,24 @@ const MapSheet = (() => {
   const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
 
   // where a band's pawn stands: its node, or part-way along the leg it walks
+  const walk = {};
   function bandPoint(b) {
+    if (walk[b.gid]) return walk[b.gid];
     return typeof b.at === "string" ? P(b.at) : lerp(P(b.at[0]), P(b.at[1]), b.at[2]);
+  }
+
+  // paired footprints along the leg walked, fainter toward where it began
+  function feet(from, at) {
+    const ang = Math.atan2(at[1] - from[1], at[0] - from[0]), len = Math.hypot(at[0] - from[0], at[1] - from[1]);
+    g.save();
+    for (let d = 17, k = 0; d < len - 18; d += 17, k++) {
+      const side = k % 2 ? 5 : -5, [x, y] = from;
+      g.fillStyle = `rgba(33,66,102,${(.3 + .6 * d / len).toFixed(2)})`;
+      g.beginPath();
+      g.ellipse(x + Math.cos(ang) * d - Math.sin(ang) * side, y + Math.sin(ang) * d + Math.cos(ang) * side, 6, 3.2, ang, 0, 7);
+      g.fill();
+    }
+    g.restore();
   }
 
   function drawWay(b, selected) {
@@ -153,6 +169,7 @@ const MapSheet = (() => {
     const ink = "rgba(46,95,142,.95)", at = bandPoint(b), from = P(t.from);
     const ahead = t.stops.map(s => P(s.node));
     g.strokeStyle = ink; inkLine([from, at], 4);
+    feet(from, at);
     g.strokeStyle = "rgba(46,95,142,.8)"; inkLine([at, ...ahead], 3, [10, 6]);
     [at, ...ahead].forEach((p, k, all) => k && arrow(all[k - 1], p, "#2e5f8e"));
     const next = t.stops[0], [nx, ny] = ahead[0];
@@ -288,7 +305,7 @@ const MapSheet = (() => {
   $("zfit").onclick = fit;
 
   return {
-    selected: null, onmove: null, dragged: 0, P, bandPoint, fit, draw, labelSides,
+    selected: null, onmove: null, dragged: 0, P, bandPoint, walk, lerp, fit, draw, labelSides,
     zoomIn: () => zoomAt(W / 2, H / 2, 1.3), zoomOut: () => zoomAt(W / 2, H / 2, 1 / 1.3),
     set(state) {
       M = state;

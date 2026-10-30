@@ -105,7 +105,7 @@ Each folder under [references/](references/) is the approved look of a family, o
 | `battle_mockup/` | the board |
 | `menu_mockup/` | the title: the menu beside the last guild's charter on its map |
 | `market_mockup/` | a shop: the keeper, the shelf, the packs |
-| `map_mockup/` | the campaign map (`?state=split`, `merge`) |
+| `map_mockup/` | the campaign map (`?state=split`, `merge`, `walk`) |
 | `sheets_mockup/` | the guild's sheet: members, bands, the guild, reputations |
 | `dialogue_mockup/` | the talk before a fight |
 | `report_mockup/` | after a fight: the fallen, the report, a level-up, the field, the purse |
@@ -114,15 +114,9 @@ Each folder under [references/](references/) is the approved look of a family, o
 
 ## What is left
 
-In order. The board items are tuned by eye, so each takes a mockup first.
+In order.
 
-### 1. The board, by eye
-
-- **The bands walk on the map** from node to node along the edge, as tokens walk on the board.
-
-**Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
-
-### 2. The Editor
+### 1. The Editor
 
 The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
 `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
@@ -132,7 +126,7 @@ game.
 
 **Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
 
-### 3. The retirement
+### 2. The retirement
 
 Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
 `icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.

@@ -430,6 +430,8 @@ let seed=23; const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483
 const rr=(a,b)=>a+(b-a)*rnd();
 const cv=document.getElementById("map"), g=cv.getContext("2d");
 
+const STATE=new URLSearchParams(location.search).get("state");
+const WALK=STATE==="walk"?.62:.135;
 // world.known(guild) for this save, at world.compute_layout's positions
 const NODES={
   city:["Ankareth",.289,.559,"map/city","city"], lumber_yard:["Lumber Yard",.189,.628,"stick-splitting"], carpenter:["The Carpenter",.302,.653,"crafting"],
@@ -493,11 +495,17 @@ function render(){
   g.strokeStyle="rgba(42,26,12,.72)";for(const [a,b] of EDGES)inkLine([P(a),P(b)],1.6,[7,5]);
   // Vokoranyr's Band: walked (solid) and still to walk (dashed), in enamel
   const route=["city","road","ledger_hold","frontier_outpost","battlefield"].map(P);
-  const at=[route[0][0]+(route[1][0]-route[0][0])*.135,route[0][1]+(route[1][1]-route[0][1])*.135];
+  const at=[route[0][0]+(route[1][0]-route[0][0])*WALK,route[0][1]+(route[1][1]-route[0][1])*WALK];
   g.strokeStyle="rgba(46,95,142,.95)";inkLine([route[0],at],4);
   g.strokeStyle="rgba(46,95,142,.8)";inkLine([at,...route.slice(1)],3,[10,6]);
   g.fillStyle="#2e5f8e";for(let k=1;k<route.length;k++){const [x0,y0]=k===1?at:route[k-1],[x1,y1]=route[k];const a=Math.atan2(y1-y0,x1-x0),mx=(x0+x1)/2,my=(y0+y1)/2;
     g.save();g.translate(mx,my);g.rotate(a);g.beginPath();g.moveTo(8,0);g.lineTo(-6,-6);g.lineTo(-2,0);g.lineTo(-6,6);g.closePath();g.fill();g.restore();}
+  if(STATE==="walk"){ // the walked leg: paired footprints in ink, fading toward the start; the clock beside the pawn
+    const [x0,y0]=route[0],ang=Math.atan2(at[1]-y0,at[0]-x0),len=Math.hypot(at[0]-x0,at[1]-y0);
+    for(let d=14,k=0;d<len-18;d+=17,k++){const f=1-d/len*.8,side=k%2?5:-5,px=x0+Math.cos(ang)*d-Math.sin(ang)*side,py=y0+Math.sin(ang)*d+Math.cos(ang)*side;
+      g.save();g.translate(px,py);g.rotate(ang);g.fillStyle="rgba(33,66,102,"+(.3+.6*(1-f)).toFixed(2)+")";g.beginPath();g.ellipse(0,0,6,3.2,0,0,7);g.fill();g.restore();}
+    g.fillStyle="#2e5f8e";g.font="italic 17px 'IM Fell English'";g.textAlign="left";g.fillText("on the road, 13:52",at[0]+44,at[1]+54);
+  }
   g.fillStyle="#2e5f8e";g.font="italic 16px 'IM Fell English'";g.fillText("13:16",P("road")[0]-14,P("road")[1]-30);
   g.textAlign="right";g.fillText("at the Battlefield day 71, 04:34",P("battlefield")[0]-30,P("battlefield")[1]+6);g.textAlign="start";
   // the hovered node's way there, in red ink
@@ -527,7 +535,7 @@ for(const [id,[name,,,ic,kind]] of Object.entries(NODES)){const [x,y]=P(id);
   const cls=["node",kind||"",id==="lumber_yard"?"here":"",id==="market"?"hover":"",ALERT.includes(id)?"al":""].join(" ");
   html+=`<div class="${cls}" style="left:${x}px;top:${y}px"><div class="m"><div class="ico">${icon(ic.split("/").pop())}</div></div>`+
         `<div class="n ${LABEL[id]||""}">${name}</div>${ALERT.includes(id)?'<div class="wax">!</div>':""}</div>`;}
-{const [a,b]=[P("city"),P("road")],x=a[0]+(b[0]-a[0])*.135,y=a[1]+(b[1]-a[1])*.135;
+{const [a,b]=[P("city"),P("road")],x=a[0]+(b[0]-a[0])*WALK,y=a[1]+(b[1]-a[1])*WALK;
  html+=`<div class="pawn" style="left:${x}px;top:${y+14}px"><div class="pin"></div><div class="p"><img src="img/human_4.png"></div></div>`;}
 {const [x,y]=P("lumber_yard");
  html+=`<div class="pawn sel" style="left:${x}px;top:${y-6}px"><div class="pin"></div><div class="p"><img src="img/human_10.png"></div></div>`;}
@@ -537,7 +545,6 @@ document.getElementById("nodes").innerHTML=html;
 
 
 // the other frames of the same screen: ?state=split (picking who leaves), ?state=merge (two bands at one place)
-const STATE=new URLSearchParams(location.search).get("state");
 const bands=document.querySelectorAll(".band");
 if(STATE==="split"){
   const pk=(m,n,sub,on)=>`<div class="pk${on?" on":""}"><div class="box">${on?"✓":""}</div>${face(m)}<div><b>${n}</b><small>${sub}</small></div><span class="goes">${on?"Leaves":"Stays"}</span></div>`;

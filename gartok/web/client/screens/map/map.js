@@ -251,9 +251,77 @@ function news(lines, bad = false) {
 $("news").onclick = () => { $("news").hidden = true; };
 
 // ---------------------------------------------------------------- the loop
+// the nodes of the shortest known walk from one place to another, by the roads' hours
+function roadPath(from, to) {
+  const dist = {[from]: 0}, prev = {}, todo = new Set([from]);
+  while (todo.size) {
+    const cur = [...todo].reduce((x, y) => dist[x] <= dist[y] ? x : y);
+    todo.delete(cur);
+    if (cur === to) break;
+    for (const [a, b, d] of M.edges) {
+      const nxt = a === cur ? b : b === cur ? a : null;
+      if (nxt !== null && (dist[nxt] === undefined || dist[cur] + d < dist[nxt])) { dist[nxt] = dist[cur] + d; prev[nxt] = cur; todo.add(nxt); }
+    }
+  }
+  if (dist[to] === undefined) return null;
+  const out = [to];
+  while (out[0] !== from) out.unshift(prev[out[0]]);
+  return out;
+}
+
+// the points a pawn walks from where it was to where it stands now: out of its leg by the nearer end,
+// along the roads, in by the leg it ends on
+function walkPath(was, now) {
+  const P = MapSheet.P, lerp = MapSheet.lerp, edge = typeof was.at !== "string";
+  const here = edge ? lerp(P(was.at[0]), P(was.at[1]), was.at[2]) : P(was.at);
+  if (edge && typeof now.at !== "string" && now.at[0] === was.at[0] && now.at[1] === was.at[1])
+    return [here, lerp(P(now.at[0]), P(now.at[1]), now.at[2])];
+  const goal = typeof now.at === "string" ? now.at : now.at[0];
+  let best = null;
+  for (const [start, back] of edge ? [[was.at[1], false], [was.at[0], true]] : [[was.at, false]]) {
+    const way = roadPath(start, goal);
+    if (!way) continue;
+    const pts = [here, ...(back ? [P(start)] : []), ...way.map(P)];
+    if (!best || pts.length < best.length) best = pts;
+  }
+  if (!best) return null;
+  if (typeof now.at !== "string") best.push(lerp(P(now.at[0]), P(now.at[1]), now.at[2]));
+  return best;
+}
+
+let walkFrame = 0;
+function startWalks(paths) {
+  cancelAnimationFrame(walkFrame);
+  for (const gid of Object.keys(MapSheet.walk)) delete MapSheet.walk[gid];
+  const legs = Object.entries(paths).map(([gid, pts]) => {
+    const lens = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
+    return {gid, pts, lens, total: lens.reduce((a, b) => a + b, 0)};
+  }).filter(w => w.total > 4);
+  if (!legs.length) return;
+  const ms = Math.min(1800, Math.max(600, Math.max(...legs.map(w => w.total)) * 4)), t0 = performance.now();
+  const frame = now => {
+    const k = Math.min(1, (now - t0) / ms), e = k * k * (3 - 2 * k);
+    for (const w of legs) {
+      let d = e * w.total, i = 0;
+      while (i < w.lens.length - 1 && d > w.lens[i]) d -= w.lens[i++];
+      MapSheet.walk[w.gid] = MapSheet.lerp(w.pts[i], w.pts[i + 1], w.lens[i] ? d / w.lens[i] : 1);
+    }
+    if (k >= 1) for (const w of legs) delete MapSheet.walk[w.gid];
+    MapSheet.draw(); drawPlaces();
+    if (k < 1) walkFrame = requestAnimationFrame(frame);
+  };
+  walkFrame = requestAnimationFrame(frame);
+}
+
 function show(state) {
   if (state.screen && state.screen !== "map") { location.reload(); return; }
+  const was = M, paths = {};
   M = state;
+  if (was && !matchMedia("(prefers-reduced-motion: reduce)").matches)
+    for (const g of M.groups) {
+      const old = was.groups.find(o => o.gid === g.gid);
+      if (old && JSON.stringify(old.at) !== JSON.stringify(g.at)) { const p = walkPath(old, g); if (p) paths[g.gid] = p; }
+    }
   previews.clear();
   if (state.focus && band(state.focus)) sel = state.focus;
   if (!band(sel)) sel = (M.groups.find(b => b.blocked) || M.groups.find(b => b.idle) || M.groups[0] || {}).gid;
@@ -265,6 +333,7 @@ function show(state) {
   $("wiped").hidden = !M.wiped;
   drawTurn();
   if (hoverNode) { const h = hoverNode; hoverNode = null; hover(h); }
+  startWalks(paths);
 }
 
 function drawTurn() {
