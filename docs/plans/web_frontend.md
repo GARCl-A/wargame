@@ -120,14 +120,6 @@ In order. The board items are tuned by eye, so each takes a mockup first.
 
 - **A pit reads as a pit, and how deep** (`board.py` elevation).
 - **The bands walk on the map** from node to node along the edge, as tokens walk on the board.
-- **A body and a fighter in one cell** (playtest 2026-10-30). A fighter may stand on a body (dying,
-  stable or dead), and today the two tokens overlap so neither reads. Both must show, and what lies
-  underneath must be readable: options for the mockup, e.g. the body drawn as a small fallen token or a
-  mark on the floor under a standing token, a corner badge counting what is underneath, the cell's
-  hover listing the stack.
-- **The initiative shows each one's state** (playtest 2026-10-30): the green bar under a portrait
-  does not say whether the fighter is dead, down and dying, or down and stable, and it must be obvious
-  at a glance (the portrait greyed or struck, a mark per state).
 
 **Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
 

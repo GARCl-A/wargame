@@ -218,3 +218,33 @@
 .endcard p{margin-top:14px;font:italic 19px/1.4 "IM Fell English",serif;color:#5b4630}
 .endcard .row{margin-top:26px;display:flex;gap:10px;justify-content:center;align-items:center}
 .endcard select{height:40px;padding:0 10px;font:16px var(--read);background:#f4e9cf;border:1px solid #6b4f2c;color:#2a1a0e}
+
+/* initiative: who is down, who is dead */
+.coin .mk{position:absolute;right:-9px;top:-9px;min-width:22px;height:22px;padding:0 3px;border-radius:11px;display:grid;place-items:center;
+  font:700 12px/1 Cinzel,serif;background:#120d08;border:2px solid var(--c);color:var(--c)}
+.coin.is-dying{--c:#d0493a} .coin.is-stable{--c:var(--brass-hi)} .coin.is-dead{--c:#c9473a;--side:#4a3a28}
+.coin.is-dying img{filter:grayscale(.85) brightness(.7)}
+.coin.is-dying .hp i{width:100%;background:#d0493a;animation:pulse 1.2s infinite}
+.coin.is-stable img{filter:grayscale(1) brightness(.62)}
+.coin.is-stable .hp i{width:100%;background:var(--brass)}
+.coin.is-dead img{filter:grayscale(1) brightness(.4)}
+.coin.is-dead:before{content:"";position:absolute;inset:-2px;z-index:1;border-radius:50%;
+  background:linear-gradient(45deg,transparent 43%,#c9473a 43% 57%,transparent 57%)}
+@keyframes pulse{50%{opacity:.35}}
+
+/* a body in a cell: the badge counts the pile, the card lists it */
+.tok.is-dying img{filter:grayscale(.85) brightness(.7)}
+.tok.is-stable{--side:var(--brass)}
+.tok.is-dying,.tok.is-stable,.tok.is-broken{transform:rotate(-14deg)}
+.tok.lift{z-index:50!important;transform:scale(1.18) translate(10px,-10px);transition:transform .15s}
+.badge.pile{background:#120d08;border-color:var(--brass);color:var(--brass-hi);font-size:11px}
+#pile{position:absolute;z-index:60;width:330px;padding:10px 12px 12px;box-shadow:0 8px 22px rgba(0,0,0,.6)}
+#pile h3{font:700 12px/1 Cinzel,serif;letter-spacing:.18em;color:var(--brass-lo);margin-bottom:8px;text-transform:uppercase}
+.prow{display:flex;gap:10px;align-items:center;padding:6px 8px;border:2px solid transparent;border-radius:3px;margin-bottom:4px;cursor:pointer}
+.prow .pface{width:42px;height:42px;flex:none;border-radius:50%;box-shadow:0 0 0 3px var(--side)}
+.prow .pface img{width:100%;height:100%;border-radius:50%}
+.prow b{display:block;font:700 16px/1.1 var(--read);color:var(--ink)}
+.prow span{font:16px/1.2 var(--read);color:var(--ink-2)}
+.prow em{margin-left:auto;font:700 14px/1 var(--read);font-style:normal;color:var(--blood)}
+.prow.sel{background:#f3e8cc;border-color:var(--brass)}
+.prow.off{opacity:.45;cursor:default} .prow.off em{color:var(--ink-2);font-weight:400}

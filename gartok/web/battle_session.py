@@ -552,24 +552,31 @@ class BattleSession(Session):
             "active": u is b.active and b.winner is None,
             "torch": u.has_torch, "defending": u.defending, "demoralized": u.demoralized,
             "downed": u.downed, "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
+            "state": self._state(u),
             "ai_ally": u.ai_ally,
-            "attackable": bool(my_turn and u.team != self.team and u.alive
+            "attackable": bool(my_turn and u.team != self.team and (u.alive or u.downed)
                                and (actions.ATTACK.can(b, b.active, u) or actions.ATTACK_TONGUE.can(b, b.active, u))),
         }
+
+    @staticmethod
+    def _state(u):
+        return "dead" if u.dead else "dying" if u.dying else "stable" if u.stable else "broken" if u.broken else "up"
 
     def _initiative(self, obs):
         b = self.battle
         out = []
-        for u in b.order:
-            if u.dead or u.fled:
-                continue
+        for u in sorted((u for u in b.order if not u.fled), key=lambda u: u.dead):
             known = u.team == self.team or vision.enemy_visible(b, obs, u)
+            if u.dead and not known:
+                continue
             out.append({"id": self.uid(u) if known else None, "side": self._side(u),
                         "seat": self._seat(u) if known else None,
                         "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None)))
                         if known else None,
                         "name": u.name if known else None,
                         "hp_frac": self._health(u)["hp_frac"] if known else None,
+                        "state": self._state(u) if known else None,
+                        "dying": f"{u.death_clock}/{data.DYING_TURNS}" if known and u.dying else None,
                         "active": u is b.active})
         return out
 

@@ -12,7 +12,7 @@ from itertools import pairwise
 
 import pytest
 
-from gartok import actions, ai, artwork, combat_lab, lighting, recorder, vision
+from gartok import actions, ai, artwork, combat_lab, data, lighting, recorder, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
 
@@ -74,6 +74,40 @@ def test_state_holds_only_what_the_side_knows():
     assert sum(1 for c in st["initiative"] if c["id"] is None) == len(hidden)
     assert all("hp" not in u for u in st["units"] if u["side"] == "foe")
     json.dumps(st)
+
+
+def test_a_body_and_its_chain_coin_carry_their_state():
+    s = _session()
+    _to_my_turn(s)
+    b = s.battle
+    mine = [u for u in b.units if u.team == "player" and u is not b.active]
+    dying, stable, dead = mine[0], mine[1], mine[2]
+    dying.hp, dying.status, dying.death_clock = 0, "dying", 3
+    stable.hp, stable.status = 0, "stable"
+    dead.hp, dead.status = -9, "dead"
+    stable.pos = b.active.pos
+    st = s.state()
+    token = {u["id"]: u for u in st["units"]}
+    assert token[s.uid(dying)]["state"] == "dying" and token[s.uid(dying)]["dying"]
+    assert token[s.uid(stable)]["state"] == "stable" and token[s.uid(b.active)]["state"] == "up"
+    assert s.uid(dead) not in token
+    coins = {c["id"]: c for c in st["initiative"] if c["id"]}
+    assert coins[s.uid(dying)]["state"] == "dying" and coins[s.uid(dying)]["dying"] == f"3/{data.DYING_TURNS}"
+    assert coins[s.uid(stable)]["state"] == "stable"
+    assert coins[s.uid(dead)]["state"] == "dead"
+    assert [c["state"] for c in st["initiative"] if c["id"]][-1] == "dead"
+    json.dumps(st)
+
+
+def test_a_dead_foe_nobody_saw_stays_out_of_the_chain():
+    s = _session()
+    _to_my_turn(s)
+    b = s.battle
+    obs = vision.observers(b, False, "player")
+    unseen = next(u for u in b.units if u.team != "player" and not vision.enemy_visible(b, obs, u))
+    before = len(s.state()["initiative"])
+    unseen.hp, unseen.status = -9, "dead"
+    assert len(s.state()["initiative"]) == before - 1
 
 
 def test_a_foe_shows_its_health_in_steps_and_its_card_only_what_intel_opened():

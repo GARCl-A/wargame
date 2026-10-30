@@ -105,10 +105,19 @@ async function apply(state, events) {
   if (first) pump();
 }
 
-function unitAt(cell) {
-  if (!S || !cell) return null;
+// everyone in one cell, the one standing first: a fighter may stand on a body (dying or stable)
+function unitsAt(cell) {
+  if (!S || !cell) return [];
   const [x, y] = cell;
-  return S.units.find(u => x >= u.pos[0] && x < u.pos[0] + u.fp && y >= u.pos[1] && y < u.pos[1] + u.fp) || null;
+  return S.units.filter(u => x >= u.pos[0] && x < u.pos[0] + u.fp && y >= u.pos[1] && y < u.pos[1] + u.fp)
+    .sort((a, b) => a.downed - b.downed);
+}
+
+// [size as a share of the cell, x, y offset in 1/100 cells]: the top one up and right, the bodies down and left
+const STACK = [[[.8, 9, -9], [.8, -11, 11]], [[.78, 0, -10], [.7, -13, 13], [.7, 14, 13]]];
+function stackSlot(n, i) {
+  const set = STACK[n > 2 ? 1 : 0];
+  return set[i] || [.62, (i - 2) * 11, 16];
 }
 
 function arc(d, frac, col) {
@@ -121,22 +130,33 @@ function arc(d, frac, col) {
 function renderTokens() {
   const box = $("tokens"), L = Board.layout, seen = new Set();
   const offered = new Set(ui.aim ? ui.aim.targets : []);
+  const stacks = new Map();
+  for (const u of S.units) if (u.fp === 1) {
+    const k = u.pos.join(",");
+    stacks.set(k, [...(stacks.get(k) || []), u]);
+  }
+  for (const list of stacks.values()) list.sort((a, b) => a.downed - b.downed);
   const offerCol = {attack: "#c9473a", demo: "#9a5cc0", heal: "#6ea65a", move: "#5b8fc0", spell: "#f0d79e", throw: "#e0882c"}[ui.aim && ui.aim.kind] || "#f0d79e";
   for (const u of S.units) {
     seen.add(u.id);
     let el = box.querySelector(`[data-id="${u.id}"]`);
     if (!el) { el = document.createElement("div"); el.dataset.id = u.id; box.appendChild(el); }
-    const d = Math.round(L.cell * u.fp * (u.fp > 1 ? .9 : .84) + (u.active ? 4 : 0));
-    const x = Board.cx(u.pos[0]) + L.cell * u.fp / 2 - d / 2, y = Board.cy(u.pos[1]) + L.cell * u.fp / 2 - d / 2;
+    const pile = u.fp === 1 ? stacks.get(u.pos.join(",")) : null, n = pile ? pile.length : 1, at = pile ? pile.indexOf(u) : 0;
+    const [k, ox, oy] = n > 1 ? stackSlot(n, at) : [u.fp > 1 ? .9 : .84, 0, 0];
+    const d = Math.round(L.cell * u.fp * k + (u.active ? 4 : 0));
+    const sc = L.cell / 100;
+    const x = Board.cx(u.pos[0]) + L.cell * u.fp / 2 - d / 2 + ox * sc, y = Board.cy(u.pos[1]) + L.cell * u.fp / 2 - d / 2 + oy * sc;
     const cls = ["tok", "seat-" + u.seat];
     if (u.active) cls.push("active");
     if (offered.has(u.id)) cls.push("offered");
     else if (ui.armed === u.id || (ui.inspect === u.id && u.side === "foe")) cls.push("target");
-    if (u.downed) cls.push("downed");
+    if (u.downed) cls.push("downed", "is-" + u.state);
+    if (ui.lift === u.id) cls.push("lift");
     el.className = cls.join(" ");
-    el.style.cssText = `left:${x}px;top:${y}px;width:${d}px;height:${d}px;--offer:${offerCol}`;
+    el.style.cssText = `left:${x}px;top:${y}px;width:${d}px;height:${d}px;z-index:${n - at};--offer:${offerCol}`;
     const col = u.hp_frac > .5 ? "#7fa557" : "#d0493a";
-    const badge = u.dying ? `<div class="badge">${esc(u.dying)}</div>` : u.defending ? `<div class="badge">◈</div>` : "";
+    const badge = n > 1 && at === 0 ? `<div class="badge pile">+${n - 1}</div>` : n > 1 ? ""
+      : u.dying ? `<div class="badge">${esc(u.dying)}</div>` : u.defending ? `<div class="badge">◈</div>` : "";
     const nameplate = (u.active && S.my_turn) || ui.armed === u.id || ui.inspect === u.id
       ? `<div class="nameplate ${u.side}">${esc(u.name)}</div>` : "";
     const html = face(u.portrait, u.name) + arc(d, u.hp_frac, col) + (u.seat === "player" ? `<div class="pennant"></div>` : "") + badge + nameplate;
@@ -151,7 +171,9 @@ function renderTop() {
   const coins = S.initiative.map(c => {
     if (!c.id) return `<div class="coin unknown">?</div>`;
     const hp = c.hp_frac == null ? "" : `<div class="hp" style="--c:${c.hp_frac > .5 ? "#7fa557" : "#d0493a"}"><i style="width:${c.hp_frac * 100}%"></i></div>`;
-    return `<div class="coin seat-${c.seat}${c.active ? " now" : ""}"${tip(c.name)}>${face(c.portrait, c.name)}${hp}</div>`;
+    const mark = {dying: c.dying, stable: "♥", dead: "✝"}[c.state];
+    const what = {dying: `dying, ${c.dying}`, stable: "down and stable", dead: "dead"}[c.state];
+    return `<div class="coin seat-${c.seat}${c.active ? " now" : ""}${c.state && c.state !== "up" ? " is-" + c.state : ""}"${tip(what ? `${c.name} · ${what}` : c.name)}>${face(c.portrait, c.name)}${c.state === "dead" ? "" : hp}${mark ? `<div class="mk">${esc(mark)}</div>` : ""}</div>`;
   }).join("");
   $("init").innerHTML = `<div class="round"><div><small>Round</small><span>${ROMAN(S.round)}</span></div></div><div class="chain">${coins}</div>`;
 }
@@ -430,19 +452,76 @@ async function selectAction(id) {
   act({action: id});
 }
 
+// the card of a cell with a body in it: one row per occupant, the ones the armed action takes lit
+function pileRows(cell) {
+  return unitsAt(cell).map(u => {
+    const legal = ui.aim ? ui.aim.targets.includes(u.id) : !!u.attackable;
+    const state = u.state === "dying" ? `dying · ${u.dying}` : u.state === "stable" ? "down · stable" : u.state === "broken" ? "broken" : "standing";
+    const why = legal ? (ui.aim ? ui.aim.name : "strike") : u.side === "ally" ? "ally" : u.downed ? "not a target" : "not downed";
+    return {u, legal, state, why};
+  });
+}
+
+function openPile(cell, rows = pileRows(cell)) {
+  const first = rows.findIndex(r => r.legal);
+  ui.pile = {cell, rows, sel: Math.max(0, first)};
+  renderPile();
+}
+
+function closePile() { ui.pile = null; ui.lift = null; renderPile(); renderTokens(); }
+
+function renderPile() {
+  const box = $("pile");
+  if (!ui.pile) { box.hidden = true; box.innerHTML = ""; return; }
+  const {cell, rows, sel} = ui.pile, L = Board.layout;
+  const left = Board.cx(cell[0]) + L.cell + 10, flip = left + 330 > 1384;
+  box.style.left = `${flip ? Board.cx(cell[0]) - 340 : left}px`;
+  box.style.top = `${Math.min(Math.max(Board.cy(cell[1]) - 20, 4), 780 - 60 - rows.length * 58)}px`;
+  box.innerHTML = `<h3>${esc(ui.aim ? ui.aim.name : "Strike")} — who</h3>` + rows.map((r, i) =>
+    `<div class="prow ${r.legal ? "" : "off"} ${i === sel ? "sel" : ""}" data-i="${i}"><div class="pface seat-${r.u.seat}">${face(r.u.portrait, r.u.name)}</div>
+      <div><b>${esc(r.u.name)}</b><span>${esc(r.state)}</span></div><em>${esc(r.why)}</em></div>`).join("");
+  box.hidden = false;
+}
+
+async function takePile(i) {
+  const r = ui.pile && ui.pile.rows[i];
+  if (!r || !r.legal) return;
+  const aim = ui.aim;
+  closePile();
+  return act(aim ? {action: aim.id, target: r.u.id} : {action: "attack", target: r.u.id});
+}
+
+$("pile").addEventListener("click", e => {
+  const row = e.target.closest(".prow");
+  if (row) takePile(Number(row.dataset.i));
+});
+$("pile").addEventListener("mouseover", e => {
+  const row = e.target.closest(".prow");
+  if (!row || !ui.pile) return;
+  ui.lift = ui.pile.rows[Number(row.dataset.i)].u.id;
+  renderTokens();
+});
+
 $("overlay").addEventListener("click", async e => {
   if (ui.dragged) { ui.dragged = false; return; }
   if (!S || ui.busy || S.winner) return;
+  if (ui.pile) { closePile(); return; }
   const cell = Board.cellAt(...sheetPoint(e));
   if (!cell) return;
-  const u = unitAt(cell);
+  const pile = unitsAt(cell), u = pile[0] || null;
+  const [bx, by] = sheetPoint(e), L = Board.layout;
+  if (pile.length > 1 && !S.setup && Math.hypot(bx - (Board.cx(cell[0]) + L.cell * .88), by - (Board.cy(cell[1]) + L.cell * .88)) < L.cell * .2) {
+    return openPile(cell);
+  }
   const marked = cells => cells.some(([x, y]) => x === cell[0] && y === cell[1]);
   if (S.setup) {
     if (marked(S.setup.cells)) return act({action: S.setup.kind === "flag" ? "plant_flag" : "plant_trap", cell});
     return;
   }
   if (ui.aim) {
-    if (u && ui.aim.targets.includes(u.id)) return act({action: ui.aim.id, target: u.id});
+    const legal = pile.filter(t => ui.aim.targets.includes(t.id));
+    if (legal.length > 1) return openPile(cell);
+    if (legal.length) return act({action: ui.aim.id, target: legal[0].id});
     if (ui.aim.cellTarget && marked(ui.aim.cells)) {
       const heights = ui.aim.heights && ui.aim.heights[cell.join(",")];
       if (!heights) return act({action: ui.aim.id, cell});
@@ -523,6 +602,15 @@ $("newfight").addEventListener("click", () => S && showEnd(true));
 
 document.addEventListener("keydown", e => {
   if (!S || !$("modal").hidden || !$("dialog").hidden) return;
+  if (ui.pile) {
+    const n = ui.pile.rows.length;
+    if (e.key === "Escape") return closePile();
+    if (e.key === "Tab" || e.key === "ArrowDown") { e.preventDefault(); ui.pile.sel = (ui.pile.sel + 1) % n; return renderPile(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); ui.pile.sel = (ui.pile.sel + n - 1) % n; return renderPile(); }
+    if (e.key === "Enter") return takePile(ui.pile.sel);
+    if (/^[1-9]$/.test(e.key) && Number(e.key) <= n) return takePile(Number(e.key) - 1);
+    return;
+  }
   if (e.key === "Escape") { ui.aim = null; ui.armed = null; ui.spellbook = false; renderAll(); return; }
   const pan = {ArrowLeft: [160, 0], ArrowRight: [-160, 0], ArrowUp: [0, 160], ArrowDown: [0, -160]}[e.key];
   if (pan) { e.preventDefault(); return Board.panBy(...pan); }
