@@ -127,16 +127,7 @@ Each needs the author's call (port, or drop and delete what is left of it):
 
 **Done when:** each is in the browser with its tests, or deleted from the code and its tutorial copy.
 
-### 2. The tests the pygame cut lost
-
-No web test covers these yet: the clock run while a screen is open (`MapSession.tick_outside`); a guild with
-every member jailed waiting out the sentence on the map; the save refused mid-battle or mid-hunt; two due
-screens draining one at a time; the REST row's wording (how many meals, the days of rations still short); a
-trip cancelled to the next node.
-
-**Done when:** each has a test through the web sessions.
-
-### 3. The board, by eye
+### 2. The board, by eye
 
 - **The fog.** Seen before (grey), never seen (paper) and seen but unlit (dark) stack into too many layers:
   it is hard to tell what is dark, what is fog and what is unknown (the playtests of 2026-10-21 and
@@ -154,7 +145,7 @@ trip cancelled to the next node.
 
 **Done when:** a mockup of each is approved, then built and looked at at 1920x1080.
 
-### 4. The Editor
+### 3. The Editor
 
 The character creator, the map editor and the combat lab's menu are pygame (`editor_app`,
 `editor_menu_screen`, `char_editor_screen`, `map_editor_screen`, `combat_lab_screen`, and `battle_screen` +
@@ -164,7 +155,7 @@ game.
 
 **Done when:** decided, and if ported, each Editor screen is a web screen and its pygame screen is deleted.
 
-### 5. The retirement
+### 4. The retirement
 
 Still importing pygame outside the Editor: `artwork.py` (tints and caches glyphs for pygame), `battle_fx.py`,
 `icons.py`, `screen.py`, `text_field.py`, `sound.py` (inside `enable()` only), and the 16 modules of `ui/`.

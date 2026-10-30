@@ -75,6 +75,7 @@ class MapSession(MapView, Session):
         self.pending = []
         self.level_ups = []                      # aftermath.LevelUp the clock brought, each its own page
         self.wiped = False
+        self._wait_out_the_sentence()
         due = self._pending_event              # a save taken with a fight due opens on that band
         self.focus = due[0].gid if due else None
 
@@ -544,8 +545,16 @@ class MapSession(MapView, Session):
         self.wiped = self.wiped or result.wiped
         return result.events, result.casualties
 
+    def _wait_out_the_sentence(self):
+        """Every band went to the cells: no map to show, so the days pass (`Guild.pass_time`, which runs
+        `justice.release_due`) until the nearest release stands a band back up."""
+        while not self.guild.groups and self.guild.jailed:
+            events, _dead = self.guild.pass_time(24)
+            self.notices += events
+
     def _land(self):
         """Open the next screen the clock left due, or land on the map; the answer is the screen open."""
+        self._wait_out_the_sentence()
         if self.wiped:
             return {"screen": self.screen, **self.state()}
         if self.level_ups:

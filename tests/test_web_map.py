@@ -8,7 +8,7 @@ import urllib.request
 
 import pytest
 
-from gartok import orders, persist, recorder, world
+from gartok import justice, orders, persist, recorder, world
 from gartok.animals import Animal
 from gartok.group import CAUTIOUS, Group
 from gartok.guild import Guild
@@ -17,6 +17,7 @@ from gartok.wagon import Wagon
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game, serve
+from tests.helpers import standard_unit
 
 
 def _guild(*nodes):
@@ -278,3 +279,165 @@ def test_the_server_routes_the_map_verbs_and_answers_with_the_screen_open(saves)
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+def _hurt_band(node="country_roads", potatoes=6, hp_lost=8, n=2):
+    units = [standard_unit() for _ in range(n)]
+    for u in units:
+        u.hp = max(1, u.hp_max - hp_lost)
+        u.give_to_pack("Potato", potatoes)
+    guild = Guild(None, groups=[Group(units, node=node, leader=units[0])], name="Ink Hands")
+    return guild, guild.groups[0]
+
+
+def _rest_rows(guild, g):
+    ins = _game(guild).session.state()["groups"][0]["inspector"]
+    return {r["key"]: r for r in ins["camp"]["rest"]}
+
+
+def test_the_rest_rows_count_the_meals_the_hours_cost():
+    guild, g = _hurt_band()
+    rows = _rest_rows(guild, g)
+    assert rows["rest:1"]["sub"] == "no meal" and rows["rest:8"]["sub"] == "no meal"
+    full = rows["rest:full"]
+    assert full["label"] == "Until full" and full["sub"].endswith("4 meals") and full["tip"] is None
+
+
+def test_a_rest_the_rations_cannot_carry_to_full_health_stops_at_the_floor_and_says_how_short():
+    guild, g = _hurt_band(potatoes=1, hp_lost=30)
+    full = _rest_rows(guild, g)["rest:full"]
+    assert full["label"] == "To the floor" and full["sub"].endswith("no meal")
+    assert full["tip"] == "rations run out 2 days short of full health"
+    guild, g = _hurt_band(potatoes=2, hp_lost=40)
+    full = _rest_rows(guild, g)["rest:full"]
+    assert full["sub"].endswith("2 meals") and full["tip"] == "rations run out 1 day short of full health"
+
+
+def test_nobody_hurt_has_no_rest_to_the_end():
+    guild, g = _hurt_band(hp_lost=0)
+    full = _rest_rows(guild, g)["rest:full"]
+    assert not full["enabled"] and full["sub"] == "nobody is hurt"
+
+
+def test_a_trip_cancelled_on_the_road_ends_at_the_next_node_not_the_far_one():
+    guild = _guild("city", "city")
+    s = _game(guild).session
+    a, b = guild.groups
+    s.travel(a.gid, "battlefield")
+    path, _ = world.route("city", "battlefield")
+    assert len(path) > 2
+    s.act(a.gid, "cancel_trip")
+    b.order = orders.rest(48)
+    s._advance()
+    assert a.node == path[1] and not a.busy
+
+
+def test_hours_spent_off_the_map_run_the_other_bands_and_leave_what_falls_due_waiting():
+    guild = _guild("city", "market")
+    s = _game(guild).session
+    a, b = guild.groups
+    a.order = orders.rest(8)
+    t0 = guild.clock.seconds
+    events, dead = s.tick_outside(3, busy=b.members)
+    assert guild.clock.seconds - t0 == 3 * 3600 and dead == []
+    assert 4.9 < a.order.remaining < 5.1 and not s.pending
+
+    c = guild.groups[0]
+    c.order = orders.interactive("bank")
+    c.order.remaining = 1
+    s.tick_outside(2, busy=b.members)
+    assert [(g, o.kind) for g, o in s.pending] == [(c, "bank")]
+
+
+def test_two_due_screens_open_one_at_a_time_and_the_map_comes_back_after_the_last():
+    guild = _guild("city", "market")
+    a, b = guild.groups
+    a.order, b.order = orders.interactive("bank"), orders.interactive("market")
+    game = _game(guild)
+    s = game.session
+    s.pending = [(a, a.order), (b, b.order)]
+    assert s._land() == {"screen": "hub"} and game.session.order.kind == "bank"
+    assert s.pending and s.pending[0][1].kind == "market"
+    a.order = orders.idle()
+    assert s.back() == {"screen": "hub"} and game.session.order.kind == "market"
+    assert not s.pending
+    b.order = orders.idle()
+    assert s.back()["screen"] == "map"
+
+
+def test_a_guild_with_every_member_jailed_waits_out_the_sentence_and_stands_a_band_up(saves):
+    unit = standard_unit()
+    unit.crime = 2
+    guild = Guild(None, groups=[Group([unit], node="city", leader=unit)], name="Ink Hands")
+    justice.jail(guild, unit)
+    assert not guild.groups and guild.jailed
+    t0 = guild.clock.seconds
+    s = _game(guild).session
+    (band,) = guild.groups
+    assert band.members == [unit] and not guild.jailed and band.node == world.START_NODE
+    assert guild.clock.seconds > t0 and not s.wiped
+    st = s.state()
+    assert [b["gid"] for b in st["groups"]] == [band.gid] and not st["wiped"]
+
+
+def test_the_landing_after_a_sentence_served_in_play_stands_the_band_up_too(saves):
+    a = standard_unit()
+    a.crime = 1
+    guild = Guild(None, groups=[Group([a], node="city", leader=a)], name="Ink Hands")
+    s = _game(guild).session
+    justice.jail(guild, a)
+    assert not guild.groups
+    assert s._land()["screen"] == "map" and len(guild.groups) == 1 and not s.wiped
+
+
+def _http(srv):
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def post(verb, body=None):
+        req = urllib.request.Request(url + verb, data=json.dumps(body or {}).encode(),
+                                     headers={"Content-Type": "application/json"})
+        return urllib.request.urlopen(req)
+    return post
+
+
+def test_a_save_is_refused_while_a_fight_is_open_and_nothing_is_written(saves):
+    guild = _guild("road")
+    mute = Unit("Fighter")
+    mute.languages = []
+    g = guild.groups[0]
+    g.pending = orders.Order("ambush", pack=(mute,))
+    game = _game(guild, "w1")
+    game.session.act(g.gid, "resolve_event")
+    assert game.session.screen == "battle"
+    before = [x["id"] for x in persist.list_saves("w1")]
+    srv = serve(game)
+    post = _http(srv)
+    try:
+        with pytest.raises(urllib.error.HTTPError) as e:
+            post("/api/map/save_as", {"name": "mid"})
+        assert e.value.code == 409
+    finally:
+        srv.shutdown()
+        srv.server_close()
+    assert [x["id"] for x in persist.list_saves("w1")] == before
+    assert not any(x["kind"] == "manual" for x in persist.list_saves("w1"))
+
+
+def test_a_save_is_refused_while_a_hunt_is_open(saves):
+    from gartok.web.hunt_session import open_hunt
+    guild = _guild("country_roads")
+    g = guild.groups[0]
+    game = _game(guild, "w1")
+    open_hunt(game.session, g, "meat")
+    assert game.session.screen == "hunt"
+    srv = serve(game)
+    post = _http(srv)
+    try:
+        with pytest.raises(urllib.error.HTTPError) as e:
+            post("/api/map/save_as", {"name": "mid"})
+        assert e.value.code == 409
+    finally:
+        srv.shutdown()
+        srv.server_close()
+    assert not any(x["kind"] == "manual" for x in persist.list_saves("w1"))
