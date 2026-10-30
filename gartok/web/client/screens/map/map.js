@@ -196,7 +196,7 @@ async function hover(id) {
 // ---------------------------------------------------------------- the inspector
 function block(k) {
   if (k.t === "section") return `<div class="kicker psec">${esc(k.label)}</div>`;
-  if (k.t === "note") return `<div class="pnote-line ${k.tone}">${esc(k.text)}</div>`;
+  if (k.t === "note") return `<div class="pnote-line ${k.tone}">${k.text.split(/\s+·\s+/).map(esc).join("<br>")}</div>`;
   return `<div class="pbtn ${k.danger ? "danger" : ""} ${k.enabled ? "" : "off"}" data-act="${esc(k.key)}"${tip(k.sub || "")}>${esc(title(k.label))}</div>`;
 }
 

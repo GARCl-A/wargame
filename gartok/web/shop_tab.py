@@ -68,7 +68,8 @@ class ShopTab:
         if voice is not None:
             out["voice"] = {"uid": voice.uid, "name": voice.name, "portrait": _portrait(voice)}
             cha = voice.haggle_charisma_mod
-            out["marks"] = [{"text": f"Speaks {lang}", "good": True},
+            shared = [t for t in economy.vendor_tongues(lang) if t in voice.languages]
+            out["marks"] = [{"text": f"Speaks {', '.join(shared)}", "good": True},
                             {"text": f"Cha {cha:+d}", "good": cha > 0},
                             {"text": trade.BENT_WORDS[dist].capitalize(), "good": dist <= 1}]
         elif lang:
