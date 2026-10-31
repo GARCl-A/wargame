@@ -126,7 +126,8 @@
   font:16px/1.35 var(--read);color:#4a3522}
 .rollfoot b{font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#7d5c37;text-transform:uppercase;margin-right:8px}
 
-#next{left:1296px;top:108px;width:592px;height:944px;padding:26px}
+#next{left:1296px;top:108px;width:592px;height:944px;padding:26px;display:flex;flex-direction:column}
+#next>.kicker,.step{flex:none}
 .step{display:flex;align-items:center;gap:16px;padding:14px;margin-top:10px;border-radius:3px;border:1px solid rgba(201,163,94,.16)}
 .step .n{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font:700 13px/1 Cinzel,serif;color:#8f7652;box-shadow:inset 0 0 0 1px rgba(201,163,94,.35)}
 .step .d{width:52px;height:52px;flex:none;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 38% 32%,#4a3522,#24180e);box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--brass-lo)}
@@ -139,14 +140,14 @@
 .step.now .n{background:var(--brass);color:#24180e}
 .step .faces{display:flex}
 .step .faces .medal{width:34px;height:34px}
-.cond{margin-top:26px}
+.cond{margin-top:26px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,163,94,.35) transparent}
 .cond .row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid rgba(201,163,94,.1)}
 .cond .row .medal{width:38px;height:38px}
 .cond .row b{font:600 14px/1 Cinzel,serif;letter-spacing:.04em;color:#ecdcb9;width:150px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cond .row .bar{flex:1;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px rgba(201,163,94,.2)}
 .cond .row em{width:118px;flex:none;text-align:right;font:15px/1 var(--read);color:#a08a68}
 .cond .row em.red{color:#e2a194}
-.nextfoot{position:absolute;left:26px;right:26px;bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.nextfoot{flex:none;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .nextfoot i{font:16px/1.3 var(--read);color:#8f7652;max-width:270px}
 
 /* the level-up */

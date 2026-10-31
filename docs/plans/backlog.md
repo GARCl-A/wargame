@@ -413,3 +413,5 @@ Em reputations, seria bom poder "encolher" as folhas de cada uma das factions, p
 Agora que eu vou começar a fazer playtests "externos" seria bom que os saves fossem compativeis (ou que fosse explicito que teve um BREAKING CHANGE e agr os saves n são mais compativeis) isso implica deixar o numero da versão no save & isso tambem implica que em "settings" seria bom ter lá um texto dizendo em que versão o jogador ta.
 
 Acho que o "gathering" poderia ser nível 3 de Lumber poderia ser um work de nível 3 e o "gathering" de Mine poderia ser um work de nível 4.
+
+Uma parada que me incomoda nas emboscadas, teve uma que eu tava com OITO CARAS no dia 105 e eu tive que parar por causa de DOIS LOBOS. 
