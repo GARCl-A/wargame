@@ -78,6 +78,22 @@ bugs, then the rest.
   it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
+- **Bug: split groups do not share the clock when one performs at the tavern (playtest 2026-10-31, the
+  worst one found).** After a split, one group did Perform at a tavern while the other worked at the
+  lumber mill. The performance ran and days passed for it, but time did not pass for the group at the
+  mill: it kept working for 48 h and was paid nothing. It blocks a strategy the players like (two
+  musicians playing while the rest levels up). Find where an order that spends days (Perform) advances
+  `world` time and why the other groups' `tick` / orders do not run for the same hours (the shift
+  never finishes, so no wage is banked). Fix so every group's orders advance by the time any group
+  spends. Test: two groups, one Perform for N days and one on a wage shift; the shift ends and pays.
+
+- **Bug: Hook Shield seems to lock when the target is flanked on every side (playtest 2026-10-31).**
+  Reported by feel, no repro yet. Hypothesis: the action needs a free cell to pull or place the foe
+  and, with every neighbour taken, it neither resolves nor says why. Rebuild it as a fixed board (foe
+  surrounded on all 8 cells), see what `execute` does, then make it either resolve with no move or be
+  disabled with a reason in the action bar (same tooltip rule as the stuck Move above). Test: the
+  fixed board, and the AI does not pick it when it cannot resolve.
+
 - **Prisoners: bail is paid only if the recruit succeeds, plus optional extra bail (playtest 2026-10-30,
   decided).** Today `tavern.Prison._bail` charges `recruit.bail_cost` before the pitch and a failed pitch
   keeps the money ("walks away free"). Change: the pitch is rolled first with the bail's +2
@@ -207,6 +223,21 @@ bugs, then the rest.
 
 - **A talent with more than one prerequisite.** The tree already draws the second requirement as a red dotted
   line, but no talent has one yet. The day one does, check that this is how it reads.
+
+## Playtest notes 2026-10-31
+
+A friend's first session (about 2 h, no tutorial from the author). The two bugs are in *Ready to do*
+(Small). Raw feedback, not yet sized:
+
+- **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
+  mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
+  highlight of the control on the screen), or shorter cards that point at the first action.
+- **The Reputations tasks only half guide a start.** Found them "almost intuitive", not a clear "how
+  to begin". Check whether the first deeds read as a path.
+- **Rations are learned the expensive way.** Travel eats rations (once a day) and he found out by
+  spending them. The wiki was opened once and never used. Ideas: a ration/day cost line in the
+  travel preview, a first-travel warning, a link from the tutorial to the wiki.
+- Good sign: he understood the screens by playing and asked whether to continue (about 2 h in).
 
 ## Playtest notes 2026-10-30
 
