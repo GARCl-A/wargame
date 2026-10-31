@@ -169,9 +169,13 @@ def test_state_objectives_follow_the_guild():
     g.groups[0].wagons.append(cart)
     g.groups[0].herd.append(ox)
     assert not objectives.is_done(g, "obj_wagon")          # a wagon nothing pulls
-    assert not objectives.is_done(g, "obj_pack_animal")    # a Harness pulls, it carries nothing
-    ox.hitch = cart.uid
+    assert objectives.is_done(g, "obj_pack_animal")        # a Harness on an animal counts too
+    g.groups[0].herd.remove(ox)
+    assert not objectives.is_done(g, "obj_pack_animal")
     g.groups[0].herd.append(Animal("Donkey", tack="Pack Saddle"))
+    assert objectives.is_done(g, "obj_pack_animal")
+    g.groups[0].herd.append(ox)
+    ox.hitch = cart.uid
     g.deeds_done.append("arena_dethrone")
     u.rite_progress["nature"] = 270
     u.magic_sources = [*u.magic_sources, "nature"]
