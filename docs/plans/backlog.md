@@ -392,3 +392,14 @@ Keep these while building them:
   Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
   the one price of a meal). Marsh's slower rot is priced low until this lands.
 
+=================
+
+Ideias de talentos:
+na arvore de carisma (work/combate) +1 de limite tamanho do grupo ao liderar; Reduz em 10% a crowd penalty
+na arvore de inteligencia (combate) permite posicionar os personagens antes do combate, ao inves de ser algo aleatorio
+talento composto entre carisma e sabedoria, permitindo dar demoralize em bestas
+
+==============
+
+Impressões gerais do meu playtest 30/10/2026
+Recrutar prisioneiro não parece ser muito bom, a mecanica de pagar mesmo na falha é só ruim. Vale fazer com que o pagamento só seja pago se vc conseguir recrutar com sucesso. Eu ACHO que vale ter a opção tambem de ir pagando mais fiança pra aumentar a chance de contratação na prisão.

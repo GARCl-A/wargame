@@ -178,32 +178,33 @@ function renderTop() {
   $("init").innerHTML = `<div class="round"><div><small>Round</small><span>${ROMAN(S.round)}</span></div></div><div class="chain">${coins}</div>`;
 }
 
+const tier = (label, facts) => `<section class="tier"><span>${esc(label)}</span><div class="facts">${facts}</div></section>`;
+const weaponFacts = w => `<span><b>${esc(w.name)}</b>${w.damage ? " " + esc(w.damage) : ""}</span>${w.action ? `<span${tip(w.action_tip, "item")}>${esc(w.action)}</span>` : ""}`;
+const foeHead = (t, chips, extra) => `<div class="foehead"><div class="med" style="--side:${SEAT[t.seat] || "var(--blood)"}">${face(t.portrait, t.name)}</div>
+  <div><h2>${esc(t.name)}</h2>${chips}${extra || ""}</div></div>`;
+const chipRow = (names, cls = "chip") => `<div class="chips">${names.filter(Boolean).map(c => `<span class="${cls}">${esc(c)}</span>`).join("")}</div>`;
+
 function renderInspect() {
   const box = $("inspect"), t = S.inspect;
+  const card = (kicker, head, sections, foot = "") =>
+    box.innerHTML = `<div class="kicker">${kicker}</div><div class="bscroll">${head}<div class="known">${sections}</div>${foot}</div>`;
   if (!t) {
     box.innerHTML = `<div class="kicker">Bestiary</div><div class="empty">Click a foe to read what your squad knows of it. Click it again to strike.</div>`;
     return;
   }
   if (t.kind === "ally") {
-    box.innerHTML = `<div class="kicker">Your squad</div>
-      <div class="foehead"><div class="med" style="--side:${SEAT[t.seat]}">${face(t.portrait, t.name)}</div>
-      <div><h2>${esc(t.name)}</h2><div class="race">${esc(t.race)} · ${esc(t.occupation)} · ${esc(t.alignment)}</div>
-      <div class="chips">${(t.conditions || []).map(c => `<span class="chip muted">${esc(c)}</span>`).join("")}</div></div></div>
-      <div class="known"><div class="tier"><span>Vitals</span><div class="facts"><span>HP <b>${t.hp}/${t.hp_max}</b></span><span>AC <b>${t.ac}</b></span><span>MD <b>${t.md}</b></span><span>Speed <b>${t.speed}</b></span></div></div>
-      ${t.weapon ? `<div class="tier"><span>Weapon</span><div class="facts"><span><b>${esc(t.weapon.name)}</b> ${esc(t.weapon.damage || "")}</span>${t.weapon.action ? `<span${tip(t.weapon.action_tip, "item")}>${esc(t.weapon.action)}</span>` : ""}</div></div>` : ""}</div>`;
+    card("Your squad",
+      foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.occupation)} · ${esc(t.alignment)}</div>${chipRow(t.conditions || [], "chip muted")}`),
+      tier("Vitals", `<span>HP <b>${t.hp}/${t.hp_max}</b></span><span>AC <b>${t.ac}</b></span><span>MD <b>${t.md}</b></span><span>Speed <b>${t.speed}</b></span>`)
+        + (t.weapon ? tier("Weapon", weaponFacts(t.weapon)) : ""));
     return;
   }
   const bars = Array.from({length: t.steps_max}, (_, i) => `<i class="${i < t.steps ? "on" : ""}"></i>`).join("");
-  const chips = [t.size, ...(t.conditions || [])].filter(Boolean).map(c => `<span class="chip">${esc(c)}</span>`).join("");
-  const bands = t.bands.map(b => `<div class="tier"><span>${esc(b.label)}</span><div class="facts">${
-    b.rows.map(r => r.value == null ? `<span class="q">${esc(r.label)}</span>` : `<span>${esc(r.label)} <b>${esc(r.value)}</b></span>`).join("")}</div></div>`).join("");
-  box.innerHTML = `<div class="kicker">Bestiary · ${ui.armed === t.id ? "target" : "foe"}</div>
-    <div class="foehead"><div class="med" style="--side:${SEAT[t.seat] || "var(--blood)"}">${face(t.portrait, t.name)}</div>
-    <div><h2>${esc(t.name)}</h2><div class="race">${esc(t.race)} · ${esc(t.alignment)}</div>
-    <div class="chips">${chips}</div><div class="health">${bars}</div></div></div>
-    <div class="known"><div class="tier"><span>Arms</span><div class="facts"><span><b>${esc(t.weapon.name)}</b></span>${t.weapon.action ? `<span${tip(t.weapon.action_tip, "item")}>${esc(t.weapon.action)}</span>` : ""}
-    ${t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")}</div></div>${bands}</div>
-    <div class="assess">${esc(t.read)} — Assess to read more.</div>`;
+  const bands = t.bands.map(b => tier(b.label, b.rows.map(r => r.value == null ? `<span class="q">${esc(r.label)}</span>` : `<span>${esc(r.label)} <b>${esc(r.value)}</b></span>`).join(""))).join("");
+  card(`Bestiary · ${ui.armed === t.id ? "target" : "foe"}`,
+    foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.alignment)}</div>${chipRow([t.size, ...(t.conditions || [])])}`, `<div class="health">${bars}</div>`),
+    tier("Arms", weaponFacts({...t.weapon, damage: ""}) + t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")) + bands,
+    `<div class="assess">${esc(t.read)} — Assess to read more.</div>`);
 }
 
 function renderLog() {

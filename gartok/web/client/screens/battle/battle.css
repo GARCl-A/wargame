@@ -62,7 +62,8 @@
 
 /* right column */
 #right{position:absolute;left:1440px;top:112px;width:448px;height:780px;display:flex;flex-direction:column;gap:16px}
-.bestiary{padding:22px 24px 18px;min-height:150px;max-height:430px;overflow-y:auto;flex:none;scrollbar-width:thin;scrollbar-color:rgba(90,60,30,.35) transparent}
+.bestiary{padding:22px 24px 18px;min-height:150px;max-height:430px;flex:none;display:flex;flex-direction:column}
+.bscroll{flex:1;min-height:0;overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:rgba(90,60,30,.35) transparent}
 .foehead{display:flex;gap:16px;margin-top:14px;align-items:center}
 .foehead .med{width:104px;height:104px;border-radius:50%;flex:none;overflow:hidden;
   box-shadow:0 0 0 2px #2a1c10,0 0 0 5px var(--side,var(--blood)),0 0 0 7px #2a1c10,0 6px 12px rgba(40,20,5,.45)}

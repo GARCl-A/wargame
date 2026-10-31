@@ -393,6 +393,12 @@ function render(state) {
 $("body").addEventListener("pointerdown", e => {
   if (R.stage === "loot" && !e.target.closest("[data-go]")) fieldDown(e);
 });
+$("body").addEventListener("wheel", e => {
+  const packs = e.target.closest("#packs");
+  if (!packs || e.target.closest(".packlist") || packs.scrollWidth <= packs.clientWidth) return;
+  e.preventDefault();
+  packs.scrollLeft += e.deltaY || e.deltaX;
+}, {passive: false});
 $("body").addEventListener("click", e => {
   const go = e.target.closest("[data-go]");
   if (go && !go.classList.contains("off")) { Sound.play("click"); post(go.dataset.go); return; }
