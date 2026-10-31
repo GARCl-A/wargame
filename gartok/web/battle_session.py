@@ -489,6 +489,7 @@ class BattleSession(Session):
                       + [p | {"pos": _cell(p["pos"]), "remembered": True}
                          for p in self.fog.remembered_props(self.team, visible)]),
             "units": units,
+            "ctf": self._ctf(known),
             "initiative": self._initiative(obs),
             "active": self._sheet(b.active) if b.active and (self.plays(b.active) or
                                                              self._shows(b.active, obs, my_turn)) else None,
@@ -541,6 +542,31 @@ class BattleSession(Session):
             return {"hp_frac": intel.health_steps(u) / intel.STEPS, "steps": intel.STEPS}
         return {"hp_frac": max(0, u.hp) / u.hp_max, "hp": u.hp, "hp_max": u.hp_max}
 
+    def _carries(self, u):
+        """The side ("ally"/"foe", as this seat sees it) of the flag `u` is carrying, else None."""
+        b = self.battle
+        if not b.is_ctf:
+            return None
+        team = next((t for t, c in b.flag_carrier.items() if c is u), None)
+        return None if team is None else ("ally" if team == self.team else "foe")
+
+    def _ctf(self, known):
+        """Both flags as this side knows them: its own always, the other's where it has seen it.
+        `pos` is None for a flag whose carrier is out of sight."""
+        b = self.battle
+        if not b.is_ctf or b.awaiting_flag or b.flags["enemy"] is None:
+            return []
+        out = []
+        for team in ("player", "enemy"):
+            carrier = b.flag_carrier[team]
+            pos = b.flag_pos(team)
+            shown = (self.uid(carrier) in self._shown) if carrier is not None else (
+                team == self.team or pos in known)
+            out.append({"side": "ally" if team == self.team else "foe",
+                        "pos": _cell(pos) if shown else None,
+                        "carrier": self.uid(carrier) if carrier is not None and shown else None})
+        return out
+
     def _token(self, u, obs, my_turn):
         b = self.battle
         return {
@@ -554,6 +580,7 @@ class BattleSession(Session):
             "downed": u.downed, "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
             "state": self._state(u),
             "ai_ally": u.ai_ally,
+            "carries": self._carries(u),
             "attackable": bool(my_turn and u.team != self.team and (u.alive or u.downed)
                                and (actions.ATTACK.can(b, b.active, u) or actions.ATTACK_TONGUE.can(b, b.active, u))),
         }

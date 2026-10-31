@@ -6,6 +6,20 @@ from .common import _other_side
 from .movement import _reachable_step, _step_toward
 
 
+def _ally_carries_flag(battle, unit):
+    return any(c is not None and c.alive and c.team == unit.team for c in battle.flag_carrier.values())
+
+
+def _clear_of(battle, unit, home):
+    """A runner is bringing the enemy flag home and scores only by standing on `home`: a guard on
+    it steps to a free neighbouring cell, anyone else stays put."""
+    if home not in battle.cells_of(unit):
+        return None
+    taken = {c for u in battle.units if u.alive for c in battle.cells_of(u)}
+    free = [c for c in battle.reachable(unit) if c not in taken and grid_distance(c, home) == 1]
+    return min(free, key=lambda c: grid_distance(c, unit.pos), default=None)
+
+
 def _ctf_goal(battle, unit):
     """The cell a capture-the-flag runner or defender is racing for:
     - a runner heads for the other side's flag, then races it home to score;
@@ -30,6 +44,8 @@ def _ctf_goal(battle, unit):
     home = battle.flags.get(unit.team)
     if home is None:
         return None
+    if _ally_carries_flag(battle, unit):
+        return _clear_of(battle, unit, home)
     # If another living ally is already guarding directly on the flag, do not crowd it
     guardian = next((u for u in battle.units
                      if u.alive and u.team == unit.team and u is not unit and home in battle.cells_of(u)), None)

@@ -159,8 +159,19 @@ function renderTokens() {
       : u.dying ? `<div class="badge">${esc(u.dying)}</div>` : u.defending ? `<div class="badge">◈</div>` : "";
     const nameplate = (u.active && S.my_turn) || ui.armed === u.id || ui.inspect === u.id
       ? `<div class="nameplate ${u.side}">${esc(u.name)}</div>` : "";
-    const html = face(u.portrait, u.name) + arc(d, u.hp_frac, col) + (u.seat === "player" ? `<div class="pennant"></div>` : "") + badge + nameplate;
+    const carried = u.carries ? `<div class="flagbadge ${u.carries}"${tip(u.carries === "ally" ? "Carries your flag" : "Carries their flag")}>⚑</div>` : "";
+    const html = face(u.portrait, u.name) + arc(d, u.hp_frac, col) + (u.seat === "player" ? `<div class="pennant"></div>` : "") + badge + carried + nameplate;
     if (el._html !== html) { el.innerHTML = html; el._html = html; }
+  }
+  for (const f of S.ctf || []) {
+    const id = "flag-" + f.side;
+    seen.add(id);
+    let el = box.querySelector(`[data-id="${id}"]`);
+    if (!f.pos || f.carrier) { if (el) el.hidden = true; continue; }
+    if (!el) { el = document.createElement("div"); el.dataset.id = id; el.textContent = "⚑"; box.appendChild(el); }
+    el.hidden = false;
+    el.className = "flagmark " + f.side;
+    el.style.cssText = `left:${Board.cx(f.pos[0])}px;top:${Board.cy(f.pos[1])}px;width:${L.cell}px;height:${L.cell}px;font-size:${Math.round(L.cell * .6)}px`;
   }
   for (const el of [...box.children]) if (!seen.has(el.dataset.id)) el.remove();
 }

@@ -624,3 +624,19 @@ def test_the_game_entry_opens_the_browser(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["main.py", "--editor"])
     entry.main()
     assert opened == ["web"]
+
+
+def test_ctf_state_shows_the_flags_and_who_carries_one():
+    s = _session("ctf")
+    _settle(s)
+    b = s.battle
+    side = s.team
+    flags = {f["side"]: f for f in s.state()["ctf"]}
+    assert flags["ally"]["pos"] and flags["ally"]["carrier"] is None
+
+    mine = next(u for u in b.units if u.team == side and u.alive)
+    other = "enemy" if side == "player" else "player"
+    b.flag_carrier[other] = mine
+    st = s.state()
+    assert {f["side"]: f["carrier"] for f in st["ctf"]}["foe"] == s.uid(mine)
+    assert next(t for t in st["units"] if t["id"] == s.uid(mine))["carries"] == "foe"

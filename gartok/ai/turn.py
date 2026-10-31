@@ -6,7 +6,7 @@ from .attack import _breath_spot, _eat_corpse, _finish_off, _pick_attack, _rider
 from .common import _hand_die, _spell_can, _wants_alive
 from .flee import _is_skittish, _leave_fire, _retreat_from, _should_delay, _should_flee, _skitter, _slipping_away, _try_escape_grapple, _try_vanish
 from .movement import _recover_torch, _recover_weapon, _sight_cell, _step_over_terrain, _step_toward, _try_assess, _try_disarm, _try_secret
-from .scripted import _ctf_goal, _fetch, _heist, _necromancy, _patrol
+from .scripted import _ally_carries_flag, _ctf_goal, _fetch, _heist, _necromancy, _patrol
 from .support import _ally_to_help, _try_drink_potion, _try_healing_touch, _try_lift_rider, _try_mount, _try_pixie_dust, _try_share_magic, _try_signal_horn
 from .target import _approach_reach, _flank_cell, _no_contact, _target
 
@@ -274,7 +274,8 @@ def take_turn(battle, unit):
 
         if (battle.is_ctf and not getattr(unit, "ctf_runner", False)
                 and battle.flags.get(unit.team) in battle.cells_of(unit)
-                and battle.flag_carrier.get(unit.team) is None):
+                and battle.flag_carrier.get(unit.team) is None
+                and not _ally_carries_flag(battle, unit)):
             if actions.DEFEND.available(battle, unit):
                 actions.DEFEND.execute(battle, unit)
             break

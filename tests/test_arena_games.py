@@ -364,3 +364,21 @@ def test_a_defender_holds_position_on_own_flag_square():
     d.walking = False
     ai.take_turn(b, d)
     assert d.pos == (12, 5)
+
+
+def test_a_defender_steps_off_the_flag_when_a_mate_brings_the_enemy_flag_home():
+    b = _ctf_battle(n_enemy=2)
+    b.board.walls = set()
+    b.flags["player"] = (2, 5)
+    b.flags["enemy"] = (12, 5)
+    guard, runner = b.enemy_units
+    guard.ctf_runner, runner.ctf_runner = False, True
+    guard.pos, runner.pos = (12, 5), (11, 5)
+    b.player_units[0].pos = (2, 8)
+    b.flag_carrier["player"] = runner
+    b.order = [guard]
+    b.turn_idx = 0
+    ai.take_turn(b, guard)
+    assert guard.pos != (12, 5)
+    runner.pos = (12, 5)
+    assert b.scenario.win_check(b) == "enemy"
