@@ -49,7 +49,63 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 # Ready to do
 
+Order inside a size is the order to pick them up: first what blocks the friends' playtest, then
+bugs, then the rest.
+
 ## Small
+
+- **Game version in the save and in Settings (playtest 2026-10-30, decided).** Before friends play,
+  a save must say which build wrote it. Add a `GAME_VERSION` constant (one place, e.g.
+  `gartok/version.py`, `0.x.y`), write it into the payload as `game_version` (an optional field:
+  neutral value in `persist.PAYLOAD_DEFAULTS`, no `SAVE_VERSION` bump), and print "GARTOK vX.Y.Z" in the
+  web Settings screen. No migrations (the rule stays): when `save_version` differs, the load error
+  becomes a clear BREAKING CHANGE message that names the save's `game_version` and the running one
+  (today `persist.py:342` raises a bare "cannot be loaded"), and the web load screen shows it as is. Bump
+  `GAME_VERSION` and say "saves break" in the commit whenever `SAVE_VERSION` moves. Tests: round trip keeps
+  the version, a save with another `save_version` is refused with that message, an old save with no
+  `game_version` loads.
+
+- **Playtest build for friends (checked 2026-10-30).** `build_exe.bat` (PyInstaller `--onefile`, stdlib
+  only) builds a `GARTOK.exe` that opens and serves the client; it is only the way to hand the game to
+  playtesters, not the official release. Left: play a whole session in the exe, put `build_exe.bat` in English,
+  rebuild `dist/GARTOK.exe` (still the 2026-10-10 pygame one). Do it after the version item so the exe
+  carries it.
+
+- **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, day 75,
+  against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
+  Rebuild the fight from its combat-log JSONL (`CombatLog`; the save is the author's), find the
+  condition or rule that blocked the move (web, a spider's web, a stuck state, no free cell, AP), then fix
+  it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
+  actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
+
+- **Prisoners: bail is paid only if the recruit succeeds, plus optional extra bail (playtest 2026-10-30,
+  decided).** Today `tavern.Prison._bail` charges `recruit.bail_cost` before the pitch and a failed pitch
+  keeps the money ("walks away free"). Change: the pitch is rolled first with the bail's +2
+  (`BAIL_BONUS`) promised, and the copper is taken only on success (the price is checked up front, so a
+  pitch is refused when the group cannot cover it). Extra bail: before the pitch the player may raise the
+  offer in steps (+50% of `bail_cost` each, at most 3 steps; +1 to the contest per step, on top of the
+  +2); the extra is paid only on success too. The tab shows the offer, the bonus and the total due. The
+  bar after a failed pitch (`prison_bar`) stays. Tests: failure costs nothing, success takes bail + extra
+  (copper first, change from gold), steps add to the roll, an unaffordable step is disabled; `ai/` does
+  not use the prison. Re-run `scripts/economy_report.py` (recruiting cost). Rewrite the sentences that
+  say a failed pitch keeps the bail: `RULES.md` (*Prison*, "Lose the pitch and the bail is gone too")
+  and the prison's tutorial card in `locales/en.json` ("they walk free with your money").
+
+- **Reputations: collapse a faction's sheet (playtest 2026-10-30).** On day 80 every deed of The Pits was
+  done and the sheet still took the space. Each faction block in the reputations tab gets a toggle: a
+  faction with all its deeds done starts collapsed to one line ("The Pits: COMPLETE", the same row and
+  tooltip as its header); any faction can be opened or collapsed by hand, and the choice is the client's
+  (kept in the page, not in the save). Web only (`web/client/`), no rules change.
+
+- **Gathering teaches at the node's level and needs the tool (playtest 2026-10-30, decided).**
+  `bank_haul` banks work XP at `economy.work_level(u, node_id)` (0 or 1: the tool), the same as a wage
+  shift. Change: a gathering shift banks at activity level 3 at the Lumber Yard and 4 at the Mine
+  (`progression.work_xp_hours` already pays `(activity - level + 1)` per hour and nothing once outgrown),
+  so gathering is the way past the wage's level 1. And gathering needs the node's tool (`Axe` / `Pick`,
+  `economy.WORK_TOOLS`) on the worker: a worker without it takes no roll and no XP, and the crew card
+  says who is missing it (the licence stays the guild's gate). Check `gather.py`'s docstring, the shift's
+  preview (`work_desk`) and the tutorial card for the new rule. Tests: XP at 3/4, no tool means no haul,
+  a mixed crew. Re-run `scripts/economy_report.py` (a crew now needs tools).
 
 - **Hit sounds swap (`assets/sounds/`).** Hit sounds do not fit the game (the UI sounds are fine);
   swap the Kenney variants in `assets/sounds/`.
@@ -59,15 +115,37 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   (letters, not only syllables), weigh 2 syllables over 3 and 4, and keep two heavy consonant clusters
   ("gorm", "throg", "skel") from meeting. The guild's sheet holds a long name anyway (2026-10-30: ellipsis, the whole name on hover, the book's heading shrinks).
 
-- **Playtest build for friends (checked 2026-10-30).** `build_exe.bat` (PyInstaller `--onefile`, stdlib
-  only) builds a `GARTOK.exe` that opens and serves the client; it is only the way to hand the game to
-  playtesters, not the official release. Left: play a whole session in the exe, put `build_exe.bat` in English,
-  rebuild `dist/GARTOK.exe` (still the 2026-10-10 pygame one).
-
 - **Map blocks: drop pygame's layout hints.** `gap_before` and `height` in `map_view.py`'s blocks are
   ignored by the web; the Editor does not count (author 2026-10-30). Delete them.
 
 ## Medium
+
+- **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided).** On day 105 a guild of
+  eight stopped for two wolves. The premise: an ambush only exists if the pack would plausibly attack
+  that group. Where a pack is rolled against a group (the road, `world.ROAD_AMBUSH_CHANCE`; the work
+  nodes, `gather.ambushed` / `ambush_pack`; the Wilds hunt), compare the rolled pack with the group
+  before the fight starts, with one function in `encounters.py` (the pack's strength against the group's:
+  levels, count and HP, the same measure `combat_pairs.py` / the sim use for a win chance) and a
+  threshold. Below it the pack does not attack: the roll is spent, the log says so ("Two wolves watch the
+  column pass and keep to the trees"), no board, the group keeps its clock. Only the odds are
+  tested, not a free pass: the pack is re-rolled once at a size that fits the group (`GATHER_COUNT_WEIGHTS`
+  scaled by the group's size) before giving up, so a big guild still meets big packs. Threshold
+  (start at ~15% win chance for the pack, tune with `sim_test.py`), and whether the hunt shares it, are
+  open until the first run. The Wilds hunt shares the check (author 2026-10-31). Not for forced/story fights (`Group.pending`, quests, the Biwolf escort).
+  Tests: eight L3 against two L0 wolves never opens a fight, a lone L0 against the same wolves does, the
+  re-roll scales with size, forced fights are untouched, the `ai/` side is unaffected (the foe only
+  decides inside a battle).
+
+- **Audit: which fights are ambushes and which are not (author 2026-10-31).** Do it before or together
+  with *An ambush needs a pack with a chance to win*, because the check only belongs to the ambushes.
+  List every place the game starts a fight (road legs, gather shifts, Wilds hunt, supply run,
+  Ledger Hold, wagon watch, node fights such as the Ruins and the Serpent's Nest, the arena, forced
+  events, quests) in a table in `RULES.md` with its kind: **ambush** (the pack comes to the group; the
+  win-chance check applies), **sought** (the group goes in: the player chose the risk, no check) or
+  **forced** (a quest or story fight). Each row names who starts it and what the group can do (flee,
+  pay, hide). Put the kind on the code that rolls it (one field, not a comment) so the check reads it.
+  Output: the table, the field, a test that every fight source has a kind. Expect to find fights that
+  should change kind (a Ruins visit that behaves like an ambush); each is a short question for the author.
 
 - **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
   second roll of the weapon's damage)" in `weapon_traits.py`, `actions/weapon_actions.py`,
@@ -136,7 +214,10 @@ Sorted out of the raw notes: the browser's items (the wiki's links, the reading 
 fighter, the initiative's states) are done; the
 component kit with a game tooltip, long names, the field's Distribute load and every hub opening on
 its shop are done; the tutorial's black screen did not reproduce and was dropped (reopen it if it comes
-back); the name generator and the rules as keywords are in *Ready to do*.
+back); the name generator and the rules as keywords are in *Ready to do*. The notes of the day's
+last pass (prisoner bail, the Ruins floor, the stuck fighter, collapsing reputations, the save's version,
+gathering as a level 3/4 job, ambushes without a chance of winning) are sized in *Ready to do* and *Art*;
+the talent ideas are in *Needs more information*.
 
 ## Playtest notes 2026-10-28 (save "Polissexus playtest 1", after 9c3ed73)
 
@@ -240,6 +321,9 @@ silhouettes. Order is the suggested priority.
   - [ ] Road earth (twice wrong: straight ruts like grid lines, then a copy of `rock.jpg`;
     attach no floor texture as a reference, Gemini copies it)
   - [ ] Town cobbles (twice wrong: too dark and contrasty, then a copy of `rock.jpg`)
+  - [ ] Ancient Ruins floor (playtest 2026-10-30): the tile repeats and its edges do not meet, so the
+    seams show in the first room. Same rules as the others (seamless, no 2x2 copies); check the
+    edges by tiling it 3x3 before it goes in, and replace the file the Ruins floor reads in `ui/floors.py`.
   - [ ] Masonry wall from above (twice wrong: a wall seen from the front, then a light
     floor of blocks that does not tile top to bottom)
 - **Fill the short portrait pools** (12 is complete). Short: Snake Dragon (1), Dragon (2), Ogre (3),
@@ -381,6 +465,33 @@ Keep these while building them:
     (1) does weather live on the world map, on the board, or both? (2) does it change rules (sight, shots)
     or only the look? (3) before the playtest or after: decided 2026-10-30, after the playtest; nothing exists yet.
 
+- **Talent ideas (author 2026-10-30, answered 2026-10-31; still to be sized).** Talent rules: no
+  immunities, no extra AP, no loot multipliers, no one-node perks.
+  1. *Charisma tree (work and combat):* +1 group size limit while leading; -10% crowd penalty
+     (`recruit.size_penalty`); and a joint pitch. Joint pitch, as the author means it: A (holds the
+     talent) recruits a target that B could also recruit on their own. A "consumes" B: instead of one
+     roll per recruiter, the pitch is N rolls (A and every other ally who could recruit that target), each
+     `1d20 + A's CHA + 1 per other ally who could`. A has +2 and B +1 in the author's example, so two
+     rolls of `d20+3`. A failure spends the week's attempt (`recruit.bar`) of everyone involved. Open:
+     does one roll above the target's resolve win, or must all of them (proposal: the best roll counts, the
+     talent is a way to try more than once); who becomes `recruited_by` (the holder; the earlier idea
+     was the highest Charisma); whether "could recruit" counts `slots_free` and the shared language;
+     three nodes or one chain, which tier; and whether "group size limit" is `cohesion.py`'s capacity
+     (to be replaced by Loyalty, see above).
+  2. *Intelligence tree (combat), two talents:* (a) **group leader only: places the whole group** before
+     the fight; (b) **places only oneself**. Together they are a ladder (b the early node, a the late one),
+     and (a) needs the leader to be on the board. Open: the placement zone (the start zone only), the
+     UI on the board, an undo, what happens to a group whose leader is absent, and how `ai/` places its
+     own side (the premise "the AI knows the mechanic" applies, even if it only keeps today's random
+     start).
+  3. *Charisma + Wisdom compound:* Demoralize on beasts. The point is the language: a beast has none,
+     so `Demoralize._can_provoke` (`actions/combat.py`) never allows it. The talent gives the holder what
+     `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets
+     with no language of their own. The effect on the beast is the same as on a humanoid
+     (`Demoralized`: cannot move, lower defenses). Open: the compound talents' shape (no cross-tree node
+     yet, see *Notes -> a talent with more than one prerequisite*) and whether it also needs the holder
+     to be able to see the beast for a turn (the existing sight check already does).
+
 - **Magic as the vertical progression.** The arc's work is in *Ready to do -> Medium*. The schools are
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
   Open: tier 2+ spells and any reputation penalty for rivalry.
@@ -391,27 +502,3 @@ Keep these while building them:
   attribute, advantage on a named kind of action...), and only the most recent meal's buff is active.
   Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
   the one price of a meal). Marsh's slower rot is priced low until this lands.
-
-=================
-
-Ideias de talentos:
-na arvore de carisma (work/combate) +1 de limite tamanho do grupo ao liderar; Reduz em 10% a crowd penalty; permite que quando mais de 1 aliado pode recrutar o mesmo alvo "todos" fazem o teste juntos com +1 pra cada aliado que pode recrutar e, no fim, se for bem sucedido, o de maior carisma que fica como "recrutador" do recrutado.
-na arvore de inteligencia (combate) permite posicionar os personagens antes do combate, ao inves de ser algo aleatorio
-talento composto entre carisma e sabedoria, permitindo dar demoralize em bestas
-
-==============
-
-Impressões gerais do meu playtest 30/10/2026
-Recrutar prisioneiro não parece ser muito bom, a mecanica de pagar mesmo na falha é só ruim. Vale fazer com que o pagamento só seja pago se vc conseguir recrutar com sucesso. Eu ACHO que vale ter a opção tambem de ir pagando mais fiança pra aumentar a chance de contratação na prisão.
-
-O chão da ancient ruins ta bem ruim, or que o PNG que repete no chão nao tem conexão um com o outro, então logo na primeira sala pra ver a desconectividade entre os PNGs
-
-No combate das ruinas no dia 75 contra as aranhas, no round XIV, o irekdralob não conseguia se mover por algum motivo e nao tinha nada na barra de ações dele que indicava um possivel problema/impledimento.
-
-Em reputations, seria bom poder "encolher" as folhas de cada uma das factions, por que por exemplo, no dia 80 eu ja tinha todas as deeds do the pits. Então eu poderia simplesmente clicar num botão e deixar aquele espaço "livre" na minha tela mostrando lá né "Faction The Pits COMPLETE" ou algo do tipo (que eu possa abrir pra olhar, evidentemente) mas pra diminuir o atrito visual que o jogador tem ao abrir essa tela.
-
-Agora que eu vou começar a fazer playtests "externos" seria bom que os saves fossem compativeis (ou que fosse explicito que teve um BREAKING CHANGE e agr os saves n são mais compativeis) isso implica deixar o numero da versão no save & isso tambem implica que em "settings" seria bom ter lá um texto dizendo em que versão o jogador ta.
-
-Acho que o "gathering" poderia ser nível 3 de Lumber poderia ser um work de nível 3 e o "gathering" de Mine poderia ser um work de nível 4.
-
-Uma parada que me incomoda nas emboscadas, teve uma que eu tava com OITO CARAS no dia 105 e eu tive que parar por causa de DOIS LOBOS. 
