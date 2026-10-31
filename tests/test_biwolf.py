@@ -86,7 +86,7 @@ def test_he_comes_at_the_first_hour_after_dark_and_never_by_day():
     assert not ambushed and elapsed == 8                        # no lure, no Biwolf
 
 
-def test_the_pack_is_the_biwolf_and_three_wolves_and_it_springs_once():
+def test_the_pack_is_the_biwolf_and_three_wolves_and_it_is_spent_when_he_falls():
     guild, (signer, _) = _guild()
     m = _job(guild, signer)
     _stock_meat(signer, 15)
@@ -95,6 +95,9 @@ def test_the_pack_is_the_biwolf_and_three_wolves_and_it_springs_once():
     assert len(pack) == 4
     assert pack[0].name == "Biwolf" and pack[0].combat_level == 10
     assert [u.race["name"] for u in pack[1:]] == ["Wolf"] * 3
+    assert not m.ambush_done                                    # spent only when he falls
+    assert hunt.biwolf_lure(guild, [signer])
+    missions.settle_biwolf(guild, escaped=False)
     assert m.ambush_done
     assert not hunt.biwolf_lure(guild, [signer])                # spent for good
 
@@ -259,7 +262,7 @@ def test_losing_the_leather_fails_the_job_for_good():
     _stock_meat(signer, 15)
     hunt.biwolf_pack(guild)
     mate.give_to_pack(items.BIWOLF_LEATHER_ITEM)
-    assert missions.fail_if_leather_lost(guild) is None          # taken from the field
+    assert missions.settle_biwolf(guild, escaped=False) is None  # taken from the field
     mate.remove_named(items.BIWOLF_LEATHER_ITEM)
     assert missions.fail_if_leather_lost(guild) is m
     assert m.state == "failed"
@@ -275,7 +278,46 @@ def test_a_worn_or_banked_leather_is_not_lost():
     _stock_meat(signer, 15)
     hunt.biwolf_pack(guild)
     signer.give_to_artifact(items.BIWOLF_LEATHER_ITEM)
-    assert missions.fail_if_leather_lost(guild) is None
+    assert missions.settle_biwolf(guild, escaped=False) is None
     signer.take_from_artifact()
     guild.bank.put(items.BIWOLF_LEATHER_ITEM)
     assert missions.fail_if_leather_lost(guild) is None
+
+
+def test_the_escort_alternates_one_more_wolf_and_one_level_on_the_weakest():
+    base = hunt.BIWOLF_ESCORT_LEVEL
+    assert hunt.biwolf_escort_levels(0) == [base] * 3
+    assert hunt.biwolf_escort_levels(1) == [base] * 4
+    assert sorted(hunt.biwolf_escort_levels(2)) == [base] * 3 + [base + 1]
+    assert len(hunt.biwolf_escort_levels(3)) == 5 and sum(hunt.biwolf_escort_levels(3)) == 5 * base + 1
+    many = hunt.biwolf_escort_levels(40)
+    assert len(many) == hunt.BIWOLF_ESCORT_MAX and min(many) > base
+
+
+def test_a_getaway_keeps_the_job_open_and_the_next_ambush_is_harder():
+    guild, (signer, _) = _guild(clock_hour=18)
+    m = _job(guild, signer)
+    _stock_meat(signer, 15)
+    first = hunt.biwolf_pack(guild)
+    assert len(first) == 4
+    assert missions.settle_biwolf(guild, escaped=True) is None
+    assert m.escapes == 1 and m.state == "active" and not m.ambush_done
+    assert hunt.biwolf_lure(guild, [signer])                    # same lure: meat, night
+    assert len(hunt.biwolf_pack(guild)) == 5                    # one more wolf
+    missions.settle_biwolf(guild, escaped=True)
+    assert len(hunt.biwolf_pack(guild)) == 5                    # the level goes on the weakest wolf
+    back = missions.mission_from_dict(missions.mission_to_dict(m))
+    assert back.escapes == 2
+
+
+def test_the_biwolf_that_runs_off_the_map_or_stands_counts_as_escaped():
+    guild, (signer, _) = _guild()
+    _job(guild, signer)
+    _stock_meat(signer, 15)
+    batt = Battle([signer], hunt.biwolf_pack(guild), lethal=True)
+    biwolf = batt.enemy_units[0]
+    assert hunt.biwolf_escaped(batt)                            # still standing
+    biwolf.status = "fled"
+    assert hunt.biwolf_escaped(batt)
+    biwolf.status = "dead"
+    assert not hunt.biwolf_escaped(batt)

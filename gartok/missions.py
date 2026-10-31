@@ -73,6 +73,7 @@ class Mission:
     ambush_done: bool = False   # the one-shot ambush the mission springs (fortress, Biwolf): fires once
     failed_day: int | None = None   # clock.day it failed, for `MissionTemplate.retry_days`
     recruit_uid: str | None = None
+    escapes: int = 0            # times the Biwolf got away from his ambush: each one makes the next harder
 
 
 TANNER_HIDES = MissionTemplate(
@@ -595,10 +596,24 @@ def settle_wildfire(guild, mission):
 
 
 def pending_biwolf(guild):
-    """The Biwolf job, if it is active and has not sprung its ambush yet --
-    the Mission to mark `ambush_done` on (`hunt.biwolf_pack`), else None."""
+    """The Biwolf job, if it is active and he has not fallen yet (`settle_biwolf`), else None."""
     mission = active(guild, TANNER_BIWOLF)
     return None if mission is None or mission.ambush_done else mission
+
+
+def settle_biwolf(guild, escaped):
+    """The Biwolf's ambush is over. If he got away (`escaped`: he still stood, or ran off the
+    map) the job stays open and his next ambush is harder (`escapes`, `hunt.biwolf_pack`); once he
+    is down the ambush is spent, and a leather nowhere in the guild fails the job for good.
+    -> the failed Mission, else None."""
+    mission = active(guild, TANNER_BIWOLF)
+    if mission is None:
+        return None
+    if escaped:
+        mission.escapes += 1
+        return None
+    mission.ambush_done = True
+    return fail_if_leather_lost(guild)
 
 
 def pending_ox(guild):
@@ -662,13 +677,13 @@ def mission_to_dict(m):
     return {"template_id": m.template_id, "unit_uid": m.unit_uid,
             "accepted_day": m.accepted_day, "deadline_day": m.deadline_day,
             "state": m.state, "ambush_done": m.ambush_done,
-            "failed_day": m.failed_day, "recruit_uid": m.recruit_uid}
+            "failed_day": m.failed_day, "recruit_uid": m.recruit_uid, "escapes": m.escapes}
 
 
 def mission_from_dict(d):
     return Mission(d["template_id"], d["unit_uid"], d["accepted_day"],
                    d["deadline_day"], d["state"], d["ambush_done"], d.get("failed_day"),
-                   d.get("recruit_uid"))
+                   d.get("recruit_uid"), d.get("escapes", 0))
 
 
 def make_treefolk_recruit():

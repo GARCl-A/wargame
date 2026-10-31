@@ -224,8 +224,12 @@ class HuntSession(Session):
 
         def after(outcome):
             notes = self.map.notices
-            if s.biwolf and missions.fail_if_leather_lost(guild):
-                notes.append("The Biwolf's leather is lost -- the tanner's job is failed for good.")
+            if s.biwolf:
+                escaped = hunt.biwolf_escaped(battle)
+                if missions.settle_biwolf(guild, escaped):
+                    notes.append("The Biwolf's leather is lost -- the tanner's job is failed for good.")
+                elif escaped:
+                    notes.append("The Biwolf got away. He will come again to the smell of meat -- and not alone.")
             if self.tracking and outcome.won:
                 notes.append("Aurochs, the immortal ox, is dead.")
                 if missions.fail_if_hide_lost(guild):

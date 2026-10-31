@@ -395,7 +395,7 @@ Keep these while building them:
 =================
 
 Ideias de talentos:
-na arvore de carisma (work/combate) +1 de limite tamanho do grupo ao liderar; Reduz em 10% a crowd penalty
+na arvore de carisma (work/combate) +1 de limite tamanho do grupo ao liderar; Reduz em 10% a crowd penalty; permite que quando mais de 1 aliado pode recrutar o mesmo alvo "todos" fazem o teste juntos com +1 pra cada aliado que pode recrutar e, no fim, se for bem sucedido, o de maior carisma que fica como "recrutador" do recrutado.
 na arvore de inteligencia (combate) permite posicionar os personagens antes do combate, ao inves de ser algo aleatorio
 talento composto entre carisma e sabedoria, permitindo dar demoralize em bestas
 
@@ -403,3 +403,13 @@ talento composto entre carisma e sabedoria, permitindo dar demoralize em bestas
 
 Impressões gerais do meu playtest 30/10/2026
 Recrutar prisioneiro não parece ser muito bom, a mecanica de pagar mesmo na falha é só ruim. Vale fazer com que o pagamento só seja pago se vc conseguir recrutar com sucesso. Eu ACHO que vale ter a opção tambem de ir pagando mais fiança pra aumentar a chance de contratação na prisão.
+
+O chão da ancient ruins ta bem ruim, or que o PNG que repete no chão nao tem conexão um com o outro, então logo na primeira sala pra ver a desconectividade entre os PNGs
+
+No combate das ruinas no dia 75 contra as aranhas, no round XIV, o irekdralob não conseguia se mover por algum motivo e nao tinha nada na barra de ações dele que indicava um possivel problema/impledimento.
+
+Em reputations, seria bom poder "encolher" as folhas de cada uma das factions, por que por exemplo, no dia 80 eu ja tinha todas as deeds do the pits. Então eu poderia simplesmente clicar num botão e deixar aquele espaço "livre" na minha tela mostrando lá né "Faction The Pits COMPLETE" ou algo do tipo (que eu possa abrir pra olhar, evidentemente) mas pra diminuir o atrito visual que o jogador tem ao abrir essa tela.
+
+Agora que eu vou começar a fazer playtests "externos" seria bom que os saves fossem compativeis (ou que fosse explicito que teve um BREAKING CHANGE e agr os saves n são mais compativeis) isso implica deixar o numero da versão no save & isso tambem implica que em "settings" seria bom ter lá um texto dizendo em que versão o jogador ta.
+
+Acho que o "gathering" poderia ser nível 3 de Lumber poderia ser um work de nível 3 e o "gathering" de Mine poderia ser um work de nível 4.

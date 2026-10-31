@@ -37,6 +37,7 @@ GUARD_WORK_LEVEL = 1             # wagon watch: lower risk, activity level 1
 BIWOLF_SLUG = "biwolf"
 BIWOLF_MEAT = 15
 BIWOLF_ESCORT = 3
+BIWOLF_ESCORT_MAX = 8
 BIWOLF_ESCORT_LEVEL = HUNT_LEVEL
 
 
@@ -96,12 +97,29 @@ def biwolf_lure(guild, party):
     return sum(u.count_of(MEAT_ITEM) for u in party) >= BIWOLF_MEAT
 
 
+def biwolf_escort_levels(escapes):
+    """The escort's wolf levels after `escapes` getaways: they alternate between one more wolf
+    (up to `BIWOLF_ESCORT_MAX`) and one level on the weakest wolf."""
+    levels = [BIWOLF_ESCORT_LEVEL] * BIWOLF_ESCORT
+    for i in range(escapes):
+        if i % 2 == 0 and len(levels) < BIWOLF_ESCORT_MAX:
+            levels.append(BIWOLF_ESCORT_LEVEL)
+        else:
+            levels[levels.index(min(levels))] += 1
+    return levels
+
+
 def biwolf_pack(guild):
-    """The Biwolf and his escort. Spends the job's one ambush."""
-    missions.pending_biwolf(guild).ambush_done = True
-    escort = [encounters.build_enemy(BIWOLF_ESCORT_LEVEL, race_pool=data.WILD_POOL)
-              for _ in range(BIWOLF_ESCORT)]
+    """The Biwolf and his escort, grown by every time he has got away."""
+    levels = biwolf_escort_levels(missions.pending_biwolf(guild).escapes)
+    escort = [encounters.build_enemy(lv, race_pool=data.WILD_POOL) for lv in levels]
     return [npc_lib.load_npc(BIWOLF_SLUG)] + escort
+
+
+def biwolf_escaped(battle):
+    """Whether the Biwolf of this fight is still out there: standing, or ran off the map."""
+    return any(getattr(getattr(u, "char", None), "npc_slug", None) == BIWOLF_SLUG and (u.alive or u.fled)
+               for u in battle.foe_units)
 
 
 def hunt_stretch(state, rng=random, hour=None, lure=False):

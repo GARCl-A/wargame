@@ -1811,9 +1811,14 @@ instance of a given template can be active guild-wide at a time
 - **The Tanner's second job, the Biwolf** (same screen, offered once the hides
   are in; no deadline and no copper, the pay is the second reputation point with the Tanners).
   While it is out, a hunt in the Wilds that spends an hour after dark
-  (18:00-06:00) with **15 Meat** in the hunters' packs is ambushed once by the
+  (18:00-06:00) with **15 Meat** in the hunters' packs is ambushed by the
   Biwolf (the level-10 NPC `npcs/biwolf.json`) and 3 ordinary wolves
-  (`hunt.biwolf_lure` / `hunt.biwolf_pack`); the job's `ambush_done` spends it.
+  (`hunt.biwolf_lure` / `hunt.biwolf_pack`). The ambush is spent only when the
+  Biwolf falls (`missions.settle_biwolf` sets `ambush_done`). If he gets away
+  (he runs off the map, or the squad is beaten or flees with him standing) the
+  job stays open with the same lure, and `Mission.escapes` goes up: each escape
+  alternately adds a wolf to the escort (up to 8) or a level to its weakest wolf
+  (`hunt.biwolf_escort_levels`), so letting him run is punished, not final.
   The Biwolf always drops the **Leather of Biwolf** (`loot.UNIQUE_DROPS`), an
   artifact worn in its own slot: +1 AC against anything not a humanoid
   (`Combatant.ac_vs`). Handing it in (worn or in a pack) ends the job and banks
