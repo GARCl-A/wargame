@@ -79,7 +79,7 @@ bugs, then the rest.
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
 - **Bug: split groups do not share the clock when one performs at the tavern (playtest 2026-10-31, the
-  worst one found).** After a split, one group did Perform at a tavern while the other worked at the
+  worst one found; it is why the friend stopped playing: it broke the farming plan he had).** After a split, one group did Perform at a tavern while the other worked at the
   lumber mill. The performance ran and days passed for it, but time did not pass for the group at the
   mill: it kept working for 48 h and was paid nothing. It blocks a strategy the players like (two
   musicians playing while the rest levels up). Find where an order that spends days (Perform) advances
@@ -93,6 +93,19 @@ bugs, then the rest.
   surrounded on all 8 cells), see what `execute` does, then make it either resolve with no move or be
   disabled with a reason in the action bar (same tooltip rule as the stuck Move above). Test: the
   fixed board, and the AI does not pick it when it cannot resolve.
+
+- **Playtest export (decided 2026-10-31).** The author asks each tester to zip the save folder by hand to read
+  the combat logs and what was done. Add a Settings button "Export playtest data" that gives one zip
+  (saves, combat-log JSONLs, `game_version`). Do it with the version item so the zip says the build.
+
+- **Delay is found by chance (playtest 2026-10-31).** The tester wished for "Delay" (move the tank first,
+  the rest back) and did not see that it exists (key 9, an icon in the bar). Give it a text label and a tooltip
+  that says what it does ("let the others act first"), and list it in the first battle's hint. Web only.
+
+- **Draft: say what a commission does (playtest 2026-10-31).** The tester did not know the COMMISSION tokens
+  force a reroll until the card has the asked tag (+2 on that attribute) and took the first cards he saw,
+  one with STR 2. Put a one-line explanation at the button ("3 tokens: replace a card by one with the tag you
+  pick") and the token count where the cards are. Web only (`screens/draft/draft.js`).
 
 - **Prisoners: bail is paid only if the recruit succeeds, plus optional extra bail (playtest 2026-10-30,
   decided).** Today `tavern.Prison._bail` charges `recruit.bail_cost` before the pitch and a failed pitch
@@ -226,8 +239,57 @@ bugs, then the rest.
 
 ## Playtest notes 2026-10-31
 
-A friend's first session (about 2 h, no tutorial from the author). The two bugs are in *Ready to do*
-(Small). Raw feedback, not yet sized:
+A friend's (Johann) first session (about 2 h, no tutorial from the author). The two bugs, the Delay label, the
+draft's commission text and the export are in *Ready to do* (Small). The author's stated intent from the
+same talk is in [../vision.md](../vision.md). Raw feedback, not yet sized:
+
+- **Theme: the rules sit where the player does not look.** The wiki, the menu and the tutorial text were
+  not read; the player learned by doing, and paid for it (rations, the draft, Delay). A fix per case is
+  small; the pattern is to show the rule where the decision is made (a pick, a price, a button).
+- **No difficulty signal.** He avoided the arena ("if wolves kill me, the arena will") and the first bout
+  is easier than the wolves (3 level-0 fighters against 2 to 6 wolves of level 1 to 4). Ideas: a danger
+  hint on a node or fight before entering (a level range, "easy / hard for this group"); it ties to
+  *An ambush needs a pack with a chance to win* (wolves killed an early squad).
+- **Race and vocation choice cannot be read.** He chose Delvers for the buff, by lore, not by numbers, and
+  could not tell what a race gives ("mental bonus, stat check: means nothing yet"). He thought the Automaton the
+  strongest race; the author says Orc and Goliath are, and the game does not show it. Show what a race gives
+  in plain words at the pick, and see the vocation balance below.
+- **Vocations are far apart** (author): Delvers and Caravan ahead; Warband fine for Orc / Goliath; Scholars
+  for the races that cast early; Wilds and Marsh weak. Rework or balance with the vocation probation in
+  *Loyalty, the oath...*; each perk should act on a daily loop.
+- **Starting squad is weak.** STR 2 or 3 carries nothing, a bow is too dear, and the start weapon is
+  a dagger or a piece of an axe ("at least one real weapon"). The author would take 18 STR, 18 CON and 0
+  elsewhere at level 0. The occupation removal rolls the start kit anew: give it a real weapon then.
+- **Food was learned wrong.** He bought what looked like 20 days of shelf life and it spoiled; beer
+  first (cheap at 4 copper and durable), then Potato; a farm trip for it did not pay against Fruit at the
+  grocery. Show shelf life in the shop row. Check the economy report: is beer the best buy per day, and
+  should a beer-only diet cost something (a hangover)? The tavern's stock (about 15 beers, 10 meats, 30
+  potatoes) cannot feed a 10-day defence for ten people (110 meals): decide if that is wanted or a
+  limit to show.
+- **Hunting is not cheaper than buying** (the first mechanic he tried); the author agrees it is badly balanced.
+  Re-run `scripts/economy_report.py` for the Wilds hunt against the cheapest meal.
+- **No recipes to be found.** He found none: recipes are few (race, crafting talents). The design is in
+  [../vision.md](../vision.md) (learn by owning the item or being taught); size a first form when the
+  production chain is picked up.
+- **Market stall.** Idea: a licence to open a stall in any market and sell your goods at a better price. Not
+  sized; belongs with the production chain and the living economy.
+- **Combat will dull with time; the bar is only attack, defend, special.** Open: group actions, linking units,
+  a way to make many units cheap to play (the sim's auto-play, *Auto battler*). Magic is the author's answer,
+  but it comes late.
+- **Levelling is vertical only.** Nothing new to do at a higher level. The Charisma line (earns money,
+  recruits) is the example he liked. Open design question for the talent trees: each level should open a
+  thing to do, not only a bigger number.
+- **Automaton "comes back 100% with no repair".** The rule says it goes *broken* until an ally repairs it
+  (INT vs DC 15, `RULES.md`). The tester saw no way to repair, only a full recovery. Check the repair
+  action is offered and shown; if it recovers by itself, fix (the author wants it to need a repair).
+- **The group limit was not visible.** He did not know how many a group holds or that recruiting gets harder
+  with every member (-1 per member). Show the capacity and the crowd penalty at the recruit pitch.
+  The author's wiki said "level + CHA mod" for the capacity; the code has `BASE_CAPACITY` 3 + CHA mod +
+  half the racial level: confirm which is meant.
+- **Switching between groups.** The author asked if it is pleasant; the answer was not clear in the record.
+  Ask again. The friend's view: up to 8 units is fine, more groups slow it unless there is automation.
+- **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received.
+  Already in *Playtest notes 2026-10-12* (programmable order chains) and *Epic*.
 
 - **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
   mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
