@@ -31,8 +31,8 @@ validating the work: [Decisions made without asking](#decisions-made-without-ask
 | `scripts/economy_exploits.py` | the exploit detector: loops, barriers, dominance, route, conservation fuzz | `--fuzz 200` |
 | `tests/test_economy_sim.py`, `test_economy_exploits.py`, `test_craft_level.py` | pytest on seeded short runs; the detector tests break the rules on purpose to prove each scan can fail; the ones that judge a design number off a sim are marked `balance` | `python -m pytest tests/` (`-m balance` for those) |
 
-`AGENTS.md` now says to re-run `economy_guild.py`, `economy_activities.py` and
-`economy_exploits.py` (or just `economy_report.py`) after touching wages, purses, prices or loot.
+Re-run `economy_guild.py`, `economy_activities.py` and `economy_exploits.py` (or just
+`economy_report.py`) after touching wages, purses, prices or loot; `AGENTS.md` carries that rule.
 
 ## Roles: each activity has a job
 
@@ -40,7 +40,7 @@ Judge an activity against its own job, at the levels it is meant for, not agains
 
 | Activity | Role | Level band | What "good" means |
 |---|---|---|---|
-| Lumber yard | floor | 0-1 | A squad eats and keeps >= $1 a day, always available |
+| Lumber yard | floor | 0-1 | A squad eats and keeps >= $1 a day, always available. With no fatigue the Yard pays ~50% over that floor: accepted 2026-10-22, hunger is the one upkeep |
 | Arena: Scrapper | leveling | 0 | Takes a squad to combat level 1 cheaply. **Not a money job**: the purse is fine as is |
 | Arena: Brawl, Capture the Flag (the Games) | leveling | 2-5 | The ladder after the Scrapper: non-lethal, XP-rich, costs more in stake than it pays. Not judged for money |
 | Arena: Challenge the Champion, The Ribbit Brothers | one-off | 1-4, 3-6 | A gate (it opens the Games) and a capstone (six a side). Shown, not judged |
@@ -60,7 +60,7 @@ level 2-3 only. The Wilds give little XP on purpose: the arena and the dungeon a
 | 3. **Day-30 milestone.** A level-0 squad on a sensible policy has food for 7 days, a weapon and Studded Leather per member and the bank strongbox | **PASS**: 60% of guilds (need >= 50%; resolved 2026-10-19) |
 | 4. **No dominant loop.** No money-from-nothing loop; no activity beats the rest on copper and XP at no more risk | **PASS** (0 exploits, 12 fragile, 0 dominance) |
 
-"$1" is one copper, as in `AGENTS.md`; a Gold Coin ($100) is far out of day-labour reach.
+"$1" is one copper, as in `RULES.md`; a Gold Coin ($100) is far out of day-labour reach.
 
 ## XP in the sim
 
@@ -170,7 +170,7 @@ fail. The market's cash is a design ceiling (~$25/day per market) and is printed
 ## Findings
 
 **1. The floor holds, and only just.** Lumber nets +$1.00 per member per day at level 0, as
-`AGENTS.md` promises. A lumber-only squad ends day 30 with about $54 per member (it started with
+the design premise (`RULES.md`) promises. A lumber-only squad ends day 30 with about $54 per member (it started with
 about $28), i.e. $160 for the guild.
 
 **2. The day-30 milestone is out of reach for a level-0 squad.** It costs $423; lumber affords

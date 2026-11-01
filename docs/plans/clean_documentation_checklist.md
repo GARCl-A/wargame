@@ -38,10 +38,7 @@ Decisions: no `Co-Authored-By` trailer from anywhere, whatever a harness reminde
 wins). A dated decision is kept only in the doc that owns it, with its date as provenance.
 
 ## Root
-- [ ] `AGENTS.md` — apply the map above: trim the opening paragraph, shorten *Tests* and *pygame*
-  to rule + link, cut the premises to their code-facing line, drop the dated ~50% decision and the
-  coin details, shorten *Deep context* to one line. Keep *Load-bearing rules* and *Feature
-  implementation rules* whole (no other owner).
+- [x] `AGENTS.md` — done 2026-11-01 (94 -> 81 lines): opening and *Deep context* shortened, *Tests* and *pygame* are rule + link, premises cut to their code-facing line (disposable squad dropped: it is in `RULES.md` l. 715), dated ~50% decision moved to `economy_sim_v2.md`, owner list added. *Load-bearing rules* and *Feature implementation rules* untouched.
 - [ ] `CLAUDE.md`
 - [ ] `README.md`
 - [ ] `REFERENCE.md`
