@@ -143,15 +143,15 @@ Each mockup is a standalone page (`*.html` + `icons.js`, often `data.js`) with i
 - [ ] `talents_mockup/` — 15 files + 6 in `img/` (`talents.html`, `big.js`)
 
 ### `docs/art/` — art candidates (images only, no text)
-- [ ] `elf_options/` — 6 PNGs (3 options, 200 px and 512 px)
-- [ ] `hobgoblin_options/` — 6 PNGs (3 options, 200 px and 512 px)
-- [ ] `npc_options/` — 20 PNGs (10 NPCs, 200 px and 512 px)
-- [ ] `snake_dragon/` — 2 PNGs
-- [ ] `snake_options/` — 6 PNGs (cascavel, cornuda, mamba)
-- [ ] `sprite_options/` — 6 PNGs (monocle, vaultkey, goldcoin)
-- [ ] `treefolk_options/` — 4 loose comparison sheets (PNG/JPG), plus:
-  - [ ] `cropped/` — 16 PNGs (8 medallions + 8 raw)
-  - [ ] `cropped_v2/` — 8 PNGs
-  - [ ] `military/` — 8 PNGs (recruit variants)
-- [ ] `wagon_options/` — 2 sheets (JPG), plus:
-  - [ ] `cropped/` — 6 PNGs (cart and wagon, raw and medallion)
+- [x] `elf_options/` — 6 PNGs (3 options, 200 px and 512 px)
+- [x] `hobgoblin_options/` — 6 PNGs (3 options, 200 px and 512 px)
+- [x] `npc_options/` — 20 PNGs (10 NPCs, 200 px and 512 px)
+- [x] `snake_dragon/` — 2 PNGs
+- [x] `snake_options/` — 6 PNGs (cascavel, cornuda, mamba)
+- [x] `sprite_options/` — 6 PNGs (monocle, vaultkey, goldcoin)
+- [x] `treefolk_options/` — 4 loose comparison sheets (PNG/JPG), plus:
+  - [x] `cropped/` — 16 PNGs (8 medallions + 8 raw)
+  - [x] `cropped_v2/` — 8 PNGs
+  - [x] `military/` — 8 PNGs (recruit variants)
+- [x] `wagon_options/` — 2 sheets (JPG), plus:
+  - [x] `cropped/` — 6 PNGs (cart and wagon, raw and medallion)
