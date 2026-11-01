@@ -1,4 +1,4 @@
-"""The economy report, in the plan's order (docs/plans/economy_sim_v2.md):
+"""The economy report, in this order (docs/economy_sim.md):
 
   1. verdicts   pass or fail, each with the number that decides it
   2. exploits   money-from-nothing loops, recipe barriers, dominance (economy_exploits.py)

@@ -1,138 +1,62 @@
-# GARTOK — Campaign AI & Genetic Algorithm (GA) Roadmap
+# Campaign AI: a planner, then a genetic algorithm
 
-## 1. Executive Summary
+Status: **not started** (backlog, *Large -> Campaign AI*). Phase 1 exists; nothing past it does.
 
-This document outlines the design, feasibility, and step-by-step roadmap for developing an AI capable of playing the **Campaign / Macro layer** of GARTOK. 
+## Goal
 
-The goal of this AI is not just to play, but to:
-1. Optimize character builds, talent trees, and equipment loadouts.
-2. Maximize roster XP, survivability, and faction reputation.
-3. Stress-test the game rules and automatically discover unintended mathematical exploits or broken metas.
+An AI that plays the campaign layer (orders, shopping, talents, loadouts), not only the fights
+(`gartok/ai/` already plays those). It is for the sims, not for the player: to
+1. optimise builds, talent picks and loadouts;
+2. maximise roster XP, survivability and faction reputation;
+3. stress-test the rules and surface exploits or broken metas on its own.
 
----
+## Why it is cheap here
 
-## 2. Technical Feasibility & Engine Advantages
+The core (`battle`, `campaign`, `guild`, `orders`, `progression`) has no pygame and no UI, a 30-day
+guild runs headless in seconds on CPU with the fights drawn from `economy_guild.FightLibrary`, and
+runs are seedable. A genetic algorithm over a utility policy suits the problem better than the
+alternatives: a scripted bot only does what is hardcoded (that is what `economy_guild`'s policies
+are today); pure RL (PPO/DQN) suffers from sparse rewards and a combinatorial macro action space; an
+LLM agent is too slow to run thousands of guilds.
 
-GARTOK is uniquely suited for AI training and fast simulation due to key architectural decisions:
-- **Headless Core by Design:** The core game logic ([battle.py](../../gartok/battle.py), [campaign.py](../../gartok/campaign.py), [guild.py](../../gartok/guild.py), [orders.py](../../gartok/orders.py), [progression.py](../../gartok/progression.py)) is pure Python with **zero** `pygame` dependencies.
-- **Blazing Fast Simulation:** While a human playthrough takes hours, a headless simulation of an entire 30-day campaign (with combat auto-resolved by [ai/](../../gartok/ai/)) executes in **~1 to 3 seconds** on CPU.
-- **Deterministic & Seedable:** Simulations can be seeded (`random.seed`) for exact reproducibility.
+## Exploit hypotheses to test
 
----
+Expected to emerge from the rules; none is covered by `scripts/economy_exploits.py` (the detector
+scans markets, recipes, missions, routes and dominance). Check each in the code before building on it.
 
-## 3. Technology Comparison: Why Genetic Algorithms (GA)?
+1. **Last-hit funnel.** `progression.xp_award(attacker, victim) = (victim - attacker) + 1` when
+   `victim >= attacker`, else 0, and only the lethal blow earns XP: veterans soften a boss, a level-0
+   recruit lands the last hit.
+2. **Mean-level twinking.** Encounter and arena difficulty scale with `progression.mean_level`
+   (`encounters.py`): one level-3 veteran plus three level-0 recruits is a mean of 0.
+3. **Cross-training HP.** Hit dice follow the racial level (combat + work + magic), so safe day
+   labour raises HP before a unit risks permadeath.
+4. **Reputation deeds.** They are one-shot (`factions.py`): buy and resell five cheap items for
+   "Diverse Portfolio", or field an unarmoured runner in Capture the Flag for "Untouchable".
 
-| Approach | Learns on its own? | Setup Complexity | Best For |
-|---|:---:|:---:|---|
-| **Scripted Bot (Heuristics)** | No | Low | Simple automated sanity checks. Only does what you hardcode. |
-| **Pure RL (PPO / DQN)** | Yes | Very High | Micro/Tactical combat. Suffers from sparse rewards and combinatorial action spaces on the macro map. |
-| **LLM Agent (Tool Calling)** | Yes (In-Context) | Medium | Roleplay, narrative explanations, and human-like strategic reasoning. Slower execution. |
-| **Genetic Algorithm + Utility AI** | **Yes (Evolutionary)** | **Moderate (1-2 days)** | **The sweet spot for finding exploits, broken builds, and optimal campaign paths.** |
+## Design: a utility engine parametrised by a genome
 
----
+The genome sets the weights and thresholds of a decision loop; it does not write code.
 
-## 4. Known Mathematical Exploits for the AI to Test
+- **Genome:** work vs adventure preference, risk tolerance (minimum squad HP before the Arena or a
+  hard fight), copper reserve before buying gear, tool-buying priority, weapon bias (reach vs damage),
+  armour investment, talent-tree focus.
+- **Decision loop** at each node or day: list the options (`Order.march`, `work`, `arena`, `rest`,
+  the offers in `scripts/economy_offers.py`), score each as a function of the state and the genome,
+  dispatch the best through `orders.py`, let `ai/` run the fights.
+- **Fitness:** reputation, roster combat and work XP, copper, minus the fallen. The weights are the
+  author's call (an early guess: reputation x100, combat XP x10, work XP x5, copper x0.1, fallen -50).
 
-When evaluating fitness and observing agent behaviors, the following rule interactions are expected to emerge:
+## Phases
 
-1. **The "Last-Hit Funnel" (Combat XP Exploit):**
-   - *Rule:* `xp_award(attacker, victim) = (victim - attacker) + 1` if `victim >= attacker` else `0`. Only the unit delivering the lethal blow receives XP.
-   - *Exploit:* Strong veterans soften tough enemies down to 1-2 HP, and Level 0 recruits deliver the final blow to gain massive XP leaps (e.g., Level 0 killing a Level 3 boss earns 4 XP instantly).
-2. **"Mean-Level Twinking" (Encounter Difficulty Scaling):**
-   - *Rule:* Encounter scaling relies on `mean_level = sum(track_levels) // len(track_levels)`.
-   - *Exploit:* Bringing 1 high-level veteran (Level 3) + 3 sacrificial Level 0 recruits results in `(3 + 0 + 0 + 0) // 4 = 0`. The game generates Level 0 enemies while the squad has a Level 3 juggernaut.
-3. **"Cross-Training" Safe HP Farming (Racial Track):**
-   - *Rule:* Hit Dice and base HP scale with Racial Level, which is `combat_level + work_level + magic_level`.
-   - *Exploit:* Gaining Work XP via safe day-labour (Lumber Yard with an Axe to hit Lv 1, then Hunting) allows units to accumulate high HP before risking permadeath in combat.
-4. **Market Churning & Untouchable CTF (Reputation Deeds):**
-   - *Rule:* Reputation is earned through one-shot deeds ([factions.py](../../gartok/factions.py)).
-   - *Exploit:* Buying and immediately reselling 5 cheap items fulfills "Diverse Portfolio"; deploying an unarmored, high-movement runner in CTF achieves the "Untouchable" deed (+1 rep with no kills).
-
----
-
-## 5. Proposed Architecture: Utility AI Parametrized by Genome
-
-The AI does not write code from scratch; rather, the **Genotype** controls the weights and decision thresholds of a **Utility Engine**.
-
-### A. The Genotype (DNA)
-```python
-genome = {
-    # Economic / Risk weights
-    "work_preference": 0.75,         # Likelihood of working vs adventuring
-    "risk_tolerance": 0.25,          # Min squad HP % before attempting arena/hard battles
-    "reserve_copper_target": 60,     # Gold buffer kept before buying gear
-    "tool_buying_priority": 0.85,    # Willingness to buy axes/shovels for work efficiency
-    
-    # Gear & Progression preferences
-    "weapon_type_bias": 0.10,        # 0.0 = Range/Reach (Spear), 1.0 = Pure Damage (Axe)
-    "armor_investment_bias": 0.70,   # Prioritize defensive armor over offensive weapons
-    "talent_tree_focus": "defense",  # Bias towards survivability vs burst damage
-}
-```
-
-### B. The Decision Loop
-At each map node or day transition:
-1. Evaluate potential orders (`Order.march`, `Order.work`, `Order.arena`, `Order.rest`).
-2. Score each option:
-   $$\text{Utility}(\text{Option}) = f(\text{Game State}, \text{Genome})$$
-3. Pick the highest utility action and dispatch it via [orders.py](../../gartok/orders.py).
-4. Run combat automatically with [ai/](../../gartok/ai/).
-
-### C. The Fitness Function
-```python
-fitness = (
-    (guild.total_reputation * 100)
-    + (total_roster_combat_xp * 10)
-    + (total_roster_work_xp * 5)
-    + (guild.total_copper * 0.1)
-    - (fallen_members_count * 50)
-)
-```
-
----
-
-## 6. Implementation Roadmap
-
-### Phase 1: Headless Campaign Runner (~1 - 2 hours)
-**Status: done, as `scripts/economy_guild.py`** (not `sim_campaign.py`): a headless 30-day guild run on
-the real `campaign.advance`, with hand-written policies. Phase 2 is the open part; see the
-*Sim policies that find the opportunities themselves* item in [backlog.md](backlog.md).
-
-- Create `sim_campaign.py` (analogous to [sim_test.py](../../sim_test.py)).
-- Initialize a `Guild`, assign basic orders, call `campaign.advance()`, and simulate 30 campaign days in a simple loop without GUI.
-
-### Phase 2: Campaign Agent & Genotype Evaluator (~2 - 3 hours)
-- Implement `CampaignAgent(genome)` with utility scoring for:
-  - Traveling to nodes (using `world.route`).
-  - Purchasing tools and optimal weapons.
-  - Choosing when to enter the Arena or accept missions.
-- Implement auto-equip and talent selection based on genome biases.
-
-### Phase 3: Evolutionary Loop (GA) (~1 - 2 hours)
-- Population size: 30 to 50 guilds.
-- Generations: 20 to 30.
-- Selection: Top 20% elite survivor retention.
-- Crossover: Blend of parent weights.
-- Mutation: Small Gaussian perturbation ($\pm 5\%$).
-
-### Phase 4: Telemetry & Reporting (~1 hour)
-- Output convergence logs:
-  - Best score per generation.
-  - Dominant builds (e.g., spear vs sword, lumber vs rush).
-  - Unlocked deeds and average roster survival rate.
-
----
-
-## 7. Estimated Development Time
-
-- **Functional Prototype (MVP):** 3 to 5 hours.
-- **Polished System with reporting & balance stats:** 1 to 2 days.
-
----
-
-## 8. When You Are Ready to Resume
-
-To start development when the time is right:
-1. Review this document.
-2. Phase 1 exists (`scripts/economy_guild.py`); begin with **Phase 2**, a `CampaignAgent` that picks orders from a genome.
-3. Validate that 30 campaign ticks complete cleanly without UI dependencies (the runner already does).
+1. **Headless runner.** Done: `scripts/economy_guild.py` (a 30-day guild on the real
+   `campaign.advance`, hand-written policies).
+2. **Policy planner / `CampaignAgent(genome)`.** The first open step (it is also the sim's "policies
+   that find the opportunities themselves"): `economy_offers.py` already lists what a guild can take up in copper and days; the planner enumerates and prices the
+   offers dynamically, then picks by genome-weighted utility (travel by `world.route`, tools and
+   weapons, when to enter the Arena or take a mission, auto-equip and talent picks). Compare it
+   against `balanced` as the baseline.
+3. **Evolutionary loop.** Population 30-50 guilds, 20-30 generations, top 20% kept, blend crossover,
+   small Gaussian mutation (about 5%).
+4. **Telemetry.** Convergence logs: best score per generation, dominant builds, deeds unlocked,
+   roster survival. Read the exploits it found against the hypotheses above.

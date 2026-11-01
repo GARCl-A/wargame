@@ -20,7 +20,7 @@ flags. The server stops when the window is closed.
 Dev tools (pytest, pytest-xdist, ruff) live apart: `pip install -r requirements-dev.txt`.
 
 ```
-python -m pytest tests/ -n auto -m "not balance"   # the gate; the tiers are in docs/plans/test_suite.md
+python -m pytest tests/ -n auto -m "not balance"   # the gate; the tiers are in tests/README.md
 python sim_test.py                                 # 200 headless AI-vs-AI battles
 python -m gartok.reference                         # regenerates REFERENCE.md
 ```
@@ -204,7 +204,7 @@ scripts/            the sims and tools; each opens with a docstring saying what 
                     (what a guild can take up today), play_analysis.py (play.jsonl), combat_analysis.py and
                     combat_pairs.py (read the combat logs; the AI replays a person's squads),
                     gen_portrait.py (portraits, driven by the /gen-portrait skill; portrait_lora/ has the setup)
-docs/               web_ui/ (web_client.md: how to build a web screen; references/: the approved mockups), plans/ (backlog.md is all the open work)
+docs/               economy_sim.md (what the economy sim measures), web_ui/ (web_client.md: how to build a web screen; references/: the approved mockups), plans/ (backlog.md is all the open work; loyalty.md and campaign_ai_roadmap.md are the plans it points to)
 ```
 
 ### How to add a system

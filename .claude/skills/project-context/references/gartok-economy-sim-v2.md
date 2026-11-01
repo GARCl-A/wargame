@@ -8,7 +8,7 @@ metadata:
 ---
 
 The economy is measured by four scripts and one report (`python scripts/economy_report.py`, `--quick`
-for a smoke run), plan and findings in `docs/plans/economy_sim_v2.md`. They replaced the old
+for a smoke run), plan and findings in `docs/economy_sim.md`. They replaced the old
 `economy_sim.py` (see [[gartok-balance-sim]] for its history). XP is part of the economy, the
 player's skill is a parameter (the AI plays far below a person), and a recipe's level is worked out
 by `gartok/craft_level.py` and blocks nobody.

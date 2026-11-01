@@ -1,6 +1,6 @@
 """Economy sim v2: what is on offer to a guild right now, each priced in copper and days.
 
-Plan: docs/plans/economy_sim_v2.md. The hand-written policies reach for the same few levers (the
+Docs: docs/economy_sim.md. The hand-written policies reach for the same few levers (the
 Axe, the Champion's stake, the Library's Dictionary mission, the starting kit to sell); this lists
 them from the game's own tables, so a planner can pick among them and a recording can be checked
 against what was available. Nothing here plays a day: it reads `arena`, `missions`, `economy`,

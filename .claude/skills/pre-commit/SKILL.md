@@ -33,7 +33,7 @@ only makes sense historically is the expensive one.
    When the diff touches wages, purses, prices or loot, also run
    `python -m pytest tests/ -n auto -m balance -q` and `python scripts/economy_report.py --quick`
    (the `balance` tests are design numbers off the sims, not bug checks:
-   [docs/plans/test_suite.md](../../../docs/plans/test_suite.md)). A failure stops this skill
+   [tests/README.md](../../../tests/README.md)). A failure stops this skill
    here — report it and fix or ask before going any further. Never let a red suite ride into a
    commit. A failure in a file another agent is editing right now (step 6) is theirs: name it,
    don't fix it. (`python sim_test.py` is a good second check for anything touching combat/AI,
