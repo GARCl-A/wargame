@@ -72,6 +72,8 @@ const Tavern = (() => {
       <div class="paper ledger recruit"><div class="kicker">Dossier <em>who they are and who could talk them into the guild</em></div>
         <div class="rbody">${R.signed ? signed(R.signed) : ""}${body}</div>
         <div class="ledgerfoot"><p>${esc(R.foot)}</p></div></div>`;
+    const fresh = $("body").querySelector(".pitcher.signed");
+    if (fresh) fresh.scrollIntoView({block: "nearest"});
   }
 
   function student(m) {
