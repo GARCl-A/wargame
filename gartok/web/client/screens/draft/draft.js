@@ -79,7 +79,7 @@ function side() {
     body = `<div class="lbl">The squad · ${D.squad.length} of ${D.team}</div>${slots}
       <div class="tokens"><div class="lbl">Commission tokens · ${D.tokens} of ${D.tokens_max}</div><div class="coins">${coins}</div>
       <p>${D.tokens ? `${D.tokens} token${D.tokens === 1 ? "" : "s"}: replace a card by one with the tags you pick, a token per tag.` : "Every token is spent; the squad is what the pool gives."}</p>
-      <span class="ghost-btn ${D.tokens && !D.pending.length ? "" : "off"}" id="commission">${D.tokens ? "Commission…" : "No tokens left"}</span></div>`;
+      <span class="ghost-btn ${D.tokens && !D.pending.length ? "" : "off"}" id="commission">${D.tokens ? "Commission" : "No tokens left"}</span></div>`;
     const full = D.squad.length === D.team;
     sealHtml("Continue", full ? "to the charter" : `${D.squad.length} of ${D.team} picked`, "gui/contract", !full);
   } else {

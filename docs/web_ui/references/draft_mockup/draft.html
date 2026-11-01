@@ -354,7 +354,7 @@ function side(){
     body=`<div class="lbl">The squad · ${picks.length} of 3</div>${slots}
       <div class="tokens"><div class="lbl">Commission tokens · ${tokensLeft} of ${D.tokens}</div><div class="coins">${coins}</div>
       <p>Call for what the pool lacks (a leader, the strong, the wise). Each archetype costs a token; the card you click next is replaced.</p>
-      <span class="ghost-btn ${STATE==="commission"?"hot":""}">${tokensLeft?"Commission…":"No tokens left"}</span></div>`;
+      <span class="ghost-btn ${STATE==="commission"?"hot":""}">${tokensLeft?"Commission":"No tokens left"}</span></div>`;
     seal=sealHtml("Continue",picks.length<3?`${picks.length} of 3 picked`:"to the charter","contract",picks.length<3);
     back="Vocation";
   }

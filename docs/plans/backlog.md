@@ -47,10 +47,10 @@ the rest.
 
 ## Small
 
-- **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, day 75,
+- **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, in-game day 75,
   against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
-  Rebuild the fight from its combat-log JSONL (`CombatLog`; the save is the author's, from day 30, and it is
-  not in `recordings/`), find the
+  Rebuild the fight from its combat-log JSONL (`CombatLog`; the author has it as a local recording of
+  2026-10-30 on another machine; it is not in the repo, so ask for it), find the
   condition or rule that blocked the move (web, a spider's web, a stuck state, no free cell, AP), then fix
   it and make the action bar always name the blocker of a disabled Move. Mock both ways first (author
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
@@ -65,10 +65,12 @@ the rest.
   enter the recruiters list properly and push the buttons down. Reproduce with two recruits on day 1, fix
   the layout so the list scrolls inside its box and the buttons stay put.
 
-- **A disabled End Day seal reads as a stray button (playtest 2026-11-01).** The brown square at the
-  bottom right of the map, under "The clock waits", is the cta seal (`#seal` in `screens/map/map.js`) in its
-  `cold` state: dimmed because a group still needs an order. Say why on hover (or keep the label readable
-  when cold) so it stops looking like an unlabelled button.
+- **A dead seal on the map reads as a stray button (playtest 2026-11-01).** With one band waiting ("The
+  clock waits on ..."), `MapSession` answers the `cycle_idle` cta as "Next band · none idle" with
+  `enabled: False`, and `map.js` draws the seal in its `cold` state: a dark brown disc that does nothing.
+  The author sees a brown square at the bottom right and says another red button already advances the day,
+  which was not found in the map client: first identify, on a screenshot, which element it is. Then hide the
+  seal when it has nothing to do, or make its cold state say why.
 
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
@@ -279,10 +281,14 @@ agent asks for art instead of generating it. Order is the suggested priority.
   `web/wiki_session.BUILD` prints the whole catalog from turn one (Beasts: Hit Die, size, speed, abilities
   and drop odds; Talents: every racial node of every race; Recipes: all of them). Gate each chapter on what
   the guild has met, owned or learned (`intel`, known recipes, the talents of the races in the guild), with
-  a locked-entry stub or no entry at all. Decide in two steps (author 2026-11-01): first, what each
-  chapter shows from day one (the rules every guild needs, the starting races' own talents...); then
-  what "known" means for the rest per chapter (met, owned, learned) and whether the wiki says that
-  something is still hidden. The complete catalog is `REFERENCE.md`, a design doc for
+  a locked-entry stub or no entry at all. Cases given (author 2026-11-01): a shop's items appear once the
+  guild has entered a shop that stocks them; a race appears when the guild hires one or finishes a 100%
+  assess of it; a beast appears at a 100% assess. Open: whether the wiki builds partial entries (the
+  assess filling a beast in bit by bit). Cases still to decide: recipes (known, or seen crafted), talents
+  (of the races in the guild), conditions (first suffered or inflicted), weapon traits and actions (when a
+  unit owns or gets them), places and factions (visited, met), spells (known or a scroll owned), what
+  comes with the guild on day one (the rules chapters). Then whether the wiki says that something is still
+  hidden. The complete catalog is `REFERENCE.md`, a design doc for
   developers and agents, spoilers included; if it is ever published it becomes the game's general wiki,
   outside the game, and the in-game one stays the discovered subset.
 
@@ -422,7 +428,8 @@ has one "Enter" button and its functions are tabs inside.
   repeated every level.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
-- **Programmable order chains for a group**, e.g. gather Lumber at the Yard -> sell Lumber and
+- **Programmable order chains for a group** (see *Programmable orders: brainstorm and spec* in *Needs
+  more information*), e.g. gather Lumber at the Yard -> sell Lumber and
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner. Intent (author
   2026-10-31): macro management through automation, **optional**. The main group is played by hand;
   the secondary groups run routines (collect wood, buy vials, craft healing potions and stock the guild
@@ -451,6 +458,18 @@ has one "Enter" button and its functions are tabs inside.
 ---
 
 # Needs more information
+
+- **Programmable orders: brainstorm and spec (author 2026-11-01).** Not a build task: first find out
+  exactly what the author wants, then write it in a plan (`docs/plans/programmable_orders.md`) so the
+  implementations are chosen from a real specification. Several entries want a composed or automated order
+  and today each names its own shape: the programmable chains and the secondary groups on routines (*Older
+  raw notes*), the Ledger Hold front where the battle is the job (*The Battlefield beyond the Faith
+  mission*), the production chain's gather-sell-buy loop, and the stints in `stints.py`. Deliverables: (1)
+  brainstorm with the author the use cases (which routines, who runs them, what interrupts them, what the
+  player collects and when); (2) identify every place that already runs an order (`orders.py`,
+  `stints.py`, `MapSession.spend`, the supply run and the hunt) and what they share; (3) document the
+  options (a list of ordinary orders run by the one clock, or a new order kind with state) with a
+  recommendation. Constraint to keep: only `campaign.advance` moves the clock.
 
 - **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
   code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar
