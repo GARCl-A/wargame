@@ -39,7 +39,7 @@ wins). A dated decision is kept only in the doc that owns it, with its date as p
 
 ## Root
 - [x] `AGENTS.md` — done 2026-11-01 (94 -> 81 lines): opening and *Deep context* shortened, *Tests* and *pygame* are rule + link, premises cut to their code-facing line (disposable squad dropped: it is in `RULES.md` l. 715), dated ~50% decision moved to `economy_sim_v2.md`, owner list added. *Load-bearing rules* and *Feature implementation rules* untouched.
-- [ ] `CLAUDE.md`
+- [x] `CLAUDE.md` - points towards `AGENTS.md`.
 - [x] `README.md` — done 2026-11-01 (428 -> 256 lines): pitch cut to one paragraph, *Controls* (stale pygame keys) and the *generator / designed / World systems* bullets deleted (`RULES.md` owns them), *Structure* lost its pygame ghosts (`icons`, `artwork`, `battle_fx`, `abandon_screen`, `watch_screen`), `web/`, `scripts/` and `docs/` shrank to a pointer, *How to add* aligned with `SAVE_DEFAULTS` and the `arena_talk` namespace. `tests/test_readme_map.py` now fails on a module missing from the map or a file named that does not exist.
 - [ ] `REFERENCE.md`
 - [ ] `RULES.md`
