@@ -32,7 +32,7 @@ below (`caught`, `prev_node`, `resume_path`, `pack`, `job`) are theirs.
 
 from dataclasses import dataclass
 
-from . import world
+from . import economy, world
 
 AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
@@ -107,6 +107,8 @@ def work(guild, group, hours, gather=False, task=None):
     `Guild.work_speedup`. With `gather` the shift yields the node's drops, not the wage."""
     if gather and not guild.has_licence(group.node):
         raise ValueError(f"no gathering licence for {group.node!r}")
+    if gather and not any(economy.owns_tool(u, group.node) for u in group.members):
+        raise ValueError(f"no one in {group.display_name} carries the node's {economy.WORK_TOOLS[group.node]}")
     clock_hours = hours * guild.work_speedup(group.members)
     return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task)
 
@@ -146,7 +148,6 @@ def supply_hours(guild, group):
 def supply_run(guild, group):
     """Order `group` to walk a Ledger Hold supply caravan to the Frontier Outpost and back
     (`Guild.supply_leg` per leg). Needs Ledger Hold and `SUPPLY_RUN_CARGO_KG` of free cargo."""
-    from . import economy
     if group.node != SUPPLY_START:
         raise ValueError(f"supply runs can only be issued at {SUPPLY_START}, got {group.node!r}")
     if group.free_cargo_capacity < economy.SUPPLY_RUN_CARGO_KG:

@@ -30,10 +30,14 @@ def _worker(money=0):
     return u
 
 
-def _crew(node, n=1, licensed=True, money=0):
+def _crew(node, n=1, licensed=True, money=0, tools=None):
+    """A band at `node`; the first `tools` workers (all by default) carry its tool."""
     guild = Guild([_worker(money) for _ in range(n)], clock=Clock(6 * 3600), node=node)
     if licensed:
         guild.licences.add(node)
+    if gather.can_gather(node):
+        for u in guild.groups[0].members[:n if tools is None else tools]:
+            u.give_to_pack(gather.tool(node))
     return guild, guild.groups[0]
 
 
@@ -164,13 +168,13 @@ def test_a_gathering_shift_fills_each_pack_instead_of_paying_the_wage(monkeypatc
     for u in group.members:
         assert u.money == 0
         assert sum(u.count_of(name) for name, _ in gather.TABLES["mine"]) in (2, 3)
-        assert u.work_hours == 16
+        assert u.work_hours == 16 * (gather.LEVEL["mine"] + 1)
     assert any("gathered 16 h" in e for e in result.events)
     assert group.order is None and not result.pending
 
 
 def test_a_wage_shift_at_a_licensed_node_still_pays():
-    guild, group = _crew("lumber_yard")
+    guild, group = _crew("lumber_yard", tools=0)
     group.order = orders.work(guild, group, 16)
     campaign.advance(guild)
     assert group.members[0].money == economy.work_pay("lumber_yard", 16)
@@ -204,7 +208,8 @@ def test_winning_the_ambush_banks_the_haul_and_losing_it_does_not(monkeypatch, w
     held = sum(u.count_of("Lumber") + u.count_of("Fruit") for u in group.members)
     assert group.pending is None and group.order.kind == "idle" and events
     if won:
-        assert 4 <= held <= 6 and sum(u.work_hours for u in group.members) == 32
+        assert 4 <= held <= 6
+        assert sum(u.work_hours for u in group.members) == 2 * 16 * (gather.LEVEL["lumber_yard"] + 1)
     else:
         assert held == 0 and sum(u.work_hours for u in group.members) == 0
 
@@ -278,3 +283,74 @@ def test_the_licence_says_when_it_pays_back():
     assert "pays back" not in gs._payback_line(gather.licence_price("mine"))
     guild.licences.clear()
     assert "licence pays back in ~" in gs._payback_line(gather.licence_price("mine"))
+
+
+def test_gathering_teaches_at_two_in_the_yard_and_three_in_the_mine():
+    assert gather.LEVEL == {"lumber_yard": 2, "mine": 3}
+    for node_id, level in gather.LEVEL.items():
+        guild, group = _crew(node_id)
+        u = group.members[0]
+        guild.bank_haul([u], 16, node_id)
+        assert u.work_hours == 16 * (level + 1)
+
+
+@pytest.mark.parametrize("node_id", sorted(gather.LEVEL))
+def test_gathering_stops_teaching_once_outgrown(node_id):
+    guild, group = _crew(node_id)
+    u = group.members[0]
+    u.set_track_level("work", gather.LEVEL[node_id])
+    before = u.work_hours
+    guild.bank_haul([u], 16, node_id)
+    assert u.work_hours - before == 16
+    u.set_track_level("work", gather.LEVEL[node_id] + 1)
+    before = u.work_hours
+    lines = guild.bank_haul([u], 16, node_id)
+    assert u.work_hours == before and any("no work XP" in line for line in lines)
+
+
+@pytest.mark.parametrize("node_id", sorted(gather.TABLES))
+def test_a_worker_without_the_tool_gathers_nothing_and_learns_nothing(node_id):
+    random.seed(9)
+    guild, group = _crew(node_id, 2, tools=1)
+    gatherer, guard = group.members
+    lines = guild.bank_haul(group.members, 16, node_id)
+    names = [name for name, _ in gather.TABLES[node_id]]
+    assert sum(gatherer.count_of(n) for n in names) in (2, 3) and gatherer.work_hours > 0
+    assert sum(guard.count_of(n) for n in names) == 0 and guard.work_hours == 0
+    assert any(guard.name in line and "stood guard" in line and gather.tool(node_id) in line for line in lines)
+    assert gather.gatherers(group.members, node_id) == [gatherer]
+
+
+def test_a_tool_in_hand_counts_like_one_in_the_pack():
+    guild, group = _crew("mine", tools=0)
+    u = group.members[0]
+    u.equipped_weapon = "Pick"
+    assert gather.gatherers([u], "mine") == [u]
+
+
+def test_a_band_with_no_tool_cannot_order_a_gather_shift():
+    guild, group = _crew("mine", 2, tools=0)
+    with pytest.raises(ValueError, match="Pick"):
+        orders.work(guild, group, 8, gather=True)
+    orders.work(guild, group, 8)
+    group.members[1].give_to_pack("Pick")
+    assert orders.work(guild, group, 8, gather=True).gather
+
+
+def test_a_mixed_crew_fights_the_ambush_together_and_only_gatherers_bank(monkeypatch):
+    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+    random.seed(10)
+    guild, group = _crew("mine", 3, tools=2)
+    group.order = orders.work(guild, group, 16, gather=True)
+    (g, ambush), = campaign.advance(guild).pending
+    assert g is group
+    forced.resolve_gather_ambush(guild, g, ambush, _outcome(group, True))
+    a, b, guard = group.members
+    assert a.work_hours == b.work_hours == 16 * (gather.LEVEL["mine"] + 1) and guard.work_hours == 0
+
+
+def test_the_preview_counts_only_the_gatherers_haul():
+    guild, group = _crew("lumber_yard", 3, tools=2)
+    haul, wage, _ = guild.shift_worth(group, "lumber_yard", 16)
+    assert haul == pytest.approx(2 * gather.expected_value("lumber_yard", 16))
+    assert guild.worker_worth(group.members[2], "lumber_yard", 16)[0] == 0

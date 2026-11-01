@@ -114,21 +114,28 @@ class LaborMixin:
     def worker_worth(self, u, node_id, hours):
         """`(haul, wage)` of one worker's shift: `shift_worth` for a crew of one."""
         mult = vocations.gather_mult(self)
-        return (gather.expected_value(node_id, hours) * mult,
+        haul = gather.expected_value(node_id, hours) * mult if economy.owns_tool(u, node_id) else 0
+        return (haul,
                 economy.work_pay(node_id, hours, economy.work_level(u, node_id)) * mult * (1 + u.talent_bonus("coin_gain")))
 
     def bank_haul(self, workers, hours, node_id):
-        """Each worker's roll on the node's table goes into their own pack and the hours into their
-        work track. Returns the lines to show."""
+        """Each worker with the node's tool rolls on its table into their own pack and banks the
+        hours at the node's gathering level; one without it stood guard. Returns the lines to show."""
         events = []
         mult = vocations.gather_mult(self)
-        found = []
+        found, guards = [], []
         for u in (u for u in workers if u in self.roster):
+            if not economy.owns_tool(u, node_id):
+                guards.append(u.name)
+                continue
             haul = gather.roll_haul(node_id, hours, mult)
             for name, n in haul.items():
                 u.give_to_pack(name, n)
-            events += u.bank_work(hours, economy.work_level(u, node_id))
+            events += u.bank_work(hours, gather.LEVEL[node_id])
             found.append(f"{u.name} {gather.describe(haul)}")
+        if guards:
+            events.insert(0, f"{', '.join(guards)} had no {gather.tool(node_id)}: stood guard, "
+                             f"no haul and no work XP.")
         if found:
             events.insert(0, f"{world.node(node_id).name}: gathered {hours} h ({'; '.join(found)}).")
         return events

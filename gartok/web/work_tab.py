@@ -37,11 +37,14 @@ class GatherTab(GatherDesk):
             haul, wage, risk = self.guild.shift_worth(self.group, node, h)
             shifts.append({"hours": h, "haul": round(haul), "wage": round(wage), "risk": round(risk * 100),
                            "good": haul > wage})
+        tool = gather.tool(node)
         crew = []
         for u in self.group.members:
             haul, wage = self.guild.worker_worth(u, node, gather.DAY_HOURS)
             crew.append({"name": u.name, "portrait": _portrait(u), "sub": f"{u.race['name']} · {u.occupation['name']}",
-                         "haul": round(haul), "wage": round(wage), "good": haul > wage})
+                         "haul": round(haul), "wage": round(wage), "good": haul > wage,
+                         "tool": economy.owns_tool(u, node), "note": self._gather_note(u, tool)})
+        guards = [c["name"] for c in crew if not c["tool"]]
         notice, self.notice = self.notice, None
         return {"cards": self.hub_cards(), "held": self.guild.has_licence(node), "price": price,
                 "short": self.guild.licence_shortfall(node, self.group),
@@ -49,4 +52,5 @@ class GatherTab(GatherDesk):
                 "drops": [{"name": n, "glyph": item_icon.glyph(n), "pct": pct, "sell": economy.sell_price(n)}
                           for n, pct in gather.drops(node)],
                 "glyph": item_icon.glyph(main), "shifts": shifts, "crew": crew, "day": gather.DAY_HOURS,
-                "payback": self._payback_line(price), "notice": notice}
+                "payback": self._payback_line(price), "notice": notice, "tool": tool,
+                "level": gather.LEVEL[node], "guards": guards, "can": len(guards) < len(self.group.members)}

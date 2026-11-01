@@ -46,6 +46,15 @@ class GatherDesk:
         else:
             self.notice = "not enough coin for the licence"
 
+    def _gather_note(self, u, tool):
+        """What a shift of gathering does for `u`: their haul and work XP, or that they only stand guard."""
+        if not economy.owns_tool(u, self.node.id):
+            return f"no {tool}: stands guard, no haul and no work XP"
+        level = gather.LEVEL[self.node.id]
+        if u.work_level > level:
+            return f"own {tool}: gathers, but has outgrown it (work level {u.work_level}): no work XP"
+        return f"own {tool}: gathers, work XP x{level - u.work_level + 1} an hour"
+
     def _payback_line(self, price):
         """A full day's haul against the wage for this group, and the days a licence takes to pay."""
         haul, wage, risk = self.guild.shift_worth(self.group, self.node.id, gather.DAY_HOURS)

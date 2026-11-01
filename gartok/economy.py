@@ -378,13 +378,17 @@ def deal_value(mods, item, side):
     return round(max(DEAL_MIN, min(DEAL_MAX, total)), 3)
 
 
+def owns_tool(unit, node_id):
+    """The worker carries the node's own tool (`WORK_TOOLS`): in the pack is enough, it does not
+    have to be the weapon in hand."""
+    tool = WORK_TOOLS[node_id]
+    return unit.has_item(tool) or unit.equipped_weapon == tool or unit.equipped_tongue == tool
+
+
 def work_level(unit, node_id):
     """A worker's job level at the work node `node_id`: 0 with the foreman's lent tool, 1 once
-    they own the node's tool (`WORK_TOOLS`) -- carried in the pack is enough, it does not have
-    to be the weapon in hand."""
-    tool = WORK_TOOLS[node_id]
-    owns = unit.has_item(tool) or unit.equipped_weapon == tool or unit.equipped_tongue == tool
-    return LUMBER_LEVEL_OWN_AXE if owns else 0
+    they own the node's tool."""
+    return LUMBER_LEVEL_OWN_AXE if owns_tool(unit, node_id) else 0
 
 
 def lumber_level(unit):

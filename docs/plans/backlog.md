@@ -77,16 +77,6 @@ the rest.
   say a failed pitch keeps the bail: `RULES.md` (*Prison*, "Lose the pitch and the bail is gone too")
   and the prison's tutorial card in `locales/en.json` ("they walk free with your money").
 
-- **Gathering teaches at the node's level and needs the tool (playtest 2026-10-30, decided).**
-  `bank_haul` banks work XP at `economy.work_level(u, node_id)` (0 or 1: the tool), the same as a wage
-  shift. Change: a gathering shift banks at activity level 3 at the Lumber Yard and 4 at the Mine
-  (`progression.work_xp_hours` already pays `(activity - level + 1)` per hour and nothing once outgrown),
-  so gathering is the way past the wage's level 1. And gathering needs the node's tool (`Axe` / `Pick`,
-  `economy.WORK_TOOLS`) on the worker: a worker without it takes no roll and no XP, and the crew card
-  says who is missing it (the licence stays the guild's gate). Check `gather.py`'s docstring, the shift's
-  preview (`work_desk`) and the tutorial card for the new rule. Tests: XP at 3/4, no tool means no haul,
-  a mixed crew. Re-run `scripts/economy_report.py` (a crew now needs tools).
-
 - **Hit sounds swap (`assets/sounds/`).** Hit sounds do not fit the game (the UI sounds are fine);
   swap the Kenney variants in `assets/sounds/`.
 

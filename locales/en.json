@@ -304,7 +304,8 @@
       "title": "Gathering materials",
       "body": [
         "Buy the node's licence once and every group of the guild can gather here instead of taking the wage.",
-        "Pick a shift (4 to 16 hours); the haul goes into the group's packs: Lumber and Fruit at the Lumber Yard; Stone Brick, Coal, Iron Ore and gems at the Mine. On average it out-earns the wage, but a pack of beasts may find the crew."
+        "Only a worker carrying the node's own tool gathers (an Axe at the Lumber Yard, a Pick at the Mine) and learns more than the wage teaches. The rest stand guard: no haul and no work XP, but they fight if a pack comes. Split them off on the map if they should earn elsewhere.",
+        "Pick a shift (4 to 16 hours); the haul goes into the gatherers' packs: Lumber and Fruit at the Lumber Yard; Stone Brick, Coal, Iron Ore and gems at the Mine. On average it out-earns the wage, but a pack of beasts may find the crew."
       ]
     },
     "group_turn": {
