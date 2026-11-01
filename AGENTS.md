@@ -7,7 +7,7 @@ separate package (`editor/`, `python -m editor`) the game never imports.
 
 **Source of truth:** `RULES.md` = design prose (combat, world systems); `REFERENCE.md` = generated
 catalog data (`python -m gartok.reference`, never edited by hand). When the two disagree,
-`REFERENCE.md` wins. `docs/vision.md` = the author's stated intent and where the game goes. **Where code lives:** `README.md` → *Structure* (one line per module) and
+`REFERENCE.md` wins. **Where code lives:** `README.md` → *Structure* (one line per module) and
 *How to add a system*. This file is loaded on every request: keep it to rules, and put a new
 module's description in the README, not here.
 

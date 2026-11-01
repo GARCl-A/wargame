@@ -11,6 +11,7 @@ Parts:
 - **Pre-playtest plan** — what is left before the author's playtest, in order.
 - **Ready to do** — the task is defined enough to start, sorted by size.
 - **Deprioritised** and **Notes to remember** — wanted one day, not now.
+- **To discuss and reflect on** — premises to think over, not tasks.
 - **Playtest notes** — raw notes by date, sized as they are picked up.
 - **Needs more information** — a design question, a repro or another system has to land
   before the task can be sized.
@@ -236,12 +237,38 @@ bugs, then the rest.
 
 - **A talent with more than one prerequisite.** The tree already draws the second requirement as a red dotted
   line, but no talent has one yet. The day one does, check that this is how it reads.
+- **Roster of characters, not an army of clones (author 2026-10-31).** Many action-bar entries and each
+  unit a character in its own right, friction accepted. The trade-off, named: eight identical units are
+  fast to play (move, hit, hit), eight complex ones mean hundreds of buttons a turn.
+
+## To discuss and reflect on
+
+Not tasks and not yet decisions: premises the author wants to think over before they harden.
+
+- **Everything is open from the day the guild is founded (author 2026-10-31).** Nothing is unlocked by
+  story; what gates a thing is money, exploring a place, a reputation, a talent or a race. The author
+  knows this makes levelling feel flat (*Playtest notes 2026-10-31 -> Levelling is vertical only*).
+  Question: keep it fully open and fix levelling elsewhere, or let something be earned in order?
+- **Release (author 2026-10-31).** Itch.io first, as an indie demo (pay what you want), while the game
+  grows; Steam when there are 20+ hours of play ($100 fee; the generative-AI content flag must be
+  ticked). Mobile does not fit: the UI is heavy, though it is a web app. A Kickstarter to pay a real
+  artist was suggested. State the AI use plainly on the store page: generative AI is only the character
+  portraits and a few tree sprites; the rest is drawn by code (the axe icon is an SVG written in code).
+- **Co-op / multiplayer on a shared map (author 2026-10-31).** Each band a player. A daydream; the
+  tester does not see it fitting. No plan.
 
 ## Playtest notes 2026-10-31
 
 A friend's (Johann) first session (about 2 h, no tutorial from the author). The two bugs, the Delay label, the
 draft's commission text and the export are in *Ready to do* (Small). The author's stated intent from the
-same talk is in [../vision.md](../vision.md). Raw feedback, not yet sized:
+same talk is spread over *To discuss and reflect on*, *Notes to remember*, *Needs more information* and the
+items it touches. Raw feedback, not yet sized:
+
+- **What worked (do not "fix" it).** The character progression, combat, and the pull of "always something
+  to go after" (the exclamation marks on the map). Two musicians playing while the rest worked was the
+  strategy he liked (hence the split-clock bug is the worst one). He compares it with, or above, Wartales /
+  Battle Brothers / Mount & Blade for fun, and finds it easy to play in short sessions. He stopped because
+  of that bug and because he had played a lot, not because he was bored.
 
 - **Theme: the rules sit where the player does not look.** The wiki, the menu and the tutorial text were
   not read; the player learned by doing, and paid for it (rations, the draft, Delay). A fix per case is
@@ -256,36 +283,42 @@ same talk is in [../vision.md](../vision.md). Raw feedback, not yet sized:
   in plain words at the pick, and see the vocation balance below.
 - **Vocations are far apart** (author): Delvers and Caravan ahead; Warband fine for Orc / Goliath; Scholars
   for the races that cast early; Wilds and Marsh weak. Rework or balance with the vocation probation in
-  *Loyalty, the oath...*; each perk should act on a daily loop.
+  *Loyalty, the oath...*; each perk should act on a daily loop. **Not validated** (author 2026-10-31: these
+  are impressions, not measured). Check them first with `balance_sim.py` / `economy_sim.py` /
+  `scripts/economy_report.py`: vocation ranking, and whether Orc (does not fall) and Goliath (carries
+  double, no donkey to buy) really are the strongest races. Only then rework.
 - **Starting squad is weak.** STR 2 or 3 carries nothing, a bow is too dear, and the start weapon is
   a dagger or a piece of an axe ("at least one real weapon"). The author would take 18 STR, 18 CON and 0
   elsewhere at level 0. The occupation removal rolls the start kit anew: give it a real weapon then.
 - **Food was learned wrong.** He bought what looked like 20 days of shelf life and it spoiled; beer
   first (cheap at 4 copper and durable), then Potato; a farm trip for it did not pay against Fruit at the
-  grocery. Show shelf life in the shop row. Check the economy report: is beer the best buy per day, and
-  should a beer-only diet cost something (a hangover)? The tavern's stock (about 15 beers, 10 meats, 30
-  potatoes) cannot feed a 10-day defence for ten people (110 meals): decide if that is wanted or a
-  limit to show.
-- **Hunting is not cheaper than buying** (the first mechanic he tried); the author agrees it is badly balanced.
-  Re-run `scripts/economy_report.py` for the Wilds hunt against the cheapest meal.
-- **No recipes to be found.** He found none: recipes are few (race, crafting talents). The design is in
-  [../vision.md](../vision.md) (learn by owning the item or being taught); size a first form when the
-  production chain is picked up.
-- **Market stall.** Idea: a licence to open a stall in any market and sell your goods at a better price. Not
-  sized; belongs with the production chain and the living economy.
+  grocery. Show shelf life in the shop row. Check the economy report: is beer the best buy per day? No
+  hangover for a beer-only diet (author 2026-10-31: does not like it). Decided: the supply is a
+  constraint on purpose, not an afterthought: a group of ten plus a cart eats eleven meals a day, a
+  10-day territory defence needs ~110 meals and a tavern holds tens (about 15 beers, 10 meats, 30
+  potatoes). Salted meat and beer are the end-game foods (30 and 20 days), Potato lasts 7, fruit 1;
+  hunting pays through meat and hides sold, then potatoes bought. Left: make that constraint visible
+  (shelf life in the row, the meals a trip or a defence needs).
+- **Hunting is not cheaper than buying** (the first mechanic he tried); the author felt it was badly
+  balanced but it is **not validated**: it needs an economic analysis first (author 2026-10-31).
+  Re-run `scripts/economy_report.py` for the Wilds hunt (meat and hides sold, then food bought) against
+  the cheapest meal, per hour and per risk of ambush, before any change.
+- **No recipes to be found.** He found none: recipes are few (race, crafting talents). The design
+  question is in *Needs more information -> Recipes learned by owning the item or a teacher*.
 - **Combat will dull with time; the bar is only attack, defend, special.** Open: group actions, linking units,
   a way to make many units cheap to play (the sim's auto-play, *Auto battler*). Magic is the author's answer,
-  but it comes late.
+  but it comes late. More weapon-driven mechanics should relieve it too, and the tester suggested a way to
+  link characters or make them act together.
 - **Levelling is vertical only.** Nothing new to do at a higher level. The Charisma line (earns money,
   recruits) is the example he liked. Open design question for the talent trees: each level should open a
-  thing to do, not only a bigger number.
-- **Automaton "comes back 100% with no repair".** The rule says it goes *broken* until an ally repairs it
-  (INT vs DC 15, `RULES.md`). The tester saw no way to repair, only a full recovery. Check the repair
-  action is offered and shown; if it recovers by itself, fix (the author wants it to need a repair).
+  thing to do, not only a bigger number. Not wanted (author 2026-10-31): only bigger numbers, or a pile of
+  skills. Wanted: a new thing to do per level (a bard that can play at court or recruit). Magic is the
+  main hope but it arrives late (reputation with the schools, unless the start is a Gnome or Kobold, the
+  races that begin as casters).
 - **The group limit was not visible.** He did not know how many a group holds or that recruiting gets harder
   with every member (-1 per member). Show the capacity and the crowd penalty at the recruit pitch.
-  The author's wiki said "level + CHA mod" for the capacity; the code has `BASE_CAPACITY` 3 + CHA mod +
-  half the racial level: confirm which is meant.
+  The author's wiki said "level + CHA mod" for the capacity: the wiki is wrong, the code (`BASE_CAPACITY`
+  3 + CHA mod + half the racial level) is the intent (author 2026-10-31). Fix the wiki text.
 - **Switching between groups.** The author asked if it is pleasant; the answer was not clear in the record.
   Ask again. The friend's view: up to 8 units is fine, more groups slow it unless there is automation.
 - **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received.
@@ -343,7 +376,14 @@ map**: a node has one "Enter" button and its functions are tabs inside.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 - **Programmable order chains for a group**, e.g. gather Lumber at the Yard -> sell Lumber and
-  buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
+  buy food -> gather again. Large; ties to `orders.py` and the sim's planner. Intent (author
+  2026-10-31): macro management through automation, **optional**. The main group is played by hand;
+  the secondary groups run routines (collect wood, buy vials, craft healing potions and stock the guild
+  inventory; study a spell for two months) and the player collects when back from the expedition. A
+  player who likes clicking can still do 80 clicks a day. The player never runs two adventures at
+  once: automation is for the world around the expedition. It is why the game has several groups
+  (without it they feel slow, as in RimWorld). The author knows it may push some players away and goes
+  ahead: the game is first for them. The tester's view: it only attracts, it turns micro into macro.
 - **The Battlefield beyond the Faith mission.** For now its only use is the Faith Order's errands, and
   it stays that way (author 2026-10-17). Later it becomes one more place of Ledger Hold work and missions:
   what an open skirmish pays, how often the front has a fight. The supply run's walked order with an
@@ -375,6 +415,13 @@ map**: a node has one "Enter" button and its functions are tabs inside.
   the sim's `balanced` policy (smelt, then forge or sell) and tests. Gives Coal and the gems a use and
   closes `sources.py`'s `traded` goods one chain at a time.
   **Market supply and demand / lumber saturation:** endless day labour at the Yard should flood wood prices.
+  Intent (author 2026-10-31): a living economy, prices answer to what players do (a guild that cuts wood 24
+  h a day floods the market and the work stops paying); the carpenter buys wood from the lumberjack and
+  iron from the smith, the smith buys ore and coal from the mine. How the player enters that chain against
+  the shops is open. After the core is solid.
+- **Market stall (tester's idea, playtest 2026-10-31).** A licence to open a stall in any market and sell
+  your own goods at a better price, so every area allows some interaction. Not sized; it belongs with the
+  production chain above and needs it first.
 - **Item properties: base material sources (after the production chain).**
   (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven
   declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
@@ -559,7 +606,9 @@ Keep these while building them:
     or only the look? (3) before the playtest or after: decided 2026-10-30, after the playtest; nothing exists yet.
 
 - **Talent ideas (author 2026-10-30, answered 2026-10-31; still to be sized).** Talent rules: no
-  immunities, no extra AP, no loot multipliers, no one-node perks.
+  immunities, no extra AP, no loot multipliers, no one-node perks. Trade-off rule (author 2026-10-31):
+  group size and recruiting come from Charisma talents that cost a pick which would otherwise make a
+  better individual fighter; a big guild or a strong fighter, not both.
   1. *Charisma tree (work and combat):* +1 group size limit while leading; -10% crowd penalty
      (`recruit.size_penalty`); and a joint pitch. Joint pitch, as the author means it: A (holds the
      talent) recruits a target that B could also recruit on their own. A "consumes" B: instead of one
@@ -585,9 +634,27 @@ Keep these while building them:
      yet, see *Notes -> a talent with more than one prerequisite*) and whether it also needs the holder
      to be able to see the beast for a turn (the existing sight check already does).
 
+- **Assess grows into an Intelligence combat tree (author 2026-10-31).** Study the foe, and what you
+  know grants crit and to-hit: a turn spent investigating before the beating is a real option. Not built
+  to the author's liking yet. Sits beside the Intelligence talents in *Talent ideas* above.
+
+- **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
+  too much friction; new actions have to come in gradually, so a new player is not flooded while the
+  complexity builds. Open: which actions come at which level or talent. Ties to *Roster of characters*
+  (*Notes to remember*) and *Levelling is vertical only*.
+
 - **Magic as the vertical progression.** The arc's work is in *Ready to do -> Medium*. The schools are
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
   Open: tier 2+ spells and any reputation penalty for rivalry.
+
+- **Recipes learned by owning the item or a teacher (author 2026-10-31).** Today a recipe comes only from
+  a race (Dwarf at level 5) or a crafting talent (Apothecary, Smith), and few exist. The intent: learn by
+  owning an item (take the axe to the smith and study it until you can make it) or by being taught. A
+  first form: the Library makes dictionaries, so a leader who speaks only Draconic hires a Lizardfolk and
+  writes the dictionary to learn the language. Some recipes come from missions, artefacts from quests;
+  the Kobold learns trap recipes and places traps farther. The tester's idea: a research system to
+  discover formulas. Open: teachers (who, what it costs), study time, what the Library's dictionary
+  gives, research. Size a first form when the production chain is picked up.
 
 - **Better food: dishes with buffs (after the magic arc).** Food only quells hunger and the Potato does it
   cheapest. The preservation recipes are built (Jerky, Roast Meat, Fruit Compote; no buffs, by design).
