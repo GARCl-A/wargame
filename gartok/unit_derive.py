@@ -4,7 +4,7 @@ Mixed into `unit.Unit`: carry, attribute mods, HP, AC, speed and their
 breakdowns, so roster screens can show a character without a Combatant.
 """
 
-from . import data, items
+from . import data, items, natural_weapons
 from .data import ATTRIBUTES, mod, roll
 
 
@@ -309,6 +309,12 @@ class DerivationMixin:
     @property
     def weapon(self):
         return items.get(self.equipped_weapon)
+
+    @property
+    def natural_weapon(self):
+        """What this body fights with when nothing is in the weapon hand: its race's own
+        weapon at its own size (`natural_weapons`)."""
+        return natural_weapons.for_race(self.race["name"], self.size)
 
     @property
     def armor_name(self):

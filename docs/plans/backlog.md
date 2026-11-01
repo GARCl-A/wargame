@@ -69,11 +69,6 @@ the rest.
   token. Improve how the web board shows it (a corner badge on the token, or a marker in the cell ring)
   and how it reads in the inspect panel, so the player knows it is there and can Pick it up.
 
-- **Unarmed special action (2 AP).** A fighter with no weapon (thrown, dropped, disarmed) has only the
-  plain unarmed Attack: every weapon trait action needs its weapon. Give the unarmed stance one 2 AP
-  action of its own (design call pending: effect, e.g. a grapple-shove or a flurry; race/talent hooks such
-  as `sweeping_claws` already exist). Must come with its AI use and tests, per the feature rules.
-
 - **Playtest export (decided 2026-10-31).** The author asks each tester to zip the save folder by hand to read
   the combat logs and what was done. Add a Settings button "Export playtest data" that gives one zip
   (saves, combat-log JSONLs, `game_version`). Do it with the version item so the zip says the build.
@@ -152,6 +147,33 @@ the rest.
   `hunting` case from `persist` and its test in `tests/test_one_clock.py`. Tests: save and load mid-stretch
   keeps the clock, the party, the yield and the ambush; a save with the hunt screen open (setup,
   interlude) still refuses or keeps working as it does now.
+
+- **Natural weapons: finish the three states, then Wrest (2 AP, decided 2026-11-01).** A body is a weapon, so
+  "unarmed" stops being an absence (`weapon is None`, `weapon_hand` false) and becomes three states:
+  **armed** (a real item in hand), **natural** (the race's own weapon) and **unarmed** (the `Unarmed`
+  weapon of a humanoid with empty hands). `natural_weapons.py` and `Unit.natural_weapon` exist
+  (Wolf and Giant Spider `Bite`, Snake `Fangs`, Dragon `Claws`, Donkey and Horse `Hooves`, Ox `Horns`;
+  the die follows the body's size on the `DAMAGE_STEPS` ladder); nothing reads them yet. Left:
+  (1) `Unit.weapon` / `Combatant.weapon` return the natural weapon in an empty hand, and the ~35
+  `unarmed` / `weapon is None` checks are reclassified (ten weapon actions lose their
+  `unarmed or w is None` guard and ask the combatant for the trait, pick up a weapon is `Unarmed`
+  only, the finesse logic of `is_dex_melee` / `attack_mods` / `attack_bonus` collapses to one,
+  `UNARMED_ATTACK` and `unarmed_damage` go); (2) talents only modify the weapon (`rending_bite` a die,
+  `deft_bones` finesse on `Unarmed`, `sweeping_claws` gives that creature's `Claws` the `cleave` trait; a
+  talent grants traits to the wielder's weapon, not to all); `improvised` is a trait of the unloaded
+  crossbow, its damage the unarmed die of the wielder's size; (3) **Wrest**.
+  **Wrest (2 AP, `Unarmed` only):** adjacent foe holding a weapon the actor can wield (`can_wield`, free
+  hands); d20 + DEX against 15 + the foe's STR, no two-hand bonus; on a pass the actor takes the weapon
+  and attacks with it at once, no penalty; on a failure only the 2 AP are lost. Natural weapons never
+  have it. The AI uses it when unarmed next to an armed foe it can disarm. `Tail Sweep` stays a talent
+  action, its die the `Unarmed` die of the body's size whatever is in hand.
+
+- **2 AP actions for `Claws`, `Bite`, `Fangs`, `Hooves` and `Horns` (future, after *Natural weapons*).** One special action
+  per natural weapon, like Wrest for `Unarmed`, as a trait of that weapon. Design call open for each.
+  Medium, not Small: a new action is end-to-end (rules, web tab, AI, tests, tutorial card).
+
+- **Takedown as its own action (like Push and Grab).** Knock a foe prone: needs a `prone` condition (none
+  exists) and a roll; sized when designed.
 
 - **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided).** On day 105 a guild of
   eight stopped for two wolves. The premise: an ambush only exists if the pack would plausibly attack

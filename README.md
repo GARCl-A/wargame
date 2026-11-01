@@ -74,6 +74,7 @@ gartok/
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
   item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for the Editor's code-drawn icons (editor/ui/item_icons.py)
   weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
+  natural_weapons.py the body as a weapon: Unarmed and the beasts' Bite/Fangs/Claws, one ItemDef per body size, outside the item registry
   craft_level.py    a recipe's difficulty level, worked out from its requirements, reagents and batch time
   workbench.py      a station's bench (`Bench`: the crafters, their recipes, what the packs lack,
                     a stint waited out or alone)
