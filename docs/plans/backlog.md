@@ -32,7 +32,7 @@ combat presentation and the hub kit are done. Left:
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
 - The *Small* items below, in order: the fighter that cannot move, the icons'
-  authors, then the exe.
+  authors, then the skills.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -61,9 +61,6 @@ the rest.
   game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
   new names up with no code change.
 
-- **Rebuild the friends' exe last (2026-11-01).** Run `build_exe.bat` on Windows once the other playtest
-  items are in, so `dist/GARTOK.exe` carries their fixes.
-
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
   copy it into `.claude/skills/<name>/SKILL.md`, then check it against the owner list in
@@ -91,7 +88,7 @@ the rest.
   tool or a crafted good above the material it is made from, then run the `balance` tier and
   `scripts/economy_report.py`. The starting kit draws items by price, so the prices set what a recruit carries.
 
-- **Scroll of Invisibility (Magic Arc).** A Library quest unlocked at max Library reputation with a caster
+- **Scroll of Invisibility (Magic Arc).** The item exists (`items.py`); missing is the Library quest, unlocked at max Library reputation with a caster
   initiated in magic (direction 2026-10-19).
 
 - **UI sound: the missing cues.** `gartok/sound.py` has 7 cues and every one
@@ -105,7 +102,7 @@ the rest.
 
 - **The battle takes ~1 s to open, and each action repaints for ~230 ms (playtest 2026-11-01).** Title,
   map and hub are ready in ~350-450 ms; the battle is not, even with every file cached. The time is not the
-  files: `Board.draw` (`board.js`) runs on every state change and costs ~230 ms in a headless Chromium
+  files: `Board.draw` (`screens/battle/board.js`) runs on every state change and costs ~230 ms in a headless Chromium
   without GPU, most of it `fogAndLight` (blurred light and fog layers at full resolution) and `memory`;
   `drawStatic` (floor and walls) is cached and runs once. Real GPU timings are unknown. Options: draw the
   light and fog layers at a lower resolution; skip the repaint of those layers when an action did not change
@@ -141,7 +138,7 @@ the rest.
 
 ## Large
 
-- **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16: out of its case an
+- **Weapon actions: tune the favoured cases after a playtest.** Out of its case an
   action is one strike; in it the strike lands twice over plus a small edge (RULES.md *Weapon actions*,
   `favoured` on each action, the premise held by `test_ai_actions`). Left: whether each case comes up
   often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
@@ -347,7 +344,7 @@ items it touches. Raw feedback, not yet sized:
   double, no donkey to buy) really are the strongest races. Only then rework.
 - **Starting squad is weak.** STR 2 or 3 carries nothing, a bow is too dear, and the start weapon is
   a dagger or a piece of an axe ("at least one real weapon"). The author would take 18 STR, 18 CON and 0
-  elsewhere at level 0. The kit half is built (`starter_kit.py`: a random weapon and item by price).
+  elsewhere at level 0.
 - **Food was learned wrong.** He bought what looked like 20 days of shelf life and it spoiled; beer
   first (cheap at 4 copper and durable), then Potato; a farm trip for it did not pay against Fruit at the
   grocery. Show shelf life in the shop row. Check the economy report: is beer the best buy per day? No
@@ -424,7 +421,7 @@ has one "Enter" button and its functions are tabs inside.
   Author 2026-10-30: still no idea of how archaeology should work to be interesting; nothing to size
   until that answer exists.
 - **The Claim:** let the player build their own farm to stock food.
-- **Combat leveling (Lv 1 -> 2):** the Wilds weights were fixed (`142b6f5`); assist XP or an
+- **Combat leveling (Lv 1 -> 2):** assist XP or an
   intermediate arena bout wait on future playtests.
 
 ---
@@ -450,10 +447,7 @@ has one "Enter" button and its functions are tabs inside.
 
 - **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
   targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
-  order of impact. Settled (author 2026-11-01): the Medic stays a luxury for an instant cure when one is
-  needed now (planning a rest is the way otherwise); upkeep is intended: the City house is a guild seat
-  and dear on purpose ($30 a week), and a day labourer lives to work, eat and sleep, so the Yard alone
-  never keeps a house or an animal.
+  order of impact.
   1. *The Games pay too little for their risk (direction decided 2026-11-01, numbers open).* A Games bout
      (Brawl or Capture the Flag, 3 a side) costs $30 a fighter ($90 for the three) and pays a flat $130,
      against three opponents rolled level 1 to 6 each (`encounters.ARENA_LEVEL_WEIGHTS`: 30/24/18/13/9/6,
