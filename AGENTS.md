@@ -24,8 +24,9 @@ a system* `README.md`; web screens `docs/web_client.md`; tests `docs/plans/test_
   follows `editor/ui/README.md`.
 - Work and commit straight on `main`; no feature branches unless the user asks for one.
   A teammate works on `main` in parallel, so `git pull` before committing.
-  A cloud session is the exception: it is bound to its own branch, and once that work is on
-  `main` the branch is disposable, so delete it (local and remote) without asking.
+  A cloud session is the exception: it commits on its own branch, then merges into `main` when
+  there is no conflict (on a conflict, stop and ask). Once that work is on `main` the branch is
+  disposable, so delete it (local and remote) without asking.
 
 ## Design premises that touch code (the why: `RULES.md`, World systems)
 

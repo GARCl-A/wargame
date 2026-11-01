@@ -1,191 +1,44 @@
 # GARTOK Tactical
 
-An open-world **guild manager** with turn-based tactical combat, based on the
-**GARTOK RPG**, rebuilt from the character generator at
-[Gerenciador-Gartok](https://github.com/GARCl-A/Gerenciador-Gartok).
-It is a sandbox: there is no win condition and no end screen. The run ends only
-when the whole guild is wiped out.
-
-Every unit is a randomly generated GARTOK character (race + occupation + 3d6)
-and its own individual: the group is a container, the unit is the atom.
-
-**Draft:** the game opens on a pool of nine rolled characters; you keep three.
-Those three are your **guild**: name it, pick its banner (colour + emblem —
-cosmetic, recolours every unit token from then on), then choose who leads it.
-Early mortality is very high on purpose — the starters are meant to be lost.
-
-**Campaign:** the guild is one or more **groups** on the world map, each a
-physical unit of members standing on their own node. Give a group an order
-(travel, work, or head into a battle / market / tavern / the wilds); once no
-group is left idle, the clock runs on its own (`campaign.advance`), resolving
-travel and work silently and handing you the rest to actually play. For a
-battle you pick a **squad** (1–3 members), drop onto a grid, and win by
-putting the enemy team down. Time only passes while the clock is running or on
-a group resting (day/night, hunger); death is permanent; a total wipe ends
-the run. Each guild is a **world** of its own (a save folder: the current state,
-an automatic snapshot before every fight, and named manual saves).
-
-There is no money pool: coins are items in a character's pack. Adventure
-out-earns day labour — the lumber yard is only a survival floor — so the risk pays.
-What the guild builds is **standing and property**: reputation with factions
-(earned by one-shot `deeds` and paid missions — the arena, the Bankers, the
-Library, the Tanner), a house in the City or a fenced Claim in the Wilds, wagons
-and animals, and a growing set of groups run in parallel.
+A guild-manager sandbox with turn-based tactical combat, rebuilt from the character generator
+([Gerenciador-Gartok](https://github.com/GARCl-A/Gerenciador-Gartok)) of a lost tabletop RPG, GARTOK.
+You draft three rolled characters, lead them as groups across a world map, fight, trade and build, and
+lose them: death is permanent and the run ends only when the whole guild is wiped out. The game is a web
+client over a Python core; pygame survives only in the Editor.
 
 ## Run
 
 ```
 pip install -r requirements.txt      # the game needs nothing but the standard library
-python main.py              # the game, in a browser window (Edge or Chrome in app mode)
+python main.py                       # the game, in a browser window (Edge or Chrome in app mode)
 pip install -r editor/requirements.txt && python -m editor   # the Editor, a separate pygame program: characters, maps, the combat lab
 ```
 
-`python -m gartok` is the same as `python main.py`; `python -m gartok.web --help` lists the
-browser's own flags (`--save <world>`, `--fight <lab fight>`, `--no-window`). The server stops
-when the window is closed.
+`python -m gartok` is the same as `python main.py`; `python -m gartok.web --help` lists the browser's own
+flags. The server stops when the window is closed.
 
-Dev tools (pytest, pytest-xdist, ruff) live apart from the game's own requirements:
-`pip install -r requirements-dev.txt`.
+Dev tools (pytest, pytest-xdist, ruff) live apart: `pip install -r requirements-dev.txt`.
 
-Tests: `python -m pytest tests/ -n auto` (rules, in parallel) and `python sim_test.py`
-(200 headless AI-vs-AI battles). `-m "not slow and not balance"` skips the whole AI fights
-and the sims' design numbers; the tiers are in [docs/plans/test_suite.md](docs/plans/test_suite.md).
-`python -m gartok.reference` regenerates [`REFERENCE.md`](REFERENCE.md).
+```
+python -m pytest tests/ -n auto -m "not balance"   # the gate; the tiers are in docs/plans/test_suite.md
+python sim_test.py                                 # 200 headless AI-vs-AI battles
+python -m gartok.reference                         # regenerates REFERENCE.md
+```
 
-## Controls
+## Where things are written
 
-| Action | How |
+| Topic | Read |
 |---|---|
-| Pick a character (draft) | click up to three of the nine cards (click again to put one back), then **CONTINUE** |
-| Replace a candidate (draft) | **COMMISSION** (top right) → choose archetypes → click the card to replace |
-| Walk (1 point) | click a green cell — the path to the cursor is drawn; the walked trail this turn is marked |
-| Attack (1 point) | click an enemy with a red outline to arm, click again or press `Enter` / `F` to strike |
-| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In / Grab / Escape | panel buttons (the aimed ones ask for a target click) or hotkeys `1`–`8`, in panel order |
-| Delay | `9` (drop to the end of the initiative order) |
-| Switch action tab | `Tab` (toggles combat ↔ utility actions) |
-| Pan camera | `WASD` or middle/right mouse drag |
-| Zoom | mousewheel |
-| Toggle character ↔ squad vision | `L` |
-| Inspect a sheet | click any unit |
-| End turn | `Space` (defends first when it can), `0` (ends without defending) or the button |
-| Pause / quit | `Esc` |
+| The rules and the design premises | [`RULES.md`](RULES.md) |
+| The catalog: races, occupations, weapons, prices, talents, constants (generated) | [`REFERENCE.md`](REFERENCE.md) |
+| Rules for an agent working on the repo | [`AGENTS.md`](AGENTS.md) |
+| Building a web screen | [`docs/web_client.md`](docs/web_client.md) |
+| Open work | [`docs/plans/backlog.md`](docs/plans/backlog.md) |
+| The Editor's UI kit | [`editor/ui/README.md`](editor/ui/README.md) |
 
-After a battle, memorials, the after-action report and level-up cards lead to the loot / reward screens or back to the map.
-
-Each unit has **2 action points per turn**; every action costs 1 (except End
-Turn). Walking moves up to the unit's speed and can be split across clicks.
-**Core rule:** bonuses of the same type do not stack (the largest wins); untyped
-bonuses and all penalties add.
-
-**Vision is per-character, not per-player:** the map is dark; on your turn you see
-only what the active character sees (torches, light items, darkvision). The enemy
-squad (red) is a simple AI.
-
-## What came from the generator and what was designed
-
-Ported from the original `.xlsx` sheets (`gartok/data.py`): 3d6 attributes,
-18 races with mods and abilities, 31 occupations with a weapon + item, 9
-alignments, sizes / speed / carry, the AC / HP / modifier formulas. The full
-catalog — every race, occupation, ability, weapon, armor, price, talent and
-tunable constant — is generated from the code into [`REFERENCE.md`](REFERENCE.md).
-
-Designed for the wargame (did not exist in the generator), with the full
-reconstructed ruleset in [`RULES.md`](RULES.md):
-
-- **d20 combat**: initiative `d20 + WIS mod`; attack `d20 + mods` vs AC; damage =
-  weapon die + STR mod (melee); crit on 20, fumble on 1.
-- **Action points** (2/turn) and **typed bonuses** (`data.resolve_bonus`).
-- **Actions** (`gartok/actions/`): Walk, Attack, Defend, Throw, Pick Up,
-  Demoralize, Stabilize, First Aid, Flee, plus the Z-axis moves Climb / Push /
-  Jump / Drop In.
-- **Falling / stabilizing / death** (dying → stable | dead), permadeath.
-- **Temporary conditions** — Defending, Demoralized (`gartok/conditions.py`).
-- **The mechanical effect of the racial abilities** (`gartok/abilities.py`).
-- **Vision and light**, walls, ground objects, torches; **a per-cell Z axis**
-  (pits, fall damage); **water** — shallow (difficult terrain) and deep (Swim,
-  hold your breath or drown).
-- **Ammo** (crossbow + quiver, reload) and **improvised weapon**; **flanking**
-  and Pack Tactics.
-- **1 cell = 1.5 m**.
-
-World systems, outside combat:
-
-- **Campaign**: the guild's members are split across **groups**, each its own
-  token that can travel/work/act independently; a tick/orders engine
-  (`gartok/orders.py`, `campaign.advance`) advances the shared clock + day/night
-  to the next order due; permadeath and save-by-slot (`world.py`, `clock.py`,
-  `guild.py`, `group.py`, `persist.py`).
-- **Identity**: the guild's name and banner (colour + emblem), picked at the
-  draft — cosmetic, recolours every unit token for the run
-  (`ui.banner.set_player_color`, `Guild.banner_color`/`banner_icon`).
-- **Leadership**: the guild has one leader ("who am I", chosen at the draft);
-  every group has its own (who speaks for it, freely swappable); a group's
-  leader caps how many members it can hold before cohesion costs Mental
-  Defense (`Group.leader`/`capacity`, `Guild.leader`).
-- **Hunger**: one meal a day, a shared larder; without food, growing penalties
-  up to death.
-- **Progression**: no classes — each XP track (combat, work, racial, magic) has
-  its own level and its own talent tree (`progression.py`, `talents.py`,
-  `web/talent_session.py`).
-- **Magic**: twelve spells across three schools (`nature`, `blood`, `faith`),
-  initiated at the schools' hidden sanctuaries (`rite.py`),
-  learned by studying at the taverna over several in-game days (`magic.py`), and
-  cast in battle (`actions.CastSpellAction`, `ai/`).
-- **Economy**: money lives on the character as `Copper Coin` ($1) and `Gold Coin`
-  ($100) items in the pack (they weigh and split like any item); gold only exists
-  through the bank's exchange. A market with haggling by language + Charisma +
-  alignment and finite stock per shop; the arena's staked non-lethal bouts; field
-  loot; the lumber yard's and the Mine's day-labour wages (the Mine pays $1 more per block and
-  sells the stone, ore and coal); the Forge turns learned recipes and
-  materials into gear and battlefield traps (`workbench.py`). The numbers are
-  kept honest by an economy sim (`scripts/economy_report.py`).
-- **Bank**: a rented strongbox at the City, the gold exchange and the Bankers'
-  trust mission (`vault.py`, `economy.buy_gold`/`sell_gold`).
-- **Medic**: a quick treatment at the Apothecary that mends HP, sickness and poison
-  for the potions it would take at a discount; a long one is a hospital stay on a
-  `solo` order (`medic.py`, `solo.py`).
-- **Wagons and animals**: a group keeps livestock (Donkey, Ox, Horse) and wagons
-  (cart, carriage) that carry cargo and passengers by weight, eat, wear down on the
-  road and are lost with the group (`wagon.py`, `animals.py`, `stables.py`,
-  `holdings.GarageDesk`).
-- **Recruitment**: a tavern pool refreshed weekly (no money, a Charisma-vs-
-  Charisma pitch) or the prison's bail-and-pitch alternative (pay first, then
-  pitch); each member can only sponsor so many people (Charisma-gated), the
-  guild leader's own level adding a strong bonus on top (`recruit.py`).
-- **Factions & reputation**: one-shot deeds earn per-faction standing
-  (`factions.py`); the arena's champion title lives in `arena.py`. Paid,
-  deadlined **missions** from a named giver (the Tanner, the Bankers) are a
-  separate, failable track alongside the silent deeds (`missions.py`).
-- **Base-building**: two paths to guild property, both playable start to
-  finish — a taxed house bought from the Bankers in the City, or a Wilds
-  claim fenced and garrisoned by hand through a scout/clear/fence/sweep/
-  sustain campaign, contestable by raids and seizure once established
-  (`vault.py`, `claim_desk.py`).
-- **Crime & justice**: a personal rap sheet that can get a character caught by
-  the City guard at a jurisdiction node — accept prison time, fight the
-  patrol, flee, or talk (bluff or bribe) your way out; the Old Road carries its own ambush risk regardless of
-  crime (`justice.py`).
-- **Editors**: sandbox character and map creators (`char_editor_screen.py`,
-  `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`. The
-  map editor sets the grid size and paints walls / pits / water / torches / zones.
-- **Onboarding**: a modal, once-per-slot tutorial (`tutorial.py`, drawn by the web shell)
-  teaching how to play and how to use each screen (draft, map with the clock and
-  hunger, each guild-screen tab, group gear, squad, battle, loot, reward, market,
-  taverna, the wilds, the bank, paid jobs, the forge, the house, the claim, the
-  guard, the prison, progression) — the first time a screen (or tab, or draft phase) matters, a
-  centred card over a dimmed screen explains it, some pointing at where to look
-  next, dismissed with a click or Enter/Space (input is swallowed while it is up
-  and just after, so closing it never presses what lies beneath) and reopenable
-  from its `?` badge; per-slot, toggled and reset
-  from the settings screen. Its copy is the first thing routed through `i18n.py`, a
-  small dotted-key catalog reader (`locales/en.json`) meant to grow into the
-  game's general translation layer, not a tutorial-only shim.
+Identifiers and domain content are English; only the prose of `RULES.md` may lag the code wording.
 
 ## Structure
-
-Identifiers are English; so is the domain content (race, occupation, alignment,
-size, language, weapon and item names). Only [`RULES.md`](RULES.md) design prose
-may lag the code wording.
 
 ```
 gartok/
@@ -207,7 +60,7 @@ gartok/
   outfit.py         a generated enemy's kit bought with its racial level's budget
   matchup.py        (node, arena Bout) -> the opponents + the scenario for one fight
   unit.py           Unit = the persistent character (init, save/load, generation), built from mixins:
-                    unit_hunger / unit_levels / unit_edit / unit_derive / unit_loadout / unit_poison
+                    unit_hunger.py / unit_levels.py / unit_edit.py / unit_derive.py / unit_loadout.py / unit_poison.py
   poisons.py        persistent poisons (Snake Venom, Spider Venom): levels, saves, Antidote
   combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
@@ -222,13 +75,13 @@ gartok/
   item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for the Editor's code-drawn icons (editor/ui/item_icons.py)
   weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
   craft_level.py    a recipe's difficulty level, worked out from its requirements, reagents and batch time
-  workbench.py      a station's bench, no pygame (`Bench`: the crafters, their recipes, what the packs lack,
+  workbench.py      a station's bench (`Bench`: the crafters, their recipes, what the packs lack,
                     a stint waited out or alone)
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
   loot.py           gathers the field loot after a lethal win
-  spoils.py         the field's loot split among the survivors (no pygame; the report's FIELD)
+  spoils.py         the field's loot split among the survivors (the report's FIELD)
   aftermath.py      what the screens after a fight read (report rows, takedowns, LevelUp, Memorial,
                     result_word), filled by campaign.absorb_battle
   progression.py    XP curves + the combat-XP rule (pure data, no gartok imports)
@@ -240,37 +93,37 @@ gartok/
   # world + campaign
   world.py          the map graph: nodes, edges (distance), route (Dijkstra), Bout (arena offers)
   node_functions.py what a node can offer (shop, bank, forge...): order kind + map button, one entry each
-  map_view.py       what the map shows of a band and its node, no pygame (`MapView`: inspector blocks,
+  map_view.py       what the map shows of a band and its node (`MapView`: inspector blocks,
                     the order's status, the REST plans, `NODE_ICON`), read by web/map_session.py
   shop.py           a shop's own till and finite shelf, one per node that offers `shop`
   trade.py          a shop's counter: buying, selling, the purse, the deal, the moves between packs
-                    (`Counter`, the Library's `LibraryCounter`); no pygame, web/shop_tab.py trades through it
-  vault.py          a stash's counter, no pygame: the Bank's strongbox and gold exchange (`BankVault`),
+                    (`Counter`, the Library's `LibraryCounter`); web/shop_tab.py trades through it
+  vault.py          a stash's counter: the Bank's strongbox and gold exchange (`BankVault`),
                     the City house's stash, oven and debt (`HouseVault`)
-  tavern.py         the Tavern's counter, no pygame (`Tavern`: the pitch, the study rooms, the stage;
+  tavern.py         the Tavern's counter (`Tavern`: the pitch, the study rooms, the stage;
                     `Prison`: the cells, with a bail)
-  work_desk.py      a work node's desks (Lumber Yard, Mine), no pygame: WORK (`WorkDesk`: paid shifts, each
+  work_desk.py      a work node's desks (Lumber Yard, Mine): WORK (`WorkDesk`: paid shifts, each
                     worker's tool and wage) and GATHERING (`GatherDesk`: the licence, what a shift is worth)
-  stables.py        the Farm's stables and the Carpenter's wagon yard, no pygame (`Stables`, `WagonYard`:
+  stables.py        the Farm's stables and the Carpenter's wagon yard (`Stables`, `WagonYard`:
                     the purse, the herd limit, the tack, the resale)
-  ledger.py         Ledger Hold's desk, no pygame (`LedgerDesk`: the chest, the mentorship, the supply run);
-  job_board.py      each giver's jobs board, no pygame (`Board`, `TannerBoard`, `ShrineBoard`, ...: the offers,
+  ledger.py         Ledger Hold's desk (`LedgerDesk`: the chest, the mentorship, the supply run);
+  job_board.py      each giver's jobs board (`Board`, `TannerBoard`, `ShrineBoard`, ...: the offers,
                     the signing, the turn-in and its notice)
-  claim_desk.py     the Wilds Claim's work, no pygame (`ClaimDesk`: scouting, the fences, the garrison, the hearth);
+  claim_desk.py     the Wilds Claim's work (`ClaimDesk`: scouting, the fences, the garrison, the hearth);
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
-                    guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
-  holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals); GarageDesk is a garage's counter, no pygame
+                    guild_upkeep.py / guild_holdings.py / guild_claim.py / guild_labor.py hold its behaviour
+  holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals); GarageDesk is a garage's counter
   creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
   animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role
-  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at the Carpenter (stables.WagonYard); wagon_watch.py / watch_screen.py handle the wagon left outside the Ruins or a hunt
+  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber); bought at the Carpenter (stables.WagonYard); wagon_watch.py is the wagon left outside the Ruins or a hunt
   group.py          Group = a physical subset of the guild: its own node + squad + order;
                     fame buys group slots (`BASE_SLOTS`, `group_slots`)
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk
                     (7-day notice, loot by alignment)
   solo.py           solo tasks (hospital stay, craft): one member busy apart from the group on a `solo` order
-  medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab with no pygame
-  rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab with no pygame
+  medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab
+  rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   rest.py           what a rest order costs in rations and how long "until full" lasts
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
@@ -314,7 +167,7 @@ gartok/
 
   # onboarding + translation (i18n.py is project-wide; tutorial is its first consumer)
   i18n.py           dotted-key string catalogs (locales/*.json), language fallback
-  tutorial.py       the tutorial's ids + TutorialState (seen/enabled, pygame-free)
+  tutorial.py       the tutorial's ids + TutorialState (seen/enabled)
 
   wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
 
@@ -327,58 +180,32 @@ gartok/
                     tests/ (`python -m pytest editor/ -n auto`), item_icon_preview.py, requirements.txt (pygame-ce)
 
   # presentation of the game
-  web/              the web client (guide: docs/web_client.md):
-                    session.py (a screen's server half), battle_session.py (one fight as the side
-                    knows it), map_session.py (the map), hub_session.py + shop_tab.py (a place's
-                    tabs and its shop), work_tab.py (Work, Gathering), medic_tab.py (the
-                    Medic), jobs_tab.py (a jobs board), craft_tab.py (a workbench), stable_tab.py (the stables, the wagon yard), tavern_tab.py (the Tavern, the prison's cells), initiation_tab.py (a sanctuary's initiation), vault_tab.py (the Bank's strongbox, the City house), garage_tab.py (the house's garage and the Claim's), claim_tab.py (the Wilds Claim's stages), ledger_tab.py (Ledger Hold's desk), guild_session.py (the guild's sheet: members, bands, the charter, reputations), sheet_view.py (a member's sheet, the book any screen opens), arena_session.py (the arena's bouts, the stake, the offer to recruit a fallen boss), campaign_fight.py (a campaign fight entered and settled, then handed to the report), hunt_session.py (the hunt), swift.py (the clean-stomp estimate of a fight due, behind its AUTO-WIN button), watch_session.py (who minds the wagon), dialogue_session.py (the talk before a fight), report_session.py (the screens after a fight, and the clock's level-ups), talent_session.py (a member's talent trees), draft_session.py (a new guild), settings_session.py, wiki_session.py, title_session.py (the title, the guilds, their saves), server.py (stdlib JSON API routed
-                    by screen), client/ (the shell + one folder per screen under screens/);
+  web/              the web client (guide: docs/web_client.md): server.py (stdlib JSON API routed by
+                    screen), session.py (a screen's server half) and one session (or tab) module per
+                    screen or hub tab, client/ (the shell + one folder per screen under screens/);
                     `python main.py` / `python -m gartok` (the title),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
-  icons.py          vector action icons (pygame.draw) -- no asset file
-  art_files.py      where the art is, no pygame: portrait_path, BANNER_ICONS, `RACE_ICON` and
+  art_files.py      where the art is: portrait_path, BANNER_ICONS, `RACE_ICON` and
                     `OCCUPATION_ICON` name each race's and occupation's glyph (`map_view.NODE_ICON` the nodes')
-  artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
-                    portraits under assets/portraits/ for pygame
-  sheet.py          a character's sheet as a plain dict (unit_to_ch), no pygame
-  lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; battle_draw.LightRenderer paints it
-  battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, the action's
-                    name over its actor and the flight of a shot (`battle.announce`), combat sounds
-  sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the Editor enables it, `volume` setting
-  loadout_move.py   the moves between a member's hands, armour and pack, no pygame (the band's kit, the vaults)
-  guild_sheet.py    the guild's sheet, no pygame: the roster, a member's sheet and roles, the charter
-  band_kit.py       one band's kit, no pygame: the moves, the tack and the hitch, the item menu, first aid
+  sheet.py          a character's sheet as a plain dict (unit_to_ch)
+  lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; the web board draws it
+  sound.py          sound cues (assets/sounds/, Kenney CC0) the web plays, `volume` setting; the Editor has its own player
+  loadout_move.py   the moves between a member's hands, armour and pack (the band's kit, the vaults)
+  guild_sheet.py    the guild's sheet: the roster, a member's sheet and roles, the charter
+  band_kit.py       one band's kit: the moves, the tack and the hitch, the item menu, first aid
   store_column.py   a wagon or an animal as one more pack (the web's shop and vault)
 
 main.py             entry point (gartok/__main__.py: the browser)
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
-scripts/            balance_sim.py (race / occupation / combo rankings; --level / --racial
-                    add random talent picks and a per-talent ranking), economy_activities.py
-                    (what each activity pays in copper and XP, and the floor check),
-                    economy_guild.py (a whole guild living days: `lumber`, the floor, and
-                    `balanced`, the game played as the author plays it; the race / occupation
-                    ranking; the gathering licence measured), economy_talents.py (each work
-                    talent priced on its own), economy_exploits.py
-                    (money-from-nothing loops, recipe barriers, dominance), economy_report.py
-                    (all of them in one report, with verdicts), economy_offers.py (what a guild can take up
-                    today, each priced in copper and days), play_analysis.py (reads play.jsonl into the sim's
-                    day table and the author's thresholds), ai_usage.py (which actions the combat AI takes, and
-                    what losing each costs it), unit_stats.py (creation-stat spread), unit_compare.py,
-                    crafting_cost.py, vocation_report.py (each vocation perk's value as a share of the guild's daily wage),
-                    combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay),
-                    combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai/ change),
-                    archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks),
-                    gen_portrait.py (medallion portraits from a local Stable Diffusion + the style LoRA, driven by
-                    the /gen-portrait skill; portrait_lora/ has the setup and the Colab notebook that trains the LoRA)
-docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and its findings),
-                    campaign_ai_roadmap.md (the long-range AI plan)
-docs/web_client.md  the guide to building a web screen: the rules, the look, the layouts that hold
+scripts/            the sims and tools; each opens with a docstring saying what it reads and prints:
+                    balance_sim.py (race / occupation rankings), economy_report.py (every economy sim in
+                    one report, with verdicts; the other economy_*.py are its parts), economy_offers.py
+                    (what a guild can take up today), play_analysis.py (play.jsonl), combat_analysis.py and
+                    combat_pairs.py (read the combat logs; the AI replays a person's squads),
+                    gen_portrait.py (portraits, driven by the /gen-portrait skill; portrait_lora/ has the setup)
+docs/               web_client.md (how to build a web screen), plans/ (backlog.md is all the open work)
 ```
-
-> Rendering is procedural, with two asset-backed exceptions: `artwork.py` loads
-> the SVG silhouettes under `gartok/assets/icons/` (game-icons.net) and the race
-> medallion portraits under `gartok/assets/portraits/`.
 
 ### How to add a system
 
@@ -393,7 +220,8 @@ docs/web_client.md  the guide to building a web screen: the rules, the look, the
   derivation) — there is no plugin bus.
 - **New persistent character state** (e.g. wounds, fatigue): a field on `unit.py`,
   folded into `Unit._derive_combat` if it moves the numbers, saved in
-  `persist.unit_to_dict` / `Unit.from_save`. `Combatant` reads it for free.
+  `persist.unit_to_dict` / `Unit.from_save`. `Combatant` reads it for free. An optional
+  field's neutral value goes in `unit.SAVE_DEFAULTS` and needs no `SAVE_VERSION` bump.
 - **New ground-object type**: a new `kind` on `ground.GroundObject` and the rule
   that reacts to it (consumers ask `obj.kind` / `obj.is_weapon`).
 - **New battle scenario** (prebuilt map, deployment zones, lighting): a `Scenario`
@@ -423,6 +251,6 @@ docs/web_client.md  the guide to building a web screen: the rules, the look, the
   `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
   screen's session (`web/session.py`).
 - **New translated string anywhere else**: a key under its own namespace in
-  `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` is the only
-  namespace actually converted so far; the rest of the game's text is still
+  `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` and `arena_talk.*`
+  are the only namespaces converted so far; the rest of the game's text is still
   literal, on purpose (this is the framework, not a translation pass).

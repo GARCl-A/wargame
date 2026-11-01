@@ -1,6 +1,6 @@
 """A wagon left outside while the party goes into a dangerous place.
 
-The Ancient Ruins and a hunt in the Wilds open the squad selector (`watch_screen.py`):
+The Ancient Ruins and a hunt in the Wilds open the squad selector (`web/watch_session.py`):
 whoever stays behind minds the wagon. Any one member is a guard. Unguarded, the wagon and
 the animals roll once when the party comes back out: the node's `wagon_risk` plus the
 flightiest animal's chance to bolt (`data.BEASTS`), and a hit loses everything, silently.
