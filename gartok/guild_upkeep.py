@@ -72,29 +72,24 @@ class UpkeepMixin:
     # ------------------------------------------------------------------ #
     # time + daily upkeep                                                #
     # ------------------------------------------------------------------ #
-    def pass_time(self, hours, busy=()):
-        """Hours spent by anything but the map's own jump: one clock for the guild, so every
-        band's order advances by them (`clock_hook`, the session's `tick_outside`, which runs
-        `campaign.advance` and so `run_clock`). Without a session (tests, scripts) it is `run_clock`.
-        `(hours, busy=()) -> (events, casualties)` either way."""
-        if self.clock_hook is None or not self.groups:
-            return self.run_clock(hours, busy)
-        return self.clock_hook(hours, busy)
+    def tick(self, hours, busy=()):
+        """Hours spent with no map to run them (the sims, a test's shortcut): through
+        `campaign.advance`, so every band's order keeps in step. The game never calls it: an hour a
+        band spends there is an order (`stints.py`). -> `(events, casualties)`."""
+        from . import campaign
+        result = campaign.advance(self, dt=hours, busy=busy)
+        return result.events, result.casualties
 
-    def run_clock(self, hours, busy=()):
+    def pass_time(self, hours, busy=()):
         """Advance the campaign clock and run daily upkeep for every day it
         crosses. Returns a list of events (missed meals, deaths) for the caller
         to show. This is the only path that moves the clock by hours -- battle
         time (`clock.advance_rounds`) is seconds and skips upkeep. It leaves the
-        bands' orders alone: only `campaign._advance` calls it directly.
+        bands' orders alone, so only `campaign._advance` calls it (a test checks it).
 
-        `busy` are units doing something that spends the hours without a group
-        order carrying it (a hunt, a crafting shift, scouting the claim): they
-        do not rest meanwhile, same as a group on an order.
-
-        The `(hours, busy=()) -> (events, casualties)` shape is a contract: the
-        app's `_tick_outside_map` stands in for this call on screens that spend
-        an hour (`repair_wagon`), and a test pins the two together."""
+        `busy` are units spending the hours without a group order carrying them
+        (a headless shortcut's crew, `tick`): they do not rest meanwhile, same as
+        a group on an order."""
         start_day = self.clock.day
         self.clock.advance_hours(hours)
         events = []
@@ -113,7 +108,8 @@ class UpkeepMixin:
             working = g.busy and g.order.kind in orders.WORK_KINDS and not resting
             for u in g.members:
                 on_the_job = working or u in busy
-                waiting = g.busy and g.order.kind == "solo" and u.uid != g.order.who
+                waiting = g.busy and ((g.order.kind == "solo" and u.uid != g.order.who)
+                                      or (g.order.kind == "hunting" and u.uid not in g.order.crew))
                 if ((g.busy and not resting and not waiting) or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):
                     u.consecutive_rest_hours = 0
                     u.unbroken_rest_hours = 0

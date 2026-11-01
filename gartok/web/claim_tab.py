@@ -69,16 +69,18 @@ class ClaimTab:
         return out
 
     def act(self, verb):
-        """Run one of the stage's own pieces of work (not a fight nor the garrison: `HubSession` plays those)."""
+        """Run one of the stage's own pieces of work (not a fight nor the garrison: `HubSession` plays those).
+        -> the stint the band takes for it, or None for work with no hours (the report says what came of it)."""
         work = {"scout": self.s._scout, "deposit": self.s._deposit_lumber, "build": self.s._build_fences,
                 "leave_garrison": self.s._leave_garrison, "garrison_job": self.s._toggle_garrison_job,
                 "collect": self.s._collect_lumber, "campfire": self.s._light_campfire,
                 "oven": self.s._build_oven}.get(verb)
         if work is None or verb not in {a[0] for a in self._actions() if a[2]} | self._hearth_verbs():
             raise ValueError(f"nothing to {verb.replace('_', ' ')} at the claim now")
-        work()
+        order = work()
         notice, self.s.notice = self.s.notice, None
         self.report = [notice] if notice else []
+        return order
 
     def start_garrison(self):
         if "garrison" not in {a[0] for a in self._actions()}:

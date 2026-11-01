@@ -211,7 +211,7 @@ class GuildSession(Session):
         g = next((g for g in self.guild.groups if g.gid == gid and not g.empty), None)
         if g is None:
             raise ValueError("no such band")
-        self.gear = BandKit(self.guild, g, on_tick=self.map.tick_outside)
+        self.gear = BandKit(self.guild, g)
 
     def pick_band(self, gid):
         self._set_band(gid)
@@ -442,7 +442,15 @@ class GuildSession(Session):
         elif key not in {a["key"] for a in self._actions() if a["on"]}:
             raise ValueError("that cannot be done now")
         gear._unit_by_uid = gear._owners_by_uid()
-        gear._handle_button(key)
+        order = gear._handle_button(key)
+        if order is not None:
+            lines, landed = self.map.spend(g, order)
+            if landed is not None:
+                return landed
+            gear.notice = "  ".join(lines) or None
+            if self.map.level_ups:
+                return self.map.open_level_ups(self._resume)
+            return self.state()
         if self.map.wiped or g.empty:
             self.map.game.open(self.map)
             return self.map._land()

@@ -11,7 +11,8 @@ squatting. Money and the guard stay with the caller (`Guild`, `campaign`).
 
 import math
 
-from . import animals, economy
+from . import animals, economy, stints
+from .wagon import REPAIR_HOURS
 from .constants import fmt_money
 from .stash import Stash  # noqa: F401 -- re-exported
 
@@ -120,8 +121,8 @@ class GarageDesk:
     The Claim's garage (`claim=True`) has no bays and no limit, and is only safe while a garrison stands
     there. pygame's `GarageScreen` and `web/garage_tab.py` are the windows over it."""
 
-    def __init__(self, guild, group, claim=False, on_tick=None):
-        self.guild, self.group, self.claim, self.on_tick = guild, group, claim, on_tick
+    def __init__(self, guild, group, claim=False):
+        self.guild, self.group, self.claim = guild, group, claim
         self.notice = None
 
     @property
@@ -133,7 +134,8 @@ class GarageDesk:
         return sum(m.money for m in (*self.group.members, *getattr(self.group, "stores", ())))
 
     def _act(self, key):
-        """Run one of the garage's verbs, named `kind:index` as pygame's buttons name them."""
+        """Run one of the garage's verbs, named `kind:index` as pygame's buttons name them. -> the `repair`
+        stint for the band when the verb is a repair that can start, else None."""
         g, garage, guild = self.group, self.garage, self.guild
         kind, _, arg = key.partition(":")
         if kind == "bay":
@@ -145,10 +147,12 @@ class GarageDesk:
             self.notice = "a new bay: room for one more wagon and one more animal."
         elif kind in ("repair_garaged", "repair_group"):
             wagon = (garage.wagons if kind == "repair_garaged" else g.wagons)[int(arg)]
-            ok, events, _ = guild.repair_wagon(g.members, wagon, self.on_tick)
-            if ok and wagon in g.wagons:
-                g.hitch_idle()
-            self.notice = "  ".join(events)
+            short = guild.repair_short(g.members, wagon)
+            if short:
+                self.notice = short
+                return None
+            guild.repair_lumber(g.members, wagon)
+            return stints.order("repair", REPAIR_HOURS, g.members, wagon=wagon.uid)
         elif kind == "park_wagon":
             wagon = g.wagons[int(arg)]
             if guild.park_wagon(g, wagon, garage):

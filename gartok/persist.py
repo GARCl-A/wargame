@@ -165,7 +165,7 @@ def garage_to_dict(garage):
             "herd": [a.to_dict(_serialize_pack) for a in garage.herd]}
 
 
-_ORDER_SEQUENCES = ("path", "caught", "resume_path")
+_ORDER_SEQUENCES = ("path", "caught", "resume_path", "crew")
 
 
 def order_to_dict(order):
@@ -179,7 +179,8 @@ def order_to_dict(order):
 def order_from_dict(d):
     kwargs = {f.name: d[f.name] for f in fields(Order) if f.name in d}
     for key in _ORDER_SEQUENCES:
-        kwargs[key] = tuple(kwargs[key])
+        if key in kwargs:
+            kwargs[key] = tuple(kwargs[key])
     kwargs["pack"] = tuple(Unit.from_save(u) for u in d["pack"])
     return Order(**kwargs)
 
@@ -217,6 +218,8 @@ def group_from_dict(d):
     group.campfire_expires = d.get("campfire_expires", 0)
     if d["order"]:
         group.order = order_from_dict(d["order"])
+        if group.order.kind == "hunting":       # a hunt is never saved: the party is back, empty-handed
+            group.order = None
     if d["pending"]:
         group.pending = order_from_dict(d["pending"])
     return group

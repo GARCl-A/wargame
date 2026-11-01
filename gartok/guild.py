@@ -135,7 +135,6 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.objectives_done = list(objectives_done or [])   # ids of completed objectives (objectives.py)
         self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
-        self.clock_hook = None              # the map's `tick_outside`: set by the session, never saved
         self.bank = bank if bank is not None else Stash()   # the rented strongbox; capacity 0 = none rented
         self.shops = dict(shops or {})        # shop.Shop per node id, made on first visit
         self.missions = list(missions or [])  # active/finished missions.Mission, see missions.py

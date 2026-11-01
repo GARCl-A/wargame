@@ -64,6 +64,9 @@ dismissed item is deleted, never kept with a note, the record is the git log).
   every base material a source (`sources.py`); `REFERENCE.md` must match the registries.
 - **Combat log:** every `Action.execute`, end of turn and flag/trap goes through
   `CombatLog.record`, human or AI, so a fight rebuilds from its JSONL alone.
+- **One clock:** only `campaign.advance` moves it (`Guild.pass_time` is its, a test checks it). Hours a band
+  spends on a screen are an order (`stints.py`, a `solo` craft, a `hunting` stretch) run through
+  `MapSession.spend`, never a jump of their own.
 - **Groups:** a `Group` with a `pending` forced fight has `order = None` but is `locked`: no split,
   merge, leader swap or kit change until it resolves.
 - A recipe's level is derived (`craft_level.py`), never set by hand.

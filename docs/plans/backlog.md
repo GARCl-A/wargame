@@ -197,8 +197,8 @@ the rest.
 
 - **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
   wagon left behind, the hand-over card between groups, the vault read from the guild screen and the auto-win
-  are done (2026-10-30). Left: the tests the cut lost: the clock
-  while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
+  are done (2026-10-30), and the clock while a screen is open (`tests/test_one_clock.py`, 2026-11-01).
+  Left: the tests the cut lost: everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
   cancelled. The old screens are in git before the cut.
 
 - **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per test and
@@ -394,7 +394,7 @@ items it touches. Raw feedback, not yet sized:
 
 - **What worked (do not "fix" it).** The character progression, combat, and the pull of "always something
   to go after" (the exclamation marks on the map). Two musicians playing while the rest worked was the
-  strategy he liked (hence the split-clock bug is the worst one). He compares it with, or above, Wartales /
+  strategy he liked (hence the split-clock bug was the worst one; fixed 2026-11-01, one clock for every group). He compares it with, or above, Wartales /
   Battle Brothers / Mount & Blade for fun, and finds it easy to play in short sessions. He stopped because
   of that bug and because he had played a lot, not because he was bored.
 

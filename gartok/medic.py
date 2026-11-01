@@ -81,28 +81,42 @@ def cure(unit):
     unit.hp = unit.hp_max
 
 
-def treat(guild, group, patients):
-    """Treat `patients` (units of `group`): the group pays, the clock advances by the longest
-    treatment, and every patient leaves at full HP, cured and unpoisoned. Returns
-    `(ok, lines)`; nothing happens when the pick is empty, past the Medic's limit or unaffordable."""
+def visit(guild, group, patients):
+    """Pay for treating `patients` (units of `group`) at a visit: the group pays now, and the
+    treatment takes the longest one's hours. -> `(patients, hours, lines)`, `patients` empty with
+    nothing paid when the pick is empty, past the Medic's limit or unaffordable."""
     picked = [(u, quote(u)) for u in patients]
     picked = [(u, q) for u, q in picked if q.needs_care]
     if not picked:
-        return False, ["Nobody picked needs treating."]
+        return [], 0, ["Nobody picked needs treating."]
     if not all(q.offered for _, q in picked):
-        return False, ["A longer treatment needs a hospital stay."]
+        return [], 0, ["A longer treatment needs a hospital stay."]
     cost, hours = total([q for _, q in picked])
     holders = (*group.members, *getattr(group, "stores", ()))
     if sum(u.money for u in holders) < cost:
-        return False, [f"The group cannot pay ${cost}."]
+        return [], 0, [f"The group cannot pay ${cost}."]
     economy.charge_richest_first(holders, cost)
     objectives.complete(guild, "obj_medic")
-    events, _ = guild.pass_time(hours)
-    for u, _ in picked:
+    names = ", ".join(u.name for u, _ in picked)
+    return [u for u, _ in picked], hours, [f"The Medic treats {names}: ${cost}, {hours} h."]
+
+
+def treated(guild, patients):
+    """A visit's hours are up: every patient still alive leaves at full HP, cured and unpoisoned."""
+    for u in patients:
         if u in guild.roster:
             cure(u)
-    names = ", ".join(u.name for u, _ in picked)
-    return True, [f"The Medic treats {names}: ${cost}, {hours} h."] + list(events)
+    return []
+
+
+def treat(guild, group, patients):
+    """Treat `patients` (units of `group`) right now, the headless shortcut of a `treat` stint:
+    `visit`, the hours through `Guild.tick`, then `treated`. Returns `(ok, lines)`."""
+    cured, hours, lines = visit(guild, group, patients)
+    if not cured:
+        return False, lines
+    events, _ = guild.tick(hours)
+    return True, lines + treated(guild, cured) + list(events)
 
 
 def admit(guild, group, patient):
@@ -166,16 +180,22 @@ class Ward:
             self.picked = {uid}
 
     def _treat(self):
-        """Treat the picked patients, or admit the one picked for a stay. -> `(ok, lines)`."""
+        """Pay for the picked patients' visit, or admit the one picked for a stay. -> `(ok, lines, order)`,
+        `order` the visit's `treat` stint for the band (None for a stay, which sets its own)."""
+        from . import stints
         patients = [u for u in self.group.members if u.uid in self.picked]
+        order = None
         if self._stay():
             ok, lines = admit(self.guild, self.group, patients[0])
         else:
-            ok, lines = treat(self.guild, self.group, patients)
+            cured, hours, lines = visit(self.guild, self.group, patients)
+            ok = bool(cured)
+            if ok:
+                order = stints.order("treat", hours, cured)
         self.notice = "  ".join(lines)
         if ok:
             self.picked.clear()
-        return ok, lines
+        return ok, lines, order
 
     def _stay_where(self):
         return ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1

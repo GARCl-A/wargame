@@ -8,6 +8,7 @@ import sys
 import pytest
 
 from gartok import (
+    campaign,
     claim_desk,
     economy,
     gather,
@@ -71,8 +72,11 @@ def test_the_ward_picks_and_treats_the_hurt():
     ward = medic.Ward(guild, g)
     assert [q.uid for q in ward._quotes()] == [u.uid]
     ward._toggle(u.uid)
-    ok, _ = ward._treat()
-    assert ok and u.hp == u.hp_max and not ward.picked
+    ok, _, order = ward._treat()
+    assert ok and order.task == "treat" and u.hp < u.hp_max and not ward.picked
+    g.order = order
+    campaign.advance(guild)
+    assert u.hp == u.hp_max and not g.busy
 
 
 def test_the_stables_sell_an_animal_and_buy_it_back_at_a_loss():
@@ -113,7 +117,7 @@ def test_the_bench_lists_who_works_here_and_rolls_a_stint():
     assert [rid for rid, _, _ in bench._recipes(u)] == ["Bear Trap"]
     assert bench._get_missing_materials("Bear Trap")
     with pytest.raises(ValueError):
-        bench._work("Bear Trap", 3)
+        bench._wait("Bear Trap", 3)
     assert workbench.Bench(guild, g, "apothecary").crafters == []
 
 
@@ -208,8 +212,9 @@ def test_the_claim_desk_hands_out_only_the_lumber_a_pack_can_carry():
 def test_the_claim_desk_scouts_and_banks_the_carried_lumber():
     guild, g, u = _band(world.WILDS_TERRITORY_NODE)
     desk = claim_desk.ClaimDesk(guild, g)
-    desk._scout()
-    assert guild.wilds_claim_stage == "SCOUTED" and "scouted" in desk.notice
+    g.order = desk._scout()
+    assert guild.wilds_claim_stage == "NONE"
+    assert any("scouted" in e for e in campaign.advance(guild).events) and guild.wilds_claim_stage == "SCOUTED"
     guild.wilds_claim_stage = "CLEARED"
     u.give_to_pack("Lumber", 3)
     assert desk._party_lumber() == 3

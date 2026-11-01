@@ -1,4 +1,4 @@
-from gartok import world
+from gartok import campaign, world
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.tavern import Tavern
@@ -96,17 +96,19 @@ def test_the_tavern_stage_plays_a_show():
     mute._base_inventory = []
     bard.money = mute.money = 0
     g = Guild([bard, mute])
-    group = Group(list(g.roster), "city")
+    group = g.groups[0]
     desk = Tavern(g, group)
     desk.perform_hours = 2
     assert desk._performers() == [bard]
     desk.perform_off = {bard}
     assert not desk._performers()
     desk.perform_off = set()
+    group.order = desk._show()
+    assert group.order.task == "perform" and group.order.crew == (bard.uid,) and bard.money == 0
     with fixed_d20(20):
-        desk._perform()
+        events = campaign.advance(g).events
     assert bard.money == 2 * ((20 + bard.mod_charisma - 16) // 2) > 0 and mute.money == 0
-    assert "Tavern stage" in desk.notice
+    assert any("Tavern stage" in e for e in events) and not group.busy
 
 
 def test_the_work_tab_pays_by_each_workers_tool():

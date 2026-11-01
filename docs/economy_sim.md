@@ -140,7 +140,7 @@ fail. The market's cash is a design ceiling (~$25/day per market), printed under
   library draw, which keeps a 30-day guild under a minute a policy.
 - Selling goes through the market's cash and only sells what the guild picked up or crafted;
   starting items (the Axe, an instrument, a Holy Symbol) are never sold.
-- Crafting is single-threaded on the clock (`Guild.crafting_shift` spends the whole guild's
+- Crafting is single-threaded on the clock (the sim's `Guild.crafting_shift` spends the whole guild's
   hours), so a crafting guild puts one member at the forge and the others wait.
 - Finite shelves apply to freely bought items only; the items already finite (`economy.STOCK`)
   keep their no-refill rule. A shelf of about 10 refilling 3 a day holds a crafter near 2x a

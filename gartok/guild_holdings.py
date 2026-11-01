@@ -46,33 +46,48 @@ class HoldingsMixin:
         garage.wagons.append(wagon)
         return True
 
-    def repair_wagon(self, crew, wagon, tick=None):
+    def repair_wagon(self, crew, wagon):
         """Mend `wagon` where the group stands: the Lumber out of someone's pack, an hour
         of the clock and an INT check by the best of `crew`. The Lumber and the hour are
-        spent whether or not it holds. `tick(hours, busy=...)` runs the hour (default
-        `pass_time`; the app passes one that keeps the other groups' orders in step).
+        spent whether or not it holds. The headless shortcut of a `repair` stint.
         Returns `(ok, events, casualties)`; whoever starved meanwhile is in both."""
+        short = self.repair_short(crew, wagon)
+        if short:
+            return False, [short], []
+        self.repair_lumber(crew, wagon)
+        events, casualties = self.tick(wagons.REPAIR_HOURS, busy=crew)
+        events = [*events, *(f"{u.name} starved to death." for u in casualties)]
+        ok, lines = self.repair_roll(crew, wagon)
+        return ok, [*lines, *events], casualties
+
+    def repair_short(self, crew, wagon):
+        """Why `crew` cannot mend `wagon` now, or None."""
         name = wagon.kind.lower()
         if not wagon.needs_repair:
-            return False, [f"the {name} needs no repair."], []
+            return f"the {name} needs no repair."
         cost = wagon.repair_cost
-        holders = [u for u in crew if u.count_of(wagons.REPAIR_ITEM)]
-        if sum(u.count_of(wagons.REPAIR_ITEM) for u in holders) < cost:
-            return False, [f"it takes {cost} {wagons.REPAIR_ITEM} to mend the {name}."], []
-        left = cost
-        for u in holders:
+        if sum(u.count_of(wagons.REPAIR_ITEM) for u in crew) < cost:
+            return f"it takes {cost} {wagons.REPAIR_ITEM} to mend the {name}."
+        return None
+
+    def repair_lumber(self, crew, wagon):
+        """The repair's Lumber, out of `crew`'s packs as the work starts."""
+        left = wagon.repair_cost
+        for u in crew:
             left -= u.remove_named(wagons.REPAIR_ITEM, left)
-        events, casualties = (tick or self.pass_time)(wagons.REPAIR_HOURS, busy=crew)
-        events = [*events, *(f"{u.name} starved to death." for u in casualties)]
+
+    def repair_roll(self, crew, wagon):
+        """The hour is up: an INT check by the best of `crew` says whether `wagon` holds.
+        -> `(ok, lines)`."""
+        name = wagon.kind.lower()
         smith = wagons.repairer(crew)
         total = data.d20() + smith.mod_intelligence
         if total < wagons.REPAIR_DC:
-            miss = (f"{smith.name} fails to mend the {name} ({total} vs DC {wagons.REPAIR_DC}) "
-                    f"-- the {wagons.REPAIR_ITEM} is wasted.")
-            return False, [miss, *events], casualties
+            return False, [f"{smith.name} fails to mend the {name} ({total} vs DC {wagons.REPAIR_DC}) "
+                           f"-- the {wagons.REPAIR_ITEM} is wasted."]
         mult = 2 if any(u.has_talent('wheelwright') for u in crew) else 1
         gained = wagon.repair(mult=mult)
-        return True, [f"{smith.name} mends the {name}: +{gained} HP ({wagon.hp}/{wagon.hp_max}).", *events], casualties
+        return True, [f"{smith.name} mends the {name}: +{gained} HP ({wagon.hp}/{wagon.hp_max})."]
 
     def abandon_wagon(self, group, wagon):
         """Leave a wagon behind for good, cargo and all (the caller let the player unload

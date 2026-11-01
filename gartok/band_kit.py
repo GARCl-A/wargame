@@ -7,17 +7,16 @@ per picked band. An item moves only inside the band: a trade never crosses place
 
 import random
 
-from . import captives, chest, data, items, magic, missions
+from . import captives, chest, data, items, magic, missions, stints
 from .animals import Animal
 from .loadout_move import LoadoutMoveMixin
-from .wagon import Wagon
+from .wagon import REPAIR_HOURS, Wagon
 
 
 class BandKit(LoadoutMoveMixin):
-    def __init__(self, guild, group, on_tick=None):
+    def __init__(self, guild, group):
         self.guild = guild
         self.group = group
-        self.on_tick = on_tick
         self.selected = []                   # [(owner, loc), ...]: loc is a slot name or a pack index
         self.notice = None
         self._unit_by_uid = self._owners_by_uid()
@@ -131,13 +130,19 @@ class BandKit(LoadoutMoveMixin):
                        else f"the {animal.species} is unhitched.")
 
     def _repair_wagon(self, uid):
+        """-> the repair's stint for the band, or None when it cannot start (the notice says why)."""
         wagon = next((w for w in self.group.wagons if w.uid == uid), None)
         if wagon is None:
-            return
-        ok, events, _ = self.guild.repair_wagon(self.group.members, wagon, self.on_tick)
-        if ok:
-            self.group.hitch_idle()
-        self.notice = "  ".join(events)
+            return None
+        if self.group.busy:
+            self.notice = f"{self.group.display_name} is busy: a repair waits until it stops."
+            return None
+        short = self.guild.repair_short(self.group.members, wagon)
+        if short:
+            self.notice = short
+            return None
+        self.guild.repair_lumber(self.group.members, wagon)
+        return stints.order("repair", REPAIR_HOURS, self.group.members, wagon=wagon.uid)
 
     def _release(self, uid):
         cap = next((c for c in self.group.captives if c.unit.uid == uid), None)
@@ -150,7 +155,7 @@ class BandKit(LoadoutMoveMixin):
         elif key.startswith("hitch:"):
             self._cycle_hitch(key.partition(":")[2])
         elif key.startswith("repair:"):
-            self._repair_wagon(key.partition(":")[2])
+            return self._repair_wagon(key.partition(":")[2])
         elif key.startswith("release:"):
             self._release(key.partition(":")[2])
         elif key == "distribute":

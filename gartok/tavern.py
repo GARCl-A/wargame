@@ -14,7 +14,7 @@ study target (a scroll or dictionary the band carries) gains daily progress towa
 language.
 """
 
-from . import economy, magic, orders, recorder, recruit
+from . import economy, magic, orders, recorder, recruit, stints
 from .constants import fmt_money
 from .data import alignment_distance
 
@@ -153,14 +153,14 @@ class Tavern:
         return [m for m in self.party if m in self.guild.roster and economy.can_perform(m)
                 and m not in self.perform_off]
 
-    def _perform(self):
+    def _show(self):
+        """The show the picked players put on: a `perform` stint for the band, or None (the notice says why)."""
         crew = self._performers()
         if not crew:
             self.notice = "Pick someone with a Musical Instrument to play."
-            return []
-        events, _ = self.guild.perform_shift(crew, self.perform_hours)
-        self.notice = "  ".join(events)
-        return events
+            return None
+        hours = self.perform_hours
+        return stints.order("perform", hours, crew, clock_hours=hours * self.guild.work_speedup(crew))
 
     @staticmethod
     def _signed_line(cand):

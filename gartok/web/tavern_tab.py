@@ -194,11 +194,9 @@ class TavernTab:
             raise ValueError(f"{m.name} has no {economy.PERFORM_ITEM.lower()}")
         self.s.perform_off ^= {m}
 
-    def perform(self):
+    def show(self):
         self.s.sync_group()
-        self.report = self.s._perform()
-        if self.report:
-            self.s.notice = None        # the lines show as the last show, not as a toast
+        return self.s._show()
 
     def _player(self, m):
         s = self.s
