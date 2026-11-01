@@ -538,3 +538,32 @@ has one "Enter" button and its functions are tabs inside.
   (`rite.py`) consumes it, so the Faith school has no way to get it.
   Not for sale at the Market (author's call). Decide the source: a lair pile, a mission reward, a rare
   drop from a given foe, or a temple quest. Until then the rite cannot start in a new game.
+
+
+==========
+
+notas de playtest cruas - 2026-11-01
+
+Na tela de seleção de vocação, SE as vocações forem continuar no jogo, over em cima das raças dela poderia mostrar modificadores de atributos e habilidades raciais.
+
+Pensar em vocations como dificuldades ou como escolha de build?
+
+To sentindo um estranhamento com os alertas, nao sei. É como se durante o jogo, as imagens viessem pulando/travando umas entre as outras. Nao sei se e o tempo do front requisitar o back, mas as transições não estao muito suaves, é como se tudo tivesse "tomando um susto" o tempo todo quadno ta trocando de tela e aparecendo os tutoriais. Sera que nao e como se as telas nao estivessem carregadas/em cache ainda?
+
+Os sons tambem aprecem que tem um delay entre o instante que eu CLICO no botão e o som sair.
+
+O botão de "comission" tem reticencias, por que? 
+
+Na tela de mapa, no canto inferior direito tem um quadrado marrom mais escuro que parece um botão, logo abaixo de the clock waits. Oq é esse botão?
+
+Logo no dia 1, consegui fazer 2 recrutamentos, tive um problema de overflow na taverna. Os novos recrutas não entraram adequadamente na lista de recrutadores, empurrando os botões pra baixo.
+
+O som de level up, quando pega o talento, parece ser muito mais alto que o som de clicar na interface.
+
+no card de assess no bestiario, seria bom que o hover tanto na habilidade racial, quanto na arma, mostrasse a entrada na wiki daquele item ne.
+
+na tela de loot, eu nao consigo nem ver a ficha dos personagens, nem equipar as armas neles. Sendo que, idealmente, essa tela deveria ter todas as funcionalidades que uma tela de "inventario de grupo" teria.
+
+Eu to com a sensação que a IA ta fazendo duas coisas "demais". Uma é estabilizar aliados, isso faz com que ela perca turnos e, consequentemente, perca lutas. A outra é o "empurrar e fugir", eu tive uma luta no dia 17 desse playtest que o lobo empurrou, fugiu e depois voltou. Acho q a IA nao tomou la a decisão 100% correta. PRO FUTURO, acho que vale uma mecanica de "moral" que faz com que os inimigos (e os personagens do jogador) efetivamente entre num modo de "fugindo" ou "se rendam". Mas pra AGORA, a ideia é so entender se a prorização de empurrar e correr está correta. As vezes ele nem precisaria empurrar pra fugir, pq tem espaço livre pra sair correndo e acho q so empurra pra reduzir o flanco.
+
+Achei o craft do dicionario MUITO RAPIDO, acho que fiz um no dia 18 em cerca de 4 ou 5 horas, não fez sentido nenhum isso, acho que precisamos de fine tuning no tempo de craft.
