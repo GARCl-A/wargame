@@ -5,8 +5,43 @@ Tick a box once the file was reviewed and its fate decided (kept, trimmed, merge
 
 Snapshot: 2026-11-01 — 63 `.md` + 2 `LICENSE.txt`, plus the non-text folders at the end.
 
+## Responsibility map (decided 2026-11-01)
+
+Goal: duplication close to zero. Each topic has **one owner**; every other doc holds at most a
+one-line rule and a link. When a box below is ticked, apply this map to that file.
+
+**What `AGENTS.md` is for.** It rides on every request, so it holds only what an agent would get
+wrong or break without knowing it, that the code does not show, and that applies on any task:
+agent behaviour (language, commits, comments, where to work), invariants the tests enforce, and the
+code-facing consequence of a design premise. It never holds a module's description, a number, a
+dated decision, history or the *why* of a premise.
+
+Test for a premise: *if an agent ignored it, would it write code that breaks an invariant or a test?*
+Yes -> one line in `AGENTS.md` (the code-side consequence only) and the prose stays in `RULES.md`.
+No (it only makes the design feel off) -> `RULES.md` alone.
+
+| Topic | Owner | Everyone else |
+|---|---|---|
+| Design premises and their *why* (sandbox, individual, no treasury, adventure vs labour, vision, disposable squad) | `RULES.md` (World systems) | `AGENTS.md`: one line each for the premises that touch code (individual, world-first, no treasury, per-character vision, re-run the economy report); `README.md`: one sentence of pitch |
+| Premise of a disposable early squad | `RULES.md` only | not in `AGENTS.md` (no code consequence) |
+| Dated economy decisions and numbers (the ~50% yard margin, accepted 2026-10-22) | `docs/plans/economy_sim_v2.md` | `AGENTS.md`: only "re-run `scripts/economy_report.py` after touching wages, purses, prices or loot" |
+| Money mechanics (coins, 200 = 1 kg, bank fee, change) | `RULES.md` | `AGENTS.md`: "money is items on the character, no guild pool" |
+| pygame only in the Editor, delete the screen with its rules | `docs/web_client.md` | `AGENTS.md`: one rule line + link; `editor/ui/README.md`: its opening line only |
+| Test gate, markers, `standard_unit`, tiers | `docs/plans/test_suite.md` | `AGENTS.md`: the gate command + the `standard_unit` rule + link; the exact steps live in `pre-commit` |
+| Commit rules (Portuguese, no accents, no `Co-Authored-By` ever, `pre-commit` first, user approval) | `.agents/skills/pre-commit/SKILL.md` | `AGENTS.md`: one line + link; the two `commit-workflow.md` copies are deleted |
+| Where code lives, how to add a system | `README.md` | `AGENTS.md`: link only |
+| Catalog data | `REFERENCE.md` (generated) | link only |
+| History and rejected options | `project-context` (frozen), `git log` | `AGENTS.md`: one line |
+| Cloud session | works on its own `claude/...` branch; once on `main` it is deleted | already in `AGENTS.md`; no change |
+
+Decisions: no `Co-Authored-By` trailer from anywhere, whatever a harness reminder says (the repo rule
+wins). A dated decision is kept only in the doc that owns it, with its date as provenance.
+
 ## Root
-- [ ] `AGENTS.md`
+- [ ] `AGENTS.md` — apply the map above: trim the opening paragraph, shorten *Tests* and *pygame*
+  to rule + link, cut the premises to their code-facing line, drop the dated ~50% decision and the
+  coin details, shorten *Deep context* to one line. Keep *Load-bearing rules* and *Feature
+  implementation rules* whole (no other owner).
 - [ ] `CLAUDE.md`
 - [ ] `README.md`
 - [ ] `REFERENCE.md`
@@ -34,7 +69,7 @@ Snapshot: 2026-11-01 — 63 `.md` + 2 `LICENSE.txt`, plus the non-text folders a
 - [ ] `gartok/assets/sounds/LICENSE.txt`
 
 ## Agent skills and rules
-- [ ] `.agents/rules/commit-workflow.md`
+- [ ] `.agents/rules/commit-workflow.md` — delete (a pointer to `pre-commit`); check first that Antigravity does not need it as its always-on rule, and that "wait for the user's approval" is in `AGENTS.md` or `pre-commit`
 - [ ] `.agents/skills/check_backlog/SKILL.md`
 - [ ] `.agents/skills/pre-commit/SKILL.md`
 - [ ] `.agents/skills/project-context/SKILL.md`
@@ -43,7 +78,7 @@ Snapshot: 2026-11-01 — 63 `.md` + 2 `LICENSE.txt`, plus the non-text folders a
 
 ## `project-context` references (39 files)
 All under `.agents/skills/project-context/references/`:
-- [ ] `commit-workflow.md`
+- [ ] `commit-workflow.md` — delete; also its row in `project-context/SKILL.md` (l. 75) and the `[[commit-workflow]]` mention in `gartok-recruit-capacity.md` (l. 112)
 - [ ] `player-text-english.md`
 - [ ] `gartok-arena-champion-title.md`
 - [ ] `gartok-arena-ribbit-brothers-boss.md`
