@@ -56,10 +56,6 @@ the rest.
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
   today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Bug: the tavern overflows after two recruits on day 1 (playtest 2026-11-01).** The new recruits do not
-  enter the recruiters list properly and push the buttons down. Reproduce with two recruits on day 1, fix
-  the layout so the list scrolls inside its box and the buttons stay put.
-
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
   game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
