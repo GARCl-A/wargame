@@ -152,8 +152,8 @@ def test_a_save_of_another_version_is_shown_but_refused(saves):
         json.dump(payload, fh)
     title = _title()
     st = title.state()
-    assert st["charter"]["broken"] and st["map"] is None and st["charter"]["faces"]
-    with pytest.raises(ValueError, match="another version"):
+    assert "BREAKING CHANGE" in st["charter"]["broken"] and st["map"] is None and st["charter"]["faces"]
+    with pytest.raises(ValueError, match="BREAKING CHANGE"):
         title.load("ink")
 
 

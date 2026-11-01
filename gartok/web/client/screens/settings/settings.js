@@ -35,6 +35,7 @@ function render(state) {
   $("back").textContent = S.back;
   $("rows").innerHTML = S.rows.map(r => `<div class="row" data-key="${r.key}"><div class="txt"><b>${esc(r.label)}</b><span>${esc(r.note)}</span></div>
     ${opts(r.choices, r.value, "data-value")}</div>`).join("");
+  $("ver").textContent = S.version;
   const T = S.tutorial;
   $("tut").innerHTML = T ? `<div class="kicker">The tutorial of ${esc(S.guild || "this guild")}</div>
     <div class="row"><div class="txt"><b>Tutorial cards</b><span>The card each screen opens with the first time, kept with the guild's save.</span></div>

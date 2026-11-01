@@ -46,17 +46,6 @@ the rest.
 
 ## Small
 
-- **Game version in the save and in Settings (playtest 2026-10-30, decided).** Before friends play,
-  a save must say which build wrote it. Add a `GAME_VERSION` constant (one place, e.g.
-  `gartok/version.py`, `0.x.y`), write it into the payload as `game_version` (an optional field:
-  neutral value in `persist.PAYLOAD_DEFAULTS`, no `SAVE_VERSION` bump), and print "GARTOK vX.Y.Z" in the
-  web Settings screen. No migrations (the rule stays): when `save_version` differs, the load error
-  becomes a clear BREAKING CHANGE message that names the save's `game_version` and the running one
-  (today `persist.py:342` raises a bare "cannot be loaded"), and the web load screen shows it as is. Bump
-  `GAME_VERSION` and say "saves break" in the commit whenever `SAVE_VERSION` moves. Tests: round trip keeps
-  the version, a save with another `save_version` is refused with that message, an old save with no
-  `game_version` loads.
-
 - **Credits screen (decided 2026-11-01).** The icons are game-icons.net under CC BY 3.0, which requires
   crediting the authors, the license link and the source, and the credit must reach the player (a
   `LICENSE.txt` inside the repo or the build is not enough). Add a Credits entry reachable from the

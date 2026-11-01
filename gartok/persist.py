@@ -40,6 +40,7 @@ from .orders import Order
 from .shop import Shop
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
+from .version import GAME_VERSION
 from .wagon import Wagon
 
 # Se estiver rodando como um executável do PyInstaller, sys.frozen será True.
@@ -238,12 +239,14 @@ PAYLOAD_DEFAULTS = {
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True, "revealed": [], "met_factions": [], "supply_runs_completed": 0,
     "wildfire": None, "boss_talks_seen": [], "objectives_done": [], "ruins_cleared": [],
+    "game_version": "unknown",
 }
 
 
 def _payload(guild, kind, label):
     return {
         "save_version": SAVE_VERSION,
+        "game_version": GAME_VERSION,
         "save_kind": kind,
         "save_label": label,
         "day": guild.clock.day,
@@ -340,8 +343,9 @@ def load_game(world, save_id=CURRENT):
         payload = json.load(fh)
     payload = {**copy.deepcopy(PAYLOAD_DEFAULTS), **payload}
     if payload.get("save_version") != SAVE_VERSION:
-        raise SaveVersionError(f"This save is from another version of the game (save format "
-                               f"{payload.get('save_version')}, expected {SAVE_VERSION}) and cannot be loaded.")
+        raise SaveVersionError(f"BREAKING CHANGE: this save was written by GARTOK v{payload['game_version']} "
+                               f"(save format {payload.get('save_version')}); this is GARTOK v{GAME_VERSION} "
+                               f"(save format {SAVE_VERSION}). Saves do not carry over between them.")
     groups = [group_from_dict(d) for d in payload["groups"]]
     pool = payload["taverna_pool"]
     p_pool = payload["prison_pool"]
