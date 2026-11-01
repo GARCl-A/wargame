@@ -102,13 +102,15 @@ Functional squad roles for candidate generation and commission tokens at the dra
 
 | Archetype | Role & Qualification |
 |---|---|
-| LEADER | Highly charismatic (+2 mod). Critical for recruiting in taverns, bargaining, and guild morale. |
-| STRONG | Powerful build (+2 Strength mod). Hits hard in melee and hauls heavy armor, tools, and spoils. |
-| TOUGH | Massive health pool (8+ max HP). Durable frontline combatant with strong survivability. |
-| NIMBLE | Superior dexterity (+2 mod). High evasion, accuracy with finesse weapons, and natural defense. |
-| RANGED | Equipped with bow, sling, or crossbow. Engages hostile targets from safe standoff distance. |
-| GENIUS | Brilliant intellect (+2 mod). Accelerated crafting, manual reading, and arcane research. |
-| WISE | Perceptive mind (+2 mod). High combat initiative, mental defense, and skilled field medicine. |
+| LEADER | CHA +2. Sets how many people the guild can take in and how well recruiting goes. Also haggles and lifts morale. |
+| STRONG | STR +2. Hits hard in melee and carries heavy armor, tools and spoils. |
+| TOUGH | 8+ HP. A big pool of HP: survives more than one hit. Not the same as CON, the hit die decides it. |
+| HEALTHY | CON +2. Heals more HP on every rest, holds their breath longer and shrugs off poison. |
+| NIMBLE | DEX +2. Harder to hit, and accurate with finesse weapons. |
+| RANGED | bow, sling or crossbow. Hits from a distance, out of the enemy's reach. |
+| GENIUS | INT +2. Crafts faster, reads manuals and does research. |
+| WISE | WIS +2. Acts earlier in a fight, resists the mind and treats wounds in the field. |
+| RISKY | CON ≤ 8 · total ≤ 56 · can barely carry gear. A hard pick: a frail body that has to be played around. Not always a bad one: a fine leader can be fragile. |
 
 ## Vocations
 

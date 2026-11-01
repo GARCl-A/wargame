@@ -66,6 +66,13 @@ class DraftSession(Session):
             return "draft.intro"
         return {"vocation": "draft.vocation", "pick": "draft.pick", "charter": "draft.identity"}[self.step]
 
+    def tutorial_rows(self, key):
+        """The pick card lists every tag as the cards wear it, from the catalog."""
+        if key != "draft.pick":
+            return []
+        return [{"stamp": {"label": a.label, "style": a.style}, "rule": a.rule, "text": a.desc}
+                for a in ARCHETYPES.values()]
+
     # ------------------------------------------------------------------ #
     # verbs                                                              #
     # ------------------------------------------------------------------ #
@@ -215,7 +222,7 @@ class DraftSession(Session):
             d = self.draft
             out.update(pool=[self._card(u) for u in d.pool], squad=[d.pool.index(u) for u in d.picks],
                        team=TEAM_SIZE, tokens=d.tokens, tokens_max=COMMISSION_TOKENS, pending=list(d.pending_labels),
-                       archetypes=[{"key": a.key, "label": a.label, "desc": a.desc, "style": a.style}
+                       archetypes=[{"key": a.key, "label": a.label, "rule": a.rule, "desc": a.desc, "style": a.style}
                                    for a in ARCHETYPES.values()])
         else:
             out["charter"] = self._charter()

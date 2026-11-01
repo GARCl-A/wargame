@@ -154,6 +154,12 @@ def test_the_draft_welcomes_first_then_names_each_steps_card():
     assert d.tutorial_key() == "draft.identity"
 
 
+def test_a_card_carries_the_rows_its_session_draws_and_a_plain_one_has_none():
+    assert tutorial.card("map")["rows"] == []
+    rows = [{"stamp": {"label": "X", "style": "green"}, "rule": "r", "text": "t"}]
+    assert tutorial.card("draft.pick", rows)["rows"] == rows
+
+
 def test_the_reports_card_follows_its_stage():
     s = ReportSession.__new__(ReportSession)
     s.stages = [("memorial", None), ("report", None), ("level", 0), ("purse", None), ("loot", None), ("map", None)]

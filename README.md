@@ -258,7 +258,8 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
 - **New tutorial card** (a screen or a tab/phase of one): an id in
   `tutorial.TUTORIALS`, a `title`/`body`/optional `suggestion` block under
   `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
-  screen's session (`web/session.py`).
+  screen's session (`web/session.py`). What the copy cannot hold (a list drawn from a registry, later a
+  picture) is `tutorial_rows(key)` on the session: each row is a stamp, a rule and a text, optionally an `image`.
 - **New translated string anywhere else**: a key under its own namespace in
   `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` and `arena_talk.*`
   are the only namespaces converted so far; the rest of the game's text is still

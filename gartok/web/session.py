@@ -35,6 +35,10 @@ class Session:
     def tutorial_key(self):
         return None
 
+    def tutorial_rows(self, key):
+        """The rows of `key`'s card that the session draws from its registries (`tutorial.card`)."""
+        return []
+
     def tutorials(self):
         """The `TutorialState` the card is read and dismissed in: the guild's."""
         guild = getattr(self, "guild", None)

@@ -22,8 +22,11 @@ TUTORIALS = (
 )
 
 
-def card(key):
-    """The copy of `key`'s card: title, paragraphs, an optional closing pointer and the button."""
+def card(key, rows=()):
+    """The copy of `key`'s card: title, paragraphs, an optional closing pointer and the button.
+    `rows` is what the copy cannot hold, drawn by the screen's session from its own registry: each
+    row is {"stamp": {"label", "style"}, "rule", "text"} plus an optional "image" (a url), shown
+    between the paragraphs and the pointer."""
     title = i18n.t(f"tutorial.{key}.title")
     body = i18n.t(f"tutorial.{key}.body")
     if isinstance(body, str):
@@ -32,7 +35,7 @@ def card(key):
     suggestion = i18n.t(suggestion_key) if i18n.has(suggestion_key) else None
     button_key = f"tutorial.{key}.button"
     button = i18n.t(button_key if i18n.has(button_key) else "tutorial.default_button")
-    return {"title": title, "body": list(body), "suggestion": suggestion, "button": button}
+    return {"title": title, "body": list(body), "rows": list(rows), "suggestion": suggestion, "button": button}
 
 
 class TutorialState:

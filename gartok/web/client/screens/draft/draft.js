@@ -78,7 +78,7 @@ function side() {
     const coins = Array.from({length: D.tokens_max}, (_, k) => `<div class="coin ${k < D.tokens ? "" : "spent"}"></div>`).join("");
     body = `<div class="lbl">The squad · ${D.squad.length} of ${D.team}</div>${slots}
       <div class="tokens"><div class="lbl">Commission tokens · ${D.tokens} of ${D.tokens_max}</div><div class="coins">${coins}</div>
-      <p>Call for what the pool lacks (a leader, the strong, the wise). Each archetype costs a token; the card you click next is replaced.</p>
+      <p>${D.tokens ? `${D.tokens} token${D.tokens === 1 ? "" : "s"}: replace a card by one with the tags you pick, a token per tag.` : "Every token is spent; the squad is what the pool gives."}</p>
       <span class="ghost-btn ${D.tokens && !D.pending.length ? "" : "off"}" id="commission">${D.tokens ? "Commission…" : "No tokens left"}</span></div>`;
     const full = D.squad.length === D.team;
     sealHtml("Continue", full ? "to the charter" : `${D.squad.length} of ${D.team} picked`, "gui/contract", !full);
@@ -139,22 +139,27 @@ function slipHtml() {
   return `<div id="veil"></div><div class="paper slip" id="slip">
     <div class="kicker">Commission<em>${room} token${room === 1 ? "" : "s"} left</em></div>
     <h3>Call for what the pool lacks</h3>
-    <div class="why">Tick the archetypes you want in one candidate, a token each. Then click the card they replace; a picked card leaves the squad.</div>
+    <div class="why">Tick the tags you want in one candidate, a token each. Then click the card they replace; a picked card leaves the squad.</div>
     <div class="arcs">${D.archetypes.map(a => {
       const on = sel.includes(a.key), full = !on && sel.length >= room;
       return `<div class="arc ${on ? "on" : full ? "off" : ""}" data-arc="${a.key}"><span class="box">${on ? "✓" : ""}</span>
-        <span class="stamp ${on ? "star" : a.style}">${esc(a.label)}</span><p>${esc(a.desc)}</p></div>`;
+        <span class="stamp ${on ? "star" : a.style}">${esc(a.label)}</span><p><b>${esc(a.rule)}.</b> ${esc(a.desc)}</p></div>`;
     }).join("")}</div>
     <div class="slipfoot"><span class="cost">Costs <b>${sel.length}</b> of ${room}</span>
       <div class="coins">${Array.from({length: room}, (_, k) => `<div class="coin ${k < sel.length ? "use" : ""}"></div>`).join("")}</div>
       <span class="sp"></span><span class="ghost-btn ink" data-slip="cancel">Cancel</span><span class="btn ${sel.length ? "" : "off"}" data-slip="call">Call them</span></div></div>`;
 }
 
+function tokensChip() {
+  const coins = Array.from({length: D.tokens_max}, (_, k) => `<i class="${k < D.tokens ? "" : "spent"}"></i>`).join("");
+  return `<span class="tk"${tip("Commission tokens: replace a card by one with the tags you pick")}>${coins}<b>${D.tokens}</b> of ${D.tokens_max} commission tokens</span>`;
+}
+
 function pool() {
   const head = D.pending.length
     ? `<div class="targetbar"><b>Pick the one to replace</b><span>for ${D.pending.map(esc).join(" + ")} · ${D.pending.length} token${D.pending.length === 1 ? "" : "s"}</span><span class="ghost-btn" data-cancel>Cancel</span></div>`
     : `<div id="head"><h2>The Pool</h2><span>pick ${D.team} of ${D.pool.length} · a click picks, a second click lets go</span>
-       <span class="right">${esc(D.vocation.name)} · one of each of its races</span></div>`;
+       <span class="right">${esc(D.vocation.name)} · one of each of its races</span>${tokensChip()}</div>`;
   return head + `<div id="cards" class="${D.pending.length ? "targeting" : ""}">${D.pool.map(dossier).join("")}</div>` + (slip ? slipHtml() : "");
 }
 
