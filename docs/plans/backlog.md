@@ -60,14 +60,6 @@ the rest.
   enter the recruiters list properly and push the buttons down. Reproduce with two recruits on day 1, fix
   the layout so the list scrolls inside its box and the buttons stay put.
 
-- **Bug: an empty bordered box under "The clock waits" on the map (playtest 2026-11-01).** A screenshot
-  shows a small empty dark box with a thin border under the text of the cta card, left of the "Next band ·
-  none idle" seal (the seal is right: one band waiting, so it is disabled). The box sits where `#swift`
-  (the swift-resolution ghost button, `screens/map/screen.html`) is drawn, but the code says it should be
-  hidden: `Kit.swift` sets `hidden` when the cta has no `swift`, and `kit.css` has `.ghost-btn[hidden]`.
-  Reproduce in a browser with one idle band, find what draws it, and fix it. Test: with no fight due the
-  cta has no visible button.
-
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
   game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
