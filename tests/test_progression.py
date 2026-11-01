@@ -232,10 +232,10 @@ def test_tier2_talent_needs_its_root_first():
 
 
 def test_sure_strike_and_deadeye_key_off_the_attack_attribute():
-    tgt = _combatant(seed=7)
+    tgt = Combatant(standard_unit("enemy"))
 
     def to_hit(weapon, *picks, ammo=False):
-        u = _unit(seed=1)
+        u = standard_unit()
         u.combat_xp = 10
         for p in picks:
             assert u.choose_talent("combat", p)
