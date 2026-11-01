@@ -5,7 +5,9 @@ trail fought as a campaign fight (`campaign_fight._enter`) that comes back here,
 A stretch is rolled as it starts and runs as a `hunting` order (`MapSession.spend`), so every other band's
 order runs with it and the map takes over when another band needs the person; the map keeps this session in
 `MapSession.hunts` and opens it again (`arrive`) when the stretch is up. The live hunt is a `hunt.HuntState`
-held by this session; like pygame, a hunt is never saved (`persist` drops a `hunting` order on load)."""
+held by this session; while a stretch is out it also rides in the `hunting` order (`Order.state`), so a save
+taken then loads with the stretch still running, and the map rebuilds this session from it (`restore`). On the
+screen itself (setup, an interlude, an ambush) the hunt lives only here: a load finds the party back."""
 
 from typing import ClassVar
 
@@ -62,11 +64,21 @@ class HuntSession(Session):
         self.events = []                   # what the clock did during the last stretch
         self.result = None                 # `hunt.grant_haul`'s lines, once banked
         self.pack = None                   # the ambush waiting to be fought
-        self.found = None                  # the stretch out on the clock: what springs when it is up, or None
+        self.found = None                  # the stretch out on the clock: "wilds", "biwolf", "ox" or None
         self.look = Look()                 # its clean-stomp estimate
         self.notice = None
         if self.phase is None:
             self._begin()
+
+    @classmethod
+    def restore(cls, map_session, group):
+        """The hunt whose stretch `group`'s `hunting` order carries, out on the clock again after a load."""
+        d = group.order.state
+        session = cls(map_session, group, d["hunt"]["target"])
+        session.state_ = hunt.from_dict(d["hunt"], group.members, session.node)
+        session.goes = list(session.state_.party)
+        session.guarded, session.found, session.phase = d["guarded"], d["found"], "out"
+        return session
 
     @property
     def tracking(self):
@@ -176,17 +188,25 @@ class HuntSession(Session):
         self.notice = None
         if self.tracking:
             elapsed, found = ox.track(s, guild)
-            pack = ox.aurochs_pack
+            kind = "ox"
         else:
             lure = hunt.biwolf_lure(guild, s.party)
             s.biwolf = False
             elapsed, found = hunt.hunt_stretch(s, hour=guild.clock.hour_of_day, lure=lure)
-            pack = (lambda: hunt.biwolf_pack(guild)) if s.biwolf else (lambda: hunt.wilds_pack(guild=guild))
-        self.found = pack if found else None
+            kind = "biwolf" if s.biwolf else "wilds"
+        self.found = kind if found else None
         self.phase = "out"
         self.map.hunts[self.group.gid] = self
-        order = orders.Order("hunting", eta=elapsed, remaining=elapsed, crew=tuple(u.uid for u in s.party))
+        order = orders.Order("hunting", eta=elapsed, remaining=elapsed, crew=tuple(u.uid for u in s.party),
+                             state={"hunt": hunt.to_dict(s), "found": self.found, "guarded": self.guarded})
         return self.map.spend(self.group, order)[1]
+
+    def _pack(self, found):
+        if found == "ox":
+            return ox.aurochs_pack()
+        if found == "biwolf":
+            return hunt.biwolf_pack(self.guild)
+        return hunt.wilds_pack(guild=self.guild)
 
     def arrive(self):
         """The stretch is up (the map's clock ran it): an ambush springs, or the hunt is over."""
@@ -198,7 +218,7 @@ class HuntSession(Session):
             self._wrap_up()
         else:
             s.fights += 1
-            self.pack = found()
+            self.pack = self._pack(found)
             self.phase = "ambush"
             self.look.clear()
             if not self.tracking:

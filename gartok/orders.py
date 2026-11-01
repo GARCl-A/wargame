@@ -65,6 +65,7 @@ class Order:
     owed: float = 0.0        # supply run: hours of this leg still to walk past the ambush the order stops at
     crew: tuple = ()         # stint: uids of the members it settles for (the performers, the patients)
     wagon: str | None = None  # stint "repair": uid of the wagon being mended
+    state: dict | None = None  # hunting: the hunt out on the clock and what its stretch rolled (`HuntSession`)
 
     @property
     def interactive(self):

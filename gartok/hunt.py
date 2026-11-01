@@ -11,9 +11,9 @@ Meat is the point: it pays no copper, but a haul feeds the guild for days and a
 strong hunter can carry the whole roster's food (see `Unit.share_food`). The
 lumber yard is the safe floor; the wilds are the gamble.
 
-`app` owns the flow (map -> party picker -> `HuntScreen` <-> battle); this module
-is the rules. `HuntState` is the live hunt, carried on `app._hunt` across any
-ambush battles so a screen rebuilt after a fight can pick the hunt back up.
+`web/hunt_session.py` owns the flow; this module is the rules. `HuntState` is the
+live hunt; while a stretch is out on the clock it also rides in the `hunting`
+order (`to_dict`), so a save taken mid-stretch picks the hunt back up.
 """
 
 import random
@@ -63,6 +63,24 @@ class HuntState:
         if self.target == "meat":
             return int(self.yield_hours * self.meat_mult // HUNT_MEAT_HOURS)
         return 0
+
+
+_SCALARS = ("hours_left", "hours_hunted", "yield_hours", "fights", "target", "shrooms_found",
+            "fruit_found", "biwolf", "yield_mult", "ambush_mult", "meat_mult")
+
+
+def to_dict(state):
+    """`state` as the `hunting` order carries it: the people as uids, the node left to the group's."""
+    return {"party": [u.uid for u in state.party], "guards": [u.uid for u in state.guards],
+            **{k: getattr(state, k) for k in _SCALARS}}
+
+
+def from_dict(d, units, node):
+    """The `HuntState` `to_dict` wrote, its people looked up in `units` (anyone gone is left out)."""
+    by_uid = {u.uid: u for u in units}
+    return HuntState([by_uid[i] for i in d["party"] if i in by_uid], node,
+                     guards=[by_uid[i] for i in d["guards"] if i in by_uid],
+                     **{k: d[k] for k in _SCALARS})
 
 
 def begin(guild, party, node, stance, hours_left=0, target="meat", guards=()):

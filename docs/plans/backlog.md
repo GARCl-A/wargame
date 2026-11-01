@@ -72,22 +72,12 @@ the rest.
 
 ## Medium
 
-- **A hunt out on the clock must survive a save (decided 2026-11-01).** Since the one-clock change a hunt
-  stretch is a `hunting` order the map runs while the player plays the other bands, so a save is taken
-  mid-hunt all the time (every map landing autosaves). Today `persist.group_from_dict` drops that order:
-  on load the party is back idle and loses the hours spent and the haul so far, which makes no sense now
-  that the hunt is just another order. Save it: the `hunt.HuntState` (party and guard uids, hours left and
-  hunted, `yield_hours`, finds, fights, target, multipliers, Biwolf) and what the stretch rolled (an ambush
-  or not, and whose: Biwolf, Wilds pack, the ox) go into the `hunting` `Order` itself (decided 2026-11-01:
-  the order, not a field on `Group`, so later orders can carry their own state the same way), and on load
-  `MapSession.hunts` is rebuilt from it so the stretch comes due and `HuntSession.arrive` opens as usual.
-  Today the ambush pack is rolled at arrival, so it needs no saving; once *An ambush needs a pack with a
-  chance to win* rolls it inside the stretch, the pack goes into the order too.
-  Change the AGENTS.md / RULES.md rule
-  "a battle or hunt in progress is never saved" to "a battle in progress is never saved" and drop the
-  `hunting` case from `persist` and its test in `tests/test_one_clock.py`. Tests: save and load mid-stretch
-  keeps the clock, the party, the yield and the ambush; a save with the hunt screen open (setup,
-  interlude) still refuses or keeps working as it does now.
+- **A hunt's stretch that came due behind the hand-over card is lost on load (2026-11-01).** A `hunting`
+  order rides in the save while it runs, but once it is up and waits on the card for GO ON
+  (`MapSession._land`) the order is gone from the group and the autosave there finds the band idle: a
+  load loses the hours and the haul. Same for an ambush up on the hunt screen. Small: keep the due order
+  on the group (or in `Group.pending`) until `HuntSession.arrive`. Test: save on the card, load, the
+  stretch's end opens the hunt screen.
 
 - **Audit: which fights are ambushes and which are not (author 2026-10-31).** Do it before *An ambush
   needs a pack with a chance to win*, because the check only belongs to the ambushes.
@@ -124,8 +114,8 @@ the rest.
   it. In code the check sits where each ambush is caught (the catch returns None, `gather_shift` banks the
   haul, the hunt stretch keeps spending hours), so only the fights the audit marks **ambush** get it,
   never a forced or story fight (`Group.pending` from a quest, the Biwolf escort). The hunt rolls its pack
-  at arrival today; the check needs it rolled in the stretch, which feeds *A hunt out on the clock must
-  survive a save*. Open: the threshold, the pack's win chance below which it does not attack (a first
+  at arrival today (the `hunting` order saves only whose it is, `Order.state["found"]`); the check needs it
+  rolled in the stretch, and then the pack rides in the order too (`Order.pack`, already saved). Open: the threshold, the pack's win chance below which it does not attack (a first
   guess is ~15%, tuned with `sim_test.py`).
   Tests: eight L3 against two L0 wolves never opens a fight and leaves no trace in the log, a lone L0
   against the same wolves does, the ambush chance itself is unchanged, forced fights are untouched, the
