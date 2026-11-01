@@ -2,30 +2,19 @@
 
 ```
 assets/
-  icons/            game-icons.net silhouettes (SVG). LOADED at runtime.
-    action/ body/ gui/ hat/ head/    flattened <category>/<name>.svg  (no per-author dir)
-    map/                 drawn for this game: the map nodes and occupations game-icons.net lacks
-    LICENSE.txt          CC BY 3.0 — see file (covers everything but map/)
-  portraits/        engraved medallion portraits, one folder per race.
-  sounds/           Kenney sound effects (OGG, CC0, LICENSE.txt). `gartok/sound.py` names each cue's files;
-                    the full packs live in the git-ignored scratch/audios/.
+  icons/       SVG silhouettes, white on transparent: action/ body/ gui/ hat/ head/ item/ flattened to
+               <category>/<name>.svg (game-icons.net, no per-author dir), and map/, drawn for this game
+               (the map nodes and occupations game-icons.net lacks). LICENSE.txt covers all but map/.
+  portraits/   engraved medallion portraits, one folder per race, creature or `npc`, numbered PNGs.
+  sounds/      Kenney sound effects (OGG, CC0, LICENSE.txt); `gartok/sound.py` names each cue's files.
 ```
 
-## icons/ — used by the game
+Who reads them: `gartok/art_files.py` says where each file is (portrait of a unit, `RACE_ICON`,
+`OCCUPATION_ICON`, banner emblems; `map_view.NODE_ICON` for the nodes), the web serves them as they are
+under `/assets/`, and `editor/artwork.py` rasterises and tints the SVGs for pygame. A race, occupation
+or node without a glyph fails a test (`AGENTS.md`); new portraits go in through the `gen-portrait` skill.
 
-`gartok/artwork.py` loads these on demand, rasterises each SVG once at the size
-asked for, tints it, and caches by `(category, name, px, colour)`:
+`map/` is plain filled shapes on a 512 box: a clockwise subpath fills, a counter-clockwise one cuts a hole.
 
-- `head/` -- `ui.primitives.token_badge` draws the unit's **race silhouette** on the
-  team-coloured disc (`artwork.RACE_ICON` maps race name -> file), falling back to the
-  board letter when a race has no glyph.
-- the **occupation** glyph leads the race / occupation line of the character sheet, the
-  member rows and the guild screen (`artwork.OCCUPATION_ICON`, `artwork.occupation_icon`).
-- the **map nodes** each draw their own glyph (`map_screen.NODE_ICON`).
-
-`tests/test_icons.py` fails for a node or an occupation with no glyph, or one whose file is
-missing. `map/` is drawn as plain filled shapes on a 512 box (clockwise subpaths fill, a
-counter-clockwise one cuts a hole).
-
-Adding an icon: drop a white-on-transparent SVG into the right folder, reference
-it by bare name (`artwork.icon("head", "orc-head", 24)`).
+Adding an icon: drop a white-on-transparent SVG into the right folder and reference it by bare name
+(`artwork.icon("head", "orc-head", 24)`).

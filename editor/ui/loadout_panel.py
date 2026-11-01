@@ -19,10 +19,32 @@ import pygame
 
 from editor import icons
 from editor.ui import load_meter
-from editor.ui.inspector_panel import ROLE_MARK, draw_role
 from editor.ui.item_icons import draw_icon
 from editor.ui.primitives import caps, contained, draw_button, hline, scrollbar, text
 from editor.ui.tokens import T, mix
+
+ROLE_MARK = {"vanguard": "shield", "archer": "bow", "hand": "sword", "healer": "cross", "wagon": "wagon"}
+
+
+def draw_role(surf, p, kind, c):
+    x, y = p
+    if kind == "shield":
+        pygame.draw.polygon(surf, c, [(x, y - 6), (x + 5, y - 3), (x + 5, y + 2),
+                                      (x, y + 6), (x - 5, y + 2), (x - 5, y - 3)], 1)
+    elif kind == "bow":
+        pygame.draw.arc(surf, c, pygame.Rect(x - 5, y - 6, 10, 12), -1.2, 1.2, 1)
+        pygame.draw.line(surf, c, (x + 3, y - 5), (x + 3, y + 5), 1)
+    elif kind == "wagon":
+        pygame.draw.rect(surf, c, pygame.Rect(x - 5, y - 4, 10, 6), 1)
+        pygame.draw.circle(surf, c, (x - 3, y + 4), 2, 1)
+        pygame.draw.circle(surf, c, (x + 3, y + 4), 2, 1)
+    elif kind == "cross":
+        pygame.draw.line(surf, c, (x, y - 5), (x, y + 5), 2)
+        pygame.draw.line(surf, c, (x - 4, y - 1), (x + 4, y - 1), 2)
+    else:
+        pygame.draw.line(surf, c, (x - 4, y + 5), (x + 4, y - 5), 2)
+        pygame.draw.line(surf, c, (x - 3, y - 3), (x + 2, y + 2), 1)
+
 
 TAG_COLOR = {"": T.TX_FAINT, "WEAPON": T.TX_MUTED, "ARMOR": T.TX_MUTED,
              "AMMO": T.TX_FAINT, "HEAL": T.GREEN, "LIGHT": T.BRASS_DIM,
