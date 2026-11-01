@@ -69,8 +69,8 @@ const Tavern = (() => {
     $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${R.prison ? "Prisoners in the cells" : "Strangers in the tavern"}</div>
         <p class="hint">Charisma against Charisma, in a tongue both speak; a tie goes to the ${R.prison ? "prisoner" : "stranger"}.</p>
         <div class="crew">${list}</div></div>
-      <div class="paper ledger"><div class="kicker">Dossier <em>who they are and who could talk them into the guild</em></div>
-        ${R.signed ? signed(R.signed) : ""}${body}
+      <div class="paper ledger recruit"><div class="kicker">Dossier <em>who they are and who could talk them into the guild</em></div>
+        <div class="rbody">${R.signed ? signed(R.signed) : ""}${body}</div>
         <div class="ledgerfoot"><p>${esc(R.foot)}</p></div></div>`;
   }
 

@@ -355,6 +355,11 @@
 .lastpitch.money b{color:#7a5a12}
 .sec.dark{margin-top:18px}
 .sec.dark .lbl{color:#6b5233}
+.ledger.recruit{display:flex;flex-direction:column;box-sizing:border-box;padding-bottom:116px}
+.ledger.recruit .kicker{flex:none}
+.rbody{flex:1;min-height:0;display:flex;flex-direction:column}
+.rbody>*{flex:none}
+.rbody>.pitchers{flex:1 1 auto;min-height:96px}
 .pitchers{margin-top:8px;max-height:310px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(90,60,30,.45) transparent}
 .pterms .fact{margin-top:8px}
 .pterms .fact b{color:#3a2410;min-width:60px}
