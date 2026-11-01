@@ -83,10 +83,21 @@ class MapSession(MapView, Session):
         self.look = Look()
         self.turn = None                         # the hand-over card up: {"gid", "action", "danger", "go"}
         self.hunts = {}                          # gid -> the HuntSession whose stretch is out on the clock
+        self._restore_hunts()
         self.seen = None                         # the band last in view
         self._wait_out_the_sentence()
         due = self._pending_event              # a save taken with a fight due opens on that band
         self.focus = due[0].gid if due else None
+
+    def _restore_hunts(self):
+        """A save taken mid-stretch: each `hunting` order carries its hunt, so its screen opens when it is up."""
+        from .hunt_session import HuntSession
+        for g in self.guild.groups:
+            if g.order is not None and g.order.kind == "hunting":
+                if g.order.state is None:        # a save from before the hunt rode in its order
+                    g.order = None
+                else:
+                    self.hunts[g.gid] = HuntSession.restore(self, g)
 
     # ------------------------------------------------------------------ #
     # what pygame's map reads call                                        #

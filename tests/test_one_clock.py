@@ -193,12 +193,99 @@ def test_an_ambush_springs_on_the_hunt_screen_at_its_hour_with_the_other_band_st
     assert guild.clock.seconds - t0 == 3600 and mill.order.remaining == 5 and not g.busy
 
 
-def test_a_hunt_out_on_the_clock_is_never_saved():
+def _hunt_saved(monkeypatch, ambush, mill_left):
+    """A hunt sent out on a 16 h shift while a mill band has `mill_left` hours to go: the map takes over
+    mid-stretch and autosaves; -> the game rebuilt from that save, its guild, the hunt and the mill."""
     from tests.test_web_hub import _guild
+    from gartok import hunt
+    from gartok.web.map_session import MapSession
+    from gartok.web.server import Game
+    monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", ambush)
+    guild = _guild("wilds")
+    game = Game(MapSession(guild, "w1"))
+    g = guild.groups[0]
+    game.session.act(g.gid, "hunt")
+    _mill(guild, mill_left)
+    hunt_screen = game.session
+    hunt_screen.set_hours(16)
+    assert hunt_screen.start()["screen"] == "map" and g.order.kind == "hunting"
+    loaded = persist.load_game("w1")
+    game = Game(MapSession(loaded, "w1"))
+    return game, loaded, guild, hunt_screen
+
+
+def test_a_save_mid_stretch_loads_with_the_hunt_still_out_on_the_clock(monkeypatch):
+    game, loaded, guild, before = _hunt_saved(monkeypatch, 0, 6)
+    g, mill = loaded.groups
+    assert loaded.clock.seconds == guild.clock.seconds
+    assert g.order.kind == "hunting" and g.order.remaining == 10 and g.busy
+    restored = game.session.hunts[g.gid]
+    s, was = restored.state_, before.state_
+    assert [u.uid for u in s.party] == [u.uid for u in was.party] and all(u in g.members for u in s.party)
+    assert (s.hours_hunted, s.hours_left, s.yield_hours, s.target) == (16, 0, was.yield_hours, "meat")
+    assert restored.phase == "out" and restored.found is None
+    mill.order = orders.work(loaded, mill, 16)
+    m = game.session
+    assert m._after_order()["screen"] == "hunt" and game.session is restored and restored.phase == "done"
+    assert loaded.clock.seconds - guild.clock.seconds == 10 * 3600
+    assert sum(u.count_of("Meat") for u in g.members) == s.meat > 0
+    assert restored.done()["screen"] == "map" and not m.hunts and not g.busy
+
+
+def test_an_ambush_rolled_before_the_save_still_springs_after_the_load(monkeypatch):
+    game, loaded, guild, before = _hunt_saved(monkeypatch, 1, 0.5)
+    g, mill = loaded.groups
+    restored = game.session.hunts[g.gid]
+    assert g.order.remaining == 0.5 and g.order.state["found"] == "wilds" and restored.found == "wilds"
+    assert restored.state_.hours_hunted == 1 and restored.state_.hours_left == 15
+    mill.order = orders.work(loaded, mill, 16)
+    st = game.session._after_order()
+    assert st["screen"] == "hunt" and restored.phase == "ambush" and restored.pack
+    assert restored.state_.fights == 1 and st["ambush"]["title"] == "Ambush in the Wilds!"
+
+
+def test_the_biwolf_and_the_ox_a_stretch_rolled_are_who_springs_after_the_load(monkeypatch):
+    from gartok import hunt, ox, world
+    from gartok.web.hunt_session import HuntSession
+    from tests.test_web_hub import _guild
+    from gartok.web.map_session import MapSession
+    guild = _guild("wilds")
+    g = guild.groups[0]
+    m = MapSession(guild)
+    s = hunt.begin(guild, g.members, world.node("wilds"), g.stance)
+    monkeypatch.setattr(hunt, "biwolf_pack", lambda guild: ["biwolf"])
+    monkeypatch.setattr(ox, "aurochs_pack", lambda: ["ox"])
+    for found, pack in (("biwolf", ["biwolf"]), ("ox", ["ox"])):
+        g.order = orders.Order("hunting", eta=2, remaining=2, state={"hunt": hunt.to_dict(s), "found": found,
+                                                                        "guarded": True})
+        back = persist.group_from_dict(persist.group_to_dict(g))
+        assert HuntSession.restore(m, back)._pack(back.order.state["found"]) == pack
+
+
+def test_a_hunt_on_its_screen_is_not_in_the_save_the_band_loads_back_idle():
+    from tests.test_web_hub import _guild
+    from gartok.web.map_session import MapSession
+    from gartok.web.server import Game
+    guild = _guild("wilds")
+    game = Game(MapSession(guild, "w1"))
+    g = guild.groups[0]
+    game.session.act(g.gid, "hunt")
+    assert game.session.phase == "setup"
+    game.session.map._save()
+    loaded = persist.load_game("w1")
+    assert loaded.groups[0].order is None and loaded.groups[0].node == "wilds"
+    assert not MapSession(loaded, "w1").hunts
+
+
+def test_a_hunting_order_saved_without_its_hunt_is_dropped_on_load():
+    from tests.test_web_hub import _guild
+    from gartok.web.map_session import MapSession
     guild = _guild("wilds")
     g = guild.groups[0]
     g.order = orders.Order("hunting", eta=4, remaining=4, crew=(g.members[0].uid,))
-    assert persist.group_from_dict(persist.group_to_dict(g)).order is None
+    back = persist.group_from_dict(persist.group_to_dict(g))
+    guild.groups = [back]
+    assert not MapSession(guild).hunts and back.order is None
 
 
 def test_only_the_tick_engine_moves_the_clock():

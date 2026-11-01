@@ -1454,8 +1454,10 @@ The `wilds` node (`kind = "wilds"`). Its first activity is **Hunt**: `hunt.py` +
 `web/hunt_session.py`. Pick a party and a shift; the hunt spends hours one at a time,
 with a per-hour **ambush** chance (`hunt.AMBUSH_CHANCE_PER_HOUR`). Each stretch up to an ambush or
 the shift's end is rolled as it starts and runs as a `hunting` order on the shared clock: the screen
-opens again when it is up (after the hand-over card when the map was on another group). A hunt is
-never saved: a load finds the party back, empty-handed. An ambush drops
+opens again when it is up (after the hand-over card when the map was on another group). A stretch on the
+clock is saved with its order (the hunt so far and what the stretch rolled ride in it), so a load finds the
+party still out; a hunt on its own screen (setup, an interlude, an ambush) is not: a load finds the party
+back, empty-handed. An ambush drops
 the party into a **lethal** fight against a scaled pack (`encounters.roll_pack`,
 mean level 0–4). Win it → field loot, and if daylight is left you may keep
 hunting. Meat accrues at 1 kg per 2 hours **at a party yield of 1.0**, split among

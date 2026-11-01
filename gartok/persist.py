@@ -14,10 +14,10 @@ name/banner, the taverna's current weekly pool of would-be recruits). Enemies ar
 battle and battle state lives on a throwaway `Combatant` wrapper, never on the
 `Unit`, so disk never sees it -- a saved unit is always "full HP, standing".
 
-A group's `order` (travel, rest, garrison...) and its `pending` forced order
-(an ambush that came due, enemy pack included) are saved too, so a load picks
-the world back up where it stood.
-Nothing mid-battle or mid-hunt is ever saved (`App._can_save`).
+A group's `order` (travel, rest, garrison, a hunt's stretch with the hunt it
+carries...) and its `pending` forced order (an ambush that came due, enemy pack
+included) are saved too, so a load picks the world back up where it stood.
+Nothing mid-battle is ever saved.
 """
 
 import copy
@@ -219,8 +219,6 @@ def group_from_dict(d):
     group.campfire_expires = d.get("campfire_expires", 0)
     if d["order"]:
         group.order = order_from_dict(d["order"])
-        if group.order.kind == "hunting":       # a hunt is never saved: the party is back, empty-handed
-            group.order = None
     if d["pending"]:
         group.pending = order_from_dict(d["pending"])
     return group
