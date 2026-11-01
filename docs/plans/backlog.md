@@ -78,15 +78,6 @@ the rest.
   it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Bug: split groups do not share the clock when one performs at the tavern (playtest 2026-10-31, the
-  worst one found; it is why the friend stopped playing: it broke the farming plan he had).** After a split, one group did Perform at a tavern while the other worked at the
-  lumber mill. The performance ran and days passed for it, but time did not pass for the group at the
-  mill: it kept working for 48 h and was paid nothing. It blocks a strategy the players like (two
-  musicians playing while the rest levels up). Find where an order that spends days (Perform) advances
-  `world` time and why the other groups' `tick` / orders do not run for the same hours (the shift
-  never finishes, so no wage is banked). Fix so every group's orders advance by the time any group
-  spends. Test: two groups, one Perform for N days and one on a wage shift; the shift ends and pays.
-
 - **Bug: Hook Shield seems to lock when the target is flanked on every side (playtest 2026-10-31).**
   Reported by feel, no repro yet. Hypothesis: the action needs a free cell to pull or place the foe
   and, with every neighbour taken, it neither resolves nor says why. Rebuild it as a fixed board (foe

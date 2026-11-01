@@ -73,10 +73,20 @@ class UpkeepMixin:
     # time + daily upkeep                                                #
     # ------------------------------------------------------------------ #
     def pass_time(self, hours, busy=()):
+        """Hours spent by anything but the map's own jump: one clock for the guild, so every
+        band's order advances by them (`clock_hook`, the session's `tick_outside`, which runs
+        `campaign.advance` and so `run_clock`). Without a session (tests, scripts) it is `run_clock`.
+        `(hours, busy=()) -> (events, casualties)` either way."""
+        if self.clock_hook is None or not self.groups:
+            return self.run_clock(hours, busy)
+        return self.clock_hook(hours, busy)
+
+    def run_clock(self, hours, busy=()):
         """Advance the campaign clock and run daily upkeep for every day it
         crosses. Returns a list of events (missed meals, deaths) for the caller
         to show. This is the only path that moves the clock by hours -- battle
-        time (`clock.advance_rounds`) is seconds and skips upkeep.
+        time (`clock.advance_rounds`) is seconds and skips upkeep. It leaves the
+        bands' orders alone: only `campaign._advance` calls it directly.
 
         `busy` are units doing something that spends the hours without a group
         order carrying it (a hunt, a crafting shift, scouting the claim): they

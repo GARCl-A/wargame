@@ -369,7 +369,7 @@ def _advance(guild, dt=None, busy=()):
 
     before_levels = {u.uid: aftermath.level_snapshot(u) for u in guild.roster}
     start_day = guild.clock.day
-    events, casualties = guild.pass_time(dt, busy=busy)
+    events, casualties = guild.run_clock(dt, busy=busy)
     days_crossed = guild.clock.day - start_day
     if jumped:
         events += guild.eat_now_pass()
