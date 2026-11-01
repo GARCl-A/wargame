@@ -1,18 +1,19 @@
-"""Editing a character in place: the draft's race/occupation swap and the
+"""Editing a character in place: the draft's race/kit swap and the
 sandbox creator's direct setters.
 
 Mixed into `unit.Unit`. Each setter keeps the model whole (re-applies
 attributes, re-derives combat) and round-trips through `persist.unit_to_dict`.
 """
 
-from . import constants, data, economy, magic, names, progression, talents
+from . import constants, data, economy, items, magic, names, progression, talents
 
 
 class EditMixin:
     # ------------------------------------------------------------------ #
-    # draft editing: swap race / occupation before the battle            #
+    # draft editing: swap race / kit before the battle                   #
     # ------------------------------------------------------------------ #
     def set_race(self, name):
+        was_beast = self.race["kind"] == "beast"
         self.race = data.race_by_name(name)
         self._hp_roll = None                  # new hit die -> re-roll HP
         offered = {t.id for t in talents.racial_tree(name)}
@@ -20,8 +21,8 @@ class EditMixin:
         self._configure_race()
         if self.race["kind"] == "beast":
             self._become_beast()
-        elif self.occupation["name"] == data.BEAST_OCCUPATION["name"]:
-            self._apply_occupation()          # leaving a beast body: it needs a real job again
+        elif was_beast:
+            self._roll_kit()                  # leaving a beast body: it needs a weapon again
         self._after_edit()
 
     def _become_beast(self):
@@ -34,12 +35,20 @@ class EditMixin:
         self._apply_beast()
         self._base_inventory, self.locked_items = pack, locked
 
-    def set_occupation(self, name):
+    def set_kit(self, weapon, item):
+        """Replace what the character carries with `weapon` in hand and `item` in the pack
+        (either may be None). A beast fights with its own body and keeps nothing."""
         if self.race["kind"] == "beast":
-            return                            # a beast has no job -- it fights with its own body
-        self.occupation = data.occupation_by_name(name)
-        self._configure_occupation()
+            return
+        self._stock(weapon, item)
         self._after_edit()
+
+    def _stock(self, weapon, item):
+        self.locked_items = {}
+        self.equipped_weapon = weapon
+        self.equipped_offhand = None                  # off hand: a torch or a light source
+        self.equipped_armor = None                    # body slot: bought at the market
+        self._base_inventory = [] if item is None else [items.create_instance(item, 1)]
 
     def _after_edit(self):
         self.token = self.race["token"]

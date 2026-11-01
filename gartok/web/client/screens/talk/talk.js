@@ -167,7 +167,7 @@ function band() {
     if (mute && tongue.length) langs += ` <em>· no ${esc(tongue[0])}</em>`;
     h += `<div class="mem ${sel ? "sel" : ""} ${mute ? "mute" : ""} ${reading ? "" : "pick"}" data-uid="${u.uid}">
       <div class="medal ours">${face(u.portrait, u.name)}</div>
-      <div class="nm"><b>${esc(u.name)}</b><span>${esc(u.race)} ${esc(u.occupation)}</span><div class="tongues">${langs}</div></div>
+      <div class="nm"><b>${esc(u.name)}</b><span>${esc(u.race)}</span><div class="tongues">${langs}</div></div>
       <div class="mods"><div class="mod lead"><b>${sign(u.cha)}</b><span>CHA</span></div><div class="mod"><b>${sign(u.int)}</b><span>INT</span></div></div>
       ${tags.length ? `<div class="tagrow">${tags.join("")}</div>` : ""}</div>`;
   }

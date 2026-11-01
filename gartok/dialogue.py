@@ -176,7 +176,7 @@ class Encounter:
         return self.verbs
 
     def caption(self, unit):
-        return f"{unit.race['name']} {unit.occupation['name']}"
+        return unit.race['name']
 
     def advance(self):
         """The next step once the player has read a `next` result; None goes back to the verbs."""

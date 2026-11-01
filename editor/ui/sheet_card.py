@@ -153,8 +153,8 @@ def _hp_color(cur, mx):
     return T.GREEN
 
 
-def _occ_glyph(s, occupation, x, cy, color, px=14):
-    img = artwork.occupation_icon(occupation, px, color)
+def _race_glyph(s, race, x, cy, color, px=14):
+    img = artwork.race_icon(race, px, color)
     if img is None:
         return x
     s.blit(img, img.get_rect(midleft=(x, cy)))
@@ -165,16 +165,16 @@ def _occ_glyph(s, occupation, x, cy, color, px=14):
 def _b_identity(s, F, r, ch, d, ed, mouse, tip):
     if d == "compact":
         text(s, F["bodyb"], ch["name"], (r.x, r.y), T.TX)
-        gx = _occ_glyph(s, ch["occ"], r.x, r.y + T.S * 2 + 2 + 6, T.TX_FAINT, px=12)
-        caps(s, F["micro"], f"{ch['race']} · {ch['occ']}", (gx, r.y + T.S * 2 + 2), T.TX_FAINT)
+        gx = _race_glyph(s, ch["race"], r.x, r.y + T.S * 2 + 2 + 6, T.TX_FAINT, px=12)
+        caps(s, F["micro"], f"{ch['race']}", (gx, r.y + T.S * 2 + 2), T.TX_FAINT)
         return
     dr = T.S * 3 if d == "normal" else T.S * 4
     cx, cy = r.x + dr, r.y + dr
     token_badge(s, F, (cx, cy), ch["unit"], r=dr)
     x = r.x + dr * 2 + T.S * 2
     text(s, F["titleb"] if d == "full" else F["nameb"], ch["name"], (x, r.y), T.TX)
-    gx = _occ_glyph(s, ch["occ"], x, r.y + T.S * 3 + 4 + 6, T.TX_MUTED)
-    caps(s, F["micro"], f"{ch['race']} · {ch['occ']}", (gx, r.y + T.S * 3 + 4), T.TX_MUTED)
+    gx = _race_glyph(s, ch["race"], x, r.y + T.S * 3 + 4 + 6, T.TX_MUTED)
+    caps(s, F["micro"], f"{ch['race']}", (gx, r.y + T.S * 3 + 4), T.TX_MUTED)
     if d == "full":
         caps(s, F["micro"], f"{ch['align']} · {ch['size']} · {ch['age']} yrs · combat {ch['combat']}",
              (x, r.y + T.S * 5 + 4), T.TX_FAINT)
@@ -388,8 +388,8 @@ def draw_row(surf, F, rect, ch, selected=False, tag=None, draw_trailing=None):
     cx = rect.x + T.S * 3
     token_badge(surf, F, (cx, rect.centery), ch["unit"], r=T.S * 2)
     text(surf, F["name"], ch["name"], (rect.x + T.S * 6, rect.centery - 16), T.TX)
-    gx = _occ_glyph(surf, ch["occ"], rect.x + T.S * 6, rect.centery + 4 + 6, T.TX_FAINT, px=12)
-    caps(surf, F["micro"], f"{ch['race']} · {ch['occ']}",
+    gx = _race_glyph(surf, ch["race"], rect.x + T.S * 6, rect.centery + 4 + 6, T.TX_FAINT, px=12)
+    caps(surf, F["micro"], f"{ch['race']}",
          (gx, rect.centery + 4), T.TX_FAINT)
     
     if draw_trailing:
@@ -402,6 +402,6 @@ def draw_row(surf, F, rect, ch, selected=False, tag=None, draw_trailing=None):
             caps(surf, F["micro"], ch["status"][0], (rect.right - T.S * 2, rect.centery + 2),
                  T.BLOOD, right=True)
     if tag:
-        label_w = F["micro"].size(f"{ch['race']} · {ch['occ']}".upper())[0]
+        label_w = F["micro"].size(f"{ch['race']}".upper())[0]
         caps(surf, F["micro"], tag, (gx + label_w + T.S * 2, rect.centery + 4),
              T.BRASS)

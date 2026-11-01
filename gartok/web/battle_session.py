@@ -649,14 +649,13 @@ class BattleSession(Session):
 
     def _sheet(self, u):
         w = u.weapon
-        occupation = u.char.occupation
         return {
             "id": self.uid(u), "name": u.name, "side": self._side(u), "seat": self._seat(u),
             "level": u.char.racial_level if u.team == self.team else None,
             "tracks": ({"combat": u.char.combat_level, "work": u.char.work_level, "magic": u.char.magic_level}
                        if u.team == self.team else None),
             "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
-            "race": u.race["name"], "occupation": occupation["name"] if isinstance(occupation, dict) else occupation,
+            "race": u.race["name"],
             "alignment": u.char.alignment,
             **self._health(u),
             "ac": u.ac if u.team == self.team else None,

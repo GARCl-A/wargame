@@ -10,12 +10,13 @@ from gartok import ai, campaign, cohesion, dialogue, persist, talents, vision
 from gartok.actions.base import _held_line, _resolve_hit
 from gartok.guild import Guild
 from gartok.unit_hunger import BLOOM_FRUIT
-from tests.helpers import Battle, GroundObject, Unit, actions, data, patch_action_d20
+from tests.helpers import Battle, GroundObject, Unit, actions, data, duelists, patch_action_d20
 
 
 def _racial(race, *picks, team="player", seed=0):
     random.seed(seed)
     u = Unit(team, race=data.race_by_name(race))
+    u._stock("Quarterstaff", None)
     u.set_track_level("racial", 15)
     for p in picks:
         assert u.choose_talent("racial", p), p
@@ -546,8 +547,10 @@ def test_ai_centaur_leaves_a_standing_ally_alone():
 def _sweep_board(second=True):
     liz = _racial("Lizardfolk", "tail_sweep")
     liz.strength = 18
+    liz._stock("Dagger", None)
     liz._derive_combat()
-    foes = [Unit("enemy"), Unit("enemy")] if second else [Unit("enemy")]
+    foes = [duelists()[1], duelists()[1]] if second else [duelists()[1]]
+    random.seed(0)
     batt = Battle([liz], foes)
     l = batt.player_units[0]
     batt.board.walls = set()

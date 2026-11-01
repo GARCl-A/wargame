@@ -61,8 +61,8 @@ dismissed item is deleted, never kept with a note, the record is the git log).
   (`ItemDef.has_trait()`), talents `talents.py`, items `items.py` (single source), node services
   `node_functions.py` (each order kind has its tab in `web/hub_session.HUB_KINDS`), forced events
   `forced.EVENTS`.
-- **Tests fail on a missing entry:** every item needs an `item_icon.ICONS` entry; every race,
-  occupation and node a glyph (`art_files.RACE_ICON`, `OCCUPATION_ICON`, `map_view.NODE_ICON`);
+- **Tests fail on a missing entry:** every item needs an `item_icon.ICONS` entry; every race
+  and node a glyph (`art_files.RACE_ICON`, `map_view.NODE_ICON`);
   every base material a source (`sources.py`); `REFERENCE.md` must match the registries.
 - **Combat log:** every `Action.execute`, end of turn and flag/trap goes through
   `CombatLog.record`, human or AI, so a fight rebuilds from its JSONL alone.

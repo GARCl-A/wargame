@@ -5,7 +5,7 @@ effect of the RACIAL ABILITIES were designed here for the wargame, keeping the
 d20 style.
 
 Naming: everything is English -- identifiers and the domain *content* (race,
-occupation, alignment, size, language, weapon and item names). `RULES.md` is the
+alignment, size, language, weapon and item names). `RULES.md` is the
 design-prose doc; `python -m gartok.reference` turns these tables into
 `REFERENCE.md`, the authoritative catalog.
 """
@@ -196,8 +196,8 @@ LANGUAGES = sorted({r["language"] for r in _RACES})
 # --------------------------------------------------------------------------- #
 # Beasts: the first non-humanoid `kind` -- enemy-only (never rolled as a       #
 # player's race), scaled through `encounters.build_enemy` exactly like a      #
-# humanoid, but with no occupation (see `Unit._apply_beast`): a beast never   #
-# carries a job's weapon/item, it fights with its own body (unarmed damage +  #
+# humanoid, but with no kit (see `Unit._apply_beast`): a beast never carries  #
+# a starting weapon/item, it fights with its own body (unarmed damage +  #
 # its racial ability's `melee_damage`) and drops its own `drop_item` instead  #
 # of gear (`loot.field_loot` reads it straight off the race dict -- a new     #
 # beast's material is just two more columns here, not a change to loot.py).  #
@@ -228,7 +228,7 @@ def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
 
 _BEASTS = [_beast_dict(*row) for row in BEASTS]
 
-# Undead are not animals: they keep a job (an occupation, its weapon and item),
+# Undead are not animals: they carry a weapon and an item like a recruit,
 # but like a beast they are never rolled as a player race -- authored in the
 # creator or placed by hand (the ruins).
 UNDEAD = [
@@ -264,9 +264,6 @@ GOBLIN_POOL = [r for r in _RACES if r["name"] == "Goblin"]
 KOBOLD_POOL = [r for r in _RACES if r["name"] == "Kobold"]
 HOBGOBLIN_POOL = [r for r in _RACES if r["name"] == "Hobgoblin"]
 GOBLINOID_POOL = GOBLIN_POOL + HOBGOBLIN_POOL
-
-BEAST_OCCUPATION = {"name": "Wild Beast", "weapon": None, "item": None}
-
 
 _RACE_THRESHOLDS = [row[0] for row in RACES]
 RACE_NAMES = [r["name"] for r in _RACES]
@@ -408,71 +405,6 @@ def alignment_distance(a, b):
 
 
 # --------------------------------------------------------------------------- #
-# Occupations   (threshold = upper bound on a d100 roll)                       #
-# --------------------------------------------------------------------------- #
-
-OCCUPATIONS = [
-    (5,   "Butcher",  "Hatchet",    "Meat"),
-    (11,  "Farmer",  "Hatchet",    "Potato"),
-    (14,  "Craftsman",     "Light Hammer",  "Chisel"),
-    (19,  "Barber",    "Dagger",         None),
-    (21,  "Crossbowman",    "Light Crossbow",    "Quiver"),
-    (25,  "Hunter",     "Shortspear",   "Bear Trap"),
-    (27,  "Jailer",  "Club",         "Chains"),
-    (28,  "Cartographer",  "Dagger",         None),
-    (29,  "Brewer",  "Dagger",         "1L Beer"),
-    (32,  "Merchant", "Dagger",         "Semi-precious Gemstone"),
-    (35,  "Builder",  "Hammer",       "Stone Brick"),
-    (38,  "Tanner",    "Dagger",         "1sqm Hide"),
-    (40,  "Gravedigger",     "Light Pick", None),
-    (42,  "Slave",     "Club",         "Rotten Food"),
-    (43,  "Scribe",     "Dagger",         "Scroll"),
-    (46,  "Blacksmith",    "Hammer",       "Iron Bar"),
-    (48,  "Guard",      "Club",         "Lantern"),
-    (51,  "Guide",        "Quarterstaff",        None),
-    (55,  "Gambler",     "Dagger",         None),
-    (61,  "Thief",      "Dagger",         "Cloak"),
-    (67,  "Woodcutter",    "Axe",       "Lumber"),
-    (68,  "Linguist",   "Dagger",         "Dictionary"),
-    (69,  "Physician",      "Dagger",         "First Aid Kit"),
-    (72,  "Messenger",  "Quarterstaff",        "Ink"),
-    (77,  "Mercenary",  "Axe",       "Rope"),
-    (81,  "Miner",   "Pick",      "1kg Coal"),
-    (85,  "Musician",      "Dagger",         "Musical Instrument"),
-    (88,  "Goldsmith",     "Dagger",         None),
-    (91,  "Priest",       "Quarterstaff",        "Holy Symbol"),
-    (96,  "Shepherd",      "Quarterstaff",        None),
-    (100, "Innkeeper",  "Dagger",         "Salt"),
-]
-
-
-def _occupation_dict(threshold, name, weapon, item):
-    return {"name": name, "weapon": weapon, "item": item}
-
-
-_OCCUPATIONS = [_occupation_dict(*row) for row in OCCUPATIONS]
-_OCCUPATION_THRESHOLDS = [row[0] for row in OCCUPATIONS]
-OCCUPATION_NAMES = [o["name"] for o in _OCCUPATIONS]
-
-
-def roll_occupation():
-    r = random.randint(1, 100)
-    for threshold, occupation in zip(_OCCUPATION_THRESHOLDS, _OCCUPATIONS):
-        if r <= threshold:
-            return dict(occupation)
-    return None
-
-
-def occupation_by_name(name):
-    if name == BEAST_OCCUPATION["name"]:
-        return dict(BEAST_OCCUPATION)
-    for occupation in _OCCUPATIONS:
-        if occupation["name"] == name:
-            return dict(occupation)
-    return None
-
-
-# --------------------------------------------------------------------------- #
 # Alignments   (threshold = upper bound on a d100 roll)                        #
 # --------------------------------------------------------------------------- #
 
@@ -487,28 +419,6 @@ ALIGNMENTS = [
     (97,  "Chaotic and Neutral"),
     (100, "Chaotic and Evil"),
 ]
-
-
-_HEAL_OCC = {"Priest", "Herbalist", "Physician", "Healer"}
-_GUARD_OCC = {"Guard", "Soldier", "Mercenary", "Watchman"}
-
-
-def role_for(occupation):
-    """Combat-role glyph key (into `ROLE_MARK`) for an occupation dict --
-    shared by every roster-ish zone (the map's ROSTER party pips, the
-    group screen's rail/columns) so the same occupation always draws the
-    same icon everywhere. Takes the plain `Unit.occupation` dict, not the
-    `Unit` itself."""
-    weapon = ((occupation or {}).get("weapon") or "").lower()
-    if "bow" in weapon or "crossbow" in weapon:
-        return "archer"
-    name = (occupation or {}).get("name", "")
-    if name in _HEAL_OCC:
-        return "healer"
-    if name in _GUARD_OCC:
-        return "vanguard"
-    return "hand"
-
 
 def roll_alignment():
     r = random.randint(1, 100)

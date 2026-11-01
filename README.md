@@ -57,6 +57,7 @@ gartok/
   ground.py         ground objects (GroundObject) and neutral creatures (Creature)
   scenario.py       builds a battle's map: terrain, deployment, torches; win_check seam
   encounters.py     enemy packs scaled to a target mean level
+  starter_kit.py    the random weapon and item a fresh recruit starts with
   outfit.py         a generated enemy's kit bought with its racial level's budget
   matchup.py        (node, arena Bout) -> the opponents + the scenario for one fight
   unit.py           Unit = the persistent character (init, save/load, generation), built from mixins:
@@ -192,7 +193,7 @@ gartok/
                     `python main.py` / `python -m gartok` (the title),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   art_files.py      where the art is: portrait_path, BANNER_ICONS, `RACE_ICON` and
-                    `OCCUPATION_ICON` name each race's and occupation's glyph (`map_view.NODE_ICON` the nodes')
+                    name each race's glyph (`map_view.NODE_ICON` the nodes')
   sheet.py          a character's sheet as a plain dict (unit_to_ch)
   lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; the web board draws it
   sound.py          sound cues (assets/sounds/, Kenney CC0) the web plays, `volume` setting; the Editor has its own player
@@ -205,7 +206,7 @@ main.py             entry point (gartok/__main__.py: the browser)
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
 scripts/            the sims and tools; each opens with a docstring saying what it reads and prints:
-                    balance_sim.py (race / occupation rankings), economy_report.py (every economy sim in
+                    balance_sim.py (race / starting weapon rankings), economy_report.py (every economy sim in
                     one report, with verdicts; the other economy_*.py are its parts), economy_offers.py
                     (what a guild can take up today), play_analysis.py (play.jsonl), combat_analysis.py and
                     combat_pairs.py (read the combat logs; the AI replays a person's squads),

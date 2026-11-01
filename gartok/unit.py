@@ -3,7 +3,7 @@
 Ported from the original generator's `personagem.py` and extended with the
 tactical-combat derivatives (speed in squares, HP, AC, carry, ...).
 
-This is the roster entity: race / occupation / attributes / alignment / gold /
+This is the roster entity: race / attributes / alignment / gold /
 hunger / the equipped loadout (`equipped_weapon`, `equipped_offhand`,
 `_base_inventory`). It is what `persist.py` saves and the guild screens edit.
 
@@ -22,7 +22,7 @@ import copy
 import random
 import uuid
 
-from . import abilities, data, economy, items, magic, names, talents
+from . import abilities, data, economy, items, magic, names, starter_kit, talents
 from .data import ATTRIBUTES, roll
 from .unit_derive import DerivationMixin
 from .unit_edit import EditMixin
@@ -87,7 +87,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         if self.race["kind"] == "beast":
             self._apply_beast()
         else:
-            self._apply_occupation()
+            self._roll_kit()
         self.alignment = data.roll_alignment()
         purse = roll(*economy.STARTING_WEALTH_DICE)       # copper coins -- lives on the character, as a pack item
         self.money = 0 if self.race["kind"] == "beast" else purse
@@ -156,11 +156,6 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u._configure_race()
         u.age = d["age"]                                # creator-set age wins over the derived one
         u.languages = [l for l in d["languages"] if l]   # keep the saved picks, don't re-sort; drop blanks
-        u.occupation = data.occupation_by_name(d["occupation"])
-        if u.race["kind"] == "beast":
-            u._apply_beast()
-        else:
-            u._configure_occupation()
         u._base_inventory = pack_from_raw(d["inventory"])
         u.locked_items = dict(d["locked_items"])
         u.equipped_weapon = d["equipped_weapon"]
@@ -290,43 +285,21 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         if "Kobold" in races:
             self.add_magic_source("blood")
 
-    def _apply_occupation(self):
-        self.occupation = data.roll_occupation()
-        self._configure_occupation()
-
     def _apply_beast(self):
         """A beast has no job -- it fights with its own body, not a rolled
         weapon (see `natural_weapons`; the extra bite
         comes off its racial ability's `melee_damage`, like `_configure_race`
         already wires up for anything else the ability grants)."""
-        self.occupation = dict(data.BEAST_OCCUPATION)
         self.equipped_weapon = None
         self.equipped_offhand = None
         self.equipped_armor = None
-        self.item = None
         self._base_inventory = []
         self.locked_items = {}
 
-    def _configure_occupation(self):
-        # A weapon is just a held item: `equipped_weapon` is the one in the weapon
-        # hand (None = fighting unarmed); spares ride in `_base_inventory`.
-        self.locked_items = {}
-        self.equipped_weapon = self.occupation["weapon"]
-        self.equipped_offhand = None                  # off hand: a torch or a light source
-        self.equipped_armor = None                    # body slot: bought at the market
-        self.item = self.occupation["item"]
-        if self.item is None:
-            self._base_inventory = []
-        else:
-            if self.item == "Scroll":
-                nature_spells = [s for s in magic.SPELLS.values() if "nature" in s.sources and s.level == 0]
-                if nature_spells:
-                    self.item = f"Scroll of {random.choice(nature_spells).name}"
-            elif self.item == "Dictionary":
-                foreign = [l for l in data.LANGUAGES if l not in self.languages]
-                if foreign:
-                    self.item = f"Dictionary of {random.choice(foreign)}"
-            self._base_inventory = [items.create_instance(self.item, 1)]
+    def _roll_kit(self):
+        """A weapon is just a held item: `equipped_weapon` is the one in the weapon
+        hand (None = fighting unarmed); spares ride in `_base_inventory`."""
+        self._stock(*starter_kit.roll())
 
     @property
     def title(self):

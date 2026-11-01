@@ -117,34 +117,19 @@ the rest.
 - **Review the cheapest item prices (author 2026-11-01).** Several sit at 1 or 2 copper with no logic:
   a Chisel at 1, a Scroll at 1 (below Paper at 10 and 1sqm Hide at 12), a Cloak and a Torch at 2. Price a
   tool or a crafted good above the material it is made from, then run the `balance` tier and
-  `scripts/economy_report.py`. Do it with or right after *Remove occupations*: the new starting kit draws
-  items by price, so the prices set what a recruit carries.
+  `scripts/economy_report.py`. The starting kit draws items by price, so the prices set what a recruit carries.
 
-- **Remove occupations (decided 2026-10-23). Close this soon, and until then do not maintain the idea.**
-  Occupations are going, so no new code, label, icon, test or sim ranking may lean on them (author
-  2026-10-30): every new screen that prints "Race Occupation" raises the cost of this removal. It is spread
-  over five core modules plus the labels below. The first step of *Needs more information -> Loyalty,
-  the oath and who the members are*: an occupation is only a preset of the starting weapon and item
-  (`unit.py`), so the starting kit is rolled at random and nothing is written on the character.
-  The new kit (author 2026-11-01, numbers are examples to tune): each recruit starts with a random
-  weapon worth up to ~35 copper and a random item worth up to ~20 (author 2026-11-01), drawn from `items.py` by price, so the
-  squad's average value is set and every start has a real weapon (*Playtest notes -> Starting squad is
-  weak*). Since gathering needs the node's tool (`economy.WORK_TOOLS`: Axe, Pick), the draw decides who can
-  gather on day one: the weapon pool is the base weapons only (no Large/Huge) up to 35, so Axe and Pick
-  are in (decided 2026-11-01); the item pool takes raw materials too, only quest items and coins are
-  out (the Sealed Chest is now a quest item and the Box of Gems costs 273, so no list is needed); the purse is 3d4 copper instead of 5d10 (decided 2026-11-01). Check the sim's policies
-  afterwards (`economy_guild.py`: the yard and Mine ones buy an Axe or
-  a Pick for whoever lacks one, and the day-30 milestone prices an Axe). Touches
-  `data.OCCUPATIONS`, `Unit` (roll, save, `unit_edit`), `artwork.OCCUPATION_ICON` and `role_for` (the
-  member's icon needs another source: the race's, or the weapon's), every label that prints
-  "Race Occupation" (tavern, guild, squad, medic, initiation, crafting, watch, `dialogue.py`, the web
-  board and talk), `aftermath.Memorial` and the memorial screen, `recorder.py`, `npc_lib` / `npcs/*.json`,
-  `outfit.py` (level 0 keeps the occupation's kit), `reference.py` / REFERENCE.md, the sims' rankings
-  (`economy_guild.py`, `balance_sim.py`, `unit_compare.py`) and their tests. Saves of the old shape stop
-  loading unless the key gets a default. The occupation-unique items lose their reason to exist: drop
-  them from the start, they come back if a system ever needs them.
-  `tests/helpers.standard_unit` drops its `set_occupation("Guide")` and must still hand back a Quarterstaff
-  and an empty pack.
+- **Retune the economy for the new starting kit (2026-11-01).** The kit is now random and the purse is 3d4
+  copper (`starter_kit.py`, `economy.STARTING_WEALTH_DICE`), against a mean ~56 of value before and ~34
+  now. `scripts/economy_report.py --quick` fails the day-30 milestone (a level-0 `balanced` squad
+  affording food for 7 days, a weapon, Studded Leather and the strongbox: 30% of guilds, 50% needed).
+  Decide whether the milestone or the start moves, then re-run the `balance` tier and the sims. Check
+  `economy_guild.py`'s yard and Mine policies (they buy an Axe or a Pick for whoever lacks one; about 18%
+  of recruits now start with one).
+- **The RANGED commission has no candidate (found 2026-11-01).** The draft's RANGED archetype needs a
+  recruit holding a bow or a crossbow, and no starting weapon (base weapons up to 35 copper) shoots: the
+  cheapest is the Light Crossbow at 80. Decide: a cheap ranged weapon (a sling), a ranged pick outside the
+  price cap, or drop the archetype from the commission.
 
 - **Scroll of Invisibility (Magic Arc).** A Library quest unlocked at max Library reputation with a caster
   initiated in magic (direction 2026-10-19).
@@ -355,7 +340,7 @@ items it touches. Raw feedback, not yet sized:
   double, no donkey to buy) really are the strongest races. Only then rework.
 - **Starting squad is weak.** STR 2 or 3 carries nothing, a bow is too dear, and the start weapon is
   a dagger or a piece of an axe ("at least one real weapon"). The author would take 18 STR, 18 CON and 0
-  elsewhere at level 0. The kit half is in *Remove occupations* (a random weapon and item by price).
+  elsewhere at level 0. The kit half is built (`starter_kit.py`: a random weapon and item by price).
 - **Food was learned wrong.** He bought what looked like 20 days of shelf life and it spoiled; beer
   first (cheap at 4 copper and durable), then Potato; a farm trip for it did not pay against Fruit at the
   grocery. Show shelf life in the shop row. Check the economy report: is beer the best buy per day? No
@@ -441,8 +426,7 @@ has one "Enter" button and its functions are tabs inside.
 - **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
   code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar
   per member; the oath is composed once, by the player; recruiting is one person convincing another;
-  occupations go and the vocation stays on probation. First concrete step: *Remove occupations* in *Ready
-  to do*. The plan ends with its open questions.
+  occupations are gone and the vocation stays on probation. The plan ends with its open questions.
 
 - **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
   targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
@@ -562,7 +546,7 @@ has one "Enter" button and its functions are tabs inside.
     it. Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the
     farm patch comes up.
 
-- **DECIDE HOW HOLY SYMBOL DROPS (author 2026-11-01).** Today only a Priest is born with one, and Faith's
-  rite (`rite.py`) consumes it, so *Remove occupations* leaves the Faith school with no way to get it.
+- **DECIDE HOW HOLY SYMBOL DROPS (author 2026-11-01).** No recruit starts with one (only the Priest did) and no shelf sells it, while Faith's rite
+  (`rite.py`) consumes it, so the Faith school has no way to get it.
   Not for sale at the Market (author's call). Decide the source: a lair pile, a mission reward, a rare
   drop from a given foe, or a temple quest. Until then the rite cannot start in a new game.

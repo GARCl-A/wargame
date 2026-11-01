@@ -94,7 +94,7 @@ function hunter(m) {
   const w = m.work.span ? Math.round(100 * m.work.into / m.work.span) : 100;
   return `<div class="mem on">
     ${m.picks ? `<div class="pick" data-talents="${esc(m.uid)}">Level up (${m.picks})</div>` : ""}
-    <div class="who"><div class="medal">${face(m.portrait, m.name)}</div><div><b>${esc(m.name)}</b><span>${esc(m.race)} ${esc(m.occupation.toLowerCase())}</span></div></div>
+    <div class="who"><div class="medal">${face(m.portrait, m.name)}</div><div><b>${esc(m.name)}</b><span>${esc(m.race)}</span></div></div>
     <div class="vit"><div class="${hurt}"><b>${m.hp[0]}/${m.hp[1]}</b><span>HP</span></div><div><b>${m.ac}</b><span>AC</span></div>
       <div class="${heavy}"><b>${m.load[0]}</b><span>of ${m.load[1]} kg</span></div><div><b>${m.rations}</b><span>rations</span></div></div>
     <div class="work"><span>Work ${m.work.level}</span><div class="bar"><i style="width:${w}%"></i></div><span>WIS ${m.wis >= 0 ? "+" : ""}${m.wis}</span></div>

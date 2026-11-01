@@ -65,7 +65,7 @@ function memorial() {
     const k = m.killer;
     h += `<div class="grave"><div class="tag">In memoriam</div>
       <div class="oval">${face(m.portrait, m.name)}</div>
-      <h2>${esc(m.name)}</h2><div class="cap">${esc(m.race)} ${esc(m.occupation)}${m.founder ? " · one of the founders" : ""}</div>
+      <h2>${esc(m.name)}</h2><div class="cap">${esc(m.race)}${m.founder ? " · one of the founders" : ""}</div>
       <div class="days">${m.days_n}<small>${m.days_n === 1 ? "day" : "days"} with the guild</small></div>
       <div class="span">day ${m.joined} to day ${m.died}</div>
       <div class="rule"></div>
@@ -124,7 +124,7 @@ function report() {
   h += `</div><div></div><div><div class="kicker">The pack<em>${P.foes.length}${lv.length ? `, racial level ${lv.length > 1 ? `${lv[0]}–${lv[lv.length - 1]}` : lv[0]}` : ""}</em></div>`;
   for (const f of P.foes) {
     h += `<div class="fo" data-n="${esc(f.name)}" style="height:${rowH}px"><div class="medal foe ${f.status === "fallen" ? "dead" : ""}" style="width:${rowH * .54}px;height:${rowH * .54}px">${face(f.portrait, f.name)}</div>
-      <div style="min-width:0"><b>${esc(f.name)}</b><span>${esc(f.race)} ${esc(f.occupation)}</span><div class="st ${f.status}">${FOE_STATUS[f.status]}</div></div></div>`;
+      <div style="min-width:0"><b>${esc(f.name)}</b><span>${esc(f.race)}</span><div class="st ${f.status}">${FOE_STATUS[f.status]}</div></div></div>`;
   }
   h += `</div><svg id="blows"></svg></div>
     <div class="legend"><span style="font-style:normal" class="lbl">Who put down whom</span><span><i style="border-color:var(--blueink)"></i>the band's blows</span><span><i style="border-color:var(--redink);border-top-style:dashed"></i>the pack's blows</span></div>
@@ -211,7 +211,7 @@ function level() {
   $("body").innerHTML = `<div class="paper" id="sheet">
     <div class="plate"><div class="tag">${esc(L.tag)}</div><div class="big">${face(L.portrait, L.name)}</div>
       <div class="wax"><b>${L.level}</b><span>${esc(L.track)}</span></div>
-      <h2>${esc(L.name)}</h2><div class="cap">${esc(L.race)} ${esc(L.occupation)}</div></div>
+      <h2>${esc(L.name)}</h2><div class="cap">${esc(L.race)}</div></div>
     <div class="gains"><div class="kicker">${esc(L.track.toLowerCase())} level ${head ? `${head[1]} to ${head[2]}` : L.level}<em>what rose</em></div>
       <h3>${esc(L.name)} is now a level ${L.level} ${ROLE[L.track]}${L.track === "COMBAT" && L.xp_gain
         ? `<small>${L.xp_gain} XP from the ${esc(R.place)} carried them over the line.</small>` : ""}</h3>

@@ -246,8 +246,7 @@ class ArenaSession(Session):
                           "tone": "warn"})
         if u.pending_picks:
             flags.append({"text": "Talent pick ready", "tone": "good"})
-        return {"uid": u.uid, "name": u.name, "race": u.race["name"], "occupation": u.occupation["name"],
-                "portrait": _portrait(u), "hp": [max(0, u.hp), u.hp_max], "ac": u.ac, "md": u.mental_defense,
+        return {"uid": u.uid, "name": u.name, "race": u.race["name"],                 "portrait": _portrait(u), "hp": [max(0, u.hp), u.hp_max], "ac": u.ac, "md": u.mental_defense,
                 "speed": u.speed, "weapon": u.weapon.name, "dmg": f"{n}d{faces}",
                 "money": u.money, "money_text": fmt_money(u.money), "level": lvl, "flags": flags,
                 "unfit": u.incapacitated, "picked": u in self.picked,

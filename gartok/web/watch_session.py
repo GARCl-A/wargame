@@ -14,7 +14,7 @@ def watch_state(group, goes):
     node = world.node(group.node)
     guards = [u for u in group.members if u not in goes]
     return {"members": [{"uid": u.uid, "name": u.name, "portrait": _portrait(u),
-                         "what": f"{u.race['name']} {u.occupation['name'].lower()}",
+                         "what": u.race['name'],
                          "level": f"level {u.combat_level}", "goes": u in goes} for u in group.members],
             "going": len(goes), "outside": len(guards), "guarded": bool(guards),
             "risk": wagon_watch.risk(group, node), "place_risk": node.wagon_risk,

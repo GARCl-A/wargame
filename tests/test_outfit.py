@@ -64,7 +64,7 @@ def test_the_budget_climbs_with_the_level_and_holds_past_the_table():
     assert outfit.budget(-1) == costs[0]
 
 
-def test_level_zero_keeps_the_occupation_kit():
+def test_level_zero_keeps_the_starting_kit():
     u = _body()
     outfit.outfit(u, 0)
     assert u.equipped_weapon == "Club" and u.equipped_armor is None
@@ -113,7 +113,7 @@ def test_a_clumsy_body_buys_the_heaviest_armour_it_carries():
     assert clumsy.equipped_armor == "Plate Armor"
 
 
-def test_the_archetype_comes_from_the_stats_not_the_occupation():
+def test_the_archetype_comes_from_the_stats_not_the_starting_weapon():
     assert outfit.archetype(_body(strength=16, dexterity=10), SHOOTS) == outfit.STRENGTH
     assert outfit.archetype(_body(strength=10, dexterity=16), SHOOTS) == outfit.RANGED
     assert outfit.archetype(_body(strength=10, dexterity=16), STABS) == outfit.FINESSE
@@ -144,7 +144,7 @@ def test_a_lantern_in_the_pack_goes_to_the_off_hand_instead_of_a_torch():
     assert u.count_of(items.LANTERN_ITEM) == 0
 
 
-def test_an_archer_gets_a_bow_and_a_quiver_whatever_the_occupation():
+def test_an_archer_gets_a_bow_and_a_quiver_whatever_the_starting_kit():
     u = _body(weapon="Hammer", dexterity=16)
     outfit.outfit(u, 6, SHOOTS)
     assert items.get(u.equipped_weapon).range
@@ -195,7 +195,7 @@ def test_beasts_are_never_outfitted():
 
 def test_build_enemy_outfits_a_humanoid_by_its_racial_level():
     random.seed(4)
-    u = encounters.build_enemy(5)
+    u = encounters.build_enemy(5, race_pool=(data.race_by_name("Human"),))
     assert u.racial_level == 5
     assert u.equipped_armor is not None or u.encumbered
     assert u.count_of(outfit.POTION) > 0 or u.encumbered

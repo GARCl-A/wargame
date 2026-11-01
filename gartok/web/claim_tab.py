@@ -136,7 +136,7 @@ class ClaimTab:
     def _member(self, u):
         held = [{"name": n, "qty": u.count_of(n)} for n in CARRIED if u.count_of(n)]
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u),
-                "sub": f"{u.race['name']} {u.occupation['name'].lower()} · HP {u.hp} / {u.hp_max}", "held": held}
+                "sub": f"{u.race['name']} · HP {u.hp} / {u.hp_max}", "held": held}
 
     def hub_cards(self):
         g, stage = self.guild, self.stage

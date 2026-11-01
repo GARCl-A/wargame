@@ -212,10 +212,10 @@ def test_keep_fed_at_low_shops_when_the_larder_is_empty():
 
 
 def test_the_analysis_tells_who_died_and_how(tmp_path):
-    rows = [{"e": "death", "t": 2 * SECONDS_PER_DAY, "name": "Ana", "race": "Elf", "occupation": "Smith",
+    rows = [{"e": "death", "t": 2 * SECONDS_PER_DAY, "name": "Ana", "race": "Elf",
              "combat": 0.3, "work": 1.0, "cause": "combat", "how": "death_save", "round": 5,
              "foes": ["Wolf"], "trail": ["The Wolf bites Ana.", "Ana goes down"], "money": 5, "food_days": 1.0},
-            {"e": "death", "t": 4 * SECONDS_PER_DAY, "name": "Bo", "race": "Orc", "occupation": "Slave",
+            {"e": "death", "t": 4 * SECONDS_PER_DAY, "name": "Bo", "race": "Orc",
              "combat": 0.0, "work": 0.0, "cause": "starvation", "unfed_days": 3, "money": 0, "food_days": 0.0}]
     out = pa.death_report(rows, "run")
     assert "2 lost" in out and "Ana" in out and "death save in round 5 vs Wolf" in out

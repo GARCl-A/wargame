@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import Battle, Unit, abilities, actions, data, fixed_d20
+from tests.helpers import Battle, Unit, abilities, actions, data, duelists, fixed_d20
 
 
 def _set_stats(combatant, **scores):
@@ -14,7 +14,9 @@ def _set_stats(combatant, **scores):
 
 def _pit_battle(depth=2, rope=False):
     random.seed(3)
-    batt = Battle([Unit("player")], [Unit("enemy")])
+    side_a, side_d = duelists()
+    batt = Battle([side_a], [side_d])
+    batt.ambient_light = True
     a, d = batt.units
     a._ability = d._ability = abilities.get("none")
     a.pos, d.pos = (5, 5), (6, 5)

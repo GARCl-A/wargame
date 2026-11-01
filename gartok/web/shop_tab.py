@@ -6,7 +6,6 @@ the purse and the deeds stay one source.
 """
 
 from .. import art_files, economy, item_icon, items, store_column, trade
-from ..data import role_for
 from .session import asset_url
 
 SLOTS = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Armour"), ("artifact", "Artifact"))
@@ -126,7 +125,7 @@ class ShopTab:
                          "sell": economy.sell_price(name, self.m.deal) if name else None,
                          "tip": _tip(name) if name else ""})
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
-                "sub": f"{u.race['name']} · {u.occupation['name']}", "role": role_for(u.occupation),
+                "sub": u.race['name'],
                 "voice": voice, "hurt": u.hp < u.hp_max,
                 "money": u.money, "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max,
                 "worn": worn, "pack": self._pack(u)}

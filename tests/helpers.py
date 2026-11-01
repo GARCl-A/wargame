@@ -36,9 +36,10 @@ def packed(names):
 
 
 def _unit(**over):
-    """A deterministic Unit for tests: seeded roll with overridden fields."""
+    """A deterministic Unit for tests: seeded roll (race and attributes) with a fixed kit and overridden fields."""
     random.seed(over.pop("seed", 0))
     u = Unit(over.pop("team", "player"))
+    u._stock("Quarterstaff", None)
     for k, v in over.items():
         setattr(u, k, v)
     return u
@@ -50,7 +51,7 @@ def standard_unit(team="player"):
     about a roll starts here and sets what it is about on top; each call is a fresh copy."""
     u = Unit(team, name="Standard")
     u.set_race("Human")
-    u.set_occupation("Guide")
+    u.set_kit("Quarterstaff", None)
     for a in data.ATTRIBUTES:
         u.base_attributes[a] = 10
     u.languages = ["Ankarin"]
@@ -66,6 +67,30 @@ def standard_unit(team="player"):
     u._derive_combat()
     u.hp = u.hp_max
     return u
+
+
+def _body(team, race, attributes, hp_roll, language, age, weapon):
+    u = standard_unit(team)
+    u.set_race(race)
+    u.base_attributes.update(attributes)
+    u.languages = [language]
+    u._hp_roll = hp_roll
+    u._age_base = u.age = age
+    u.alignment = "Neutral and Good"
+    u._stock(weapon, None)
+    u._apply_attributes()
+    u._derive_combat()
+    u.hp = u.hp_max
+    return u
+
+
+def duelists():
+    """The two bodies the duel boards were tuned on: a Lizardfolk (player) and a Grippli (enemy),
+    two peoples with no tongue in common."""
+    return (_body("player", "Lizardfolk", dict(strength=12, dexterity=10, constitution=15, intelligence=7,
+                                               wisdom=12, charisma=10), 7, "Draconic", 53, "Quarterstaff"),
+            _body("enemy", "Grippli", dict(strength=13, dexterity=8, constitution=5, intelligence=12,
+                                           wisdom=16, charisma=14), 5, "Sylvan", 111, "Dagger"))
 
 
 def _combatant(**over):
@@ -84,7 +109,11 @@ def _recruit(batt, team="player"):
 
 def _melee_battle():
     random.seed(3)
-    batt = Battle([Unit("player")], [Unit("enemy")])
+    side_a, side_d = duelists()
+    random.seed(3)                                  # the board does not depend on how the bodies rolled
+    batt = Battle([side_a], [side_d])
+    batt.board.walls = set()
+    batt.ambient_light = True
     a, d = batt.units
     a.pos, d.pos = (5, 5), (6, 5)
     a.weapon_hand, a.torch_hand = True, False

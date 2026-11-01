@@ -1720,9 +1720,9 @@ def report(table, marks, label):
 
 
 def member_traits(unit):
-    """What a ranking groups a member by: race, occupation, languages known, an attribute's
+    """What a ranking groups a member by: race, starting weapon, languages known, an attribute's
     modifier (`STR mod` ...) and whether they start with an Axe (the yard pays 4/3 for it)."""
-    traits = {"race": unit.race["name"], "occupation": unit.occupation["name"],
+    traits = {"race": unit.race["name"], "weapon": unit.equipped_weapon,
               "languages": len(unit.languages), "own Axe": economy.lumber_level(unit) > 0}
     for attribute in data.ATTRIBUTES:
         traits[f"{attribute[:3].upper()} mod"] = data.mod(getattr(unit, attribute))
@@ -1873,7 +1873,7 @@ def main():
     ap.add_argument("--curve", action="store_true",
                     help="also print each policy's copper per member by day")
     ap.add_argument("--ranking", action="store_true",
-                    help="rank races, occupations, CHA and languages by what the guilds earned")
+                    help="rank races, weapons, CHA and languages by what the guilds earned")
     ap.add_argument("--set", action="append", default=[], metavar="MODULE.NAME=VALUE",
                     help="what-if: override a gartok constant, e.g. economy.LUMBER_WAGE=2")
     ap.add_argument("--price", action="append", default=[], metavar="ITEM=VALUE",

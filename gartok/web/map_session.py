@@ -272,7 +272,7 @@ class MapSession(MapView, Session):
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "lead": u is g.leader,
                 "hp": u.hp, "hp_max": u.hp_max, "hungry": u.hunger_level > 0, "sick": bool(u.sick),
                 "poisoned": bool(u.poisoned),
-                "sub": f"{u.race['name']} · {u.occupation['name']} · lvl {u.racial_level}"}
+                "sub": f"{u.race['name']} · lvl {u.racial_level}"}
 
     def _pace(self, g):
         return vocations.travel_mult(self.guild, g)

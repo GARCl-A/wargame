@@ -40,7 +40,7 @@ The career:
   - everything is the expectation, not a draw: copper is net of the cheapest meal, survival is
     the chance of living through every run on the way.
 
-Level 0 is the starting kit: the occupation's weapon and item plus the starting coins, at the
+Level 0 is the starting kit: the random weapon and item plus the starting coins, at the
 market's buy price, averaged over random characters. Every figure is per character.
 
     python scripts/wealth_by_level.py                     # a player who wins 80% of fights

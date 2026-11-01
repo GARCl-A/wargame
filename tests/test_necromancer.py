@@ -264,6 +264,7 @@ def _front(seed=4, level=3):
     random.seed(seed)
     squad = [Unit("player") for _ in range(4)]
     for u in squad:
+        u._stock("Quarterstaff", "Rope")
         u.set_track_level("combat", level)
     sc = necromancer.NecromancerScenario(squad, random.Random(seed))
     batt = Battle(squad, sc.enemies, scenario=sc, allies=sc.allies, others=sc.others,

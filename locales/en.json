@@ -21,7 +21,7 @@
       "pick": {
         "title": "Building your guild",
         "body": [
-          "Nine random candidates: a race, an occupation and 3d6 for each attribute. Click three to keep (click again to put one back), then CONTINUE. Expect to lose some: an early squad is meant to be spent.",
+          "Nine random candidates: a race, a starting weapon and item, and 3d6 for each attribute. Click three to keep (click again to put one back), then CONTINUE. Expect to lose some: an early squad is meant to be spent.",
           "Each card wears tags for what its candidate is good at. Aim for a bit of everything: someone to lead, someone to hit, someone who lasts."
         ],
         "suggestion": "Something missing? Use your Commission Tokens to replace a card by one with the tags you ask for. RISKY can be asked for too, for a harder start."
@@ -214,7 +214,7 @@
       "body": [
         "A school takes the guild's people once the guild has 2 reputation with it. Reputation is the door, not the price: it is never spent.",
         "BEGIN THE RITE: the member boards at the sanctuary in a group of their own (or the whole group waits, with no free slot) and rolls 1d20 + INT a day toward the school: 180 points for Faith, 90 for Blood, 270 for Nature. Leave and the points are kept.",
-        "Faith consumes a Holy Symbol: every Priest carries one, so loot it off a Priest you defeat. Blood first tests the blood for 7 days, and a failed test is final. Board is $3 on a day the boarder has no food. The rite grants the school, not a spell: spells are studied from scrolls."
+        "Faith consumes a Holy Symbol. Blood first tests the blood for 7 days, and a failed test is final. Board is $3 on a day the boarder has no food. The rite grants the school, not a spell: spells are studied from scrolls."
       ]
     },
     "medic": {
@@ -328,7 +328,7 @@
     "kicker": "Gartok Tactical · what the game borrows",
     "icons": {
       "heading": "Icons",
-      "intro": "The icons of items, actions, bodies, heads and the interface are from game-icons.net, used under Creative Commons Attribution 3.0 (CC BY 3.0). They are used as downloaded (white on transparent). The map and occupation glyphs were drawn for this game.",
+      "intro": "The icons of items, actions, bodies, heads and the interface are from game-icons.net, used under Creative Commons Attribution 3.0 (CC BY 3.0). They are used as downloaded (white on transparent). The map glyphs were drawn for this game.",
       "authors": "Authors whose work appears in the game"
     },
     "sounds": {

@@ -360,18 +360,18 @@ def test_the_ranking_averages_what_each_trait_earned_over_the_guilds_that_had_it
                               money={30: 10 + net * len(members)}, start_money=10,
                               traits=[dict(m) for m in members])
 
-    elf = {"race": "Elf", "occupation": "Barber", "CHA mod": 0}
-    orc = {"race": "Orc", "occupation": "Guard", "CHA mod": 2}
+    elf = {"race": "Elf", "weapon": "Dagger", "CHA mod": 0}
+    orc = {"race": "Orc", "weapon": "Club", "CHA mod": 2}
     ranked = sim_mod.rank_traits([result(30, elf), result(10, orc),
-                                  result(20, {**elf, "occupation": "Guard"})], 30)
+                                  result(20, {**elf, "weapon": "Club"})], 30)
     assert ranked["race"]["Elf"][0] == 25 and ranked["race"]["Orc"][0] == 10
-    assert ranked["occupation"]["Guard"][0] == 15 and ranked["CHA mod"][2][0] == 10
+    assert ranked["weapon"]["Club"][0] == 15 and ranked["CHA mod"][2][0] == 10
     assert "best-to-worst spread" in sim_mod.ranking_report(ranked, "x")
 
 
 def test_a_members_traits_cover_every_attribute_and_the_starting_axe():
     traits = sim_mod.member_traits(Unit("player"))
-    assert {"race", "occupation", "languages", "own Axe", "STR mod", "CHA mod"} <= set(traits)
+    assert {"race", "weapon", "languages", "own Axe", "STR mod", "CHA mod"} <= set(traits)
     axe = Unit("player")
     axe.give_to_pack("Axe")
     assert sim_mod.member_traits(axe)["own Axe"] is True
@@ -845,7 +845,7 @@ def test_the_sim_guild_is_led_by_its_drafted_leader():
 def test_the_library_dresses_a_squad_in_the_kit_most_of_the_party_wears():
     a, b, c = (Unit("player") for _ in range(3))
     for u in (a, b, c):
-        u.equipped_weapon = None                 # a rolled occupation can start with an Axe
+        u.equipped_weapon = None                 # a rolled kit can start with an Axe
     for u in (a, b):
         u.give_to_armor("Studded Leather")
     a.give_to_hand("Axe")

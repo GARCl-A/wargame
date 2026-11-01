@@ -7,7 +7,7 @@ Two reports over headless AI-vs-AI battles (same setup knobs as balance_sim.py):
             with plenty of opportunities and ~0 executions is one the AI ignores.
   ablation  `--ablate id,id,...`: for each action, the player side loses it (its
             `available`/`can` return False) while the enemy keeps it, over mirror
-            fights (same race + occupation both sides). Score < 0.5 means the AI was
+            fights (same race + weapon both sides). Score < 0.5 means the AI was
             using it profitably; ~0.5 means losing it costs nothing, so either the
             action is dead weight for the AI or the AI never reached for it. The
             `blocked` column counts execute calls the AI made on the banned action
@@ -35,7 +35,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from balance_sim import OCCUPATIONS, RACES, Build, _scenario, _squad
+from balance_sim import WEAPONS, RACES, Build, _scenario, _squad
 
 from gartok import actions, ai
 from gartok.battle import Battle
@@ -162,8 +162,8 @@ def _jobs(n, args, build, ban_ids, mirror):
     rng = random.Random(args.seed)
     jobs = []
     for _ in range(n):
-        a = (rng.choice(RACES), rng.choice(OCCUPATIONS))
-        b = a if mirror else (rng.choice(RACES), rng.choice(OCCUPATIONS))
+        a = (rng.choice(RACES), rng.choice(WEAPONS))
+        b = a if mirror else (rng.choice(RACES), rng.choice(WEAPONS))
         jobs.append((a, b, rng.randrange(2**31), args.team_size, args.scenario,
                      args.daylight, build, ban_ids))
     return jobs

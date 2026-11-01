@@ -21,7 +21,6 @@ import pygame
 
 from gartok.art_files import (
     BANNER_ICONS,
-    OCCUPATION_ICON,
     RACE_ICON,
     portrait_path,
 )
@@ -30,11 +29,6 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _ICONS = os.path.join(os.path.dirname(_HERE), "gartok", "assets", "icons")
 
 _WHITE = (255, 255, 255)
-
-
-def occupation_icon(occupation, px, color=_WHITE):
-    slug = OCCUPATION_ICON.get(occupation)
-    return icon(slug[0], slug[1], px, color) if slug else None
 
 
 @functools.lru_cache(maxsize=1024)

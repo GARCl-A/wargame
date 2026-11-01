@@ -15,13 +15,10 @@ from tests.helpers import Unit, data
 # the Linguist's starting item                                                #
 # --------------------------------------------------------------------------- #
 
-def test_linguist_starts_with_a_dictionary_of_a_foreign_language():
+def test_a_dictionary_names_a_language_the_owner_does_not_speak():
     random.seed(3)
     u = Unit("player")
-    u.set_occupation("Linguist")            # deterministic re-roll of the occupation's item
-
-    item = u._base_inventory[0][0]
-    assert item.startswith("Dictionary of ")
+    item = f"Dictionary of {next(l for l in data.LANGUAGES if l not in u.languages)}"
     lang = magic.language_for_dictionary(item)
     assert lang is not None
     assert lang.name not in u.languages     # a language the character doesn't already speak

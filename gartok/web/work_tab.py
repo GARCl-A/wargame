@@ -39,7 +39,7 @@ class GatherTab(GatherDesk):
         tool = gather.tool(node)
         crew = []
         for u in self.group.members:
-            crew.append({"name": u.name, "portrait": _portrait(u), "sub": f"{u.race['name']} · {u.occupation['name']}",
+            crew.append({"name": u.name, "portrait": _portrait(u), "sub": u.race['name'],
                          "haul": round(self.guild.worker_haul(u, node, gather.DAY_HOURS)),
                          "tool": economy.owns_tool(u, node), "note": self._gather_note(u, tool)})
         guards = [c["name"] for c in crew if not c["tool"]]

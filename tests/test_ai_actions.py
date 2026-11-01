@@ -5,13 +5,14 @@ import random
 
 from gartok import ai
 from gartok.ground import GroundObject
-from tests.helpers import Battle, Unit, abilities, actions, fixed_d20, _recruit
+from tests.helpers import Battle, Unit, abilities, actions, fixed_d20, _recruit, duelists
 from tests.test_ai_racial import _centaur, _rider_unit
 
 
 def _duel(weapon="Axe"):
     random.seed(3)
-    batt = Battle([Unit("player")], [Unit("enemy")])
+    side_p, side_e = duelists()
+    batt = Battle([side_p], [side_e])
     p, e = batt.player_units[0], batt.enemy_units[0]
     for u in batt.units:
         u._ability = abilities.get("none")

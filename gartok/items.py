@@ -30,6 +30,7 @@ class ItemType(StrEnum):
     TACK = "tack"
     ARTIFACT = "artifact"
     MISC = "misc"
+    CURRENCY = "currency"
 
 
 class ItemRarity(StrEnum):
@@ -391,8 +392,8 @@ _register(ItemDef(id="paper", name="Paper", type=ItemType.MATERIAL, rarity=ItemR
 _register(ItemDef(id="ink", name="Ink", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=45))
 _register(ItemDef(id="bear_trap", name="Bear Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=3.0, price=35))
 _register(ItemDef(id="alarm_trap", name="Alarm Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=1.0, price=45))
-_register(ItemDef(id="copper_coin", name="Copper Coin", type=ItemType.MISC, rarity=ItemRarity.COMMON, weight=0.005, price=1))
-_register(ItemDef(id="gold_coin", name="Gold Coin", type=ItemType.MISC, rarity=ItemRarity.COMMON, weight=0.005, price=100))
+_register(ItemDef(id="copper_coin", name="Copper Coin", type=ItemType.CURRENCY, rarity=ItemRarity.COMMON, weight=0.005, price=1))
+_register(ItemDef(id="gold_coin", name="Gold Coin", type=ItemType.CURRENCY, rarity=ItemRarity.COMMON, weight=0.005, price=100))
 _register(ItemDef(id="pack_saddle", name="Pack Saddle", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=5.0, price=60))
 _register(ItemDef(id="harness", name="Harness", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=4.0, price=30))
 _register(ItemDef(id="rope", name="Rope", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))

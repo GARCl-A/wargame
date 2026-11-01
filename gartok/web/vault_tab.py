@@ -8,7 +8,6 @@ vault's.
 """
 
 from .. import economy, item_icon, items, store_column
-from ..data import role_for
 from ..vault import BankVault, HouseVault
 from .shop_tab import SLOTS, _portrait, _tip
 
@@ -79,7 +78,7 @@ class VaultTab:
                          "glyph": item_icon.glyph(name) if name else None,
                          "kg": items.item_weight(name) if name else 0, "tip": _tip(name) if name else ""})
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
-                "sub": f"{u.race['name']} · {u.occupation['name']}", "role": role_for(u.occupation),
+                "sub": u.race['name'],
                 "hurt": u.hp < u.hp_max, "money": u.money,
                 "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max,
                 "worn": worn, "pack": self._pack(u)}

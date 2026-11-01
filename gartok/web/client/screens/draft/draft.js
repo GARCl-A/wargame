@@ -73,7 +73,7 @@ function side() {
       if (i === undefined) return `<div class="slot empty">pick a ${["first", "second", "third"][k]} from the pool</div>`;
       const c = D.pool[i];
       return `<div class="slot" data-pick="${i}"><span class="num">${k + 1}</span>${medal(c.portrait, c.name, 60, "var(--enamel-hi)")}
-        <div><b>${esc(c.name)}</b><small>${esc(c.race)} · ${esc(c.occ)}</small><div class="mini">${c.attrs.map(a => `<span>${a.k}<i>${a.v}</i></span>`).join("")}</div></div></div>`;
+        <div><b>${esc(c.name)}</b><small>${esc(c.race)} ·</small><div class="mini">${c.attrs.map(a => `<span>${a.k}<i>${a.v}</i></span>`).join("")}</div></div></div>`;
     }).join("");
     const coins = Array.from({length: D.tokens_max}, (_, k) => `<div class="coin ${k < D.tokens ? "" : "spent"}"></div>`).join("");
     body = `<div class="lbl">The squad · ${D.squad.length} of ${D.team}</div>${slots}
@@ -91,7 +91,7 @@ function side() {
         <div><div class="nm">${renaming === i
           ? `<input id="rename" maxlength="${C.max_founder}" value="${esc(f.name)}">`
           : `${esc(f.name)}<span class="pen" data-rename="${i}" data-tip="Rename">${ico("gui/pencil")}</span>`}</div>
-          <small>${esc(f.race)} · ${esc(f.occ)} · ${esc(f.align)}</small>
+          <small>${esc(f.race)} · · ${esc(f.align)}</small>
           <div class="rec">Can recruit ${f.recruits}<i>${esc(f.recruits_why)}</i></div></div>
         <div class="mods">${f.attrs.map(a => `<div><span>${a.k}</span><b class="${modCls(a.mod)}">${sign(a.mod)}</b></div>`).join("")}</div></div>`).join("")}`;
     sealHtml("Found", C.can_found ? "the guild" : "pick a leader", "map/city", !C.can_found);
@@ -125,7 +125,7 @@ function dossier(c, i) {
   return `<div class="paper dos ${k >= 0 ? "picked" : ""}" data-pick="${i}" style="left:${530 + (i % 3) * 452}px;top:${108 + Math.floor(i / 3) * 314}px">
     ${k >= 0 ? `<div class="ribbon">${k + 1}</div>` : c.commissioned ? `<span class="newmark">commissioned</span>` : ""}
     <div class="top"><div data-sheet="${c.uid}"${tip(`Open ${c.name}'s whole sheet`)}>${medal(c.portrait, c.name, 68)}</div>
-      <div class="who"><h4>${esc(c.name)}</h4><div class="ro">${esc(c.race)} · ${esc(c.occ)}</div>
+      <div class="who"><h4>${esc(c.name)}</h4><div class="ro">${esc(c.race)} ·</div>
         <div class="al">${esc(c.align)} · ${esc(c.size)} · age ${c.age}</div><div class="stamps">${stamps}</div></div></div>
     <div class="vit"><div><span>HP</span><b>${c.hp}</b></div><div><span>AC</span><b>${c.ac}</b></div><div><span>MD</span><b>${c.md}</b></div><div><span>SPD</span><b>${c.spd}</b></div><div><span>INIT</span><b>${esc(c.init)}</b></div></div>
     <div class="att">${c.attrs.map(a => `<div><span>${a.k}</span><b>${a.v}</b><i class="${modCls(a.mod)}">${sign(a.mod)}</i></div>`).join("")}</div>
@@ -184,7 +184,7 @@ function charter() {
     <div class="sec"><div class="kicker">Signed</div>
       <div class="sigs">${order.map(i => { const f = C.founders[i];
         return `<div class="sig ${f.leader ? "first" : ""}">${f.leader ? `<span class="master"></span>` : ""}
-          <div class="hand">${esc(f.name)}</div><div class="line"></div><b>${f.leader ? "Master of the guild" : "Founder"}</b><small>${esc(f.race)} · ${esc(f.occ)}</small></div>`; }).join("")}</div></div>
+          <div class="hand">${esc(f.name)}</div><div class="line"></div><b>${f.leader ? "Master of the guild" : "Founder"}</b><small>${esc(f.race)} ·</small></div>`; }).join("")}</div></div>
   </div>
   <div id="banner"><div class="cloth"></div><div class="trim"></div><div class="rod"></div>${ico(emb.icon)}<div class="motto" id="bannername">${esc(C.name || "The Guild")}</div></div>
   <div class="bannercap">The banner flies over the squad's tokens on the board and its pennants on the map.</div>`;

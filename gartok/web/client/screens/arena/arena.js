@@ -57,7 +57,7 @@ function member(m) {
   return `<div class="mem ${m.picked ? "on" : ""} ${m.unfit ? "unfit" : ""}" data-uid="${esc(m.uid)}">
     <div class="mark">${mark}</div>
     <div class="who"><div class="medal">${face(m.portrait, m.name)}</div>
-      <div><b>${esc(m.name)}</b><span>${esc(m.race)} ${esc(m.occupation.toLowerCase())}</span></div></div>
+      <div><b>${esc(m.name)}</b><span>${esc(m.race)}</span></div></div>
     <div class="vit"><div class="${hurt}"><b>${m.hp[0]}/${m.hp[1]}</b><span>HP</span></div><div><b>${m.ac}</b><span>AC</span></div>
       <div><b>${m.md}</b><span>MD</span></div><div><b>${m.speed}</b><span>SPD</span></div></div>
     <div class="arm"><span>${esc(m.weapon)} <em>${esc(m.dmg)}</em></span><span>${esc(m.money_text)} · <em>${esc(m.level)}</em></span></div>

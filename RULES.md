@@ -7,7 +7,7 @@ survived: the character generator (`Gerenciador-Gartok`). It is split into:
 - 🟡 **Designed** — did not exist; created for the wargame, in the d20 style of
   the rest.
 
-The **catalog data** — every race, occupation, racial-ability effect, weapon,
+The **catalog data** — every race, racial-ability effect, weapon,
 armor, price, talent and tunable constant — is generated from the code into
 [`REFERENCE.md`](REFERENCE.md) (`python -m gartok.reference`). This document keeps
 the *rules prose*: the formulas, the combat resolution, and the design premises.
@@ -16,7 +16,7 @@ Code is never described here twice: `README.md` is the map of where it lives, an
 `tests/test_rules_doc.py` fails when a file, module attribute or constant named in
 backticks stops existing, or a constant's value quoted next to its name drifts.
 
-> **The `Status: OK` mark** on a race/occupation row in the generator was the
+> **The `Status: OK` mark** on a race row in the generator was the
 > author's hand annotation: `OK` = that row has been revisited and its
 > effect/item is the intended one, not the first inference. It does not survive
 > into `REFERENCE.md`; the 🟡 racial-ability effects that are still first guesses
@@ -43,9 +43,9 @@ The generator's exact order:
 1. Roll the 6 attributes (3d6 each).
 2. Roll **race** (d100) → apply the racial mods, set the hit die, size, language,
    racial ability and age band.
-3. Roll **occupation** (d100) → set the starting weapon and one starting item.
+3. Draw the **starting kit**: one random base weapon worth up to 35 copper and one random item worth up to 20 (`starter_kit.py`).
 4. Roll **alignment** (d100).
-5. Roll **starting money**: **$5d10 in copper coins**, carried as a stack of
+5. Roll **starting money**: **$3d4 in copper coins**, carried as a stack of
    `Copper Coin` items in the pack (200 coins weigh 1 kg; `Unit.money` is their
    count). Beasts carry none.
 6. The character starts at **Level 0, XP 1000**. 🟢 *(the meaning of that
@@ -97,9 +97,9 @@ mods, a hit die, a size, a language, a racial ability and an age multiplier.
 
 **Beasts**, **undead** and **giants** are the kinds of race that are not a player's (`kind`; the
 `data.BEASTS`, `UNDEAD` and `GIANTS` tables; their stats are `REFERENCE.md` § Creatures). A beast has
-no occupation: it fights with its own body and drops its own loot, and the creator can pick it like
-any race (switching a character to a beast keeps its pack). An undead and a giant keep a job, an
-occupation with its weapon and item; the undead never break and run (`ai.common._mindless`). None of
+no kit: it fights with its own body and drops its own loot, and the creator can pick it like
+any race (switching a character to a beast keeps its pack). An undead and a giant carry a weapon and an
+item like a recruit; the undead never break and run (`ai.common._mindless`). None of
 them rolls in a locality's encounter table (`data.WILD_POOL` is wolves only): they are authored in the
 creator or placed by hand. A race may set its own **speed** in meters; unset, it is the size's. A race's
 `ability` may be a **list** of ids, merged into one (`abilities.get` folds numbers, flags and hooks
@@ -135,11 +135,12 @@ In the wargame **1 cell = 1.5 m**. 🟡
 
 ---
 
-## 6. Occupations 🟢
+## 6. Starting kit 🟢
 
-31 occupations, rolled on a d100 (cumulative thresholds). Each grants **one
-weapon** and **one item**. **The full table is in [`REFERENCE.md`](REFERENCE.md)**
-(§ Occupations).
+A recruit starts with one **weapon** and one **item**, each drawn evenly from the shelf of what
+costs little (`starter_kit.py`): the base weapons (no Large or Huge) up to 35 copper, so an Axe or a
+Pick can come up and that recruit can gather on day one, and any item up to 20 copper that is not a
+quest item or money. Nothing is written on the character: the kit is just what is in hand and in the pack.
 
 ---
 
@@ -251,7 +252,7 @@ spend, measured by `scripts/wealth_by_level.py`). A humanoid of level 1 and up s
 that adds the most AC under its Dex cap (a body with Dex +3 stops at Studded Leather), a weapon by how
 it fights (Strength over Dexterity: a one-handed blade with a light, or a Broadsword or Glaive; otherwise a
 bow with a quiver, or a one-handed finesse blade with a light), then up to 3 Minor Healing Potions,
-never loading itself past the overload. The occupation's weapon is dropped; level 0 keeps it, and
+never loading itself past the overload. The starting weapon is dropped; level 0 keeps it, and
 beasts carry nothing. Every outfitted band brings a light to the field: if nobody holds one, a free
 hand takes a torch, else a two-handed fighter swaps to one hand (`outfit.light_the_band`, run by
 `Battle`). What it carries falls as loot by the usual rules (weapon and pack; armour only where the
@@ -356,7 +357,7 @@ level-0 and a level-1 spell of its own.
   know the spell, and clears it the same way. The sandbox character editor has the identical control
   for authored NPCs.
 - **Scroll scarcity by design**: Spells are intentionally rare and strictly limited, and no shop sells a
-  `Scroll of <Spell>`. They come from an occupation's starting item (a random level 0 nature spell), the
+  `Scroll of <Spell>`. They come from the
   sunken vaults of the Ancient Ruins (the rare Scroll of Sleep), an errand's reward (Water Jet, Dragonfire)
   a pile of the Dragon's hoard (Hex), or a rare find on a battlefield (Spare the Dying).
 
@@ -368,9 +369,8 @@ character can pick this up. `magic.language_for_dictionary` and
 the shared `Unit.study_target` / `study_progress` pair, so a character is
 always studying at most one thing (a spell *or* a language, never both).
 
-- **The item**: a `Dictionary of <Language>` in the pack. The **Linguist**
-  occupation starts with one, naming a language *other than* the one they
-  already speak (`unit._configure_occupation`).
+- **The item**: a `Dictionary of <Language>` in the pack, bought or traded for a language
+  *other than* the ones the character already speaks.
 - **Cost**: `magic.points_to_learn(0)` = 105 points, the same threshold as a
   level-0 spell (roughly a week of daily `1d20 + INT mod` rolls at the
   Tavern's "study" garrison job), no `magic_sources` bonuses involved.
@@ -1382,8 +1382,7 @@ The PERFORM tab of the Tavern (`tavern.Tavern`). Rule in
 `Guild.perform_tips` / `economy.perform_pay`; like the yard it is an order (a `perform`
 stint, `stints.py`) that runs on the shared clock, and the tips are paid when the show ends.
 
-- **Who plays:** anyone with a **Musical Instrument** in the pack (the Musician's
-  starting item); the rest of the party sits out. Show length: 1, 2 or 4 h.
+- **Who plays:** anyone with a **Musical Instrument** in the pack (sold at the Market); the rest of the party sits out. Show length: 1, 2 or 4 h.
 - **Pay is a test:** each hour on stage rolls `d20 + CHA mod` per performer, and
   the crowd tips **one coin per 2 points over 16** (`PERFORM_TIP_BASE` /
   `PERFORM_TIP_STEP`). Averaged over the d20: **~$0.30/h at +1** (the yard with

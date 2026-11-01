@@ -5,7 +5,7 @@
   3. activities what each job pays in copper and XP (economy_activities.py), each work talent
                 priced on its own (economy_talents.py)
   4. sustain    a guild living 30 days under each policy, and its curve (economy_guild.py)
-  5. ranking    races, occupations, CHA and languages by what they earned
+  5. ranking    races, weapons, CHA and languages by what they earned
 
 A player is assumed to turn `--skill` of the AI's losses into wins (`economy_activities.player_odds`,
 measured from the author's fights), so a squad a level up wins more for the player as for the AI.

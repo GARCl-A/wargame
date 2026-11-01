@@ -221,17 +221,7 @@ def test_the_initiation_picks_a_member_and_begins_the_rite():
     assert ok and a.rite_school == "faith" and "Holy Symbol" in desk.notice
 
 
-def test_a_defeated_priest_is_where_the_holy_symbol_comes_from():
-    """No shelf sells the Faith rite's Holy Symbol, by design: it is loot off an enemy Priest."""
-    import random
-
-    from gartok import economy, encounters, loot, rite
+def test_no_shelf_sells_the_holy_symbol():
+    from gartok import economy, rite
 
     assert economy.shop_of(rite.HOLY_SYMBOL) is None
-    for seed in range(4000):
-        random.seed(seed)
-        foe = encounters.build_enemy(2, rng=random.Random(seed))
-        if foe.occupation["name"] == "Priest":
-            assert rite.HOLY_SYMBOL in loot.carried_by(foe)
-            return
-    raise AssertionError("no Priest rolled")
