@@ -164,6 +164,20 @@ the rest.
 
 ## Medium
 
+- **A hunt out on the clock must survive a save (decided 2026-11-01).** Since the one-clock change a hunt
+  stretch is a `hunting` order the map runs while the player plays the other bands, so a save is taken
+  mid-hunt all the time (every map landing autosaves). Today `persist.group_from_dict` drops that order:
+  on load the party is back idle and loses the hours spent and the haul so far, which makes no sense now
+  that the hunt is just another order. Save it: the `hunt.HuntState` (party and guard uids, hours left and
+  hunted, `yield_hours`, finds, fights, target, multipliers, Biwolf) and what the stretch rolled (an ambush
+  or not, and whose: Biwolf, Wilds pack, the ox) go into the order or the group, and on load
+  `MapSession.hunts` is rebuilt from them so the stretch comes due and `HuntSession.arrive` opens as usual.
+  The ambush pack itself is rolled at arrival, so it needs no saving. Change the AGENTS.md / RULES.md rule
+  "a battle or hunt in progress is never saved" to "a battle in progress is never saved" and drop the
+  `hunting` case from `persist` and its test in `tests/test_one_clock.py`. Tests: save and load mid-stretch
+  keeps the clock, the party, the yield and the ambush; a save with the hunt screen open (setup,
+  interlude) still refuses or keeps working as it does now.
+
 - **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided).** On day 105 a guild of
   eight stopped for two wolves. The premise: an ambush only exists if the pack would plausibly attack
   that group. Where a pack is rolled against a group (the road, `world.ROAD_AMBUSH_CHANCE`; the work
