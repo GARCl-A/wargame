@@ -194,9 +194,9 @@ Each occupation grants one starting weapon and one starting item. `d100` is the 
 | Light Pick | Medium | 1d4 | melee | yes | 6 sq | 1 | 1 kg | 10 |
 | Large Light Pick | Large | 1d6 | melee | yes | 6 sq | 1 | 2 kg | 20 |
 | Huge Light Pick | Huge | 1d8 | melee | yes | 6 sq | 1 | 4 kg | 40 |
-| Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
-| Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 60 |
-| Huge Pick | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 120 |
+| Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
+| Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
+| Huge Pick | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 140 |
 | Sword | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
 | Large Sword | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
 | Huge Sword | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 140 |

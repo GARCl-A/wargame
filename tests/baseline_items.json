@@ -127,7 +127,7 @@
   },
   "Pick": {
     "weight": 3.0,
-    "price": 30,
+    "price": 35,
     "damage": [
       1,
       8
@@ -337,7 +337,7 @@
   },
   "Large Pick": {
     "weight": 6.0,
-    "price": 60,
+    "price": 70,
     "damage": [
       1,
       10

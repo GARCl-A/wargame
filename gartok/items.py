@@ -285,7 +285,7 @@ _BASE_WEAPONS_DATA = [
     ("quarterstaff", "Quarterstaff", ItemRarity.COMMON, 2.0, 5, (1, 6), 0, True, 0, 1, False, ("finesse", "repel_strike"), 2),
     ("shortspear", "Shortspear", ItemRarity.COMMON, 1.5, 12, (1, 6), 0, False, 12, 1, False, ("thrown", "javelin_charge"), 2),
     ("light_pick", "Light Pick", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 6, 1, False, ("finesse", "thrown", "crit_3x", "armor_pierce"), 3),
-    ("pick", "Pick", ItemRarity.COMMON, 3.0, 30, (1, 8), 0, False, 0, 1, False, ("crit_3x", "armor_pierce"), 3),
+    ("pick", "Pick", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("crit_3x", "armor_pierce"), 3),
     ("sword", "Sword", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("parry_strike",), 2),
     ("broadsword", "Broadsword", ItemRarity.COMMON, 4.0, 105, (1, 12), 0, False, 0, 2, False, ("parry_strike",), 2),
     ("glaive", "Glaive", ItemRarity.COMMON, 4.5, 137, (1, 10), 0, False, 0, 2, False, ("long_thrust",), 2),
