@@ -293,6 +293,8 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Antidote | 0.2 kg | consumable | 60 |
 | Bear Trap | 3 kg | -- | 35 |
 | Bloom Fruit | 0.2 kg | food, consumable | 6 |
+| Box | 8 kg | -- | 16 |
+| Box of Gems | 8 kg | -- | 273 |
 | Chains | 5 kg | -- | 10 |
 | Chisel | 0.3 kg | -- | 1 |
 | Copper Coin | 0.005 kg | -- | 1 |
@@ -314,7 +316,6 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Leather of Biwolf | 1 kg | -- | 150 |
 | Legendary Horn | 2 kg | material | 60 |
 | Letter of Receipt | 0.1 kg | -- | 1 |
-| Locked Chest | 8 kg | -- | 16 |
 | Lumber | 2 kg | material | 7 |
 | Meat | 1 kg | food, consumable, material | 5 |
 | Minor Healing Potion | 0.2 kg | consumable | 80 |

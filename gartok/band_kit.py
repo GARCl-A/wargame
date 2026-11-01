@@ -238,7 +238,7 @@ class BandKit(LoadoutMoveMixin):
 
         rows = [("drop", "Drop", None)]
         solo_member = len(picks) == 1 and not self._is_store(picks[0][0])
-        if solo_member and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
+        if solo_member and self._item_at(*picks[0]) in (data.BOX_OF_GEMS_ITEM, data.MISSION_CHEST_ITEM):
             rows.append(("open", "OPEN THE CHEST", None))
         if solo_member and self._item_at(*picks[0]) == "Minor Healing Potion":
             rows.append(("drink", "Drink", None))

@@ -16,19 +16,19 @@ def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
     chest?" by re-scanning the whole pack for data.MISSION_CHEST_ITEM instead
     of looking at the item actually right-clicked -- a unit carrying both
     (e.g. via the sandbox editor) would always resolve as the sealed one,
-    even when the player opened the ordinary Locked Chest."""
+    even when the player opened the ordinary Box of Gems."""
     from gartok.band_kit import BandKit
 
     random.seed(1)
     u = Unit("player")
     u.mod_dexterity = 0
-    u._base_inventory = packed([data.MISSION_CHEST_ITEM, data.CHEST_ITEM])
+    u._base_inventory = packed([data.MISSION_CHEST_ITEM, data.BOX_OF_GEMS_ITEM])
     guild = _guild_of(u)
     gs = BandKit(guild, guild.groups[0])
     with fixed_d20(data.CHEST_DC):
-        gs._menu_run([(u, 1)], "open", None)                 # the CHEST_ITEM row
+        gs._menu_run([(u, 1)], "open", None)                 # the BOX_OF_GEMS_ITEM row
 
-    assert not u.has_item(data.CHEST_ITEM)
+    assert not u.has_item(data.BOX_OF_GEMS_ITEM)
     assert u.has_item(data.MISSION_CHEST_ITEM)   # untouched -- the sealed one stays sealed
     assert u.has_item(data.GEM_ITEM)
     assert "picks the lock" in gs.notice and "trust mission" not in gs.notice

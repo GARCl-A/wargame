@@ -1,4 +1,4 @@
-"""A locked chest (`data.CHEST_ITEM`): a pack item with its own lock, picked
+"""A Box of Gems (`data.BOX_OF_GEMS_ITEM`): a locked pack item, picked
 outside battle (`band_kit.BandKit`'s item menu) rather than
 through `actions.py` (that module is battle-only -- opening a chest happens
 on the map, between fights).
@@ -34,16 +34,17 @@ def roll_lock(unit, day=1):
 
 
 def try_open(unit, day=1):
-    """Attempt to pick one `items.CHEST_ITEM` in `unit`'s pack. On success it
-    is consumed and replaced with the gems inside; on a miss nothing changes.
+    """Attempt to pick one `items.BOX_OF_GEMS_ITEM` in `unit`'s pack. On success it
+    is replaced with the gems inside and an empty Box; on a miss nothing changes.
     Returns `(opened, gems)` -- `gems` is 0 on a miss. No-op, `(False, 0)`, if
     `unit` isn't carrying one."""
-    if not unit.has_item(items.CHEST_ITEM):
+    if not unit.has_item(items.BOX_OF_GEMS_ITEM):
         return False, 0
     gems = roll_lock(unit, day=day)
     if gems is None:
         return False, 0
-    unit.remove_named(items.CHEST_ITEM)
+    unit.remove_named(items.BOX_OF_GEMS_ITEM)
+    unit.give_to_pack(items.BOX_ITEM)
     if gems:
         unit.give_to_pack(items.GEM_ITEM, gems)
     return True, gems

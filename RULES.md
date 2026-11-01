@@ -2008,9 +2008,10 @@ it can catch up with a character wherever the City's authority reaches
 - **The Old Road** (`world.Node.unsafe`) rolls an ambush per travel leg
   through it — deserters, bandits and roving packs — the same
   pause/resume seam the guard uses, unrelated to jurisdiction or crime.
-- **Locked chests** (`chest.py`, `data.CHEST_ITEM`): a generic pack item
+- **Box of Gems** (`chest.py`, `data.BOX_OF_GEMS_ITEM`): a locked generic pack item
   picked open outside battle (the band's item menu, `band_kit.py`),
-  `d20 + Dexterity ≥ data.CHEST_DC`. A miss costs nothing, just try later.
+  `d20 + Dexterity ≥ data.CHEST_DC`. A miss costs nothing, just try later. A hit leaves
+  the gems and an empty `Box`. Its price is the mean haul times 1.3.
   The Bankers' mission chest (see Missions) is a deliberately different item
   so it's never picked open by mistake — doing so fails that mission and
   banks crime instead of quietly paying out.
