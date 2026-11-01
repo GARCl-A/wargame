@@ -87,11 +87,13 @@ the rest.
   preview (`work_desk`) and the tutorial card for the new rule. Tests: XP at 3/4, no tool means no haul,
   a mixed crew. Re-run `scripts/economy_report.py` (a crew now needs tools).
 
-- **UI sound consistency audit.** `Sound.play` (`web/client/shell.js`) is called screen by screen, so
-  the same kind of button or action clicks on one screen and is silent on another (`hunt`, `watch`,
-  `arena`, `title`, `draft` and the sheet never call it). List what should sound (buttons, confirm,
-  error, buy/sell, equip, turn end), then make every screen play the same cue for the same kind of act,
-  ideally from one shared helper instead of per-screen calls.
+- **UI sound: one click for every screen.** `Sound.play` (`web/client/shell.js`) is called screen by
+  screen (~31 `Sound.play("click")` in `screens/`), so `hunt`, `watch`, `arena`, `title`, `draft` and the
+  sheet are silent. Play `click` from one delegated listener in `shell.js` (every `button` and clickable
+  `[data-*]` target, opt out with `data-silent`), delete the per-screen `"click"` calls, and play an error
+  cue from `api()` when an answer is not ok (reuse `miss` until the cues item below). Keep the calls that
+  pick a cue from the answer (`coins` when the purse moved, `level_up`): those stay where they are. Check by
+  hand in the browser, screen by screen (there is no JS test).
 
 - **Can Rotten Food be sold? (author 2026-11-01).** Rotten Food has `price=2`, so a counter pays $1 for it
   (the floor). Decide whether spoiled food should sell at all (a tanner or a farm that takes it as
@@ -205,6 +207,13 @@ the rest.
   40 die by day 60, all hunting: a lost lethal fight takes the whole group. The sim gives the player `SKILL = 0.5`
   of the AI's losses in every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0,
   `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later (the sim: [../economy_sim.md](../economy_sim.md)).
+
+- **UI sound: the missing cues (after *UI sound: one click*).** `gartok/sound.py` has 7 cues and every one
+  of the 16 files in `assets/sounds/` is used, so confirm, error, equip and end of turn have no sound. The
+  author picks the files (Kenney, CC0, same `LICENSE.txt`); then add them to `CUES` / `LEVEL`, write down
+  which act plays which cue (one table in `docs/web_ui/web_client.md`), and wire them: equip in the sheet,
+  confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
+  from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
 
 ---
 
