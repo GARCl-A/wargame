@@ -296,7 +296,8 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Chains | 5 kg | -- | 10 |
 | Chisel | 0.3 kg | -- | 1 |
 | Copper Coin | 0.005 kg | -- | 1 |
-| Dictionary of (, Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin, Halfling, Jotun, Orcish, Sylvan, Verdant) | 2 kg | -- | 150 |
+| Dictionary | 2 kg | -- | 150 |
+| Dictionary of (Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin, Halfling, Jotun, Orcish, Sylvan, Verdant) | 2 kg | -- | 150 |
 | Dragon Egg | 8 kg | -- | 400 |
 | First Aid Kit | 0.8 kg | consumable | 40 |
 | Flint and Steel | 0.3 kg | -- | 40 |

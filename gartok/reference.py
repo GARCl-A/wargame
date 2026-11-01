@@ -247,11 +247,11 @@ def _items():
         if name in data.LIGHT_SOURCES:
             tags.append(f"light {data.LIGHT_SOURCES[name]} sq")
         prefix, sep, tail = name.partition(" of ")
-        key = (prefix if sep else name, f"{item.weight:g} kg", ", ".join(tags) or "--",
+        key = (prefix, bool(sep), f"{item.weight:g} kg", ", ".join(tags) or "--",
                economy.PRICES.get(name) or "--")
         groups.setdefault(key, []).append((name, tail))
     rows = []
-    for (prefix, weight, notes, price), members in groups.items():
+    for (prefix, _, weight, notes, price), members in groups.items():
         if len(members) >= GROUP_MIN:
             rows.append((f"{prefix} of ({', '.join(t for _, t in members)})", weight, notes, price))
         else:

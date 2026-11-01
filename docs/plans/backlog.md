@@ -97,10 +97,6 @@ the rest.
   (the floor). Decide whether spoiled food should sell at all (a tanner or a farm that takes it as
   compost, say) or be refused like trash, and then give the Snake Dragon Corpse (`price=1`) the same rule.
 
-- **REFERENCE.md: the plain Dictionary breaks the Dictionary row.** `python -m gartok.reference` now groups
-  `Dictionary` with the `Dictionary of <language>` rows and prints `Dictionary of (, Ankarin, ...)`, a stray
-  comma. Keep the plain one out of the group (or give it its own row).
-
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
   copy it into `.claude/skills/<name>/SKILL.md`, then check it against the owner list in
