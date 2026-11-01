@@ -9,8 +9,9 @@ ROW = {"version": GAME_VERSION, "date": "2026-11-01", "hash": "abc", "save_versi
        "breaks_save": "yes", "path": ""}
 
 
-def test_matching_table_has_no_errors_and_warns_when_head_moved():
+def test_matching_table_has_no_errors_and_ignores_commits_past_the_row():
     assert version_check.check([ROW], "abc", False) == ([], [])
+    assert version_check.check([ROW], "newer", False) == ([], [])
     errors, warnings = version_check.check([ROW], "", True)
     assert not errors and len(warnings) == 1
 
@@ -28,3 +29,11 @@ def test_the_shipped_table_matches_the_code():
     with open(path, encoding="utf-8", newline="") as fh:
         rows = list(csv.DictReader(fh))
     assert version_check.check(rows, "", False)[0] == []
+
+
+def test_release_row_is_derived_and_skipped_when_already_listed():
+    assert version_check.release_row([ROW], "abc") is None
+    old = {**ROW, "version": "0.0.1", "save_version": "-1"}
+    row = version_check.release_row([old], "abc")
+    assert row["version"] == GAME_VERSION and row["breaks_save"] == "yes" and row["hash"] == "abc"
+    assert version_check.release_row([{**old, "save_version": ROW["save_version"]}], "abc")["breaks_save"] == "no"

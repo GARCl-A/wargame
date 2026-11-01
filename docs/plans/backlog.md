@@ -60,8 +60,7 @@ the rest.
   new names up with no code change.
 
 - **Rebuild the friends' exe last (2026-11-01).** Run `build_exe.bat` on Windows once the other playtest
-  items are in, so `dist/GARTOK.exe` carries their fixes; first add the `docs/versions.csv` row
-  `scripts/version_check.py` asks for (it warns of the commits since v0.1.0).
+  items are in, so `dist/GARTOK.exe` carries their fixes.
 
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
