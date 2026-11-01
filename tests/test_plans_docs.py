@@ -33,7 +33,7 @@ def test_every_test_they_name_exists():
     named = _ids(r"`(test_\w+\.py)::(test_\w+)`")
     missing = [f"{doc}: {f}::{name}" for doc, (f, name) in named
                if f"def {name}" not in (ROOT / "tests" / f).read_text(encoding="utf-8")]
-    assert named and not missing, missing
+    assert not missing, missing
 
 
 def test_every_module_attribute_they_name_exists():

@@ -9,12 +9,13 @@ from gartok import actions, data, items, persist, poisons
 from gartok.battle import Battle
 from gartok.ground import GroundObject
 from gartok.unit import Unit
+from tests.helpers import standard_unit
 
 VENOM = "giant_spider_venom"
 
 
 def _human(dex=10):
-    u = Unit("player", race=data.race_by_name("Human"))
+    u = standard_unit()
     u.set_base_attribute("dexterity", dex)
     return u
 
@@ -43,6 +44,7 @@ def _fight(victim_unit=None, spider=None):
     batt.board.walls.clear()
     batt.ground[:] = [GroundObject.torch((5, 4))]
     sp.ap = 2
+    sp.damage_roll = lambda **kw: 1
     return batt, sp, victim
 
 
@@ -102,7 +104,7 @@ def test_poison_survives_a_save():
 
 def test_the_world_clock_ticks_every_roster_members_poison():
     from gartok.guild import Guild
-    g = Guild([Unit("player"), Unit("player")])
+    g = Guild([standard_unit(), standard_unit()])
     member = g.roster[0]
     member.add_poison(VENOM, 11)
     member.add_poison(VENOM, 11)
@@ -178,9 +180,9 @@ def test_a_unit_with_a_physical_attribute_at_zero_starts_the_battle_dying():
     for _ in range(3):
         weak.add_poison(VENOM, 11)
     assert weak.dexterity == 0 and weak.zeroed_attribute == "dexterity"
-    batt = Battle([weak], [Unit("enemy")])
+    batt = Battle([weak], [standard_unit("enemy")])
     assert batt.player_units[0].dying
-    healthy = Battle([_human()], [Unit("enemy")])
+    healthy = Battle([_human()], [standard_unit("enemy")])
     assert healthy.player_units[0].alive
 
 
@@ -203,7 +205,7 @@ def test_the_zero_rule_covers_all_three_physical_attributes(attr):
     setattr(u, attr, 0)
     assert u.zeroed_attribute == attr
     u.intelligence = 0
-    assert Unit("player", race=data.race_by_name("Human")).zeroed_attribute is None
+    assert standard_unit().zeroed_attribute is None
 
 
 # --------------------------------------------------------------------------- #
@@ -281,7 +283,7 @@ def test_one_antidote_a_day_per_character_and_none_for_the_healthy():
 def test_the_band_offers_an_antidote_from_anyones_pack():
     from gartok.band_kit import BandKit
     from gartok.guild import Guild
-    g = Guild([Unit("player"), Unit("player")])
+    g = Guild([standard_unit(), standard_unit()])
     grp = g.groups[0]
     patient = grp.members[0]
     scr = BandKit(g, grp)
@@ -307,7 +309,7 @@ def test_the_snake_antidote_recipe_wants_a_snake_gland():
     assert all(r.target == "Antidote" for r in recipes)
     assert "Antidote" in items.APOTHECARY_RECIPES
 
-    u = Unit("player")
+    u = standard_unit()
     u.recipes.append("Antidote")
     assert "Antidote" in u.known_recipes
 

@@ -150,16 +150,6 @@ the rest.
   everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old
   screens and their tests are in git before the cut.
 
-- **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per test and
-  runs under `pytest-xdist` (how it works: [../../tests/README.md](../../tests/README.md)); four tests
-  still lean on luck and only their seed holds them green, so a change to `Unit` generation may turn one
-  red. Rebuild each on `standard_unit`:
-  `test_combat_talents.py::test_gruesome_takedown_demoralizes_nearest_foe_on_down`,
-  `test_objectives.py::test_the_medic_marks_its_objective`,
-  `test_poison.py::test_a_bite_that_hurts_forces_a_save_and_a_failure_poisons`,
-  `test_web_hub.py::test_a_trust_order_opens_the_bankers_jobs_alone`. The rest of the suite moves by
-  touch: a file whose tests are edited moves its `Unit(...)` rolls to `standard_unit`.
-
 - **Remove occupations (decided 2026-10-23). Close this soon, and until then do not maintain the idea.**
   Occupations are going, so no new code, label, icon, test or sim ranking may lean on them (author
   2026-10-30): every new screen that prints "Race Occupation" raises the cost of this removal. It is spread

@@ -5,18 +5,30 @@
 - Intelligence combat tree: Tactical Mind, Sharp Analysis, Combat Analysis, Exploit Weakness
 """
 
-from gartok import actions, data, intel, talents
+from gartok import actions, intel
 from tests.helpers import (
     Battle,
-    Unit,
     fixed_d20,
+    standard_unit,
 )
 
 
+def _body(team, name, race="Human"):
+    """A `standard_unit` under `name`; another race keeps its hit die at the top, unrolled."""
+    u = standard_unit(team)
+    u.name = name
+    if race != "Human":
+        u.set_race(race)
+        u._hp_roll = u.race["hd"]
+        u._derive_combat()
+        u.hp = u.hp_max
+    return u
+
+
 def _squad_battle():
-    u1 = Unit("player", name="Hero", race=data.race_by_name("Human"))
-    u2 = Unit("player", name="Buddy", race=data.race_by_name("Human"))
-    f1 = Unit("enemy", name="Foe", race=data.race_by_name("Goblin"))
+    u1 = _body("player", "Hero")
+    u2 = _body("player", "Buddy")
+    f1 = _body("enemy", "Foe", "Goblin")
     b = Battle([u1, u2], [f1])
     c1, c2, cf = b.units
     c1.pos, cf.pos, c2.pos = (4, 5), (5, 5), (6, 5)
@@ -28,7 +40,7 @@ def _squad_battle():
 # --------------------------------------------------------------------------- #
 
 def test_blind_strike_reduces_obscured_penalty():
-    u = Unit("player", name="Striker", race=data.race_by_name("Human"))
+    u = _body("player", "Striker")
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "strong")
     u.set_track_level("combat", 2)
@@ -37,7 +49,7 @@ def test_blind_strike_reduces_obscured_penalty():
     assert u.choose_talent("combat", "blind_strike")
     assert u.has_talent("blind_strike")
 
-    f = Unit("enemy", name="DarkFoe", race=data.race_by_name("Goblin"))
+    f = _body("enemy", "DarkFoe", "Goblin")
     b = Battle([u], [f])
     c, foe = b.units
     c.pos, foe.pos = (0, 0), (1, 0)
@@ -49,7 +61,7 @@ def test_blind_strike_reduces_obscured_penalty():
         pen = actions.base.obscured_penalty(b, c, foe)
         assert pen == 3  # 4 - 1 = 3
 
-        plain_u = Unit("player", name="Plain", race=data.race_by_name("Human"))
+        plain_u = _body("player", "Plain")
         plain_b = Battle([plain_u], [f])
         plain_c, _ = plain_b.units
         assert actions.base.obscured_penalty(plain_b, plain_c, foe) == 4
@@ -92,7 +104,7 @@ def test_flanking_reduces_defender_ac_and_peripheral_vision_halves_it():
 # --------------------------------------------------------------------------- #
 
 def test_charisma_combat_tree_progression():
-    u = Unit("player", name="Warlord", race=data.race_by_name("Human"))
+    u = _body("player", "Warlord")
     base_cha = u.charisma
 
     # Tier 1: Imposing (+1 CHA)
@@ -147,14 +159,14 @@ def test_cull_the_broken_adds_extra_damage_vs_demoralized():
 
 
 def test_gruesome_takedown_demoralizes_nearest_foe_on_down():
-    u1 = Unit("player", name="Executioner", race=data.race_by_name("Human"))
+    u1 = _body("player", "Executioner")
     u1.set_track_level("combat", 1)
     u1.choose_talent("combat", "imposing")
     u1.set_track_level("combat", 2)
     u1.choose_talent("combat", "gruesome_takedown")
 
-    f1 = Unit("enemy", name="Weakling", race=data.race_by_name("Goblin"))
-    f2 = Unit("enemy", name="Bystander", race=data.race_by_name("Orc"))
+    f1 = _body("enemy", "Weakling", "Goblin")
+    f2 = _body("enemy", "Bystander", "Orc")
     # Ensure no shared language between Human and Orc
     f2.languages = ("Orcish",)
 
@@ -177,7 +189,7 @@ def test_gruesome_takedown_demoralizes_nearest_foe_on_down():
 # --------------------------------------------------------------------------- #
 
 def test_intelligence_combat_tree_progression():
-    u = Unit("player", name="Scholar", race=data.race_by_name("Human"))
+    u = _body("player", "Scholar")
     base_int = u.intelligence
 
     # Tier 1: Tactical Mind (+1 INT)
@@ -191,7 +203,7 @@ def test_intelligence_combat_tree_progression():
     assert u.talent_bonus("assess_bonus") == 1
 
     # Tier 2b / Tier 3: on another unit
-    u2 = Unit("player", name="Tactician", race=data.race_by_name("Human"))
+    u2 = _body("player", "Tactician")
     u2.set_track_level("combat", 1)
     u2.choose_talent("combat", "tactical_mind")
     u2.set_track_level("combat", 2)
@@ -205,7 +217,7 @@ def test_intelligence_combat_tree_progression():
 
 
 def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
-    u = Unit("player", name="Analyst", race=data.race_by_name("Human"))
+    u = _body("player", "Analyst")
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "tactical_mind")
     u.set_track_level("combat", 2)
@@ -213,7 +225,7 @@ def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
     u.set_track_level("combat", 3)
     u.choose_talent("combat", "exploit_weakness")
 
-    f = Unit("enemy", name="Subject", race=data.race_by_name("Goblin"))
+    f = _body("enemy", "Subject", "Goblin")
     b = Battle([u], [f])
     c, foe = b.units
     c.pos, foe.pos = (5, 5), (6, 5)
@@ -236,7 +248,7 @@ def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
 # --------------------------------------------------------------------------- #
 
 def test_wrestler_bonus_push_and_grab():
-    u = Unit("player", name="Grappler", race=data.race_by_name("Human"))
+    u = _body("player", "Grappler")
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "strong")
     u.set_track_level("combat", 2)
@@ -246,7 +258,7 @@ def test_wrestler_bonus_push_and_grab():
     assert u.talent_bonus("push_bonus") == 1
     assert u.talent_bonus("grab_bonus") == 1
 
-    f = Unit("enemy", name="Gobbo", race=data.race_by_name("Goblin"))
+    f = _body("enemy", "Gobbo", "Goblin")
     b = Battle([u], [f])
     c, foe = b.units
     c.pos, foe.pos = (5, 5), (6, 5)
@@ -258,7 +270,7 @@ def test_wrestler_bonus_push_and_grab():
 
 
 def test_nimble_skirmisher_flank_damage():
-    u1 = Unit("player", name="Rogue", race=data.race_by_name("Human"))
+    u1 = _body("player", "Rogue")
     u1.set_track_level("combat", 1)
     u1.choose_talent("combat", "agile")
     u1.set_track_level("combat", 2)
@@ -267,8 +279,8 @@ def test_nimble_skirmisher_flank_damage():
     assert u1.choose_talent("combat", "nimble_skirmisher")
     assert u1.talent_bonus("flank_finesse_damage") == 2
 
-    u2 = Unit("player", name="Buddy", race=data.race_by_name("Human"))
-    f = Unit("enemy", name="FlankTarget", race=data.race_by_name("Goblin"))
+    u2 = _body("player", "Buddy")
+    f = _body("enemy", "FlankTarget", "Goblin")
     f.hp = 30
     f.max_hp = 30
 
@@ -288,7 +300,7 @@ def test_nimble_skirmisher_flank_damage():
 
 
 def test_iron_stance_defend_mental_defense():
-    u = Unit("player", name="Monk", race=data.race_by_name("Human"))
+    u = _body("player", "Monk")
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "alert")
     u.set_track_level("combat", 2)
@@ -297,7 +309,7 @@ def test_iron_stance_defend_mental_defense():
     assert u.choose_talent("combat", "iron_stance")
     assert u.talent_bonus("defend_mental_defense") == 2
 
-    b = Battle([u], [Unit("enemy", name="Foe", race=data.race_by_name("Goblin"))])
+    b = Battle([u], [_body("enemy", "Foe", "Goblin")])
     c, _ = b.units
     base_md = c.mental_defense
     actions.DEFEND.execute(b, c)
@@ -306,7 +318,7 @@ def test_iron_stance_defend_mental_defense():
 
 
 def test_inspiring_shout_demoralize_initiative():
-    u1 = Unit("player", name="Leader", race=data.race_by_name("Human"))
+    u1 = _body("player", "Leader")
     u1.set_track_level("combat", 1)
     u1.choose_talent("combat", "imposing")
     u1.set_track_level("combat", 2)
@@ -315,8 +327,8 @@ def test_inspiring_shout_demoralize_initiative():
     assert u1.choose_talent("combat", "inspiring_shout")
     assert u1.talent_bonus("demoralize_ally_initiative") == 1
 
-    u2 = Unit("player", name="Follower", race=data.race_by_name("Human"))
-    f = Unit("enemy", name="WeakFoe", race=data.race_by_name("Goblin"))
+    u2 = _body("player", "Follower")
+    f = _body("enemy", "WeakFoe", "Goblin")
 
     f.languages = u1.languages
     b = Battle([u1, u2], [f])
@@ -332,7 +344,7 @@ def test_inspiring_shout_demoralize_initiative():
 
 
 def test_anatomist_crit_range_full_intel():
-    u = Unit("player", name="Doctor", race=data.race_by_name("Human"))
+    u = _body("player", "Doctor")
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "tactical_mind")
     u.set_track_level("combat", 2)
@@ -341,7 +353,7 @@ def test_anatomist_crit_range_full_intel():
     assert u.choose_talent("combat", "anatomist")
     assert u.talent_bonus("full_intel_crit_range") == 1
 
-    f = Unit("enemy", name="Specimen", race=data.race_by_name("Goblin"))
+    f = _body("enemy", "Specimen", "Goblin")
     f.hp = 30
     f.max_hp = 30
     b = Battle([u], [f])

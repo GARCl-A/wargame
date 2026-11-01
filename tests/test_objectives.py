@@ -1,13 +1,14 @@
 """Tests for the Guild Objectives checklist (onboarding checklist on Guild Screen)."""
 
 from unittest.mock import MagicMock
+
 from gartok import objectives
 from gartok.guild import Guild
-from gartok.unit import Unit
+from tests.helpers import standard_unit
 
 
 def test_objectives_initial_state():
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u])
     assert g.objectives_done == []
 
@@ -22,7 +23,7 @@ def test_objectives_initial_state():
 
 
 def test_buy_food_objective():
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u])
     assert not objectives.is_done(g, "obj_buy_food")
 
@@ -32,7 +33,7 @@ def test_buy_food_objective():
 
 
 def test_buy_torch_objective():
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u])
     assert not objectives.is_done(g, "obj_buy_torch")
 
@@ -42,7 +43,7 @@ def test_buy_torch_objective():
 
 
 def test_combat_level_1_objective():
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u])
     assert not objectives.is_done(g, "obj_combat_lv1")
 
@@ -54,7 +55,7 @@ def test_combat_level_1_objective():
 
 def test_work_chain_progression_and_blurbs():
     from gartok import economy, progression
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u])
 
     # Step 0
@@ -84,7 +85,7 @@ def test_work_chain_progression_and_blurbs():
 
 
 def test_arena_bout_objective():
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u])
     assert not objectives.is_done(g, "obj_arena_bout")
 
@@ -95,7 +96,7 @@ def test_arena_bout_objective():
 
 
 def test_recruitment_objectives():
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u])
     assert not objectives.is_done(g, "obj_recruit_tavern")
     assert not objectives.is_done(g, "obj_recruit_prison")
@@ -111,7 +112,7 @@ def test_recruitment_objectives():
 
 def test_objectives_persistence():
     from gartok import persist
-    u = Unit("player")
+    u = standard_unit()
     g = Guild([u], objectives_done=["obj_buy_food", "obj_combat_lv1"])
     payload = persist._payload(g, "current", "")
     assert "objectives_done" in payload
@@ -130,7 +131,7 @@ def test_objectives_persistence():
 def test_market_buy_completes_objectives():
     from gartok import world
     from gartok.trade import Counter
-    u = Unit("player")
+    u = standard_unit()
     u.give_to_pack("Copper Coin", 500)
     g = Guild([u])
     node = world.node("market")
@@ -155,7 +156,7 @@ def test_state_objectives_follow_the_guild():
     from gartok import economy
     from gartok.animals import Animal
     from gartok.wagon import Wagon
-    u, v = Unit("a"), Unit("b")
+    u, v = standard_unit("a"), standard_unit("b")
     g = Guild([u, v])
     ids = ("obj_work_shift", "obj_licence", "obj_mission", "obj_two_groups",
            "obj_strongbox", "obj_pack_animal", "obj_wagon", "obj_deed", "obj_initiation")
@@ -184,7 +185,7 @@ def test_state_objectives_follow_the_guild():
 
 def test_two_groups_stays_done_once_banked():
     from gartok.group import Group
-    u, v = Unit("a"), Unit("b")
+    u, v = standard_unit("a"), standard_unit("b")
     g = Guild([u, v])
     g.groups.append(Group([v], g.groups[0].node))
     g.groups[0].members.remove(v)
@@ -195,14 +196,14 @@ def test_two_groups_stays_done_once_banked():
 
 
 def test_a_racial_magic_source_is_not_an_initiation():
-    u = Unit("a")
+    u = standard_unit("a")
     u.magic_sources = ["nature"]
     assert not objectives.is_done(Guild([u]), "obj_initiation")
 
 
 def test_the_medic_marks_its_objective():
     from gartok import medic
-    u = Unit("a")
+    u = standard_unit("a")
     u.give_to_pack("Copper Coin", 500)
     g = Guild([u])
     u.hp = max(1, u.hp_max - 2)
