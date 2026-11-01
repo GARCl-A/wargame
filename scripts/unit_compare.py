@@ -111,7 +111,7 @@ def main():
     for slug in args.npc or [arena.CHAMPION_SLUG]:
         u = npc_lib.load_npc(slug)
         s = stats(u)
-        print(f"\n{u.name} ({u.race['name']} {u.occupation}): combat {u.combat_level} / "
+        print(f"\n{u.name} ({u.race['name']}): combat {u.combat_level} / "
               f"work {u.work_level} / racial {u.racial_level}, weapon {u.equipped_weapon}, "
               f"armor {u.armor_name}")
         print("  " + "  ".join(f"{m} {s[m]:.1f}" for m in METRICS))

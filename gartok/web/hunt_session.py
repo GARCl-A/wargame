@@ -339,7 +339,7 @@ class HuntSession(Session):
     def _member(self, u):
         into, span = progression.to_next(progression.WORK_XP_THRESHOLDS, u.work_xp)
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race["name"],
-                "occupation": u.occupation["name"], "hp": [max(0, u.hp), u.hp_max], "ac": u.ac,
+                "hp": [max(0, u.hp), u.hp_max], "ac": u.ac,
                 "load": [round(u.load, 1), u.carry_normal, u.carry_max], "rations": u.rations,
                 "work": {"level": u.work_level, "into": into, "span": span},
                 "wis": u.mod_wisdom, "picks": len(u.pending_picks)}

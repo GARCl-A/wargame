@@ -133,7 +133,8 @@ def test_tongue_ai_stops_at_reach_two_to_lash_instead_of_closing():
     d.ap = 2
 
     assert ai._approach_reach(d) == 2
-    ai.take_turn(batt, d)
+    with fixed_d20(20):
+        ai.take_turn(batt, d)
     assert batt.units_distance(d, a) >= 2             # did not crowd in to adjacent
     assert a.hp < 40                                  # lashed on arrival
 

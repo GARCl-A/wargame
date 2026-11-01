@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 class Memorial:
     name: str
     race: str
-    occupation: str
     portrait_id: object
     joined_day: int
     day: int
@@ -26,13 +25,13 @@ class Memorial:
 
 
 def memorial(unit, *, day, cause, place=None, killer=None, line=None):
-    return Memorial(unit.name, unit.race["name"], unit.occupation["name"], unit.portrait_id,
+    return Memorial(unit.name, unit.race["name"], unit.portrait_id,
                     unit.joined_day, day, cause, place, killer, line)
 
 
 def card(m, tag="IN MEMORIAM", button="CONTINUE"):
     days = m.days_lived
-    return {"name": m.name, "race": m.race, "occupation": m.occupation, "portrait_id": m.portrait_id,
+    return {"name": m.name, "race": m.race, "portrait_id": m.portrait_id,
             "cause": m.cause, "days": f"{days} day{'s' if days != 1 else ''} with the guild",
             "span": f"DAY {m.joined_day} TO DAY {m.day}", "place": m.place, "killer": m.killer,
             "line": m.line, "tag": tag, "button": button}

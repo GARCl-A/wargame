@@ -1,10 +1,10 @@
-"""Beasts: the first non-humanoid `kind` -- no occupation gear, a real (scaling)
+"""Beasts: the first non-humanoid `kind` -- no starting kit, a real (scaling)
 Pack Tactics, the Wilds' encounter table, and the Hide they drop instead of
 carrying loot."""
 
 import random
 
-from gartok import encounters, names
+from gartok import encounters, names, starter_kit
 from tests.helpers import (
     Battle,
     Unit,
@@ -21,7 +21,7 @@ def _wolf():
     return Unit("enemy", race=data.race_by_name("Wolf"))
 
 
-def test_a_beast_has_no_occupation_and_fights_unarmed():
+def test_a_beast_has_no_kit_and_fights_unarmed():
     random.seed(1)
     u = _wolf()
     assert u.race["kind"] == "beast"
@@ -130,7 +130,6 @@ def test_a_wolf_survives_a_save_round_trip():
     w = _wolf()
     back = Unit.from_save(persist.unit_to_dict(w))
     assert back.race["name"] == "Wolf"
-    assert back.occupation["name"] == data.BEAST_OCCUPATION["name"]
     assert back.equipped_weapon is None
     assert back.ability.id == "wolf_pack_tactics"
     assert back.hp_max == w.hp_max
@@ -142,11 +141,11 @@ def test_creator_can_turn_a_unit_into_a_wolf_and_back():
     u.set_race("Wolf")
     assert u.race["kind"] == "beast" and u.token == "w"
     assert u.equipped_weapon is None and u.equipped_armor is None
-    u.set_occupation("Farmer")                                 # a beast keeps no job
-    assert u.occupation["name"] == data.BEAST_OCCUPATION["name"]
+    u.set_kit("Club", None)                                    # a beast keeps no weapon
+    assert u.equipped_weapon is None
     u.set_race("Human")
     assert u.race["kind"] == "humanoid"
-    assert u.occupation["name"] != data.BEAST_OCCUPATION["name"]
+    assert u.equipped_weapon is not None
 
 
 def test_a_race_walks_at_its_own_speed_else_its_sizes():
@@ -445,29 +444,27 @@ def test_the_ai_spider_strings_a_web_when_the_prey_is_still_far():
     assert any(o.trap_type == "web" for o in batt.ground)
 
 
-def test_a_skeleton_has_a_job_but_a_spider_does_not():
+def test_a_skeleton_carries_a_weapon_but_a_spider_does_not():
     random.seed(21)
     sk = _skeleton()
-    assert sk.occupation["name"] != data.BEAST_OCCUPATION["name"]
-    assert sk.occupation["name"] in data.OCCUPATION_NAMES
-    assert sk.equipped_weapon == sk.occupation["weapon"]
+    assert sk.equipped_weapon in starter_kit.weapon_pool()
     sp = Unit("enemy", race=data.race_by_name("Giant Spider"))
-    assert sp.occupation["name"] == data.BEAST_OCCUPATION["name"] and sp.equipped_weapon is None
-    sk.set_occupation("Guard")
-    assert sk.occupation["name"] == "Guard"
+    assert sp.equipped_weapon is None
+    sk.set_kit("Club", None)
+    assert sk.equipped_weapon == "Club"
 
 
-def test_a_skeleton_keeps_its_job_through_a_save_and_a_race_swap():
+def test_a_skeleton_keeps_its_weapon_through_a_save_and_a_race_swap():
     from gartok import persist
     random.seed(22)
     sk = _skeleton()
-    sk.set_occupation("Guard")
+    sk.set_kit("Club", None)
     back = Unit.from_save(persist.unit_to_dict(sk))
-    assert back.race["name"] == "Skeleton" and back.occupation["name"] == "Guard"
+    assert back.race["name"] == "Skeleton" and back.equipped_weapon == "Club"
     wolf = Unit("player", race=data.race_by_name("Human"))
     wolf.set_race("Giant Spider")
     wolf.set_race("Skeleton")
-    assert wolf.occupation["name"] in data.OCCUPATION_NAMES
+    assert wolf.equipped_weapon in starter_kit.weapon_pool()
 
 
 def test_a_wolf_also_drops_meat_beside_its_hide():

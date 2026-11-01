@@ -1,24 +1,24 @@
-"""Balance tournament: which races, occupations and race/occupation combos win.
+"""Balance tournament: which races, weapons and race/weapon combos win.
 
 Headless AI-vs-AI. Every battle pits a homogeneous squad of one archetype against
 a homogeneous squad of another -- so the win is credited cleanly to an archetype,
 and racial abilities that need same-race allies (Goblin pack tactics, flanking)
 still get to fire. Attributes / alignment / starting gold are re-rolled for every
 clone, so what is being measured is the archetype (race mods + ability + the
-occupation's weapon/item), averaged over the 3d6 noise.
+weapon's weapon/item), averaged over the 3d6 noise.
 
 Fighters are level 0 with no talents by default -- the raw creation-stat baseline.
 `--level N` raises combat and work to N, `--racial N` pins the racial level (hit
 dice + racial pick, which unlocks at 5); talents are then picked at random from
 the trees, and a TALENTS section ranks each one by how much better than its
-race + occupation predicts the units holding it did.
+race + weapon predicts the units holding it did.
 
 One random sweep feeds all three questions at once: a battle between a
-`(race, occ)` and a `(race', occ')` squad is simultaneously a race-vs-race and an
-occupation-vs-occupation result, so the race / occupation / combo Elo pools all
+`(race, wpn)` and a `(race', wpn')` squad is simultaneously a race-vs-race and an
+weapon-vs-weapon result, so the race / weapon / combo Elo pools all
 come out of the same games.
 
-    python scripts/balance_sim.py                          # 20k battles, race/occ ranking, ~1 min
+    python scripts/balance_sim.py                          # 20k battles, race/wpn ranking, ~1 min
     python scripts/balance_sim.py --battles 60000          # tighter combo numbers too
     python scripts/balance_sim.py --racial 5               # level-0 fighters + a racial talent
     python scripts/balance_sim.py --level 5                # combat 5 / work 5 (racial 5 derived)
@@ -45,14 +45,14 @@ from typing import NamedTuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from gartok import ai, data, items, map_lib, talents
+from gartok import ai, data, items, map_lib, starter_kit, talents
 from gartok.battle import Battle
 from gartok.scenario import ArenaScenario, CustomScenario, ErmosScenario
 from gartok.unit import Unit
 
 RACES = list(data.RACE_NAMES)
-OCCUPATIONS = list(data.OCCUPATION_NAMES)
-COMBOS = [(r, o) for r in RACES for o in OCCUPATIONS]
+WEAPONS = starter_kit.weapon_pool()
+COMBOS = [(r, o) for r in RACES for o in WEAPONS]
 
 GUARD = 600                # per-battle turn-cap; a real 3v3 ends in ~15 rounds
                            # (~90 turns), so anything near this is a stalemate
@@ -78,7 +78,7 @@ def spend_picks(u):
 
 class Build(NamedTuple):
     """How far a fighter is levelled and kitted out. `gear`: `starting` (the
-    occupation's own weapon only), `best` (highest damage die + best armor and
+    starting weapon only), `best` (highest damage die + best armor and
     shield the unit can use) or `random` (a random usable weapon, armor, shield)."""
     combat: int = 0
     work: int = 0
@@ -106,13 +106,13 @@ def give_gear(u, mode):
 
 
 def _squad(combo, team, size, build):
-    race, occ = combo
+    race, wpn = combo
     combat, work, racial, gear = build
     squad = []
     for _ in range(size):
         u = Unit(team)
         u.set_race(race)
-        u.set_occupation(occ)
+        u.set_kit(wpn, None)
         if combat:
             u.set_track_level("combat", combat)
         if work:
@@ -225,7 +225,7 @@ def _wilson_lo(tally, z=1.96):
 def aggregate(results):
     combo = defaultdict(Tally)
     race = defaultdict(Tally)
-    occ = defaultdict(Tally)
+    wpn = defaultdict(Tally)
     combo_games, race_games, occ_games = [], [], []
     rounds = []
     side = Counter()               # did the player (side A) or enemy (side B) win
@@ -261,10 +261,10 @@ def aggregate(results):
                     t.l += 1
             race_games.append((ra, rb, sa))
 
-        # occupation marginal (skip occ mirrors)
+        # weapon marginal (skip wpn mirrors)
         if oa != ob:
-            for oc, is_a in ((oa, True), (ob, False)):
-                t = occ[oc]
+            for wp, is_a in ((oa, True), (ob, False)):
+                t = wpn[wp]
                 if result == "draw":
                     t.d += 1
                 elif (result == "A") == is_a:
@@ -274,7 +274,7 @@ def aggregate(results):
             occ_games.append((oa, ob, sa))
 
     return {
-        "combo": combo, "race": race, "occ": occ,
+        "combo": combo, "race": race, "wpn": wpn,
         "combo_games": combo_games, "race_games": race_games, "occ_games": occ_games,
         "rounds": rounds, "side": side,
     }
@@ -282,19 +282,19 @@ def aggregate(results):
 
 def talent_effects(results, agg):
     """Per talent: how much better (score) its holders did than their race +
-    occupation alone predict. Unit-slot attribution -- each holder is credited
+    weapon alone predict. Unit-slot attribution -- each holder is credited
     with its squad's result -- so teammates' talents are noise that averages out;
     the SE ignores that within-battle correlation, so read it as a floor."""
     overall = sum(t.score * t.n for t in agg["combo"].values()) / \
               sum(t.n for t in agg["combo"].values())
     race_mean = {r: agg["race"][r].score for r in RACES}
-    occ_mean = {o: agg["occ"][o].score for o in OCCUPATIONS}
+    occ_mean = {o: agg["wpn"][o].score for o in WEAPONS}
     samples = defaultdict(list)
     slots = 0
     for combo_a, combo_b, result, _r, tal_a, tal_b, *_ in results:
         sa = {"A": 1.0, "B": 0.0, "draw": 0.5}[result]
-        for (race, occ), score, squad in ((combo_a, sa, tal_a), (combo_b, 1.0 - sa, tal_b)):
-            expected = race_mean[race] + occ_mean[occ] - overall
+        for (race, wpn), score, squad in ((combo_a, sa, tal_a), (combo_b, 1.0 - sa, tal_b)):
+            expected = race_mean[race] + occ_mean[wpn] - overall
             for tals in squad:
                 slots += 1
                 for tid in tals:
@@ -312,16 +312,16 @@ def talent_effects(results, agg):
 
 def stat_effects(results, agg):
     """Per attribute: how much a unit's score moves per +1 of its modifier, once its race and
-    occupation are taken out (the slope of the residual on the modifier). Unit-slot attribution
+    weapon are taken out (the slope of the residual on the modifier). Unit-slot attribution
     like `talent_effects`; the six rolls are independent, so each slope stands on its own."""
     overall = sum(t.score * t.n for t in agg["combo"].values()) / sum(t.n for t in agg["combo"].values())
     race_mean = {r: agg["race"][r].score for r in RACES}
-    occ_mean = {o: agg["occ"][o].score for o in OCCUPATIONS}
+    occ_mean = {o: agg["wpn"][o].score for o in WEAPONS}
     rows = []
     for combo_a, combo_b, result, _r, _ta, _tb, mods_a, mods_b in results:
         sa = {"A": 1.0, "B": 0.0, "draw": 0.5}[result]
-        for (race, occ), score, squad in ((combo_a, sa, mods_a), (combo_b, 1.0 - sa, mods_b)):
-            expected = race_mean[race] + occ_mean[occ] - overall
+        for (race, wpn), score, squad in ((combo_a, sa, mods_a), (combo_b, 1.0 - sa, mods_b)):
+            expected = race_mean[race] + occ_mean[wpn] - overall
             rows += [(mods, score - expected) for mods in squad]
     out = {}
     for i, stat in enumerate(data.ATTRIBUTES):
@@ -384,8 +384,8 @@ def build_report(agg, cfg, tal_fx=None, stat_fx=None):
             p(f"{i:<4}{label:<16}{ratings.get(kk,1500.0):>6.0f}"
               f"{t.score:>8.3f}{t.winrate:>7.1%}{t.n:>8}   {_bar(t.score)}")
 
-    table("RACES  (occupation randomised out)", race_elo, agg["race"], RACES)
-    table("OCCUPATIONS  (race randomised out)", occ_elo, agg["occ"], OCCUPATIONS)
+    table("RACES  (weapon randomised out)", race_elo, agg["race"], RACES)
+    table("WEAPONS  (race randomised out)", occ_elo, agg["wpn"], WEAPONS)
 
     # combos: need a minimum sample; rank by Wilson lower bound so thin cells
     # don't float to the top on variance
@@ -411,11 +411,11 @@ def build_report(agg, cfg, tal_fx=None, stat_fx=None):
     for c in by_lo[-20:][::-1]:
         p(combo_row(c))
 
-    # interaction: combo score vs an additive race+occ model
+    # interaction: combo score vs an additive race+wpn model
     overall = sum(t.score * t.n for t in agg["combo"].values()) / \
               sum(t.n for t in agg["combo"].values())
     race_mean = {r: agg["race"][r].score for r in RACES}
-    occ_mean = {o: agg["occ"][o].score for o in OCCUPATIONS}
+    occ_mean = {o: agg["wpn"][o].score for o in WEAPONS}
     resid = []
     for c in solid:
         pred = race_mean[c[0]] + occ_mean[c[1]] - overall
@@ -423,7 +423,7 @@ def build_report(agg, cfg, tal_fx=None, stat_fx=None):
     resid.sort(key=lambda x: x[1])
     p("")
     p("-" * 78)
-    p("INTERACTION  (combo score minus additive race+occ prediction)")
+    p("INTERACTION  (combo score minus additive race+wpn prediction)")
     p("positive = the pairing is worth more than its parts; negative = anti-synergy")
     p("-" * 78)
     p("STRONGEST SYNERGY:")
@@ -437,7 +437,7 @@ def build_report(agg, cfg, tal_fx=None, stat_fx=None):
     if stat_fx:
         p("")
         p("-" * 78)
-        p("STATS  (score per +1 of the unit's own modifier, race and occupation taken out)")
+        p("STATS  (score per +1 of the unit's own modifier, race and weapon taken out)")
         p("unit-slot attribution like TALENTS; a squad's +1 on all three is about 3x the slope")
         p("-" * 78)
         p(f"  {'attribute':<14}{'slope':>8}{'+/-SE':>8}{'z':>7}")
@@ -448,7 +448,7 @@ def build_report(agg, cfg, tal_fx=None, stat_fx=None):
     if tal_fx:
         p("")
         p("-" * 78)
-        p("TALENTS  (holder score minus race+occupation prediction; + = the talent helps)")
+        p("TALENTS  (holder score minus race+weapon prediction; + = the talent helps)")
         p("random picks; unit-slot attribution, SE is a floor; |z| < 2 is noise")
         p("a branch's tier-2 nodes carry their root's pull; racial talents are not")
         p("ranked here (the race's own mean already contains them) -- use --racial-ab")
@@ -480,22 +480,22 @@ def make_jobs(battles, seed):
     rng = random.Random(seed)
     jobs = []
     for i in range(battles):
-        a = (rng.choice(RACES), rng.choice(OCCUPATIONS))
-        b = (rng.choice(RACES), rng.choice(OCCUPATIONS))
+        a = (rng.choice(RACES), rng.choice(WEAPONS))
+        b = (rng.choice(RACES), rng.choice(WEAPONS))
         while b == a:
-            b = (rng.choice(RACES), rng.choice(OCCUPATIONS))
+            b = (rng.choice(RACES), rng.choice(WEAPONS))
         jobs.append((a, b, rng.randrange(2**31)))
     return jobs
 
 
 def _ab_battle(job):
-    """One racial A/B fight: two squads of the same race and occupation, both with
+    """One racial A/B fight: two squads of the same race and weapon, both with
     the racial level pinned (same hit dice), one holding its racial talent and the
     other with it dropped. Returns (race, talent_side_score)."""
-    race, occ, seed, size, scenario_name, daylight, levels, swap = job
+    race, wpn, seed, size, scenario_name, daylight, levels, swap = job
     random.seed(seed)
-    with_t = _squad((race, occ), "enemy" if swap else "player", size, levels)
-    without = _squad((race, occ), "player" if swap else "enemy", size, levels)
+    with_t = _squad((race, wpn), "enemy" if swap else "player", size, levels)
+    without = _squad((race, wpn), "player" if swap else "enemy", size, levels)
     for u in without:
         for tid in list(u.talents["racial"]):
             u.drop_talent("racial", tid)
@@ -520,7 +520,7 @@ def racial_ab(args, levels):
     can't isolate it, since every member of a race holds the same single node."""
     levels = levels._replace(racial=5 if levels.racial is None else levels.racial)
     rng = random.Random(args.seed)
-    jobs = [(race, rng.choice(OCCUPATIONS), rng.randrange(2**31), args.team_size,
+    jobs = [(race, rng.choice(WEAPONS), rng.randrange(2**31), args.team_size,
              args.scenario, args.daylight, levels, i % 2)
             for race in (args.race or RACES) for i in range(args.racial_ab)]
     print(f"racial A/B: {len(jobs)} mirror fights on {args.workers} workers ...")
@@ -559,12 +559,12 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--battles", type=int, default=20000,
-                    help="20k: solid race/occ ranking in ~1 min. 60k: tight combos too.")
+                    help="20k: solid race/wpn ranking in ~1 min. 60k: tight combos too.")
     ap.add_argument("--team-size", type=int, default=3)
     ap.add_argument("--level", type=int, default=0,
                     help="combat AND work level for every fighter (talents picked at random)")
     ap.add_argument("--gear", choices=("starting", "best", "random"), default="starting",
-                    help="starting = the occupation's weapon; best / random draw weapon, "
+                    help="starting = the starting weapon; best / random draw weapon, "
                          "armor and shield from the whole catalog")
     ap.add_argument("--combat-level", type=int, default=None)
     ap.add_argument("--work-level", type=int, default=None)
@@ -646,12 +646,12 @@ def main():
             "talents": tal_fx or {},
             "stats": stat_fx,
             "race": {r: vars_of(agg["race"][r]) for r in RACES},
-            "occ": {o: vars_of(agg["occ"][o]) for o in OCCUPATIONS},
+            "wpn": {o: vars_of(agg["wpn"][o]) for o in WEAPONS},
             "combo": {f"{r}|{o}": vars_of(agg["combo"][(r, o)]) for r, o in COMBOS},
         }, f, indent=2)
 
     for name, keys, tally in (("race", RACES, agg["race"]),
-                              ("occ", OCCUPATIONS, agg["occ"]),
+                              ("wpn", WEAPONS, agg["wpn"]),
                               ("combo", COMBOS, agg["combo"])):
         with open(os.path.join(args.out_dir, f"balance-{tag}-{name}.csv"),
                   "w", newline="", encoding="utf-8") as f:

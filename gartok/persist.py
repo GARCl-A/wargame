@@ -87,7 +87,6 @@ def unit_to_dict(u):
         "portrait_id": u.portrait_id,
         "portrait_file": getattr(u, "portrait_file", None),
         "race": list(u.race["races"]) if len(u.race.get("races", ())) > 1 else u.race["name"],
-        "occupation": u.occupation["name"],
         "alignment": u.alignment,
         "crime": u.crime,                        # rap sheet the guard tests at a jurisdiction node
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)

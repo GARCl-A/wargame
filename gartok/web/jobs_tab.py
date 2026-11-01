@@ -89,7 +89,7 @@ class JobsTab:
         return {"cards": b.hub_cards(), "line": b.subtitle_text.strip('"'),
                 "jobs": [self._job(t) for t in templates],
                 "signer": {"name": leader.name, "portrait": _portrait(leader),
-                           "sub": f"{leader.race['name']} {leader.occupation['name'].lower()} · leads the band"},
+                           "sub": f"{leader.race['name']} · leads the band"},
                 "carried": self._carried(templates),
                 "egg": None if extra is None else {"label": extra[0], "on": extra[1]},
                 "notice": notice}

@@ -67,7 +67,7 @@ def member_sheet(u, guild=None, task=None):
         stamps.append({"text": "Champion of the Pit", "tone": ""})
     return {
         "uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race["name"],
-        "occ": u.occupation["name"], "age": u.age, "align": u.alignment.capitalize(),
+        "age": u.age, "align": u.alignment.capitalize(),
         "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
         "where": node_label(grp.node) if grp else "Not yet sworn in" if guild is None else "Camp",
         "task": task or (GuildSheet._group_task(grp).lower() if grp else "no orders"),

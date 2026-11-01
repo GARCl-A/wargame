@@ -15,7 +15,7 @@ Events (all carry `t`, the clock in seconds):
   order    a group was given an order (kind, from, dest, hours)
   buy/sell a market transaction (node, item, qty, price per unit)
   fight    a battle ended (kind, won, squad, deaths, xp)
-  death    a character was lost: who (race, occupation, levels), the cause (combat / starvation)
+  death    a character was lost: who (race, levels), the cause (combat / starvation)
            and, for a fight, how: the last log lines before they fell, the foes, the round
   talent   a talent was picked
   asset    the bank chest, the house or an upgrade was bought
@@ -88,7 +88,7 @@ def _pulse(guild):
 
 def death(unit, cause, **fields):
     """A character is lost. `cause` is "combat" or "starvation"; `fields` say how."""
-    emit("death", name=unit.name, race=unit.race["name"], occupation=unit.occupation["name"],
+    emit("death", name=unit.name, race=unit.race["name"],
          combat=unit.combat_level, work=unit.work_level, hp_max=unit.hp_max, cause=cause, **fields)
 
 

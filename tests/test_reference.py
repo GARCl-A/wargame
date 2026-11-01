@@ -50,7 +50,7 @@ def test_every_catalog_entry_is_in_the_document():
     names = [*data.ALL_RACE_NAMES, *(a.name for a in abilities.ABILITIES.values()),
              *(t.name for t in talents.TALENTS.values()), *(t.name for t in weapon_traits.all_traits()),
              *(d.name for d in factions.DEEDS.values()), *(f.name for f in factions.FACTIONS.values()),
-             *(o[1] for o in data.OCCUPATIONS), *(v.name for v in vocations.VOCATIONS.values()),
+             *(v.name for v in vocations.VOCATIONS.values()),
              *(a.label for a in archetypes.ARCHETYPES.values())]
     missing = sorted(n for n in names if n not in _cells(doc) and n not in doc)
     assert not missing, f"missing from REFERENCE.md: {missing}"

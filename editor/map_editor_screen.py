@@ -859,7 +859,7 @@ class MapEditorScreen(Screen):
                 pygame.draw.rect(screen, _NPC_C if sel else T.STEEL_LINE, rr, 1)
                 text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], int(rr.w * 0.5)),
                      (rr.x + T.S, rr.centery - 6), _NPC_C if sel else T.TX)
-                meta = f"{row['race']} · {row['occupation']}"
+                meta = row['race']
                 text(screen, F["micro"], ellipsize(meta, F["micro"], int(rr.w * 0.45)),
                      (rr.right - T.S, rr.centery - 5), T.TX_FAINT, right=True)
                 self.picker_hits.append((rr, ("set_npc", row["slug"])))

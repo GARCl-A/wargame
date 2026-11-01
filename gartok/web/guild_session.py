@@ -25,7 +25,6 @@ from .. import (
 from .. import wagon as wagon_mod
 from ..animals import Animal
 from ..band_kit import BandKit
-from ..data import role_for
 from ..guild_sheet import (
     FIGHT_DUE_TIP,
     FILTERS,
@@ -251,7 +250,7 @@ class GuildSession(Session):
                     "tip": "Make them walk" if riding else "Let them ride" if u.afoot else "No room on the wagons"}
         hunger = u.hunger_level > 0
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
-                "sub": f"{u.race['name']} {u.occupation['name']}", "role": role_for(u.occupation),
+                "sub": u.race['name'],
                 "lead": u is g.leader, "hurt": u.hp < u.hp_max, "hungry": hunger,
                 "money": u.money, "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max,
                 "worn": worn, "pack": self._pack(u), "ride": ride}

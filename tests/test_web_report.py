@@ -101,7 +101,7 @@ def test_the_fallen_page_names_the_killer_with_their_face_and_the_days():
     [m] = s.state()["memorial"]
     foe = battle.enemy_units[0]
     assert m["name"] == squad[-1].name and m["killer"]["name"] == foe.name and m["killer"]["foe"]
-    assert m["killer"]["caption"] == f"{foe.char.race['name']} {foe.char.occupation['name']}"
+    assert m["killer"]["caption"] == foe.char.race['name']
     assert m["days_n"] == guild.clock.day and m["founder"] and m["cause"] == "Killed in combat"
 
 
@@ -246,8 +246,8 @@ def test_distribute_load_evens_the_packs_and_leaves_the_field_alone():
     assert st["loot"]["can_distribute"] and st["loot"]["things"] == on_field
     assert light.load > 0 and heavy.load <= heavy.carry_max
     assert sum(u.count_of("Axe") for u in squad) >= axes["qty"]
-    marked = {n: q for t in st["loot"]["taken"] for n, q in t["items"]}
-    assert marked.get("Axe") == axes["qty"]
+    marked = sum(q for t in st["loot"]["taken"] for n, q in t["items"] if n == "Axe")
+    assert marked == axes["qty"]
 
 
 def test_distribute_load_needs_two_survivors_and_the_field_on_the_table():

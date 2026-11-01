@@ -23,7 +23,7 @@ def _chips(u, limit=None):
 
 
 def _kind(u):
-    return f"{u.race['name']} {u.occupation['name'].lower()}"
+    return u.race['name']
 
 
 class TavernTab:

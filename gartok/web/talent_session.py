@@ -124,8 +124,7 @@ class TalentSession(Session):
         hand = next((t for t in nodes if t.id == self.sel), None)
         return {
             "guild": self.guild.name, "day": self.guild.clock.day, "back": self.back_label, "chain": self.chain,
-            "unit": {"uid": u.uid, "name": u.name, "race": u.race["name"], "occupation": u.occupation["name"],
-                     "portrait": _portrait(u), "hp": max(0, u.hp), "hp_max": u.hp_max,
+            "unit": {"uid": u.uid, "name": u.name, "race": u.race["name"],                      "portrait": _portrait(u), "hp": max(0, u.hp), "hp_max": u.hp_max,
                      "racial_level": u.racial_level, "schools": list(u.magic_sources),
                      "attrs": [{"k": k, "v": getattr(u, a)} for k, a in ATTRS]},
             "tracks": [self._track(u, tr) for tr in talents.TRACKS],

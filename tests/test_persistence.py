@@ -20,7 +20,7 @@ def test_unit_save_round_trip_keeps_rolled_values():
               "quiver_charges", "first_aid_charges"):
         assert getattr(v, f) == getattr(u, f), f
     assert v.race["name"] == u.race["name"]
-    assert v.occupation["name"] == u.occupation["name"]
+    assert v.equipped_weapon == u.equipped_weapon
     assert [getattr(v, a) for a in ATTRIBUTES] == [getattr(u, a) for a in ATTRIBUTES]
 
 

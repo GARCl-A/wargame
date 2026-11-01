@@ -55,7 +55,7 @@ const depthOf = (n, B) => n.requires && B[n.requires] ? 1 + depthOf(B[n.requires
 function heading() {
   const u = T.unit;
   $("title").textContent = `${u.name}'s talents`;
-  $("subtitle").innerHTML = `<b>${esc(u.race)} ${esc(u.occupation)}</b> · ${esc(T.guild)} · day ${T.day}`;
+  $("subtitle").innerHTML = `<b>${esc(u.race)}</b> · ${esc(T.guild)} · day ${T.day}`;
   $("topright").innerHTML = T.chain ? `<div class="chain">${T.chain.map(c =>
     `<span class="${c.at === "later" ? "" : c.at}">${esc(c.label)}</span>`).join("<i>›</i>")}</div>` : "";
 }
@@ -81,7 +81,7 @@ function who() {
   const label = Object.fromEntries(T.tracks.map(t => [t.track, t.label]));
   $("who").innerHTML = `
     <div class="plate"><div class="medal">${face(u.portrait, u.name)}</div>
-      <div><b>${esc(u.name)}</b><span>${esc(u.race)} ${esc(u.occupation)}</span><small>racial level ${u.racial_level} · HP ${u.hp}/${u.hp_max}</small></div></div>
+      <div><b>${esc(u.name)}</b><span>${esc(u.race)}</span><small>racial level ${u.racial_level} · HP ${u.hp}/${u.hp_max}</small></div></div>
     <div class="attrs">${u.attrs.map(a => `<div class="attr ${hot.has(a.k) ? "hot" : ""}"><span>${a.k}</span><b>${a.v}</b><i>${mod(a.v)}</i></div>`).join("")}</div>
     <div class="kicker">The four tracks<em>a level, a pick</em></div>
     ${T.tracks.map(trackCard).join("")}
@@ -115,7 +115,7 @@ function sheet() {
   const empty = !T.nodes.length;
   const school = t.track === "magic" && !u.schools.length;
   $("sheet").innerHTML = `
-    <div class="head"><div><div class="kicker">${esc(u.race)} ${esc(u.occupation)} · ${t.label} level ${t.level}<em>${t.track === "racial" ? `gifts of the ${esc(u.race.toLowerCase())}` : "one tree per track"}</em></div>
+    <div class="head"><div><div class="kicker">${esc(u.race)} · ${t.label} level ${t.level}<em>${t.track === "racial" ? `gifts of the ${esc(u.race.toLowerCase())}` : "one tree per track"}</em></div>
         <h1>${t.label}</h1><p>${HEADS[t.track]}</p></div>
       <div class="seals">
         <div><div class="wax ${t.picks ? "" : "black"}"><b>${t.picks}</b></div><small>pick${t.picks === 1 ? "" : "s"} to spend</small></div>

@@ -75,7 +75,7 @@ class CraftTab:
             n = len(s._recipes(u))
             mod = u.mod_intelligence + u.craft_bonus(self.station)
             crafters.append({"uid": u.uid, "name": u.name, "portrait": _portrait(u), "picked": u is m,
-                             "sub": f"{u.occupation['name']} · d20{mod:+d} · {n} recipe{'s' if n != 1 else ''}",
+                             "sub": f"d20{mod:+d} · {n} recipe{'s' if n != 1 else ''}",
                              "note": f"working on {u.crafting_target.split(':')[0]}" if u.crafting_target else None})
         notice, self.notice = self.notice, None
         return {"cards": s.hub_cards(), "what": self.what, "crafters": crafters,

@@ -220,7 +220,7 @@ function renderInspect() {
   }
   if (t.kind === "ally") {
     card("Your squad",
-      foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.occupation)} · ${esc(t.alignment)}</div>${chipRow(t.conditions || [], "chip muted")}`),
+      foeHead(t, `<div class="race">${esc(t.race)} · · ${esc(t.alignment)}</div>${chipRow(t.conditions || [], "chip muted")}`),
       tier("Vitals", `<span>HP <b>${t.hp}/${t.hp_max}</b></span><span>AC <b>${t.ac}</b></span><span>MD <b>${t.md}</b></span><span>Speed <b>${t.speed}</b></span>`)
         + (t.weapon ? tier("Weapon", weaponFacts(t.weapon)) : "") + groundTier(t),
       S.active && S.active.id === t.id && t.loot.length ? `<div class="assess">Pick up lifts what your hands can hold.</div>` : "");
@@ -260,7 +260,7 @@ function renderUnit() {
   const w = a.weapon;
   const lvl = a.level == null ? "" : `<div class="lvl"${tip(`Racial level ${a.level} (hit dice) · combat ${a.tracks.combat} · work ${a.tracks.work} · magic ${a.tracks.magic}`)}><small>LV</small>${a.level}</div>`;
   box.innerHTML = `<div class="med" style="--side:${SEAT[a.seat]}">${face(a.portrait, a.name)}</div>${lvl}
-    <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · ${esc(a.occupation)} · ${esc(a.alignment)}</div>
+    <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · · ${esc(a.alignment)}</div>
     ${S.my_turn ? `<div class="stats"><div class="stat hp"><span>Hit points${own ? ` · ${a.hp}/${a.hp_max}` : ""}</span>${hp}</div>
       <div class="stat"><span>AC</span><b>${a.ac ?? "?"}</b></div><div class="stat"><span>MD</span><b>${a.md ?? "?"}</b></div><div class="stat"><span>Speed</span><b>${a.speed}</b></div></div>
       ${w ? `<div class="weapon"><b>${esc(w.name)}</b>${esc(w.damage || "")}${w.thrown ? ` · thrown ${w.thrown}` : ""}${w.range ? ` · range ${w.range}` : ""}${w.action ? `<em>${esc(w.action)}</em>` : ""}</div>` : `<div class="weapon">Unarmed</div>`}`

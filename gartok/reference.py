@@ -4,7 +4,7 @@ It is the design-side catalog, spoilers included (creature stats, where a materi
 from). The player's view of the same data is the in-game wiki (`web/wiki_session.py`).
 
 Every catalog in the codebase already carries its own player-facing text: an
-`Ability`/`Talent` has a `name` and an `effect`, `data.RACES`/`OCCUPATIONS` are
+`Ability`/`Talent` has a `name` and an `effect`, `data.RACES` are
 tables, `world.ARENA_TIERS` are `Bout`s. This walks those and emits one Markdown
 reference so nobody hand-maintains a second copy that drifts.
 
@@ -167,14 +167,6 @@ def _vocations():
             + _table(("Vocation", "Races", "Perk"), rows))
 
 
-def _occupations():
-    ranges = _roll_ranges(o[0] for o in data.OCCUPATIONS)
-    rows = [(o[1], rng, o[2], o[3] or '--') for rng, o in zip(ranges, data.OCCUPATIONS)]
-    return "## Occupations\n\nEach occupation grants one starting weapon and one " \
-           "starting item. `d100` is the roll that picks it.\n\n" \
-           + _table(("Occupation", "d100", "Weapon", "Item"), rows)
-
-
 def _weapons():
     rows = []
     for name, w in items.weapons().items():
@@ -222,7 +214,7 @@ def _enemy_kit():
     head = ("Racial level", "Kit budget ($)", "Armor up to ($)", "Weapon up to ($)")
     return ("## Enemy kit by level\n\nWhat a generated humanoid of each racial level is outfitted "
             f"with (`outfit.py`); the rest of the budget buys up to {outfit.POTION_CAP} "
-            f"{outfit.POTION}s. Level 0 keeps the occupation's kit; beasts carry none.\n\n"
+            f"{outfit.POTION}s. Level 0 keeps the starting kit; beasts carry none.\n\n"
             + _table(head, rows))
 
 
@@ -360,7 +352,7 @@ def _constants():
            "them.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _creatures, _abilities, _spells, _archetypes, _vocations, _occupations, _weapons, _weapon_traits, _armor, _shields, _enemy_kit, _items, _base_materials,
+_SECTIONS = (_races, _creatures, _abilities, _spells, _archetypes, _vocations, _weapons, _weapon_traits, _armor, _shields, _enemy_kit, _items, _base_materials,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 

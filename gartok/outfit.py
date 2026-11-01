@@ -7,7 +7,7 @@ get there (`scripts/wealth_by_level.py`, a player who wins 95% of fights and tak
   - armour, up to `ARMOR_SHARE` of the budget: the one that gives the most AC once its Dex cap
     is taken (`ac + min(Dex mod, max_dex)`), the cheapest of those, worn without being
     overloaded; a nimble body stops at the armour its Dex already fills;
-  - weapon, up to `WEAPON_SHARE`, by the body's archetype, whatever its occupation: Strength
+  - weapon, up to `WEAPON_SHARE`, by the body's archetype, whatever it carries: Strength
     over Dexterity fights in melee, `TWO_HANDED_SHARE` of them with a two-handed weapon (a
     Broadsword or a Glaive), the rest with a one-handed weapon that is not finesse; otherwise
     `RANGED_SHARE` of them shoot (a bow or a crossbow, and a Quiver) and the rest fight with a
@@ -21,7 +21,7 @@ get there (`scripts/wealth_by_level.py`, a player who wins 95% of fights and tak
     overload (the catalogue has no kit to soak up the budgets past level 5, the rest buys
     nothing).
 
-Only what some shelf sells is bought (`economy.SHELVES`). Level 0 keeps the occupation's kit;
+Only what some shelf sells is bought (`economy.SHELVES`). Level 0 keeps the starting kit (`starter_kit.py`);
 a beast is never outfitted.
 
 `light_the_band` makes sure a band brings a light to a dark field: `Battle` calls it on every

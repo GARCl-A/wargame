@@ -11,7 +11,8 @@ from tests.helpers import Unit, packed
 def _make_worker(*talent_chain):
     u = Unit("player", name="Worker", race=data.race_by_name("Human"))
     u.money = 100
-    u._base_inventory = []
+    u._stock(None, None)
+    u._hp_roll = u.race["hd"]
     u.work_hours = economy.LUMBER_XP_HOURS * 30
     u._derive_combat()
     for t in talent_chain:

@@ -195,7 +195,7 @@ class Initiation:
             rows.append({"key": u.uid, "name": u.name, "status": self._status(u),
                          "face": {"race": u.race["name"], "portrait_id": getattr(u, "portrait_id", None),
                                   "token": u.token},
-                         "sub": f"{u.race['name']} {u.occupation['name'].lower()}  ·  INT {u.mod_intelligence:+}",
+                         "sub": f"{u.race['name']}  ·  INT {u.mod_intelligence:+}",
                          "note": blocked or "", "enabled": blocked is None, "picked": u.uid == self.picked})
         return rows
 

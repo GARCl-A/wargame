@@ -111,7 +111,7 @@ FALLBACK = {
     items.ItemType.MATERIAL: ("rocks", "stone", {}), items.ItemType.SCROLL: ("scroll", "paper", {}),
     items.ItemType.DICTIONARY: ("book", "leather", {}), items.ItemType.LIGHT: ("torch", "wood", {}),
     items.ItemType.CONTAINER: ("chest", "wood", {}), items.ItemType.TRAP: ("beartrap", "iron", {}),
-    items.ItemType.MISC: ("coin", "copper", {}), items.ItemType.TACK: ("saddle", "leather", {}),
+    items.ItemType.MISC: ("coin", "copper", {}), items.ItemType.CURRENCY: ("coin", "copper", {}), items.ItemType.TACK: ("saddle", "leather", {}),
     items.ItemType.TOOL: ("scissors", "iron", {}), items.ItemType.GEM: ("gem", "purple", {}),
     items.ItemType.QUEST: ("letter", "paper", {}), items.ItemType.ARTIFACT: ("horn", "bone", {}),
 }

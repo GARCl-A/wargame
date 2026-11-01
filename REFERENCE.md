@@ -125,44 +125,6 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | Travel takes 15% fewer hours. |
 | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | On every 10th day no food in the guild ages. |
 
-## Occupations
-
-Each occupation grants one starting weapon and one starting item. `d100` is the roll that picks it.
-
-| Occupation | d100 | Weapon | Item |
-|---|---|---|---|
-| Butcher | 1-5 | Hatchet | Meat |
-| Farmer | 6-11 | Hatchet | Potato |
-| Craftsman | 12-14 | Light Hammer | Chisel |
-| Barber | 15-19 | Dagger | -- |
-| Crossbowman | 20-21 | Light Crossbow | Quiver |
-| Hunter | 22-25 | Shortspear | Bear Trap |
-| Jailer | 26-27 | Club | Chains |
-| Cartographer | 28 | Dagger | -- |
-| Brewer | 29 | Dagger | 1L Beer |
-| Merchant | 30-32 | Dagger | Semi-precious Gemstone |
-| Builder | 33-35 | Hammer | Stone Brick |
-| Tanner | 36-38 | Dagger | 1sqm Hide |
-| Gravedigger | 39-40 | Light Pick | -- |
-| Slave | 41-42 | Club | Rotten Food |
-| Scribe | 43 | Dagger | Scroll |
-| Blacksmith | 44-46 | Hammer | Iron Bar |
-| Guard | 47-48 | Club | Lantern |
-| Guide | 49-51 | Quarterstaff | -- |
-| Gambler | 52-55 | Dagger | -- |
-| Thief | 56-61 | Dagger | Cloak |
-| Woodcutter | 62-67 | Axe | Lumber |
-| Linguist | 68 | Dagger | Dictionary |
-| Physician | 69 | Dagger | First Aid Kit |
-| Messenger | 70-72 | Quarterstaff | Ink |
-| Mercenary | 73-77 | Axe | Rope |
-| Miner | 78-81 | Pick | 1kg Coal |
-| Musician | 82-85 | Dagger | Musical Instrument |
-| Goldsmith | 86-88 | Dagger | -- |
-| Priest | 89-91 | Quarterstaff | Holy Symbol |
-| Shepherd | 92-96 | Quarterstaff | -- |
-| Innkeeper | 97-100 | Dagger | Salt |
-
 ## Weapons
 
 | Weapon | Size | Damage | Range | Finesse | Thrown | Hands | Weight | Price ($) |
@@ -265,7 +227,7 @@ Properties and keywords carried by weapons.
 
 ## Enemy kit by level
 
-What a generated humanoid of each racial level is outfitted with (`outfit.py`); the rest of the budget buys up to 3 Minor Healing Potions. Level 0 keeps the occupation's kit; beasts carry none.
+What a generated humanoid of each racial level is outfitted with (`outfit.py`); the rest of the budget buys up to 3 Minor Healing Potions. Level 0 keeps the starting kit; beasts carry none.
 
 | Racial level | Kit budget ($) | Armor up to ($) | Weapon up to ($) |
 |---|---|---|---|
@@ -669,7 +631,7 @@ The tunable knobs, read off the modules that run them.
 | Demoralize range | 12 sq |
 | Torch radius | 4 sq |
 | Lantern radius | 6 sq |
-| Starting wealth | 5d10 $ |
+| Starting wealth | 3d4 $ |
 | Resale factor | 0.5 of buy price |
 | Lumber wage | $1 per 4 h (level 0, bare-handed); 4/3 of that with your own Axe (level 1), floored |
 | Hunting job level | 3 |

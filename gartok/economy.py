@@ -19,7 +19,7 @@ from . import constants, data, items
 
 TORCH_ITEM = data.TORCH_ITEM
 
-STARTING_WEALTH_DICE = (5, 10)          # 5d10 copper rolled at character creation
+STARTING_WEALTH_DICE = (3, 4)           # 3d4 copper rolled at character creation
 SELL_FACTOR = 0.5                       # resale = half the buy price, floored at 1
 CHA_DEAL_STEP = 0.04                    # deal fraction per point of haggle Charisma
                                        #   mod (and per step of the food talent)

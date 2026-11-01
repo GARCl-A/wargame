@@ -25,7 +25,8 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
     from gartok.guild import Guild
     random.seed(4)
     a, b = Unit("player"), Unit("player")
-    a._base_inventory, b._base_inventory = [], []
+    a._stock(None, None)
+    b._stock(None, None)
     a.money = b.money = 0
     for u in (a, b):
         u._derive_combat()
@@ -100,7 +101,7 @@ def test_outgrown_lumber_yard_pays_but_teaches_nothing():
     u = Unit("player")
     u.money = 0
     u.work_hours = economy.LUMBER_XP_HOURS * 2          # work_xp 2 -> work level 1
-    u._base_inventory = []
+    u._stock(None, None)
     u._derive_combat()
     before = u.work_hours
     guild = Guild([u], clock=Clock(6 * 3600))

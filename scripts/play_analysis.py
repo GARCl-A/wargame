@@ -199,7 +199,7 @@ def death_report(rows, label):
         return f"== {label}: nobody died"
     lines = [f"== {label}: {len(deaths)} lost"]
     for r in deaths:
-        who = f"{r['name']} ({r['race']} {r['occupation']}, combat {r['combat']}, work {r['work']})"
+        who = f"{r['name']} ({r['race']}, combat {r['combat']}, work {r['work']})"
         if r["cause"] == "starvation":
             lines.append(f"  day {day_of(r['t'])}  {who}: starved after {r['unfed_days']} unfed days, "
                          f"{r['food_days']} days of food left, ${r['money']} in hand")

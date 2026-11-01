@@ -253,7 +253,7 @@ def test_first_aid_consumes_charge_either_way():
 
 def test_medic_carries_first_aid_kit():
     u = _unit()
-    u.set_occupation("Physician")
+    u.set_kit("Dagger", data.FIRST_AID_ITEM)
     c = Combatant(u)
     assert data.FIRST_AID_ITEM in c.inventory
     assert c.first_aid_charges == data.FIRST_AID_CHARGES
@@ -331,7 +331,7 @@ def test_lethal_flag_defaults_true_and_permadeath_still_bites():
 
 def test_crossbowman_starts_with_ammo():
     u = _unit()
-    u.set_occupation("Crossbowman")
+    u.set_kit("Light Crossbow", data.AMMO_ITEM)
     assert u.quiver_charges == data.QUIVER_AMMO
     assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Light Crossbow"
 
@@ -346,7 +346,7 @@ def test_giving_quiver_sets_quiver_charges():
 
 def test_crossbow_starts_unloaded_and_must_reload_first():
     u = _unit()
-    u.set_occupation("Crossbowman")
+    u.set_kit("Light Crossbow", data.AMMO_ITEM)
     c = Combatant(u)
     assert not c.crossbow_loaded and not c.ranged and c.improvised   # can't shoot yet
     assert c.can_reload and c.attack_range == 1                       # swings it until reloaded
@@ -436,7 +436,8 @@ def test_ai_lashes_with_the_tongue_when_the_hand_weapon_falls_short():
     a.dr = 0
     d.ap = 2
     hp = a.hp
-    ai.take_turn(batt, d)
+    with fixed_d20(20):
+        ai.take_turn(batt, d)
     assert a.hp < hp                                  # the enemy reached out and hit
     """`Unit.attack_bonus` -- the base to-hit the guild screen shows on the
     weapon row (and `sheet_panel._to_hit` reuses)."""

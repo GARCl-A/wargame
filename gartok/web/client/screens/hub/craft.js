@@ -42,7 +42,7 @@ const Craft = (() => {
     const crew = C.crafters.length ? C.crafters.map(u => `<div class="worker patient ${u.picked ? "on" : ""}" data-crafter="${esc(u.uid)}">
         <div class="medal">${face(u.portrait, u.name)}</div>
         <div class="who"><h3>${esc(u.name)}</h3><div class="race">${esc(u.sub)}</div>${u.note ? `<p>${esc(u.note)}</p>` : ""}</div></div>`).join("")
-      : `<p class="hint">No one in the band knows a recipe for this bench. Recipes come from Work talent picks on the Guild screen, or from a starting occupation.</p>`;
+      : `<p class="hint">No one in the band knows a recipe for this bench. Recipes come from Work talent picks on the Guild screen.</p>`;
     const report = C.report.length
       ? `<div class="report lreport"><div class="lbl">The last stint</div>${C.report.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
     const list = C.recipes.length ? C.recipes.map(r => recipe(r, C)).join("") : `<p class="aside">No known recipes for this bench yet.</p>`;

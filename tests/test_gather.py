@@ -8,7 +8,6 @@ import pytest
 from gartok import (
     ai,
     campaign,
-    data,
     economy,
     encounters,
     forced,
@@ -56,10 +55,9 @@ def test_the_yard_drops_lumber_and_fruit_and_the_mine_stone_coal_ore_and_gems():
         "Stone Brick", "1kg Coal", "Iron Ore", items.GEM_ITEM, items.PRECIOUS_GEM_ITEM]
 
 
-def test_gem_prices_and_the_merchants_kit():
+def test_gem_prices():
     assert items.get(items.GEM_ITEM).price == 60
     assert items.get(items.PRECIOUS_GEM_ITEM).price == 240
-    assert any(o[1] == "Merchant" and o[3] == items.GEM_ITEM for o in data.OCCUPATIONS)
 
 
 @pytest.mark.parametrize("node_id", sorted(gather.TABLES))

@@ -321,7 +321,7 @@ class ReportSession(Session):
                      founder=m.joined_day <= 1,
                      killer=None if m.killer is None else {
                          "name": m.killer, "portrait": _portrait(k.char) if k is not None else None,
-                         "caption": f"{k.char.race['name']} {k.char.occupation['name']}" if k is not None else "",
+                         "caption": k.char.race['name'] if k is not None else "",
                          "foe": k is not None and k.team != "player"})
             c.pop("portrait_id", None)
             out.append(c)
@@ -339,8 +339,7 @@ class ReportSession(Session):
                          "level_before": curve.level(before), "level": curve.level(after),
                          "into": into, "span": span, "bar": into / span if span else 1.0,
                          "bar_before": was_into / was_span if was_span else 1.0})
-        foes = [{"name": c.name, "race": c.char.race["name"], "occupation": c.char.occupation["name"],
-                 "portrait": _portrait(c.char), "status": _foe_status(c), "level": c.char.racial_level}
+        foes = [{"name": c.name, "race": c.char.race["name"],                  "portrait": _portrait(c.char), "status": _foe_status(c), "level": c.char.racial_level}
                 for c in self.foes]
         deeds = ([{"name": d.name, "blurb": d.blurb, "rep": d.rep, "faction": factions.faction(d.faction).name}
                   for d in o.deeds_earned] if o.arena_reward is None else [])
@@ -361,8 +360,7 @@ class ReportSession(Session):
             into, span = progression.to_next(progression.COMBAT_XP_THRESHOLDS, u.combat_xp)
             nxt = [into, span]
         total = sum(1 for k, _ in self.stages if k == "level")
-        return {"uid": u.uid, "name": u.name, "race": u.race["name"], "occupation": u.occupation["name"],
-                "portrait": _portrait(u), "track": track, "level": level,
+        return {"uid": u.uid, "name": u.name, "race": u.race["name"],                 "portrait": _portrait(u), "track": track, "level": level,
                 "tag": "Level up" if total <= 1 else f"Level up · {i + 1} of {total}", "after": self._after(lu),
                 "gains": [[label, a, b] for label, a, b in lu.gains], "next": nxt,
                 "xp_gain": row.xp_gain if row else 0, "picks": len(u.pending_picks), "hp": [u.hp, u.hp_max]}
@@ -408,7 +406,7 @@ class ReportSession(Session):
                  "kg": items.item_weight(items.stack_name(e)), "tip": _tip(items.stack_name(e)),
                  "new": got.get(items.stack_name(e), 0)} for idx, e in enumerate(u._base_inventory)]
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u),
-                "sub": f"{u.race['name']} · {u.occupation['name']}", "hp": [u.hp, u.hp_max],
+                "sub": u.race['name'], "hp": [u.hp, u.hp_max],
                 "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max, "worn": worn, "pack": pack}
 
     def _purse(self):
@@ -416,7 +414,7 @@ class ReportSession(Session):
         entry = getattr(offer, "entry", 0) or 0
         return {"amount": o.arena_reward, "entry": entry, "fighters": o.squad_size,
                 "bout": getattr(offer, "name", "") or "", "paid_to": self.paid_to.uid if self.paid_to else None,
-                "members": [{"uid": u.uid, "name": u.name, "sub": f"{u.race['name']} · {u.occupation['name']}",
+                "members": [{"uid": u.uid, "name": u.name, "sub": u.race['name'],
                              "portrait": _portrait(u), "money": u.money} for u in o.survivors],
                 "deeds": [{"name": d.name, "blurb": d.blurb, "rep": d.rep,
                            "faction": factions.faction(d.faction).name} for d in o.deeds_earned],

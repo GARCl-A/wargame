@@ -127,7 +127,7 @@ const Sheet = (() => {
     const where = u.band ? `Rides with <b>${esc(u.band)}</b><br>at the ${esc(u.where)}, ${esc(u.task)}` : esc(u.where);
     const L = `<div class="who"><div class="plate">${face(u.portrait, u.name)}</div><div>
         <h1 class="${nameSize(u.name)}"${tip(u.name)}>${esc(u.name)}</h1>
-        <div class="race"><b>${esc(u.race)} ${esc(u.occ)}</b><br>${u.age} years · ${esc(u.align)}</div>
+        <div class="race"><b>${esc(u.race)}</b><br>${u.age} years · ${esc(u.align)}</div>
         <div class="pos">${where}</div>
         <div class="stamps">${u.stamps.map(s => `<span class="stamp ${s.tone}">${esc(s.text)}</span>`).join("")}</div>
       </div></div>

@@ -62,7 +62,7 @@ def delete_npc(slug):
 
 def list_npcs():
     """One summary dict per file for the library list, sorted by name:
-    `{slug, name, race, occupation}`. Skips anything that will not parse."""
+    `{slug, name, race}`. Skips anything that will not parse."""
     out = []
     try:
         names = os.listdir(NPC_DIR)
@@ -75,7 +75,7 @@ def list_npcs():
             with open(os.path.join(NPC_DIR, fn), encoding="utf-8") as fh:
                 d = json.load(fh)
             out.append({"slug": fn[:-5], "name": d.get("name", fn[:-5]),
-                        "race": d.get("race", ""), "occupation": d.get("occupation", "")})
+                        "race": d.get("race", "")})
         except (json.JSONDecodeError, OSError):
             continue
     return sorted(out, key=lambda r: r["name"].lower())

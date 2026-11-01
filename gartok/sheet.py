@@ -81,8 +81,7 @@ def unit_to_ch(u):
         return getattr(u, name) + pen + (enc if name in ("strength", "dexterity") else 0)
 
     return {
-        "name": u.name, "race": u.race["name"], "occ": u.occupation["name"],
-        "align": u.alignment, "size": u.size, "age": u.age, "combat": f"N{u.combat_level}",
+        "name": u.name, "race": u.race["name"],         "align": u.alignment, "size": u.size, "age": u.age, "combat": f"N{u.combat_level}",
         "status": status, "tags": tags,
         "hp": (max(u.hp, 0), u.hp_max), "ac": u.ac, "md": u.mental_defense, "spd": u.speed,
         "init": f"{u.initiative_bonus():+}",

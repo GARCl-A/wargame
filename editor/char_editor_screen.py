@@ -1,7 +1,7 @@
 """Character creator: roll a GARTOK character and hand-edit every field.
 
 A sandbox, not a player flow -- it is not bound by draft / XP gating. Every
-editable field is set straight to a valid value: race / occupation / alignment
+editable field is set straight to a valid value: race / alignment
 from their tables, the six attributes as 3d6 scores (3..18), combat / work level
 by stepper (talent picks and hit dice follow), HP (a stepper pins an override,
 AUTO drops back to the roll), talents from the trees, languages, the purse, and
@@ -172,8 +172,7 @@ class CharEditorScreen(Screen):
             self._start_edit(kind)
         elif kind == "picker":
             _, pk = action
-            opts = {"race": data.ALL_RACE_NAMES, "occupation": data.OCCUPATION_NAMES,
-                    "alignment": [a for _, a in data.ALIGNMENTS],
+            opts = {"race": data.ALL_RACE_NAMES, "alignment": [a for _, a in data.ALIGNMENTS],
                     "weapon": ["(unarmed)"] + list(items.weapons()),
                     "tongue": ["(empty)"] + [n for n, w in items.weapons().items()
                                              if w.hands == 1],
@@ -181,7 +180,7 @@ class CharEditorScreen(Screen):
                                                if i.type == items.ItemType.ARTIFACT],
                     "armor": ["(none)"] + list(items.armor()),
                     "additem": _ITEM_CATALOG}[pk]
-            cur = {"race": u.race["name"], "occupation": u.occupation["name"],
+            cur = {"race": u.race["name"],
                    "alignment": u.alignment, "weapon": u.equipped_weapon,
                    "tongue": u.equipped_tongue, "artifact": u.equipped_artifact,
                    "armor": u.equipped_armor,
@@ -246,8 +245,6 @@ class CharEditorScreen(Screen):
             u = self.unit
             if pk == "race":
                 u.set_race(name)
-            elif pk == "occupation":
-                u.set_occupation(name)
             elif pk == "alignment":
                 u.set_alignment(name)
             elif pk == "weapon":
@@ -351,10 +348,7 @@ class CharEditorScreen(Screen):
         self._edit_row(screen, pygame.Rect(x, y, w, 26), "NAME", "name",
                        "" if u._auto_name else u.name)
         y += 26 + T.S // 2
-        for i, (pk, lbl, val) in enumerate((("race", "RACE", u.race["name"]),
-                                            ("occupation", "OCC", u.occupation["name"]))):
-            self._pick_row(screen, pygame.Rect(x + i * (half + T.S), y, half, 26),
-                           lbl, val, ("picker", pk))
+        self._pick_row(screen, pygame.Rect(x, y, half, 26), "RACE", u.race["name"], ("picker", "race"))
         y += 26 + T.S // 2
         self._pick_row(screen, pygame.Rect(x, y, half, 26), "ALIGN", u.alignment,
                        ("picker", "alignment"))
@@ -726,7 +720,7 @@ class CharEditorScreen(Screen):
             name_w = int(rr.w * 0.46)
             text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], name_w),
                  (rr.x + T.S, rr.y + 5), T.TX)
-            meta = f"{row['race']} · {row['occupation']}"
+            meta = row['race']
             text(screen, F["micro"], ellipsize(meta, F["micro"], rr.w - name_w - 52),
                  (rr.right - 44, rr.y + 6), T.TX_FAINT, right=True)
             if self.confirm_delete == row["slug"]:
@@ -784,7 +778,7 @@ class CharEditorScreen(Screen):
         ph = min(H - 2 * T.S * 2, 52 + rows * ch + T.S * 2)
         panel_r = pygame.Rect((W - pw) // 2, (H - ph) // 2, pw, ph)
         box(screen, panel_r, fill=T.TABLE, border=T.BRASS, width=2)
-        noun = {"additem": "an item", "occupation": "an occupation",
+        noun = {"additem": "an item",
                 "alignment": "an alignment", "armor": "armor",
                 "tongue": "a tongue weapon", "artifact": "an artifact", "magic": "a magic source"}.get(kind, f"a {kind}")
         text(screen, F["titleb"], f"pick {noun}", (panel_r.x + pad, panel_r.y + 12), T.TX)
