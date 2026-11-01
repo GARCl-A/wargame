@@ -10,6 +10,7 @@ and a JSON API over the screen being played. Standard library only.
     *    /api/lab/fights, /new    -> the combat lab, when the game was opened on one
 """
 
+import hashlib
 import json
 import mimetypes
 import os
@@ -137,6 +138,19 @@ def _tutorial(session, verb, post):
     return None
 
 
+_ETAGS = {}      # path -> ((mtime, size), etag): a file is hashed again only when it changed
+
+
+def _etag(path):
+    st = os.stat(path)
+    stamp = (st.st_mtime_ns, st.st_size)
+    hit = _ETAGS.get(path)
+    if hit is None or hit[0] != stamp:
+        with open(path, "rb") as fh:
+            hit = _ETAGS[path] = (stamp, '"' + hashlib.sha1(fh.read()).hexdigest()[:20] + '"')
+    return hit[1]
+
+
 def _inside(root, rel):
     path = os.path.normpath(os.path.join(root, rel))
     return path if path.startswith(os.path.normpath(root) + os.sep) and os.path.isfile(path) else None
@@ -147,13 +161,13 @@ def make_handler(game):
         def log_message(self, *args):
             pass
 
-        def _send(self, body, ctype, status=200, headers=()):
+        def _send(self, body, ctype, status=200, headers=(), cache="no-store"):
             self.send_response(status)
             for k, v in headers:
                 self.send_header(k, v)
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", cache)
             self.end_headers()
             self.wfile.write(body)
 
@@ -169,8 +183,15 @@ def make_handler(game):
             if path is None:
                 return self._missing()
             ctype = mimetypes.guess_type(path)[0] or "application/octet-stream"
+            tag = _etag(path)
+            if tag in (t.strip() for t in self.headers.get("If-None-Match", "").split(",")):
+                self.send_response(304)
+                self.send_header("ETag", tag)
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                return
             with open(path, "rb") as fh:
-                self._send(fh.read(), ctype)
+                self._send(fh.read(), ctype, headers=(("ETag", tag),), cache="no-cache")
 
         def _body(self):
             n = int(self.headers.get("Content-Length") or 0)

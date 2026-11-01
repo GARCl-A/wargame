@@ -103,12 +103,11 @@ the rest.
   Playtest 2026-11-01 adds two: the level-up cue is much louder than a click (lower its `LEVEL`), and the
   sound lags behind the click (measure first whether it is the audio start or the round trip to the server).
 
-- **Screens still wait on assets (playtest 2026-11-01).** A screen change reloads the page and the server
-  sends `Cache-Control: no-store` on everything, so each switch refetches ~60 files (~830 KB) before the
-  screen is ready (~400 ms). Send `no-cache` with an ETag (a content hash, 304 on a match) on `/client` and
-  `/assets`, keep `no-store` on the API, with a test that every static answer carries it. Then warm the
-  fonts, icons, portraits and sounds while the title opens (a manifest endpoint, a short load veil there).
-  Measure again with a filmstrip (screencast frames of a reload) after each.
+- **Warm the assets while the game opens (playtest 2026-11-01).** A screen change reloads the page, and
+  the first load of each asset is still the slow one (~990 KB, ~350 ms to a ready screen). Load the fonts,
+  icons, portraits and sounds while the title opens (a manifest endpoint, a short load veil there). The
+  sounds are the bulk of what a warm reload still downloads (16 `Audio` files, ~180 KB: the browser does
+  not reuse them from its cache). Measure again with a filmstrip (screencast frames of a reload).
 
 - **Hover on the vocation's races shows their modifiers (author 2026-11-01).** On the vocation pick,
   hovering a race lists its attribute modifiers and racial abilities, read off the registries. Only if

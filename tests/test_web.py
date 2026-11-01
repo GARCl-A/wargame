@@ -552,6 +552,45 @@ def test_every_file_the_shell_routes_to_is_served(server):
         assert _get(server + path)[0] == 200
 
 
+def _head(url, **headers):
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=headers)) as r:
+            return r.status, r.headers, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.headers, b""
+
+
+def test_static_files_are_revalidated_and_the_api_is_never_stored(server):
+    """`no-cache` + an ETag: the browser keeps a copy but asks before using it, so a new build is never
+    shadowed by an old file; a 304 answers with no body. A static answer without the header would be
+    cached by the browser's own guess."""
+    from gartok.web.server import ART, ASSETS, CLIENT
+    paths = ["/"] + ["/client/" + os.path.relpath(os.path.join(d, f), CLIENT).replace(os.sep, "/")
+                     for d, _, fs in os.walk(CLIENT) for f in fs]
+    for art in ART:
+        folder = os.path.join(ASSETS, art)
+        paths += [f"/assets/{art}/" + os.path.relpath(os.path.join(d, f), folder).replace(os.sep, "/")
+                  for d, _, fs in os.walk(folder) for f in fs[:1]][:3]
+    for path in paths:
+        status, headers, body = _head(server + path)
+        assert status == 200 and headers["Cache-Control"] == "no-cache" and headers["ETag"], path
+        status, again, body = _head(server + path, **{"If-None-Match": headers["ETag"]})
+        assert status == 304 and body == b"" and again["ETag"] == headers["ETag"], path
+        assert _head(server + path, **{"If-None-Match": '"other"'})[0] == 200, path
+    assert _head(server + "/api/screen")[1]["Cache-Control"] == "no-store"
+    assert "ETag" not in _head(server + "/api/screen")[1]
+
+
+def test_the_etag_follows_the_content(tmp_path):
+    from gartok.web.server import _etag
+    f = tmp_path / "a.js"
+    f.write_text("one")
+    first = _etag(str(f))
+    assert _etag(str(f)) == first
+    f.write_text("two")
+    assert _etag(str(f)) != first
+
+
 def test_no_two_scripts_of_one_page_declare_the_same_name():
     """A screen's scripts share the page with the shell's: a second top-level `const` of a name throws
     and the screen never draws (the map's sheet once clashed with the member sheet)."""

@@ -40,6 +40,9 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   cursor, `data-silent` keeps one quiet, and a screen plays only the cue its answer picks (`coins` when the
   purse moved, `level_up`), never `click`.
 - **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.
+- **Static files are revalidated, the API is never stored.** `/client` and `/assets` answer `no-cache` with an
+  ETag (a content hash; a 304 when it matches), so a new build is never shadowed by an old copy and no one
+  clears a cache; `/api` answers `no-store`. A test walks every static file for the header.
 - **A screen opens whole.** `#screen` is veiled until `settle()` in `shell.js` finds nothing left to wait for
   (answers in, fonts loaded, `<img>`s and CSS pictures decoded, capped at 2.5 s), then fades in; the tutorial
   card waits for `Shell.ready` and enters after it. A screen needs nothing for this, but a late `fetch` it fires
