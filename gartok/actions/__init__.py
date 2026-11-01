@@ -14,6 +14,7 @@ from .base import (  # noqa: F401
     _attackable_target,
     _cell_free,
     _drop_cell,
+    _land_thrown,
     _facing,
     _flank_penalty,
     _flanked,
@@ -244,15 +245,32 @@ def aim_kind(action):
     return "throw"
 
 
+def empty_hand_reason(battle, actor, action):
+    """Why a weapon action is out while its weapon is on the ground, or "" when that is not the cause."""
+    w = actor.weapon
+    if not (actor.unarmed and actor.let_go and w is not None and action in WEAPON_ACTIONS
+            and w.has_trait(action.id)):
+        return ""
+    why = f"thrown at {actor.let_go['at']}"
+    lying = next((o.pos for o in battle.ground if o.is_weapon and o.weapon_name == actor.weapon_name), None)
+    if lying is not None:
+        why += f", on the ground at {lying}"
+    return f"no {actor.weapon_name} in hand ({why})"
+
+
 def panel(battle, actor, tab, my_turn, show_blocked=False):
     """The action bar for `actor` on `tab` ("combat" | "utility"): one entry per action it shows,
-    `{"action", "applies", "reason", "enabled", "hotkey"}`, the free hotkeys 1-8 in order."""
+    `{"action", "applies", "reason", "enabled", "hotkey", "why"}` (`why`: the tooltip line of a shown but
+    disabled action), the free hotkeys 1-8 in order."""
     entries, free = [], 0
     for action in COMBAT_ACTIONS if tab == "combat" else UTILITY_ACTIONS:
         applies, reason = action.applicable(battle, actor)
         if action in CONTEXTUAL and not (my_turn and action.available(battle, actor)):
             continue
-        if not applies and not show_blocked:
+        lost = empty_hand_reason(battle, actor, action) if tab == "combat" else ""
+        if lost:
+            reason = lost
+        elif not applies and not show_blocked:
             continue
         hotkey = FIXED_HOTKEYS.get(action.id)
         if hotkey is None and free < 8:
@@ -260,5 +278,5 @@ def panel(battle, actor, tab, my_turn, show_blocked=False):
             hotkey = free
         enabled = applies and my_turn and (action is END or action.available(battle, actor))
         entries.append({"action": action, "applies": applies, "reason": reason,
-                        "enabled": enabled, "hotkey": hotkey})
+                        "enabled": enabled, "hotkey": hotkey, "why": lost})
     return entries

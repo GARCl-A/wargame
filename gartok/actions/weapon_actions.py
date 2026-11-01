@@ -21,11 +21,10 @@ modifier:
 from .. import items
 from ..conditions import Defending, Maimed, ShieldHooked
 from ..data import d20, resolve_bonus, roll
-from ..ground import GroundObject
 from .base import (
     Action,
     _cell_free,
-    _drop_cell,
+    _land_thrown,
     _flanked,
     _hostile_target,
     _pack_flank,
@@ -591,10 +590,7 @@ class JavelinCharge(Action):
         if res in ("hit", "crit"):
             battle.log(f"  The running throw impacts with brutal force (+{bonus_dmg} damage)!")
 
-        actor.disarm()
-        landing = _drop_cell(battle, target)
-        battle.ground.append(GroundObject.weapon(landing, weapon_name))
-        battle.log(f"  {weapon_name} lands at {landing}; {actor.name} is disarmed.")
+        _land_thrown(battle, actor, target, weapon_name)
 
 
 # --------------------------------------------------------------------------- #

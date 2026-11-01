@@ -252,11 +252,11 @@ function renderUnit() {
     ${S.my_turn ? `<div class="ap"><span>Action</span><div class="coins">${Array.from({length: a.ap_max}, (_, i) => `<i class="${i < a.ap_max - a.ap ? "spent" : ""}"></i>`).join("")}</div></div>` : ""}`;
 }
 
-function plate(a, {id = a.id, name = a.toggle ? a.label : a.name, sel = ui.aim && ui.aim.id === a.id} = {}) {
+function plate(a, {id = a.id, name = a.toggle ? a.label : a.name, sel = ui.aim && ui.aim.id === a.id, sub = ""} = {}) {
   const cls = ["plate", a.enabled ? "" : "off", sel ? "sel" : "", a.toggle && /ON/.test(a.label) ? "on" : ""].join(" ");
-  return `<div class="${cls}" data-action="${esc(id)}"${tip(a.label)}>
+  return `<div class="${cls}" data-action="${esc(id)}"${tip(a.why ? `${a.label} — ${a.why}` : a.label)}>
     <div class="key">${a.hotkey ?? ""}</div><div class="cost">${"<i></i>".repeat(a.cost)}</div>
-    <div class="ico mask" style="--icon:${iconOf(id)}"></div><div class="nm">${esc(name)}</div></div>`;
+    <div class="ico mask" style="--icon:${iconOf(id)}"></div><div class="nm">${esc(name)}${sub ? `<small>${esc(sub)}</small>` : ""}</div></div>`;
 }
 
 // the row: the spells folded into one plate, then the tab's actions; Delay sits apart, always in reach
@@ -270,7 +270,7 @@ function renderPlates() {
                                      {id: "spells", name: "Spells", sel: ui.spellbook || aimingSpell}) : "";
   $("plates").innerHTML = book + list.map(a => plate(a)).join("");
   const delay = all.find(a => a.id === "delay");
-  $("fixed").innerHTML = delay ? plate(delay) : "";
+  $("fixed").innerHTML = delay ? plate(delay, {sub: "others first"}) : "";
   const open = ui.spellbook && spells.length && S.my_turn;
   $("spellbook").hidden = !open;
   if (open) $("spellbook").innerHTML = `<div class="kicker">Spells</div>` + spells.map(a =>
@@ -306,7 +306,7 @@ function renderHint() {
   else if (S.flags.binding) h = "Enemies down — Capture a fallen foe, or Space to let the round run out.";
   else if (S.flags.ctf) h = "Carry their flag home to win, and guard your own.";
   else if (S.flags.can_flee) h = "At the edge of the field: you can Flee.";
-  else h = "Click a marked cell to move · a foe twice to strike · Space: defend and end the turn · wheel zooms, drag pans.";
+  else h = "Click a marked cell to move · a foe twice to strike · Space: defend and end the turn · 9: Delay, let the others go first · wheel zooms, drag pans.";
   $("hint").textContent = h;
 }
 

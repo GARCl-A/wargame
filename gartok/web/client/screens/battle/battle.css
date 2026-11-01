@@ -170,6 +170,7 @@
 .plate:hover{transform:translateY(-3px)}
 .plate .ico{width:42px;height:42px;margin:20px auto 0;color:#d8bd86}
 .plate .nm{position:absolute;left:4px;right:4px;bottom:10px;font:600 10px/1.15 Cinzel,serif;letter-spacing:.05em;color:#d9c7a2;text-transform:uppercase}
+.plate .nm small{display:block;margin-top:2px;font:500 9px/1.1 Cinzel,serif;letter-spacing:.02em;text-transform:none;opacity:.8}
 .plate .key{position:absolute;left:7px;top:6px;font:700 11px/1 Cinzel,serif;color:#6f8a84}
 .plate .cost{position:absolute;right:7px;top:8px;display:flex;gap:3px}
 .plate .cost i{width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9b0,#a77a32)}

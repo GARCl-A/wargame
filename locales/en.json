@@ -85,7 +85,7 @@
     "battle": {
       "title": "Fighting it out",
       "body": [
-        "Each character has 2 action points a turn. Walking, attacking and most actions cost 1; a weapon action costs 2. Space ends the turn. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
+        "Each character has 2 action points a turn. Walking, attacking and most actions cost 1; a weapon action costs 2. Space ends the turn; Delay (key 9, beside the action bar) lets the others act first, once a round, before you spend a point. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
         "You see only what the active character's light and senses reach; L shows the whole squad's sight. A foe's ? fields are what you have not read yet: everyone reads a foe on first sight, and Assess (1 point) reads harder.",
         "At 0 HP a character is down, not dead: Stabilize or First Aid them before they bleed out."
       ]

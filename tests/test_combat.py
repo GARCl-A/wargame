@@ -748,3 +748,58 @@ def test_flee_blocked_reasons():
     assert not flee.available(batt, a)
     assert "right beside you" in flee.blocked_reason(batt, a).lower()
 
+
+
+# --------------------------------------------------------------------------- #
+# A thrown weapon: where it lies, and why its actions leave the bar            #
+# --------------------------------------------------------------------------- #
+
+def _thrown_hatchet(surround=False):
+    batt, a, d = _melee_battle()
+    a.equip_weapon("Hatchet")
+    a.pos, d.pos = (5, 5), (8, 5)
+    a.ap = 2
+    if surround:
+        batt.ground += [GroundObject.torch(p) for p in batt.board.neighbors(d.pos)]
+    with fixed_d20(1):
+        actions.THROW.execute(batt, a, d)
+    return batt, a, d
+
+
+def test_a_surrounded_foe_gets_the_weapon_on_its_own_cell_and_it_can_be_picked_up():
+    batt, a, d = _thrown_hatchet(surround=True)
+    lying = [o for o in batt.ground if o.is_weapon]
+    assert [o.pos for o in lying] == [d.pos]
+    a.pos, a.ap = (7, 5), 2
+    assert actions.PICK_UP.available(batt, a)
+    actions.PICK_UP.execute(batt, a)
+    assert a.weapon_name == "Hatchet" and not a.unarmed and a.let_go is None
+    assert not [o for o in batt.ground if o.is_weapon]
+
+
+def test_the_bar_shows_a_weapon_action_disabled_with_the_reason_once_the_weapon_is_thrown():
+    batt, a, d = _thrown_hatchet()
+    where = next(o.pos for o in batt.ground if o.is_weapon)
+    entry = next(e for e in actions.panel(batt, a, "combat", True) if e["action"] is actions.HOOK_SHIELD)
+    assert not entry["enabled"]
+    assert entry["why"] == f"no Hatchet in hand (thrown at {d.name}, on the ground at {where})"
+    ids = [e["action"].id for e in actions.panel(batt, a, "combat", True)]
+    assert "hook_shield" in ids and "maiming_strike" not in ids
+
+
+def test_a_weapon_action_is_enabled_again_once_the_weapon_is_back_in_hand():
+    batt, a, d = _thrown_hatchet()
+    a.pos = next(o.pos for o in batt.ground if o.is_weapon)
+    a.ap = 2
+    actions.PICK_UP.execute(batt, a)
+    a.ap = 2
+    entry = next(e for e in actions.panel(batt, a, "combat", True) if e["action"] is actions.HOOK_SHIELD)
+    assert entry["enabled"] and not entry["why"]
+
+
+def test_the_ai_does_not_pick_a_weapon_action_it_cannot_use():
+    from gartok.ai.attack import _weapon_action
+    batt, a, d = _thrown_hatchet()
+    d.pos, a.pos, a.ap = (6, 5), (5, 5), 2
+    assert not actions.HOOK_SHIELD.can(batt, a, d)
+    assert _weapon_action(batt, a, d) is None

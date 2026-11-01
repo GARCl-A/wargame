@@ -641,12 +641,13 @@ class BattleSession(Session):
             out[tab] = [{"id": e["action"].id, "name": e["action"].name,
                          "label": e["action"].label(b, actor), "cost": e["action"].cost,
                          "enabled": e["enabled"], "aimed": e["action"].aimed, "target": e["action"].target,
-                         "hotkey": e["hotkey"], "toggle": bool(getattr(e["action"], "toggle", False))}
+                         "hotkey": e["hotkey"], "toggle": bool(getattr(e["action"], "toggle", False)),
+                         "why": e["why"]}
                         for e in actions.panel(b, actor, tab, my_turn)]
         spells = [actions.CastSpellAction(sp) for sp in actor.char.spells_known]
         out["combat"] = [{"id": f"spell:{a.spell_id}", "name": a.name, "label": a.name, "cost": a.cost,
                           "enabled": a.available(b, actor), "aimed": True, "target": a.target,
-                          "hotkey": None, "toggle": False} for a in spells] + out["combat"]
+                          "hotkey": None, "toggle": False, "why": ""} for a in spells] + out["combat"]
         return out
 
     def _inspect(self, uid, obs, my_turn):

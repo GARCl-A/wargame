@@ -5,6 +5,7 @@ import random
 from .. import combat_log, intel, poisons
 from ..board import cells
 from ..data import roll
+from ..ground import GroundObject
 
 
 def _sign(v):
@@ -202,6 +203,16 @@ def _drop_cell(battle, target):
             if battle.unit_at(p) is None and battle.ground_at(p) is None
             and p not in battle.board.walls]
     return random.choice(free) if free else target.pos
+
+
+def _land_thrown(battle, actor, target, weapon_name):
+    """The weapon just thrown at `target` leaves the hand and lies on the ground; the actor remembers
+    where (the action bar says why its weapon actions are gone)."""
+    actor.disarm()
+    landing = _drop_cell(battle, target)
+    battle.ground.append(GroundObject.weapon(landing, weapon_name))
+    actor.let_go = {"at": target.name}
+    battle.log(f"  {weapon_name} lands at {landing}; {actor.name} is disarmed.")
 
 
 def _pickable(unit, obj):

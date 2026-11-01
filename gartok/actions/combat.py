@@ -6,14 +6,13 @@ from .. import intel
 from ..board import cells, cells_in_radius, cone_cells
 from ..conditions import Defending, Demoralized, Grappled
 from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll
-from ..ground import GroundObject
 from .base import (
     Action,
     _attackable_target,
     _cell_free,
-    _drop_cell,
     _flanked,
     _hostile_target,
+    _land_thrown,
     _pack_flank,
     _resolve_hit,
     _shared_language,
@@ -307,10 +306,7 @@ class Throw(Action):
                 target.take_damage(actor.damage_roll(crit=nat2 == 20, thrown=True), battle.log,
                                    knockout=actor.nonlethal_blows)
 
-        actor.disarm()
-        landing = _drop_cell(battle, target)
-        battle.ground.append(GroundObject.weapon(landing, weapon_name))
-        battle.log(f"  {weapon_name} lands at {landing}; {actor.name} is disarmed.")
+        _land_thrown(battle, actor, target, weapon_name)
 
 
 # --------------------------------------------------------------------------- #

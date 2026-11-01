@@ -64,13 +64,6 @@ the rest.
   it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Say why a weapon action is hidden when the hand is empty.** After `Throw`, `actor.disarm()` empties the
-  hand and every weapon trait action (Hook Shield, ...) vanishes from the bar with no word. Show it
-  disabled with the reason "no <weapon> in hand (thrown at X, on the ground at Y)" (same tooltip rule as
-  the stuck Move above). When every neighbour of a thrown-at target is taken, `base._drop_cell` lands the
-  weapon on the target's own cell: keep Pick up working from there. Test: throw at a fully surrounded foe,
-  the axe is on the board and picked up; the AI does not pick a weapon action it cannot use.
-
 - **Show items lying on a cell a character stands on.** An item dropped or thrown onto a cell with a
   unit on it (a weapon that lands under a surrounded foe, a drop under your own fighter) is hidden by the
   token. Improve how the web board shows it (a corner badge on the token, or a marker in the cell ring)
@@ -84,10 +77,6 @@ the rest.
 - **Playtest export (decided 2026-10-31).** The author asks each tester to zip the save folder by hand to read
   the combat logs and what was done. Add a Settings button "Export playtest data" that gives one zip
   (saves, combat-log JSONLs, `game_version`). Do it with the version item so the zip says the build.
-
-- **Delay is found by chance (playtest 2026-10-31).** The tester wished for "Delay" (move the tank first,
-  the rest back) and did not see that it exists (key 9, an icon in the bar). Give it a text label and a tooltip
-  that says what it does ("let the others act first"), and list it in the first battle's hint. Web only.
 
 - **Draft: say what a commission does (playtest 2026-10-31).** The tester did not know the COMMISSION tokens
   force a reroll until the card has the asked tag (+2 on that attribute) and took the first cards he saw,

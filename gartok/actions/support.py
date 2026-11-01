@@ -606,6 +606,9 @@ class Delay(Action):
         if self.available(battle, actor):
             battle.delay_turn(actor)
 
+    def label(self, battle, actor):
+        return "Delay: let the others act first (once a round, before you spend a point)"
+
 
 class SignalHorn(Action):
     id, name, cost, target = "signal_horn", "Signal Horn", 2, "none"

@@ -83,6 +83,7 @@ class Combatant:
         self.delayed = False          # waiting at the end of the order; its turn resumes, not restarts
         self.delay_round = 0          # round of its last Delay: one per round (rounds start at 1)
         self.weapon_hand = c.equipped_weapon is not None
+        self.let_go = None            # {"at": name} while the weapon lies thrown on the ground
         self.weapon_name = c.equipped_weapon
         self.weapon = items.get(c.equipped_weapon)
         # the Tongue is a separate limb: its weapon rides alongside the hands
@@ -363,6 +364,7 @@ class Combatant:
         self.weapon_name = weapon_name
         self.weapon = items.get(weapon_name)
         self.weapon_hand = True
+        self.let_go = None
         dropped = []
         if self._hands_used() > 2:            # two-handed weapon + a torch/lantern in the other
             dropped.append(self.drop_torch())
