@@ -30,7 +30,7 @@ python -m gartok.reference                         # regenerates REFERENCE.md
 | Topic | Read |
 |---|---|
 | The rules and the design premises | [`RULES.md`](RULES.md) |
-| The catalog: races, occupations, weapons, prices, talents, constants (generated) | [`REFERENCE.md`](REFERENCE.md) |
+| The design catalog for developers and agents, spoilers included: races, creatures, weapons, prices, talents, constants (generated) | [`REFERENCE.md`](REFERENCE.md) |
 | Rules for an agent working on the repo | [`AGENTS.md`](AGENTS.md) |
 | Building a web screen | [`docs/web_client.md`](docs/web_client.md) |
 | Open work | [`docs/plans/backlog.md`](docs/plans/backlog.md) |

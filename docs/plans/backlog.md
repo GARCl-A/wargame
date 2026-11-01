@@ -148,6 +148,13 @@ bugs, then the rest.
 - **Map blocks: drop pygame's layout hints.** `gap_before` and `height` in `map_view.py`'s blocks are
   ignored by the web; the Editor does not count (author 2026-10-30). Delete them.
 
+- **Quest and tool items priced at a placeholder $4 (found 2026-11-01 reading `REFERENCE.md`).** `Ancient Codex`,
+  `Snake Dragon Corpse` (both `ItemType.QUEST`, rare, 2 and 12 kg), `Musical Instrument` and `Dictionary`
+  carry `price=4` in `items.py`, the same as a Fruit or a Sugar; there is no default, the number was set by hand.
+  Decide per item: a real price (what the Library or the Tanners would pay, what a bard's instrument costs),
+  or "not for sale" if the market never trades quest items (check `trade.Counter` first). After touching
+  prices run `python -m pytest tests/ -n auto -m balance` and `scripts/economy_report.py` (`AGENTS.md`).
+
 ## Medium
 
 - **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided).** On day 105 a guild of
@@ -232,6 +239,17 @@ bugs, then the rest.
 
 - **Native window for the web client (pywebview or Tauri).** Today the game opens in an Edge or Chrome app
   window. pywebview's `pythonnet` is unverified on Python 3.14. Wanted one day, not now.
+
+- **The in-game wiki shows only what the guild already knows (author 2026-11-01, decided).** The wiki is
+  the player's own notebook, not the game's encyclopedia: a player who opens it to reread how the sword's
+  action works must not be spoiled on the next creature, recipe or talent. Today every chapter in
+  `web/wiki_session.BUILD` prints the whole catalog from turn one (Beasts: Hit Die, size, speed, abilities
+  and drop odds; Talents: every racial node of every race; Recipes: all of them). Gate each chapter on what
+  the guild has met, owned or learned (`intel`, known recipes, the talents of the races in the guild), with
+  a locked-entry stub or no entry at all. Open: what counts as "known" per chapter, and whether the
+  wiki says that something is still hidden. The complete catalog is `REFERENCE.md`, a design doc for
+  developers and agents, spoilers included; if it is ever published it becomes the game's general wiki,
+  outside the game, and the in-game one stays the discovered subset.
 
 ## Notes to remember when the case comes up
 
