@@ -12,6 +12,7 @@ from gartok import (
     data,
     economy,
     gather,
+    group,
     items,
     medic,
     orders,
@@ -671,6 +672,21 @@ def test_the_tavern_opens_on_its_shop_and_its_recruits_show_the_strangers_and_th
     assert t["dossier"]["uid"] == second.uid and t["strangers"][1]["picked"]
     with pytest.raises(ValueError):
         hub.verb("candidate", True)(hub, {"uid": "nobody"})
+
+
+def test_the_dossier_shows_the_crowd_penalty_and_the_room_left_in_the_recruiters_group():
+    hub, guild, g = _tavern()
+    g.leader.set_base_attribute("charisma", 14)
+    g.leader._racial_override = 4
+    terms = {t["label"]: t for t in hub.pick_tab("recruits")["tavern"]["dossier"]["terms"]}
+    assert terms["Crowd"]["value"] == "0" and f"past {recruit.FREE_SLOTS}" in terms["Crowd"]["note"]
+    cap = group.BASE_CAPACITY + 2 + 2
+    assert terms["Group"]["value"] == f"2 of {cap}" and terms["Group"]["tone"] == "good"
+    assert terms["Group"]["note"].endswith(f"holds {group.BASE_CAPACITY} base +2 CHA +2 half level")
+    for _ in range(recruit.FREE_SLOTS + 1 - len(guild.roster)):
+        guild.add_member(standard_unit(), g)
+    terms = {t["label"]: t for t in hub.state()["tavern"]["dossier"]["terms"]}
+    assert terms["Crowd"]["value"] == f"-{recruit.SIZE_PENALTY}" and terms["Crowd"]["tone"] == "bad"
 
 
 def test_a_pitch_won_signs_the_stranger_into_the_band_and_saves(saves, monkeypatch):

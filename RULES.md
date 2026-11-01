@@ -1095,7 +1095,8 @@ different questions:
   Charisma modifier among the eligible speakers does, same as before leaders
   existed.
 - **A cap on cohesion.** `Group.capacity` = `BASE_CAPACITY` (3) + the leader's
-  Charisma modifier — how many members one leader can hold as a coalition.
+  Charisma modifier + half their racial level (`group.CAPACITY_TERMS`) — how many
+  members one leader can hold as a coalition. A leader grows into a bigger band.
   Past it, `Group.overextension` counts the excess and docks that amount, flat,
   off every member's **Mental Defense** (`Unit._derive_ac`) — an overstretched
   group doesn't get blocked from growing, it just gets easier to rattle

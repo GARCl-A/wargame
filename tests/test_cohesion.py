@@ -295,3 +295,15 @@ def test_recruiting_into_a_full_group_with_no_slot_is_allowed_with_a_warning():
     assert "group is full" in recruit.overflow_warning(guild, m[0])
     _fame(guild, 1)
     assert recruit.overflow_warning(guild, m[0]) is None
+
+
+def test_capacity_is_the_base_plus_the_leaders_charisma_and_half_their_racial_level():
+    from gartok.group import capacity_for
+    from tests.helpers import standard_unit
+    lead = standard_unit()
+    lead.set_base_attribute("charisma", 14)
+    lead._racial_override = 5
+    group = Group([lead, standard_unit()], leader=lead)
+    assert group.capacity_terms() == [(BASE_CAPACITY, "base"), (2, "CHA"), (2, "half level")]
+    assert group.capacity == capacity_for(lead) == BASE_CAPACITY + 2 + 2
+    assert capacity_for(None) == BASE_CAPACITY

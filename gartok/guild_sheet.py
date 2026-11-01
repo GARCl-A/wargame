@@ -7,7 +7,7 @@ the charter (the bands, the notices, the holdings, the founding trade). A tone i
 from . import magic, progression, recruit, rite, vocations, world
 from .animals import STARVE_DAYS, Animal
 from .constants import fmt_money
-from .group import BASE_CAPACITY
+from .group import capacity_for
 
 FILTERS = (
     ("all", "ALL", "Every member of every group"),
@@ -203,7 +203,7 @@ class GuildSheet:
         return f"Sponsored recruits: {used} of {cap} -- {left}"
 
     def _role_rows(self, unit, grp):
-        cap = BASE_CAPACITY + unit.mod_charisma + (unit.racial_level // 2)
+        cap = capacity_for(unit)
         band = grp.display_name if grp else "the group"
         free_swap = self.guild.leader_swaps_used < 1
         rows = []

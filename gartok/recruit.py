@@ -109,7 +109,7 @@ def convince(recruiter, candidate, roster_size, rng=random, day=1, extra_mods=No
 
     `roster_size` is how many members the guild has right now (it grows as you
     recruit within one visit, so the fourth hire of a session is harder than the
-    first). Returns a `Pitch`; on a tie the recruiter wins.
+    first). Returns a `Pitch`; a tie goes to the candidate.
     """
     lang = shared_languages(recruiter, candidate)
     if not lang:

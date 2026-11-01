@@ -356,6 +356,12 @@
 .sec.dark{margin-top:18px}
 .sec.dark .lbl{color:#6b5233}
 .pitchers{margin-top:8px;max-height:310px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(90,60,30,.45) transparent}
+.pterms .fact{margin-top:8px}
+.pterms .fact b{color:#3a2410;min-width:60px}
+.pterms .fact b.good{color:#2f5a22}
+.pterms .fact b.bad{color:#7a2318}
+.pterms .fact b.money{color:#7a5a12}
+.pterms .use{font:15px/1.25 var(--read);color:#7b6142}
 .pitcher{display:grid;grid-template-columns:48px 1fr auto;gap:14px;align-items:center;padding:8px 10px;border-bottom:1px dashed rgba(90,60,30,.28);cursor:pointer}
 .pitcher .medal{width:42px;height:42px}
 .pitcher:hover{background:rgba(201,163,94,.08)}

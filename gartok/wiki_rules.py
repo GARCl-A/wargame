@@ -76,8 +76,8 @@ def sections():
         ("GROUPS, LEADERS & FAME", [
             (f"The guild may run {group.BASE_SLOTS} groups, plus one more for every "
             f"{group.FAME_PER_SLOT} reputation summed across all factions."),
-            (f"A group holds {group.BASE_CAPACITY} + its leader's Charisma modifier members, and "
-            f"{group.HERD_BASE} + the leader's Wisdom modifier animals and captives."),
+            (f"A group holds {group.BASE_CAPACITY} + {' + '.join(t for t, _, _ in group.CAPACITY_TERMS)} "
+            f"members, and {group.HERD_BASE} + the leader's Wisdom modifier animals and captives."),
             ("An overextended group rolls each day against its weakest member's Mental Defense "
             "(the leaders are exempt). That member splits off into a group of their own, or with no "
             f"slot free gives {cohesion.NOTICE_DAYS} days' notice and then leaves the guild."),

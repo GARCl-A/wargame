@@ -57,6 +57,7 @@ const Tavern = (() => {
       ${last(d.last)}
       <div class="sec dark"><span class="lbl">Who makes the pitch</span></div>
       <div class="pitchers">${pitchers}</div>
+      <div class="pterms">${d.terms.map(t => `<div class="fact"><span class="lbl">${esc(t.label)}</span><b class="${t.tone}">${esc(t.value)}</b><span class="use">${esc(t.note)}</span></div>`).join("")}</div>
       ${d.hint ? `<p class="aside ${d.hint.tone}">${esc(d.hint.text.charAt(0).toUpperCase() + d.hint.text.slice(1))}</p>` : ""}
       <div class="brass-btn wide ${d.button.on ? "" : "off"}" id="convince"><div><b>${esc(d.button.label)}</b></div></div>`;
   }
@@ -65,15 +66,12 @@ const Tavern = (() => {
     const list = R.strangers.length ? R.strangers.map(stranger).join("") : `<p class="hint">${esc(R.empty)}</p>`;
     const body = R.dossier ? dossier(R.dossier)
       : `<p class="aside">${R.signed ? "" : "Pick a stranger on the left to read their dossier and make a pitch."}</p>`;
-    const foot = R.prison
-      ? "The bail buys +2 on the pitch, and every doubling of the offer another +1. It is taken only if the pitch wins; turned down, you keep the coin, and the one who pitched may not try them again until the cells turn over."
-      : "Opposite alignment docks the pitch a point a step, and so does every member past the second. Turned down, the one who pitched may not try that stranger again until the crowd changes.";
     $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${R.prison ? "Prisoners in the cells" : "Strangers in the tavern"}</div>
         <p class="hint">Charisma against Charisma, in a tongue both speak; a tie goes to the ${R.prison ? "prisoner" : "stranger"}.</p>
         <div class="crew">${list}</div></div>
       <div class="paper ledger"><div class="kicker">Dossier <em>who they are and who could talk them into the guild</em></div>
         ${R.signed ? signed(R.signed) : ""}${body}
-        <div class="ledgerfoot"><p>${foot}</p></div></div>`;
+        <div class="ledgerfoot"><p>${esc(R.foot)}</p></div></div>`;
   }
 
   function student(m) {

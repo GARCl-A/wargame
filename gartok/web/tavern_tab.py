@@ -10,7 +10,7 @@ verb that runs the clock (`perform`) lives on `HubSession`, which holds the map.
 from .. import economy, item_icon, magic, recruit
 from ..archetypes import unit_archetypes
 from ..constants import fmt_money
-from ..tavern import ARCHETYPE_TONE, Prison, Tavern
+from ..tavern import ARCHETYPE_TONE, BAIL_BONUS, Prison, Tavern
 from .shop_tab import _portrait
 
 TABS = ("recruits", "rooms", "perform")
@@ -96,7 +96,7 @@ class TavernTab:
             return None
         k, due, held = self.s.raise_k, self.s._due(c), self.s._wealth()
         return {"base": fmt_money(base), "cost": fmt_money(due), "held": fmt_money(held), "ok": held >= due,
-                "bonus": 2 + k, "k": k, "more": held >= base << (k + 1), "less": k > 0}
+                "bonus": BAIL_BONUS[0] + k, "k": k, "more": held >= base << (k + 1), "less": k > 0}
 
     def _pitch(self, c):
         s, who = self.s, self.s.selected_recruiter
@@ -123,7 +123,32 @@ class TavernTab:
         elif can:
             warn = recruit.overflow_warning(self.guild, who)
             hint = {"text": warn, "tone": "money"} if warn else None
-        return {"pitchers": pitchers, "button": {"label": label, "on": can}, "hint": hint}
+        return {"pitchers": pitchers, "button": {"label": label, "on": can}, "hint": hint,
+                "terms": self._terms(who)}
+
+    def _terms(self, who):
+        """The two numbers a pitch is weighed by before the roll: the crowd penalty and the room in
+        the group the recruit would join."""
+        size = len(self.guild.roster)
+        pen = recruit.size_penalty(size)
+        crowd = {"label": "Crowd", "value": f"-{pen}" if pen else "0", "tone": "bad" if pen else "good",
+                 "note": f"guild of {size}: -{recruit.SIZE_PENALTY} on every pitch per member past {recruit.FREE_SLOTS}"}
+        grp = (self.guild.group_of(who) if who is not None else None) or self.group
+        (base, base_lbl), *rest = grp.capacity_terms()
+        sum_line = " ".join([f"{base} {base_lbl}", *(f"{v:+} {lbl}" for v, lbl in rest)])
+        n, cap = len(grp.members), grp.capacity
+        room = {"label": "Group", "value": f"{n} of {cap}", "tone": "good" if n < cap else "money",
+                "note": f"{grp.display_name} holds {sum_line}"}
+        return [crowd, room]
+
+    def _foot(self):
+        if self.prison:
+            return (f"The bail buys +{BAIL_BONUS[0]} on the pitch, and every doubling of the offer another +1. "
+                    "It is taken only if the pitch wins; turned down, you keep the coin, and the one who "
+                    "pitched may not try them again until the cells turn over.")
+        return (f"Opposite alignment docks the pitch {recruit.ALIGNMENT_PENALTY} a step, and every member "
+                f"past {recruit.FREE_SLOTS} another {recruit.SIZE_PENALTY}. Turned down, the one who pitched "
+                "may not try that stranger again until the crowd changes.")
 
     def _signed(self):
         sg = self.s.signed
@@ -137,7 +162,7 @@ class TavernTab:
         s = self.s
         out = {"strangers": [self._stranger(i, c) for i, c in enumerate(s.candidates)],
                "empty": s.EMPTY_LIST, "signed": self._signed(), "dossier": None,
-               "prison": self.prison}
+               "prison": self.prison, "foot": self._foot()}
         if s.sel is not None and s.sel < len(s.candidates):
             c = s.candidates[s.sel]
             out["dossier"] = {**self._dossier(c), **self._pitch(c)}

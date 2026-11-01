@@ -56,6 +56,7 @@ import random
 import statistics
 import sys
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -197,7 +198,7 @@ def study_row():
 
 def group_size(level, cha):
     """How many a leader of racial `level` and Charisma mod `cha` holds in one group."""
-    return group.BASE_CAPACITY + cha + level // 2
+    return group.capacity_for(SimpleNamespace(mod_charisma=cha, racial_level=level))
 
 
 def measure(max_level, cha, trials, skill):
@@ -370,8 +371,9 @@ def extras_report(rows):
 
 
 def report(marks, stalled, kit, coins, skill, cha):
+    size = " + ".join([str(group.BASE_CAPACITY), *(lbl for _, lbl, _ in group.CAPACITY_TERMS)])
     lines = [(f"== wealth by racial level, per character: a player who wins {skill * 100:.0f}% of "
-              f"fights, a group of {group.BASE_CAPACITY} + racial level // 2 + CHA mod {cha:+d}"),
+              f"fights, a group of {size} (CHA {cha:+d})"),
              (f"   level 0 = starting kit ${kit:.0f} + coins ${coins:.0f}; wealth = that + "
               "copper earned net of the meal"), ""]
     lines.append(f"{'racial':>6}{'group':>6}{'day':>6}{'C/W/M':>8}{'alive%':>8}{'earned':>8}{'wealth':>8}"

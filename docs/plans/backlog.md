@@ -31,7 +31,7 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- The *Small* items below, in order: the wiki's group capacity, the fighter that cannot move, the icons'
+- The *Small* items below, in order: the fighter that cannot move, the icons'
   authors, then the exe.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
@@ -46,12 +46,6 @@ Order inside a size is the order to pick them up: first what blocks the friends'
 the rest.
 
 ## Small
-
-- **The wiki's group capacity is wrong (playtest 2026-10-31).** `wiki_rules.py` ("GROUPS, LEADERS &
-  FAME") says a group holds `BASE_CAPACITY` + the leader's Charisma modifier; `Group.capacity` also adds
-  half the leader's racial level, and the code is the intent (author 2026-10-31). Fix the text (read the
-  numbers off `group`, as the line already does) and show the capacity and the crowd penalty
-  (`recruit.size_penalty`, -1 per member) at the recruit pitch, where the friend needed them.
 
 - **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, day 75,
   against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
@@ -181,6 +175,16 @@ the rest.
   which act plays which cue (one table in `docs/web_ui/web_client.md`), and wire them: equip in the sheet,
   confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
   from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
+
+- **The wiki and the tutorials read every number off the code (author 2026-11-01).** The group capacity
+  went wrong because the text restated the rule by hand. Three parts: a test that no string literal in
+  `wiki_rules.py` holds a digit, with the constant made where the code has none either (Defend's +1 AC
+  in `actions/combat.py`, the flank's -2 in `actions/base.py`, the coin values, Sneak Attack's +1d4);
+  the `group.CAPACITY_TERMS` pattern (the sum is the rule, the text reads the same tuple) for the other
+  formulas the wiki states (`recruit.capacity` / `leader_capacity`, `Group.herd_capacity` with Beast
+  Whisperer); and the `locales/en.json` cards (the tavern's says "past the guild's second" and "$15 a
+  day") filled from the constants or checked against them by a test. Then one load-bearing line in
+  `AGENTS.md`.
 
 ---
 

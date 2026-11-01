@@ -1,7 +1,7 @@
 """The wiki's RULES tab (wiki_rules.py): the numbers are the live ones and the filter finds a rule."""
 
 
-from gartok import dialogue, recruit, wiki_rules
+from gartok import dialogue, group, recruit, wiki_rules
 
 
 def test_the_rules_quote_the_live_constants():
@@ -14,3 +14,10 @@ def test_the_filter_finds_the_crowd_penalty():
     titles = [t for t, _ in wiki_rules.matching("crowd")]
     assert titles == ["RECRUITING"]
     assert len(wiki_rules.matching("")) == len(wiki_rules.sections())
+
+
+def test_the_group_size_line_names_every_term_capacity_adds():
+    line = next(ln for ln in dict(wiki_rules.sections())["GROUPS, LEADERS & FAME"] if "A group holds" in ln)
+    assert f"holds {group.BASE_CAPACITY} + " in line
+    for phrase, _, _ in group.CAPACITY_TERMS:
+        assert phrase in line

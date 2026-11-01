@@ -29,10 +29,30 @@ from . import economy, items
 from .animals import feed_herd, feed_hungry
 from .data import METERS_PER_SQUARE
 
-BASE_CAPACITY = 3   # + the leader's Charisma modifier -- see `capacity`/`overextension`
+BASE_CAPACITY = 3   # + `CAPACITY_TERMS` -- see `capacity`/`overextension`
 HERD_BASE = 3       # + the leader's Wisdom modifier -- see `herd_capacity`
 BASE_SLOTS = 2      # groups an unknown guild may run: one to study, one in the field
 FAME_PER_SLOT = 3   # total reputation that buys the guild one more group
+
+# The leader's share of `capacity`: (how the wiki says it, the short label, the value). The sum is
+# the rule and the text is read off the same tuple, so the two cannot drift apart.
+CAPACITY_TERMS = (
+    ("the leader's Charisma modifier", "CHA", lambda u: u.mod_charisma),
+    ("half the leader's racial level", "half level", lambda u: u.racial_level // 2),
+)
+
+
+def capacity_terms(leader):
+    """`[(value, label)]`: `BASE_CAPACITY` and, with a leader, each of `CAPACITY_TERMS`."""
+    terms = [(BASE_CAPACITY, "base")]
+    if leader is not None:
+        terms += [(value(leader), label) for _, label, value in CAPACITY_TERMS]
+    return terms
+
+
+def capacity_for(leader):
+    """How many members a group led by `leader` holds (the sum of `capacity_terms`)."""
+    return sum(v for v, _ in capacity_terms(leader))
 NORMAL, CAUTIOUS = "normal", "cautious"   # travel stances: Cautious trades XP and loot for fewer ambushes
 STANCES = (NORMAL, CAUTIOUS)
 
@@ -239,11 +259,11 @@ class Group:
     @property
     def capacity(self):
         """Members this group's leader can hold as one coalition before
-        cohesion starts to suffer -- `BASE_CAPACITY` + the leader's Charisma
-        modifier + half their racial level."""
-        if not self.leader:
-            return BASE_CAPACITY
-        return BASE_CAPACITY + self.leader.mod_charisma + (self.leader.racial_level // 2)
+        cohesion starts to suffer (see `capacity_for`)."""
+        return capacity_for(self.leader)
+
+    def capacity_terms(self):
+        return capacity_terms(self.leader)
 
     @property
     def herd_capacity(self):
