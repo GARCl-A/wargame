@@ -103,9 +103,12 @@ the rest.
   Playtest 2026-11-01 adds two: the level-up cue is much louder than a click (lower its `LEVEL`), and the
   sound lags behind the click (measure first whether it is the audio start or the round trip to the server).
 
-- **Screens feel like they jump (playtest 2026-11-01).** Screen changes and the tutorial cards appear with
-  a startle, as if the screen were not loaded yet. Measure before changing anything: is it the fetch after
-  the switch, assets loading late, or a missing transition? Then preload or cross-fade.
+- **Screens still wait on assets (playtest 2026-11-01).** A screen change reloads the page and the server
+  sends `Cache-Control: no-store` on everything, so each switch refetches ~60 files (~830 KB) before the
+  screen is ready (~400 ms). Send `no-cache` with an ETag (a content hash, 304 on a match) on `/client` and
+  `/assets`, keep `no-store` on the API, with a test that every static answer carries it. Then warm the
+  fonts, icons, portraits and sounds while the title opens (a manifest endpoint, a short load veil there).
+  Measure again with a filmstrip (screencast frames of a reload) after each.
 
 - **Hover on the vocation's races shows their modifiers (author 2026-11-01).** On the vocation pick,
   hovering a race lists its attribute modifiers and racial abilities, read off the registries. Only if

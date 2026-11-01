@@ -40,6 +40,10 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   cursor, `data-silent` keeps one quiet, and a screen plays only the cue its answer picks (`coins` when the
   purse moved, `level_up`), never `click`.
 - **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.
+- **A screen opens whole.** `#screen` is veiled until `settle()` in `shell.js` finds nothing left to wait for
+  (answers in, fonts loaded, `<img>`s and CSS pictures decoded, capped at 2.5 s), then fades in; the tutorial
+  card waits for `Shell.ready` and enters after it. A screen needs nothing for this, but a late `fetch` it fires
+  outside `api()` is not waited for.
 
 ### How a screen is checked
 

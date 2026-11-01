@@ -6,9 +6,15 @@ const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 
+let pending = 0;      // answers on their way: a screen is not ready while one is
+
 async function api(path, body) {
-  const res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
-  const data = await res.json();
+  pending++;
+  let res, data;
+  try {
+    res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    data = await res.json();
+  } finally { pending--; }
   Tutorial.sync(res.headers.get("X-Tutorial"));
   if (!res.ok) {
     Sound.play("miss");
@@ -107,7 +113,7 @@ const Tutorial = (() => {
       up = key !== null && flag === "1";
       if (!key) { drop("tut-veil"); drop("tut-badge"); shown = null; return; }
       if (!up) { drop("tut-veil"); shown = null; badge(); return; }
-      if (shown !== key) { shown = key; fetch("/api/tutorial").then(r => r.json()).then(show).catch(() => {}); }
+      if (shown !== key) { shown = key; fetch("/api/tutorial").then(r => r.json()).then(c => Shell.ready.then(() => show(c))).catch(() => {}); }
     },
   };
 })();
@@ -209,7 +215,10 @@ const Sheet = (() => {
 // the server stops once the window is closed; a reload onto another screen asks again before it does
 addEventListener("pagehide", () => navigator.sendBeacon("/api/bye"));
 
-const Shell = {screen: null, lab: false};
+let reveal;
+// ready: the screen's answers are in, its fonts loaded and its pictures decoded, so it fades in whole and
+// the tutorial card (which waits for it) never lands on an empty table
+const Shell = {screen: null, lab: false, ready: new Promise(r => { reveal = r; })};
 
 // each screen lives in screens/<id>/: screen.html, then these stylesheets and scripts in order
 const SCREENS = {
@@ -248,6 +257,36 @@ const attach = (tag, attrs) => new Promise((ok, fail) => {
   (tag === "link" ? document.head : document.body).appendChild(el);
 });
 
+// the pictures a screen draws that no <img> holds (backgrounds, masks), loaded once each
+const warmed = new Set();
+function pictures(root) {
+  const urls = new Set();
+  for (const el of root.querySelectorAll("*")) {
+    const cs = getComputedStyle(el);
+    for (const v of [cs.backgroundImage, cs.maskImage, cs.webkitMaskImage])
+      for (const m of (v || "").matchAll(/url\("?([^")]+)"?\)/g)) if (!m[1].startsWith("data:") && !warmed.has(m[1])) urls.add(m[1]);
+  }
+  const imgs = [...root.querySelectorAll("img")].filter(i => !i.complete).map(i => i.decode().catch(() => {}));
+  urls.forEach(u => warmed.add(u));
+  return [...imgs, ...[...urls].map(u => Object.assign(new Image(), {src: u}).decode().catch(() => {}))];
+}
+
+// waits until a round finds nothing left to wait for; `cap` keeps a screen that never goes quiet (or a
+// window the browser holds hidden, which draws no frames) from staying veiled
+async function settle(cap = 2500) {
+  const frame = () => new Promise(r => requestAnimationFrame(() => r()));
+  const quiet = async () => { while (pending > 0) await sleep(16); };
+  await Promise.race([sleep(cap), (async () => {
+    for (let waited = true; waited;) {
+      await quiet();
+      await frame();
+      const work = pictures($("screen"));
+      waited = work.length > 0 || pending > 0;
+      await Promise.all([...work, document.fonts.ready]);
+    }
+  })()]);
+}
+
 // a screen's scripts declare their names at the top level, so one opens once per page load:
 // moving to another screen reloads the page on it
 async function open(id) {
@@ -262,10 +301,12 @@ async function open(id) {
   Tutorial.place();
   await document.fonts.ready;
   for (const f of spec.js) await attach("script", {src: dir + f});
+  await settle();
 }
 
 api("/api/screen").then(info => {
   Object.assign(Shell, {screen: info.screen, lab: info.lab});
   Sound.volume = info.volume ?? 70;
   return open(info.screen);
-}).catch(e => { $("screen").innerHTML = `<div id="failed">${esc(e.message)}</div>`; });
+}).catch(e => { $("screen").innerHTML = `<div id="failed">${esc(e.message)}</div>`; })
+  .finally(() => { document.body.classList.add("ready"); reveal(); });
