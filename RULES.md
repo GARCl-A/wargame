@@ -2010,7 +2010,7 @@ it can catch up with a character wherever the City's authority reaches
 - **Box of Gems** (`chest.py`, `data.BOX_OF_GEMS_ITEM`): a locked generic pack item
   picked open outside battle (the band's item menu, `band_kit.py`),
   `d20 + Dexterity ≥ data.CHEST_DC`. A miss costs nothing, just try later. A hit leaves
-  the gems and an empty `Box`. Its price is the mean haul times 1.3.
+  the gems and an `Empty Box` (1 kg, worth a Lumber: 7 copper, there for the realism). Its price is the mean haul times 1.3.
   The Bankers' mission chest (see Missions) is a deliberately different item
   so it's never picked open by mistake — doing so fails that mission and
   banks crime instead of quietly paying out.

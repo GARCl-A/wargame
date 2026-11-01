@@ -86,10 +86,6 @@ the rest.
   everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old
   screens and their tests are in git before the cut.
 
-- **Give the empty Box a use (author 2026-11-01).** Opening a Box of Gems leaves a `Box` (8 kg, 16
-  copper) that does nothing but sell. Give it a job: a craft input, a container for the pack, or a thing
-  a mission asks for.
-
 - **Review the cheapest item prices (author 2026-11-01).** Several sit at 1 or 2 copper with no logic:
   a Chisel at 1, a Scroll at 1 (below Paper at 10 and 1sqm Hide at 12), a Cloak and a Torch at 2. Price a
   tool or a crafted good above the material it is made from, then run the `balance` tier and

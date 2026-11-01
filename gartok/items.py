@@ -409,8 +409,8 @@ _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRar
 _register(ItemDef(id="flint_and_steel", name="Flint and Steel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=40))
 _register(ItemDef(id="semi_precious_gemstone", name="Semi-precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))
 _register(ItemDef(id="precious_gemstone", name="Precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.RARE, weight=0.1, price=240))
-_register(ItemDef(id="box_of_gems", name="Box of Gems", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=273))
-_register(ItemDef(id="box", name="Box", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=8.0, price=16))
+_register(ItemDef(id="box_of_gems", name="Box of Gems", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=1.5, price=273))
+_register(ItemDef(id="empty_box", name="Empty Box", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=1.0, price=7))
 _register(ItemDef(id="sealed_chest", name="Sealed Chest", type=ItemType.QUEST, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))
 _register(ItemDef(id="letter_of_receipt", name="Letter of Receipt", type=ItemType.QUEST, rarity=ItemRarity.COMMON, weight=0.1, price=1))
 _register(ItemDef(id="ancient_codex", name="Ancient Codex", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=2.0, price=300))
@@ -946,7 +946,7 @@ FIRST_AID_ITEM = "First Aid Kit"
 ANTIDOTE_ITEM = "Antidote"
 VENOM_GLAND_ITEM = "Venom Gland"
 BOX_OF_GEMS_ITEM = "Box of Gems"   # price 273 = the mean haul (3.5 gems x 60) x 1.3
-BOX_ITEM = "Box"                   # what opening a Box of Gems leaves behind
+BOX_ITEM = "Empty Box"             # what opening a Box of Gems leaves behind
 GEM_ITEM = "Semi-precious Gemstone"
 PRECIOUS_GEM_ITEM = "Precious Gemstone"
 MISSION_CHEST_ITEM = "Sealed Chest"

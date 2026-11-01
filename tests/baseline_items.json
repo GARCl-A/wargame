@@ -569,14 +569,14 @@
     "lifespan": null
   },
   "Box of Gems": {
-    "weight": 8.0,
+    "weight": 1.5,
     "price": 273,
     "food": false,
     "lifespan": null
   },
-  "Box": {
-    "weight": 8.0,
-    "price": 16,
+  "Empty Box": {
+    "weight": 1.0,
+    "price": 7,
     "food": false,
     "lifespan": null
   },

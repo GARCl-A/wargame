@@ -79,7 +79,7 @@ ICONS = {
     "First Aid Kit": ("aid_kit", "salt", {}),
     "Quiver": ("quiver", "leather", {}),
     "Box of Gems": ("chest", "gold", {}),
-    "Box": ("chest", "wood", {}),
+    "Empty Box": ("chest", "wood", {}),
     "Sealed Chest": ("chest", "wood", {"sealed": True}),
     "Minor Healing Potion": ("flask", "glass", {"accent": TONES["red"]}),
     "Antidote": ("flask", "glass", {"accent": TONES["green"]}),

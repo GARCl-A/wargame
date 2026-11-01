@@ -254,14 +254,14 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Antidote | 0.2 kg | consumable | 60 |
 | Bear Trap | 3 kg | -- | 35 |
 | Bloom Fruit | 0.2 kg | food, consumable | 6 |
-| Box | 8 kg | -- | 16 |
-| Box of Gems | 8 kg | -- | 273 |
+| Box of Gems | 1.5 kg | -- | 273 |
 | Chains | 5 kg | -- | 10 |
 | Chisel | 0.3 kg | -- | 1 |
 | Copper Coin | 0.005 kg | -- | 1 |
 | Dictionary | 2 kg | -- | 150 |
 | Dictionary of (Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin, Halfling, Jotun, Orcish, Sylvan, Verdant) | 2 kg | -- | 150 |
 | Dragon Egg | 8 kg | -- | 400 |
+| Empty Box | 1 kg | -- | 7 |
 | First Aid Kit | 0.8 kg | consumable | 40 |
 | Flint and Steel | 0.3 kg | -- | 40 |
 | Fruit | 0.2 kg | food, consumable, material | 4 |
