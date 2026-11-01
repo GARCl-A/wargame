@@ -456,6 +456,7 @@ def _advance(guild, dt=None, busy=()):
         elif order.kind == "solo":
             events += solo.finish(guild, g, order)
         elif order.kind == "hunting":          # a hunt's stretch is up: its screen says what sprang
+            g.due_hunt = order                 # until the hunt screen settles it, so a save keeps it
             pending.append((g, order))
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))

@@ -323,3 +323,22 @@ def test_only_the_tick_engine_moves_the_clock():
             assert ".pass_time(" not in text, rel
         if path.name not in headless:
             assert ".tick(" not in text and not shortcuts.search(text), rel
+
+
+def test_a_stretch_due_behind_the_card_is_not_lost_on_a_save_and_load(monkeypatch):
+    from gartok.web.map_session import MapSession
+    from gartok.web.server import Game
+    game, loaded, guild, before = _hunt_saved(monkeypatch, 0, 6)
+    g, mill = loaded.groups
+    m = game.session
+    mill.order = orders.work(loaded, mill, 16)
+    m.seen = mill.gid
+    st = m._after_order()
+    assert st["turn"]["action"] == "HUNTING" and g.due_hunt is not None and not g.busy
+    m._save()
+    again = persist.load_game("w1")
+    assert again.groups[0].due_hunt is not None
+    game = Game(MapSession(again, "w1"))
+    st = game.session.land_due()
+    assert st["screen"] == "hunt" and game.session.phase == "done"
+    assert again.groups[0].due_hunt is None

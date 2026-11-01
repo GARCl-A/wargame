@@ -77,12 +77,6 @@ the rest.
 
 ## Medium
 
-- **A hunt's stretch that came due behind the hand-over card is lost on load (2026-11-01).** A `hunting`
-  order rides in the save while it runs, but once it is up and waits on the card for GO ON
-  (`MapSession._land`) the order is gone from the group and the autosave there finds the band idle: a
-  load loses the hours and the haul. Same for an ambush up on the hunt screen. Small: keep the due order
-  on the group (or in `Group.pending`) until `HuntSession.arrive`. Test: save on the card, load, the
-  stretch's end opens the hunt screen.
 
 - **The economy sim's hunt still ambushes a strong guild (author 2026-11-01).** The road, the shifts and
   the supply runs go through the game's own code and get the check, but `scripts/economy_guild.py` and

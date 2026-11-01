@@ -83,7 +83,10 @@ class Game:
 
     @classmethod
     def from_save(cls, world, screen="map"):
-        return cls(SCREENS[screen](_load(world), world))
+        game = cls(SCREENS[screen](_load(world), world))
+        if screen == "map":
+            game.session.land_due()
+        return game
 
     @classmethod
     def title(cls, notice=None):
@@ -94,7 +97,9 @@ class Game:
         guild = _load(world, save_id)
         if save_id != persist.CURRENT:
             persist.save_game(world, guild)
-        self.open(MapSession(guild, world))
+        session = MapSession(guild, world)
+        self.open(session)
+        session.land_due()
 
     def new_fight(self, fight, level, squad, seed=None, players=1):
         self.open(self.lab.fight(fight, level, squad, seed, players))

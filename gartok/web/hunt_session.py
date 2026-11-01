@@ -72,14 +72,16 @@ class HuntSession(Session):
             self._begin()
 
     @classmethod
-    def restore(cls, map_session, group):
-        """The hunt whose stretch `group`'s `hunting` order carries, out on the clock again after a load."""
-        d = group.order.state
+    def restore(cls, map_session, group, order=None):
+        """The hunt whose stretch `group`'s `hunting` order (or the `order` that came due) carries, out on
+        the clock again after a load."""
+        order = order or group.order
+        d = order.state
         session = cls(map_session, group, d["hunt"]["target"])
         session.state_ = hunt.from_dict(d["hunt"], group.members, session.node)
         session.goes = list(session.state_.party)
         session.guarded, session.found, session.phase = d["guarded"], d["found"], "out"
-        session.rolled = list(group.order.pack)
+        session.rolled = list(order.pack)
         return session
 
     @property
@@ -201,6 +203,7 @@ class HuntSession(Session):
         self.rolled = list(s.pack)
         self.phase = "out"
         self.map.hunts[self.group.gid] = self
+        self.group.due_hunt = None
         order = orders.Order("hunting", eta=elapsed, remaining=elapsed, crew=tuple(u.uid for u in s.party),
                              pack=tuple(self.rolled),
                              state={"hunt": hunt.to_dict(s), "found": self.found, "guarded": self.guarded})
@@ -233,6 +236,7 @@ class HuntSession(Session):
 
     def _wrap_up(self):
         self.phase = "done"
+        self.group.due_hunt = None
         self.state_.party = [u for u in self.state_.party if u in self.guild.roster]
         if self.result is None:
             self.result = hunt.grant_haul(self.state_)
@@ -247,6 +251,7 @@ class HuntSession(Session):
         result = self.look.result if swift else None
         if swift and result is None:
             raise ValueError("this fight is not a clean stomp")
+        self.group.due_hunt = None
         battle = Battle(list(s.party), self.pack, scenario=node.scenario(), daylight=guild.clock.is_daylight,
                         lethal=node.lethal, arena=False, clock_day=guild.clock.day,
                         aggressor="player" if self.tracking else "enemy")

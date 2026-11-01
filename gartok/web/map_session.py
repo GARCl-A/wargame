@@ -98,6 +98,13 @@ class MapSession(MapView, Session):
                     g.order = None
                 else:
                     self.hunts[g.gid] = HuntSession.restore(self, g)
+            elif g.due_hunt is not None:         # saved with the stretch up, its screen not yet open
+                self.hunts[g.gid] = HuntSession.restore(self, g, g.due_hunt)
+                self.pending.append((g, g.due_hunt))
+
+    def land_due(self):
+        """After a load: open the screen a stretch that came due before the save was waiting for."""
+        return self._land() if self.pending else None
 
     # ------------------------------------------------------------------ #
     # what pygame's map reads call                                        #
