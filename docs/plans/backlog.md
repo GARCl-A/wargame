@@ -96,6 +96,12 @@ the rest.
   everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old
   screens and their tests are in git before the cut.
 
+- **Review the cheapest item prices (author 2026-11-01).** Several sit at 1 or 2 copper with no logic:
+  a Chisel at 1, a Scroll at 1 (below Paper at 10 and 1sqm Hide at 12), a Cloak and a Torch at 2. Price a
+  tool or a crafted good above the material it is made from, then run the `balance` tier and
+  `scripts/economy_report.py`. Do it with or right after *Remove occupations*: the new starting kit draws
+  items by price, so the prices set what a recruit carries.
+
 - **Remove occupations (decided 2026-10-23). Close this soon, and until then do not maintain the idea.**
   Occupations are going, so no new code, label, icon, test or sim ranking may lean on them (author
   2026-10-30): every new screen that prints "Race Occupation" raises the cost of this removal. It is spread
@@ -103,11 +109,13 @@ the rest.
   the oath and who the members are*: an occupation is only a preset of the starting weapon and item
   (`unit.py`), so the starting kit is rolled at random and nothing is written on the character.
   The new kit (author 2026-11-01, numbers are examples to tune): each recruit starts with a random
-  weapon worth up to ~35 copper and a random item worth up to ~15, drawn from `items.py` by price, so the
+  weapon worth up to ~35 copper and a random item worth up to ~20 (author 2026-11-01), drawn from `items.py` by price, so the
   squad's average value is set and every start has a real weapon (*Playtest notes -> Starting squad is
   weak*). Since gathering needs the node's tool (`economy.WORK_TOOLS`: Axe, Pick), the draw decides who can
-  gather on day one: say whether the tools are in the weapon pool (Axe and Pick both cost 35, right at the
-  cap) and check the sim's policies afterwards (`economy_guild.py`: the yard and Mine ones buy an Axe or
+  gather on day one: the weapon pool is the base weapons only (no Large/Huge) up to 35, so Axe and Pick
+  are in (decided 2026-11-01); the item pool takes raw materials too, only quest items, coins and the
+  chests are out; the purse is 3d4 copper instead of 5d10 (decided 2026-11-01). Check the sim's policies
+  afterwards (`economy_guild.py`: the yard and Mine ones buy an Axe or
   a Pick for whoever lacks one, and the day-30 milestone prices an Axe). Touches
   `data.OCCUPATIONS`, `Unit` (roll, save, `unit_edit`), `artwork.OCCUPATION_ICON` and `role_for` (the
   member's icon needs another source: the race's, or the weapon's), every label that prints
@@ -540,3 +548,8 @@ has one "Enter" button and its functions are tabs inside.
   - **A use for Rotten Food (author 2026-11-01).** Today it is worthless (`price=0`) and a keeper bins
     it. Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the
     farm patch comes up.
+
+- **DECIDE HOW HOLY SYMBOL DROPS (author 2026-11-01).** Today only a Priest is born with one, and Faith's
+  rite (`rite.py`) consumes it, so *Remove occupations* leaves the Faith school with no way to get it.
+  Not for sale at the Market (author's call). Decide the source: a lair pile, a mission reward, a rare
+  drop from a given foe, or a temple quest. Until then the rite cannot start in a new game.
