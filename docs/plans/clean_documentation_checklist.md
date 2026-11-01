@@ -3,7 +3,7 @@
 **Update this file whenever we touch the documentation** (add, remove, move, rename or merge a doc).
 Tick a box once the file was reviewed and its fate decided (kept, trimmed, merged, deleted).
 
-Snapshot: 2026-11-01, updated after removing `.agents` — 60 `.md` + 2 `LICENSE.txt`, plus the non-text folders at the end.
+Snapshot: 2026-11-01, updated after removing `.agents` — 57 `.md` + 2 `LICENSE.txt`, plus the non-text folders at the end.
 
 ## Responsibility map (decided 2026-11-01)
 
@@ -52,14 +52,12 @@ wins). A dated decision is kept only in the doc that owns it, with its date as p
 - [ ] `docs/plans/test_suite.md`
 
 ## Local READMEs
-- [ ] `editor/ui/README.md`
-- [ ] `gartok/assets/README.md`
-- [ ] `gartok/web/client/fonts/README.md`
-- [ ] `scripts/portrait_lora/README.md`
-- [ ] `recordings/2026-10-08/README.md`
-- [ ] `recordings/2026-10-10/README.md`
-- [ ] `recordings/2026-10-12/README.md`
-- [ ] `recordings/2026-10-19/README.md`
+`tests/test_local_readmes.py` keeps the assets README true (every icon folder listed, only real files named).
+- [x] `editor/ui/README.md` — done 2026-11-01 (66 -> 22 lines). The Editor is frozen (reference for a future port off pygame), so the README is now the look to carry over (colour is state, the 8 px grid, data in / rects out) and the component table is gone (docstrings own it). `inspector_panel.py` was dead but for `draw_role` / `ROLE_MARK`: those moved into `loadout_panel.py`, the module is deleted.
+- [x] `gartok/assets/README.md` — done 2026-11-01 (31 -> 21 lines): it described `gartok/artwork.py` and `map_screen.NODE_ICON` (both gone), pointed at `tests/test_icons.py` (lives in `editor/tests/`) and omitted `icons/item/`. Now: tree, who reads the files (`art_files.py`, the web, `editor/artwork.py`), the `map/` drawing rule, how to add an icon. The glyph-per-race/occupation/node rule is in `AGENTS.md`; the cue list is `sound.py`'s.
+- [x] `gartok/web/client/fonts/README.md` — kept as is: source, licence and the weight choices; `fonts.css` declares the faces and nothing else says where they come from.
+- [x] `scripts/portrait_lora/README.md` — kept, two edits: the hard "230 images" is gone from the command comment and the 230 is now stated as what the shipped LoRA saw (the pool has 350 portraits), and the default `-000006` pick is explained. Owns setup, training and measured times (the `gen-portrait` skill and `gen_portrait.py` point here); the notebook owns the training recipe.
+- [x] `recordings/*/README.md` (4 files) — merged into one `recordings/README.md`: the four repeated the recorder blurb and the `saves/` note. Dead pointers dropped (`economy_guild.py --policies human --profile`: the `human` policy was folded into `balanced`; the backlog item *Feed the recorded runs*: no longer in `backlog.md`). Day and fight counts re-read from the `.jsonl` files. The three `human_profile*.json` were deleted (`play_analysis.py` regenerates them).
 
 ## Licenses
 - [ ] `gartok/assets/icons/LICENSE.txt`

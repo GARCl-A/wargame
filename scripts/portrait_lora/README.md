@@ -16,10 +16,11 @@
 ## Training the LoRA (free, Colab T4, ~1 h)
 
 ```
-python scripts/portrait_lora/build_dataset.py        # -> scratch/portrait_lora/gartok_style.zip (230 images + captions)
+python scripts/portrait_lora/build_dataset.py        # -> scratch/portrait_lora/gartok_style.zip (every portrait + a caption)
 ```
 Open `gartok_style_lora.ipynb` in Colab (T4 runtime), upload the zip when asked, run all cells, download the
-`.safetensors` files. Retrain after the portrait pool grows a lot: the LoRA learns the pool's look.
+`.safetensors` files (one every 2 epochs of 10; `-000006` is the default pick). The shipped LoRA saw 230
+portraits and the pool has grown since: retrain after it grows a lot, the LoRA learns the pool's look.
 
 ## Measured on the 1050 Ti
 
