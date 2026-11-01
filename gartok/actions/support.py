@@ -26,7 +26,8 @@ class PickUp(Action):
     def label(self, battle, actor):
         return "Pick up / swap object (1 pt)"
 
-    def _queue(self, battle, actor):
+    def options(self, battle, actor):
+        """What the actor can lift now, the order the AI takes it in: `execute` takes any one of these."""
         def _score(o):
             if getattr(o, "is_relic", False) or getattr(o, "is_chest", False):
                 return (0, chebyshev(o.pos, actor.pos))
@@ -53,10 +54,10 @@ class PickUp(Action):
     def execute(self, battle, actor, target=None):
         if actor.ap < self.cost:
             return
-        queue = self._queue(battle, actor)
+        queue = self.options(battle, actor)
         if not queue:
             return
-        obj = queue[0]
+        obj = target if target in queue else queue[0]
         battle.ground.remove(obj)
         actor.ap -= 1
         actor.walking = False

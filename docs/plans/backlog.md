@@ -64,11 +64,6 @@ the rest.
   it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Show items lying on a cell a character stands on.** An item dropped or thrown onto a cell with a
-  unit on it (a weapon that lands under a surrounded foe, a drop under your own fighter) is hidden by the
-  token. Improve how the web board shows it (a corner badge on the token, or a marker in the cell ring)
-  and how it reads in the inspect panel, so the player knows it is there and can Pick it up.
-
 - **Draft: say what a commission does (playtest 2026-10-31).** The tester did not know the COMMISSION tokens
   force a reroll until the card has the asked tag (+2 on that attribute) and took the first cards he saw,
   one with STR 2. Put a one-line explanation at the button ("3 tokens: replace a card by one with the tag you

@@ -168,6 +168,8 @@ def _target(battle, target):
         return {"cell": _cell(target)}
     if target in battle.units:
         return {"unit": battle.units.index(target)}
+    if target in battle.ground:
+        return {"cell": _cell(target.pos), "item": target.weapon_name or target.item_name or target.kind}
     return {"other": type(target).__name__}
 
 

@@ -16,6 +16,7 @@ from .. import (
     data,
     dialogue,
     intel,
+    item_icon,
     lighting,
     vision,
     wiki_terms,
@@ -77,7 +78,7 @@ class BattleSession(Session):
     }
     POST: ClassVar[dict] = {
         "act": lambda s, b: _steps(s.act(b.get("action", ""), b.get("target"), b.get("cell"), b.get("inspect"),
-                                         b.get("elevation"))),
+                                         b.get("elevation"), b.get("item"))),
         "advance": lambda s, b: _steps(s.advance(b.get("inspect"))),
         "talk": lambda s, b: _steps(s.answer(b.get("verb"), b.get("speaker"), bool(b.get("go_on")), b.get("inspect"))),
         "seat": lambda s, b: _steps(s.take_seat(b.get("inspect"))),
@@ -152,10 +153,11 @@ class BattleSession(Session):
         steps (see `cut_step`); does nothing on the player's turn or once the fight is over."""
         return self._stepped(self._advance, inspect)
 
-    def act(self, action_id, target=None, cell=None, inspect=None, elevation=None):
+    def act(self, action_id, target=None, cell=None, inspect=None, elevation=None, item=None):
         """The player's `action_id` ("move" walks to `cell`) on `target` (a unit id) or `cell`,
-        as steps. Raises ValueError when it cannot be done now."""
-        return self._stepped(lambda: self._act(action_id, target, cell, elevation), inspect)
+        as steps; `item` (a ground index from `pickups`) says which thing Pick up lifts. Raises
+        ValueError when it cannot be done now."""
+        return self._stepped(lambda: self._act(action_id, target, cell, elevation, item), inspect)
 
     def answer(self, verb=None, speaker=None, go_on=False, inspect=None):
         """The player's part in a challenge on the board: pick the `speaker` (an index into the
@@ -247,7 +249,7 @@ class BattleSession(Session):
         else:
             ai.take_turn(b, b.active)
 
-    def _act(self, action_id, target, cell, elevation=None):
+    def _act(self, action_id, target, cell, elevation=None, item=None):
         b = self.battle
         cell = tuple(cell) if cell is not None else None
         if action_id in ("plant_flag", "plant_trap", "skip_traps"):
@@ -288,6 +290,11 @@ class BattleSession(Session):
                 if unit is None or not action.can(b, actor, unit):
                     raise ValueError(f"{action.name} cannot take that target")
                 action.execute(b, actor, unit)
+            elif action is actions.PICK_UP and item is not None:
+                obj = b.ground[item] if 0 <= item < len(b.ground) else None
+                if obj not in actions.PICK_UP.options(b, actor):
+                    raise ValueError("that cannot be picked up now")
+                action.execute(b, actor, obj)
             else:
                 if not action.can(b, actor):
                     raise ValueError(f"{action.name} cannot be done now")
@@ -457,8 +464,9 @@ class BattleSession(Session):
         known = visible | seen
         my_turn = self.my_turn()
         board = b.board
+        self._last_visible = visible
         units = [self._token(u, obs, my_turn) for u in b.units if self._shows(u, obs, my_turn)]
-        self._last_visible, self._shown = visible, {t["id"] for t in units}
+        self._shown = {t["id"] for t in units}
         return {
             "meta": self.meta,
             "campaign": self.then is not None,
@@ -489,6 +497,8 @@ class BattleSession(Session):
                       + [p | {"pos": _cell(p["pos"]), "remembered": True}
                          for p in self.fog.remembered_props(self.team, visible)]),
             "units": units,
+            "pickups": self._pickups(my_turn),
+            "under": self._under([u for u in b.units if self.uid(u) in self._shown]),
             "ctf": self._ctf(known),
             "initiative": self._initiative(obs),
             "active": self._sheet(b.active) if b.active and (self.plays(b.active) or
@@ -516,6 +526,36 @@ class BattleSession(Session):
             props.append({"kind": kind, "pos": o.pos})
         props += [{"kind": "corpse", "pos": u.pos, "size": u.footprint} for u in b.units if u.dead]
         return props
+
+    def _thing(self, o):
+        name = o.weapon_name or o.item_name or o.kind.title()
+        return {"name": name, "glyph": item_icon.glyph(name), "pos": _cell(o.pos), "flag": None}
+
+    def _things(self, cells):
+        """What lies on `cells` that a hand can pick up, or a flag standing there, on the cells the side sees."""
+        b = self.battle
+        here = set(cells) & self._last_visible
+        out = [self._thing(o) for o in b.ground if o.pos in here and o.kind in ("weapon", "torch", "relic", "chest")]
+        if b.is_ctf:
+            for team in ("player", "enemy"):
+                if b.flag_carrier[team] is None and b.flags[team] in here:
+                    side = "ally" if team == self.team else "foe"
+                    out.append({"name": f"{'Your' if side == 'ally' else 'Their'} flag", "glyph": None,
+                                "pos": _cell(b.flags[team]), "flag": side})
+        return out
+
+    def _pickups(self, my_turn):
+        """What Pick up can lift now, each with the ground index `act(item=)` takes."""
+        b = self.battle
+        if not my_turn or not actions.PICK_UP.available(b, b.active):
+            return []
+        return [self._thing(o) | {"id": b.ground.index(o)} for o in actions.PICK_UP.options(b, b.active)]
+
+    def _loot(self, u):
+        return self._things(self.battle.cells_of(u))
+
+    def _under(self, units):
+        return self._things({c for u in units for c in self.battle.cells_of(u)})
 
     def _shows(self, u, obs, my_turn):
         b = self.battle
@@ -655,9 +695,9 @@ class BattleSession(Session):
         if u is None or not self._shows(u, obs, my_turn):
             return None
         if u.team == self.team:
-            return {"kind": "ally", **self._sheet(u)}
+            return {"kind": "ally", **self._sheet(u), "loot": self._loot(u)}
         card = foe_card(intel.known_fields(self.battle, self.team, u))
-        return {"kind": "foe", "id": uid,
+        return {"kind": "foe", "id": uid, "loot": self._loot(u),
                 "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
                 **card}
 

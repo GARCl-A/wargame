@@ -37,7 +37,7 @@ async function act(body, path = "/api/battle/act") {
   ui.busy = true;
   try {
     const r = await api(path, {...body, inspect: ui.inspect});
-    ui.aim = null; ui.route = null; ui.armed = null; ui.error = null;
+    ui.aim = null; ui.route = null; ui.armed = null; ui.error = null; ui.loot = null;
     await playSteps(r.steps);
   } catch (e) {
     ui.error = e.message; renderHint();
@@ -173,6 +173,19 @@ function renderTokens() {
     el.className = "flagmark " + f.side;
     el.style.cssText = `left:${Board.cx(f.pos[0])}px;top:${Board.cy(f.pos[1])}px;width:${L.cell}px;height:${L.cell}px;font-size:${Math.round(L.cell * .6)}px`;
   }
+  const lying = new Map();
+  for (const t of S.under) lying.set(t.pos.join(","), [...(lying.get(t.pos.join(",")) || []), t]);
+  for (const [cell, list] of lying) {
+    const id = "loot-" + cell, [x, y] = cell.split(",").map(Number);
+    seen.add(id);
+    let el = box.querySelector(`[data-id="${id}"]`);
+    if (!el) { el = document.createElement("div"); el.dataset.id = id; box.appendChild(el); }
+    el.className = "lootmark";
+    const d = Math.round(L.cell * .27);
+    el.style.cssText = `left:${Board.cx(x) + L.cell * .9 - d / 2 - 6}px;top:${Board.cy(y) + L.cell * .1}px;--d:${d}px`;
+    const html = lootIcon(list[0]) + (list.length > 1 ? "<b>+</b>" : "");
+    if (el._html !== html) { el.innerHTML = html; el._html = html; }
+  }
   for (const el of [...box.children]) if (!seen.has(el.dataset.id)) el.remove();
 }
 
@@ -193,6 +206,8 @@ const tier = (label, facts) => `<section class="tier"><span>${esc(label)}</span>
 const weaponFacts = w => `<span><b>${esc(w.name)}</b>${w.damage ? " " + esc(w.damage) : ""}</span>${w.action ? `<span${tip(w.action_tip, "item")}>${esc(w.action)}</span>` : ""}`;
 const foeHead = (t, chips, extra) => `<div class="foehead"><div class="med" style="--side:${SEAT[t.seat] || "var(--blood)"}">${face(t.portrait, t.name)}</div>
   <div><h2>${esc(t.name)}</h2>${chips}${extra || ""}</div></div>`;
+const lootIcon = t => t.glyph ? ico(t.glyph) : `<i class="flagico ${t.flag}">⚑</i>`;
+const groundTier = t => t.loot && t.loot.length ? tier("On the ground", t.loot.map(l => `<span class="lootrow">${lootIcon(l)}<b>${esc(l.name)}</b></span>`).join("")) : "";
 const chipRow = (names, cls = "chip") => `<div class="chips">${names.filter(Boolean).map(c => `<span class="${cls}">${esc(c)}</span>`).join("")}</div>`;
 
 function renderInspect() {
@@ -207,14 +222,15 @@ function renderInspect() {
     card("Your squad",
       foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.occupation)} · ${esc(t.alignment)}</div>${chipRow(t.conditions || [], "chip muted")}`),
       tier("Vitals", `<span>HP <b>${t.hp}/${t.hp_max}</b></span><span>AC <b>${t.ac}</b></span><span>MD <b>${t.md}</b></span><span>Speed <b>${t.speed}</b></span>`)
-        + (t.weapon ? tier("Weapon", weaponFacts(t.weapon)) : ""));
+        + (t.weapon ? tier("Weapon", weaponFacts(t.weapon)) : "") + groundTier(t),
+      S.active && S.active.id === t.id && t.loot.length ? `<div class="assess">Pick up lifts what your hands can hold.</div>` : "");
     return;
   }
   const bars = Array.from({length: t.steps_max}, (_, i) => `<i class="${i < t.steps ? "on" : ""}"></i>`).join("");
   const bands = t.bands.map(b => tier(b.label, b.rows.map(r => r.value == null ? `<span class="q">${esc(r.label)}</span>` : `<span>${esc(r.label)} <b>${esc(r.value)}</b></span>`).join(""))).join("");
   card(`Bestiary · ${ui.armed === t.id ? "target" : "foe"}`,
     foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.alignment)}</div>${chipRow([t.size, ...(t.conditions || [])])}`, `<div class="health">${bars}</div>`),
-    tier("Arms", weaponFacts({...t.weapon, damage: ""}) + t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")) + bands,
+    tier("Arms", weaponFacts({...t.weapon, damage: ""}) + t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")) + groundTier(t) + bands,
     `<div class="assess">${esc(t.read)} — Assess to read more.</div>`);
 }
 
@@ -315,6 +331,7 @@ function renderAll() {
   Board.overlay(S, ui);
   $("withdraw").hidden = !S.flags.can_withdraw;
   $("skiptraps").hidden = !(S.setup && S.setup.kind === "trap");
+  renderLoot();
   renderDialog();
   if (S.winner) showEnd();
 }
@@ -454,6 +471,11 @@ async function selectAction(id) {
   const a = [...S.actions.combat, ...S.actions.utility].find(x => x.id === id);
   if (!a || !a.enabled) return;
   if (a.id === "end") return act({action: "end"});
+  if (a.id === "pick_up" && S.pickups.length > 1) {
+    const u = S.units.find(t => t.id === S.active.id);
+    if (ui.loot && ui.loot.mode === "pick") return closeLoot();
+    return openLoot(u.pos, "pick");
+  }
   if (a.aimed || a.target === "cell") {
     if (ui.aim && ui.aim.id === id) { ui.aim = null; renderAll(); return; }
     const aim = await api(`/api/battle/aim?action=${encodeURIComponent(id)}`);
@@ -514,11 +536,77 @@ $("pile").addEventListener("mouseover", e => {
   renderTokens();
 });
 
+// the things lying on a cell, as a flag by its corner: opened by hovering or clicking the mark, or by Pick up
+// when it has more than one thing to lift
+const lootAt = cell => S.under.filter(t => t.pos[0] === cell[0] && t.pos[1] === cell[1]);
+function lootZone(e, cell) {
+  const el = cell && $("tokens").querySelector(`[data-id="loot-${cell.join(",")}"]`);
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  return e.clientX >= r.left - 3 && e.clientX <= r.right + 3 && e.clientY >= r.top - 3 && e.clientY <= r.bottom + 3;
+}
+
+function where(p) {
+  const u = S.units.find(t => S.active && t.id === S.active.id);
+  if (!u) return "";
+  const dx = p[0] < u.pos[0] ? -1 : p[0] >= u.pos[0] + u.fp ? 1 : 0, dy = p[1] < u.pos[1] ? -1 : p[1] >= u.pos[1] + u.fp ? 1 : 0;
+  return !dx && !dy ? "underfoot" : ({"-1,-1": "NW", "0,-1": "N", "1,-1": "NE", "-1,0": "W", "1,0": "E", "-1,1": "SW", "0,1": "S", "1,1": "SE"})[`${dx},${dy}`];
+}
+
+function openLoot(cell, mode = "hover") {
+  ui.loot = {cell, mode, sel: 0};
+  renderLoot();
+}
+function closeLoot() { ui.loot = null; renderLoot(); }
+
+function renderLoot() {
+  const box = $("loot"), l = ui.loot;
+  const rows = !l ? [] : l.mode === "pick" ? S.pickups.map(p => ({...p, hint: where(p.pos)})) : lootAt(l.cell);
+  if (!rows.length) { ui.loot = null; box.hidden = true; box.innerHTML = ""; return; }
+  const L = Board.layout, pick = l.mode === "pick", left = Board.cx(l.cell[0]) + L.cell + 10, flip = left + 250 > 1384;
+  box.style.left = `${flip ? Board.cx(l.cell[0]) - 260 : left}px`;
+  box.style.top = `${Math.min(Math.max(Board.cy(l.cell[1]) - 20, 4), 780 - 60 - rows.length * 44)}px`;
+  box.style.pointerEvents = pick ? "auto" : "none";
+  box.innerHTML = `<h3>${pick ? "Pick up — which" : "On the ground"}</h3>` + rows.map((r, i) =>
+    `<div class="lrow ${pick ? "pick" : ""} ${pick && i === l.sel ? "sel" : ""}" data-i="${i}">${lootIcon(r)}<b>${esc(r.name)}</b>${r.hint ? `<em>${esc(r.hint)}</em>` : ""}</div>`).join("");
+  box.hidden = false;
+}
+
+function takeLoot(i) {
+  const r = ui.loot && ui.loot.mode === "pick" && S.pickups[i];
+  if (!r) return;
+  closeLoot();
+  return act({action: "pick_up", item: r.id});
+}
+$("loot").addEventListener("click", e => {
+  const row = e.target.closest(".lrow.pick");
+  if (row) takeLoot(Number(row.dataset.i));
+});
+$("loot").addEventListener("mouseover", e => {
+  const row = e.target.closest(".lrow.pick");
+  if (!row || !ui.loot) return;
+  ui.loot.sel = Number(row.dataset.i); renderLoot();
+});
+$("overlay").addEventListener("mousemove", e => {
+  if (!S || (drag && drag.moved) || (ui.loot && ui.loot.mode !== "hover")) return;
+  const cell = Board.cellAt(...sheetPoint(e));
+  if (cell && lootZone(e, cell)) {
+    if (!ui.loot || ui.loot.cell[0] !== cell[0] || ui.loot.cell[1] !== cell[1]) openLoot(cell);
+  } else if (ui.loot) closeLoot();
+});
+
 $("overlay").addEventListener("click", async e => {
   if (ui.dragged) { ui.dragged = false; return; }
   if (!S || ui.busy || S.winner) return;
   if (ui.pile) { closePile(); return; }
   const cell = Board.cellAt(...sheetPoint(e));
+  if (ui.loot) {
+    const pinned = ui.loot.mode === "pin" && cell && lootZone(e, cell) && cell[0] === ui.loot.cell[0] && cell[1] === ui.loot.cell[1];
+    const picking = ui.loot.mode === "pick";
+    closeLoot();
+    if (picking || pinned) return;
+  }
+  if (cell && lootZone(e, cell)) return openLoot(cell, "pin");
   if (!cell) return;
   const pile = unitsAt(cell), u = pile[0] || null;
   const [bx, by] = sheetPoint(e), L = Board.layout;
@@ -547,7 +635,7 @@ $("overlay").addEventListener("click", async e => {
     ui.armed = S.my_turn && u.attackable ? u.id : null;
     return inspect(u.id);
   }
-  if (u && u.side === "ally" && !u.active) return inspect(u.id);
+  if (u && u.side === "ally" && (!u.active || S.under.some(l => l.pos[0] === u.pos[0] && l.pos[1] === u.pos[1]))) return inspect(u.id);
   if (S.my_turn && S.reach.some(([x, y]) => x === cell[0] && y === cell[1])) return act({action: "move", cell});
 });
 
@@ -614,6 +702,15 @@ $("newfight").addEventListener("click", () => S && showEnd(true));
 
 document.addEventListener("keydown", e => {
   if (!S || !$("modal").hidden || !$("dialog").hidden) return;
+  if (ui.loot && ui.loot.mode === "pick") {
+    const n = S.pickups.length;
+    if (e.key === "Escape") return closeLoot();
+    if (e.key === "Tab" || e.key === "ArrowDown") { e.preventDefault(); ui.loot.sel = (ui.loot.sel + 1) % n; return renderLoot(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); ui.loot.sel = (ui.loot.sel + n - 1) % n; return renderLoot(); }
+    if (e.key === "Enter") return takeLoot(ui.loot.sel);
+    if (/^[1-9]$/.test(e.key) && Number(e.key) <= n) return takeLoot(Number(e.key) - 1);
+    return;
+  }
   if (ui.pile) {
     const n = ui.pile.rows.length;
     if (e.key === "Escape") return closePile();

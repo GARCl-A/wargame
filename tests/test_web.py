@@ -129,6 +129,61 @@ def test_a_body_and_its_chain_coin_carry_their_state():
     json.dumps(st)
 
 
+def test_what_lies_under_a_token_is_named_with_its_icon_only_where_the_side_sees():
+    from gartok.ground import GroundObject
+    s = _session()
+    _to_my_turn(s)
+    b = s.battle
+    me = b.active
+    b.ground += [GroundObject.weapon(me.pos, "Shortspear"), GroundObject.torch(me.pos),
+                 GroundObject.trap(me.pos, "spikes", "enemy")]
+    st = s.state(s.uid(me))
+    assert {(t["name"], t["glyph"]) for t in st["under"]} == {("Shortspear", "item/stone-spear"), ("Torch", "item/torch")}
+    assert all(t["pos"] == list(me.pos) for t in st["under"])
+    assert [t["name"] for t in st["inspect"]["loot"]] == ["Shortspear", "Torch"]
+    s._last_visible = set()
+    assert s._things([me.pos]) == []
+
+
+def test_pick_up_lifts_the_item_the_player_names():
+    from gartok.ground import GroundObject
+    s = _session()
+    _to_my_turn(s)
+    b = s.battle
+    me = b.active
+    relic, torch = GroundObject.relic(me.pos, "Test Gem"), GroundObject.relic(me.pos, "Test Cup")
+    b.ground += [relic, torch]
+    st = s.state()
+    assert {p["name"] for p in st["pickups"]} == {"Test Gem", "Test Cup"}
+    with pytest.raises(ValueError):
+        s.act("pick_up", item=len(b.ground))
+    s.act("pick_up", item=b.ground.index(torch))
+    assert relic in b.ground and torch not in b.ground
+    assert [p["name"] for p in s.state()["pickups"]] == ["Test Gem"]
+
+
+def test_pick_up_takes_the_first_by_default_and_the_chosen_one_when_given():
+    from gartok.ground import GroundObject
+    s = _session()
+    _to_my_turn(s)
+    b = s.battle
+    me = b.active
+    first, second = GroundObject.relic(me.pos, "Test Gem"), GroundObject.relic(me.pos, "Test Cup")
+    b.ground += [first, second]
+    assert actions.PICK_UP.options(b, me)[0] is first
+    actions.PICK_UP.execute(b, me, second)
+    assert second not in b.ground and first in b.ground
+
+
+def test_a_flag_under_a_token_is_listed_with_its_side():
+    s = _session("ctf")
+    _to_my_turn(s)
+    b = s.battle
+    b.flags["player"] = b.active.pos
+    flag = next(t for t in s.state()["under"] if t["flag"])
+    assert flag["flag"] == "ally" and flag["glyph"] is None
+
+
 def test_a_dead_foe_nobody_saw_stays_out_of_the_chain():
     s = _session()
     _to_my_turn(s)

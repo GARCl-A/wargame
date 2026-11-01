@@ -32,6 +32,17 @@ def _recorded(tmp_path, controllers=HUMAN_AI, **kw):
     battle.record_to(log)
     return battle, log
 
+def test_a_picked_item_is_logged_with_its_cell_and_name():
+    from gartok import actions
+    from gartok.ground import GroundObject
+    battle = _fight()
+    me = battle.active
+    gem, cup = GroundObject.relic(me.pos, "Test Gem"), GroundObject.relic(me.pos, "Test Cup")
+    battle.ground += [gem, cup]
+    assert combat_log._target(battle, cup) == {"cell": list(me.pos), "item": "Test Cup"}
+    actions.PICK_UP.execute(battle, me, cup)
+    assert gem in battle.ground and cup not in battle.ground
+
 def _lab_log(tmp_path, name, controllers, seed=5):
     battle, meta = combat_lab.build("scrapper", 0, 3, seed=seed)
     log = combat_log.CombatLog(str(tmp_path / name), meta, controllers)

@@ -520,7 +520,7 @@ const Board = (() => {
       g.fillStyle = sc; g.fillRect(X - C * .2, Y - C * .2, C * 1.4, C * 1.4);
       for (let i = 0; i < 3; i++) flame(g, X + C * (.22 + i * .28) + (r() - .5) * C * .08, Y + C * (.75 + r() * .15), C * (.5 + r() * .3), C * (.15 + r() * .06), r);
     }
-    for (const p of s.props) {
+    for (const p of [...s.props].sort((a, b) => (b.kind === "corpse") - (a.kind === "corpse"))) {
       const [x, y] = p.pos, X = wx(x), Y = wy(y), r = rng(x * 19 + y * 23);
       g.globalAlpha = p.remembered ? .55 : 1;
       if (p.kind === "corpse") {
