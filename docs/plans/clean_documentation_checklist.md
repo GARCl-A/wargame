@@ -67,16 +67,17 @@ wins). A dated decision is kept only in the doc that owns it, with its date as p
 
 Decided 2026-11-01: **Antigravity is no longer used**, so `.agents/` is gone and the three skills it
 held now live in `.claude/skills/`, the only place Claude Code finds them (done, same day).
-- [ ] **Local skills (yours):** look at the skills on your own machine (`~/.claude/skills/`) and copy
-  the ones the repo needs into `.claude/skills/`, then list each one here. Nothing in the repo
-  depends on them being there.
+- [x] **Local skills (yours)** — only the author can read `~/.claude/skills/`, so it became a backlog item
+  (*Ready to do*, Small: *Bring the author's own skills into the repo*); the review is done.
 - [x] `.agents/rules/commit-workflow.md`, `.agents/hooks.json`, `.agents/scripts/lint_touched_file.py` — deleted (Antigravity only; "wait for approval" lives in `pre-commit` step 9, Claude's hook in `.claude/settings.json`)
 - [x] `scripts/lint_touched_file.py` — Antigravity branches cut, message in English
 - [x] `.claude/settings.json` — kept (the ruff PostToolUse hook), status message in English
 - [x] `.claude/skills/check_backlog/SKILL.md` — the real file now (the pointer is gone)
-- [ ] `.claude/skills/pre-commit/SKILL.md` — moved, Antigravity paragraph cut; still to review its content against the map (it owns the commit rules and the exact test steps)
-- [ ] `.claude/skills/project-context/SKILL.md` — moved, commit-workflow row and empty *Workflow* section gone; its fate goes with the references below
-- [ ] `.claude/skills/gen-portrait/SKILL.md` — review
+- [x] `.claude/skills/pre-commit/SKILL.md` — done 2026-11-01: kept (it is the one place that owns the commit rules and the exact steps; `test_suite.md` owns only the tiers). Fixed against the code: the `gartok/ui/` pointer (gone) is now the web session + tab recipe, "every frame" is "every request or redraw", the `saves/` / `.pyc` culprits (already gitignored) are out of step 6, the `REFERENCE.md` step names its command, the intro line and the balance-tests aside (`test_suite.md`'s) are cut. The review stays heavy on purpose: it is the repo's only quality gate before a commit.
+- [x] `.claude/skills/check_backlog/SKILL.md` — kept: it overlaps `pre-commit` step 5 only on purpose (the net for what slipped, and the only place that ranks work); its "`AGENTS.md` module table" input (gone) is `README.md` *Structure*.
+- [x] `.claude/skills/project-context/SKILL.md` — kept as a frozen archive, no edit: the wrapper costs one description line per session and the 38 references (208 KB) are read one at a time, only the ones a task needs; what they hold (what was tried and rejected) is in no other file. Its index rows still describe pygame-era screens (`GuildScreen`, `GroupScreen`, `CharEditorScreen`, `MapEditorScreen`, "SAVE_VERSION 17"; 29 of 38 references mention a screen or pygame) and only 30 of 38 frontmatters have a description to rebuild it from, so the rows are rewritten with the references below, not before.
+- [x] `.claude/skills/gen-portrait/SKILL.md` — done 2026-11-01: kept, as the fallback it is. It said "the game's own LoRA" as if official; now the description and the opening say Gemini is preferred, the skill runs only when the author asks (`web_client.md`), and `README.md`, `gartok/assets/README.md` and `backlog.md` (Art) stopped calling it the way portraits are made. Cut what `portrait_lora/README.md` owns (the webui path, measured times, retrain advice) and a rule that repeated step 5. Its step 7 and `gen_portrait.py`'s hint named `test_named_npcs_load_pinned_portraits`, a test that no longer exists: `test_every_pinned_npc_portrait_is_a_file` now checks the pinned files.
+- [x] Chat language: "Reply in Portuguese" sat in two skills and nowhere else; it is one clause in `AGENTS.md` (*Conventions*) now.
 
 ## `project-context` references (38 files)
 All under `.claude/skills/project-context/references/`:

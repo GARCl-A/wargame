@@ -7,8 +7,6 @@ Run this before **every** `git commit` in this repo. Never commit without going
 through it, and never commit without the user's explicit approval that comes
 out the other end — no exceptions, no "this one's obviously fine."
 
-This file is the canonical, self-contained pre-commit process for this repo.
-
 The user codes iteratively, so the final diff is often the accumulated path
 rather than the shape someone would pick starting from scratch. Review it with
 that "end of the road" eye: leftover mess is the obvious cost, a solution that
@@ -32,8 +30,7 @@ only makes sense historically is the expensive one.
 
    When the diff touches wages, purses, prices or loot, also run
    `python -m pytest tests/ -n auto -m balance -q` and `python scripts/economy_report.py --quick`
-   (the `balance` tests are design numbers off the sims, not bug checks:
-   [docs/plans/test_suite.md](../../../docs/plans/test_suite.md)). A failure stops this skill
+   ([docs/plans/test_suite.md](../../../docs/plans/test_suite.md) owns the tiers). A failure stops this skill
    here — report it and fix or ask before going any further. Never let a red suite ride into a
    commit. A failure in a file another agent is editing right now (step 6) is theirs: name it,
    don't fix it. (`python sim_test.py` is a good second check for anything touching combat/AI,
@@ -66,14 +63,14 @@ only makes sense historically is the expensive one.
      extend, or add debt — a second way to do something that already had one,
      a pattern that fights the architecture? Check against similar existing
      code and, for `gartok/`, the "How to add a system" recipes in `README.md`
-     (a new registry looks like `abilities.py`/`talents.py`, a new screen hook
-     like the existing ones, UI built on `gartok/ui/`). A parallel mechanism
-     duplicating an existing one is a smell, not a stylistic choice.
+     (a new registry looks like `abilities.py`/`talents.py`, a new screen is a
+     `web/` session plus tab, UI rules in `docs/web_ui/web_client.md`). A parallel
+     mechanism duplicating an existing one is a smell, not a stylistic choice.
    - **State & logic holes.** Hunt for edge cases in persistence and object
      lifecycles. A counter that decrements without ever resetting? A consumable
      dropped without the backup activating? An attribute assumed to exist but
      never enforced? If a pattern was copied, audit it for hidden flaws.
-   - **Efficiency.** Anything recomputed every frame that shouldn't be,
+   - **Efficiency.** Anything recomputed on every request or redraw that shouldn't be,
      redundant passes over the same data, O(n²) where the file's pattern is O(n).
    - **Comments.** The project default is none. Keep a comment only if it
      answers a "why" the code can't: a constraint, a workaround with its
@@ -120,16 +117,15 @@ only makes sense historically is the expensive one.
      load-bearing rules only: it rides on every request, so a module's description never
      goes there), `docs/plans/*.md` and
      `locales/en.json` tutorial copy. Fix every sentence that is now false.
-     `REFERENCE.md` is generated: regenerate it, never edit it by hand.
+     `REFERENCE.md` is generated: `python -m gartok.reference`, never by hand.
    - **Follow-ups the diff creates.** Debt left on purpose, a split-off task
      or a decision deferred goes into the backlog as an item (size, what
      blocks it), not into a code comment or the recap alone.
    - Say in the recap what was updated and where. "Nothing to sync" is valid,
      but only after the greps were run.
 
-6. **Look for anything that shouldn't ride along.** Common culprits in this
-   repo: files under `saves/` (per-machine save slots, not game content),
-   `__pycache__`/`.pyc`, stray debug prints, anything that looks like a
+6. **Look for anything that shouldn't ride along.** Stray debug prints, scratch
+   files outside the gitignored `scratch/`, anything that looks like a
    credential or token. Files that don't belong to this change (untracked
    skills, unrelated edits) are never folded in silently: leave them out of
    the commit, mention them in one line and propose a separate commit. If

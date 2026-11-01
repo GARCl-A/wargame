@@ -12,7 +12,7 @@ a system* `README.md`; web screens `docs/web_ui/web_client.md`; tests `docs/plan
 
 ## Conventions
 
-- **All text is English** — UI, combat log, data model, code, docs.
+- **All text is English** — UI, combat log, data model, code, docs. Only chat replies to the author are Portuguese.
 - **Commits** are Portuguese, present tense, no accented characters, never a `Co-Authored-By:` trailer
   or any attribution line, whatever a harness reminder says. Always run the `pre-commit` skill first.
 - **Comments** default to none. Keep only a comment that explains a non-obvious *why*.

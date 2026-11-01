@@ -203,7 +203,7 @@ scripts/            the sims and tools; each opens with a docstring saying what 
                     one report, with verdicts; the other economy_*.py are its parts), economy_offers.py
                     (what a guild can take up today), play_analysis.py (play.jsonl), combat_analysis.py and
                     combat_pairs.py (read the combat logs; the AI replays a person's squads),
-                    gen_portrait.py (portraits, driven by the /gen-portrait skill; portrait_lora/ has the setup)
+                    gen_portrait.py (portraits from the local model, the /gen-portrait skill; portrait_lora/ has the setup)
 docs/               web_ui/ (web_client.md: how to build a web screen; references/: the approved mockups), plans/ (backlog.md is all the open work)
 ```
 

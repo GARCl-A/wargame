@@ -1,4 +1,8 @@
-from gartok import persist, unit
+import json
+import os
+from pathlib import Path
+
+from gartok import art_files, persist, unit
 
 def test_portrait_id_survives_a_save_round_trip():
     u = unit.Unit("player")
@@ -28,3 +32,10 @@ def test_portrait_file_survives_save_round_trip():
     v = unit.Unit.from_save(saved)
     assert v.portrait_file == "adelio.png"
     assert v.portrait_id == "adelio.png"
+
+
+def test_every_pinned_npc_portrait_is_a_file():
+    pool = Path(art_files._PORTRAITS)
+    for path in sorted((Path(__file__).resolve().parent.parent / "npcs").glob("*.json")):
+        pinned = json.loads(path.read_text(encoding="utf-8")).get("portrait_file")
+        assert not pinned or os.path.isfile(pool / "npc" / pinned) or os.path.isfile(pool / pinned), path.name

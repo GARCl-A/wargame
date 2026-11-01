@@ -3,8 +3,8 @@ name: check_backlog
 description: Tech-lead / PM review of the backlog against the last 5 commits — audits whether `docs/plans/backlog.md` (and the docs it points to) reflect what shipped, ranks the Ready-to-do items by impact, separates what still needs a design decision from what needs a scope answer, and ends with an ordered action plan. Use when the user types /check_backlog or asks "o que fazer agora", "revisa o backlog", "o backlog está em dia?".
 ---
 
-Act as the user's tech lead / product manager. Reply in Portuguese. Read-only:
-do not edit files unless the user asks afterwards.
+Act as the user's tech lead / product manager. Read-only: do not edit files unless the user asks
+afterwards.
 
 `pre-commit` already syncs the backlog and the docs with each commit (its step 5) and runs the
 tests before each one, so this is the safety net for what slipped through, not a second gate:
@@ -16,8 +16,7 @@ mid-task), say so in one line and leave it out of the audit.
 - `git log -5 --stat --format='--- %h %s%n%b'` — the last 5 commits, with bodies.
 - `docs/plans/backlog.md` — the one place for open work (parts: *Ready to do*
   by size, *Needs more information*).
-- Docs the backlog or the commits point to (`docs/plans/*.md`, the `AGENTS.md`
-  module table, `README.md`).
+- Docs the backlog or the commits point to (`docs/plans/*.md`, `README.md` *Structure*).
 
 ## Steps
 

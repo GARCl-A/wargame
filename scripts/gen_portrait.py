@@ -140,8 +140,7 @@ def install(args):
     medallion(args.image, dest)
     print("installed", dest)
     if args.npc:
-        print(f'next: set "portrait_file": "{_slug(args.npc)}.png" in npcs/<id>.json and list it in '
-              "tests/test_portraits.py::test_named_npcs_load_pinned_portraits")
+        print(f'next: set "portrait_file": "{_slug(args.npc)}.png" in npcs/<id>.json')
     else:
         print("note: a bigger pool changes `portrait_id % len(files)`, so existing units of that race may swap face")
 

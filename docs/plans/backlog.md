@@ -163,6 +163,13 @@ bugs, then the rest.
   or "not for sale" if the market never trades quest items (check `trade.Counter` first). After touching
   prices run `python -m pytest tests/ -n auto -m balance` and `scripts/economy_report.py` (`AGENTS.md`).
 
+- **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
+  skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
+  copy it into `.claude/skills/<name>/SKILL.md`, then check it against the map in
+  `clean_documentation_checklist.md`: no rule an owner doc already holds, no pointer to a file that is
+  gone, one line in `AGENTS.md` only if an agent would break something without it. Nothing in the repo
+  depends on them being there.
+
 ## Medium
 
 - **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided).** On day 105 a guild of
@@ -462,9 +469,9 @@ map**: a node has one "Enter" button and its functions are tabs inside.
 
 ## Art (made by hand, not code)
 
-Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png` from the `/gen-portrait`
-skill (about 7 minutes of GPU a portrait, curated by hand); the rest is game-icons.net SVG
-silhouettes. Order is the suggested priority.
+Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`: Gemini first, the
+`/gen-portrait` skill (local LoRA, about 7 minutes of GPU a portrait, weaker) as the fallback, curated by
+hand; the rest is game-icons.net SVG silhouettes. Order is the suggested priority.
 
 - **Art to generate for the web board and UI** (the art direction in [../web_ui/web_client.md](../web_ui/web_client.md);
   files go in `gartok/web/client/img/`). Each is one seamless 1024 texture in the sepia
