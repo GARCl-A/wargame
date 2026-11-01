@@ -14,11 +14,11 @@ from .base import (  # noqa: F401
     _attackable_target,
     _cell_free,
     _drop_cell,
-    _land_thrown,
     _facing,
     _flank_penalty,
     _flanked,
     _hostile_target,
+    _land_thrown,
     _pack_flank,
     _phalanxed,
     _pickable,
@@ -267,11 +267,11 @@ def panel(battle, actor, tab, my_turn, show_blocked=False):
         applies, reason = action.applicable(battle, actor)
         if action in CONTEXTUAL and not (my_turn and action.available(battle, actor)):
             continue
-        lost = empty_hand_reason(battle, actor, action) if tab == "combat" else ""
-        if lost:
-            reason = lost
+        why = empty_hand_reason(battle, actor, action) if tab == "combat" else ""
+        if why:
+            reason = why
         elif action is DELAY and my_turn:
-            lost = reason
+            why = reason
         elif not applies and not show_blocked:
             continue
         hotkey = FIXED_HOTKEYS.get(action.id)
@@ -280,5 +280,5 @@ def panel(battle, actor, tab, my_turn, show_blocked=False):
             hotkey = free
         enabled = applies and my_turn and (action is END or action.available(battle, actor))
         entries.append({"action": action, "applies": applies, "reason": reason,
-                        "enabled": enabled, "hotkey": hotkey, "why": lost})
+                        "enabled": enabled, "hotkey": hotkey, "why": why})
     return entries

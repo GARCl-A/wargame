@@ -893,8 +893,6 @@ class Battle:
             return "already delayed this round"
         if unit.ap < AP_PER_TURN or unit.moved or unit.walking:
             return "you already spent a point this turn: Delay only works before you act"
-        if unit.delayed:
-            return "already delayed this round"
         if not any(u.alive for u in self.order[self.turn_idx + 1:]):
             return "nobody is left to act after you"
         return ""
