@@ -9,7 +9,7 @@ echo.
 echo Checking the version...
 uv run python scripts/version_check.py --build
 if errorlevel 1 (
-    echo Fix docs/versions.csv and run again.
+    echo Fix the error above and run again.
     pause
     exit /b 1
 )
