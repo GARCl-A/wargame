@@ -328,22 +328,41 @@ def test_finite_shelves_run_out_and_refill_each_morning():
 # ------------------------------------------------------------------ #
 # the milestone, the report and the ranking                          #
 # ------------------------------------------------------------------ #
-def test_the_milestone_costs_less_for_what_the_guild_already_wears():
-    sim = _sim()
+def _bare(sim):
+    """Everyone with a Club and no armor, whatever the recruit rolled."""
+    for u in sim.members:
+        u.equipped_weapon, u.equipped_armor = "Club", None
+    return sim
+
+
+def test_the_milestone_is_three_equipped_members_and_a_food_fund():
+    sim = _bare(_sim())
+    gear = items.get("Axe").price + items.get("Studded Leather").price
+    assert sim_mod.milestone_cost(sim) == 3 * gear + sim_mod.food_fund()
+    assert sim_mod.food_fund() == 7 * 3 * sim_mod.cheapest_food_price()
+
+
+def test_the_milestone_credits_what_the_guild_already_wears():
+    sim = _bare(_sim())
     start = sim_mod.milestone_cost(sim)
     sim.members[0].equipped_armor = "Studded Leather"
     assert sim_mod.milestone_cost(sim) == start - items.get("Studded Leather").price
-    sim.guild.rent_bank_chest()
-    assert sim_mod.milestone_cost(sim) == start - items.get("Studded Leather").price - economy.BANK_CHEST_PRICE
+    sim.members[0].equipped_weapon = "Axe"
+    assert sim_mod.is_equipped(sim.members[0])
+    assert sim_mod.milestone_cost(sim) == start - sim_mod.MILESTONE_WEAPON_PRICE - items.get("Studded Leather").price
 
 
-def test_food_in_the_packs_counts_toward_the_milestones_seven_days():
+def test_a_cheap_weapon_does_not_count_as_equipped():
     sim = _sim()
-    start = sim_mod.milestone_cost(sim)
-    with sim.market() as shop:
-        shop.buy_food(5)
-    cost_of_food = sim.rations * sim_mod.cheapest_food_price()
-    assert sim_mod.milestone_cost(sim) == start - cost_of_food
+    sim.members[0].equipped_armor = "Studded Leather"
+    sim.members[0].equipped_weapon = "Club"
+    assert not sim_mod.is_equipped(sim.members[0])
+
+
+def test_members_past_the_third_add_nothing_to_the_milestone():
+    sim = _bare(_sim(size=5))
+    gear = items.get("Axe").price + items.get("Studded Leather").price
+    assert sim_mod.milestone_cost(sim) == 3 * gear + sim_mod.food_fund()
 
 
 def test_a_policy_that_never_reaches_the_milestone_reports_no_first_day():
@@ -904,7 +923,7 @@ def test_the_balanced_opening_buys_an_axe_for_everyone_it_can():
 
 @pytest.mark.balance
 def test_the_sprint_goes_for_the_champion_at_combat_zero_and_signs_no_one(monkeypatch):
-    sim = _sim("balanced", capital=300, library=_WON)
+    sim = _sim("balanced", capital=200, library=_WON)
     for u in sim.members:
         u.set_track_level("work", 2)
     pitched, fought = [], []

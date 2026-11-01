@@ -113,8 +113,9 @@ def build(settings):
     share = table[MILESTONE_POLICY]["milestone"]
     start_cost = guild_sim.milestone_cost(guild_sim.Sim(guild_sim.Lumber(), seed=settings.seed))
     verdicts.append(("day-30 milestone", share >= MILESTONE_SHARE,
-                     (f"a level-0 squad on the '{MILESTONE_POLICY}' policy can afford food for 7 days, "
-                      f"a weapon and Studded Leather each and the strongbox on some day by day "
+                     (f"a level-0 squad on the '{MILESTONE_POLICY}' policy can afford a weapon worth "
+                      f"{guild_sim.MILESTONE_WEAPON_PRICE}+ and Studded Leather for {guild_sim.MILESTONE_SQUAD} members "
+                      f"and keep ${guild_sim.food_fund()} for their food on some day by day "
                       f"{settings.days} in {share * 100:.0f}% of guilds (need >= {MILESTONE_SHARE * 100:.0f}%); "
                       f"the cost starts at ${start_cost}")))
 

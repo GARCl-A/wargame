@@ -49,9 +49,11 @@ The report prints today's number next to each; the exit code is 1 if one fails.
 
 1. **Floor.** Lumber at level 0: eat and keep >= $1 per member per day.
 2. **Wilds beat the floor** at level 2-3 for a player who wins most fights.
-3. **Day-30 milestone.** A level-0 squad on the `balanced` policy has, by day 30, food for 7 days, a
-   weapon (an Axe) and Studded Leather per member and the bank strongbox, in >= 50% of its guilds
-   (`economy_report.MILESTONE_SHARE`). `milestone_cost` credits what the guild already wears.
+3. **Day-30 milestone: a healthy guild.** A level-0 squad on the `balanced` policy can, by day 30, equip
+   at least 3 members (a weapon worth 35+, an Axe, and Studded Leather) and still hold the copper for
+   7 days of food for 3 (7 x 3 x the cheapest food price) in >= 50% of its guilds
+   (`economy_report.MILESTONE_SHARE`). `milestone_cost` takes the 3 members cheapest to equip and
+   credits what they already wear; a bigger guild adds nothing to it. The strongbox is not part of it.
 4. **No dominant loop.** No money-from-nothing loop (EXPLOIT); no activity beats another of its
    level on copper and XP at no more risk.
 

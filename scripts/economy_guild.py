@@ -81,9 +81,11 @@ SHIFT_HOURS = 16                     # a work shift; the other 8 h of the day ar
 SLEEP_HOURS = 24 - SHIFT_HOURS        # a night's rest, for the wounded: the game has no fatigue
 FOOD_LOW_DAYS = 2                    # shop when the packs hold less than this many days
 FOOD_TARGET_DAYS = 6                 # ...and buy up to this many (a Potato keeps 7)
-MILESTONE_WEAPON = "Axe"             # the weapon the day-30 milestone prices
+MILESTONE_WEAPON = "Axe"             # the weapon a policy buys toward the day-30 milestone
+MILESTONE_WEAPON_PRICE = 35          # an equipped member holds a weapon worth at least this (an Axe)
 MILESTONE_ARMOR = "Studded Leather"
-MILESTONE_FOOD_DAYS = 7
+MILESTONE_SQUAD = 3                  # a healthy guild has at least this many equipped members...
+MILESTONE_FOOD_DAYS = 7              # ...and copper in the pack for this many days of food for them
 CURVE_DAYS = (1, 3, 7, 14, 21, 30)
 STEP_LIMIT = 4000
 CREW_FOOD_DAYS = 6                   # rations the crew is kept stocked with at each shop visit
@@ -1141,27 +1143,38 @@ def cheapest_food_price():
 
 
 # --------------------------------------------------------------------------- #
-# the day-30 milestone: food for 7 days, a weapon and Studded Leather each,    #
-# and the bank's strongbox                                                     #
+# the day-30 milestone: a healthy guild, 3 equipped members and a food fund   #
 # --------------------------------------------------------------------------- #
 def _owns_at_least(member, want, current):
     cur, goal = items.get(current), items.get(want)
     return cur is not None and goal is not None and cur.price >= goal.price
 
 
+def _armed(member):
+    weapon = items.get(member.equipped_weapon or "")
+    return weapon is not None and weapon.price >= MILESTONE_WEAPON_PRICE
+
+
+def _armored(member):
+    return _owns_at_least(member, MILESTONE_ARMOR, getattr(member, "equipped_armor", None) or "")
+
+
+def is_equipped(member):
+    """A weapon worth `MILESTONE_WEAPON_PRICE` and Studded Leather or better."""
+    return _armed(member) and _armored(member)
+
+
+def food_fund():
+    """Copper that stands for a healthy guild's food: `MILESTONE_FOOD_DAYS` days for `MILESTONE_SQUAD`."""
+    return MILESTONE_FOOD_DAYS * MILESTONE_SQUAD * cheapest_food_price()
+
+
 def milestone_cost(sim):
-    """Copper still missing for the milestone: whatever the guild has not already got."""
-    guild, cost = sim.guild, 0
-    for u in guild.roster:
-        if not _owns_at_least(u, MILESTONE_ARMOR, getattr(u, "equipped_armor", None) or ""):
-            cost += items.get(MILESTONE_ARMOR).price
-        if not _owns_at_least(u, MILESTONE_WEAPON, u.equipped_weapon or ""):
-            cost += items.get(MILESTONE_WEAPON).price
-    if not guild.bank.capacity:
-        cost += economy.BANK_CHEST_PRICE
-    need_rations = MILESTONE_FOOD_DAYS * len(guild.roster) - guild.rations
-    cost += max(0, need_rations) * cheapest_food_price()
-    return cost
+    """Copper still missing for a healthy guild: the gear of the `MILESTONE_SQUAD` members who are
+    cheapest to equip (what they already wear is credited) plus the food fund, which stays in the packs."""
+    weapon, armor = items.get(MILESTONE_WEAPON).price, items.get(MILESTONE_ARMOR).price
+    gaps = sorted((0 if _armed(u) else weapon) + (0 if _armored(u) else armor) for u in sim.guild.roster)
+    return sum(gaps[:MILESTONE_SQUAD]) + food_fund()
 
 
 # --------------------------------------------------------------------------- #
