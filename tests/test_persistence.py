@@ -4,6 +4,7 @@ import os
 import random
 
 from gartok.holdings import Stash
+from gartok.version import GAME_VERSION
 from tests.helpers import Combatant, Unit, _unit, data, packed, persist, recruit
 
 
@@ -247,8 +248,26 @@ def test_a_save_of_another_version_is_refused_with_a_clear_error():
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(payload, fh)
     try:
-        with pytest.raises(persist.SaveVersionError):
+        with pytest.raises(persist.SaveVersionError, match="BREAKING CHANGE") as err:
             persist.load_game(world)
+        assert f"v{GAME_VERSION}" in str(err.value) and payload["game_version"] in str(err.value)
+    finally:
+        persist.delete_world(world)
+
+
+def test_a_save_carries_the_game_version_and_an_old_one_without_it_still_loads():
+    import json
+    world = persist.new_world_id()
+    persist.save_game(world, _world_guild())
+    path = persist.save_path(world)
+    try:
+        with open(path, encoding="utf-8") as fh:
+            payload = json.load(fh)
+        assert payload["game_version"] == GAME_VERSION
+        del payload["game_version"]
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh)
+        assert persist.load_game(world).name == "Iron Fists"
     finally:
         persist.delete_world(world)
 

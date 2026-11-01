@@ -61,11 +61,12 @@ class TitleSession(Session):
         self.worlds = persist.list_worlds()
         self.latest = self.worlds[0] if self.worlds else None
         self._last = None
+        self._broken = None
         if self.latest:
             try:
                 self._last = persist.load_game(self.latest["world"])
-            except persist.SaveVersionError:
-                pass
+            except persist.SaveVersionError as e:
+                self._broken = str(e)
 
     # ------------------------------------------------------------------ #
     # verbs                                                              #
@@ -164,7 +165,7 @@ class TitleSession(Session):
             out["faces"] = self._faces(w)[:CHARTER_FACES]
             out["more"] = max(0, len(w.get("faces", [])) - CHARTER_FACES)
             out["where"] = None
-            out["broken"] = "This save is from another version of the game and cannot be loaded."
+            out["broken"] = self._broken
             return out
         bands = [b for b in g.groups if not b.empty]
         out["ledger"].append((len(bands), "Bands"))

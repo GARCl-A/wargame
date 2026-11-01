@@ -5,6 +5,7 @@ the map's menu; BACK returns there."""
 from typing import ClassVar
 
 from .. import settings
+from ..version import GAME_VERSION, build_hash
 from .session import Session
 
 NOTES = {
@@ -74,4 +75,4 @@ class SettingsSession(Session):
         if self.guild is not None:
             tut = {"enabled": self.guild.tutorial.enabled, "reset": self.reset_note}
         return {"rows": rows, "tutorial": tut, "guild": self.guild.name if self.guild else None,
-                "volume": settings.get("volume"), "back": self.back_label}
+                "version": f"GARTOK v{GAME_VERSION} · {build_hash()}", "volume": settings.get("volume"), "back": self.back_label}
