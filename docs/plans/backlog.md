@@ -95,9 +95,6 @@ the rest.
 - **Hit sounds swap (`assets/sounds/`).** Hit sounds do not fit the game (the UI sounds are fine);
   swap the Kenney variants in `assets/sounds/`.
 
-- **Map blocks: drop pygame's layout hints.** `gap_before` and `height` in `map_view.py`'s blocks are
-  ignored by the web; the Editor does not count (author 2026-10-30). Delete them.
-
 - **Quest and tool items priced at a placeholder $4 (found 2026-11-01 reading `REFERENCE.md`).** `Ancient Codex`,
   `Snake Dragon Corpse` (both `ItemType.QUEST`, rare, 2 and 12 kg), `Musical Instrument` and `Dictionary`
   carry `price=4` in `items.py`, the same as a Fruit or a Sugar; there is no default, the number was set by hand.

@@ -116,8 +116,8 @@ class MapView:
             line = f"burns through in {left} day(s), and spreads"
         blocks = [{"type": "text", "text": line, "tone": "bad"}]
         if focus.cleared:
-            blocks += [{"type": "section", "label": "the fire", "gap_before": 8},
-                       {"type": "button", "key": "wf_put_out", "primary": True, "height": 40,
+            blocks += [{"type": "section", "label": "the fire"},
+                       {"type": "button", "key": "wf_put_out", "primary": True,
                         "label": f"PUT OUT THE FIRE ({wildfire.PUT_OUT_HOURS} h)"},
                        {"type": "wrapped_text", "tone": "faint",
                         "text": f"the best mind of the group rolls INT vs DC {wildfire.PUT_OUT_DC} at the end  ·  "
@@ -131,10 +131,10 @@ class MapView:
             who = "the Ogre" if focus.great else "the foreman"
             dc = wildfire.talk_dc(self.guild, focus)
             step = "get a hearing" if focus.talk == 0 else "show them how it is done"
-            blocks.append({"type": "section", "label": f"talk to {who}", "gap_before": 8})
+            blocks.append({"type": "section", "label": f"talk to {who}"})
             blocks.append({"type": "wrapped_text", "tone": "faint",
                            "text": f"{step}: {attr[:3].upper()} vs DC {dc}  ·  a miss and they fight"})
-            blocks.append({"type": "button", "key": "wf_talk", "height": 36, "gap_before": 2,
+            blocks.append({"type": "button", "key": "wf_talk",
                            "label": f"TALK TO {who.upper()}"})
         return blocks
 
@@ -251,13 +251,10 @@ class MapView:
             blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
                           "tone": "faint"})
         for fn in offered:
-            first = not blocks
             btn = {"type": "button", "key": fn.order_kind,
                    "label": here.shop_label if fn.id == "shop" and here.shop_label else fn.label}
             if fn.id == "ancient_ruins":
                 btn["primary"] = True
-            if not first:
-                btn["gap_before"] = 16
             blocks.append(btn)
             blocks += self._function_notes(fn)
             if fn.id == "shop" and here.has("work"):
@@ -272,28 +269,27 @@ class MapView:
                            "text": f"! {label}: {names}"})
 
         if here.id == "road" and not self.guild.is_node_revealed("ancient_ruins"):
-            blocks.append({"type": "button", "key": "scout_ruins", "label": f"EXPLORE THE AREA ({campaign.SCOUT_RUINS_HOURS} h)",
-                          "gap_before": 16})
+            blocks.append({"type": "button", "key": "scout_ruins", "label": f"EXPLORE THE AREA ({campaign.SCOUT_RUINS_HOURS} h)"})
             blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
                           "tone": "faint"})
 
         if (here.id == "lumber_yard" and missions.pending_snake(self.guild) is not None
                 and not self.guild.is_node_revealed(serpent_nest.NODE)):
             blocks.append({"type": "button", "key": "search_nest",
-                           "label": f"SEARCH FOR THE NEST ({serpent_nest.SEARCH_HOURS} h)", "gap_before": 16})
+                           "label": f"SEARCH FOR THE NEST ({serpent_nest.SEARCH_HOURS} h)"})
             blocks.append({"type": "text", "text": "Follow the shed skins to the Snake Dragon's den (WIS check)",
                            "tone": "faint"})
 
         if (here.id == "mine" and missions.pending_clutch(self.guild) is not None
                 and not self.guild.is_node_revealed(lair.NODE)):
             blocks.append({"type": "button", "key": "search_lair",
-                           "label": f"SEARCH THE DEEP GALLERIES ({lair.SEARCH_HOURS} h)", "gap_before": 16})
+                           "label": f"SEARCH THE DEEP GALLERIES ({lair.SEARCH_HOURS} h)"})
             blocks.append({"type": "text", "text": "Follow the warm air past where the miners stopped (WIS check)",
                            "tone": "faint"})
 
         if here.id == "country_roads" and not self.guild.is_node_revealed("ox_fields"):
             blocks.append({"type": "button", "key": "scout_fields",
-                           "label": f"SEARCH THE LANES ({ox.SCOUT_HOURS} h)", "gap_before": 16})
+                           "label": f"SEARCH THE LANES ({ox.SCOUT_HOURS} h)"})
             blocks.append({"type": "text", "text": "Look for where the land opens out (WIS check)",
                            "tone": "faint"})
 
