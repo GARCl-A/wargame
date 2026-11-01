@@ -171,14 +171,13 @@ function draw() {
 }
 
 async function back() {
-  Sound.play("click");
   await api("/api/guild/back", {});
   location.reload();
 }
 
 $("tabs").addEventListener("click", e => {
   const t = e.target.closest("[data-tab]");
-  if (t && t.dataset.tab !== G.tab) { Sound.play("click"); post("tab", {key: t.dataset.tab}); }
+  if (t && t.dataset.tab !== G.tab) post("tab", {key: t.dataset.tab});
 });
 $("back").onclick = back;
 $("body").addEventListener("click", e => {
@@ -189,12 +188,12 @@ $("body").addEventListener("click", e => {
   const fold = el.closest("[data-fold]");
   if (fold) return post("fold", {gid: fold.dataset.fold});
   const m = el.closest(".mem[data-uid]");
-  if (m) { Sound.play("click"); return post("member", {uid: m.dataset.uid}); }
+  if (m) return post("member", {uid: m.dataset.uid});
   const r = el.closest("[data-role]");
-  if (r && !r.classList.contains("off")) { Sound.play("click"); return post("role", {key: r.dataset.role}); }
-  if (el.closest("#tree")) { Sound.play("click"); return post("talents", {}); }
+  if (r && !r.classList.contains("off")) return post("role", {key: r.dataset.role});
+  if (el.closest("#tree")) return post("talents", {});
   const o = el.closest("[data-open]");
-  if (o) { Sound.play("click"); return post("band", {gid: o.dataset.open}); }
+  if (o) return post("band", {gid: o.dataset.open});
   const ff = el.closest("[data-facfold]");
   if (ff) {
     const f = G.reputations.factions.find(x => x.name === ff.dataset.facfold);
@@ -208,7 +207,7 @@ $("body").addEventListener("click", e => {
     return draw();
   }
   const row = el.closest("tr[data-band]");
-  if (row && row.dataset.band) { Sound.play("click"); post("band", {gid: row.dataset.band}); }
+  if (row && row.dataset.band) post("band", {gid: row.dataset.band});
 });
 addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT") return;

@@ -142,7 +142,7 @@
 .bar .hint{display:flex;align-items:center;gap:12px;height:24px;font:16px/1 var(--read);color:#a9bdb6}
 .bar .tabs{margin-left:auto;display:flex;gap:2px}
 .bar .tabs span{font:600 10px/1 Cinzel,serif;letter-spacing:.22em;color:var(--verdigris);padding:6px 12px;border-bottom:1px solid rgba(111,148,140,.3);cursor:pointer;text-transform:uppercase}
-.bar .tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
+.bar .tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass);cursor:default}
 .platerow{display:flex;gap:14px}
 .platebox{position:relative;flex:1;min-width:0}
 /* the row scrolls sideways when the actions outgrow it; the padding is the room a raised plate needs */

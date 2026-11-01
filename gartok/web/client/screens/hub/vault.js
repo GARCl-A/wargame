@@ -108,7 +108,7 @@ const Vault = (() => {
     picks = null;
     for (const k in take) delete take[k];
     const r = await post(verb, body);
-    if (r && r.vault) Sound.play(r.vault.purse !== before ? "coins" : "click");
+    if (r && r.vault && r.vault.purse !== before) Sound.play("coins");
   }
 
   // ---------------------------------------------------------------- what the person does

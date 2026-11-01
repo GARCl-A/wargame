@@ -48,7 +48,7 @@ const Jobs = (() => {
     const b = e.target.closest("[data-job]");
     if (b && !b.classList.contains("off")) {
       const r = await post(b.dataset.verb, {id: b.dataset.job});
-      if (r) Sound.play(b.dataset.verb === "turn_in" ? "coins" : "click");
+      if (r && b.dataset.verb === "turn_in") Sound.play("coins");
       return;
     }
     const egg = e.target.closest("#egg");

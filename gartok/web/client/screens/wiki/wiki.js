@@ -65,11 +65,11 @@ function render(state) {
 
 $("chapters").addEventListener("click", e => {
   const t = e.target.closest("[data-ch]");
-  if (t && t.dataset.ch !== W.chapter) { Sound.play("click"); $("entries").scrollTop = 0; post("chapter", {chapter: t.dataset.ch}); }
+  if (t && t.dataset.ch !== W.chapter) { $("entries").scrollTop = 0; post("chapter", {chapter: t.dataset.ch}); }
 });
 $("entries").addEventListener("click", e => {
   const t = e.target.closest("[data-ref]");
-  if (t) { Sound.play("click"); post("open", {ref: t.dataset.ref}); }
+  if (t) post("open", {ref: t.dataset.ref});
 });
 // a find dropped while another was on its way is sent again once the answer shows the page behind
 function find() {

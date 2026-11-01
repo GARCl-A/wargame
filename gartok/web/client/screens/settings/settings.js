@@ -18,7 +18,6 @@ async function post(verb, body = {}) {
     const r = await api(`/api/settings/${verb}`, body);
     if (r.screen && r.screen !== "settings") { location.reload(); return; }
     render(r);
-    Sound.play("click");
   } catch (e) {
     toast(e.message);
   } finally {

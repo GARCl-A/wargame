@@ -57,7 +57,7 @@ const Labor = (() => {
 
   async function act(verb, body) {
     const r = await post(verb, body);
-    if (r) Sound.play(verb === "work" || verb === "licence" ? "coins" : "click");
+    if (r && (verb === "work" || verb === "licence")) Sound.play("coins");
   }
 
   $("body").addEventListener("click", e => {

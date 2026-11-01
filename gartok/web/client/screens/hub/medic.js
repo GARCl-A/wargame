@@ -44,7 +44,7 @@ const Medic = (() => {
   $("body").addEventListener("click", async e => {
     if (!H || !H.medic) return;
     const p = e.target.closest("[data-uid]");
-    if (p) { Sound.play("click"); post("patient", {uid: p.dataset.uid}); return; }
+    if (p) { post("patient", {uid: p.dataset.uid}); return; }
     const t = e.target.closest("#treat");
     if (t && !t.classList.contains("off")) {
       const r = await post("treat");

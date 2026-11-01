@@ -17,7 +17,6 @@ async function post(verb) {
   try {
     const r = await api(`/api/credits/${verb}`, {});
     if (r.screen && r.screen !== "credits") { location.reload(); return; }
-    Sound.play("click");
   } catch (e) {
     toast(e.message);
   } finally {

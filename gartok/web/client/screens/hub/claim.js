@@ -79,7 +79,6 @@ const Claim = (() => {
     const b = e.target.closest("[data-claim]");
     if (!b || b.classList.contains("off")) return;
     const verb = b.dataset.claim;
-    Sound.play("click");
     if (verb.startsWith("fight_")) post("claim_fight", {verb});
     else if (verb === "garrison") post("claim_garrison");
     else post("claim", {verb});
