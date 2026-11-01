@@ -4,7 +4,7 @@ the Non-lethal toggle."""
 
 from .. import intel, natural_weapons
 from ..board import cells, cells_in_radius, cone_cells
-from ..conditions import Defending, Demoralized, Grappled
+from ..conditions import Defending, Demoralized, Grappled, Prone
 from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll
 from .base import (
     Action,
@@ -434,13 +434,15 @@ class Flee(Action):
 
     def available(self, battle, actor):
         return (actor.ap >= self.cost and not actor.has_condition("grappled")
-                and self._at_edge(battle, actor) and self._escapes(battle, actor))
+                and not actor.has_condition("prone") and self._at_edge(battle, actor) and self._escapes(battle, actor))
 
     def blocked_reason(self, battle, actor):
         if actor.ap < self.cost:
             return "need 1 AP"
         if actor.has_condition("grappled"):
             return "grappled"
+        if actor.has_condition("prone"):
+            return "on the ground"
         if not self._at_edge(battle, actor):
             return "reach map edge"
         pursuers = self._pursuers(battle, actor)
@@ -785,6 +787,85 @@ class Grab(Action):
             battle.fx(target.pos, "grappled", "ok")
         else:
             battle.log(desc + " -> failed.")
+
+
+# --------------------------------------------------------------------------- #
+# Takedown / Stand Up                                                         #
+# --------------------------------------------------------------------------- #
+
+class Takedown(Action):
+    """Knock an adjacent foe to the ground: 1 AP, d20 + STR against the foe's d20 + DEX; matching it
+    is enough, and a natural 20 always lands. The foe is Prone. A flier cannot be brought down."""
+    id, name, cost, target, aimed = "takedown", "Takedown", 1, "enemy", True
+    desc = "Throw an adjacent foe to the ground (STR vs DEX): prone, it cannot move and strikes at -2."
+
+    def _targets(self, battle, actor):
+        return [u for u in battle.units
+                if u.alive and u.team != actor.team and self.can(battle, actor, u)]
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and bool(self._targets(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        if actor.ap < self.cost or not _hostile_target(actor, target):
+            return False
+        if target.has_condition("prone") or target.flies:
+            return False
+        if battle.units_distance(actor, target) > 1:
+            return False
+        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
+            return False
+        return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
+
+    def label(self, battle, actor):
+        return "Takedown (1 pt, STR vs DEX)"
+
+    def highlight_targets(self, battle, actor):
+        return self._targets(battle, actor)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        mine, theirs = d20(), d20()
+        total = mine + actor.mod_strength
+        resist = theirs + target.mod_dexterity
+        desc = (f"{actor.name} tries to take down {target.name}: d20({mine}) {actor.mod_strength:+}(STR) = {total}"
+                f" vs d20({theirs}) {target.mod_dexterity:+}(DEX) = {resist}")
+        if mine == 20 or total >= resist:
+            target.add_condition(Prone())
+            battle.log(desc + f" -> {target.name} is on the ground!")
+            battle.fx(target.pos, "prone", "ok")
+        else:
+            battle.log(desc + " -> failed.")
+
+
+class StandUp(Action):
+    """Get back on your feet: 1 AP, only while Prone."""
+    id, name, cost, target = "stand_up", "Stand Up", 1, "none"
+    desc = "Get up from the ground (ends Prone)."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.has_condition("prone"):
+            return False, "not prone"
+        return True, ""
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and actor.has_condition("prone")
+
+    def label(self, battle, actor):
+        return "Stand Up (1 pt)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.available(battle, actor):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        actor.conditions.remove(actor.condition("prone"))
+        battle.log(f"{actor.name} gets back on their feet.")
+        battle.fx(actor.pos, "up", "ok")
 
 
 # --------------------------------------------------------------------------- #

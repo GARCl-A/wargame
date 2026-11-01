@@ -6,6 +6,14 @@ from .common import _axes, _mindless
 from .target import _target
 
 
+def _try_stand_up(battle, unit):
+    """Get up off the ground before anything else: a prone unit cannot walk."""
+    if not actions.STAND_UP.available(battle, unit):
+        return False
+    actions.STAND_UP.execute(battle, unit)
+    return True
+
+
 def _try_escape_grapple(battle, unit):
     """Attempt to break free from a grapple when holding a ranged weapon, fleeing,
     unable to hit any foe, or heavily hurt."""

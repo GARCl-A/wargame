@@ -34,6 +34,9 @@ def _pick_attack(battle, unit, target):
     if _should_grab(battle, unit, target):
         return actions.GRAB
 
+    if _should_takedown(battle, unit, target):
+        return actions.TAKEDOWN
+
     opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
             if a.can(battle, unit, target)]
 
@@ -135,6 +138,14 @@ def _should_grab(battle, unit, target):
     if _runs_flag(battle, target) or getattr(target, "fleeing", False):
         return True
     return False
+
+
+def _should_takedown(battle, unit, target):
+    """Bring a runner or flag carrier down. Anything else is a point traded for the point the foe
+    spends standing, which headless fights show never pays (a squad that takes down a harder-hitting
+    foe on the contest's odds loses more, not less)."""
+    return (actions.TAKEDOWN.can(battle, unit, target)
+            and (_runs_flag(battle, target) or getattr(target, "fleeing", False)))
 
 
 def _sleep_immune(battle, unit, target):

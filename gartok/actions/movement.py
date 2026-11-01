@@ -49,6 +49,8 @@ class _VerticalStep(Action):
     target, aimed = "cell", True
 
     def _spots(self, battle, actor):
+        if actor.has_condition("prone"):
+            return []
         z = battle.elevation(actor)
         return [nb for nb in battle.board.neighbors(actor.pos)
                 if self._wants(battle.board.elevation_at(nb), z)
@@ -153,6 +155,8 @@ class Jump(Action):
         return max(0, min(total // JUMP_DIVISOR, actor.speed)) + int(actor.char.talent_bonus("jump_reach"))
 
     def _max_reach(self, battle, actor):
+        if actor.has_condition("prone"):
+            return 0
         return self._reach(actor, 20 + actor.mod_strength)
 
     def available(self, battle, actor):
@@ -228,11 +232,11 @@ class Swim(Action):
         return self._squares(actor, (20 + actor.mod_strength) // SWIM_DIVISOR)
 
     def available(self, battle, actor):
-        return (actor.ap >= self.cost and not actor.flies
+        return (actor.ap >= self.cost and not actor.flies and not actor.has_condition("prone")
                 and self._at_water(battle, actor))
 
     def can(self, battle, actor, target=None):
-        if actor.ap < self.cost or actor.flies or not isinstance(target, tuple):
+        if actor.ap < self.cost or actor.flies or actor.has_condition("prone") or not isinstance(target, tuple):
             return False
         if not battle.board.in_bounds(target) or target == actor.pos:
             return False

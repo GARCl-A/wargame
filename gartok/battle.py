@@ -496,7 +496,7 @@ class Battle:
     def reachable(self, unit, budget=None):
         """Reachable anchors -> {pos: cost}. Straight steps cost 1; the diagonals
         along a route alternate 1, 2, 1, 2 ... (`board.path_cost`)."""
-        if unit.has_condition("entangled") or unit.has_condition("grappled"):
+        if any(unit.has_condition(c) for c in ("entangled", "grappled", "prone")):
             return {}
         if budget is None:
             if unit.walking:

@@ -71,6 +71,15 @@ the rest.
 ## Medium
 
 
+- **Tactical analysis of every action (author 2026-11-01).** Takedown went in weak on purpose: it trades
+  the point it costs for the point the foe spends standing, and headless fights (mirrored squads, the AI
+  standing up first) show a squad that takes down an ordinary foe loses a little (about 3 to 5 points of
+  win rate), so the AI uses it only on a runner or flag carrier. Go through every action of the bar the same
+  way: what role each plays against the others (Grab holds a foe for the allies' -2 AC and the Zombie Bite,
+  Takedown pins a runner or frees the attacker to move), which one is dominated, and which need a bonus to
+  earn a use (one candidate for Takedown: melee attacks against a Prone foe at +2). Measure with
+  `scripts/combat_pairs.py` and mirrored headless squads, then retune.
+
 - **Rules as keywords, the next ones (playtest 2026-10-30).** `keywords.py` and the wiki's KEYWORDS chapter
   exist, with *Brutal N* the first (N more rolls of the weapon's damage; every Brutal of the game is 1;
   the crit multiplies the whole blow last). Missing: look for the next repeated rules (Flanked, Prone...)
@@ -520,24 +529,17 @@ has one "Enter" button and its functions are tabs inside.
   know grants crit and to-hit: a turn spent investigating before the beating is a real option. Not built
   to the author's liking yet. Sits beside the Intelligence talents in *Talent ideas* above.
 
-- **New body actions: Takedown and one per natural weapon (`prone` is shared).** Both need a design pass
-  first, and both want the same new condition, so `prone` is designed once, for both. Decided (author
-  2026-11-01): `prone` is a simple condition: standing up costs AP, a prone unit cannot move (it must stand
-  first) and attacks at -2 while down. Before building, compare Takedown with Grab in the sim so neither
-  dominates the other:
-  - *Takedown* (like Push and Grab): knock a foe prone, with a roll. No `prone` condition exists yet
-    (`conditions.py`).
-  - *A 2 AP action for `Claws`, `Bite`, `Fangs`, `Hooves` and `Horns`*: one special action per natural
-    weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`, as a trait of that weapon. Open:
-    the action for each. Each is end-to-end (rules, web tab, AI, tests, tutorial card).
-  Open: how many AP standing up costs, Takedown's roll, to-hit against a prone foe, and which of the five
-  natural actions knock prone too.
+- **New body actions: one per natural weapon.** A 2 AP action for `Claws`, `Bite`, `Fangs`, `Hooves` and
+  `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
+  as a trait of that weapon. Open: the action for each, and which of the five knock the foe `Prone` (the
+  condition and Takedown exist, `conditions.py`, `actions/combat.py`). Each is end-to-end (rules, web tab,
+  AI, tests, tutorial card). Compare with Takedown and Grab in the sim so none dominates.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
   too much friction; new actions have to come in gradually, so a new player is not flooded while the
   complexity builds. Open: which actions come at which level or talent. Decide it after *New body
   actions* (author 2026-11-01): Takedown and the natural and unarmed actions are most of what the bar
-  would gate. Ties to *Roster of characters* (*Notes to remember*) and *Levelling is vertical only*.
+  would gate. Takedown and Stand Up are on the bar for everyone today. Ties to *Roster of characters* (*Notes to remember*) and *Levelling is vertical only*.
 
 - **Magic as the vertical progression.** The arc's work is the *Scroll of Invisibility* (*Ready to do ->
   Medium*) and *Magic Arc, later* (*Large*). The schools are

@@ -39,7 +39,9 @@ from .combat import (  # noqa: F401
     NonLethal,
     Push,
     Reload,
+    StandUp,
     TailSweep,
+    Takedown,
     Throw,
     ZombieBite,
     _strike,
@@ -144,6 +146,8 @@ SIGNAL_HORN = SignalHorn()
 DRAGON_BREATH = DragonBreath()
 GRAB = Grab()
 ESCAPE_GRAPPLE = EscapeGrapple()
+TAKEDOWN = Takedown()
+STAND_UP = StandUp()
 ZOMBIE_BITE = ZombieBite()
 NONLETHAL = NonLethal()
 CAPTURE = Capture()
@@ -191,6 +195,8 @@ COMBAT_ACTIONS = [
     ZOMBIE_BITE,
     GRAB,
     ESCAPE_GRAPPLE,
+    TAKEDOWN,
+    STAND_UP,
     THROW,
     DEMORALIZE,
     ASSESS,

@@ -109,6 +109,15 @@ class Grappled(Condition):
         return False
 
 
+class Prone(Condition):
+    """Down on the ground (Takedown): cannot move until it stands up (Stand Up, 1 AP) and
+    attacks at -2. Lasts until it stands."""
+    id = "prone"
+
+    def attack_mods(self):
+        return [(-2, "status", "Prone")]
+
+
 class Sleeping(Condition):
     id = "sleeping"
 

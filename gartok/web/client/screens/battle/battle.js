@@ -13,6 +13,7 @@ const ICONS = {
   hook_shield: "action/catch", javelin_charge: "action/trench-assault", parry_strike: "action/riposte",
   long_thrust: "action/expander", wrest: "action/snatch", dragon_breath: "action/kindle", tail_sweep: "action/slalom",
   zombie_bite: "action/tearing", grab: "action/grab", escape_grapple: "action/dodging",
+  takedown: "action/boot-kick", stand_up: "action/muscle-up",
   throw: "action/throwing-ball", demoralize: "action/screaming", assess: "action/look-at",
   push: "action/push", defend: "body/bell-shield", nonlethal: "action/slap", reload: "gui/clockwise-rotation",
   attack_tongue: "action/swallow", flee: "action/run", delay: "gui/backward-time", end: "gui/halt",

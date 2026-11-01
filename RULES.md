@@ -750,6 +750,12 @@ triples.
   in and the throw ends there; onto burning cells it burns (Fire, below). The AI
   shoves when the throw is worth more than a swing: into the flames, a pit deep enough to hurt,
   a bear trap, out of a flank on itself, or a Mighty Shove into a wall (`ai.attack._try_shove`).
+- **Takedown** (1-point action, an adjacent enemy up to 1 level of difference, not a flier):
+  `d20 + STR mod` (attacker) vs `d20 + DEX mod` (target); matching it is enough and a natural 20
+  always lands. Success makes the target **Prone**: it cannot move, jump, swim or flee and attacks
+  at **-2** until it spends **1 point** on **Stand Up**, which is only open while Prone. The AI stands
+  up before anything else and takes a foe down only to stop a runner or flag carrier: against an
+  ordinary foe the trade (a point for the point it spends standing) lost in headless fights.
 - **Vertical combat.** Melee reaches between two elevations if the difference is
   **≤ 1** (a fight at the lip). A difference of **2 or more** takes the target
   out of melee reach until someone climbs — a **ranged** attack still connects.
