@@ -887,13 +887,17 @@ class Battle:
         """Why `unit` cannot delay now, or "" when it can: only the active unit, once per
         round, before it spends anything, and only while someone standing still acts
         after it (otherwise there is nothing to wait for)."""
-        if unit is self.active and unit.delay_round == self.round_no:
+        if unit is not self.active or self.winner is not None:
+            return "it is not your turn"
+        if unit.delay_round == self.round_no:
             return "already delayed this round"
-        if (self.winner is None and unit is self.active and not unit.delayed
-                and unit.ap >= AP_PER_TURN and not unit.moved and not unit.walking
-                and any(u.alive for u in self.order[self.turn_idx + 1:])):
-            return ""
-        return "act first / nobody after you"
+        if unit.ap < AP_PER_TURN or unit.moved or unit.walking:
+            return "you already spent a point this turn: Delay only works before you act"
+        if unit.delayed:
+            return "already delayed this round"
+        if not any(u.alive for u in self.order[self.turn_idx + 1:]):
+            return "nobody is left to act after you"
+        return ""
 
     def can_delay(self, unit):
         return not self.delay_block(unit)

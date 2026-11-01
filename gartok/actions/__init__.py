@@ -270,6 +270,8 @@ def panel(battle, actor, tab, my_turn, show_blocked=False):
         lost = empty_hand_reason(battle, actor, action) if tab == "combat" else ""
         if lost:
             reason = lost
+        elif action is DELAY and my_turn:
+            lost = reason
         elif not applies and not show_blocked:
             continue
         hotkey = FIXED_HOTKEYS.get(action.id)

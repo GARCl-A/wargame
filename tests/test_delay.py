@@ -132,3 +132,27 @@ def test_unit_downed_while_waiting_starts_its_next_turn_fresh():
     batt.end_turn()
     batt.end_turn()
     assert not a.delayed
+
+
+def _bar_delay(batt, unit):
+    return next(e for e in actions.panel(batt, unit, "combat", True) if e["action"] is actions.DELAY)
+
+
+def test_the_bar_keeps_delay_and_says_why_it_cannot_be_used():
+    batt, a, b, e = _trio()
+    assert _bar_delay(batt, a)["enabled"] and not _bar_delay(batt, a)["why"]
+    a.ap = 1
+    entry = _bar_delay(batt, a)
+    assert not entry["enabled"] and "already spent a point" in entry["why"]
+    a.ap = 2
+    actions.DELAY.execute(batt, a)
+    batt.end_turn()
+    batt.end_turn()
+    assert batt.active is a
+    assert not _bar_delay(batt, a)["enabled"] and _bar_delay(batt, a)["why"] == "already delayed this round"
+
+
+def test_the_bar_says_delay_has_nobody_after_the_last_unit():
+    batt, a, b, e = _trio()
+    batt.turn_idx = 2
+    assert _bar_delay(batt, e)["why"] == "nobody is left to act after you"
