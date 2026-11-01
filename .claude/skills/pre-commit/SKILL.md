@@ -196,7 +196,7 @@ only makes sense historically is the expensive one.
    `main`. On a rebase conflict: `git rebase --abort`, stop and ask. If
    `--ff-only` fails because `main` moved, fetch and rebase again. The rebase
    rewrites the branch: if it was already pushed, do not push it again (no force),
-   push only `main`. Once the work is on `main`, delete the branch, local and remote.
+   push only `main`. Leave the branch alone: a cloud session cannot delete it, so do not try.
 
 ## Hard rules
 

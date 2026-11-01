@@ -87,17 +87,12 @@ the rest.
   never finishes, so no wage is banked). Fix so every group's orders advance by the time any group
   spends. Test: two groups, one Perform for N days and one on a wage shift; the shift ends and pays.
 
-- **Hook Shield "locks" after the hatchet is thrown (playtest 2026-10-31; no repro of a real lock).**
-  Hook Shield is a melee strike, not a throw: it moves nobody and resolves on a foe flanked on all 8
-  cells (`test_hook_shield_resolves_on_a_foe_flanked_on_all_eight_cells`). What the tester most likely
-  saw is the hatchet's own `Throw` (1 AP): `actor.disarm()` empties the hand, so `HookShield.applicable`
-  answers "requires hatchet" and the bar hides it with no word on why. Two things to settle: (1) when
-  every neighbour of the target is taken, `base._drop_cell` lands the weapon on the target's own cell
-  (under the foe); make the landing visible and reachable (the nearest free cell, or a marker under the
-  token) and keep Pick up working from there; (2) a weapon action hidden because the hand is empty
-  should show as disabled with the reason "no hatchet in hand (thrown at X, on the ground at Y)" (same
-  tooltip rule as the stuck Move above). Test: throw at a fully surrounded foe, the axe is on the board
-  and picked up; the AI does not pick a weapon action it cannot use.
+- **Say why a weapon action is hidden when the hand is empty.** After `Throw`, `actor.disarm()` empties the
+  hand and every weapon trait action (Hook Shield, ...) vanishes from the bar with no word. Show it
+  disabled with the reason "no <weapon> in hand (thrown at X, on the ground at Y)" (same tooltip rule as
+  the stuck Move above). When every neighbour of a thrown-at target is taken, `base._drop_cell` lands the
+  weapon on the target's own cell: keep Pick up working from there. Test: throw at a fully surrounded foe,
+  the axe is on the board and picked up; the AI does not pick a weapon action it cannot use.
 
 - **Show items lying on a cell a character stands on.** An item dropped or thrown onto a cell with a
   unit on it (a weapon that lands under a surrounded foe, a drop under your own fighter) is hidden by the

@@ -26,8 +26,8 @@ work `docs/plans/backlog.md` (it points to the plan of each big item).
   A teammate works on `main` in parallel, so `git pull` before committing.
   A cloud session is the exception: it commits on its own branch, then rebases it onto
   `origin/main` and fast-forwards `main` (`git merge --ff-only`, no merge commit) when there is no
-  conflict (on a conflict, `git rebase --abort`, stop and ask). Once that work is on `main` the
-  branch is disposable, so delete it (local and remote) without asking.
+  conflict (on a conflict, `git rebase --abort`, stop and ask). Do not try to delete the
+  branch afterwards (the session cannot delete it, remote or local): leave it and report nothing about it.
 
 ## Design premises that touch code (the why: `RULES.md`, World systems)
 
