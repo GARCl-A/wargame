@@ -448,6 +448,25 @@ has one "Enter" button and its functions are tabs inside.
   `stints.py`, `MapSession.spend`, the supply run and the hunt) and what they share; (3) document the
   options (a list of ordinary orders run by the one clock, or a new order kind with state) with a
   recommendation. Constraint to keep: only `campaign.advance` moves the clock.
+  **The proof of concept (author 2026-11-01) is the acceptance scenario of the spec**: if the plan's
+  design cannot run it, the design is wrong. Three groups: (A) played by hand, hunting in the Wilds;
+  (B) automated, gathering Lumber at the Lumber Yard into the group's own inventory; (C) an automated
+  trader that takes B's Lumber, walks to the farm, sells it, buys potatoes, walks back to B, hands the
+  potatoes over, takes the new Lumber, and repeats. While the player plays A normally (time passes, A's
+  play is never slowed or interrupted by B and C), the B-C loop keeps running. Pass criteria: nobody
+  starves, nobody ends stuck, neither activity stops by itself. It exercises what the spec has to
+  answer: an order that moves goods between two groups (inventory to inventory, so both must be at the
+  same node), an order that walks a route and trades at each stop, a loop that resumes after each
+  interruption, food as a need the routine itself must satisfy, and many groups advancing together on
+  the one clock while one of them is played by hand. Turn it into a test (a headless run over N game
+  days checking the three criteria) once the design is chosen.
+  Decided with the author (2026-11-01): an *order* is a list of steps and conditionals the player
+  builds and assigns to a group, which then runs under it. Goods change hands between inventories of
+  two groups only at the same node; B stays parked at the Yard and only C walks. A hand-over takes
+  everything by default, with an optional condition ("wait for X Lumber"). The profit stays with C
+  (nothing forbids a step that returns coins to B). Hunger ("low on food") and an ambush both drop the
+  group out of automatic mode to manual; a step that cannot run (no coins, no stock, blocked route)
+  stops the order and warns the player.
 
 - **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
   code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar
