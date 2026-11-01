@@ -103,12 +103,13 @@ the rest.
 - **Map blocks: drop pygame's layout hints.** `gap_before` and `height` in `map_view.py`'s blocks are
   ignored by the web; the Editor does not count (author 2026-10-30). Delete them.
 
-- **Quest and tool items priced at a placeholder $4 (found 2026-11-01 reading `REFERENCE.md`).** `Ancient Codex`,
-  `Snake Dragon Corpse` (both `ItemType.QUEST`, rare, 2 and 12 kg), `Musical Instrument` and `Dictionary`
-  carry `price=4` in `items.py`, the same as a Fruit or a Sugar; there is no default, the number was set by hand.
-  Decide per item: a real price (what the Library or the Tanners would pay, what a bard's instrument costs),
-  or "not for sale" if the market never trades quest items (check `trade.Counter` first). After touching
-  prices run `python -m pytest tests/ -n auto -m balance` and `scripts/economy_report.py` (`AGENTS.md`).
+- **Can Rotten Food be sold? (author 2026-11-01).** Rotten Food has `price=2`, so a counter pays $1 for it
+  (the floor). Decide whether spoiled food should sell at all (a tanner or a farm that takes it as
+  compost, say) or be refused like trash, and then give the Snake Dragon Corpse (`price=1`) the same rule.
+
+- **REFERENCE.md: the plain Dictionary breaks the Dictionary row.** `python -m gartok.reference` now groups
+  `Dictionary` with the `Dictionary of <language>` rows and prints `Dictionary of (, Ankarin, ...)`, a stray
+  comma. Keep the plain one out of the group (or give it its own row).
 
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,

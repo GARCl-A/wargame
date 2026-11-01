@@ -287,15 +287,14 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | 1kg Coal | 1 kg | material | 5 |
 | 1sqm Hide | 2 kg | material | 12 |
 | Alarm Trap | 1 kg | -- | 45 |
-| Ancient Codex | 2 kg | -- | 4 |
+| Ancient Codex | 2 kg | -- | 300 |
 | Antidote | 0.2 kg | consumable | 60 |
 | Bear Trap | 3 kg | -- | 35 |
 | Bloom Fruit | 0.2 kg | food, consumable | 6 |
 | Chains | 5 kg | -- | 10 |
 | Chisel | 0.3 kg | -- | 1 |
 | Copper Coin | 0.005 kg | -- | 1 |
-| Dictionary | 2 kg | -- | 4 |
-| Dictionary of (Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin, Halfling, Jotun, Orcish, Sylvan, Verdant) | 2 kg | -- | 150 |
+| Dictionary of (, Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin, Halfling, Jotun, Orcish, Sylvan, Verdant) | 2 kg | -- | 150 |
 | Dragon Egg | 8 kg | -- | 400 |
 | First Aid Kit | 0.8 kg | consumable | 40 |
 | Flint and Steel | 0.3 kg | -- | 40 |
@@ -316,7 +315,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Lumber | 2 kg | material | 7 |
 | Meat | 1 kg | food, consumable, material | 5 |
 | Minor Healing Potion | 0.2 kg | consumable | 80 |
-| Musical Instrument | 2 kg | -- | 4 |
+| Musical Instrument | 2 kg | -- | 18 |
 | Pack Saddle | 5 kg | -- | 60 |
 | Paper | 0.1 kg | material | 10 |
 | Potato | 1 kg | food, consumable | 3 |
@@ -335,7 +334,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Sealed Chest | 8 kg | -- | 16 |
 | Semi-precious Gemstone | 0.1 kg | -- | 60 |
 | Signal Horn | 1 kg | -- | 60 |
-| Snake Dragon Corpse | 12 kg | -- | 4 |
+| Snake Dragon Corpse | 12 kg | -- | 1 |
 | Snake Venom Gland | 0.1 kg | material | 20 |
 | Stone Brick | 3 kg | material | 10 |
 | Sugar | 0.5 kg | material | 4 |

@@ -362,7 +362,7 @@ _register(ItemDef(id="scroll_of_invisibility", name="Scroll of Invisibility", ty
 _register(ItemDef(id="scroll_of_raise_dead", name="Scroll of Raise Dead", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=750, spell_id="raise_dead"), "scroll_raise_dead")
 
 # Dictionaries
-_register(ItemDef(id="dictionary", name="Dictionary", type=ItemType.DICTIONARY, rarity=ItemRarity.COMMON, weight=2.0, price=4))
+_register(ItemDef(id="dictionary", name="Dictionary", type=ItemType.DICTIONARY, rarity=ItemRarity.COMMON, weight=2.0, price=150))
 _LANGUAGES = ["Ankarin", "Draconic", "Dwarvish", "Elvish", "Gnomish", "Goblin", "Halfling", "Jotun", "Orcish", "Sylvan", "Verdant"]
 for lang in _LANGUAGES:
     slug = f"dictionary_of_{lang.lower()}"
@@ -397,7 +397,7 @@ _register(ItemDef(id="pack_saddle", name="Pack Saddle", type=ItemType.TACK, rari
 _register(ItemDef(id="harness", name="Harness", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=4.0, price=30))
 _register(ItemDef(id="rope", name="Rope", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
 _register(ItemDef(id="chisel", name="Chisel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=1))
-_register(ItemDef(id="musical_instrument", name="Musical Instrument", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
+_register(ItemDef(id="musical_instrument", name="Musical Instrument", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=18))
 _register(ItemDef(id="holy_symbol", name="Holy Symbol", type=ItemType.TOOL, rarity=ItemRarity.UNCOMMON, weight=0.5, price=80))
 _register(ItemDef(id="signal_horn", name="Signal Horn", type=ItemType.ARTIFACT, rarity=ItemRarity.UNCOMMON, weight=1.0, price=60))
 _register(ItemDef(id="leather_of_biwolf", name="Leather of Biwolf", type=ItemType.ARTIFACT, rarity=ItemRarity.RARE, weight=1.0, price=150))
@@ -411,9 +411,9 @@ _register(ItemDef(id="precious_gemstone", name="Precious Gemstone", type=ItemTyp
 _register(ItemDef(id="locked_chest", name="Locked Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))
 _register(ItemDef(id="sealed_chest", name="Sealed Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))
 _register(ItemDef(id="letter_of_receipt", name="Letter of Receipt", type=ItemType.QUEST, rarity=ItemRarity.COMMON, weight=0.1, price=1))
-_register(ItemDef(id="ancient_codex", name="Ancient Codex", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=2.0, price=4))
+_register(ItemDef(id="ancient_codex", name="Ancient Codex", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=2.0, price=300))
 _register(ItemDef(id="dragon_egg", name="Dragon Egg", type=ItemType.GEM, rarity=ItemRarity.UNIQUE, weight=8.0, price=400))
-_register(ItemDef(id="snake_dragon_corpse", name="Snake Dragon Corpse", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=12.0, price=4, lifespan=3))
+_register(ItemDef(id="snake_dragon_corpse", name="Snake Dragon Corpse", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=12.0, price=1, lifespan=3))
 
 
 # --------------------------------------------------------------------------- #

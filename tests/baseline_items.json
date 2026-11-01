@@ -480,7 +480,7 @@
   },
   "Dictionary": {
     "weight": 2.0,
-    "price": 4,
+    "price": 150,
     "food": false,
     "lifespan": null
   },
@@ -528,7 +528,7 @@
   },
   "Ancient Codex": {
     "weight": 2.0,
-    "price": 4,
+    "price": 300,
     "food": false,
     "lifespan": null
   },
@@ -546,7 +546,7 @@
   },
   "Musical Instrument": {
     "weight": 2.0,
-    "price": 4,
+    "price": 18,
     "food": false,
     "lifespan": null
   },
