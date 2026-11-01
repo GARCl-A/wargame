@@ -69,6 +69,7 @@ class HuntState:
     ambush_mult: float = 1.0       # the group's stance and the party's scouts (vocations.ambush_mult)
     meat_mult: float = 1.0         # what the wildfires left of the Wilds' game (wildfire.meat_mult)
     guards: list = field(default_factory=list)  # units left outside minding the wagon
+    pack: list = field(default_factory=list)    # the pack the stretch ended on, when `hunt_stretch` was given `roll_pack`
 
     @property
     def meat(self):
@@ -152,12 +153,16 @@ def biwolf_escaped(battle):
                for u in battle.foe_units)
 
 
-def hunt_stretch(state, rng=random, hour=None, lure=False):
+def hunt_stretch(state, rng=random, hour=None, lure=False, roll_pack=None):
     """Spend hours one at a time until an ambush hits or the daylight runs out.
     Mutates `state` (`hours_left` down, `hours_hunted` up). Returns
     `(elapsed_hours, ambushed)`. With `lure` and the clock's `hour` the stretch
     starts at, the first hour spent after dark is the Biwolf's ambush
-    (`state.biwolf`) instead of a roll."""
+    (`state.biwolf`) instead of a roll. With `roll_pack` (a callable) every hour that
+    rolls an ambush also rolls the pack, which must be one that would take on the party
+    (`encounters.would_attack`) or the hour passes as if nothing came; the pack that
+    ends the stretch is left in `state.pack`."""
+    state.pack = []
     elapsed = 0
     chance = AMBUSH_CHANCE_PER_HOUR * state.ambush_mult
     yield_now = party_yield(len(state.party)) * state.yield_mult
@@ -175,7 +180,12 @@ def hunt_stretch(state, rng=random, hour=None, lure=False):
             state.biwolf = True
             return elapsed, True
         if rng.random() < chance:
-            return elapsed, True
+            if roll_pack is None:
+                return elapsed, True
+            pack = roll_pack()
+            if encounters.would_attack(pack, state.party):
+                state.pack = pack
+                return elapsed, True
     return elapsed, False
 
 

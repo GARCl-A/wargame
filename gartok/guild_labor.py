@@ -87,12 +87,15 @@ class LaborMixin:
     def gather_shift(self, group, order):
         """A gathering shift whose clock has run out. Returns `(events, ambush)`: with no ambush
         the crew's haul is banked here; with one, `ambush` is the forced `gather_ambush` Order for
-        the caller to fight, and the haul waits for `bank_haul` on a win."""
+        the caller to fight, and the haul waits for `bank_haul` on a win. A pack the crew would sweep
+        (`encounters.would_attack`) is not told of: the shift banks as if none came."""
         node_id = group.node
         if gather.ambushed(node_id, order.hours, self.gather_risk_mult(group, node_id)):
-            name = world.node(node_id).name
-            return ([f"{name}: a pack finds {group.display_name} at work."],
-                    orders.Order("gather_ambush", pack=tuple(gather.ambush_pack(node_id)), hours=order.hours))
+            pack = gather.ambush_pack(node_id)
+            if encounters.would_attack(pack, group.members):
+                name = world.node(node_id).name
+                return ([f"{name}: a pack finds {group.display_name} at work."],
+                        orders.Order("gather_ambush", pack=tuple(pack), hours=order.hours))
         return self.bank_haul(group.members, order.hours, node_id), None
 
     def gather_risk_mult(self, group, node_id):
@@ -149,9 +152,13 @@ class LaborMixin:
             order.remaining = order.eta - order.owed
         return order
 
-    def supply_ambush(self, order):
-        """The forced fight a supply leg stopped at: the pack, and the rest of the leg to walk on a win."""
-        return orders.Order("supply_ambush", pack=tuple(encounters.roll_supply_ambush()), dest=order.dest,
+    def supply_ambush(self, order, group):
+        """The forced fight a supply leg stopped at: the pack, and the rest of the leg to walk on a win.
+        None when the pack would not take on `group` (`encounters.would_attack`)."""
+        pack = encounters.roll_supply_ambush()
+        if not encounters.would_attack(pack, group.members):
+            return None
+        return orders.Order("supply_ambush", pack=tuple(pack), dest=order.dest,
                             resume_path=order.path, eta=order.eta, owed=order.owed)
 
     def bank_supply_run(self, workers):

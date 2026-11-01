@@ -1,5 +1,5 @@
 """What kind of fight a fight is, declared by the code that starts it, for the rules only some
-fights get (the win-chance check of an ambush). The test: *if the group were twice as strong, would
+fights get (the power check of an ambush, `encounters.would_attack`). The test: *if the group were twice as strong, would
 this attacker still come?* The table of every fight and its nature is in `RULES.md`, *Where fights
 come from*."""
 

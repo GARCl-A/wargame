@@ -65,6 +65,7 @@ class HuntSession(Session):
         self.result = None                 # `hunt.grant_haul`'s lines, once banked
         self.pack = None                   # the ambush waiting to be fought
         self.found = None                  # the stretch out on the clock: "wilds", "biwolf", "ox" or None
+        self.rolled = []                   # the Wilds pack the stretch ended on, rolled with it (`Order.pack`)
         self.look = Look()                 # its clean-stomp estimate
         self.notice = None
         if self.phase is None:
@@ -78,6 +79,7 @@ class HuntSession(Session):
         session.state_ = hunt.from_dict(d["hunt"], group.members, session.node)
         session.goes = list(session.state_.party)
         session.guarded, session.found, session.phase = d["guarded"], d["found"], "out"
+        session.rolled = list(group.order.pack)
         return session
 
     @property
@@ -192,12 +194,15 @@ class HuntSession(Session):
         else:
             lure = hunt.biwolf_lure(guild, s.party)
             s.biwolf = False
-            elapsed, found = hunt.hunt_stretch(s, hour=guild.clock.hour_of_day, lure=lure)
+            elapsed, found = hunt.hunt_stretch(s, hour=guild.clock.hour_of_day, lure=lure,
+                                               roll_pack=lambda: hunt.wilds_pack(guild=guild))
             kind = "biwolf" if s.biwolf else "wilds"
         self.found = kind if found else None
+        self.rolled = list(s.pack)
         self.phase = "out"
         self.map.hunts[self.group.gid] = self
         order = orders.Order("hunting", eta=elapsed, remaining=elapsed, crew=tuple(u.uid for u in s.party),
+                             pack=tuple(self.rolled),
                              state={"hunt": hunt.to_dict(s), "found": self.found, "guarded": self.guarded})
         return self.map.spend(self.group, order)[1]
 
@@ -214,11 +219,12 @@ class HuntSession(Session):
         self.events, m.notices = m.notices, []
         s.party = [u for u in s.party if u in guild.roster]
         found, self.found = self.found, None
+        rolled, self.rolled = self.rolled, []
         if guild.empty or not s.party or found is None:
             self._wrap_up()
         else:
             s.fights += 1
-            self.pack = self._pack(found)
+            self.pack = rolled or self._pack(found)
             self.phase = "ambush"
             self.look.clear()
             if not self.tracking:

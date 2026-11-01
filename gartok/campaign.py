@@ -390,8 +390,12 @@ def _advance(guild, dt=None, busy=()):
         order = g.order
         if order.kind == "travel" and order.owed > 0:
             # a supply caravan stopped on the road: it stays at the leg's start until the fight
+            ambush = guild.supply_ambush(order, g)
+            if ambush is None:
+                order.remaining, order.owed = order.owed, 0
+                continue
             g.order = None
-            pending.append((g, guild.supply_ambush(order)))
+            pending.append((g, ambush))
             continue
         if order.kind == "travel" and order.path:
             # arrived at a waypoint, not the final stop -- visibly stop here and

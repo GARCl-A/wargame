@@ -10,6 +10,7 @@ from gartok import (
     campaign,
     data,
     economy,
+    encounters,
     forced,
     gather,
     items,
@@ -330,6 +331,7 @@ def test_a_band_with_no_tool_cannot_order_a_gather_shift():
 
 def test_a_mixed_crew_fights_the_ambush_together_and_only_gatherers_bank(monkeypatch):
     monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+    monkeypatch.setattr(encounters, "AMBUSH_MIN_POWER", 0.0)
     random.seed(10)
     guild, group = _crew("mine", 3, tools=2)
     group.order = orders.work(guild, group, 16, gather=True)

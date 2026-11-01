@@ -17,6 +17,7 @@ from tests.helpers import (
     patch_action_d20,
     persist,
     recruit,
+    standard_unit,
 )
 
 
@@ -344,7 +345,7 @@ def test_elf_woodland_scout_trims_road_and_hunt_ambushes_only_when_cautious():
     roll = world.ROAD_AMBUSH_CHANCE * 0.95          # between x0.9 and x1
 
     with patch("gartok.forced.random.random", return_value=roll):
-        with patch("gartok.forced.encounters.roll_encounter", return_value=["Goblin"]):
+        with patch("gartok.forced.encounters.roll_encounter", return_value=[standard_unit("enemy")] * 3):
             group.stance = NORMAL
             assert forced.road_ambush_catch(guild, group, None, ["road"]).kind == "ambush"
             group.stance = CAUTIOUS

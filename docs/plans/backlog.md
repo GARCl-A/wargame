@@ -79,25 +79,11 @@ the rest.
   on the group (or in `Group.pending`) until `HuntSession.arrive`. Test: save on the card, load, the
   stretch's end opens the hunt screen.
 
-- **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided 2026-11-01).** On day 105 a
-  guild of eight stopped for two wolves. The premise: an ambush only exists if the pack would plausibly
-  attack that group. **The chance of an ambush does not change** (`world.ROAD_AMBUSH_CHANCE`,
-  `gather.ambush_chance`, `hunt.AMBUSH_CHANCE_PER_HOUR`): the pack is rolled as today, then one function
-  in `encounters.py` asks whether that pack would attack this group (the pack's strength against the
-  group's: levels, count and HP, the same measure `combat_pairs.py` / the sim use for a win chance). If it
-  would, the ambush happens as today. If not, **nothing happens and the player never learns of it**: no
-  log line, no board, the group keeps its clock; it simply avoided the ambush by being too strong for
-  it. In code the check sits where each ambush is caught (the catch returns None, `gather_shift` banks the
-  haul, the hunt stretch keeps spending hours), so only the fights whose `nature` is
-  `fight_nature.OPPORTUNIST` get it (`RULES.md`, *Where fights come from*), never a determined or sought
-  one (the Biwolf, the Ledger Hold bandits, the guard, the claim's raiders). The hunt rolls its pack
-  at arrival today (the `hunting` order saves only whose it is, `Order.state["found"]`); the check needs it
-  rolled in the stretch, and then the pack rides in the order too (`Order.pack`, already saved). Open: the
-  threshold, the pack's win chance below which it does not attack (a first
-  guess is ~15%, tuned with `sim_test.py`).
-  Tests: eight L3 against two L0 wolves never opens a fight and leaves no trace in the log, a lone L0
-  against the same wolves does, the ambush chance itself is unchanged, determined and sought fights are untouched, the
-  `ai/` side is unaffected (the foe only decides inside a battle).
+- **The economy sim's hunt still ambushes a strong guild (author 2026-11-01).** The road, the shifts and
+  the supply runs go through the game's own code and get the check, but `scripts/economy_guild.py` and
+  `scripts/economy_activities.py` call `hunt.hunt_stretch` without `roll_pack`, so a strong guild's
+  simulated hunt overstates its ambushes. Pass it the Wilds pack roll, then rerun
+  `python -m pytest tests/ -n auto -m balance` and `scripts/economy_report.py`.
 
 - **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
   second roll of the weapon's damage)" in `weapon_traits.py`, `actions/weapon_actions.py`,
@@ -305,6 +291,11 @@ Not tasks and not yet decisions: premises the author wants to think over before 
   ticked). Mobile does not fit: the UI is heavy, though it is a web app. A Kickstarter to pay a real
   artist was suggested. State the AI use plainly on the store page: generative AI is only the character
   portraits and a few tree sprites; the rest is drawn by code (the axe icon is an SVG written in code).
+- **How power progress should work (author 2026-11-01).** Headless fights (10 each, both sides on the AI)
+  showed that recruiting beats getting strong: 2 L3 lose 9 of 10 to 6 L1 wolves, one L10 (63 HP) loses
+  10 of 10 to 8 L2 wolves, 3 L4 lose 9 of 10 to 4 L3 wolves, while 8 L3 sweep 2 L0 wolves and 10 L20 sweep
+  6 L1 soldiers. Headcount weighs more than level, and armour barely moved the 3-against-4 result.
+  Question: is that the progression the game wants, or should levels and gear count for more than bodies?
 - **Co-op / multiplayer on a shared map (author 2026-10-31).** Each band a player. A daydream; the
   tester does not see it fitting. No plan.
 
@@ -329,8 +320,8 @@ items it touches. Raw feedback, not yet sized:
   small; the pattern is to show the rule where the decision is made (a pick, a price, a button).
 - **No difficulty signal.** He avoided the arena ("if wolves kill me, the arena will") and the first bout
   is easier than the wolves (3 level-0 fighters against 2 to 6 wolves of level 1 to 4). Ideas: a danger
-  hint on a node or fight before entering (a level range, "easy / hard for this group"); it ties to
-  *An ambush needs a pack with a chance to win* (wolves killed an early squad).
+  hint on a node or fight before entering (a level range, "easy / hard for this group"); the measure
+  behind it exists (`encounters.pack_power`).
 - **Race and vocation choice cannot be read.** He chose Delvers for the buff, by lore, not by numbers, and
   could not tell what a race gives ("mental bonus, stat check: means nothing yet"). He thought the Automaton the
   strongest race; the author says Orc and Goliath are, and the game does not show it. Show what a race gives
@@ -448,7 +439,7 @@ has one "Enter" button and its functions are tabs inside.
      (`scripts/economy_activities.py`, `economy_report.py`), then set the numbers.
   2. *How lethal the Wilds should be.* A level-3 squad that does not win nearly every fight cannot make a
      living there, and the Old Road's ambush (20% a pass, `world.ROAD_AMBUSH_CHANCE`) fires on every walk.
-     Re-measure after *An ambush needs a pack with a chance to win* (author 2026-11-01).
+     Re-measure now that a group too strong for a pack is no longer ambushed by it (author 2026-11-01).
   3. *How much a crafting specialist may earn.* The shelves aim at 2-3x a lumberjack; the author's note says
      crafting is for saving money and reaching what cannot be bought, not a business. Needs the sum first
      (author 2026-11-01): what each crafting loop earns a day against the Yard, with

@@ -244,6 +244,23 @@ def test_an_ambush_rolled_before_the_save_still_springs_after_the_load(monkeypat
     assert restored.state_.fights == 1 and st["ambush"]["title"] == "Ambush in the Wilds!"
 
 
+def test_the_pack_rolled_with_the_stretch_is_the_one_that_springs_after_the_load(monkeypatch):
+    from gartok import hunt
+    game, loaded, guild, before = _hunt_saved(monkeypatch, 1, 0.5)
+    g, mill = loaded.groups
+    rolled = [u.uid for u in before.rolled]
+    assert rolled and [u.uid for u in g.order.pack] == rolled
+
+    def roll_again(**kw):
+        raise AssertionError("the pack is rolled with the stretch, not again on arrival")
+
+    monkeypatch.setattr(hunt, "wilds_pack", roll_again)
+    restored = game.session.hunts[g.gid]
+    mill.order = orders.work(loaded, mill, 16)
+    game.session._after_order()
+    assert [u.uid for u in restored.pack] == rolled
+
+
 def test_the_biwolf_and_the_ox_a_stretch_rolled_are_who_springs_after_the_load(monkeypatch):
     from gartok import hunt, ox, world
     from gartok.web.hunt_session import HuntSession

@@ -24,6 +24,7 @@ from gartok.draft import Draft
 from gartok.group import BASE_CAPACITY, CAUTIOUS, NORMAL, Group
 from gartok.guild import Guild
 from gartok.unit import Unit
+from tests.helpers import standard_unit
 
 
 def _guild(vocation=None, n=1, **kw):
@@ -229,7 +230,7 @@ def test_a_cautious_wilds_group_dodges_a_road_ambush_a_normal_one_walks_into():
     group.node = "road"
     roll = world.ROAD_AMBUSH_CHANCE * 0.9               # under 0.2, over 0.16
     with patch("gartok.forced.random.random", return_value=roll), \
-            patch("gartok.forced.encounters.roll_encounter", return_value=["Goblin"]):
+            patch("gartok.forced.encounters.roll_encounter", return_value=[standard_unit("enemy")] * 4):
         group.stance = NORMAL
         assert forced.road_ambush_catch(guild, group, None, ["road"]) is not None
         group.stance = CAUTIOUS

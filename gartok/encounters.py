@@ -192,6 +192,47 @@ FRONTIER_SUPPLY_COUNT = level_weights(4, 10, peak=6, spread=2)
 FRONTIER_SUPPLY_LEVEL = level_weights(3, 8, peak=4, spread=2)
 
 
+AMBUSH_MIN_POWER = 0.10     # below this share of the combined power, an opportunist pack lets the group be
+
+
+def _blow(unit):
+    weapon = unit.weapon
+    dice, sides = weapon.damage
+    return max(0.5, dice * (sides + 1) / 2 + (0 if weapon.range else unit.mod_strength))
+
+
+def _damage_a_round(unit, foe_ac):
+    """Two attacks a round at the odds the attack bonus gives against `foe_ac`, at the held weapon's mean blow."""
+    need = foe_ac - unit.attack_bonus[0]
+    return 2 * max(0.05, min(0.95, (21 - need) / 20)) * _blow(unit)
+
+
+def _power(side, foe_ac):
+    """Lanchester's square law: what a side can take (HP) times what it can deal (damage a round)."""
+    return sum(u.hp for u in side) * sum(_damage_a_round(u, foe_ac) for u in side)
+
+
+def pack_power(pack, group):
+    """The pack's share, 0..1, of the power of both sides were they to fight now: members still standing,
+    at the HP they have, each side's blows weighed against the other's mean AC. Not a probability: the
+    square law makes the stronger side win almost every time, so the share runs from near 0 (the group
+    sweeps it) to near 1, and 0.5 is a toss-up."""
+    pack, group = [u for u in pack if u.hp > 0], [u for u in group if u.hp > 0]
+    if not pack:
+        return 0.0
+    if not group:
+        return 1.0
+    pack_ac = sum(u.ac for u in pack) / len(pack)
+    group_ac = sum(u.ac for u in group) / len(group)
+    theirs, ours = _power(pack, group_ac), _power(group, pack_ac)
+    return theirs / (theirs + ours)
+
+
+def would_attack(pack, group):
+    """Whether an opportunist `pack` goes for `group`: it has a fair share of the power (`AMBUSH_MIN_POWER`)."""
+    return pack_power(pack, group) >= AMBUSH_MIN_POWER
+
+
 def roll_supply_ambush(rng=random):
     """Roll a pack of frontier raiders ambushing a supply caravan."""
     return roll_encounter(FRONTIER_SUPPLY_TABLE, FRONTIER_SUPPLY_COUNT, FRONTIER_SUPPLY_LEVEL, rng=rng)

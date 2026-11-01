@@ -12,7 +12,8 @@ a supply caravan. Each is one `ForcedEvent` in `EVENTS`, keyed by its order kind
   "map" lands on the map with a red CTA to start it, "talk" opens the dialogue before it
   (`encounter`, `dialogue.py`; a pack nobody in talks goes straight to the fight). The road
   ambush's CTA opens the dialogue too. `app.FORCED_PLAYERS` maps each to its screen.
-- **what kind of fight it is** (`nature`, `fight_nature`): only an opportunist pack weighs the odds.
+- **what kind of fight it is** (`nature`, `fight_nature`): only an opportunist pack weighs the odds
+  (`encounters.would_attack`, asked where each ambush is caught; a pack that would not come is dropped).
 - **how it is settled** (`resolve`), after the fight: `resolve(guild, group, order, outcome)`;
   a talk that ends without one is settled by `settle_talk`.
 
@@ -55,7 +56,7 @@ SOUGHT, OPPORTUNIST, DETERMINED = fight_nature.SOUGHT, fight_nature.OPPORTUNIST,
 class ForcedEvent:
     kind: str
     play: str                       # "battle" | "map" | "talk"
-    nature: str                     # fight_nature: whether the win-chance check applies
+    nature: str                     # fight_nature: whether the power check (encounters.would_attack) applies
     resolve: Callable               # (guild, group, order, outcome) -> events
     arrival: tuple = ()             # catch(guild, group, prev_node, resume_path) -> Order | None
     daily: Callable | None = None   # (guild, days) -> (events, [(group, Order)])
@@ -98,7 +99,7 @@ def guard_catch(guild, group, prev_node, resume_path):
 
 def road_ambush_catch(guild, group, prev_node, resume_path):
     """An unsafe node rolls `world.ROAD_AMBUSH_CHANCE` once per leg against its own
-    `encounter_table`."""
+    `encounter_table`; a pack the group would sweep (`encounters.would_attack`) lets it be."""
     node = world.node(group.node)
     if not node.unsafe:
         return None
@@ -107,6 +108,8 @@ def road_ambush_catch(guild, group, prev_node, resume_path):
     if random.random() >= chance:
         return None
     pack = encounters.roll_encounter(node.encounter_table)
+    if not encounters.would_attack(pack, group.members):
+        return None
     return orders.Order("ambush", pack=tuple(pack), resume_path=tuple(resume_path))
 
 

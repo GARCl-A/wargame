@@ -1063,7 +1063,7 @@ Every fight the world starts has a **nature**, declared by the code that starts 
 a rule that belongs to only some fights reads it. The test: *if the group were twice as strong, would
 this attacker still come?*
 
-- **opportunist**: no. A pack that picks its prey by the odds; only these get a win-chance check.
+- **opportunist**: no. A pack that picks its prey by the odds; only these get the check below.
 - **determined**: yes. It has a reason that ignores the odds: the law, the land, a foe the party
   baited or a quest sent.
 - **sought**: the group went in; the player chose the risk.
@@ -1087,6 +1087,20 @@ this attacker still come?*
 | The Battlefield, the necromancer, the Wildfire camps, the Ogre's fortress | the errand's order | the group | not go in; leave a watch on the wagon | sought |
 | The ox's trail | tracking in the Ox Fields | the group | not set out | sought |
 | An arena bout | the arena | the group | not stake | sought |
+
+**An ambush needs a pack that would take the group on.** The chance of an opportunist ambush is rolled
+as ever (`world.ROAD_AMBUSH_CHANCE`, `gather.ambush_chance`, `hunt.AMBUSH_CHANCE_PER_HOUR`,
+`economy.SUPPLY_RUN_AMBUSH_CHANCE`, stance and perks included); a hit rolls the pack, and
+`encounters.would_attack` asks whether it would go for the people who would fight it, standing and at the
+HP they have now. If not, nothing happens and nothing is told: no log line, no board, the group keeps its
+clock, the shift banks its haul, the caravan walks on, the hunt spends its next hour (and rolls another
+pack if that one hits). The measure is Lanchester's square law: each side's HP times what its blows deal
+a round (two attacks at the odds the attack bonus gives against the other side's mean AC, at the held
+weapon's mean blow), the pack's share of the two being `pack_power`; it is a share, not a chance to win,
+as the stronger side wins nearly every time. The pack attacks from a share of `AMBUSH_MIN_POWER = 0.1` up. Played out
+headless (10 fights per group), a pack under ~33% won none and one at 35% won one in ten; magic, venom and
+a pack's racial abilities are not in the measure and did not break it. The Wilds hunt rolls its pack with
+the stretch, so it rides in the `hunting` order (`Order.pack`).
 
 A wagon left unguarded outside a dangerous place is no fight: one silent roll when the party comes out
 (`wagon_watch`).
