@@ -248,6 +248,7 @@ def test_the_gathering_tab_marks_who_gathers_and_who_stands_guard():
     first, *rest = st["crew"]
     assert first["tool"] and "gathers" in first["note"] and first["haul"] > 0
     assert all(c["haul"] == 0 and not c["tool"] for c in rest)
+    assert not any("wage" in c for c in st["crew"]) and not any("wage" in r for r in st["shifts"])
 
 
 def test_a_gathering_shift_goes_back_to_the_map_and_runs_the_clock_there():

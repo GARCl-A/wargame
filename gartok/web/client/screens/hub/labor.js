@@ -38,9 +38,9 @@ const Labor = (() => {
          <div class="brass-btn wide ${G.short ? "off" : ""}" id="licence"><div><b>Buy the licence · ${money(G.price)}</b></div></div>`;
     const crew = G.crew.map(u => `<div class="worker slim ${u.tool ? "" : "guard"}">
       <div class="medal">${face(u.portrait, u.name)}</div>
-      <div class="who"><h3>${esc(u.name)}</h3><div class="race">${esc(u.sub)} · wage ${money(u.wage)}</div>
+      <div class="who"><h3>${esc(u.name)}</h3><div class="race">${esc(u.sub)}</div>
         <p class="${u.tool ? "" : "bad"}">${esc(u.note)}</p></div>
-      <div class="pay ${u.good ? "good" : u.tool ? "" : "bad"}"><b>${u.tool ? "~" + money(u.haul) : "guard"}</b><span class="lbl">${u.tool ? `per ${G.day} h` : `no ${esc(G.tool.toLowerCase())}`}</span></div></div>`).join("");
+      <div class="pay ${u.tool ? "" : "bad"}"><b>${u.tool ? "~" + money(u.haul) : "guard"}</b><span class="lbl">${u.tool ? `per ${G.day} h` : `no ${esc(G.tool.toLowerCase())}`}</span></div></div>`).join("");
     const tool = esc(G.tool), names = G.guards.map(esc).join(", ");
     const guards = !G.guards.length ? ""
       : !G.can ? `<p class="warn">No one in the band carries a ${tool}: nobody can gather.</p>`
@@ -53,8 +53,8 @@ const Labor = (() => {
         <div class="crew">${crew}</div>
         <div class="sec"><span class="lbl">What the ground gives</span></div><p class="hint">${esc(G.rolls)}</p>${drops}</div>
       <div class="paper ledger"><div class="kicker">Shifts <em>the crew keeps what it finds instead of a wage</em></div>
-        <div class="shifts">${G.shifts.map(s => shiftRow(G.glyph, s, `the same hours' wage ${money(s.wage)} · ${s.risk}% ambush`,
-          "~" + money(s.haul), s.good ? "good" : "", "gather", "Gather", G.held && G.can)).join("")}</div>
+        <div class="shifts">${G.shifts.map(s => shiftRow(G.glyph, s, `${s.risk}% ambush`,
+          "~" + money(s.haul), "", "gather", "Gather", G.held && G.can)).join("")}</div>
         ${G.held ? "" : `<p class="aside">Gathering needs the licence.</p>`}
         <div class="ledgerfoot">${guards}<p class="warn">A pack may ambush the crew: the fight must be won to keep the haul.</p><p>${esc(G.payback)}</p></div></div>`;
     toast(G.notice);

@@ -56,15 +56,13 @@ class GatherDesk:
         return f"own {tool}: gathers, work XP x{level - u.work_level + 1} an hour"
 
     def _payback_line(self, price):
-        """A full day's haul against the wage for this group, and the days a licence takes to pay."""
-        haul, wage, risk = self.guild.shift_worth(self.group, self.node.id, gather.DAY_HOURS)
-        line = (f"{gather.DAY_HOURS} h for this group: haul ~{fmt_money(round(haul))} sold, "
-                f"wage {fmt_money(round(wage))}, {risk * 100:.0f}% ambush")
-        if self.guild.has_licence(self.node.id):
+        """A full day's haul for this group and, before the licence is bought, the days of it the
+        licence takes to pay for itself."""
+        haul, risk = self.guild.shift_worth(self.group, self.node.id, gather.DAY_HOURS)
+        line = f"{gather.DAY_HOURS} h for this group: haul ~{fmt_money(round(haul))} sold, {risk * 100:.0f}% ambush"
+        if self.guild.has_licence(self.node.id) or not haul:
             return line
-        if haul <= wage:
-            return line + " · the licence never pays back"
-        return line + f" · licence pays back in ~{price / (haul - wage):.0f} days"
+        return line + f" · the licence pays for itself in ~{price / haul:.0f} days of gathering"
 
     def hub_cards(self):
         price = gather.licence_price(self.node.id)

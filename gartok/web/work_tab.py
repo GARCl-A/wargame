@@ -34,15 +34,13 @@ class GatherTab(GatherDesk):
         main = gather.drops(node)[0][0]
         shifts = []
         for h in SHIFTS:
-            haul, wage, risk = self.guild.shift_worth(self.group, node, h)
-            shifts.append({"hours": h, "haul": round(haul), "wage": round(wage), "risk": round(risk * 100),
-                           "good": haul > wage})
+            haul, risk = self.guild.shift_worth(self.group, node, h)
+            shifts.append({"hours": h, "haul": round(haul), "risk": round(risk * 100)})
         tool = gather.tool(node)
         crew = []
         for u in self.group.members:
-            haul, wage = self.guild.worker_worth(u, node, gather.DAY_HOURS)
             crew.append({"name": u.name, "portrait": _portrait(u), "sub": f"{u.race['name']} · {u.occupation['name']}",
-                         "haul": round(haul), "wage": round(wage), "good": haul > wage,
+                         "haul": round(self.guild.worker_haul(u, node, gather.DAY_HOURS)),
                          "tool": economy.owns_tool(u, node), "note": self._gather_note(u, tool)})
         guards = [c["name"] for c in crew if not c["tool"]]
         notice, self.notice = self.notice, None
