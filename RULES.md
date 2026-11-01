@@ -12,6 +12,9 @@ armor, price, talent and tunable constant — is generated from the code into
 [`REFERENCE.md`](REFERENCE.md) (`python -m gartok.reference`). This document keeps
 the *rules prose*: the formulas, the combat resolution, and the design premises.
 Where the two disagree, `REFERENCE.md` (straight from the registries) is right.
+Code is never described here twice: `README.md` is the map of where it lives, and
+`tests/test_rules_doc.py` fails when a file, module attribute or constant named in
+backticks stops existing, or a constant's value quoted next to its name drifts.
 
 > **The `Status: OK` mark** on a race/occupation row in the generator was the
 > author's hand annotation: `OK` = that row has been revisited and its
@@ -51,28 +54,12 @@ The generator's exact order:
 ### The squad draft & commission tokens 🟡
 
 A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
-- The guild picks one **vocation** (`vocations.py`), once and for good. Each is a list of six races and one fixed perk that **the whole guild** has, whatever a member's race; the Guild tab shows it. The draft pool of the chosen vocation always holds at least one candidate of each of its six races, the other three come from the natural race table (all 18 races); a commission replaces a card from that same natural table.
-
-  | Vocation | Races | Perk |
-  |---|---|---|
-  | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (`cohesion._roll_groups`); an overextended group's defence penalty is unchanged |
-  | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% from gathering: work-shift pay (`vocations.gather_pay`; the odd fraction of a coin is paid by chance) and the meat, mushrooms and fruit of a hunt or forage (`HuntState.yield_mult`). A creature's drop (wolf hide) is not gathering |
-  | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | the ambush chance is x0.8 while the group's stance is *Cautious* |
-  | Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information (`vocations.INFO_BONUS`): added to the opening read and to Assess (`intel.bind("player", guild.bestiary, vocations.info_bonus(guild))`) |
-  | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | x0.85 on travel hours, after wagon and animal speed (`orders.next_leg(pace=...)`) |
-  | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | on every 10th day of the guild's clock (day % 10 == 0) no food ages (`guild_upkeep._daily_upkeep`) |
+- The guild picks one **vocation** (`vocations.py`), once and for good: six races and one fixed perk that **the whole guild** has, whatever a member's race (the catalog is `REFERENCE.md` § Vocations). The draft pool of the chosen vocation always holds at least one candidate of each of its six races, the other three come from the natural race table (all 18 races); a commission replaces a card from that same natural table. What the catalog line leaves out: the Warband's +1 counts in the daily cohesion roll only, an overextended group's defence penalty is unchanged; the Delvers' +15% covers work-shift pay (the odd fraction of a coin is paid by chance) and the food of a hunt or forage, never a creature's drop (a wolf's hide); the Caravan's cut comes after wagon and animal speed; the Marsh counts the guild's own clock (`day % 10 == 0`).
 
 - **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers every ambush the player walks into: the Old Road leg (`forced.road_ambush_catch`), the hunt's hourly roll (`hunt.hunt_stretch`), a gathering shift (`Guild.gather_risk_mult`) and each leg of a supply run (`Guild.supply_leg`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wilds perk makes it x0.8 and the Elf's *Woodland Scout* x0.9, and they multiply (road 0.2 -> 0.144 with both). *Cautious* costs nothing but the XP and loot of the fights it avoids.
 - The draft offers a **pool of 9 candidates**; the player keeps 3 of them as the starting squad (click to pick, click again to put one back, scroll to see all nine).
 - To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
-- Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) in the pool: the commission names the archetypes, then the player clicks the candidate it replaces with a fresh one that has them (a replaced pick leaves the squad; tokens are spent only when the replacement happens):
-  - **LEADER**: Charisma mod $\ge +2$. Essential for tavern recruitment and haggling.
-  - **STRONG**: Strength mod $\ge +2$. Hits hard in melee and hauls heavy armor, tools, and spoils.
-  - **TOUGH**: Max HP $\ge 8$. Durable frontline combatant.
-  - **NIMBLE**: Dexterity mod $\ge +2$. High evasion, natural defense, and finesse accuracy.
-  - **RANGED**: Starts equipped with a ranged weapon (bow, sling, or crossbow).
-  - **GENIUS**: Intelligence mod $\ge +2$. Fast crafting, manual reading, and research.
-  - **WISE**: Wisdom mod $\ge +2$. High initiative, mental defense, and skilled field medicine.
+- Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) in the pool: the commission names the archetypes, then the player clicks the candidate it replaces with a fresh one that has them (a replaced pick leaves the squad; tokens are spent only when the replacement happens). The seven archetypes and their thresholds are `REFERENCE.md` § Squad archetypes.
 - An archetype is a **role**, never a racial trait that would just pick a race: FAST, LARGE and SEES IN DARK were dropped for that reason (only Centaur, or Dwarf/Hobgoblin, ever matched). MAGIC went for the same reason (only Kobold and Gnome start as casters). Each remaining label needs at least 3 races to cover half its candidates, and each attribute has one label at most (Pack Mule and Damage Dealer were both just Strength, so they became STRONG). `tests/test_draft_commission.py` checks the races.
 - Commissioned candidates highlight their guaranteed tags with a star (`★`) and brass border.
 - Once three are picked and Continue is pressed, the draft moves into **Identity** (Guild Name, Banner Color, and Banner Icon), followed by picking the guild's **Leader** (`Guild.leader`).
@@ -89,13 +76,12 @@ A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
 | **Age** | `d100 × racial multiplier` | see `REFERENCE.md` |
 | **Carry capacity (normal)** | `max(1, round((STR mod × 4 + 15) × carry mult.))` | 🟡 reworked for the wargame |
 | **Carry capacity (high)** | `max(2, round((STR mod × 6 + 35) × carry mult.))` | 🟡 |
-| **Unarmed attack** 🟡 | die by size (Tiny/Small 1d2 · Medium 1d3 · Large 1d4) | everyone has one; STR mod adds to the damage; the `unarmed_dice` talent channel adds dice (Wolf *Rending Bite*: 1d3 → 2d3) |
+| **Unarmed attack** 🟡 | die by size (`REFERENCE.md` § Sizes) | everyone has one; STR mod adds to the damage; the `unarmed_dice` talent channel adds dice (Wolf *Rending Bite*: 1d3 → 2d3) |
 
 > Generator quirk: HP used `randrange(1, hit_die)`, i.e. it rolled **1 to
 > (die−1)**. The wargame uses the full die (1 to die), the presumed design intent.
 
-The **base carry multiplier** by size (Tiny 0.5 / Small 1.0 / Medium 1.0 /
-Large 2.0) is unchanged; Goliath's "Strong Body" counts it as Large for carry
+The **base carry multiplier** by size (`REFERENCE.md` § Sizes) is unchanged; Goliath's "Strong Body" counts it as Large for carry
 only. The formula itself was reworked 🟡 — deliberately tight: a Strength-10
 Medium character in a chain shirt and a basic kit *is* encumbered.
 
@@ -109,23 +95,15 @@ mods, a hit die, a size, a language, a racial ability and an age multiplier.
 **The full table is in [`REFERENCE.md`](REFERENCE.md)** (§ Races). The ability
 *names* are 🟢; **what each one does is 🟡** — see §7.
 
-**Beasts** are a second kind of race (`kind = "beast"`, the `data.BEASTS` table):
-no occupation, they fight with their own body, and the creator can pick them
-like any race (the Wolf is the first). A race may set its own **speed** in
-meters; unset, it is the size's (the Wolf walks 10.5 m / 7 cells). Switching a
-character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** and the **Snake** are beasts too (the Snake is Small, +4 Dex, and every attack it makes is a finesse attack with its *Fangs*). The **Skeleton** and the **Zombie** are
-`kind = "undead"` (the `data.UNDEAD` table): not animals, so they keep a job — an
-occupation with its weapon and item. The Zombie is slow and tough (STR +2, DEX −2, CON +4, 6 m / 4
-cells, Darkvision, Sleep Immunity); the undead never break and run (`ai.common._mindless`). Neither rolls in a locality's encounter table
-(`data.WILD_POOL` is wolves only); they are authored in the creator or placed by hand.
-The **Ogre** (the `data.GIANTS` table) is the same: a humanoid with a job, never a
-player's race. Large, `d12` Hit Die, STR +4 DEX −2 CON +2 INT −2 WIS +2 CHA −2, Jotun,
-and **Reach**: every melee attack reaches 1 cell farther. His racial tree is
-Giant's Grip, Intimidating Presence (both shared) and Mighty Shove.
-
-A race's `ability` may be a **list** of ids, merged into one (`abilities.get`
-folds numbers, flags and hooks together): the Skeleton has *Darkvision* and
-*Sleep Immunity*.
+**Beasts**, **undead** and **giants** are the kinds of race that are not a player's (`kind`; the
+`data.BEASTS`, `UNDEAD` and `GIANTS` tables; their stats are `REFERENCE.md` § Creatures). A beast has
+no occupation: it fights with its own body and drops its own loot, and the creator can pick it like
+any race (switching a character to a beast keeps its pack). An undead and a giant keep a job, an
+occupation with its weapon and item; the undead never break and run (`ai.common._mindless`). None of
+them rolls in a locality's encounter table (`data.WILD_POOL` is wolves only): they are authored in the
+creator or placed by hand. A race may set its own **speed** in meters; unset, it is the size's. A race's
+`ability` may be a **list** of ids, merged into one (`abilities.get` folds numbers, flags and hooks
+together).
 
 Languages in the world are just the racial languages — names only, no
 description survived: Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin,
@@ -136,13 +114,7 @@ languages they rolled — see "Learning a language" below.
 
 ## 5. Sizes 🟢 / 🟡
 
-| Size | Speed | Carry mult. | Footprint |
-|---|---:|---:|---:|
-| Tiny | 4.5 m (3 sq) | 0.5 | 1 cell |
-| Small | 6.0 m (4 sq) | 1.0 | 1 cell |
-| Medium | 9.0 m (6 sq) | 1.0 | 1 cell |
-| Large | 9.0 m (6 sq) | 2.0 | **2×2 = 4 cells** |
-| Huge | 9.0 m (6 sq) | 4.0 | **3×3 = 9 cells** |
+The table (speed, carry multiplier, footprint, unarmed die) is `REFERENCE.md` § Sizes.
 
 In the wargame **1 cell = 1.5 m**. 🟡
 
@@ -178,43 +150,14 @@ designed for the wargame (each is an `Ability` in `gartok/abilities.py`: numeric
 passives and/or hooks). **The full list with effects is in
 [`REFERENCE.md`](REFERENCE.md)** (§ Racial abilities).
 
-The design choices worth stating in prose:
+What an effect line cannot hold:
 
-- **Darkvision** — sees 12 cells (18 m) in the dark as if lit.
-- **Inorganic Body** (Automaton) — at 0 HP goes *broken* instead of dying: no
-  death save, no clock, waits for an ally to repair it (Stabilize: `d20 + INT`
-  vs DC 15, back on its feet at 1 HP). Lost with the squad on a total defeat.
-- **Ferocity** (Orc) — once per battle, the blow that would down the Orc takes it
-  to 0 HP and *dying*, but it keeps acting until the **end of its own turn**;
-  only then does it fall and the clock start. A second fatal hit before that
-  drops it immediately.
-- **Pack Tactics** (Goblin) — drops the "opposite sides" requirement of a flank:
-  the attacker and one ally both adjacent to the target is enough (+2
-  [circumstance] to attack). Stacks with the defender's flanking AC penalty.
-- **Extra Language** (Human) — a second random language; can Demoralize anyone
-  who shares either tongue. This is the Human's edge in market haggling too.
-- **Mimic Sounds** (Kenku) — may Demoralize with no shared language (offense
-  only); does **not** help haggling.
-- **Autotroph** (Treefolk) — photosynthesises: never eats, immune to the hunger
-  rules.
-- **Flight** (Sprite) — moves freely in three dimensions (up and down pits with
-  no check, ignores terrain) and never takes falling damage. No numeric bonus.
-- **Climber** (Lizardfolk) — climbs any surface of DC 25 or lower with no check
-  (still spends the action).
-- **Amphibious** (Grippli) — breathes water: never runs out of breath while
-  submerged, so it can stay underwater indefinitely and never drowns. (Was a flat
-  +1 speed; reworked when water terrain landed.)
-
-**Placeholder effects — to revisit when the relevant mechanic exists** (these
-carry a stand-in combat bonus today so the ability is never inert; `REFERENCE.md`
-lists only the current effect):
-
-- ~~**Strong Stomach** — migrated: can eat rotten food safely.~~
-- ~~**Primal Blood** → **Nature Magic** — migrated: Gnome starts initiated in
-  nature magic with one random cantrip.~~
-- ~~**Keen Hearing** → **Innocent Face** — migrated: Halfling crime decays naturally.~~
-- ~~**Ancestral Blood** → **Blood Magic** — migrated: Kobold starts initiated in
-  blood magic, +2 to spell study rolls.~~
+- **Ferocity** (Orc): a second fatal hit before the end of its turn drops it at once.
+- Most abilities meet a rule further down rather than a number: Flight and Climber the Z axis,
+  Amphibious the water, Autotroph hunger, Extra Language and Mimic Sounds Demoralize and haggling,
+  Inorganic Body the death rules.
+- Some 🟡 effects are still first guesses and carry a stand-in combat bonus so the ability is never
+  inert; `abilities.py` calls them out.
 
 ---
 
@@ -247,8 +190,8 @@ game:
 - **Skills / attribute checks**: presumably `d20 + mod` vs a difficulty.
 - **Magic**: no caster class appears in the generator; "Primal Blood", "Holy
   Symbol" and "Scroll" hinted it existed. A first system now does (see
-  "Magic" below) — twelve spells across three schools (`nature`, `blood`, `faith`),
-  school initiation at hidden sanctuaries, and a study-at-the-tavern path to learn more.
+  "Magic" below) — three schools (`nature`, `blood`, `faith`), school initiation at hidden
+  sanctuaries, and a study-at-the-tavern path to learn more.
 - **Weapons and equipment**: damage, weight, price are set; **armor and shields
   are not** — the wargame designed a five-tier armor table 🟡.
 - **The effect of the racial abilities** (§7).
@@ -281,8 +224,8 @@ state on the `Unit` (`talents`, `_level_hp_rolls`); screen in
 | Magic | `magic_xp` | a last hit dealt with magic, a spell studied to the end |
 
 **Level per track** — cumulative thresholds in `progression.py`, a first guess,
-tunable, written as **formulas with no top** (`progression.Curve`): combat (and magic) `2n² + n`,
-work `n(n + 1)`, racial `2n`. Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author).
+tunable, written as **formulas with no top** (`progression.Curve`; the curves are `REFERENCE.md` § Constants).
+Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author).
 Each level in combat, work and magic grants **one pick** in that track's tree. The **racial
 track** earns no XP of its own — its "XP" is the sum of the other track levels
 (`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. While hit
@@ -303,7 +246,7 @@ encounter table may ask for more (the supply run's soldiers reach 8), and past t
 climb together.
 
 **A generated enemy carries the kit its level paid for** (`outfit.py`). Each racial level has a
-budget (`outfit.KIT_BUDGET`, $56 at 0 up to $5741 at 8: what a character who climbed there had to
+budget (`outfit.KIT_BUDGET`, the table is `REFERENCE.md` § Enemy kit by level: what a character who climbed there had to
 spend, measured by `scripts/wealth_by_level.py`). A humanoid of level 1 and up spends it: the armour
 that adds the most AC under its Dex cap (a body with Dex +3 stops at Studded Leather), a weapon by how
 it fights (Strength over Dexterity: a one-handed blade with a light, or a Broadsword or Glaive; otherwise a
@@ -324,21 +267,13 @@ of the battle by `campaign.absorb_battle`.) Wilds packs scale 0–4; the Games r
 step deeper specialises the character in one action. **No pick is mutually
 exclusive** (the `group` field is reserved): one pick per track level, filled in
 any order, and over enough levels a character can hold every node. A deeper node
-just needs the one above it first (`requires`), which chains down the branch. The
-first tier-3 node is `Fleet` (+1 Speed, behind Deadeye); **Armor Bearer** (combat tier 3, behind
-Bulwark) takes up to 6 kg off the carried weight of the armor worn (never more than the armor
-weighs, `armor_weight_relief`), so heavy plate stops counting against encumbrance; **Fletcher** (work
-tier 3, behind Woodcarver) is the arrow-carver (see *Ammo*). The node list with
+just needs the one above it first (`requires`), which chains down the branch. The node list with
 effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
 
 **The magic track** (`magic_xp`, `progression.MAGIC_XP_THRESHOLDS`, combat's curve for now). Magic XP
 comes from a last hit dealt with magic (a spell or a magic action: the combat rule's amount,
 banked as magic instead of combat) and from finishing the study of a spell (`spell level + 1`).
-The tree is **school-agnostic** (6 nodes): **Arcane Mind** (tier 1, +1 Intelligence) branches into
-**Spell Focus** (+1 to hit with spell attacks), **Destructive Casting** (+1 damage with damaging
-spells), **Blessed Hands** (+1 HP restored with healing spells), and **Focused Will** (+1 Mental
-Defense) at tier 2, with **Far Cast** (tier 3, behind Spell Focus, +1 square of range with non-melee
-spells) below.
+The tree is **school-agnostic** (`REFERENCE.md` § Talent trees, Magic track).
 
 **Hit die by racial level.** Each racial level grants a hit die: `1d(racial HD) +
 CON mod` (min 1), added to max HP. The rolls are saved (`_level_hp_rolls`) —
@@ -354,7 +289,7 @@ State on `unit.py` (`magic_sources`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
 sources)`); casting in `actions/spells.py`'s `CastSpellAction` (+ `ShareMagicAction`
 for the Sprite); AI use in `ai/`; the `Sleeping` condition in
-`conditions.py`. A first foothold, not a full system — twelve spells today, and each school has a
+`conditions.py`. A first foothold, not a full system — the spells are `magic.SPELLS`, and each school has a
 level-0 and a level-1 spell of its own.
 
 - **Sources.** `magic_sources` (a list, no repeats, of `nature` / `blood` / `faith`) gates which
@@ -367,68 +302,25 @@ level-0 and a level-1 spell of its own.
   talent is worth its *Share Magic* action whether or not it already holds `nature`) or the school's
   **initiation** at its hidden sanctuary (see *Initiation* below). The creator
   toggles each school on its own; dropping one forgets only the spells no remaining school casts.
-- **Casting** costs 1 action point (a level-2 spell, both) and only shows up once the spell's id is
-  in `spells_known`:
-  - **Magic Missile** (level 0) — ranged (6 cells), `d20 + INT` vs AC, `1d4`
-    damage on a hit; a natural 20 crits (rolls the die twice), a natural 1
-    fumbles with no effect.
-  - **Sleep** (level 1) — ranged (6 cells), `d20 + INT` vs the target's
-    Mental Defense; a hit applies `Sleeping` (`−2 status` to AC). A race with
-    the **Sleep Immunity** ability (the Elf) is never affected. The condition lasts
-    at most $\max(1, 10 - \text{CON mod} - \text{WIS mod})$ rounds, ticking down
-    at the end of each skipped turn. Sleep ends early if the target takes any damage
-    or an adjacent ally spends 1 AP on `Wake Up`.
-  - **Water Jet** (level 1, **Nature only**) — ranged (the Dagger's thrown range, 6 cells),
-    `d20 + INT` vs AC, `1d6 + INT` damage on a hit, and the jet throws the target **1 cell**
-    straight away from the caster unless something is in the way (into the flames, it burns).
-    Its scroll is the Nature Coven's reward for the Ogre's Wildfire; no shop sells it. The AI casts
-    it when it beats its hand weapon or would throw a foe into the fire.
-  - **Dragonfire** (level 1, **Blood only**, the Dragon branch) — ranged (the Dagger's thrown
-    range), `d20 + INT` vs AC, **2d6** fire damage on a hit. Blood magic costs no hit points.
-    Its scroll is the Blood Cult's reward for the Dragon's Clutch; the dragon under the Mine knows
-    it. The AI casts it when it beats its hand weapon.
-  - **Invisibility** (level 2, every school, 2 points) — the caster vanishes from every other
-    side's sight (`conditions.Invisible`, see *Invisibility*). The necromancer at the front knows it;
-    its scroll exists ($750, `economy.scroll_price(2)`), but no source hands it out yet. The AI casts it
-    as a way out of a lethal fight: when it would break and run, or when it is down to a third and a foe
-    it sees can reach it; invisible and at half its HP or less, it makes for the edge instead of striking.
-  - **Raise Dead** (level 2, **Faith only**, 2 points) — a **dead** body (not dying, not stable)
-    within 6 cells and in sight stands up again with **1 HP on the caster's side**, the same body with
-    its gear, immune to Sleep. A raised body that falls again is dead for good and is never raised
-    twice; a guild member's body can be raised against the guild. The log names the cell it rises on.
-    A teaser of what a strong caster does: only the necromancer at the front knows it; its scroll
-    exists ($750), but no source hands it out yet.
-  - **Grasping Roots** (level 0, **Nature only**) — a foe within 6 cells and in sight, `d20 + INT`
-    vs AC: on a hit it walks **1 cell** at most until the end of its next turn (`conditions.Rooted`).
-    Recast, it refreshes. The AI weighs it in hit points against what the point buys as a strike
-    (`ai.reckon._roots_worth`): a foe carrying a flag or a walk from one (as much as Maiming Strike's stop), or a
-    melee foe a walk from the AI's side held out of reach, the two blows it would have landed.
-  - **Hex** (level 0, **Blood only**) — a foe within 6 cells and in sight, `d20 + INT` vs Mental
-    Defense: on a hit, **-1 on each of its six attribute scores** until the end of its next turn
-    (`conditions.Hexed`, never stacked: a recast refreshes it). A modifier is `(score - 10) // 2`, so
-    the hex bites only where a score is **even**: an odd one keeps its modifier. Everything read off a
-    modifier follows (rolls, damage, AC through Dexterity as far as armour lets it count, Mental
-    Defense through Wisdom). An even Constitution also costs one max HP **and** one current HP per hit
-    die; when the hex wears off the max comes back and the current HP does not, so in practice it is
-    damage equal to the level. Reading the foe's attributes (Assess) tells whether it is worth it: the
-    AI casts it only on a foe whose attributes its side has read, when its worth in hit points (the
-    Constitution loss, the blows its side lands more often on the lower AC, the foe's own blows
-    landing less often and for less, `ai.reckon._hex_worth`) beats what the point buys as a strike.
-  - **Spare the Dying** (level 0, **Faith only**) — touch: a **dying** ally in reach is stable, no
-    check (Stabilize is a coin flip). A good AI casts it instead of Stabilize.
-  - **Healing Touch** (level 1, **Faith only**) — touch: an ally in reach, or the caster, heals **1d6**,
-    nothing added; a body on the ground (dying or stable) is back on its feet. The AI heals the most
-    hurt in reach at half health or less, and a good one lifts a dying friend with it.
-  - **Light Globe** (level 0) — drop a light source ground object at a cell in range (6 cells).
-  - **Floating Disk** (level 0) — conjures a magical floating platform at a cell
-    in range (6 cells) at a chosen altitude (e.g. ground level z=0). Bridges
-    pits and deep water, allowing units walking at the disk's elevation to cross
-    cleanly (ignoring drops and water). Units at the bottom of a pit can walk
-    underneath it. Currently 1 unit per cell (full 3D multi-tier occupancy
-    reserved for future system work).
-  - **Share Magic** — a Sprite Nature Initiate's own action: spends a point
-    to teach a random ally one of its known spells for the rest of the
-    battle.
+- **Casting** costs the spell's action points (`REFERENCE.md` § Spells: level, schools, cost and effect) and only shows up once the spell's id is in `spells_known`. What the effect line
+  cannot hold:
+  - **Where the scrolls come from.** Water Jet is the Nature Coven's reward for the Ogre's Wildfire and
+    Dragonfire the Blood Cult's for the Dragon's Clutch; no shop sells either. Invisibility and Raise Dead
+    are known by the necromancer at the front; their scrolls exist, but no source hands them out yet (Raise
+    Dead is a teaser of what a strong caster does). Raising a guild member's body against the guild is allowed.
+  - **How the AI casts.** Water Jet when it beats the hand weapon or would throw a foe into the fire;
+    Dragonfire when it beats the hand weapon; Invisibility as a way out of a lethal fight (when it would
+    break and run, or is down to a third and a foe it sees can reach it), and once invisible at half its HP
+    or less it makes for the edge instead of striking. Grasping Roots is weighed in hit points against what
+    the point buys as a strike (`ai.reckon._roots_worth`): a foe carrying a flag or a walk from one, or a
+    melee foe a walk from the AI's side held out of reach. Hex only on a foe whose attributes its side has
+    read (Assess), when its worth in hit points (`ai.reckon._hex_worth`) beats a strike. A good AI casts
+    Spare the Dying instead of Stabilize, and Healing Touch on the most hurt in reach at half health or less.
+  - **Hex** bites only where a score is even; an even Constitution also costs one max HP **and** one
+    current HP per hit die, and when the hex wears off the max comes back and the current HP does not, so
+    in practice it is damage equal to the level.
+  - **Share Magic**, a Sprite Nature Initiate's own action, spends a point to teach a random ally one of
+    its known spells for the rest of the battle.
 - **Initiation** (`rite.py`, the INITIATION tab of each hidden sanctuary, `rite.Initiation`). A
   school takes a character once the guild has **2 reputation** with its faction: a threshold, never
   spent. The character stays to **board** at the sanctuary: they split off into a group of their own
@@ -459,17 +351,14 @@ level-0 and a level-1 spell of its own.
   Sleep (level 1) needs 224. No gold, no scroll, or no school in `magic_sources` yet all
   mean no progress that day (the room is still paid for if the gold is
   there). Hitting the threshold banks the spell and clears the study slot.
-- **Setting a study target**: right-click a `Scroll of <Spell>` on the Gear
-  screen for a "study" row on the send-to menu (the same idiom the locked
-  chest uses for "open") — offered once the character has a school in `magic_sources`
-  and doesn't already know the spell, and toggles off the same way. The
-  sandbox character editor has the identical control for authored NPCs.
-- **Scroll scarcity by design**: Spells are intentionally rare and strictly
-  limited. `Scroll of <Spell>` items are not sold in shops. Today there are only
-  two ways to obtain a scroll: starting with one at character creation (when an
-  occupation rolls "Scroll", granting a random level 0 nature spell) or delving
-  into the sunken vaults of the Ancient Ruins (which hides the rare Scroll of
-  Sleep).
+- **Setting a study target**: the Tavern's STUDY tab lists each member's options, a `Scroll of <Spell>`
+  in the band's packs, offered once the character has a school in `magic_sources` and doesn't already
+  know the spell, and clears it the same way. The sandbox character editor has the identical control
+  for authored NPCs.
+- **Scroll scarcity by design**: Spells are intentionally rare and strictly limited, and no shop sells a
+  `Scroll of <Spell>`. They come from an occupation's starting item (a random level 0 nature spell), the
+  sunken vaults of the Ancient Ruins (the rare Scroll of Sleep), an errand's reward (Water Jet, Dragonfire)
+  a pile of the Dragon's hoard (Hex), or a rare find on a battlefield (Spare the Dying).
 
 ### Learning a language 🟡
 
@@ -485,31 +374,18 @@ always studying at most one thing (a spell *or* a language, never both).
 - **Cost**: `magic.points_to_learn(0)` = 105 points, the same threshold as a
   level-0 spell (roughly a week of daily `1d20 + INT mod` rolls at the
   Tavern's "study" garrison job), no `magic_sources` bonuses involved.
-- **Setting a study target**: right-click a `Dictionary of <Language>` on the
-  Gear screen for a "study" row — offered once the character doesn't already
-  speak it. Same toggle idiom as scrolls; the sandbox character editor has
-  the identical control.
+- **Setting a study target**: the same STUDY tab offers a `Dictionary of <Language>` in the band's
+  packs, once the character doesn't already speak it; the sandbox character editor has the identical
+  control.
 - Hitting the threshold appends the language to `Unit.languages` — it
   immediately counts for Demoralize, haggling and recruitment (all gated on
   `languages`, see §7 and Property/Economy below).
 
 ---
 
-## The wargame's combat 🟡 (proposal)
+## The wargame's combat 🟡
 
-Where each part lives: the persistent character in `gartok/unit.py`, the
-combatant in a battle (HP, AP, conditions, hands, combat behaviour) in
-`gartok/combatant.py`, actions in `gartok/actions/`, conditions in
-`gartok/conditions.py`, abilities in `gartok/abilities.py`, vision/light in
-`gartok/vision.py`, board/pathfinding/LOS in `gartok/board.py`, ground objects
-and neutral creatures in `gartok/ground.py`, map assembly in
-`gartok/scenario.py`, picking the opponents + map for a given fight in
-`gartok/matchup.py`, turn flow in `gartok/battle.py`.
-
-> **Design premise:** the rules are written thinking about *the world* — how
-> characters interact with it — not just about combat. Combat is the central
-> mechanic, but each system exists first as a world thing; if it talks to combat,
-> better. Systems land bit by bit.
+Where each part lives is the code map of `README.md`.
 
 ### Action points
 
@@ -545,37 +421,17 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   show it next round). The AI blows it while the fight is still a walk away (no foe within
   reach) and at least two allies hear it.
 - **Throw** (1 point) = throws the weapon in hand, if it is a **thrown weapon**
-  (Dagger 6 cells, Light Pick 6, Hatchet 4, Light Hammer 8, Shortspear 12; REFERENCE.md has
-  the catalogue). See below. The AI throws only with its last point and no foe in swing reach,
+  (its range is the Thrown column of `REFERENCE.md` § Weapons). See below. The AI throws only with its last point and no foe in swing reach,
   when the throw may drop the foe, stops a flag runner, or it cannot get any nearer.
-- **Weapon actions** (one per weapon kind; REFERENCE.md *Weapon Traits*). A 2-point action is
-  **one strike** for the price of two plain attacks, so it is the worse buy out of its **favoured
-  case**; in that case the strike **lands twice over** (a second roll of the weapon's damage) plus
-  the action's own edge, and beats the two attacks whatever the weapon or the modifiers:
-  - **Sneak Attack** (Dagger): a flanked foe (you and an ally adjacent on opposite sides); +1d4.
-    With no flank there is no action: the button stays dark.
-  - **Precise Thrust** (Rapier): a flanked foe, likewise only then; +2 to hit.
-  - **Cleave** (Axe): a second foe beside both; the sweep strikes both, each swing +2 to hit
-    (no double: two blows already).
-  - **Repel Strike** (Quarterstaff): shoves the foe 1 cell (+2 to the push); with its back to a
-    wall or a body it is slammed instead, +1d4.
-  - **Maiming Strike** (Club, Hammers): halves the foe's speed; a foe Entangled, Sleeping,
-    Surprised or Demoralized (it cannot dodge); +2 to hit.
-  - **Armor Pierce** (Picks): ignores worn armour; an armoured foe.
-  - **Power Shot** (Shortbow, Longbow): +STR; at half the bow's range or farther, +STR at least +1.
-  - **Hook Shield** (Hatchet): a foe with a shield; the hook comes first, so the shield gives no
-    AC to this strike or anyone's until next round.
-  - **Parry & Strike** (Broadsword, Sword): Defending (+1 AC); two or more foes in reach.
-  - **Extreme Shot** (Light Crossbow): no double; its case is a target past the normal range,
-    which only it reaches (36 cells).
-  - **Long Thrust** (Glaive): no double either; one strike 1 cell past the Glaive's reach (3
-    cells), +1 to hit. Its case is a foe there, which no other blow reaches.
-  - **Javelin Charge** (Shortspear) is **1 point**: a throw after a walk this turn, +1d4, so a
-    walk and the throw fill a turn.
-
-  The AI scores each by expected damage (hit odds against the AC it can reckon) against the two
-  plain attacks the same points buy (one shot for a crossbow, whose other point reloads it) and
-  takes the better; a test holds the premise for every action, STR 10-18 and AC 10-19.
+- **Weapon actions** (one per weapon kind; the list is `REFERENCE.md` § Weapon Traits). A 2-point action
+  is **one strike** for the price of two plain attacks, so it is the worse buy out of its **favoured
+  case**; in that case the strike **lands twice over** (a second roll of the weapon's damage) plus the
+  action's own edge, and beats the two attacks whatever the weapon or the modifiers. Cleave (two blows
+  already), Extreme Shot and Long Thrust do not double: their case is a target only they reach.
+  Javelin Charge (Shortspear) costs **1 point**, a throw after a walk this turn, so a walk and the
+  throw fill a turn. The AI scores each by expected damage (hit odds against the AC it can reckon)
+  against the two plain attacks the same points buy (one shot for a crossbow, whose other point
+  reloads it) and takes the better; a test holds the premise for every action, STR 10-18 and AC 10-19.
 - **Reach** = a melee weapon strikes foes 1 cell away; one with a reach of its own reaches
   farther (`ItemDef.reach`: the **Glaive**, 2 cells), and a body's **Reach** ability adds 1 on
   top. The AI walks only as near as its reach and strikes from there.
@@ -682,7 +538,8 @@ to the fight, as before.
 ### Initiative and attack
 
 - **Initiative**: `d20 + Wisdom mod` (+ racial bonus, + the Quick Wits talent).
-  Decreasing order, fixed for the battle. A dialogue before the fight can move it (see above).
+  Decreasing order, fixed for the battle except what a dialogue before the fight, Delay and the
+  Signal Horn move.
 - **Attack**: `d20 + mods` vs the target's `AC`.
   - base mod = `Strength mod` (melee), `Dexterity mod` (ranged / thrown), or the
     **better of Strength and Dexterity** (a *finesse* weapon).
@@ -712,10 +569,7 @@ to the fight, as before.
 States and the clock in `combatant.py`; the `Stabilize` / `FirstAid` actions in
 `actions/support.py`; turn flow and victory in `battle.py`.
 
-> **Design premise (from the author):** at the first levels mortality is very
-> high and the starting squad is **disposable**. Whoever survives the first
-> fights becomes valuable; from there the player hires replacements, who also
-> die, and so on. Resurrection is a far-future concern.
+> The first squad is **disposable** (the premises under *World systems*).
 
 **A unit's states:**
 
@@ -794,7 +648,7 @@ FALLEN*), then ends.
 
 After a won fight every captive joins the group (`captives.py`): **not a member** (it never
 fights, works or eats), it walks with the group (its speed counts in the pace), takes **1 of the
-herd limit** (`Group.herd_capacity`) and **dies 7 days** after its capture. A herd over the limit
+herd limit** (`Group.herd_capacity`) and **dies 7 days** (`captives.CAPTIVE_DAYS = 7`) after its capture. A herd over the limit
 loses its latest captive first when it has no animal to lose. The group screen's QUESTS & CAPTIVES tab lists
 the captives with their days left and a RELEASE button. A captive with a body worth keeping (the
 Snake Dragon) leaves it in the leader's pack when it dies; a foe left fallen and unbound after a won
@@ -1013,7 +867,7 @@ Rules in `board.py` (`los_clear`) and `vision.py` (`cell_lit`, `can_see`).
 ### What a side knows of a foe 🟡
 
 Rule in `intel.py` (free functions over `battle.intel`, like `vision.py`); the card is
-`ui/foe_panel.py`. **The AI is another player: it reads exactly what a player is
+`foe_card.py`. **The AI is another player: it reads exactly what a player is
 shown (`intel.known_fields`).**
 
 - **Visible, no roll:** position, name, race, size, alignment, the *names* of the weapon,
@@ -1041,8 +895,7 @@ shown (`intel.known_fields`).**
 
 ### Throwing 🟡
 
-- Only a **thrown weapon** works. For now **only the Dagger** (range 9 m =
-  6 cells).
+- Only a **thrown weapon** works (the Thrown trait; the range is in `REFERENCE.md` § Weapons).
 - **Hit:** `d20 + Dexterity mod` (+ typical mods) vs AC. Natural 20 = crit;
   natural 1 = fumble.
 - **Damage:** the weapon die **+ Strength mod** (strength goes into the damage,
@@ -1153,9 +1006,7 @@ immediately without manual combat grind.
 ### Weapons table 🟡
 
 The full table (damage, range, finesse, thrown, hands, weight, price) is in
-[`REFERENCE.md`](REFERENCE.md) (§ Weapons). By design the game starts with only
-the Dagger as a thrown weapon; the Light Crossbow is the one ranged weapon and it
-must be reloaded between shots.
+[`REFERENCE.md`](REFERENCE.md) (§ Weapons); a crossbow must be reloaded between shots (*Ammo*, above).
 
 - **Weapon sizes:** Base weapons are **Medium**. **Large** variants have double
   weight (`weight × 2`) and deal **+1 damage step** (`1d4 -> 1d6 -> 1d8 -> 1d10 -> 1d12 -> 2d8`).
@@ -1172,9 +1023,15 @@ must be reloaded between shots.
 Rules that exist **outside combat** — the guild on the map, time passing, the
 economy. Each starts as a "world thing" and only then talks to the fight.
 
-Design premises that hold across them:
+Design premises that hold across the whole game:
 
 - **A sandbox with no win condition.** The run ends only on a full wipe.
+- **World-first.** The rules are written thinking about *the world* — how characters interact with
+  it — not just about combat. Combat is the central mechanic, but each system exists first as a
+  world thing; if it talks to combat, better. Systems land bit by bit.
+- **A disposable first squad.** At the first levels mortality is very high. Whoever survives the
+  first fights becomes valuable; from there the player hires replacements, who also die, and so on.
+  Resurrection is a far-future concern.
 - **Every unit is its own individual.** A shared activity (a shift, a craft, a hunt)
   resolves per person.
 - **No guild treasury.** Money is `Copper Coin` ($1) and `Gold Coin` ($100) items in
@@ -1192,14 +1049,11 @@ Design premises that hold across them:
 
 Purely cosmetic, no mechanical effect: after the three squad picks, the draft's
 "identity" phase asks for a **guild name** and a **banner** — a colour and an
-emblem, both from a small curated set (`ui.banner`,
-`artwork.BANNER_ICONS`), not a free painter. The chosen colour becomes every
-unit token's fill for the rest of the run (`ui.banner.set_player_color`, read live
-by the token badge — every roster card in the game uses it without
-knowing it changed). On the battle board it is only a pennant on the squad's
-tokens: the side is told by the plate each token stands on (a disc in the side's
-fixed colour for the squad and its allies, a diamond for a foe), a readability cue,
-not an identity, that a red banner can never blur into `ENEMY_C`. A save from before this existed shows "The Guild" in
+emblem, both from a small curated set (`art_files.BANNER_ICONS`), not a free painter.
+On the battle board the colour is only a pennant on the squad's tokens: the side is
+told by the plate each token stands on (a disc in the side's fixed colour for the squad
+and its allies, a diamond for a foe), a readability cue, not an identity, so that a red
+banner can never blur into `ENEMY_C`. A save from before this existed shows "The Guild" in
 a default colour (`Guild.DEFAULT_BANNER_COLOR`/`DEFAULT_BANNER_ICON`).
 
 ### Leadership 🟡
@@ -1246,17 +1100,7 @@ different questions:
   with fixed attributes whose Strength sets what they carry) and wagons (a cart
   for two people's worth of load, a carriage for six). The tack an animal wears
   decides its job: a Pack Saddle carries cargo on its back, a Harness lets it
-  pull. A harnessed animal is hitched to one wagon (the HITCH button on its column of the gear screen, or
-  dragging its header onto the wagon's on the gear screen; dropping on a full
-  wagon swaps the two animals), and a wagon holds no more than the animals
-  hitched to it can draw, up to its box. Cargo on animals and wagons never goes
-  into a fight, everyone eats from it, and it is lost with the group. People ride
-  by weight, the slowest first, and every rider takes room the cargo could use;
-  the RIDES button on a member's column of the group's gear screen makes them walk
-  beside the wagon instead. Wagons are bought and sold at the Carpenter (its WAGONS
-  tab), animals and tack at the Farm's stables; neither hitches: hitching (the
-  button on a draft animal's column, or dragging it onto the wagon) is done on the
-  gear screen too.
+  pull. A harnessed animal is hitched to one wagon, and a wagon holds no more than the animals hitched to it can draw, up to its box (dropping an animal on a full wagon swaps the two). Cargo on animals and wagons never goes into a fight, everyone eats from it, and it is lost with the group. People ride by weight, the slowest first, and every rider takes room the cargo could use; a member can be set to walk beside the wagon instead. Wagons are bought and sold at the Carpenter, animals and tack at the Farm's stables; hitching and riding are set on the group's gear screen.
 - **Broken wagons.** A vehicle has Hit Dice of d8 and no Constitution at all: a
   cart is 1 HD (5 HP), a carriage 3 HD (13 HP), the mean of the dice, never
   rolled. Every 100 units of map distance a group travels costs each of its
@@ -1332,7 +1176,7 @@ takes a **rest** (battle time is in seconds and does not count a
 meal).
 
 - **Every character eats once a day.** For each map day crossed, a character
-  consumes **1 food item** (`data.FOOD_ITEMS` — today `Meat`, `Potato`).
+  consumes **1 food item** (anything in `data.FOOD_ITEMS`).
   Ate → counter resets.
 - **Shared food (on by default), scoped to the group.** Each character eats from
   their **own pack** first (a full first pass over the roster); anyone still
@@ -1375,7 +1219,7 @@ meal).
   > The death trigger is `data.STARVATION_DEATH_DAYS = 4`.
 
 - **Autotroph (Treefolk):** photosynthesises — never eats, never starves.
-- Food is **for sale at the market** (`Meat` 5c, `Potato` 3c).
+- Food is for sale at the Farm (`Meat` 5c, `Potato` 3c: `economy.PRICES`).
 - Eating/dying **re-derives** the character's attributes, so the sheet, the guild
   cards and the next battle already show the right numbers. If the whole guild
   starves on the road, the campaign ends.
@@ -1399,7 +1243,7 @@ copper instead of walking into the wilds and dying. The yard is also a shop
 
 - **How it works:** pick a group standing at the yard and a **shift** — 4, 8, 12
   or 16 h — on the WORK tab, which issues a work order and runs the clock right
-  there (`App._work_shift`, the map's own loop): it passes the time (can cross
+  there (the map's own loop): it passes the time (can cross
   midnight and trigger the day's meal), pays each worker and leaves the tab up
   with what the shift paid. When something else falls due on the way (another
   group idle, a fight, a death), the map takes over and the shift runs on there.
@@ -1420,8 +1264,7 @@ copper instead of walking into the wilds and dying. The yard is also a shop
 - **No wood by default:** the axe is borrowed and the tree is not yours; you take only
   the wage for the hours, no item. With the yard's **gathering licence** (below) a shift
   can gather instead.
-- **Deliberately meagre.** $0.75/h. A full day feeds you (a Potato is $3)
-  and leaves ~9 over; rebuilding a minimal kit (~$30) takes ~3 days. An
+- **Deliberately meagre.** A full day feeds you (a Potato is $3) and leaves a coin over. An
   arena purse or a wilds haul pays several times faster — the yard is a safety
   net, not a career.
 - A character **incapacitated by hunger can work** (it is not combat) — that is
@@ -1589,9 +1432,8 @@ the yield with diminishing returns (`hunt.HUNT_PARTY_YIELD`: 0.5, 0.3, 0.2, 0.2,
 and the same factor scales the forage odds. The yield follows the survivors, so
 losing a hunter to an ambush lowers it for the rest of the trip.
 
-The Ogre's Wildfire leaves its mark here: every focus that burned takes **5 %** of The Wilds' meat
-for good (`wildfire.meat_mult`, 10 burned at worst = half), and while the Ogre's fortress stands
-hostile a hunt meets **1.5×** the ambushes, half of them his goblins (`wildfire.wilds_pack`).
+The Ogre's Wildfire leaves its mark here: every focus that burned takes **5 %** of The Wilds' meat for good (`wildfire.meat_mult`, `wildfire.MEAT_LOSS = 0.05`; 10 burned at worst = half), and while the Ogre's fortress stands
+hostile a hunt meets **1.5×** (`wildfire.HOLD_AMBUSH_MULT = 1.5`) the ambushes, half of them his goblins (`wildfire.wilds_pack`).
 
 ### Market and haggling 🟡
 
@@ -1633,13 +1475,7 @@ Neutral**).
   Library's Kobold in Draconic, the Lumber Yard's Orc in Orcish, the Mine's Goblin in Goblin; the Apothecary's
   Gnome (Gnomish), the Tavern's Halfling (Halfling) and the Farm's Human (Ankarin and Sylvan; `Node.language`
   may be a tuple). Every shop has a tongue and a bent (a test fails for one without). A guild with nobody who
-  speaks it pays the tabled price. The hub's header shows the keeper big (`web/hub_session.py`): portrait, their
-  line, their bent, and the shop's cards -- the deal (who haggles for the party, `economy.haggle_voice`, their
-  Charisma and how far their bent sits from the keeper's), the party's purse and the shop's till. The shelf
-  has a cart: a click puts a row in it, BUY shares it out to whoever has room (`trade.Counter._buy_cart`); a
-  drag still buys for one member, and pack items dropped on the shelf are sold. A shop with a trade (Smithy, Tannery, Apothecary) is one hub screen with a SHOP tab
-  (`web/hub_session.py`); the Farm and the Tavern show the shop beside their stables / recruiting.
-  A tab with nothing on it is not listed.
+  speaks it pays the tabled price.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a
   parameter — the Provisioner talent adds one scoped to food, buy-side.
 - **Auto-sell marks.** The ⋮ menu of a pack row marks an item *kind* (`Guild.autosell`, saved
@@ -1706,14 +1542,9 @@ Ledger Hold own their own node; the Blood Cult, Nature Coven and Faith Order own
 > deeds **in any order** (`requires` only when order must be forced). They grow
 > by hand, one at a time — a faction's rules *are* what it wants from you.
 
-**Faction #1 — The Pits (`arena`).** The first arena's sub-campaign is three
-independent deeds (see [`REFERENCE.md`](REFERENCE.md) § Factions and deeds):
-
-| Deed | Condition | Reward |
-|---|---|---|
-| **First Blood** | win a staked arena bout | +1 reputation |
-| **Lone Wolf** | win the cheapest bout (entry tier) with **a single fighter** | +1 reputation |
-| **Dethrone the Champions** | beat the arena's **champion team** | +1 reputation |
+**Faction #1 — The Pits (`arena`).** Its deeds are `REFERENCE.md` § Factions and deeds; the first
+three (First Blood, Lone Wolf, Dethrone the Champions) are the first arena's sub-campaign, independent
+of one another.
 
 All three → 3 reputation. **Dethrone** is fought via the "Challenge the Champion"
 bout on the hand-authored `maps/the-pit.json` (Adelio Small-Knife + 2 hired
@@ -1722,29 +1553,22 @@ bodies); the win condition is unchanged — put the whole team down.
 Arena progression is now tied entirely to these narrative deeds rather than
 static reputation ladders. Completing the "First Blood" deed opens the way to
 the champion, and dethroning the champion unlocks The Games (`arena.py`'s
-stage 2 bouts): **Bloodsport** (win a stage 2 bout), **Flag Runner** (capture enemy
-flag), **Untouchable** (capture flag without KOs), and **The Ribbit Brothers** (beat
-the 3 Grippli boss team). Each bout is defined in `arena.py` and assembled in `matchup.build`.
+stage 2 bouts, each defined there and assembled in `matchup.build`).
 In a capture-the-flag bout the AI sends **one** runner, its side's fastest (`battle.FLAG_RUNNERS`,
 what a person does; one runner beat half the side head to head on the logged flag fights), the
 nearest of the rest stands on its own flag and the others fight; anyone carrying its side's flag
 away is everyone's target.
 
-**Faction #2 — The Bankers (`bankers`).** The coin-keepers of the City. Four deeds
-measure the guild's standing:
-- **Good for Business:** complete an economic job in the City.
-- **Steady Customer:** spend $1,000 at the market.
-- **Diverse Portfolio:** sell 5 different kinds of goods to the market.
-- **Earned Trust:** carry the Bankers' sealed chest intact to Ledger Hold and
-  return their receipt (`bankers_trust_chest` mission).
+**Faction #2 — The Bankers (`bankers`).** The coin-keepers of the City; their deeds are in
+`REFERENCE.md`, and the last, **Earned Trust**, is the `bankers_trust_chest` mission (see *Missions*).
 
 **Ledger Hold** also has deeds: *Treefolk Mentorship* (train a Treefolk recruit to racial level 2 and
 bring them) and *Frontier Supply Run*, the military deed: **10** completed supply runs. A run
 (`orders.supply_run`) needs 20 kg of free cargo capacity and is a **walk**: the group carries the
 supplies out to the Frontier Outpost and back to Ledger Hold, at its own pace (5 distance each way,
-10 h for a walker), its pawn moving on the map. The pay is fixed per run, **$30** an escort and work
+10 h for a walker), its pawn moving on the map. The pay is fixed per run, **$30** an escort (`economy.SUPPLY_RUN_PAY = 30`) and work
 XP of level 5 (as 10 h of work), banked on the return to Ledger Hold, so a faster group earns more an
-hour. **Each leg** (out, back) rolls a **35%** ambush (`economy.SUPPLY_RUN_AMBUSH_CHANCE`, cut by the
+hour. **Each leg** (out, back) rolls a **35%** ambush (`economy.SUPPLY_RUN_AMBUSH_CHANCE = 0.35`, cut by the
 Wilds vocation and Woodland Scout like a road's): enemy soldiers stop the caravan part-way along the
 road (a forced `supply_ambush`, talk first). They are **4-10** humanoids of level **3-8**, drawn from a
 bell leaning low (`encounters.level_weights`: headcount peak 6, level peak 4, spread 2), so about one
@@ -1777,10 +1601,8 @@ What they sell today is the guild's **first shared property**: a **strongbox** a
 - The chest lives at the bank — gear in it is **only reachable from the City**.
 
 **Faction #3 — The Library (`library`).** Scholars and linguists situated just
-outside the City walls (`Node.library = True`). Two deeds measure standing:
-- **Library Initiate:** complete a scholarly task for the library (`library_dictionary` mission).
-- **Trusted Scholar:** complete a second task for the library (retrieving the lost codex
-  from the Ancient Ruins, `library_ancient_codex`).
+outside the City walls (`Node.library = True`). Its two deeds (in `REFERENCE.md`) are the
+`library_dictionary` and `library_ancient_codex` missions.
 
 Standing with the Library expands the world's scholarly resources:
 - **Dictionary market:** The library sells language dictionaries; the stock of different
@@ -1811,13 +1633,13 @@ instance of a given template can be active guild-wide at a time
 - **The Tanner's second job, the Biwolf** (same screen, offered once the hides
   are in; no deadline and no copper, the pay is the second reputation point with the Tanners).
   While it is out, a hunt in the Wilds that spends an hour after dark
-  (18:00-06:00) with **15 Meat** in the hunters' packs is ambushed by the
+  (18:00-06:00) with **15 Meat** (`hunt.BIWOLF_MEAT = 15`) in the hunters' packs is ambushed by the
   Biwolf (the level-10 NPC `npcs/biwolf.json`) and 3 ordinary wolves
   (`hunt.biwolf_lure` / `hunt.biwolf_pack`). The ambush is spent only when the
   Biwolf falls (`missions.settle_biwolf` sets `ambush_done`). If he gets away
   (he runs off the map, or the squad is beaten or flees with him standing) the
   job stays open with the same lure, and `Mission.escapes` goes up: each escape
-  alternately adds a wolf to the escort (up to 8) or a level to its weakest wolf
+  alternately adds a wolf to the escort (up to 8, `hunt.BIWOLF_ESCORT_MAX = 8`) or a level to its weakest wolf
   (`hunt.biwolf_escort_levels`), so letting him run is punished, not final.
   The Biwolf always drops the **Leather of Biwolf** (`loot.UNIQUE_DROPS`), an
   artifact worn in its own slot: +1 AC against anything not a humanoid
@@ -1831,13 +1653,13 @@ instance of a given template can be active guild-wide at a time
   it) and the third reputation point with the Tanners.
   - *Finding the place.* The Farm leads 1 h to the **Country Roads**, and from
     there 1 h to the **Legendary Ox Fields** -- hidden. With the job out, the
-    roads' SEARCH (2 h, Wisdom check of the group's best against DC 10) reveals
-    them for good (`Guild.ox_fields_discovered`); without the job the search finds
+    roads' SEARCH (2 h, Wisdom check of the group's best against DC 10: `ox.SCOUT_HOURS = 2`, `ox.SCOUT_DC = 10`) reveals
+    them for good (`Guild.revealed`); without the job the search finds
     nothing. With the job gone (done or failed) the Fields stay on the map but
     the trail is cold.
   - *Tracking.* At the Fields TRACK THE OX is a hunt-style shift of daylight hours
     (2 / 4 / 6 / 8, never past dusk): one Wisdom check an hour against DC 12.
-    A found trail opens the fight; every time one is found the next DC is 2 higher
+    A found trail opens the fight; every time one is found the next DC is 2 higher (`ox.TRACK_DC = 12`, `ox.TRACK_DC_STEP = 2`)
     (`Guild.ox_trails`), so a lost chase is run again, harder. A found trail is one
     chase: the hunt ends after it, win or lose.
   - *The field.* A 48x30 daylight map (the tracks were read by day, so no torches
@@ -1847,8 +1669,8 @@ instance of a given template can be active guild-wide at a time
     anyone within 12 squares sends him for open ground far from the party, so a
     straight chase herds him round the groves. He turns and fights when cornered
     -- a canyon, the map edge, a pincer -- or winded (3 turns of running), and then
-    stands for 2 rounds. Every 5 rounds he bellows and an ox of the party's level
-    minus 2 (1..3) charges in from the far edge, at most 4. While he is out of sight
+    stands for 2 rounds. Every 5 rounds (`ox_fields.CALL_EVERY = 5`) he bellows and an ox of the party's level
+    minus 2 (1..3) charges in from the far edge, at most 4 (`ox_fields.CALL_MAX = 4`). While he is out of sight
     the log gives the compass way to him. The fight is won the moment he falls.
   - *Loot and failure.* He always drops the **Thunderhide** (artifact: +1 Strength
     while worn, `items.ARTIFACT_ATTRIBUTES`) and the **Legendary Horn** (the Signal
@@ -1886,7 +1708,7 @@ shipped start to finish (buy/claim, use, lose, recover):
   recurring tax (`economy.CITY_PROPERTY_TAX` = **$30** every
   `CITY_PROPERTY_TAX_PERIOD_DAYS` = **7** days, charged automatically by
   `Guild._city_property_upkeep`). `CITY_PROPERTY_MISSED_PAYMENTS_LIMIT` (3)
-  unpaid cycles force a choice (`RepossessionScreen`): **return** the
+  unpaid cycles force a choice: **return** the
   property (and owe the Bankers a debt that blocks their other services until
   paid, escalating to the guard after `CITY_PROPERTY_DEBT_GRACE_DAYS` = 14
   days), or **squat** — keep it tax-free (no further charges, none missed) but illegal, and the guard
@@ -1940,9 +1762,9 @@ they could have done.
 beast: an ordinary snake with dragon blood in it. The **Blood Cult** wants its **body** (to read the
 bloodline); the **Nature Coven** wants it **alive** (to learn whether a curse twisted it, and tend
 it). One beast, so one delivery closes the other (failed, like the Codex), +1 reputation either way.
-With either job out, a group at the Lumber Yard can **search for the nest** (2 h, Wisdom DC 10). The
+With either job out, a group at the Lumber Yard can **search for the nest** (2 h, Wisdom DC 10: `serpent_nest.SEARCH_HOURS = 2`, `serpent_nest.SEARCH_DC = 10`). The
 **Serpent's Nest** is a dark dungeon of five chambers: packs of snakes (a Giant Spider at most) scaled
-to the squad sleep in the first four until a foe comes within 5 squares; the fifth is the lair, a pool
+to the squad sleep in the first four until a foe comes within 5 squares (`serpent_nest.AWARENESS = 5`); the fifth is the lair, a pool
 of shallow and deep water, and the **Snake Dragon** (`npcs/snake_dragon.json`): a level-8 composite
 `["Snake", "Dragon"]` (Large 2x2), with `Dragon` and `Dragon Breath`. The fight is won the moment it is dead or bound.
 Taken alive, it is delivered from the group's captives (`MissionTemplate.goal_captive`); dead, its body
@@ -1953,9 +1775,9 @@ medicine to the border war: on accepting, the signer gets **6 Minor Healing Poti
 only; a retry brings none). The group has **7 days** to reach **The Battlefield** (a public node past the
 **Frontier Outpost**, beyond Ledger Hold; the outpost does nothing yet) and **JOIN THE SKIRMISH**, which
 only the group carrying the errand sees. The field is two trenches (a parapet wall with gaps) and open
-ground between. Beside the squad, in its trench, stand **4 Ledger Hold soldiers** (Lawful and Good, a
+ground between. Beside the squad, in its trench, stand **4 Ledger Hold soldiers** (`battlefield.SOLDIERS = 4`; Lawful and Good, a
 leather jerkin, **two levels under** the squad's mean, at least 0) who fight on the player's side but are
-played by the AI (green tokens); across the field, a **warband of 6** mixed humanoids **one level over**.
+played by the AI (green tokens); across the field, a **warband of 6** (`battlefield.WARBAND = 6`) mixed humanoids **one level over**.
 Lethal. Won with **every soldier alive**, the errand is done: +1 reputation with the Faith Order, and the
 potions left over are the pay. A dead soldier, a lost fight or a missed week fail it; the Order asks again
 **14 days** later. The guild's own deaths do not fail it.
@@ -1963,8 +1785,8 @@ potions left over are the pay. A dead soldier, a lost fight or a missed week fai
 **The Necromancer at the Front** (`necromancer.py`, the Faith Order's second errand, offered once
 Mercy is done, **14 days**). The soldiers who fell at the front do not stay dead. The same JOIN THE
 SKIRMISH opens a **48 x 30 field at night** (the trenches' watch fires the only light) with three
-sides: the squad and **4 soldiers** (as in Mercy), a **warband of 8** one level over in Studded Leather, and the
-necromancer's dead (**4 Zombies** at the warband's level), while **6 bodies** of the days before lie in
+sides: the squad and **4 soldiers** (as in Mercy, `necromancer.SOLDIERS = 4`), a **warband of 8** (`necromancer.WARBAND = 8`) one level over in Studded Leather, and the
+necromancer's dead (**4 Zombies**, `necromancer.ZOMBIES = 4`, at the warband's level), while **6 bodies** (`necromancer.CORPSES = 6`) of the days before lie in
 no man's land. **Oskar Vell, the Gravecaller** (`npcs/necromancer.json`, a Human Gravedigger, racial 15:
 combat 5 / work 10 / magic 15) starts the fight **invisible** in the middle and raises a body each turn
 he can, the strongest in reach, walking to the next when none is; he backs off from whoever found him
@@ -1981,35 +1803,34 @@ other, and gone with every edge into them when the event is over. They live in t
 (`Guild.wildfire`) and come back on a load (`wildfire.sync_world`). A group standing on one when it
 goes walks back to The Wilds; one walking to it stops where it is.
 
-**The Ogre's Wildfire** (`wildfire.py`, the Nature Coven's third errand, 14 days). An Ogre has brought
+**The Ogre's Wildfire** (`wildfire.py`, the Nature Coven's third errand, 14 days: `wildfire.DAYS = 14`). An Ogre has brought
 a goblin band into the Wilds to clear ground for a fortress, and they set the forest on fire doing it.
 Accepting puts four ethereal nodes on the map: **three foci** and **the Great Focus**, each an hour off
 The Wilds and the foci an hour off the Great Focus.
 
 - **A small focus** holds **3 Goblins** at the squad's mean level and their **Hobgoblin foreman** one
   over. **Talk** to the foreman (a dialogue, see *Dialogue before initiative*): a chain of two checks,
-  **CHA** for a hearing then **INT** to show them how it is done, **DC 13** each, the player picks who
-  rolls each one. Passing both puts the fire out and the node goes. A miss sets the camp on the
+  **CHA** for a hearing then **INT** to show them how it is done, **DC 13** each (`wildfire.FOCUS_DC = 13`), the player picks who rolls each one. Passing both puts the fire out and the node goes. A miss sets the camp on the
   group: the fight starts (**ATTACK THE CAMP**, on open ground, lethal). A beaten crew leaves the fire
-  burning: **PUT OUT THE FIRE** is **16 hours** of work and an INT check (**DC 13**, the best mind of
+  burning: **PUT OUT THE FIRE** is **16 hours** of work (`wildfire.PUT_OUT_HOURS = 16`) and an INT check (**DC 13**, `wildfire.PUT_OUT_DC = 13`, the best mind of
   the group rolls); a miss costs the hours and can be tried again.
-- **A focus left 7 days** burns through: it is gone, it counts as burned, and **two new foci** start
+- **A focus left 7 days** (`wildfire.BURN_DAYS = 7`) burns through: it is gone, it counts as burned, and **two new foci** start
   where it was, linked to the same nodes **an hour farther**, each with its own week.
-- **The Great Focus** is the fortress going up: **talk** the Ogre round (the same chain, **DC 15**,
+- **The Great Focus** is the fortress going up: **talk** the Ogre round (the same chain, **DC 15**, `wildfire.OGRE_DC = 15`,
   **−1 for every small focus taught**) or **STORM THE FORTRESS** (`fortress_scenario.py`: half-raised
   walls, the bonfire spreading, the **Ogre** -- `npcs/ogre.json`, racial 10, Large, plate armour and a Huge Club,
-  Giant's Grip and Mighty Shove -- and **5 Goblins and Hobgoblins** at level **6**, whatever the squad's level). The fight is
+  Giant's Grip and Mighty Shove -- and **5 Goblins and Hobgoblins** (`wildfire.ESCORT = 5`) at level **6** (`wildfire.ESCORT_LEVEL = 6`), whatever the squad's level). The fight is
   won when the Ogre is down. Either way the errand is **done**: +1 reputation with the Nature Coven and
   a **Scroll of Water Jet** to the signer. Talked round, he builds it right: **The Ogre's Fortress**
   stays as a friendly node and **Grumbold**, its Ogre chieftain, sells the Large forge weapons there
   (Jotun, Chaotic Neutral). The small foci still burning keep their clock.
 - **Day 14**: every focus still burning is lost. With the Ogre unbeaten the errand **fails** and the
   fortress stands **hostile** for good: more ambushes on a Wilds hunt (above), and **STORM THE
-  FORTRESS** there (the finished walls with one gate, **7** escorts at level 6) takes it down.
+  FORTRESS** there (the finished walls with one gate, **7** escorts, `wildfire.HOLD_ESCORT = 7`, at level 6) takes it down.
 
 **The Dragon's Clutch** (`lair.py`, the Blood Cult's third errand, open to all once the Ancient Codex is
 recovered, no deadline). The Codex names a lair under the Mine where a dragon sleeps on its clutch; the
-Cult wants one egg. **SEARCH THE DEEP GALLERIES** at the Mine (**3 h**, WIS **DC 12**, the job out) reveals
+Cult wants one egg. **SEARCH THE DEEP GALLERIES** at the Mine (**3 h**, WIS **DC 12**: `lair.SEARCH_HOURS = 3`, `lair.SEARCH_DC = 12`, the job out) reveals
 **The Dragon's Lair**, two hours off the Mine. **ENTER THE LAIR** is a heist in the dark:
 
 - **The board** (44 x 22): the way in and a kobold-sized tunnel (the dragon cannot follow), the
@@ -2019,13 +1840,13 @@ Cult wants one egg. **SEARCH THE DEEP GALLERIES** at the Mine (**3 h**, WIS **DC
   d12 hit dice, Draconic, never rolled into a pack), **racial 20** (combat 20, work 19, magic 2: Dragon,
   Dragon Breath, Dragonfire), 227 HP, AC 15 with its scales. Its breath **leaves the cells it reaches
   burning**, and once it is awake the lair's fire spreads a cell a round.
-- **Its sleep is noise** (asleep -> **stirring** at 6 -> **awake** at 14): a walk past half the walker's
+- **Its sleep is noise** (asleep -> **stirring** at 6 -> **awake** at 14; `lair.STIR_AT = 6`, `lair.WAKE_AT = 14`): a walk past half the walker's
   speed **+2**, heavy armour on the move **+1**, a creep that fails **+1** (each walk of half speed or less
   rolls `d20 + DEX` against `10 + its WIS`) -- these three only within **14 cells** of it -- a turn in
-  which anyone was hurt **+3**, a pile of the hoard **+2**, an egg lifted **+2**, the alarm **+8**.
-  Stirring, it wakes on anyone it sees within 5 cells. Awake (or the alarm rung), the lair hunts.
+  which anyone was hurt **+3**, a pile of the hoard **+2**, an egg lifted **+2**, the alarm **+8** (`lair.ALARM = 8`).
+  Stirring, it wakes on anyone it sees within 5 cells (`lair.STIR_SIGHT = 5`). Awake (or the alarm rung), the lair hunts.
 - **Kobold patrols** (two of three, at the squad's level, the first with a torch) walk their rounds.
-  One that sees the squad within 6 cells **challenges** it before the alarm (a dialogue on the board,
+  One that sees the squad within 6 cells (`lair.PATROL_SIGHT = 6`) **challenges** it before the alarm (a dialogue on the board,
   `dialogue.Challenge`): **Bluff** and **Bribe** both need **Draconic** (a Kobold is born with it; a
   bluff's DC climbs **+2** for every bluff already told in the lair, a miss rings the alarm and the squad
   loses its first turn); **Attack** needs nothing, and the patrol rings the alarm on its next turn unless
@@ -2035,7 +1856,7 @@ Cult wants one egg. **SEARCH THE DEEP GALLERIES** at the Mine (**3 h**, WIS **DC
   fight with what they carry. With the dragon dead, the eggs still on the ground are loot too.
 - **The eggs**: one handed in at the Blood Sanctuary is the errand: **+1 Blood Cult** and a **Scroll of
   Dragonfire**. The rest are the guild's: the Market pays its usual half of **$400**, a sanctuary's
-  keeper pays **$1200** (the Cult only once its own egg is in).
+  keeper pays **$1200** (`lair.SHRINE_EGG_PRICE = 1200`; the Cult only once its own egg is in).
 
 ### Dungeons and the Ancient Ruins 🟡
 
@@ -2123,5 +1944,5 @@ The title only bites inside the arena (see the Demoralize exception above). Ever
 `CHALLENGE_GRACE` (7) days to turn up at the arena for a 1v1 or the title is
 forfeit for the run. The challenger is built to the champion's own mean level + 1
 (`encounters.build_enemy`), so it keeps pace as the champion levels on these
-fights. Once dethroned, Adelio becomes a fixture: a 5 % chance any ordinary pit
+fights. Once dethroned, Adelio becomes a fixture: a 5 % chance (`arena.ADELIO_CAMEO_CHANCE = 0.05`) any ordinary pit
 bout fields him as one of the opponents. He never levels.

@@ -28,6 +28,7 @@ from . import (
     factions,
     hunt,
     items,
+    magic,
     outfit,
     progression,
     sources,
@@ -125,6 +126,19 @@ def _abilities():
            "effect below was designed for the wargame. Two abilities may share a name " \
            "(Pack Tactics): `Held by` tells them apart.\n\n" \
            + _table(("Ability", "Held by", "Effect"), rows)
+
+
+def _spells():
+    from .actions.spells import _SPELL_ACTIONS
+    rows = []
+    for spell in sorted(magic.SPELLS.values(), key=lambda sp: (sp.level, sp.name)):
+        action = _SPELL_ACTIONS[spell.id]
+        rows.append((spell.level, spell.name, ", ".join(sorted(spell.sources)) if len(spell.sources) < len(magic.SOURCES) else "any",
+                     action.cost, action.desc, magic.points_to_learn(spell.level)))
+    return "## Spells\n\nA spell is cast from a known `Scroll of <Spell>` studied to the end (price in Items); " \
+           "a caster needs a school that casts it. A level 0 spell takes " \
+           f"{magic.points_to_learn(0)} learning points.\n\n" \
+           + _table(("Level", "Spell", "Schools", "AP", "Effect", "Learning points"), rows)
 
 
 def _archetypes():
@@ -345,7 +359,7 @@ def _constants():
            "them.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _creatures, _abilities, _archetypes, _vocations, _occupations, _weapons, _weapon_traits, _armor, _shields, _enemy_kit, _items, _base_materials,
+_SECTIONS = (_races, _creatures, _abilities, _spells, _archetypes, _vocations, _occupations, _weapons, _weapon_traits, _armor, _shields, _enemy_kit, _items, _base_materials,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 
