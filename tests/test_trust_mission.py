@@ -76,7 +76,7 @@ def test_the_fortress_ambush_fires_once_through_campaign_advance():
 
     assert g.node == "ledger_hold" and g.order is None
     order = next(o for grp, o in result.pending if grp is g)
-    assert order.kind == "ambush"
+    assert order.kind == "fortress_ambush"
     assert len(order.pack) == forced.FORTRESS_AMBUSH_SIZE
     mission = missions._active_trust_mission(guild)
     assert mission.ambush_done

@@ -1057,6 +1057,40 @@ Design premises that hold across the whole game:
   ground objects where they were last seen, never a unit. Every board starts black; a flag
   or trap placement reveals the cells it offers (the squad walked its own half).
 
+### Where fights come from 🟡
+
+Every fight the world starts has a **nature**, declared by the code that starts it (`fight_nature`), so
+a rule that belongs to only some fights reads it. The test: *if the group were twice as strong, would
+this attacker still come?*
+
+- **opportunist**: no. A pack that picks its prey by the odds; only these get a win-chance check.
+- **determined**: yes. It has a reason that ignores the odds: the law, the land, a foe the party
+  baited or a quest sent.
+- **sought**: the group went in; the player chose the risk.
+
+| Fight | Started by | Who brings it | What the group can do | Nature |
+|---|---|---|---|---|
+| Road ambush | an `unsafe` node on arrival | a pack off the node's table | talk (persuade, bluff, intimidate, bribe) or fight | opportunist |
+| Ambushed at work | a lumber yard or Mine shift (`gather_shift`) | a pack off the site's table | talk or fight | opportunist |
+| The caravan is attacked | a supply run's leg (`supply_leg`) | frontier raiders | talk or fight | opportunist |
+| Ambush in the Wilds | an hour of a hunt (`hunt_stretch`) | a Wilds pack (the Ogre's goblins while his fortress stands) | fight | opportunist |
+| Ambushed at Ledger Hold | the trust mission, arriving with the sealed chest | bandits after the chest | talk or fight | determined |
+| The Biwolf | a hunt after dark with the tanner's job out and the meat in the pack | the Biwolf and his escort | fight | determined |
+| Stopped by the guard | a jurisdiction node, members carrying crime | the City guard | surrender, bluff, bribe, run back, fight | determined |
+| Raid on the house | arriving at a squatted property | the City guard | fight | determined |
+| Raid on the claim | a day passing, a garrison sustaining the claim | raiders | fight | determined |
+| The claim is seized | a day passing, the claim established and garrisoned | raiders | fight | determined |
+| Title defense | entering the arena with the champion when the challenge is due | a challenger a level above | fight | determined |
+| Retake the claim | arriving at the claim after it was seized | the group | fight | sought |
+| The Claim's CLEAR and SWEEP | the claim's hub | the group | not go in | sought |
+| The Ancient Ruins, the Serpent's Nest, the Dragon's Lair | the node's order | the group | not go in; leave a watch on the wagon | sought |
+| The Battlefield, the necromancer, the Wildfire camps, the Ogre's fortress | the errand's order | the group | not go in; leave a watch on the wagon | sought |
+| The ox's trail | tracking in the Ox Fields | the group | not set out | sought |
+| An arena bout | the arena | the group | not stake | sought |
+
+A wagon left unguarded outside a dangerous place is no fight: one silent roll when the party comes out
+(`wagon_watch`).
+
 ### Identity 🟡
 
 Purely cosmetic, no mechanical effect: after the three squad picks, the draft's

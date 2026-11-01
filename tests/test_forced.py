@@ -28,7 +28,7 @@ def _threat(monkeypatch, **hooks):
         return forced.resume_arrival(guild, group, order)
 
     monkeypatch.setitem(forced.EVENTS, "test_threat",
-                        forced.ForcedEvent("test_threat", "battle", resolve, **hooks))
+                        forced.ForcedEvent("test_threat", "battle", "determined", resolve, **hooks))
     return settled
 
 
@@ -80,8 +80,8 @@ def test_arrival_catchers_run_in_registry_order_and_stop_at_the_first(monkeypatc
         return orders.Order("test_threat")
 
     monkeypatch.setattr(forced, "EVENTS", {
-        "a": forced.ForcedEvent("a", "battle", None, arrival=(first,)),
-        "b": forced.ForcedEvent("b", "battle", None, arrival=(second,)),
+        "a": forced.ForcedEvent("a", "battle", "determined", None, arrival=(first,)),
+        "b": forced.ForcedEvent("b", "battle", "determined", None, arrival=(second,)),
     })
     g = Group([Unit("player")], node="road")
     assert forced.arrival_pause(Guild(None, groups=[g]), g, None, ()) is not None

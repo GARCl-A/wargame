@@ -13,6 +13,7 @@ from .. import (
     combat_lab,
     encounters,
     factions,
+    fight_nature,
     forced,
     lair,
     missions,
@@ -34,6 +35,9 @@ from .claim_tab import FIGHTS
 from .report_session import ReportSession
 
 AFTER_CLAIM_FIGHT = {"SCOUTED": "CLEARED", "FENCED": "SWEPT"}
+CLAIM_NATURE = fight_nature.SOUGHT     # the Claim's CLEAR and SWEEP: the band goes in
+DELVE_NATURE = fight_nature.SOUGHT     # the Ruins, the Nest, the Lair
+ERRAND_NATURE = fight_nature.SOUGHT    # the Battlefield, the necromancer, the Wildfire camps and fortress
 
 
 def forced_fight(map_session, group, order, opening=None, swift=None):
@@ -50,8 +54,9 @@ def forced_fight(map_session, group, order, opening=None, swift=None):
         group.pending = None
         return forced.resolve(guild, group, order, outcome)
 
-    return _enter(map_session, group, battle, node, order.kind, forced.EVENTS[order.kind].label.capitalize(), settle,
-                  swift=swift)
+    event = forced.EVENTS[order.kind]
+    return _enter(map_session, group, battle, node, order.kind, event.label.capitalize(), settle,
+                  swift=swift, nature=event.nature)
 
 
 def claim_fight(map_session, group):
@@ -70,7 +75,7 @@ def claim_fight(map_session, group):
         {"CLEARED": guild.wilds_claim_mark_cleared, "SWEPT": guild.wilds_claim_mark_swept}[stage]()
         return [f"The Wilds claim advances -- now {stage.title()}."]
 
-    return _enter(map_session, group, battle, node, node.id, title, settle)
+    return _enter(map_session, group, battle, node, node.id, title, settle, nature=CLAIM_NATURE)
 
 
 def delve(map_session, group, kind):
@@ -109,7 +114,7 @@ def _delve(map_session, group, kind, title, build, squad, guarded):
         wagon_watch.leave_outside(group, node, guarded)
         return []
 
-    return _enter(map_session, group, battle, node, node.id, title, settle, squad=squad)
+    return _enter(map_session, group, battle, node, node.id, title, settle, squad=squad, nature=DELVE_NATURE)
 
 
 def _nest(guild, squad):
@@ -178,7 +183,7 @@ def _skirmish(map_session, group, mission, squad, guarded):
             notice, deeds = missions.settle_battlefield(guild, mission, outcome.won, battlefield.soldiers_lost(battle))
         return [notice, *(factions.deed_notice(d) for d in deeds)]
 
-    return _enter(map_session, group, battle, node, "skirmish", title, settle, squad=squad)
+    return _enter(map_session, group, battle, node, "skirmish", title, settle, squad=squad, nature=ERRAND_NATURE)
 
 
 def _wildfire(map_session, group, kind, focus, squad, guarded):
@@ -195,7 +200,7 @@ def _wildfire(map_session, group, kind, focus, squad, guarded):
         wagon_watch.leave_outside(group, node, guarded)
         return wildfire.settle_fight(guild, node.id, outcome.won)
 
-    return _enter(map_session, group, battle, node, kind, title, settle, squad=squad)
+    return _enter(map_session, group, battle, node, kind, title, settle, squad=squad, nature=ERRAND_NATURE)
 
 
 def _swift(battle, squad, result):
@@ -214,11 +219,15 @@ def _swift(battle, squad, result):
     battle.round_no = max(1, round(result.avg_rounds))
 
 
-def _enter(map_session, group, battle, node, kind, title, settle, *, squad=None, offer=None, after=None, swift=None):
+def _enter(map_session, group, battle, node, kind, title, settle, *, nature, squad=None, offer=None, after=None,
+           swift=None):
     """Every campaign fight starts here, as `App._enter_battle`: the world is saved first, so a bad
     fight can be undone. `squad` is who fights (the whole band unless an arena bout picked), `offer` the
     arena's `world.Bout`, `after(outcome)` where the report ends (the map, unless the fight says). With
-    `swift` (an `autowin.AutoWinResult`) the fight is settled at once, unplayed."""
+    `swift` (an `autowin.AutoWinResult`) the fight is settled at once, unplayed. `nature` is what the
+    source declared (`fight_nature`): one is owed by every fight, so a new source cannot forget it."""
+    if nature not in fight_nature.NATURES:
+        raise ValueError(f"unknown fight nature {nature!r}")
     guild, squad = map_session.guild, list(squad if squad is not None else group.members)
     if map_session.world_id is not None:
         foes = len(battle.enemy_units)
@@ -232,8 +241,8 @@ def _enter(map_session, group, battle, node, kind, title, settle, *, squad=None,
     day = guild.clock.day
     path = recorder.combat_log_path(f"d{day:03d}-{combat_lab.slug(f'{node.id}-{kind}')}")
     if path is not None:
-        battle.record_to(CombatLog(path, {"source": "campaign", "node": node.id, "kind": kind, "day": day},
-                                   {"player": "human", "enemy": "ai"}))
+        meta = {"source": "campaign", "node": node.id, "kind": kind, "nature": nature, "day": day}
+        battle.record_to(CombatLog(path, meta, {"player": "human", "enemy": "ai"}))
     battle.intel.bind("player", guild.bestiary, vocations.info_bonus(guild))
     session = BattleSession(battle, {"name": node.name, "sub": f"{title} · day {day}"},
                             then=lambda: _settle(map_session, group, squad, battle, node, kind, settle, offer, after),

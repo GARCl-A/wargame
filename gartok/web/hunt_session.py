@@ -257,8 +257,9 @@ class HuntSession(Session):
             return self._resume()
 
         title = "The ox's trail" if self.tracking else "The Biwolf" if s.biwolf else "Ambush in the Wilds"
+        nature = ox.TRACK_NATURE if self.tracking else hunt.BIWOLF_NATURE if s.biwolf else hunt.PACK_NATURE
         return _enter(self.map, self.group, battle, node, "hunt", title, settle, squad=list(s.party), after=after,
-                      swift=result)
+                      swift=result, nature=nature)
 
     def done(self):
         """Back to the map: the wagon left at the door is rolled for, silently, as `App._end_hunt`; a

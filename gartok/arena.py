@@ -25,7 +25,7 @@ any ordinary pit bout fields him as one of the opponents. He never levels.
 
 import random
 
-from . import constants, encounters, i18n, npc_lib, world
+from . import constants, encounters, fight_nature, i18n, npc_lib, world
 from .dialogue import BossTalk
 
 CHAMPION_SLUG = "adelio-small-knife"
@@ -40,6 +40,9 @@ CHALLENGE_CYCLE = 15            # days between formal title challenges
 CHALLENGE_GRACE = 7           # days the champion has to reach the arena and defend
 
 ADELIO_CAMEO_CHANCE = 0.05    # chance an ordinary pit bout fields the dethroned Adelio
+
+BOUT_NATURE = fight_nature.SOUGHT          # the band picks the bout and stakes it
+DEFENSE_NATURE = fight_nature.DETERMINED    # the challenger comes when the cycle is due
 
 CHAMPION_MAP = "the-pit"          # the hand-laid arena the title bout is fought on
 

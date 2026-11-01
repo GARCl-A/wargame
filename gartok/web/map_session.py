@@ -225,7 +225,7 @@ class MapSession(MapView, Session):
 
     def _chip(self, g):
         if g.fight_due:
-            return "Ambushed" if g.pending.kind == "ambush" else "Fight due", "bad"
+            return "Ambushed" if g.pending.kind in ("ambush", "fortress_ambush") else "Fight due", "bad"
         o = g.order
         if o is None or o.kind == "idle":
             return "No orders", "idle"

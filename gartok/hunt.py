@@ -19,7 +19,19 @@ ambush battles so a screen rebuilt after a fight can pick the hunt back up.
 import random
 from dataclasses import dataclass, field
 
-from . import clock, data, encounters, missions, npc_lib, vocations, wildfire
+from . import (
+    clock,
+    data,
+    encounters,
+    fight_nature,
+    missions,
+    npc_lib,
+    vocations,
+    wildfire,
+)
+
+PACK_NATURE = fight_nature.OPPORTUNIST     # a Wilds pack picks its prey
+BIWOLF_NATURE = fight_nature.DETERMINED    # the party baited him with the meat
 
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield of 1.0

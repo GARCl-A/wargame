@@ -57,10 +57,10 @@ def title_defense(map_session, group):
     enemies, scenario = matchup.build(node, offer, squad_size=1, guild=guild)
     battle = Battle([champ], enemies, scenario=scenario, daylight=guild.clock.is_daylight, lethal=False,
                     arena=True, clock_day=guild.clock.day)
-    return _bout(map_session, group, [champ], battle, node, offer)
+    return _bout(map_session, group, [champ], battle, node, offer, arena.DEFENSE_NATURE)
 
 
-def _bout(map_session, group, squad, battle, node, offer):
+def _bout(map_session, group, squad, battle, node, offer, nature):
     guild = map_session.guild
 
     def settle(outcome):
@@ -82,7 +82,7 @@ def _bout(map_session, group, squad, battle, node, offer):
         return {"screen": session.screen}
 
     return _enter(map_session, group, battle, node, offer.name, offer.name, settle,
-                  squad=squad, offer=offer, after=after)
+                  squad=squad, offer=offer, after=after, nature=nature)
 
 
 class ArenaSession(Session):
@@ -169,11 +169,14 @@ class ArenaSession(Session):
         battle = Battle(squad, enemies, scenario=scenario, daylight=guild.clock.is_daylight, lethal=node.lethal,
                         arena=node.arena, clock_day=guild.clock.day)
         talk = arena.boss_talk(guild, offer)
+        def go():
+            return _bout(self.map, self.group, squad, battle, node, offer, arena.BOUT_NATURE)
+
         if talk is None:
-            return _bout(self.map, self.group, squad, battle, node, offer)
+            return go()
         from .dialogue_session import boss_talk
         guild.boss_talks_seen.add(arena.boss_talk_key(offer))
-        session = boss_talk(self.map, self.group, talk, lambda: _bout(self.map, self.group, squad, battle, node, offer))
+        session = boss_talk(self.map, self.group, talk, go)
         self.map.game.open(session)
         return {"screen": session.screen}
 

@@ -97,30 +97,6 @@ the rest.
   keeps the clock, the party, the yield and the ambush; a save with the hunt screen open (setup,
   interlude) still refuses or keeps working as it does now.
 
-- **Audit: which fights are ambushes and which are not (author 2026-10-31).** Do it before *An ambush
-  needs a pack with a chance to win*, because the check only belongs to the ambushes.
-  List every place the game starts a fight (road legs, gather shifts, Wilds hunt, supply run,
-  Ledger Hold, wagon watch, node fights such as the Ruins and the Serpent's Nest, the arena, forced
-  events, quests) in a table in `RULES.md` with its kind: **ambush** (the pack comes to the group; the
-  win-chance check applies), **sought** (the group goes in: the player chose the risk, no check) or
-  **forced** (a quest or story fight). Each row names who starts it and what the group can do (flee,
-  pay, hide). Put the kind on the code that rolls it (one field, not a comment) so the check reads it.
-  Output: the table, the field, a test that every fight source has a kind. Expect to find fights that
-  should change kind (a Ruins visit that behaves like an ambush); each is a short question for the author.
-  Where fights start today (read 2026-11-01), the three paths the field has to cover:
-  1. *A forced event* (`forced.EVENTS`, one `ForcedEvent` per order kind): caught on arrival at a node
-     (`road_ambush_catch`, the guard, the house raid, the claim retake), by a daily check (the claim's
-     raid and seizure) or by the work that rolls it (`Guild.gather_shift`, `Guild.supply_leg`). The catch
-     returns an `Order` with its `pack`, the group gets `pending` and is locked, the event is played as
-     `battle` / `map` / `talk`, and its `resolve` settles it.
-  2. *The Wilds hunt*: not a `ForcedEvent`; `hunt.py` rolls the ambush hour by hour inside the stretch
-     and `HuntSession` runs the fight and picks the hunt back up.
-  3. *Sought fights*: a node's own screen starts the battle (the Ruins, the Serpent's Nest, the arena,
-     the quests).
-  Proposal for the field: a `nature` on `ForcedEvent` (most ambushes live there) plus the same constant
-  declared by the hunt and by each node fight; the test walks the three. To decide with the author at the
-  audit.
-
 - **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided 2026-11-01).** On day 105 a
   guild of eight stopped for two wolves. The premise: an ambush only exists if the pack would plausibly
   attack that group. **The chance of an ambush does not change** (`world.ROAD_AMBUSH_CHANCE`,
@@ -130,13 +106,14 @@ the rest.
   would, the ambush happens as today. If not, **nothing happens and the player never learns of it**: no
   log line, no board, the group keeps its clock; it simply avoided the ambush by being too strong for
   it. In code the check sits where each ambush is caught (the catch returns None, `gather_shift` banks the
-  haul, the hunt stretch keeps spending hours), so only the fights the audit marks **ambush** get it,
-  never a forced or story fight (`Group.pending` from a quest, the Biwolf escort). The hunt rolls its pack
+  haul, the hunt stretch keeps spending hours), so only the fights whose `nature` is
+  `fight_nature.OPPORTUNIST` get it (`RULES.md`, *Where fights come from*), never a determined or sought
+  one (the Biwolf, the Ledger Hold bandits, the guard, the claim's raiders). The hunt rolls its pack
   at arrival today; the check needs it rolled in the stretch, which feeds *A hunt out on the clock must
   survive a save*. Open: the threshold, the pack's win chance below which it does not attack (a first
   guess is ~15%, tuned with `sim_test.py`).
   Tests: eight L3 against two L0 wolves never opens a fight and leaves no trace in the log, a lone L0
-  against the same wolves does, the ambush chance itself is unchanged, forced fights are untouched, the
+  against the same wolves does, the ambush chance itself is unchanged, determined and sought fights are untouched, the
   `ai/` side is unaffected (the foe only decides inside a battle).
 
 - **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
