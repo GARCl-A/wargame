@@ -156,8 +156,8 @@ the rest.
 
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
-  copy it into `.claude/skills/<name>/SKILL.md`, then check it against the map in
-  `clean_documentation_checklist.md`: no rule an owner doc already holds, no pointer to a file that is
+  copy it into `.claude/skills/<name>/SKILL.md`, then check it against the owner list in
+  `AGENTS.md`: no rule an owner doc already holds, no pointer to a file that is
   gone, one line in `AGENTS.md` only if an agent would break something without it. Nothing in the repo
   depends on them being there.
 

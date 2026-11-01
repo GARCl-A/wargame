@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PLANS = ROOT / "docs" / "plans"
-DOCS = [*sorted(p for p in PLANS.glob("*.md") if p.name != "clean_documentation_checklist.md"),
+DOCS = [*sorted(PLANS.glob("*.md")),
         ROOT / "docs" / "economy_sim.md", ROOT / "tests" / "README.md"]
 PROPOSED = {"gartok/version.py"}        # a file an open backlog item says to create
 TEXT = {p: p.read_text(encoding="utf-8") for p in DOCS}
@@ -51,7 +51,7 @@ def test_every_module_attribute_they_name_exists():
 def test_no_plan_is_forgotten_by_the_backlog():
     backlog = (PLANS / "backlog.md").read_text(encoding="utf-8")
     forgotten = [p.name for p in PLANS.glob("*.md")
-                 if p.name not in ("backlog.md", "clean_documentation_checklist.md") and p.name not in backlog]
+                 if p.name != "backlog.md" and p.name not in backlog]
     assert not forgotten, f"plans the backlog does not point to: {forgotten}"
 
 
