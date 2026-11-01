@@ -63,8 +63,8 @@ wins). A dated decision is kept only in the doc that owns it, with its date as p
 - [x] `recordings/*/README.md` (4 files) — merged into one `recordings/README.md`: the four repeated the recorder blurb and the `saves/` note. Dead pointers dropped (`economy_guild.py --policies human --profile`: the `human` policy was folded into `balanced`; the backlog item *Feed the recorded runs*: no longer in `backlog.md`). Day and fight counts re-read from the `.jsonl` files. The three `human_profile*.json` were deleted (`play_analysis.py` regenerates them).
 
 ## Licenses
-- [ ] `gartok/assets/icons/LICENSE.txt`
-- [ ] `gartok/assets/sounds/LICENSE.txt`
+- [x] `gartok/assets/icons/LICENSE.txt`
+- [x] `gartok/assets/sounds/LICENSE.txt`
 
 ## Agent skills and rules
 
