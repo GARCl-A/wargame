@@ -15,6 +15,7 @@ from . import (
     rest,
     scenario,
     serpent_nest,
+    stints,
     wildfire,
     world,
 )
@@ -75,11 +76,15 @@ class MapView:
             if o.path:                            # more waypoints still to come
                 return f"→ {dest_name} via {world.node(o.dest).name} ({o.remaining:g} h)"
             return f"→ {dest_name} ({o.remaining:g} h)"
+        if stints.is_stint(o):
+            return f"{stints.doing(o)} ({o.remaining:g} h left)"
         if o.kind == "work":
             doing = "gathering" if o.gather else "searching" if o.task in campaign.SEARCHES else "working"
             return f"{doing} ({o.remaining:g} h left)"
         if o.kind == "rest":
             return f"resting ({rest.format_hours(o.remaining)} left)"
+        if o.kind == "hunting":
+            return f"hunting ({o.remaining:g} h left)"
         if o.kind == "solo":
             doing = "in the hospital" if o.task == "hospital" else f"crafting {o.recipe}"
             return f"{doing} ({o.remaining:g} h left)"

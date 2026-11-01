@@ -1038,6 +1038,12 @@ Design premises that hold across the whole game:
   a character's pack; paying spends copper first, then breaks gold and returns change.
 - **Adventure out-earns day labour.** The lumber yard is a floor (16 h buys the cheapest
   meal plus $1); the arena and the wilds pay more for the risk.
+- **One clock.** The guild's groups share one clock and none of them waits for another: every hour a
+  group spends (a road, a shift, a show on the tavern stage, a Medic's visit, a craft, the claim's work,
+  a repair, a stretch of a hunt) is an order, and only `campaign.advance` runs the clock, every order
+  with it. A screen that spends hours (`MapSession.spend`) stays up with what came of them when their
+  end is all that stopped the clock; when another group goes idle or something falls due first, the map
+  takes over at that hour and the order runs on there (`stints.py`).
 - **Vision is per-character**: you see what the active unit sees.
 - **Fog of war**: the side remembers what any of its members saw this fight. Light is drawn per
   cell (one tone for each cell in sight, by its distance to the light that reaches it). A cell never
@@ -1107,7 +1113,8 @@ different questions:
   wagons 1 HP. A wagon cannot die: at 0 HP it *breaks* (like an Automaton) and
   stays with the group, drawing nothing and carrying nothing; its animals are
   freed but stay in the herd. REPAIR (the wagon's column on the Group screen,
-  or the garage) costs 1 Lumber per Hit Die and 1 hour, and the member with the
+  or the garage, a `repair` stint for an idle group) costs 1 Lumber per Hit Die, taken
+  as it starts, and 1 hour, and when it is up the member with the
   best Intelligence modifier rolls d20 + INT against DC 15; a success mends
   half its maximum HP (rounded up), and it works on a wagon that is only hurt.
   A miss still spends the Lumber and the hour. A broken wagon in a garage
@@ -1323,8 +1330,8 @@ map; `orders.work(..., gather=True)`) instead of the wage.
 ### The tavern stage: busking for tips 🟡
 
 The PERFORM tab of the Tavern (`tavern.Tavern`). Rule in
-`Guild.perform_shift` / `economy.perform_pay`; unlike the yard it resolves
-right now (clock advanced through `pass_time`), no order.
+`Guild.perform_tips` / `economy.perform_pay`; like the yard it is an order (a `perform`
+stint, `stints.py`) that runs on the shared clock, and the tips are paid when the show ends.
 
 - **Who plays:** anyone with a **Musical Instrument** in the pack (the Musician's
   starting item); the rest of the party sits out. Show length: 1, 2 or 4 h.
@@ -1350,9 +1357,10 @@ abandoned craft doesn't get them back.
   craft does not start (`items.missing_tools`).
 
 - **Progress** rolls `1d20 + INT mod` per hour worked (`Unit.progress_crafting`,
-  driven by `Guild.crafting_shift`) toward the recipe's point target; hitting
+  driven by `Guild.craft_hours`) toward the recipe's point target; hitting
   it drops the finished item into the pack and clears the target.
-- **Two ways to work.** A shift (1, 4 or 8 h) makes the whole group wait out the hours. *Alone*
+- **Two ways to work.** A shift (1, 4 or 8 h) makes the whole group wait out the hours on a `solo`
+  order, every pack feeding the craft. *Alone*
   (4, 8 or 16 h) sends the crafter off on a `solo` order (`solo.py`): they split off into a group
   of their own (a free group slot, and only their own pack feeds the craft) while the others
   act, and the progress is rolled when the hours are up. They stay where they are until the
@@ -1380,8 +1388,8 @@ abandoned craft doesn't get them back.
 *expected* consumables: Minor Healing Potions for lost HP (`MEDIC_POTION_HP` = 3.5 each),
 one First Aid Kit charge for sickness, Antidotes for poison, all at
 `MEDIC_PRICE_FACTOR` (0.7) of the catalogue price. Treating HP takes
-`MEDIC_HP_HOURS`, sickness `MEDIC_SICKNESS_HOURS`; the clock moves for the whole group by
-the longest treatment picked. Past `MEDIC_MAX_HOURS` (24) it is a **hospital stay**: the
+`MEDIC_HP_HOURS`, sickness `MEDIC_SICKNESS_HOURS`; the group pays up front and waits out the
+longest treatment picked on a `treat` stint, the patients cured when it ends. Past `MEDIC_MAX_HOURS` (24) it is a **hospital stay**: the
 patient splits off into a group of their own on a `solo` order and leaves cured when the
 hours run out (with no free group slot the group waits instead). The economy sim prices
 the Medic from the same constants.
@@ -1430,7 +1438,10 @@ shop, potion brewing, the Medic and jobs.
 
 The `wilds` node (`kind = "wilds"`). Its first activity is **Hunt**: `hunt.py` +
 `web/hunt_session.py`. Pick a party and a shift; the hunt spends hours one at a time,
-with a per-hour **ambush** chance (`hunt.AMBUSH_CHANCE_PER_HOUR`). An ambush drops
+with a per-hour **ambush** chance (`hunt.AMBUSH_CHANCE_PER_HOUR`). Each stretch up to an ambush or
+the shift's end is rolled as it starts and runs as a `hunting` order on the shared clock: the screen
+opens again when it is up (after the hand-over card when the map was on another group). A hunt is
+never saved: a load finds the party back, empty-handed. An ambush drops
 the party into a **lethal** fight against a scaled pack (`encounters.roll_pack`,
 mean level 0–4). Win it → field loot, and if daylight is left you may keep
 hunting. Meat accrues at 1 kg per 2 hours **at a party yield of 1.0**, split among

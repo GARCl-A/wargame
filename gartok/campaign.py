@@ -43,6 +43,7 @@ from . import (
     recorder,
     serpent_nest,
     solo,
+    stints,
     vocations,
     wildfire,
     world,
@@ -369,7 +370,7 @@ def _advance(guild, dt=None, busy=()):
 
     before_levels = {u.uid: aftermath.level_snapshot(u) for u in guild.roster}
     start_day = guild.clock.day
-    events, casualties = guild.run_clock(dt, busy=busy)
+    events, casualties = guild.pass_time(dt, busy=busy)
     days_crossed = guild.clock.day - start_day
     if jumped:
         events += guild.eat_now_pass()
@@ -437,6 +438,8 @@ def _advance(guild, dt=None, busy=()):
         elif order.kind == "work" and order.task in SEARCHES:
             _found, msg = SEARCHES[order.task][1](guild, g)
             events.append(msg)
+        elif stints.is_stint(order):
+            events += stints.settle(guild, g, order)
         elif order.kind == "work":
             events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
         elif order.kind == "rest":
@@ -448,6 +451,8 @@ def _advance(guild, dt=None, busy=()):
                 events.append(f"{g.display_name}: stopped resting before midnight to keep a day of rations ({who}).")
         elif order.kind == "solo":
             events += solo.finish(guild, g, order)
+        elif order.kind == "hunting":          # a hunt's stretch is up: its screen says what sprang
+            pending.append((g, order))
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
     forced_events, forced_pending = forced.daily_checks(guild, days_crossed)

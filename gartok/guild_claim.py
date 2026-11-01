@@ -43,35 +43,61 @@ class WildsClaimMixin:
     def claim_build_oven(self, crew):
         """Build the oven: Stone Brick pooled from `crew`'s packs and a stretch of the clock.
         Unlike the campfire it never goes out, and it stays standing if the claim is seized.
-        Returns `(built, events, casualties)`."""
+        The headless shortcut of a `claim_oven` stint. Returns `(built, events, casualties)`."""
+        short = self.claim_oven_short(crew)
+        if short:
+            return False, [short], []
+        self.claim_oven_bricks(crew)
+        events, casualties = self.tick(economy.CLAIM_OVEN_HOURS, busy=crew)
+        return True, self.claim_oven_built() + events, casualties
+
+    def claim_oven_short(self, crew):
+        """Why `crew` cannot build the claim's oven now, or None."""
         if self.claim_oven:
-            return False, ["the claim already has an oven."], []
+            return "the claim already has an oven."
         have = sum(u.count_of(economy.CLAIM_OVEN_BRICK) for u in crew)
         if have < economy.CLAIM_OVEN_BRICKS:
-            return False, [f"the oven needs {economy.CLAIM_OVEN_BRICKS} {economy.CLAIM_OVEN_BRICK}; "
-                           f"the group carries {have}."], []
+            return f"the oven needs {economy.CLAIM_OVEN_BRICKS} {economy.CLAIM_OVEN_BRICK}; the group carries {have}."
+        return None
+
+    def claim_oven_bricks(self, crew):
+        """The oven's Stone Brick, out of `crew`'s packs as the work starts."""
         left = economy.CLAIM_OVEN_BRICKS
         for u in crew:
             left -= u.remove_named(economy.CLAIM_OVEN_BRICK, left)
-        events, casualties = self.pass_time(economy.CLAIM_OVEN_HOURS, busy=crew)
+
+    def claim_oven_built(self):
         self.claim_oven = True
         recorder.emit("asset", what="claim_oven")
-        return True, ["the oven is built -- the claim can cook, fire or no fire."] + events, casualties
+        return ["the oven is built -- the claim can cook, fire or no fire."]
 
     def wilds_claim_light_campfire(self, crew):
         """Build a fire at the claim: one unit of fuel from someone's pack, an hour
         of the clock, and a WIS check by the best of `crew`. The fuel is gone
-        whether or not the fire catches. Returns `(lit, events, casualties)`."""
+        whether or not the fire catches. The headless shortcut of a `claim_fire` stint.
+        Returns `(lit, events, casualties)`."""
+        if not self.claim_fire_fuel(crew):
+            return False, [f"nobody has {economy.CAMPFIRE_FUEL} to burn."], []
+        events, casualties = self.tick(economy.CAMPFIRE_HOURS, busy=crew)
+        lit, lines = self.claim_fire_catch(crew)
+        return lit, lines + events, casualties
+
+    def claim_fire_fuel(self, crew):
+        """One unit of fuel out of someone's pack as the work starts; False when nobody has any."""
         fuel = next((u for u in crew if u.count_of(economy.CAMPFIRE_FUEL)), None)
         if fuel is None:
-            return False, [f"nobody has {economy.CAMPFIRE_FUEL} to burn."], []
+            return False
         fuel.remove_named(economy.CAMPFIRE_FUEL)
-        events, casualties = self.pass_time(economy.CAMPFIRE_HOURS, busy=crew)
+        return True
+
+    def claim_fire_catch(self, crew):
+        """The hour is up: a WIS check by the best of `crew` says whether the fire caught.
+        -> `(lit, lines)`."""
         best = max(crew, key=lambda u: u.mod_wisdom)
         if data.roll(1, 20) + best.mod_wisdom >= economy.CAMPFIRE_DC:
             self.wilds_claim_campfire = True
-            return True, ["the fire catches -- the claim has a hearth now."] + events, casualties
-        return False, ["the wood won't catch -- the fuel is wasted."] + events, casualties
+            return True, ["the fire catches -- the claim has a hearth now."]
+        return False, ["the wood won't catch -- the fuel is wasted."]
 
     def claim_garrison(self):
         """The living group parked, garrisoning, at the claim node right now, or None."""

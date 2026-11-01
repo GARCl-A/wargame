@@ -332,23 +332,6 @@ def test_a_trip_cancelled_on_the_road_ends_at_the_next_node_not_the_far_one():
     assert a.node == path[1] and not a.busy
 
 
-def test_hours_spent_off_the_map_run_the_other_bands_and_leave_what_falls_due_waiting():
-    guild = _guild("city", "market")
-    s = _game(guild).session
-    a, b = guild.groups
-    a.order = orders.rest(8)
-    t0 = guild.clock.seconds
-    events, dead = s.tick_outside(3, busy=b.members)
-    assert guild.clock.seconds - t0 == 3 * 3600 and dead == []
-    assert 4.9 < a.order.remaining < 5.1 and not s.pending
-
-    c = guild.groups[0]
-    c.order = orders.interactive("bank")
-    c.order.remaining = 1
-    s.tick_outside(2, busy=b.members)
-    assert [(g, o.kind) for g, o in s.pending] == [(c, "bank")]
-
-
 def test_two_due_screens_open_one_at_a_time_and_the_map_comes_back_after_the_last():
     guild = _guild("city", "market")
     a, b = guild.groups

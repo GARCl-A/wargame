@@ -1,13 +1,15 @@
 """The hunt in the browser, as pygame's `HuntScreen` and `TrackScreen` play it through `app_hunt`: who minds
-the wagon (`watch_screen`), what to look for and for how long, each stretch of hours on the clock
-(`MapSession.tick_outside`, so the other bands keep in step), an ambush or the ox's trail fought as a
-campaign fight (`campaign_fight._enter`) that comes back here, then the haul banked and the map.
+the wagon (`watch_screen`), what to look for and for how long, each stretch of hours, an ambush or the ox's
+trail fought as a campaign fight (`campaign_fight._enter`) that comes back here, then the haul banked and the map.
 
-The live hunt is a `hunt.HuntState` held by this session; like pygame, a hunt is never saved."""
+A stretch is rolled as it starts and runs as a `hunting` order (`MapSession.spend`), so every other band's
+order runs with it and the map takes over when another band needs the person; the map keeps this session in
+`MapSession.hunts` and opens it again (`arrive`) when the stretch is up. The live hunt is a `hunt.HuntState`
+held by this session; like pygame, a hunt is never saved (`persist` drops a `hunting` order on load)."""
 
 from typing import ClassVar
 
-from .. import hunt, missions, ox, progression, wagon_watch, wildfire, world
+from .. import hunt, missions, orders, ox, progression, wagon_watch, wildfire, world
 from ..battle import Battle
 from ..map_view import node_icon
 from ..unit import distribute_load
@@ -60,6 +62,7 @@ class HuntSession(Session):
         self.events = []                   # what the clock did during the last stretch
         self.result = None                 # `hunt.grant_haul`'s lines, once banked
         self.pack = None                   # the ambush waiting to be fought
+        self.found = None                  # the stretch out on the clock: what springs when it is up, or None
         self.look = Look()                 # its clean-stomp estimate
         self.notice = None
         if self.phase is None:
@@ -168,28 +171,39 @@ class HuntSession(Session):
         return self.state()
 
     def _stretch(self):
+        """Roll the stretch and send the party out on it: a `hunting` order the map's clock runs."""
         s, guild = self.state_, self.guild
         self.notice = None
         if self.tracking:
             elapsed, found = ox.track(s, guild)
-            pack = ox.aurochs_pack if found else None
+            pack = ox.aurochs_pack
         else:
             lure = hunt.biwolf_lure(guild, s.party)
             s.biwolf = False
             elapsed, found = hunt.hunt_stretch(s, hour=guild.clock.hour_of_day, lure=lure)
             pack = (lambda: hunt.biwolf_pack(guild)) if s.biwolf else (lambda: hunt.wilds_pack(guild=guild))
-        self.events, _dead = self.map.tick_outside(elapsed, busy=s.party)
+        self.found = pack if found else None
+        self.phase = "out"
+        self.map.hunts[self.group.gid] = self
+        order = orders.Order("hunting", eta=elapsed, remaining=elapsed, crew=tuple(u.uid for u in s.party))
+        return self.map.spend(self.group, order)[1]
+
+    def arrive(self):
+        """The stretch is up (the map's clock ran it): an ambush springs, or the hunt is over."""
+        s, guild, m = self.state_, self.guild, self.map
+        self.events, m.notices = m.notices, []
         s.party = [u for u in s.party if u in guild.roster]
-        if guild.empty or not s.party or not found:
+        found, self.found = self.found, None
+        if guild.empty or not s.party or found is None:
             self._wrap_up()
         else:
             s.fights += 1
-            self.pack = pack()
+            self.pack = found()
             self.phase = "ambush"
             self.look.clear()
             if not self.tracking:
                 self.look.of(s.fights, s.party, self.pack, self.node.scenario, guild.clock.is_daylight, self.node.lethal)
-        return self.state()
+        return self._resume()
 
     def _wrap_up(self):
         self.phase = "done"
@@ -250,6 +264,7 @@ class HuntSession(Session):
         """Back to the map: the wagon left at the door is rolled for, silently, as `App._end_hunt`; a
         hunt that spent no hours leaves it where it stood."""
         self._phase("done")
+        self.map.hunts.pop(self.group.gid, None)
         if self.state_.hours_hunted:
             wagon_watch.leave_outside(self.group, self.node, self.guarded)
         from .dialogue_session import _to_map

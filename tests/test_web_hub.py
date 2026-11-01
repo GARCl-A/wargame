@@ -1290,30 +1290,3 @@ def test_every_hub_a_node_offers_opens_on_every_one_of_its_tabs():
             for key, _label in hub.tabs:
                 assert hub.pick_tab(key)["tab"] == key, (node.id, f.order_kind, key)
 
-
-def test_a_show_on_the_stage_runs_the_other_bands_wage_shift_to_its_end_and_pays_it():
-    from gartok import orders
-    from tests.helpers import packed
-    hub, guild, g = _hub("tavern", "recruit")
-    bard = g.members[0]
-    bard._base_inventory = packed(["Musical Instrument"])
-    miller = standard_unit()
-    miller.give_to_pack("Potato", 6)
-    mill = Group([miller], node="lumber_yard", leader=miller)
-    guild.groups.append(mill)
-    mill.order = orders.work(guild, mill, 4)
-    miller.money = 0
-    hub.tavern.s.perform_hours = 4
-    hub.perform()
-    assert not mill.busy and miller.money > 0
-
-
-def test_every_hour_a_band_spends_off_the_map_runs_the_other_bands_orders_too():
-    from gartok import orders
-    hub, guild, g = _hub("lumber_yard", "recruit")
-    miller = standard_unit()
-    mill = Group([miller], node="lumber_yard", leader=miller)
-    guild.groups.append(mill)
-    mill.order = orders.rest(8)
-    guild.work_shift(g.members, 3)
-    assert 4.9 < mill.order.remaining < 5.1

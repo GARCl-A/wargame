@@ -205,36 +205,45 @@ def test_the_band_repairs_a_broken_wagon_and_rehitches_it():
     group.wear_wagons(0)
     scr = BandKit(guild, group)
     assert wagon.needs_repair
+    group.order = scr._handle_button(f"repair:{wagon.uid}")
+    assert group.order.task == "repair" and not any(u.count_of("Lumber") for u in group.members)
     with fixed_d20(20):
-        scr._handle_button(f"repair:{wagon.uid}")
-    assert wagon.hp == 3 and group.pulling(horse) is wagon
-    assert not any(u.count_of("Lumber") for u in group.members)
+        campaign.advance(guild)
+    assert wagon.hp == 3 and group.pulling(horse) is wagon and not group.busy
+
+
+def test_a_busy_band_cannot_start_a_repair():
+    from gartok.band_kit import BandKit
+    guild, group, wagon, _ = _setup("Cart", lumber=1)
+    wagon.hp = 1
+    group.order = orders.rest(8)
+    scr = BandKit(guild, group)
+    assert scr._handle_button(f"repair:{wagon.uid}") is None and "busy" in scr.notice
+    assert group.members[0].count_of("Lumber") == 1
 
 
 # --------------------------------------------------------------------------- #
 # the hour of a repair goes through the world's clock                           #
 # --------------------------------------------------------------------------- #
 
-def test_the_repair_hour_runs_through_the_tick_it_is_given():
+def test_the_repair_hour_runs_every_other_bands_order_too():
     guild, group, wagon, _ = _setup("Cart", lumber=1)
     wagon.hp = 1
-    seen = []
-
-    def tick(hours, busy=()):
-        seen.append((hours, list(busy)))
-        return ["a quiet hour."], []
-
+    other = Group([_unit(0)], node="city")
+    guild.groups.append(other)
+    other.order = orders.rest(5)
     with fixed_d20(20):
-        ok, events, _ = guild.repair_wagon(group.members, wagon, tick)
-    assert ok and seen == [(1, group.members)] and "a quiet hour." in events
+        ok, _events, _ = guild.repair_wagon(group.members, wagon)
+    assert ok and 3.9 < other.order.remaining < 4.1
 
 
 def test_someone_who_starves_during_the_repair_is_reported():
     guild, group, wagon, _ = _setup("Cart", lumber=1)
     wagon.hp = 1
     victim = group.members[0]
+    guild.tick = lambda hours, busy=(): ([], [victim])
     with fixed_d20(20):
-        ok, events, dead = guild.repair_wagon(group.members, wagon, lambda hours, busy=(): ([], [victim]))
+        ok, events, dead = guild.repair_wagon(group.members, wagon)
     assert ok and dead == [victim] and f"{victim.name} starved to death." in events
 
 
@@ -242,5 +251,6 @@ def test_a_refused_repair_does_not_run_the_clock():
     guild, group, wagon, _ = _setup("Carriage", lumber=1)
     wagon.hp = 1
     ticks = []
-    ok, _events, _ = guild.repair_wagon(group.members, wagon, lambda *a, **k: ticks.append(a) or ([], []))
+    guild.tick = lambda *a, **k: ticks.append(a) or ([], [])
+    ok, _events, _ = guild.repair_wagon(group.members, wagon)
     assert not ok and ticks == [] and group.members[0].count_of("Lumber") == 1

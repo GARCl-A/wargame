@@ -3,8 +3,7 @@ with its HP and cargo, each animal with what it eats), on paper what the band ke
 bays and the price of the next one, or the Claim's risk with no garrison to watch it.
 
 The rules are `holdings.GarageDesk`'s, which pygame's `GarageScreen` reads too: a verb names a wagon or an
-animal by its uid and the tab presses the desk's verb on its index. The repair's hour runs through the `tick`
-the hub hands in.
+animal by its uid and the tab presses the desk's verb on its index. A repair is a stint the hub runs.
 """
 
 from .. import economy, wagon_watch
@@ -14,8 +13,8 @@ from .stable_tab import WAGON_GLYPH, _face
 
 
 class GarageTab:
-    def __init__(self, guild, group, node, tick=None, claim=False):
-        self.s = GarageDesk(guild, group, claim=claim, on_tick=tick)
+    def __init__(self, guild, group, node, claim=False):
+        self.s = GarageDesk(guild, group, claim=claim)
         self.claim = claim
         self.guild, self.group, self.node = guild, group, node
 
@@ -47,11 +46,19 @@ class GarageTab:
             self.s._act(f"take_animal:{self._index(garage.herd, uid)}")
 
     def repair(self, uid):
+        """-> the repair's stint, or None when it cannot start (the notice says why)."""
         garage, g = self.garage, self.group
         if any(w.uid == uid for w in garage.wagons):
-            self.s._act(f"repair_garaged:{self._index(garage.wagons, uid)}")
-        else:
-            self.s._act(f"repair_group:{self._index(g.wagons, uid)}")
+            return self.s._act(f"repair_garaged:{self._index(garage.wagons, uid)}")
+        return self.s._act(f"repair_group:{self._index(g.wagons, uid)}")
+
+    @property
+    def report(self):
+        return [self.s.notice] if self.s.notice else []
+
+    @report.setter
+    def report(self, lines):
+        self.s.notice = "  ".join(lines) or None
 
     def _wagon(self, w, parked):
         have = sum(u.count_of(wagon_mod.REPAIR_ITEM) for u in self.group.members)

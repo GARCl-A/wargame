@@ -4,7 +4,7 @@ SWEEP) are the front-end's to play (`guild_claim` says what they are). pygame's 
 `web/claim_tab.py` are the windows over `ClaimDesk`.
 """
 
-from . import economy, items, orders
+from . import economy, items, orders, stints
 
 
 class ClaimDesk:
@@ -44,26 +44,32 @@ class ClaimDesk:
         self.notice = (f"collected {taken} Lumber." if taken
                        else "no room to carry any Lumber right now.")
 
+    # the claim's work with hours to it: each returns its stint for the band, or None (the notice says why)
     def _scout(self):
-        events, _ = self.guild.pass_time(economy.WILDS_CLAIM_SCOUT_HOURS, busy=self.group.members)
-        self.guild.wilds_claim_scout()
-        self.notice = "  ".join(["the land is scouted -- ready to clear."] + events)
+        return stints.order("claim_scout", economy.WILDS_CLAIM_SCOUT_HOURS, self.group.members)
 
     def _build_fences(self):
         if self.guild.wilds_claim_fence_lumber < economy.WILDS_CLAIM_FENCE_LUMBER:
-            return
-        events, _ = self.guild.pass_time(economy.WILDS_CLAIM_FENCE_HOURS, busy=self.group.members)
-        self.guild.wilds_claim_build_fences()
-        self.notice = "  ".join(["the fences go up -- time to sweep the region."] + events)
+            return None
+        return stints.order("claim_fences", economy.WILDS_CLAIM_FENCE_HOURS, self.group.members)
 
     def _light_campfire(self):
-        self._built(self.guild.wilds_claim_light_campfire(self.group.members)[1])
+        if not self.guild.claim_fire_fuel(self.group.members):
+            self.notice = f"nobody has {economy.CAMPFIRE_FUEL} to burn."
+            return None
+        self._lightened()
+        return stints.order("claim_fire", economy.CAMPFIRE_HOURS, self.group.members)
 
     def _build_oven(self):
-        self._built(self.guild.claim_build_oven(self.group.members)[1])
+        short = self.guild.claim_oven_short(self.group.members)
+        if short:
+            self.notice = short
+            return None
+        self.guild.claim_oven_bricks(self.group.members)
+        self._lightened()
+        return stints.order("claim_oven", economy.CLAIM_OVEN_HOURS, self.group.members)
 
-    def _built(self, events):
-        self.notice = "  ".join(events)
+    def _lightened(self):
         for m in self.group.members:
             m._derive_combat()
 

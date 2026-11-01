@@ -311,16 +311,12 @@ class HubSession(Session):
         return self.state()
 
     def perform(self):
-        """A show on the stage: the clock passes its hours here, as pygame's does, and the tab stays up
-        with what the crowd tipped; a death that empties the band lands on the map."""
-        self.tavern.perform()
-        m = self.map
-        if m.wiped or not self.group.members:
-            m.game.open(m)
-            return m._after_order()
-        m._save()
-        self.tab = "perform"
-        return self.state()
+        """A show on the stage: a `perform` stint, run as the map's clock would (`_spent`)."""
+        order = self.tavern.show()
+        if order is None:
+            self.tab = "perform"
+            return self.state()
+        return self._spent("perform", self.tavern, order)
 
     @property
     def stash_key(self):
@@ -333,19 +329,14 @@ class HubSession(Session):
 
     @property
     def garage(self):
-        return self._tab("garage", "_garage", lambda g, grp, n: GarageTab(g, grp, n, tick=self._tick,
-                                                                       claim=self.order.kind == "claim"))
-
-    def _tick(self, hours, busy=()):
-        return self.map.tick_outside(hours, busy)
+        return self._tab("garage", "_garage", lambda g, grp, n: GarageTab(g, grp, n, claim=self.order.kind == "claim"))
 
     def on_garage(self, verb, *args):
-        verb(self.garage, *args)
-        m = self.map
-        if m.wiped or not self.group.members:
-            m.game.open(m)
-            return m._after_order()
-        m._save()
+        """A garage verb; a repair is a stint run as the map's clock would (`_spent`)."""
+        order = verb(self.garage, *args)
+        if order is not None:
+            return self._spent("garage", self.garage, order)
+        self.map._save()
         self.tab = "garage"
         return self.state()
 
@@ -370,14 +361,12 @@ class HubSession(Session):
         return self._tab("claim", "_claim", ClaimTab)
 
     def claim_work(self, verb):
-        """A piece of the claim's work done here: scouting, the fences and the hearth pass their hours as
-        pygame's do, and the tab stays up with what came of it; a death that empties the band lands on the map."""
-        self.claim.act(verb)
-        m = self.map
-        if m.wiped or not self.group.members:
-            m.game.open(m)
-            return m._after_order()
-        m._save()
+        """A piece of the claim's work: scouting, the fences and the hearth are stints run as the map's
+        clock would (`_spent`); the rest is done here and the tab stays up with what came of it."""
+        order = self.claim.act(verb)
+        if order is not None:
+            return self._spent("claim", self.claim, order)
+        self.map._save()
         self.tab = "claim"
         return self.state()
 
@@ -449,27 +438,20 @@ class HubSession(Session):
         return self.state()
 
     def craft(self, recipe, hours, alone):
-        """Put `hours` into `recipe`. With the group waiting the stint is rolled now and the clock passes
-        here, as pygame's does; alone, the crafter splits off on a solo task and the band goes back to the
-        map, where the clock runs."""
+        """Put `hours` into `recipe` on a `solo` order. With the group waiting the clock runs as the
+        map's would (`_spent`); alone, the crafter splits off and the band goes back to the map."""
         tab = self.bench
         recipe = tab.recipe(recipe)
         m = self.map
-        if alone:
-            ok, lines = tab.s._alone(recipe, hours)
-            if not ok:
-                tab.notice = lines[0]
-                return self.state()
-            m.notices += lines
-            m.game.open(m)
-            return m._after_order()
-        tab.report = tab.s._work(recipe, hours)
-        if m.wiped or not self.group.members:
-            m.game.open(m)
-            return m._after_order()
-        m._save()
-        self.tab = tab.key
-        return self.state()
+        ok, lines = (tab.s._alone if alone else tab.s._wait)(recipe, hours)
+        if not ok:
+            tab.notice = lines[0]
+            return self.state()
+        if not alone:
+            return self._spent(tab.key, tab)
+        m.notices += lines
+        m.game.open(m)
+        return m._after_order()
 
     def on_board(self, verb, *args):
         verb(self.board, *args)
@@ -486,22 +468,27 @@ class HubSession(Session):
         self.map.focus = self.group.gid
 
     def work(self, hours):
-        """A paid shift, as `App._work_shift` runs it: the clock runs as the map's would, and the tab
-        stays up with what the shift paid when its end is all that stopped it. Anything else (another
-        band idle, a screen or a fight due, a death) lands on the map, the shift still running there."""
+        """A paid shift: the clock runs as the map's would (`MapSession.spend`), and the tab stays up
+        with what the shift paid when its end is all that stopped it."""
         tab = self.working
         self._shift(hours)
+        return self._spent("work", tab)
+
+    def _spent(self, key, tab, order=None, said=()):
+        """Run the band's order through `MapSession.spend`: back on tab `key` with what it said (after
+        `said`, what issuing it said) in `tab.report`, or on whatever the map opens, `said` among its
+        notices, when something else stopped the clock first."""
+        if order is not None and self.group.busy:
+            raise ValueError(f"{self.group.display_name} is busy")
         m = self.map
-        if self.guild.needs_orders:
-            return m.back()
-        before = len(m.notices)
-        idle, dead = m._advance()
-        if m.wiped or self.group.busy or m.pending or dead or idle - {self.group.gid}:
-            return m.back()
-        tab.report = m.notices[before:]
-        del m.notices[before:]
-        m._save()
-        self.tab = "work"
+        start, said = len(m.notices), list(said)
+        m.notices += said
+        lines, landed = m.spend(self.group, order)
+        if landed is not None:
+            return landed
+        del m.notices[start:start + len(said)]
+        tab.report = [*said, *lines]
+        self.tab = key
         if m.level_ups:
             return m.open_level_ups(self._resume)
         return self.state()
@@ -528,13 +515,15 @@ class HubSession(Session):
         return self.state()
 
     def treat(self):
-        """Treat the picked patients (the clock passes their hours here, as pygame's does) or admit the
-        one picked for a stay. A stay the whole band waits out is an order: the band goes back to the
-        map and the clock runs there."""
-        if not self.ward.treat():
+        """Treat the picked patients, a `treat` stint run as the map's clock would (`_spent`), or admit
+        the one picked for a stay. A stay the whole band waits out goes back to the map, where the clock runs."""
+        ok, order = self.ward.treat()
+        if not ok:
             return self.state()
+        if order is not None:
+            return self._spent("medic", self.ward, order, said=self.ward.report)
         m = self.map
-        if m.wiped or not self.group.members or self.group.busy:
+        if self.group.busy:
             m.game.open(m)
             return m._after_order()
         m._save()

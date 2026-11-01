@@ -11,7 +11,7 @@ from collections import Counter
 from . import items, solo
 from .unit_loadout import pooled_unlocked
 
-WAIT_HOURS = (1, 4, 8)          # a stint the whole group waits out, here and now
+WAIT_HOURS = (1, 4, 8)          # a solo task the whole group waits out
 ALONE_HOURS = (4, 8, 16)        # a solo task: the crafter splits off and the map runs the clock
 
 
@@ -83,12 +83,12 @@ class Bench:
                 out.append((recipe_id, r_data, active))
         return out
 
-    def _work(self, recipe, hours):
-        """The picked crafter puts `hours` into `recipe` while the group waits: -> the lines it said."""
+    def _wait(self, recipe, hours):
+        """The picked crafter puts `hours` into `recipe` while the group waits on a `solo` order,
+        every pack feeding the craft: -> `(ok, lines)`."""
         if hours not in WAIT_HOURS:
             raise ValueError(f"no {hours} h stint")
-        result = self.guild.crafting_shift(self.selected_crafter, recipe, hours, pool=self._packs)
-        return result[0] if isinstance(result, tuple) else result
+        return solo.craft(self.guild, self.group, self.selected_crafter, recipe, hours, alone=False)
 
     def _alone(self, recipe, hours):
         """The picked crafter splits off on a solo task for `hours`: -> `(ok, lines)`."""

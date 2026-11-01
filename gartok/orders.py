@@ -63,6 +63,8 @@ class Order:
     gather: bool = False     # work: gather items at the node (gather.py) instead of taking the wage
     parley: dict | None = None  # forced: how the talk before the fight ended (`dialogue.Result.to_dict`), once rolled
     owed: float = 0.0        # supply run: hours of this leg still to walk past the ambush the order stops at
+    crew: tuple = ()         # stint: uids of the members it settles for (the performers, the patients)
+    wagon: str | None = None  # stint "repair": uid of the wagon being mended
 
     @property
     def interactive(self):

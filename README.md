@@ -122,6 +122,8 @@ gartok/
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk
                     (7-day notice, loot by alignment)
   solo.py           solo tasks (hospital stay, craft): one member busy apart from the group on a `solo` order
+  stints.py         hours a band spends where it stands (a show, a Medic's visit, the claim's work, a repair):
+                    a `work` order with its `task`, settled by `campaign.advance` when the hours are up
   medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab
   rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
@@ -239,6 +241,10 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
 - **New world system** (outside combat): the routine that passes time in
   `guild.pass_time` / `_daily_upkeep`; the battle result that returns to the
   roster in `campaign.absorb_battle`.
+- **New activity that spends hours** (a show, a repair, a piece of building): never a clock jump of
+  its own. It is an order: a `Stint` in `stints.STINTS` (its chip and how it settles) issued by the
+  place's desk, and the tab runs it with `HubSession._spent` (`MapSession.spend`), so every band's
+  order advances with it and the map takes over when another band needs the person.
 - **New faction or deed** (objective / reputation): a `Faction` or a `Deed` in
   `factions.py`. `Deed.check(guild, event)` runs in `factions.settle(guild,
   Event(kind, ...))`, which already fires after a battle (`campaign.absorb_battle`),

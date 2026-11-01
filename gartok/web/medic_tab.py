@@ -19,9 +19,10 @@ class MedicTab(medic.Ward):
         self.report = []                # what the last treatment said
 
     def treat(self):
-        ok, lines = self._treat()
+        """-> `(ok, order)`: the visit's stint for the band to run, None for a stay."""
+        ok, lines, order = self._treat()
         self.report = lines if ok else []
-        return ok
+        return ok, order
 
     def state(self):
         by_uid = {u.uid: u for u in self.group.members}

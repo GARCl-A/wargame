@@ -31,14 +31,14 @@ class LaborMixin:
 
     def work_shift(self, workers, hours, node_id="lumber_yard"):
         """A stint at a work node (the lumber yard outside the walls, the Mine), done right now:
-        advances the campaign clock through `pass_time` (a long shift can cross
+        advances the campaign clock through `tick` (a long shift can cross
         midnight and run the daily meal -- a starving worker may not live to be
-        paid) and then pays the crew. See `_pay_shift` for the pay/XP step alone
-        (used by the tick/orders engine, which advances the clock itself)."""
+        paid) and then pays the crew. The headless shortcut of a `work` order: see `_pay_shift`
+        for the pay/XP step alone (what `campaign.advance` runs when the order is up)."""
         hours = int(hours)
         crew = [u for u in workers if u in self.roster]
         clock_hours = hours * self.work_speedup(crew)
-        events, casualties = self.pass_time(clock_hours, busy=crew)
+        events, casualties = self.tick(clock_hours, busy=crew)
         events += self._pay_shift(workers, hours, clock_hours, node_id)
         return events, casualties
 
@@ -177,18 +177,22 @@ class LaborMixin:
         return gain
 
     def perform_shift(self, performers, hours):
-        """A show on the tavern stage, done right now: the clock runs through
-        `pass_time`, then each performer is tipped by their own Charisma
-        (an hourly Charisma test, `economy.perform_pay`). Anyone without an instrument sits it out."""
-        hours = int(hours)
+        """A show on the tavern stage, done right now (the headless shortcut of a `perform`
+        stint): the clock runs through `tick`, then `perform_tips` pays the crew."""
         crew = [u for u in performers if u in self.roster and economy.can_perform(u)]
         if not crew:
             return ["Nobody here has an instrument to play."], []
-        clock_hours = hours * self.work_speedup(crew)
-        events, casualties = self.pass_time(clock_hours, busy=crew)
+        events, casualties = self.tick(int(hours) * self.work_speedup(crew), busy=crew)
+        return events + self.perform_tips(crew, hours), casualties
+
+    def perform_tips(self, performers, hours):
+        """A show's end: each performer still standing is tipped by their own Charisma (an hourly
+        Charisma test, `economy.perform_pay`) and banks the work hours. -> the lines it said."""
+        hours = int(hours)
+        events = []
         shows = []
         xp_lines = []
-        for u in (u for u in crew if u in self.roster):     # a long show can starve one
+        for u in (u for u in performers if u in self.roster and economy.can_perform(u)):
             cha_mod = u.mod_charisma + int(u.talent_bonus("tavern_perform_bonus"))
             pay = economy.perform_pay(hours, cha_mod)
             shows.append((u, self._pay_worker(u, pay, hours, economy.PERFORM_LEVEL, xp_lines)))
@@ -196,7 +200,7 @@ class LaborMixin:
             tips = ", ".join(f"{u.name} {fmt_money(g)}" for u, g in shows)
             events.append(f"Tavern stage: played {hours} h ({tips}).")
             events += xp_lines
-        return events, casualties
+        return events
 
     def send_alone(self, group, unit, order, name):
         """Put `unit` on `order` apart from the rest of `group`: a lone group takes it as it is,
@@ -228,7 +232,8 @@ class LaborMixin:
 
     def crafting_shift(self, unit, recipe, hours, pool=None):
         """A stint at the forge/workbench, done right now:
-        advances the campaign clock through `pass_time` and rolls progress.
+        advances the campaign clock through `tick` and rolls progress (the headless shortcut of a
+        `solo` craft, which `solo.finish` rolls the same way).
         `pool` is the units whose packs feed the craft as one (the crafter's
         own first); without it only the crafter's pack counts. Padlocked
         items are never used."""
@@ -238,7 +243,7 @@ class LaborMixin:
         if blocked:
             return [blocked], []
         worked, made, progress_total = self.craft_hours(unit, recipe, hours, pool)
-        events, casualties = self.pass_time(worked * self.work_speedup([unit]), busy=[unit])
+        events, casualties = self.tick(worked * self.work_speedup([unit]), busy=[unit])
         return events + self.craft_report(unit, recipe, hours, worked, made, progress_total), casualties
 
     def craft_hours(self, unit, recipe, hours, pool):

@@ -21,6 +21,7 @@ from .. import (
     persist,
     recruit,
     rest,
+    stints,
     vocations,
     world,
 )
@@ -74,7 +75,6 @@ class MapSession(MapView, Session):
 
     def __init__(self, guild, world_id=None):
         self.guild = guild
-        guild.clock_hook = self.tick_outside
         self.world_id = world_id
         self.notices = []
         self.pending = []
@@ -82,6 +82,7 @@ class MapSession(MapView, Session):
         self.wiped = False
         self.look = Look()
         self.turn = None                         # the hand-over card up: {"gid", "action", "danger", "go"}
+        self.hunts = {}                          # gid -> the HuntSession whose stretch is out on the clock
         self.seen = None                         # the band last in view
         self._wait_out_the_sentence()
         due = self._pending_event              # a save taken with a fight due opens on that band
@@ -228,8 +229,9 @@ class MapSession(MapView, Session):
         o = g.order
         if o is None or o.kind == "idle":
             return "No orders", "idle"
-        label = ("gather" if o.kind == "work" and o.gather else "search" if o.task in campaign.SEARCHES
-                 else o.task if o.kind == "solo" else "travelling" if o.kind == "travel" else o.kind)
+        label = (stints.doing(o) if stints.is_stint(o) else "gather" if o.kind == "work" and o.gather
+                 else "search" if o.task in campaign.SEARCHES else o.task if o.kind == "solo"
+                 else "travelling" if o.kind == "travel" else o.kind)
         return label.replace("_", " "), "go" if o.kind == "travel" else "busy"
 
     def _band(self, g):
@@ -601,22 +603,31 @@ class MapSession(MapView, Session):
                     self.focus = next(iter(idle))
                 return idle, dead
 
-    def tick_outside(self, hours, busy=()):
-        """Hours spent off the map (a repair), run through `campaign.advance` as `App._tick_outside_map`
-        does, so the other bands keep in step and what falls due waits for the map."""
-        result = campaign.advance(self.guild, dt=hours, busy=busy)
-        self.pending += result.pending
-        self.level_ups += result.level_ups
-        self.notices += [f"{u.name} died." for u in result.casualties]
-        self.wiped = self.wiped or result.wiped
-        return result.events, result.casualties
+    def spend(self, group, order=None):
+        """`group` takes `order` (or the one it was just given) on a screen off the map, and the clock
+        runs as the map's would, every band's order with it. -> `(lines, None)` when the order's end is
+        all that stopped the clock: the screen stays up with what it said. Else `(None, answer)`: another
+        band idle or done, a screen or a fight due, a death, and the map takes over, the order still
+        running there."""
+        if order is not None:
+            group.order = order
+        self.focus = group.gid
+        if self.guild.needs_orders:
+            return None, self.back()
+        before = len(self.notices)
+        idle, dead = self._advance()
+        if self.wiped or group.busy or self.pending or dead or idle - {group.gid}:
+            return None, self.back()
+        lines = self.notices[before:]
+        del self.notices[before:]
+        self._save()
+        return lines, None
 
     def _wait_out_the_sentence(self):
-        """Every band went to the cells: no map to show, so the days pass (`Guild.pass_time`, which runs
+        """Every band went to the cells: no map to show, so the days pass (the daily upkeep runs
         `justice.release_due`) until the nearest release stands a band back up."""
         while not self.guild.groups and self.guild.jailed:
-            events, _dead = self.guild.pass_time(24)
-            self.notices += events
+            self.notices += campaign.advance(self.guild, dt=24).events
 
     def _land(self):
         """Open the next screen the clock left due, or land on the map; the answer is the screen open."""
@@ -660,6 +671,8 @@ class MapSession(MapView, Session):
     def _enter(self, group, order):
         """The screen `order` plays: the arena, the hunt, a search's find, an errand's fight, else its hub."""
         from .hub_session import HUB_KINDS, HubSession
+        if order.kind == "hunting":
+            return self.hunts[group.gid].arrive()
         if order.kind == "arena":
             from .arena_session import open_arena
             return open_arena(self, group)
