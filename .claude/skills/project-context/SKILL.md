@@ -68,8 +68,3 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `gartok-character-creator.md` | CharEditorScreen (sandbox), DUPLICATE, 3 progression steppers, npc_lib. |
 | `gartok-map-editor.md` | MapEditorScreen paints the board, map_lib (git-tracked maps/*.json). |
 | `gartok-name-generator.md` | gartok/names.py: procedural names, private RNG. |
-
-### Workflow
-| File | What it covers |
-|---|---|
-| `commit-workflow.md` | Always run pre-commit, no Co-Authored-By. (Also in `.agents/rules/`.) |

@@ -2,16 +2,8 @@
 
 Catches broken imports, undefined names, and syntax errors the instant a file
 is edited, instead of waiting for pytest or the pre-commit review to notice.
-
-Shared by two different hook runners with two different stdin shapes:
-- Claude Code: {"tool_input": {"file_path": ...}, ...}
-- Antigravity: {"toolCall": {"args": {"TargetFile"/"AbsolutePath": ...}}, ...}
-Output also differs: Claude Code reads a {"decision": "block", "reason": ...}
-JSON object and feeds "reason" back to the model. Antigravity's PostToolUse
-does not support that (its docs say the hook's stdout is ignored) — findings
-are just printed as plain text so they show up wherever Antigravity logs hook
-output; they do not reach the agent's context there. Unverified against a
-live Antigravity run — test before relying on it.
+Reads Claude Code's hook payload ({"tool_input": {"file_path": ...}}) and answers
+with {"decision": "block", "reason": ...} so the findings reach the model.
 """
 import json
 import shutil
@@ -25,10 +17,7 @@ def touched_file(payload: dict) -> str | None:
     tool_input = payload.get("tool_input") or {}
     if path := tool_input.get("file_path"):
         return path
-    if path := (payload.get("tool_response") or {}).get("filePath"):
-        return path
-    tool_call_args = (payload.get("toolCall") or {}).get("args") or {}
-    return tool_call_args.get("TargetFile") or tool_call_args.get("AbsolutePath")
+    return (payload.get("tool_response") or {}).get("filePath")
 
 
 def find_ruff() -> str | None:
@@ -44,9 +33,7 @@ def find_ruff() -> str | None:
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
-    is_claude_code = "tool_input" in payload
-    file_path = touched_file(payload)
+    file_path = touched_file(json.load(sys.stdin))
     if not file_path or not file_path.endswith(".py") or not Path(file_path).exists():
         return
 
@@ -62,11 +49,7 @@ def main() -> None:
     if result.returncode == 0:
         return
     findings = (result.stdout + result.stderr).strip()
-    message = f"ruff encontrou problema(s) em {file_path}:\n{findings}"
-    if is_claude_code:
-        print(json.dumps({"decision": "block", "reason": message}))
-    else:
-        print(message, file=sys.stderr)
+    print(json.dumps({"decision": "block", "reason": f"ruff found problem(s) in {file_path}:\n{findings}"}))
 
 
 if __name__ == "__main__":

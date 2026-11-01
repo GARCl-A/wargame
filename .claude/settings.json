@@ -8,7 +8,7 @@
             "type": "command",
             "command": "py scripts/lint_touched_file.py",
             "timeout": 30,
-            "statusMessage": "Checando imports/nomes com ruff..."
+            "statusMessage": "Checking imports and names with ruff..."
           }
         ]
       }

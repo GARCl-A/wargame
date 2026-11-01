@@ -7,10 +7,7 @@ Run this before **every** `git commit` in this repo. Never commit without going
 through it, and never commit without the user's explicit approval that comes
 out the other end — no exceptions, no "this one's obviously fine."
 
-This file is the canonical, self-contained pre-commit process for this repo,
-read by both Antigravity (native `.agents/` support) and Claude Code (its
-user-level `pre-commit` skill defers to it entirely). Keep it up to date here
-first if the process changes.
+This file is the canonical, self-contained pre-commit process for this repo.
 
 The user codes iteratively, so the final diff is often the accumulated path
 rather than the shape someone would pick starting from scratch. Review it with

@@ -109,5 +109,3 @@ low enough to bite fast, not so low the guild never leaves single digits.
   (e.g. `guild_screen`'s roster list doesn't show it) — not asked for yet.
 - `BASE_RECRUIT_CAPACITY = 1` is a first guess, untuned by play — same "retune
   freely" status as `BASE_CAPACITY`, `progression` thresholds, etc.
-- Not committed as of this writing — pending [[commit-workflow]] (`/pre-commit`
-  review first).

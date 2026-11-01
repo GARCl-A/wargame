@@ -3,7 +3,7 @@
 **Update this file whenever we touch the documentation** (add, remove, move, rename or merge a doc).
 Tick a box once the file was reviewed and its fate decided (kept, trimmed, merged, deleted).
 
-Snapshot: 2026-11-01 — 63 `.md` + 2 `LICENSE.txt`, plus the non-text folders at the end.
+Snapshot: 2026-11-01, updated after removing `.agents` — 60 `.md` + 2 `LICENSE.txt`, plus the non-text folders at the end.
 
 ## Responsibility map (decided 2026-11-01)
 
@@ -28,7 +28,7 @@ No (it only makes the design feel off) -> `RULES.md` alone.
 | Money mechanics (coins, 200 = 1 kg, bank fee, change) | `RULES.md` | `AGENTS.md`: "money is items on the character, no guild pool" |
 | pygame only in the Editor, delete the screen with its rules | `docs/web_client.md` | `AGENTS.md`: one rule line + link; `editor/ui/README.md`: its opening line only |
 | Test gate, markers, `standard_unit`, tiers | `docs/plans/test_suite.md` | `AGENTS.md`: the gate command + the `standard_unit` rule + link; the exact steps live in `pre-commit` |
-| Commit rules (Portuguese, no accents, no `Co-Authored-By` ever, `pre-commit` first, user approval) | `.agents/skills/pre-commit/SKILL.md` | `AGENTS.md`: one line + link; the two `commit-workflow.md` copies are deleted (one was Antigravity-only) |
+| Commit rules (Portuguese, no accents, no `Co-Authored-By` ever, `pre-commit` first, user approval) | `.claude/skills/pre-commit/SKILL.md` | `AGENTS.md`: one line + link; the two `commit-workflow.md` copies are deleted (one was Antigravity-only) |
 | Where code lives, how to add a system | `README.md` | `AGENTS.md`: link only |
 | Catalog data | `REFERENCE.md` (generated) | link only |
 | History and rejected options | `project-context` (frozen), `git log` | `AGENTS.md`: one line |
@@ -70,26 +70,22 @@ wins). A dated decision is kept only in the doc that owns it, with its date as p
 
 ## Agent skills and rules
 
-Decided 2026-11-01: **Antigravity is no longer used**, so anything that exists only for it is
-dropped once it is checked for something worth keeping. Claude Code finds skills only in
-`.claude/skills/`: `pre-commit` and `project-context` live only in `.agents/skills/`, so they do not
-show up as skills today (only `check_backlog` does, through its pointer). Proposed, to confirm: move
-the three skills into `.claude/skills/`, delete the pointer, `.agents/` and every `.agents` path
-(`AGENTS.md` l. 92, `project-context/SKILL.md`).
-- [ ] `.agents/rules/commit-workflow.md` — delete (Antigravity rule, a pointer to `pre-commit`); "wait for the user's approval" is already in `pre-commit` step 9
-- [ ] `.agents/hooks.json` — delete (Antigravity hook config; Claude's is `.claude/settings.json`)
-- [ ] `.agents/scripts/lint_touched_file.py` — delete (a one-line shim that runs `scripts/lint_touched_file.py`)
-- [ ] `scripts/lint_touched_file.py` — keep; drop the Antigravity stdin/output branches and docstring (only `tool_input` and the `decision: block` JSON are used)
-- [ ] `.claude/settings.json` — keep (the ruff PostToolUse hook); the hook message is in Portuguese, the rest of the repo is English
-- [ ] `.agents/skills/check_backlog/SKILL.md` — move to `.claude/skills/check_backlog/` and delete the pointer below
-- [ ] `.agents/skills/pre-commit/SKILL.md` — move to `.claude/skills/pre-commit/`; cut the Antigravity / "user-level skill" paragraph (l. 11-13); its gate and commit rules stay (the owner, see the map)
-- [ ] `.agents/skills/project-context/SKILL.md` — move with its `references/` (or decide the folder's fate in the next section); the commit-workflow row goes
-- [ ] `.claude/skills/check_backlog/SKILL.md` — a pointer to `.agents`: replaced by the real file
+Decided 2026-11-01: **Antigravity is no longer used**, so `.agents/` is gone and the three skills it
+held now live in `.claude/skills/`, the only place Claude Code finds them (done, same day).
+- [ ] **Local skills (yours):** look at the skills on your own machine (`~/.claude/skills/`) and copy
+  the ones the repo needs into `.claude/skills/`, then list each one here. Nothing in the repo
+  depends on them being there.
+- [x] `.agents/rules/commit-workflow.md`, `.agents/hooks.json`, `.agents/scripts/lint_touched_file.py` — deleted (Antigravity only; "wait for approval" lives in `pre-commit` step 9, Claude's hook in `.claude/settings.json`)
+- [x] `scripts/lint_touched_file.py` — Antigravity branches cut, message in English
+- [x] `.claude/settings.json` — kept (the ruff PostToolUse hook), status message in English
+- [x] `.claude/skills/check_backlog/SKILL.md` — the real file now (the pointer is gone)
+- [ ] `.claude/skills/pre-commit/SKILL.md` — moved, Antigravity paragraph cut; still to review its content against the map (it owns the commit rules and the exact test steps)
+- [ ] `.claude/skills/project-context/SKILL.md` — moved, commit-workflow row and empty *Workflow* section gone; its fate goes with the references below
 - [ ] `.claude/skills/gen-portrait/SKILL.md` — review
 
-## `project-context` references (39 files)
-All under `.agents/skills/project-context/references/`:
-- [ ] `commit-workflow.md` — delete; also its row in `project-context/SKILL.md` (l. 75) and the `[[commit-workflow]]` mention in `gartok-recruit-capacity.md` (l. 112)
+## `project-context` references (38 files)
+All under `.claude/skills/project-context/references/`:
+- [x] `commit-workflow.md` — deleted, with its index row and the `[[commit-workflow]]` mention in `gartok-recruit-capacity.md`
 - [ ] `player-text-english.md`
 - [ ] `gartok-arena-champion-title.md`
 - [ ] `gartok-arena-ribbit-brothers-boss.md`

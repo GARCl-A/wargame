@@ -89,6 +89,6 @@ Whenever a new mechanic or action is added to the game, you MUST always:
 ## Deep context
 
 History of a feature built up to 2026-10-20 or a past design decision (including what was tried
-and rejected): the `project-context` skill (`.agents/skills/project-context/`), one reference per
+and rejected): the `project-context` skill (`.claude/skills/project-context/`), one reference per
 initiative — read only what you need. Frozen since 2026-10-28; for anything later, the code,
 `docs/plans/` and `git log` are the record.
