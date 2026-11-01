@@ -150,7 +150,7 @@ def test_halfling_luck_resets_on_next_day():
 def test_halfling_luck_rerolls_chest_lockpick():
     halfling = _halfling()
     assert halfling.choose_talent("racial", "halfling_luck")
-    halfling.give_to_pack(data.CHEST_ITEM)
+    halfling.give_to_pack(data.BOX_OF_GEMS_ITEM)
 
     # First roll 2 (fails DC 15), reroll 18 (succeeds)
     with patch("gartok.chest.data.d20", side_effect=[2, 18]):

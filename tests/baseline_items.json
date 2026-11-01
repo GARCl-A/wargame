@@ -568,7 +568,13 @@
     "food": false,
     "lifespan": null
   },
-  "Locked Chest": {
+  "Box of Gems": {
+    "weight": 8.0,
+    "price": 273,
+    "food": false,
+    "lifespan": null
+  },
+  "Box": {
     "weight": 8.0,
     "price": 16,
     "food": false,

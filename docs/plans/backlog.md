@@ -110,6 +110,10 @@ the rest.
   everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old
   screens and their tests are in git before the cut.
 
+- **Give the empty Box a use (author 2026-11-01).** Opening a Box of Gems leaves a `Box` (8 kg, 16
+  copper) that does nothing but sell. Give it a job: a craft input, a container for the pack, or a thing
+  a mission asks for.
+
 - **Review the cheapest item prices (author 2026-11-01).** Several sit at 1 or 2 copper with no logic:
   a Chisel at 1, a Scroll at 1 (below Paper at 10 and 1sqm Hide at 12), a Cloak and a Torch at 2. Price a
   tool or a crafted good above the material it is made from, then run the `balance` tier and
@@ -127,8 +131,8 @@ the rest.
   squad's average value is set and every start has a real weapon (*Playtest notes -> Starting squad is
   weak*). Since gathering needs the node's tool (`economy.WORK_TOOLS`: Axe, Pick), the draw decides who can
   gather on day one: the weapon pool is the base weapons only (no Large/Huge) up to 35, so Axe and Pick
-  are in (decided 2026-11-01); the item pool takes raw materials too, only quest items, coins and the
-  chests are out; the purse is 3d4 copper instead of 5d10 (decided 2026-11-01). Check the sim's policies
+  are in (decided 2026-11-01); the item pool takes raw materials too, only quest items and coins are
+  out (the Sealed Chest is now a quest item and the Box of Gems costs 273, so no list is needed); the purse is 3d4 copper instead of 5d10 (decided 2026-11-01). Check the sim's policies
   afterwards (`economy_guild.py`: the yard and Mine ones buy an Axe or
   a Pick for whoever lacks one, and the day-30 milestone prices an Axe). Touches
   `data.OCCUPATIONS`, `Unit` (roll, save, `unit_edit`), `artwork.OCCUPATION_ICON` and `role_for` (the

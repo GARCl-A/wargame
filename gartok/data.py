@@ -114,11 +114,11 @@ FIRST_AID_ITEM = items.FIRST_AID_ITEM
 
 # A locked chest: pick the lock (chest.py) for the gems inside, or hand it in
 # whole. Failure costs nothing -- try again -- so it is never removed on a miss.
-CHEST_ITEM = items.CHEST_ITEM
+BOX_OF_GEMS_ITEM = items.BOX_OF_GEMS_ITEM
 GEM_ITEM = items.GEM_ITEM                   # what a chest holds; sellable, not stocked to buy back
 
 # The Bankers' trust mission (missions.py): a sealed chest that is NOT
-# data.CHEST_ITEM on purpose -- opening this one early (chest.py's same roll)
+# data.BOX_OF_GEMS_ITEM on purpose -- opening this one early (chest.py's same roll)
 # fails the mission and marks the opener a criminal instead of quietly paying
 # out. LETTER_ITEM is what Ledger Hold hands back once it's exchanged intact.
 MISSION_CHEST_ITEM = items.MISSION_CHEST_ITEM
