@@ -243,34 +243,20 @@ def test_ambush_chance_is_the_odds_of_at_least_one_hours_roll():
 
 
 @pytest.mark.parametrize("node_id", sorted(gather.TABLES))
-def test_a_shift_is_worth_its_table_per_worker_against_their_wage(node_id):
+def test_a_shift_is_worth_its_table_per_worker(node_id):
     guild, group = _crew(node_id, 3)
-    haul, wage, risk = guild.shift_worth(group, node_id, 16)
+    haul, risk = guild.shift_worth(group, node_id, 16)
     assert haul == pytest.approx(3 * gather.expected_value(node_id, 16))
-    assert wage == pytest.approx(sum(economy.work_pay(node_id, 16, economy.work_level(u, node_id))
-                                     for u in group.members))
-    assert haul > wage
     assert risk == pytest.approx(gather.ambush_chance(node_id, 16))
-
-
-def test_piecework_lifts_the_wage_a_shift_is_weighed_against():
-    guild, group = _crew("lumber_yard", 1)
-    _, before, _ = guild.shift_worth(group, "lumber_yard", 16)
-    u = group.members[0]
-    u.set_track_level("work", 2)
-    u.choose_talent("work", "brawny")
-    u.choose_talent("work", "piecework")
-    _, after, _ = guild.shift_worth(group, "lumber_yard", 16)
-    assert after == pytest.approx(before * 1.2)
 
 
 def test_a_cautious_crew_weighs_lower_ambush_odds():
     from gartok.group import CAUTIOUS
     guild, group = _crew("mine", 2)
     guild.vocation = "wilds"
-    _, _, normal = guild.shift_worth(group, "mine", 16)
+    _, normal = guild.shift_worth(group, "mine", 16)
     group.stance = CAUTIOUS
-    _, _, cautious = guild.shift_worth(group, "mine", 16)
+    _, cautious = guild.shift_worth(group, "mine", 16)
     assert cautious < normal
 
 
@@ -280,9 +266,14 @@ def test_the_licence_says_when_it_pays_back():
 
     guild, group = _crew("mine", 3)
     gs = GatherDesk(guild, group, world.node("mine"))
-    assert "pays back" not in gs._payback_line(gather.licence_price("mine"))
+    price = gather.licence_price("mine")
+    assert "pays for itself" not in gs._payback_line(price)
+    assert "wage" not in gs._payback_line(price)
     guild.licences.clear()
-    assert "licence pays back in ~" in gs._payback_line(gather.licence_price("mine"))
+    haul, _ = guild.shift_worth(group, "mine", gather.DAY_HOURS)
+    assert f"pays for itself in ~{price / haul:.0f} days" in gs._payback_line(price)
+    guild, group = _crew("mine", 3, licensed=False, tools=0)
+    assert "pays for itself" not in GatherDesk(guild, group, world.node("mine"))._payback_line(price)
 
 
 def test_gathering_teaches_at_two_in_the_yard_and_three_in_the_mine():
@@ -351,6 +342,6 @@ def test_a_mixed_crew_fights_the_ambush_together_and_only_gatherers_bank(monkeyp
 
 def test_the_preview_counts_only_the_gatherers_haul():
     guild, group = _crew("lumber_yard", 3, tools=2)
-    haul, wage, _ = guild.shift_worth(group, "lumber_yard", 16)
+    haul, _ = guild.shift_worth(group, "lumber_yard", 16)
     assert haul == pytest.approx(2 * gather.expected_value("lumber_yard", 16))
-    assert guild.worker_worth(group.members[2], "lumber_yard", 16)[0] == 0
+    assert guild.worker_haul(group.members[2], "lumber_yard", 16) == 0
