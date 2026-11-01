@@ -24,9 +24,10 @@ work `docs/plans/backlog.md` (it points to the plan of each big item).
   follows `editor/ui/README.md`.
 - Work and commit straight on `main`; no feature branches unless the user asks for one.
   A teammate works on `main` in parallel, so `git pull` before committing.
-  A cloud session is the exception: it commits on its own branch, then merges into `main` when
-  there is no conflict (on a conflict, stop and ask). Once that work is on `main` the branch is
-  disposable, so delete it (local and remote) without asking.
+  A cloud session is the exception: it commits on its own branch, then rebases it onto
+  `origin/main` and fast-forwards `main` (`git merge --ff-only`, no merge commit) when there is no
+  conflict (on a conflict, `git rebase --abort`, stop and ask). Once that work is on `main` the
+  branch is disposable, so delete it (local and remote) without asking.
 
 ## Design premises that touch code (the why: `RULES.md`, World systems)
 

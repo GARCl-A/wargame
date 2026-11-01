@@ -190,6 +190,14 @@ only makes sense historically is the expensive one.
    commit with the approved message, then `git status` to confirm that what is
    left is only other work.
 
+   **Cloud session** (own branch, not `main`): after committing, integrate by
+   rebase, never a merge commit. `git fetch origin main`, `git rebase origin/main`
+   on the session branch, then on `main` `git merge --ff-only <branch>` and push
+   `main`. On a rebase conflict: `git rebase --abort`, stop and ask. If
+   `--ff-only` fails because `main` moved, fetch and rebase again. The rebase
+   rewrites the branch: if it was already pushed, do not push it again (no force),
+   push only `main`. Once the work is on `main`, delete the branch, local and remote.
+
 ## Hard rules
 
 - Never `--no-verify`, never skip or bypass a hook.
