@@ -57,7 +57,7 @@ class SneakAttack(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("sneak_attack"):
+        if not w.has_trait("sneak_attack"):
             return False, "requires dagger"
         return True, ""
 
@@ -100,7 +100,7 @@ class PreciseThrust(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("precise_thrust"):
+        if not w.has_trait("precise_thrust"):
             return False, "requires rapier"
         return True, ""
 
@@ -143,14 +143,7 @@ class Cleave(Action):
 
     @classmethod
     def applicable(cls, battle, actor):
-        w = actor.weapon
-        unarmed = getattr(actor, "unarmed", False)
-        char = getattr(actor, "char", actor)
-        has_unarmed_cleave = bool(getattr(char, "talent_bonus", lambda _: 0)("unarmed_cleave"))
-        if unarmed:
-            if not has_unarmed_cleave:
-                return False, "requires axe"
-        elif w is None or not w.has_trait("cleave"):
+        if not actor.weapon.has_trait("cleave"):
             return False, "requires axe"
         return True, ""
 
@@ -162,10 +155,11 @@ class Cleave(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        char = getattr(actor, "char", actor)
-        if getattr(actor, "unarmed", False) and getattr(char, "talent_bonus", lambda _: 0)("unarmed_cleave"):
-            return "Sweeping Claws (2 pts, strike 2 adjacent foes at +2)"
-        return "Cleave (2 pts, strike 2 adjacent foes at +2)"
+        return f"{self._title(actor)} (2 pts, strike 2 adjacent foes at +2)"
+
+    @staticmethod
+    def _title(actor):
+        return "Cleave" if actor.armed else "Sweeping Claws"
 
     @staticmethod
     def second(battle, actor, target):
@@ -196,7 +190,7 @@ class Cleave(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix_name = "Sweeping Claws" if getattr(actor, "unarmed", False) else "Cleave"
+        prefix_name = self._title(actor)
         prefix = f"{actor.name} {prefix_name} -> {target.name}"
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
 
@@ -222,7 +216,7 @@ class RepelStrike(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("repel_strike"):
+        if not w.has_trait("repel_strike"):
             return False, "requires quarterstaff"
         return True, ""
 
@@ -300,7 +294,7 @@ class MaimingStrike(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("maiming_strike"):
+        if not w.has_trait("maiming_strike"):
             return False, "requires bludgeon"
         return True, ""
 
@@ -352,7 +346,7 @@ class ArmorPierce(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("armor_pierce"):
+        if not w.has_trait("armor_pierce"):
             return False, "requires pick"
         return True, ""
 
@@ -398,7 +392,7 @@ class PowerShot(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("power_shot"):
+        if not w.has_trait("power_shot"):
             return False, "requires a bow"
         return True, ""
 
@@ -456,7 +450,7 @@ class ExtremeShot(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("extreme_shot"):
+        if not w.has_trait("extreme_shot"):
             return False, "requires crossbow"
         return True, ""
 
@@ -502,7 +496,7 @@ class HookShield(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("hook_shield"):
+        if not w.has_trait("hook_shield"):
             return False, "requires hatchet"
         return True, ""
 
@@ -552,7 +546,7 @@ class JavelinCharge(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("javelin_charge"):
+        if not w.has_trait("javelin_charge"):
             return False, "requires shortspear"
         return True, ""
 
@@ -604,7 +598,7 @@ class ParryStrike(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("parry_strike"):
+        if not w.has_trait("parry_strike"):
             return False, "requires a sword"
         return True, ""
 
@@ -657,7 +651,7 @@ class LongThrust(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("long_thrust"):
+        if not w.has_trait("long_thrust"):
             return False, "requires a glaive"
         return True, ""
 

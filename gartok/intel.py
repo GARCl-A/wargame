@@ -225,7 +225,7 @@ def _open(battle, team, target):
 
 
 def _damage_die(u):
-    n, faces = u.unarmed_damage if (u.unarmed or u.improvised) else u.weapon["damage"]
+    n, faces = u.hand_die
     return f"{n}d{faces}"
 
 
@@ -235,7 +235,7 @@ def _to_hit(u):
 
 
 def _damage_bonus(u):
-    return u.mod_strength if (u.unarmed or u.improvised or not u.ranged) else 0
+    return u.mod_strength if not u.ranged else 0
 
 
 def _artifact_effect(u):
@@ -317,8 +317,8 @@ def known_fields(battle, team, target):
               for name in FIELDS if not (name == "artifact" and not target.equipped_artifact)}
     visible = {"name": target.name, "race": target.race["name"], "size": target.size,
                "alignment": target.alignment, "conditions": _conditions(target),
-               "weapon": None if target.unarmed else target.weapon_name,
-               "weapon_action": None if target.unarmed else weapon_traits.action_name(target.weapon),
+               "weapon": target.weapon.name,
+               "weapon_action": weapon_traits.action_name(target.weapon) if target.armed else None,
                "armor": target.armor_name if target.armor else None,
                "artifact": target.equipped_artifact}
     return Known(full=has_full_intel(battle, team, target), margin=battle.intel.margin[team].get(target),

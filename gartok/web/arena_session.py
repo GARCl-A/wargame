@@ -230,7 +230,7 @@ class ArenaSession(Session):
 
     def _member(self, u):
         lvl = f"C{u.combat_level}" + (f"/W{u.work_level}" if u.work_xp or u.work_level else "") + f"/R{u.racial_level}"
-        n, faces = u.weapon["damage"] if u.weapon else u.unarmed_damage
+        n, faces = u.weapon["damage"]
         flags = []
         if u.incapacitated:
             flags.append({"text": "Collapsed from hunger", "tone": "bad"})
@@ -245,7 +245,7 @@ class ArenaSession(Session):
             flags.append({"text": "Talent pick ready", "tone": "good"})
         return {"uid": u.uid, "name": u.name, "race": u.race["name"], "occupation": u.occupation["name"],
                 "portrait": _portrait(u), "hp": [max(0, u.hp), u.hp_max], "ac": u.ac, "md": u.mental_defense,
-                "speed": u.speed, "weapon": u.weapon_name or "Unarmed", "dmg": f"{n}d{faces}",
+                "speed": u.speed, "weapon": u.weapon.name, "dmg": f"{n}d{faces}",
                 "money": u.money, "money_text": fmt_money(u.money), "level": lvl, "flags": flags,
                 "unfit": u.incapacitated, "picked": u in self.picked,
                 "title": bool(getattr(u, "arena_title", False))}

@@ -76,7 +76,7 @@ A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
 | **Age** | `d100 × racial multiplier` | see `REFERENCE.md` |
 | **Carry capacity (normal)** | `max(1, round((STR mod × 4 + 15) × carry mult.))` | 🟡 reworked for the wargame |
 | **Carry capacity (high)** | `max(2, round((STR mod × 6 + 35) × carry mult.))` | 🟡 |
-| **Unarmed attack** 🟡 | die by size (`REFERENCE.md` § Sizes) | everyone has one; STR mod adds to the damage; the `unarmed_dice` talent channel adds dice (Wolf *Rending Bite*: 1d3 → 2d3) |
+| **Natural weapon** 🟡 | die by body size (`REFERENCE.md` § Sizes) | every body is a weapon: `Unarmed` for a humanoid's empty hands, the race's own (`Bite`, `Fangs`, `Claws`, `Hooves`, `Horns`) for a beast, in `natural_weapons.py`; STR mod adds to the damage; the `natural_dice` talent channel adds dice (Wolf *Rending Bite*: 1d3 → 2d3) and `natural_trait` grants it a trait (Dragon *Sweeping Claws*: `cleave`) |
 
 > Generator quirk: HP used `randrange(1, hit_die)`, i.e. it rolled **1 to
 > (die−1)**. The wargame uses the full die (1 to die), the presumed design intent.

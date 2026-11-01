@@ -296,7 +296,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
 
     def _apply_beast(self):
         """A beast has no job -- it fights with its own body, not a rolled
-        weapon (see `combatant.unarmed`/`data.UNARMED_ATTACK`; the extra bite
+        weapon (see `natural_weapons`; the extra bite
         comes off its racial ability's `melee_damage`, like `_configure_race`
         already wires up for anything else the ability grants)."""
         self.occupation = dict(data.BEAST_OCCUPATION)

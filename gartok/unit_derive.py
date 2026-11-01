@@ -4,6 +4,8 @@ Mixed into `unit.Unit`: carry, attribute mods, HP, AC, speed and their
 breakdowns, so roster screens can show a character without a Combatant.
 """
 
+from dataclasses import replace
+
 from . import data, items, natural_weapons
 from .data import ATTRIBUTES, mod, roll
 
@@ -47,8 +49,6 @@ class DerivationMixin:
         self._derive_hp()
         self._derive_ac()
         self._derive_speed()
-        n, faces = data.UNARMED_ATTACK.get(self.size, (1, 2))              # die by size
-        self.unarmed_damage = (n + self.talent_bonus("unarmed_dice"), faces)
         self.dr = self._ability.damage_reduction
 
     def _derive_size(self):
@@ -308,13 +308,17 @@ class DerivationMixin:
 
     @property
     def weapon(self):
-        return items.get(self.equipped_weapon)
+        """The weapon in the weapon hand, or the body's own when the hand is empty."""
+        return items.get(self.equipped_weapon) or self.natural_weapon
 
     @property
     def natural_weapon(self):
-        """What this body fights with when nothing is in the weapon hand: its race's own
-        weapon at its own size (`natural_weapons`)."""
-        return natural_weapons.for_race(self.race["name"], self.size)
+        """What this body fights with when nothing is in the weapon hand: its race's own weapon at
+        its own size, with the dice and traits its talents add (`natural_weapons`)."""
+        base = natural_weapons.for_race(self.race["name"], self.size)
+        n, faces = base.damage
+        return replace(base, damage=(n + self.talent_bonus("natural_dice"), faces),
+                       traits=base.traits + tuple(self.talent_stats("natural_trait")))
 
     @property
     def armor_name(self):
@@ -352,15 +356,9 @@ class DerivationMixin:
         or condition mods -- those are situational and need the Combatant. Empty
         hands hit with Strength (the unarmed attack)."""
         w = self.weapon
-        if w is None and (self.talent_bonus("unarmed_finesse") or self.ability.finesse):
-            base = max(self.mod_strength, self.mod_dexterity)
-            stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
-            src = "STR/DEX"
-        elif w is None:
-            base, stat, src = self.mod_strength, "str", "STR"
-        elif w.range > 0:
+        if w.range > 0:
             base, stat, src = self.mod_dexterity, "dex", "DEX"
-        elif (w.has_trait("finesse") if hasattr(w, "has_trait") else getattr(w, "finesse", False)) or self.ability.finesse:
+        elif w.is_finesse or self.ability.finesse:
             base = max(self.mod_strength, self.mod_dexterity)
             stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
             src = "STR/DEX"

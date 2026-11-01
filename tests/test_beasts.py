@@ -164,9 +164,9 @@ def _grown_wolf():
 
 def test_rending_bite_adds_a_die_to_the_unarmed_attack():
     w = _grown_wolf()
-    assert w.unarmed_damage == (1, 3)
+    assert w.natural_weapon.damage == (1, 3)
     assert w.choose_talent("racial", "rending_bite")
-    assert w.unarmed_damage == (2, 3)
+    assert w.natural_weapon.damage == (2, 3)
 
 
 def test_dire_growth_makes_a_wolf_large_and_stacks_with_the_bite():
@@ -174,10 +174,10 @@ def test_dire_growth_makes_a_wolf_large_and_stacks_with_the_bite():
     assert (w.size, w.footprint) == ("Medium", 1)
     assert w.choose_talent("racial", "dire_growth")
     assert (w.size, w.footprint) == ("Large", 2)
-    assert w.unarmed_damage == (1, 4)                      # the Large unarmed die
+    assert w.natural_weapon.damage == (1, 4)                      # the Large unarmed die
     w.set_track_level("racial", 10)
     w.choose_talent("racial", "rending_bite")
-    assert w.unarmed_damage == (2, 4)
+    assert w.natural_weapon.damage == (2, 4)
     assert w.speed == data.squares(10.5)                  # Large does not slow it
 
 
@@ -347,9 +347,9 @@ def test_giant_spider_is_medium_and_grows_twice_to_a_3x3_body():
     assert (sp.size, sp.footprint) == ("Medium", 1) and sp.ability.auto_climb_dc == 25
     assert not sp.choose_talent("racial", "titanic_growth")          # needs the first growth
     sp.choose_talent("racial", "giant_growth")
-    assert (sp.size, sp.footprint, sp.unarmed_damage) == ("Large", 2, (1, 4))
+    assert (sp.size, sp.footprint, sp.natural_weapon.damage) == ("Large", 2, (1, 4))
     sp.choose_talent("racial", "titanic_growth")
-    assert (sp.size, sp.footprint, sp.unarmed_damage) == ("Huge", 3, (1, 6))
+    assert (sp.size, sp.footprint, sp.natural_weapon.damage) == ("Huge", 3, (1, 6))
     back = Unit.from_save(persist.unit_to_dict(sp))
     assert back.size == "Huge" and back.footprint == 3
     batt = Battle([Unit("player")], [sp])

@@ -29,6 +29,7 @@ from . import (
     hunt,
     items,
     magic,
+    natural_weapons,
     outfit,
     progression,
     sources,
@@ -270,7 +271,7 @@ def _base_materials():
 def _sizes():
     rows = [(name, f"{s['speed']:g} m ({data.squares(s['speed'])} sq)",
              f"x{s['carry']:g}", f"{s['footprint']}x{s['footprint']}",
-             _dice(*data.UNARMED_ATTACK[name]))
+             _dice(*natural_weapons.get(natural_weapons.DEFAULT, name).damage))
             for name, s in data.SIZES.items()]
     head = ("Size", "Speed", "Carry mult.", "Footprint", "Unarmed")
     return "## Sizes\n\n" + _table(head, rows)

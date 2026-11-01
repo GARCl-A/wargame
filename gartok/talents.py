@@ -14,9 +14,9 @@ exactly one consumer that reads it back:
     to_hit            Unit.attack_bonus / Combatant     "strength" | "dexterity"
     melee_damage      Combatant.damage_roll            --
     melee_reach       Combatant.tongue_reach           --
-    unarmed_dice      Unit._derive_combat (+N dice)    --
+    natural_dice      Unit.natural_weapon (+N dice)    --
     size_up           Unit._derive_size (+N sizes)     --
-    unarmed_finesse   Unit.attack_bonus / Combatant    --
+    natural_trait     Unit.natural_weapon              weapon trait id
     spin_web          actions.SpinWeb                  --
     venom             actions.base._envenom            poison id
     swim_reach        actions.Swim (+squares per swim) --
@@ -70,7 +70,6 @@ exactly one consumer that reads it back:
     defend_mental_defense Combatant.mental_defense     --
     demoralize_ally_initiative actions.combat.execute_demoralize --
     full_intel_crit_range actions.base._resolve_hit    --
-    unarmed_cleave    actions.weapon_actions.Cleave    --
     flies             Combatant.flies                  --
     fly_speed         Unit._derive_speed               --
     grudge / ambush_predator / under_the_whip / arena_born / cavalry_charge
@@ -589,8 +588,8 @@ _LIST = [
            "whoever hits you in melee takes 1 damage.", race="Treefolk",
            effects=(Effect("thornskin", 1),), icon="body/spiked-wall"),
     Talent("rending_bite", "racial", 1, "Rending Bite",
-           "jaws that tear: roll one extra die on your unarmed attack.", race="Wolf",
-           effects=(Effect("unarmed_dice", 1),), icon="action/eating"),
+           "jaws that tear: roll one extra die on your bite.", race="Wolf",
+           effects=(Effect("natural_dice", 1),), icon="action/eating"),
     Talent("elder_skeleton", "racial", 1, "Elder Skeleton",
            "centuries of unlife sharpen the mind and the voice: +4 Intelligence and "
            "+4 Charisma.", race="Skeleton",
@@ -601,9 +600,9 @@ _LIST = [
            "initiated, gain a free spell.", race="Skeleton",
            effects=(), icon="action/prayer"),
     Talent("deft_bones", "racial", 1, "Deft Bones",
-           "light, quick bones: your unarmed attacks hit with the better of Strength "
+           "light, quick bones: your bare hands hit with the better of Strength "
            "or Dexterity.", race="Skeleton",
-           effects=(Effect("unarmed_finesse", 1),), icon="action/sprint"),
+           effects=(Effect("natural_trait", 1, "finesse"),), icon="action/sprint"),
     Talent("giant_growth", "racial", 1, "Giant Growth",
            "you swell past your kin: your size goes up one step (Medium to Large, 2x2).",
            race="Giant Spider",
@@ -642,10 +641,10 @@ _LIST = [
            requires="dragon", race="Dragon",
            effects=(Effect("dragon_breath", 1),), icon="body/fire-dash"),
     Talent("sweeping_claws", "racial", 2, "Sweeping Claws",
-           "your claws sweep in wide lethal arcs: you can use Cleave while unarmed, "
-           "striking two adjacent foes with your natural weapon.",
+           "your claws sweep in wide lethal arcs: they gain the Cleave trait, "
+           "striking two adjacent foes at once.",
            requires="dragon", race="Dragon",
-           effects=(Effect("unarmed_cleave", 1),), icon="body/deadly-strike"),
+           effects=(Effect("natural_trait", 1, "cleave"),), icon="body/deadly-strike"),
     Talent("draconic_wings", "racial", 3, "Draconic Wings",
            "massive leathery wings carry you aloft: you gain flight (move freely across "
            "3D terrain and pits, immune to fall damage) and your speed increases to 12 squares.",
@@ -699,6 +698,13 @@ def racial_tree(race_name):
     """The racial nodes offered to `race_name` -- those with no `race` gate plus
     that race's own. Empty for a race with nothing authored yet."""
     return [t for t in TREE["racial"] if t.for_race(race_name)]
+
+
+def stats(talent_ids, channel):
+    """The `stat` of every effect the given talents have on `channel` (for the channels whose stat
+    names what is granted, such as a weapon trait)."""
+    return [e.stat for tid in talent_ids if (t := TALENTS.get(tid)) is not None
+            for e in t.effects if e.channel == channel and e.amount]
 
 
 def bonus(talent_ids, channel, stat=""):

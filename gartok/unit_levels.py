@@ -189,6 +189,11 @@ class LevelingMixin:
         picked = [tid for lst in self.talents.values() for tid in lst]
         return talents.bonus(picked, channel, stat)
 
+    def talent_stats(self, channel):
+        """What this character's picked talents grant on `channel` (a list of trait ids, say)."""
+        picked = [tid for lst in self.talents.values() for tid in lst]
+        return talents.stats(picked, channel)
+
     def has_talent(self, talent_id):
         t = talents.get(talent_id)
         return t is not None and self.holds_talent(t.track, talent_id)

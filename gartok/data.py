@@ -89,19 +89,6 @@ SIZES = {       # kg: the body alone, what a wagon carries a passenger as (60 fo
 
 
 # --------------------------------------------------------------------------- #
-# Unarmed attack  (everyone has one; the die comes from the size)              #
-# --------------------------------------------------------------------------- #
-
-UNARMED_ATTACK = {
-    "Tiny": (1, 2),
-    "Small":  (1, 2),
-    "Medium":    (1, 3),
-    "Large":   (1, 4),
-    "Huge":    (1, 6),
-}
-
-
-# --------------------------------------------------------------------------- #
 # Falling, stabilizing and death  (designed for the wargame)                   #
 # --------------------------------------------------------------------------- #
 

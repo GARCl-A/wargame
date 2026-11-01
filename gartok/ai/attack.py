@@ -1,6 +1,6 @@
 """Action choice: which attack, spell or special move the AI makes on a target this instant."""
 
-from .. import actions, intel
+from .. import actions, intel, natural_weapons
 from ..board import cells, grid_distance
 from .common import _avg_die, _axes, _hand_die, _runs_flag, _wants_alive
 from . import reckon
@@ -101,10 +101,6 @@ def _weapon_action(battle, unit, target):
     """The 2-point weapon action worth at least the two plain attacks it costs, the best one, or None."""
     if unit.ap < 2:
         return None
-    char = getattr(unit, "char", unit)
-    has_unarmed_cleave = getattr(char, "has_talent", lambda _: False)("sweeping_claws")
-    if (unit.unarmed or not unit.weapon) and not has_unarmed_cleave:
-        return None
     best, best_worth = None, _two_points(battle, unit, target)
     for act in actions.WEAPON_ACTIONS:
         if act.cost < 2 or not act.can(battle, unit, target):
@@ -120,7 +116,7 @@ def _tail_sweep_pays(battle, unit, target):
     sweep = actions.TAIL_SWEEP
     if not sweep.can(battle, unit, target):
         return False
-    tail = _avg_die(unit.unarmed_damage) + unit.mod_strength + unit.char.talent_bonus("melee_damage")
+    tail = _avg_die(natural_weapons.get(natural_weapons.DEFAULT, unit.size)["damage"]) + unit.mod_strength + unit.char.talent_bonus("melee_damage")
     foes = [target] + [u for u in (sweep.second(battle, unit, target),) if u is not None]
     worth = sum(_hit_odds(battle, unit, f) * tail + _shove_worth(battle, unit, f) for f in foes)
     return worth >= _two_points(battle, unit, target) and worth > 0

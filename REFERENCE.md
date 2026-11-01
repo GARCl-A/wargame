@@ -473,7 +473,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Centaur | 2 | Cavalry Charge | your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved. | Mount |
 | Dragon | 1 | Dragon | dragon blood runs in you: your hide hardens into scales (+1 AC). | -- |
 | Dragon | 2 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | Dragon |
-| Dragon | 2 | Sweeping Claws | your claws sweep in wide lethal arcs: you can use Cleave while unarmed, striking two adjacent foes with your natural weapon. | Dragon |
+| Dragon | 2 | Sweeping Claws | your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once. | Dragon |
 | Dragon | 3 | Draconic Wings | massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares. | Dragon |
 | Dwarf | 1 | Deep Miner | at home under the mountain: the odds of a pack finding your crew while gathering at the Mine are 25% lower. | -- |
 | Dwarf | 1 | Dwarven Forging | your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- |
@@ -525,7 +525,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Ox | 1 | Aurochs Might | a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- |
 | Ox | 1 | Gore Charge | after walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- |
 | Ox | 1 | Thick Hide | +1 AC. | -- |
-| Skeleton | 1 | Deft Bones | light, quick bones: your unarmed attacks hit with the better of Strength or Dexterity. | -- |
+| Skeleton | 1 | Deft Bones | light, quick bones: your bare hands hit with the better of Strength or Dexterity. | -- |
 | Skeleton | 1 | Elder Skeleton | centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- |
 | Skeleton | 1 | Faith Initiate | a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
 | Snake | 1 | Serpent Growth | you outgrow your coils: your size goes up one step (Small to Medium). | -- |
@@ -538,7 +538,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Treefolk | 1 | Thornskin | whoever hits you in melee takes 1 damage. | -- |
 | Treefolk | 2 | Bountiful Harvest | you bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it. | Fruitful |
 | Wolf | 1 | Dire Growth | you grow past your kin: your size goes up one step (a Wolf becomes Large). | -- |
-| Wolf | 1 | Rending Bite | jaws that tear: roll one extra die on your unarmed attack. | -- |
+| Wolf | 1 | Rending Bite | jaws that tear: roll one extra die on your bite. | -- |
 | Zombie | 1 | Death Grip | your cold dead hands lock like iron: +2 to grab checks. | -- |
 | Zombie | 2 | Zombie Bite | sink your teeth into held flesh: an attack targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage. | Death Grip |
 

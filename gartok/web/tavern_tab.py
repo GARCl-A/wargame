@@ -80,7 +80,7 @@ class TavernTab:
         kit = [n for n in (c.equipped_weapon, c.armor_name) if n] + [i.name for i in c.inventory]
         return {"uid": c.uid, "name": c.name, "portrait": _portrait(c), "sub": f"{_kind(c)} · {c.alignment}",
                 "chips": _chips(c), "facts": [("HP", str(c.hp_max)), ("AC", str(c.ac)), ("Speed", f"{c.speed} sq"),
-                                              ("Attack", c.weapon_name or "Unarmed")],
+                                              ("Attack", c.weapon.name)],
                 "kit": [{"name": n, "glyph": item_icon.glyph(n)} for n in kit],
                 "ability": {"name": c.ability.name, "effect": c.ability.effect}, "last": self._last(c),
                 "bail": self._bail(c)}

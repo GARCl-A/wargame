@@ -18,12 +18,12 @@ from gartok.unit import Unit
 def avg_damage(unit):
     wep_name = unit.equipped_weapon
     if not wep_name:
-        count, sides = unit.unarmed_damage
+        count, sides = unit.natural_weapon.damage
         return count * ((sides + 1) / 2) + unit.mod_strength
     
     wep = data.WEAPONS.get(wep_name)
     if not wep:
-        count, sides = unit.unarmed_damage
+        count, sides = unit.natural_weapon.damage
         return count * ((sides + 1) / 2) + unit.mod_strength
         
     count, sides = wep.get("damage", (1, 2))

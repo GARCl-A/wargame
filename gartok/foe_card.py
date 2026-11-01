@@ -51,6 +51,6 @@ def foe_card(known):
             else f"INT read {known.margin:+} on DC {known.dc}")
     return {"name": v["name"], "race": v["race"], "size": v["size"], "alignment": v["alignment"],
             "conditions": v["conditions"], "steps": known.steps, "steps_max": intel.STEPS,
-            "weapon": {"name": v["weapon"] or "unarmed", "action": v["weapon_action"],
+            "weapon": {"name": v["weapon"], "action": v["weapon_action"],
                        "action_tip": wiki_terms.action_tip(v["weapon_action"])},
             "equipment": equipment, "read": read, "bands": bands}

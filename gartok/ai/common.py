@@ -12,9 +12,7 @@ def _avg_die(nf):
 def _hand_die(unit):
     """Average damage die of the unit's hand attack (a real swing, an improvised
     club, or bare fists)."""
-    if unit.unarmed or unit.improvised:
-        return _avg_die(unit.unarmed_damage)
-    return _avg_die(unit.weapon["damage"])
+    return _avg_die(unit.hand_die)
 
 
 def _other_side(team):

@@ -25,12 +25,8 @@ METRICS = ("HP", "AC", "MD", "Speed", "To-hit", "Avg dmg", "Dmg/turn vs AC10")
 
 def avg_damage(u):
     w = u.weapon
-    if w is None:
-        n, sides = u.unarmed_damage
-        mod = u.mod_strength
-    else:
-        n, sides = w.damage
-        mod = u.mod_dexterity if (w.finesse or w.range > 0) else u.mod_strength
+    n, sides = w.damage
+    mod = u.mod_dexterity if (w.is_finesse or w.range > 0) else u.mod_strength
     return n * (sides + 1) / 2 + mod + u.talent_bonus("damage")
 
 

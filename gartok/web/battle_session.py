@@ -608,7 +608,7 @@ class BattleSession(Session):
         return out
 
     def _sheet(self, u):
-        w = u.weapon if u.weapon_hand else None
+        w = u.weapon
         occupation = u.char.occupation
         return {
             "id": self.uid(u), "name": u.name, "side": self._side(u), "seat": self._seat(u),

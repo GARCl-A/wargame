@@ -132,14 +132,14 @@ def test_zombie_talents_grab_bonus_and_bite():
 # Dragon racial talents: Sweeping Claws & Draconic Wings                       #
 # --------------------------------------------------------------------------- #
 
-def test_dragon_sweeping_claws_unarmed_cleave():
+def test_dragon_sweeping_claws_give_its_claws_cleave():
     dragon_race = data.race_by_name("Dragon")
     d = Unit("player", race=dragon_race)
     d.set_track_level("racial", 15)
     assert d.choose_talent("racial", "dragon")
     assert d.choose_talent("racial", "sweeping_claws")
     assert d.has_talent("sweeping_claws")
-    assert d.talent_bonus("unarmed_cleave") == 1
+    assert d.natural_weapon.name == "Claws" and d.natural_weapon.has_trait("cleave")
 
     t1 = _make_unit("enemy", "Human", strength=10, hp=30)
     t2 = _make_unit("enemy", "Human", strength=10, hp=30)
@@ -148,8 +148,7 @@ def test_dragon_sweeping_claws_unarmed_cleave():
     c_t1 = b.enemy_units[0]
     c_t2 = b.enemy_units[1]
 
-    # Dragon is unarmed in battle
-    assert c_d.unarmed
+    assert c_d.natural and not c_d.unarmed
 
     c_d.pos = (1, 1)
     c_t1.pos = (1, 2)

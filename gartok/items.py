@@ -90,6 +90,10 @@ class ItemDef:
         return trait_id in self.traits
 
     @property
+    def is_finesse(self) -> bool:
+        return self.finesse or self.has_trait("finesse")
+
+    @property
     def speed(self) -> int:
         return self.speed_penalty
 

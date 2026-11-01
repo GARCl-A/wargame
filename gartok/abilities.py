@@ -52,7 +52,6 @@ class Ability:
     sleep_immunity: bool = False      # the Sleep spell (magic.py) never affects this unit
     venom: str | None = None          # poison id (poisons.py): a bite that hurts forces a Constitution save
     finesse: bool = False             # every melee attack hits with the better of Strength and Dexterity
-    natural_weapon: str | None = None  # what the unarmed attack is called (Fangs), else "Unarmed"
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -168,7 +167,7 @@ _LIST = [
     Ability("serpentine", "Serpentine",
             "a body that strikes before it is seen: every attack is a finesse attack (the better "
             "of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs.",
-            finesse=True, natural_weapon="Fangs"),
+            finesse=True),
     Ability("wolf_pack_tactics", "Pack Tactics",
             "+1 [melee] damage (a real bite); +2 [circumstance] to attack per "
             "ally already on the target, not just the first.",
@@ -209,7 +208,7 @@ def _combined(ids):
             merged[f.name] = max(vals)
         elif f.name == "carry_mult":
             merged[f.name] = math.prod(vals)
-        elif f.name in ("carry_size", "venom", "natural_weapon"):
+        elif f.name in ("carry_size", "venom"):
             merged[f.name] = next((v for v in vals if v), None)
         elif isinstance(vals[0], bool):
             merged[f.name] = any(vals)

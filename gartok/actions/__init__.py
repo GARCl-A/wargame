@@ -247,8 +247,8 @@ def aim_kind(action):
 
 def empty_hand_reason(battle, actor, action):
     """Why a weapon action is out while its weapon is on the ground, or "" when that is not the cause."""
-    w = actor.weapon
-    if not (actor.unarmed and actor.let_go and w is not None and action in WEAPON_ACTIONS
+    w = actor.held
+    if not (not actor.armed and actor.let_go and w is not None and action in WEAPON_ACTIONS
             and w.has_trait(action.id)):
         return ""
     why = f"thrown at {actor.let_go['at']}"

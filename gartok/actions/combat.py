@@ -2,7 +2,7 @@
 the Non-lethal toggle."""
 
 
-from .. import intel
+from .. import intel, natural_weapons
 from ..board import cells, cells_in_radius, cone_cells
 from ..conditions import Defending, Demoralized, Grappled
 from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll
@@ -71,8 +71,7 @@ class Attack(Action):
         return actor.ranged
 
     def label(self, battle, actor):
-        natural = actor.ability.natural_weapon if actor.unarmed else None
-        return natural or self.name
+        return actor.weapon.name if actor.natural else self.name
 
     def can(self, battle, actor, target=None):
         if actor.ap < self.cost or not _attackable_target(actor, target):
@@ -110,7 +109,7 @@ class Attack(Action):
             else:
                 actor.ammo -= 1                             # a bow draws from the quiver on every shot
                 battle.log(f"{actor.name} shoots ({actor.ammo} arrow(s) left in the quiver).")
-        natural = actor.ability.natural_weapon if actor.unarmed and not actor.ranged else None
+        natural = actor.weapon.name if actor.natural else None
         _strike(battle, actor, target,
                 prefix=f"{actor.name} -> {target.name} ({natural.lower()})" if natural else None)
 
@@ -971,7 +970,7 @@ class TailSweep(Action):
     @staticmethod
     def tail(actor):
         """The tail as a weapon: the unarmed die, swung with Strength."""
-        return {"name": "Tail", "damage": actor.unarmed_damage, "crit_mult": 2, "crit_range": 20}
+        return {"name": "Tail", "damage": natural_weapons.get(natural_weapons.DEFAULT, actor.size)["damage"], "crit_mult": 2, "crit_range": 20}
 
     @staticmethod
     def second(battle, actor, target):

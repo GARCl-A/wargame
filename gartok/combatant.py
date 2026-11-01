@@ -15,7 +15,7 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import data, intel, items, progression
+from . import data, intel, items, natural_weapons, progression
 from .conditions import Hexed
 from .data import resolve_bonus, roll
 from .unit import flatten_pack
@@ -85,7 +85,8 @@ class Combatant:
         self.weapon_hand = c.equipped_weapon is not None
         self.let_go = None            # {"at": name} while the weapon lies thrown on the ground
         self.weapon_name = c.equipped_weapon
-        self.weapon = items.get(c.equipped_weapon)
+        self._held = items.get(c.equipped_weapon)
+        self._natural = c.natural_weapon
         # the Tongue is a separate limb: its weapon rides alongside the hands
         self.tongue_weapon_name = c.equipped_tongue if c.has_tongue else None
         self.tongue_weapon = items.get(self.tongue_weapon_name)
@@ -93,7 +94,7 @@ class Combatant:
         self.torch_hand = False
         self.lantern_hand = False
         if c.equipped_offhand in (data.TORCH_ITEM, data.LANTERN_ITEM):
-            weapon_hands = self.weapon.hands if (self.weapon_hand and self.weapon) else 0
+            weapon_hands = self.weapon.hands if self.weapon_hand else 0
             free_off_hand = weapon_hands < 2         # a 2-handed weapon leaves no off hand
             if c.equipped_offhand == data.TORCH_ITEM:
                 self.torch_hand = free_off_hand
@@ -293,10 +294,6 @@ class Combatant:
     # lantern takes the off hand -- only one of the two at a time)        #
     # ------------------------------------------------------------------ #
     @property
-    def unarmed(self):
-        return not self.weapon_hand
-
-    @property
     def has_torch(self):
         return self.torch_hand
 
@@ -362,7 +359,7 @@ class Combatant:
         if not self.char.can_wield(weapon_name):
             return []
         self.weapon_name = weapon_name
-        self.weapon = items.get(weapon_name)
+        self._held = items.get(weapon_name)
         self.weapon_hand = True
         self.let_go = None
         dropped = []
@@ -372,8 +369,38 @@ class Combatant:
         return [x for x in dropped if x]
 
     @property
+    def weapon(self):
+        """What the weapon hand strikes with: the item held, or the body's own weapon."""
+        return self._held if self.weapon_hand and self._held else self._natural
+
+    @property
+    def held(self):
+        """The item last put in the weapon hand (still the one on the ground after a throw)."""
+        return self._held
+
+    @property
+    def armed(self):
+        return self.weapon is self._held
+
+    @property
     def unarmed(self):
-        return (not self.weapon_hand) or (self.weapon is None)
+        """Bare hands: nothing held and no natural weapon of its own (a humanoid)."""
+        return not self.armed and self._natural.name == natural_weapons.DEFAULT
+
+    @property
+    def natural(self):
+        """Fights with its race's own weapon (a Bite, Claws): nothing held."""
+        return not self.armed and not self.unarmed
+
+    @property
+    def hand_die(self):
+        """The damage die of the hand attack: the weapon's, or the body's when a crossbow is swung empty."""
+        return (self._natural if self.improvised else self.weapon)["damage"]
+
+    @property
+    def attack_weapon(self):
+        """The weapon that is actually swung: the body's own while a crossbow is swung empty."""
+        return self._natural if self.improvised else self.weapon
 
     # ------------------------------------------------------------------ #
     # carry (foundation: carried weight vs capacity; no penalty yet)     #
@@ -381,8 +408,8 @@ class Combatant:
     @property
     def load(self):
         w = sum(items.item_weight(it) for it in self.inventory)
-        if self.weapon_hand and self.weapon:
-            w += self.weapon.weight
+        if self.weapon_hand and self._held:
+            w += self._held.weight
         if self.tongue_weapon:
             w += self.tongue_weapon.weight
         if self.torch_hand:
@@ -400,7 +427,7 @@ class Combatant:
     @property
     def needs_ammo(self):
         """Wields a weapon that fires ammunition (the crossbow)."""
-        return not self.unarmed and self.weapon["range"] > 0
+        return self.weapon["range"] > 0
 
     @property
     def can_reload(self):
@@ -434,7 +461,7 @@ class Combatant:
         has its own, longer reach (`tongue_reach`) -- see `actions.AttackTongue`."""
         if self.ranged:
             return self.weapon["range"] + self.char.talent_bonus("ranged_reach")
-        return 1 + self._ability.melee_reach + (0 if self.unarmed else self.weapon.reach)
+        return 1 + self._ability.melee_reach + self.weapon.reach
 
     @property
     def has_tongue_weapon(self):
@@ -448,15 +475,12 @@ class Combatant:
     def is_dex_melee(self):
         if self.ranged:
             return False
-        w = self.weapon
-        finesse = (w.has_trait("finesse") if (w and hasattr(w, "has_trait")) else getattr(w, "finesse", False)) or self.ability.finesse
-        if w is None and (getattr(self.char, "talent_bonus", lambda _: 0)("unarmed_finesse") or self.ability.finesse):
-            finesse = True
-        return bool(finesse and self.mod_dexterity >= self.mod_strength)
+        return bool((self.attack_weapon.is_finesse or self.ability.finesse)
+                    and self.mod_dexterity >= self.mod_strength)
 
     @property
     def can_throw(self):
-        return not self.unarmed and self.weapon["thrown"] > 0
+        return self.weapon["thrown"] > 0
 
     @property
     def throw_range(self):
@@ -577,11 +601,7 @@ class Combatant:
         WEAPONS dict) overrides the held one -- the Tongue weapon, always a plain
         1-handed melee strike."""
         def _is_fin(w):
-            if w is None:
-                return False
-            if hasattr(w, "has_trait") and w.has_trait("finesse"):
-                return True
-            return bool(w.get("finesse", False))
+            return w.is_finesse if hasattr(w, "is_finesse") else bool(w.get("finesse", False))
 
         if weapon is not None:
             if _is_fin(weapon) or self.ability.finesse:
@@ -593,16 +613,10 @@ class Combatant:
         elif thrown:
             mods = [(self.mod_dexterity, None, "DEX")]       # a throw hits with Dexterity
             hit_stat = "dex"
-        elif (self.unarmed or self.improvised) and (self.char.talent_bonus("unarmed_finesse") or self.ability.finesse):
-            mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
-            hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
-        elif self.unarmed or self.improvised:
-            mods = [(self.mod_strength, None, "STR")]
-            hit_stat = "str"
         elif self.ranged:
             mods = [(self.mod_dexterity, None, "DEX")]
             hit_stat = "dex"
-        elif _is_fin(self.weapon) or self.ability.finesse:
+        elif _is_fin(self.attack_weapon) or self.ability.finesse:
             mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
             hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
         else:
@@ -651,16 +665,10 @@ class Combatant:
 
     def damage_roll(self, crit=False, thrown=False, weapon=None, crit_mult=None, bonus_damage=0):
         """`weapon` (a WEAPONS dict or ItemDef) overrides the held one -- the Tongue weapon."""
-        if weapon is not None:
-            n, faces = weapon["damage"]
-            mult = crit_mult or weapon.get("crit_mult", 2)
-        elif (self.unarmed or self.improvised) and not thrown:
-            n, faces = self.unarmed_damage
-            mult = crit_mult or 2
-        else:
-            n, faces = self.weapon["damage"]
-            mult = crit_mult or (self.weapon.get("crit_mult", 2) if self.weapon else 2)
-        
+        w = weapon if weapon is not None else (self._natural if self.improvised and not thrown else self.weapon)
+        n, faces = w["damage"]
+        mult = crit_mult or w.get("crit_mult", 2)
+
         crit_dice = sum(roll(n, faces) for _ in range(max(1, mult) - 1)) if crit else 0
         savage = int(self.char.talent_bonus("savage_attacks")) if crit else 0
         if savage:

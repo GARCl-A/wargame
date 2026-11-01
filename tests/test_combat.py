@@ -473,7 +473,7 @@ def test_crossbow_without_ammo_is_improvised():
     labels = {lbl for _, _, lbl in u.attack_mods(None)}
     assert "STR" in labels and "DEX" not in labels
     # damage die is the size unarmed die, never 1d8
-    faces = data.UNARMED_ATTACK[u.size][1]
+    faces = u.char.natural_weapon.damage[1]
     assert max(u.damage_roll() for _ in range(200)) <= faces + u.mod_strength + u._ability.melee_damage
 
 

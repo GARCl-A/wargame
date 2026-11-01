@@ -186,7 +186,7 @@ class GuildSheet:
         if not offhand:
             offhand = "Torch" if getattr(c, "torch_hand", False) else (
                 "Lantern" if getattr(c, "lantern_hand", False) else None)
-        weapon = c.weapon_name or unit.ability.natural_weapon or "Unarmed"
+        weapon = c.weapon.name
         return {
             "hands": f"{weapon} + {offhand}" if offhand and offhand != "None" else weapon,
             "armor": unit.armor_name if unit.armor else "None",

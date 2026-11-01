@@ -117,7 +117,7 @@ def _body_sheet(kind, level, samples=60):
     us = [encounters.build_enemy(level, rng, race_pool=_pool(kind)) for _ in range(samples)]
 
     def dmg(u):
-        n, f = u.unarmed_damage if u.equipped_weapon is None else u.weapon["damage"]
+        n, f = u.weapon["damage"]
         return n * (f + 1) / 2 + u.mod_strength
 
     def avg(xs):

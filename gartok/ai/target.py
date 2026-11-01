@@ -41,7 +41,7 @@ def _approach_reach(unit):
     reach only when the lash is the attack it would actually pick (no hand weapon,
     or the tongue's die is at least as big) -- otherwise it keeps closing for the
     hand weapon and still lashes if the walk falls short."""
-    if unit.has_tongue_weapon and (unit.unarmed or unit.improvised
+    if unit.has_tongue_weapon and (not unit.armed or unit.improvised
                                    or _avg_die(unit.tongue_weapon["damage"]) >= _hand_die(unit)):
         return unit.tongue_reach
     spell_dmg = unit.talent_bonus("spell_damage")
