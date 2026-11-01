@@ -1114,6 +1114,14 @@ different questions:
   keeps its bay and can be mended there. Setting out with a broken wagon
   abandons it: the group is asked first, and may unload the cargo into the packs
   on the loot screen; whatever is left goes with the wagon.
+- **Design constraints for wagons, animals and camps** (keep them while building these systems). The
+  game is meant to get big (many groups, animals and wagons): shape the systems for that now and prefer
+  the general model over a patch for the small case. Storage trades capacity for something: the pack is
+  free and goes to combat; a chest and a house are static and safe; a wagon is mobile, lost with the
+  group, needs animals that eat and sets the trip's pace; pack animals sit between pack and wagon. Tack
+  decides an animal's role (Pack Saddle carries, Harness pulls, a riding saddle later); the wagon is a
+  box and transport is derived. Wagons never enter a battle map: when combat starts, passengers get off
+  and fight.
 - **A hard wall on the roster itself.** `recruit.capacity(guild, unit)`
   = `BASE_RECRUIT_CAPACITY` (1) + the unit's own Charisma modifier — how many
   people *that specific member* can personally sponsor into the guild

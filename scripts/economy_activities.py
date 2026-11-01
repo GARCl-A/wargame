@@ -1,6 +1,6 @@
 """Economy sim v2, layer 1: what each activity pays a level-N squad, in copper and in XP.
 
-Plan: docs/plans/economy_sim_v2.md. Every number comes from the real rules -- wages from
+Docs: docs/economy_sim.md. Every number comes from the real rules -- wages from
 `economy`, hunt time and ambushes from `hunt`, fights from `Battle` + `ai`, loot from
 `loot.field_loot`, XP from `progression` -- never a parallel model. Fights are replayed
 `--trials` times, so risk is a measured rate that moves when combat changes.

@@ -1,57 +1,48 @@
 # Backlog — everything still open
 
-The one place for open work. What is already built is in the code, its tests and the git
-log; the long-range AI plan is [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
+The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
+`docs/plans/` ([loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
+that owns the subject: the test suite [../../tests/README.md](../../tests/README.md), the economy sim
+[../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
+What is already built is in the code, its tests and the git log.
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do* items again on 2026-10-30). When an item is done, delete
-it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
+Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do*
+items again on 2026-10-30, the plan pointers on 2026-11-01). When an item is done, delete it here and, if it
+changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
-Parts:
+Parts, in this order:
 
-- **Pre-playtest plan** — what is left before the author's playtest, in order.
-- **Ready to do** — the task is defined enough to start, sorted by size.
-- **Deprioritised** and **Notes to remember** — wanted one day, not now.
-- **To discuss and reflect on** — premises to think over, not tasks.
+- **Before the friends' playtest** — what is left before the build goes out.
+- **Ready to do** — defined enough to start: *Small*, then *Medium*, in the order to pick them up.
+- **Large and later** — after the playtest or after another system: *Large*, *Art*, *Epic*.
+- **Deprioritised**, **Notes to remember**, **To discuss and reflect on** — wanted one day, or premises to
+  think over; not tasks.
 - **Playtest notes** — raw notes by date, sized as they are picked up.
-- **Needs more information** — a design question, a repro or another system has to land
-  before the task can be sized.
+- **Needs more information** — a design question, a repro or another system has to land before the task
+  can be sized.
 
 ---
 
-# Web front-end (decided 2026-10-23)
+# Before the friends' playtest (agreed 2026-10-20)
 
-The presentation moved from pygame to HTML/CSS/Canvas, and the Python core stays. Every screen the
-campaign reaches is in the browser and `python main.py` opens it (the Editor, a separate pygame program, is `python -m editor`; the
-pygame campaign is gone). The rules for new UI work are in [../web_ui/web_client.md](../web_ui/web_client.md); what was left of the port is in this file.
+Goal: a stable build for the author's playtest and one with friends. Content, AI, measure and economy,
+combat presentation and the hub kit are done. Left:
 
----
+- **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
+  map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
+  and flags what still rings false.
+- The *Small* items below, in order: the version, the exe, the two bugs the friend hit, the export.
 
-# Pre-playtest plan (agreed 2026-10-20)
-
-Goal: a "stable" build for the author's playtest and one with friends. Phases 1-4 (content,
-AI, measure and economy, combat presentation: the fog of war, the log on the board with its sound,
-a floor per place in `ui/floors.py`, every screen on the hub kit) are done; what is left:
-
-**Phase 5 — tutorials** (last: they describe the final screens)
-5. **Tutorials.** Done 2026-10-21: every card checked against the code and cut to the rule it
-   teaches (~4,800 words -> ~3,000); the map's card closes onto the objectives (17, all open,
-   `gartok/objectives.py`); the wounded group's Medic line and the Library's WRITE hint are in.
-   Left: the author reads every card in play and flags what still rings false.
-6. **Big screen files:** the two editors
-   (`map_editor_screen.py`, `char_editor_screen.py`, ~800-970) stay out. When any of them takes a new
-   node or tab, split by concern instead of growing it.
-
-**After the playtest** (the playtest answers them, or they are content past it): weapon actions
-tuning, *Tune the specialised shops*, Magic Arc tuning, production chain (the sim's crafter policy:
-smelting Iron Bar, Coal's use), cooking with meal buffs, the sim planner (`economy_offers.py` -> policy), the
-other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
+After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
+specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
+Prisoners, Archaeology at Ancient Ruins.
 
 ---
 
 # Ready to do
 
-Order inside a size is the order to pick them up: first what blocks the friends' playtest, then
-bugs, then the rest.
+Order inside a size is the order to pick them up: first what blocks the friends' playtest, then bugs, then
+the rest.
 
 ## Small
 
@@ -212,9 +203,15 @@ bugs, then the rest.
   while a screen is open, everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip
   cancelled. The old screens are in git before the cut.
 
-- **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per
-  test, runs under `pytest-xdist` and the skills use it; four tests still lean on luck and the
-  rest move to `standard_unit` as they are touched; the steps are in [test_suite.md](test_suite.md).
+- **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per test and
+  runs under `pytest-xdist` (how it works: [../../tests/README.md](../../tests/README.md)); four tests
+  still lean on luck and only their seed holds them green, so a change to `Unit` generation may turn one
+  red. Rebuild each on `standard_unit`:
+  `test_combat_talents.py::test_gruesome_takedown_demoralizes_nearest_foe_on_down`,
+  `test_objectives.py::test_the_medic_marks_its_objective`,
+  `test_poison.py::test_a_bite_that_hurts_forces_a_save_and_a_failure_poisons`,
+  `test_web_hub.py::test_a_trust_order_opens_the_bankers_jobs_alone`. The rest of the suite moves by
+  touch: a file whose tests are edited moves its `Unit(...)` rolls to `standard_unit`.
 
 - **Remove occupations (decided 2026-10-23). Close this soon, and until then do not maintain the idea.**
   Occupations are going, so no new code, label, icon, test or sim ranking may lean on them (author
@@ -231,6 +228,8 @@ bugs, then the rest.
   loading unless the key gets a default. The occupation-unique items lose their reason to exist: drop
   them from the start, they come back if a system ever needs them. Check the economy sim afterwards:
   a starting Axe or Pickaxe was a work tool.
+  `tests/helpers.standard_unit` drops its `set_occupation("Guide")` and must still hand back a Quarterstaff
+  and an empty pack.
 
 - **Magic Arc follow-ups (future drops, quests & tuning).**
   1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
@@ -241,9 +240,98 @@ bugs, then the rest.
   meet the day-30 milestone, none die before it. Past it (the Pit, a recruit, the Wilds hunt as the income) 18 of
   40 die by day 60, all hunting: a lost lethal fight takes the whole group. The sim gives the player `SKILL = 0.5`
   of the AI's losses in every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0,
-  `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later.
+  `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later (the sim: [../economy_sim.md](../economy_sim.md)).
 
-## Deprioritised
+---
+
+# Large and later
+
+## Large
+
+- **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16: out of its case an
+  action is one strike; in it the strike lands twice over plus a small edge (RULES.md *Weapon actions*,
+  `favoured` on each action, the premise held by `test_ai_actions`). Left: whether each case comes up
+  often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
+  the slimmest), Long Thrust (Glaive, 2026-10-22: one strike past reach, no double, the narrowest by design),
+  and the old Extreme Shot / Power Shot niches (Power Shot is now on the Longbow too).
+- **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
+  group's output is another's input, the heart of the open-world vision. The Carpenter is open (2026-10-19).
+  The Forge already smelts Iron Bar (2 Iron Ore + 1kg Coal). Next: wagon crafting, a crafting branch for
+  the sim's `balanced` policy (smelt, then forge or sell) and tests. Gives Coal and the gems a use and
+  closes `sources.py`'s `traded` goods one chain at a time.
+  **Market supply and demand / lumber saturation:** endless day labour at the Yard should flood wood prices.
+  Intent (author 2026-10-31): a living economy, prices answer to what players do (a guild that cuts wood 24
+  h a day floods the market and the work stops paying); the carpenter buys wood from the lumberjack and
+  iron from the smith, the smith buys ore and coal from the mine. How the player enters that chain against
+  the shops is open. After the core is solid.
+- **Market stall (tester's idea, playtest 2026-10-31).** A licence to open a stall in any market and sell
+  your own goods at a better price, so every area allows some interaction. Not sized; it belongs with the
+  production chain above and needs it first.
+- **Item properties: base material sources (after the production chain).**
+  (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven
+  declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
+- **Prisoners.** The bail rule is its own item in *Ready to do*. Decided 2026-10-19: (1) sell to City Prison via interactive tab/dialogue for bounty based on
+  captive level/crime; (2) recruit contest; (3) forced manual labor in lumber/mine: captive eats group food (or
+  starves), escape/revolt check fires daily after captive recovers to full HP. Left: UI tabs, escape check,
+  enemy capturing player units, and battlefield rescue.
+- **Campaign AI: a policy planner, then a genetic algorithm** — plan: [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
+  The offers list is built (`scripts/economy_offers.py`); left: a planner that enumerates and prices
+  offers dynamically in copper and days (the plan's phase 2), then the evolutionary loop and its telemetry.
+- **Tune the specialised shops.** Confirm distances and alignments of shop keepers; verify world-tied
+  restocking (the Carpenter is verified). The shelf numbers (target and refill per shop and item) are a
+  first estimate from the sim's restock sweep, and a shop's till and its refill belong to a shop function, not
+  to `kind == "market"` (the Library's cash never refills, nor would the tavern's).
+
+## Art (made by hand, not code)
+
+Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`; the rest is game-icons.net
+SVG silhouettes. How the art is made (Gemini first, anchored on the four reference portraits; the
+`/gen-portrait` LoRA is the weaker fallback) is in [../web_ui/web_client.md](../web_ui/web_client.md); an
+agent asks for art instead of generating it. Order is the suggested priority.
+
+- **Art to generate for the web board and UI** (the art direction in [../web_ui/web_client.md](../web_ui/web_client.md);
+  files go in `gartok/web/client/img/`). Each is one seamless 1024 texture in the sepia
+  engraving of the reference portraits, seen from above, mid value, with no 2x2 copies of
+  its motif inside (Gemini's habit: the 2026-10-23 batch was four copies of a 512 block).
+  **Prompts are not kept in the repo yet** (the Gemini prompts for the finished textures were not
+  saved). From now on save each prompt that works (and the reference images attached) next to the
+  texture, in `docs/art/<name>_options/`, and write the prompt that failed under its item.
+  - [x] Cave rock floor — `rock.jpg`
+  - [x] Grass floor — `grass.jpg`
+  - [x] Stone floor — `flagstones.jpg`
+  - [x] Arena sand — `sand.jpg`
+  - [x] Trees from above — `tree_1..3.png` (cut out of their parchment)
+  - [x] UI materials — `paper.png`, `leather.png`, `brass_button.png` /
+    `brass_button_pressed.png`, `seal.png` (End Turn), `portrait_frame.png`
+  - [ ] Boulders from above — one of three, `boulder.png` (the other came inside a drawn
+    circle)
+  - [ ] Road earth (twice wrong: straight ruts like grid lines, then a copy of `rock.jpg`;
+    attach no floor texture as a reference, Gemini copies it)
+  - [ ] Town cobbles (twice wrong: too dark and contrasty, then a copy of `rock.jpg`)
+  - [ ] Ancient Ruins floor (playtest 2026-10-30): the tile repeats and its edges do not meet, so the
+    seams show in the first room. Same rules as the others (seamless, no 2x2 copies); check the
+    edges by tiling it 3x3 before it goes in, and replace the file the Ruins floor reads in `ui/floors.py`.
+  - [ ] Masonry wall from above (twice wrong: a wall seen from the front, then a light
+    floor of blocks that does not tile top to bottom)
+- **Fill the short portrait pools** (12 is complete). Short: Snake Dragon (1), Dragon (2), Ogre (3),
+  Snake (3), Zombie (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8),
+  Skeleton (9), Goliath (10), Dwarf (11), Lizardfolk (11).
+- **The Mine's art.** The Mine has no visual of its own on the map or its screens; the Lumber Yard's
+  look is the model.
+- **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
+  drawn procedurally. Lowest priority.
+
+## Epic
+
+- **Riding and mounts.** Riding a Centaur ally is built. Left: riding animals (a riding saddle enters
+  `animals.TACK`; the rider and animal pair goes into combat), and controllable / AI-driven animals in
+  combat (today a neutral creature only stands still and blocks its cell). The creature abstraction should not make it harder.
+- **Auto battler with priority programming** (Siralim Ultimate style). Its own arc and
+  branch: UI, AI and tests.
+
+---
+
+# Deprioritised, notes and reflection
 
 - **Port the Editor to the web (author 2026-10-30: wanted one day, not now).** The character creator, the map
   editor and the combat lab's menu stay pygame (the `editor/` package, `python -m editor`: `editor_app`, `editor_menu_screen`,
@@ -266,6 +354,11 @@ bugs, then the rest.
   developers and agents, spoilers included; if it is ever published it becomes the game's general wiki,
   outside the game, and the in-game one stays the discovered subset.
 
+- **Test suite: faster tiers (found 2026-10-28).** If `-n auto` is ever not enough: ~78 tests between 0.1 s
+  and 1 s make up about half of the fast tier's serial time (look there first); and
+  `test_economy_sim._rows` replays 50 battles per call with no sharing, so a module-level cache would cut
+  the `balance` tier by ~10 s if it is run often.
+
 ## Notes to remember when the case comes up
 
 - **A talent with more than one prerequisite.** The tree already draws the second requirement as a red dotted
@@ -280,7 +373,7 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 - **Everything is open from the day the guild is founded (author 2026-10-31).** Nothing is unlocked by
   story; what gates a thing is money, exploring a place, a reputation, a talent or a race. The author
-  knows this makes levelling feel flat (*Playtest notes 2026-10-31 -> Levelling is vertical only*).
+  knows this makes levelling feel flat (*Playtest notes -> 2026-10-31 -> Levelling is vertical only*).
   Question: keep it fully open and fix levelling elsewhere, or let something be earned in order?
 - **Release (author 2026-10-31).** Itch.io first, as an indie demo (pay what you want), while the game
   grows; Steam when there are 20+ hours of play ($100 fee; the generative-AI content flag must be
@@ -290,7 +383,11 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 - **Co-op / multiplayer on a shared map (author 2026-10-31).** Each band a player. A daydream; the
   tester does not see it fitting. No plan.
 
-## Playtest notes 2026-10-31
+---
+
+# Playtest notes
+
+## 2026-10-31
 
 A friend's (Johann) first session (about 2 h, no tutorial from the author). The two bugs, the Delay label, the
 draft's commission text and the export are in *Ready to do* (Small). The author's stated intent from the
@@ -355,7 +452,7 @@ items it touches. Raw feedback, not yet sized:
 - **Switching between groups.** The author asked if it is pleasant; the answer was not clear in the record.
   Ask again. The friend's view: up to 8 units is fine, more groups slow it unless there is automation.
 - **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received.
-  Already in *Playtest notes 2026-10-12* (programmable order chains) and *Epic*.
+  Already in *Older raw notes* (programmable order chains) and *Epic*.
 
 - **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
   mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
@@ -367,43 +464,14 @@ items it touches. Raw feedback, not yet sized:
   travel preview, a first-travel warning, a link from the tutorial to the wiki.
 - Good sign: he understood the screens by playing and asked whether to continue (about 2 h in).
 
-## Playtest notes 2026-10-30
+## Older raw notes (2026-10-12, 2026-10-21)
 
-Sorted out of the raw notes: the browser's items (the wiki's links, the reading face, a body under a
-fighter, the initiative's states) are done; the
-component kit with a game tooltip, long names, the field's Distribute load and every hub opening on
-its shop are done; the tutorial's black screen did not reproduce and was dropped (reopen it if it comes
-back); the name generator and the rules as keywords are in *Ready to do*. The notes of the day's
-last pass (prisoner bail, the Ruins floor, the stuck fighter, collapsing reputations, the save's version,
-gathering as a level 3/4 job, ambushes without a chance of winning) are sized in *Ready to do* and *Art*;
-the talent ideas are in *Needs more information*.
+To be sized as they are picked up. Guiding rule (2026-10-12): **fewest possible buttons on the map**: a node
+has one "Enter" button and its functions are tabs inside.
 
-## Playtest notes 2026-10-28 (save "Polissexus playtest 1", after 9c3ed73)
-
-A short run in the browser. Its local bugs are fixed (the draft's COMMISSION hit area and cut weapon lines, the
-food alert's overflow, the Chronicle's scroll, every condition on the foe card, Edge's
-translate prompt). What needed a design call, a shared component or a behaviour pygame had is done (the sheet as a
-modal, the work level-up, the tutorial button in the header, the type and the talent map, the fog, the pit,
-the map's walking bands).
-
-## Playtest notes 2026-10-21 (guild Herança)
-
-Raw notes from the author's playtest, to be sized as they are picked up.
-
-- **Presentation:**
-  - Too few icons for the guild banner.
-- **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
-- **Occupations are bland:** answered 2026-10-23, they go (*Ready to do -> Remove occupations*) and an
-  aspiration takes their place (*Needs more information -> Loyalty, the oath and who the members are*).
-- **Combat board:**
-  - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
-  - Hit sounds: in *Ready to do -> Small*.
-
-## Playtest notes 2026-10-12
-
-Raw notes, to be sized as they are picked up. Guiding rule: **fewest possible buttons on the
-map**: a node has one "Enter" button and its functions are tabs inside.
-
+- **Too few icons for the guild banner (10-21).**
+- **World and soul (10-21):** the world needs story depth before the Archaeology arc; the game still lacks
+  "soul" (see *Loyalty* in *Needs more information*).
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
@@ -434,199 +502,33 @@ map**: a node has one "Enter" button and its functions are tabs inside.
 - **Combat leveling (Lv 1 -> 2):** the Wilds weights were fixed (`142b6f5`); assist XP or an
   intermediate arena bout wait on future playtests.
 
-## Large
-
-- **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16: out of its case an
-  action is one strike; in it the strike lands twice over plus a small edge (RULES.md *Weapon actions*,
-  `favoured` on each action, the premise held by `test_ai_actions`). Left: whether each case comes up
-  often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
-  the slimmest), Long Thrust (Glaive, 2026-10-22: one strike past reach, no double, the narrowest by design),
-  and the old Extreme Shot / Power Shot niches (Power Shot is now on the Longbow too).
-- **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
-  group's output is another's input, the heart of the open-world vision. The Carpenter is open (2026-10-19).
-  The Forge already smelts Iron Bar (2 Iron Ore + 1kg Coal). Next: wagon crafting, a crafting branch for
-  the sim's `balanced` policy (smelt, then forge or sell) and tests. Gives Coal and the gems a use and
-  closes `sources.py`'s `traded` goods one chain at a time.
-  **Market supply and demand / lumber saturation:** endless day labour at the Yard should flood wood prices.
-  Intent (author 2026-10-31): a living economy, prices answer to what players do (a guild that cuts wood 24
-  h a day floods the market and the work stops paying); the carpenter buys wood from the lumberjack and
-  iron from the smith, the smith buys ore and coal from the mine. How the player enters that chain against
-  the shops is open. After the core is solid.
-- **Market stall (tester's idea, playtest 2026-10-31).** A licence to open a stall in any market and sell
-  your own goods at a better price, so every area allows some interaction. Not sized; it belongs with the
-  production chain above and needs it first.
-- **Item properties: base material sources (after the production chain).**
-  (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven
-  declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
-- **Prisoners.** Decided 2026-10-19: (1) sell to City Prison via interactive tab/dialogue for bounty based on
-  captive level/crime; (2) recruit contest; (3) forced manual labor in lumber/mine: captive eats group food (or
-  starves), escape/revolt check fires daily after captive recovers to full HP. Left: UI tabs, escape check,
-  enemy capturing player units, and battlefield rescue.
-- **Sim policies that find the opportunities themselves.** The offers list is built (`scripts/economy_offers.py`);
-  left: a policy planner that enumerates and prices offers dynamically in copper and days.
-- **Tune the specialised shops.** Confirm distances and alignments of shop keepers; verify world-tied
-  restocking (the Carpenter is verified).
-
-## Art (made by hand, not code)
-
-Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`: Gemini first, the
-`/gen-portrait` skill (local LoRA, about 7 minutes of GPU a portrait, weaker) as the fallback, curated by
-hand; the rest is game-icons.net SVG silhouettes. Order is the suggested priority.
-
-- **Art to generate for the web board and UI** (the art direction in [../web_ui/web_client.md](../web_ui/web_client.md);
-  files go in `gartok/web/client/img/`). Each is one seamless 1024 texture in the sepia
-  engraving of the reference portraits, seen from above, mid value, with no 2x2 copies of
-  its motif inside (Gemini's habit: the 2026-10-23 batch was four copies of a 512 block).
-  **Prompts and references are not kept in the repo yet** (the Gemini prompts for the finished textures
-  were not saved). What exists: the four engraved portraits in `docs/web_ui/references/` (Gnoll 10, Grippli 13,
-  Kenku 4, Ogre 0) as the style anchor, the rules above and the failures listed below. From now on save each
-  prompt that works (and the reference images attached) next to the texture, in `docs/art/<name>_options/`,
-  and write the prompt that failed under its item.
-  - [x] Cave rock floor — `rock.jpg`
-  - [x] Grass floor — `grass.jpg`
-  - [x] Stone floor — `flagstones.jpg`
-  - [x] Arena sand — `sand.jpg`
-  - [x] Trees from above — `tree_1..3.png` (cut out of their parchment)
-  - [x] UI materials — `paper.png`, `leather.png`, `brass_button.png` /
-    `brass_button_pressed.png`, `seal.png` (End Turn), `portrait_frame.png`
-  - [ ] Boulders from above — one of three, `boulder.png` (the other came inside a drawn
-    circle)
-  - [ ] Road earth (twice wrong: straight ruts like grid lines, then a copy of `rock.jpg`;
-    attach no floor texture as a reference, Gemini copies it)
-  - [ ] Town cobbles (twice wrong: too dark and contrasty, then a copy of `rock.jpg`)
-  - [ ] Ancient Ruins floor (playtest 2026-10-30): the tile repeats and its edges do not meet, so the
-    seams show in the first room. Same rules as the others (seamless, no 2x2 copies); check the
-    edges by tiling it 3x3 before it goes in, and replace the file the Ruins floor reads in `ui/floors.py`.
-  - [ ] Masonry wall from above (twice wrong: a wall seen from the front, then a light
-    floor of blocks that does not tile top to bottom)
-- **Fill the short portrait pools** (12 is complete). Short: Snake Dragon (1), Dragon (2), Ogre (3),
-  Snake (3), Zombie (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8),
-  Skeleton (9), Goliath (10), Dwarf (11), Lizardfolk (11).
-- **The Mine's art.** The Mine has no visual of its own on the map or its screens; the Lumber Yard's
-  look is the model.
-- **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
-  drawn procedurally. Lowest priority.
-
-## Epic
-
-- **Riding and mounts.** Riding a Centaur ally is built. Left: riding animals (a riding saddle enters
-  `animals.TACK`; the rider and animal pair goes into combat), and controllable / AI-driven animals in
-  combat (today a neutral creature only stands still and blocks its cell). The creature abstraction should not make it harder.
-- **Auto battler with priority programming** (Siralim Ultimate style). Its own arc and
-  branch: UI, AI and tests.
-
-### Constraints for the wagon, animal and camp systems
-
-Keep these while building them:
-
-- The game is meant to get big (many groups, animals and wagons): shape these systems for
-  that now and prefer the general model over a patch for the small case.
-- Storage trades capacity for something: pack is free and goes to combat; chest and house
-  are static and safe; a wagon is mobile, lost with the group, needs animals that eat and
-  sets the trip's pace; pack animals sit between pack and wagon.
-- Tack decides an animal's role (Pack Saddle carries, Harness pulls, a riding saddle later);
-  the wagon is a box and transport is derived.
-- Wagons never enter a battle map: when combat starts, passengers get off and fight.
-
 ---
 
 # Needs more information
 
-- **Loyalty, the oath and who the members are (design talk 2026-10-23, no code).** Replaces the
-  2026-10-22 "drama engine" and the oath of the old *Found-the-guild charter* entry. Its first concrete
-  step is *Ready to do -> Remove occupations*.
+- **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
+  code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar
+  per member; the oath is composed once, by the player; recruiting is one person convincing another;
+  occupations go and the vocation stays on probation. First concrete step: *Remove occupations* in *Ready
+  to do*. The plan ends with its open questions.
 
-  **The problem.** "No soul, it is all one big calculator": a character is a statblock plus an
-  alignment that only serves recruitment and shops; nobody wants anything. Several systems were built
-  each for a piece of the same need (vocation: "the guild must have something"; alignment: "alike people
-  like each other"; the oath: "why the member stays"; leadership and cohesion: a limit on growth) and
-  none of them talks to the others. The author's worry: piling up subsystems of friction ("making a
-  duck"). The aim is fewer concepts covering those roles, not more content. The test: after an hour
-  of play the player tells a story with a character's name in it.
-
-  **Decided.**
-  - **The player is the guild**, an entity outside the groups; that is why it commands several groups
-    at once. No avatar: an avatar dies to a wolf in a game built on a disposable early squad. Members
-    are **partners, not employees** (no wages, no treasury: the guild has to be worth it to them).
-    The guild leader and the group leaders are managerial roles, not a hierarchy.
-  - **A member is a statblock + named traits + an aspiration.**
-    - **Occupations go** (a classless game; an occupation is only a preset of the random item roll).
-    - **The aspiration** is what the member wants to become: a mage, famous, rich (their own coins), to
-      see the world, a quiet life, to serve faction X. The main loyalty input, and it ties loyalty to
-      progression: a talent or an initiation spent on them is spent toward what they want. A fulfilled
-      aspiration is a story beat (a new one, or they retire a legend).
-    - **Alignment becomes named traits.** The two axes stay underneath, shown as words (proposed:
-      Steadfast / Fickle on the law axis, Merciful / Ruthless on the moral one). What alignment does
-      today, in the author's words: keeping one's word, holding the formation (law); not killing, not
-      stealing (moral). The traits carry both halves: how the member **behaves** when the player is not
-      in control (`ai/`'s temper, what a deserter takes, `dialogue.py`) and what they **value**
-      (loyalty inputs: a Merciful one suffers a captive left to die). Further personality traits, if
-      ever, are more inputs of the same bar.
-  - **Loyalty: one bar per member, shown as a number** (the author likes a transparent game). Inputs:
-    doing what they want, their relations with the other members, killing when they did not want to,
-    progressing when they wanted to, the oath kept or broken. At 0% they announce they are leaving
-    (reuse `cohesion.py`'s 7-day notice, the window where the player can still react).
-    - **It accelerates**: the more loyal, the more they tolerate (losses are dampened); the less loyal,
-      the faster it falls.
-    - **Founders start at ~70%**: they founded the guild. Recruits start mid-bar (~50%), whatever the
-      pitch; one who has little in common with the guild simply falls fast, with no special rule.
-    - **A group past its leader's capacity costs the group leader loyalty**, in place of `cohesion.py`
-      rolling against the weakest member's Mental Defense (absorbs the leadership open problem).
-  - **Relations between members are in**, and they are also a reason to run more than one group
-    (keeping two who cannot stand each other apart). How the player manages them is open.
-  - **Recruiting is one person convincing another**, never the guild recruiting. The recruiter pitches
-    who the guild is and its oath ("this is us, this is the oath, you in?"); CHA still matters, it covers
-    the gap between what the guild offers and what the candidate wants ("not exactly what you want, but
-    close: try it?"). The recruiter's traits against the candidate's can stay (alike people get along);
-    the guild-vs-candidate alignment distance goes.
-  - **The tavern is the world.** Who drinks there is there on their own; the player has no say in who
-    shows up. (Rejected: a "races the guild welcomes" list steering the tavern or the draft. It locks the
-    player out of the Grippli they meet later and fights world-first.)
-  - **The draft stays, as the founding**, not a recruitment: nobody convinced anybody. Choosing a
-    starting crew among random strangers is common in the genre and liked (RimWorld's colonists,
-    Wildermyth); attachment comes from what happens to a character, not from picking them (XCOM).
-    Today's draft is a numbers pick; once candidates show traits and an aspiration it becomes a choice
-    between people.
-  - **The oath** (pf2e's edicts and anathemas):
-    - **Composed by the player, choice by choice**, along axes with trade-offs (e.g. killing: everyone
-      must die / free / nobody dies). The guild is as complex as the player wants it to be.
-    - **Every clause points at an event the game already records**, or it is abstract. "Get rich" alone
-      is no trade-off (every player wants it); it works as an edict loyalty reads. Candidates from the
-      talk: "nobody is left behind" (a downed ally or body abandoned), "no blood for nothing" (killing
-      one who surrendered, a captive left to die), "we come home alive" (withdrawing is never shameful),
-      "we keep the City's law" (a crime, `justice.py`).
-    - **Binds every member**, founders and recruits alike.
-    - **Can never be changed**: the guild is the player, and the oath is the commitment the player makes
-      by starting the run.
-    - **Factions and NPCs do not react to the oath**, only to what the guild does.
-  - **Vocation stays for now, on probation.** It is cut, merged or diluted into another system as soon
-    as one does its job better. Today it is six races + one perk; that coupling makes a fan of one race
-    pick a perk they do not want, and the author only ever plays Caravan or Delvers: those two touch
-    something done every day (travel, gathering), the other four rare events (the cohesion roll, a
-    Cautious ambush, the opening read, every 10th day's food). If it is reworked, each perk acts on a
-    daily loop.
-
-  **Rules of thumb for every input and output.** An input is an event the game already has (a death,
-  hunger, days at the Yard, the loot, a withdrawal, a crime); an output is a mechanism that already
-  exists (leaving, recruiting, maybe combat morale); nothing needs a new screen to manage, it shows as a
-  line in the log or a one-off request ("Brakka wants a double share or leaves with their own"); it
-  produces a decision (profit against a person, a person against a person), not only an upkeep like
-  hunger. And not everything feeds loyalty: if perk, oath, aspiration and trait only move the same bar,
-  loyalty becomes the new calculator.
-
-  **Proposed, not yet answered.**
-  - **Origins** (a starting situation in place of a perk: "a wagon and a debt to the Bankers",
-    "survivors of a Ruins expedition") are the form the genre likes best for a founding; new content, so
-    noted, not now. A candidate for what the vocation could become.
-
-  **Open (closes with play or numbers).**
-  - How far each input moves the bar, the acceleration curve, what high loyalty buys besides tolerance.
-  - The aspiration list and how each one is read off existing state.
-  - The oath's axes and the steps on each.
-  - How the player sees and manages relations between members.
-  - What the economy sim (`economy_guild.py`) and `cohesion.py` must learn.
-  - Presentation, later: a founding charter that writes itself line by line, signed with the banner and
-    the oath, the first entry of the guild's chronicle.
+- **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
+  targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
+  order of impact:
+  1. *The Medic's price.* As built it is $16 an HP against $1.3 an HP for a rest, so only a rich squad uses
+     it: keep it a late-game luxury, or price it at the rest it saves?
+  2. *Upkeep.* A house costs a lumberjack's whole wage and a Donkey a third more. Intended (assets need an
+     adventuring income), or should the first assets be reachable on day labour?
+  3. *The Games' stake.* $30 a fighter is more than a lumber squad keeps in a week, so the ladder is
+     capital-gated: a climb for a guild that has done well, or should the stake come down?
+  4. *How lethal the Wilds should be.* A level-3 squad that does not win nearly every fight cannot make a
+     living there, and the Old Road's ambush (20% a pass, `world.ROAD_AMBUSH_CHANCE`) fires on every walk.
+     Ties to *An ambush needs a pack with a chance to win*.
+  5. *How much a crafting specialist may earn.* The shelves aim at 2-3x a lumberjack; the author's note says
+     crafting is for saving money and reaching what cannot be bought, not a business. Ties to *Tune the
+     specialised shops*.
+  6. *The reference late-game scenario* (level 3 with $250) is a guess at "a guild a week in".
+  7. The Claim's numbers predate the `hold` job fix: re-measure when a sim policy goes for the Claim.
 
 - **Open design questions from the 2026-10-18 playtests** (no code yet).
   - **The world moving by itself** (a Wilds node turns into a lair if nobody clears it). The author's
@@ -664,7 +566,7 @@ Keep these while building them:
      `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets
      with no language of their own. The effect on the beast is the same as on a humanoid
      (`Demoralized`: cannot move, lower defenses). Open: the compound talents' shape (no cross-tree node
-     yet, see *Notes -> a talent with more than one prerequisite*) and whether it also needs the holder
+     yet, see *Notes to remember -> a talent with more than one prerequisite*) and whether it also needs the holder
      to be able to see the beast for a turn (the existing sight check already does).
 
 - **Assess grows into an Intelligence combat tree (author 2026-10-31).** Study the foe, and what you
@@ -676,7 +578,7 @@ Keep these while building them:
   complexity builds. Open: which actions come at which level or talent. Ties to *Roster of characters*
   (*Notes to remember*) and *Levelling is vertical only*.
 
-- **Magic as the vertical progression.** The arc's work is in *Ready to do -> Medium*. The schools are
+- **Magic as the vertical progression.** The arc's work is in *Ready to do -> Medium* (*Magic Arc follow-ups*). The schools are
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
   Open: tier 2+ spells and any reputation penalty for rivalry.
 

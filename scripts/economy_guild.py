@@ -1,6 +1,6 @@
 """Economy sim v2, layer 2: a whole guild lives N days under a policy.
 
-Plan: docs/plans/economy_sim_v2.md. The real `Guild` lives the days: the real order engine
+Docs: docs/economy_sim.md. The real `Guild` lives the days: the real order engine
 (`orders` + `campaign.advance`) walks it between places and ticks the clock, the real daily
 upkeep feeds it, rots its food and heals it, and the market is the real `trade.Counter`, so
 prices, haggling, finite stock and the market's cash (`Guild.shop(node_id).cash`) all bite. Work and
