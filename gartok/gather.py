@@ -3,8 +3,11 @@
 The Lumber Yard and the Mine pay a wage for a shift (`economy.work_pay`). With the node's
 licence (bought once there, held by the whole guild) a group may gather instead: every worker
 rolls `rolls(hours)` times on the node's drop table, rarer items further down, and the haul goes
-into their pack. A pack may find the crew first (`ambushed`); the haul is banked only if the
-crew wins. `Guild.gather_shift` runs it, `campaign` and `app` play the fight.
+into their pack. Only a worker who carries the node's own tool (`economy.WORK_TOOLS`: the Yard's
+Axe, the Mine's Pick) gathers: they roll and bank work XP at the node's `LEVEL` (the Yard 2, the
+Mine 3, past the wage's 1). A worker without it takes no roll and no XP but stays with the crew as
+a guard, and fights if a pack comes. A pack may find the crew first (`ambushed`); the haul is
+banked only if the crew wins. `Guild.gather_shift` runs it, `campaign` and `app` play the fight.
 
 The tables, the rate and the licence prices are tuned so that a shift sold to a shop is worth more
 than the best wage for the same hours, and a full day (16 h) at least `PREMIUM` copper more (a test
@@ -33,6 +36,7 @@ TABLES = {
              (items.GEM_ITEM, 4), (items.PRECIOUS_GEM_ITEM, 1)),
 }
 LICENCE_PRICE = {"lumber_yard": 270, "mine": 385}
+LEVEL = {"lumber_yard": 2, "mine": 3}
 RISK_PER_HOUR = {"lumber_yard": 0.005, "mine": 0.01}
 AMBUSH_TABLES = {"lumber_yard": encounters.LUMBER_YARD_TABLE, "mine": encounters.MINE_TABLE}
 AMBUSH_LEVEL_WEIGHTS = encounters.WILDS_LEVEL_WEIGHTS
@@ -40,6 +44,15 @@ AMBUSH_LEVEL_WEIGHTS = encounters.WILDS_LEVEL_WEIGHTS
 
 def can_gather(node_id):
     return node_id in TABLES
+
+
+def tool(node_id):
+    return economy.WORK_TOOLS[node_id]
+
+
+def gatherers(units, node_id):
+    """Who in `units` gathers at `node_id`: those who carry its tool."""
+    return [u for u in units if economy.owns_tool(u, node_id)]
 
 
 def rolls(hours):

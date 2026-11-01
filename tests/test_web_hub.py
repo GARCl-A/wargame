@@ -248,9 +248,26 @@ def test_the_licence_is_bought_from_the_bands_purse_and_refused_when_it_is_short
     assert sum(u["haul"] for u in crew) == round(guild.shift_worth(g, "lumber_yard", gather.DAY_HOURS)[0])
 
 
+def test_the_gathering_tab_marks_who_gathers_and_who_stands_guard():
+    hub, guild, g = _hub("lumber_yard", "market")
+    hub.gathering.buy_licence()
+    st = hub.pick_tab("gather")["gather"]
+    assert not st["can"] and st["guards"] == [u.name for u in g.members] and st["tool"] == "Axe"
+    assert all(not c["tool"] and "stands guard" in c["note"] for c in st["crew"])
+    with pytest.raises(ValueError):
+        hub.gather(4)
+    g.members[0].give_to_pack("Axe")
+    st = hub.pick_tab("gather")["gather"]
+    assert st["can"] and st["guards"] == [u.name for u in g.members[1:]] and st["level"] == 2
+    first, *rest = st["crew"]
+    assert first["tool"] and "gathers" in first["note"] and first["haul"] > 0
+    assert all(c["haul"] == 0 and not c["tool"] for c in rest)
+
+
 def test_a_gathering_shift_goes_back_to_the_map_and_runs_the_clock_there():
     hub, guild, g = _hub("lumber_yard", "market")
     hub.gathering.buy_licence()
+    g.members[0].give_to_pack("Axe")
     start = guild.clock.seconds
     st = hub.verb("gather", True)(hub, {"hours": 4})
     assert st["screen"] == "map" and isinstance(hub.game.session, MapSession)

@@ -603,9 +603,12 @@ def test_eligible_work_activities():
     jobs_1 = progression.eligible_work_activities(1, u)
     assert "Lumber Yard (with your Axe)" in jobs_1 and "Mine (requires owning a Pick)" in jobs_1
 
-    # Level 2: Lumber Yard is out
+    assert "Lumber Yard gathering (Lv 2: the licence and your own Axe)" in jobs_1
+
+    # Level 2: the Lumber Yard's wage is out, its gathering still teaches
     jobs_2 = progression.eligible_work_activities(2, u)
-    assert not any("Lumber Yard" in j for j in jobs_2)
+    assert [j for j in jobs_2 if "Lumber Yard" in j] == ["Lumber Yard gathering (Lv 2: the licence and your own Axe)"]
+    assert "Mine gathering (Lv 3: the licence and your own Pick)" in jobs_2
     assert any("Crafting" in j for j in jobs_2)
     assert any("Hunting" in j for j in jobs_2)
 
@@ -615,8 +618,11 @@ def test_eligible_work_activities():
     assert any("Crafting" in j for j in jobs_3)
     assert any("Hunting" in j for j in jobs_3)
 
+    assert any("Mine gathering" in j for j in jobs_3)
+
     # Level 4: Level 4 Crafting (Signal Horn)
     jobs_4 = progression.eligible_work_activities(4, u)
+    assert not any("Mine" in j for j in jobs_4)
     assert not any("Hunting" in j for j in jobs_4)
     assert any("Crafting" in j for j in jobs_4)
     assert any("Signal Horn" in j for j in jobs_4)

@@ -143,6 +143,11 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
             else:
                 activities.append(f"{place} (requires {tool})")
 
+    from . import gather
+    for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
+        if worker_level <= gather.LEVEL[node_id]:
+            activities.append(f"{place} gathering (Lv {gather.LEVEL[node_id]}: the licence and your own {tool})")
+
     # Tavern stage
     if worker_level <= 1:
         activities.append("Tavern stage (with a Musical Instrument)")

@@ -1202,7 +1202,7 @@ class Policy:
         if (gather.can_gather(node) and not sim.guild.has_licence(node)
                 and sim.money >= gather.licence_price(node) + reserve):
             sim.buy_licence(node)
-        if sim.guild.has_licence(node):
+        if sim.guild.has_licence(node) and gather.gatherers(sim.members, node):
             sim.gather_shift(node=node)
         else:
             sim.work_shift(node=node)
@@ -1230,6 +1230,7 @@ class Gatherer(Policy):
 
     def step(self, sim):
         self.upkeep(sim)
+        self.arm(sim)
         self.work_node_shift(sim, "lumber_yard")
         day = sim.mouths * gather.rolls(SHIFT_HOURS)
         if sum(sim.sellable.values()) >= self.SELL_EVERY * day:
@@ -1238,6 +1239,19 @@ class Gatherer(Policy):
         if sum(sim.sellable.values()) >= 2 * self.SELL_EVERY * day:
             with sim.market() as shop:
                 shop.sell_round()
+
+    def arm(self, sim):
+        """An Axe for whoever lacks one while the next meals stay covered: only a worker with the
+        node's tool gathers."""
+        tool = economy.WORK_TOOLS["lumber_yard"]
+        lacking = [u for u in sim.members if not economy.owns_tool(u, "lumber_yard")]
+        floor = items.get(tool).price + 3 * sim.mouths * cheapest_food_price()
+        if not lacking or sim.money < floor:
+            return
+        with sim.market() as shop:
+            for u in lacking:
+                if sim.money >= floor:
+                    shop.buy(u, tool)
 
 
 class Miner(Policy):

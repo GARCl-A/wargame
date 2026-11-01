@@ -186,6 +186,8 @@
 .worker .pay{text-align:right;flex:none}
 .worker .pay b{display:block;font:700 22px/1 Cinzel,serif;color:#c9b38c}
 .worker .pay.good b{color:#a9c98a}
+.worker.guard{box-shadow:inset 0 0 0 1px rgba(201,71,58,.45);background:rgba(122,35,24,.18)}
+.worker p.bad,.worker .pay.bad b{color:var(--blood-hi)}
 .worker .pay .lbl{display:block;margin-top:6px}
 .fact{display:flex;align-items:baseline;gap:14px;margin-top:14px}
 .fact .lbl{width:70px;flex:none}

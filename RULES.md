@@ -1281,7 +1281,8 @@ copper instead of walking into the wilds and dying. The yard is also a shop
   Each hour is worth `(activity level - work level) + 1` banked hours, and
   nothing once the activity is below your level, the same rule as combat XP
   (`progression.work_xp_hours`). The yard is level 0, level 1 with your own Axe;
-  crafting is the recipe's `level` (1 or 2), the tavern stage 1, the wilds hunt 3.
+  gathering (licence and own tool) is level 2 at the yard and 3 at the Mine; crafting is the
+  recipe's `level` (1 to 4), the tavern stage 1, the wilds hunt 3.
 - **No wood by default:** the axe is borrowed and the tree is not yours; you take only
   the wage for the hours, no item. With the yard's **gathering licence** (below) a shift
   can gather instead.
@@ -1319,15 +1320,22 @@ paid richest first by the selected group, held by the whole guild: `Guild.licenc
 from then on a group there can order a **gather shift** (4 / 8 / 12 / 16 h, `gather:N` on the
 map; `orders.work(..., gather=True)`) instead of the wage.
 
-- **The haul:** every worker rolls `hours / 7` times on the node's table (a 16 h shift is 2.3
+- **The tool:** only a worker who carries the node's own tool gathers (the Yard's **Axe**, the Mine's
+  **Pick**, `economy.WORK_TOOLS`; in the pack is enough). One without it stays with the crew as a
+  **guard**: no roll, no work XP, but they fight if a pack comes. The tab marks each one and names
+  the guards; split them off on the map to earn elsewhere. A band where no one has the tool cannot
+  order a gather shift. The licence stays the guild's gate.
+- **The haul:** every gatherer rolls `hours / 7` times on the node's table (a 16 h shift is 2.3
   items: 2, and a 3-in-10 chance of a third), each roll one item, rarer further down. The items go into that worker's own
-  pack and the hours into their work track at the node's level (the tool is not needed to gather).
+  pack and the hours into their work track at the node's gathering level (`gather.LEVEL`: the Yard
+  **2**, the Mine **3**, against the wage's 1), so gathering is the way past the wage: the Yard
+  teaches up to work level 3, the Mine up to 4.
   The Delvers' perk adds rolls. **Lumber Yard:** Lumber 75%, Fruit 25%. **Mine:** Stone Brick 55%,
   Coal 25%, Iron Ore 15%, Semi-precious Gemstone 4% ($60), Precious Gemstone 1% ($240).
 - **Pays more than the wage, on average:** a shift sold to a shop is worth at least the node's best
   wage for the same hours, and a full 16 h day at least **3 copper** more (`gather.PREMIUM`; a test holds
   both). The Yard's day pays 8 against a wage of 5, the Mine's 14.3 against 10 (its road and its risk are
-  longer). A licence pays back in about 30 days for 3 workers gathering 16 h a day.
+  longer). A licence pays back in about 30 days for 3 workers gathering 16 h a day, plus a tool each.
 - **Risk:** every hour carries a chance that a pack finds the crew (Yard 0.5% an hour, Mine 1%;
   Cautious and the Woodland Scout shave it like any ambush). **Yard:** wolves, Snakes or Giant Spiders;
   **Mine:** Giant Spiders or Skeletons; 1-3 bodies, never a lone wolf (`encounters.WOLF_PACK_MIN`). It is a lethal forced fight (`gather_ambush`);

@@ -327,6 +327,9 @@ class MapSession(MapView, Session):
         if gather.can_gather(here.id):
             held = self.guild.has_licence(here.id)
             out.append({"value": "held" if held else "no licence", "label": "Gathering", "no": not held})
+            hands = len(gather.gatherers(g.members, here.id))
+            out.append({"value": f"{hands}/{len(g.members)}", "label": f"Own {gather.tool(here.id)}",
+                        "no": hands < len(g.members)})
         out.append({"value": str(len(g.members)), "label": "Workers"})
         return out
 

@@ -252,6 +252,8 @@ def test_a_pack_on_a_gathering_shift_is_fought_with_its_own_pack_and_a_win_banks
     monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
     sim = _sim(skill=1.0, library=_WON)
     sim.guild.licences.add("lumber_yard")
+    for u in sim.guild.roster:
+        u.give_to_pack("Axe")
     seen = []
     real = sim.library.draw
     sim.library.draw = lambda kind, *a, **kw: (seen.append(kind), real(kind, *a, **kw))[1]
