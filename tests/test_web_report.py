@@ -363,3 +363,21 @@ def test_a_work_level_on_the_work_tab_comes_back_to_the_tab():
         assert game.session.back()["stage"] == "level"
     back = s.next()
     assert back["screen"] == "hub" and game.session is hub and back["tab"] == "work" and back["work"]["report"]
+
+
+def test_the_field_opens_a_sheet_and_equips_and_unequips_from_the_loot_screen():
+    _, s, squad = _field()
+    me = squad[0]
+    assert s.sheet(me.uid)["uid"] == me.uid
+    me.equipped_weapon = None
+    st = s.take([{"from": "field", "loc": _stack(s.state(), "Axe")["loc"]}], me.uid, "hand")
+    assert me.equipped_weapon == "Axe"
+    col = next(p for p in st["loot"]["packs"] if p["id"] == me.uid)
+    assert next(w for w in col["worn"] if w["zone"] == "hand")["name"] == "Axe"
+    s.take([{"from": me.uid, "loc": "hand"}], me.uid)
+    assert me.equipped_weapon is None and me.count_of("Axe") == 1
+
+
+def test_the_loot_packs_are_the_kits_column_with_the_sheet_on_the_portrait():
+    src = open("gartok/web/client/screens/report/report.js", encoding="utf-8").read()
+    assert "Kit.column(" in src and "Kit.item(" in src and 'class="slot ' not in src

@@ -56,11 +56,6 @@ the rest.
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
   today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Bug: the loot screen has no character sheet and no equip (playtest 2026-11-01).** After a fight the
-  loot screen cannot open a character's sheet nor equip a weapon on anyone. It should carry what a group
-  inventory has: the sheets, equip and unequip, and the pack. Reuse the pack/sheet component the hub uses
-  instead of a second one. Test: loot a weapon after a fight and equip it from that screen.
-
 - **Bug: the tavern overflows after two recruits on day 1 (playtest 2026-11-01).** The new recruits do not
   enter the recruiters list properly and push the buttons down. Reproduce with two recruits on day 1, fix
   the layout so the list scrolls inside its box and the buttons stay put.

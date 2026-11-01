@@ -234,19 +234,13 @@ function ware(w) {
 }
 
 function column(p, refused) {
-  const hp = p.hp[0] * 3 < p.hp[1], over = p.kg > p.normal;
-  const worn = p.worn.map(w => `<div class="slot ${w.name ? "" : "empty"} ${w.new ? "new" : ""} ${isPicked(p.uid, w.zone) ? "on" : ""}" data-zone="${w.zone}"
-      ${w.name ? `data-from="${p.uid}" data-loc="${w.zone}"` : ""}${tip(w.tip, "item")}><span class="g">${g(w.glyph)}</span><div><em>${esc(w.label)}</em><b>${esc(w.name || "empty")}</b></div></div>`).join("");
-  const rows = p.pack.map(r => `<div class="row-it ${r.new ? "new" : ""} ${isPicked(p.uid, r.loc) ? "on" : ""}" data-from="${p.uid}" data-loc="${r.loc}"${tip(r.tip, "item")}>
-      <span class="g">${g(r.glyph)}</span><span>${esc(r.name)}</span>${r.qty > 1 || r.new ? `<small>×${r.qty}${r.new ? ` <b>+${r.new}</b>` : ""}</small>` : ""}<em>${kilos(r.qty * r.kg)}</em></div>`).join("");
-  return `<div class="leather col ${refused ? "refuse" : ""}" data-col="${p.uid}">
-    <div class="who"><div class="medal">${face(p.portrait, p.name)}</div><div><b>${esc(p.name)}</b><span>${esc(p.sub)}</span></div></div>
-    <div class="meter"><div class="barlbl"><span>Hit points</span><b class="${hp ? "red" : ""}">${p.hp[0]} / ${p.hp[1]}</b></div>
-      <div class="bar hp ${hp ? "low" : ""}"><i style="width:${p.hp[0] / p.hp[1] * 100}%"></i></div>
-      <div class="barlbl"><span>Load</span><b class="${over ? "red" : ""}">${kilos(p.kg)} / ${kilos(p.normal)} · max ${kilos(p.max)}</b></div>
-      <div class="bar load"><i class="${over ? "over" : ""}" style="width:${Math.min(100, p.kg / p.max * 100)}%"></i><span class="norm" style="left:${p.normal / p.max * 100}%"></span></div></div>
-    <div class="slots">${worn}</div><div class="rows">${rows}</div>
-    ${refused ? `<div class="why"><b>Won't fit</b>${esc(refused.why)}</div>` : ""}</div>`;
+  const row = (q, it, loc, slot) => {
+    const got = it && it.name ? (it.new || 0) : 0;
+    const html = Kit.item(q.id, it, loc, slot, {sel: isPicked(q.id, loc), tags: got ? Kit.tag(true, "new") : ""});
+    return got ? html.replace('class="it ', 'class="it new ') : html;
+  };
+  const html = Kit.column(p, {row, foot: refused ? `<b>Won't fit</b>${esc(refused.why)}` : ""});
+  return refused ? html.replace('class="col pack"', 'class="col pack refuse"').replace('class="cfoot"', 'class="cfoot why"') : html;
 }
 
 function loot() {
@@ -279,19 +273,20 @@ function itemOf(from, loc) {
 }
 
 function sourceAt(el) {
-  const s = el.closest("[data-from]");
+  const s = el.closest("[data-from], .it[data-loc]");
   if (!s) return null;
-  const loc = s.dataset.from === "field" || /^\d+$/.test(s.dataset.loc) ? +s.dataset.loc : s.dataset.loc;
-  return {from: s.dataset.from, loc};
+  const from = s.dataset.from || s.dataset.owner;
+  const loc = from === "field" || /^\d+$/.test(s.dataset.loc) ? +s.dataset.loc : s.dataset.loc;
+  return {from, loc};
 }
 
 function give(src, el) {
-  const col = el.closest("[data-col]");
+  const col = el.closest("[data-col], .col.pack[data-owner]");
   if (!col) return false;
-  const to = col.dataset.col;
+  const to = col.dataset.col || col.dataset.owner;
   if (to === "field" && src.from === "field") return false;
   if (to === src.from) return false;
-  const slot = el.closest(".slot[data-zone]");
+  const slot = el.closest(".it[data-zone]");
   const w = src.from === "field" ? wareOf(src.loc) : null;
   const body = {picks: [{from: src.from, loc: src.loc, qty: w ? Math.min(qty[w.name] ?? w.qty, w.qty) : undefined}], to,
     zone: slot && to !== "field" ? slot.dataset.zone : "pack"};
@@ -333,7 +328,7 @@ function moveSlip(e) {
   $("slip").style.top = (e.clientY - st.top) / k + 10 + "px";
   document.querySelectorAll(".target").forEach(t => t.classList.remove("target"));
   const el = document.elementFromPoint(e.clientX, e.clientY);
-  const over = el && (el.closest(".slot[data-zone]") || el.closest("[data-col]"));
+  const over = el && (el.closest(".it[data-zone]") || el.closest("[data-col], .col.pack[data-owner]"));
   if (over) over.classList.add("target");
 }
 

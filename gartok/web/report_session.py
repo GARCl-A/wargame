@@ -85,6 +85,9 @@ class ReportSession(Session):
         self.refused = None                      # {"uid", "item", "why"}: the last drop that would not fit
         self.paid_to = None
 
+    def sheet_units(self):
+        return list(self.outcome.survivors)
+
     def tutorial_key(self):
         return {"memorial": "memorial", "report": "report", "level": "level_up", "purse": "reward",
                 "loot": "loot"}.get(self.stage[0])
@@ -401,12 +404,13 @@ class ReportSession(Session):
                 continue
             name = ls._item_at(u, zone)
             worn.append({"zone": zone, "label": label, "name": name, "glyph": item_icon.glyph(name) if name else None,
-                         "tip": _tip(name) if name else "", "new": bool(name and got.get(name))})
+                         "tip": _tip(name) if name else "", "new": int(bool(name and got.get(name))),
+                         "kg": items.item_weight(name) if name else 0})
         pack = [{"loc": idx, "name": items.stack_name(e), "qty": e[1], "glyph": item_icon.glyph(items.stack_name(e)),
                  "kg": items.item_weight(items.stack_name(e)), "tip": _tip(items.stack_name(e)),
                  "new": got.get(items.stack_name(e), 0)} for idx, e in enumerate(u._base_inventory)]
-        return {"uid": u.uid, "name": u.name, "portrait": _portrait(u),
-                "sub": u.race['name'], "hp": [u.hp, u.hp_max],
+        return {"uid": u.uid, "id": u.uid, "name": u.name, "portrait": _portrait(u), "money": u.money,
+                "hurt": u.hp * 3 < u.hp_max, "sub": u.race['name'], "hp": [u.hp, u.hp_max],
                 "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max, "worn": worn, "pack": pack}
 
     def _purse(self):
