@@ -8,6 +8,9 @@ let G = null;
 const hpcls = (h, m) => h / m < .34 ? "low" : h / m < .67 ? "mid" : "";
 const rgb = c => `rgb(${c.join(",")})`;
 const showing = new Set();          // holdings opened to look inside
+const folded = new Map();           // faction -> collapsed by hand (true/false); absent: collapsed only when complete
+const complete = f => f.deeds.length > 0 && f.deeds.every(d => d.state === "done");
+const isShut = f => folded.has(f.name) ? folded.get(f.name) : complete(f);
 
 let toastTimer = null;
 function toast(text) {
@@ -142,12 +145,18 @@ function drawReputations() {
     <div class="objhead"><h2>Guild Objectives</h2><b>${o.done}<small> / ${o.total}</small></b></div>
     <div class="objblurb">${esc(o.blurb)}</div>
     <div class="objs">${objs.map(d => `<div class="ob ${d.done ? "done" : ""}"><span class="box2"></span><div><b>${esc(d.name)}</b><p>${esc(d.blurb)}</p></div></div>`).join("")}</div></div>`;
-  const facs = R.factions.map(f => `<div class="paper fac">
-      <div class="top2"><div><div class="kicker">Faction</div><h2>${esc(f.name)}</h2></div><div class="rep ${f.rep ? "" : "zero"}">${f.rep}</div></div>
+  const facs = R.factions.map(f => {
+    const shut = isShut(f);
+    const head = `<div class="top2" data-facfold="${esc(f.name)}"${tip(shut ? "Open this faction's sheet" : "Collapse this faction's sheet")}>
+        <div><div class="kicker">Faction</div><h2>${esc(f.name)}${shut && complete(f) ? `: COMPLETE` : ""}</h2></div>
+        <div class="rep ${f.rep ? "" : "zero"}">${f.rep}</div></div>`;
+    if (shut) return `<div class="paper fac shut">${head}</div>`;
+    return `<div class="paper fac">${head}
       <div class="bl">${esc(f.blurb)}</div>
       <div style="margin-top:8px">${f.deeds.map(d => `<div class="ob ${d.state}"><span class="box2"></span><div><b>${esc(d.name)}</b><span class="pt">+${d.rep}</span><p>${esc(d.blurb)}</p></div></div>`).join("")}</div>
       ${f.unlocks.map(u => `<div class="unl ${u.open ? "" : "shut"}"><span class="lk">${u.open ? "open" : "at " + u.need}</span><span><b>${esc(u.title)}</b>: <i>${esc(u.text)}</i></span></div>`).join("")}
-    </div>`).join("") || `<div class="paper fac"><div class="bl">No faction has heard of the guild yet.</div></div>`;
+    </div>`;
+  }).join("") || `<div class="paper fac"><div class="bl">No faction has heard of the guild yet.</div></div>`;
   $("body").innerHTML = page + `<div id="facs">${facs}</div>`;
 }
 
@@ -186,6 +195,12 @@ $("body").addEventListener("click", e => {
   if (el.closest("#tree")) { Sound.play("click"); return post("talents", {}); }
   const o = el.closest("[data-open]");
   if (o) { Sound.play("click"); return post("band", {gid: o.dataset.open}); }
+  const ff = el.closest("[data-facfold]");
+  if (ff) {
+    const f = G.reputations.factions.find(x => x.name === ff.dataset.facfold);
+    folded.set(f.name, !isShut(f));
+    return draw();
+  }
   const look = el.closest("[data-look]");
   if (look) {
     const k = look.dataset.look;

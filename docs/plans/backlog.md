@@ -91,12 +91,6 @@ the rest.
   say a failed pitch keeps the bail: `RULES.md` (*Prison*, "Lose the pitch and the bail is gone too")
   and the prison's tutorial card in `locales/en.json` ("they walk free with your money").
 
-- **Reputations: collapse a faction's sheet (playtest 2026-10-30).** On day 80 every deed of The Pits was
-  done and the sheet still took the space. Each faction block in the reputations tab gets a toggle: a
-  faction with all its deeds done starts collapsed to one line ("The Pits: COMPLETE", the same row and
-  tooltip as its header); any faction can be opened or collapsed by hand, and the choice is the client's
-  (kept in the page, not in the save). Web only (`web/client/`), no rules change.
-
 - **Gathering teaches at the node's level and needs the tool (playtest 2026-10-30, decided).**
   `bank_haul` banks work XP at `economy.work_level(u, node_id)` (0 or 1: the tool), the same as a wage
   shift. Change: a gathering shift banks at activity level 3 at the Lumber Yard and 4 at the Mine
