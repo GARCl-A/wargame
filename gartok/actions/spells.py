@@ -9,6 +9,12 @@ from ..data import d20
 from ..ground import GroundObject
 from .base import Action, _cell_free, _hostile_target, _sign, nonlethal_penalty
 
+_DAGGER_THROW = items.get("Dagger").thrown
+
+
+def _dice(dice):
+    return f"{dice[0]}d{dice[1]}"
+
 
 class SpellAction(Action):
     """Shared plumbing for a spell cast as a combat action: one subclass per
@@ -45,6 +51,9 @@ class MagicMissileAction(SpellAction):
     target, aimed = "enemy", True
     missile = True
     REACH = 6
+    DICE = (1, 4)
+    desc = (f"A foe in sight within {REACH} squares, d20 + INT against AC: {_dice(DICE)} damage. "
+            "A natural 20 rolls the die twice, a natural 1 fumbles with no effect.")
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
@@ -66,7 +75,7 @@ class MagicMissileAction(SpellAction):
         hit_score = atk + self.spell_to_hit(actor) - pulled
         ac = target.ac_vs(actor)
         if atk == 20 or hit_score >= ac:
-            dmg = data.roll(1, 4) + self.spell_damage_bonus(actor)
+            dmg = data.roll(*self.DICE) + self.spell_damage_bonus(actor)
             battle.log(f" Hit ({hit_score} vs AC {intel.shown(battle, target, 'ac', ac)}) for {dmg} magic damage.")
             was_up = target.alive
             target.take_damage(dmg, battle.log, knockout=bool(pulled))
@@ -80,6 +89,9 @@ class SleepAction(SpellAction):
     spell_id = "sleep"
     target, aimed = "enemy", True
     REACH = 6
+    desc = (f"A foe within {REACH} squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for up to "
+            "max(1, 10 - CON mod - WIS mod) rounds, ending early when it takes damage or an adjacent ally "
+            "wakes it. A body with Sleep Immunity is never affected.")
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
@@ -120,6 +132,9 @@ class WaterJetAction(SpellAction):
     target, aimed = "enemy", True
     missile = True
     DICE = (1, 6)
+    desc = (f"A foe within a dagger's throw ({_DAGGER_THROW} squares), d20 + INT against AC: {_dice(DICE)} + INT "
+            "damage, and the jet throws the target 1 square straight away from the caster unless something "
+            "is in the way (into flames, it burns).")
 
     @staticmethod
     def reach(actor=None):
@@ -185,6 +200,8 @@ class DragonfireAction(SpellAction):
     target, aimed = "enemy", True
     missile = True
     DICE = (2, 6)
+    desc = (f"A foe within a dagger's throw ({_DAGGER_THROW} squares), d20 + INT against AC: {_dice(DICE)} fire "
+            "damage. Blood magic costs no hit points.")
 
     @staticmethod
     def reach(actor=None):
@@ -261,6 +278,8 @@ class _HostileSpellAction(SpellAction):
 class GraspingRootsAction(_HostileSpellAction):
     """Nature's level 0: roots hold a foe to 1 cell of walking until the end of its next turn."""
     spell_id = "grasping_roots"
+    desc = (f"A foe in sight within {_HostileSpellAction.REACH} squares, d20 + INT against AC: it walks 1 square "
+            "at most until the end of its next turn. A recast refreshes it.")
 
     def lands(self, battle, actor, target):
         old = target.condition("rooted")
@@ -276,6 +295,9 @@ class HexAction(_HostileSpellAction):
     (`Combatant.hex`), which bites only where a score is even."""
     spell_id = "hex"
     against = "md"
+    desc = (f"A foe in sight within {_HostileSpellAction.REACH} squares, d20 + INT against Mental Defense: -1 on "
+            "each of its six attribute scores until the end of its next turn, which bites only where a score "
+            "is even. Never stacks; a recast refreshes it.")
 
     def lands(self, battle, actor, target):
         was_up = target.alive
@@ -312,6 +334,7 @@ class _TouchSpellAction(SpellAction):
 class SpareTheDyingAction(_TouchSpellAction):
     """Faith's level 0: a dying ally in reach is stable, no check."""
     spell_id = "spare_the_dying"
+    desc = "Touch: a dying ally in reach is stable, no check."
 
     def wants(self, unit):
         return unit.dying and not unit.raised
@@ -331,6 +354,8 @@ class HealingTouchAction(_TouchSpellAction):
     the ground is back on its feet."""
     spell_id = "healing_touch"
     DICE = (1, 6)
+    desc = (f"Touch: an ally in reach, or the caster, heals {_dice(DICE)}, nothing added; a body on the ground "
+            "(dying or stable) is back on its feet.")
 
     def wants(self, unit):
         return ((unit.alive and unit.hp < unit.hp_max) or unit.dying or unit.stable) and not unit.raised
@@ -373,6 +398,7 @@ class _PlacedSpellAction(SpellAction):
 
 class LightGlobeAction(_PlacedSpellAction):
     spell_id = "light_globe"
+    desc = f"Drops a light source on a free square within {_PlacedSpellAction.REACH} squares."
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -384,6 +410,8 @@ class LightGlobeAction(_PlacedSpellAction):
 
 class FloatingDiskAction(_PlacedSpellAction):
     spell_id = "floating_disk"
+    desc = (f"A magical platform on a free square within {_PlacedSpellAction.REACH} squares, at a chosen height: "
+            "units walking at that height cross pits and deep water over it. One unit per square.")
 
     def heights(self, battle, actor, tile):
         """[(z, label)] the disk may float at over `tile`, highest first: the ground, the caster's
@@ -413,6 +441,7 @@ class InvisibilityAction(SpellAction):
     hurts someone (`conditions.Invisible`, `Combatant.hidden_from`)."""
     spell_id = "invisibility"
     cost = 2
+    desc = "The caster vanishes from every other side's sight until it hurts someone."
 
     def available(self, battle, actor):
         return super().available(battle, actor) and not actor.has_condition("invisible")
@@ -434,6 +463,8 @@ class RaiseDeadAction(SpellAction):
     target, aimed = "cell", True
     cost = 2
     REACH = 6
+    desc = (f"A dead body (not dying, not stable) within {REACH} squares and in sight stands up on the caster's "
+            "side with 1 HP, the same body with its gear, immune to Sleep. One that falls again is dead for good.")
 
     @staticmethod
     def bodies(battle):

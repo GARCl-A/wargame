@@ -77,6 +77,25 @@ The generator kept only the names; every effect below was designed for the warga
 | Pack Tactics | Wolf | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 | Reach | Ogre | long arms on a huge body: melee attacks reach 1 square farther. |
 
+## Spells
+
+A spell is cast from a known `Scroll of <Spell>` studied to the end (price in Items); a caster needs a school that casts it. A level 0 spell takes 105 learning points.
+
+| Level | Spell | Schools | AP | Effect | Learning points |
+|---|---|---|---|---|---|
+| 0 | Floating Disk | any | 1 | A magical platform on a free square within 6 squares, at a chosen height: units walking at that height cross pits and deep water over it. One unit per square. | 105 |
+| 0 | Grasping Roots | nature | 1 | A foe in sight within 6 squares, d20 + INT against AC: it walks 1 square at most until the end of its next turn. A recast refreshes it. | 105 |
+| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores until the end of its next turn, which bites only where a score is even. Never stacks; a recast refreshes it. | 105 |
+| 0 | Light Globe | any | 1 | Drops a light source on a free square within 6 squares. | 105 |
+| 0 | Magic Missile | any | 1 | A foe in sight within 6 squares, d20 + INT against AC: 1d4 damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect. | 105 |
+| 0 | Spare the Dying | faith | 1 | Touch: a dying ally in reach is stable, no check. | 105 |
+| 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 2d6 fire damage. Blood magic costs no hit points. | 224 |
+| 1 | Healing Touch | faith | 1 | Touch: an ally in reach, or the caster, heals 1d6, nothing added; a body on the ground (dying or stable) is back on its feet. | 224 |
+| 1 | Sleep | any | 1 | A foe within 6 squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for up to max(1, 10 - CON mod - WIS mod) rounds, ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected. | 224 |
+| 1 | Water Jet | nature | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d6 + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns). | 224 |
+| 2 | Invisibility | any | 2 | The caster vanishes from every other side's sight until it hurts someone. | 357 |
+| 2 | Raise Dead | faith | 2 | A dead body (not dying, not stable) within 6 squares and in sight stands up on the caster's side with 1 HP, the same body with its gear, immune to Sleep. One that falls again is dead for good. | 357 |
+
 ## Squad archetypes
 
 Functional squad roles for candidate generation and commission tokens at the draft.

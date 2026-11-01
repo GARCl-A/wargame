@@ -98,3 +98,18 @@ def test_docs_point_only_at_sections_that_exist():
         for m in re.finditer(r"REFERENCE\.md\s+\*([A-Z][^*]+)\*", text):
             bad += [(path.name, m.group(1))] * (m.group(1).lower() not in headings)
     assert not bad, f"pointers to a REFERENCE.md section that does not exist: {bad}"
+
+
+def test_every_spell_is_in_the_document_with_its_own_effect():
+    from gartok import magic
+    from gartok.actions.spells import _SPELL_ACTIONS
+    rows = _cells(_sections(reference.build())["Spells"])
+    assert set(_SPELL_ACTIONS) == set(magic.SPELLS)
+    for spell in magic.SPELLS.values():
+        assert spell.name in rows and _SPELL_ACTIONS[spell.id].desc in rows, spell.id
+
+
+def test_a_spell_effect_quotes_the_live_range_and_dice():
+    from gartok.actions import spells
+    assert f"within {spells.MagicMissileAction.REACH} squares" in spells.MagicMissileAction.desc
+    assert spells.DragonfireAction.desc.count(f"{spells.DragonfireAction.DICE[0]}d{spells.DragonfireAction.DICE[1]}") == 1
