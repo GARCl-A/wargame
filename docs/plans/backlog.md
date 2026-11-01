@@ -65,11 +65,9 @@ the rest.
   game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
   new names up with no code change.
 
-- **Playtest build for friends (checked 2026-10-30).** `build_exe.bat` (PyInstaller `--onefile`, stdlib
-  only) builds a `GARTOK.exe` that opens and serves the client; it is only the way to hand the game to
-  playtesters, not the official release. Left: play a whole session in the exe, put `build_exe.bat` in English,
-  rebuild `dist/GARTOK.exe` (still the 2026-10-10 pygame one). Do it last of the playtest items, so the exe
-  carries their fixes.
+- **Rebuild the friends' exe last (2026-11-01).** Run `build_exe.bat` on Windows once the other playtest
+  items are in, so `dist/GARTOK.exe` carries their fixes; first add the `docs/versions.csv` row
+  `scripts/version_check.py` asks for (it warns of the commits since v0.1.0).
 
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,

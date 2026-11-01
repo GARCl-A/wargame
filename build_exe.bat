@@ -1,22 +1,22 @@
 @echo off
-echo Criando ambiente virtual...
+echo Creating the virtual environment...
 uv venv
 
-echo Instalando dependencias e o PyInstaller...
+echo Installing dependencies and PyInstaller...
 uv pip install -r requirements.txt pyinstaller
 
 echo.
-echo Checando a versao...
+echo Checking the version...
 uv run python scripts/version_check.py --build
 if errorlevel 1 (
-    echo Corrija docs/versions.csv e rode de novo.
+    echo Fix docs/versions.csv and run again.
     pause
     exit /b 1
 )
 
-echo Construindo o executavel com PyInstaller...
+echo Building the executable with PyInstaller...
 uv run pyinstaller --onefile --noconsole --name GARTOK --add-data "locales;locales" --add-data "maps;maps" --add-data "npcs;npcs" --add-data "gartok/assets;gartok/assets" --add-data "gartok/web/client;gartok/web/client" main.py
 
 echo.
-echo Pronto! O executavel esta na pasta "dist".
+echo Done! The executable is in the "dist" folder.
 pause
