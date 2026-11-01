@@ -89,5 +89,5 @@
 #tip .sum .note{color:#6b5233}
 
 /* the swift resolution's button (`Kit.swift`) */
-.ghost-btn[hidden]{display:none}
+.ghost-btn[hidden]{display:none!important}
 .ghost-btn.off{opacity:.55;cursor:default}

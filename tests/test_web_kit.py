@@ -29,6 +29,12 @@ def test_no_hover_is_the_browsers_title():
         assert not re.search(r"\btitle=|\.title\s*=[^=]", src), path
 
 
+def test_a_hidden_ghost_button_stays_hidden_under_any_screen_rule():
+    # `#maptable .ghost-btn{display:flex}` out-ranks a plain `[hidden]` rule and drew an empty box in the cta
+    assert re.search(r"\.ghost-btn\[hidden\]\{display:none\s*!important\}", _read("kit.css"))
+    assert 'id="swift" hidden' in _read("screens/map/screen.html")
+
+
 def test_the_shared_pieces_are_declared_once_in_the_kit():
     shared = ("ico", "money", "plural", "sign", "kg", "tip", "stagePoint", "popAt", "dropMarker")
     kit = _read("kit.js")
