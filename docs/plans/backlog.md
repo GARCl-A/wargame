@@ -74,12 +74,6 @@ the rest.
 ## Medium
 
 
-- **The economy sim's hunt still ambushes a strong guild (author 2026-11-01).** The road, the shifts and
-  the supply runs go through the game's own code and get the check, but `scripts/economy_guild.py` and
-  `scripts/economy_activities.py` call `hunt.hunt_stretch` without `roll_pack`, so a strong guild's
-  simulated hunt overstates its ambushes. Pass it the Wilds pack roll, then rerun
-  `python -m pytest tests/ -n auto -m balance` and `scripts/economy_report.py`.
-
 - **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
   second roll of the weapon's damage)" in `weapon_traits.py`, `actions/weapon_actions.py`,
   `wiki_rules.py`) becomes one keyword with its own wiki entry, and the descriptions say only the

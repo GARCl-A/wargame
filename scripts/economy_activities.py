@@ -368,10 +368,10 @@ def _hunt_live(size, level, trials, shift):
         state = hunt.HuntState(party=squad, node=None, hours_left=shift)
         alive = list(squad)
         while state.hours_left > 0 and alive:
-            _, ambushed = hunt.hunt_stretch(state)
+            _, ambushed = hunt.hunt_stretch(state, roll_pack=hunt.wilds_pack)
             if not ambushed:
                 continue
-            b = play(alive, hunt.wilds_pack(), ErmosScenario(), lethal=True)
+            b = play(alive, state.pack, ErmosScenario(), lethal=True)
             dead = [u for c, u in zip(b.player_units, alive) if not c.alive]
             won = b.winner == "player"
             value = loot_value(loot.field_loot(
@@ -399,7 +399,7 @@ def _hunt_skilled(size, level, trials, shift, skill, fights, rng):
     for _ in range(trials):
         state = hunt.HuntState(party=make_squad(size, level), node=None, hours_left=shift)
         while state.hours_left > 0 and state.party:
-            _, ambushed = hunt.hunt_stretch(state, rng)
+            _, ambushed = hunt.hunt_stretch(state, rng, roll_pack=lambda: hunt.wilds_pack(rng))
             if not ambushed:
                 continue
             won = rng.random() < p

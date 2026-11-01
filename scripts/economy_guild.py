@@ -889,7 +889,8 @@ class Sim:
         state = hunt.begin(self.guild, self.members, world.node("wilds"), self.main.stance,
                            hours_left=hours)
         while state.hours_left > 0 and state.party:
-            elapsed, ambushed = hunt.hunt_stretch(state, self.rng)
+            elapsed, ambushed = hunt.hunt_stretch(
+                state, self.rng, roll_pack=lambda: hunt.wilds_pack(self.rng, self.guild))
             self.pass_hours(elapsed, busy=state.party)
             if not ambushed:
                 continue
