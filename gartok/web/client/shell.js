@@ -294,13 +294,18 @@ async function open(id) {
   if (!spec) throw new Error(`no screen called ${id}`);
   const dir = `/client/screens/${id}/`;
   document.body.dataset.screen = id;
-  await Promise.all(spec.css.map(f => attach("link", {rel: "stylesheet", href: dir + f})));
-  const res = await fetch(dir + "screen.html");
+  // everything the screen needs is asked for at once: a request that waits on another costs a round trip each
+  spec.js.forEach(f => document.head.appendChild(Object.assign(document.createElement("link"), {rel: "preload", as: "script", href: dir + f})));
+  const [, res] = await Promise.all([
+    Promise.all(spec.css.map(f => attach("link", {rel: "stylesheet", href: dir + f}))),
+    fetch(dir + "screen.html"),
+  ]);
   if (!res.ok) throw new Error(`could not load ${dir}screen.html`);
   $("screen").innerHTML = await res.text();
   Tutorial.place();
   await document.fonts.ready;
-  for (const f of spec.js) await attach("script", {src: dir + f});
+  // async=false: downloaded together, run in the listed order (a script uses the names the one before declares)
+  await Promise.all(spec.js.map(f => attach("script", {src: dir + f, async: false})));
   await settle();
 }
 

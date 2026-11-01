@@ -47,6 +47,9 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   (answers in, fonts loaded, `<img>`s and CSS pictures decoded, capped at 2.5 s), then fades in; the tutorial
   card waits for `Shell.ready` and enters after it. A screen needs nothing for this, but a late `fetch` it fires
   outside `api()` is not waited for.
+  `open()` asks for a screen's CSS, `screen.html` and scripts at once (the scripts download together and run in
+  the order `SCREENS` lists them): a request that waits on another costs a round trip each, which adds up on a
+  slow machine.
 
 ### How a screen is checked
 
