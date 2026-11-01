@@ -425,7 +425,7 @@ Where each part lives is the code map of `README.md`.
   when the throw may drop the foe, stops a flag runner, or it cannot get any nearer.
 - **Weapon actions** (one per weapon kind; the list is `REFERENCE.md` § Weapon Traits). A 2-point action
   is **one strike** for the price of two plain attacks, so it is the worse buy out of its **favoured
-  case**; in that case the strike **lands twice over** (a second roll of the weapon's damage) plus the
+  case**; in that case the strike is **Brutal 1** (the keyword in `gartok/keywords.py`: N more rolls of the weapon's damage) plus the
   action's own edge, and beats the two attacks whatever the weapon or the modifiers. Cleave (two blows
   already), Extreme Shot and Long Thrust do not double: their case is a target only they reach.
   Javelin Charge (Shortspear) costs **1 point**, a throw after a walk this turn, so a walk and the
@@ -550,7 +550,8 @@ to the fight, as before.
   - base mod = `Strength mod` (melee), `Dexterity mod` (ranged / thrown), or the
     **better of Strength and Dexterity** (a *finesse* weapon).
   - other mods are typed and pass through the accumulation rule above.
-  - **natural 20** = automatic hit + crit (roll the damage die twice).
+  - **natural 20** = automatic hit + crit: the blow's whole damage (dice, modifiers, bonuses, Brutal) is
+    multiplied last, by 2 (3 for the `crit_3x` weapons).
   - **natural 1** = automatic miss.
 - **Flanking**: the defender suffers a **−2 penalty to AC** (reduced to −1 by
   the `Peripheral Vision` talent) when the attacker **and** an ally are both

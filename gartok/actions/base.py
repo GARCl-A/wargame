@@ -326,7 +326,7 @@ def _gore_charge(battle, attacker, target):
 
 
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
-                 weapon=None, armor_pierce=False, bonus_damage=0, crit_mult=None):
+                 weapon=None, armor_pierce=False, bonus_damage=0, crit_mult=None, brutal=0, brutal_why=""):
     pulled = nonlethal_penalty(attacker)
     if pulled:
         bonus -= pulled
@@ -386,8 +386,11 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         if _flanked(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
             flank_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("flank_finesse_damage")
         frenzy = attacker.char.talent_bonus("blood_frenzy") if melee and target.hp < target.hp_max / 2 else 0
+        brutal_total = brutal + (attacker.crit_brutal() if crit else 0)
+        if brutal_total:
+            battle.log(f"  {brutal_why if brutal else 'Savage Attacks'}: Brutal {brutal_total}!")
         dmg = attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon, crit_mult=crit_mult,
-                                   bonus_damage=bonus_damage + cull + flank_finesse + frenzy)
+                                   bonus_damage=bonus_damage + cull + flank_finesse + frenzy, brutal=brutal)
         dmg = _stone_endurance(battle, target, dmg)
         target.take_damage(dmg, battle.log, knockout=bool(pulled))
         if dmg > 0:

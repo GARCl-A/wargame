@@ -41,19 +41,19 @@ _TRAITS = [
     WeaponTrait(
         id="crit_3x",
         name="Crit 3x",
-        desc="Critical hits deal 3x weapon damage dice instead of 2x.",
+        desc="Critical hits multiply the blow's damage by 3 instead of 2.",
         crit_mult=3,
     ),
     WeaponTrait(
         id="sneak_attack",
         name="Sneak Attack",
-        desc="2 AP: One strike; against a flanked foe the blow lands twice over (a second roll of the weapon's damage), +1d4.",
+        desc="2 AP: One strike; against a flanked foe the blow is Brutal 1, +1d4.",
         action_id="sneak_attack",
     ),
     WeaponTrait(
         id="precise_thrust",
         name="Precise Thrust",
-        desc="2 AP: One strike; against a flanked foe +2 to hit and the blow lands twice over (a second roll of the weapon's damage).",
+        desc="2 AP: One strike; against a flanked foe +2 to hit and the blow is Brutal 1.",
         action_id="precise_thrust",
     ),
     WeaponTrait(
@@ -65,25 +65,25 @@ _TRAITS = [
     WeaponTrait(
         id="repel_strike",
         name="Repel Strike",
-        desc="2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow lands twice over (a second roll of the weapon's damage), +1d4.",
+        desc="2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4.",
         action_id="repel_strike",
     ),
     WeaponTrait(
         id="maiming_strike",
         name="Maiming Strike",
-        desc="2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow lands twice over (a second roll of the weapon's damage).",
+        desc="2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1.",
         action_id="maiming_strike",
     ),
     WeaponTrait(
         id="armor_pierce",
         name="Armor Pierce",
-        desc="2 AP: One strike that ignores worn armor AC; against an armoured foe the blow lands twice over (a second roll of the weapon's damage).",
+        desc="2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1.",
         action_id="armor_pierce",
     ),
     WeaponTrait(
         id="power_shot",
         name="Power Shot",
-        desc="2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow lands twice over (a second roll of the weapon's damage).",
+        desc="2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1.",
         action_id="power_shot",
     ),
     WeaponTrait(
@@ -95,7 +95,7 @@ _TRAITS = [
     WeaponTrait(
         id="hook_shield",
         name="Hook Shield",
-        desc="2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that lands twice over (a second roll of the weapon's damage). Otherwise one plain strike.",
+        desc="2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike.",
         action_id="hook_shield",
     ),
     WeaponTrait(
@@ -107,7 +107,7 @@ _TRAITS = [
     WeaponTrait(
         id="parry_strike",
         name="Parry & Strike",
-        desc="2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow lands twice over (a second roll of the weapon's damage).",
+        desc="2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1.",
         action_id="parry_strike",
     ),
     WeaponTrait(

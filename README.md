@@ -177,6 +177,7 @@ gartok/
   tutorial.py       the tutorial's ids + TutorialState (seen/enabled)
 
   wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
+  keywords.py       the reserved words of the rules (Brutal): one text each, the KEYWORDS chapter of the wiki; a description says only the word
 
   # the Editor lives apart, in editor/ (a sibling package): the one pygame program of the repo.
   # gartok/ never imports it or pygame (a test checks it); the Editor reads gartok, and gartok/assets

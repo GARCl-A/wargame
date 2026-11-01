@@ -3,12 +3,14 @@ menu: resume, save as, settings, wiki, main menu, quit), and back to where they 
 
 import json
 import os
+import re
+from pathlib import Path
 import threading
 import urllib.request
 
 import pytest
 
-from gartok import items, persist, recorder, settings, talents, weapon_traits, wiki_rules, wiki_terms
+from gartok import items, keywords, persist, recorder, settings, talents, weapon_traits, wiki_rules, wiki_terms
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.web.map_session import MapSession
@@ -101,7 +103,7 @@ def test_from_the_map_the_settings_carry_the_guilds_tutorial_and_save_it(saves):
 def test_the_wiki_opens_on_items_and_every_chapter_reads_the_catalogs(saves):
     w = WikiSession(lambda: {"screen": "title"})
     st = w.state()
-    assert st["chapter"] == "items" and len(st["chapters"]) == 7
+    assert st["chapter"] == "items" and len(st["chapters"]) == 8
     assert st["total"] == len(items.all_items()) and len(st["entries"]) == st["total"]
     sword = next(e for e in st["entries"] if e["name"] == "Broadsword")
     assert "1d12" in sword["tags"] and "Two-handed" in sword["tags"] and sword["glyph"].startswith("item/")
@@ -288,3 +290,27 @@ def test_every_author_the_icons_license_lists_reaches_the_credits():
     listed = credits_session.authors(credits_session._read("icons"))
     assert len(listed) >= 12 and all(a["name"] for a in listed)
     assert [a["name"] for a in listed][:2] == ["Lorc", "Delapouite"]
+
+
+# ---------------------------------------------------------------- keywords
+def test_a_keyword_has_its_own_chapter_and_the_actions_that_name_it_link_to_it(saves):
+    w = WikiSession(lambda: {"screen": "title"})
+    st = w.chapter("keywords")
+    assert [e["name"] for e in st["entries"]] == [k.name for k in keywords.all_keywords()]
+    brutal = st["entries"][0]
+    assert brutal["kind"] == "Keyword" and brutal["body"] == [keywords.get("brutal").text]
+    dagger = next(e for e in w.chapter("actions")["entries"] if e["id"] == "sneak_attack")
+    link = next(x for x in dagger["links"] if x["label"] == "Brutal")
+    assert link["ref"] == "keywords:brutal" and link["tip"].startswith("Brutal\nKeyword")
+    st = w.open(link["ref"])
+    assert (st["chapter"], st["focus"]) == ("keywords", "brutal")
+    assert "brutal" not in [e["id"] for e in w.chapter("actions")["entries"]]
+
+
+def test_a_keyword_is_written_once_and_every_other_text_says_only_the_word():
+    assert wiki_terms.keywords_in("the blow is Brutal, and Brutalised is not") == ["brutal"]
+    root = Path(__file__).resolve().parent.parent / "gartok"
+    for path in root.rglob("*.py"):
+        assert "twice over" not in path.read_text(encoding="utf-8"), path
+    for name in ("actions/weapon_actions.py", "weapon_traits.py"):
+        assert not re.search(r"\bdouble\b", (root / name).read_text(encoding="utf-8")), name

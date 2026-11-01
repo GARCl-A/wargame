@@ -1,9 +1,8 @@
 """Weapon actions: unique tactical options granted by equipped weapon traits.
 
 A 2-AP action is one strike for the price of two plain attacks, so out of its favoured case it is
-the worse buy; in that case (`favoured`) the strike lands twice over -- a second roll of the
-weapon's damage -- plus the action's own edge, and beats the two attacks for any weapon or
-modifier:
+the worse buy; in that case (`favoured`) the strike is Brutal 1 (gartok/keywords.py) plus the action's own
+edge, and beats the two attacks for any weapon or modifier:
 - Dagger: Sneak Attack (a flanked foe; +1d4)
 - Rapier: Precise Thrust (a flanked foe; +2 to hit)
 - Axe / Dwarf Axe: Cleave (a second foe beside both: two swings, each +2 to hit)
@@ -35,16 +34,7 @@ from .base import (
 from .combat import PUSH_DC_BASE, _strike
 
 UNGUARDED = ("entangled", "sleeping", "surprised", "demoralized")
-
-
-def _second_blow(actor, favoured, **kw):
-    """A favoured strike lands twice over: one more roll of the weapon's damage, or 0."""
-    return actor.damage_roll(**kw) if favoured else 0
-
-
-def _log_twice(battle, res, favoured, why):
-    if favoured and res in ("hit", "crit"):
-        battle.log(f"  {why}: the blow lands twice over!")
+BRUTAL = 1      # every Brutal of a favoured strike; the keyword's value, see keywords.py
 
 
 # --------------------------------------------------------------------------- #
@@ -53,7 +43,7 @@ def _log_twice(battle, res, favoured, why):
 
 class SneakAttack(Action):
     id, name, cost, target, aimed = "sneak_attack", "Sneak Attack", 2, "enemy", True
-    desc = "2 AP: Only against a flanked foe: the blow lands twice over, +1d4."
+    desc = "2 AP: Only against a flanked foe: the blow is Brutal 1, +1d4."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -68,7 +58,7 @@ class SneakAttack(Action):
         return _flanked(battle, actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Sneak Attack (2 pts, double damage +1d4 vs flanked)"
+        return "Sneak Attack (2 pts, Brutal 1 +1d4 vs flanked)"
 
     def favoured(self, battle, actor, target):
         return _flanked(battle, actor, target)
@@ -79,15 +69,15 @@ class SneakAttack(Action):
         actor.ap -= self.cost
         actor.walking = False
 
-        bonus_dmg = roll(1, 4) + _second_blow(actor, True)
+        bonus_dmg = roll(1, 4)
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Sneak Attack -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=bonus_dmg)
-        _log_twice(battle, res, True, "Sneak Attack strikes a vulnerable spot")
+        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=bonus_dmg,
+                     brutal=BRUTAL, brutal_why="Sneak Attack strikes a vulnerable spot")
 
 
 # --------------------------------------------------------------------------- #
@@ -96,7 +86,7 @@ class SneakAttack(Action):
 
 class PreciseThrust(Action):
     id, name, cost, target, aimed = "precise_thrust", "Precise Thrust", 2, "enemy", True
-    desc = "2 AP: Only against a flanked foe: +2 to hit, the blow lands twice over."
+    desc = "2 AP: Only against a flanked foe: +2 to hit, the blow is Brutal 1."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -111,7 +101,7 @@ class PreciseThrust(Action):
         return _flanked(battle, actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Precise Thrust (2 pts, +2 to hit & double damage vs flanked)"
+        return "Precise Thrust (2 pts, +2 to hit & Brutal 1 vs flanked)"
 
     def favoured(self, battle, actor, target):
         return _flanked(battle, actor, target)
@@ -129,9 +119,8 @@ class PreciseThrust(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Precise Thrust -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                           bonus_damage=_second_blow(actor, True))
-        _log_twice(battle, res, True, "The thrust finds the gap")
+        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+                     brutal=BRUTAL, brutal_why="The thrust finds the gap")
 
 
 # --------------------------------------------------------------------------- #
@@ -229,7 +218,7 @@ class RepelStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Repel Strike (2 pts, attack & push +2; double +1d4 vs a foe against a wall)"
+        return "Repel Strike (2 pts, attack & push +2; Brutal 1 +1d4 vs a foe against a wall)"
 
     @staticmethod
     def behind(actor, target):
@@ -256,9 +245,9 @@ class RepelStrike(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Repel Strike -> {target.name}"
-        slam = roll(1, 4) + _second_blow(actor, True) if pinned else 0
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=slam)
-        _log_twice(battle, res, pinned, f"{target.name} is slammed against what stands behind")
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+                           bonus_damage=roll(1, 4) if pinned else 0, brutal=BRUTAL * pinned,
+                           brutal_why=f"{target.name} is slammed against what stands behind")
 
         if res in ("hit", "crit") and not pinned:
             dc = PUSH_DC_BASE + target.mod_constitution
@@ -307,7 +296,7 @@ class MaimingStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Maiming Strike (2 pts, halves speed; +2 & double vs a foe that cannot dodge)"
+        return "Maiming Strike (2 pts, halves speed; +2 & Brutal 1 vs a foe that cannot dodge)"
 
     def favoured(self, battle, actor, target):
         """Caught, asleep, surprised or shaken: it cannot get its legs out of the way."""
@@ -327,9 +316,8 @@ class MaimingStrike(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Maiming Strike -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                           bonus_damage=_second_blow(actor, unguarded))
-        _log_twice(battle, res, unguarded, f"{target.name} cannot get out of the way")
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * unguarded,
+                           brutal_why=f"{target.name} cannot get out of the way")
 
         if res in ("hit", "crit"):
             target.add_condition(Maimed())
@@ -359,7 +347,7 @@ class ArmorPierce(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Armor Pierce (2 pts, ignores armor AC; double vs an armoured foe)"
+        return "Armor Pierce (2 pts, ignores armor AC; Brutal 1 vs an armoured foe)"
 
     def favoured(self, battle, actor, target):
         return target.armor is not None and target.armor.ac > 0
@@ -376,9 +364,8 @@ class ArmorPierce(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Armor Pierce -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, armor_pierce=True,
-                           bonus_damage=_second_blow(actor, armoured))
-        _log_twice(battle, res, armoured, "The point punches through the armour")
+        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, armor_pierce=True,
+                     brutal=BRUTAL * armoured, brutal_why="The point punches through the armour")
 
 
 # --------------------------------------------------------------------------- #
@@ -407,7 +394,7 @@ class PowerShot(Action):
         return battle.can_see_unit(actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Power Shot (2 pts, +STR to damage; double at half range or farther)"
+        return "Power Shot (2 pts, +STR to damage; Brutal 1 at half range or farther)"
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
@@ -430,13 +417,12 @@ class PowerShot(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Power Shot -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                           bonus_damage=str_bonus + _second_blow(actor, far))
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=str_bonus,
+                           brutal=BRUTAL * far, brutal_why="A full draw at long range")
 
         actor.ammo = max(0, actor.ammo - 1)
         if res in ("hit", "crit") and str_bonus > 0:
             battle.log(f"  Drawn with great power (+{str_bonus} STR damage)!")
-        _log_twice(battle, res, far, "A full draw at long range")
 
 
 # --------------------------------------------------------------------------- #
@@ -509,7 +495,7 @@ class HookShield(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Hook Shield (2 pts, strip shield AC; double vs a shield)"
+        return "Hook Shield (2 pts, strip shield AC; Brutal 1 vs a shield)"
 
     def favoured(self, battle, actor, target):
         hand = target.equipped_offhand
@@ -530,9 +516,8 @@ class HookShield(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Hook Shield -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                           bonus_damage=_second_blow(actor, shielded))
-        _log_twice(battle, res, shielded, "The hook bites behind the shield")
+        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * shielded,
+                     brutal_why="The hook bites behind the shield")
 
 
 # --------------------------------------------------------------------------- #
@@ -611,7 +596,7 @@ class ParryStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Parry & Strike (2 pts, attack & Defend; double with 2+ foes in reach)"
+        return "Parry & Strike (2 pts, attack & Defend; Brutal 1 with 2+ foes in reach)"
 
     def favoured(self, battle, actor, target):
         """Pressed by two or more: every parry opens a riposte."""
@@ -631,9 +616,8 @@ class ParryStrike(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Parry & Strike -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                           bonus_damage=_second_blow(actor, pressed))
-        _log_twice(battle, res, pressed, "Parry and riposte")
+        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * pressed,
+                     brutal_why="Parry and riposte")
 
         actor.add_condition(Defending())
         battle.log(f"  {actor.name} falls back into a parrying stance (+1 AC until next turn)!")

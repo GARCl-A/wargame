@@ -224,14 +224,28 @@ def test_blood_frenzy_on_a_target_below_half():
     assert _hit(batt, gnoll, foe) == full + 2
 
 
-def test_savage_attacks_rolls_one_more_die_on_a_crit():
+def test_savage_attacks_makes_a_crit_brutal_1_before_the_multiplier():
     _batt, orc, _foe = _duel(_racial("Orc", "savage_attacks"), Unit("enemy"))
-    with patch("gartok.combatant.roll", return_value=1) as dice:
+    with patch("gartok.combatant.roll", return_value=1):
+        blow = orc.damage_roll()
         savage = orc.damage_roll(crit=True)
+        stacked = orc.damage_roll(crit=True, brutal=1)
         orc.char.talents["racial"].remove("savage_attacks")
         plain = orc.damage_roll(crit=True)
-    assert savage == plain + 1
-    assert dice.call_count == 5
+    assert plain == 2 * blow and savage == 2 * (2 * blow) and stacked == 2 * (3 * blow)
+    assert orc.crit_brutal() == 0
+
+
+def test_the_log_reads_the_brutal_of_a_crit_as_one_number():
+    batt, orc, foe = _duel(_racial("Orc", "savage_attacks"), Unit("enemy"))
+    foe.hp = foe.hp_max = 100
+    _resolve_hit(batt, orc, foe, 20, 40, "", "test")
+    assert any("Savage Attacks: Brutal 1!" in ln for ln in batt.log_lines)
+    _resolve_hit(batt, orc, foe, 20, 40, "", "test", brutal=1, brutal_why="A full draw")
+    assert any("A full draw: Brutal 2!" in ln for ln in batt.log_lines)
+    n = len(batt.log_lines)
+    _resolve_hit(batt, orc, foe, 15, 40, "", "test", brutal=1, brutal_why="Parry and riposte")
+    assert any("Parry and riposte: Brutal 1!" in ln for ln in batt.log_lines[n:])
 
 
 def test_stone_endurance_softens_only_the_first_blow():

@@ -28,6 +28,7 @@ from . import (
     factions,
     hunt,
     items,
+    keywords,
     magic,
     natural_weapons,
     outfit,
@@ -184,6 +185,12 @@ def _weapons():
 def _weapon_traits():
     rows = [(t.name, t.desc) for t in weapon_traits.all_traits()]
     return "## Weapon Traits\n\nProperties and keywords carried by weapons.\n\n" + _table(("Trait", "Description"), rows)
+
+
+def _keywords():
+    rows = [(k.name, k.text) for k in keywords.all_keywords()]
+    return ("## Keywords\n\nReserved words of the rules: each always means the one thing written here.\n\n"
+            + _table(("Keyword", "Meaning"), rows))
 
 
 def _armor():
@@ -352,7 +359,7 @@ def _constants():
            "them.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _creatures, _abilities, _spells, _archetypes, _vocations, _weapons, _weapon_traits, _armor, _shields, _enemy_kit, _items, _base_materials,
+_SECTIONS = (_races, _creatures, _abilities, _spells, _archetypes, _vocations, _weapons, _weapon_traits, _keywords, _armor, _shields, _enemy_kit, _items, _base_materials,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 

@@ -364,15 +364,14 @@ def test_every_weapon_action_loses_to_two_attacks_out_of_its_case_and_wins_in_it
                     assert (worth > two) is favoured, f"{case}: action {worth:.2f} vs two attacks {two:.2f}"
 
 
-def test_a_favoured_strike_lands_twice_over():
+def test_a_favoured_strike_is_brutal_1():
     batt, e, p = _case("maiming_strike", True)
     rolls = []
     real = type(e).damage_roll
 
     def spy(self, *a, **kw):
-        out = real(self, *a, **kw)
-        rolls.append(out)
-        return out
+        rolls.append(kw.get("brutal", 0))
+        return real(self, *a, **kw)
     import gartok.combatant as combatant
     orig = combatant.Combatant.damage_roll
     combatant.Combatant.damage_roll = spy
@@ -381,4 +380,4 @@ def test_a_favoured_strike_lands_twice_over():
             actions.MAIMING_STRIKE.execute(batt, e, p)
     finally:
         combatant.Combatant.damage_roll = orig
-    assert len(rolls) == 2 and any("twice over" in ln for ln in batt.log_lines)
+    assert rolls == [1] and any("Brutal 1!" in ln for ln in batt.log_lines)

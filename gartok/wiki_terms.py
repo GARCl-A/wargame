@@ -1,8 +1,11 @@
 """The terms the compendium links: every weapon trait and every combat action is one entry of the
-ACTIONS chapter, named by its id, and an item names the ones it brings. The wiki's item pages link
+ACTIONS chapter, every keyword (`keywords.py`) one of the KEYWORDS chapter, each named by its id, and
+an item names the ones it brings. The wiki's item pages link
 them, and any screen that names one shows the entry on hover."""
 
-from . import actions, items, weapon_traits
+import re
+
+from . import actions, items, keywords, weapon_traits
 
 # what an item brings to the board besides its traits
 ITEM_ACTIONS = {
@@ -13,16 +16,26 @@ ITEM_ACTIONS = {
 
 
 def terms() -> dict[str, dict]:
-    """Every term by id: its name, its kind line and its text; a trait that is a weapon action is
-    that action's entry."""
+    """Every term by id: its name, its kind line, its text and the wiki chapter it opens in; a trait
+    that is a weapon action is that action's entry."""
     out = {}
     for tr in weapon_traits.all_traits():
         out.setdefault(tr.id, {"name": tr.name, "kind": "Weapon action · 2 AP" if tr.action_id else "Weapon trait",
-                               "text": tr.desc})
+                               "text": tr.desc, "chapter": "actions"})
     for a in actions.PANEL_ACTIONS:
         kind = "Combat" if a in actions.COMBAT_ACTIONS else "Utility"
-        out.setdefault(a.id, {"name": a.name, "kind": f"{kind} · {a.cost} AP", "text": getattr(a, "desc", "") or ""})
+        out.setdefault(a.id, {"name": a.name, "kind": f"{kind} · {a.cost} AP", "text": getattr(a, "desc", "") or "",
+                              "chapter": "actions"})
+    for k in keywords.all_keywords():
+        out.setdefault(k.id, {"name": k.name, "kind": "Keyword", "text": k.text, "chapter": "keywords"})
     return out
+
+
+def keywords_in(text: str) -> list[str]:
+    """The ids of the keywords `text` names, in the order they first appear."""
+    found = [(m.start(), k.id) for k in keywords.all_keywords()
+             for m in [re.search(rf"\b{re.escape(k.name)}\b", text or "")] if m]
+    return [kid for _, kid in sorted(found)]
 
 
 def tip(term_id: str) -> str:

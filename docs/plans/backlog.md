@@ -74,13 +74,13 @@ the rest.
 ## Medium
 
 
-- **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
-  second roll of the weapon's damage)" in `weapon_traits.py`, `actions/weapon_actions.py`,
-  `wiki_rules.py`) becomes one keyword with its own wiki entry, and the descriptions say only the
-  keyword: shorter text, and the rules become a set of words that always mean the same thing. Start with
-  *Double blow* (the name is open) and look for the next ones (Flanked, Prone, the conditions already
-  are). The assess card in the bestiary should also link a racial ability and a weapon to their wiki
-  entry on hover (playtest 2026-11-01). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai/` and the numbers do not change.
+- **Rules as keywords, the next ones (playtest 2026-10-30).** `keywords.py` and the wiki's KEYWORDS chapter
+  exist, with *Brutal N* the first (N more rolls of the weapon's damage; every Brutal of the game is 1;
+  the crit multiplies the whole blow last). Missing: look for the next repeated rules (Flanked, Prone...)
+  and add each as a `Keyword`; a keyword written inside a description (tooltips of the sheet, of the
+  action bar) should link to its entry on hover; the assess card in the bestiary should link a racial
+  ability and a weapon to their wiki entry on hover (playtest 2026-11-01); check the sheet's weapon-action
+  chip shows the new text on hover.
 
 - **The tests the pygame campaign's cut lost (found 2026-10-28).** Rewrite them on the web screens:
   everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old

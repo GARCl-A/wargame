@@ -29,11 +29,11 @@ def sections():
             ("An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some "
             "races and beasts have."),
             ("Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on a flanked foe: the blow "
-            "lands twice over, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."),
+            "is Brutal 1, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."),
         ]),
         ("WEAPON ACTIONS (2 POINTS)", [
             ("One strike for the price of two attacks. Out of its case it is the worse buy; in its case "
-            "the blow lands twice over and beats the two attacks."),
+            "the blow is Brutal 1 and beats the two attacks."),
             "Cleave (Axe): a second foe beside both, each swing +2 to hit.",
             "Repel Strike (Quarterstaff): shoves the foe 1 cell; against a wall or a body, +1d4 instead.",
             ("Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, "

@@ -176,7 +176,7 @@ def _wrest_worth(battle, unit, target):
 
 def _weapon_action_worth(battle, unit, act, target):
     """Expected damage (or its equivalent) of a 2-point weapon action on `target`: one strike, which
-    lands twice over in the action's favoured case (`act.favoured`), plus the action's own edge."""
+    is Brutal 1 in the action's favoured case (`act.favoured`), plus the action's own edge."""
     if act.id == "wrest":
         return _wrest_worth(battle, unit, target)
     if act.id == "extreme_shot":

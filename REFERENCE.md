@@ -191,20 +191,28 @@ Properties and keywords carried by weapons.
 |---|---|
 | Finesse | Uses Dexterity for attack rolls if it is higher than Strength. |
 | Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
-| Crit 3x | Critical hits deal 3x weapon damage dice instead of 2x. |
-| Sneak Attack | 2 AP: One strike; against a flanked foe the blow lands twice over (a second roll of the weapon's damage), +1d4. |
-| Precise Thrust | 2 AP: One strike; against a flanked foe +2 to hit and the blow lands twice over (a second roll of the weapon's damage). |
+| Crit 3x | Critical hits multiply the blow's damage by 3 instead of 2. |
+| Sneak Attack | 2 AP: One strike; against a flanked foe the blow is Brutal 1, +1d4. |
+| Precise Thrust | 2 AP: One strike; against a flanked foe +2 to hit and the blow is Brutal 1. |
 | Cleave | 2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit. |
-| Repel Strike | 2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow lands twice over (a second roll of the weapon's damage), +1d4. |
-| Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow lands twice over (a second roll of the weapon's damage). |
-| Armor Pierce | 2 AP: One strike that ignores worn armor AC; against an armoured foe the blow lands twice over (a second roll of the weapon's damage). |
-| Power Shot | 2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow lands twice over (a second roll of the weapon's damage). |
+| Repel Strike | 2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4. |
+| Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1. |
+| Armor Pierce | 2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1. |
+| Power Shot | 2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1. |
 | Extreme Shot | 2 AP: Doubles attack range to 36 squares. |
-| Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that lands twice over (a second roll of the weapon's damage). Otherwise one plain strike. |
+| Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike. |
 | Javelin Charge | 1 AP: Throws the spear after moving this turn, +1d4 bonus damage. |
-| Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow lands twice over (a second roll of the weapon's damage). |
+| Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1. |
 | Wrest | 2 AP, bare hands only: seize the weapon of an adjacent armed foe (d20 + Dexterity against 15 + its Strength) and, if you can wield it, strike with it at once. |
 | Long Thrust | 2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far. |
+
+## Keywords
+
+Reserved words of the rules: each always means the one thing written here.
+
+| Keyword | Meaning |
+|---|---|
+| Brutal | Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2. |
 
 ## Armor
 
@@ -485,7 +493,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Lizardfolk | 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each. | -- |
 | Ogre | 1 | Mighty Shove | your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- |
 | Orc, Ogre | 1 | Intimidating Presence | a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- |
-| Orc | 1 | Savage Attacks | a critical hit rolls one more weapon die. | -- |
+| Orc | 1 | Savage Attacks | your critical hits are Brutal 1. | -- |
 | Orc | 1 | War Cry | +1 to Demoralize checks. | -- |
 | Ox | 1 | Aurochs Might | a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- |
 | Ox | 1 | Gore Charge | after walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- |

@@ -2,7 +2,7 @@
 "use strict";
 
 let W = null, busy = false, typed = null;
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 
 function toast(text) {
   const t = $("toast");

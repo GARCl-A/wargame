@@ -570,7 +570,7 @@ _LIST = [
            "after a won fight, your traps that never sprang go back into your pack.",
            race="Kobold", effects=(Effect("trap_salvage", 1),), icon="action/snatch"),
     Talent("savage_attacks", "racial", 1, "Savage Attacks",
-           "a critical hit rolls one more weapon die.", race="Orc",
+           "your critical hits are Brutal 1.", race="Orc",
            effects=(Effect("savage_attacks", 1),), icon="head/orc-head"),
     Talent("war_cry", "racial", 1, "War Cry", "+1 to Demoralize checks.", race="Orc",
            effects=(Effect("demoralize_bonus", 1),), icon="action/screaming"),

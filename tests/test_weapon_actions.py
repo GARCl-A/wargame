@@ -1,6 +1,6 @@
 """Tests for 2-AP weapon actions, traits expansion, critical hit multipliers, and AI usage."""
 
-import random
+from unittest.mock import patch
 import pytest
 
 from gartok import items, weapon_traits
@@ -63,13 +63,21 @@ def test_weapon_traits_catalog_and_properties():
     assert l_xbow.range == 18
 
 
-def test_crit_mult_triples_damage_dice():
+def test_a_critical_hit_multiplies_the_whole_blow_last():
     batt, a, d = _melee_battle()
     a.equip_weapon("Pick")
-    random.seed(42)
-    dmg = a.damage_roll(crit=True)
-    # 3d8 + STR mod
-    assert dmg >= 3
+    with patch("gartok.combatant.roll", return_value=4):
+        plain = a.damage_roll()
+        assert a.damage_roll(crit=True) == 3 * plain
+        assert a.damage_roll(crit=True, bonus_damage=2) == 3 * (plain + 2)
+
+
+def test_brutal_adds_a_roll_and_a_critical_hit_multiplies_it():
+    batt, a, d = _melee_battle()
+    with patch("gartok.combatant.roll", return_value=4) as dice:
+        plain = a.damage_roll()
+        assert a.damage_roll(brutal=1) == 2 * plain and dice.call_count == 3
+        assert a.damage_roll(brutal=1, crit=True) == 2 * (2 * plain)
 
 
 def test_sneak_attack_action():

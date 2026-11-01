@@ -663,24 +663,28 @@ class Combatant:
                 mods.append((charge, None, "Cavalry Charge"))
         return mods
 
-    def damage_roll(self, crit=False, thrown=False, weapon=None, crit_mult=None, bonus_damage=0):
-        """`weapon` (a WEAPONS dict or ItemDef) overrides the held one -- the Tongue weapon."""
+    def crit_brutal(self):
+        """The Brutal a critical hit of this unit carries (Savage Attacks)."""
+        return int(self.char.talent_bonus("savage_attacks"))
+
+    def damage_roll(self, crit=False, thrown=False, weapon=None, crit_mult=None, bonus_damage=0, brutal=0):
+        """The damage of one blow: the weapon's roll and its modifiers, once more for each point of
+        `brutal`, then `bonus_damage`; a critical hit multiplies the whole sum, last.
+        `weapon` (a WEAPONS dict or ItemDef) overrides the held one -- the Tongue weapon."""
         w = weapon if weapon is not None else (self._natural if self.improvised and not thrown else self.weapon)
         n, faces = w["damage"]
-        mult = crit_mult or w.get("crit_mult", 2)
-
-        crit_dice = sum(roll(n, faces) for _ in range(max(1, mult) - 1)) if crit else 0
-        savage = int(self.char.talent_bonus("savage_attacks")) if crit else 0
-        if savage:
-            crit_dice += roll(savage, faces)
-        dice = roll(n, faces) + crit_dice + bonus_damage
         bonus = 0
         if thrown:
             bonus += self.mod_strength              # thrown: add Strength to damage
         elif weapon is not None or not self.ranged:  # melee (includes unarmed and the Tongue)
             bonus += (self.mod_strength + self._ability.melee_damage
                       + self.char.talent_bonus("melee_damage"))
-        return max(1, dice + bonus)
+        if crit:
+            brutal += self.crit_brutal()
+        total = sum(roll(n, faces) + bonus for _ in range(1 + brutal)) + bonus_damage
+        if crit:
+            total *= max(1, crit_mult or w.get("crit_mult", 2))
+        return max(1, total)
 
     def take_damage(self, amount, log, knockout=False):
         amount = max(0, amount - self.dr)

@@ -1,5 +1,5 @@
-"""The wiki and compendium, as pygame's `WikiScreen`: seven chapters (items, recipes, actions,
-talents, races, beasts, rules) read off the live catalogs, and a filter over the open one.
+"""The wiki and compendium, as pygame's `WikiScreen`: eight chapters (items, recipes, actions,
+keywords, talents, races, beasts, rules) read off the live catalogs, and a filter over the open one.
 Opened from the title or the map's menu; BACK returns there."""
 
 from typing import ClassVar
@@ -18,7 +18,8 @@ from .. import (
 )
 from .session import Session
 
-CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), ("talents", "Talents"),
+CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), ("keywords", "Keywords"),
+            ("talents", "Talents"),
             ("races", "Races"), ("beasts", "Beasts"), ("rules", "Rules"))
 MAX_QUERY = 24
 
@@ -31,7 +32,7 @@ def _entry(name, kind="", meta=(), body=(), tags=(), glyph=None, find=(), eid=No
 
 
 def _link(tid, label):
-    return {"ref": f"actions:{tid}", "label": label, "tip": wiki_terms.tip(tid)}
+    return {"ref": f"{wiki_terms.terms()[tid]['chapter']}:{tid}", "label": label, "tip": wiki_terms.tip(tid)}
 
 
 def _item(it):
@@ -58,9 +59,16 @@ def _recipe(target, rec):
                   glyph=item_icon.glyph(target), find=[" ".join(rec.materials)])
 
 
-def _actions():
-    return sorted((_entry(t["name"], t["kind"], body=[t["text"]] if t["text"] else [], find=[t["text"]], eid=tid)
-                   for tid, t in wiki_terms.terms().items()), key=lambda e: e["name"])
+def _terms(chapter):
+    """The entries of a chapter that reads `wiki_terms`; each links the keywords its text names."""
+    out = []
+    for tid, t in wiki_terms.terms().items():
+        if t["chapter"] != chapter:
+            continue
+        links = [_link(k, wiki_terms.terms()[k]["name"]) for k in wiki_terms.keywords_in(t["text"]) if k != tid]
+        out.append(_entry(t["name"], t["kind"], body=[t["text"]] if t["text"] else [], links=links,
+                          find=[t["text"], *(x["label"] for x in links)], eid=tid))
+    return sorted(out, key=lambda e: e["name"])
 
 
 def _talents():
@@ -106,7 +114,8 @@ BUILD = {"items": lambda: [_item(i) for i in sorted(items.all_items().values(), 
                                     for target, rl in items.CRAFTING_RECIPES.items()
                                     for rec in (rl if isinstance(rl, (list, tuple)) else [rl])),
                                    key=lambda e: e["name"]),
-         "actions": _actions, "talents": _talents, "races": _races, "beasts": _beasts, "rules": _rules}
+         "actions": lambda: _terms("actions"), "keywords": lambda: _terms("keywords"),
+         "talents": _talents, "races": _races, "beasts": _beasts, "rules": _rules}
 
 
 class WikiSession(Session):
