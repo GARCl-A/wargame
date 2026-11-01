@@ -64,19 +64,6 @@ the rest.
   it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Prisoners: bail is paid only if the recruit succeeds, plus optional extra bail (playtest 2026-10-30,
-  decided).** Today `tavern.Prison._bail` charges `recruit.bail_cost` before the pitch and a failed pitch
-  keeps the money ("walks away free"). Change: the pitch is rolled first with the bail's +2
-  (`BAIL_BONUS`) promised, and the copper is taken only on success (the price is checked up front, so a
-  pitch is refused when the group cannot cover it). Extra bail: before the pitch the player may raise the
-  offer in steps (+50% of `bail_cost` each, at most 3 steps; +1 to the contest per step, on top of the
-  +2); the extra is paid only on success too. The tab shows the offer, the bonus and the total due. The
-  bar after a failed pitch (`prison_bar`) stays. Tests: failure costs nothing, success takes bail + extra
-  (copper first, change from gold), steps add to the roll, an unaffordable step is disabled; `ai/` does
-  not use the prison. Re-run `scripts/economy_report.py` (recruiting cost). Rewrite the sentences that
-  say a failed pitch keeps the bail: `RULES.md` (*Prison*, "Lose the pitch and the bail is gone too")
-  and the prison's tutorial card in `locales/en.json` ("they walk free with your money").
-
 - **Gathering teaches at the node's level and needs the tool (playtest 2026-10-30, decided).**
   `bank_haul` banks work XP at `economy.work_level(u, node_id)` (0 or 1: the tool), the same as a wage
   shift. Change: a gathering shift banks at activity level 3 at the Lumber Yard and 4 at the Mine
@@ -243,7 +230,7 @@ the rest.
 - **Item properties: base material sources (after the production chain).**
   (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven
   declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
-- **Prisoners.** The bail rule is its own item in *Ready to do*. Decided 2026-10-19: (1) sell to City Prison via interactive tab/dialogue for bounty based on
+- **Prisoners.** Decided 2026-10-19: (1) sell to City Prison via interactive tab/dialogue for bounty based on
   captive level/crime; (2) recruit contest; (3) forced manual labor in lumber/mine: captive eats group food (or
   starves), escape/revolt check fires daily after captive recovers to full HP. Left: UI tabs, escape check,
   enemy capturing player units, and battlefield rescue.

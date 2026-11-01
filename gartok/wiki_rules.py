@@ -70,8 +70,8 @@ def sections():
             ("A failed pitch bars that recruiter from that stranger until the pool turns over. Someone "
             "else may still try."),
             (f"The Tavern keeps {recruit.TAVERNA_SIZE} strangers and the Prison {recruit.PRISON_SIZE} "
-            f"prisoners; both re-roll every {recruit.REFRESH_DAYS} days. Bail is paid before the pitch and "
-            "adds +2 to it; lose and the bail is gone."),
+            f"prisoners; both re-roll every {recruit.REFRESH_DAYS} days. Bail adds +2 to the pitch, "
+            "and each doubling of the offer +1 more; it is taken only if the pitch wins."),
         ]),
         ("GROUPS, LEADERS & FAME", [
             (f"The guild may run {group.BASE_SLOTS} groups, plus one more for every "

@@ -1,5 +1,6 @@
 """The Tavern's counter, with no pygame: talk a stranger into joining the guild, rent quiet rooms to
-study, or play the stage for tips. `Prison` is the City Prison's cells: the same counter with a bail.
+study, or play the stage for tips. `Prison` is the City Prison's cells: the same counter with a bail
+that is taken only when the pitch wins.
 
 The strangers drinking here are the guild's weekly pool (`recruit.refresh_pool` -- same faces every
 visit until seven days pass, then a fresh set). Pick one, then the member who makes the pitch:
@@ -42,6 +43,7 @@ class Tavern:
         self.perform_hours = economy.PERFORM_SHIFT_HOURS[-1]
         self.perform_off = set()            # members who sit the show out
         self.signed = None                  # {"unit", "by", "pitch", "line"} of the most recent sign-on
+        self.raise_k = 0                    # doublings of the bail on offer (Prison)
 
     def _pool(self):
         return recruit.refresh_pool(self.guild)
@@ -69,8 +71,25 @@ class Tavern:
         recruit.bar(self.guild, cand, member)
 
     def _bail(self, cand):
-        """Copper that must be paid before a pitch is even rolled."""
+        """Copper the base bail costs; paid only when the pitch wins."""
         return 0
+
+    def _due(self, cand):
+        """Copper taken if the pitch wins: the bail, doubled once per raise."""
+        return self._bail(cand) << self.raise_k
+
+    def _raise_mods(self):
+        return [(self.raise_k, "extra bail")] if self.raise_k else []
+
+    def _raise(self, delta):
+        """Move the offer one doubling up (while the purse covers it) or down."""
+        cand = self.candidates[self.sel] if self.sel is not None and self.sel < len(self.candidates) else None
+        if cand is None or not self._bail(cand):
+            return
+        k = self.raise_k + delta
+        if k < 0 or (delta > 0 and self._wealth() < self._bail(cand) << k):
+            return
+        self.raise_k = k
 
     def _wealth(self):
         stores = self.group.stores
@@ -90,7 +109,8 @@ class Tavern:
         dist = max(0, raw - int(m.talent_bonus("align_distance_reduction")))
         return (m.mod_charisma - recruit.ALIGNMENT_PENALTY * dist
                 - recruit.size_penalty(len(self.guild.roster))
-                + m.talent_bonus("recruit_cha") + sum(v for v, _ in self.PITCH_BONUS))
+                + m.talent_bonus("recruit_cha") + sum(v for v, _ in self.PITCH_BONUS)
+                + self.raise_k)
 
     def _best(self, cand):
         """(member, net modifier) for the strongest pitch still open, or None."""
@@ -119,6 +139,7 @@ class Tavern:
         """Read candidate `i`'s dossier; the one pitching moves to the strongest pitch still open
         unless the one picked can still pitch them."""
         self.sel = i
+        self.raise_k = 0
         self.signed = None
         self.notice = None
         cand = self.candidates[i]
@@ -188,18 +209,20 @@ class Tavern:
         if self._barred(cand, member):
             self.notice = f"{member.name} already tried {cand.name} this week."
             return
-        cost = self._bail(cand)
+        cost = self._due(cand)
         if cost and self._wealth() < cost:
             self.notice = f"Not enough coin to pay {cand.name}'s bail ({fmt_money(cost)})."
             return
-        if cost:
-            stores = self.group.stores
-            economy.charge_richest_first((*self.party, *stores), cost)
         pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day,
-                                 extra_mods=list(self.PITCH_BONUS))
+                                 extra_mods=[*self.PITCH_BONUS, *self._raise_mods()])
         self.last[cand.uid] = (pitch, member)
-        recorder.emit("recruit", pitcher=member.name, candidate=cand.name, bail=cost, ok=bool(pitch.ok))
+        paid = cost if pitch.ok else 0
+        raised, self.raise_k = self.raise_k, 0
+        recorder.emit("recruit", pitcher=member.name, candidate=cand.name, bail=paid, raised=raised,
+                      ok=bool(pitch.ok))
         if pitch.ok:
+            if paid:
+                economy.charge_richest_first((*self.party, *self.group.stores), paid)
             recruit.enlist(self.guild, cand, member)
             from . import objectives
             objectives.complete(self.guild, "obj_recruit_prison" if cost else "obj_recruit_tavern")
@@ -209,8 +232,7 @@ class Tavern:
             if cand in self.candidates:
                 self.candidates.remove(cand)
             self.signed = {"unit": cand, "by": member, "pitch": pitch, "line": self._signed_line(cand)}
-            paid = "Bail paid! " if cost else ""
-            self.notice = f"{paid}{cand.name} signs with the guild (recruited by {member.name})!"
+            self.notice = f"{'Bail paid! ' if cost else ''}{cand.name} signs with the guild (recruited by {member.name})!"
             if self.candidates:
                 self.sel = min(self.sel, len(self.candidates) - 1)
             else:
@@ -218,7 +240,7 @@ class Tavern:
         else:
             self._bar(cand, member)
             if cost:
-                self.notice = f"Bail paid, but {cand.name} walks away free. You lost {fmt_money(cost)}."
+                self.notice = f"{cand.name} turns {member.name} down. The bail stays in your purse."
             else:
                 self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
 
@@ -263,8 +285,8 @@ class Tavern:
 
 
 class Prison(Tavern):
-    """The cells: the strangers are the guild's weekly `prison_pool`, and their bail is paid before the
-    pitch is rolled, for a +2 on the Charisma contest. A failed pitch walks free with the money."""
+    """The cells: the strangers are the guild's weekly `prison_pool`. The bail on offer buys +2 on the
+    Charisma contest and each doubling of it +1 more; it is taken only if the pitch wins."""
 
     REJECTED_LABEL = "WALKED FREE THIS WEEK"
     EMPTY_LIST = "The cells are empty right now. Come back when the crowd changes."

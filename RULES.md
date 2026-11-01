@@ -1539,10 +1539,12 @@ can still try.
   separate weekly pool (`recruit.refresh_prison_pool`) of minor criminals.
   Both pools show a red "!" on their map node once they turn over, until the
   guild next walks in (`recruit.has_new_faces`, `Guild.recruit_seen`).
-  Unlike the Tavern, you must pay `recruit.bail_cost` — `(sum of the six
-  attributes × (racial level + 1)) + 20` $ — before you can even pitch;
-  the payment adds a **+2** bonus to the Charisma contest (their gratitude).
-  Lose the pitch and the bail is gone too — they walk free with your money.
+  Unlike the Tavern, there is a bail, `recruit.bail_cost` — `(sum of the six
+  attributes × (racial level + 1)) + 20` $ — and the band must hold it to
+  pitch; the offer adds a **+2** bonus to the Charisma contest (their
+  gratitude). The money is taken only if the pitch wins: lose and you keep
+  it. Each doubling of the offer (×2, ×4, ×8, ... with no cap but the purse)
+  adds **+1** more, so forcing a high roll gets very expensive.
 
 ### Reputation and factions 🟡
 

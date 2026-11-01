@@ -272,8 +272,8 @@
     "prison": {
       "title": "The prison",
       "body": [
-        "Pay a prisoner's bail to try recruiting them, the same pitch as the tavern: Charisma against Charisma, +2 for their gratitude.",
-        "If the pitch fails they walk free with your money."
+        "Offer a prisoner's bail to try recruiting them, the same pitch as the tavern: Charisma against Charisma, +2 for their gratitude.",
+        "Double the offer for another +1 each time. The bail is taken only if the pitch wins; if it fails you keep your money."
       ]
     },
     "stable": {

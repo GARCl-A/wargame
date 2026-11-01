@@ -758,13 +758,14 @@ def test_the_prison_opens_on_its_cells_with_each_prisoners_bail(monkeypatch):
     cand = guild.prison_pool[0]
     bail = recruit.bail_cost(cand)
     assert t["strangers"][0]["note"].endswith(f"bail ${bail:,}")
-    assert t["dossier"]["bail"] == {"cost": f"${bail:,}", "held": f"${2000:,}", "ok": True}
-    assert t["dossier"]["button"]["label"] == f"Pay the ${bail:,} bail and convince"
+    d = t["dossier"]["bail"]
+    assert (d["base"], d["cost"], d["held"], d["ok"], d["bonus"], d["k"]) == (f"${bail:,}", f"${bail:,}", f"${2000:,}", True, 2, 0)
+    assert t["dossier"]["button"]["label"] == f"Convince (bail ${bail:,} if it works)"
     st = hub.verb("candidate", True)(hub, {"uid": guild.prison_pool[1].uid})
     assert st["tab"] == "prison" and st["tavern"]["dossier"]["uid"] == guild.prison_pool[1].uid
 
 
-def test_bailing_a_prisoner_pays_before_the_pitch_and_a_won_pitch_signs_them(saves, monkeypatch):
+def test_a_won_prison_pitch_pays_the_bail_and_signs_them(saves, monkeypatch):
     hub, guild, g = _cells(monkeypatch)
     hub.map.world_id = "w1"
     cand = guild.prison_pool[0]
@@ -777,17 +778,27 @@ def test_bailing_a_prisoner_pays_before_the_pitch_and_a_won_pitch_signs_them(sav
     assert len(persist.load_game("w1").roster) == 3
 
 
-def test_a_lost_pitch_keeps_the_bail_and_a_short_purse_cannot_pay_it(monkeypatch):
+def test_a_lost_pitch_costs_nothing_and_a_short_purse_cannot_pay_it(monkeypatch):
     hub, guild, g = _cells(monkeypatch)
     cand = guild.prison_pool[0]
-    bail = recruit.bail_cost(cand)
     _roll(monkeypatch, 1, 20)
     t = hub.verb("convince", True)(hub, {})["tavern"]
-    assert cand not in g.members and "walks away free" in t["notice"]
-    assert sum(u.money for u in g.members) == 2000 - bail
+    assert cand not in g.members and "stays in your purse" in t["notice"]
+    assert sum(u.money for u in g.members) == 2000
     hub, guild, g = _cells(monkeypatch, coins=0)
     d = hub.state()["tavern"]["dossier"]
     assert not d["bail"]["ok"] and not d["button"]["on"] and d["button"]["label"].startswith("Cannot afford")
+
+
+def test_raising_the_bail_doubles_the_due_and_the_bonus_grows(monkeypatch):
+    hub, guild, g = _cells(monkeypatch)
+    bail = recruit.bail_cost(guild.prison_pool[0])
+    t = hub.verb("raise_bail", True)(hub, {"delta": 1})["tavern"]
+    d = t["dossier"]["bail"]
+    assert (d["cost"], d["bonus"], d["k"], d["less"]) == (f"${bail * 2:,}", 3, 1, True)
+    _roll(monkeypatch, 20, 1)
+    hub.verb("convince", True)(hub, {})
+    assert sum(u.money for u in g.members if u is not guild.roster[-1]) == 2000 - bail * 2
 
 
 def _vault(coins=300, rent=True):

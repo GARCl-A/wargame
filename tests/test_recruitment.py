@@ -280,7 +280,7 @@ def test_prison_pitch_removes_candidate_without_index_error(monkeypatch):
     monkeypatch.setattr(recruit, "convince", lambda *a, **kw: recruit.Pitch(False, 5, 12, -7, 2, []))
     scr._pitch(recruiter)
     assert recruit.prison_barred(g, remaining_cand, recruiter)
-    assert recruiter.money < gold_before
+    assert recruiter.money == gold_before
     assert remaining_cand not in g.roster
     assert remaining_cand in scr.candidates
     assert scr.sel == 0                                   # still looking at them after the failed pitch
@@ -323,7 +323,7 @@ def test_a_prison_pitch_without_the_bail_money_rolls_nothing(monkeypatch):
     assert not rolled and "Not enough coin" in scr.notice
 
 
-def test_a_prison_pitch_charges_the_bail_and_adds_the_bonus(monkeypatch):
+def test_a_prison_pitch_takes_the_bail_only_on_success_and_adds_the_bonus(monkeypatch):
     scr, g, recruiter = _prison()
     cand = scr.candidates[0]
     cost = recruit.bail_cost(cand)
@@ -340,6 +340,54 @@ def test_a_prison_pitch_charges_the_bail_and_adds_the_bonus(monkeypatch):
     assert before - recruiter.money == cost
     assert (2, "paid bail") in seen["extra_mods"]
     assert cand in g.roster
+
+
+def test_a_failed_prison_pitch_costs_nothing_and_still_bars(monkeypatch):
+    scr, g, recruiter = _prison()
+    cand = scr.candidates[0]
+    monkeypatch.setattr(recruit, "convince", lambda *a, **kw: recruit.Pitch(False, 5, 15, 5, 2, []))
+    scr.sel = 0
+    before = recruiter.money
+    scr._pitch(recruiter)
+    assert recruiter.money == before and cand not in g.roster and scr._barred(cand, recruiter)
+
+
+def test_every_doubling_of_the_bail_adds_one_and_costs_double(monkeypatch):
+    scr, g, recruiter = _prison(party_gold=5000)
+    cand = scr.candidates[0]
+    bail = recruit.bail_cost(cand)
+    scr.sel = 0
+    base = scr._net(recruiter, cand)
+    seen = {}
+
+    def fake(*a, **kw):
+        seen.update(kw)
+        return recruit.Pitch(True, 15, 10, 5, 2, [])
+
+    monkeypatch.setattr(recruit, "convince", fake)
+    scr._raise(1)
+    scr._raise(1)
+    assert scr.raise_k == 2 and scr._due(cand) == bail * 4 and scr._net(recruiter, cand) == base + 2
+    before = recruiter.money
+    scr._pitch(recruiter)
+    assert (2, "extra bail") in seen["extra_mods"] and before - recruiter.money == bail * 4
+    assert scr.raise_k == 0
+
+
+def test_a_doubling_the_purse_cannot_cover_is_refused_and_picking_resets_it():
+    scr, g, recruiter = _prison()
+    cand = scr.candidates[0]
+    scr.sel = 0
+    for _ in range(40):
+        scr._raise(1)
+    k = scr.raise_k
+    assert scr._due(cand) <= scr._wealth() < recruit.bail_cost(cand) << (k + 1)
+    scr._raise(-1)
+    assert scr.raise_k == k - 1
+    scr._pick_candidate(0)
+    assert scr.raise_k == 0
+    scr._raise(-1)
+    assert scr.raise_k == 0
 
 
 def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):

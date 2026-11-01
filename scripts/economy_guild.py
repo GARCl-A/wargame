@@ -507,7 +507,7 @@ class Sim:
     # -- a growing guild --------------------------------------------------- #
     def recruit(self, node="tavern", reserve=0, limit=None):
         """A visit to the tavern (free; the Charisma contest decides) or the prison (the bail is
-        paid first, +2 to the contest, and lost if the pitch fails). The best talker with a free
+        taken only if the pitch wins, +2 to the contest). The best talker with a free
         sponsor slot and a shared language pitches each stranger. -> how many signed on."""
         prison = node == "prison"
         self.arrive("prison" if prison else "recruit", node)
@@ -527,13 +527,13 @@ class Sim:
             if bail and self.money < bail + reserve:
                 continue
             talker = max(talkers, key=lambda m: m.mod_charisma)
-            if bail:
-                economy.charge_richest_first(self.members, bail)
-                self.bail_spent += bail
             self.pitches += 1
             pitch = recruit.convince(talker, cand, len(guild.roster), day=guild.clock.day,
                                      extra_mods=[BAIL_BONUS] if prison else None)
             if pitch.ok:
+                if bail:
+                    economy.charge_richest_first(self.members, bail)
+                    self.bail_spent += bail
                 recruit.enlist(guild, cand, talker)
                 hired += 1
                 self.recruited += 1

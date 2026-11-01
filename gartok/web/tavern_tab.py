@@ -1,7 +1,7 @@
 """The Tavern's three tabs in the browser: RECRUIT (the strangers drinking here on leather, the picked
 one's dossier and who makes the pitch on paper), STUDY (the rooms to rent and each member's study
 target) and PERFORM (the stage: the show's length and who plays); the City Prison's cells are RECRUIT
-with a bail paid before the pitch (`tavern.Prison`).
+with a bail taken only if the pitch wins, doubled for +1 each time (`tavern.Prison`).
 
 The rules are `tavern.Tavern`'s: the pool, the pitch, the bars, the study targets and the show. The
 verb that runs the clock (`perform`) lives on `HubSession`, which holds the map.
@@ -49,6 +49,11 @@ class TavernTab:
     def recruiter(self, uid):
         self.s.selected_recruiter = self._member(uid)
 
+    def raise_bail(self, delta):
+        if delta not in (-1, 1):
+            raise ValueError("the offer moves one doubling at a time")
+        self.s._raise(delta)
+
     def convince(self):
         s = self.s
         if s.sel is None or s.selected_recruiter is None:
@@ -86,11 +91,12 @@ class TavernTab:
                 "bail": self._bail(c)}
 
     def _bail(self, c):
-        cost = self.s._bail(c)
-        if not cost:
+        base = self.s._bail(c)
+        if not base:
             return None
-        held = self.s._wealth()
-        return {"cost": fmt_money(cost), "held": fmt_money(held), "ok": held >= cost}
+        k, due, held = self.s.raise_k, self.s._due(c), self.s._wealth()
+        return {"base": fmt_money(base), "cost": fmt_money(due), "held": fmt_money(held), "ok": held >= due,
+                "bonus": 2 + k, "k": k, "more": held >= base << (k + 1), "less": k > 0}
 
     def _pitch(self, c):
         s, who = self.s, self.s.selected_recruiter
@@ -104,8 +110,8 @@ class TavernTab:
                              "signed": signed is not None and signed["unit"] is m})
         can = (who is not None and recruit.can_pitch(who, c) and not s._barred(c, who)
                and recruit.slots_free(self.guild, who) > 0)
-        bail = s._bail(c)
-        label = f"Pay the {fmt_money(bail)} bail and convince" if bail else "Convince to join the guild"
+        bail = s._due(c)
+        label = f"Convince (bail {fmt_money(bail)} if it works)" if bail else "Convince to join the guild"
         if bail and can and s._wealth() < bail:
             can, label = False, f"Cannot afford the {fmt_money(bail)} bail"
         elif who is not None and not can:

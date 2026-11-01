@@ -623,16 +623,27 @@ def test_a_pitch_at_the_tavern_that_lands_adds_a_member_for_free(monkeypatch):
     assert len(sim.guild.roster) == 4 and sim.recruited == 1 and sim.money >= before
 
 
-def test_the_prison_takes_the_bail_first_and_keeps_it_when_the_pitch_fails(monkeypatch):
+def test_the_prison_takes_no_bail_when_the_pitch_fails(monkeypatch):
     from gartok import recruit
     sim = _sim(capital=500)
     jailed = _stranger(sim)
     sim.guild.prison_pool, sim.guild.prison_week = [jailed], recruit.current_week(sim.guild.clock)
     monkeypatch.setattr(recruit, "convince", _always(False))
-    before, bail = sim.money, recruit.bail_cost(jailed)
+    before = sim.money
     assert sim.recruit("prison") == 0
-    assert sim.money == before - bail and sim.bail_spent == bail
+    assert sim.money == before and sim.bail_spent == 0
     assert len(sim.guild.roster) == 3
+
+
+def test_the_prison_takes_the_bail_when_the_pitch_wins(monkeypatch):
+    from gartok import recruit
+    sim = _sim(capital=500)
+    jailed = _stranger(sim)
+    sim.guild.prison_pool, sim.guild.prison_week = [jailed], recruit.current_week(sim.guild.clock)
+    monkeypatch.setattr(recruit, "convince", _always(True))
+    before, bail = sim.money, recruit.bail_cost(jailed)
+    assert sim.recruit("prison") == 1
+    assert sim.bail_spent == bail and sim.money == before - bail + jailed.money
 
 
 def test_a_stranger_the_guild_cannot_afford_to_bail_is_left_in_the_cell(monkeypatch):

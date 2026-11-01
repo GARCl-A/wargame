@@ -47,7 +47,13 @@ const Tavern = (() => {
           <div class="dfacts">${facts}<span class="kit">${kit}</span></div>
           <div class="chips">${d.chips.map(c => `<span class="tag ${c.tone}"${tip(c.tip)}>${esc(c.label)}</span>`).join("")}</div>
           <p class="ability"><b>${esc(d.ability.name)}</b> ${esc(d.ability.effect)}</p></div></div>
-      ${d.bail ? `<p class="lastpitch ${d.bail.ok ? "money" : "bad"}">Bail <b>${esc(d.bail.cost)}</b> · the band holds ${esc(d.bail.held)}</p>` : ""}
+      ${d.bail ? `<div class="offer ${d.bail.ok ? "" : "bad"}"><div class="line">
+          <span class="was">Bail <b>${esc(d.bail.base)}</b></span><span class="dot">·</span><span class="lbl">Offering</span>
+          <div class="btn ${d.bail.less ? "" : "off"}" id="bail_less"${tip("Halve the offer")}>÷2</div>
+          <b class="sum">${esc(d.bail.cost)}</b>
+          <div class="btn ${d.bail.more ? "" : "off"}" id="bail_more"${tip("Double the offer")}>×2</div>
+          <span class="lbl">for</span><b class="plus">+${d.bail.bonus}</b><span class="lbl">on the pitch</span></div>
+        <p class="note">Paid only if the pitch works · the band holds ${esc(d.bail.held)}</p></div>` : ""}
       ${last(d.last)}
       <div class="sec dark"><span class="lbl">Who makes the pitch</span></div>
       <div class="pitchers">${pitchers}</div>
@@ -60,7 +66,7 @@ const Tavern = (() => {
     const body = R.dossier ? dossier(R.dossier)
       : `<p class="aside">${R.signed ? "" : "Pick a stranger on the left to read their dossier and make a pitch."}</p>`;
     const foot = R.prison
-      ? "The bail is paid before the pitch and buys +2 on it. Turned down, the prisoner walks free with the coin, and the one who pitched may not try them again until the cells turn over."
+      ? "The bail buys +2 on the pitch, and every doubling of the offer another +1. It is taken only if the pitch wins; turned down, you keep the coin, and the one who pitched may not try them again until the cells turn over."
       : "Opposite alignment docks the pitch a point a step, and so does every member past the second. Turned down, the one who pitched may not try that stranger again until the crowd changes.";
     $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${R.prison ? "Prisoners in the cells" : "Strangers in the tavern"}</div>
         <p class="hint">Charisma against Charisma, in a tongue both speak; a tie goes to the ${R.prison ? "prisoner" : "stranger"}.</p>
@@ -149,6 +155,8 @@ const Tavern = (() => {
     let el;
     if ((el = on("[data-cand]"))) act("candidate", {uid: el.dataset.cand});
     else if ((el = on("[data-pitcher]"))) act("recruiter", {uid: el.dataset.pitcher});
+    else if (on("#bail_more")) act("raise_bail", {delta: 1});
+    else if (on("#bail_less")) act("raise_bail", {delta: -1});
     else if (on("#convince")) act("convince");
     else if ((el = on("[data-target]"))) { picking = null; act("study_target", {uid: el.dataset.uid, id: el.dataset.target}); }
     else if ((el = on("[data-pick]"))) { picking = picking === el.dataset.pick ? null : el.dataset.pick; Sound.play("click"); rooms(H.tavern); }
