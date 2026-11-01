@@ -7,7 +7,7 @@ that owns the subject: the test suite [../../tests/README.md](../../tests/README
 What is already built is in the code, its tests and the git log.
 
 Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do*
-items and the plan pointers again on 2026-11-01). When an item is done, delete it here and, if it
+items, the plan pointers and the sim's `roll_pack` claim again on 2026-11-01). When an item is done, delete it here and, if it
 changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts, in this order:
@@ -49,10 +49,26 @@ the rest.
 
 - **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, day 75,
   against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
-  Rebuild the fight from its combat-log JSONL (`CombatLog`; the save is the author's), find the
+  Rebuild the fight from its combat-log JSONL (`CombatLog`; the save is the author's, from day 30, and it is
+  not in `recordings/`), find the
   condition or rule that blocked the move (web, a spider's web, a stuck state, no free cell, AP), then fix
-  it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
-  actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
+  it and make the action bar always name the blocker of a disabled Move. Mock both ways first (author
+  2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
+  today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
+
+- **Bug: the loot screen has no character sheet and no equip (playtest 2026-11-01).** After a fight the
+  loot screen cannot open a character's sheet nor equip a weapon on anyone. It should carry what a group
+  inventory has: the sheets, equip and unequip, and the pack. Reuse the pack/sheet component the hub uses
+  instead of a second one. Test: loot a weapon after a fight and equip it from that screen.
+
+- **Bug: the tavern overflows after two recruits on day 1 (playtest 2026-11-01).** The new recruits do not
+  enter the recruiters list properly and push the buttons down. Reproduce with two recruits on day 1, fix
+  the layout so the list scrolls inside its box and the buttons stay put.
+
+- **A disabled End Day seal reads as a stray button (playtest 2026-11-01).** The brown square at the
+  bottom right of the map, under "The clock waits", is the cta seal (`#seal` in `screens/map/map.js`) in its
+  `cold` state: dimmed because a group still needs an order. Say why on hover (or keep the label readable
+  when cold) so it stops looking like an unlabelled button.
 
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
@@ -89,7 +105,8 @@ the rest.
   `wiki_rules.py`) becomes one keyword with its own wiki entry, and the descriptions say only the
   keyword: shorter text, and the rules become a set of words that always mean the same thing. Start with
   *Double blow* (the name is open) and look for the next ones (Flanked, Prone, the conditions already
-  are). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai/` and the numbers do not change.
+  are). The assess card in the bestiary should also link a racial ability and a weapon to their wiki
+  entry on hover (playtest 2026-11-01). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai/` and the numbers do not change.
 
 - **The tests the pygame campaign's cut lost (found 2026-10-28).** Rewrite them on the web screens:
   everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old
@@ -113,6 +130,26 @@ the rest.
   which act plays which cue (one table in `docs/web_ui/web_client.md`), and wire them: equip in the sheet,
   confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
   from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
+  Playtest 2026-11-01 adds two: the level-up cue is much louder than a click (lower its `LEVEL`), and the
+  sound lags behind the click (measure first whether it is the audio start or the round trip to the server).
+
+- **Screens feel like they jump (playtest 2026-11-01).** Screen changes and the tutorial cards appear with
+  a startle, as if the screen were not loaded yet. Measure before changing anything: is it the fetch after
+  the switch, assets loading late, or a missing transition? Then preload or cross-fade.
+
+- **Hover on the vocation's races shows their modifiers (author 2026-11-01).** On the vocation pick,
+  hovering a race lists its attribute modifiers and racial abilities, read off the registries. Only if
+  vocations stay (see *Vocations: difficulty or build?* below).
+
+- **The dictionary crafts too fast (playtest 2026-11-01).** One was made on day 18 in about 4 or 5 hours.
+  Find the time the craft takes (`craft_level.py` and the recipe) and set a target with the author, then
+  review the other crafts' times against it.
+
+- **Is a STR/CON-heavy draft objectively best? (author 2026-11-01).** The author drafts a Charisma leader
+  plus the strongest, toughest bodies for the rest and cannot tell bias from fact. Measure with the headless
+  fights and the economy sim: squads built on max STR/CON against squads spread over other attributes, at
+  equal cost. Result decides whether the starting squad and the stat draft need a rebalance
+  (*Starting squad is weak* in the playtest notes).
 
 - **The wiki and the tutorials read every number off the code (author 2026-11-01).** The group capacity
   went wrong because the text restated the rule by hand. Three parts: a test that no string literal in
@@ -286,6 +323,20 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 ---
 
 # Playtest notes
+
+## 2026-11-01
+
+- **Vocations: difficulty or build? (author 2026-11-01).** If vocations stay, is playing Marsh objectively
+  worse than Caravan? Either flag it to the player ("risky" and the like), or balance them to be equally
+  desirable. Either way the game needs a way to test the vocations' balance (`balance_sim.py`,
+  `economy_sim.py`; see *Vocations are far apart* under 2026-10-31).
+- **The AI over-uses two things.** It stabilises allies (it loses turns and fights) and it pushes then
+  flees (day 17: a wolf pushed, ran off and came back; it may push only to cut the flank when it could just
+  walk away). Task, before any morale work because it touches much of `ai/`: review the priority of Stabilise
+  and of push-and-flee, in a headless fight set.
+- **Morale: flee or surrender (author 2026-11-01, future).** Enemies and the player's units enter a
+  "fleeing" mode or surrender. Think the design (a morale number, what breaks it, what a fleeing unit does,
+  prisoners) after the AI review above. It ties to *Prisoners*.
 
 ## 2026-10-31
 
@@ -485,13 +536,16 @@ has one "Enter" button and its functions are tabs inside.
   to the author's liking yet. Sits beside the Intelligence talents in *Talent ideas* above.
 
 - **New body actions: Takedown and one per natural weapon (`prone` is shared).** Both need a design pass
-  first, and both want the same new condition, so `prone` is designed once, for both:
+  first, and both want the same new condition, so `prone` is designed once, for both. Decided (author
+  2026-11-01): `prone` is a simple condition: standing up costs AP, a prone unit cannot move (it must stand
+  first) and attacks at -2 while down. Before building, compare Takedown with Grab in the sim so neither
+  dominates the other:
   - *Takedown* (like Push and Grab): knock a foe prone, with a roll. No `prone` condition exists yet
     (`conditions.py`).
   - *A 2 AP action for `Claws`, `Bite`, `Fangs`, `Hooves` and `Horns`*: one special action per natural
     weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`, as a trait of that weapon. Open:
     the action for each. Each is end-to-end (rules, web tab, AI, tests, tutorial card).
-  Open: what `prone` does (to-hit against, standing up costs AP?), its roll, and which of the five
+  Open: how many AP standing up costs, Takedown's roll, to-hit against a prone foe, and which of the five
   natural actions knock prone too.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
@@ -528,32 +582,3 @@ has one "Enter" button and its functions are tabs inside.
   (`rite.py`) consumes it, so the Faith school has no way to get it.
   Not for sale at the Market (author's call). Decide the source: a lair pile, a mission reward, a rare
   drop from a given foe, or a temple quest. Until then the rite cannot start in a new game.
-
-
-==========
-
-notas de playtest cruas - 2026-11-01
-
-Na tela de seleção de vocação, SE as vocações forem continuar no jogo, over em cima das raças dela poderia mostrar modificadores de atributos e habilidades raciais.
-
-Pensar em vocations como dificuldades ou como escolha de build?
-
-To sentindo um estranhamento com os alertas, nao sei. É como se durante o jogo, as imagens viessem pulando/travando umas entre as outras. Nao sei se e o tempo do front requisitar o back, mas as transições não estao muito suaves, é como se tudo tivesse "tomando um susto" o tempo todo quadno ta trocando de tela e aparecendo os tutoriais. Sera que nao e como se as telas nao estivessem carregadas/em cache ainda?
-
-Os sons tambem aprecem que tem um delay entre o instante que eu CLICO no botão e o som sair.
-
-O botão de "comission" tem reticencias, por que? 
-
-Na tela de mapa, no canto inferior direito tem um quadrado marrom mais escuro que parece um botão, logo abaixo de the clock waits. Oq é esse botão?
-
-Logo no dia 1, consegui fazer 2 recrutamentos, tive um problema de overflow na taverna. Os novos recrutas não entraram adequadamente na lista de recrutadores, empurrando os botões pra baixo.
-
-O som de level up, quando pega o talento, parece ser muito mais alto que o som de clicar na interface.
-
-no card de assess no bestiario, seria bom que o hover tanto na habilidade racial, quanto na arma, mostrasse a entrada na wiki daquele item ne.
-
-na tela de loot, eu nao consigo nem ver a ficha dos personagens, nem equipar as armas neles. Sendo que, idealmente, essa tela deveria ter todas as funcionalidades que uma tela de "inventario de grupo" teria.
-
-Eu to com a sensação que a IA ta fazendo duas coisas "demais". Uma é estabilizar aliados, isso faz com que ela perca turnos e, consequentemente, perca lutas. A outra é o "empurrar e fugir", eu tive uma luta no dia 17 desse playtest que o lobo empurrou, fugiu e depois voltou. Acho q a IA nao tomou la a decisão 100% correta. PRO FUTURO, acho que vale uma mecanica de "moral" que faz com que os inimigos (e os personagens do jogador) efetivamente entre num modo de "fugindo" ou "se rendam". Mas pra AGORA, a ideia é so entender se a prorização de empurrar e correr está correta. As vezes ele nem precisaria empurrar pra fugir, pq tem espaço livre pra sair correndo e acho q so empurra pra reduzir o flanco.
-
-Achei o craft do dicionario MUITO RAPIDO, acho que fiz um no dia 18 em cerca de 4 ou 5 horas, não fez sentido nenhum isso, acho que precisamos de fine tuning no tempo de craft.
