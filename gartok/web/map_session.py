@@ -74,6 +74,7 @@ class MapSession(MapView, Session):
 
     def __init__(self, guild, world_id=None):
         self.guild = guild
+        guild.clock_hook = self.tick_outside
         self.world_id = world_id
         self.notices = []
         self.pending = []
