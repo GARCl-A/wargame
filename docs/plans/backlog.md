@@ -82,10 +82,6 @@ the rest.
   pick a cue from the answer (`coins` when the purse moved, `level_up`): those stay where they are. Check by
   hand in the browser, screen by screen (there is no JS test).
 
-- **A use for Rotten Food (author 2026-11-01).** Today it is worthless (`price=0`) and a keeper bins it.
-  Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the farm
-  patch comes up.
-
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
   copy it into `.claude/skills/<name>/SKILL.md`, then check it against the owner list in
@@ -557,3 +553,6 @@ has one "Enter" button and its functions are tabs inside.
   attribute, advantage on a named kind of action...), and only the most recent meal's buff is active.
   Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
   the one price of a meal). Marsh's slower rot is priced low until this lands.
+  - **A use for Rotten Food (author 2026-11-01).** Today it is worthless (`price=0`) and a keeper bins
+    it. Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the
+    farm patch comes up.
