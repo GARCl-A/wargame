@@ -119,6 +119,9 @@ the rest.
   tool or a crafted good above the material it is made from, then run the `balance` tier and
   `scripts/economy_report.py`. The starting kit draws items by price, so the prices set what a recruit carries.
 
+- **Playtest the new start before retuning (author 2026-11-01).** The author will play it to see whether
+  the smaller start (a random weapon and item, 3d4 copper) is workable at all; the numbers below wait for
+  that verdict.
 - **Retune the economy for the new starting kit (2026-11-01).** The kit is now random and the purse is 3d4
   copper (`starter_kit.py`, `economy.STARTING_WEALTH_DICE`), against a mean ~56 of value before and ~34
   now. `scripts/economy_report.py --quick` fails the day-30 milestone (a level-0 `balanced` squad
@@ -126,11 +129,6 @@ the rest.
   Decide whether the milestone or the start moves, then re-run the `balance` tier and the sims. Check
   `economy_guild.py`'s yard and Mine policies (they buy an Axe or a Pick for whoever lacks one; about 18%
   of recruits now start with one).
-- **The RANGED commission has no candidate (found 2026-11-01).** The draft's RANGED archetype needs a
-  recruit holding a bow or a crossbow, and no starting weapon (base weapons up to 35 copper) shoots: the
-  cheapest is the Light Crossbow at 80. Decide: a cheap ranged weapon (a sling), a ranged pick outside the
-  price cap, or drop the archetype from the commission.
-
 - **Scroll of Invisibility (Magic Arc).** A Library quest unlocked at max Library reputation with a caster
   initiated in magic (direction 2026-10-19).
 

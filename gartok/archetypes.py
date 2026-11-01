@@ -88,14 +88,6 @@ ARCHETYPES = {
         desc="Harder to hit, and accurate with finesse weapons.",
         predicate=lambda u: u.mod_dexterity >= 2,
     ),
-    "RANGED": Archetype(
-        key="RANGED",
-        label="RANGED",
-        rule="bow, sling or crossbow",
-        style="muted",
-        desc="Hits from a distance, out of the enemy's reach.",
-        predicate=lambda u: bool(u.ranged),
-    ),
     "GENIUS": Archetype(
         key="GENIUS",
         label="GENIUS",

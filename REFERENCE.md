@@ -107,7 +107,6 @@ Functional squad roles for candidate generation and commission tokens at the dra
 | TOUGH | 8+ HP. A big pool of HP: survives more than one hit. Not the same as CON, the hit die decides it. |
 | HEALTHY | CON +2. Heals more HP on every rest, holds their breath longer and shrugs off poison. |
 | NIMBLE | DEX +2. Harder to hit, and accurate with finesse weapons. |
-| RANGED | bow, sling or crossbow. Hits from a distance, out of the enemy's reach. |
 | GENIUS | INT +2. Crafts faster, reads manuals and does research. |
 | WISE | WIS +2. Acts earlier in a fight, resists the mind and treats wounds in the field. |
 | RISKY | CON ≤ 8 · total ≤ 56 · can barely carry gear. A hard pick: a frail body that has to be played around. Not always a bad one: a fine leader can be fragile. |
