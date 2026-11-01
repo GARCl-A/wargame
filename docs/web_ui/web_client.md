@@ -21,7 +21,7 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
 
 - **Rules** live in a core module with no pygame (a *desk*: `trade.Counter`, `workbench.Bench`,
   `guild_sheet.GuildSheet`, `dialogue.Talk`, `spoils.Spoils` ...). A test loads it with pygame blocked.
-- **The server half** is a `web/session.Session`: a `screen` id, `state`, its verbs, `tutorial_key()` and
+- **The server half** is a `web/session.Session`: a `screen` id, `state`, its verbs, `tutorial_key()` (and `tutorial_rows(key)` for a card's registry-drawn rows) and
   `sheet_units` (who its `sheet` verb may open). It holds the desk; it never borrows a method off a screen.
   The server routes `/api/<screen>/<verb>` to the open session and refuses another screen's verbs.
 - **The client half** is `client/screens/<id>/`, with its files named in `SCREENS` in `shell.js`. A

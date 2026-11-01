@@ -97,7 +97,15 @@ html,body{background:#0b0806;overflow:hidden;width:100%;height:100%}
 #tut-card h2{margin:14px 0 18px;font:700 34px/1.1 Cinzel,serif;color:#2a1a0e}
 #tut-card p{margin-top:12px;font:19px/1.42 var(--read);color:var(--ink-2)}
 #tut-card p.next{margin-top:20px;font:italic 19px/1.4 "IM Fell English",serif;color:#7a2318}
-#tut-card .btn{width:max-content;margin:28px auto 0}
+#tut-card .tut-rows{margin-top:12px;border-top:1px solid rgba(90,60,30,.3)}
+#tut-card .trow{display:grid;grid-template-columns:auto 132px 1fr;gap:16px;align-items:center;padding:5px 0;border-bottom:1px dashed rgba(90,60,30,.3)}
+#tut-card .trow img{width:48px;height:48px;object-fit:contain}
+#tut-card .trow:not(:has(img)){grid-template-columns:132px 1fr}
+#tut-card .tstamp{justify-self:start;font:700 12px/1 Cinzel,serif;letter-spacing:.14em;padding:5px 8px 4px;border:1.5px solid currentColor;border-radius:2px;transform:rotate(-1.5deg);color:var(--ink-2)}
+#tut-card .tstamp.brass{color:#8a5a12}#tut-card .tstamp.green{color:#3f6b2a}#tut-card .tstamp.warn{color:#a8570f;background:rgba(168,87,15,.1)}
+#tut-card .trow b{display:block;font:700 13px/1.2 Cinzel,serif;letter-spacing:.06em;color:#2a1a0e}
+#tut-card .trow div span{display:block;margin-top:1px;font:16px/1.25 var(--read);color:var(--ink-2)}
+#tut-card .btn{width:max-content;margin:24px auto 0}
 #tut-badge{position:absolute;z-index:80;right:calc(var(--bx,0px) + 6px);top:calc(var(--by,0px) + 6px);
   width:26px;height:26px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
   font:700 14px/1 Cinzel,serif;color:var(--brass-hi);background:radial-gradient(circle at 40% 35%,#3a2b1d,#1a130d);

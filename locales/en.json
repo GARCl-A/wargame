@@ -22,8 +22,9 @@
         "title": "Building your guild",
         "body": [
           "Nine random candidates: a race, an occupation and 3d6 for each attribute. Click three to keep (click again to put one back), then CONTINUE. Expect to lose some: an early squad is meant to be spent.",
-          "Your 3 Commission Tokens call an archetype the pool lacks (Leader, Strong, Tough): pick the archetype, then click the candidate it replaces."
-        ]
+          "Each card wears tags for what its candidate is good at. Aim for a bit of everything: someone to lead, someone to hit, someone who lasts."
+        ],
+        "suggestion": "Something missing? Use your Commission Tokens to replace a card by one with the tags you ask for. RISKY can be asked for too, for a harder start."
       },
       "identity": {
         "title": "Identity and leadership",

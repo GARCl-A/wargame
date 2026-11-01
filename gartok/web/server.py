@@ -121,14 +121,14 @@ def _tutorial(session, verb, post):
     if key is None or state is None:
         raise ValueError("this screen has no tutorial card")
     if not post and verb is None:
-        return {"key": key, **tutorial.card(key)}
+        return {"key": key, **tutorial.card(key, session.tutorial_rows(key))}
     if post and verb == "dismiss":
         first = key not in state.seen
         state.dismiss(key)
         return session.tutorial_closed(key, first) or {}
     if post and verb == "reopen":
         state.reopen(key)
-        return {"key": key, **tutorial.card(key)}
+        return {"key": key, **tutorial.card(key, session.tutorial_rows(key))}
     return None
 
 

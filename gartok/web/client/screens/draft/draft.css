@@ -125,6 +125,7 @@
 .stamps{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;min-height:18px}
 .stamp{font:700 9.5px/1 Cinzel,serif;letter-spacing:.14em;padding:4px 6px 3px;border:1.5px solid currentColor;border-radius:2px;transform:rotate(-1.5deg)}
 .stamp.brass{color:#8a5a12}.stamp.green{color:var(--greenink)}.stamp.muted{color:var(--ink-2)}
+.stamp.warn{color:#a8570f;background:rgba(168,87,15,.1)}
 .stamp.star{color:var(--redink);background:rgba(142,42,30,.08)}
 .vit{display:grid;grid-template-columns:repeat(5,1fr);margin-top:12px;border-top:1px solid rgba(90,60,30,.35);border-bottom:1px solid rgba(90,60,30,.35)}
 .vit div{padding:6px 0 5px;text-align:center}
@@ -155,6 +156,11 @@
   background:rgba(239,226,195,.35);mix-blend-mode:multiply}
 .targeting .dos:hover .xstamp{display:block}
 
+#head .tk{display:flex;align-items:center;gap:6px;margin-left:22px;font:600 11px/1 Cinzel,serif;letter-spacing:.14em;color:var(--brass,#c9a35e);text-transform:uppercase}
+#head .tk i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f0d58c,#b8863a);box-shadow:0 1px 2px rgba(0,0,0,.5)}
+#head .tk i.spent{background:none;box-shadow:inset 0 0 0 1.5px rgba(201,163,94,.35)}
+#head .tk b{font-size:16px;margin-left:4px}
+.arc p b{font-family:Cinzel,serif;letter-spacing:.04em}
 .targetbar{position:absolute;left:530px;right:40px;top:30px;height:58px;display:flex;align-items:center;gap:16px;padding:0 20px;z-index:4;
   border-radius:3px;background:linear-gradient(90deg,#5e1810,#3a0f0a);box-shadow:inset 0 0 0 1px rgba(201,71,58,.6),0 8px 16px rgba(0,0,0,.5)}
 .targetbar b{font:700 15px/1 Cinzel,serif;letter-spacing:.16em;color:#fbe1d6;text-transform:uppercase}

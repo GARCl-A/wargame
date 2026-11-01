@@ -192,3 +192,12 @@ def test_the_router_opens_the_draft_from_the_title(saves):
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+def test_the_pick_card_lists_every_tag_from_the_catalog_and_the_slip_carries_its_rule():
+    d = _draft(vocations.WARBAND)
+    rows = d.tutorial_rows("draft.pick")
+    assert [r["stamp"]["label"] for r in rows] == [a.label for a in ARCHETYPES.values()]
+    assert all(r["rule"] and r["text"] and r["stamp"]["style"] for r in rows)
+    assert d.tutorial_rows("draft.vocation") == []
+    assert all(a["rule"] for a in d.state()["archetypes"])

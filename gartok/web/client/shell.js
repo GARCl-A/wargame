@@ -19,8 +19,12 @@ async function api(path, body) {
 // end of the screen's header when it has one (#top), else in the window's corner
 const Tutorial = (() => {
   let key = null, up = false, shown = null;
+  // what the card's copy cannot hold: a stamp (or a picture), its rule and what it is for
+  const rows = list => !list?.length ? "" : `<div class="tut-rows">${list.map(r => `<div class="trow">
+    ${r.image ? `<img src="${esc(r.image)}" draggable="false">` : ""}<span class="tstamp ${esc(r.stamp?.style)}">${esc(r.stamp?.label)}</span>
+    <div><b>${esc(r.rule)}</b><span>${esc(r.text)}</span></div></div>`).join("")}</div>`;
   const card = c => `<div id="tut-card" class="paper"><div class="kicker">The guild's notes</div>
-    <h2>${esc(c.title)}</h2>${c.body.map(p => `<p>${esc(p)}</p>`).join("")}
+    <h2>${esc(c.title)}</h2>${c.body.map(p => `<p>${esc(p)}</p>`).join("")}${rows(c.rows)}
     ${c.suggestion ? `<p class="next">${esc(c.suggestion)}</p>` : ""}<div class="btn">${esc(c.button)}</div></div>`;
   const node = id => document.getElementById(id) || $("stage").appendChild(Object.assign(document.createElement("div"), {id}));
   const drop = id => document.getElementById(id)?.remove();

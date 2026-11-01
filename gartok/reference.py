@@ -151,7 +151,7 @@ def _archetypes():
                 incomp.append(b)
             elif b == arc.key:
                 incomp.append(a)
-        rows.append((arc.label, arc.desc, ", ".join(sorted(incomp)) or "--"))
+        rows.append((arc.label, arc.text, ", ".join(sorted(incomp)) or "--"))
     head = ("Archetype", "Role & Qualification", "Incompatible With")
     if not archetypes.INCOMPATIBLE_PAIRS:
         head, rows = head[:2], [r[:2] for r in rows]

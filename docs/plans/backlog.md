@@ -64,11 +64,6 @@ the rest.
   it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Draft: say what a commission does (playtest 2026-10-31).** The tester did not know the COMMISSION tokens
-  force a reroll until the card has the asked tag (+2 on that attribute) and took the first cards he saw,
-  one with STR 2. Put a one-line explanation at the button ("3 tokens: replace a card by one with the tag you
-  pick") and the token count where the cards are. Web only (`screens/draft/draft.js`).
-
 - **Prisoners: bail is paid only if the recruit succeeds, plus optional extra bail (playtest 2026-10-30,
   decided).** Today `tavern.Prison._bail` charges `recruit.bail_cost` before the pitch and a failed pitch
   keeps the money ("walks away free"). Change: the pitch is rolled first with the bail's +2
@@ -359,8 +354,8 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 ## 2026-10-31
 
-A friend's (Johann) first session (about 2 h, no tutorial from the author). The two bugs, the Delay label, the
-draft's commission text and the export are in *Ready to do* (Small). The author's stated intent from the
+A friend's (Johann) first session (about 2 h, no tutorial from the author). The two bugs, the Delay label and
+the export are in *Ready to do* (Small). The author's stated intent from the
 same talk is spread over *To discuss and reflect on*, *Notes to remember*, *Needs more information* and the
 items it touches. Raw feedback, not yet sized:
 
