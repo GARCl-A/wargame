@@ -36,6 +36,9 @@ function render(state) {
   $("rows").innerHTML = S.rows.map(r => `<div class="row" data-key="${r.key}"><div class="txt"><b>${esc(r.label)}</b><span>${esc(r.note)}</span></div>
     ${opts(r.choices, r.value, "data-value")}</div>`).join("");
   $("ver").textContent = S.version;
+  $("export").innerHTML = `<div class="kicker">Playtest</div>
+    <div class="row"><div class="txt"><b>Export playtest data</b><span>One zip with the saves, the combat logs and the build, to send to the author.</span></div>
+      <a class="pbtn" id="export-btn" href="/api/settings/export" download>Export</a></div>`;
   const T = S.tutorial;
   $("tut").innerHTML = T ? `<div class="kicker">The tutorial of ${esc(S.guild || "this guild")}</div>
     <div class="row"><div class="txt"><b>Tutorial cards</b><span>The card each screen opens with the first time, kept with the guild's save.</span></div>

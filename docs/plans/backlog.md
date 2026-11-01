@@ -31,7 +31,7 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- The *Small* items below, in order: the version, the exe, the two bugs the friend hit, the export.
+- The *Small* items below, in order: the version, the exe, the two bugs the friend hit.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -68,10 +68,6 @@ the rest.
   unit on it (a weapon that lands under a surrounded foe, a drop under your own fighter) is hidden by the
   token. Improve how the web board shows it (a corner badge on the token, or a marker in the cell ring)
   and how it reads in the inspect panel, so the player knows it is there and can Pick it up.
-
-- **Playtest export (decided 2026-10-31).** The author asks each tester to zip the save folder by hand to read
-  the combat logs and what was done. Add a Settings button "Export playtest data" that gives one zip
-  (saves, combat-log JSONLs, `game_version`). Do it with the version item so the zip says the build.
 
 - **Draft: say what a commission does (playtest 2026-10-31).** The tester did not know the COMMISSION tokens
   force a reroll until the card has the asked tag (+2 on that attribute) and took the first cards he saw,

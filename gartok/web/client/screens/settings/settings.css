@@ -18,6 +18,9 @@
 #tut{margin-top:34px}
 #tut:empty{display:none}
 #tut .kicker{margin-bottom:6px}
+#export{margin-top:34px}
+#export .kicker{margin-bottom:6px}
+a.pbtn{text-decoration:none}
 .pbtn{height:36px;padding:0 16px;display:grid;place-items:center;border-radius:2px;cursor:pointer;
   font:600 11px/1 Cinzel,serif;letter-spacing:.16em;color:#4a3522;text-transform:uppercase;
   border:1px solid rgba(90,60,30,.5);background:rgba(255,248,225,.35)}

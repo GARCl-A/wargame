@@ -2,6 +2,7 @@
 menu: resume, save as, settings, wiki, main menu, quit), and back to where they were opened."""
 
 import json
+import os
 import threading
 import urllib.request
 
@@ -232,6 +233,34 @@ def test_the_router_serves_both_screens(saves):
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+# ---------------------------------------------------------------- the playtest export
+def test_the_export_zips_the_saves_the_combat_logs_and_names_the_build(saves):
+    import io
+    import json
+    import urllib.request
+    import zipfile
+
+    from gartok.version import GAME_VERSION
+    game = _map()
+    logs = os.path.join(persist.world_dir("ink"), "combat_logs")
+    os.makedirs(logs)
+    with open(os.path.join(logs, "fight.jsonl"), "w") as fh:
+        fh.write("{}\n")
+    game.open(SettingsSession(lambda: None))
+    srv = serve(game)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        r = urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/api/settings/export")
+        assert "attachment" in r.headers["Content-Disposition"]
+        z = zipfile.ZipFile(io.BytesIO(r.read()))
+    finally:
+        srv.shutdown()
+        srv.server_close()
+    names = set(z.namelist())
+    assert {"playtest.json", "saves/ink/current.json", "saves/ink/combat_logs/fight.jsonl"} <= names
+    assert json.loads(z.read("playtest.json"))["game_version"] == GAME_VERSION
 
 
 # ---------------------------------------------------------------- the credits

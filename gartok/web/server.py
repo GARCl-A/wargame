@@ -5,6 +5,7 @@ and a JSON API over the screen being played. Standard library only.
     GET  /api/sounds              -> the sound cues
     POST /api/bye                 -> the page is going (closed, or reloaded on another screen)
     GET  /api/tutorial            -> the open screen's tutorial card; POST .../dismiss, .../reopen
+    GET  /api/settings/export     -> the playtest zip (saves, combat logs, build), while Settings is open
     *    /api/<screen>/<verb>     -> that screen's session (`session.Session`)
     *    /api/lab/fights, /new    -> the combat lab, when the game was opened on one
 """
@@ -17,7 +18,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from .. import combat_lab, persist, recorder, settings, sound, tutorial
+from .. import combat_lab, persist, playtest_export, recorder, settings, sound, tutorial
 from ..combat_log import CombatLog
 from .battle_session import BattleSession
 from .guild_session import GuildSession
@@ -189,6 +190,10 @@ def make_handler(game):
                 except ValueError as e:
                     return self._json({"error": str(e)}, 409)
                 return self._missing() if answer is None else self._json(answer)
+            if parts == ["settings", "export"] and not post and s.screen == "settings":
+                return self._send(playtest_export.build(), "application/zip",
+                                  headers=(("Content-Disposition",
+                                            f'attachment; filename="{playtest_export.filename()}"'),))
             if len(parts) != 2:
                 return self._missing()
             screen, verb = parts

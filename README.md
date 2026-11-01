@@ -162,6 +162,7 @@ gartok/
   ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
   version.py        GAME_VERSION + build hash; docs/versions.csv is the release table, scripts/version_check.py guards it
+  playtest_export.py  the Settings "Export playtest data" zip (saves, combat logs, build)
   settings.py       player preferences (settings.json), listed on the settings screen
   combat_log.py     one JSONL per fight, enough to rebuild it: every decision, its options, what the AI would have done
   combat_lab.py     the benchmark fights set up outside a campaign (Editor menu: COMBAT LAB), either side a person or the AI
