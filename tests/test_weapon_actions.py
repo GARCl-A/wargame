@@ -247,6 +247,33 @@ def test_hook_shield_nullifies_shield_ac():
     assert d.ac == base_ac - 2
 
 
+def _surround(batt, target, around):
+    cells = [(target.pos[0] + dx, target.pos[1] + dy)
+             for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)]
+    for unit, cell in zip(around, cells):
+        unit.pos = cell
+
+
+@pytest.mark.parametrize("team", ["player", "enemy"])
+def test_hook_shield_resolves_on_a_foe_flanked_on_all_eight_cells(team):
+    batt, a, d = _melee_battle()
+    d.pos = (6, 5)
+    others = [_recruit(batt, team=team) for _ in range(7)]
+    _surround(batt, d, [a] + others)
+    d.hp = 30
+    a.equip_weapon("Hatchet")
+    d.char.give_to_offhand("Dwarf Shield")
+    a.ap = 2
+
+    assert actions.HOOK_SHIELD.can(batt, a, d)
+    assert d in actions.HOOK_SHIELD.highlight_targets(batt, a)
+    with fixed_d20(18):
+        actions.HOOK_SHIELD.execute(batt, a, d)
+    assert a.ap == 0
+    assert d.has_condition("shield_hooked")
+    assert all(u.pos != d.pos for u in batt.units if u is not d)
+
+
 def test_javelin_charge_requires_moving():
     batt, a, d = _melee_battle()
     d.hp = 20
