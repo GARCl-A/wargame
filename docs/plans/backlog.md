@@ -7,7 +7,7 @@ that owns the subject: the test suite [../../tests/README.md](../../tests/README
 What is already built is in the code, its tests and the git log.
 
 Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do*
-items again on 2026-10-30, the plan pointers on 2026-11-01). When an item is done, delete it here and, if it
+items and the plan pointers again on 2026-11-01). When an item is done, delete it here and, if it
 changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts, in this order:
@@ -31,7 +31,8 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- The *Small* items below, in order: the version, the exe, the two bugs the friend hit.
+- The *Small* items below, in order: the wiki's group capacity, the fighter that cannot move, the icons'
+  authors, then the exe.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -46,6 +47,19 @@ the rest.
 
 ## Small
 
+- **The wiki's group capacity is wrong (playtest 2026-10-31).** `wiki_rules.py` ("GROUPS, LEADERS &
+  FAME") says a group holds `BASE_CAPACITY` + the leader's Charisma modifier; `Group.capacity` also adds
+  half the leader's racial level, and the code is the intent (author 2026-10-31). Fix the text (read the
+  numbers off `group`, as the line already does) and show the capacity and the crowd penalty
+  (`recruit.size_penalty`, -1 per member) at the recruit pitch, where the friend needed them.
+
+- **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, day 75,
+  against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
+  Rebuild the fight from its combat-log JSONL (`CombatLog`; the save is the author's), find the
+  condition or rule that blocked the move (web, a spider's web, a stuck state, no free cell, AP), then fix
+  it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
+  actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
+
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
   game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
@@ -54,15 +68,8 @@ the rest.
 - **Playtest build for friends (checked 2026-10-30).** `build_exe.bat` (PyInstaller `--onefile`, stdlib
   only) builds a `GARTOK.exe` that opens and serves the client; it is only the way to hand the game to
   playtesters, not the official release. Left: play a whole session in the exe, put `build_exe.bat` in English,
-  rebuild `dist/GARTOK.exe` (still the 2026-10-10 pygame one). Do it after the version item so the exe
-  carries it.
-
-- **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, day 75,
-  against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
-  Rebuild the fight from its combat-log JSONL (`CombatLog`; the save is the author's), find the
-  condition or rule that blocked the move (web, a spider's web, a stuck state, no free cell, AP), then fix
-  it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
-  actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
+  rebuild `dist/GARTOK.exe` (still the 2026-10-10 pygame one). Do it last of the playtest items, so the exe
+  carries their fixes.
 
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
@@ -79,39 +86,19 @@ the rest.
   on load the party is back idle and loses the hours spent and the haul so far, which makes no sense now
   that the hunt is just another order. Save it: the `hunt.HuntState` (party and guard uids, hours left and
   hunted, `yield_hours`, finds, fights, target, multipliers, Biwolf) and what the stretch rolled (an ambush
-  or not, and whose: Biwolf, Wilds pack, the ox) go into the order or the group, and on load
-  `MapSession.hunts` is rebuilt from them so the stretch comes due and `HuntSession.arrive` opens as usual.
-  The ambush pack itself is rolled at arrival, so it needs no saving. Change the AGENTS.md / RULES.md rule
+  or not, and whose: Biwolf, Wilds pack, the ox) go into the `hunting` `Order` itself (decided 2026-11-01:
+  the order, not a field on `Group`, so later orders can carry their own state the same way), and on load
+  `MapSession.hunts` is rebuilt from it so the stretch comes due and `HuntSession.arrive` opens as usual.
+  Today the ambush pack is rolled at arrival, so it needs no saving; once *An ambush needs a pack with a
+  chance to win* rolls it inside the stretch, the pack goes into the order too.
+  Change the AGENTS.md / RULES.md rule
   "a battle or hunt in progress is never saved" to "a battle in progress is never saved" and drop the
   `hunting` case from `persist` and its test in `tests/test_one_clock.py`. Tests: save and load mid-stretch
   keeps the clock, the party, the yield and the ambush; a save with the hunt screen open (setup,
   interlude) still refuses or keeps working as it does now.
 
-- **2 AP actions for `Claws`, `Bite`, `Fangs`, `Hooves` and `Horns` (future, after *Natural weapons*).** One special action
-  per natural weapon, like Wrest for `Unarmed`, as a trait of that weapon. Design call open for each.
-  Medium, not Small: a new action is end-to-end (rules, web tab, AI, tests, tutorial card).
-
-- **Takedown as its own action (like Push and Grab).** Knock a foe prone: needs a `prone` condition (none
-  exists) and a roll; sized when designed.
-
-- **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided).** On day 105 a guild of
-  eight stopped for two wolves. The premise: an ambush only exists if the pack would plausibly attack
-  that group. Where a pack is rolled against a group (the road, `world.ROAD_AMBUSH_CHANCE`; the work
-  nodes, `gather.ambushed` / `ambush_pack`; the Wilds hunt), compare the rolled pack with the group
-  before the fight starts, with one function in `encounters.py` (the pack's strength against the group's:
-  levels, count and HP, the same measure `combat_pairs.py` / the sim use for a win chance) and a
-  threshold. Below it the pack does not attack: the roll is spent, the log says so ("Two wolves watch the
-  column pass and keep to the trees"), no board, the group keeps its clock. Only the odds are
-  tested, not a free pass: the pack is re-rolled once at a size that fits the group (`GATHER_COUNT_WEIGHTS`
-  scaled by the group's size) before giving up, so a big guild still meets big packs. Threshold
-  (start at ~15% win chance for the pack, tune with `sim_test.py`), and whether the hunt shares it, are
-  open until the first run. The Wilds hunt shares the check (author 2026-10-31). Not for forced/story fights (`Group.pending`, quests, the Biwolf escort).
-  Tests: eight L3 against two L0 wolves never opens a fight, a lone L0 against the same wolves does, the
-  re-roll scales with size, forced fights are untouched, the `ai/` side is unaffected (the foe only
-  decides inside a battle).
-
-- **Audit: which fights are ambushes and which are not (author 2026-10-31).** Do it before or together
-  with *An ambush needs a pack with a chance to win*, because the check only belongs to the ambushes.
+- **Audit: which fights are ambushes and which are not (author 2026-10-31).** Do it before *An ambush
+  needs a pack with a chance to win*, because the check only belongs to the ambushes.
   List every place the game starts a fight (road legs, gather shifts, Wilds hunt, supply run,
   Ledger Hold, wagon watch, node fights such as the Ruins and the Serpent's Nest, the arena, forced
   events, quests) in a table in `RULES.md` with its kind: **ambush** (the pack comes to the group; the
@@ -120,6 +107,37 @@ the rest.
   pay, hide). Put the kind on the code that rolls it (one field, not a comment) so the check reads it.
   Output: the table, the field, a test that every fight source has a kind. Expect to find fights that
   should change kind (a Ruins visit that behaves like an ambush); each is a short question for the author.
+  Where fights start today (read 2026-11-01), the three paths the field has to cover:
+  1. *A forced event* (`forced.EVENTS`, one `ForcedEvent` per order kind): caught on arrival at a node
+     (`road_ambush_catch`, the guard, the house raid, the claim retake), by a daily check (the claim's
+     raid and seizure) or by the work that rolls it (`Guild.gather_shift`, `Guild.supply_leg`). The catch
+     returns an `Order` with its `pack`, the group gets `pending` and is locked, the event is played as
+     `battle` / `map` / `talk`, and its `resolve` settles it.
+  2. *The Wilds hunt*: not a `ForcedEvent`; `hunt.py` rolls the ambush hour by hour inside the stretch
+     and `HuntSession` runs the fight and picks the hunt back up.
+  3. *Sought fights*: a node's own screen starts the battle (the Ruins, the Serpent's Nest, the arena,
+     the quests).
+  Proposal for the field: a `nature` on `ForcedEvent` (most ambushes live there) plus the same constant
+  declared by the hunt and by each node fight; the test walks the three. To decide with the author at the
+  audit.
+
+- **An ambush needs a pack with a chance to win (playtest 2026-10-30, decided 2026-11-01).** On day 105 a
+  guild of eight stopped for two wolves. The premise: an ambush only exists if the pack would plausibly
+  attack that group. **The chance of an ambush does not change** (`world.ROAD_AMBUSH_CHANCE`,
+  `gather.ambush_chance`, `hunt.AMBUSH_CHANCE_PER_HOUR`): the pack is rolled as today, then one function
+  in `encounters.py` asks whether that pack would attack this group (the pack's strength against the
+  group's: levels, count and HP, the same measure `combat_pairs.py` / the sim use for a win chance). If it
+  would, the ambush happens as today. If not, **nothing happens and the player never learns of it**: no
+  log line, no board, the group keeps its clock; it simply avoided the ambush by being too strong for
+  it. In code the check sits where each ambush is caught (the catch returns None, `gather_shift` banks the
+  haul, the hunt stretch keeps spending hours), so only the fights the audit marks **ambush** get it,
+  never a forced or story fight (`Group.pending` from a quest, the Biwolf escort). The hunt rolls its pack
+  at arrival today; the check needs it rolled in the stretch, which feeds *A hunt out on the clock must
+  survive a save*. Open: the threshold, the pack's win chance below which it does not attack (a first
+  guess is ~15%, tuned with `sim_test.py`).
+  Tests: eight L3 against two L0 wolves never opens a fight and leaves no trace in the log, a lone L0
+  against the same wolves does, the ambush chance itself is unchanged, forced fights are untouched, the
+  `ai/` side is unaffected (the foe only decides inside a battle).
 
 - **Rules as keywords (playtest 2026-10-30).** A rule repeated in prose ("the blow lands twice over (a
   second roll of the weapon's damage)" in `weapon_traits.py`, `actions/weapon_actions.py`,
@@ -128,11 +146,9 @@ the rest.
   *Double blow* (the name is open) and look for the next ones (Flanked, Prone, the conditions already
   are). A keyword's entry goes in `wiki_terms.terms()` and the wiki already links it (`wiki_terms.of_item`) and shows it on hover; `ai/` and the numbers do not change.
 
-- **What only pygame had, in the browser (found 2026-10-28, when the pygame campaign was cut).** The broken
-  wagon left behind, the hand-over card between groups, the vault read from the guild screen and the auto-win
-  are done (2026-10-30). Left: the tests the cut lost: everyone
-  jailed, no save mid-battle, two due screens in turn, the REST row, a trip
-  cancelled. The old screens are in git before the cut.
+- **The tests the pygame campaign's cut lost (found 2026-10-28).** Rewrite them on the web screens:
+  everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old
+  screens and their tests are in git before the cut.
 
 - **Test suite: the last luck-dependent tests (found 2026-10-28).** The suite is seeded per test and
   runs under `pytest-xdist` (how it works: [../../tests/README.md](../../tests/README.md)); four tests
@@ -149,7 +165,14 @@ the rest.
   2026-10-30): every new screen that prints "Race Occupation" raises the cost of this removal. It is spread
   over five core modules plus the labels below. The first step of *Needs more information -> Loyalty,
   the oath and who the members are*: an occupation is only a preset of the starting weapon and item
-  (`unit.py`), so the starting kit is rolled at random and nothing is written on the character. Touches
+  (`unit.py`), so the starting kit is rolled at random and nothing is written on the character.
+  The new kit (author 2026-11-01, numbers are examples to tune): each recruit starts with a random
+  weapon worth up to ~35 copper and a random item worth up to ~15, drawn from `items.py` by price, so the
+  squad's average value is set and every start has a real weapon (*Playtest notes -> Starting squad is
+  weak*). Since gathering needs the node's tool (`economy.WORK_TOOLS`: Axe, Pick), the draw decides who can
+  gather on day one: say whether the tools are in the weapon pool (Axe and Pick both cost 35, right at the
+  cap) and check the sim's policies afterwards (`economy_guild.py`: the yard and Mine ones buy an Axe or
+  a Pick for whoever lacks one, and the day-30 milestone prices an Axe). Touches
   `data.OCCUPATIONS`, `Unit` (roll, save, `unit_edit`), `artwork.OCCUPATION_ICON` and `role_for` (the
   member's icon needs another source: the race's, or the weapon's), every label that prints
   "Race Occupation" (tavern, guild, squad, medic, initiation, crafting, watch, `dialogue.py`, the web
@@ -157,21 +180,12 @@ the rest.
   `outfit.py` (level 0 keeps the occupation's kit), `reference.py` / REFERENCE.md, the sims' rankings
   (`economy_guild.py`, `balance_sim.py`, `unit_compare.py`) and their tests. Saves of the old shape stop
   loading unless the key gets a default. The occupation-unique items lose their reason to exist: drop
-  them from the start, they come back if a system ever needs them. Check the economy sim afterwards:
-  a starting Axe or Pickaxe was a work tool.
+  them from the start, they come back if a system ever needs them.
   `tests/helpers.standard_unit` drops its `set_occupation("Guide")` and must still hand back a Quarterstaff
   and an empty pack.
 
-- **Magic Arc follow-ups (future drops, quests & tuning).**
-  1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
-  2. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
-  3. *Tuning after playtests:* balance numbers for Battlefield, Snake Dragon, Ogre Wildfire, Necromancer at the Front, and Dragon's Clutch once further campaign runs reach them.
-
-- **The sim's long game (found 2026-10-21).** `economy_guild.Balanced` plays the author's line: 92% of guilds
-  meet the day-30 milestone, none die before it. Past it (the Pit, a recruit, the Wilds hunt as the income) 18 of
-  40 die by day 60, all hunting: a lost lethal fight takes the whole group. The sim gives the player `SKILL = 0.5`
-  of the AI's losses in every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0,
-  `combat_pairs.py`). Decided 2026-10-21: keep 0.5 and leave the long game for later (the sim: [../economy_sim.md](../economy_sim.md)).
+- **Scroll of Invisibility (Magic Arc).** A Library quest unlocked at max Library reputation with a caster
+  initiated in magic (direction 2026-10-19).
 
 - **UI sound: the missing cues.** `gartok/sound.py` has 7 cues and every one
   of the 16 files in `assets/sounds/` is used, so confirm, error, equip and end of turn have no sound. The
@@ -192,6 +206,17 @@ the rest.
   often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
   the slimmest), Long Thrust (Glaive, 2026-10-22: one strike past reach, no double, the narrowest by design),
   and the old Extreme Shot / Power Shot niches (Power Shot is now on the Longbow too).
+- **Magic Arc, later.** (1) *Blood's fourth mission* (the robbed dragon strikes back): the dragon attacks
+  node by node seeking its eggs, closest first, with consequences if nodes are destroyed; after the magic
+  arc's core content (author 2026-10-19). (2) *Tuning after playtests:* the numbers for the Battlefield,
+  the Snake Dragon, the Ogre Wildfire, the Necromancer at the Front and the Dragon's Clutch, once campaign
+  runs reach them.
+- **The sim's long game (found 2026-10-21, left for later the same day).** `economy_guild.Balanced` plays the
+  author's line: 92% of guilds meet the day-30 milestone, none die before it. Past it (the Pit, a recruit,
+  the Wilds hunt as the income) 18 of 40 die by day 60, all hunting: a lost lethal fight takes the whole
+  group. The sim gives the player `SKILL = 0.5` of the AI's losses in every fight; the author's 87 hunts
+  measure 0.84 (arena 0.44, road ambushes ~0, `combat_pairs.py`). Kept at 0.5 (the sim:
+  [../economy_sim.md](../economy_sim.md)).
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
   group's output is another's input, the heart of the open-world vision. The Carpenter is open (2026-10-19).
   The Forge already smelts Iron Bar (2 Iron Ore + 1kg Coal). Next: wagon crafting, a crafting branch for
@@ -287,8 +312,10 @@ agent asks for art instead of generating it. Order is the suggested priority.
   `web/wiki_session.BUILD` prints the whole catalog from turn one (Beasts: Hit Die, size, speed, abilities
   and drop odds; Talents: every racial node of every race; Recipes: all of them). Gate each chapter on what
   the guild has met, owned or learned (`intel`, known recipes, the talents of the races in the guild), with
-  a locked-entry stub or no entry at all. Open: what counts as "known" per chapter, and whether the
-  wiki says that something is still hidden. The complete catalog is `REFERENCE.md`, a design doc for
+  a locked-entry stub or no entry at all. Decide in two steps (author 2026-11-01): first, what each
+  chapter shows from day one (the rules every guild needs, the starting races' own talents...); then
+  what "known" means for the rest per chapter (met, owned, learned) and whether the wiki says that
+  something is still hidden. The complete catalog is `REFERENCE.md`, a design doc for
   developers and agents, spoilers included; if it is ever published it becomes the game's general wiki,
   outside the game, and the in-game one stays the discovered subset.
 
@@ -327,14 +354,13 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 ## 2026-10-31
 
-A friend's (Johann) first session (about 2 h, no tutorial from the author). The two bugs, the Delay label and
-the export are in *Ready to do* (Small). The author's stated intent from the
+A friend's (Johann) first session (about 2 h, no tutorial from the author). The author's stated intent from the
 same talk is spread over *To discuss and reflect on*, *Notes to remember*, *Needs more information* and the
 items it touches. Raw feedback, not yet sized:
 
 - **What worked (do not "fix" it).** The character progression, combat, and the pull of "always something
   to go after" (the exclamation marks on the map). Two musicians playing while the rest worked was the
-  strategy he liked (hence the split-clock bug is the worst one). He compares it with, or above, Wartales /
+  strategy he liked. He compares it with, or above, Wartales /
   Battle Brothers / Mount & Blade for fun, and finds it easy to play in short sessions. He stopped because
   of that bug and because he had played a lot, not because he was bored.
 
@@ -357,7 +383,7 @@ items it touches. Raw feedback, not yet sized:
   double, no donkey to buy) really are the strongest races. Only then rework.
 - **Starting squad is weak.** STR 2 or 3 carries nothing, a bow is too dear, and the start weapon is
   a dagger or a piece of an axe ("at least one real weapon"). The author would take 18 STR, 18 CON and 0
-  elsewhere at level 0. The occupation removal rolls the start kit anew: give it a real weapon then.
+  elsewhere at level 0. The kit half is in *Remove occupations* (a random weapon and item by price).
 - **Food was learned wrong.** He bought what looked like 20 days of shelf life and it spoiled; beer
   first (cheap at 4 copper and durable), then Potato; a farm trip for it did not pay against Fruit at the
   grocery. Show shelf life in the shop row. Check the economy report: is beer the best buy per day? No
@@ -383,10 +409,6 @@ items it touches. Raw feedback, not yet sized:
   skills. Wanted: a new thing to do per level (a bard that can play at court or recruit). Magic is the
   main hope but it arrives late (reputation with the schools, unless the start is a Gnome or Kobold, the
   races that begin as casters).
-- **The group limit was not visible.** He did not know how many a group holds or that recruiting gets harder
-  with every member (-1 per member). Show the capacity and the crowd penalty at the recruit pitch.
-  The author's wiki said "level + CHA mod" for the capacity: the wiki is wrong, the code (`BASE_CAPACITY`
-  3 + CHA mod + half the racial level) is the intent (author 2026-10-31). Fix the wiki text.
 - **Switching between groups.** The author asked if it is pleasant; the answer was not clear in the record.
   Ask again. The friend's view: up to 8 units is fine, more groups slow it unless there is automation.
 - **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received.
@@ -452,21 +474,36 @@ has one "Enter" button and its functions are tabs inside.
 
 - **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
   targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
-  order of impact:
-  1. *The Medic's price.* As built it is $16 an HP against $1.3 an HP for a rest, so only a rich squad uses
-     it: keep it a late-game luxury, or price it at the rest it saves?
-  2. *Upkeep.* A house costs a lumberjack's whole wage and a Donkey a third more. Intended (assets need an
-     adventuring income), or should the first assets be reachable on day labour?
-  3. *The Games' stake.* $30 a fighter is more than a lumber squad keeps in a week, so the ladder is
-     capital-gated: a climb for a guild that has done well, or should the stake come down?
-  4. *How lethal the Wilds should be.* A level-3 squad that does not win nearly every fight cannot make a
+  order of impact. Settled (author 2026-11-01): the Medic stays a luxury for an instant cure when one is
+  needed now (planning a rest is the way otherwise); upkeep is intended: the City house is a guild seat
+  and dear on purpose ($30 a week), and a day labourer lives to work, eat and sleep, so the Yard alone
+  never keeps a house or an animal.
+  1. *The Games pay too little for their risk (direction decided 2026-11-01, numbers open).* A Games bout
+     (Brawl or Capture the Flag, 3 a side) costs $30 a fighter ($90 for the three) and pays a flat $130,
+     against three opponents rolled level 1 to 6 each (`encounters.ARENA_LEVEL_WEIGHTS`: 30/24/18/13/9/6,
+     mostly 1 to 3, mean ~2.7); the Ribbit Brothers' bout costs $40 a fighter for $450, six a side,
+     lackeys at level 3. A level 3-4 group has no reason to risk being beaten up for that: the purse (or
+     the stake against it) has to make a bout worth more than what the same group earns elsewhere in
+     the same days, the Wilds first. Measure the Games' net per bout against the Wilds hunt for that group
+     (`scripts/economy_activities.py`, `economy_report.py`), then set the numbers.
+  2. *How lethal the Wilds should be.* A level-3 squad that does not win nearly every fight cannot make a
      living there, and the Old Road's ambush (20% a pass, `world.ROAD_AMBUSH_CHANCE`) fires on every walk.
-     Ties to *An ambush needs a pack with a chance to win*.
-  5. *How much a crafting specialist may earn.* The shelves aim at 2-3x a lumberjack; the author's note says
-     crafting is for saving money and reaching what cannot be bought, not a business. Ties to *Tune the
-     specialised shops*.
-  6. *The reference late-game scenario* (level 3 with $250) is a guess at "a guild a week in".
-  7. The Claim's numbers predate the `hold` job fix: re-measure when a sim policy goes for the Claim.
+     Re-measure after *An ambush needs a pack with a chance to win* (author 2026-11-01).
+  3. *How much a crafting specialist may earn.* The shelves aim at 2-3x a lumberjack; the author's note says
+     crafting is for saving money and reaching what cannot be bought, not a business. Needs the sum first
+     (author 2026-11-01): what each crafting loop earns a day against the Yard, with
+     `scripts/economy_report.py` and the restock sweep, before the call. Ties to *Tune the specialised
+     shops*.
+  4. *The reference scenario past the start.* The sim tests the Wilds, the Games and the Claim from a
+     guild that starts at level 3 with $250 (`economy_guild.py --level 3 --capital 250`), a guess. The
+     author's own line (2026-11-01): a group of **4 at combat 1, work 2** already goes to the Wilds for
+     hides and mushrooms. Make that the scenario: `--level` is one number today, so the sim needs the
+     combat and work tracks apart (and `--size 4`); the starting coin is still open (proposal: what the
+     sim's own guild holds the day it reaches combat 1, work 2).
+  5. *The Claim's numbers are old.* The Wilds claim (the guild's own holding in the Wilds, built by a
+     garrison that sustains it until it is established, then raided now and then) was measured before
+     the garrison's `hold` job (rest and heal on the claim) existed, so the sim's "a gamble, established
+     by 13-28% of guilds" may be wrong. Not a call: a re-measure, when a sim policy goes for the Claim.
 
 - **Open design questions from the 2026-10-18 playtests** (no code yet).
   - **The world moving by itself** (a Wilds node turns into a lair if nobody clears it). The author's
@@ -487,18 +524,20 @@ has one "Enter" button and its functions are tabs inside.
      talent) recruits a target that B could also recruit on their own. A "consumes" B: instead of one
      roll per recruiter, the pitch is N rolls (A and every other ally who could recruit that target), each
      `1d20 + A's CHA + 1 per other ally who could`. A has +2 and B +1 in the author's example, so two
-     rolls of `d20+3`. A failure spends the week's attempt (`recruit.bar`) of everyone involved. Open:
-     does one roll above the target's resolve win, or must all of them (proposal: the best roll counts, the
-     talent is a way to try more than once); who becomes `recruited_by` (the holder; the earlier idea
-     was the highest Charisma); whether "could recruit" counts `slots_free` and the shared language;
-     three nodes or one chain, which tier; and whether "group size limit" is `cohesion.py`'s capacity
-     (to be replaced by Loyalty, see above).
+     rolls of `d20+3`. A failure spends the week's attempt (`recruit.bar`) of everyone involved.
+     Decided (author 2026-11-01): the best roll counts (the talent is a way to try more than once); the
+     holder becomes `recruited_by`; "could recruit" means every requirement the ally would need to
+     recruit that target alone (`slots_free`, the shared language, the rest of `recruit.py`'s checks).
+     Open: three nodes or one chain, which tier; and whether "group size limit" is `cohesion.py`'s
+     capacity (to be replaced by Loyalty, see above).
   2. *Intelligence tree (combat), two talents:* (a) **group leader only: places the whole group** before
      the fight; (b) **places only oneself**. Together they are a ladder (b the early node, a the late one),
-     and (a) needs the leader to be on the board. Open: the placement zone (the start zone only), the
-     UI on the board, an undo, what happens to a group whose leader is absent, and how `ai/` places its
-     own side (the premise "the AI knows the mechanic" applies, even if it only keeps today's random
-     start).
+     and (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
+     the UI is like the flag's placement (a pre-fight setup step, `BattleSession` already has "flag" and
+     "trap"), placing the characters one after another in initiative order. (a) works only when the
+     leader is on the board (an arena bout picks its fighters, a hunt leaves its guards behind: without
+     the leader, no one places the group). Open: how `ai/` places its own side: keep today's start
+     for now, then record how the author places in a few scenarios and train the AI on them.
   3. *Charisma + Wisdom compound:* Demoralize on beasts. The point is the language: a beast has none,
      so `Demoralize._can_provoke` (`actions/combat.py`) never allows it. The talent gives the holder what
      `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets
@@ -511,12 +550,24 @@ has one "Enter" button and its functions are tabs inside.
   know grants crit and to-hit: a turn spent investigating before the beating is a real option. Not built
   to the author's liking yet. Sits beside the Intelligence talents in *Talent ideas* above.
 
+- **New body actions: Takedown and one per natural weapon (`prone` is shared).** Both need a design pass
+  first, and both want the same new condition, so `prone` is designed once, for both:
+  - *Takedown* (like Push and Grab): knock a foe prone, with a roll. No `prone` condition exists yet
+    (`conditions.py`).
+  - *A 2 AP action for `Claws`, `Bite`, `Fangs`, `Hooves` and `Horns`*: one special action per natural
+    weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`, as a trait of that weapon. Open:
+    the action for each. Each is end-to-end (rules, web tab, AI, tests, tutorial card).
+  Open: what `prone` does (to-hit against, standing up costs AP?), its roll, and which of the five
+  natural actions knock prone too.
+
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
   too much friction; new actions have to come in gradually, so a new player is not flooded while the
-  complexity builds. Open: which actions come at which level or talent. Ties to *Roster of characters*
-  (*Notes to remember*) and *Levelling is vertical only*.
+  complexity builds. Open: which actions come at which level or talent. Decide it after *New body
+  actions* (author 2026-11-01): Takedown and the natural and unarmed actions are most of what the bar
+  would gate. Ties to *Roster of characters* (*Notes to remember*) and *Levelling is vertical only*.
 
-- **Magic as the vertical progression.** The arc's work is in *Ready to do -> Medium* (*Magic Arc follow-ups*). The schools are
+- **Magic as the vertical progression.** The arc's work is the *Scroll of Invisibility* (*Ready to do ->
+  Medium*) and *Magic Arc, later* (*Large*). The schools are
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
   Open: tier 2+ spells and any reputation penalty for rivalry.
 
