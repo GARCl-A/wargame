@@ -15,7 +15,7 @@ Aurochs himself is authored (`npcs/aurochs.json`); killing him closes the trail
 
 import random
 
-from . import clock, data, missions, npc_lib
+from . import clock, data, fight_nature, missions, npc_lib
 from .ox_fields import AUROCHS_SLUG
 
 SCOUT_HOURS = 2
@@ -23,6 +23,7 @@ SCOUT_DC = 10
 TRACK_DC = 12
 TRACK_DC_STEP = 2
 TRACK_SHIFT_HOURS = (2, 4, 6, 8)
+TRACK_NATURE = fight_nature.SOUGHT     # the band runs the ox down
 
 
 def _scout(party):

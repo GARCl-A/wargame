@@ -138,6 +138,7 @@ gartok/
                     also the tick engine (`advance`) that plays orders out
   forced.py         forced events (guard, ambushes, raids, seizures): where each is caught,
                     how it is played and settled, one `ForcedEvent` per kind in `EVENTS`
+  fight_nature.py   sought / opportunist / determined: what kind of fight each source declares
   economy.py        prices, market stock, haggling (language + Charisma + alignment)
   constants.py      tuning knobs shared by economy/justice/campaign (bail, patrols, taxes)
   chest.py          a generic locked pack item (d20+DEX vs DC), opened from the band's item menu
@@ -240,7 +241,9 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   A new kind of service is one `NodeFunction` in `node_functions.FUNCTIONS` (order kind, button
   label) plus its tab in `web/hub_session.py`.
 - **New threat** (a fight the world forces on a group): a catch function (on arrival or daily)
-  and a resolve function in `forced.py`, plus one `ForcedEvent` in `forced.EVENTS`.
+  and a resolve function in `forced.py`, plus one `ForcedEvent` in `forced.EVENTS` with its
+  `nature` (`fight_nature`). Any new fight passes its nature to `web/campaign_fight._enter`, and
+  takes a row in `RULES.md`, *Where fights come from*.
 - **New world system** (outside combat): the routine that passes time in
   `guild.pass_time` / `_daily_upkeep`; the battle result that returns to the
   roster in `campaign.absorb_battle`.

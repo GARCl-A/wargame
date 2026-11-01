@@ -12,6 +12,7 @@ a supply caravan. Each is one `ForcedEvent` in `EVENTS`, keyed by its order kind
   "map" lands on the map with a red CTA to start it, "talk" opens the dialogue before it
   (`encounter`, `dialogue.py`; a pack nobody in talks goes straight to the fight). The road
   ambush's CTA opens the dialogue too. `app.FORCED_PLAYERS` maps each to its screen.
+- **what kind of fight it is** (`nature`, `fight_nature`): only an opportunist pack weighs the odds.
 - **how it is settled** (`resolve`), after the fight: `resolve(guild, group, order, outcome)`;
   a talk that ends without one is settled by `settle_talk`.
 
@@ -34,6 +35,7 @@ from . import (
     economy,
     encounters,
     factions,
+    fight_nature,
     justice,
     missions,
     orders,
@@ -46,12 +48,14 @@ FORTRESS_AMBUSH_SIZE = constants.FORTRESS_AMBUSH_SIZE
 CITY_RAID_CHANCE = constants.CITY_RAID_CHANCE    # per arrival at a squatted City property
 CITY_RAID_LEVEL = constants.CITY_RAID_LEVEL
 CITY_RAID_SIZE = 3
+SOUGHT, OPPORTUNIST, DETERMINED = fight_nature.SOUGHT, fight_nature.OPPORTUNIST, fight_nature.DETERMINED
 
 
 @dataclass(frozen=True)
 class ForcedEvent:
     kind: str
     play: str                       # "battle" | "map" | "talk"
+    nature: str                     # fight_nature: whether the win-chance check applies
     resolve: Callable               # (guild, group, order, outcome) -> events
     arrival: tuple = ()             # catch(guild, group, prev_node, resume_path) -> Order | None
     daily: Callable | None = None   # (guild, days) -> (events, [(group, Order)])
@@ -118,7 +122,7 @@ def fortress_ambush_catch(guild, group, prev_node, resume_path):
     mission.ambush_done = True
     pack = tuple(encounters.build_enemy(FORTRESS_AMBUSH_LEVEL)
                  for _ in range(FORTRESS_AMBUSH_SIZE))
-    return orders.Order("ambush", pack=pack, resume_path=tuple(resume_path))
+    return orders.Order("fortress_ambush", pack=pack, resume_path=tuple(resume_path))
 
 
 def property_raid_catch(guild, group, prev_node, resume_path):
@@ -359,8 +363,9 @@ def resolve_wilds_claim_retake(guild, group, order, outcome):
 # --------------------------------------------------------------------------- #
 # the talk before the fight                                                   #
 # --------------------------------------------------------------------------- #
-TALKS = {"guard", "ambush", "gather_ambush", "supply_ambush"}
-_TITLES = {"ambush": "AMBUSHED ON THE ROAD", "gather_ambush": "AMBUSHED AT WORK",
+TALKS = {"guard", "ambush", "fortress_ambush", "gather_ambush", "supply_ambush"}
+_TITLES = {"ambush": "AMBUSHED ON THE ROAD", "fortress_ambush": "AMBUSHED AT LEDGER HOLD",
+           "gather_ambush": "AMBUSHED AT WORK",
            "supply_ambush": "THE CARAVAN IS STOPPED"}
 
 
@@ -394,18 +399,20 @@ def settle_talk(guild, group, order):
 
 
 EVENTS = {e.kind: e for e in (
-    ForcedEvent("guard", "talk", resolve_guard_fight_aftermath, arrival=(guard_catch,),
+    ForcedEvent("guard", "talk", DETERMINED, resolve_guard_fight_aftermath, arrival=(guard_catch,),
                 label="STOPPED BY THE GUARD"),
-    ForcedEvent("ambush", "map", resolve_road_ambush,
-                arrival=(road_ambush_catch, fortress_ambush_catch), label="AMBUSHED ON THE ROAD"),
-    ForcedEvent("eviction", "battle", resolve_property_raid, arrival=(property_raid_catch,),
+    ForcedEvent("ambush", "map", OPPORTUNIST, resolve_road_ambush, arrival=(road_ambush_catch,),
+                label="AMBUSHED ON THE ROAD"),
+    ForcedEvent("fortress_ambush", "map", DETERMINED, resolve_road_ambush, arrival=(fortress_ambush_catch,),
+                label="AMBUSHED AT LEDGER HOLD"),
+    ForcedEvent("eviction", "battle", DETERMINED, resolve_property_raid, arrival=(property_raid_catch,),
                 label="RAID ON THE HOUSE"),
-    ForcedEvent("wilds_retake", "battle", resolve_wilds_claim_retake,
+    ForcedEvent("wilds_retake", "battle", SOUGHT, resolve_wilds_claim_retake,
                 arrival=(wilds_claim_retake_catch,), label="RETAKE THE CLAIM"),
-    ForcedEvent("wilds_raid", "battle", resolve_wilds_raid, daily=wilds_claim_raid_check,
+    ForcedEvent("wilds_raid", "battle", DETERMINED, resolve_wilds_raid, daily=wilds_claim_raid_check,
                 label="RAID ON THE CLAIM"),
-    ForcedEvent("wilds_seizure", "battle", resolve_wilds_seizure, daily=wilds_claim_seizure_check,
+    ForcedEvent("wilds_seizure", "battle", DETERMINED, resolve_wilds_seizure, daily=wilds_claim_seizure_check,
                 label="THE CLAIM IS SEIZED"),
-    ForcedEvent("gather_ambush", "talk", resolve_gather_ambush, label="AMBUSHED AT WORK"),
-    ForcedEvent("supply_ambush", "talk", resolve_supply_ambush, label="THE CARAVAN IS ATTACKED"),
+    ForcedEvent("gather_ambush", "talk", OPPORTUNIST, resolve_gather_ambush, label="AMBUSHED AT WORK"),
+    ForcedEvent("supply_ambush", "talk", OPPORTUNIST, resolve_supply_ambush, label="THE CARAVAN IS ATTACKED"),
 )}
