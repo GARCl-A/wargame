@@ -87,8 +87,11 @@ the rest.
   preview (`work_desk`) and the tutorial card for the new rule. Tests: XP at 3/4, no tool means no haul,
   a mixed crew. Re-run `scripts/economy_report.py` (a crew now needs tools).
 
-- **Hit sounds swap (`assets/sounds/`).** Hit sounds do not fit the game (the UI sounds are fine);
-  swap the Kenney variants in `assets/sounds/`.
+- **UI sound consistency audit.** `Sound.play` (`web/client/shell.js`) is called screen by screen, so
+  the same kind of button or action clicks on one screen and is silent on another (`hunt`, `watch`,
+  `arena`, `title`, `draft` and the sheet never call it). List what should sound (buttons, confirm,
+  error, buy/sell, equip, turn end), then make every screen play the same cue for the same kind of act,
+  ideally from one shared helper instead of per-screen calls.
 
 - **Can Rotten Food be sold? (author 2026-11-01).** Rotten Food has `price=2`, so a counter pays $1 for it
   (the floor). Decide whether spoiled food should sell at all (a tanner or a farm that takes it as
