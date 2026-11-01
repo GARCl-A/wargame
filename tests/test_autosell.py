@@ -94,3 +94,24 @@ def test_marks_survive_a_save():
     wid = persist.new_world_id()
     persist.save_game(wid, guild)
     assert persist.load_game(wid).autosell == {"Dagger", "Rotten Food"}
+
+
+def test_a_worthless_item_marked_for_auto_sell_is_thrown_away_not_shelved():
+    u = _unit(("Rotten Food", 3), ("Dagger", 1))
+    s = _screen(u, marked={"Rotten Food", "Dagger"})
+    shop, before = s._shop(), u.money
+    s._sell_marked()
+    assert _count([u], "Rotten Food") == 0 and u.count_of("Dagger") == 0
+    assert u.money - before == economy.sell_price("Dagger", s.deal)
+    assert "Rotten Food" not in shop.stock and "Rotten Food" not in s.guild.items_sold_kinds
+    assert "threw away 3" in s.notice and "sold 1" in s.notice
+
+
+def test_a_body_handed_over_is_thrown_away_so_it_never_waits_on_a_shelf():
+    u = _unit((items.SNAKE_DRAGON_CORPSE_ITEM, 1))
+    s = _screen(u, marked={items.SNAKE_DRAGON_CORPSE_ITEM})
+    assert economy.sell_price(items.SNAKE_DRAGON_CORPSE_ITEM) == 0 == s._marked_total()
+    s._sell_marked()
+    assert u.count_of(items.SNAKE_DRAGON_CORPSE_ITEM) == 0
+    assert items.SNAKE_DRAGON_CORPSE_ITEM not in s._shop().stock
+    assert s.notice.startswith("the keeper threw away 1")

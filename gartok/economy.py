@@ -433,7 +433,10 @@ def sell_price(name, mods=()):
     """What the market pays for `name` -- kept a fraction of the buy price, so
     resale is a loss even after a good haggle (`deal` up to `DEAL_MAX` = 0.25
     keeps the two factors 0.15 apart). A charged item (a quiver) sells for the
-    share of its charges still left."""
+    share of its charges still left. A worthless item (`price=0`) fetches nothing:
+    the keeper takes it off your hands and throws it away."""
+    if _base_price(name) <= 0:
+        return 0
     price = _base_price(name) * (SELL_FACTOR + 0.4 * deal_value(mods, name, "sell"))
     item, charges = items.get(name), getattr(name, "charges", None)
     if item is not None and item.max_charges and charges is not None:

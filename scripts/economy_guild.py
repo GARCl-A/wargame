@@ -1070,7 +1070,8 @@ class MarketVisit:
         for u, i, name, qty in sorted(stacks, key=lambda s: -self._price(s[2])):
             take = min(qty, sim.sellable[name])
             unit_price = self._price(name)
-            take = min(take, int((cash - total) // unit_price))
+            if unit_price:
+                take = min(take, int((cash - total) // unit_price))
             if take <= 0:
                 continue
             picks.append(((u, i), name, take))

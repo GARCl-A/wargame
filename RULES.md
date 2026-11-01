@@ -1507,6 +1507,9 @@ Neutral**).
   with the guild); a marked row wears an AUTO-SELL tag and **SELL MARKED** sells every marked
   stack the shoppers carry, except the padlocked part, in one sale (the market's cash limit
   still applies to the whole sale).
+- **Worthless goods are thrown away.** An item priced 0 (Rotten Food, the Snake Dragon Corpse)
+  sells for nothing: the keeper still takes it, through a sale or SELL MARKED, and bins it, so it
+  never reaches a shelf (a body on a shelf would stop rotting).
 - **The vendor has a face.** Each shop function has a `world.Vendor` (name, race, role and a
   portrait from `assets/portraits/npc/`) on its `Node.vendors`: the Market's Automaton merchant,
   the Library's Kobold librarian, the Tannery's Gnoll tanner, the Smithy's Dwarf blacksmith, the Apothecary's

@@ -534,7 +534,7 @@
   },
   "Rotten Food": {
     "weight": 1.0,
-    "price": 2,
+    "price": 0,
     "food": true,
     "lifespan": null
   },

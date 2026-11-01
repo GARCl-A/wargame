@@ -167,6 +167,20 @@ def test_a_locked_stack_stays_out_of_the_auto_sell_and_a_marked_kind_sells_in_on
     assert a.count_of("Potato") == 4 and b.count_of("Potato") == 0
 
 
+def test_rotten_food_shows_as_worthless_and_selling_it_throws_it_away():
+    hub, guild, g = _hub("market", "market")
+    a = g.members[0]
+    a.give_to_pack("Rotten Food", 2)
+    money, till = a.money, guild.shop("market").cash
+    row = _pack(hub.state(), a, "Rotten Food")
+    assert row["sell"] == 0
+    st = hub.verb("mark", True)(hub, {"name": "Rotten Food"})
+    assert st["shop"]["marked_total"] == 0 and st["shop"]["marked_held"]
+    st = hub.verb("sell_marked", True)(hub, {})
+    assert a.count_of("Rotten Food") == 0 and a.money == money and guild.shop("market").cash == till
+    assert "threw away" in st["shop"]["notice"] and not st["shop"]["marked_held"]
+
+
 def test_leaving_the_hub_lands_on_the_map_and_saves_what_was_bought(saves):
     guild = _guild("market")
     game = Game(MapSession(guild, "w1"))

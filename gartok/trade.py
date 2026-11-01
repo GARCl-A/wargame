@@ -489,7 +489,7 @@ class Counter(economy.PartyPurse):
         by_owner = {}
         for p in picks:
             by_owner.setdefault(id(p[0]), (p[0], []))[1].append(p)
-        total = sold = 0
+        total = sold = binned = 0
         shop = self._shop()
         for owner, owner_picks in by_owner.values():
             collected, _ = self._collect(owner_picks)  # _take reads self._sel_qty -- clear after
@@ -497,17 +497,23 @@ class Counter(economy.PartyPurse):
             payee = owner if owner in self.shoppers else self.shoppers[0]    # a wagon or animal takes no coin
             payee.money += proceeds
             total += proceeds
-            sold += sum(q for _, q in collected)
             for n, q in collected:
-                recorder.emit("sell", node=self._node_id(), item=n, qty=q,
-                              price=economy.sell_price(n, self.deal))
+                price = economy.sell_price(n, self.deal)
+                recorder.emit("sell", node=self._node_id(), item=n, qty=q, price=price)
+                if price == 0:
+                    binned += q
+                    continue
+                sold += q
                 if shop and items.get(n) and not items.is_coin(n):
                     shop.add(n, q)
                 self.guild.items_sold_kinds.add(n)
             owner._derive_combat()
         self._sel_qty = {}
         self._till(-total)
-        self.notice = f"sold {sold} item(s) for {total}."
+        parts = [f"sold {sold} item(s) for {total}"] if sold else []
+        if binned:
+            parts.append(f"the keeper threw away {binned} worthless item(s)")
+        self.notice = "  ·  ".join(parts) + "."
         self._settle_market()
 
 

@@ -92,16 +92,18 @@ const Shop = (() => {
 
   // ---------------------------------------------------------------- the bottom
   function sellPlate() {
-    const goods = picks && picks.items ? picks.items.filter(p => p.sell) : [];
+    const goods = picks && picks.items ? picks.items.filter(p => p.sell != null) : [];
     let line, ready = false;
     if (goods.length) {
       const what = goods.length === 1 ? `${goods[0].qty > 1 ? goods[0].qty + " " : ""}${goods[0].name}` : `${goods.length} stacks`;
-      line = `Sell ${esc(what)} for <b>${money(sellTotal(goods))}</b>: click here, or drop them here.`;
+      const t = sellTotal(goods);
+      line = t ? `Sell ${esc(what)} for <b>${money(t)}</b>: click here, or drop them here.`
+        : `${esc(what)} is worthless: click here and the keeper throws it away.`;
       ready = true;
     } else if (S.marked.length) {
       const names = S.marked.length > 4 ? `${S.marked.slice(0, 4).join(", ")} and ${S.marked.length - 4} more` : S.marked.join(", ");
-      line = `Auto-sell: ${esc(names)}. ${S.marked_total ? `Click to sell them all for <b>${money(S.marked_total)}</b>.` : "None in the packs."}`;
-      ready = S.marked_total > 0;
+      line = `Auto-sell: ${esc(names)}. ${S.marked_total ? `Click to sell them all for <b>${money(S.marked_total)}</b>.` : S.marked_held ? "Click and the keeper throws them away." : "None in the packs."}`;
+      ready = S.marked_held;
     } else {
       line = `Drop an item from any pack here. ${esc(H.keeper.name || "The shop")} pays ${S.deal.get}% of the price.`;
     }
@@ -160,7 +162,7 @@ const Shop = (() => {
     }
     const list = picks && picks.items && picks.items.some(p => same(p, src.item)) ? picks.items : [src.item];
     if (el.closest("#sell") || el.closest("#shelf")) {
-      if (list.some(p => p.sell)) act("sell", {picks: list.map(({from, loc, qty: q}) => ({from, loc, qty: q}))});
+      if (list.some(p => p.sell != null)) act("sell", {picks: list.map(({from, loc, qty: q}) => ({from, loc, qty: q}))});
       else toast("the shop does not buy coin");
       return;
     }
@@ -203,7 +205,7 @@ const Shop = (() => {
     }
     if (el.closest("#sell")) {
       if (picks && picks.items) return drop(el, {item: picks.items[0]});
-      if (S.marked_total) act("sell_marked", {});
+      if (S.marked_held) act("sell_marked", {});
       return;
     }
     if (picks && (el.closest(".col") || (picks.ware && el.closest("#purse"))))
@@ -238,7 +240,8 @@ const Shop = (() => {
     const m = $("menu"), others = S.packs.filter(p => p.id !== it.from);
     const p = pack(it.from), row = typeof it.loc === "number" ? p.pack.find(r => r.loc === it.loc) : null;
     const rows = [];
-    if (it.sell) {
+    if (it.sell === 0) rows.push([`Throw away${it.qty > 1 ? " all ×" + it.qty : ""} <b>(worthless)</b>`, () => act("sell", {picks: [{from: it.from, loc: it.loc}]})]);
+    else if (it.sell) {
       if (it.qty > 1) rows.push([`Sell 1 <b>+${money(it.sell)}</b>`, () => act("sell", {picks: [{from: it.from, loc: it.loc, qty: 1}]})]);
       rows.push([`Sell ${it.qty > 1 ? "all ×" + it.qty : ""} <b>+${money(it.sell * it.qty)}</b>`, () => act("sell", {picks: [{from: it.from, loc: it.loc}]})]);
     }

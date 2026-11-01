@@ -327,7 +327,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Red Mushroom | 0.1 kg | material | 10 |
 | Roast Meat | 0.8 kg | food, consumable | 6 |
 | Rope | 2 kg | material | 4 |
-| Rotten Food | 1 kg | food, consumable | 2 |
+| Rotten Food | 1 kg | food, consumable | -- |
 | Salt | 0.5 kg | material | 3 |
 | Scroll | 0.1 kg | -- | 1 |
 | Scroll of (Dragonfire, Healing Touch, Sleep, Water Jet) | 0.1 kg | -- | 465 |
@@ -337,7 +337,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Sealed Chest | 8 kg | -- | 16 |
 | Semi-precious Gemstone | 0.1 kg | -- | 60 |
 | Signal Horn | 1 kg | -- | 60 |
-| Snake Dragon Corpse | 12 kg | -- | 1 |
+| Snake Dragon Corpse | 12 kg | -- | -- |
 | Snake Venom Gland | 0.1 kg | material | 20 |
 | Stone Brick | 3 kg | material | 10 |
 | Sugar | 0.5 kg | material | 4 |

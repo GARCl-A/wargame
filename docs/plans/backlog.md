@@ -95,9 +95,9 @@ the rest.
   pick a cue from the answer (`coins` when the purse moved, `level_up`): those stay where they are. Check by
   hand in the browser, screen by screen (there is no JS test).
 
-- **Can Rotten Food be sold? (author 2026-11-01).** Rotten Food has `price=2`, so a counter pays $1 for it
-  (the floor). Decide whether spoiled food should sell at all (a tanner or a farm that takes it as
-  compost, say) or be refused like trash, and then give the Snake Dragon Corpse (`price=1`) the same rule.
+- **A use for Rotten Food (author 2026-11-01).** Today it is worthless (`price=0`) and a keeper bins it.
+  Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the farm
+  patch comes up.
 
 - **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
   skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,

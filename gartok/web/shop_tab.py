@@ -47,6 +47,7 @@ class ShopTab:
             "packs": [self._store(o) if store_column.is_store(o) else self._member(o, o is voice) for o in owners],
             "marked": sorted(m._marked()),
             "marked_total": m._marked_total(),
+            "marked_held": bool(m._marked_stock()[0]),
             "notice": notice,
         }
 

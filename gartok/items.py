@@ -344,7 +344,7 @@ _register(ItemDef(id="sugar", name="Sugar", type=ItemType.MATERIAL, rarity=ItemR
 _register(ItemDef(id="jerky", name="Jerky", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.5, price=8, food=True, lifespan=20))
 _register(ItemDef(id="roast_meat", name="Roast Meat", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.8, price=6, food=True, lifespan=5))
 _register(ItemDef(id="fruit_compote", name="Fruit Compote", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.4, price=18, food=True, lifespan=25))
-_register(ItemDef(id="rotten_food", name="Rotten Food", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=2, food=True, lifespan=None))
+_register(ItemDef(id="rotten_food", name="Rotten Food", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=0, food=True, lifespan=None))
 
 # Scrolls
 _register(ItemDef(id="scroll", name="Scroll", type=ItemType.SCROLL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
@@ -413,7 +413,7 @@ _register(ItemDef(id="sealed_chest", name="Sealed Chest", type=ItemType.CONTAINE
 _register(ItemDef(id="letter_of_receipt", name="Letter of Receipt", type=ItemType.QUEST, rarity=ItemRarity.COMMON, weight=0.1, price=1))
 _register(ItemDef(id="ancient_codex", name="Ancient Codex", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=2.0, price=300))
 _register(ItemDef(id="dragon_egg", name="Dragon Egg", type=ItemType.GEM, rarity=ItemRarity.UNIQUE, weight=8.0, price=400))
-_register(ItemDef(id="snake_dragon_corpse", name="Snake Dragon Corpse", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=12.0, price=1, lifespan=3))
+_register(ItemDef(id="snake_dragon_corpse", name="Snake Dragon Corpse", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=12.0, price=0, lifespan=3))
 
 
 # --------------------------------------------------------------------------- #
