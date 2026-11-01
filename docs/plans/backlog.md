@@ -103,11 +103,11 @@ the rest.
   Playtest 2026-11-01 adds two: the level-up cue is much louder than a click (lower its `LEVEL`), and the
   sound lags behind the click (measure first whether it is the audio start or the round trip to the server).
 
-- **Warm the assets while the game opens (playtest 2026-11-01).** A screen change reloads the page, and
-  the first load of each asset is still the slow one (~990 KB, ~350 ms to a ready screen). Load the fonts,
-  icons, portraits and sounds while the title opens (a manifest endpoint, a short load veil there). The
-  sounds are the bulk of what a warm reload still downloads (16 `Audio` files, ~180 KB: the browser does
-  not reuse them from its cache). Measure again with a filmstrip (screencast frames of a reload).
+- **The battle takes ~1 s to open (playtest 2026-11-01).** Title, map and hub are ready in ~350-450 ms; the
+  battle is not, even with every file cached (~950 ms), so it is not the files. Measure what holds it
+  before changing anything: `settle()` rounds (each one waits a frame, then the icons the render added),
+  `board.js` loading its images, the state fetch. Preloading files at launch was measured and dropped: it saves
+  60-200 ms on a screen's first visit and costs ~300 ms at launch.
 
 - **Hover on the vocation's races shows their modifiers (author 2026-11-01).** On the vocation pick,
   hovering a race lists its attribute modifiers and racial abilities, read off the registries. Only if
