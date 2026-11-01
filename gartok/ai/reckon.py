@@ -159,9 +159,26 @@ def _repel_worth(battle, unit, target):
     return max(0.05, min(0.95, (21 - need) / 20)) * _cell_damage(battle, target, dest)
 
 
+WREST_TURNS = 2             # turns the AI counts a disarmed foe's lost damage for
+
+
+def _wrest_worth(battle, unit, target):
+    """A Wrest: the odds of tearing the weapon away times the blow struck with it at once, plus the
+    damage the foe loses by being left with its bare body for a couple of turns."""
+    held = target.weapon
+    stolen = unit.char.natural_weapon.damage if held["range"] > 0 else held["damage"]
+    need = actions.WREST.dc(target) - unit.mod_dexterity
+    odds = max(0.05, min(0.95, (21 - need) / 20))
+    strike = _hit_odds(battle, unit, target) * (_avg_die(stolen) + unit.mod_strength)
+    lost = max(0.0, _avg_die(held["damage"]) - _avg_die(target.char.natural_weapon.damage)) * WREST_TURNS
+    return odds * (strike + lost)
+
+
 def _weapon_action_worth(battle, unit, act, target):
     """Expected damage (or its equivalent) of a 2-point weapon action on `target`: one strike, which
     lands twice over in the action's favoured case (`act.favoured`), plus the action's own edge."""
+    if act.id == "wrest":
+        return _wrest_worth(battle, unit, target)
     if act.id == "extreme_shot":
         return _strike_worth(battle, unit, target) - UNLOADED_COST
     if act.id == "long_thrust":

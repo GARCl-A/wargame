@@ -432,6 +432,12 @@ Where each part lives is the code map of `README.md`.
   throw fill a turn. The AI scores each by expected damage (hit odds against the AC it can reckon)
   against the two plain attacks the same points buy (one shot for a crossbow, whose other point
   reloads it) and takes the better; a test holds the premise for every action, STR 10-18 and AC 10-19.
+  **Wrest** is the one action of bare hands (`Unarmed`; a beast's natural weapon has none), 2 points: an
+  armed foe in reach, d20 + DEX against 15 + its STR (a natural 20 always passes, a 1 always fails). On a
+  pass the actor takes the weapon (it must be one it can wield, with the hands free for it) and strikes
+  with it at once, no penalty; on a failure only the points are lost. It is not a doubled strike, so the
+  AI scores it apart: the odds times the blow struck with the stolen weapon plus the damage the foe loses
+  by being left with its body for two turns.
 - **Reach** = a melee weapon strikes foes 1 cell away; one with a reach of its own reaches
   farther (`ItemDef.reach`: the **Glaive**, 2 cells), and a body's **Reach** ability adds 1 on
   top. The AI walks only as near as its reach and strikes from there.

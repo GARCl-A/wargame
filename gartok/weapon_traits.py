@@ -111,6 +111,12 @@ _TRAITS = [
         action_id="parry_strike",
     ),
     WeaponTrait(
+        id="wrest",
+        name="Wrest",
+        desc="2 AP, bare hands only: seize the weapon of an adjacent armed foe (d20 + Dexterity against 15 + its Strength) and, if you can wield it, strike with it at once.",
+        action_id="wrest",
+    ),
+    WeaponTrait(
         id="long_thrust",
         name="Long Thrust",
         desc="2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far.",

@@ -133,16 +133,6 @@ the rest.
   keeps the clock, the party, the yield and the ambush; a save with the hunt screen open (setup,
   interlude) still refuses or keeps working as it does now.
 
-- **Wrest, the 2 AP action of bare hands (decided 2026-11-01).** A body is a weapon with three states, in code:
-  **armed** (a real item in hand), **natural** (the race's own weapon, `Bite`, `Claws`...) and **unarmed**
-  (`Unarmed`, a humanoid's empty hands); `Combatant.armed` / `natural` / `unarmed` tell them apart. Wrest is
-  the special action of `Unarmed` only (a trait of that weapon; natural weapons never have it): adjacent foe
-  holding a weapon the actor can wield (`can_wield`, free hands); d20 + DEX against 15 + the foe's STR, no
-  two-hand bonus; on a pass the actor takes the weapon (`drop_weapon` on the foe, `equip_weapon` on the
-  actor) and attacks with it at once, no penalty; on a failure only the 2 AP are lost. The AI uses it when
-  bare-handed next to an armed foe it can disarm. Tests: the happy path, a fail, a foe with no weapon, an
-  armed actor, a weapon the actor cannot wield, a beast, two hands, the AI.
-
 - **2 AP actions for `Claws`, `Bite`, `Fangs`, `Hooves` and `Horns` (future, after *Natural weapons*).** One special action
   per natural weapon, like Wrest for `Unarmed`, as a trait of that weapon. Design call open for each.
   Medium, not Small: a new action is end-to-end (rules, web tab, AI, tests, tutorial card).

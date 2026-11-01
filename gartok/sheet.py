@@ -89,7 +89,7 @@ def unit_to_ch(u):
         "attrs": [(k, eff(name), getattr(u, f"mod_{name}"), eff(name) < getattr(u, name)) for k, name in _ATTRS],
         "weapon": {"nm": wname, "hit": f"d20 {bab:+} ({src})", "dmg": dmg, "tags": reach,
                   "crit": "crit 20, fumble 1",
-                  "action": weapon_traits.action_name(u.weapon) if u.armed else None},
+                  "action": weapon_traits.action_name(u.weapon)},
         "tongue": tongue,
         "gear": {"hands": held, "armor": armor, "pack": pack,
                 "load": (u.load, u.carry_normal, u.carry_max), "copper": u.money},

@@ -240,6 +240,7 @@ Properties and keywords carried by weapons.
 | Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that lands twice over (a second roll of the weapon's damage). Otherwise one plain strike. |
 | Javelin Charge | 1 AP: Throws the spear after moving this turn, +1d4 bonus damage. |
 | Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow lands twice over (a second roll of the weapon's damage). |
+| Wrest | 2 AP, bare hands only: seize the weapon of an adjacent armed foe (d20 + Dexterity against 15 + its Strength) and, if you can wield it, strike with it at once. |
 | Long Thrust | 2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far. |
 
 ## Armor

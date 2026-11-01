@@ -28,7 +28,8 @@ def test_a_disarmed_foe_shows_bare_hands():
     d.equip_weapon("Broadsword")
     d.disarm()
     card = foe_card.foe_card(intel.known_fields(batt, "player", d))
-    assert card["weapon"] == {"name": "Unarmed", "action": None, "action_tip": ""}
+    assert card["weapon"]["name"] == "Unarmed" and card["weapon"]["action"] == "Wrest"
+    assert card["weapon"]["action_tip"]
 
 
 def test_a_plain_swing_is_not_named():

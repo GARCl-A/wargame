@@ -318,7 +318,7 @@ def known_fields(battle, team, target):
     visible = {"name": target.name, "race": target.race["name"], "size": target.size,
                "alignment": target.alignment, "conditions": _conditions(target),
                "weapon": target.weapon.name,
-               "weapon_action": weapon_traits.action_name(target.weapon) if target.armed else None,
+               "weapon_action": weapon_traits.action_name(target.weapon),
                "armor": target.armor_name if target.armor else None,
                "artifact": target.equipped_artifact}
     return Known(full=has_full_intel(battle, team, target), margin=battle.intel.margin[team].get(target),

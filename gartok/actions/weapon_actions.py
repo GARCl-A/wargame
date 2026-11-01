@@ -16,6 +16,7 @@ modifier:
 - Shortspear: Javelin Charge (1 AP, thrown after moving this turn, +1d4)
 - Broadsword / Sword: Parry & Strike (gains Defending; two or more foes in reach)
 - Glaive: Long Thrust (one square past its reach, +1 to hit: the only blow that lands there)
+- Bare hands (`Unarmed`): Wrest (seize the weapon of an armed foe and strike with it)
 """
 
 from .. import items
@@ -31,7 +32,7 @@ from .base import (
     _resolve_hit,
     _sign,
 )
-from .combat import PUSH_DC_BASE
+from .combat import PUSH_DC_BASE, _strike
 
 UNGUARDED = ("entangled", "sleeping", "surprised", "demoralized")
 
@@ -689,3 +690,58 @@ class LongThrust(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         prefix = f"{actor.name} Long Thrust -> {target.name}"
         _resolve_hit(battle, actor, target, d20(), bonus, detail, prefix)
+
+
+# --------------------------------------------------------------------------- #
+# Bare hands: Wrest                                                           #
+# --------------------------------------------------------------------------- #
+
+class Wrest(Action):
+    id, name, cost, target, aimed = "wrest", "Wrest", 2, "enemy", True
+    desc = "2 AP: Seize the weapon of an armed foe; if you win, strike with it at once."
+    BASE_DC = 15
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.weapon.has_trait("wrest"):
+            return False, "requires bare hands"
+        return True, ""
+
+    def can(self, battle, actor, target=None):
+        if not self.available(battle, actor) or not _hostile_target(actor, target):
+            return False
+        if not target.armed or not actor.char.can_wield(target.weapon_name):
+            return False
+        if actor.free_hands < target.weapon["hands"]:
+            return False
+        if battle.units_distance(actor, target) > actor.attack_range:
+            return False
+        return battle.los_between(actor, target)
+
+    def label(self, battle, actor):
+        return "Wrest (2 pts, DEX vs 15 + STR: take the foe's weapon and strike with it)"
+
+    @classmethod
+    def dc(cls, target):
+        return cls.BASE_DC + target.mod_strength
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+
+        name = target.weapon_name
+        dc = self.dc(target)
+        nat = d20()
+        total = nat + actor.mod_dexterity
+        desc = f"{actor.name} Wrest -> {target.name}: d20({nat}) + {actor.mod_dexterity}(DEX) = {total} vs DC {dc}"
+        if nat != 20 and (nat == 1 or total < dc):
+            battle.log(desc + f" -> {target.name} keeps the {name}.")
+            return
+
+        battle.log(desc + f" -> {actor.name} tears the {name} away!")
+        target.drop_weapon()
+        actor.equip_weapon(name)
+        _strike(battle, actor, target, prefix=f"  {actor.name} -> {target.name} ({name.lower()})")
+
