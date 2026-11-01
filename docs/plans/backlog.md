@@ -22,7 +22,7 @@ Parts:
 
 The presentation moved from pygame to HTML/CSS/Canvas, and the Python core stays. Every screen the
 campaign reaches is in the browser and `python main.py` opens it (the Editor, a separate pygame program, is `python -m editor`; the
-pygame campaign is gone). The rules for new UI work are in [../web_client.md](../web_client.md); what was left of the port is in this file.
+pygame campaign is gone). The rules for new UI work are in [../web_ui/web_client.md](../web_ui/web_client.md); what was left of the port is in this file.
 
 ---
 
@@ -458,12 +458,12 @@ Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png` from
 skill (about 7 minutes of GPU a portrait, curated by hand); the rest is game-icons.net SVG
 silhouettes. Order is the suggested priority.
 
-- **Art to generate for the web board and UI** (the art direction in [../web_client.md](../web_client.md);
+- **Art to generate for the web board and UI** (the art direction in [../web_ui/web_client.md](../web_ui/web_client.md);
   files go in `gartok/web/client/img/`). Each is one seamless 1024 texture in the sepia
   engraving of the reference portraits, seen from above, mid value, with no 2x2 copies of
   its motif inside (Gemini's habit: the 2026-10-23 batch was four copies of a 512 block).
   **Prompts and references are not kept in the repo yet** (the Gemini prompts for the finished textures
-  were not saved). What exists: the four engraved portraits in `docs/plans/references/` (Gnoll 10, Grippli 13,
+  were not saved). What exists: the four engraved portraits in `docs/web_ui/references/` (Gnoll 10, Grippli 13,
   Kenku 4, Ogre 0) as the style anchor, the rules above and the failures listed below. From now on save each
   prompt that works (and the reference images attached) next to the texture, in `docs/art/<name>_options/`,
   and write the prompt that failed under its item.

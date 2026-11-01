@@ -26,7 +26,7 @@ No (it only makes the design feel off) -> `RULES.md` alone.
 | Premise of a disposable early squad | `RULES.md` only | not in `AGENTS.md` (no code consequence) |
 | Dated economy decisions and numbers (the ~50% yard margin, accepted 2026-10-22) | `docs/plans/economy_sim_v2.md` | `AGENTS.md`: only "re-run `scripts/economy_report.py` after touching wages, purses, prices or loot" |
 | Money mechanics (coins, 200 = 1 kg, bank fee, change) | `RULES.md` | `AGENTS.md`: "money is items on the character, no guild pool" |
-| pygame only in the Editor, delete the screen with its rules | `docs/web_client.md` | `AGENTS.md`: one rule line + link; `editor/ui/README.md`: its opening line only |
+| pygame only in the Editor, delete the screen with its rules | `docs/web_ui/web_client.md` | `AGENTS.md`: one rule line + link; `editor/ui/README.md`: its opening line only |
 | Test gate, markers, `standard_unit`, tiers | `docs/plans/test_suite.md` | `AGENTS.md`: the gate command + the `standard_unit` rule + link; the exact steps live in `pre-commit` |
 | Commit rules (Portuguese, no accents, no `Co-Authored-By` ever, `pre-commit` first, user approval) | `.claude/skills/pre-commit/SKILL.md` | `AGENTS.md`: one line + link; the two `commit-workflow.md` copies are deleted (one was Antigravity-only) |
 | Where code lives, how to add a system | `README.md` | `AGENTS.md`: link only |
@@ -45,7 +45,7 @@ wins). A dated decision is kept only in the doc that owns it, with its date as p
 - [ ] `RULES.md`
 
 ## `docs/`
-- [ ] `docs/web_client.md`
+- [ ] `docs/web_ui/web_client.md`
 - [ ] `docs/plans/backlog.md`
 - [ ] `docs/plans/campaign_ai_roadmap.md`
 - [ ] `docs/plans/economy_sim_v2.md`
@@ -124,23 +124,21 @@ All under `.claude/skills/project-context/references/`:
 
 ## Non-text documentation (folder exploration)
 
-### `docs/plans/references/` — HTML mockups (168 files in subfolders + 4 loose PNGs)
-Loose images in the folder root:
-- [ ] `docs/plans/references/gnoll_10.png`
-- [ ] `docs/plans/references/grippli_13.png`
-- [ ] `docs/plans/references/kenku_4.png`
-- [ ] `docs/plans/references/ogre_0.png`
+### `docs/web_ui/references/` — HTML mockups
+- [x] Four loose PNGs in the folder root (`gnoll_10`, `grippli_13`, `kenku_4`, `ogre_0`): kept, they are the style anchor for generated art (`web_client.md`, Art direction; `backlog.md`, Art).
 
-Each mockup is a standalone page (`*.html` + `icons.js`, often `data.js`) with its screenshots and an `img/` folder of portraits/sprites:
-- [ ] `battle_mockup/` — 14 files + 10 in `img/` (`battle.html`, `fog.html`, `pit.html`, `pit_maps.html`, `stack.html`, `play_battle.bat`)
-- [ ] `dialogue_mockup/` — 7 files + 18 in `img/` (`dialogue.html`)
-- [ ] `draft_mockup/` — 8 files + 27 in `img/` (`draft.html`)
-- [ ] `map_mockup/` — 6 files + 9 in `img/` (`map.html`)
-- [ ] `market_mockup/` — 3 files + 5 in `img/` (`market.html`)
-- [ ] `menu_mockup/` — 3 files + 4 in `img/` (`menu.html`)
-- [ ] `report_mockup/` — 8 files + 9 in `img/` (`report.html`)
-- [ ] `sheets_mockup/` — 7 files + 9 in `img/` (`sheets.html`)
-- [ ] `talents_mockup/` — 15 files + 6 in `img/` (`talents.html`, `big.js`)
+Kept: `docs/web_ui/web_client.md` ("The mockups") names them the approved look of each family, and five screen
+stylesheets plus `guild_session.py` cite them. Each `img/` holds byte-identical copies of `gartok/assets`
+art, left because the mockup pages load it by relative path.
+- [x] `battle_mockup/` (`play_battle.bat` still works: it launches `python -m gartok.web --fight`)
+- [x] `dialogue_mockup/`
+- [x] `draft_mockup/`
+- [x] `map_mockup/`
+- [x] `market_mockup/`
+- [x] `menu_mockup/`
+- [x] `report_mockup/`
+- [x] `sheets_mockup/`
+- [x] `talents_mockup/`
 
 ### `docs/art/` — art candidates (images only, no text)
 - [x] `elf_options/` — 6 PNGs (3 options, 200 px and 512 px)

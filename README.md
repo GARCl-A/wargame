@@ -32,7 +32,7 @@ python -m gartok.reference                         # regenerates REFERENCE.md
 | The rules and the design premises | [`RULES.md`](RULES.md) |
 | The design catalog for developers and agents, spoilers included: races, creatures, weapons, prices, talents, constants (generated) | [`REFERENCE.md`](REFERENCE.md) |
 | Rules for an agent working on the repo | [`AGENTS.md`](AGENTS.md) |
-| Building a web screen | [`docs/web_client.md`](docs/web_client.md) |
+| Building a web screen | [`docs/web_ui/web_client.md`](docs/web_ui/web_client.md) |
 | Open work | [`docs/plans/backlog.md`](docs/plans/backlog.md) |
 | The Editor's UI kit | [`editor/ui/README.md`](editor/ui/README.md) |
 
@@ -180,7 +180,7 @@ gartok/
                     tests/ (`python -m pytest editor/ -n auto`), item_icon_preview.py, requirements.txt (pygame-ce)
 
   # presentation of the game
-  web/              the web client (guide: docs/web_client.md): server.py (stdlib JSON API routed by
+  web/              the web client (guide: docs/web_ui/web_client.md): server.py (stdlib JSON API routed by
                     screen), session.py (a screen's server half) and one session (or tab) module per
                     screen or hub tab, client/ (the shell + one folder per screen under screens/);
                     `python main.py` / `python -m gartok` (the title),
@@ -204,7 +204,7 @@ scripts/            the sims and tools; each opens with a docstring saying what 
                     (what a guild can take up today), play_analysis.py (play.jsonl), combat_analysis.py and
                     combat_pairs.py (read the combat logs; the AI replays a person's squads),
                     gen_portrait.py (portraits, driven by the /gen-portrait skill; portrait_lora/ has the setup)
-docs/               web_client.md (how to build a web screen), plans/ (backlog.md is all the open work)
+docs/               web_ui/ (web_client.md: how to build a web screen; references/: the approved mockups), plans/ (backlog.md is all the open work)
 ```
 
 ### How to add a system

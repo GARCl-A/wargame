@@ -2,8 +2,8 @@
 
 The game is a web client over a Python core: `python main.py` serves it and opens it in a browser window.
 Read this before you add or change a screen. It is a standing guide (the rules, the look, the layouts that
-hold); open work is in [plans/backlog.md](plans/backlog.md), and how each step was built is in
-`git log -p -- docs/web_client.md`.
+hold); open work is in [plans/backlog.md](../plans/backlog.md), and how each step was built is in
+`git log -p --follow -- docs/web_ui/web_client.md`.
 
 The Editor (`python -m editor`) is the one pygame program left, a separate package the game never imports.
 Leave it alone: it is only maintained, and porting it is deprioritised in the backlog.
@@ -48,7 +48,7 @@ Leave it alone: it is only maintained, and porting it is deprioritised in the ba
   of a real save (the day-70 save `35d38388` is the usual one); clicks and drags driven over the DevTools
   protocol when they matter.
 - **A new family of screens gets a mockup first**, one HTML page at 1920x1080 with its PNG in
-  `plans/references/<family>_mockup/`, approved by the author before any code. Its other screens follow without
+  `references/<family>_mockup/`, approved by the author before any code. Its other screens follow without
   one.
 
 ### Art direction
@@ -68,11 +68,11 @@ Leave it alone: it is only maintained, and porting it is deprioritised in the ba
   lettering is the chart's hand, drawn on the canvas.
 - **The art is not drawn in code.** Code composes images (textures, frames, portraits) and draws only state
   (health, ranges, highlights): `pygame.draw` art is why the game looked like programmer art.
-- **Gemini makes the art**, anchored on the four engraved portraits in [plans/references/](plans/references/) (Gnoll 10,
+- **Gemini makes the art**, anchored on the four engraved portraits in [references/](references/) (Gnoll 10,
   Grippli 13, Kenku 4, Ogre 0). 2D engraving only: no isometric, 3D or pixel art.
 - **No tile sheets.** A floor is one seamless texture across the cell lines, tinted per place in code, in a
   lower value band than the tokens (cream tokens vanished on a cream floor). Files go in
-  `gartok/web/client/img/`; what is still missing is under Art in [plans/backlog.md](plans/backlog.md).
+  `gartok/web/client/img/`; what is still missing is under Art in [plans/backlog.md](../plans/backlog.md).
 - **Item glyphs** are game-icons.net SVGs (CC BY 3.0) in `assets/icons/item/`, one per `item_icon` kind; a
   test fails for a kind with no file.
 - **Fonts** ship in `gartok/web/client/fonts/`, never fetched at runtime.
@@ -91,7 +91,7 @@ Leave it alone: it is only maintained, and porting it is deprioritised in the ba
 
 ### The mockups
 
-Each folder under [plans/references/](plans/references/) is the approved look of a family, one frame per `?state=`:
+Each folder under [references/](references/) is the approved look of a family, one frame per `?state=`:
 
 | Folder | Family |
 |---|---|
