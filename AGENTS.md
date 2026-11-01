@@ -30,6 +30,8 @@ module's description in the README, not here.
   screen); the Editor's pygame UI follows `editor/ui/README.md`.
 - Work and commit straight on `main`; no feature branches unless the user asks for one.
   A teammate works on `main` in parallel, so `git pull` before committing.
+  A cloud session is the exception: it is bound to its own branch, and once that work is on
+  `main` the branch is disposable, so delete it (local and remote) without asking.
 
 ## Design premises (durable)
 
