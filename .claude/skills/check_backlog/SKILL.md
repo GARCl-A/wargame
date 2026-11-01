@@ -23,6 +23,10 @@ mid-task), say so in one line and leave it out of the audit.
 1. **Sync audit.** For each of the 5 commits, check that what it delivered is
    reflected in the backlog and the docs:
    - items it finished were deleted from the backlog (the backlog's own rule);
+   - the backlog holds only what is still missing: flag any item, in the commits' reach or not,
+     that carries a "done" / "resolved" / "not a bug" / "probable cause" note, a struck-through
+     line, or the history of an investigation instead of just the work left. It is deleted, or
+     rewritten as only the remaining work; the record is the git log;
    - items it created or changed were added or reworded;
    - claims in open items still hold — **verify against the code**, don't trust
      the prose (`grep` for the flag, the function, the file the item names);

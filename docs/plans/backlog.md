@@ -78,12 +78,22 @@ the rest.
   it and make the action bar always name the blocker of a disabled Move (the tooltip the other disabled
   actions have). Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Bug: Hook Shield seems to lock when the target is flanked on every side (playtest 2026-10-31).**
-  Reported by feel, no repro yet. Hypothesis: the action needs a free cell to pull or place the foe
-  and, with every neighbour taken, it neither resolves nor says why. Rebuild it as a fixed board (foe
-  surrounded on all 8 cells), see what `execute` does, then make it either resolve with no move or be
-  disabled with a reason in the action bar (same tooltip rule as the stuck Move above). Test: the
-  fixed board, and the AI does not pick it when it cannot resolve.
+- **Say why a weapon action is hidden when the hand is empty.** After `Throw`, `actor.disarm()` empties the
+  hand and every weapon trait action (Hook Shield, ...) vanishes from the bar with no word. Show it
+  disabled with the reason "no <weapon> in hand (thrown at X, on the ground at Y)" (same tooltip rule as
+  the stuck Move above). When every neighbour of a thrown-at target is taken, `base._drop_cell` lands the
+  weapon on the target's own cell: keep Pick up working from there. Test: throw at a fully surrounded foe,
+  the axe is on the board and picked up; the AI does not pick a weapon action it cannot use.
+
+- **Show items lying on a cell a character stands on.** An item dropped or thrown onto a cell with a
+  unit on it (a weapon that lands under a surrounded foe, a drop under your own fighter) is hidden by the
+  token. Improve how the web board shows it (a corner badge on the token, or a marker in the cell ring)
+  and how it reads in the inspect panel, so the player knows it is there and can Pick it up.
+
+- **Unarmed special action (2 AP).** A fighter with no weapon (thrown, dropped, disarmed) has only the
+  plain unarmed Attack: every weapon trait action needs its weapon. Give the unarmed stance one 2 AP
+  action of its own (design call pending: effect, e.g. a grapple-shove or a flurry; race/talent hooks such
+  as `sweeping_claws` already exist). Must come with its AI use and tests, per the feature rules.
 
 - **Playtest export (decided 2026-10-31).** The author asks each tester to zip the save folder by hand to read
   the combat logs and what was done. Add a Settings button "Export playtest data" that gives one zip

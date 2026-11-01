@@ -106,10 +106,14 @@ only makes sense historically is the expensive one.
    it here, in the same commit, instead. The fixes are yours to apply (same
    rule as step 4).
 
-   - **Items the diff finishes or reshapes.** Read `docs/plans/backlog.md`.
-     An item the diff completes is deleted (the backlog's own rule); one it
-     changes is reworded; a claim that stops being true ("now", "not built",
-     a size, a count) is corrected.
+   - **Items the diff finishes or reshapes.** Read `docs/plans/backlog.md`. The backlog holds only
+     what is still missing, readable at a glance. An item the diff completes, or that turned out not to
+     be a bug or a task, is **deleted**: never kept with a "done", "resolved", "not a bug" or
+     "probable cause" note, never struck through. The record of what was done is the git log and the
+     code. If real work remains inside it, rewrite the item as only that work, with no history of the
+     investigation. One it changes is reworded; a claim that stops being true ("now", "not built",
+     a size, a count) is corrected. Before the recap, re-read each backlog item the diff touches and
+     ask: does every line say something still to do?
    - **Docs that describe what changed.** For each flag, function, constant,
      module or behaviour the diff adds, removes or renames, `grep` the names
      (and the old prose, such as "never heals") across `RULES.md`,
@@ -189,6 +193,14 @@ only makes sense historically is the expensive one.
    (named explicitly — not a blanket `git add -A`; step 6 for a shared file),
    commit with the approved message, then `git status` to confirm that what is
    left is only other work.
+
+   **Cloud session** (own branch, not `main`): after committing, integrate by
+   rebase, never a merge commit. `git fetch origin main`, `git rebase origin/main`
+   on the session branch, then on `main` `git merge --ff-only <branch>` and push
+   `main`. On a rebase conflict: `git rebase --abort`, stop and ask. If
+   `--ff-only` fails because `main` moved, fetch and rebase again. The rebase
+   rewrites the branch: if it was already pushed, do not push it again (no force),
+   push only `main`. Leave the branch alone: a cloud session cannot delete it, so do not try.
 
 ## Hard rules
 
