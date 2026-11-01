@@ -232,3 +232,30 @@ def test_the_router_serves_both_screens(saves):
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+# ---------------------------------------------------------------- the credits
+def test_the_title_opens_the_credits_which_name_the_authors_the_licence_and_the_source(saves):
+    from gartok.web.credits_session import CreditsSession
+    title = Game.title().session
+    assert _title_menu(title)["credits"]["enabled"]
+    assert TitleSession.POST["credits"](title, {}) == {"screen": "credits"}
+    credits = title.game.session
+    assert isinstance(credits, CreditsSession) and credits.tutorial_key() is None
+    st = credits.state()
+    icons, sounds = st["sections"]
+    names = {p["name"] for p in icons["people"]}
+    assert {"Lorc", "Delapouite"} <= names, "the authors come from the icons' LICENSE.txt"
+    assert [x["url"] for x in icons["links"]] == ["https://creativecommons.org/licenses/by/3.0/",
+                                                  "https://game-icons.net/"]
+    assert "CC BY 3.0" in icons["intro"] and "CC0" in sounds["intro"]
+    assert sounds["people"][0]["name"] == "Kenney Vleugels" and sounds["links"][0]["url"].endswith("/zero/1.0/")
+    assert st["back"] == "Back to the title"
+    assert credits.back_to() == {"screen": "title"} and title.game.session is title
+
+
+def test_every_author_the_icons_license_lists_reaches_the_credits():
+    from gartok.web import credits_session
+    listed = credits_session.authors(credits_session._read("icons"))
+    assert len(listed) >= 12 and all(a["name"] for a in listed)
+    assert [a["name"] for a in listed][:2] == ["Lorc", "Delapouite"]

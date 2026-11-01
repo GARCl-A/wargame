@@ -320,5 +320,18 @@
     "ribit": "Bufo holds the flag, Peep holds the water, and I hold your attention. Let's see who tires first.",
     "bufo": "Flag stays. You go.",
     "peep": "Wade in, wade in. The water's lovely. I'll count the splashes."
+  },
+  "credits": {
+    "title": "Credits",
+    "kicker": "Gartok Tactical · what the game borrows",
+    "icons": {
+      "heading": "Icons",
+      "intro": "The icons of items, actions, bodies, heads and the interface are from game-icons.net, used under Creative Commons Attribution 3.0 (CC BY 3.0). They are used as downloaded (white on transparent). The map and occupation glyphs were drawn for this game.",
+      "authors": "Authors whose work appears in the game"
+    },
+    "sounds": {
+      "heading": "Sounds",
+      "intro": "The sound effects are by Kenney (www.kenney.nl), released under Creative Commons Zero (CC0). Credit is optional, and gladly given."
+    }
   }
 }

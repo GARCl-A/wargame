@@ -203,6 +203,7 @@ const SCREENS = {
   watch: {css: ["watch.css"], js: ["watch.js"]},
   wiki: {css: ["wiki.css"], js: ["wiki.js"]},
   settings: {css: ["settings.css"], js: ["settings.js"]},
+  credits: {css: ["credits.css"], js: ["credits.js"]},
 };
 
 // the screens are laid out on 1920x1080, centred; a window off 16:9 gets the backdrop's bleed, not black bars

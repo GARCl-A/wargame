@@ -9,6 +9,7 @@ from .. import art_files, persist, recorder, vocations, world
 from ..guild import DEFAULT_BANNER_COLOR, DEFAULT_BANNER_ICON
 from .map_session import MapSession, _icon, _plural, _portrait
 from .session import Session, asset_url
+from .credits_session import CreditsSession
 from .settings_session import SettingsSession
 from .wiki_session import WikiSession
 
@@ -42,6 +43,7 @@ class TitleSession(Session):
         "new": lambda s, b: s.new_guild(),
         "wiki": lambda s, b: s.aside(WikiSession(s._return, "Back to the title")),
         "settings": lambda s, b: s.aside(SettingsSession(s._return, "Back to the title")),
+        "credits": lambda s, b: s.aside(CreditsSession(s._return, "Back to the title")),
         "load": lambda s, b: s.load(b["world"], b.get("save", persist.CURRENT)),
         "delete_world": lambda s, b: s.delete_world(b["world"]),
         "delete_save": lambda s, b: s.delete_save(b["world"], b["save"]),
@@ -94,7 +96,7 @@ class TitleSession(Session):
         return {"screen": DraftSession.screen}
 
     def aside(self, session):
-        """The wiki or the settings, which come back here."""
+        """The wiki, the settings or the credits, which come back here."""
         self.game.open(session)
         return {"screen": session.screen}
 
@@ -145,6 +147,7 @@ class TitleSession(Session):
             None,
             {"key": "wiki", "label": "Wiki & compendium", "enabled": True},
             {"key": "settings", "label": "Settings", "enabled": True},
+            {"key": "credits", "label": "Credits", "enabled": True},
             {"key": "editor", "label": "Editor", "enabled": False, "hint": "characters, maps, combat lab"},
             None,
             {"key": "quit", "label": "Quit", "enabled": True, "quiet": True},

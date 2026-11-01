@@ -57,13 +57,10 @@ the rest.
   the version, a save with another `save_version` is refused with that message, an old save with no
   `game_version` loads.
 
-- **Credits screen (decided 2026-11-01).** The icons are game-icons.net under CC BY 3.0, which requires
-  crediting the authors, the license link and the source, and the credit must reach the player (a
-  `LICENSE.txt` inside the repo or the build is not enough). Add a Credits entry reachable from the
-  main menu or Settings, drawn from `gartok/assets/icons/LICENSE.txt` and `sounds/LICENSE.txt` (Kenney,
-  CC0, credit optional). Before shipping, complete the author list from game-icons.net for the icons
-  actually used (the file's list is partial), and note any recoloured icon as modified. New screen: needs
-  its `tutorial_key()` decision, a locale block and a test; the build for friends must include it.
+- **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
+  authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
+  game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
+  new names up with no code change.
 
 - **Playtest build for friends (checked 2026-10-30).** `build_exe.bat` (PyInstaller `--onefile`, stdlib
   only) builds a `GARTOK.exe` that opens and serves the client; it is only the way to hand the game to

@@ -1,0 +1,20 @@
+/* The credits: one ruled block per asset family on a page, the authors as a wrapped line of links. */
+#credits{position:absolute;inset:0;overflow-y:auto;
+  background:radial-gradient(ellipse 70% 65% at 50% 48%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+#page{position:relative;margin:70px auto 60px;width:1040px;padding:44px 52px 36px}
+#page h2{margin-top:14px;font:700 40px/1 Cinzel,serif;color:#2a1a0e}
+.sec{margin-top:26px;padding-top:20px;border-top:1px solid rgba(90,60,30,.3)}
+.sec b{display:block;font:700 22px/1.1 Cinzel,serif;color:#2a1a0e}
+.sec p{margin-top:8px;font:17px/1.35 var(--read);color:#5b4630}
+.sec .who{margin-top:14px;font:600 12px/1 Cinzel,serif;letter-spacing:.14em;text-transform:uppercase;color:#4a3522}
+.names{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 22px;font:17px/1.3 var(--read);color:#2a1a0e}
+.sec a{color:#7a2318}
+.links{margin-top:14px;display:flex;gap:26px;font:17px/1.3 var(--read)}
+.pbtn{height:36px;padding:0 16px;display:grid;place-items:center;border-radius:2px;cursor:pointer;
+  font:600 11px/1 Cinzel,serif;letter-spacing:.16em;color:#4a3522;text-transform:uppercase;
+  border:1px solid rgba(90,60,30,.5);background:rgba(255,248,225,.35)}
+.pbtn:hover{color:#7a2318;border-color:#7a2318}
+.foot{display:flex;margin-top:30px}
+#toast{position:absolute;left:50%;bottom:60px;transform:translateX(-50%);max-width:900px;padding:14px 22px;z-index:30;
+  font:italic 19px/1.3 "IM Fell English",serif;color:#f1e4c5;background:rgba(20,14,9,.94);border:1px solid var(--brass-lo);border-radius:3px}
+#toast[hidden]{display:none}
