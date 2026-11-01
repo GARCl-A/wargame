@@ -4,6 +4,7 @@ carrying loot."""
 
 import random
 
+from gartok import encounters, names
 from tests.helpers import (
     Battle,
     Unit,
@@ -12,6 +13,7 @@ from tests.helpers import (
     actions,
     data,
     resolve_bonus,
+    standard_unit,
 )
 
 
@@ -30,7 +32,7 @@ def test_a_beast_has_no_occupation_and_fights_unarmed():
 
 
 def test_build_enemy_with_a_race_pool_only_draws_beasts():
-    from gartok import encounters
+    from gartok import encounters, names
     rng = random.Random(4)
     for _ in range(20):
         u = encounters.build_enemy(2, rng, race_pool=data.BEAST_POOL)
@@ -38,7 +40,7 @@ def test_build_enemy_with_a_race_pool_only_draws_beasts():
 
 
 def test_wilds_encounter_table_can_roll_an_all_beast_pack_within_the_usual_envelope():
-    from gartok import encounters
+    from gartok import encounters, names
     rng = random.Random(1)
     saw_a_beast_pack = False
     for _ in range(50):
@@ -55,7 +57,7 @@ def test_the_humanoid_encounter_entry_keeps_the_racial_rarity_weights():
     thresholds, not draw uniformly across all 18 races -- Human is common
     (~25% of the d100), Sprite is rare (~1%); a uniform pick would flatten
     both to ~5.5% and this ratio would disappear."""
-    from gartok import encounters
+    from gartok import encounters, names
     rng = random.Random(7)
     names = [encounters.build_enemy(0, rng, race_pool=None).race["name"]
              for _ in range(400)]
@@ -236,7 +238,7 @@ def test_natural_armor_counts_in_battle_and_survives_a_save():
 
 
 def test_the_creator_can_pin_combat_and_work_past_fifteen_without_moving_enemy_caps():
-    from gartok import encounters, progression
+    from gartok import encounters, names, progression
     u = _wolf()
     u.set_track_level("combat", 20)
     u.set_track_level("work", 20)
@@ -266,7 +268,7 @@ def test_turning_a_unit_into_a_beast_keeps_its_pack_and_stows_held_gear():
 
 
 def test_skeleton_and_giant_spider_are_creator_races_but_never_wild_encounters():
-    from gartok import encounters
+    from gartok import encounters, names
     for name, kind in (("Skeleton", "undead"), ("Giant Spider", "beast")):
         assert name in data.ALL_RACE_NAMES and name not in data.RACE_NAMES
         assert data.race_by_name(name)["kind"] == kind
@@ -482,3 +484,16 @@ def test_a_wolf_also_drops_meat_beside_its_hide():
 
 def test_a_beast_without_a_second_drop_adds_nothing_extra():
     assert not any(r["also_drops"] for r in data.BEAST_POOL if r["name"] != "Wolf")
+
+
+def test_a_wild_beast_is_called_by_its_species_and_a_pack_gets_an_adjective_each():
+    wolf = next(r for r in data.BEAST_POOL if r["name"] == "Wolf")
+    pack = [encounters.build_enemy(1, race_pool=[wolf]) for _ in range(3)]
+    assert {u.name for u in pack} == {"Wolf"}
+    lone = encounters.build_enemy(1, race_pool=[wolf])
+    assert Battle([standard_unit()], [lone]).enemy_units[0].name == "Wolf"
+    battle = Battle([standard_unit()], pack)
+    called = sorted(c.name for c in battle.enemy_units)
+    assert len(set(called)) == 3 and all(n.split()[0] in names.EPITHETS and n.endswith(" Wolf") for n in called)
+    battle._tell_beasts_apart(battle.enemy_units)
+    assert sorted(c.name for c in battle.enemy_units) == called

@@ -119,7 +119,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.awareness_radius = 8
 
         self._auto_name = name is None
-        self.name = name or names.random_name()
+        self.name = name or (self.race["name"] if self.race["kind"] == "beast" else names.random_name())
         self.token = self.race["token"]
         self.portrait_id = int(self.uid[:8], 16)
         self.portrait_file = None

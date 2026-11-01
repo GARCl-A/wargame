@@ -104,11 +104,6 @@ the rest.
 - **Hit sounds swap (`assets/sounds/`).** Hit sounds do not fit the game (the UI sounds are fine);
   swap the Kenney variants in `assets/sounds/`.
 
-- **Name generator: shorter names (playtest 2026-10-30).** `names.random_name` strings 2 to 4 syllables,
-  so "Othgormskelther" and "Dralothcazthrog" come out: pronounceable but long and ugly. Cap the length
-  (letters, not only syllables), weigh 2 syllables over 3 and 4, and keep two heavy consonant clusters
-  ("gorm", "throg", "skel") from meeting. The guild's sheet holds a long name anyway (2026-10-30: ellipsis, the whole name on hover, the book's heading shrinks).
-
 - **Map blocks: drop pygame's layout hints.** `gap_before` and `height` in `map_view.py`'s blocks are
   ignored by the web; the Editor does not count (author 2026-10-30). Delete them.
 

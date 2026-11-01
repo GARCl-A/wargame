@@ -11,7 +11,7 @@ roster and a rematch could reuse the same picks.
 
 import random
 
-from . import captives, data, intel, outfit, vision
+from . import captives, data, intel, names, outfit, vision
 from .board import (
     COLS,
     ROWS,
@@ -59,11 +59,21 @@ class Battle:
         self.player_units = ([Combatant(u, "player") for u in player_units]
                              + [Combatant(u, "player", ai_ally=True) for u in allies])
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
+        self._tell_beasts_apart(self.enemy_units)
         # further sides, hostile to everyone else and played by ai/: {team: [units]}
         self.other_units = [Combatant(u, team) for team, units in (others or {}).items() for u in units]
         self.setup()
 
     # ------------------------------------------------------------------ #
+    @staticmethod
+    def _tell_beasts_apart(units):
+        """Beasts carry their species as a name; a pack of the same one gets an adjective each: "Scarred Wolf", "Gaunt Wolf"."""
+        for species in {u.name for u in units if u.race["kind"] == "beast" and u.name == u.race["name"]}:
+            pack = [u for u in units if u.name == species and u.race["kind"] == "beast"]
+            if len(pack) > 1:
+                for u, epithet in zip(pack, names.epithets(len(pack))):
+                    u.name = f"{epithet} {species}"
+
     def record_to(self, sink):
         """Write this fight's decisions to `sink` (a `combat_log.CombatLog`) from now on."""
         self.sink = sink
