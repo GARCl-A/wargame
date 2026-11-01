@@ -5,8 +5,7 @@ Read this before you add or change a screen. It is a standing guide (the rules, 
 hold); open work is in [plans/backlog.md](../plans/backlog.md), and how each step was built is in
 `git log -p --follow -- docs/web_ui/web_client.md`.
 
-The Editor (`python -m editor`) is the one pygame program left, a separate package the game never imports.
-Leave it alone: it is only maintained, and porting it is deprioritised in the backlog.
+The Editor (`python -m editor`) is the one pygame program left; leave it alone (see *Port the Editor* in the backlog).
 
 ## Rules
 
@@ -24,32 +23,26 @@ Leave it alone: it is only maintained, and porting it is deprioritised in the ba
   `guild_sheet.GuildSheet`, `dialogue.Talk`, `spoils.Spoils` ...). A test loads it with pygame blocked.
 - **The server half** is a `web/session.Session`: a `screen` id, `state`, its verbs, `tutorial_key()` and
   `sheet_units` (who its `sheet` verb may open). It holds the desk; it never borrows a method off a screen.
-  The server routes `/api/<screen>/<verb>` to the open session and refuses another screen's verbs. A verb
-  that changes screen sets `game.session`; the client reloads on it.
+  The server routes `/api/<screen>/<verb>` to the open session and refuses another screen's verbs.
 - **The client half** is `client/screens/<id>/`, with its files named in `SCREENS` in `shell.js`. A
   screen's scripts declare top-level names, so two scripts of one page must not share one (a test checks
-  it). Shared pieces live in the shell: `$`, `api`, `esc`, `face`, `Sound`, `Tutorial`, `Sheet` (the
-  member's book as a modal, opened by any portrait marked `data-sheet`); what two screens draw is in
-  `kit.js` / `kit.css`, one function each on plain data (`Kit.item`, `Kit.column`, `Kit.purse`, `Kit.stepper`,
-  `ico`, `money`, `plural`, `kg`, `stagePoint`, `popAt`, `dropMarker`). A piece a second screen needs moves
-  there; a screen never keeps its own copy (a test checks the helpers).
+  it).
+- **Shared pieces are not copied.** The shell (`shell.js`) holds the helpers and the `Sheet` modal (the
+  member's book, opened by any portrait marked `data-sheet`); what two screens draw is in `kit.js` /
+  `kit.css`, one function each on plain data. Read their headers for the list. A piece a second screen
+  needs moves there; a screen never keeps its own copy (a test checks the helpers).
 - **Every hover is the game's tooltip** (`Tip` in `kit.js`), never the browser's `title` (a test checks it):
   `${tip(text)}` on the element, `tip(text, "item")` for an item's name over its lines,
   `tip(text, "sum")` for a breakdown (a title, `label: value` rows, `= total`).
-- **The server filters** fog, sight and intel: the client never gets what the side does not know (the
-  rule `ai/` lives by, `intel.known_fields`).
-- **A new screen has a tutorial card:** `tutorial_key()` plus a `tutorial.<id>` block in
-  `locales/en.json`. The shell puts the `?` at the end of the screen's `#top`.
+- **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.
 
 ### How a screen is checked
 
-- **Tests first**, in pytest through the API (`tests/test_web_*.py`).
 - **Screenshots at milestones**, only when the step is about the look: headless Edge at 1920x1080 on a copy
-  of a real save (the day-70 save `35d38388` is the usual one); clicks and drags driven over the DevTools
-  protocol when they matter.
+  of a real late-game save; clicks and drags driven over the DevTools protocol when they matter.
 - **A new family of screens gets a mockup first**, one HTML page at 1920x1080 with its PNG in
   `references/<family>_mockup/`, approved by the author before any code. Its other screens follow without
-  one.
+  one. Add the family to the table in *The mockups* (a test fails otherwise).
 
 ### Art direction
 
@@ -68,14 +61,16 @@ Leave it alone: it is only maintained, and porting it is deprioritised in the ba
   lettering is the chart's hand, drawn on the canvas.
 - **The art is not drawn in code.** Code composes images (textures, frames, portraits) and draws only state
   (health, ranges, highlights): `pygame.draw` art is why the game looked like programmer art.
-- **Gemini makes the art**, anchored on the four engraved portraits in [references/](references/) (Gnoll 10,
-  Grippli 13, Kenku 4, Ogre 0). 2D engraving only: no isometric, 3D or pixel art.
+- **How the art is made.** Gemini is the preferred generator: its results are the best. It is anchored on the
+  four engraved portraits in [references/](references/) (Gnoll 10, Grippli 13, Kenku 4, Ogre 0), 2D
+  engraving only: no isometric, 3D or pixel art. The portrait LoRA (`/gen-portrait`) is the fallback, and
+  its results are weaker: the LoRA portraits in the game are provisional, candidates to be replaced. An
+  agent does not generate art: it lists what is missing under Art in [plans/backlog.md](../plans/backlog.md)
+  and asks the author. Save each Gemini prompt that works, with its reference images, in
+  `docs/art/<name>_options/`.
 - **No tile sheets.** A floor is one seamless texture across the cell lines, tinted per place in code, in a
   lower value band than the tokens (cream tokens vanished on a cream floor). Files go in
-  `gartok/web/client/img/`; what is still missing is under Art in [plans/backlog.md](../plans/backlog.md).
-- **Item glyphs** are game-icons.net SVGs (CC BY 3.0) in `assets/icons/item/`, one per `item_icon` kind; a
-  test fails for a kind with no file.
-- **Fonts** ship in `gartok/web/client/fonts/`, never fetched at runtime.
+  `gartok/web/client/img/`.
 
 ### Layouts that hold
 
@@ -91,14 +86,15 @@ Leave it alone: it is only maintained, and porting it is deprioritised in the ba
 
 ### The mockups
 
-Each folder under [references/](references/) is the approved look of a family, one frame per `?state=`:
+Each folder under [references/](references/) is the approved look of a family, one frame per `?state=`
+(a mockup page may hold more frames than the table names):
 
 | Folder | Family |
 |---|---|
 | `battle_mockup/` | the board |
 | `menu_mockup/` | the title: the menu beside the last guild's charter on its map |
 | `market_mockup/` | a shop: the keeper, the shelf, the packs |
-| `map_mockup/` | the campaign map (`?state=split`, `merge`, `walk`) |
+| `map_mockup/` | the campaign map |
 | `sheets_mockup/` | the guild's sheet: members, bands, the guild, reputations |
 | `dialogue_mockup/` | the talk before a fight |
 | `report_mockup/` | after a fight: the fallen, the report, a level-up, the field, the purse |
@@ -109,8 +105,5 @@ Each folder under [references/](references/) is the approved look of a family, o
 
 Accepted, written down so nobody chases them:
 
-- The fog and light layer is redrawn on every step (about 5 ms); a wall the side never saw can stand between
-  a light it sees and a cell in sight, which then reads a little brighter (no information leaks). If big
-  boards ever feel slow, the next cost is `ai.take_turn`'s path fields (`battle._pf_field` /
-  `board._dijkstra`).
-- A hunt is never saved (a rule, see `AGENTS.md`): a window closed mid-hunt drops it.
+- The fog and light layer is redrawn on every step; a wall the side never saw can stand between a light it
+  sees and a cell in sight, which then reads a little brighter (no information leaks).
