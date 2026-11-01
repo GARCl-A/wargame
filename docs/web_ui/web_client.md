@@ -34,6 +34,11 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
 - **Every hover is the game's tooltip** (`Tip` in `kit.js`), never the browser's `title` (a test checks it):
   `${tip(text)}` on the element, `tip(text, "item")` for an item's name over its lines,
   `tip(text, "sum")` for a breakdown (a title, `label: value` rows, `= total`).
+- **The click is the shell's** (`Sound` in `shell.js`): it plays on whatever the styles mark clickable (a
+  `pointer` or `zoom-in` cursor; `.off` and the open tab go back to `default`) and on a drag let go over a
+  marked drop target, and an answer that is not ok plays the error cue. So a clickable element needs its
+  cursor, `data-silent` keeps one quiet, and a screen plays only the cue its answer picks (`coins` when the
+  purse moved, `level_up`), never `click`.
 - **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.
 
 ### How a screen is checked

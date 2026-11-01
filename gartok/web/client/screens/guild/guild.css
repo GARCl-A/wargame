@@ -35,7 +35,7 @@
 .tabs{display:flex;gap:4px}
 .tabs span{font:600 12px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;padding:10px 18px;border-bottom:1px solid rgba(201,163,94,.2);text-transform:uppercase;cursor:pointer}
 .tabs span:hover{color:#d9c49b}
-.tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
+.tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass);cursor:default}
 .tabs span i{font-style:normal;margin-left:7px;padding:2px 5px;border-radius:2px;background:var(--blood);color:#fbe9dd;font-size:9.5px;letter-spacing:.06em}
 #topright{margin-left:auto;display:flex;gap:10px;align-items:center}
 #body{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none}

@@ -10,9 +10,48 @@ async function api(path, body) {
   const res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
   const data = await res.json();
   Tutorial.sync(res.headers.get("X-Tutorial"));
-  if (!res.ok) throw new Error(data.error || res.statusText);
+  if (!res.ok) {
+    Sound.play("miss");
+    throw new Error(data.error || res.statusText);
+  }
   return data;
 }
+
+// the cues `sound.py` plays in pygame; silent until the browser allows audio. Every screen's click is played
+// here, before any screen's own listener can stop it: on whatever the styles mark clickable (a pointer or a
+// zoom-in cursor, which `.off` turns back to default) and on a drag let go over a marked drop target;
+// data-silent keeps an element quiet. A screen plays only the cue its answer picks (coins, level up)
+const Sound = (() => {
+  let bank = null, level = {}, volume = 0;
+  api("/api/sounds").then(r => {
+    level = r.level;
+    bank = Object.fromEntries(Object.entries(r.cues).map(([cue, urls]) => [cue, urls.map(u => new Audio(u))]));
+  }).catch(() => {});
+  function play(cue) {
+    const list = bank && bank[cue];
+    if (!list || volume <= 0) return;
+    const a = list[Math.floor(Math.random() * list.length)].cloneNode();
+    a.volume = Math.min(1, volume * (level[cue] ?? 1));
+    a.play().catch(() => {});
+  }
+  const CLICKABLE = new Set(["pointer", "zoom-in"]);
+  addEventListener("click", e => {
+    const el = e.composedPath()[0];
+    if (!(el instanceof Element) || el.closest("[data-silent]")) return;
+    if (el.closest("button:not(.off)") || CLICKABLE.has(getComputedStyle(el).cursor)) play("click");
+  }, true);
+  let down = null;
+  addEventListener("pointerdown", e => { down = e.button === 0 ? [e.clientX, e.clientY] : null; }, true);
+  addEventListener("pointerup", e => {
+    const moved = down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) >= 6;
+    down = null;
+    if (moved && $("screen").querySelector(".drop, .target")) play("click");
+  }, true);
+  return {
+    set volume(v) { volume = v / 100; },
+    play,
+  };
+})();
 
 // the open screen's tutorial card, named in every answer's X-Tutorial header ("key|1" while it is up):
 // a veiled card that swallows every click and key until it is closed, then a ? that opens it again: at the
@@ -165,25 +204,6 @@ const Sheet = (() => {
     if (type === "click") { pressed = null; open(el.dataset.sheet).catch(() => {}); }
   }, true);
   return {pages: u => u.beast ? animalPages(u) : memberPages(u), open, close};
-})();
-
-// the cues `sound.py` plays in pygame; silent until the browser allows audio
-const Sound = (() => {
-  let bank = null, level = {}, volume = 0;
-  api("/api/sounds").then(r => {
-    level = r.level;
-    bank = Object.fromEntries(Object.entries(r.cues).map(([cue, urls]) => [cue, urls.map(u => new Audio(u))]));
-  }).catch(() => {});
-  return {
-    set volume(v) { volume = v / 100; },
-    play(cue) {
-      const list = bank && bank[cue];
-      if (!list || volume <= 0) return;
-      const a = list[Math.floor(Math.random() * list.length)].cloneNode();
-      a.volume = Math.min(1, volume * (level[cue] ?? 1));
-      a.play().catch(() => {});
-    },
-  };
 })();
 
 // the server stops once the window is closed; a reload onto another screen asks again before it does

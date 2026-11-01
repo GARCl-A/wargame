@@ -39,7 +39,6 @@ const Ledger = (() => {
     if (!H || !H.ledger) return;
     const b = e.target.closest("[data-desk]");
     if (!b || b.classList.contains("off")) return;
-    Sound.play("click");
     post("ledger", {key: b.dataset.desk});
   });
 

@@ -296,7 +296,6 @@ function give(src, el) {
   const body = {picks: [{from: src.from, loc: src.loc, qty: w ? Math.min(qty[w.name] ?? w.qty, w.qty) : undefined}], to,
     zone: slot && to !== "field" ? slot.dataset.zone : "pack"};
   pick = null;
-  Sound.play("click");
   post("take", body);
   return true;
 }
@@ -401,7 +400,7 @@ $("body").addEventListener("wheel", e => {
 }, {passive: false});
 $("body").addEventListener("click", e => {
   const go = e.target.closest("[data-go]");
-  if (go && !go.classList.contains("off")) { Sound.play("click"); post(go.dataset.go); return; }
+  if (go && !go.classList.contains("off")) { post(go.dataset.go); return; }
   const giveTo = e.target.closest("[data-give]");
   if (giveTo) post("give", {uid: giveTo.dataset.give});
 });

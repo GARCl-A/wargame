@@ -186,13 +186,13 @@ function render(state, rolled = false) {
 }
 
 $("mid").addEventListener("click", e => {
-  if (e.target.closest("#goon")) { Sound.play("click"); post("go_on"); return; }
+  if (e.target.closest("#goon")) { post("go_on"); return; }
   const c = e.target.closest(".card[data-verb]");
-  if (c && !c.classList.contains("closed")) { Sound.play("click"); post("choose", {verb: c.dataset.verb}); }
+  if (c && !c.classList.contains("closed")) post("choose", {verb: c.dataset.verb});
 });
 $("band").addEventListener("click", e => {
   const m = e.target.closest(".mem.pick");
-  if (m && m.dataset.uid !== T.speaker) { Sound.play("click"); post("speaker", {uid: m.dataset.uid}); }
+  if (m && m.dataset.uid !== T.speaker) post("speaker", {uid: m.dataset.uid});
 });
 addEventListener("keydown", e => {
   if ((e.key === "Enter" || e.key === " ") && T && T.result) { e.preventDefault(); post("go_on"); }

@@ -449,7 +449,6 @@ async function saveAs() {
     $("saveform").hidden = true;
     $("savename").value = "";
     $("savednote").textContent = `saved: ${r.saved}`;
-    Sound.play("click");
   } catch (e) { news([e.message], true); }
 }
 $("titlebtn").onclick = () => pause(true);

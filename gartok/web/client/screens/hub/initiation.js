@@ -42,8 +42,8 @@ const Initiation = (() => {
   $("body").addEventListener("click", async e => {
     if (!H || !H.initiation) return;
     const p = e.target.closest("[data-uid]");
-    if (p) { Sound.play("click"); post("novice", {uid: p.dataset.uid}); return; }
-    if (e.target.closest("#begin")) { Sound.play("click"); post("begin_rite"); }
+    if (p) { post("novice", {uid: p.dataset.uid}); return; }
+    if (e.target.closest("#begin")) post("begin_rite");
   });
 
   return {draw};

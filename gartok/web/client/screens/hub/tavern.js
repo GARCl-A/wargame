@@ -143,9 +143,9 @@ const Tavern = (() => {
     toast(T.notice);
   }
 
-  async function act(verb, body, sound = "click") {
+  async function act(verb, body, sound = null) {
     const r = await post(verb, body);
-    if (r) Sound.play(sound);
+    if (r && sound) Sound.play(sound);
     return r;
   }
 
@@ -159,7 +159,7 @@ const Tavern = (() => {
     else if (on("#bail_less")) act("raise_bail", {delta: -1});
     else if (on("#convince")) act("convince");
     else if ((el = on("[data-target]"))) { picking = null; act("study_target", {uid: el.dataset.uid, id: el.dataset.target}); }
-    else if ((el = on("[data-pick]"))) { picking = picking === el.dataset.pick ? null : el.dataset.pick; Sound.play("click"); rooms(H.tavern); }
+    else if ((el = on("[data-pick]"))) { picking = picking === el.dataset.pick ? null : el.dataset.pick; rooms(H.tavern); }
     else if ((el = on("[data-stop]"))) act("stop_study", {uid: el.dataset.stop});
     else if (on("#rent_study")) act("rent_study");
     else if (on("#cancel_study")) act("cancel_study");

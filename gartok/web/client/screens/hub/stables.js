@@ -129,7 +129,7 @@ const Stables = (() => {
     const d = b.dataset;
     const body = d.body ? {[d.body]: d.key} : d.tack ? {uid: d.uid, tack: d.tack} : d.uid ? {uid: d.uid} : {};
     const r = await post(d.verb, body);
-    if (r) Sound.play(d.verb.startsWith("garage_") && d.verb !== "garage_bay" ? "click" : "coins");
+    if (r && (!d.verb.startsWith("garage_") || d.verb === "garage_bay")) Sound.play("coins");
   });
 
   return {animals, wagons, garage};

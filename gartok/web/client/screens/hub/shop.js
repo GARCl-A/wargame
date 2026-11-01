@@ -142,7 +142,7 @@ const Shop = (() => {
     const before = S.purse;
     picks = null;
     const r = await post(verb, body);
-    if (r && r.shop) Sound.play(r.shop.purse !== before ? "coins" : "click");
+    if (r && r.shop && r.shop.purse !== before) Sound.play("coins");
   }
 
   // ---------------------------------------------------------------- what the person does
@@ -281,7 +281,7 @@ const Shop = (() => {
       return redraw();
     }
     const c = e.target.closest(".cats [data-cat]");
-    if (c) { cat = c.dataset.cat; Sound.play("click"); return redraw(); }
+    if (c) { cat = c.dataset.cat; return redraw(); }
     drag = {src: source(e.target), x: e.clientX, y: e.clientY, moving: false};
   });
   addEventListener("pointermove", e => {

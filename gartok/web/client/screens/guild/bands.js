@@ -126,8 +126,7 @@ const Bands = (() => {
 
   async function act(verb, body) {
     picks = null;
-    const r = await post(verb, body);
-    if (r) Sound.play("click");
+    await post(verb, body);
   }
 
   // ---------------------------------------------------------------- what the person does
@@ -160,7 +159,7 @@ const Bands = (() => {
     const c = el.closest(".bchip[data-band]");
     if (el.closest("#pen")) { naming = true; return redraw(); }
     if (c) {
-      if (c.dataset.band !== B.gid) { picks = null; Sound.play("click"); post("band", {gid: c.dataset.band}); }
+      if (c.dataset.band !== B.gid) { picks = null; post("band", {gid: c.dataset.band}); }
       return;
     }
     const b = el.closest("[data-btn]");

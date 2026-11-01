@@ -87,20 +87,18 @@ function nextTab(step) {
 }
 
 async function back() {
-  Sound.play("click");
   await api("/api/hub/back", {});
   location.reload();
 }
 
 $("tabs").addEventListener("click", e => {
   const t = e.target.closest("[data-tab]");
-  if (t && t.dataset.tab !== H.tab) { Sound.play("click"); post("tab", {key: t.dataset.tab}); }
+  if (t && t.dataset.tab !== H.tab) post("tab", {key: t.dataset.tab});
 });
 $("back").onclick = back;
 $("body").addEventListener("click", async e => {
   const o = H && H.repossession && e.target.closest("[data-choice]");
   if (!o) return;
-  Sound.play("click");
   await api("/api/hub/repossess", {choice: o.dataset.choice});
   location.reload();
 });

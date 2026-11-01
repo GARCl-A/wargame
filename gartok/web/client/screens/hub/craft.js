@@ -57,11 +57,10 @@ const Craft = (() => {
   $("body").addEventListener("click", async e => {
     if (!H || !H.craft) return;
     const p = e.target.closest("[data-crafter]");
-    if (p) { Sound.play("click"); post("crafter", {uid: p.dataset.crafter}); return; }
+    if (p) { post("crafter", {uid: p.dataset.crafter}); return; }
     const b = e.target.closest("[data-recipe]");
     if (b) {
-      const r = await post("craft", {recipe: b.dataset.recipe, hours: +b.dataset.hours, alone: !!b.dataset.alone});
-      if (r) Sound.play("click");
+      post("craft", {recipe: b.dataset.recipe, hours: +b.dataset.hours, alone: !!b.dataset.alone});
     }
   });
 
