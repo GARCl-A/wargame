@@ -22,6 +22,8 @@ Events (all carry `t`, the clock in seconds):
   animal   an animal was bought or sold at the stables
   recruit  a pitch (pitcher, candidate, bail, ok)
   mission  a mission accepted or turned in (id, reward)
+  ambush_roll  a gathering shift drew a pack (node, hours, foes, result: fight / dismissed when the pack
+           would not attack the crew)
   craft    a crafting shift (recipe, hours worked, units made)
 
 Each fight also writes its own decision log next to this file, in `combat_logs/` (`combat_log.py`).

@@ -227,3 +227,19 @@ def test_the_city_raid_and_the_retake_come_whatever_the_odds(monkeypatch):
     group.node = world.WILDS_TERRITORY_NODE
     guild.wilds_claim_owner = "seized"
     assert forced.wilds_claim_retake_catch(guild, group, None, []).kind == "wilds_retake"
+
+
+def test_the_play_log_tells_a_dismissed_pack_from_a_fight(monkeypatch, tmp_path):
+    import json
+
+    from gartok import recorder
+    recorder.attach(str(tmp_path), Guild(_strong()))
+    try:
+        _shift(monkeypatch, _strong(), _wolves(2))
+        _shift(monkeypatch, _weak(), _wolves(2))
+    finally:
+        recorder.detach()
+    rows = [json.loads(line) for line in (tmp_path / recorder.FILE).read_text().splitlines()]
+    rolls = [r for r in rows if r["e"] == "ambush_roll"]
+    assert [r["result"] for r in rolls] == ["dismissed", "fight"]
+    assert rolls[0]["node"] == "mine" and rolls[0]["foes"] == 2 and rolls[0]["hours"] == 8

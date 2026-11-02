@@ -92,7 +92,10 @@ class LaborMixin:
         node_id = group.node
         if gather.ambushed(node_id, order.hours, self.gather_risk_mult(group, node_id)):
             pack = gather.ambush_pack(node_id)
-            if encounters.would_attack(pack, group.members):
+            attacks = encounters.would_attack(pack, group.members)
+            recorder.emit("ambush_roll", node=node_id, hours=order.hours, foes=len(pack),
+                          result="fight" if attacks else "dismissed")
+            if attacks:
                 name = world.node(node_id).name
                 return ([f"{name}: a pack finds {group.display_name} at work."],
                         orders.Order("gather_ambush", pack=tuple(pack), hours=order.hours))
