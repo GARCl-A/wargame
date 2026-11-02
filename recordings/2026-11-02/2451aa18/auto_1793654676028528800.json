@@ -1,0 +1,1811 @@
+{
+  "save_version": 2,
+  "game_version": "0.1.2",
+  "save_kind": "auto",
+  "save_label": "Before a fight at The Claim: 2 foes",
+  "day": 91,
+  "battles_won": 30,
+  "reputation": {
+    "arena": 7,
+    "library": 1,
+    "bankers": 4,
+    "tanners": 1,
+    "apothecary": 1,
+    "ledger_hold": 1
+  },
+  "deeds_done": [
+    "arena_first_blood",
+    "arena_dethrone",
+    "arena_lone_wolf",
+    "library_initiate",
+    "bankers_diverse_portfolio",
+    "bankers_good_for_business",
+    "tanners_hides",
+    "arena_bloodsport",
+    "arena_flag_runner",
+    "arena_untouchable",
+    "bankers_steady_customer",
+    "bankers_trust",
+    "apothecary_mushrooms",
+    "ledger_hold_mentoring",
+    "arena_ribbit_brothers"
+  ],
+  "objectives_done": [
+    "obj_buy_food",
+    "obj_work_shift",
+    "obj_work_chain",
+    "obj_recruit_tavern",
+    "obj_buy_torch",
+    "obj_arena_bout",
+    "obj_combat_lv1",
+    "obj_deed",
+    "obj_mission",
+    "obj_pack_animal",
+    "obj_wagon",
+    "obj_recruit_prison"
+  ],
+  "arena_challenge_day": null,
+  "clock_seconds": 7820586,
+  "bank_capacity": 0,
+  "bank_items": [],
+  "property_city_unlocked": false,
+  "property_city_items": [],
+  "property_city_tax_due_day": null,
+  "property_city_missed_payments": 0,
+  "property_city_squatting": false,
+  "property_city_oven": false,
+  "property_city_garage": {
+    "tier": 0,
+    "wagons": [],
+    "herd": []
+  },
+  "wilds_claim_garage": {
+    "tier": 0,
+    "wagons": [],
+    "herd": []
+  },
+  "bankers_debt": 0,
+  "property_city_debt_since": null,
+  "garrison_stock": {},
+  "wilds_claim_stage": "FENCED",
+  "wilds_claim_fence_lumber": 11,
+  "wilds_claim_sustain_days_left": null,
+  "wilds_claim_owner": null,
+  "wilds_claim_campfire": false,
+  "claim_oven": false,
+  "ox_trails": 0,
+  "revealed": [
+    "ancient_ruins"
+  ],
+  "met_factions": [
+    "apothecary",
+    "ledger_hold",
+    "library",
+    "tanners"
+  ],
+  "boss_talks_seen": [
+    "boss",
+    "champion"
+  ],
+  "ruins_cleared": [],
+  "supply_runs_completed": 5,
+  "wildfire": null,
+  "shops": {
+    "tavern": {
+      "cash": 773,
+      "stock": {
+        "1L Beer": 15,
+        "Jerky": 10,
+        "Vial": 1,
+        "Dagger": 1,
+        "Torch": 6,
+        "Club": 1,
+        "Chains": 1,
+        "Quarterstaff": 1,
+        "Sword": 1,
+        "Axe": 1,
+        "1sqm Hide": 11,
+        "Scroll": 1
+      },
+      "progress": {}
+    },
+    "farm": {
+      "cash": 1089,
+      "stock": {
+        "Potato": 30,
+        "Salt": 20,
+        "Sugar": 15,
+        "Meat": 10,
+        "Fruit": 10,
+        "Chains": 1,
+        "Paper": 1,
+        "Dagger": 1,
+        "Torch": 2,
+        "Rapier": 1,
+        "Cloak": 1,
+        "Empty Box": 1
+      },
+      "progress": {}
+    },
+    "lumber_yard": {
+      "cash": 576,
+      "stock": {
+        "Lumber": 20,
+        "Fruit": 10,
+        "Hatchet": 1
+      },
+      "progress": {}
+    },
+    "carpenter": {
+      "cash": 500,
+      "stock": {
+        "Shortbow": 2,
+        "Longbow": 1,
+        "Light Crossbow": 2,
+        "Quarterstaff": 4
+      },
+      "progress": {}
+    },
+    "mine": {
+      "cash": 244,
+      "stock": {
+        "Stone Brick": 10,
+        "Iron Ore": 10,
+        "1kg Coal": 15,
+        "Torch": 7,
+        "Dagger": 1,
+        "Shortbow": 2,
+        "Pick": 2,
+        "Vial": 1,
+        "Red Mushroom": 2,
+        "Light Hammer": 1,
+        "Cloak": 2,
+        "Quarterstaff": 3,
+        "Light Crossbow": 1,
+        "Axe": 2,
+        "Leather Jerkin": 1
+      },
+      "progress": {}
+    },
+    "market": {
+      "cash": 631,
+      "stock": {
+        "Torch": 30,
+        "Lantern": 5,
+        "Musical Instrument": 5,
+        "Bear Trap": 4,
+        "Alarm Trap": 4,
+        "Lumber": 20,
+        "Flint and Steel": 5,
+        "Rope": 8,
+        "1kg Coal": 1
+      },
+      "progress": {}
+    },
+    "smith": {
+      "cash": 1586,
+      "stock": {
+        "Iron Bar": 12,
+        "Club": 8,
+        "Dagger": 8,
+        "Hatchet": 8,
+        "Shortspear": 6,
+        "Axe": 6,
+        "Pick": 6,
+        "Hammer": 6,
+        "Sword": 6,
+        "Broadsword": 3,
+        "Glaive": 2,
+        "Rapier": 2,
+        "Chainmail": 2,
+        "Brigandine": 1,
+        "Plate Armor": 1,
+        "Chains": 3,
+        "Torch": 10,
+        "Quarterstaff": 4,
+        "Rope": 1,
+        "Iron Ore": 2,
+        "1sqm Hide": 16,
+        "Chisel": 1,
+        "Stone Brick": 1,
+        "Sugar": 2,
+        "Paper": 1,
+        "Empty Box": 1,
+        "Leather Jerkin": 3,
+        "1kg Coal": 1,
+        "Snake Venom Gland": 2,
+        "Light Hammer": 3,
+        "Shortbow": 2
+      },
+      "progress": {}
+    },
+    "tanner": {
+      "cash": 500,
+      "stock": {
+        "Cloak": 15,
+        "1sqm Hide": 0,
+        "Leather Jerkin": 3,
+        "Studded Leather": 3,
+        "Quiver": 5,
+        "Vial": 1,
+        "Torch": 3,
+        "Rapier": 1,
+        "Quarterstaff": 1,
+        "Dagger": 2,
+        "Chains": 1
+      },
+      "progress": {}
+    },
+    "apothecary": {
+      "cash": 660,
+      "stock": {
+        "Vial": 10,
+        "First Aid Kit": 5,
+        "Minor Healing Potion": 3
+      },
+      "progress": {}
+    },
+    "library": {
+      "cash": 555,
+      "stock": {
+        "Paper": 20,
+        "Ink": 10
+      },
+      "progress": {}
+    }
+  },
+  "total_spent": 3705,
+  "items_sold_kinds": [
+    "1kg Coal",
+    "1sqm Hide",
+    "Axe",
+    "Broadsword",
+    "Chainmail",
+    "Chains",
+    "Chisel",
+    "Cloak",
+    "Club",
+    "Dagger",
+    "Empty Box",
+    "Hatchet",
+    "Iron Bar",
+    "Iron Ore",
+    "Leather Jerkin",
+    "Light Crossbow",
+    "Light Hammer",
+    "Paper",
+    "Pick",
+    "Quarterstaff",
+    "Rapier",
+    "Red Mushroom",
+    "Rope",
+    "Scroll",
+    "Shortbow",
+    "Snake Venom Gland",
+    "Stone Brick",
+    "Sugar",
+    "Sword",
+    "Torch",
+    "Vial"
+  ],
+  "autosell": [
+    "1sqm Hide",
+    "Axe",
+    "Broadsword",
+    "Chainmail",
+    "Chains",
+    "Chisel",
+    "Cloak",
+    "Club",
+    "Dagger",
+    "Empty Box",
+    "Hatchet",
+    "Iron Bar",
+    "Iron Ore",
+    "Leather Jerkin",
+    "Light Crossbow",
+    "Light Hammer",
+    "Paper",
+    "Pick",
+    "Quarterstaff",
+    "Rapier",
+    "Red Mushroom",
+    "Rope",
+    "Rotten Food",
+    "Scroll",
+    "Shortbow",
+    "Snake Venom Gland",
+    "Stone Brick",
+    "Sugar",
+    "Sword",
+    "Torch",
+    "Vial"
+  ],
+  "licences": [],
+  "bestiary": {
+    "races": [
+      "Centaur",
+      "Dwarf",
+      "Elf",
+      "Gnome",
+      "Goblin",
+      "Goliath",
+      "Grippli",
+      "Halfling",
+      "Human",
+      "Kobold",
+      "Lizardfolk",
+      "Orc",
+      "Wolf"
+    ],
+    "abilities": [
+      "amphibious",
+      "blood_magic",
+      "climber",
+      "darkvision",
+      "extra_language",
+      "ferocity",
+      "gallop",
+      "innocent_face",
+      "nature_magic",
+      "pack_tactics",
+      "sleep_immunity",
+      "strong_body",
+      "wolf_pack_tactics"
+    ],
+    "named": {
+      "adelio-small-knife": 8,
+      "ribit": 3,
+      "bufo": 3,
+      "peep": -6
+    }
+  },
+  "missions": [
+    {
+      "template_id": "library_dictionary",
+      "unit_uid": "639843b5c90546cc848e56a9350fec4f",
+      "accepted_day": 17,
+      "deadline_day": 32,
+      "state": "done",
+      "ambush_done": false,
+      "failed_day": null,
+      "recruit_uid": null,
+      "escapes": 0
+    },
+    {
+      "template_id": "tanner_hides",
+      "unit_uid": "639843b5c90546cc848e56a9350fec4f",
+      "accepted_day": 27,
+      "deadline_day": 32,
+      "state": "done",
+      "ambush_done": false,
+      "failed_day": null,
+      "recruit_uid": null,
+      "escapes": 0
+    },
+    {
+      "template_id": "bankers_trust_chest",
+      "unit_uid": "639843b5c90546cc848e56a9350fec4f",
+      "accepted_day": 29,
+      "deadline_day": 36,
+      "state": "done",
+      "ambush_done": true,
+      "failed_day": null,
+      "recruit_uid": null,
+      "escapes": 0
+    },
+    {
+      "template_id": "apothecary_mushrooms",
+      "unit_uid": "639843b5c90546cc848e56a9350fec4f",
+      "accepted_day": 41,
+      "deadline_day": 51,
+      "state": "done",
+      "ambush_done": false,
+      "failed_day": null,
+      "recruit_uid": null,
+      "escapes": 0
+    },
+    {
+      "template_id": "ledger_treefolk",
+      "unit_uid": "639843b5c90546cc848e56a9350fec4f",
+      "accepted_day": 41,
+      "deadline_day": null,
+      "state": "done",
+      "ambush_done": false,
+      "failed_day": null,
+      "recruit_uid": "1290b6318b6d4cbe80dc3d14abd032b6",
+      "escapes": 0
+    }
+  ],
+  "leader": "639843b5c90546cc848e56a9350fec4f",
+  "leader_swaps_used": 0,
+  "leaving": {},
+  "vocation": "caravan",
+  "name": "Semenzada",
+  "banner_color": [
+    196,
+    90,
+    90
+  ],
+  "banner_icon": "stars-stack",
+  "saved_at": 1793654676.029529,
+  "squad": [
+    "Senkael",
+    "Wenunvyr",
+    "Ulntiksur",
+    "Ashquen",
+    "Irhel",
+    "Pyrza",
+    "Ekuln",
+    "Ribit"
+  ],
+  "groups": [
+    {
+      "gid": "ed0716a49e774ac39786d02298a25e91",
+      "name": null,
+      "node": "wilds_territory",
+      "order": null,
+      "pending": null,
+      "due_hunt": null,
+      "leader": "639843b5c90546cc848e56a9350fec4f",
+      "members": [
+        {
+          "uid": "3c03b4fdf9344cafa78a2ac463790e48",
+          "recruited_by": null,
+          "joined_day": 1,
+          "name": "Senkael",
+          "auto_name": true,
+          "portrait_id": 1006875901,
+          "portrait_file": null,
+          "race": "Human",
+          "alignment": "Chaotic and Evil",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 33,
+          "share_food": true,
+          "combat_xp": 43,
+          "magic_xp": 0,
+          "work_hours": 403,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin",
+            "Dictionary of Elvish"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "strong",
+              "sure_strike",
+              "heavy_hand",
+              "tough"
+            ],
+            "work": [
+              "sturdy",
+              "brawny",
+              "restful_sleep",
+              "brisk_hands"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            5,
+            1,
+            5,
+            5
+          ],
+          "base_attributes": {
+            "strength": 14,
+            "dexterity": 10,
+            "constitution": 13,
+            "intelligence": 12,
+            "wisdom": 6,
+            "charisma": 8
+          },
+          "age_base": 34,
+          "age": 34,
+          "hp_roll": 7,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin",
+            "Elvish"
+          ],
+          "equipped_weapon": "Sword",
+          "equipped_offhand": "Torch",
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": "Chainmail",
+          "inventory": [],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "9d3a04b189dd4683a67017085e59a232",
+          "recruited_by": null,
+          "joined_day": 1,
+          "name": "Wenunvyr",
+          "auto_name": true,
+          "portrait_id": 2637825201,
+          "portrait_file": null,
+          "race": "Human",
+          "alignment": "Lawful and Neutral",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 19,
+          "share_food": true,
+          "combat_xp": 21,
+          "magic_xp": 0,
+          "work_hours": 410,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin",
+            "Dictionary of Verdant"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "strong",
+              "sure_strike",
+              "heavy_hand"
+            ],
+            "work": [
+              "sturdy",
+              "charismatic",
+              "brawny",
+              "observant"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            4,
+            1,
+            4
+          ],
+          "base_attributes": {
+            "strength": 14,
+            "dexterity": 12,
+            "constitution": 11,
+            "intelligence": 5,
+            "wisdom": 13,
+            "charisma": 9
+          },
+          "age_base": 28,
+          "age": 28,
+          "hp_roll": 6,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin",
+            "Verdant"
+          ],
+          "equipped_weapon": "Axe",
+          "equipped_offhand": "Torch",
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": "Brigandine",
+          "inventory": [],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "639843b5c90546cc848e56a9350fec4f",
+          "recruited_by": null,
+          "joined_day": 1,
+          "name": "Ulntiksur",
+          "auto_name": true,
+          "portrait_id": 1670923189,
+          "portrait_file": null,
+          "race": "Human",
+          "alignment": "Lawful and Neutral",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 39,
+          "share_food": true,
+          "combat_xp": 37,
+          "magic_xp": 0,
+          "work_hours": 410,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin",
+            "Dictionary of Verdant"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "strong",
+              "sure_strike",
+              "heavy_hand",
+              "tough"
+            ],
+            "work": [
+              "brawny",
+              "charismatic",
+              "fixer",
+              "observant"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            5,
+            8,
+            1,
+            4
+          ],
+          "base_attributes": {
+            "strength": 17,
+            "dexterity": 6,
+            "constitution": 15,
+            "intelligence": 9,
+            "wisdom": 13,
+            "charisma": 15
+          },
+          "age_base": 24,
+          "age": 24,
+          "hp_roll": 6,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin",
+            "Verdant"
+          ],
+          "equipped_weapon": "Axe",
+          "equipped_offhand": null,
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": "Plate Armor",
+          "inventory": [],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "88a040da0e924c1ebb40ae56c6c678c7",
+          "recruited_by": "639843b5c90546cc848e56a9350fec4f",
+          "joined_day": 11,
+          "name": "Ashquen",
+          "auto_name": true,
+          "portrait_id": 2292203738,
+          "portrait_file": null,
+          "race": "Human",
+          "alignment": "Neutral and Good",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 20,
+          "share_food": true,
+          "combat_xp": 29,
+          "magic_xp": 0,
+          "work_hours": 410,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin",
+            "Dictionary of Jotun"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "strong",
+              "sure_strike",
+              "heavy_hand"
+            ],
+            "work": [
+              "sturdy",
+              "charismatic",
+              "brawny",
+              "observant"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            1,
+            6,
+            6
+          ],
+          "base_attributes": {
+            "strength": 12,
+            "dexterity": 8,
+            "constitution": 11,
+            "intelligence": 13,
+            "wisdom": 9,
+            "charisma": 11
+          },
+          "age_base": 27,
+          "age": 27,
+          "hp_roll": 3,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin",
+            "Jotun"
+          ],
+          "equipped_weapon": "Axe",
+          "equipped_offhand": "Torch",
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": "Chainmail",
+          "inventory": [],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "eda3162c212745d5bcbe8686814349d1",
+          "recruited_by": "88a040da0e924c1ebb40ae56c6c678c7",
+          "joined_day": 57,
+          "name": "Irhel",
+          "auto_name": true,
+          "portrait_id": 3986888236,
+          "portrait_file": null,
+          "race": "Human",
+          "alignment": "Neutral and Good",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 13,
+          "share_food": true,
+          "combat_xp": 12,
+          "magic_xp": 0,
+          "work_hours": 200,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin",
+            "Dictionary of Gnomish"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "agile",
+              "deadeye"
+            ],
+            "work": [
+              "brawny",
+              "nimble_fingers",
+              "woodcarver"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            3,
+            8
+          ],
+          "base_attributes": {
+            "strength": 9,
+            "dexterity": 16,
+            "constitution": 10,
+            "intelligence": 12,
+            "wisdom": 10,
+            "charisma": 7
+          },
+          "age_base": 66,
+          "age": 66,
+          "hp_roll": 2,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin",
+            "Gnomish"
+          ],
+          "equipped_weapon": "Longbow",
+          "equipped_offhand": null,
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": null,
+          "inventory": [
+            {
+              "id": "quiver",
+              "name": "Quiver",
+              "qty": 1,
+              "charges": 7
+            },
+            {
+              "id": "quiver",
+              "name": "Quiver",
+              "qty": 4,
+              "charges": 20
+            }
+          ],
+          "locked_items": {
+            "Quiver": 2
+          },
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "d7678191758f472aad4257a0679b05e8",
+          "recruited_by": "639843b5c90546cc848e56a9350fec4f",
+          "joined_day": 65,
+          "name": "Pyrza",
+          "auto_name": true,
+          "portrait_id": 3613884817,
+          "portrait_file": null,
+          "race": "Human",
+          "alignment": "Lawful and Neutral",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 7,
+          "share_food": true,
+          "combat_xp": 2,
+          "magic_xp": 0,
+          "work_hours": 82,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin",
+            "Dictionary of Gnomish"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [],
+            "work": [
+              "brawny"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [],
+          "base_attributes": {
+            "strength": 14,
+            "dexterity": 7,
+            "constitution": 11,
+            "intelligence": 11,
+            "wisdom": 12,
+            "charisma": 9
+          },
+          "age_base": 16,
+          "age": 16,
+          "hp_roll": 7,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin",
+            "Gnomish"
+          ],
+          "equipped_weapon": "Pick",
+          "equipped_offhand": "Torch",
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": null,
+          "inventory": [
+            {
+              "id": "jerky",
+              "name": "Jerky",
+              "qty": 1,
+              "days_old": 5
+            },
+            {
+              "id": "salt",
+              "name": "Salt",
+              "qty": 1
+            },
+            {
+              "id": "copper_coin",
+              "name": "Copper Coin",
+              "qty": 171
+            }
+          ],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "c4648c3ca0d64234b49864e230c60150",
+          "recruited_by": "639843b5c90546cc848e56a9350fec4f",
+          "joined_day": 75,
+          "name": "Ekuln",
+          "auto_name": true,
+          "portrait_id": 3294923836,
+          "portrait_file": null,
+          "race": "Automaton",
+          "alignment": "Chaotic and Neutral",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 1,
+          "share_food": true,
+          "combat_xp": 8,
+          "magic_xp": 0,
+          "work_hours": 92,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "strong"
+            ],
+            "work": [
+              "brawny"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            2
+          ],
+          "base_attributes": {
+            "strength": 16,
+            "dexterity": 14,
+            "constitution": 9,
+            "intelligence": 14,
+            "wisdom": 15,
+            "charisma": 7
+          },
+          "age_base": 98,
+          "age": 98,
+          "hp_roll": 1,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin"
+          ],
+          "equipped_weapon": "Pick",
+          "equipped_offhand": "Torch",
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": null,
+          "inventory": [
+            {
+              "id": "jerky",
+              "name": "Jerky",
+              "qty": 4,
+              "days_old": 5
+            },
+            {
+              "id": "fruit_compote",
+              "name": "Fruit Compote",
+              "qty": 1,
+              "days_old": 7
+            },
+            {
+              "id": "copper_coin",
+              "name": "Copper Coin",
+              "qty": 250
+            }
+          ],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "a555ea2c865a47018b7499c0fe953b7a",
+          "recruited_by": "88a040da0e924c1ebb40ae56c6c678c7",
+          "joined_day": 81,
+          "name": "Ribit",
+          "auto_name": false,
+          "portrait_id": "ribit.png",
+          "portrait_file": "ribit.png",
+          "race": "Grippli",
+          "alignment": "Chaotic and Neutral",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 37,
+          "share_food": true,
+          "combat_xp": 79,
+          "magic_xp": 0,
+          "work_hours": 340,
+          "bio": "The eldest of the three and the one who does the talking. Fast, never where the blow lands, and fond of letting you tire yourself out in the open before the dagger finds your throat.",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Sylvan",
+            "Dictionary of Ankarin"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "agile",
+              "deadeye",
+              "fleet",
+              "alert",
+              "iron_will",
+              "quick_wits"
+            ],
+            "work": [
+              "carrier",
+              "brisk_hands",
+              "brawny",
+              "steady_pace"
+            ],
+            "racial": [
+              "webbed_feet"
+            ],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            5,
+            1,
+            6,
+            8,
+            5
+          ],
+          "base_attributes": {
+            "strength": 10,
+            "dexterity": 13,
+            "constitution": 12,
+            "intelligence": 8,
+            "wisdom": 12,
+            "charisma": 8
+          },
+          "age_base": 16,
+          "age": 24,
+          "hp_roll": 6,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Sylvan",
+            "Ankarin"
+          ],
+          "equipped_weapon": "Rapier",
+          "equipped_offhand": null,
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": "Leather Jerkin",
+          "inventory": [
+            {
+              "id": "copper_coin",
+              "name": "Copper Coin",
+              "qty": 160
+            }
+          ],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": true,
+          "awareness_radius": 0
+        }
+      ],
+      "wagons": [
+        {
+          "uid": "a90b31a0d2904ad7880bf6cd899ef940",
+          "kind": "Cart",
+          "hp": 3,
+          "travelled": 35.8,
+          "contents": [
+            {
+              "id": "1kg_coal",
+              "name": "1kg Coal",
+              "qty": 14
+            },
+            {
+              "id": "flint_and_steel",
+              "name": "Flint and Steel",
+              "qty": 1
+            },
+            {
+              "id": "1l_beer",
+              "name": "1L Beer",
+              "qty": 15,
+              "days_old": 5
+            },
+            {
+              "id": "potato",
+              "name": "Potato",
+              "qty": 11,
+              "days_old": 5
+            }
+          ],
+          "locked_items": {
+            "1L Beer": 2,
+            "Lumber": 1,
+            "Longbow": 1,
+            "Potato": 6,
+            "1kg Coal": 15,
+            "Flint and Steel": 1
+          }
+        }
+      ],
+      "herd": [
+        {
+          "uid": "eed68ed54e5342eeb1adafcb6f14888b",
+          "species": "Ox",
+          "hp": 7,
+          "unfed_days": 0,
+          "tack": "Harness",
+          "hitch": "a90b31a0d2904ad7880bf6cd899ef940",
+          "contents": [],
+          "locked_items": {}
+        }
+      ],
+      "herd_notice": null,
+      "captives": [],
+      "stance": "normal",
+      "campfire_node": "farm",
+      "campfire_expires": 7379946
+    }
+  ],
+  "taverna_week": 12,
+  "taverna_pool": [
+    {
+      "uid": "094a80feee614d5cbde2d8a2776db24b",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Morgarald",
+      "auto_name": true,
+      "portrait_id": 155877630,
+      "portrait_file": null,
+      "race": "Elf",
+      "alignment": "Neutral and Good",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 5,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Elvish"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 7,
+        "dexterity": 12,
+        "constitution": 9,
+        "intelligence": 10,
+        "wisdom": 9,
+        "charisma": 14
+      },
+      "age_base": 27,
+      "age": 236,
+      "hp_roll": 6,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Elvish"
+      ],
+      "equipped_weapon": "Hammer",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "potato",
+          "name": "Potato",
+          "qty": 1
+        },
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 8
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    },
+    {
+      "uid": "107fc5cc5f2a47e1bc923d8be97e3c30",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Feldral",
+      "auto_name": true,
+      "portrait_id": 276809164,
+      "portrait_file": null,
+      "race": "Hobgoblin",
+      "alignment": "Neutral and Evil",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 9,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Goblin"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 11,
+        "dexterity": 4,
+        "constitution": 11,
+        "intelligence": 15,
+        "wisdom": 12,
+        "charisma": 14
+      },
+      "age_base": 21,
+      "age": 13,
+      "hp_roll": 8,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Goblin"
+      ],
+      "equipped_weapon": "Light Hammer",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "musical_instrument",
+          "name": "Musical Instrument",
+          "qty": 1
+        },
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 7
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    },
+    {
+      "uid": "a5c99615c9884f258561a52eb32a473a",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Nimwen",
+      "auto_name": true,
+      "portrait_id": 2781451797,
+      "portrait_file": null,
+      "race": "Elf",
+      "alignment": "Neutral and Neutral",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 4,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Elvish"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 3,
+        "dexterity": 18,
+        "constitution": 12,
+        "intelligence": 13,
+        "wisdom": 12,
+        "charisma": 16
+      },
+      "age_base": 1,
+      "age": 9,
+      "hp_roll": 4,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Elvish"
+      ],
+      "equipped_weapon": "Club",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "bloom_fruit",
+          "name": "Bloom Fruit",
+          "qty": 1
+        },
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 9
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    }
+  ],
+  "taverna_blocked": [],
+  "prison_week": 10,
+  "prison_pool": [
+    {
+      "uid": "64529d3cb10548dd9a43626ed2acf823",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Magarsho",
+      "auto_name": true,
+      "portrait_id": 1683135804,
+      "portrait_file": null,
+      "race": "Dwarf",
+      "alignment": "Neutral and Good",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 10,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Dwarvish"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 12,
+        "dexterity": 10,
+        "constitution": 16,
+        "intelligence": 10,
+        "wisdom": 12,
+        "charisma": 8
+      },
+      "age_base": 82,
+      "age": 410,
+      "hp_roll": 6,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Dwarvish"
+      ],
+      "equipped_weapon": "Light Hammer",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "chains",
+          "name": "Chains",
+          "qty": 1
+        },
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 8
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    },
+    {
+      "uid": "c776b762ea304135af28a3feb7c99a9f",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Ashmir",
+      "auto_name": true,
+      "portrait_id": 3346446178,
+      "portrait_file": null,
+      "race": "Orc",
+      "alignment": "Lawful and Neutral",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 6,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Orcish"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 15,
+        "dexterity": 7,
+        "constitution": 12,
+        "intelligence": 10,
+        "wisdom": 10,
+        "charisma": 13
+      },
+      "age_base": 75,
+      "age": 47,
+      "hp_roll": 5,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Orcish"
+      ],
+      "equipped_weapon": "Light Hammer",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "1sqm_hide",
+          "name": "1sqm Hide",
+          "qty": 1
+        },
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 5
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    }
+  ],
+  "prison_blocked": [
+    [
+      "c4648c3ca0d64234b49864e230c60150",
+      "9d3a04b189dd4683a67017085e59a232"
+    ]
+  ],
+  "recruit_seen": {
+    "taverna": 12,
+    "prison": 10
+  },
+  "jailed": [],
+  "tutorial_seen": [
+    "bank",
+    "battle",
+    "claim",
+    "craft",
+    "dialogue",
+    "draft.identity",
+    "draft.intro",
+    "draft.pick",
+    "draft.vocation",
+    "gathering",
+    "group",
+    "guild.members",
+    "guild.overview",
+    "guild.reputations",
+    "hunt",
+    "ledger",
+    "level",
+    "level_up",
+    "library",
+    "loot",
+    "map",
+    "market",
+    "missions",
+    "prison",
+    "report",
+    "reward",
+    "squad",
+    "stable",
+    "taverna",
+    "wagon_yard",
+    "watch",
+    "work"
+  ],
+  "tutorial_enabled": true
+}

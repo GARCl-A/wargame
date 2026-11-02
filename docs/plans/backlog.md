@@ -602,3 +602,61 @@ has one "Enter" button and its functions are tabs inside.
   preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
   and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
   playtest shows whether bout chains break anything.
+
+
+
+=========================
+
+RAW PLAYTEST NOTES 02-11-2026 - GUILDA SEMENZADA
+
+
+O ribit, dos ribit brothers tá com a ficha inconsistente.
+
+eu recrute ele e ele tem work 4, mas ele só tem brisk hands. Ao que tudo indica, ele era pra ter "Brawny" tbm, mas não tem.
+
+Vale checar os outros NPCs se a ficha deles tá consistente.
+Os Botões "Gear e Quests" & "Campfire".
+
+Não precisam de texto descritivo, poderia ser só haver.
+Textos de loot na tela de loot tá dando overflor. mostrando oq q foi pra cada inventário
+Durante a etapa de garriss9n da wilds, quando tem q segurar 10 dias não ficam muito claro quanto tempo falta.
+
+E ainda foge do tempo por conta do botão de avançar 24h
+A claim agora tem um conflito com a licença do lumberyard na coleta de lumber.  As duas coisas estão meio que se sobrepondo.
+
+
+Eai um outro ponto, não fica claro quem, no claim tá coletando madeira ou não. Quais são os pré requisitos pra isso, nem nada. 
+
+Tecnicamente, toda atividade de gather, deveria ter a aba de gather né
+Na claim, não dá pra usar os itens que estão nas carroças pra construir o forno.
+Não tá mostrando q o personagem com arvo equipado está sem flechas. 
+
+Acho inclusive q ele tava com VARIAS aljavas no inventário
+Adicionar um botão de "auto flee"
+A lógica de empurrar pra fugir só faz sentido se, depois de empurrar, for possível fugir.
+
+Na luta contra o Aurochs (dia 112), ele tava empurrando um personagem e depois usando defend.
+Eu tô em dúvida se a regra de carga em 2 etapas tá fazendo sentido.
+
+Tô com a sensacao 1 ter 2 valores de carga diferentes tá mais atrapalhando q sendo interessante.
+Talento de combate pra aumentar o dano com arco.
+Talento de combate pra aumentar o dano com arco.
+Um talento q aumenta em +1 dano com arco.
+
+E um talento que faz uma condicional pra adicional BRUTAL no dano. Poderia ser até "uma linha reta" nas 8 direções.
+Na tela de pós luta, quando tem muitos bichos (dungeon da snake dragon) a lista de inimigos está dando overflow.
+Achei a dungeon da snake dragon muito fácil.
+
+não sei se é pq eu já tinha grindado muito
+No covil do dragao, não dá pra saber q os itens de baú no chão são interativos.
+
+Idealmente vale até deixar mais explícito q os itens no chão SAO interativos.
+
+como por exemplo um hover/click dizendo oq eles são
+Peguei a quest dos ovos de dragao.
+
+Quem era o "owner" da quest MORREU.
+
+com isso, a quest ficou travada e não dá pra falhar nem completar ela.
+
+mesmo tendo os ovos de dragao
