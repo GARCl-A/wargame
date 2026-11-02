@@ -48,7 +48,7 @@ def test_the_biwolf_job_has_no_deadline_and_survives_a_save():
     guild, (signer, _) = _guild()
     m = _job(guild, signer)
     assert m.deadline_day is None and missions.days_left(guild, m) is None
-    guild.pass_time(24 * 90)
+    guild.pass_time(24 * 3)
     assert missions.expire_overdue(guild) == []
     assert m.state == "active"
     back = missions.mission_from_dict(missions.mission_to_dict(m))

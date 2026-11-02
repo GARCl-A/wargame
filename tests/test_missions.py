@@ -108,13 +108,22 @@ def test_missed_deadline_fails_the_mission_and_it_is_not_offered_again():
     assert missions.TANNER_HIDES.id not in {t.id for t in missions.offers_at(guild, "tanner")}
 
 
-def test_signers_death_leaves_the_mission_unreachable():
+def test_signers_death_hands_the_mission_to_the_groups_leader():
     guild, hunters, home = _guild_with_two_groups()
-    signer = hunters.members[0]
+    signer, heir = hunters.members
+    hunters.leader = signer
     m = missions.accept(guild, signer, missions.TANNER_HIDES)
+    heir.give_to_pack("1sqm Hide", 15)
     guild.remove_members([signer])
-    assert missions.progress(guild, m) == 0
-    assert not missions.can_turn_in(guild, m)
+    assert m.unit_uid == heir.uid
+    assert missions.can_turn_in(guild, m)
+
+
+def test_mission_fails_when_its_whole_group_dies():
+    guild, hunters, home = _guild_with_two_groups()
+    m = missions.accept(guild, hunters.members[0], missions.TANNER_HIDES)
+    guild.remove_members(list(hunters.members))
+    assert m.state == "failed"
 
 
 def test_market_stock_starts_at_each_items_target():

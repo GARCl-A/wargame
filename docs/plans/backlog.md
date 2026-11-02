@@ -56,11 +56,6 @@ the rest.
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
   today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Bug: the dragon-egg quest locks when its owner dies (playtest 2026-11-02).** The quest's owner died;
-  the quest can neither be completed (even holding the eggs) nor failed. Decide who holds a quest when its
-  owner dies (another member of the group delivers it, or it fails), then make both paths reachable and
-  test the dead owner with the eggs in another pack.
-
 - **Bug: Ribit's sheet is inconsistent (playtest 2026-11-02).** Recruited, he shows Work 4 but only *Brisk
   Hands* (`npcs/ribit.json` lists `carrier` and `brisk_hands`); the author expected *Brawny* too. Find which
   is wrong, the file or the sheet's Work count, then audit every `npcs/*.json` the same way (talents against

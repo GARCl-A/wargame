@@ -357,7 +357,8 @@ def accept(guild, unit, template):
 
 def _current_group(guild, mission):
     """Wherever `mission`'s unit is standing right now, or None if it's no
-    longer on the roster (permadeath -- the deal died with them)."""
+    longer on the roster (a save from before `Guild.remove_members` handed
+    the deal on)."""
     unit = next((u for u in guild.roster if u.uid == mission.unit_uid), None)
     return guild.group_of(unit) if unit is not None else None
 

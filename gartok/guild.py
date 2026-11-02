@@ -323,9 +323,18 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         dead = set(units)
         for g in list(self.groups):
             if any(u in dead for u in g.members):
+                gone = {u.uid for u in g.members if u in dead}
                 g.members = [u for u in g.members if u not in dead]
                 if g.empty:
                     self.groups.remove(g)
+                else:
+                    g.ensure_leader()
+                for m in self.missions:
+                    if m.state == "active" and m.unit_uid in gone:
+                        if g.empty:
+                            m.state, m.failed_day = "failed", self.clock.day
+                        else:
+                            m.unit_uid = g.leader.uid
         self._sync_leadership()
 
     def split_group(self, group, members, *, name=None, wagons=(), herd=()):
