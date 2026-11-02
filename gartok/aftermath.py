@@ -6,6 +6,8 @@ field); `web/report_session.py` reads it."""
 
 from dataclasses import dataclass, field
 
+from . import poisons
+
 
 @dataclass
 class Memorial:
@@ -14,7 +16,7 @@ class Memorial:
     portrait_id: object
     joined_day: int
     day: int
-    cause: str                       # "Killed in combat", "Starved to death"
+    cause: str                       # "Killed in combat", "Starved to death", "Died of Gut Rot"
     place: str | None = None
     killer: str | None = None        # who put them down, when a blow did
     line: str | None = None          # the log line of the fall, or how it came
@@ -41,6 +43,14 @@ def starved(unit, *, day, place=None):
     days = unit.unfed_days
     return memorial(unit, day=day, cause="Starved to death", place=place,
                     line=f"{days} day{'s' if days != 1 else ''} without a meal.")
+
+
+def collapsed(unit, attribute, *, day, place=None):
+    """A physical score eaten down to nothing: named for the worst poison on that score, else a wasting."""
+    eating = [poisons.get(pid) for pid in unit.poisons if poisons.get(pid).attribute == attribute]
+    worst = max(eating, key=lambda p: unit.poisons[p.id]["level"] * p.per_stack, default=None)
+    return memorial(unit, day=day, cause=f"Died of {worst.name}" if worst else "Wasted away", place=place,
+                    line=f"{attribute.capitalize()} fell to {getattr(unit, attribute)}.")
 
 
 @dataclass

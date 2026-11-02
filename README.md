@@ -62,7 +62,7 @@ gartok/
   matchup.py        (node, arena Bout) -> the opponents + the scenario for one fight
   unit.py           Unit = the persistent character (init, save/load, generation), built from mixins:
                     unit_hunger.py / unit_levels.py / unit_edit.py / unit_derive.py / unit_loadout.py / unit_poison.py
-  poisons.py        persistent poisons (Snake Venom, Spider Venom): levels, saves, Antidote
+  poisons.py        persistent poisons (Snake Venom, Spider Venom, Gut Rot): levels, saves, Antidote
   combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
   ai/               enemy squad AI (over actions/); alignment tempers the edges. `turn.take_turn` runs one turn

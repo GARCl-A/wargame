@@ -79,7 +79,7 @@ function doing(b) {
 function bandCard(b) {
   const isSel = b.gid === sel, cls = ["band", isSel ? "sel" : "", b.blocked ? "bad" : ""].join(" ");
   if (splitting === b.gid) return splitCard(b, cls);
-  const foot = `<div class="bfoot"><span class="${b.rations ? "" : "bad"}">${ico("action/eating")}${plural(b.rations, "ration")}</span>
+  const foot = `<div class="bfoot"><span class="${b.rations ? "" : "bad"}">${ico("action/eating")}${!b.rations && b.rotten ? `${b.rotten} (all rotten)` : plural(b.rations, "ration")}</span>
     <span>${ico("gui/wallet")}${esc(b.money)}</span><span class="tail">${b.trip ? `${b.trip.stops[0].hours} h to the next stop` : isSel ? "picked" : ""}</span></div>`;
   let actions = "";
   if (isSel && !b.blocked && (!b.busy || b.chip === "garrison")) {

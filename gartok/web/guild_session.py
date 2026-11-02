@@ -328,7 +328,7 @@ class GuildSession(Session):
             "gid": g.gid, "name": g.display_name, "custom": g.name or "",
             "locked": g.fight_due, "lock_tip": FIGHT_DUE_TIP if g.fight_due else "",
             "load": [round(g.total_load, 1), g.total_carry_normal, g.total_carry_max],
-            "rations": g.rations_days, "speed": f"{g.speed:g} m",
+            "rations": g.rations_days, "rotten": 0 if g.rations else g.rotten_rations, "speed": f"{g.speed:g} m",
             "over": g.overextension,
             "actions": self._actions(),
             "packs": [*(self._column(u) for u in g.members), *(self._animal_column(a) for a in g.herd)],

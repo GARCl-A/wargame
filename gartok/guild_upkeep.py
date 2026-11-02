@@ -49,6 +49,10 @@ class UpkeepMixin:
         """Meals in the packs across the whole roster, and on the wagons and animals."""
         return sum(u.rations for u in self.roster) + sum(g.carried_rations for g in self.groups)
 
+    @property
+    def rotten_rations(self):
+        return sum(u.rotten_rations for u in self.roster) + sum(g.carried_rotten for g in self.groups)
+
     def food_alert(self):
         """`(level, text, title)` for the map's food card, or None: "critical" with no food left,
         "warning" with about a day of it. Meals count rations across the whole guild. `title`
@@ -60,13 +64,16 @@ class UpkeepMixin:
             return ("warning", (f"Only {rations} meal{'s' * (rations != 1)} left for {mouths} "
                                 f"member{'s' * (mouths != 1)}: about a day of food. Buy more before the next order."),
                     "LOW ON FOOD")
+        rot = self.rotten_rations
+        rot_note = (f" Only {rot} portion{'s' * (rot != 1)} of Rotten Food is left: it is eaten only on the last "
+                    f"day before starving, and it makes the eater sick." if rot else "")
         hungry = self.hungry
         if not hungry:
-            return ("critical", "NO FOOD LEFT: the whole guild goes hungry at the next dawn. Buy food now.",
-                    "NO FOOD LEFT")
+            return ("critical", ("NO FOOD LEFT: the whole guild goes hungry at the next dawn. Buy food now."
+                                 + rot_note), "NO FOOD LEFT")
         days = max(1, data.STARVATION_DEATH_DAYS - max(u.unfed_days for u in hungry))
         return ("critical", (f"STARVING: {len(hungry)} member{'s' * (len(hungry) != 1)} hungry and no food left. "
-                             f"The first one dies in {days} day{'s' * (days != 1)}. Buy food now."),
+                             f"The first one dies in {days} day{'s' * (days != 1)}. Buy food now." + rot_note),
                 "STARVING")
 
     # ------------------------------------------------------------------ #
@@ -100,7 +107,10 @@ class UpkeepMixin:
             e, c = self._daily_upkeep()
             events += e
             all_casualties += c
-        
+        e, c = self.reap_collapsed()
+        events += e
+        all_casualties += c
+
         # Passive healing: every 8h of continuous rest (not busy) heals the unit.
         # Steady Pace lets a group that is working where it stands rest on the job.
         for g in self.groups:
@@ -158,6 +168,25 @@ class UpkeepMixin:
 
         recorder.day_tick(self)
         return events, all_casualties
+
+    def reap_collapsed(self):
+        """Whoever has a physical score (Str / Dex / Con) at zero or below dies where they stand: the
+        world half of `Combatant.check_collapse`. Poison, sickness and hunger all get here the same way.
+        -> `(events, dead)`, the dead already off the roster."""
+        events, dead = [], []
+        for u in self.roster:
+            attribute = u.zeroed_attribute
+            if attribute is None:
+                continue
+            g = self.group_of(u)
+            place = world.node(g.node).name if g is not None and g.node else None
+            u.memorial = aftermath.collapsed(u, attribute, day=self.clock.day, place=place)
+            recorder.death(u, "collapse", attribute=attribute)
+            events.append(f"{u.name} died: {u.memorial.cause}.")
+            dead.append(u)
+        if dead:
+            self.remove_members(dead)
+        return events, dead
 
     def _shared_larder(self, eater):
         """The packs `eater` may draw a ration from -- every group-mate
@@ -236,6 +265,7 @@ class UpkeepMixin:
         # mate drawing on the shared larder next can't take a ration its owner still
         # needs. Only then does the still-unfed hit the larder / the hunger step.
         was_sick = {u for u in self.roster if u.sick}
+        gut_rot = {u: u.poisons.get("gut_rot", {}).get("level", 0) for u in self.roster}
         for u, outcome in self._meal_pass(self.roster, self._shared_larder, board_fed).items():
             if outcome == "dead":
                 casualties.append(u)
@@ -250,6 +280,8 @@ class UpkeepMixin:
                 ate.append(u)
                 if u.sick and u not in was_sick:
                     events.append(f"{u.name} ate Rotten Food and fell sick.")
+                elif u.poisons.get("gut_rot", {}).get("level", 0) > gut_rot[u]:
+                    events.append(f"{u.name} ate Rotten Food again: Gut Rot {u.poisons['gut_rot']['level']}.")
         if ate:
             who = "1 member ate" if len(ate) == 1 else f"{len(ate)} members ate"
             events.append(f"{who} ({self.rations} rations left).")

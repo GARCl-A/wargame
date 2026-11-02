@@ -162,4 +162,8 @@ class Wagon(Creature):
 
     @property
     def rations(self):
-        return sum(qty for name, qty in self.stash.items if items.is_food(name.split(" (")[0]))
+        return sum(qty for name, qty in self.stash.items if items.is_fresh_food(name))
+
+    @property
+    def rotten_rations(self):
+        return sum(qty for name, qty in self.stash.items if items.is_rotten_food(name))

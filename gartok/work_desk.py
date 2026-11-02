@@ -14,6 +14,13 @@ class WorkDesk:
         self.guild, self.group, self.node = guild, group, node
         self.report = []                # what the last shift paid
 
+    def _rations_card(self):
+        g = self.group
+        if not g.rations and g.rotten_rations:
+            return {"label": "rations", "value": f"{g.rotten_rations} (all rotten)", "tone": "bad"}
+        return {"label": "rations", "value": f"{g.rations}  ·  {g.rations_days} d",
+                "tone": "bad" if g.rations_days < 1 else None}
+
     def _wage(self, hours):
         return sum(economy.work_pay(self.node.id, hours, economy.work_level(u, self.node.id))
                    for u in self.group.members)
@@ -22,8 +29,7 @@ class WorkDesk:
         return [{"label": f"wage for {SHIFTS[-1]} h", "value": fmt_money(self._wage(SHIFTS[-1])), "tone": "money"},
                 {"label": "party purse", "value": fmt_money(sum(u.money for u in self.group.members)),
                  "tone": "money"},
-                {"label": "rations", "value": f"{self.group.rations}  ·  {self.group.rations_days} d",
-                 "tone": "bad" if self.group.rations_days < 1 else None}]
+                self._rations_card()]
 
     def _crew_note(self, u, tool):
         level = economy.work_level(u, self.node.id)

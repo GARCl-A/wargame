@@ -29,6 +29,7 @@ class Poison:
 _LIST = [
     Poison("giant_spider_venom", "Giant Spider Venom", "dexterity"),
     Poison("snake_venom", "Snake Venom", "constitution"),
+    Poison("gut_rot", "Gut Rot", "constitution", per_stack=2, hours=168),   # a rotten meal on a sick stomach
 ]
 
 POISONS = {p.id: p for p in _LIST}

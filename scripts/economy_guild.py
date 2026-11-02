@@ -1109,20 +1109,21 @@ class MarketVisit:
         return before - sum(u.money for u in self.sim.members)
 
     def buy_food(self, target_days):
-        """Buy the cheapest food up to `target_days` of rations, each unit into whichever
-        pack has the most room, until the money, the shelf or the room runs out. A food covers
-        only the days before it spoils (the meals nearest to spoiling are eaten first), so a
+        """Buy the cheapest food up to `target_days` of rations, each unit into the pack holding
+        the least of that food (everyone eats their own pack first, so an uneven split rots), until
+        the money, the shelf or the room runs out. A food covers only the days before it spoils (the meals nearest to spoiling are eaten first), so a
         long trip takes the cheap food for its first days and what keeps for the rest, never dearer
-        than `TRIP_FOOD_PRICE`; what the shelves leave uncovered is the cheapest food, eaten stale."""
+        than `TRIP_FOOD_PRICE`. A food counts one day less than its shelf life: it is aged a night
+        before the first meal, and a meal that rots uneaten no longer counts as a ration."""
         sim = self.sim
         covered = sim.rations
         need = int(target_days * sim.mouths) - covered
-        passes = [(n, int(min(target_days, items.get(n).lifespan or target_days) * sim.mouths))
+        passes = [(n, int(min(target_days, (items.get(n).lifespan or target_days + 1) - 1) * sim.mouths))
                   for n in foods_by_price() if items.get(n).price <= TRIP_FOOD_PRICE]
         for name, keeps in passes + [(cheapest_food(), None)]:
             while need > 0 and (keeps is None or covered < keeps):
-                roomy = sorted(sim.members, key=lambda u: u.carry_max - u.load, reverse=True)
-                if sim.money < economy.buy_price(name, self.screen.deal) or not self.buy(roomy[0], name):
+                emptiest = sorted(sim.members, key=lambda u: (u.count_of(name), u.load - u.carry_max))
+                if sim.money < economy.buy_price(name, self.screen.deal) or not self.buy(emptiest[0], name):
                     break
                 need -= 1
                 covered += 1

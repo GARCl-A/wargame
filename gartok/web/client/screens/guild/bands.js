@@ -37,7 +37,7 @@ const Bands = (() => {
     const acts = B.actions.map(a => `<div class="ghost-btn ${a.on && !B.locked ? "" : "off"}" data-btn="${a.key}"${tip(a.tip)}>${ico(a.glyph)}${esc(a.label)}</div>`).join("");
     return `<div class="leather" id="bar"><div class="chips2">${B.chips.map(chip).join("")}</div><div class="vline"></div>
       <div class="metric ${l > n ? "bad" : tight ? "tight" : ""}"><span class="lbl">Band load</span><b>${l} <small>/ ${n} kg</small></b></div>
-      <div class="metric ${B.rations ? "" : "bad"}"><span class="lbl">Rations</span><b>${plural(B.rations, "day")}</b></div>
+      <div class="metric ${B.rations ? "" : "bad"}"><span class="lbl">Rations</span><b>${B.rotten ? `${B.rotten} (all rotten)` : plural(B.rations, "day")}</b></div>
       <div class="metric"><span class="lbl">Pace</span><b>${esc(B.speed)}</b></div>
       ${B.over ? `<div class="metric bad"${tip(`Past the leader's hold: −${B.over} mental defense`)}><span class="lbl">Over its hold</span><b>${B.over}</b></div>` : ""}
       <div class="acts">${acts}</div></div>`;

@@ -57,8 +57,8 @@ NORMAL, CAUTIOUS = "normal", "cautious"   # travel stances: Cautious trades XP a
 STANCES = (NORMAL, CAUTIOUS)
 
 
-def _food_in(pack):
-    return sum(qty for name, qty in pack if items.is_food(name.split(" (")[0]))
+def _food_in(pack, count=items.is_fresh_food):
+    return sum(qty for name, qty in pack if count(name))
 
 
 class Group:
@@ -172,6 +172,10 @@ class Group:
     def carried_rations(self):
         """Meals on the wagons and on the animals' backs."""
         return sum(_food_in(pack) for pack in self.food_stores())
+
+    @property
+    def carried_rotten(self):
+        return sum(_food_in(pack, items.is_rotten_food) for pack in self.food_stores())
 
     def food_stores(self):
         """Packs of food that belong to the group itself rather than a member:
@@ -351,6 +355,11 @@ class Group:
         """Meals sitting in the group's packs -- the shared larder every
         member here can draw from (see `Guild._shared_larder`)."""
         return sum(u.rations for u in self.members) + self.carried_rations
+
+    @property
+    def rotten_rations(self):
+        """Portions of Rotten Food in the group's packs: no meal, eaten only on the last day before death."""
+        return sum(u.rotten_rations for u in self.members) + self.carried_rotten
 
     @property
     def rations_days(self):

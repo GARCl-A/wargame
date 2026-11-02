@@ -479,6 +479,19 @@ def is_food(item_or_name: Any) -> bool:
     return item is not None and item.food
 
 
+ROTTEN_FOOD = "Rotten Food"
+
+
+def is_rotten_food(name: str) -> bool:
+    return name.split(" (")[0] == ROTTEN_FOOD
+
+
+def is_fresh_food(name: str) -> bool:
+    """A meal worth counting: food that is not Rotten Food (a stack's `Name (qty)` suffix is ignored)."""
+    base = name.split(" (")[0]
+    return base != ROTTEN_FOOD and is_food(base)
+
+
 def is_consumable(item_or_name: Any) -> bool:
     item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
     if item is None:

@@ -3,7 +3,7 @@
 Mixed into `unit.Unit`; see RULES.md (the Leshy "Autotroph" is exempt).
 """
 
-from . import data, items
+from . import data, items, poisons
 
 BLOOM_FRUIT = "Bloom Fruit"     # what a Treefolk with Bountiful Harvest bears: food that heals
 BLOOM_HEAL = (1, 4)
@@ -161,15 +161,23 @@ class HungerMixin:
         return "Fruit", 1
 
     def _digest(self, food):
-        """What a meal does past filling you: Rotten Food sickens, a Bloom Fruit heals."""
+        """What a meal does past filling you: Rotten Food sickens (and feeds Gut Rot once already sick),
+        a Bloom Fruit heals."""
         if food == "Rotten Food" and self._ability.id != "strong_stomach":
-            self.sick = True
-            self._apply_attributes()
+            if self.sick:
+                self.add_poison("gut_rot", poisons.get("gut_rot").base_dc)
+            else:
+                self.sick = True
+                self._apply_attributes()
         elif food == BLOOM_FRUIT:
             self.hp = min(self.hp_max, self.hp + data.roll(*BLOOM_HEAL))
 
     @property
     def rations(self):
         """Meals sitting in this character's pack."""
-        return sum(qty for name, qty in self._base_inventory
-                   if items.is_food(name.split(" (")[0]))
+        return sum(qty for name, qty in self._base_inventory if items.is_fresh_food(name))
+
+    @property
+    def rotten_rations(self):
+        """Portions of Rotten Food in this character's pack."""
+        return sum(qty for name, qty in self._base_inventory if items.is_rotten_food(name))

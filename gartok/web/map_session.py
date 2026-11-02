@@ -261,7 +261,7 @@ class MapSession(MapView, Session):
             "gid": g.gid, "name": g.display_name, "lead": g.leader.name if g.leader else "",
             "node": g.node, "at": at if isinstance(at, str) else list(at),
             "chip": chip, "tone": tone, "detail": self._order_status(g),
-            "kit": ", ".join(kit), "rations": g.rations, "money": fmt_money(g.money),
+            "kit": ", ".join(kit), "rations": g.rations, "rotten": g.rotten_rations, "money": fmt_money(g.money),
             "idle": self._is_idle(g), "blocked": g.fight_due, "busy": g.busy,
             "pace": world.hours(1, g.speed) * self._pace(g),
             "members": [self._member(u, g) for u in g.members],

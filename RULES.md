@@ -634,7 +634,9 @@ navigates toward the nearest map edge when it decides to flee.
 Constitution score reaches **0** (poison, sickness, a harsh race mod on a low roll),
 they fall to the ground **dying** — checked when a battle starts and whenever poison
 takes another point (`Combatant.check_collapse`). Hunger and encumbrance penalties
-act on the modifiers and do not count.
+act on the modifiers and do not count. Off the field the same score is fatal outright:
+`Guild.reap_collapsed` (run by `pass_time`, after the daily upkeep) removes anyone at zero, with a
+memorial naming the worst poison on that score ("Died of Gut Rot") or "Wasted away".
 
 ### Non-lethal blows 🟡
 
@@ -1267,7 +1269,9 @@ meal).
   icons: amber (*LOW ON FOOD*) when the whole guild holds no more than about a day of meals, red
   (*NO FOOD LEFT*) when none is left, and *STARVING* once someone is hungry, with the days until
   the first one starves (`data.STARVATION_DEATH_DAYS` minus the worst `unfed_days`). Hovering the
-  card gives the full line (how many are hungry, what to do). It takes no strip of its own.
+  card gives the full line (how many are hungry, what to do). It takes no strip of its own. Only
+  fresh food counts as a ration: with nothing fresh left but Rotten Food the card says so, and the
+  band card and the Work tab show "N (all rotten)".
 - **Rest** (the REST button on the map -- `orders.rest`, one group's order
   like travel or work): the selected group first **eats if it is hungry**
   (`Guild.eat_now_pass`, own pack then the shared larder; an animal already
@@ -1295,6 +1299,11 @@ meal).
 
   > The death trigger is `data.STARVATION_DEATH_DAYS = 4`.
 
+- **Rotten Food is not a ration.** It is eaten only on the last day before starving (4th meal
+  missed), resets the hunger and sickens the eater (`sick`: −4 Con, −2 to the rest). Eaten again
+  while already sick it adds a stack of **Gut Rot** (`poisons.py`, −2 Con a stack, 168 h a stack:
+  longer than the 4 days between such meals, so the stacks pile up instead of fading). At Con 0 the
+  character dies. The Medic cures sickness and Gut Rot together. Strong Stomach (Gnoll) is immune.
 - **Autotroph (Treefolk):** photosynthesises — never eats, never starves.
 - Food is for sale at the Farm (`Meat` 5c, `Potato` 3c: `economy.PRICES`).
 - Eating/dying **re-derives** the character's attributes, so the sheet, the guild
@@ -1486,7 +1495,9 @@ race itself has none). Both work the same way:
   **Success** sheds one stack now (restarting the clock for the next), so a single
   stack clears on the spot instead of waiting 24 h. **Failure** burns the dose. Either
   way, **one Antidote per character per 24 h** (`Unit.antidote_cooldown`).
-- No racial immunities yet. The poisoned-oil weapon coating is future work, on the
+- **Gut Rot** is the third poison, not bitten but eaten: a rotten meal on a sick stomach (see
+  *Hunger*) adds a stack of −2 Constitution that wears off a stack every **168 h**.
+- No racial immunities to venom yet. The poisoned-oil weapon coating is future work, on the
   same registry.
 
 ### The Apothecary: brewing and foraging 🟡

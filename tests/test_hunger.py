@@ -408,3 +408,123 @@ def test_the_starving_alert_counts_the_days_to_the_first_death():
     assert level == "critical" and "1 member hungry" in text and "dies in 3 days" in text and title == "STARVING"
     crew[1].unfed_days = 3
     assert "2 members hungry" in guild.food_alert()[1] and "dies in 1 day." in guild.food_alert()[1]
+
+
+def _guild_holding(*packs):
+    from gartok.guild import Guild
+    from tests.helpers import standard_unit
+    crew = [standard_unit() for _ in packs]
+    for u, pack in zip(crew, packs):
+        u._base_inventory = packed(pack)
+    return Guild(list(crew), node="city"), crew
+
+
+def test_rotten_food_is_not_a_ration_and_a_crew_holding_only_it_gets_a_critical_alert():
+    guild, crew = _guild_holding(["Rotten Food"] * 3, ["Rotten Food"] * 2)
+    assert crew[0].rations == 0 and crew[0].rotten_rations == 3
+    assert guild.rations == 0 and guild.rotten_rations == 5
+    level, text, title = guild.food_alert()
+    assert level == "critical" and title == "NO FOOD LEFT"
+    assert "5 portions of Rotten Food" in text
+
+
+def test_fresh_food_beside_rotten_counts_only_the_fresh():
+    guild, crew = _guild_holding(["Potato"] * 4 + ["Rotten Food"] * 6, ["Potato"] * 4)
+    assert guild.rations == 8 and guild.rotten_rations == 6
+    assert guild.food_alert() is None
+
+
+def test_the_rotten_food_on_a_wagon_is_not_a_carried_ration():
+    from gartok.group import Group
+    from gartok.wagon import Wagon
+    from gartok.unit_loadout import stack_add
+    from tests.helpers import standard_unit
+    wagon = Wagon("Cart")
+    stack_add(wagon.stash.items, "Potato", 2)
+    stack_add(wagon.stash.items, "Rotten Food", 5)
+    g = Group([standard_unit()], wagons=[wagon])
+    assert wagon.rations == 2 and wagon.rotten_rations == 5
+    assert g.carried_rations == 2 and g.carried_rotten == 5
+    assert g.rations == 2 and g.rotten_rations == 5
+
+
+def test_the_work_tab_says_all_rotten_when_only_rotten_food_is_left():
+    from gartok.group import Group
+    from gartok.work_desk import WorkDesk
+    guild, crew = _guild_holding(["Rotten Food"] * 4)
+    desk = WorkDesk(guild, Group(list(crew), node="city"), None)
+    card = desk._rations_card()
+    assert card["value"] == "4 (all rotten)" and card["tone"] == "bad"
+
+
+def _rot_eater(**kw):
+    from tests.helpers import standard_unit
+    u = standard_unit()
+    for k, v in kw.items():
+        setattr(u, k, v)
+    return u
+
+
+def test_the_first_rotten_meal_sickens_and_the_next_adds_a_stack_of_gut_rot():
+    u = _rot_eater()
+    u._digest("Rotten Food")
+    assert u.sick and not u.poisons and u.constitution == 6          # 10 - 4 for the sickness
+    u._digest("Rotten Food")
+    assert u.poisons["gut_rot"]["level"] == 1 and u.constitution == 4
+    u._digest("Rotten Food")
+    assert u.poisons["gut_rot"]["level"] == 2 and u.constitution == 2
+    assert u.poison_label.startswith("Gut Rot 2")
+
+
+def test_strong_stomach_eats_rotten_food_without_sickness_or_gut_rot():
+    u = _rot_eater()
+    u.set_race("Gnoll")
+    assert u.ability.id == "strong_stomach"
+    for _ in range(3):
+        u._digest("Rotten Food")
+    assert not u.sick and not u.poisons
+
+
+def test_gut_rot_holds_through_the_four_days_between_rotten_meals_and_wears_off_in_a_week():
+    u = _rot_eater(sick=True)
+    u.add_poison("gut_rot", 11)
+    u.tick_poison(96)
+    assert u.poisons["gut_rot"]["level"] == 1
+    u.add_poison("gut_rot", 11)                       # the next rotten meal, four days on
+    u.tick_poison(96)
+    assert u.poisons["gut_rot"]["level"] == 2         # 96 h does not shed a stack, so they pile up
+    u.tick_poison(72)
+    assert u.poisons["gut_rot"]["level"] == 1
+    u.tick_poison(168)
+    assert not u.poisons
+
+
+def test_a_rotten_meal_in_the_daily_upkeep_names_the_gut_rot():
+    guild, (u,) = _guild_holding(["Rotten Food"])
+    u.sick = True
+    u._apply_attributes()
+    u.unfed_days = data.STARVATION_DEATH_DAYS - 1
+    events, _ = guild.pass_time(24, busy=[u])
+    assert u.poisons["gut_rot"]["level"] == 1
+    assert any("Gut Rot 1" in ev for ev in events)
+
+
+def test_a_unit_whose_constitution_reaches_zero_dies_in_the_world_with_a_memorial():
+    guild, crew = _guild_holding([], [])
+    victim, survivor = crew
+    victim.sick = True
+    for _ in range(3):
+        victim.add_poison("gut_rot", 11)              # 10 - 4 - 6 = 0
+    assert victim.zeroed_attribute == "constitution"
+    events, dead = guild.pass_time(1)
+    assert dead == [victim] and victim not in guild.roster and survivor in guild.roster
+    assert victim.memorial.cause == "Died of Gut Rot"
+    assert any("Died of Gut Rot" in ev for ev in events)
+
+
+def test_a_wasting_with_no_poison_is_still_a_death_and_the_last_member_wipes_the_guild():
+    guild, crew = _guild_holding([])
+    crew[0].base_attributes["strength"] = 0
+    crew[0]._apply_attributes()
+    events, dead = guild.pass_time(1)
+    assert dead == crew and guild.empty and crew[0].memorial.cause == "Wasted away"
