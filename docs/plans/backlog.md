@@ -56,6 +56,34 @@ the rest.
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
   today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
+- **Bug: Rotten Food counts as a ration, so a guild with food in the pack starves (playtest DK 2026-11-01).**
+  `recordings/2026-11-01/DK/2fed6b7a/play.jsonl`, days 33-48: `rations` sat at 12 for four days, then fell
+  to 9, and so on, while the crew's HP dropped to 1 (hungry, -4 CON). Cause (reproduced): `UpkeepMixin.rations`
+  / `Unit.rations` count any `items.is_food`, `Rotten Food` included, but `_meal_pass` only eats it on the
+  last day before death (`allow_rotten` in `consume_daily_food`), so the guild goes 3 hungry days for each
+  sick meal. The food card (`food_alert`), the map and the recorder all say "fed" meanwhile. That is also
+  Johann's "5 shifts of 16 h cost one ration" and "more potatoes than they should last" (Potato rots
+  in 7 days). Work shifts themselves are right (3 x 16 h per 2 days, one meal a day). Fix: rations
+  (`Unit`, `Group.carried_rations`, `food_alert`, recorder, the shop's days-of-food) count fresh food
+  only; a pack with nothing but Rotten Food is a "buy food now" case, not a silent one: the Rations card on the map and the Work tab's rations row say "N (all
+  rotten)" in the bad tone when nothing fresh is left. Test: a crew holding only Rotten Food has
+  `rations == 0` and a "critical" alert.
+
+- **A log of what happened while the days passed (Johann, 2026-11-01).** Today the lines of a jump
+  (meals eaten, food rotted, hunger, purchases) reach the map as one "Since the last order" card (last
+  12 lines, click to put it away) and are gone: `MapSession.state` drains `notices`, and the guild
+  screen's Notices are the charter's, not a history. Keep a bounded, per-guild list of the day's events
+  (saved, or at least kept for the session) with a tab or button to reread it. Size once the card
+  decides how much to keep.
+
+- **Bug: the Mine's Gathering shift throws the player back to the map with nothing shown (playtest DK
+  2026-11-01).** The clock does run (author and Johann checked), but
+  `HubSession.gather` sends the band to the map (`map.game.open(map)`) and the Work tab, by
+  contrast, stays up and prints `report` (`_spent`). The comment there ("as pygame's does") is stale
+  since pygame left the game. Move `gather` onto `_spent("gather", tab)` like `work`, show what the shift
+  found ("X worked 16 h, level N, found 2 Stone") in a `GatherTab.report`, and drop the stale comment.
+  Test: a gathering shift answers with the gather tab and a non-empty report.
+
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
   game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
@@ -589,48 +617,9 @@ has one "Enter" button and its functions are tabs inside.
   Not for sale at the Market (author's call). Decide the source: a lair pile, a mission reward, a rare
   drop from a given foe, or a temple quest. Until then the rite cannot start in a new game.
 
-
-==============
-
-Erros encontrados nos recordings de 01/11 na pasta "DK"
-
-"""
-[21:38, 01/11/2026] Johann: Seria legal ter um log das ações que rolam
-Pq eu comprei umas 30 batatas agora
-[21:38, 01/11/2026] Johann: E fui clicando no lumber pra juntar uma grana inicial
-[21:39, 01/11/2026] Johann: E teve uns dias que consegui fazer uns 3-4 trabalhos de 16h
-[21:39, 01/11/2026] Johann: Sem gastar ração
-[21:39, 01/11/2026] Johann: Não sei se foi um bug ou não
-[21:40, 01/11/2026] Lucas Garcia: mas tem dia q da pra fazer 2 de 16h
-[21:40, 01/11/2026] Lucas Garcia: tip9
-[21:40, 01/11/2026] Lucas Garcia: começa as 00h e trabalha até às 16h (não gasta comida) aí trabalha 16h e gasta comida.
-[21:42, 01/11/2026] Johann: Ah sim, o problema é que senti que teve dia que foi 3 ou 4 vezes
-[21:42, 01/11/2026] Johann: Não bate o cálculo kk
-[21:52, 01/11/2026] Johann: Yup, acabei de fazer 5 tasks de trabalho de 16h seguidos, consumiu só uma ração
-[21:53, 01/11/2026] Johann: Considerando que eu tinha até mais batata do que elas deviam durar, talvez tenha um bug com a comida tbm. Ainda não tenho dados suficientes
-"""
-
-"""
-Lutar na arena não gasta tempo
-"""
-
-"""
-[22:09, 01/11/2026] Johann: Por acaso, outro bug interessante
-[22:10, 01/11/2026] Johann: Comprei a licença da mina
-[22:10, 01/11/2026] Johann: Clico pra minerar
-[22:10, 01/11/2026] Johann: Ele só sai da tela, e volta pro mapa mundi
-[22:10, 01/11/2026] Lucas Garcia: tu tem picareta?
-[22:10, 01/11/2026] Lucas Garcia: Ele só sai da tela, e volta pro mapa mundi
-tá com 1 grupo só?
-[22:10, 01/11/2026] Johann: 1 grupo só
-Acabei de ver aqui
-[22:10, 01/11/2026] Johann: Ele minera
-[22:11, 01/11/2026] Johann: Só fica meio estranhozinho pq não tem nada mostrando que minerou
-[22:12, 01/11/2026] Lucas Garcia: Só fica meio estranhozinho pq não tem nada mostrando que minerou
-q sinistro. deveria, na tela de mina, aparecer tipo fulano worked x/y h de XP lv tal
-[22:12, 01/11/2026] Lucas Garcia: e collected X item
-[22:12, 01/11/2026] Lucas Garcia: mas o sair da tela de mina é q é a doidera
-[22:13, 01/11/2026] Johann: É, não aparece nada
-[22:13, 01/11/2026] Johann: Funciona, eu só não sei se tá passando o tempo direito
-[22:13, 01/11/2026] Johann: Tá simm
-"""
+- **Does an arena bout cost hours? (author 2026-11-01)** A bout advances the clock only by its rounds
+  (6 s each, `campaign.py`), which is about a minute: a squad can chain bouts the same day with no
+  meal or rest in between. That is plausible for the fight itself; the open question is whether the
+  preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
+  and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
+  playtest shows whether bout chains break anything.
