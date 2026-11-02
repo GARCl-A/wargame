@@ -56,6 +56,41 @@ the rest.
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
   today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
+- **Bug: the dragon-egg quest locks when its owner dies (playtest 2026-11-02).** The quest's owner died;
+  the quest can neither be completed (even holding the eggs) nor failed. Decide who holds a quest when its
+  owner dies (another member of the group delivers it, or it fails), then make both paths reachable and
+  test the dead owner with the eggs in another pack.
+
+- **Bug: Ribit's sheet is inconsistent (playtest 2026-11-02).** Recruited, he shows Work 4 but only *Brisk
+  Hands* (`npcs/ribit.json` lists `carrier` and `brisk_hands`); the author expected *Brawny* too. Find which
+  is wrong, the file or the sheet's Work count, then audit every `npcs/*.json` the same way (talents against
+  prerequisites and the level's talent points) with a test that fails on an inconsistent authored NPC.
+
+- **Bug: an archer with no arrows shows no warning, and carries several quivers (playtest 2026-11-02).**
+  The Arvo with a bow equipped is out of arrows and nothing on the sheet or the action bar says so; the pack
+  held several quivers (check whether empty quivers stack, are all counted, or are the wrong item). Name the
+  missing ammunition on the disabled Shoot and on the sheet. Test: bow with only empty quivers.
+
+- **Bug: the Claim cannot use the carts' items to build the furnace (playtest 2026-11-02).** Building
+  reads only the members' packs, not the carts' stock. Make the build draw from the same stock the Claim's
+  other crafts do and test it.
+
+- **Claim: the lumber licence and the Claim overlap, and nobody knows who gathers (playtest 2026-11-02).**
+  The Claim now collides with the Lumberyard licence on lumber collection, and the screen does not say who
+  in the Claim is gathering wood or what that takes. Pick one owner of the rule, show per member
+  whether they gather and the requirement they lack. Principle (author): every gather activity should have
+  the gather tab.
+
+- **Overflows and unclear counters (playtest 2026-11-02).** (1) Loot screen: the text of what went to each
+  inventory overflows. (2) Post-fight screen: with many foes (the Snake Dragon dungeon) the enemy list
+  overflows. (3) Wilds garrison: when holding for 10 days, the time left is not clear, and the *advance 24 h*
+  button runs past it; show days left and stop the advance at the end. (4) *Gear & Quests* and *Campfire*
+  buttons need no descriptive text, an icon alone with a tooltip is enough.
+
+- **The floor items of a dungeon do not look interactive (playtest 2026-11-02).** In the dragon's lair a
+  chest on the floor cannot be told from decor. Make interactive ground objects explicit (a marker or
+  highlight) and say what they are on hover or click.
+
 - **A log of what happened while the days passed (Johann, 2026-11-01).** Today the lines of a jump
   (meals eaten, food rotted, hunger, purchases) reach the map as one "Since the last order" card (last
   12 lines, click to put it away) and are gone: `MapSession.state` drains `notices`, and the guild
@@ -315,6 +350,17 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 # Playtest notes
 
+## 2026-11-02
+
+Recordings of the session (saves and combat logs) are in the repo with the notes' commit; the fights named
+below can be rebuilt from them.
+
+- **Is the two-step charge worth it? (author 2026-11-02, doubt).** Having one charge with two different
+  values feels more of a hindrance than interesting. Review the rule against the Aurochs fight (day 112) and
+  decide: keep, merge into one value, or drop. Measure with `scripts/combat_pairs.py`.
+- **The Snake Dragon dungeon was too easy (author 2026-11-02).** Possibly because the squad had grinded
+  before. Check the encounter's level against the squad's on entry in the headless set before changing it.
+
 ## 2026-11-01
 
 - **Vocations: difficulty or build? (author 2026-11-01).** If vocations stay, is playing Marsh objectively
@@ -325,6 +371,11 @@ Not tasks and not yet decisions: premises the author wants to think over before 
   flees (day 17: a wolf pushed, ran off and came back; it may push only to cut the flank when it could just
   walk away). Task, before any morale work because it touches much of `ai/`: review the priority of Stabilise
   and of push-and-flee, in a headless fight set.
+  Playtest 2026-11-02: push only makes sense to flee if, after the push, fleeing is possible; and the Aurochs
+  (day 112) pushed a character and then used Defend.
+- **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the
+  exit while it can, instead of ordering each one. Needs the flee rules read first (what blocks a flee,
+  who is held) and the AI's flee path reused. End-to-end: web button, `ai/`, tests.
 - **Morale: flee or surrender (author 2026-11-01, future).** Enemies and the player's units enter a
   "fleeing" mode or surrender. Think the design (a morale number, what breaks it, what a fleeing unit does,
   prisoners) after the AI review above. It ties to *Prisoners*.
@@ -550,6 +601,10 @@ has one "Enter" button and its functions are tabs inside.
      (`Demoralized`: cannot move, lower defenses). Open: the compound talents' shape (no cross-tree node
      yet, see *Notes to remember -> a talent with more than one prerequisite*) and whether it also needs the holder
      to be able to see the beast for a turn (the existing sight check already does).
+  4. *Archery (playtest 2026-11-02):* a combat talent giving +1 damage with a bow; and a second that
+     adds a conditional *Brutal* to the blow, possibly "in a straight line" along the 8 directions (the
+     shot must travel straight). The *Brutal N* keyword exists (`keywords.py`); the open point is the
+     condition and the tier.
 
 - **Assess grows into an Intelligence combat tree (author 2026-10-31).** Study the foe, and what you
   know grants crit and to-hit: a turn spent investigating before the beating is a real option. Not built
@@ -602,61 +657,3 @@ has one "Enter" button and its functions are tabs inside.
   preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
   and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
   playtest shows whether bout chains break anything.
-
-
-
-=========================
-
-RAW PLAYTEST NOTES 02-11-2026 - GUILDA SEMENZADA
-
-
-O ribit, dos ribit brothers tá com a ficha inconsistente.
-
-eu recrute ele e ele tem work 4, mas ele só tem brisk hands. Ao que tudo indica, ele era pra ter "Brawny" tbm, mas não tem.
-
-Vale checar os outros NPCs se a ficha deles tá consistente.
-Os Botões "Gear e Quests" & "Campfire".
-
-Não precisam de texto descritivo, poderia ser só haver.
-Textos de loot na tela de loot tá dando overflor. mostrando oq q foi pra cada inventário
-Durante a etapa de garriss9n da wilds, quando tem q segurar 10 dias não ficam muito claro quanto tempo falta.
-
-E ainda foge do tempo por conta do botão de avançar 24h
-A claim agora tem um conflito com a licença do lumberyard na coleta de lumber.  As duas coisas estão meio que se sobrepondo.
-
-
-Eai um outro ponto, não fica claro quem, no claim tá coletando madeira ou não. Quais são os pré requisitos pra isso, nem nada. 
-
-Tecnicamente, toda atividade de gather, deveria ter a aba de gather né
-Na claim, não dá pra usar os itens que estão nas carroças pra construir o forno.
-Não tá mostrando q o personagem com arvo equipado está sem flechas. 
-
-Acho inclusive q ele tava com VARIAS aljavas no inventário
-Adicionar um botão de "auto flee"
-A lógica de empurrar pra fugir só faz sentido se, depois de empurrar, for possível fugir.
-
-Na luta contra o Aurochs (dia 112), ele tava empurrando um personagem e depois usando defend.
-Eu tô em dúvida se a regra de carga em 2 etapas tá fazendo sentido.
-
-Tô com a sensacao 1 ter 2 valores de carga diferentes tá mais atrapalhando q sendo interessante.
-Talento de combate pra aumentar o dano com arco.
-Talento de combate pra aumentar o dano com arco.
-Um talento q aumenta em +1 dano com arco.
-
-E um talento que faz uma condicional pra adicional BRUTAL no dano. Poderia ser até "uma linha reta" nas 8 direções.
-Na tela de pós luta, quando tem muitos bichos (dungeon da snake dragon) a lista de inimigos está dando overflow.
-Achei a dungeon da snake dragon muito fácil.
-
-não sei se é pq eu já tinha grindado muito
-No covil do dragao, não dá pra saber q os itens de baú no chão são interativos.
-
-Idealmente vale até deixar mais explícito q os itens no chão SAO interativos.
-
-como por exemplo um hover/click dizendo oq eles são
-Peguei a quest dos ovos de dragao.
-
-Quem era o "owner" da quest MORREU.
-
-com isso, a quest ficou travada e não dá pra falhar nem completar ela.
-
-mesmo tendo os ovos de dragao
