@@ -652,3 +652,25 @@ has one "Enter" button and its functions are tabs inside.
   preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
   and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
   playtest shows whether bout chains break anything.
+
+
+====
+
+Raw playtest notes 02-11-2026 -guilda semenzada
+
+[14:23, 02/11/2026] Lucas Garcia: Melhorar o tutorial de combate, explicando as ações.
+
+Melhorar a exibição visual das condições aplicadas aos personagens no combate.
+[15:09, 02/11/2026] Lucas Garcia: Na taverna se eu tenho 2 pessoas q podem recrutar, mas uma delas falha.
+
+fica mostrando "rejected this week" mesmo quando ainda é razoável
+[15:14, 02/11/2026] Lucas Garcia: Na tela de craft não mostra a contagem de racoes.
+[15:16, 02/11/2026] Lucas Garcia: A glaive tem, por base, +1 de alcance? Se sim, isso não é mostrado na wiki. Só a ação extra dela.
+[15:25, 02/11/2026] Lucas Garcia: eu acho que a picareta parece ser simplesmente a melhor arma de 35 de Gold POR MUITO. ela é uma máquina de dar dano pq a condicional dela é o alvo usar armadura é qualquer inimigo (humano) do lv2 pra frente está de armadura.
+
+Isso é apenas MAIS UM insight a respeito da análise das armas.
+[15:31, 02/11/2026] Lucas Garcia: No inventário, não dá pra saber individualmente, a validade de cada comida.
+[16:42, 02/11/2026] Lucas Garcia: Quest no apotecario pedindo por glândulas de veneno.
+[16:49, 02/11/2026] Lucas Garcia: Na tela de morte, fica texto sobrepondo.
+[16:57, 02/11/2026] Lucas Garcia: A missão de treinar o recruta, lá no ledger hold, não deve estar aparecendo o "!" no mapa. Além disso, ela era pra estar na aba "jobs" não junto do work da supply run.
+[17:27, 02/11/2026] Lucas Garcia: Perdi uma luta durante uma caça na Wilds. Aí quando fui dar load no save antes dela, a luta não tava carregada. E, por consequência disso a ação da wilds tbm não. ou seja, o estado do save não representava o estado do jogo real
