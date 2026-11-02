@@ -63,11 +63,32 @@ the rest.
   last day before death (`allow_rotten` in `consume_daily_food`), so the guild goes 3 hungry days for each
   sick meal. The food card (`food_alert`), the map and the recorder all say "fed" meanwhile. That is also
   Johann's "5 shifts of 16 h cost one ration" and "more potatoes than they should last" (Potato rots
-  in 7 days). Work shifts themselves are right (3 x 16 h per 2 days, one meal a day). Fix: rations
-  (`Unit`, `Group.carried_rations`, `food_alert`, recorder, the shop's days-of-food) count fresh food
-  only; a pack with nothing but Rotten Food is a "buy food now" case, not a silent one: the Rations card on the map and the Work tab's rations row say "N (all
-  rotten)" in the bad tone when nothing fresh is left. Test: a crew holding only Rotten Food has
-  `rations == 0` and a "critical" alert.
+  in 7 days). Work shifts themselves are right (3 x 16 h per 2 days, one meal a day).
+  Design hole behind it (author 2026-11-02): Rotten Food is free (`price=0`) and one rotten meal resets
+  `unfed_days`, so a crew lives forever on one sick meal every 4 days. Fix, three parts:
+  1. **Count fresh food only.** One predicate in `items.py` (food and not `Rotten Food`) replaces the three
+     copies of `is_food(name.split(" (")[0])` (`HungerMixin.rations`, `Wagon.rations`, `group._food_in`),
+     plus a parallel `rotten_rations` on unit, wagon, group and guild. `rations` (`Group.carried_rations`,
+     `food_alert`, recorder, the shop's days-of-food) then ignores it; a pack with nothing but Rotten Food is
+     a "buy food now" case: `food_alert` is "critical" and says only rotten food is left (it is eaten
+     only on the last day before death), and the Rations card on the map and the Work tab's rations row
+     say "N (all rotten)" in the bad tone (N = rotten portions). `rite.board` now feeds and charges
+     someone holding only rotten food: intended.
+  2. **Gut Rot.** Eating Rotten Food while already `sick` adds a stack of a new poison in `poisons.py`
+     (reuses `unit_poison.py`): `attribute="constitution"`, `per_stack=2`, `hours=168`. 168 h, not 96 h:
+     a stack's clock restarts on every dose and the rotten meal comes at most every 4 days (96 h), so a
+     96 h decay ties and the crew sits at Gut Rot 1 forever. `strong_stomach` stays immune. Label
+     "Gut Rot N"; the medic cures it with the rest (`medic.quote` / `cure`), which is the real cost of
+     living on rot. CON 10 dies on the 3rd stack (~16 days), CON 14 on the 5th.
+  3. **CON <= 0 kills in the world.** Today `Unit.zeroed_attribute` only drops a `Combatant` in a fight
+     (`check_collapse`). `Guild.reap_collapsed()` called by `campaign.advance` after each step (the one
+     clock) removes anyone with a physical attribute at 0 or less, through `recorder.death` and an
+     `aftermath` memorial for the cause ("died of Gut Rot" / the poison's name), covering every poison,
+     not only this one. A unit that leaves a fight at CON 0 dies on the next step.
+  Tests: a crew holding only Rotten Food has `rations == 0`, `rotten_rations > 0` and a "critical"
+  alert; the second rotten meal adds Gut Rot 1 (the first only sickens), `strong_stomach` adds none, the
+  stack does not decay in 96 h and does in 168 h; a unit at CON 0 is removed by `advance` with a memorial.
+  After it, run `-m balance` and `scripts/economy_report.py`: the sims see less food.
 
 - **A log of what happened while the days passed (Johann, 2026-11-01).** Today the lines of a jump
   (meals eaten, food rotted, hunger, purchases) reach the map as one "Since the last order" card (last
