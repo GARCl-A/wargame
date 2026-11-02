@@ -39,6 +39,7 @@ class GatherDesk:
     def __init__(self, guild, group, node):
         self.guild, self.group, self.node = guild, group, node
         self.notice = None
+        self.report = []                # what the last shift found
 
     def buy_licence(self):
         if self.guild.buy_licence(self.node.id, self.group):

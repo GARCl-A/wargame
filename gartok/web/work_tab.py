@@ -51,4 +51,5 @@ class GatherTab(GatherDesk):
                           for n, pct in gather.drops(node)],
                 "glyph": item_icon.glyph(main), "shifts": shifts, "crew": crew, "day": gather.DAY_HOURS,
                 "payback": self._payback_line(price), "notice": notice, "tool": tool,
-                "level": gather.LEVEL[node], "guards": guards, "can": len(guards) < len(self.group.members)}
+                "level": gather.LEVEL[node], "guards": guards, "can": len(guards) < len(self.group.members),
+                "report": self.report}

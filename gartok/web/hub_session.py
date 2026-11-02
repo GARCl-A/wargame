@@ -504,11 +504,11 @@ class HubSession(Session):
         return self.state()
 
     def gather(self, hours):
-        """A gathering shift: the band goes back to the map and the clock runs there, as pygame's does."""
-        self._tab("gather", "_gather", GatherTab)
+        """A gathering shift: the clock runs as the map's would (`_spent`), and the tab stays up with
+        what the shift found when its end is all that stopped it."""
+        tab = self.gathering
         self._shift(hours, gather=True)
-        self.map.game.open(self.map)
-        return self.map._after_order()
+        return self._spent("gather", tab)
 
     def patient(self, uid):
         self.ward.pick(uid)

@@ -1,7 +1,6 @@
 // A work node's two tabs: WORK (the crew on leather with each one's tool and wage, the shifts on paper)
 // and GATHERING (the licence and what the ground gives on leather, the shifts that keep the haul on
-// paper). A paid shift runs the clock and stays here with what it paid; a gathering shift goes back to
-// the map, where the clock runs.
+// paper). A shift runs the clock and stays here with what it paid or found.
 "use strict";
 
 const Labor = (() => {
@@ -47,6 +46,8 @@ const Labor = (() => {
       : `<p class="warn">${names} ${G.guards.length > 1 ? "have" : "has"} no ${tool}: ${G.guards.length > 1 ? "they stand" : "stands"} guard, with no haul and no work XP. Split them off on the map if they should earn elsewhere.</p>`;
     const drops = G.drops.map(d => `<div class="it">${ico(d.glyph)}<div class="n">${esc(d.name)} <small>sells for ${money(d.sell)}</small></div>
       <span class="q">${d.pct}%</span><span></span></div>`).join("");
+    const report = G.report.length
+      ? `<div class="report"><div class="kicker">The last shift</div>${G.report.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
     $("body").innerHTML = `<div class="leather lcol"><div class="lbl">The licence</div>
         <p class="hint">One licence covers the whole guild.</p>${status}
         <div class="sec"><span class="lbl">The crew</span></div><p class="hint">Only those with their own ${tool} gather, each keeping what they find and learning up to work level ${G.level + 1}; the rest stand guard.</p>
@@ -56,13 +57,13 @@ const Labor = (() => {
         <div class="shifts">${G.shifts.map(s => shiftRow(G.glyph, s, `${s.risk}% ambush`,
           "~" + money(s.haul), "", "gather", "Gather", G.held && G.can)).join("")}</div>
         ${G.held ? "" : `<p class="aside">Gathering needs the licence.</p>`}
-        <div class="ledgerfoot">${guards}<p class="warn">A pack may ambush the crew: the fight must be won to keep the haul.</p><p>${esc(G.payback)}</p></div></div>`;
+        <div class="ledgerfoot">${guards}<p class="warn">A pack may ambush the crew: the fight must be won to keep the haul.</p><p>${esc(G.payback)}</p></div>${report}</div>`;
     toast(G.notice);
   }
 
   async function act(verb, body) {
     const r = await post(verb, body);
-    if (r && (verb === "work" || verb === "licence")) Sound.play("coins");
+    if (r && (verb === "work" || verb === "gather" || verb === "licence")) Sound.play("coins");
   }
 
   $("body").addEventListener("click", e => {

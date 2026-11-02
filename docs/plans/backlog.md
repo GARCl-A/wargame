@@ -76,14 +76,6 @@ the rest.
   (saved, or at least kept for the session) with a tab or button to reread it. Size once the card
   decides how much to keep.
 
-- **Bug: the Mine's Gathering shift throws the player back to the map with nothing shown (playtest DK
-  2026-11-01).** The clock does run (author and Johann checked), but
-  `HubSession.gather` sends the band to the map (`map.game.open(map)`) and the Work tab, by
-  contrast, stays up and prints `report` (`_spent`). The comment there ("as pygame's does") is stale
-  since pygame left the game. Move `gather` onto `_spent("gather", tab)` like `work`, show what the shift
-  found ("X worked 16 h, level N, found 2 Stone") in a `GatherTab.report`, and drop the stale comment.
-  Test: a gathering shift answers with the gather tab and a non-empty report.
-
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
   game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
