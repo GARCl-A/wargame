@@ -1,0 +1,179 @@
+{"e":"session","t":0,"members":3,"money":92,"food_days":0.0,"node":"city"}
+{"e":"order","t":0,"members":3,"money":92,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"city","dest":"tanner","hours":0.75,"size":3}
+{"e":"buy","t":2700,"members":3,"money":72,"food_days":0.0,"node":"tanner","item":"Leather Jerkin","qty":1,"price":20,"zone":"armor"}
+{"e":"order","t":2700,"members":3,"money":72,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tanner","dest":"lumber_yard","hours":0.75,"size":3}
+{"e":"buy","t":10800,"members":3,"money":60,"food_days":1.0,"node":"lumber_yard","item":"Fruit","qty":3,"price":4,"zone":"pack"}
+{"e":"buy","t":10800,"members":3,"money":48,"food_days":2.0,"node":"lumber_yard","item":"Fruit","qty":3,"price":4,"zone":"pack"}
+{"e":"buy","t":10800,"members":3,"money":36,"food_days":3.0,"node":"lumber_yard","item":"Fruit","qty":3,"price":4,"zone":"pack"}
+{"e":"order","t":10800,"members":3,"money":36,"food_days":3.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"city","hours":1.5,"size":3}
+{"e":"order","t":16200,"members":3,"money":36,"food_days":3.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"city","dest":"lumber_yard","hours":1.5,"size":3}
+{"e":"order","t":21600,"members":3,"money":36,"food_days":3.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"tanner","hours":1.5,"size":3}
+{"e":"mission","t":29700,"members":3,"money":36,"food_days":3.0,"what":"accept","id":"tanner_hides","reward":200,"deadline":5}
+{"e":"order","t":29700,"members":3,"money":36,"food_days":3.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tanner","dest":"tavern","hours":0.75,"size":3}
+{"e":"day","t":95400,"members":3,"money":39,"food_days":2.0,"day":2,"roster":[{"name":"Droelkael","money":12,"hp":6,"hp_max":6,"combat":0,"work":0},{"name":"Imraxeksen","money":15,"hp":7,"hp_max":7,"combat":0,"work":0},{"name":"Thalruru","money":12,"hp":6,"hp_max":6,"combat":0,"work":0}],"rations":6,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"tavern","size":3}]}
+{"e":"recruit","t":95400,"members":3,"money":39,"food_days":2.0,"pitcher":"Imraxeksen","candidate":"Branimorn","bail":0,"ok":true}
+{"e":"buy","t":95400,"members":4,"money":51,"food_days":2.5,"node":"tavern","item":"1L Beer","qty":3,"price":4,"zone":"pack"}
+{"e":"order","t":95400,"members":4,"money":51,"food_days":2.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tavern","dest":"road","hours":1.5,"size":4}
+{"e":"talent","t":122400,"members":4,"money":51,"food_days":2.5,"unit":"Imraxeksen","track":"work","talent":"charismatic"}
+{"e":"order","t":122400,"members":4,"money":51,"food_days":2.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"road","dest":null,"hours":4,"size":4}
+{"e":"order","t":136800,"members":4,"money":51,"food_days":2.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"road","dest":null,"hours":4,"size":4}
+{"e":"order","t":151200,"members":4,"money":51,"food_days":2.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"road","dest":"wilds","hours":9.0,"size":4}
+{"e":"day","t":183600,"members":4,"money":51,"food_days":1.5,"day":3,"roster":[{"name":"Droelkael","money":9,"hp":6,"hp_max":6,"combat":0,"work":0},{"name":"Imraxeksen","money":12,"hp":7,"hp_max":7,"combat":0,"work":1},{"name":"Thalruru","money":9,"hp":6,"hp_max":6,"combat":0,"work":0},{"name":"Branimorn","money":21,"hp":3,"hp_max":3,"combat":0,"work":0}],"rations":6,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"road","size":4}]}
+{"e":"talent","t":187200,"members":4,"money":51,"food_days":1.5,"unit":"Zaraxmor","track":"combat","talent":"agile"}
+{"e":"talent","t":187200,"members":4,"money":51,"food_days":1.5,"unit":"Zaraxmor","track":"combat","talent":"imposing"}
+{"e":"talent","t":187200,"members":4,"money":51,"food_days":1.5,"unit":"Imhrom","track":"work","talent":"brawny"}
+{"e":"talent","t":187200,"members":4,"money":51,"food_days":1.5,"unit":"Imhrom","track":"work","talent":"charismatic"}
+{"e":"fight","t":187236,"members":4,"money":51,"food_days":1.5,"hp_frac":1.0,"level_before":0.0,"members_before":4,"money_before":51,"food_days_before":1.5,"node":"wilds","kind":"hunt","won":true,"squad":4,"deaths":0,"foes":2,"xp":3,"level":0.25}
+{"e":"talent","t":187236,"members":4,"money":51,"food_days":1.5,"unit":"Branimorn","track":"combat","talent":"alert"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Kordrokorka","track":"combat","talent":"strong"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Kordrokorka","track":"combat","talent":"heavy_hand"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Kordrokorka","track":"work","talent":"brawny"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Kordrokorka","track":"work","talent":"brisk_hands"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Felbexdunuln","track":"work","talent":"observant"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Felbexdunuln","track":"work","talent":"charismatic"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Felbexdunuln","track":"work","talent":"beast_whisperer"}
+{"e":"talent","t":194436,"members":4,"money":51,"food_days":0.25,"unit":"Felbexdunuln","track":"work","talent":"sturdy"}
+{"e":"fight","t":194466,"members":4,"money":51,"food_days":0.25,"hp_frac":0.79,"level_before":0.25,"members_before":4,"money_before":51,"food_days_before":0.25,"node":"wilds","kind":"hunt","won":true,"squad":4,"deaths":0,"foes":2,"xp":0,"level":0.25}
+{"e":"talent","t":241266,"members":4,"money":51,"food_days":3.0,"unit":"Droelkael","track":"work","talent":"nimble_fingers"}
+{"e":"talent","t":241266,"members":4,"money":51,"food_days":3.0,"unit":"Branimorn","track":"work","talent":"observant"}
+{"e":"talent","t":241266,"members":4,"money":51,"food_days":3.0,"unit":"Thalruru","track":"work","talent":"observant"}
+{"e":"order","t":241266,"members":4,"money":51,"food_days":3.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"wilds","dest":"city","hours":9.0,"size":4}
+{"e":"day","t":273666,"members":4,"money":51,"food_days":2.0,"day":4,"roster":[{"name":"Droelkael","money":9,"hp":1,"hp_max":6,"combat":0,"work":1},{"name":"Imraxeksen","money":12,"hp":6,"hp_max":7,"combat":0,"work":1},{"name":"Thalruru","money":9,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":21,"hp":4,"hp_max":6,"combat":1,"work":1}],"rations":8,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"wilds","size":4}]}
+{"e":"order","t":295266,"members":4,"money":51,"food_days":2.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"city","dest":"market","hours":1.5,"size":4}
+{"e":"sell","t":300666,"members":4,"money":55,"food_days":1.5,"node":"market","item":"Meat","qty":2,"price":2}
+{"e":"sell","t":300666,"members":4,"money":59,"food_days":1.0,"node":"market","item":"Meat","qty":2,"price":2}
+{"e":"sell","t":300666,"members":4,"money":65,"food_days":0.25,"node":"market","item":"Meat","qty":3,"price":2}
+{"e":"sell","t":300666,"members":4,"money":67,"food_days":0.0,"node":"market","item":"Meat","qty":1,"price":2}
+{"e":"buy","t":300666,"members":4,"money":37,"food_days":0.0,"node":"market","item":"Lantern","qty":1,"price":30,"zone":"pack"}
+{"e":"order","t":300666,"members":4,"money":37,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"market","dest":"lumber_yard","hours":1.5,"size":4}
+{"e":"order","t":311466,"members":4,"money":37,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":369066,"members":4,"money":37,"food_days":0.0,"day":5,"roster":[{"name":"Droelkael","money":7,"hp":1,"hp_max":5,"combat":0,"work":1},{"name":"Imraxeksen","money":9,"hp":5,"hp_max":6,"combat":0,"work":1},{"name":"Thalruru","money":8,"hp":5,"hp_max":5,"combat":0,"work":1},{"name":"Branimorn","money":13,"hp":2,"hp_max":4,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"lumber_yard","size":4}]}
+{"e":"order","t":369066,"members":4,"money":57,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"tavern","hours":1.5,"size":4}
+{"e":"buy","t":379866,"members":4,"money":53,"food_days":0.25,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":379866,"members":4,"money":49,"food_days":0.5,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":379866,"members":4,"money":45,"food_days":0.75,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":379866,"members":4,"money":41,"food_days":1.0,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"order","t":394266,"members":4,"money":43,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tavern","dest":"apothecary","hours":2.0,"size":4}
+{"e":"buy","t":405066,"members":4,"money":3,"food_days":1.0,"node":"apothecary","item":"First Aid Kit","qty":1,"price":40,"zone":"pack"}
+{"e":"order","t":405066,"members":4,"money":3,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"apothecary","dest":"smith","hours":0.6,"size":4}
+{"e":"order","t":407226,"members":4,"money":3,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"smith","dest":"tavern","hours":1.0,"size":4}
+{"e":"day","t":432426,"members":4,"money":3,"food_days":0.0,"day":6,"roster":[{"name":"Droelkael","money":0,"hp":2,"hp_max":6,"combat":0,"work":1},{"name":"Imraxeksen","money":1,"hp":6,"hp_max":7,"combat":0,"work":1},{"name":"Thalruru","money":1,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":1,"hp":4,"hp_max":6,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"tavern","size":4}]}
+{"e":"buy","t":490026,"members":4,"money":13,"food_days":0.25,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":490026,"members":4,"money":9,"food_days":0.5,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":490026,"members":4,"money":5,"food_days":0.75,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":490026,"members":4,"money":1,"food_days":1.0,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"day","t":518826,"members":4,"money":1,"food_days":0.0,"day":7,"roster":[{"name":"Droelkael","money":0,"hp":5,"hp_max":6,"combat":0,"work":1},{"name":"Imraxeksen","money":1,"hp":11,"hp_max":12,"combat":0,"work":2},{"name":"Thalruru","money":0,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":0,"hp":6,"hp_max":6,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"tavern","size":4}]}
+{"e":"buy","t":547626,"members":4,"money":3,"food_days":0.25,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"order","t":547626,"members":4,"money":3,"food_days":0.25,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tavern","dest":"farm","hours":1.5,"size":4}
+{"e":"buy","t":563826,"members":4,"money":0,"food_days":0.5,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"talent","t":563826,"members":4,"money":0,"food_days":0.5,"unit":"Imraxeksen","track":"work","talent":"fixer"}
+{"e":"order","t":563826,"members":4,"money":0,"food_days":0.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"farm","dest":"country_roads","hours":1.5,"size":4}
+{"e":"order","t":569226,"members":4,"money":0,"food_days":0.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"country_roads","dest":null,"hours":2,"size":4}
+{"e":"order","t":576426,"members":4,"money":0,"food_days":0.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"country_roads","dest":null,"hours":2,"size":4}
+{"e":"order","t":583626,"members":4,"money":0,"food_days":0.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"country_roads","dest":null,"hours":2,"size":4}
+{"e":"order","t":590826,"members":4,"money":0,"food_days":0.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"country_roads","dest":null,"hours":2,"size":4}
+{"e":"order","t":598026,"members":4,"money":0,"food_days":0.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"country_roads","dest":null,"hours":2,"size":4}
+{"e":"day","t":605226,"members":4,"money":0,"food_days":0.0,"day":8,"roster":[{"name":"Droelkael","money":0,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Imraxeksen","money":0,"hp":11,"hp_max":12,"combat":0,"work":2},{"name":"Thalruru","money":0,"hp":5,"hp_max":5,"combat":0,"work":1},{"name":"Branimorn","money":0,"hp":4,"hp_max":4,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"country_roads","size":4}]}
+{"e":"order","t":605226,"members":4,"money":0,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"country_roads","dest":"lumber_yard","hours":1.5,"size":4}
+{"e":"order","t":626826,"members":4,"money":0,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":684426,"members":4,"money":19,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.5,"size":4}
+{"e":"day","t":700626,"members":4,"money":19,"food_days":0.0,"day":9,"roster":[{"name":"Droelkael","money":5,"hp":5,"hp_max":5,"combat":0,"work":1},{"name":"Imraxeksen","money":4,"hp":9,"hp_max":10,"combat":0,"work":2},{"name":"Thalruru","money":5,"hp":1,"hp_max":1,"combat":0,"work":1},{"name":"Branimorn","money":5,"hp":1,"hp_max":1,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"city","size":4}]}
+{"e":"buy","t":700626,"members":4,"money":16,"food_days":0.25,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"buy","t":700626,"members":4,"money":13,"food_days":0.5,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"buy","t":700626,"members":4,"money":10,"food_days":0.75,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"buy","t":700626,"members":4,"money":7,"food_days":1.0,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"order","t":700626,"members":4,"money":7,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"farm","dest":"lumber_yard","hours":4.0,"size":4}
+{"e":"order","t":722226,"members":4,"money":7,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":779826,"members":4,"money":7,"food_days":0.0,"day":10,"roster":[{"name":"Droelkael","money":1,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Imraxeksen","money":2,"hp":11,"hp_max":12,"combat":0,"work":2},{"name":"Thalruru","money":2,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":2,"hp":6,"hp_max":6,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"lumber_yard","size":4}]}
+{"e":"order","t":779826,"members":4,"money":25,"food_days":0.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.5,"size":4}
+{"e":"buy","t":796026,"members":4,"money":22,"food_days":0.25,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"buy","t":796026,"members":4,"money":19,"food_days":0.5,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"buy","t":796026,"members":4,"money":16,"food_days":0.75,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"buy","t":796026,"members":4,"money":13,"food_days":1.0,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"order","t":796026,"members":4,"money":13,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"farm","dest":"lumber_yard","hours":3.0,"size":3}
+{"e":"order","t":796026,"members":4,"money":13,"food_days":1.0,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"farm","dest":"tavern","hours":3.0,"size":1}
+{"e":"order","t":826626,"members":4,"money":17,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"city","hours":1.5,"size":3}
+{"e":"order","t":826626,"members":4,"money":17,"food_days":1.0,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"tavern","dest":"lumber_yard","hours":1.5,"size":1}
+{"e":"order","t":832026,"members":4,"money":17,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"city","dest":"lumber_yard","hours":1.5,"size":3}
+{"e":"order","t":837426,"members":4,"money":17,"food_days":1.0,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":837426,"members":4,"money":17,"food_days":1.0,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"lumber_yard","dest":"tavern","hours":1.5,"size":1}
+{"e":"day","t":877026,"members":4,"money":17,"food_days":0.0,"day":11,"roster":[{"name":"Droelkael","money":3,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Thalruru","money":3,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":4,"hp":6,"hp_max":6,"combat":1,"work":1},{"name":"Imraxeksen","money":7,"hp":11,"hp_max":12,"combat":0,"work":2}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"lumber_yard","size":3},{"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","node":"tavern","size":1}]}
+{"e":"buy","t":891426,"members":4,"money":20,"food_days":0.25,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"day","t":963426,"members":4,"money":26,"food_days":0.0,"day":12,"roster":[{"name":"Droelkael","money":3,"hp":5,"hp_max":5,"combat":0,"work":1},{"name":"Thalruru","money":3,"hp":5,"hp_max":5,"combat":0,"work":1},{"name":"Branimorn","money":4,"hp":4,"hp_max":4,"combat":1,"work":1},{"name":"Imraxeksen","money":16,"hp":11,"hp_max":12,"combat":0,"work":2}],"rations":0,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"lumber_yard","size":3},{"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","node":"tavern","size":1}]}
+{"e":"buy","t":963426,"members":4,"money":24,"food_days":0.25,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":963426,"members":4,"money":20,"food_days":0.5,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":963426,"members":4,"money":16,"food_days":0.75,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":963426,"members":4,"money":12,"food_days":1.0,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"order","t":963426,"members":4,"money":12,"food_days":1.0,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"tavern","dest":"lumber_yard","hours":1.5,"size":1}
+{"e":"order","t":974226,"members":4,"money":12,"food_days":1.0,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"work","node":"lumber_yard","dest":null,"hours":8,"size":1}
+{"e":"order","t":1003026,"members":4,"money":15,"food_days":1.0,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"work","node":"lumber_yard","dest":null,"hours":4,"size":1}
+{"e":"buy","t":1010226,"members":4,"money":24,"food_days":1.25,"node":"lumber_yard","item":"Fruit","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":1010226,"members":4,"money":20,"food_days":1.5,"node":"lumber_yard","item":"Fruit","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":1010226,"members":4,"money":16,"food_days":1.75,"node":"lumber_yard","item":"Fruit","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":1010226,"members":4,"money":12,"food_days":2.0,"node":"lumber_yard","item":"Fruit","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":1010226,"members":4,"money":8,"food_days":2.25,"node":"lumber_yard","item":"Fruit","qty":1,"price":4,"zone":"pack"}
+{"e":"order","t":1010226,"members":4,"money":8,"food_days":1.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"rest","node":"lumber_yard","dest":null,"hours":1.0,"size":3}
+{"e":"order","t":1013826,"members":4,"money":8,"food_days":1.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"rest","node":"lumber_yard","dest":null,"hours":1.0,"size":3}
+{"e":"order","t":1017426,"members":4,"money":9,"food_days":1.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"lumber_yard","dest":null,"hours":12,"size":3}
+{"e":"order","t":1017426,"members":4,"money":9,"food_days":1.5,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"lumber_yard","dest":"tavern","hours":1.5,"size":1}
+{"e":"day","t":1042626,"members":4,"money":9,"food_days":0.75,"day":13,"roster":[{"name":"Droelkael","money":1,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Thalruru","money":1,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":1,"hp":4,"hp_max":4,"combat":1,"work":1},{"name":"Imraxeksen","money":6,"hp":11,"hp_max":12,"combat":0,"work":2}],"rations":3,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"lumber_yard","size":3},{"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","node":"tavern","size":1}]}
+{"e":"day","t":1129026,"members":4,"money":22,"food_days":0.5,"day":14,"roster":[{"name":"Droelkael","money":1,"hp":5,"hp_max":5,"combat":0,"work":1},{"name":"Thalruru","money":1,"hp":5,"hp_max":5,"combat":0,"work":1},{"name":"Branimorn","money":1,"hp":1,"hp_max":1,"combat":1,"work":1},{"name":"Imraxeksen","money":19,"hp":11,"hp_max":12,"combat":0,"work":2}],"rations":2,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"lumber_yard","size":3},{"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","node":"tavern","size":1}]}
+{"e":"order","t":1168626,"members":4,"money":32,"food_days":0.5,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"tavern","dest":"lumber_yard","hours":1.5,"size":1}
+{"e":"order","t":1179426,"members":4,"money":32,"food_days":0.5,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"lumber_yard","dest":"carpenter","hours":0.75,"size":1}
+{"e":"order","t":1182126,"members":4,"money":32,"food_days":0.5,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"carpenter","dest":"farm","hours":0.75,"size":1}
+{"e":"buy","t":1195626,"members":4,"money":5,"food_days":2.75,"node":"farm","item":"Potato","qty":9,"price":3,"zone":"pack"}
+{"e":"order","t":1195626,"members":4,"money":5,"food_days":2.75,"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","kind":"travel","node":"farm","dest":"city","hours":4.0,"size":1}
+{"e":"order","t":1201026,"members":4,"money":15,"food_days":2.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"city","hours":1.5,"size":3}
+{"e":"order","t":1206426,"members":4,"money":15,"food_days":2.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"rest","node":"city","dest":null,"hours":1.0,"size":3}
+{"e":"day","t":1210026,"members":4,"money":15,"food_days":2.5,"day":15,"roster":[{"name":"Droelkael","money":4,"hp":1,"hp_max":1,"combat":0,"work":1},{"name":"Thalruru","money":5,"hp":1,"hp_max":1,"combat":0,"work":1},{"name":"Branimorn","money":4,"hp":1,"hp_max":1,"combat":1,"work":1},{"name":"Imraxeksen","money":2,"hp":11,"hp_max":12,"combat":0,"work":2}],"rations":10,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"city","size":3},{"gid":"1da68ae9142b4fb6a8e9b6e355b2cf56","node":"farm","size":1}]}
+{"e":"order","t":1210026,"members":4,"money":15,"food_days":2.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"city","dest":"tavern","hours":2.0,"size":4}
+{"e":"order","t":1231626,"members":4,"money":16,"food_days":2.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tavern","dest":"lumber_yard","hours":1.5,"size":4}
+{"e":"order","t":1242426,"members":4,"money":16,"food_days":2.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1300026,"members":4,"money":16,"food_days":1.5,"day":16,"roster":[{"name":"Droelkael","money":4,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Thalruru","money":5,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":4,"hp":6,"hp_max":6,"combat":1,"work":1},{"name":"Imraxeksen","money":3,"hp":11,"hp_max":12,"combat":0,"work":2}],"rations":6,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"lumber_yard","size":4}]}
+{"e":"order","t":1300026,"members":4,"money":34,"food_days":1.5,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.5,"size":4}
+{"e":"buy","t":1316226,"members":4,"money":25,"food_days":2.25,"node":"farm","item":"Potato","qty":3,"price":3,"zone":"pack"}
+{"e":"buy","t":1316226,"members":4,"money":16,"food_days":3.0,"node":"farm","item":"Potato","qty":3,"price":3,"zone":"pack"}
+{"e":"buy","t":1316226,"members":4,"money":7,"food_days":3.75,"node":"farm","item":"Potato","qty":3,"price":3,"zone":"pack"}
+{"e":"order","t":1316226,"members":4,"money":7,"food_days":3.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"farm","dest":"wilds","hours":3.0,"size":4}
+{"e":"day","t":1384626,"members":4,"money":7,"food_days":2.75,"day":17,"roster":[{"name":"Thalruru","money":2,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":2,"hp":6,"hp_max":6,"combat":1,"work":1},{"name":"Imraxeksen","money":2,"hp":11,"hp_max":12,"combat":0,"work":2},{"name":"Droelkael","money":1,"hp":6,"hp_max":6,"combat":0,"work":1}],"rations":11,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"wilds","size":3},{"gid":"28e2eca5077d4233914e04f0677ef0dd","node":"wilds","size":1}]}
+{"e":"talent","t":1384626,"members":4,"money":7,"food_days":2.75,"unit":"Senmun","track":"work","talent":"clever"}
+{"e":"talent","t":1384626,"members":4,"money":7,"food_days":2.75,"unit":"Senmun","track":"work","talent":"observant"}
+{"e":"talent","t":1384626,"members":4,"money":7,"food_days":2.75,"unit":"Senmun","track":"work","talent":"beast_whisperer"}
+{"e":"talent","t":1384626,"members":4,"money":7,"food_days":2.75,"unit":"Senmun","track":"work","talent":"nimble_fingers"}
+{"e":"talent","t":1384626,"members":4,"money":7,"food_days":2.75,"unit":"Senmun","track":"work","talent":"charismatic"}
+{"e":"talent","t":1384626,"members":4,"money":7,"food_days":2.75,"unit":"Senmun","track":"work","talent":"crafter"}
+{"e":"fight","t":1384656,"members":4,"money":7,"food_days":2.75,"hp_frac":0.98,"level_before":0.25,"members_before":4,"money_before":7,"food_days_before":2.75,"node":"wilds","kind":"hunt","won":true,"squad":4,"deaths":0,"foes":2,"xp":2,"level":0.25}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Ylvashdralma","track":"work","talent":"sturdy"}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Ylvashdralma","track":"work","talent":"brawny"}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Shoirdororn","track":"work","talent":"sturdy"}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Shoirdororn","track":"work","talent":"clever"}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Gormkethraxkor","track":"combat","talent":"tough"}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Gormkethraxkor","track":"combat","talent":"tactical_mind"}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Gormkethraxkor","track":"work","talent":"nimble_fingers"}
+{"e":"talent","t":1388256,"members":4,"money":7,"food_days":3.25,"unit":"Gormkethraxkor","track":"work","talent":"woodcarver"}
+{"e":"fight","t":1388286,"members":4,"money":7,"food_days":3.25,"hp_frac":0.77,"level_before":0.25,"members_before":4,"money_before":7,"food_days_before":3.25,"node":"wilds","kind":"hunt","won":true,"squad":4,"deaths":0,"foes":3,"xp":5,"level":0.5}
+{"e":"talent","t":1388286,"members":4,"money":7,"food_days":3.25,"unit":"Droelkael","track":"combat","talent":"strong"}
+{"e":"order","t":1409886,"members":4,"money":7,"food_days":3.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"wilds","dest":"tavern","hours":12.0,"size":4}
+{"e":"day","t":1481886,"members":4,"money":7,"food_days":2.75,"day":18,"roster":[{"name":"Thalruru","money":2,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":2,"hp":1,"hp_max":6,"combat":1,"work":1},{"name":"Imraxeksen","money":2,"hp":11,"hp_max":12,"combat":0,"work":2},{"name":"Droelkael","money":1,"hp":5,"hp_max":9,"combat":1,"work":1}],"rations":11,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"road","size":4}]}
+{"e":"order","t":1487286,"members":4,"money":7,"food_days":2.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tavern","dest":"carpenter","hours":1.5,"size":4}
+{"e":"order","t":1495386,"members":4,"money":7,"food_days":2.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"carpenter","dest":"smith","hours":0.75,"size":4}
+{"e":"order","t":1500786,"members":4,"money":7,"food_days":2.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"smith","dest":"market","hours":0.75,"size":4}
+{"e":"sell","t":1508886,"members":4,"money":12,"food_days":2.75,"node":"market","item":"Red Mushroom","qty":1,"price":5}
+{"e":"sell","t":1508886,"members":4,"money":20,"food_days":2.75,"node":"market","item":"Dagger","qty":2,"price":4}
+{"e":"sell","t":1508886,"members":4,"money":25,"food_days":2.75,"node":"market","item":"Red Mushroom","qty":1,"price":5}
+{"e":"sell","t":1508886,"members":4,"money":29,"food_days":2.75,"node":"market","item":"Dagger","qty":1,"price":4}
+{"e":"sell","t":1508886,"members":4,"money":31,"food_days":2.75,"node":"market","item":"1kg Coal","qty":1,"price":2}
+{"e":"sell","t":1508886,"members":4,"money":35,"food_days":2.75,"node":"market","item":"Lumber","qty":1,"price":4}
+{"e":"sell","t":1508886,"members":4,"money":59,"food_days":2.75,"node":"market","item":"1sqm Hide","qty":4,"price":6}
+{"e":"order","t":1508886,"members":4,"money":59,"food_days":2.75,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"market","dest":"tavern","hours":2.0,"size":4}
+{"e":"recruit","t":1523286,"members":4,"money":59,"food_days":2.75,"pitcher":"Imraxeksen","candidate":"Nyxkoruln","bail":0,"ok":true}
+{"e":"recruit","t":1523286,"members":5,"money":92,"food_days":2.2,"pitcher":"Thalruru","candidate":"Ekmaald","bail":0,"ok":true}
+{"e":"order","t":1523286,"members":6,"money":113,"food_days":1.83,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"tavern","dest":"market","hours":2.0,"size":6}
+{"e":"buy","t":1537686,"members":6,"money":109,"food_days":1.83,"node":"market","item":"Musical Instrument","qty":1,"price":4,"zone":"pack"}
+{"e":"sell","t":1537686,"members":6,"money":113,"food_days":1.83,"node":"market","item":"Lumber","qty":1,"price":4}
+{"e":"order","t":1537686,"members":6,"money":113,"food_days":1.83,"gid":"095db3ebc1414c93b08100cb672937e7","kind":"travel","node":"market","dest":"farm","hours":1.5,"size":4}
+{"e":"order","t":1537686,"members":6,"money":113,"food_days":1.83,"gid":"59c8e2413ebc41e7a6bb5d8f8c9d3b0a","kind":"travel","node":"market","dest":"tavern","hours":2.0,"size":2}
+{"e":"day","t":1566486,"members":6,"money":113,"food_days":0.83,"day":19,"roster":[{"name":"Thalruru","money":7,"hp":6,"hp_max":6,"combat":0,"work":1},{"name":"Branimorn","money":10,"hp":1,"hp_max":6,"combat":1,"work":1},{"name":"Droelkael","money":38,"hp":5,"hp_max":9,"combat":1,"work":1},{"name":"Ekmaald","money":20,"hp":2,"hp_max":2,"combat":0,"work":0},{"name":"Imraxeksen","money":2,"hp":11,"hp_max":12,"combat":0,"work":2},{"name":"Nyxkoruln","money":36,"hp":6,"hp_max":6,"combat":0,"work":0}],"rations":5,"groups":[{"gid":"095db3ebc1414c93b08100cb672937e7","node":"city","size":4},{"gid":"59c8e2413ebc41e7a6bb5d8f8c9d3b0a","node":"tavern","size":2}]}
+{"e":"buy","t":1580886,"members":6,"money":118,"food_days":1.0,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":1580886,"members":6,"money":114,"food_days":1.17,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}
+{"e":"buy","t":1580886,"members":6,"money":110,"food_days":1.33,"node":"tavern","item":"1L Beer","qty":1,"price":4,"zone":"pack"}

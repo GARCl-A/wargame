@@ -1,0 +1,971 @@
+{
+  "save_version": 2,
+  "save_kind": "auto",
+  "save_label": "Before a fight at The Wilds: 3 foes",
+  "day": 17,
+  "battles_won": 3,
+  "reputation": {},
+  "deeds_done": [],
+  "objectives_done": [
+    "obj_buy_food",
+    "obj_mission",
+    "obj_recruit_tavern",
+    "obj_work_shift",
+    "obj_combat_lv1",
+    "obj_buy_torch",
+    "obj_work_chain",
+    "obj_two_groups"
+  ],
+  "arena_challenge_day": null,
+  "clock_seconds": 1388256,
+  "bank_capacity": 0,
+  "bank_items": [],
+  "property_city_unlocked": false,
+  "property_city_items": [],
+  "property_city_tax_due_day": null,
+  "property_city_missed_payments": 0,
+  "property_city_squatting": false,
+  "property_city_oven": false,
+  "property_city_garage": {
+    "tier": 0,
+    "wagons": [],
+    "herd": []
+  },
+  "wilds_claim_garage": {
+    "tier": 0,
+    "wagons": [],
+    "herd": []
+  },
+  "bankers_debt": 0,
+  "property_city_debt_since": null,
+  "garrison_stock": {},
+  "wilds_claim_stage": "NONE",
+  "wilds_claim_fence_lumber": 0,
+  "wilds_claim_sustain_days_left": null,
+  "wilds_claim_owner": null,
+  "wilds_claim_campfire": false,
+  "claim_oven": false,
+  "ox_trails": 0,
+  "revealed": [
+    "ancient_ruins"
+  ],
+  "met_factions": [
+    "apothecary",
+    "tanners"
+  ],
+  "boss_talks_seen": [],
+  "ruins_cleared": [],
+  "supply_runs_completed": 0,
+  "wildfire": null,
+  "shops": {
+    "tanner": {
+      "cash": 500,
+      "stock": {
+        "Cloak": 15,
+        "1sqm Hide": 0,
+        "Leather Jerkin": 3,
+        "Studded Leather": 3,
+        "Quiver": 5
+      },
+      "progress": {}
+    },
+    "lumber_yard": {
+      "cash": 500,
+      "stock": {
+        "Lumber": 20,
+        "Fruit": 10
+      },
+      "progress": {}
+    },
+    "tavern": {
+      "cash": 500,
+      "stock": {
+        "1L Beer": 15,
+        "Jerky": 10
+      },
+      "progress": {}
+    },
+    "carpenter": {
+      "cash": 500,
+      "stock": {
+        "Shortbow": 2,
+        "Longbow": 1,
+        "Light Crossbow": 2,
+        "Quarterstaff": 4
+      },
+      "progress": {}
+    },
+    "mine": {
+      "cash": 500,
+      "stock": {
+        "Stone Brick": 10,
+        "Iron Ore": 10,
+        "1kg Coal": 15
+      },
+      "progress": {}
+    },
+    "market": {
+      "cash": 500,
+      "stock": {
+        "Torch": 30,
+        "Lantern": 5,
+        "Musical Instrument": 5,
+        "Bear Trap": 4,
+        "Alarm Trap": 4,
+        "Lumber": 20,
+        "Flint and Steel": 5,
+        "Rope": 8,
+        "Meat": 8
+      },
+      "progress": {}
+    },
+    "smith": {
+      "cash": 500,
+      "stock": {
+        "Iron Bar": 12,
+        "Club": 8,
+        "Dagger": 8,
+        "Hatchet": 8,
+        "Shortspear": 6,
+        "Axe": 6,
+        "Pick": 6,
+        "Hammer": 6,
+        "Sword": 6,
+        "Broadsword": 3,
+        "Glaive": 2,
+        "Rapier": 2,
+        "Chainmail": 2,
+        "Brigandine": 1,
+        "Plate Armor": 1,
+        "Chains": 3
+      },
+      "progress": {}
+    },
+    "apothecary": {
+      "cash": 500,
+      "stock": {
+        "Vial": 10,
+        "First Aid Kit": 5,
+        "Minor Healing Potion": 3
+      },
+      "progress": {}
+    },
+    "library": {
+      "cash": 500,
+      "stock": {
+        "Paper": 20,
+        "Ink": 10
+      },
+      "progress": {}
+    },
+    "farm": {
+      "cash": 527,
+      "stock": {
+        "Potato": 30,
+        "Salt": 20,
+        "Sugar": 15,
+        "Meat": 10,
+        "Fruit": 10
+      },
+      "progress": {
+        "Potato": 0
+      }
+    }
+  },
+  "total_spent": 295,
+  "items_sold_kinds": [
+    "Meat"
+  ],
+  "autosell": [],
+  "licences": [],
+  "bestiary": {
+    "races": [
+      "Wolf"
+    ],
+    "abilities": [
+      "wolf_pack_tactics"
+    ],
+    "named": {}
+  },
+  "missions": [
+    {
+      "template_id": "tanner_hides",
+      "unit_uid": "4e55af58251b494690f1d22a8ce9af00",
+      "accepted_day": 1,
+      "deadline_day": 6,
+      "state": "failed",
+      "ambush_done": false,
+      "failed_day": 7,
+      "recruit_uid": null
+    }
+  ],
+  "leader": "4e55af58251b494690f1d22a8ce9af00",
+  "leader_swaps_used": 0,
+  "leaving": {},
+  "vocation": "delvers",
+  "name": "Delver",
+  "banner_color": [
+    104,
+    176,
+    108
+  ],
+  "banner_icon": "bell-shield",
+  "saved_at": 1793456238.5665267,
+  "squad": [
+    "Thalruru",
+    "Branimorn",
+    "Imraxeksen",
+    "Droelkael"
+  ],
+  "groups": [
+    {
+      "gid": "095db3ebc1414c93b08100cb672937e7",
+      "name": null,
+      "node": "wilds",
+      "order": null,
+      "pending": null,
+      "leader": "31a4b8201fd947ae86aabb47959d2aa4",
+      "members": [
+        {
+          "uid": "31a4b8201fd947ae86aabb47959d2aa4",
+          "recruited_by": null,
+          "joined_day": 1,
+          "name": "Thalruru",
+          "auto_name": true,
+          "portrait_id": 832878624,
+          "portrait_file": null,
+          "race": "Elf",
+          "occupation": "Shepherd",
+          "alignment": "Neutral and Neutral",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 6,
+          "share_food": true,
+          "combat_xp": 0,
+          "magic_xp": 0,
+          "work_hours": 64,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Elvish"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [],
+            "work": [
+              "observant"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [],
+          "base_attributes": {
+            "strength": 10,
+            "dexterity": 14,
+            "constitution": 13,
+            "intelligence": 8,
+            "wisdom": 13,
+            "charisma": 10
+          },
+          "age_base": 28,
+          "age": 245,
+          "hp_roll": 5,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Elvish"
+          ],
+          "equipped_weapon": "Quarterstaff",
+          "equipped_offhand": "Lantern",
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": "Leather Jerkin",
+          "inventory": [
+            {
+              "id": "first_aid_kit",
+              "name": "First Aid Kit",
+              "qty": 1,
+              "charges": 10
+            },
+            {
+              "id": "copper_coin",
+              "name": "Copper Coin",
+              "qty": 2
+            },
+            {
+              "id": "potato",
+              "name": "Potato",
+              "qty": 2,
+              "days_old": 1
+            }
+          ],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": false,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "0e471111ade14df4b2ac1a1712c98970",
+          "recruited_by": "4e55af58251b494690f1d22a8ce9af00",
+          "joined_day": 2,
+          "name": "Branimorn",
+          "auto_name": true,
+          "portrait_id": 239538449,
+          "portrait_file": null,
+          "race": "Goblin",
+          "occupation": "Butcher",
+          "alignment": "Neutral and Good",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 1,
+          "share_food": true,
+          "combat_xp": 3,
+          "magic_xp": 0,
+          "work_hours": 64,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Goblin"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [
+              "alert"
+            ],
+            "work": [
+              "observant"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            3
+          ],
+          "base_attributes": {
+            "strength": 9,
+            "dexterity": 11,
+            "constitution": 9,
+            "intelligence": 11,
+            "wisdom": 14,
+            "charisma": 5
+          },
+          "age_base": 89,
+          "age": 56,
+          "hp_roll": 3,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Goblin"
+          ],
+          "equipped_weapon": "Hatchet",
+          "equipped_offhand": null,
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": null,
+          "inventory": [
+            {
+              "id": "copper_coin",
+              "name": "Copper Coin",
+              "qty": 2
+            },
+            {
+              "id": "potato",
+              "name": "Potato",
+              "qty": 2,
+              "days_old": 1
+            }
+          ],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": false,
+          "awareness_radius": 8
+        },
+        {
+          "uid": "4e55af58251b494690f1d22a8ce9af00",
+          "recruited_by": null,
+          "joined_day": 1,
+          "name": "Imraxeksen",
+          "auto_name": true,
+          "portrait_id": 1314238296,
+          "portrait_file": null,
+          "race": "Goblin",
+          "occupation": "Musician",
+          "alignment": "Lawful and Neutral",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 11,
+          "share_food": true,
+          "combat_xp": 0,
+          "magic_xp": 0,
+          "work_hours": 96,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Goblin"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [],
+            "work": [
+              "charismatic",
+              "fixer"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [
+            4
+          ],
+          "base_attributes": {
+            "strength": 7,
+            "dexterity": 16,
+            "constitution": 11,
+            "intelligence": 12,
+            "wisdom": 4,
+            "charisma": 16
+          },
+          "age_base": 81,
+          "age": 51,
+          "hp_roll": 6,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Goblin"
+          ],
+          "equipped_weapon": "Dagger",
+          "equipped_offhand": null,
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": null,
+          "inventory": [
+            {
+              "id": "musical_instrument",
+              "name": "Musical Instrument",
+              "qty": 1
+            },
+            {
+              "id": "copper_coin",
+              "name": "Copper Coin",
+              "qty": 2
+            },
+            {
+              "id": "1l_beer",
+              "name": "1L Beer",
+              "qty": 1,
+              "days_old": 5
+            },
+            {
+              "id": "potato",
+              "name": "Potato",
+              "qty": 2,
+              "days_old": 1
+            }
+          ],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": false,
+          "awareness_radius": 8
+        }
+      ],
+      "wagons": [],
+      "herd": [],
+      "herd_notice": null,
+      "captives": [],
+      "stance": "normal",
+      "campfire_node": null,
+      "campfire_expires": 0
+    },
+    {
+      "gid": "28e2eca5077d4233914e04f0677ef0dd",
+      "name": null,
+      "node": "wilds",
+      "order": null,
+      "pending": null,
+      "leader": "b301d9d2862544c6982ad9e9fd3de186",
+      "members": [
+        {
+          "uid": "b301d9d2862544c6982ad9e9fd3de186",
+          "recruited_by": null,
+          "joined_day": 1,
+          "name": "Droelkael",
+          "auto_name": true,
+          "portrait_id": 3003242962,
+          "portrait_file": null,
+          "race": "Automaton",
+          "occupation": "Tanner",
+          "alignment": "Neutral and Evil",
+          "crime": 0,
+          "unfed_days": 0,
+          "full_belly": true,
+          "sick": false,
+          "medicine_attempted_today": false,
+          "treated": false,
+          "consecutive_rest_hours": 0,
+          "unbroken_rest_hours": 0,
+          "non_lethal_damage": 0,
+          "last_daily_luck_day": 0,
+          "hp": 6,
+          "share_food": true,
+          "combat_xp": 2,
+          "magic_xp": 0,
+          "work_hours": 64,
+          "bio": "",
+          "arena_title": false,
+          "recipes": [
+            "Dictionary of Ankarin"
+          ],
+          "crafting_target": null,
+          "crafting_progress": 0,
+          "craft_bonuses": {},
+          "magic_sources": [],
+          "spells_known": [],
+          "study_target": null,
+          "study_progress": 0,
+          "magic_blood": false,
+          "blood_tested": false,
+          "blood_test_days": 0,
+          "rite_school": null,
+          "rite_progress": {},
+          "talents": {
+            "combat": [],
+            "work": [
+              "nimble_fingers"
+            ],
+            "racial": [],
+            "magic": []
+          },
+          "level_hp_rolls": [],
+          "base_attributes": {
+            "strength": 15,
+            "dexterity": 16,
+            "constitution": 11,
+            "intelligence": 15,
+            "wisdom": 11,
+            "charisma": 6
+          },
+          "age_base": 8,
+          "age": 8,
+          "hp_roll": 6,
+          "hp_override": null,
+          "poisons": {},
+          "antidote_cooldown": 0,
+          "natural_armor": 0,
+          "racial_override": null,
+          "languages": [
+            "Ankarin"
+          ],
+          "equipped_weapon": "Dagger",
+          "equipped_offhand": null,
+          "equipped_tongue": null,
+          "equipped_artifact": null,
+          "equipped_armor": null,
+          "inventory": [
+            {
+              "id": "1sqm_hide",
+              "name": "1sqm Hide",
+              "qty": 4
+            },
+            {
+              "id": "copper_coin",
+              "name": "Copper Coin",
+              "qty": 1
+            },
+            {
+              "id": "potato",
+              "name": "Potato",
+              "qty": 4,
+              "days_old": 2
+            },
+            {
+              "id": "meat",
+              "name": "Meat",
+              "qty": 2
+            }
+          ],
+          "locked_items": {},
+          "dormant": false,
+          "afoot": false,
+          "awareness_radius": 8
+        }
+      ],
+      "wagons": [],
+      "herd": [],
+      "herd_notice": null,
+      "captives": [],
+      "stance": "normal",
+      "campfire_node": null,
+      "campfire_expires": 0
+    }
+  ],
+  "taverna_week": 2,
+  "taverna_pool": [
+    {
+      "uid": "9e9b613e22c64c35bab4dcd9b8f7cbda",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Hromash",
+      "auto_name": true,
+      "portrait_id": 2660983102,
+      "portrait_file": null,
+      "race": "Orc",
+      "occupation": "Shepherd",
+      "alignment": "Lawful and Neutral",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 10,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Orcish"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 9,
+        "dexterity": 4,
+        "constitution": 12,
+        "intelligence": 7,
+        "wisdom": 13,
+        "charisma": 10
+      },
+      "age_base": 93,
+      "age": 58,
+      "hp_roll": 9,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Orcish"
+      ],
+      "equipped_weapon": "Quarterstaff",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 27
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    },
+    {
+      "uid": "33f73ffafefd480889d827edb5a7387a",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Nyxkoruln",
+      "auto_name": true,
+      "portrait_id": 871841786,
+      "portrait_file": null,
+      "race": "Goblin",
+      "occupation": "Woodcutter",
+      "alignment": "Lawful and Evil",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 6,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Goblin"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 12,
+        "dexterity": 15,
+        "constitution": 9,
+        "intelligence": 11,
+        "wisdom": 11,
+        "charisma": 18
+      },
+      "age_base": 31,
+      "age": 19,
+      "hp_roll": 6,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Goblin"
+      ],
+      "equipped_weapon": "Axe",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "lumber",
+          "name": "Lumber",
+          "qty": 1
+        },
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 33
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    },
+    {
+      "uid": "6128a5ff6d2c4fe7a3b8c29b8ee70b3f",
+      "recruited_by": null,
+      "joined_day": 1,
+      "name": "Ekmaald",
+      "auto_name": true,
+      "portrait_id": 1630053887,
+      "portrait_file": null,
+      "race": "Elf",
+      "occupation": "Linguist",
+      "alignment": "Lawful and Neutral",
+      "crime": 0,
+      "unfed_days": 0,
+      "full_belly": false,
+      "sick": false,
+      "medicine_attempted_today": false,
+      "treated": false,
+      "consecutive_rest_hours": 0,
+      "unbroken_rest_hours": 0,
+      "non_lethal_damage": 0,
+      "last_daily_luck_day": 0,
+      "hp": 2,
+      "share_food": true,
+      "combat_xp": 0,
+      "magic_xp": 0,
+      "work_hours": 0,
+      "bio": "",
+      "arena_title": false,
+      "recipes": [
+        "Dictionary of Elvish"
+      ],
+      "crafting_target": null,
+      "crafting_progress": 0,
+      "craft_bonuses": {},
+      "magic_sources": [],
+      "spells_known": [],
+      "study_target": null,
+      "study_progress": 0,
+      "magic_blood": false,
+      "blood_tested": false,
+      "blood_test_days": 0,
+      "rite_school": null,
+      "rite_progress": {},
+      "talents": {
+        "combat": [],
+        "work": [],
+        "racial": [],
+        "magic": []
+      },
+      "level_hp_rolls": [],
+      "base_attributes": {
+        "strength": 14,
+        "dexterity": 11,
+        "constitution": 7,
+        "intelligence": 7,
+        "wisdom": 12,
+        "charisma": 13
+      },
+      "age_base": 40,
+      "age": 350,
+      "hp_roll": 4,
+      "hp_override": null,
+      "poisons": {},
+      "antidote_cooldown": 0,
+      "natural_armor": 0,
+      "racial_override": null,
+      "languages": [
+        "Elvish"
+      ],
+      "equipped_weapon": "Dagger",
+      "equipped_offhand": null,
+      "equipped_tongue": null,
+      "equipped_artifact": null,
+      "equipped_armor": null,
+      "inventory": [
+        {
+          "id": "dictionary_of_gnomish",
+          "name": "Dictionary of Gnomish",
+          "qty": 1
+        },
+        {
+          "id": "copper_coin",
+          "name": "Copper Coin",
+          "qty": 21
+        }
+      ],
+      "locked_items": {},
+      "dormant": false,
+      "afoot": false,
+      "awareness_radius": 8
+    }
+  ],
+  "taverna_blocked": [],
+  "prison_week": null,
+  "prison_pool": null,
+  "prison_blocked": [],
+  "recruit_seen": {
+    "taverna": 2
+  },
+  "jailed": [],
+  "tutorial_seen": [
+    "bank",
+    "battle",
+    "draft.identity",
+    "draft.intro",
+    "draft.pick",
+    "draft.vocation",
+    "gathering",
+    "group",
+    "group_turn",
+    "guild.members",
+    "guild.overview",
+    "guild.reputations",
+    "hunt",
+    "level",
+    "level_up",
+    "loot",
+    "map",
+    "market",
+    "missions",
+    "report",
+    "stable",
+    "taverna",
+    "work"
+  ],
+  "tutorial_enabled": true
+}

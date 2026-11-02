@@ -588,3 +588,49 @@ has one "Enter" button and its functions are tabs inside.
   (`rite.py`) consumes it, so the Faith school has no way to get it.
   Not for sale at the Market (author's call). Decide the source: a lair pile, a mission reward, a rare
   drop from a given foe, or a temple quest. Until then the rite cannot start in a new game.
+
+
+==============
+
+Erros encontrados nos recordings de 01/11 na pasta "DK"
+
+"""
+[21:38, 01/11/2026] Johann: Seria legal ter um log das ações que rolam
+Pq eu comprei umas 30 batatas agora
+[21:38, 01/11/2026] Johann: E fui clicando no lumber pra juntar uma grana inicial
+[21:39, 01/11/2026] Johann: E teve uns dias que consegui fazer uns 3-4 trabalhos de 16h
+[21:39, 01/11/2026] Johann: Sem gastar ração
+[21:39, 01/11/2026] Johann: Não sei se foi um bug ou não
+[21:40, 01/11/2026] Lucas Garcia: mas tem dia q da pra fazer 2 de 16h
+[21:40, 01/11/2026] Lucas Garcia: tip9
+[21:40, 01/11/2026] Lucas Garcia: começa as 00h e trabalha até às 16h (não gasta comida) aí trabalha 16h e gasta comida.
+[21:42, 01/11/2026] Johann: Ah sim, o problema é que senti que teve dia que foi 3 ou 4 vezes
+[21:42, 01/11/2026] Johann: Não bate o cálculo kk
+[21:52, 01/11/2026] Johann: Yup, acabei de fazer 5 tasks de trabalho de 16h seguidos, consumiu só uma ração
+[21:53, 01/11/2026] Johann: Considerando que eu tinha até mais batata do que elas deviam durar, talvez tenha um bug com a comida tbm. Ainda não tenho dados suficientes
+"""
+
+"""
+Lutar na arena não gasta tempo
+"""
+
+"""
+[22:09, 01/11/2026] Johann: Por acaso, outro bug interessante
+[22:10, 01/11/2026] Johann: Comprei a licença da mina
+[22:10, 01/11/2026] Johann: Clico pra minerar
+[22:10, 01/11/2026] Johann: Ele só sai da tela, e volta pro mapa mundi
+[22:10, 01/11/2026] Lucas Garcia: tu tem picareta?
+[22:10, 01/11/2026] Lucas Garcia: Ele só sai da tela, e volta pro mapa mundi
+tá com 1 grupo só?
+[22:10, 01/11/2026] Johann: 1 grupo só
+Acabei de ver aqui
+[22:10, 01/11/2026] Johann: Ele minera
+[22:11, 01/11/2026] Johann: Só fica meio estranhozinho pq não tem nada mostrando que minerou
+[22:12, 01/11/2026] Lucas Garcia: Só fica meio estranhozinho pq não tem nada mostrando que minerou
+q sinistro. deveria, na tela de mina, aparecer tipo fulano worked x/y h de XP lv tal
+[22:12, 01/11/2026] Lucas Garcia: e collected X item
+[22:12, 01/11/2026] Lucas Garcia: mas o sair da tela de mina é q é a doidera
+[22:13, 01/11/2026] Johann: É, não aparece nada
+[22:13, 01/11/2026] Johann: Funciona, eu só não sei se tá passando o tempo direito
+[22:13, 01/11/2026] Johann: Tá simm
+"""
