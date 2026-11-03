@@ -72,10 +72,10 @@ the rest.
   is wrong, the file or the sheet's Work count, then audit every `npcs/*.json` the same way (talents against
   prerequisites and the level's talent points) with a test that fails on an inconsistent authored NPC.
 
-- **Bug: an archer with no arrows shows no warning, and carries several quivers (playtest 2026-11-02).**
-  The Arvo with a bow equipped is out of arrows and nothing on the sheet or the action bar says so; the pack
-  held several quivers (check whether empty quivers stack, are all counted, or are the wrong item). Name the
-  missing ammunition on the disabled Shoot and on the sheet. Test: bow with only empty quivers.
+- **An archer with no arrows still shows no warning in the action bar (playtest 2026-11-02).** The pack row
+  and the sheet now name the arrows left, and an emptied quiver in front of a full one no longer leaves the
+  archer dry. Left: name the missing ammunition on the bar when a bow is swung as a melee. Test: bow with
+  only empty quivers.
 
 - **Overflows and unclear counters (playtest 2026-11-02).** (1) Loot screen: the text of what went to each
   inventory overflows. (2) Post-fight screen: with many foes (the Snake Dragon dungeon) the enemy list
@@ -443,8 +443,8 @@ items it touches. Raw feedback, not yet sized:
   constraint on purpose, not an afterthought: a group of ten plus a cart eats eleven meals a day, a
   10-day territory defence needs ~110 meals and a tavern holds tens (about 15 beers, 10 meats, 30
   potatoes). Salted meat and beer are the end-game foods (30 and 20 days), Potato lasts 7, fruit 1;
-  hunting pays through meat and hides sold, then potatoes bought. Making the constraint visible is
-  *Show food's shelf life and the rations...* in *Ready to do -> Small*.
+  hunting pays through meat and hides sold, then potatoes bought. The shop row, the pack rows,
+  the craft screen and the travel slip now show it.
 - **Hunting is not cheaper than buying** (the first mechanic he tried); the author felt it was badly
   balanced but it is **not validated**: it needs an economic analysis first (author 2026-10-31).
   Re-run `scripts/economy_report.py` for the Wilds hunt (meat and hides sold, then food bought) against
@@ -473,8 +473,8 @@ items it touches. Raw feedback, not yet sized:
 - **The Reputations tasks only half guide a start.** Found them "almost intuitive", not a clear "how
   to begin". Check whether the first deeds read as a path.
 - **Rations are learned the expensive way.** Travel eats rations (once a day) and he found out by
-  spending them. The wiki was opened once and never used. The travel preview and the warning are in
-  *Show food's shelf life and the rations...* (*Small*); left here: a link from the tutorial to the wiki.
+  spending them. The wiki was opened once and never used. The travel slip now shows the rations a trip
+  takes and warns when the band is short; left here: a link from the tutorial to the wiki.
 - Good sign: he understood the screens by playing and asked whether to continue (about 2 h in).
 
 ## Older raw notes (2026-10-12, 2026-10-21)

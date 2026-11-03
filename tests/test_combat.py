@@ -645,17 +645,19 @@ def test_a_bought_quiver_is_full_even_beside_a_used_one():
     u.quiver_charges = 4
     u.give_to_pack("Quiver")
     assert u.count_of("Quiver") == 2
-    assert u.quiver_charges == 4                      # the used one is still the one in use
+    assert u.quiver_charges == 4 + data.QUIVER_AMMO   # the quivers add up
     u.remove_named("Quiver")
     assert u.quiver_charges == data.QUIVER_AMMO
 
 
-def test_spending_one_quiver_of_a_stack_leaves_its_sibling_full():
+def test_spending_a_stack_of_quivers_drains_one_then_the_next_and_keeps_the_empty():
     u = _unit()
     u._base_inventory = []
     u.give_to_pack("Quiver", 2)
-    u.quiver_charges = 3
+    u.quiver_charges = data.QUIVER_AMMO + 3
     assert sorted(it.charges for it in u._base_inventory) == [3, data.QUIVER_AMMO]
+    u.quiver_charges = 3
+    assert sorted(it.charges for it in u._base_inventory) == [0, 3]
 
 
 def test_a_stashed_quiver_comes_back_as_used_as_it_went_in():

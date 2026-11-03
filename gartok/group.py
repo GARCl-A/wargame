@@ -375,6 +375,15 @@ class Group:
             return 0
         return self.rations // len(self.members)
 
+    @property
+    def meals_a_day(self):
+        """Rations the group eats each dawn: every member that eats, plus every animal of the herd."""
+        return sum(u.ability.id != "autotroph" for u in self.members) + len(self.herd)
+
+    def rations_for(self, days):
+        """Rations a stretch of `days` dawns takes: what the travel slip shows."""
+        return days * self.meals_a_day
+
     def has_campfire(self, clock_seconds):
         """Whether a lit field campfire is burning at this group's current node."""
         return bool(self.campfire_node == self.node and self.campfire_expires > clock_seconds)

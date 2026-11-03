@@ -343,7 +343,7 @@ def test_absorb_battle_carries_quiver_charges_forward():
     assert member.has_item(data.AMMO_ITEM)
 
 
-def test_absorb_battle_drops_empty_quiver():
+def test_absorb_battle_keeps_the_emptied_quiver():
     from gartok import campaign
     from gartok.guild import Guild
     member = Unit("player")
@@ -359,7 +359,7 @@ def test_absorb_battle_drops_empty_quiver():
     campaign.absorb_battle(guild, squad, battle)
 
     assert member.quiver_charges == 0
-    assert not member.has_item(data.AMMO_ITEM)
+    assert member.has_item(data.AMMO_ITEM)
 
 
 def test_absorb_battle_rolls_over_to_spare_quiver():
@@ -374,12 +374,13 @@ def test_absorb_battle_rolls_over_to_spare_quiver():
     battle.winner = "player"
     battle.round_no = 1
     battle.player_units[0].status = "up"
-    battle.player_units[0].ammo = 0       # Used up the first quiver
+    assert battle.player_units[0].ammo == 2 * data.QUIVER_AMMO
+    battle.player_units[0].ammo = data.QUIVER_AMMO       # Used up the first quiver
 
     campaign.absorb_battle(guild, squad, battle)
 
-    assert member.has_item(data.AMMO_ITEM)
-    assert member.count_of(data.AMMO_ITEM) == 1
+    assert member.count_of(data.AMMO_ITEM) == 2           # the emptied quiver is kept
+    assert sorted(e.charges for e in member._base_inventory if e.name == data.AMMO_ITEM) == [0, data.QUIVER_AMMO]
     assert member.quiver_charges == data.QUIVER_AMMO
 
 

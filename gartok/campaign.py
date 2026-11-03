@@ -104,12 +104,8 @@ def _carry_forward(member, combatant):
             member.give_to_pack(name, qty)
 
     member.first_aid_charges = combatant.first_aid_charges
-    if member.first_aid_charges <= 0:
-        member.remove_named(data.FIRST_AID_ITEM)
 
     member.quiver_charges = combatant.ammo
-    if member.quiver_charges <= 0:
-        member.remove_named(data.AMMO_ITEM)
 
     for item in getattr(combatant, "picked_up_items", []):
         member.give_to_pack(item)

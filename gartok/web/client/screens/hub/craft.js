@@ -50,7 +50,8 @@ const Craft = (() => {
         <p class="hint">Click who works; each one rolls d20 + INT an hour toward a batch.</p><div class="crew">${crew}</div>${report}</div>
       <div class="paper ledger"><div class="kicker">Recipes <em>${C.who ? `${esc(C.who)}'s, from the band's packs · ${esc(C.what)}` : esc(C.what)}</em></div>
         <div class="recipes">${list}</div>
-        <div class="ledgerfoot"><p>Materials go in when a batch starts; a batch left half-made waits for its crafter. Alone, the crafter takes a group slot and takes the recipe's tools and materials from the group's stock.</p></div></div>`;
+        <div class="ledgerfoot"><p class="${C.food.have < C.food.meals ? "why" : ""}">${plural(C.food.have, "ration")} in the band, ${C.food.meals} eaten at each dawn${C.food.meals ? ` (${plural(Math.floor(C.food.have / C.food.meals), "day")} of food)` : ""}.</p>
+          <p>Materials go in when a batch starts; a batch left half-made waits for its crafter. Alone, the crafter takes a group slot and takes the recipe's tools and materials from the group's stock.</p></div></div>`;
     toast(C.notice);
   }
 

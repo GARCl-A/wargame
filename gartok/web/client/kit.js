@@ -48,9 +48,10 @@ const Kit = {
       return `<div class="it empty" data-owner="${owner}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(slot.label)}</span>empty</div><span></span><span></span></div>`;
     const q = it.qty || 1;
     return `<div class="it ${it.coin ? "coin" : ""} ${sel ? "sel" : ""}" data-owner="${owner}" data-loc="${loc}" ${slot ? `data-zone="${slot.zone}"` : ""}${tip(it.tip, "item")}>
-      ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(slot.label)}</span>` : ""}${esc(it.name)}${tags}</div>
+      ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(slot.label)}</span>` : ""}${esc(it.name)}${Kit.note(it)}${tags}</div>
       <span class="q">${q > 1 ? "×" + q : ""}</span><span class="kg">${kg(q, it.kg)}</span></div>`;
   },
+  note: it => it.note ? `<span class="tag ${/^(rotten|last day)/.test(it.note) ? "auto" : ""}">${esc(it.note)}</span>` : "",
   tag: (on, text, cls = "") => on ? `<span class="tag ${cls}">${text}</span>` : "",
 
   // one pack as a leather column (a shop's or a stash's shoppers): the portrait or the store's glyph, the

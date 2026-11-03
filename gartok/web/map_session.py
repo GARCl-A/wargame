@@ -462,7 +462,7 @@ class MapSession(MapView, Session):
         hours = sum(self._legs(g, path))
         day, at = _when(self.guild, hours)
         out.update(path=path, via=[world.node(p).name for p in path[1:-1]], hours=round(hours, 1),
-                   day=day, at=at)
+                   day=day, at=at, food=self._food_for(g, day - self.guild.clock.day))
         if g.fight_due:
             out["why"] = "a fight must be faced first"
         elif g.busy:
@@ -470,6 +470,11 @@ class MapSession(MapView, Session):
         elif any(w.broken for w in g.wagons):
             out["leave"] = self._left_behind(g)
         return out
+
+    @staticmethod
+    def _food_for(g, days):
+        need = g.rations_for(days)
+        return {"days": days, "need": need, "have": g.rations, "short": g.rations < need}
 
     def _left_behind(self, g):
         """What setting out with a broken wagon costs, told before the yes: each wagon and the

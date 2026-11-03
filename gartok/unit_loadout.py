@@ -192,26 +192,35 @@ class LoadoutMixin(CoinPurse):
         self._pack_add(name, qty, charges=charges, days_old=days_old)
 
     def _charges_of(self, item_name):
-        inst = next((it for it in self._base_inventory
-                     if isinstance(it, items.ItemInstance) and it.name == item_name), None)
-        if inst is None:
-            return 0
-        return items.get(item_name).max_charges if inst.charges is None else inst.charges
+        """Charges across every copy of `item_name` carried: the quivers add up, an emptied one stays."""
+        cap = items.get(item_name).max_charges
+        return sum(it.qty * (cap if it.charges is None else it.charges)
+                   for it in self._base_inventory if isinstance(it, items.ItemInstance) and it.name == item_name)
 
     def _set_charges_of(self, item_name, value):
-        """Write `value` to one copy of `item_name`, peeling it off its stack first so
-        its siblings keep their own charges. No-op with none carried."""
-        idx = next((i for i, it in enumerate(self._base_inventory)
-                    if isinstance(it, items.ItemInstance) and it.name == item_name), None)
-        if idx is None:
-            return
-        inst = self._base_inventory[idx]
-        if inst.qty > 1:
-            inst.qty -= 1
-            inst = inst.copy()
-            inst.qty = 1
-            self._base_inventory.insert(idx, inst)
-        inst.charges = max(0, int(value))
+        """Set the charges of all copies of `item_name` to `value` in total. Spending drains them in pack
+        order and keeps the empty ones; refilling tops them up in that order, each to its capacity."""
+        cap = items.get(item_name).max_charges
+        delta = self._charges_of(item_name) - max(0, int(value))      # > 0 spends, < 0 refills
+        idx = 0
+        while delta and idx < len(self._base_inventory):
+            it = self._base_inventory[idx]
+            if not (isinstance(it, items.ItemInstance) and it.name == item_name):
+                idx += 1
+                continue
+            held = cap if it.charges is None else it.charges
+            change = min(held, delta) if delta > 0 else -min(cap - held, -delta)
+            if not change:
+                idx += 1
+                continue
+            if it.qty > 1:      # peel one copy off, so its siblings keep their own charges
+                it.qty -= 1
+                it = it.copy()
+                it.qty = 1
+                self._base_inventory.insert(idx, it)
+            it.charges = held - change
+            delta -= change
+            idx += 1
 
     @property
     def quiver_charges(self):
@@ -233,9 +242,9 @@ class LoadoutMixin(CoinPurse):
         """The pill under a pack row's name; a quiver or kit also shows what is left in it."""
         tag = items.item_tag(name)
         if name == data.AMMO_ITEM:
-            return f"{tag} · {self.quiver_charges}/{data.QUIVER_AMMO}"
+            return f"{tag} · {self.quiver_charges}/{data.QUIVER_AMMO * self.count_of(name)}"
         if name == data.FIRST_AID_ITEM:
-            return f"{tag} · {self.first_aid_charges}/{data.FIRST_AID_CHARGES}"
+            return f"{tag} · {self.first_aid_charges}/{data.FIRST_AID_CHARGES * self.count_of(name)}"
         return tag
 
     def take_from_hand(self):

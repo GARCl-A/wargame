@@ -24,14 +24,6 @@ In this order. Why each one comes first is in italics.
    the gather tab. *Group B of the proof of concept gathers Lumber: the "gather" step must not be built on
    an ambiguous rule.*
 
-4. **Show food's shelf life and the rations where the decision is made (playtest 2026-11-02, Johann
-   2026-10-31).** The supply is a constraint on purpose (*Current content*, and the backlog's *Playtest
-   notes -> 2026-10-31*), so the player has to be able to see it: the shelf life in the shop row; each
-   food's own expiry in the inventory (today a stack hides the validity of its items); the ration count on
-   the craft screen; and the rations a trip or a defence needs in the travel preview, with a warning on
-   the first trip. *Hunger drops a group out of automatic mode: the order needs one function that says how
-   many rations a stretch takes, and it is the same number the preview and the warning show.*
-
 5. **A log of what happened while the days passed (Johann, 2026-11-01).** Today the lines of a jump
    (meals eaten, food rotted, hunger, purchases) reach the map as one "Since the last order" card (last
    12 lines, click to put it away) and are gone: `MapSession.state` drains `notices`, and the guild

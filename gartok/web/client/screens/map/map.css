@@ -1039,6 +1039,10 @@
   color: #24170c
 }
 
+.tip p.bad {
+  color: #7a2318
+}
+
 .tip .click {
   margin-top: 10px;
   padding-top: 8px;

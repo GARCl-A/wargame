@@ -171,14 +171,16 @@ class GuildSheet:
         src = w["hit"].split("(")[-1].rstrip(")")
         dmg = w["dmg"].split("(")[0].strip()
         reach = f"{unit.weapon['range'] * 1.5:g} m" if unit.weapon and unit.weapon.get("range") else "1.5 m"
-        return {
-            "name": w["nm"], "tags": w["tags"],
-            "chips": [
-                ("ATTACK", bab, f"Attack modifier {bab} ({src}): d20 {bab} against the target's armor class"),
-                ("DAMAGE", dmg, f"{w['dmg']}: weapon dice plus strength on a hit"),
-                ("REACH", reach, "Distance this weapon can strike"),
-            ],
-        }
+        chips = [
+            ("ATTACK", bab, f"Attack modifier {bab} ({src}): d20 {bab} against the target's armor class"),
+            ("DAMAGE", dmg, f"{w['dmg']}: weapon dice plus strength on a hit"),
+            ("REACH", reach, "Distance this weapon can strike"),
+        ]
+        if c.needs_ammo:
+            chips.append(("AMMO", str(c.ammo), "Arrows or bolts left across the quivers carried; with none the weapon "
+                                               "is swung as a clumsy melee" if c.ammo else
+                          "No arrows or bolts: carry a quiver with arrows, or the weapon is swung as a clumsy melee"))
+        return {"name": w["nm"], "tags": w["tags"], "chips": chips}
 
     @staticmethod
     def _gear_data(unit, c):
