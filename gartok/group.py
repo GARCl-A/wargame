@@ -156,6 +156,11 @@ class Group:
         return [*self.herd, *self.wagons]
 
     @property
+    def carriers(self):
+        """Everything whose pack is the group's stock: the members, then the wagons and animals."""
+        return [*self.members, *self.stores]
+
+    @property
     def money(self):
         """The total copper value held across all members, wagons and herd animals."""
         return sum(m.money for m in (*self.members, *self.stores))

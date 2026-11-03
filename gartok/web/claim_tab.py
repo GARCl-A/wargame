@@ -96,7 +96,7 @@ class ClaimTab:
         g = self.guild
         if self.stage not in ("SWEPT", "SUSTAINING", "ESTABLISHED") or self.seized:
             return None
-        crew = self.group.members
+        crew = self.group.carriers
         fuel = sum(m.count_of(economy.CAMPFIRE_FUEL) for m in crew)
         bricks = sum(m.count_of(economy.CLAIM_OVEN_BRICK) for m in crew)
         return {"lit": bool(g.wilds_claim_campfire), "oven": bool(g.claim_oven), "can_cook": bool(g.wilds_claim_can_cook),

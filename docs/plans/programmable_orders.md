@@ -17,11 +17,6 @@ record it in `AGENTS.md` or the doc that owns it.
 
 In this order. Why each one comes first is in italics.
 
-2. **Bug: the Claim cannot use the carts' items to build the furnace (playtest 2026-11-02).** Building
-   reads only the members' packs, not the carts' stock. Make the build draw from the same stock the Claim's
-   other crafts do and test it. *The hand-over between groups moves goods between inventories: "a group's
-   stock" must be one definition.*
-
 3. **Claim: the lumber licence and the Claim overlap, and nobody knows who gathers (playtest 2026-11-02).**
    The Claim now collides with the Lumberyard licence on lumber collection, and the screen does not say who
    in the Claim is gathering wood or what that takes. Pick one owner of the rule, show per member
