@@ -441,7 +441,7 @@
 .trip {
   position: relative;
   margin: 12px 4px 4px;
-  height: 30px
+  height: 48px
 }
 
 .trip .line {
@@ -503,6 +503,7 @@
 }
 
 .trip span.next {
+  top: 35px;
   color: #cfe0ef
 }
 
@@ -2300,14 +2301,85 @@
 }
 
 .band .mem {
-  padding: 2px 0;
+  gap: 10px;
+  padding: 2px 0
 }
 
-/* Garante que as medalhas/retratos fiquem no tamanho correto de ícone */
-.band .mem .medal,
-.band .mem svg,
-.band .mem img {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
+.band .mem .fm {
+  width: 36px;
+  height: 36px
+}
+
+.band .mem .fm img,
+.band .mem .fm .initial {
+  inset: 3px;
+  width: 30px;
+  height: 30px
+}
+
+.band .mem .who b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px
+}
+
+.band .mem .who b .nm {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis
+}
+
+.band .mem .who b em {
+  flex: none;
+  margin-left: 0;
+  vertical-align: 0
+}
+
+.band .crew {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  cursor: pointer
+}
+
+.band .crew .faces {
+  margin-top: 0
+}
+
+.band .crew .chev {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  border-right: 2px solid #a48b66;
+  border-bottom: 2px solid #a48b66;
+  transform: rotate(45deg);
+  transition: transform .15s
+}
+
+.band .crew:hover .chev {
+  border-color: #f0dfb8
+}
+
+.band .crew .chev.open {
+  transform: rotate(-135deg)
+}
+
+.band .mem .who small {
+  margin-top: 3px
+}
+
+.band .mem .hp {
+  width: 84px
+}
+
+.band .crew .crew-h {
+  font: 600 10px/1 Cinzel, serif;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #a48b66
 }

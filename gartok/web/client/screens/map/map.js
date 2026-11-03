@@ -4,6 +4,7 @@
 "use strict";
 
 let M = null, sel = null, splitting = null, picks = new Set(), hoverNode = null;
+const crewOpen = new Set();
 const previews = new Map();
 const band = gid => M.groups.find(b => b.gid === gid);
 const node = id => M.nodes.find(n => n.id === id);
@@ -85,14 +86,15 @@ function bandCard(b) {
 
   let actions = "";
 
-  const renderBandMembers = (members) => `
+  const open = crewOpen.has(b.gid);
+  const renderBandMembers = (members) => !open ? "" : `
     <div class="band-party-list">
       ${members.map(m => {
     const f = m.hp_max ? m.hp / m.hp_max : 0, low = f < .34 ? "low" : f < .67 ? "mid" : "";
     return `<div class="mem">
           ${medal(m)}
           <div class="who">
-            <b>${esc(m.name)}${m.lead ? "<em>Leads</em>" : ""}${m.sick ? '<em class="ill">Sick</em>' : ""}${m.poisoned ? '<em class="ill">Poisoned</em>' : ""}</b>
+            <b><span class="nm">${esc(m.name)}</span>${m.lead ? "<em>Leads</em>" : ""}${m.sick ? '<em class="ill">Sick</em>' : ""}${m.poisoned ? '<em class="ill">Poisoned</em>' : ""}</b>
             <small>${esc(m.sub)}</small>
           </div>
           <div class="hp">
@@ -121,6 +123,8 @@ function bandCard(b) {
     <div class="led">led by ${esc(b.lead)} · ${esc(b.kit)}</div>
     <div class="doing">${doing(b)}</div>
     ${b.trip ? tripBar(b.trip) : ""}
+    <div class="crew" data-crew="${b.gid}"${tip(open ? "Hide the crew details" : "Show the crew details")}>
+      ${open ? `<span class="crew-h">${plural(b.members.length, "soul")}</span>` : `<div class="faces">${b.members.map(medal).join("")}</div>`}<span class="chev${open ? " open" : ""}"></span></div>
     ${renderBandMembers(b.members)}
     ${foot}${actions}</div>`;
 }
@@ -502,8 +506,13 @@ function pickBand(gid) {
 MapSheet.onmove = () => { if (M) drawPlaces(); };
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-act],[data-band],[data-node],[data-split],[data-merge],[data-pick],[data-cancel-split],[data-confirm-split]");
+  const t = e.target.closest("[data-act],[data-crew],[data-band],[data-node],[data-split],[data-merge],[data-pick],[data-cancel-split],[data-confirm-split]");
   if (!t || !M) return;
+  if (t.dataset.crew !== undefined) {
+    const g = t.dataset.crew;
+    crewOpen.has(g) ? crewOpen.delete(g) : crewOpen.add(g);
+    drawBands(); return;
+  }
   if (t.dataset.split !== undefined) {
     if (t.classList.contains("off")) return;
     splitting = t.dataset.split; picks = new Set(); drawBands(); return;
