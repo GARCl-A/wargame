@@ -17,16 +17,6 @@ record it in `AGENTS.md` or the doc that owns it.
 
 In this order. Why each one comes first is in italics.
 
-1. **Bug: a save loaded after a lost hunt fight does not hold the fight (playtest 2026-11-02).** The squad
-   lost a fight during a Wilds hunt; loading the save from before it brought back neither the fight nor the
-   hunt that had started it, so the saved state was not the state of the game that had been played. Find what
-   the save drops (the hunt stretch, `Group.pending`, `order`; a battle in progress is never saved, by design)
-   and decide what a save taken before a fight must hold: the hunt, so the fight can be rolled again, or
-   nothing past the last stop. Ask the author which save it was (manual or autosave); the recording of the
-   session is in the repo. Test: save at the start of a hunt, lose the fight, load, the same hunt is there.
-   *An automatic order adds state to the save (current step, loop, condition); the save's contract has to
-   be right first.*
-
 2. **Bug: the Claim cannot use the carts' items to build the furnace (playtest 2026-11-02).** Building
    reads only the members' packs, not the carts' stock. Make the build draw from the same stock the Claim's
    other crafts do and test it. *The hand-over between groups moves goods between inventories: "a group's

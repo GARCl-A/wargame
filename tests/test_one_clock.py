@@ -342,3 +342,23 @@ def test_a_stretch_due_behind_the_card_is_not_lost_on_a_save_and_load(monkeypatc
     st = game.session.land_due()
     assert st["screen"] == "hunt" and game.session.phase == "done"
     assert again.groups[0].due_hunt is None
+
+
+
+def test_the_autosave_before_a_hunt_ambush_still_holds_the_stretch(monkeypatch):
+    from tests.test_web_hub import _guild
+    from gartok import hunt
+    from gartok.web.map_session import MapSession
+    from gartok.web.server import Game
+    monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", 1.0)
+    guild = _guild("wilds")
+    game = Game(MapSession(guild, "w1"))
+    game.session.act(guild.groups[0].gid, "hunt")
+    screen = game.session
+    screen.set_hours(16)
+    assert screen.start()["screen"] == "hunt" and screen.phase == "ambush"
+    screen.fight()
+    auto = next(r for r in persist.list_saves("w1") if r["id"].startswith("auto"))
+    again = persist.load_game("w1", auto["id"])
+    assert again.groups[0].due_hunt is not None
+    assert Game(MapSession(again, "w1")).session.land_due()["screen"] == "hunt"
