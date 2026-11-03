@@ -79,9 +79,31 @@ function doing(b) {
 function bandCard(b) {
   const isSel = b.gid === sel, cls = ["band", isSel ? "sel" : "", b.blocked ? "bad" : ""].join(" ");
   if (splitting === b.gid) return splitCard(b, cls);
+
   const foot = `<div class="bfoot"><span class="${b.rations ? "" : "bad"}">${ico("action/eating")}${!b.rations && b.rotten ? `${b.rotten} (all rotten)` : plural(b.rations, "ration")}</span>
     <span>${ico("gui/wallet")}${esc(b.money)}</span><span class="tail">${b.trip ? `${b.trip.stops[0].hours} h to the next stop` : isSel ? "picked" : ""}</span></div>`;
+
   let actions = "";
+
+  const renderBandMembers = (members) => `
+    <div class="band-party-list">
+      ${members.map(m => {
+    const f = m.hp_max ? m.hp / m.hp_max : 0, low = f < .34 ? "low" : f < .67 ? "mid" : "";
+    return `<div class="mem">
+          ${medal(m)}
+          <div class="who">
+            <b>${esc(m.name)}${m.lead ? "<em>Leads</em>" : ""}${m.sick ? '<em class="ill">Sick</em>' : ""}${m.poisoned ? '<em class="ill">Poisoned</em>' : ""}</b>
+            <small>${esc(m.sub)}</small>
+          </div>
+          <div class="hp">
+            <div class="bar"><i class="${low}" style="width:${f * 100}%"></i></div>
+            <span class="${low === "low" ? "low" : ""}">${m.hp} / ${m.hp_max} HP</span>
+          </div>
+        </div>`;
+  }).join('')}
+    </div>
+  `;
+
   if (isSel && !b.blocked && (!b.busy || b.chip === "garrison")) {
     const canSplit = b.members.length > 1 && !b.can_split;
     actions = `${b.mates.length ? '<div class="lk sub">Merge <em>a band standing here</em></div>' : ""}
@@ -93,12 +115,13 @@ function bandCard(b) {
       <div class="bactions"><div class="ghost-btn ${canSplit ? "" : "off"}" data-split="${b.gid}"${tip(b.can_split || (b.members.length > 1 ? "" : "one soul cannot split"))}>${ico("body/split-body")}Split</div>
       ${b.mates.length ? "" : `<div class="ghost-btn off">${ico("body/three-friends")}Merge · none here</div>`}</div>`;
   }
+
   return `<div class="${cls}" data-band="${b.gid}">
     <div class="row1"><h3>${esc(b.name)}</h3><span class="chip ${b.tone}">${esc(b.chip)}</span></div>
     <div class="led">led by ${esc(b.lead)} · ${esc(b.kit)}</div>
     <div class="doing">${doing(b)}</div>
     ${b.trip ? tripBar(b.trip) : ""}
-    <div class="faces">${b.members.map(medal).join("")}</div>
+    ${renderBandMembers(b.members)}
     ${foot}${actions}</div>`;
 }
 
@@ -215,27 +238,24 @@ function drawInspector() {
     ${main ? `<div class="brass-btn" data-act="${esc(main.key)}">${pl.icon ? ico(pl.icon) : ""}${esc(title(main.label))}</div>` : ""}
     ${ins.blocks.filter(k => k !== main).map(block).join("")}`;
 
-  const hurt = b.members.filter(m => m.hp < m.hp_max || m.sick || m.poisoned).length;
-  $("party").innerHTML = `<div class="lk">The party <em>${b.members.length}${hurt ? ` · ${hurt} wounded` : " · all hale"}</em></div>` +
-    b.members.map(m => {
-      const f = m.hp_max ? m.hp / m.hp_max : 0, low = f < .34 ? "low" : f < .67 ? "mid" : "";
-      return `<div class="mem">${medal(m)}<div class="who"><b>${esc(m.name)}${m.lead ? "<em>Leads</em>" : ""}${m.sick ? '<em class="ill">Sick</em>' : ""}${m.poisoned ? '<em class="ill">Poisoned</em>' : ""}</b><small>${esc(m.sub)}</small></div>
-        <div class="hp"><div class="bar"><i class="${low}" style="width:${f * 100}%"></i></div><span class="${low === "low" ? "low" : ""}">${m.hp} / ${m.hp_max} HP</span></div></div>`;
-    }).join("") +
-    (ins.camp && ins.camp.hurt.length ? `<div class="warn"><b>${esc(ins.camp.hurt[0])}</b> Rest, or the Medic at the Apothecary treats them at once.</div>` : "");
-
   const c = ins.camp;
   if (!c) {
     $("camp").innerHTML = `<div class="lk">Camp <em>${b.blocked ? "no going on" : "on the way"}</em></div>
       <div class="busy">${b.blocked ? "Face the fight first; the seal below opens it." : esc(b.detail.charAt(0).toUpperCase() + b.detail.slice(1)) + ". Its camp waits until it stops."}</div>`;
   } else {
     $("camp").innerHTML = `<div class="lk">Camp</div>
-      <div class="duo"><div class="tile" data-act="manage_group"><div class="t">${ico("gui/checklist")}Gear &amp; quests</div></div>
-        <div class="tile ${c.fire.enabled ? "" : "off"} ${/burning/.test(c.fire.sub) ? "lit" : ""}" ${c.fire.enabled ? 'data-act="campfire_cook"' : ""}><div class="t">${ico("body/fire-silhouette")}Campfire</div><small>${esc(c.fire.sub)}</small></div></div>
-      <div class="lk sub">Travel</div>
-      <div class="seg">${c.stance.map(s => `<div class="${s.on ? "on" : ""}" data-act="${s.key}"${tip(s.tip)}><b>${esc(s.label)}</b><small>${esc(s.sub)}</small></div>`).join("")}</div>
-      <div class="lk sub">Rest</div>
-      <div class="seg ${c.starving ? "starving" : ""}">${c.rest.map(r => `<div class="${r.rec ? "rec" : ""} ${r.enabled ? "" : "off"}" ${r.enabled ? `data-act="${r.key}"` : ""}${tip(r.tip || r.sub || "")}><b>${esc(r.label)}</b><small>${esc(r.sub || "")}</small></div>`).join("")}</div>`;
+  <div class="duo">
+    <div class="tile" data-act="manage_group">
+      <div class="t">${ico("gui/checklist")}Gear &amp; quests</div>
+    </div>
+    <div class="tile ${c.fire.enabled ? "" : "off"} ${/burning/.test(c.fire.sub) ? "lit" : ""}" ${c.fire.enabled ? 'data-act="campfire_cook"' : ""} ${tip(c.fire.sub)}>
+      <div class="t">${ico("body/fire-silhouette")}${/burning/.test(c.fire.sub) ? "Cook" : "Make Fire"}</div>
+    </div>
+  </div>
+  <div class="lk sub">Travel</div>
+  <div class="seg">${c.stance.map(s => `<div class="${s.on ? "on" : ""}" data-act="${s.key}"${tip(s.tip)}><b>${esc(s.label)}</b><small>${esc(s.sub)}</small></div>`).join("")}</div>
+  <div class="lk sub">Rest</div>
+  <div class="seg ${c.starving ? "starving" : ""}">${c.rest.map(r => `<div class="${r.rec ? "rec" : ""} ${r.enabled ? "" : "off"}" ${r.enabled ? `data-act="${r.key}"` : ""}${tip(r.tip || r.sub || "")}><b>${esc(r.label)}</b><small>${esc(r.sub || "")}</small></div>`).join("")}</div>`;
   }
 
   const t = M.cta, seal = $("seal");

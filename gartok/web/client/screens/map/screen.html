@@ -1,17 +1,27 @@
 <div id="maptable">
   <div id="top">
     <div class="gname">
-      <div class="shield"><div class="rim"></div><div class="body"></div><div class="ico mask" id="emblem"></div></div>
-      <div><h1 id="guildname"></h1><small id="guildsub"></small></div>
+      <div class="shield">
+        <div class="rim"></div>
+        <div class="body"></div>
+        <div class="ico mask" id="emblem"></div>
+      </div>
+      <div>
+        <h1 id="guildname"></h1><small id="guildsub"></small>
+      </div>
     </div>
     <div class="clock">
       <svg class="dial" viewBox="0 0 86 46" id="dial"></svg>
-      <div><div class="day"><span>DAY</span><em id="day"></em></div><div class="hour"><b id="time"></b><i id="part"></i></div></div>
+      <div>
+        <div class="day"><span>DAY</span><em id="day"></em></div>
+        <div class="hour"><b id="time"></b><i id="part"></i></div>
+      </div>
     </div>
     <div class="alerts" id="alerts"></div>
     <div class="ledger" id="ledger"></div>
     <div class="topbtns">
-      <div class="ghost-btn" id="guildbtn"><span class="ico mask" style="--icon:url(/assets/icons/gui/bookmark.svg)"></span><span id="guildlbl">Guild</span></div>
+      <div class="ghost-btn" id="guildbtn"><span class="ico mask"
+          style="--icon:url(/assets/icons/gui/bookmark.svg)"></span><span id="guildlbl">Guild</span></div>
       <div class="ghost-btn" id="titlebtn" data-tip="The menu (Esc)">Menu</div>
     </div>
   </div>
@@ -19,7 +29,10 @@
   <div id="bands" class="leather">
     <div class="lk">Bands <em id="bandsnote"></em></div>
     <div id="bandlist"></div>
-    <div class="hours"><div class="kicker">The hours ahead</div><div class="tl" id="hours"></div></div>
+    <div class="hours">
+      <div class="kicker">The hours ahead</div>
+      <div class="tl" id="hours"></div>
+    </div>
   </div>
 
   <div id="sheet">
@@ -27,40 +40,73 @@
     <div id="nodes"></div>
     <div id="slip" class="tip" hidden></div>
     <div id="news" hidden></div>
-    <div class="zoom"><div id="zin" data-tip="Zoom in (+)">+</div><div id="zout" data-tip="Zoom out (−)">−</div><div class="fit" id="zfit" data-tip="Fit the known world (F)">FIT</div></div>
+    <div class="zoom">
+      <div id="zin" data-tip="Zoom in (+)">+</div>
+      <div id="zout" data-tip="Zoom out (−)">−</div>
+      <div class="fit" id="zfit" data-tip="Fit the known world (F)">FIT</div>
+    </div>
   </div>
 
   <div id="insp">
     <div class="place" id="place"></div>
     <div id="inspscroll">
-      <div class="party leather" id="party"></div>
       <div class="camp leather" id="camp"></div>
     </div>
-    <div id="cta" class="leather"><div class="ctacol"><p id="ctatext"></p><div class="ghost-btn" id="swift" hidden></div></div><div class="seal" id="seal"></div></div>
+    <div id="cta" class="leather">
+      <div class="ctacol">
+        <p id="ctatext"></p>
+        <div class="ghost-btn" id="swift" hidden></div>
+      </div>
+      <div class="seal" id="seal"></div>
+    </div>
   </div>
 
-  <div id="wiped" hidden><div class="paper"><div class="kicker">The guild is gone</div>
-    <p>No one is left to carry the banner. The world keeps its last save; load an earlier one to try again.</p>
-    <div class="ghost-btn" id="wipedbtn">To the title</div></div></div>
-  <div id="turn" hidden><div class="paper"><div class="kicker" id="turnband"></div>
-    <h2 id="turnname"></h2><div class="where" id="turnnode"></div>
-    <div class="act" id="turnact"></div><p id="turncrew"></p>
-    <div class="lbtns"><div class="brass-btn" id="turngo">Go on</div></div></div></div>
-  <div id="leave" hidden><div class="paper"><div class="kicker">Leave the wagon behind?</div>
-    <div id="leavebody"></div>
-    <div class="lbtns"><div class="ghost-btn" data-leave="stay">Stay</div><div class="ghost-btn" data-leave="cargo">Manage cargo</div>
-      <div class="brass-btn" data-leave="go">Leave it and go</div></div></div></div>
-  <div id="pause" hidden><div class="leather">
-    <div class="tagline">The game waits</div>
-    <h3 id="pausename"></h3>
-    <div class="pm" data-pause="resume"><span class="num">I</span>Resume<span class="hint">Esc</span></div>
-    <div class="pm" data-pause="save"><span class="num">II</span>Save as…<span class="hint" id="savednote"></span></div>
-    <form id="saveform" hidden><input id="savename" maxlength="40" placeholder="Name this save" spellcheck="false" autocomplete="off">
-      <div class="ghost-btn" id="savego">Save</div></form>
-    <div class="pm" data-pause="settings"><span class="num">III</span>Settings</div>
-    <div class="pm" data-pause="wiki"><span class="num">IV</span>Wiki &amp; compendium</div>
-    <div class="gap"></div>
-    <div class="pm" data-pause="title"><span class="num">V</span>Main menu<span class="hint">saved first</span></div>
-    <div class="pm quiet" data-pause="quit"><span class="num">VI</span>Quit<span class="hint">saved first</span></div>
-  </div></div>
+  <div id="wiped" hidden>
+    <div class="paper">
+      <div class="kicker">The guild is gone</div>
+      <p>No one is left to carry the banner. The world keeps its last save; load an earlier one to try again.</p>
+      <div class="ghost-btn" id="wipedbtn">To the title</div>
+    </div>
+  </div>
+  <div id="turn" hidden>
+    <div class="paper">
+      <div class="kicker" id="turnband"></div>
+      <h2 id="turnname"></h2>
+      <div class="where" id="turnnode"></div>
+      <div class="act" id="turnact"></div>
+      <p id="turncrew"></p>
+      <div class="lbtns">
+        <div class="brass-btn" id="turngo">Go on</div>
+      </div>
+    </div>
+  </div>
+  <div id="leave" hidden>
+    <div class="paper">
+      <div class="kicker">Leave the wagon behind?</div>
+      <div id="leavebody"></div>
+      <div class="lbtns">
+        <div class="ghost-btn" data-leave="stay">Stay</div>
+        <div class="ghost-btn" data-leave="cargo">Manage cargo</div>
+        <div class="brass-btn" data-leave="go">Leave it and go</div>
+      </div>
+    </div>
+  </div>
+  <div id="pause" hidden>
+    <div class="leather">
+      <div class="tagline">The game waits</div>
+      <h3 id="pausename"></h3>
+      <div class="pm" data-pause="resume"><span class="num">I</span>Resume<span class="hint">Esc</span></div>
+      <div class="pm" data-pause="save"><span class="num">II</span>Save as…<span class="hint" id="savednote"></span>
+      </div>
+      <form id="saveform" hidden><input id="savename" maxlength="40" placeholder="Name this save" spellcheck="false"
+          autocomplete="off">
+        <div class="ghost-btn" id="savego">Save</div>
+      </form>
+      <div class="pm" data-pause="settings"><span class="num">III</span>Settings</div>
+      <div class="pm" data-pause="wiki"><span class="num">IV</span>Wiki &amp; compendium</div>
+      <div class="gap"></div>
+      <div class="pm" data-pause="title"><span class="num">V</span>Main menu<span class="hint">saved first</span></div>
+      <div class="pm quiet" data-pause="quit"><span class="num">VI</span>Quit<span class="hint">saved first</span></div>
+    </div>
+  </div>
 </div>
