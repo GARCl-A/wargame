@@ -683,4 +683,6 @@ The wilds, Frontier outpost e The battelfields deveriam ter emboscadas por "traj
 
 Substituir o "ciruculo" que marca a jurisprudencia de ankareth, por algo que parecça menos com as estradas. Inclusive o nó "Ankareth" não faz muito sentido né, o nó é "o banco". Pq ankareth contém a arena, o mercado, o smithy, etc.
 
-Revisar as mudanças de ui que fiz a partir dos commits: 2386f1604
+Revisar as mudanças de ui que fiz a partir dos commits: 2386f1604. Estou anotando o raciocinio desse topico aqui pra ver isso eu tinha q ter tomado cuidado e propagado pra algum lugar. Eu queria mudar o ledger na tela de mapa. Lá, tinha o .lbl, que era o texto responsavel pelos textos de "reputation, purse, members". Eu achei q eles estavam pequenos demais. Dessa forma, mudei a cor e o tamanho. Essa ação precisa ser replicada provavelmente em outras telas pra manter o padrão. 
+
+Na tela de mapa, a direita temos "party" e a esquerda temos "bands" a informação desses 2 paineis, parece ter muita coisa duplicada aumentando a carga visual/cognitiva desnecessariamente. A ideia é mover as coisas da party que estão na direita, para a esquerda.

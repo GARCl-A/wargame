@@ -4,6 +4,7 @@
    (a keeper's line, a dialogue), never under 17px; Cinzel is for names and labels. */
 :root {
   --read: "EB Garamond", serif;
+  --font-display: "Cinzel", serif;
   --ink: #24180e;
   --ink-2: #4a3522;
   --paper: #eadcbc;
@@ -20,7 +21,7 @@
   --leather-2: #231a12;
   --leather-3: #33261a;
   --green: #7fa557;
-  --verdigris: #6f948c;
+  --verdigris: #95c2b0;
   --verdigris-lo: #3d5752;
   --moss: #4f7d5a;
   --moss-hi: #70ba96;
@@ -121,9 +122,12 @@ body:not(.ready) #tut-badge {
 }
 
 .lbl {
-  font: 600 10px/1 Cinzel, serif;
-  letter-spacing: .24em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.1em;
   color: var(--verdigris);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   text-transform: uppercase
 }
 

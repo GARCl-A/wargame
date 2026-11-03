@@ -16,11 +16,14 @@
 }
 
 .lk {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  gap: 10px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
-  gap: 10px;
-  font: 600 10.5px/1 Cinzel, serif;
-  letter-spacing: .26em;
   color: var(--verdigris);
   text-transform: uppercase
 }
@@ -34,10 +37,9 @@
 
 .lk em {
   order: 2;
-  font: 14px/1 var(--read);
+  font-family: var(--font-display);
+  font-size: 12px;
   letter-spacing: 0;
-  color: #a48b66;
-  text-transform: none
 }
 
 .kicker em {
@@ -46,10 +48,6 @@
   letter-spacing: 0;
   color: #7b6142;
   text-transform: none
-}
-
-#maptable .lbl {
-  color: #8f7652
 }
 
 #maptable .ghost-btn {
@@ -292,13 +290,17 @@
 
 .ledger b {
   display: block;
-  font: 700 26px/1 Cinzel, serif;
-  color: #f0dfb8
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--verdigris);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  line-height: 1;
 }
 
 .ledger span {
   display: block;
-  margin-top: 6px
+  margin-top: 2 px
 }
 
 .topbtns {
