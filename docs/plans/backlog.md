@@ -674,3 +674,13 @@ Isso é apenas MAIS UM insight a respeito da análise das armas.
 [16:49, 02/11/2026] Lucas Garcia: Na tela de morte, fica texto sobrepondo.
 [16:57, 02/11/2026] Lucas Garcia: A missão de treinar o recruta, lá no ledger hold, não deve estar aparecendo o "!" no mapa. Além disso, ela era pra estar na aba "jobs" não junto do work da supply run.
 [17:27, 02/11/2026] Lucas Garcia: Perdi uma luta durante uma caça na Wilds. Aí quando fui dar load no save antes dela, a luta não tava carregada. E, por consequência disso a ação da wilds tbm não. ou seja, o estado do save não representava o estado do jogo real
+
+====
+
+Raw notes outside playtests
+
+The wilds, Frontier outpost e The battelfields deveriam ter emboscadas por "trajeto" da mesma forma que a old roads. Sinalização de que aquele nó tem "emboscada por passagem".
+
+Substituir o "ciruculo" que marca a jurisprudencia de ankareth, por algo que parecça menos com as estradas. Inclusive o nó "Ankareth" não faz muito sentido né, o nó é "o banco". Pq ankareth contém a arena, o mercado, o smithy, etc.
+
+Revisar as mudanças de ui que fiz a partir dos commits: 2386f1604
