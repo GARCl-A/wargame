@@ -30,7 +30,10 @@ const Labor = (() => {
 
   function gather(G) {
     cards(G.cards);
-    const status = G.held
+    const free = G.price == null;
+    const status = free
+      ? `<div class="fact"><span class="lbl">Status</span><b class="good">the guild's own ground: no licence</b></div>`
+      : G.held
       ? `<div class="fact"><span class="lbl">Status</span><b class="good">held: every band gathers here</b></div>`
       : `<div class="fact"><span class="lbl">Status</span><b>not held · ${money(G.price)}</b></div>
          <div class="fact"><span class="lbl">Purse</span><b class="${G.short ? "bad" : ""}">${G.short ? `the band is short ${money(G.short)}` : "the band can pay it now"}</b></div>
@@ -46,17 +49,18 @@ const Labor = (() => {
       : `<p class="warn">${names} ${G.guards.length > 1 ? "have" : "has"} no ${tool}: ${G.guards.length > 1 ? "they stand" : "stands"} guard, with no haul and no work XP. Split them off on the map if they should earn elsewhere.</p>`;
     const drops = G.drops.map(d => `<div class="it">${ico(d.glyph)}<div class="n">${esc(d.name)} <small>sells for ${money(d.sell)}</small></div>
       <span class="q">${d.pct}%</span><span></span></div>`).join("");
+    const bonus = G.bonus ? `<p class="hint">Each roll also has a ${G.bonus.pct}% chance of one more ${esc(G.bonus.name)} (sells for ${money(G.bonus.sell)}).</p>` : "";
     const report = G.report.length
       ? `<div class="report"><div class="kicker">The last shift</div>${G.report.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">The licence</div>
-        <p class="hint">One licence covers the whole guild.</p>${status}
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${free ? "The ground" : "The licence"}</div>
+        ${free ? "" : `<p class="hint">One licence covers the whole guild.</p>`}${status}
         <div class="sec"><span class="lbl">The crew</span></div><p class="hint">Only those with their own ${tool} gather, each keeping what they find and learning up to work level ${G.level + 1}; the rest stand guard.</p>
         <div class="crew">${crew}</div>
-        <div class="sec"><span class="lbl">What the ground gives</span></div><p class="hint">${esc(G.rolls)}</p>${drops}</div>
+        <div class="sec"><span class="lbl">What the ground gives</span></div><p class="hint">${esc(G.rolls)}</p>${drops}${bonus}</div>
       <div class="paper ledger"><div class="kicker">Shifts <em>the crew keeps what it finds instead of a wage</em></div>
         <div class="shifts">${G.shifts.map(s => shiftRow(G.glyph, s, `${s.risk}% ambush`,
-          "~" + money(s.haul), "", "gather", "Gather", G.held && G.can)).join("")}</div>
-        ${G.held ? "" : `<p class="aside">Gathering needs the licence.</p>`}
+          "~" + money(s.haul), "", "gather", "Gather", (free || G.held) && G.can)).join("")}</div>
+        ${free || G.held ? "" : `<p class="aside">Gathering needs the licence.</p>`}
         <div class="ledgerfoot">${guards}<p class="warn">A pack may ambush the crew: the fight must be won to keep the haul.</p><p>${esc(G.payback)}</p></div>${report}</div>`;
     toast(G.notice);
   }

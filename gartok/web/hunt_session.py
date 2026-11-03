@@ -251,13 +251,13 @@ class HuntSession(Session):
         result = self.look.result if swift else None
         if swift and result is None:
             raise ValueError("this fight is not a clean stomp")
-        self.group.due_hunt = None
         battle = Battle(list(s.party), self.pack, scenario=node.scenario(), daylight=guild.clock.is_daylight,
                         lethal=node.lethal, arena=False, clock_day=guild.clock.day,
                         aggressor="player" if self.tracking else "enemy")
         self.pack = None
 
         def settle(outcome):
+            self.group.due_hunt = None         # kept through the "before a fight" autosave, so a load rolls it again
             if not outcome.won and s.fights > 0:
                 s.fights -= 1
             s.party = [u for u in outcome.survivors if u in guild.roster]

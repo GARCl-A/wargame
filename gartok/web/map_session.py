@@ -115,7 +115,10 @@ class MapSession(MapView, Session):
     @property
     def _pending_event(self):
         g = next((g for g in self.guild.groups if g.fight_due and not g.empty), None)
-        return None if g is None else (g, g.pending)
+        if g is None:
+            return None
+        g = forced.fight_lead(self.guild, g)
+        return g, g.pending
 
     def _is_idle(self, g):
         return not g.busy and not g.empty and not g.fight_due
@@ -425,7 +428,8 @@ class MapSession(MapView, Session):
 
     def _swift_look(self, group, order):
         node = world.node(group.node)
-        return self.look.of((group.gid, id(order)), group.members, order.pack, lambda: scenario_for(node),
+        return self.look.of((group.gid, id(order)), forced.fight_squad(self.guild, group, order), order.pack,
+                            lambda: scenario_for(node),
                             self.guild.clock.is_daylight, True)
 
     def _cta(self):
@@ -462,7 +466,7 @@ class MapSession(MapView, Session):
         hours = sum(self._legs(g, path))
         day, at = _when(self.guild, hours)
         out.update(path=path, via=[world.node(p).name for p in path[1:-1]], hours=round(hours, 1),
-                   day=day, at=at)
+                   day=day, at=at, food=self._food_for(g, day - self.guild.clock.day))
         if g.fight_due:
             out["why"] = "a fight must be faced first"
         elif g.busy:
@@ -470,6 +474,11 @@ class MapSession(MapView, Session):
         elif any(w.broken for w in g.wagons):
             out["leave"] = self._left_behind(g)
         return out
+
+    @staticmethod
+    def _food_for(g, days):
+        need = g.rations_for(days)
+        return {"days": days, "need": need, "have": g.rations, "short": g.rations < need}
 
     def _left_behind(self, g):
         """What setting out with a broken wagon costs, told before the yes: each wagon and the
@@ -619,7 +628,7 @@ class MapSession(MapView, Session):
             idle = {g.gid for g in self.guild.groups if g.gid in busy_before and not g.busy}
             if dt is not None or result.pending:
                 return idle, dead
-            if idle or not any(g.busy for g in self.guild.groups):
+            if idle or not any(g.busy and g.order.kind != "garrison" for g in self.guild.groups):
                 if idle:
                     self.focus = next(iter(idle))
                 return idle, dead
@@ -637,7 +646,8 @@ class MapSession(MapView, Session):
             return None, self.back()
         before = len(self.notices)
         idle, dead = self._advance()
-        if self.wiped or group.busy or self.pending or dead or idle - {group.gid}:
+        running = group.busy and group.order.kind != "garrison"      # a shift that ended on its post is done
+        if self.wiped or running or self.pending or dead or idle - {group.gid}:
             return None, self.back()
         lines = self.notices[before:]
         del self.notices[before:]

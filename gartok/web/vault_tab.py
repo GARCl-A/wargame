@@ -43,7 +43,8 @@ class VaultTab:
             "purse": s.purse,
             "chest": {"owner": self.chest, "label": s.LABEL, **COPY[self.chest], "open": s._open(),
                       "load": round(stash.load, 2), "capacity": stash.capacity,
-                      "rows": [self._row(self.chest, i, items.stack_name(e), e[1]) for i, e in enumerate(stash.items)]},
+                      "rows": [self._row(self.chest, i, items.stack_name(e), e[1], items.stack_note(e))
+                                 for i, e in enumerate(stash.items)]},
             "services": [{"key": k, "label": label, "sub": sub, "on": on} for k, label, sub, on in s._services()],
             "packs": [self._store(o) if store_column.is_store(o) else self._member(o) for o in (*s.party, *s.stores)],
             "gold": {"price": economy.gold_price(1), "payout": economy.gold_payout(1), "fee": economy.GOLD_FEE}
@@ -52,9 +53,9 @@ class VaultTab:
             "notice": notice,
         }
 
-    def _row(self, owner, loc, name, qty):
+    def _row(self, owner, loc, name, qty, note=""):
         row = {"loc": loc, "name": name, "qty": qty, "glyph": item_icon.glyph(name), "kg": items.item_weight(name),
-               "coin": items.is_coin(name), "tip": _tip(name)}
+               "coin": items.is_coin(name), "tip": _tip(name), "note": note}
         if not self.exchanges:
             return row
         holder = self.s._holder_of(owner)
@@ -65,7 +66,8 @@ class VaultTab:
         return row
 
     def _pack(self, owner):
-        return [self._row(owner, idx, items.stack_name(e), e[1]) for idx, e in enumerate(owner._base_inventory)]
+        return [self._row(owner, idx, items.stack_name(e), e[1], items.stack_note(e))
+                for idx, e in enumerate(owner._base_inventory)]
 
     def _member(self, u):
         w = items.get(u.equipped_weapon)

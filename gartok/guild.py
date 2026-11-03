@@ -39,8 +39,7 @@ nothing paid.
 
 A **garrison** is a `Group` parked on a standing `"garrison"` order
 (`orders.py`) instead of asking for fresh ones -- `_garrison_upkeep` (also
-called from `_daily_upkeep`) banks its job's daily output into
-`garrison_stock`, keyed by node id, generic across any future property.
+called from `_daily_upkeep`) runs its job (a study, a rite) once a day.
 
 The **Wilds claim** (`wilds_claim_stage`, one of `WILDS_CLAIM_STAGES`, at
 `world.WILDS_TERRITORY_NODE`) is the guild's own territory, worked toward
@@ -116,7 +115,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  total_spent=0, items_sold_kinds=None, autosell=None, bestiary=None, jailed=None,
                  prison_week=None, prison_pool=None, prison_blocked=None,
                  house=None, bankers_debt=0,
-                 bankers_debt_since=None, garrison_stock=None,
+                 bankers_debt_since=None,
                  wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
@@ -162,9 +161,6 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.house = house if house is not None else CityProperty()
         self.bankers_debt = bankers_debt                 # copper owed after a repossession
         self.bankers_debt_since = bankers_debt_since     # clock.day the debt started (grace window)
-        # a garrisoned group's job output, keyed by the node it's parked on --
-        # generic across any future property (economy.GARRISON_JOBS, world.Node.garrison_job)
-        self.garrison_stock = {k: list(v) for k, v in (garrison_stock or {}).items()}
         # the Wilds claim campaign -- see the class docstring and WILDS_CLAIM_STAGES above
         self.wilds_claim_stage = wilds_claim_stage
         self.wilds_claim_fence_lumber = wilds_claim_fence_lumber

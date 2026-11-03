@@ -156,6 +156,11 @@ class Group:
         return [*self.herd, *self.wagons]
 
     @property
+    def carriers(self):
+        """Everything whose pack is the group's stock: the members, then the wagons and animals."""
+        return [*self.members, *self.stores]
+
+    @property
     def money(self):
         """The total copper value held across all members, wagons and herd animals."""
         return sum(m.money for m in (*self.members, *self.stores))
@@ -369,6 +374,15 @@ class Group:
         if not self.members:
             return 0
         return self.rations // len(self.members)
+
+    @property
+    def meals_a_day(self):
+        """Rations the group eats each dawn: every member that eats, plus every animal of the herd."""
+        return sum(u.ability.id != "autotroph" for u in self.members) + len(self.herd)
+
+    def rations_for(self, days):
+        """Rations a stretch of `days` dawns takes: what the travel slip shows."""
+        return days * self.meals_a_day
 
     def has_campfire(self, clock_seconds):
         """Whether a lit field campfire is burning at this group's current node."""

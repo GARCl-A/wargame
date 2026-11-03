@@ -28,9 +28,16 @@ class WorkTab(WorkDesk):
 
 
 class GatherTab(GatherDesk):
+    @staticmethod
+    def _bonus(node):
+        if node not in gather.BONUS:
+            return None
+        name, pct = gather.BONUS[node]
+        return {"name": name, "glyph": item_icon.glyph(name), "pct": pct, "sell": economy.sell_price(name)}
+
     def state(self):
         node = self.node.id
-        price = gather.licence_price(node)
+        price = gather.licence_price(node) if gather.needs_licence(node) else None
         main = gather.drops(node)[0][0]
         shifts = []
         for h in SHIFTS:
@@ -45,11 +52,11 @@ class GatherTab(GatherDesk):
         guards = [c["name"] for c in crew if not c["tool"]]
         notice, self.notice = self.notice, None
         return {"cards": self.hub_cards(), "held": self.guild.has_licence(node), "price": price,
-                "short": self.guild.licence_shortfall(node, self.group),
+                "short": self.guild.licence_shortfall(node, self.group) if price else 0,
                 "rolls": f"{gather.rolls(gather.DAY_HOURS):.1f} rolls a worker in {gather.DAY_HOURS} h",
                 "drops": [{"name": n, "glyph": item_icon.glyph(n), "pct": pct, "sell": economy.sell_price(n)}
                           for n, pct in gather.drops(node)],
                 "glyph": item_icon.glyph(main), "shifts": shifts, "crew": crew, "day": gather.DAY_HOURS,
-                "payback": self._payback_line(price), "notice": notice, "tool": tool,
+                "bonus": self._bonus(node), "payback": self._payback_line(price), "notice": notice, "tool": tool,
                 "level": gather.LEVEL[node], "guards": guards, "can": len(guards) < len(self.group.members),
                 "report": self.report}

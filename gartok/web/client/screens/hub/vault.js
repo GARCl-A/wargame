@@ -35,7 +35,7 @@ const Vault = (() => {
       ? Kit.stepper(q) : "<span></span>";
     return `<div class="row ${picked(CHEST, r.loc) ? "picked" : ""}" data-owner="${CHEST}" data-loc="${r.loc}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
-      <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${esc(kg(r.qty, r.kg))} in all</div></div>
+      <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${esc(kg(r.qty, r.kg))} in all${r.note ? ` · ${esc(r.note)}` : ""}</div></div>
       <div class="wt r">${r.kg.toFixed(r.kg < 0.1 ? 3 : 1)} <small>kg</small></div>
       <div class="stk c">×${r.qty}</div><span></span>${step}</div>`;
   }

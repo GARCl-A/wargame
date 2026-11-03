@@ -577,6 +577,28 @@ def stack_name(entry) -> str:
     return entry[0]
 
 
+def shelf_life(name) -> str:
+    """How long a food keeps once bought, for the shelf: "keeps 7 days"; empty for anything that does not spoil."""
+    item = get(name)
+    if item is None or not item.food or item.lifespan is None:
+        return ""
+    return f"keeps {item.lifespan} day{'s' * (item.lifespan != 1)}"
+
+
+def stack_note(entry) -> str:
+    """What a pack row hides about its stack: the days a food has left ("last day", "3 days left",
+    "rotten") or the charges of a quiver or a kit ("12/20"). Empty when there is nothing to say."""
+    if not isinstance(entry, ItemInstance):
+        return ""
+    item = entry.defn
+    if item.food and item.lifespan is not None:
+        left = item.lifespan - entry.days_old
+        return "rotten" if left < 0 else "last day" if left == 0 else f"{left} day{'s' * (left != 1)} left"
+    if item.max_charges and entry.charges is not None:
+        return f"{entry.charges}/{item.max_charges}"
+    return ""
+
+
 def create_instance(key: str, qty: int = 1, days_old: int = 0, charges: int | None = None) -> ItemInstance:
     item = get(key)
     if item is None:

@@ -123,3 +123,11 @@ def test_cart_coins_pay_for_bail_in_taverna():
     u.money = 0
     scr = Tavern(guild, group)
     assert scr._wealth() == 100
+
+
+def test_the_claim_oven_is_built_from_bricks_in_the_cart():
+    from gartok.claim_desk import ClaimDesk
+    guild, group, _, cart = _party((economy.CLAIM_OVEN_BRICK, economy.CLAIM_OVEN_BRICKS))
+    desk = ClaimDesk(guild, group)
+    assert desk._build_oven() is not None
+    assert cart.count_of(economy.CLAIM_OVEN_BRICK) == 0

@@ -40,7 +40,7 @@ class Bench:
 
     @property
     def _packs(self):
-        return [*self.group.members, *self.group.stores]
+        return self.group.carriers
 
     def _get_missing_materials(self, recipe):
         recipe_data = items.get_recipe(recipe)
@@ -65,8 +65,8 @@ class Bench:
         """Why `m` cannot go off alone to craft `recipe_id`, or None when they can."""
         if len(self.group.members) > 1 and not self.guild.free_slots:
             return "no free group slot"
-        if self.guild.craft_blocker(m, recipe_id, [m]) is not None:
-            return "not in their own pack"
+        if self.guild.craft_blocker(m, recipe_id, self._packs) is not None:
+            return "not in the group's stock"
         return None
 
     def _recipes(self, m):

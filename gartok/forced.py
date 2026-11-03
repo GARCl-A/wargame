@@ -49,6 +49,7 @@ FORTRESS_AMBUSH_SIZE = constants.FORTRESS_AMBUSH_SIZE
 CITY_RAID_CHANCE = constants.CITY_RAID_CHANCE    # per arrival at a squatted City property
 CITY_RAID_LEVEL = constants.CITY_RAID_LEVEL
 CITY_RAID_SIZE = 3
+CLAIM_ATTACKS = ("wilds_raid", "wilds_seizure")
 SOUGHT, OPPORTUNIST, DETERMINED = fight_nature.SOUGHT, fight_nature.OPPORTUNIST, fight_nature.DETERMINED
 
 
@@ -173,40 +174,74 @@ def _claim_raiders():
 
 
 def _claim_garrisons(guild):
-    return [g for g in guild.groups if not g.empty and g.order is not None
-            and g.order.kind == "garrison" and g.node == world.WILDS_TERRITORY_NODE]
+    return [g for g in guild.groups if not g.empty and orders.holds_post(g.order)
+            and g.node == world.WILDS_TERRITORY_NODE]
+
+
+def claim_crew(guild):
+    """Every band physically at the claim, whatever it is doing there: the garrison, the gatherers,
+    one that stopped by. A band on the road or out hunting is not there."""
+    return [g for g in guild.groups
+            if not g.empty and g.node == world.WILDS_TERRITORY_NODE and not g.fight_due
+            and (g.order is None or g.order.kind not in ("travel", "hunting"))]
+
+
+def _claim_attack(guild, days, kind, crew):
+    """The one fight a claim attack is, when the day's roll lands and the raiders would take the crew
+    on (`encounters.would_attack`): the crew's biggest garrison fronts it (`kind`), every other band
+    there is called to arms (`"wilds_aid"`), and each carries what it was doing in `prior`."""
+    if not claim_attack_rolls(days):
+        return []
+    pack = _claim_raiders()
+    if not encounters.would_attack(pack, [u for g in crew for u in g.members]):
+        return []
+    lead = max(crew, key=lambda g: (orders.holds_post(g.order), len(g.members)))
+    called = []
+    for g in crew:
+        prior, g.order = g.order, None
+        called.append((g, orders.Order(kind if g is lead else "wilds_aid", pack=pack, prior=prior)))
+    return called
 
 
 def wilds_claim_raid_check(guild, days):
-    """A raider band tests each garrison sustaining the claim (`"SUSTAINING"`). Daily rather than
-    on arrival because a garrison never arrives again once posted. The order carries `job` so a
-    won fight reissues the garrison it interrupted."""
-    if guild.wilds_claim_stage != "SUSTAINING":
+    """Raiders test the crew while a garrison sustains the claim (`"SUSTAINING"`). Daily rather than
+    on arrival because a garrison never arrives again once posted."""
+    if guild.wilds_claim_stage != "SUSTAINING" or not _claim_garrisons(guild):
         return [], []
-    pending = []
-    for g in _claim_garrisons(guild):
-        if not claim_attack_rolls(days):
-            continue
-        job = g.order.job
-        g.order = None
-        pending.append((g, orders.Order("wilds_raid", pack=_claim_raiders(), job=job)))
-    return [], pending
+    return [], _claim_attack(guild, days, "wilds_raid", claim_crew(guild))
 
 
 def wilds_claim_seizure_check(guild, days):
     """Once `"ESTABLISHED"` and held, the same roll decides whether raiders test the claim.
-    Unguarded, they take it without a fight; garrisoned, it is a `"wilds_seizure"` fight."""
+    With nobody there they take it without a fight; otherwise it is a `"wilds_seizure"` fight."""
     if guild.wilds_claim_stage != "ESTABLISHED" or guild.wilds_claim_owner != "guild":
         return [], []
-    if not claim_attack_rolls(days):
-        return [], []
-    garrison = next(iter(_claim_garrisons(guild)), None)
-    if garrison is None:
+    crew = claim_crew(guild)
+    if not crew:
+        if not claim_attack_rolls(days):
+            return [], []
         guild.wilds_claim_seize()
         return ["The Wilds claim sits unguarded -- it's seized without a fight."], []
-    job = garrison.order.job
-    garrison.order = None
-    return [], [(garrison, orders.Order("wilds_seizure", pack=_claim_raiders(), job=job))]
+    return [], _claim_attack(guild, days, "wilds_seizure", crew)
+
+
+def fight_squad(guild, group, order):
+    """Who fights `order` for `group`: the band itself, and for a claim attack every band called
+    to arms beside it."""
+    squad = list(group.members)
+    if order.kind in CLAIM_ATTACKS:
+        for g in guild.groups:
+            if g is not group and g.pending is not None and g.pending.kind == "wilds_aid":
+                squad += g.members
+    return squad
+
+
+def fight_lead(guild, group):
+    """The band whose order is the fight `group` is called to: itself, or for a band called to arms
+    the one fronting the claim attack."""
+    if group.pending is None or group.pending.kind != "wilds_aid":
+        return group
+    return next((g for g in guild.groups if g.pending is not None and g.pending.kind in CLAIM_ATTACKS), group)
 
 
 # --------------------------------------------------------------------------- #
@@ -291,6 +326,8 @@ def resolve_gather_ambush(guild, group, order, outcome):
     group.order = orders.idle()
     if not outcome.won:
         return ["The crew is driven off the work site and comes away with nothing."]
+    if order.job is not None:
+        group.order = orders.garrison(order.job)
     survivors = [u for u in group.members if u in outcome.survivors]
     return ["The crew drives the pack off."] + guild.bank_haul(survivors, order.hours, group.node)
 
@@ -324,31 +361,38 @@ def resolve_property_raid(guild, group, order, outcome):
     return events
 
 
+def _stand_down_crew(guild, group, order, won):
+    """The claim attack is over: every band that fought it (`group` and the ones called to arms) goes
+    back to what it was doing on a win, and to no orders on a loss. The dead are already gone."""
+    for g, prior in [(group, order.prior)] + [(g, g.pending.prior) for g in guild.groups
+                                              if g.pending is not None and g.pending.kind == "wilds_aid"]:
+        g.pending = None
+        if not g.empty:
+            g.order = prior if won else orders.idle()
+
+
 def resolve_wilds_raid(guild, group, order, outcome):
-    """Winning reissues the garrison the raid interrupted; losing restarts the sustain countdown
-    and leaves the survivors idle."""
-    group.pending = None
-    if group.empty:
-        return []
+    """Winning sends every band back to its work; losing restarts the sustain countdown and leaves
+    the survivors idle."""
+    _stand_down_crew(guild, group, order, outcome.won)
     if outcome.won:
-        group.order = orders.garrison(order.job)
-        return ["The garrison drives off the raiders and keeps sustaining the claim."]
+        return ["The crew drives off the raiders and the claim keeps sustaining."]
     guild.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
-    group.order = orders.idle()
-    return ["The garrison is scattered -- sustaining the claim starts over."]
+    return ["The crew is scattered -- sustaining the claim starts over."]
 
 
 def resolve_wilds_seizure(guild, group, order, outcome):
-    """Winning resumes the garrison; losing hands the claim to the occupiers until a retake."""
-    group.pending = None
+    """Winning sends every band back to its work; losing hands the claim to the occupiers until a retake."""
+    _stand_down_crew(guild, group, order, outcome.won)
     if outcome.won:
-        if not group.empty:
-            group.order = orders.garrison(order.job)
-        return ["The garrison drives off the raiders and holds the claim."]
+        return ["The crew drives off the raiders and holds the claim."]
     guild.wilds_claim_seize()
-    if not group.empty:
-        group.order = orders.idle()
-    return ["The garrison falls -- the Wilds claim is seized."]
+    return ["The crew falls -- the Wilds claim is seized."]
+
+
+def resolve_wilds_aid(guild, group, order, outcome):
+    """A band called to arms is settled with the fight it joined (`_stand_down_crew`)."""
+    return []
 
 
 def resolve_wilds_claim_retake(guild, group, order, outcome):
@@ -412,10 +456,11 @@ EVENTS = {e.kind: e for e in (
                 label="RAID ON THE HOUSE"),
     ForcedEvent("wilds_retake", "battle", SOUGHT, resolve_wilds_claim_retake,
                 arrival=(wilds_claim_retake_catch,), label="RETAKE THE CLAIM"),
-    ForcedEvent("wilds_raid", "battle", DETERMINED, resolve_wilds_raid, daily=wilds_claim_raid_check,
+    ForcedEvent("wilds_raid", "battle", OPPORTUNIST, resolve_wilds_raid, daily=wilds_claim_raid_check,
                 label="RAID ON THE CLAIM"),
-    ForcedEvent("wilds_seizure", "battle", DETERMINED, resolve_wilds_seizure, daily=wilds_claim_seizure_check,
+    ForcedEvent("wilds_seizure", "battle", OPPORTUNIST, resolve_wilds_seizure, daily=wilds_claim_seizure_check,
                 label="THE CLAIM IS SEIZED"),
+    ForcedEvent("wilds_aid", "battle", OPPORTUNIST, resolve_wilds_aid, label="CALLED TO DEFEND THE CLAIM"),
     ForcedEvent("gather_ambush", "talk", OPPORTUNIST, resolve_gather_ambush, label="AMBUSHED AT WORK"),
     ForcedEvent("supply_ambush", "talk", OPPORTUNIST, resolve_supply_ambush, label="THE CARAVAN IS ATTACKED"),
 )}

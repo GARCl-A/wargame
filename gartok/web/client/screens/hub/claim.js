@@ -26,13 +26,12 @@ const Claim = (() => {
       const who = C.garrison ? `${esc(C.garrison)} holds it` : "nobody holds it: the count is not moving";
       return `<p class="aside ${cls}">${plural(C.days_left, "day")} left · ${who}.</p>`;
     }
-    if (C.banked != null) return `<p class="aside">${C.banked ? `${plural(C.banked, "Lumber")} banked here by the garrison.` : "Nothing banked yet."}</p>`;
     return "";
   }
 
   function job(C) {
     if (!C.here) return "";
-    return `<p class="aside">This band garrisons the claim: ${C.job === "hold" ? "it holds and rests" : "it gathers Lumber"}.</p>`;
+    return `<p class="aside">This band garrisons the claim: it holds and rests. The Gathering tab puts it to work without leaving its post.</p>`;
   }
 
   const action = a => `<div class="brass-btn ${a.can ? "" : "off"}" data-claim="${a.verb}"${tip(a.why || "")}><div><b>${esc(a.label)}</b></div></div>`;

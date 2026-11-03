@@ -9,6 +9,10 @@ Mine 3, past the wage's 1). A worker without it takes no roll and no XP but stay
 a guard, and fights if a pack comes. A pack may find the crew first (`ambushed`); the haul is
 banked only if the crew wins. `Guild.gather_shift` runs it, `campaign` and `app` play the fight.
 
+The Wilds Claim is the third gathering node and the odd one out: the same Axe, work level and shift,
+but the ground is the guild's, so there is no licence and no wage, a Fruit bonus roll (`BONUS`) and the
+Wilds' own packs. A group that gathers there from its garrison goes back to it when the shift ends.
+
 The tables, the rate and the licence prices are tuned so that a shift sold to a shop is worth more
 than the best wage for the same hours, and a full day (16 h) at least `PREMIUM` copper more (a test
 holds both); a licence pays back in about `PAYBACK_DAYS` days for `PAYBACK_CREW` workers gathering
@@ -30,15 +34,21 @@ PAYBACK_DAYS = 30
 PAYBACK_CREW = 3
 
 # node id -> ((item, weight), ...), each weight the percent chance of one roll
+CLAIM = "wilds_territory"
 TABLES = {
     "lumber_yard": (("Lumber", 75), ("Fruit", 25)),
     "mine": (("Stone Brick", 55), ("1kg Coal", 25), ("Iron Ore", 15),
              (items.GEM_ITEM, 4), (items.PRECIOUS_GEM_ITEM, 1)),
+    CLAIM: (("Lumber", 80), ("Fruit", 20)),
 }
+# node id -> (item, percent): a second roll after each roll on the table, a chance of one more
+BONUS = {CLAIM: ("Fruit", 10)}
+# the Claim is the guild's own ground: no licence to buy, no wage to compare with
 LICENCE_PRICE = {"lumber_yard": 270, "mine": 385}
-LEVEL = {"lumber_yard": 2, "mine": 3}
-RISK_PER_HOUR = {"lumber_yard": 0.005, "mine": 0.01}
-AMBUSH_TABLES = {"lumber_yard": encounters.LUMBER_YARD_TABLE, "mine": encounters.MINE_TABLE}
+LEVEL = {"lumber_yard": 2, "mine": 3, CLAIM: 2}
+RISK_PER_HOUR = {"lumber_yard": 0.005, "mine": 0.01, CLAIM: 0.005}
+AMBUSH_TABLES = {"lumber_yard": encounters.LUMBER_YARD_TABLE, "mine": encounters.MINE_TABLE,
+                 CLAIM: encounters.WILDS_TABLE}
 AMBUSH_LEVEL_WEIGHTS = encounters.WILDS_LEVEL_WEIGHTS
 
 
@@ -46,8 +56,12 @@ def can_gather(node_id):
     return node_id in TABLES
 
 
+def needs_licence(node_id):
+    return node_id in LICENCE_PRICE
+
+
 def tool(node_id):
-    return economy.WORK_TOOLS[node_id]
+    return economy.GATHER_TOOLS[node_id]
 
 
 def gatherers(units, node_id):
@@ -70,12 +84,19 @@ def drops(node_id):
 
 def roll_haul(node_id, hours, mult=1.0, rng=random):
     """The items one worker gathers in a shift of `hours`: `rolls(hours)` rolls on the table,
-    times `mult` (the Delvers' bonus; the fraction of a roll left over is a chance of one more)."""
+    times `mult` (the Delvers' bonus; the fraction of a roll left over is a chance of one more).
+    A node with a `BONUS` rolls it once more after each of those."""
     count = rolls(hours) * mult
     n = int(count) + (rng.random() < count - int(count))
     table = TABLES[node_id]
     picks = rng.choices([name for name, _ in table], weights=[w for _, w in table], k=n)
-    return Counter(picks)
+    haul = Counter(picks)
+    if node_id in BONUS:
+        name, pct = BONUS[node_id]
+        extra = sum(rng.random() * 100 < pct for _ in range(n))
+        if extra:
+            haul[name] += extra
+    return haul
 
 
 def expected_value(node_id, hours):
@@ -83,6 +104,9 @@ def expected_value(node_id, hours):
     table = TABLES[node_id]
     total = sum(w for _, w in table)
     per_roll = sum(economy.sell_price(name) * w for name, w in table) / total
+    if node_id in BONUS:
+        name, pct = BONUS[node_id]
+        per_roll += economy.sell_price(name) * pct / 100
     return per_roll * rolls(hours)
 
 

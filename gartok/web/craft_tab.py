@@ -82,4 +82,5 @@ class CraftTab:
                 "who": m.name if m else None,
                 "recipes": [self._recipe(m, rid, r, a) for rid, r, a in s._recipes(m)] if m else [],
                 "wait_hours": list(WAIT_HOURS), "alone_hours": list(ALONE_HOURS),
+                "food": {"have": self.group.rations, "meals": self.group.meals_a_day},
                 "report": self.report, "notice": notice}

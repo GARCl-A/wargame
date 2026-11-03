@@ -588,6 +588,8 @@ def test_the_etag_follows_the_content(tmp_path):
     first = _etag(str(f))
     assert _etag(str(f)) == first
     f.write_text("two")
+    st = f.stat()
+    os.utime(f, ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000_000))   # same size: a coarse clock may not tell
     assert _etag(str(f)) != first
 
 

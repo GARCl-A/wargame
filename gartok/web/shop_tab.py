@@ -93,22 +93,25 @@ class ShopTab:
         m = self.m
         stock = m._stock_of(name)
         spec = m._stock_spec(name) if cat in ("weapons", "armor") else ""
-        return {"name": name, "glyph": item_icon.glyph(name), "use": spec or _first_line(name),
+        use = spec or _first_line(name)
+        life = items.shelf_life(name)
+        return {"name": name, "glyph": item_icon.glyph(name), "use": f"{use} · {life}" if life else use,
                 "tip": _tip(name), "weight": items.item_weight(name),
                 "stock": stock, "target": targets.get(name, (None, 0))[0],
                 "price": economy.buy_price(name, m.deal), "list": economy.buy_price(name),
                 "sell": economy.sell_price(name, m.deal)}
 
-    def _row(self, owner, loc, name, qty):
+    def _row(self, owner, loc, name, qty, note=""):
         m = self.m
         return {"loc": loc, "name": name, "qty": qty, "glyph": item_icon.glyph(name),
                 "kg": items.item_weight(name), "coin": items.is_coin(name),
                 "sell": None if items.is_coin(name) else economy.sell_price(name, m.deal),
                 "locked": owner.locked_of(name) > 0, "marked": name in m._marked(),
-                "tip": _tip(name)}
+                "tip": _tip(name), "note": note}
 
     def _pack(self, owner):
-        return [self._row(owner, idx, items.stack_name(e), e[1]) for idx, e in enumerate(owner._base_inventory)]
+        return [self._row(owner, idx, items.stack_name(e), e[1], items.stack_note(e))
+                for idx, e in enumerate(owner._base_inventory)]
 
     def _member(self, u, voice):
         w = items.get(u.equipped_weapon)

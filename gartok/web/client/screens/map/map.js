@@ -194,7 +194,9 @@ function drawSlip() {
   else if (!p.path.length) body = `<p>${esc(n.blurb)}</p><div class="click no">${esc(p.why || "")}</div>`;
   else {
     const via = p.via.length ? ` by ${esc(p.via.join(", "))}` : "";
-    body = `<p>Walk ${esc(b.name)} there: <b>${p.hours} h</b>${via}, in by <b>${esc(p.at)}</b>${p.day !== M.meta.day ? ` on day ${p.day}` : ""}. ${esc(n.blurb)}</p>
+    const f = p.food, food = f && f.need
+      ? `<p class="${f.short ? "bad" : ""}">${plural(f.need, "ration")} to eat on the way (${f.days} dawn${f.days > 1 ? "s" : ""}); the band holds ${f.have}${f.short ? ", and will go hungry" : ""}.</p>` : "";
+    body = `<p>Walk ${esc(b.name)} there: <b>${p.hours} h</b>${via}, in by <b>${esc(p.at)}</b>${p.day !== M.meta.day ? ` on day ${p.day}` : ""}. ${esc(n.blurb)}</p>${food}
       ${p.why ? `<div class="click no">${esc(p.why)}</div>`
         : p.leave ? `<div class="click no">Click<span>the broken ${esc(p.leave.wagons.map(w => w.name.toLowerCase()).join(" and "))} cannot come</span></div>`
           : `<div class="click">Click<span>to give the order</span></div>`}`;

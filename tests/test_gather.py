@@ -1,5 +1,5 @@
-"""Gathering at the Lumber Yard and the Mine: a licence, a shift that rolls the node's drops,
-a pack that may find the crew, and a wage it has to beat."""
+"""Gathering at the Lumber Yard, the Mine and the Wilds Claim: a licence (not at the Claim), a shift that
+rolls the node's drops, a pack that may find the crew, and a wage it has to beat (not at the Claim)."""
 
 import random
 
@@ -22,6 +22,8 @@ from gartok.guild import Guild
 from tests.helpers import standard_unit
 
 SHIFTS = (4, 8, 12, 16)
+CLAIM = gather.CLAIM
+PAID = sorted(economy.WORK_TOOLS)           # the nodes with a wage and a licence
 
 
 def _worker(money=0):
@@ -60,21 +62,21 @@ def test_gem_prices():
     assert items.get(items.PRECIOUS_GEM_ITEM).price == 240
 
 
-@pytest.mark.parametrize("node_id", sorted(gather.TABLES))
+@pytest.mark.parametrize("node_id", PAID)
 @pytest.mark.parametrize("hours", SHIFTS)
 def test_a_shift_sold_beats_the_best_wage_by_a_copper(node_id, hours):
     best_wage = max(economy.work_pay(node_id, hours, level) for level in (0, economy.LUMBER_LEVEL_OWN_AXE))
     assert gather.expected_value(node_id, hours) >= best_wage + 1
 
 
-@pytest.mark.parametrize("node_id", sorted(gather.TABLES))
+@pytest.mark.parametrize("node_id", PAID)
 def test_a_full_day_sold_beats_the_best_wage_by_the_premium(node_id):
     best_wage = max(economy.work_pay(node_id, gather.DAY_HOURS, level)
                     for level in (0, economy.LUMBER_LEVEL_OWN_AXE))
     assert gather.expected_value(node_id, gather.DAY_HOURS) >= best_wage + gather.PREMIUM
 
 
-@pytest.mark.parametrize("node_id", sorted(gather.TABLES))
+@pytest.mark.parametrize("node_id", PAID)
 def test_a_licence_pays_back_in_about_thirty_days_for_three_workers(node_id):
     gain = gather.expected_value(node_id, 16) - economy.work_pay(node_id, 16, economy.LUMBER_LEVEL_OWN_AXE)
     days = gather.licence_price(node_id) / (gather.PAYBACK_CREW * gain)
@@ -89,7 +91,7 @@ def test_a_haul_has_one_item_per_roll_and_comes_from_the_table():
     rng = random.Random(1)
     for node_id in gather.TABLES:
         haul = gather.roll_haul(node_id, 16, rng=rng)
-        assert sum(haul.values()) in (2, 3)
+        assert sum(haul.values()) in ((2, 3) if node_id not in gather.BONUS else range(2, 7))
         assert set(haul) <= {name for name, _ in gather.TABLES[node_id]}
 
 
@@ -275,8 +277,8 @@ def test_the_licence_says_when_it_pays_back():
     assert "pays for itself" not in GatherDesk(guild, group, world.node("mine"))._payback_line(price)
 
 
-def test_gathering_teaches_at_two_in_the_yard_and_three_in_the_mine():
-    assert gather.LEVEL == {"lumber_yard": 2, "mine": 3}
+def test_gathering_teaches_at_two_in_the_yard_and_the_claim_and_three_in_the_mine():
+    assert gather.LEVEL == {"lumber_yard": 2, "mine": 3, CLAIM: 2}
     for node_id, level in gather.LEVEL.items():
         guild, group = _crew(node_id)
         u = group.members[0]
@@ -305,7 +307,8 @@ def test_a_worker_without_the_tool_gathers_nothing_and_learns_nothing(node_id):
     gatherer, guard = group.members
     lines = guild.bank_haul(group.members, 16, node_id)
     names = [name for name, _ in gather.TABLES[node_id]]
-    assert sum(gatherer.count_of(n) for n in names) in (2, 3) and gatherer.work_hours > 0
+    assert sum(gatherer.count_of(n) for n in names) in ((2, 3) if node_id not in gather.BONUS else range(2, 7))
+    assert gatherer.work_hours > 0
     assert sum(guard.count_of(n) for n in names) == 0 and guard.work_hours == 0
     assert any(guard.name in line and "stood guard" in line and gather.tool(node_id) in line for line in lines)
     assert gather.gatherers(group.members, node_id) == [gatherer]
@@ -345,3 +348,49 @@ def test_the_preview_counts_only_the_gatherers_haul():
     haul, _ = guild.shift_worth(group, "lumber_yard", 16)
     assert haul == pytest.approx(2 * gather.expected_value("lumber_yard", 16))
     assert guild.worker_haul(group.members[2], "lumber_yard", 16) == 0
+
+
+# --------------------------------------------------------------------------- #
+# the Wilds Claim: the same shift, no licence and no wage, a Fruit bonus       #
+# --------------------------------------------------------------------------- #
+
+def test_the_claim_gathers_lumber_and_fruit_with_a_bonus_fruit_roll():
+    assert gather.TABLES[CLAIM] == (("Lumber", 80), ("Fruit", 20)) and gather.BONUS == {CLAIM: ("Fruit", 10)}
+    assert gather.AMBUSH_TABLES[CLAIM] is encounters.WILDS_TABLE
+    assert gather.RISK_PER_HOUR[CLAIM] == gather.RISK_PER_HOUR["lumber_yard"]
+    assert gather.tool(CLAIM) == gather.tool("lumber_yard") == "Axe"
+
+
+def test_the_claim_needs_no_licence_and_cannot_be_bought_one():
+    assert not gather.needs_licence(CLAIM) and gather.needs_licence("lumber_yard")
+    guild, group = _crew(CLAIM, 2, licensed=False, money=10_000)
+    assert guild.has_licence(CLAIM) and not guild.buy_licence(CLAIM, group) and not guild.licences
+    assert orders.work(guild, group, 8, gather=True).gather
+
+
+def test_the_bonus_roll_adds_fruit_on_top_of_the_table_and_only_there():
+    rng = random.Random(6)
+    rolls = fruit = 0
+    for _ in range(600):
+        haul = gather.roll_haul(CLAIM, 16, rng=rng)
+        rolls += sum(haul.values())
+        fruit += haul["Fruit"]
+        assert all(n > 0 for n in haul.values())
+    table_fruit = 0.20 * gather.rolls(16) * 600
+    assert fruit > table_fruit * 1.2 and rolls > gather.rolls(16) * 600
+    plain = sum(sum(gather.roll_haul("lumber_yard", 16, rng=rng).values()) for _ in range(600))
+    assert abs(plain - gather.rolls(16) * 600) < 120
+
+
+def test_the_claims_expected_value_counts_the_bonus_roll():
+    extra = economy.sell_price("Fruit") * 0.10 * gather.rolls(16)
+    table = (0.80 * economy.sell_price("Lumber") + 0.20 * economy.sell_price("Fruit")) * gather.rolls(16)
+    assert gather.expected_value(CLAIM, 16) == pytest.approx(table + extra)
+
+
+def test_a_shift_at_the_claim_banks_work_xp_at_level_two_and_leaves_the_axe_less_to_guard():
+    guild, group = _crew(CLAIM, 2, tools=1)
+    gatherer, guard = group.members
+    lines = guild.bank_haul(group.members, 16, CLAIM)
+    assert gatherer.work_hours == 16 * (gather.LEVEL[CLAIM] + 1) and guard.work_hours == 0
+    assert any(guard.name in line and "stood guard" in line for line in lines)

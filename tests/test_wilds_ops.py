@@ -42,6 +42,7 @@ def test_an_unguarded_established_claim_is_seized_without_a_fight():
     orig = _forced_raid_chance(1.0)
     try:
         guild, g, p = _established_guild(garrisoned=False)
+        g.node = "wilds"                           # the band is elsewhere: nobody at the claim
         result = campaign.advance(guild, dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
@@ -62,7 +63,7 @@ def test_a_garrisoned_established_claim_can_be_attacked():
 
     assert g.order is None
     order = next(o for grp, o in result.pending if grp is g)
-    assert order.kind == "wilds_seizure" and order.job == "lumber" and len(order.pack) > 0
+    assert order.kind == "wilds_seizure" and order.prior.job == "lumber" and len(order.pack) > 0
     assert guild.wilds_claim_owner == "guild"      # not seized yet -- the fight decides
 
 
@@ -110,7 +111,7 @@ def test_no_seizure_roll_ever_touches_a_sustaining_claim():
 def test_winning_the_seizure_fight_keeps_the_claim_and_resumes_the_garrison():
     random.seed(1)
     guild, g, p = _established_guild(garrisoned=False)
-    order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), job="lumber")
+    order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), prior=orders.garrison("lumber"))
 
     outcome = campaign.BattleOutcome(won=True, survivors=[p], fallen=[])
     events = forced.resolve_wilds_seizure(guild, g, order, outcome)
@@ -122,7 +123,7 @@ def test_winning_the_seizure_fight_keeps_the_claim_and_resumes_the_garrison():
 def test_losing_the_seizure_fight_seizes_the_claim():
     random.seed(1)
     guild, g, p = _established_guild(garrisoned=False)
-    order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), job="lumber")
+    order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), prior=orders.garrison("lumber"))
 
     outcome = campaign.BattleOutcome(won=False, survivors=[p], fallen=[])
     events = forced.resolve_wilds_seizure(guild, g, order, outcome)
@@ -134,7 +135,7 @@ def test_losing_the_seizure_fight_seizes_the_claim():
 def test_a_full_wipe_during_the_seizure_fight_still_seizes_the_claim():
     random.seed(1)
     guild, g, p = _established_guild(garrisoned=False)
-    order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), job="lumber")
+    order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), prior=orders.garrison("lumber"))
     guild.remove_members([p])                       # the fight wiped the garrison
 
     outcome = campaign.BattleOutcome(won=False, survivors=[], fallen=[p])
@@ -236,3 +237,76 @@ def test_wilds_claim_owner_survives_a_save_round_trip():
         assert back.wilds_claim_owner == "seized"
     finally:
         persist.delete_world(slot)
+
+
+# --------------------------------------------------------------------------- #
+# the claim's crew: whoever stands at the claim defends it, in one fight       #
+# --------------------------------------------------------------------------- #
+
+def _crewed_claim():
+    """A garrison, a gathering band and an idle visitor at an established claim, and a band away."""
+    guild, g, _ = _established_guild(garrisoned=True)
+    gatherer, visitor, away = (Group([Unit("player")], node=NODE) for _ in range(3))
+    gatherer.order = orders.Order("work", eta=16, remaining=9, hours=16, gather=True, job="hold")
+    away.node = "wilds"
+    away.order = orders.rest(8)
+    guild.groups += [gatherer, visitor, away]
+    return guild, g, gatherer, visitor, away
+
+
+def test_a_claim_attack_is_one_roll_and_one_fight_for_everyone_at_the_claim(monkeypatch):
+    guild, g, gatherer, visitor, away = _crewed_claim()
+    rolls = []
+    monkeypatch.setattr(forced, "claim_attack_rolls", lambda days: rolls.append(days) or True)
+    monkeypatch.setattr(forced.encounters, "would_attack", lambda pack, group: True)
+    events, pending = forced.wilds_claim_seizure_check(guild, 1)
+    assert len(rolls) == 1
+    assert {grp for grp, _ in pending} == {g, gatherer, visitor}
+    (lead_order,) = [o for grp, o in pending if grp is g]
+    assert lead_order.kind == "wilds_seizure"
+    assert {o.kind for grp, o in pending if grp is not g} == {"wilds_aid"}
+    assert away.order.kind == "rest"
+    prior_gather = next(o for grp, o in pending if grp is gatherer).prior
+    assert prior_gather.kind == "work" and prior_gather.remaining == 9
+
+
+def test_every_band_called_to_arms_fights_and_goes_back_to_what_it_was_doing_on_a_win():
+    guild, g, gatherer, visitor, _ = _crewed_claim()
+    prior = {grp: grp.order for grp in (g, gatherer, visitor)}
+    pack = (Unit("enemy"),)
+    for grp in (g, gatherer, visitor):
+        kind = "wilds_seizure" if grp is g else "wilds_aid"
+        grp.pending, grp.order = orders.Order(kind, pack=pack, prior=grp.order), None
+    assert len(forced.fight_squad(guild, g, g.pending)) == 3
+    assert forced.fight_lead(guild, visitor) is g
+    forced.resolve_wilds_seizure(guild, g, g.pending, campaign.BattleOutcome(won=True, survivors=[], fallen=[]))
+    assert all(grp.pending is None and grp.order is prior[grp] for grp in (g, gatherer, visitor))
+
+
+def test_a_lost_claim_fight_leaves_every_band_with_no_orders_and_the_dead_stay_dead():
+    guild, g, gatherer, visitor, _ = _crewed_claim()
+    pack = (Unit("enemy"),)
+    for grp in (g, gatherer, visitor):
+        kind = "wilds_seizure" if grp is g else "wilds_aid"
+        grp.pending, grp.order = orders.Order(kind, pack=pack, prior=grp.order), None
+    guild.remove_members(list(visitor.members))
+    forced.resolve_wilds_seizure(guild, g, g.pending, campaign.BattleOutcome(won=False, survivors=[], fallen=[]))
+    assert guild.wilds_claim_owner == "seized"
+    assert g.order.kind == "idle" and gatherer.order.kind == "idle" and visitor.empty
+    assert g.pending is None and gatherer.pending is None
+
+
+def test_a_crew_too_strong_for_the_raiders_is_left_alone(monkeypatch):
+    guild, g, gatherer, visitor, _ = _crewed_claim()
+    monkeypatch.setattr(forced, "claim_attack_rolls", lambda days: True)
+    monkeypatch.setattr(forced.encounters, "would_attack", lambda pack, group: False)
+    assert forced.wilds_claim_seizure_check(guild, 1) == ([], [])
+    assert g.order.kind == "garrison" and gatherer.order.kind == "work"
+    assert guild.wilds_claim_owner == "guild"
+
+
+def test_a_band_on_the_road_or_hunting_is_not_in_the_crew():
+    guild, g, gatherer, visitor, away = _crewed_claim()
+    visitor.order = orders.Order("hunting", state={})
+    gatherer.order = orders.Order("travel", dest="wilds")
+    assert forced.claim_crew(guild) == [g]

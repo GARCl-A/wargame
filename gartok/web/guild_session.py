@@ -225,12 +225,13 @@ class GuildSession(Session):
         if self.group.fight_due:
             raise ValueError(FIGHT_DUE_TIP)
 
-    def _item(self, owner, loc, name, qty):
+    def _item(self, owner, loc, name, qty, note=""):
         return {"loc": loc, "name": name, "qty": qty, "glyph": item_icon.glyph(name), "kg": items.item_weight(name),
-                "coin": items.is_coin(name), "locked": owner.locked_of(name) > 0, "tip": _tip(name)}
+                "coin": items.is_coin(name), "locked": owner.locked_of(name) > 0, "tip": _tip(name), "note": note}
 
     def _pack(self, owner):
-        return [self._item(owner, i, items.stack_name(e), e[1]) for i, e in enumerate(owner._base_inventory)]
+        return [self._item(owner, i, items.stack_name(e), e[1], items.stack_note(e))
+                for i, e in enumerate(owner._base_inventory)]
 
     def _column(self, u):
         g, gear = self.group, self.gear

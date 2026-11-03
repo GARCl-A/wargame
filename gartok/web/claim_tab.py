@@ -2,11 +2,11 @@
 the claim's six stages, the one in hand with its work, and the hearth once the region is swept.
 
 The rules are `claim_desk.ClaimDesk`'s, which pygame's `WildsClaimScreen` reads too: scouting, the Lumber for
-the fences, the garrison and its job, the campfire, the oven and the banked Lumber are its. The
-verbs that leave the claim (the two fights, the garrison) live on `HubSession`, which holds the map.
+the fences, the garrison, the campfire and the oven are its. The verbs that leave the claim (the two fights,
+the garrison) live on `HubSession`, which holds the map.
 """
 
-from .. import economy, wagon_watch
+from .. import economy, orders, wagon_watch
 from ..claim_desk import ClaimDesk
 from ..guild_claim import WILDS_CLAIM_STAGES
 from .shop_tab import _portrait
@@ -34,8 +34,7 @@ class ClaimTab:
 
     @property
     def garrisoned_here(self):
-        o = self.group.order
-        return o is not None and o.kind == "garrison"
+        return orders.holds_post(self.group.order)
 
     def _actions(self):
         """`(verb, label, enabled, why)` for the stage in hand, as pygame's panel offers them."""
@@ -56,12 +55,7 @@ class ClaimTab:
         if self.seized:
             return []
         out = []
-        if stage == "ESTABLISHED":
-            stock = g.garrison_stock_at(self.group.node)
-            out.append(("collect", "Collect the Lumber", bool(stock), None if stock else "nothing banked yet"))
         if self.garrisoned_here:
-            hold = self.group.order.job == "hold"
-            out.append(("garrison_job", "Gather Lumber instead" if hold else "Just hold the claim (rest)", True, None))
             if stage == "SUSTAINING":
                 out.append(("leave_garrison", "Stand down the garrison", True, None))
         elif stage == "SUSTAINING" and g.claim_garrison() is None:
@@ -72,8 +66,7 @@ class ClaimTab:
         """Run one of the stage's own pieces of work (not a fight nor the garrison: `HubSession` plays those).
         -> the stint the band takes for it, or None for work with no hours (the report says what came of it)."""
         work = {"scout": self.s._scout, "deposit": self.s._deposit_lumber, "build": self.s._build_fences,
-                "leave_garrison": self.s._leave_garrison, "garrison_job": self.s._toggle_garrison_job,
-                "collect": self.s._collect_lumber, "campfire": self.s._light_campfire,
+                "leave_garrison": self.s._leave_garrison, "campfire": self.s._light_campfire,
                 "oven": self.s._build_oven}.get(verb)
         if work is None or verb not in {a[0] for a in self._actions() if a[2]} | self._hearth_verbs():
             raise ValueError(f"nothing to {verb.replace('_', ' ')} at the claim now")
@@ -96,7 +89,7 @@ class ClaimTab:
         g = self.guild
         if self.stage not in ("SWEPT", "SUSTAINING", "ESTABLISHED") or self.seized:
             return None
-        crew = self.group.members
+        crew = self.group.carriers
         fuel = sum(m.count_of(economy.CAMPFIRE_FUEL) for m in crew)
         bricks = sum(m.count_of(economy.CLAIM_OVEN_BRICK) for m in crew)
         return {"lit": bool(g.wilds_claim_campfire), "oven": bool(g.claim_oven), "can_cook": bool(g.wilds_claim_can_cook),
@@ -131,7 +124,7 @@ class ClaimTab:
         if self.seized:
             return ["Seized. Occupiers hold the claim right now: the structure still stands, it is just not the guild's to work.",
                     "Travel a band here to fight for it back: only the ground needs retaking, not the whole campaign."]
-        return ["Established. The land is the guild's: the garrison keeps working it on its own."]
+        return ["Established. The land is the guild's: put the garrison to work on the Gathering tab."]
 
     def _member(self, u):
         held = [{"name": n, "qty": u.count_of(n)} for n in CARRIED if u.count_of(n)]
@@ -146,8 +139,6 @@ class ClaimTab:
             cards.append({"label": "lumber banked", "value": f"{g.wilds_claim_fence_lumber} / {economy.WILDS_CLAIM_FENCE_LUMBER}"})
         elif stage == "SUSTAINING":
             cards.append({"label": "days to hold", "value": str(g.wilds_claim_sustain_days_left)})
-        elif stage == "ESTABLISHED" and not self.seized:
-            cards.append({"label": "lumber banked", "value": str(len(g.garrison_stock_at(self.group.node)))})
         return cards
 
     def state(self):
@@ -169,7 +160,5 @@ class ClaimTab:
                            "carried": self.s._party_lumber()} if stage == "CLEARED" else None,
                 "days_left": g.wilds_claim_sustain_days_left if stage == "SUSTAINING" else None,
                 "garrison": garrison.display_name if garrison else None, "here": self.garrisoned_here,
-                "job": self.group.order.job if self.garrisoned_here else None,
-                "banked": len(g.garrison_stock_at(self.group.node)) if stage == "ESTABLISHED" else None,
                 "hearth": self._hearth(), "watch": watch,
                 "members": [self._member(u) for u in self.group.members], "report": self.report}

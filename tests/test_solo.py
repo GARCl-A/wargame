@@ -75,11 +75,34 @@ def test_the_whole_group_can_wait_and_feeds_the_craft_from_every_pack(monkeypatc
     u, mate = _crafter(material=False), Unit("player")
     mate.give_to_pack("Iron Bar")
     guild, g = _setup(u, mate)
-    assert not solo.craft(guild, g, u, RECIPE, 4)[0]
     ok, lines = solo.craft(guild, g, u, RECIPE, 4, alone=False)
     assert ok and "waits" in lines[0] and g.members == [u, mate] and g.locked
     campaign.advance(guild)
     assert u.has_item(RECIPE) and not mate.has_item("Iron Bar") and g.order is None
+
+
+def test_working_alone_takes_the_materials_from_the_whole_group_stock(monkeypatch):
+    from gartok.wagon import Wagon
+    _sure_rolls(monkeypatch)
+    u, mate, cart = _crafter(material=False), Unit("player"), Wagon("Cart")
+    cart.give_to_pack("Iron Bar")
+    guild, g = _setup(u, mate)
+    g.wagons.append(cart)
+    assert workbench.Bench(guild, g, None).alone_blocker(u, RECIPE) is None
+    ok, _ = solo.craft(guild, g, u, RECIPE, 4)
+    ward = next(x for x in guild.groups if u in x.members)
+    assert ok and ward is not g and not cart.has_item("Iron Bar")
+    campaign.advance(guild)
+    assert u.has_item(RECIPE)
+
+
+def test_working_alone_takes_every_unlocked_material_the_group_holds(monkeypatch):
+    _sure_rolls(monkeypatch)
+    u, mate = _crafter(material=False), Unit("player")
+    mate.give_to_pack("Iron Bar", 3)
+    guild, g = _setup(u, mate)
+    assert solo.craft(guild, g, u, RECIPE, 4)[0]
+    assert not mate.has_item("Iron Bar")
 
 
 def test_a_craft_without_materials_or_with_an_order_in_flight_is_refused():

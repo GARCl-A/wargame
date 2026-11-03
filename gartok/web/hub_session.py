@@ -102,10 +102,11 @@ def _house_tabs(guild):
 
 
 def _claim_tabs(guild):
-    """The Wilds Claim's tabs: the kitchen once the hearth can cook, the
-    garage once the garrison opens it."""
-    return [("claim", "The Claim"), *((("kitchen", "Kitchen"),) if guild.wilds_claim_can_cook else ()),
-            *((("garage", "Garage"),) if guild.claim_garage_open else ())]
+    """The Wilds Claim's tabs: gathering and the garage once the garrison opens them, the kitchen once
+    the hearth can cook."""
+    return [("claim", "The Claim"), *((("gather", "Gathering"),) if guild.claim_held else ()),
+            *((("kitchen", "Kitchen"),) if guild.wilds_claim_can_cook else ()),
+            *((("garage", "Garage"),) if guild.claim_held else ())]
 
 
 DYNAMIC = {"property": _house_tabs, "claim": _claim_tabs}
@@ -463,9 +464,11 @@ class HubSession(Session):
     def _shift(self, hours, **kw):
         if hours not in SHIFTS:
             raise ValueError(f"no {hours} h shift")
-        if self.group.busy:
+        order = self.group.order
+        held = order if kw.get("gather") and order is not None and order.kind == "garrison" else None
+        if self.group.busy and held is None:
             raise ValueError(f"{self.group.display_name} is busy")
-        self.group.order = orders.work(self.guild, self.group, hours, **kw)
+        self.group.order = orders.work(self.guild, self.group, hours, resume=held and held.job, **kw)
         self.map.focus = self.group.gid
 
     def work(self, hours):

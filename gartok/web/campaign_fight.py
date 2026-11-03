@@ -44,7 +44,10 @@ def forced_fight(map_session, group, order, opening=None, swift=None):
     """`group`'s forced fight (`group.pending`), as `App._start_forced_battle` plays it; `opening` is how
     the talk before it ended (`dialogue.Opening`), `swift` the clean-stomp estimate that settles it unplayed."""
     guild, node = map_session.guild, world.node(group.node)
-    battle = Battle(list(group.members), list(order.pack), scenario=scenario_for(node),
+    group = forced.fight_lead(guild, group)
+    order = group.pending
+    squad = forced.fight_squad(guild, group, order)
+    battle = Battle(squad, list(order.pack), scenario=scenario_for(node),
                     daylight=guild.clock.is_daylight, lethal=True, arena=False,
                     clock_day=guild.clock.day, aggressor="enemy")
     if opening is not None:
@@ -56,7 +59,7 @@ def forced_fight(map_session, group, order, opening=None, swift=None):
 
     event = forced.EVENTS[order.kind]
     return _enter(map_session, group, battle, node, order.kind, event.label.capitalize(), settle,
-                  swift=swift, nature=event.nature)
+                  squad=squad, swift=swift, nature=event.nature)
 
 
 def claim_fight(map_session, group):

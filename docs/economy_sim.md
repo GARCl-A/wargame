@@ -124,7 +124,7 @@ real rules:
 - levels: a recipe's level blocks nobody and is worked out by `gartok/craft_level.py` from its
   difficulty (barrier to start; scarce reagents; batch time; one level per 2 points). The detector
   checks the one input it cannot compute (`entry_of`) against what the talents really teach;
-- missions (a one-off re-offered after accepting is an exploit) and passive income (garrison);
+- missions (a one-off re-offered after accepting is an exploit);
 - **route**: what walking between the market nodes lets a guild sell (refill per market x markets,
   over the tour time);
 - **dominance**: among activities meant for a level, one that beats another by $1/day or more,
@@ -160,8 +160,9 @@ fail. The market's cash is a design ceiling (~$25/day per market), printed under
 - Library battles come from fresh squads with starting kit: gear a guild bought does not draw a
   stronger fighter.
 - The champion's title and its 15-day defence, and the Ribbit Brothers, are not in layer 2.
-- The Claim has no campfire, oven or garage, and not the garrison's `hold` job (rest, heals in
-  8 h): the garrison only gathers Lumber. Its numbers predate the `hold` fix.
+- The Claim has no campfire, oven or garage. Its garrison holds (rest, heals in 8 h) and a crew
+  with an Axe gathers a 16 h shift a day from its post (`Gathering`, no licence); the rest of the
+  day is the garrison's advance. Its numbers predate the shift rule.
 - The hunt and the road each use their own encounter table (`hunt.wilds_pack`, the Old Road's
   `encounters.OLD_ROAD_TABLE`); the pack `campaign` rolls for an ambush is not the one fought.
 - Animals and carts only cost upkeep: no pack saddle, no hitched wagon carrying anything.

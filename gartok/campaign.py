@@ -104,12 +104,8 @@ def _carry_forward(member, combatant):
             member.give_to_pack(name, qty)
 
     member.first_aid_charges = combatant.first_aid_charges
-    if member.first_aid_charges <= 0:
-        member.remove_named(data.FIRST_AID_ITEM)
 
     member.quiver_charges = combatant.ammo
-    if member.quiver_charges <= 0:
-        member.remove_named(data.AMMO_ITEM)
 
     for item in getattr(combatant, "picked_up_items", []):
         member.give_to_pack(item)
@@ -437,6 +433,8 @@ def _advance(guild, dt=None, busy=()):
             events += gathered
             if ambush is not None:
                 pending.append((g, ambush))
+            elif order.job is not None:
+                g.order = orders.garrison(order.job)
         elif order.kind == "work" and order.task == "put_out":
             events += wildfire.put_out(guild, g)
         elif order.kind == "work" and order.task in SEARCHES:
@@ -460,12 +458,14 @@ def _advance(guild, dt=None, busy=()):
             pending.append((g, order))
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
-    forced_events, forced_pending = forced.daily_checks(guild, days_crossed)
-    events += forced_events
-    pending += forced_pending
     for g, order in pending:
         if order.kind in forced.EVENTS:
-            g.pending = order
+            g.pending = order                  # set before the dailies, so a caught band is not called to the claim
+    forced_events, forced_pending = forced.daily_checks(guild, days_crossed)
+    events += forced_events
+    for g, order in forced_pending:
+        g.pending = order
+    pending += forced_pending
     level_ups = []
     for u in guild.roster:
         b = before_levels.get(u.uid)

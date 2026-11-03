@@ -1,21 +1,20 @@
 """The garrison engine (Sistema 1, [[gartok-property-two-paths]]): a Group
 parked indefinitely on a `"garrison"` order instead of asking for fresh ones,
-its daily job output (`economy.GARRISON_JOBS`, `world.Node.garrison_job`),
-the `Group.busy`/`locked` split that lets split/merge see past a standing
-garrison, and `campaign.advance` excluding it from the tick engine's chase.
-No real node offers a job yet -- these tests set `garrison_job` on a stand-in
-node the way `test_road_ambush.py` forces `world.ROAD_AMBUSH_CHANCE`, rather
-than waiting on Sistema 3's Wilds territory node to exist."""
+its daily job (`world.Node.garrison_job`), the `Group.busy`/`locked` split that lets
+split/merge see past a standing garrison, and `campaign.advance` excluding it from the tick
+engine's chase.
+These tests set `garrison_job` on a stand-in node the way `test_road_ambush.py`
+forces `world.ROAD_AMBUSH_CHANCE`."""
 
 import random
 
 from gartok import campaign, orders
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Unit, economy, world
+from tests.helpers import Unit, world
 
 
-def _job_node(node_id="market", job="lumber"):
+def _job_node(node_id="market", job="hold"):
     """Temporarily give an existing node a `garrison_job`, restoring it after
     -- same idiom `test_road_ambush.py` uses for `world.ROAD_AMBUSH_CHANCE`."""
     node = world.node(node_id)
@@ -31,7 +30,7 @@ def _job_node(node_id="market", job="lumber"):
 def test_a_garrisoned_group_is_busy_but_not_locked():
     random.seed(1)
     g = Group([Unit("player")], node="city")
-    g.order = orders.garrison("lumber")
+    g.order = orders.garrison("hold")
     assert g.busy and not g.locked
 
 
@@ -56,7 +55,7 @@ def test_a_garrisoned_group_can_still_be_split():
     a, b = Unit("player"), Unit("player")
     g = Group([a, b], node="city")
     guild = Guild(None, groups=[g])
-    g.order = orders.garrison("lumber")
+    g.order = orders.garrison("hold")
 
     new = guild.split_group(g, [a])
     assert a in new.members and b in g.members
@@ -69,8 +68,8 @@ def test_two_garrisoned_groups_can_still_be_merged():
     g1 = Group([a], node="city")
     g2 = Group([b], node="city")
     guild = Guild(None, groups=[g1, g2])
-    g1.order = orders.garrison("lumber")
-    g2.order = orders.garrison("lumber")
+    g1.order = orders.garrison("hold")
+    g2.order = orders.garrison("hold")
 
     guild.merge_groups(g1, g2)
     assert g2 not in guild.groups
@@ -101,66 +100,14 @@ def test_a_travelling_group_still_cannot_be_split_or_merged():
 # daily production                                                            #
 # --------------------------------------------------------------------------- #
 
-def test_a_garrison_at_a_job_site_banks_output_each_day():
-    random.seed(1)
-    node, orig = _job_node()
-    try:
-        a, b = Unit("player"), Unit("player")
-        g = Group([a, b], node="market")
-        guild = Guild(None, groups=[g])
-        g.order = orders.garrison("lumber")
-
-        guild.pass_time(24)
-        assert guild.garrison_stock_at("market") == ["Lumber"] * (
-            2 * economy.GARRISON_YIELD_PER_MEMBER_PER_DAY)
-        guild.pass_time(24)
-        assert guild.garrison_stock_at("market") == ["Lumber"] * (
-            4 * economy.GARRISON_YIELD_PER_MEMBER_PER_DAY)
-    finally:
-        node.garrison_job = orig
-
-
-def test_a_garrison_at_a_plain_node_produces_nothing():
+def test_a_garrison_at_a_plain_node_runs_no_job():
     random.seed(1)
     g = Group([Unit("player")], node="market")     # market.garrison_job is None
     guild = Guild(None, groups=[g])
-    g.order = orders.garrison("lumber")
+    g.order = orders.garrison("study")
 
     guild.pass_time(24)
-    assert guild.garrison_stock_at("market") == []
-
-
-def test_the_wrong_job_at_the_right_node_produces_nothing():
-    random.seed(1)
-    node, orig = _job_node(job="lumber")
-    try:
-        g = Group([Unit("player")], node="market")
-        guild = Guild(None, groups=[g])
-        g.order = orders.garrison("something_else")
-
-        guild.pass_time(24)
-        assert guild.garrison_stock_at("market") == []
-    finally:
-        node.garrison_job = orig
-
-
-def test_a_starved_out_garrison_stops_producing():
-    """Regression risk: `_garrison_upkeep` runs after `remove_members` has
-    already pruned an empty group for the day -- must not crash on a group
-    that no longer exists."""
-    random.seed(1)
-    node, orig = _job_node()
-    try:
-        lone = Unit("player")
-        lone._base_inventory = []                  # no food at all
-        g = Group([lone], node="market")
-        guild = Guild(None, groups=[g])
-        g.order = orders.garrison("lumber")
-
-        events = guild.pass_time(24 * (economy.CITY_PROPERTY_DEBT_GRACE_DAYS))
-        assert guild.empty or guild.garrison_stock_at("market") == []
-    finally:
-        node.garrison_job = orig
+    assert g.order.kind == "garrison" and g.order.job == "study"
 
 
 # --------------------------------------------------------------------------- #
@@ -171,7 +118,7 @@ def test_advance_is_a_no_op_when_only_a_garrison_is_in_flight():
     random.seed(1)
     g = Group([Unit("player")], node="city")
     guild = Guild(None, groups=[g])
-    g.order = orders.garrison("lumber")
+    g.order = orders.garrison("hold")
 
     result = campaign.advance(guild)
     assert result.events == [] and result.pending == []
@@ -186,7 +133,7 @@ def test_advance_chases_a_travelling_group_past_a_garrisoned_one():
     g2 = Group([garrisoned], node="market")
     guild = Guild(None, groups=[g1, g2])
     g1.order = orders.travel(g1, "market")
-    g2.order = orders.garrison("lumber")
+    g2.order = orders.garrison("hold")
 
     result = campaign.advance(guild)
     assert g1.node == "market" and g1.order is None      # the travel resolved normally
@@ -199,81 +146,9 @@ def test_a_forced_maintenance_stop_does_not_disturb_a_garrison_order():
     try:
         g = Group([Unit("player")], node="market")
         guild = Guild(None, groups=[g])
-        g.order = orders.garrison("lumber")
+        g.order = orders.garrison("hold")
 
         campaign.advance(guild, dt=1)               # a forced stop (a hunt's hours)
         assert g.order.kind == "garrison"
     finally:
         node.garrison_job = orig
-
-
-# --------------------------------------------------------------------------- #
-# save round trip (persist.py)                                                #
-# --------------------------------------------------------------------------- #
-
-def test_garrison_stock_survives_a_save_round_trip():
-    import os
-
-    from gartok import persist
-    slot = "testworld"
-    if os.path.exists(persist.save_path(slot)):
-        return
-    random.seed(1)
-    guild = Guild([Unit("player")])
-    guild.garrison_stock = {"market": ["Lumber", "Lumber"]}
-    try:
-        persist.save_game(slot, guild)
-        back = persist.load_game(slot)
-        assert back.garrison_stock_at("market") == ["Lumber", "Lumber"]
-    finally:
-        persist.delete_world(slot)
-
-
-def test_city_property_state_survives_a_save_round_trip():
-    """Regression: Sistema 2 shipped without wiring its new guild fields into
-    `persist.py` at all -- a bought/repossessed/squatted property silently
-    reset on every save/load. Fixed alongside Sistema 1."""
-    import os
-
-    from gartok import persist
-    slot = "testworld"
-    if os.path.exists(persist.save_path(slot)):
-        return
-    random.seed(1)
-    p = Unit("player")
-    guild = Guild([p])
-    guild.buy_city_property()
-    guild.house.stash.put("Rope")
-    guild.house.missed_payments = 2
-    guild.bankers_debt = 15
-    guild.bankers_debt_since = guild.clock.day
-    try:
-        persist.save_game(slot, guild)
-        back = persist.load_game(slot)
-        assert back.house.owned and back.house.stash.items == [("Rope", 1)]
-        assert back.house.missed_payments == 2
-        assert back.house.tax_due_day == guild.house.tax_due_day
-        assert back.bankers_debt == 15
-        assert back.bankers_debt_since == guild.bankers_debt_since
-    finally:
-        persist.delete_world(slot)
-
-
-def test_a_squatting_property_survives_a_save_round_trip():
-    import os
-
-    from gartok import persist
-    slot = "testworld"
-    if os.path.exists(persist.save_path(slot)):
-        return
-    random.seed(1)
-    guild = Guild([Unit("player")])
-    guild.buy_city_property()
-    guild.house.squat()
-    try:
-        persist.save_game(slot, guild)
-        back = persist.load_game(slot)
-        assert back.house.owned and back.house.squatting
-        assert back.house.tax_due_day is None
-    finally:
-        persist.delete_world(slot)

@@ -327,11 +327,11 @@ Raw goods no recipe makes, and where each comes from (`gartok/sources.py`).
 | 1sqm Hide | dropped: Wolf |
 | Bloom Fruit | grown: a Treefolk's Bountiful Harvest |
 | Dragon Egg | quest: the Dragon's Lair, under the Mine |
-| Fruit | gathered: lumber_yard |
+| Fruit | gathered: lumber_yard, gathered: wilds_territory |
 | Ink | traded: Library |
 | Iron Ore | gathered: mine |
 | Legendary Horn | quest: the tanner's last job |
-| Lumber | gathered: lumber_yard |
+| Lumber | gathered: lumber_yard, gathered: wilds_territory |
 | Meat | dropped: Wolf, hunted: the Wilds |
 | Paper | traded: Library |
 | Potato | traded: Farm |

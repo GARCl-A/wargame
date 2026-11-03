@@ -1,10 +1,10 @@
 """The Wilds Claim's work with no window: scouting, the Lumber hauled for the fences and the fences raised, the
-garrison and its job, the hearth (campfire or oven), and the Lumber the garrison banks. The two fights (CLEAR,
+garrison, and the hearth (campfire or oven). Gathering Lumber is the Gathering tab's (`gather.py`). The two fights (CLEAR,
 SWEEP) are the front-end's to play (`guild_claim` says what they are). pygame's `WildsClaimScreen` and
 `web/claim_tab.py` are the windows over `ClaimDesk`.
 """
 
-from . import economy, items, orders, stints
+from . import economy, orders, stints
 
 
 class ClaimDesk:
@@ -13,7 +13,7 @@ class ClaimDesk:
         self.notice = None
 
     def _carriers(self):
-        return [*self.group.members, *self.group.wagons, *self.group.herd]
+        return self.group.carriers
 
     def _party_lumber(self):
         return sum(m.count_of("Lumber") for m in self._carriers())
@@ -32,18 +32,6 @@ class ClaimDesk:
         else:
             self.notice = "nobody here is carrying Lumber."
 
-    def _collect_lumber(self):
-        stock = self.guild.garrison_stock.setdefault(self.group.node, [])
-        taken = 0
-        for m in self.group.members:
-            while stock and m.load + items.item_weight("Lumber") <= m.carry_max:
-                stock.pop()
-                m.give_to_pack("Lumber")
-                m._derive_combat()
-                taken += 1
-        self.notice = (f"collected {taken} Lumber." if taken
-                       else "no room to carry any Lumber right now.")
-
     # the claim's work with hours to it: each returns its stint for the band, or None (the notice says why)
     def _scout(self):
         return stints.order("claim_scout", economy.WILDS_CLAIM_SCOUT_HOURS, self.group.members)
@@ -54,18 +42,18 @@ class ClaimDesk:
         return stints.order("claim_fences", economy.WILDS_CLAIM_FENCE_HOURS, self.group.members)
 
     def _light_campfire(self):
-        if not self.guild.claim_fire_fuel(self.group.members):
+        if not self.guild.claim_fire_fuel(self._carriers()):
             self.notice = f"nobody has {economy.CAMPFIRE_FUEL} to burn."
             return None
         self._lightened()
         return stints.order("claim_fire", economy.CAMPFIRE_HOURS, self.group.members)
 
     def _build_oven(self):
-        short = self.guild.claim_oven_short(self.group.members)
+        short = self.guild.claim_oven_short(self._carriers())
         if short:
             self.notice = short
             return None
-        self.guild.claim_oven_bricks(self.group.members)
+        self.guild.claim_oven_bricks(self._carriers())
         self._lightened()
         return stints.order("claim_oven", economy.CLAIM_OVEN_HOURS, self.group.members)
 
@@ -74,14 +62,8 @@ class ClaimDesk:
             m._derive_combat()
 
     def _start_garrison(self):
-        self.group.order = orders.garrison("lumber")
+        self.group.order = orders.garrison("hold")
         self.guild.wilds_claim_start_sustaining()
-
-    def _toggle_garrison_job(self):
-        order = self.group.order
-        if order is None or order.kind != "garrison":
-            return
-        order.job = "lumber" if order.job == "hold" else "hold"
 
     def _leave_garrison(self):
         if self.group.order is not None and self.group.order.kind == "garrison":

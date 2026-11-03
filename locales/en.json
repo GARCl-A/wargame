@@ -251,7 +251,7 @@
       "title": "Claiming the wilds",
       "body": [
         "Six stages: scout the land (2 h), clear the creatures there (a fight), fence it (10 Lumber, 8 h), sweep a nearby camp (a fight), then hold it with a garrison for 10 days -- each day a 20% chance of a raid.",
-        "Once established, the garrison gathers Lumber each day, or just holds the place and rests. Raids still come.",
+        "Once the garrison holds, the Gathering tab puts it to work: Lumber and Fruit, with no licence to buy, only an Axe. A shift does not leave the post. Raids still come.",
         "A campfire (1 Lumber, 1 h, a Wisdom check) cooks while someone is garrisoned; an oven (15 Stone Brick from the Mine, 8 h) cooks for good. Once the garrison opens, the Claim has a garage too."
       ]
     },
@@ -304,7 +304,8 @@
       "title": "Gathering materials",
       "body": [
         "Buy the node's licence once and every group of the guild can gather here instead of taking the wage.",
-        "Only a worker carrying the node's own tool gathers (an Axe at the Lumber Yard, a Pick at the Mine) and learns more than the wage teaches. The rest stand guard: no haul and no work XP, but they fight if a pack comes. Split them off on the map if they should earn elsewhere.",
+        "The Wilds Claim gathers the same way with no licence: the ground is the guild's.",
+        "Only a worker carrying the node's own tool gathers (an Axe at the Lumber Yard and the Claim, a Pick at the Mine) and learns more than the wage teaches. The rest stand guard: no haul and no work XP, but they fight if a pack comes. Split them off on the map if they should earn elsewhere.",
         "Pick a shift (4 to 16 hours); the haul goes into the gatherers' packs: Lumber and Fruit at the Lumber Yard; Stone Brick, Coal, Iron Ore and gems at the Mine. On average it out-earns the wage, but a pack of beasts may find the crew."
       ]
     },
