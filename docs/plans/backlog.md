@@ -7,7 +7,8 @@ that owns the subject: the test suite [../../tests/README.md](../../tests/README
 What is already built is in the code, its tests and the git log.
 
 Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do*
-items, the plan pointers and the sim's `roll_pack` claim again on 2026-11-01). When an item is done, delete it here and, if it
+items, the plan pointers and the sim's `roll_pack` claim again on 2026-11-01; the items of 2026-11-03
+were only checked against the names they cite). When an item is done, delete it here and, if it
 changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts, in this order:
@@ -31,8 +32,9 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- The *Small* items below, in order: the fighter that cannot move, the icons'
-  authors, then the skills.
+- The *Small* items below, in order: the bugs (the save that does not hold a lost hunt first, then the
+  fighter that cannot move and the rest of the 2026-11-02 ones), the overflows, the food's visibility, the
+  icons' authors, then the skills.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -47,7 +49,28 @@ the rest.
 
 ## Small
 
-- **Bug: a fighter that cannot move and shows no reason (playtest 2026-10-30).** Ancient Ruins, in-game day 75,
+- **Bug: a save loaded after a lost hunt fight does not hold the fight (playtest 2026-11-02).** The squad
+  lost a fight during a Wilds hunt; loading the save from before it brought back neither the fight nor the
+  hunt that had started it, so the saved state was not the state of the game that had been played. Find what
+  the save drops (the hunt stretch, `Group.pending`, `order`; a battle in progress is never saved, by design)
+  and decide what a save taken before a fight must hold: the hunt, so the fight can be rolled again, or
+  nothing past the last stop. Ask the author which save it was (manual or autosave); the recording of the
+  session is in the repo. Test: save at the start of a hunt, lose the fight, load, the same hunt is there.
+
+- **Bug: the tavern says "REJECTED THIS WEEK" while another member can still try (playtest 2026-11-02).**
+  Two members can recruit the same candidate, one fails, and the row keeps the label (`tavern.py`
+  `REJECTED_LABEL`) even though the bar is per recruiter (`recruit.bar`). Show the label only when nobody
+  in the group can try, and name who can. Test: two recruiters, one barred.
+
+- **Bug: the Ledger Hold training errand has no "!" and sits in the wrong tab (playtest 2026-11-02).**
+  "Train a designated Treefolk recruit..." (`factions.py`) does not raise the exclamation mark on the map
+  and is listed with the supply run under *Work*; it belongs to *Jobs*. Test: the mark and the tab.
+
+- **Show food's shelf life and the rations where the decision is made (playtest 2026-11-02, Johann
+  2026-10-31).** The supply is a constraint on purpose (*Playtest notes -> 2026-10-31*), so the player has
+  to be able to see it: the shelf life in the shop row; each food's own expiry in the inventory (today a
+  stack hides the validity of its items); the ration count on the craft screen; and the rations a trip or a
+  defence needs in the travel preview, with a warning on the first trip. Ancient Ruins, in-game day 75,
   against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
   Rebuild the fight from its combat-log JSONL (`CombatLog`; the author has it as a local recording of
   2026-10-30 on another machine; it is not in the repo, so ask for it), find the
@@ -79,7 +102,7 @@ the rest.
 - **Overflows and unclear counters (playtest 2026-11-02).** (1) Loot screen: the text of what went to each
   inventory overflows. (2) Post-fight screen: with many foes (the Snake Dragon dungeon) the enemy list
   overflows. (3) Wilds garrison: when holding for 10 days, the time left is not clear, and the *advance 24 h*
-  button runs past it; show days left and stop the advance at the end. (4) *Gear & Quests* and *Campfire*
+  button runs past it; show days left and stop the advance at the end. (3b) The death screen: its texts overlap (playtest 2026-11-02). (4) *Gear & Quests* and *Campfire*
   buttons need no descriptive text, an icon alone with a tooltip is enough.
 
 - **The floor items of a dungeon do not look interactive (playtest 2026-11-02).** In the dragon's lair a
@@ -92,6 +115,12 @@ the rest.
   screen's Notices are the charter's, not a history. Keep a bounded, per-guild list of the day's events
   (saved, or at least kept for the session) with a tab or button to reread it. Size once the card
   decides how much to keep.
+
+- **Ankareth is the town, the node is the bank (author, note outside playtests).** `world.py` names the
+  `city` node "Ankareth", but the arena, the market and the smithy are their own nodes: the node is the
+  bank. Name the node for what it is, keep "Ankareth" for the region, and replace the circle that marks
+  Ankareth's jurisdiction on the map (`MapSheet`, `sheet.js`) with something that does not read as a road.
+  Grep the strings and tests that use the name first.
 
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
@@ -115,7 +144,40 @@ the rest.
   way: what role each plays against the others (Grab holds a foe for the allies' -2 AC and the Zombie Bite,
   Takedown pins a runner or frees the attacker to move), which one is dominated, and which need a bonus to
   earn a use (one candidate for Takedown: melee attacks against a Prone foe at +2). Measure with
-  `scripts/combat_pairs.py` and mirrored headless squads, then retune.
+  `scripts/combat_pairs.py` and mirrored headless squads, then retune. **Weapons too (playtest
+  2026-11-02):** the Pickaxe (35 gold) looks by far the best weapon, because its condition (the target
+  wears armour) holds for every human foe from level 2 up, so it is a damage machine; rank the weapons
+  the same way, by what their favoured case costs to meet (*Weapon actions: tune* in *Large* waits on
+  this).
+
+- **Combat teaches itself: the tutorial and the conditions (playtest 2026-11-02, Johann 2026-10-31).**
+  (1) The combat tutorial explains the actions: today the cards are text and did not help, so show the
+  control (a highlight on the bar) and cover each action of the bar. (2) The conditions on a combatant read
+  better: show each one with its icon, its rounds left and its effect on hover. Web only
+  (`screens/battle/`), with the card's key in `locales/en.json`.
+
+- **Ambush on the way in, at every dangerous node (author, note outside playtests).** The Wilds, the
+  Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road
+  (`forced.py` rolls `world.ROAD_AMBUSH_CHANCE` once per arrival at an `unsafe` node), and the map should
+  mark a node that has one ("ambush on the way"). Check what `unsafe` covers today; the chance per node is
+  tuned together with *How lethal the Wilds should be* (*Needs more information -> Economy numbers*).
+
+- **A quest at the Apothecary for venom glands (playtest 2026-11-02).** *Venom Gland* (Giant Spider) and
+  *Snake Venom Gland* (Snake) drop and have no use. Add an errand asking for them, declared like the other
+  factions' errands (`factions.py`), with a reward that does not beat the Wilds hunt (run
+  `scripts/economy_report.py`).
+
+- **One colour per name, then the map screen's pass on every screen (author, notes outside playtests).**
+  Two steps, in this order. (1) *Tokens:* the CSS declares about 70 custom properties (23 in `shell.css`)
+  against about 1600 literal colours in 17 files, so nobody can tell which colours are in use and a new
+  one is a random hash. Collect every colour in use, merge the near-equal ones, name the survivors in
+  `:root` (`shell.css`) and replace the literals; record the names in `docs/web_ui/web_client.md`.
+  (2) *The map's pass:* the author enlarged and recoloured the ledger's `.lbl` on the map (reputation, purse,
+  members), merged the *party* panel into *Bands* and cut strings (2026-11-02/03). Split each change into
+  what *should* spread, to keep text, fonts and colours one pattern (`.lbl` is redefined in `guild`, `hub`,
+  `draft` and `arena` with its own hex), and what *may* spread, a holistic wish to show less at all times,
+  move detail to hovers and use the space better. Judge each screen against the map's and list the
+  changes per screen before touching one.
 
 - **Rules as keywords, the next ones (playtest 2026-10-30).** `keywords.py` and the wiki's KEYWORDS chapter
   exist, with *Brutal N* the first (N more rolls of the weapon's damage; every Brutal of the game is 1;
@@ -176,7 +238,9 @@ the rest.
   formulas the wiki states (`recruit.capacity` / `leader_capacity`, `Group.herd_capacity` with Beast
   Whisperer); and the `locales/en.json` cards (the tavern's says "past the guild's second" and "$15 a
   day") filled from the constants or checked against them by a test. Then one load-bearing line in
-  `AGENTS.md`.
+  `AGENTS.md`. Playtest 2026-11-02 adds a case: the wiki states the Glaive's extra action but not its
+  +1 reach (if it has one), so a weapon's entry must list every property it carries, read off its
+  `ItemDef`.
 
 ---
 
@@ -414,8 +478,8 @@ items it touches. Raw feedback, not yet sized:
   constraint on purpose, not an afterthought: a group of ten plus a cart eats eleven meals a day, a
   10-day territory defence needs ~110 meals and a tavern holds tens (about 15 beers, 10 meats, 30
   potatoes). Salted meat and beer are the end-game foods (30 and 20 days), Potato lasts 7, fruit 1;
-  hunting pays through meat and hides sold, then potatoes bought. Left: make that constraint visible
-  (shelf life in the row, the meals a trip or a defence needs).
+  hunting pays through meat and hides sold, then potatoes bought. Making the constraint visible is
+  *Show food's shelf life and the rations...* in *Ready to do -> Small*.
 - **Hunting is not cheaper than buying** (the first mechanic he tried); the author felt it was badly
   balanced but it is **not validated**: it needs an economic analysis first (author 2026-10-31).
   Re-run `scripts/economy_report.py` for the Wilds hunt (meat and hides sold, then food bought) against
@@ -439,12 +503,13 @@ items it touches. Raw feedback, not yet sized:
 
 - **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
   mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
-  highlight of the control on the screen), or shorter cards that point at the first action.
+  highlight of the control on the screen), or shorter cards that point at the first action. The combat
+  card is *Combat teaches itself* (*Medium*); the other screens wait for its answer.
 - **The Reputations tasks only half guide a start.** Found them "almost intuitive", not a clear "how
   to begin". Check whether the first deeds read as a path.
 - **Rations are learned the expensive way.** Travel eats rations (once a day) and he found out by
-  spending them. The wiki was opened once and never used. Ideas: a ration/day cost line in the
-  travel preview, a first-travel warning, a link from the tutorial to the wiki.
+  spending them. The wiki was opened once and never used. The travel preview and the warning are in
+  *Show food's shelf life and the rations...* (*Small*); left here: a link from the tutorial to the wiki.
 - Good sign: he understood the screens by playing and asked whether to continue (about 2 h in).
 
 ## Older raw notes (2026-10-12, 2026-10-21)
@@ -652,39 +717,3 @@ has one "Enter" button and its functions are tabs inside.
   preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
   and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
   playtest shows whether bout chains break anything.
-
-
-====
-
-Raw playtest notes 02-11-2026 -guilda semenzada
-
-[14:23, 02/11/2026] Lucas Garcia: Melhorar o tutorial de combate, explicando as ações.
-
-Melhorar a exibição visual das condições aplicadas aos personagens no combate.
-[15:09, 02/11/2026] Lucas Garcia: Na taverna se eu tenho 2 pessoas q podem recrutar, mas uma delas falha.
-
-fica mostrando "rejected this week" mesmo quando ainda é razoável
-[15:14, 02/11/2026] Lucas Garcia: Na tela de craft não mostra a contagem de racoes.
-[15:16, 02/11/2026] Lucas Garcia: A glaive tem, por base, +1 de alcance? Se sim, isso não é mostrado na wiki. Só a ação extra dela.
-[15:25, 02/11/2026] Lucas Garcia: eu acho que a picareta parece ser simplesmente a melhor arma de 35 de Gold POR MUITO. ela é uma máquina de dar dano pq a condicional dela é o alvo usar armadura é qualquer inimigo (humano) do lv2 pra frente está de armadura.
-
-Isso é apenas MAIS UM insight a respeito da análise das armas.
-[15:31, 02/11/2026] Lucas Garcia: No inventário, não dá pra saber individualmente, a validade de cada comida.
-[16:42, 02/11/2026] Lucas Garcia: Quest no apotecario pedindo por glândulas de veneno.
-[16:49, 02/11/2026] Lucas Garcia: Na tela de morte, fica texto sobrepondo.
-[16:57, 02/11/2026] Lucas Garcia: A missão de treinar o recruta, lá no ledger hold, não deve estar aparecendo o "!" no mapa. Além disso, ela era pra estar na aba "jobs" não junto do work da supply run.
-[17:27, 02/11/2026] Lucas Garcia: Perdi uma luta durante uma caça na Wilds. Aí quando fui dar load no save antes dela, a luta não tava carregada. E, por consequência disso a ação da wilds tbm não. ou seja, o estado do save não representava o estado do jogo real
-
-====
-
-Raw notes outside playtests
-
-The wilds, Frontier outpost e The battelfields deveriam ter emboscadas por "trajeto" da mesma forma que a old roads. Sinalização de que aquele nó tem "emboscada por passagem".
-
-Substituir o "ciruculo" que marca a jurisprudencia de ankareth, por algo que parecça menos com as estradas. Inclusive o nó "Ankareth" não faz muito sentido né, o nó é "o banco". Pq ankareth contém a arena, o mercado, o smithy, etc.
-
-Revisar as mudanças de ui que fiz a partir dos commits: 2386f1604. Estou anotando o raciocinio desse topico aqui pra ver isso eu tinha q ter tomado cuidado e propagado pra algum lugar. Eu queria mudar o ledger na tela de mapa. Lá, tinha o .lbl, que era o texto responsavel pelos textos de "reputation, purse, members". Eu achei q eles estavam pequenos demais. Dessa forma, mudei a cor e o tamanho. Essa ação precisa ser replicada provavelmente em outras telas pra manter o padrão.  Vale pensar tambem que TUDO oq eu fiz foi pensando somente na tela de mapa (e eu gostei das coisas q fiz), então a intenção é identificar tanto de maneira objetiva quanto subjetiva quais dessas mudanças deveriam/podem ser propagas pra outras telas. O "deveriam" é pra manter o padrão de textos, fontes e cores. O "Podem" é uma mudança mais holistica de tentar reduzir a quantidade de informações expostas a todo momento na tela, movendo algumas coisas pros hovers & tentar aproveitar melhor o espaço. Deixando a interface com mais identidade, mais ludica, mais bonita, mais clara, com uma carga cognitiva menor, melhor diagramada, etc.
-
-Na tela de mapa, a direita temos "party" e a esquerda temos "bands" a informação desses 2 paineis, parece ter muita coisa duplicada aumentando a carga visual/cognitiva desnecessariamente. A ideia é mover as coisas da party que estão na direita, para a esquerda.
-
-Agora, que eu to revisando visualmente as coisas. Uma parada que muito me incomodou é o uso de cores que não estão definidas la no root. Isso dificulta muito compreender quais são as cores ja utilizadas e permite que eu fique criando hashes aleatorios. Vale pegar todas as cores ja utilizadas no CSS's e nomear/padronizar elas.
