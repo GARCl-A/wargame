@@ -2,11 +2,13 @@
 the flag-seeking AI and the three second-stage deeds."""
 
 import random
+
 from gartok import actions, ai, arena, campaign, encounters, factions, world
 from gartok.battle import COLS, Battle
 from gartok.guild import Guild
 from gartok.scenario import FlagScenario, own_half
 from gartok.unit import Unit
+
 
 def _ctf_battle(n_enemy=1):
     random.seed(0)

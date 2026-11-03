@@ -5,6 +5,7 @@ from gartok.ground import GroundObject
 from gartok.unit import Unit
 from tests.helpers import _melee_battle, fixed_d20
 
+
 def test_bear_trap_trigger_on_movement():
     """Walking into an enemy bear trap deals damage and stops movement."""
     batt, actor, defender = _melee_battle()

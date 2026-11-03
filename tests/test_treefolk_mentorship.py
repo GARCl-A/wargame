@@ -1,4 +1,5 @@
 import pytest
+
 from gartok import data, factions, missions
 from gartok.group import Group
 from gartok.guild import Guild

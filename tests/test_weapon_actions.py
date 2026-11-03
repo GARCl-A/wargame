@@ -1,6 +1,7 @@
 """Tests for 2-AP weapon actions, traits expansion, critical hit multipliers, and AI usage."""
 
 from unittest.mock import patch
+
 import pytest
 
 from gartok import items, weapon_traits

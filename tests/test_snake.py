@@ -3,7 +3,17 @@ drops, and three racial talents (two growths and Snake Venom)."""
 
 import random
 
-from gartok import actions, ai, data, encounters, gather, loot, poisons, sources, talents
+from gartok import (
+    actions,
+    ai,
+    data,
+    encounters,
+    gather,
+    loot,
+    poisons,
+    sources,
+    talents,
+)
 from gartok.battle import Battle
 from gartok.ground import GroundObject
 from gartok.unit import Unit

@@ -1,9 +1,11 @@
 """What a side knows of a foe: the opening read, the bands it opens, Assess, the bestiary."""
 
 import pytest
+
 from gartok import actions, ai, conditions, intel
 from gartok.battle import Battle
 from tests.helpers import Unit
+
 
 def _fight(foes=1, hidden=False):
     """A hero and `foes` enemies in daylight; `hidden` puts a wall between them."""

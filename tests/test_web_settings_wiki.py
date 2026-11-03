@@ -4,13 +4,23 @@ menu: resume, save as, settings, wiki, main menu, quit), and back to where they 
 import json
 import os
 import re
-from pathlib import Path
 import threading
 import urllib.request
+from pathlib import Path
 
 import pytest
 
-from gartok import items, keywords, persist, recorder, settings, talents, weapon_traits, wiki_rules, wiki_terms
+from gartok import (
+    items,
+    keywords,
+    persist,
+    recorder,
+    settings,
+    talents,
+    weapon_traits,
+    wiki_rules,
+    wiki_terms,
+)
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.web.map_session import MapSession

@@ -3,6 +3,7 @@
 
 import random
 from types import SimpleNamespace
+
 from gartok import actions, ai, battlefield, factions, missions, world
 from gartok.clock import Clock
 from gartok.guild import Guild

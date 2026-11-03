@@ -1,8 +1,10 @@
 """Screens draw native at any size; the shared modal and drag plumbing."""
 
 import random
+
 from gartok.guild import Guild
 from tests.helpers import Unit, data, economy, packed, standard_unit
+
 
 def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     from gartok.trade import Counter

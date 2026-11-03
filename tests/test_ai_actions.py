@@ -5,7 +5,15 @@ import random
 
 from gartok import ai
 from gartok.ground import GroundObject
-from tests.helpers import Battle, Unit, abilities, actions, fixed_d20, _recruit, duelists
+from tests.helpers import (
+    Battle,
+    Unit,
+    _recruit,
+    abilities,
+    actions,
+    duelists,
+    fixed_d20,
+)
 from tests.test_ai_racial import _centaur, _rider_unit
 
 

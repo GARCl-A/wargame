@@ -436,8 +436,8 @@ def test_fresh_food_beside_rotten_counts_only_the_fresh():
 
 def test_the_rotten_food_on_a_wagon_is_not_a_carried_ration():
     from gartok.group import Group
-    from gartok.wagon import Wagon
     from gartok.unit_loadout import stack_add
+    from gartok.wagon import Wagon
     from tests.helpers import standard_unit
     wagon = Wagon("Cart")
     stack_add(wagon.stash.items, "Potato", 2)

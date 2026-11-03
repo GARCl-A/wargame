@@ -3,7 +3,6 @@ garrisons it, one silent roll a day when nobody does, and its food feeds the gar
 
 import os
 
-
 from gartok import economy, forced, orders, persist, world
 from gartok.animals import Animal
 from gartok.group import Group

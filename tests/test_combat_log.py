@@ -3,14 +3,16 @@ battle_screen controllers, scripts/combat_analysis.py, scripts/combat_pairs.py).
 
 import os
 import random
+
+import combat_analysis
+import combat_pairs
 import pytest
+
 from gartok import ai, combat_lab, combat_log, encounters, recorder
 from gartok.battle import Battle
 from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.scenario import ErmosScenario, FlagScenario
-import combat_analysis
-import combat_pairs
 
 HUMAN_AI = {"player": "human", "enemy": "ai"}
 

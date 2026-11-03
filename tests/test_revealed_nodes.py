@@ -1,4 +1,5 @@
 import pytest
+
 from gartok import persist, world
 from gartok.guild import Guild
 from tests.helpers import Unit

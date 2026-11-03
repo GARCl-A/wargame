@@ -4,6 +4,7 @@ from gartok import abilities, ai, foe_card, intel, weapon_traits
 from gartok.sheet import unit_to_ch
 from tests.helpers import _melee_battle, _recruit, actions, fixed_d20
 
+
 def test_a_weapon_names_its_own_action_and_a_plain_one_none():
     from gartok import items
     assert weapon_traits.action_name(items.get("Axe")) == "Cleave"

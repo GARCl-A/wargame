@@ -3,8 +3,10 @@ battle. Same d20 + mod idiom as every other check in the game (`fixed_d20`
 pins it, same as a death save or the guard test)."""
 
 import random
+
 from gartok import chest, data, items
 from tests.helpers import Unit, fixed_d20, packed
+
 
 def _guild_of(*units):
     from gartok.guild import Guild

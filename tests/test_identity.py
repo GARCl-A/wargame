@@ -7,6 +7,7 @@ Purely cosmetic (see RULES.md and gartok/guild.py's "identity" paragraph) --
 from gartok.guild import DEFAULT_BANNER_COLOR, DEFAULT_BANNER_ICON, Guild
 from tests.helpers import Unit
 
+
 def test_guild_falls_back_to_the_default_identity_when_none_is_given():
     guild = Guild([Unit("player")], node="city")
     assert guild.name == ""

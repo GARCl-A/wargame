@@ -4,6 +4,7 @@ from pathlib import Path
 
 from gartok import art_files, persist, unit
 
+
 def test_portrait_id_survives_a_save_round_trip():
     u = unit.Unit("player")
     v = unit.Unit.from_save(persist.unit_to_dict(u))

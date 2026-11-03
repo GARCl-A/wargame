@@ -1,9 +1,11 @@
 """Light per cell: one level for each cell in sight, darkness outright for any cell the rules hide."""
 
 import pytest
+
 from gartok.ground import GroundObject
 from gartok.lighting import cell_levels
 from tests.helpers import _melee_battle
+
 
 def _night(walls=()):
     batt, a, d = _melee_battle()

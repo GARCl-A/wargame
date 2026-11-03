@@ -3,9 +3,11 @@ catalog backing every id a screen can hand back, and save/load round-tripping
 the seen/enabled state by slot."""
 
 import random
+
 from gartok import i18n, persist
 from gartok.tutorial import TUTORIALS, TutorialState
 from tests.helpers import Unit
+
 
 def test_every_registered_id_resolves_real_copy_not_the_key_itself():
     for tid in TUTORIALS:

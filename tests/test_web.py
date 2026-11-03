@@ -9,10 +9,13 @@ import threading
 import urllib.error
 import urllib.request
 from itertools import pairwise
+
 import pytest
+
 from gartok import actions, ai, combat_lab, data, lighting, recorder, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
+
 
 def _session(fight="dungeon", seed=3):
     battle, meta = combat_lab.build(fight, 2, 4, seed=seed)

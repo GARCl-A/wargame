@@ -1,8 +1,10 @@
 """The sandbox character/map creators and their git-tracked libraries."""
 
 import random
+
 from gartok import persist
 from tests.helpers import COLS, Battle, CustomScenario, Unit, _unit
+
 
 def test_map_npc_units_pins_a_library_character_to_its_cell():
     import shutil

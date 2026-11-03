@@ -2,6 +2,7 @@
 
 from gartok import settings
 
+
 def test_volume_label():
     assert settings.SPEC["volume"][2] in settings.SPEC["volume"][1]
     monkey = settings._values

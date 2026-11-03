@@ -2,8 +2,10 @@
 +2 initiative to every ally within 10 squares (which can reorder the turns)."""
 
 import random
+
 from gartok import ai
 from tests.helpers import Battle, Unit, actions, items, persist
+
 
 def _band(n_allies=3, horn=True):
     random.seed(5)

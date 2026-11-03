@@ -10,7 +10,15 @@ from gartok import ai, campaign, cohesion, dialogue, persist, talents, vision
 from gartok.actions.base import _held_line, _resolve_hit
 from gartok.guild import Guild
 from gartok.unit_hunger import BLOOM_FRUIT
-from tests.helpers import Battle, GroundObject, Unit, actions, data, duelists, patch_action_d20
+from tests.helpers import (
+    Battle,
+    GroundObject,
+    Unit,
+    actions,
+    data,
+    duelists,
+    patch_action_d20,
+)
 
 
 def _racial(race, *picks, team="player", seed=0):

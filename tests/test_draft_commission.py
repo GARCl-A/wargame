@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+
 from gartok import archetypes, recruit
 from gartok.draft import (
     COMMISSION_TOKENS,
@@ -12,6 +13,7 @@ from gartok.draft import (
 )
 from gartok.guild import Guild
 from gartok.unit import Unit
+
 
 def _commission(d, labels, target):
     d.pending_labels = list(labels)

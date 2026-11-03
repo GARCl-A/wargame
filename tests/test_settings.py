@@ -1,7 +1,9 @@
 """Player preferences (settings.py) and what reads them."""
 
 import pytest
+
 from gartok import settings
+
 
 @pytest.fixture(autouse=True)
 def _tmp_settings(tmp_path, monkeypatch):

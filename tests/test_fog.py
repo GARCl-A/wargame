@@ -2,6 +2,7 @@
 
 from gartok.fog import SEEN, UNSEEN, VISIBLE, FogMemory
 
+
 def _torch(pos):
     return {"kind": "torch", "pos": pos, "trap_type": "", "elevation": 0}
 
