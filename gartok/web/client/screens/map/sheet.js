@@ -5,9 +5,9 @@
 
 const MapSheet = (() => {
   const W = 1060, H = 946;
-  const INNER = {l: 80, r: W - 80, t: 140, b: H - 90};   // the fit leaves the title and the scale clear
+  const INNER = { l: 80, r: W - 80, t: 140, b: H - 90 };   // the fit leaves the title and the scale clear
   const cv = $("map"), g = cv.getContext("2d");
-  const cam = {z: 1, x: 0, y: 0};
+  const cam = { z: 1, x: 0, y: 0 };
   let M = null, base = {}, deco = null, hoverPath = null, fitKey = "";
 
   // the land each place is drawn in: woods, peaks, furrows, trenches, rubble
@@ -73,7 +73,7 @@ const MapSheet = (() => {
 
   // the seeded scatter of trees, peaks and the rest, in base coordinates, per known world
   function scatter() {
-    const out = {trees: [], peaks: [], furrows: [], trenches: [], rubble: []};
+    const out = { trees: [], peaks: [], furrows: [], trenches: [], rubble: [] };
     const far = (x, y, r) => Object.values(base).every(([px, py]) => Math.hypot(x - px, y - py) > r);
     for (const n of M.nodes) {
       const t = TERRAIN[n.id];
@@ -100,7 +100,7 @@ const MapSheet = (() => {
         .map(([a, b]) => base[a === "city" ? b : a]).concat([base.city]);
       const xs = near.map(p => p[0]), ys = near.map(p => p[1]);
       out.wall = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2,
-                  (Math.max(...xs) - Math.min(...xs)) / 2 + 50, (Math.max(...ys) - Math.min(...ys)) / 2 + 46];
+      (Math.max(...xs) - Math.min(...xs)) / 2 + 50, (Math.max(...ys) - Math.min(...ys)) / 2 + 46];
     }
     return out;
   }
@@ -247,8 +247,7 @@ const MapSheet = (() => {
     compass();
     const city = M.nodes.find(n => n.id === "city");
     text(`THE ENVIRONS OF ${(city ? city.name : "the guild").toUpperCase()}`, 46, 64, "700 25px Cinzel", "#2c1c0e");
-    text(`as walked by ${M.meta.name}, to the ${ordinal(M.meta.day)} day`, 48, 88, "italic 17px 'IM Fell English'", "#5b4630");
-    g.strokeStyle = "rgba(42,26,12,.6)"; g.lineWidth = 1; g.beginPath(); g.moveTo(46, 100); g.lineTo(420, 100); g.stroke();
+    g.strokeStyle = "rgba(42,26,12,.6)"; g.lineWidth = 1; g.beginPath(); g.moveTo(46, 70); g.lineTo(450, 70); g.stroke();
     scaleBar(M.groups.find(b => b.gid === MapSheet.selected));
     g.strokeStyle = "rgba(42,26,12,.55)"; g.lineWidth = 1.4; g.strokeRect(20, 20, W - 40, H - 40);
     g.lineWidth = .8; g.strokeRect(26, 26, W - 52, H - 52);
@@ -265,8 +264,10 @@ const MapSheet = (() => {
     const out = {};
     for (const n of M.nodes) {
       const [x, y] = P(n.id), w = n.name.length * (n.id === "city" ? 10 : NAME_W), big = n.id === "city" ? 12 : 0;
-      const opts = {"": [x - w / 2, y + 22 + big, x + w / 2, y + 40 + big], up: [x - w / 2, y - 40 - big, x + w / 2, y - 22 - big],
-                    r: [x + 24, y - 10, x + 24 + w, y + 8], l: [x - 24 - w, y - 10, x - 24, y + 8]};
+      const opts = {
+        "": [x - w / 2, y + 22 + big, x + w / 2, y + 40 + big], up: [x - w / 2, y - 40 - big, x + w / 2, y - 22 - big],
+        r: [x + 24, y - 10, x + 24 + w, y + 8], l: [x - 24 - w, y - 10, x - 24, y + 8]
+      };
       const pick = Object.keys(opts).find(k => !boxes.some(b => hit(opts[k], b))) ?? "";
       boxes.push(opts[pick]); out[n.id] = pick;
     }
@@ -285,11 +286,11 @@ const MapSheet = (() => {
     e.preventDefault();
     const r = sheet.getBoundingClientRect(), k = W / r.width;
     zoomAt((e.clientX - r.left) * k, (e.clientY - r.top) * k, e.deltaY < 0 ? 1.15 : 1 / 1.15);
-  }, {passive: false});
+  }, { passive: false });
   let drag = null;
   sheet.addEventListener("pointerdown", e => {
     if (e.button !== 0 && e.button !== 2) return;
-    drag = {x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false};
+    drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false };
   });
   addEventListener("pointermove", e => {
     if (!drag) return;
