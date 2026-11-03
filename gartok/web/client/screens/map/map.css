@@ -1157,7 +1157,8 @@
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-top: 12px
+  margin-top: 12px;
+  gap: 8px;
 }
 
 .phead .m {
@@ -1178,7 +1179,9 @@
 }
 
 .phead h2 {
-  font: 700 26px/1 Cinzel, serif;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
   color: #24170c
 }
 
@@ -1190,6 +1193,49 @@
   margin-top: 7px;
   font: 16px/1.2 var(--read);
   color: #6b5233
+}
+
+.phead.clickable {
+  cursor: pointer;
+}
+
+.phead.clickable:hover {
+  background: rgba(90, 33, 22, 0.08);
+  /* Sombra suave de tinta no fundo do papel */
+  transform: translateX(2px);
+  /* Leve deslocamento indicando ação */
+}
+
+.phead.clickable:hover h2 {
+  color: #5a2116;
+  /* Texto assume o vermelho tinta da guilda */
+}
+
+.phead.clickable::after {
+  content: "➔";
+  font-size: 30px;
+  color: #5a2116;
+  margin-left: auto;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: translateX(-4px);
+}
+
+.phead.clickable:hover::after {
+  transform: translateX(0);
+}
+
+/* Remove a moldura de moeda do .m */
+.phead .m.ico-red {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  width: 38px;
+  height: 38px;
+}
+
+/* Aplica a cor vermelha diretamente no .ico do vetor */
+.phead .m.ico-red .ico {
+  color: #5a2116 !important;
 }
 
 .pnote {
@@ -1267,30 +1313,58 @@
   cursor: default
 }
 
+/* Container base da linha de anotação */
 .place .pnote-line {
-  margin-top: 6px;
-  font: 16px/1.25 var(--read);
-  color: #6b5233
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(90, 68, 42, 0.25);
+  /* Separa a missão com uma linha fina de nanquim */
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5c4428;
+  /* Tinta sépia escura */
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
+/* Mensagens de texto longo / descrição (Faint) */
 .place .pnote-line.faint {
-  margin-top: 10px;
-  padding: 0 8px;
+  border-top: none;
+  margin-top: 6px;
+  padding: 0 4px;
   text-align: center;
-  font: italic 17px/1.3 "IM Fell English", serif;
-  color: #7b6142
+  font-family: var(--font-read);
+  /* Troca para a fonte de leitura para manter o tom de documento */
+  font-weight: 400;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.4;
+  color: #6e5538;
+  text-transform: none;
 }
 
+/* Estados de Tinta (Cera e Nanquim) */
+
+/* Alerta de Perigo / Bloqueio */
 .place .pnote-line.bad {
-  color: #7a2318
+  color: #7a2318;
+  /* Vermelho cera */
 }
 
+/* Aviso de Quest / Novidade */
 .place .pnote-line.warn {
-  color: #8a5a14
+  color: #8c5314;
+  /* Dourado âmbar envelhecido */
 }
 
+/* Confirmação / Sucesso */
 .place .pnote-line.good {
-  color: #3f5f22
+  color: #2d5016;
+  /* Verde musgo antigo */
 }
 
 .place .psec {
@@ -1416,22 +1490,18 @@
   color: #e48b7d
 }
 
-.warn {
-  margin-top: 8px;
-  padding: 9px 12px;
-  border-radius: 3px;
-  font: 16px/1.25 var(--read);
-  color: #e7c98e;
-  background: rgba(201, 163, 94, .08);
-  box-shadow: inset 3px 0 0 var(--brass)
-}
-
-.warn b {
-  font: 600 11px/1 Cinzel, serif;
-  letter-spacing: .14em;
-  font-style: normal;
-  color: var(--brass-hi);
-  text-transform: uppercase
+/* Limpa o visual de card web e integra a missão/alerta ao pergaminho */
+#place .warn {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding: 8px 0 0 0;
+  margin-top: 10px;
+  border-top: 1px dashed rgba(90, 68, 42, 0.3);
+  /* Separação discreta em nanquim */
+  color: #5c4428;
+  /* Tinta sépia para o texto secundário */
+  font-size: 13px;
 }
 
 .camp {

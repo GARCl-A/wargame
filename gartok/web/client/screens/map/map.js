@@ -233,10 +233,16 @@ function drawInspector() {
   const ins = b.inspector, pl = ins.place;
   // the place's own way in is the brass button; the rest are paper buttons under it
   const main = !b.busy && !b.blocked && ins.blocks.find(k => k.t === "button" && k.enabled && !k.danger && (k.primary || !/search|explore|scout/i.test(k.key)));
-  $("place").innerHTML = `<div class="phead"><div class="m">${pl.icon ? ico(pl.icon) : ""}</div><div><h2>${esc(pl.name)}</h2></div></div>
-    ${pl.stats.length ? `<div class="pnote">${pl.stats.map(s => `<div><b class="${s.no ? "no" : ""}">${esc(s.value)}</b><span>${esc(s.label)}</span></div>`).join("")}</div>` : ""}
-    ${main ? `<div class="brass-btn" data-act="${esc(main.key)}">${pl.icon ? ico(pl.icon) : ""}${esc(title(main.label))}</div>` : ""}
-    ${ins.blocks.filter(k => k !== main).map(block).join("")}`;
+
+  $("place").innerHTML =
+    `<div class="phead ${main ? "clickable" : ""}" ${main ? `data-act="${esc(main.key)}"` : ""}>
+    <div class="m ico-red">${pl.icon ? ico(pl.icon) : ""}</div>
+    <div><h2>${esc(pl.name)}</h2></div>
+  </div>
+    
+  ${pl.stats.length ? `<div class="pnote">${pl.stats.map(s => `<div><b class="${s.no ? "no" : ""}">${esc(s.value)}</b><span>${esc(s.label)}</span></div>`).join("")}</div>` : ""}
+
+  ${ins.blocks.filter(k => k !== main).map(block).join("")}`;
 
   const c = ins.camp;
   if (!c) {
