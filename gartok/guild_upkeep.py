@@ -21,6 +21,7 @@ from . import (
     wildfire,
     world,
 )
+from .clock import SECONDS_PER_DAY
 
 HOURS_PER_HEAL = 8
 HOURS_PER_NONLETHAL_CLEAR = 24
@@ -103,17 +104,21 @@ class UpkeepMixin:
         all_casualties = []
         for u in self.roster:
             events += u.tick_poison(hours)
-        for _ in range(self.clock.day - start_day):
-            e, c = self._daily_upkeep()
+        self.log.record(events, self.clock.seconds, "day")
+        for i in range(self.clock.day - start_day):
+            # each crossed day's upkeep is written at its own midnight, not at the jump's end
+            e, c = self._daily_upkeep((start_day + i) * SECONDS_PER_DAY)
             events += e
             all_casualties += c
         e, c = self.reap_collapsed()
+        self.log.record(e, self.clock.seconds, "day")
         events += e
         all_casualties += c
 
         # Passive healing: every 8h of continuous rest (not busy) heals the unit.
         # Steady Pace lets a group that is working where it stands rest on the job.
         for g in self.groups:
+            logged = len(events)
             resting = g.busy and orders.is_resting(g.order)
             working = g.busy and g.order.kind in orders.WORK_KINDS and not resting
             for u in g.members:
@@ -165,6 +170,7 @@ class UpkeepMixin:
                         u.consecutive_rest_hours = 0
                         u.unbroken_rest_hours = 0
                         break
+            self.log.record(events[logged:], self.clock.seconds, "rest", g.display_name)
 
         recorder.day_tick(self)
         return events, all_casualties
@@ -224,9 +230,17 @@ class UpkeepMixin:
         return rotten
 
 
-    def _daily_upkeep(self):
+    def _daily_upkeep(self, at=None):
+        """One day's sweep. `at` is the clock second the day began, where its lines go in the log."""
         events, casualties, ate = [], [], []
-        
+        at = self.clock.seconds if at is None else at
+        logged = 0
+
+        def flush(kind):
+            nonlocal logged
+            self.log.record(events[logged:], at, kind)
+            logged = len(events)
+
         # 1) rot food in everyone's inventory, the bank chest and the house
         total_rotten = 0
         spoiled = []
@@ -240,7 +254,9 @@ class UpkeepMixin:
         if total_rotten:
             events.append(f"{total_rotten} portions of food rotted away.")
         events += [f"The {name} rotted away." for name in spoiled]
+        flush("food")
         events += captives.daily(self)
+        flush("guild")
 
         for u in self.roster:
             u.medicine_attempted_today = False
@@ -251,6 +267,7 @@ class UpkeepMixin:
             if u.ability.id == "innocent_face" and u.crime > 0 and self.clock.day > 0 and self.clock.day % 7 == 0:
                 u.crime -= 1
                 events.append(f"{u.name}'s criminal record fades by 1 (Innocent Face).")
+        flush("day")
         # Units studying at the tavern pay for a room that includes a meal.
         # The rent isn't deducted until _garrison_upkeep, so check the group's funds here.
         # A rite's boarder with an empty pack is fed (and charged) by `rite.board`.
@@ -291,13 +308,16 @@ class UpkeepMixin:
             events += g.feed_animals()
         events += self.house.garage.feed(self.house.stash.items)
         events += self._claim_garage_feed()
+        flush("food")
         events += wildfire.daily(self)
         for m in missions.expire_overdue(self):
             events.append(f"{missions.template_of(m).name}: the deadline passed.")
         for u in justice.release_due(self):
             events.append(f"{u.name} finishes their time and is released in the City.")
         events += self._city_property_upkeep()
+        flush("guild")
         events += self._garrison_upkeep()
+        flush("work")
         for n in world.NODES:
             if n.has("shop"):
                 self.shop(n.id).refill()
@@ -305,6 +325,7 @@ class UpkeepMixin:
         self._claim_garage_tick()
         self._campfire_tick()
         events += cohesion.daily(self)
+        flush("day")
         return events, casualties
 
     @staticmethod

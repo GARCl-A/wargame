@@ -350,10 +350,10 @@ class HubSession(Session):
             raise ValueError("the Bankers want nothing of the house now")
         if choice == "return":
             g.repossess_city_property()
-            m.notices.append(f"The property is returned to the Bankers -- the guild now owes {fmt_money(g.bankers_debt)}.")
+            m.say(f"The property is returned to the Bankers -- the guild now owes {fmt_money(g.bankers_debt)}.", "guild")
         elif choice == "squat":
             g.house.squat()
-            m.notices.append("The guild keeps the house without paying -- the guard won't like that.")
+            m.say("The guild keeps the house without paying -- the guard won't like that.", "guild")
         else:
             raise ValueError(f"no such answer: {choice}")
         return m.back()
@@ -451,7 +451,7 @@ class HubSession(Session):
             return self.state()
         if not alone:
             return self._spent(tab.key, tab)
-        m.notices += lines
+        m.say(lines, "craft", self.group)
         m.game.open(m)
         return m._after_order()
 
@@ -486,7 +486,7 @@ class HubSession(Session):
             raise ValueError(f"{self.group.display_name} is busy")
         m = self.map
         start, said = len(m.notices), list(said)
-        m.notices += said
+        m.say(said, "work", self.group)
         lines, landed = m.spend(self.group, order)
         if landed is not None:
             return landed

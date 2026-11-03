@@ -99,6 +99,11 @@ the rest.
   gone, one line in `AGENTS.md` only if an agent would break something without it. Nothing in the repo
   depends on them being there.
 
+- **Tidy the built package's folders (author 2026-11-03).** The exe creates its folders next to itself
+  (`saves`, and soon `log-export` for the guild log's export). Decide how the built game's folder reads
+  (one data folder holding saves and exports, versus one folder each) so the build does not scatter
+  folders over the player's PC; the log's export writes wherever this lands.
+
 ## Medium
 
 

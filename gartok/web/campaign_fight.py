@@ -86,7 +86,7 @@ def delve(map_session, group, kind):
     `_enter_nest` and `_enter_lair`: a band with a wagon first says who minds it, the rest go in."""
     if kind == "ancient_ruins" and ruins_empty(map_session.guild):
         from .dialogue_session import _to_map
-        map_session.notices.append("The Ancient Ruins lie silent: nothing is left down there.")
+        map_session.say("The Ancient Ruins lie silent: nothing is left down there.", "guild", group)
         return _to_map(map_session, group)
     label, title, lead, build = DELVES[kind]
     return _watched(map_session, group, label, lead,
@@ -262,9 +262,14 @@ def _settle(map_session, group, squad, battle, node, kind, settle, offer, after)
     recorder.emit("fight", node=node.id, kind=kind, won=outcome.won, squad=outcome.squad_size,
                   deaths=len(outcome.fallen), foes=len(battle.enemy_units), xp=sum(outcome.xp_awards.values()),
                   level=round(sum(u.combat_level for u in guild.roster) / max(1, len(guild.roster)), 2))
-    map_session.notices += outcome.captive_notes
-    map_session.notices += settle(outcome)
-    map_session.notices += [f"{u.name} reached combat level {u.combat_level}!" for u in outcome.leveled_up]
+    xp = sum(outcome.xp_awards.values())
+    verdict = "won" if outcome.won else "lost"
+    fell = f", {len(outcome.fallen)} fell" if outcome.fallen else ""
+    gain = f", +{xp} combat XP" if xp else ""
+    map_session.say(f"Fight at {node.name}: {verdict}{fell}{gain}.", "fight", group)
+    map_session.say(outcome.captive_notes, "fight", group)
+    map_session.say(settle(outcome), "fight", group)
+    map_session.say([f"{u.name} reached combat level {u.combat_level}!" for u in outcome.leveled_up], "fight", group)
     if outcome.campaign_over:
         map_session.wiped = True
     map_session._save()

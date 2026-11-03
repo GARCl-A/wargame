@@ -30,7 +30,7 @@ from gartok.wagon import VEHICLES, Wagon
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game, serve
-from tests.helpers import standard_unit
+from tests.helpers import said, standard_unit
 
 
 def _guild(node, coins=200):
@@ -1069,7 +1069,7 @@ def test_a_house_too_far_behind_on_the_tax_meets_the_bankers_notice_first():
         hub.verb("vault_service", True)(hub, {"key": "oven"})
     st = hub.verb("repossess", True)(hub, {"choice": "return"})
     assert st["screen"] == "map" and not guild.house.owned and guild.bankers_debt > 0
-    assert any("returned to the Bankers" in n for n in st["notices"])
+    assert any("returned to the Bankers" in n for n in said(st))
     hub, guild, _ = _house()
     guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
     st = hub.verb("repossess", True)(hub, {"choice": "squat"})

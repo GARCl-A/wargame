@@ -244,7 +244,7 @@ PAYLOAD_DEFAULTS = {
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True, "revealed": [], "met_factions": [], "supply_runs_completed": 0,
     "wildfire": None, "boss_talks_seen": [], "objectives_done": [], "ruins_cleared": [],
-    "game_version": "unknown",
+    "game_version": "unknown", "log": [],
 }
 
 
@@ -316,6 +316,7 @@ def _payload(guild, kind, label):
                    for u, day in guild.jailed],
         "tutorial_seen": sorted(guild.tutorial.seen),
         "tutorial_enabled": guild.tutorial.enabled,
+        "log": guild.log.to_list(),
     }
 
 
@@ -408,7 +409,8 @@ def load_game(world, save_id=CURRENT):
                  wildfire=wildfire.from_dict(payload["wildfire"]),
                  tutorial=TutorialState(seen=payload["tutorial_seen"],
                                        enabled=payload["tutorial_enabled"]),
-                 objectives_done=payload["objectives_done"])
+                 objectives_done=payload["objectives_done"],
+                 log=payload["log"])
     wildfire.sync_world(guild)
     return guild
 

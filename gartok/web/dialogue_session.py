@@ -184,12 +184,12 @@ def forced_talk(map_session, group):
             from .campaign_fight import forced_fight
             return forced_fight(map_session, group, order, result.opening)
         if result.kind == "surrender":
-            map_session.notices += forced.resolve_guard_prison(guild, group, order)
+            map_session.say(forced.resolve_guard_prison(guild, group, order), "talk", group)
         elif result.kind == "leave":
             events, _pause = forced.resolve_guard_flee(guild, group, order)   # a re-catch is the band's pending
-            map_session.notices += events
+            map_session.say(events, "talk", group)
         else:
-            map_session.notices += [result.text, *forced.settle_talk(guild, group, order)]
+            map_session.say([result.text, *forced.settle_talk(guild, group, order)], "talk", group)
         return _to_map(map_session, group)
 
     return DialogueSession(map_session, group, enc, done, decided=decided, on_decided=decide,
@@ -207,7 +207,7 @@ def wildfire_talk(map_session, group):
     enc = dialogue.WildfireTalk(guild, focus, wildfire.talker(focus, encounters.squad_level(group.members)))
 
     def done(result):
-        map_session.notices.append(result.text)
+        map_session.say(result.text, "talk", group)
         if result.kind == "fight":
             map_session.game.open(map_session)
             return map_session._enter(group, orders.interactive("ogre_fight" if great else "camp_fight", hours=0))

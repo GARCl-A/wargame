@@ -5,10 +5,11 @@ import json
 import threading
 import urllib.error
 import urllib.request
+from collections import Counter
 
 import pytest
 
-from gartok import justice, orders, persist, recorder, world
+from gartok import guild_log, justice, orders, persist, recorder, settings, world
 from gartok.animals import Animal
 from gartok.group import CAUTIOUS, Group
 from gartok.guild import Guild
@@ -17,7 +18,7 @@ from gartok.wagon import Wagon
 from gartok.web.hub_session import HubSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game, serve
-from tests.helpers import standard_unit
+from tests.helpers import said, standard_unit
 
 
 def _guild(*nodes):
@@ -154,7 +155,7 @@ def test_a_broken_wagon_is_left_behind_only_after_the_card_says_what_goes_with_i
     st = s.travel(g.gid, "market", leave=True)
     assert g.wagons == [] and ox in g.herd and ox.hitch is None
     assert g.order.kind == "travel" and g.order.final_dest == "market"
-    assert any("leaves its broken cart behind" in n for n in st["notices"])
+    assert any("leaves its broken cart behind" in n for n in said(st))
 
 
 def test_a_sound_wagon_is_never_left_and_its_team_is_not_named_as_walking():
@@ -467,3 +468,95 @@ def test_a_save_is_refused_while_a_hunt_is_open(saves):
         srv.shutdown()
         srv.server_close()
     assert not any(x["kind"] == "manual" for x in persist.list_saves("w1"))
+
+
+# ---------------------------------------------------------------- the log panel
+@pytest.fixture
+def prefs(tmp_path, monkeypatch):
+    """The player's settings and the export folder, both off the real ones."""
+    monkeypatch.setattr(settings, "PATH", str(tmp_path / "settings.json"))
+    monkeypatch.setattr(guild_log, "export_dir", lambda: str(tmp_path / "log-export"))
+    settings.reload()
+    yield tmp_path
+    settings.reload()
+
+
+def _fill(guild, n, cap):
+    guild.log.cap = cap
+    for i in range(n):
+        guild.log.record([f"line {i}"], i * 60, "day")
+
+
+def test_the_state_carries_the_log_in_place_of_the_hours_and_the_news(prefs):
+    guild = _guild("lumber_yard")
+    guild.log.record(["Ribit worked 8 h."], 3600, "work", "The Loggers")
+    st = _game(guild).session.state()
+    assert "hours" not in st and "notices" not in st
+    log = st["log"]
+    assert log["rows"][-1]["text"] == "Ribit worked 8 h." and log["rows"][-1]["band"] == "The Loggers"
+    assert log["total"] == 1 and log["limit"] == 2000 and not log["near"] and not log["prompt"]
+    assert log["ahead"] and all(not h["now"] for h in log["ahead"]) and log["now"]["at"]
+    assert log["bands"] == [guild.groups[0].display_name] and "work" in log["kinds"]
+
+
+def test_what_the_clock_says_reaches_the_log_once_while_a_tab_reads_it(prefs):
+    guild = _guild("lumber_yard")
+    m = MapSession(guild, None)
+    g = guild.groups[0]
+    lines, landed = m.spend(g, orders.work(guild, g, 8))
+    assert landed is None and lines
+    said_in_log = [r["text"] for r in guild.log.tail(500)]
+    assert all(line in said_in_log for line in lines)
+    assert max(Counter(said_in_log).values()) == 1
+
+
+def test_the_search_reads_the_whole_log_not_the_tail(prefs):
+    guild = _guild("lumber_yard")
+    for i in range(300):
+        guild.log.record([f"filler {i}"], i, "day")
+    guild.log.record(["The rare thing happened."], 0, "fight", "The Founders")
+    m = MapSession(guild, None)
+    assert len(m.state()["log"]["rows"]) == 200
+    found = MapSession.GET["log"](m, {"q": "rare", "kind": "fight"})
+    assert found["found"] == 1 and found["rows"][0]["band"] == "The Founders" and found["total"] == 301
+    assert MapSession.GET["log"](m, {"q": "rare", "band": "The Loggers"})["found"] == 0
+
+
+def test_a_full_log_asks_and_later_stops_the_asking(prefs):
+    guild = _guild("lumber_yard")
+    _fill(guild, 10, cap=10)
+    m = MapSession(guild, None)
+    log = m.state()["log"]
+    assert log["full"] and log["prompt"] and log["near"]
+    assert not MapSession.POST["log_full"](m, {"choice": "later"})["log"]["prompt"]
+    assert guild.log.full                                    # nothing was dropped, only the asking
+
+
+def test_full_log_export_writes_a_file_and_makes_room(prefs):
+    guild = _guild("lumber_yard")
+    _fill(guild, 10, cap=10)
+    m = MapSession(guild, None)
+    st = MapSession.POST["log_full"](m, {"choice": "export"})
+    assert not st["log"]["full"] and st["log"]["total"] == 5
+    (name,) = [p.name for p in (prefs / "log-export").iterdir()]
+    assert name.startswith("Ink Hands-day") and name.endswith(".txt")
+
+
+def test_full_log_discard_drops_the_oldest_half(prefs):
+    guild = _guild("lumber_yard")
+    _fill(guild, 10, cap=10)
+    st = MapSession.POST["log_full"](MapSession(guild, None), {"choice": "discard"})
+    assert st["log"]["total"] == 5 and st["log"]["rows"][0]["text"] == "line 5"
+    assert not (prefs / "log-export").exists()
+
+
+def test_keep_more_raises_the_setting_and_stops_at_the_largest(prefs):
+    guild = _guild("lumber_yard")
+    m = MapSession(guild, None)
+    assert m.state()["log"]["next_limit"] == 5000
+    st = MapSession.POST["log_full"](m, {"choice": "raise"})
+    assert st["log"]["limit"] == 5000 and st["log"]["next_limit"] is None
+    with pytest.raises(ValueError, match="largest"):
+        MapSession.POST["log_full"](m, {"choice": "raise"})
+    with pytest.raises(ValueError, match="no such answer"):
+        MapSession.POST["log_full"](m, {"choice": "burn it"})

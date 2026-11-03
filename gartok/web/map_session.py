@@ -21,16 +21,20 @@ from .. import (
     persist,
     recruit,
     rest,
+    settings,
     stints,
     vocations,
     world,
 )
 from ..constants import fmt_money
 from ..group import CAUTIOUS, NORMAL
+from ..guild_log import KINDS as LOG_KINDS
 from ..map_view import ADVANCE_HOURS, STANCE_NOTES, MapView, node_icon, position
 from ..scenario import scenario_for
 from .session import Session, asset_url
 from .swift import Look
+
+LOG_TAIL = 200                  # lines of the log the map carries; the search reads the whole of it
 
 REST_ROWS = (("rest:1", "1 h"), ("rest:8", "8 h"), ("rest:full", "Until full"))
 
@@ -58,6 +62,7 @@ class MapSession(MapView, Session):
     GET: ClassVar[dict] = {
         "state": lambda s, q: s.state(),
         "preview": lambda s, q: s.preview(q["gid"], q["node"]),
+        "log": lambda s, q: s.log_search(q.get("q", ""), q.get("kind"), q.get("band")),
     }
     POST: ClassVar[dict] = {
         "travel": lambda s, b: s.travel(b["gid"], b["node"], bool(b.get("leave"))),
@@ -65,6 +70,7 @@ class MapSession(MapView, Session):
         "split": lambda s, b: s.split(b["gid"], b["uids"]),
         "merge": lambda s, b: s.merge(b["gid"], b["other"]),
         "advance": lambda s, b: s.advance_world(),
+        "log_full": lambda s, b: s.log_full(b.get("choice")),
         "go_on": lambda s, b: s.go_on(),
         "title": lambda s, b: s.to_title(),
         "save_as": lambda s, b: s.save_as(b.get("name", "")),
@@ -130,6 +136,12 @@ class MapSession(MapView, Session):
         self.seen = g.gid
         return g
 
+    def say(self, lines, kind, group=None):
+        """Put `lines` in the guild's log, where they were born, and in `notices` for the screen asking."""
+        lines = [lines] if isinstance(lines, str) else list(lines)
+        self.guild.log.record(lines, self.guild.clock.seconds, kind, group.display_name if group else None)
+        self.notices += lines
+
     def _free(self, gid):
         """The band, when it may take an order now."""
         g = self._group(gid)
@@ -144,7 +156,7 @@ class MapSession(MapView, Session):
     # ------------------------------------------------------------------ #
     def state(self):
         g = self.guild
-        notices, self.notices = self.notices, []
+        self.notices = []                        # what the screens asked for has been said; the log keeps it
         focus, self.focus = self.focus, None
         known = {n.id for n in world.known(g)}
         return {
@@ -155,9 +167,8 @@ class MapSession(MapView, Session):
             "nodes": [self._node(n) for n in world.NODES if n.id in known],
             "edges": [[a, b, d] for a, b, d in world.EDGES if a in known and b in known],
             "groups": [self._band(gr) for gr in g.groups if not gr.empty],
-            "hours": self._hours(),
+            "log": self._log(),
             "cta": self._cta(),
-            "notices": notices,
             "focus": focus,
             "turn": self._turn_card(),
             "wiped": self.wiped,
@@ -418,6 +429,38 @@ class MapSession(MapView, Session):
             out.append({"at": at, "day": day, "text": text, "now": False})
         return out
 
+    def _log(self):
+        """The log panel: the last lines, the turn of the clock and what is due next."""
+        log = self.guild.log
+        rows = self._hours()
+        return {"rows": log.tail(LOG_TAIL), "total": len(log.entries), "limit": log.limit,
+                "near": log.near_full, "full": log.full, "prompt": log.prompt,
+                "next_limit": settings.next_choice("log_lines"),
+                "now": {"day": rows[0]["day"], "at": rows[0]["at"]}, "ahead": rows[1:],
+                "kinds": list(LOG_KINDS), "bands": [g.display_name for g in self.guild.groups if not g.empty]}
+
+    def log_search(self, q, kind, band):
+        rows, found = self.guild.log.search(q, kind, band)
+        return {"rows": rows, "found": found, "total": len(self.guild.log.entries)}
+
+    def log_full(self, choice):
+        """The answer to the full-log question, asked once the clock has stopped."""
+        log, g = self.guild.log, self.guild
+        if choice == "export":
+            log.export_and_trim(g.name, g.clock.day)
+        elif choice == "discard":
+            log.discard_oldest()
+        elif choice == "raise":
+            if settings.next_choice("log_lines") is None:
+                raise ValueError("the log is already at its largest")
+            settings.step_up("log_lines")
+        elif choice == "later":
+            log.muted = True
+        else:
+            raise ValueError(f"no such answer: {choice}")
+        self._save()
+        return self.state()
+
     def _now_line(self):
         idle = [g for g in self.guild.groups if self._is_idle(g)]
         if self._pending_event:
@@ -501,7 +544,7 @@ class MapSession(MapView, Session):
             raise ValueError("a broken wagon cannot move: mend it, or leave it behind")
         for w in broken:
             self.guild.abandon_wagon(g, w)
-            self.notices.append(f"{g.display_name} leaves its broken {w.kind.lower()} behind.")
+            self.say(f"{g.display_name} leaves its broken {w.kind.lower()} behind.", "travel", g)
         g.order = orders.travel(g, node_id, self._pace(g))
         self.focus = g.gid
         return self._after_order()
@@ -545,7 +588,7 @@ class MapSession(MapView, Session):
             plan = rest.until_full(self.guild, g) if which == "full" else rest.fixed(self.guild, float(which))
             if not plan.available:
                 raise ValueError(plan.reason)
-            self.notices += self.guild.eat_now_pass(g.members)
+            self.say(self.guild.eat_now_pass(g.members), "food", g)
             g.order = orders.rest(plan.hours)
         elif key in campaign.SEARCHES:
             g.order = orders.search(key, campaign.SEARCHES[key][0])
@@ -561,7 +604,7 @@ class MapSession(MapView, Session):
             if not g.has_campfire(now):
                 if not g.light_campfire(now):
                     raise ValueError("the band cannot light a campfire")
-                self.notices.append(f"{g.display_name}: campfire lit. Burns for 4 hours.")
+                self.say(f"{g.display_name}: campfire lit. Burns for 4 hours.", "rest", g)
                 self._save()
             from .hub_session import HubSession
             self.game.open(HubSession(self, g, orders.Order("campfire")))
@@ -678,7 +721,7 @@ class MapSession(MapView, Session):
             if self._hand_over(group, self._activity_label(order), go=lambda g=group, o=order: self._enter(g, o)):
                 return {"screen": self.screen, **self.state()}
             return self._enter(group, order)
-        self.notices += arena.sync(self.guild)
+        self.say(arena.sync(self.guild), "fight")
         if self.guild.can_auto_advance:
             self._advance()
             return self._land()

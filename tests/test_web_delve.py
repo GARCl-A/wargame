@@ -19,7 +19,7 @@ from gartok.web.map_session import MapSession
 from gartok.web.report_session import ReportSession
 from gartok.web.server import Game, serve
 from gartok.web.watch_session import WatchSession
-from tests.helpers import standard_unit
+from tests.helpers import said, standard_unit
 
 
 @pytest.fixture(autouse=True)
@@ -123,7 +123,7 @@ def test_the_ruins_remember_the_foes_slain_and_once_empty_lie_silent():
     assert guild.ruins_cleared
     guild.ruins_cleared |= _ruins_keys()
     st = game.session.act(g.gid, "ancient_ruins")
-    assert st["screen"] == "map" and any("lie silent" in n for n in st["notices"])
+    assert st["screen"] == "map" and any("lie silent" in n for n in said(st))
 
 
 def test_the_nest_wants_the_snake_dragon_alive_for_the_nature_coven():

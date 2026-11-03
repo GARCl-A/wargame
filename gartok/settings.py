@@ -16,6 +16,7 @@ SPEC = {
     "chord_ms": ("ARROW CHORD", (0, 20, 40, 70, 100), 40),
     "record_play": ("PLAY RECORDER", ("OFF", "ON"), "OFF"),
     "volume": ("VOLUME", (0, 25, 50, 75, 100), 75),
+    "log_lines": ("LOG LINES", (500, 1000, 2000, 5000), 2000),
 }
 
 _values = None
@@ -52,6 +53,20 @@ def cycle(key):
     except OSError:
         pass
     return nxt
+
+
+def next_choice(key):
+    """The next larger allowed value of `key`, or None when it is on the last."""
+    choices = SPEC[key][1]
+    at = choices.index(get(key))
+    return choices[at + 1] if at + 1 < len(choices) else None
+
+
+def step_up(key):
+    """`cycle`, but without wrapping round: a limit only ever goes up from here."""
+    if next_choice(key) is not None:
+        cycle(key)
+    return get(key)
 
 
 def label(key):

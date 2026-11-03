@@ -17,14 +17,6 @@ record it in `AGENTS.md` or the doc that owns it.
 
 In this order. Why each one comes first is in italics.
 
-5. **A log of what happened while the days passed (Johann, 2026-11-01).** Today the lines of a jump
-   (meals eaten, food rotted, hunger, purchases) reach the map as one "Since the last order" card (last
-   12 lines, click to put it away) and are gone: `MapSession.state` drains `notices`, and the guild
-   screen's Notices are the charter's, not a history. Keep a bounded, per-guild list of the day's events
-   (saved, or at least kept for the session) with a tab or button to reread it. Size once the card
-   decides how much to keep. *The player collects what the automated groups did when back from the
-   expedition, and is warned when a step fails: without a history the automation runs blind.*
-
 6. **Ankareth is the town, the node is the bank (author, note outside playtests).** `world.py` names the
    `city` node "Ankareth", but the arena, the market and the smithy are their own nodes: the node is the
    bank. Name the node for what it is, keep "Ankareth" for the region, and replace the circle that marks

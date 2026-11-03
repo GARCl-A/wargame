@@ -11,7 +11,17 @@ import contextlib
 import random
 from unittest.mock import MagicMock, patch
 
-from gartok import abilities, actions, data, economy, items, persist, recruit, talents, world
+from gartok import (
+    abilities,
+    actions,
+    data,
+    economy,
+    items,
+    persist,
+    recruit,
+    talents,
+    world,
+)
 from gartok import battle as _battle_mod
 from gartok.battle import Battle
 from gartok.board import COLS, ROWS, Board, grid_distance
@@ -174,3 +184,8 @@ def walker(team="player"):
     u = Unit(team)
     u.speed = 6
     return u
+
+
+def said(state):
+    """The lines of the guild's log a map state carries, oldest first."""
+    return [row["text"] for row in state["log"]["rows"]]

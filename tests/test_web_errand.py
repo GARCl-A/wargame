@@ -18,7 +18,7 @@ from gartok.web.map_session import MapSession
 from gartok.web.report_session import ReportSession
 from gartok.web.server import Game
 from gartok.web.watch_session import WatchSession
-from tests.helpers import standard_unit
+from tests.helpers import said, standard_unit
 
 
 @pytest.fixture(autouse=True)
@@ -96,8 +96,8 @@ def test_every_soldier_home_settles_the_errand_with_the_faith_orders_deed():
     game.session.act(g.gid, "skirmish")
     st = _end(game)
     assert st["screen"] == "map" and m.state == "done"
-    assert any("Every soldier came through" in n for n in st["notices"])
-    assert any("faith" in n.lower() for n in st["notices"][1:])
+    assert any("Every soldier came through" in n for n in said(st))
+    assert any("faith" in n.lower() for n in said(st)[1:])
 
 
 def test_a_soldier_lost_fails_the_errand_even_on_a_win():
@@ -106,7 +106,7 @@ def test_a_soldier_lost_fails_the_errand_even_on_a_win():
     game.session.act(g.gid, "skirmish")
     soldier = next(c for c in game.session.battle.player_units if c.ai_ally)
     st = _end(game, dead=[soldier])
-    assert m.state == "failed" and any("did not come home" in n for n in st["notices"])
+    assert m.state == "failed" and any("did not come home" in n for n in said(st))
 
 
 def test_once_the_necromancer_is_out_the_skirmish_is_his_night_and_his_fall_meets_it():
@@ -157,7 +157,7 @@ def test_attacking_a_camp_opens_its_crew_and_a_win_leaves_the_fire_to_put_out():
     assert sorted(u.race["name"] for u in b.enemy_units) == ["Goblin"] * 3 + ["Hobgoblin"]
     assert game.session.state()["meta"]["sub"].startswith("The goblin camp")
     st = _end(game)
-    assert focus.cleared and any("put it out" in n for n in st["notices"])
+    assert focus.cleared and any("put it out" in n for n in said(st))
 
 
 def test_a_cleared_camp_opens_no_fight():
@@ -178,7 +178,7 @@ def test_the_great_focus_is_the_ogres_fortress_and_his_fall_ends_the_errand():
     assert isinstance(b.scenario, FortressScenario) and not b.scenario.finished
     assert wildfire.ogre_of(b) is not None
     st = _end(game)
-    assert m.state == "done" and any("The Ogre is beaten" in n for n in st["notices"])
+    assert m.state == "done" and any("The Ogre is beaten" in n for n in said(st))
 
 
 def test_the_hostile_fortress_left_standing_falls_to_a_won_fight():

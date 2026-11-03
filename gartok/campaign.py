@@ -366,10 +366,15 @@ def _advance(guild, dt=None, busy=()):
 
     before_levels = {u.uid: aftermath.level_snapshot(u) for u in guild.roster}
     start_day = guild.clock.day
-    events, casualties = guild.pass_time(dt, busy=busy)
+    events, casualties = guild.pass_time(dt, busy=busy)   # its own lines are in the log already
     days_crossed = guild.clock.day - start_day
+
+    def note(lines, kind, group=None):
+        guild.log.record(lines, guild.clock.seconds, kind, group.display_name if group else None)
+        return lines
+
     if jumped:
-        events += guild.eat_now_pass()
+        events += note(guild.eat_now_pass(), "food")
     
     hungry = [u for u in guild.roster if u.hunger_level > 0]
     
@@ -398,7 +403,7 @@ def _advance(guild, dt=None, busy=()):
             # queue the next edge, rather than resolving the whole route at once
             prev = g.node
             g.node = order.dest
-            events += _wear_wagons(g, prev, order.dest)
+            events += note(_wear_wagons(g, prev, order.dest), "travel", g)
             pause = forced.arrival_pause(guild, g, prev, order.path)
             if pause is not None:
                 # NOT g.order = pause: same convention as an interactive order
@@ -420,39 +425,39 @@ def _advance(guild, dt=None, busy=()):
         if order.kind == "travel":
             prev = g.node
             g.node = order.dest
-            events += _wear_wagons(g, prev, order.dest)
+            events += note(_wear_wagons(g, prev, order.dest), "travel", g)
             if order.task == "supply_run":
-                events += guild.bank_supply_run(g.members)
+                events += note(guild.bank_supply_run(g.members), "work", g)
             pause = forced.arrival_pause(guild, g, prev, ())
             if pause is not None:
                 pending.append((g, pause))
                 continue
-            events += forced.arrival_notices(guild, order.dest)
+            events += note(forced.arrival_notices(guild, order.dest), "travel", g)
         elif order.kind == "work" and order.gather:
             gathered, ambush = guild.gather_shift(g, order)
-            events += gathered
+            events += note(gathered, "work", g)
             if ambush is not None:
                 pending.append((g, ambush))
             elif order.job is not None:
                 g.order = orders.garrison(order.job)
         elif order.kind == "work" and order.task == "put_out":
-            events += wildfire.put_out(guild, g)
+            events += note(wildfire.put_out(guild, g), "work", g)
         elif order.kind == "work" and order.task in SEARCHES:
             _found, msg = SEARCHES[order.task][1](guild, g)
-            events.append(msg)
+            events += note([msg], "work", g)
         elif stints.is_stint(order):
-            events += stints.settle(guild, g, order)
+            events += note(stints.settle(guild, g, order), "work", g)
         elif order.kind == "work":
-            events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
+            events += note(guild._pay_shift(g.members, order.hours, order.eta, g.node), "work", g)
         elif order.kind == "rest":
-            events += guild.eat_now_pass(g.members)
-            events += _fletcher_rest_pass(guild, g)
+            events += note(guild.eat_now_pass(g.members), "food", g)
+            events += note(_fletcher_rest_pass(guild, g), "craft", g)
             still_hurt = [u for u in g.members if u.hp < u.hp_max]
             if still_hurt and rest.hours_to_midnight(guild) <= rest.JUST_BEFORE_MIDNIGHT * 2:
                 who = ", ".join(f"{u.name} {u.hp}/{u.hp_max} HP" for u in still_hurt)
-                events.append(f"{g.display_name}: stopped resting before midnight to keep a day of rations ({who}).")
+                events += note([f"{g.display_name}: stopped resting before midnight to keep a day of rations ({who})."], "rest", g)
         elif order.kind == "solo":
-            events += solo.finish(guild, g, order)
+            events += note(solo.finish(guild, g, order), "craft", g)
         elif order.kind == "hunting":          # a hunt's stretch is up: its screen says what sprang
             g.due_hunt = order                 # until the hunt screen settles it, so a save keeps it
             pending.append((g, order))
@@ -462,7 +467,7 @@ def _advance(guild, dt=None, busy=()):
         if order.kind in forced.EVENTS:
             g.pending = order                  # set before the dailies, so a caught band is not called to the claim
     forced_events, forced_pending = forced.daily_checks(guild, days_crossed)
-    events += forced_events
+    events += note(forced_events, "fight")
     for g, order in forced_pending:
         g.pending = order
     pending += forced_pending
@@ -474,6 +479,8 @@ def _advance(guild, dt=None, busy=()):
         a = aftermath.level_snapshot(u)
         if (a["combat"], a.get("work", 0), a["magic"]) > (b["combat"], b.get("work", 0), b["magic"]):
             level_ups.append(aftermath.LevelUp(u, b, a))
+            track = "combat" if a["combat"] > b["combat"] else "work" if a.get("work", 0) > b.get("work", 0) else "magic"
+            note([f"{u.name} reached {track} level {a[track]}!"], "work", guild.group_of(u))
     return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties,
                       hungry=hungry, level_ups=level_ups)
 

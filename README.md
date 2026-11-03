@@ -115,6 +115,9 @@ gartok/
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep.py / guild_holdings.py / guild_claim.py / guild_labor.py hold its behaviour
+  guild_log.py      `GuildLog`: what happened while the days passed, kept per guild and saved with it (`Guild.log`,
+                    each line written where it is born: the clock's upkeep and orders, a fight, a talk; the map's
+                    log panel reads it, the limit is the `log_lines` setting)
   holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals); GarageDesk is a garage's counter
   creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
   animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role

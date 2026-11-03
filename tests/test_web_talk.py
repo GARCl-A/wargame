@@ -14,6 +14,7 @@ from gartok.web.battle_session import BattleSession
 from gartok.web.dialogue_session import DialogueSession, _roll, boss_talk
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game
+from tests.helpers import said
 
 
 @pytest.fixture
@@ -103,7 +104,7 @@ def test_a_bribe_pays_the_pack_and_the_band_walks_on_back_on_the_map():
         game.session.choose("attack")
     back = game.session.go_on()
     assert back["screen"] == "map" and isinstance(game.session, MapSession)
-    assert any("counts out" in n for n in back["notices"])
+    assert any("counts out" in n for n in said(back))
     assert not g.fight_due and g.order is not None
 
 
@@ -199,7 +200,7 @@ def test_surrender_sends_the_wanted_to_the_cells_and_the_rest_back_to_the_map():
     back = game.session.go_on()
     assert back["screen"] == "map"
     assert culprit in [u for u, _ in guild.jailed] and culprit not in g.members and not g.fight_due
-    assert any("accepts arrest" in n for n in back["notices"])
+    assert any("accepts arrest" in n for n in said(back))
 
 
 def test_running_falls_back_the_way_the_band_came(monkeypatch):
@@ -209,7 +210,7 @@ def test_running_falls_back_the_way_the_band_came(monkeypatch):
     game.session.choose("leave")
     back = game.session.go_on()
     assert g.node == "market" and back["screen"] == "map"
-    assert any("fall back" in n for n in back["notices"])
+    assert any("fall back" in n for n in said(back))
 
 
 def test_a_recaught_band_cannot_run_twice():

@@ -151,8 +151,105 @@ function drawBands() {
   $("bandsnote").textContent = `${waits} orders · ${plural(M.meta.slots_free, "slot")} free`;
   $("bandlist").innerHTML = M.groups.map(bandCard).join("");
   document.querySelector(".band.sel")?.scrollIntoView({ block: "nearest" });
-  $("hours").innerHTML = M.hours.map(h => `<div class="${h.now ? "now" : ""}"><b>${esc(h.at)}</b><span>${esc(h.text)}${!h.now && h.day !== M.meta.day ? ` <i>day ${h.day}</i>` : ""}</span></div>`).join("");
 }
+
+// ---------------------------------------------------------------- the log
+const num = n => n.toLocaleString("en-US");
+const KIND_NAME = { food: "Food", work: "Work", craft: "Craft", travel: "Travel", rest: "Rest", fight: "Fight", talk: "Talk", guild: "Guild", day: "Day" };
+
+// `text` with every case-blind hit of `q` marked
+function marked(text, q) {
+  if (!q) return esc(text);
+  const low = text.toLowerCase(), at = q.toLowerCase();
+  let out = "", from = 0, hit;
+  while ((hit = low.indexOf(at, from)) >= 0) {
+    out += esc(text.slice(from, hit)) + `<mark>${esc(text.slice(hit, hit + q.length))}</mark>`;
+    from = hit + q.length;
+  }
+  return out + esc(text.slice(from));
+}
+
+function logLine(r, q) {
+  return `<div class="ln ${r.tone}"><b>${r.at}</b><span class="dot k-${r.kind}"${tip(KIND_NAME[r.kind] || "")}></span>`
+    + `<span>${r.band ? `<span class="bn">${esc(r.band)}</span>` : ""}${marked(r.text, q)}</span></div>`;
+}
+
+// the lines grouped under a "Day N" rule
+function logLines(rows, q) {
+  let day = null, html = "";
+  for (const r of rows) {
+    if (r.day !== day) { day = r.day; html += `<div class="dsep">Day ${day}</div>`; }
+    html += logLine(r, q);
+  }
+  return html;
+}
+
+function drawLog() {
+  const L = M.log, body = $("logbody");
+  const stay = body.dataset.drawn && body.scrollHeight - body.scrollTop - body.clientHeight > 40;
+  const was = body.scrollTop;
+  $("logcount").textContent = `${num(L.total)} / ${num(L.limit)}`;
+  $("logwarn").textContent = L.full ? "Full" : L.near ? "Nearly full" : "";
+  let html = L.rows.length ? logLines(L.rows) : `<div class="ln quiet"><span></span><span></span><span>Nothing has happened yet.</span></div>`;
+  html += `<div class="nowmark">Now · ${esc(L.now.at)}</div>`;
+  html += L.ahead.map(h => `<div class="ln ahead"><b>${esc(h.at)}</b><span class="dot"></span><span>${esc(h.text)}${h.day !== L.now.day ? ` · day ${h.day}` : ""}</span></div>`).join("");
+  body.innerHTML = html;
+  body.dataset.drawn = "1";
+  body.scrollTop = stay ? was : body.scrollHeight;     // a player reading up is not pulled back down
+}
+
+// the search: a word, a kind of line, a band; the server does the filtering
+let logKind = "", logBand = "", logSeq = 0;
+function logChips(el, label, all, items, current) {
+  el.innerHTML = `<span class="lbl">${label}</span>` + [all, ...items].map(([value, name, kind]) =>
+    `<span class="lchip ${value === current ? "on" : ""}" data-v="${esc(value)}">${kind ? `<span class="dot k-${kind}"></span>` : ""}${esc(name)}</span>`).join("");
+}
+function drawLogChips() {
+  logChips($("logkinds"), "What", ["", "All"], M.log.kinds.map(k => [k, KIND_NAME[k] || k, k]), logKind);
+  logChips($("logbands"), "Who", ["", "Everyone"], [...M.log.bands.map(b => [b, b]), ["-", "The guild"]], logBand);
+}
+async function runLogSearch() {
+  const seq = ++logSeq, q = $("logq").value.trim();
+  let r;
+  try { r = await api(`/api/map/log?q=${encodeURIComponent(q)}&kind=${encodeURIComponent(logKind)}&band=${encodeURIComponent(logBand)}`); }
+  catch (e) { news([e.message], true); return; }
+  if (seq !== logSeq) return;
+  $("logresults").innerHTML = r.rows.length ? logLines(r.rows, q) : `<p class="ln quiet">Nothing in the log matches.</p>`;
+  $("logfound").textContent = r.found > r.rows.length ? `the last ${num(r.rows.length)} of ${num(r.found)} matching lines` : `${num(r.found)} of ${num(r.total)} lines`;
+  $("logresults").scrollTop = $("logresults").scrollHeight;
+}
+function openLogSearch() {
+  logKind = logBand = "";
+  $("logq").value = "";
+  drawLogChips();
+  $("logsearch").hidden = false;
+  runLogSearch();
+  $("logq").focus();
+}
+function closeLogSearch() { $("logsearch").hidden = true; }
+let logTimer = 0;
+$("loghead").onclick = openLogSearch;
+$("logq").oninput = () => { clearTimeout(logTimer); logTimer = setTimeout(runLogSearch, 150); };
+$("logkinds").onclick = e => { const c = e.target.closest(".lchip"); if (c) { logKind = c.dataset.v; drawLogChips(); runLogSearch(); } };
+$("logbands").onclick = e => { const c = e.target.closest(".lchip"); if (c) { logBand = c.dataset.v; drawLogChips(); runLogSearch(); } };
+$("logsearch").addEventListener("click", e => { if (e.target === $("logsearch") || e.target.closest("[data-logclose]")) closeLogSearch(); });
+
+// a full log asks once the clock has stopped, never in the middle of a jump
+function askLog() {
+  const L = M.log;
+  if (!L.prompt || !$("logfull").hidden || !$("turn").hidden) return;
+  $("logfulltext").innerHTML = `It keeps <b>${num(L.limit)} lines</b>. Until you choose, each new line pushes the oldest one out. Nothing stops meanwhile.`;
+  $("lograise").hidden = !L.next_limit;
+  $("lograisenote").textContent = L.next_limit ? `raise the limit to ${num(L.next_limit)} lines` : "";
+  $("logfull").hidden = false;
+}
+$("logfull").addEventListener("click", async e => {
+  const t = e.target.closest("[data-logfull]");
+  if (!t) return;
+  $("logfull").hidden = true;
+  try { show(await api("/api/map/log_full", { choice: t.dataset.logfull })); }
+  catch (err) { news([err.message], true); }
+});
 
 // ---------------------------------------------------------------- places and pawns
 function drawPlaces() {
@@ -274,11 +371,12 @@ function drawInspector() {
   seal.innerHTML = `<div><b>${esc(t.label).replace(" ", "<br>")}</b><small>${esc(t.sub || "")}</small></div>`;
 }
 
-// ---------------------------------------------------------------- news and errors
+// ---------------------------------------------------------------- errors
+// what a refused order says; what happened is the log's
 function news(lines, bad = false) {
   if (!lines.length) return;
   const n = $("news");
-  n.innerHTML = `<div class="kicker">${bad ? "Not so" : "Since the last order"}</div>${lines.slice(-12).map(l => `<p class="${bad ? "bad" : ""}">${esc(l)}</p>`).join("")}<div class="click">click to put it away</div>`;
+  n.innerHTML = `<div class="kicker">${bad ? "Not so" : "Said"}</div>${lines.slice(-12).map(l => `<p class="${bad ? "bad" : ""}">${esc(l)}</p>`).join("")}<div class="click">click to put it away</div>`;
   n.hidden = false;
 }
 $("news").onclick = () => { $("news").hidden = true; };
@@ -361,10 +459,10 @@ function show(state) {
   if (splitting && !band(splitting)) splitting = null;
   MapSheet.selected = sel;
   MapSheet.set(M);
-  drawTop(); drawBands(); drawPlaces(); drawInspector();
-  news(state.notices || []);
+  drawTop(); drawBands(); drawPlaces(); drawInspector(); drawLog();
   $("wiped").hidden = !M.wiped;
   drawTurn();
+  askLog();
   if (hoverNode) { const h = hoverNode; hoverNode = null; hover(h); }
   startWalks(paths);
 }
@@ -513,6 +611,8 @@ $("seal").onclick = () => {
 };
 
 addEventListener("keydown", e => {
+  if (!$("logsearch").hidden) { if (e.key === "Escape") closeLogSearch(); return; }
+  if (!$("logfull").hidden) return;
   if (!$("turn").hidden) { if (["Enter", " ", "Escape"].includes(e.key)) { e.preventDefault(); post("go_on", {}); } return; }
   if (!$("leave").hidden) { if (e.key === "Escape") closeLeave(); return; }
   if (!$("pause").hidden) {

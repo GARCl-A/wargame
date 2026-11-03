@@ -40,6 +40,12 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   cursor, `data-silent` keeps one quiet, and a screen plays only the cue its answer picks (`coins` when the
   purse moved, `level_up`), never `click`.
 - **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.
+- **What happened goes in the guild's log** (`Guild.log`, `guild_log.py`, shown in the map's right column): a
+  rule or a screen that makes a line the player would want to reread (a meal, a haul, a fight, a deed) writes
+  it where it is born, with `Guild.log.record(lines, clock_seconds, kind, band)` or, on a screen,
+  `MapSession.say(lines, kind, group)`, which also puts the lines in `notices` for the answer that asked.
+  A line that only passes through (a tab reading back what its order said, `MapSession.spend`) is not written
+  again, and an order's refusal is not a log line: it is the map's `news` toast.
 - **Static files are revalidated, the API is never stored.** `/client` and `/assets` answer `no-cache` with an
   ETag (a content hash; a 304 when it matches), so a new build is never shadowed by an old copy and no one
   clears a cache; `/api` answers `no-store`. A test walks every static file for the header.

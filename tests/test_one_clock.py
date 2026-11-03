@@ -7,7 +7,7 @@ from gartok import campaign, economy, medic, orders, persist, stints
 from gartok.group import Group
 from gartok.wagon import Wagon
 from gartok.web.guild_session import GuildSession
-from tests.helpers import fixed_d20, packed, standard_unit
+from tests.helpers import fixed_d20, packed, said, standard_unit
 from tests.test_web_hub import _bench, _claim, _hub, _ward
 
 
@@ -84,7 +84,7 @@ def test_a_medic_visit_the_other_band_cuts_short_is_paid_now_and_cures_when_its_
     money = sum(u.money for u in g.members)
     st = hub.treat()
     assert st["screen"] == "map" and sum(u.money for u in g.members) < money
-    assert any("The Medic treats" in n for n in st["notices"])
+    assert any("The Medic treats" in n for n in said(st))
     assert hurt.hp < hurt.hp_max and g.order.task == "treat" and not mill.busy
     mill.order = orders.rest(8)
     hub.map._advance()
@@ -153,9 +153,9 @@ def test_a_headless_shift_runs_every_other_bands_order_too():
 
 def _hunters(monkeypatch, ambush):
     from gartok import hunt
-    from tests.test_web_hub import _guild
     from gartok.web.map_session import MapSession
     from gartok.web.server import Game
+    from tests.test_web_hub import _guild
     monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", ambush)
     guild = _guild("wilds")
     game = Game(MapSession(guild))
@@ -196,10 +196,10 @@ def test_an_ambush_springs_on_the_hunt_screen_at_its_hour_with_the_other_band_st
 def _hunt_saved(monkeypatch, ambush, mill_left):
     """A hunt sent out on a 16 h shift while a mill band has `mill_left` hours to go: the map takes over
     mid-stretch and autosaves; -> the game rebuilt from that save, its guild, the hunt and the mill."""
-    from tests.test_web_hub import _guild
     from gartok import hunt
     from gartok.web.map_session import MapSession
     from gartok.web.server import Game
+    from tests.test_web_hub import _guild
     monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", ambush)
     guild = _guild("wilds")
     game = Game(MapSession(guild, "w1"))
@@ -264,8 +264,8 @@ def test_the_pack_rolled_with_the_stretch_is_the_one_that_springs_after_the_load
 def test_the_biwolf_and_the_ox_a_stretch_rolled_are_who_springs_after_the_load(monkeypatch):
     from gartok import hunt, ox, world
     from gartok.web.hunt_session import HuntSession
-    from tests.test_web_hub import _guild
     from gartok.web.map_session import MapSession
+    from tests.test_web_hub import _guild
     guild = _guild("wilds")
     g = guild.groups[0]
     m = MapSession(guild)
@@ -280,9 +280,9 @@ def test_the_biwolf_and_the_ox_a_stretch_rolled_are_who_springs_after_the_load(m
 
 
 def test_a_hunt_on_its_screen_is_not_in_the_save_the_band_loads_back_idle():
-    from tests.test_web_hub import _guild
     from gartok.web.map_session import MapSession
     from gartok.web.server import Game
+    from tests.test_web_hub import _guild
     guild = _guild("wilds")
     game = Game(MapSession(guild, "w1"))
     g = guild.groups[0]
@@ -295,8 +295,8 @@ def test_a_hunt_on_its_screen_is_not_in_the_save_the_band_loads_back_idle():
 
 
 def test_a_hunting_order_saved_without_its_hunt_is_dropped_on_load():
-    from tests.test_web_hub import _guild
     from gartok.web.map_session import MapSession
+    from tests.test_web_hub import _guild
     guild = _guild("wilds")
     g = guild.groups[0]
     g.order = orders.Order("hunting", eta=4, remaining=4, crew=(g.members[0].uid,))
@@ -346,10 +346,10 @@ def test_a_stretch_due_behind_the_card_is_not_lost_on_a_save_and_load(monkeypatc
 
 
 def test_the_autosave_before_a_hunt_ambush_still_holds_the_stretch(monkeypatch):
-    from tests.test_web_hub import _guild
     from gartok import hunt
     from gartok.web.map_session import MapSession
     from gartok.web.server import Game
+    from tests.test_web_hub import _guild
     monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", 1.0)
     guild = _guild("wilds")
     game = Game(MapSession(guild, "w1"))

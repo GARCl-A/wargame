@@ -83,6 +83,7 @@ from .guild_claim import (
 )
 from .guild_holdings import HoldingsMixin
 from .guild_labor import LaborMixin
+from .guild_log import GuildLog
 from .guild_upkeep import UpkeepMixin
 from .holdings import CityProperty, Garage, Stash
 from .shop import Shop
@@ -121,7 +122,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  leaving=None, ox_trails=0, vocation=None, recruit_seen=None,
                  licences=None, revealed=None, supply_runs_completed=0, met_factions=None,
-                 wildfire=None, boss_talks_seen=None, objectives_done=None, ruins_cleared=None):
+                 wildfire=None, boss_talks_seen=None, objectives_done=None, ruins_cleared=None,
+                 log=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -188,6 +190,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.ruins_cleared = set(ruins_cleared or ())       # foes slain / things taken in the Ancient Ruins
         self.wildfire = wildfire              # wildfire.Wildfire once the Coven's errand was taken, else None
         self.tutorial = tutorial if tutorial is not None else TutorialState()
+        self.log = GuildLog(log)
         self._sync_leadership()
 
     def reveal_node(self, node_id: str) -> bool:
