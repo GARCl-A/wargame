@@ -1570,7 +1570,7 @@ Neutral**).
   specialised is its shelf: Smith = weapons, metal armour, Iron Bar; Tanner = leather armour,
   Cloak, Hide, Quiver, the bows; Apothecary = potions, Vial, First Aid Kit; Farm = raw food and
   Salt; Tavern = Beer and Jerky; Market = Torch, Lantern, instruments, traps, Lumber. Each is a
-  node of its own, 0.5 h from Ankareth and 0.3 h from each other (`world.EDGES`), so a guild kitting
+  node of its own, 0.5 h from the Bank and 0.3 h from each other (`world.EDGES`), so a guild kitting
   out walks a round of them. The keeper's race sets the shop's tongue and bent: the Smithy's Dwarf
   haggles in Dwarvish, the Tannery's Gnoll in Orcish (a Gnoll's native tongue is Orcish in `data.RACES`), the
   Library's Kobold in Draconic, the Lumber Yard's Orc in Orcish, the Mine's Goblin in Goblin; the Apothecary's
@@ -2013,7 +2013,7 @@ distinct from open-air wilderness or arena battlefields:
 ### Crime and justice 🟡
 
 Rule in `justice.py`. A **personal** record (`Unit.crime`), not a guild one —
-it can catch up with a character wherever the City's authority reaches
+it can catch up with a character wherever Ankareth's authority reaches
 (`world.Node.jurisdiction`).
 
 - **The catch.** `campaign.advance` tests every member of a group arriving at

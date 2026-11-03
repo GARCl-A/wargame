@@ -248,7 +248,7 @@ class MapSession(MapView, Session):
 
     def _node(self, n):
         return {"id": n.id, "name": n.name, "x": n.pos[0], "y": n.pos[1], "kind": n.kind,
-                "icon": _icon(node_icon(n.id)), "blurb": n.blurb,
+                "icon": _icon(node_icon(n.id)), "blurb": n.blurb, "jurisdiction": n.jurisdiction,
                 "alert": self._node_alert(n), "ethereal": world.is_ethereal(n.id)}
 
     def _node_alert(self, n):

@@ -15,16 +15,7 @@ record it in `AGENTS.md` or the doc that owns it.
 
 # 1. Before programmable orders
 
-In this order. Why each one comes first is in italics.
-
-6. **Ankareth is the town, the node is the bank (author, note outside playtests).** `world.py` names the
-   `city` node "Ankareth", but the arena, the market and the smithy are their own nodes: the node is the
-   bank. Name the node for what it is, keep "Ankareth" for the region, and replace the circle that marks
-   Ankareth's jurisdiction on the map (`MapSheet`, `sheet.js`) with something that does not read as a road.
-   Grep the strings and tests that use the name first. *A route step names its nodes: rename before the
-   orders are saved with the old name.*
-
-Left for later, they come up with the work (author 2026-11-03): the tests the pygame campaign's cut lost
+Nothing is open here any more. Left for later, they come up with the work (author 2026-11-03): the tests the pygame campaign's cut lost
 (everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled; backlog,
 *Medium*), which cover the interruption and the resume the loop depends on.
 

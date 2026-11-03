@@ -3,7 +3,7 @@ and the patrol a fight against the guard scales up."""
 
 import random
 
-from gartok import justice
+from gartok import justice, world
 from gartok.group import Group
 from gartok.guild import Guild
 from tests.helpers import Unit, fixed_d20
@@ -147,3 +147,9 @@ def test_guard_dialogue_brings_the_patrol_and_its_answers():
     assert len(order.pack) == justice.PATROL_SIZE
     assert [o.verb for o in enc.options(u, [u])] == ["surrender", "bluff", "bribe", "attack", "leave"]
     assert enc.kind == "guard"
+
+
+def test_ankareth_is_the_jurisdiction_of_exactly_its_ten_places():
+    held = {n.id for n in world.NODES if n.jurisdiction}
+    assert {n.jurisdiction for n in world.NODES if n.jurisdiction} == {"ankareth"}
+    assert held == {"prison", "library", "arena", "apothecary", "tavern", "tanner", "smith", "carpenter", "market", "city"}

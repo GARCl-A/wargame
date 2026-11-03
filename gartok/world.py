@@ -31,7 +31,7 @@ completing arena deeds (`factions`), not from the win itself.
 `pos` is in map units: a small map fills (0..1, 0..1), a bigger one runs past 1 (never squeezed,
 so nodes keep their spacing) and the map camera pans over it.
 
-`jurisdiction` (e.g. `"the_city"`) marks a node the guard patrols: `campaign.advance`
+`jurisdiction` (e.g. `"ankareth"`) marks a node the guard patrols: `campaign.advance`
 tests every crime-carrying member of a group that arrives there -- waypoint or
 final stop alike -- and can pause the group on the outcome (`justice.py`).
 Outside jurisdiction (`road`, `wilds`, the lumber yard) a rap sheet never comes up.
@@ -113,7 +113,7 @@ class Node:
         self.language = language             # shop: the tongue (or a tuple of them) the vendor haggles in
         self.alignment = alignment           # shop: the vendor's bent (price sympathy)
         self.functions = tuple(functions)    # what the node offers (node_functions.FUNCTIONS)
-        self.jurisdiction = jurisdiction     # e.g. "the_city" -- the guard tests every arrival (justice.py)
+        self.jurisdiction = jurisdiction     # e.g. "ankareth" -- the guard tests every arrival (justice.py); the map washes the nodes that share it
         self.unsafe = unsafe                 # True -> ROAD_AMBUSH_CHANCE per arrival (campaign.py)
         self.encounter_table = encounter_table   # encounters.EncounterEntry tuple an unsafe node's ambush rolls off
         self.garrison_job = garrison_job     # the job a "garrison" order can work here, or None
@@ -183,9 +183,9 @@ _DUNGORM = Vendor("Dungorm", "Gnoll", "tanner", "tanner.png",
                   line="Bring me hides. Fresh. I can smell when they're not.")
 
 NODES = [
-    Node("city", "Ankareth", "town", (0.30, 0.50),
-         "The walled burg. Where the guild sets out from -- and where the "
-         "Bankers keep their strongboxes.", jurisdiction="the_city",
+    Node("city", "The Bank", "town", (0.30, 0.50),
+         "The Bankers' counting-house in Ankareth. Where the guild sets out from -- and where the "
+         "Bankers keep their strongboxes.", jurisdiction="ankareth",
          functions=("bank", "trust", "property"),
          vendors={"bank": _ELYSIA, "trust": _ELYSIA, "property": _ELYSIA}),
     Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
@@ -199,7 +199,7 @@ NODES = [
     Node("carpenter", "The Carpenter", "town", (0.26, 0.57),
          "A fragrant workshop of cedar shavings and drying timber between the city walls and the sawmill. "
          "Bows, crossbows, carts, carriages and timber crafting are offered here, and the treefolk keeper bends living wood to shape.",
-         jurisdiction="the_city", language="Verdant", alignment="Neutral and Good",
+         jurisdiction="ankareth", language="Verdant", alignment="Neutral and Good",
          functions=("carpenter", "shop"),
          vendors={"carpenter": _ROWAN, "shop": _ROWAN}),
 
@@ -211,39 +211,39 @@ NODES = [
                                  line="Down there it's dark, deep and mine. You just rent the dark.")}),
     Node("arena", "Arena", "battle", (0.405, 0.32),
          "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
-         ArenaScenario, lethal=False, arena=True, jurisdiction="the_city",
+         ArenaScenario, lethal=False, arena=True, jurisdiction="ankareth",
          vendors={"arena": Vendor("Gorrum Sandfist", "Goliath", "pit master", "arena_master.png",
                                   line="The sand doesn't care who you were. Step in and show it who you are.")}),
     Node("market", "Market", "market", (0.38, 0.64),
          "Buy and sell gear for copper. The traders speak Ankarin.",
-         language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city",
+         language="Ankarin", alignment="Lawful and Neutral", jurisdiction="ankareth",
          functions=("shop",), vendors={"shop": Vendor("Surmanyx", "Automaton", "merchant", "merchant.png",
                                                       line="Price recorded. Weight recorded. Haggling permitted within tolerance.")}, shop_label="ENTER THE MARKET"),
     Node("smith", "The Smithy", "town", (0.47, 0.57),
          "A forge on the road out of the walls, loud enough to hear from the gate. Weapons, metal armour and "
          "iron bars are sold here, and the smith lends the anvil.",
-         jurisdiction="the_city", language="Dwarvish", alignment="Lawful and Neutral", functions=("forge", "shop"),
+         jurisdiction="ankareth", language="Dwarvish", alignment="Lawful and Neutral", functions=("forge", "shop"),
          vendors={"forge": _THALASHGROK, "shop": _THALASHGROK}),
     Node("tanner", "The Tannery", "town", (0.10, 0.72),
          "Racks of hide downwind of the lumber yard. Leather armour, cloaks, quivers and bows, and a tanner with "
          "work for anyone who hunts.",
-         language="Orcish", alignment="Chaotic and Neutral", functions=("tanner", "shop"),
+         jurisdiction="ankareth", language="Orcish", alignment="Chaotic and Neutral", functions=("tanner", "shop"),
          vendors={"tanner": _DUNGORM, "shop": _DUNGORM}),
     Node("apothecary", "The Apothecary", "town", (0.29, 0.20),
          "A herbalist's shop past the arena, smelling of vinegar and smoke. Potions, vials and first aid kits, "
          "brewed to order.",
-         jurisdiction="the_city", language="Gnomish", alignment="Chaotic and Good", functions=("apothecary", "shop"),
+         jurisdiction="ankareth", language="Gnomish", alignment="Chaotic and Good", functions=("apothecary", "shop"),
          vendors={"shop": Vendor("Pimbletwig", "Gnome", "apothecary", "apothecary.png",
                                  line="Tell me where it hurts. Then tell me what you ate.")}),
     Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
-         jurisdiction="the_city", garrison_job="study",
+         jurisdiction="ankareth", garrison_job="study",
          language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop"), shop_label="BUY FOOD AND DRINK",
          vendors={"shop": Vendor("Tobbin Hearthcup", "Halfling", "innkeeper", "innkeeper.png",
                                  line="Everyone who walks in here is hungry for something. Food I can sell.")}),
     Node("prison", "Prison", "prison", (0.22, 0.36),
          "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
-         jurisdiction="the_city", functions=("prison",),
+         jurisdiction="ankareth", functions=("prison",),
          vendors={"prison": Vendor("Captain Caelen", "Elf", "warden", "prison_guard.png",
                                    line="Every cell here was empty once. Help me keep one of them that way.")}),
     Node("road", "Old Road", "town", (0.60, 0.50),
@@ -269,7 +269,7 @@ NODES = [
          garrison_job="hold", functions=("claim",)),
     Node("library", "The Library", "town", (0.12, 0.32),
          "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
-         jurisdiction="the_city", language="Draconic", alignment="Lawful and Evil", functions=("library", "shop"),
+         jurisdiction="ankareth", language="Draconic", alignment="Lawful and Evil", functions=("library", "shop"),
          vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png",
                                     line="We keep what the world forgets. Some of it, it forgot on purpose.")}),
     Node("farm", "The Farm", "town", (0.30, 0.84),

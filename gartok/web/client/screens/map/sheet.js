@@ -5,7 +5,7 @@
 
 const MapSheet = (() => {
   const W = 1060, H = 946;
-  const INNER = { l: 80, r: W - 80, t: 140, b: H - 90 };   // the fit leaves the title and the scale clear
+  const INNER = { l: 80, r: W - 80, t: 115, b: H - 70 };
   const cv = $("map"), g = cv.getContext("2d");
   const cam = { z: 1, x: 0, y: 0 };
   let M = null, base = {}, deco = null, hoverPath = null, fitKey = "";
@@ -73,7 +73,7 @@ const MapSheet = (() => {
 
   // the seeded scatter of trees, peaks and the rest, in base coordinates, per known world
   function scatter() {
-    const out = { trees: [], peaks: [], furrows: [], trenches: [], rubble: [] };
+    const out = { trees: [], peaks: [], furrows: [], trenches: [], rubble: [], territories: [] };
     const far = (x, y, r) => Object.values(base).every(([px, py]) => Math.hypot(x - px, y - py) > r);
     for (const n of M.nodes) {
       const t = TERRAIN[n.id];
@@ -93,25 +93,79 @@ const MapSheet = (() => {
       else if (t[0] === "trenches") out.trenches.push([nx, ny]);
       else if (t[0] === "rubble") for (let i = 0; i < 14; i++) out.rubble.push([nx + rr(-50, 50), ny + rr(18, 40), rr(3, 8), rr(2, 5)]);
     }
-    // the town wall: round the city and the quarters an hour or less from it
-    const city = M.nodes.find(n => n.id === "city");
-    if (city) {
-      const near = M.edges.filter(([a, b, d]) => (a === "city" || b === "city") && d <= 1 && a !== "road" && b !== "road")
-        .map(([a, b]) => base[a === "city" ? b : a]).concat([base.city]);
-      const xs = near.map(p => p[0]), ys = near.map(p => p[1]);
-      out.wall = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2,
-      (Math.max(...xs) - Math.min(...xs)) / 2 + 50, (Math.max(...ys) - Math.min(...ys)) / 2 + 46];
-    }
+    const held = {};
+    for (const n of M.nodes) if (n.jurisdiction) (held[n.jurisdiction] = held[n.jurisdiction] || []).push(base[n.id]);
+    for (const [name, pts] of Object.entries(held)) out.territories.push(territory(pts, name));
     return out;
   }
 
+  // A jurisdiction on the sheet: a wash round the nodes that share its name, the border stippled like a shore,
+  // the name set along the edge
+  const K = .55;   // the prototype's sizes, scaled to this canvas
+  function territory(pts, name) {
+    const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+    const STEPS = 240, pad = 128 * K;
+    let r = [];
+    for (let i = 0; i < STEPS; i++) {
+      const th = 2 * Math.PI * i / STEPS, dx = Math.cos(th), dy = Math.sin(th);
+      let best = 0;
+      for (const p of pts) {
+        const ox = p[0] - cx, oy = p[1] - cy, b = ox * dx + oy * dy, d = b * b - (ox * ox + oy * oy - pad * pad);
+        if (d >= 0) best = Math.max(best, b + Math.sqrt(d));
+      }
+      r.push(best);
+    }
+    for (let k = 0; k < 40; k++) r = r.map((v, i) => (r[(i + STEPS - 1) % STEPS] + 2 * v + r[(i + 1) % STEPS]) / 4);
+    const poly = r.map((v, i) => {
+      const th = 2 * Math.PI * i / STEPS, q = v * (1 + .03 * (.5 * Math.sin(3 * th + 1) + .3 * Math.sin(7 * th + 2) + .2 * Math.sin(13 * th)));
+      return [cx + q * Math.cos(th), cy + q * Math.sin(th)];
+    });
+    const edge = []; let len = 0;
+    poly.forEach((p, i) => {
+      const a = poly[(i + STEPS - 1) % STEPS], b = poly[(i + 1) % STEPS], tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1;
+      edge.push({ p, t: [tx / l, ty / l], n: [ty / l, -tx / l], s: len });
+      len += Math.hypot(b[0] - p[0], b[1] - p[1]);
+    });
+    if ((edge[0].p[0] - cx) * edge[0].n[0] + (edge[0].p[1] - cy) * edge[0].n[1] < 0) edge.forEach(q => { q.n = [-q.n[0], -q.n[1]]; });
+    const save = seed; seed = hash("territory");
+    const dots = [[], [], [], []];
+    for (let i = 0; i < 2000; i++) {
+      const q = edge[Math.floor(rnd() * edge.length)], d = (-Math.pow(rnd(), 2.2) * 46 - 2) * K;
+      dots[Math.floor(rnd() * 4)].push([q.p[0] + q.n[0] * d + rr(-1.2, 1.2), q.p[1] + q.n[1] * d + rr(-1.2, 1.2), rr(.7, 1.6)]);
+    }
+    seed = save;
+    const along = s => {
+      const w = ((s % len) + len) % len; let i = 0;
+      while (i < STEPS - 1 && edge[i + 1].s <= w) i++;
+      const a = edge[i], b = edge[(i + 1) % STEPS], u = (w - a.s) / ((i === STEPS - 1 ? len : b.s) - a.s || 1), m = (x, y) => x + (y - x) * u;
+      return { p: [m(a.p[0], b.p[0]), m(a.p[1], b.p[1])], t: [m(a.t[0], b.t[0]), m(a.t[1], b.t[1])], n: [m(a.n[0], b.n[0]), m(a.n[1], b.n[1])] };
+    };
+    const word = name.toUpperCase(), adv = 32 * K, off = 40 * K;
+    const marks = Object.values(base).flatMap(([x, y]) => [[x, y], [x, y + 24], [x - 30, y + 24], [x + 30, y + 24]]);
+    const set = from => {
+      const d = edge.find(q => q.s === from).p[1] < cy ? 1 : -1, letters = []; let s = from - d * adv * (word.length - 1) / 2, prev = null, room = 1e9;
+      for (const ch of word) {
+        let q, x, y;
+        do { s += d * 1.5 * K; q = along(s); x = q.p[0] - q.n[0] * off; y = q.p[1] - q.n[1] * off; } while (prev && Math.hypot(x - prev[0], y - prev[1]) < adv);
+        prev = [x, y];
+        for (const [mx, my] of marks) room = Math.min(room, Math.hypot(x - mx, y - my));
+        letters.push([ch, x, y, Math.atan2(d * q.t[1], d * q.t[0])]);
+      }
+      return { letters, room };
+    };
+    // the name goes where the marks and their names leave the most room
+    let best = null;
+    for (let i = 0; i < edge.length; i += 4) { const c = set(edge[i].s); if (!best || c.room > best.room) best = c; }
+    return { poly, dots, letters: best.letters, center: [cx, cy] };
+  }
+
   // ---------- ink ----------
-  function inkLine(pts, w, dash) {
+  function inkLine(pts, w, dash, key) {
     g.lineWidth = w; g.setLineDash(dash || []); g.beginPath(); g.moveTo(...pts[0]);
     for (let k = 1; k < pts.length; k++) {
       const [x0, y0] = pts[k - 1], [x1, y1] = pts[k], L = Math.hypot(x1 - x0, y1 - y0) || 1;
       const n = Math.max(3, Math.round(L / 26)), nx = -(y1 - y0) / L, ny = (x1 - x0) / L;
-      const bend = ((Math.round(x0 * 7 + y1 * 13)) % 13 - 6) / 120;
+      const bend = (hash(key + k) % 13 - 6) / 120;
       for (let i = 1; i <= n; i++) {
         const t = i / n, s = Math.sin(t * Math.PI) * bend * L;
         g.lineTo(x0 + (x1 - x0) * t + nx * s, y0 + (y1 - y0) * t + ny * s);
@@ -119,12 +173,21 @@ const MapSheet = (() => {
     }
     g.stroke(); g.setLineDash([]);
   }
-  function tree(x, y, s) {
+  function forest(trees) {
+    const crown = (x, y, s) => {
+      g.moveTo(x, y - s); g.quadraticCurveTo(x + s * .75, y - s * .2, x + s * .55, y + s * .25);
+      g.lineTo(x - s * .55, y + s * .25); g.quadraticCurveTo(x - s * .75, y - s * .2, x, y - s);
+    };
     g.fillStyle = "#d9c49b"; g.strokeStyle = "rgba(36,22,10,.8)"; g.lineWidth = 1.1;
-    g.beginPath(); g.moveTo(x, y - s); g.quadraticCurveTo(x + s * .75, y - s * .2, x + s * .55, y + s * .25);
-    g.lineTo(x - s * .55, y + s * .25); g.quadraticCurveTo(x - s * .75, y - s * .2, x, y - s); g.fill(); g.stroke();
-    g.beginPath(); g.moveTo(x, y + s * .25); g.lineTo(x, y + s * .6); g.stroke();
-    for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(x + s * (.1 + i * .12), y - s * .5 + i * s * .22); g.lineTo(x + s * (.35 + i * .08), y - s * .3 + i * s * .22); g.stroke(); }
+    g.beginPath();
+    for (const [x, y, s] of trees) crown(x, y, s);
+    g.fill(); g.beginPath();
+    for (const [x, y, s] of trees) {
+      crown(x, y, s);
+      g.moveTo(x, y + s * .25); g.lineTo(x, y + s * .6);
+      for (let i = 0; i < 3; i++) { g.moveTo(x + s * (.1 + i * .12), y - s * .5 + i * s * .22); g.lineTo(x + s * (.35 + i * .08), y - s * .3 + i * s * .22); }
+    }
+    g.stroke();
   }
   function peak(x, y, s) {
     g.fillStyle = "#e2d0a8"; g.strokeStyle = "rgba(36,22,10,.85)"; g.lineWidth = 1.3;
@@ -168,9 +231,9 @@ const MapSheet = (() => {
     if (!t) return;
     const ink = "rgba(46,95,142,.95)", at = bandPoint(b), from = P(t.from);
     const ahead = t.stops.map(s => P(s.node));
-    g.strokeStyle = ink; inkLine([from, at], 4);
+    g.strokeStyle = ink; inkLine([from, at], 4, null, b.gid + "walked");
     feet(from, at);
-    g.strokeStyle = "rgba(46,95,142,.8)"; inkLine([at, ...ahead], 3, [10, 6]);
+    g.strokeStyle = "rgba(46,95,142,.8)"; inkLine([at, ...ahead], 3, [10, 6], b.gid + "ahead");
     [at, ...ahead].forEach((p, k, all) => k && arrow(all[k - 1], p, "#2e5f8e"));
     const next = t.stops[0], [nx, ny] = ahead[0];
     text(next.at, nx - 14, ny - 30, "italic 16px 'IM Fell English'", "#2e5f8e");
@@ -178,19 +241,6 @@ const MapSheet = (() => {
       const last = t.stops[t.stops.length - 1], [lx, ly] = ahead[ahead.length - 1];
       text(`at ${last.name} day ${last.day}, ${last.at}`, lx - 30, ly + 6, "italic 16px 'IM Fell English'", "#2e5f8e", "right");
     }
-  }
-
-  function scaleBar(sel) {
-    if (!sel || !M.edges.length) return;
-    const per = M.edges.map(([a, b, d]) => Math.hypot(base[a][0] - base[b][0], base[a][1] - base[b][1]) / d).sort((x, y) => x - y);
-    const pxHour = per[per.length >> 1] * cam.z / sel.pace;
-    const hours = [1, 2, 4, 8, 16].find(h => h * pxHour >= 90) || 16;
-    const L = Math.min(hours * pxHour, 420), sx = 46, sy = H - 48;
-    for (let k = 0; k < 4; k++) {
-      g.fillStyle = k % 2 ? "#e6d5b0" : "#2c1c0e"; g.fillRect(sx + k * L / 4, sy, L / 4, 6);
-      g.strokeStyle = "#2c1c0e"; g.lineWidth = 1; g.strokeRect(sx + k * L / 4, sy, L / 4, 6);
-    }
-    text(`${hours === 1 ? "one hour's" : hours + " hours'"} walk, at the band's pace`, sx, sy - 8, "italic 14px 'IM Fell English'", "#2c1c0e");
   }
 
   function compass() {
@@ -207,18 +257,39 @@ const MapSheet = (() => {
     text("N", cx, cy - 56, "18px 'IM Fell English SC'", "#2c1c0e", "center");
   }
 
+  function drawTerritory(t) {
+    const z = cam.z, sz = Math.sqrt(z), pts = t.poly.map(toScreen), n = pts.length;
+    const outline = () => {
+      g.beginPath(); g.moveTo((pts[0][0] + pts[n - 1][0]) / 2, (pts[0][1] + pts[n - 1][1]) / 2);
+      for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; g.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+      g.closePath();
+    };
+    const [cx, cy] = toScreen(t.center), wash = g.createRadialGradient(cx, cy, 0, cx, cy, 520 * K * z);
+    wash.addColorStop(0, "rgba(176,128,64,.22)"); wash.addColorStop(1, "rgba(176,128,64,.08)");
+    g.save(); outline(); g.clip();
+    g.fillStyle = wash; g.fillRect(0, 0, W, H);
+    g.lineJoin = "round";
+    for (const [w, a] of [[56, .05], [38, .06], [24, .07], [12, .09]]) { g.strokeStyle = `rgba(110,70,30,${a})`; g.lineWidth = w * K * sz; outline(); g.stroke(); }
+    g.restore();
+    t.dots.forEach((bucket, k) => {
+      g.fillStyle = `rgba(48,30,14,${.3 + k * .1})`; g.beginPath();
+      for (const [x, y, s] of bucket) { const [px, py] = toScreen([x, y]); g.rect(px, py, s * sz, s * sz); }
+      g.fill();
+    });
+    g.strokeStyle = "rgba(42,26,12,.62)"; g.lineWidth = 1.5; outline(); g.stroke();
+    g.font = `700 ${30 * K * z}px Cinzel`; g.fillStyle = "#24160a"; g.textAlign = "center";
+    for (const [ch, x, y, a] of t.letters) { const [px, py] = toScreen([x, y]); g.save(); g.translate(px, py); g.rotate(a); g.fillText(ch, 0, 0); g.restore(); }
+    g.textAlign = "start";
+  }
+
   function draw() {
     if (!M) return;
     g.clearRect(0, 0, W, H);
     g.drawImage(paper, 0, 0);
     g.save(); deckle(g); g.clip();
     const z = cam.z, sz = Math.sqrt(z);
-    if (deco.wall) {
-      const [x, y] = toScreen(deco.wall);
-      g.strokeStyle = "rgba(42,26,12,.35)"; g.lineWidth = 1.2; g.setLineDash([3, 4]);
-      g.beginPath(); g.ellipse(x, y, deco.wall[2] * z, deco.wall[3] * z, -.2, 0, 7); g.stroke(); g.setLineDash([]);
-    }
-    for (const [x, y, s] of deco.trees) tree(...toScreen([x, y]), s * sz);
+    for (const t of deco.territories) drawTerritory(t);
+    forest(deco.trees.map(([x, y, s]) => [...toScreen([x, y]), s * sz]));
     for (const [x, y, s] of deco.peaks) peak(...toScreen([x, y]), s * sz);
     g.strokeStyle = "rgba(80,55,25,.35)"; g.lineWidth = 1;
     for (const p of deco.furrows) {
@@ -238,17 +309,11 @@ const MapSheet = (() => {
     for (const [x, y, w, h] of deco.rubble) { const [sx, sy] = toScreen([x, y]); g.fillRect(sx, sy, w * sz, h * sz); }
 
     g.strokeStyle = "rgba(42,26,12,.72)";
-    for (const [a, b] of M.edges) inkLine([P(a), P(b)], 1.6, [7, 5]);
+    for (const [a, b] of M.edges) inkLine([P(a), P(b)], 1.6, [7, 5], a + b);
     for (const b of M.groups) drawWay(b, b.gid === MapSheet.selected);
-    if (hoverPath && hoverPath.length > 1) { g.strokeStyle = "rgba(122,35,24,.85)"; inkLine(hoverPath.map(P), 2.6, [2, 5]); }
+    if (hoverPath && hoverPath.length > 1) { g.strokeStyle = "rgba(122,35,24,.85)"; inkLine(hoverPath.map(P), 2.6, [2, 5], hoverPath.join()); }
 
-    g.save(); g.translate(40, H - 120); g.rotate(-.04);
-    g.restore();
     compass();
-    const city = M.nodes.find(n => n.id === "city");
-    text(`THE ENVIRONS OF ${(city ? city.name : "the guild").toUpperCase()}`, 46, 64, "700 25px Cinzel", "#2c1c0e");
-    g.strokeStyle = "rgba(42,26,12,.6)"; g.lineWidth = 1; g.beginPath(); g.moveTo(46, 70); g.lineTo(450, 70); g.stroke();
-    scaleBar(M.groups.find(b => b.gid === MapSheet.selected));
     g.strokeStyle = "rgba(42,26,12,.55)"; g.lineWidth = 1.4; g.strokeRect(20, 20, W - 40, H - 40);
     g.lineWidth = .8; g.strokeRect(26, 26, W - 52, H - 52);
     g.restore();
@@ -259,13 +324,13 @@ const MapSheet = (() => {
   // names already set
   const NAME_W = 7.6;   // px per letter
   function labelSides() {
-    const boxes = M.nodes.map(n => { const [x, y] = P(n.id); const r = n.id === "city" ? 30 : 20; return [x - r, y - r, x + r, y + r]; });
+    const boxes = M.nodes.map(n => { const [x, y] = P(n.id); const r = 20; return [x - r, y - r, x + r, y + r]; });
     const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
     const out = {};
     for (const n of M.nodes) {
-      const [x, y] = P(n.id), w = n.name.length * (n.id === "city" ? 10 : NAME_W), big = n.id === "city" ? 12 : 0;
+      const [x, y] = P(n.id), w = n.name.length * NAME_W;
       const opts = {
-        "": [x - w / 2, y + 22 + big, x + w / 2, y + 40 + big], up: [x - w / 2, y - 40 - big, x + w / 2, y - 22 - big],
+        "": [x - w / 2, y + 22, x + w / 2, y + 40], up: [x - w / 2, y - 40, x + w / 2, y - 22],
         r: [x + 24, y - 10, x + 24 + w, y + 8], l: [x - 24 - w, y - 10, x - 24, y + 8]
       };
       const pick = Object.keys(opts).find(k => !boxes.some(b => hit(opts[k], b))) ?? "";

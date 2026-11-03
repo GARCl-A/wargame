@@ -63,7 +63,7 @@ function places() {
   const side = MapSheet.labelSides(), M = T.map;
   let html = M.nodes.map(n => {
     const [x, y] = MapSheet.P(n.id);
-    return `<div class="node ${n.id === "city" ? "city" : ""}" style="left:${x}px;top:${y}px"><div class="m">${n.icon ? ico(n.icon) : ""}</div>
+    return `<div class="node" style="left:${x}px;top:${y}px"><div class="m">${n.icon ? ico(n.icon) : ""}</div>
       <div class="n ${side[n.id]}">${esc(n.name)}</div></div>`;
   }).join("");
   const at = {};

@@ -34,7 +34,7 @@ combat presentation and the hub kit are done. Left:
   and flags what still rings false.
 - The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
   ones), the overflows, the icons' authors, then the skills. The save bug, the Claim's two items, the food's
-  visibility, the log of the days and the Ankareth rename moved to [programmable_orders.md](programmable_orders.md).
+  visibility, and the log of the days moved to [programmable_orders.md](programmable_orders.md).
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,

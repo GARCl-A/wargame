@@ -47,6 +47,8 @@ def test_the_state_holds_the_known_world_the_bands_and_what_the_picked_one_can_d
     st = _game(guild).session.state()
     known = {n.id for n in world.known(guild)}
     assert {n["id"] for n in st["nodes"]} == known
+    held = {n["id"]: n["jurisdiction"] for n in st["nodes"]}
+    assert held["city"] == "ankareth" and held["lumber_yard"] is None
     assert all(a in known and b in known for a, b, _ in st["edges"])
     (band,) = st["groups"]
     assert band["idle"] and band["chip"] == "No orders" and band["members"][0]["lead"]
@@ -62,7 +64,7 @@ def test_the_slip_over_a_place_gives_the_walk_the_order_takes():
     game = _game(guild)
     g = guild.groups[0]
     p = game.session.preview(g.gid, "market")
-    assert p["path"][0] == "lumber_yard" and p["path"][-1] == "market" and p["via"] == ["Ankareth"]
+    assert p["path"][0] == "lumber_yard" and p["path"][-1] == "market" and p["via"] == ["The Bank"]
     o = orders.travel(g, "market")
     legs = [o.eta, *(world.hours(next(w for v, w in world.neighbors(a) if v == b), g.speed)
                      for a, b in zip([o.dest, *o.path], o.path))]

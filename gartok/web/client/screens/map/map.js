@@ -69,7 +69,7 @@ function tripBar(t) {
 
 function doing(b) {
   if (b.blocked) return `<b>${esc(b.chip)}</b> at ${esc(node(b.node).name)}`;
-  if (b.idle) return `Waiting at the <b>${esc(node(b.node).name)}</b>`;
+  if (b.idle) return `Waiting at <b>${esc(node(b.node).name)}</b>`;
   if (b.trip) {
     const last = b.trip.stops[b.trip.stops.length - 1], via = b.trip.stops.slice(0, -1).map(s => s.name);
     return `→ <b>${esc(last.name)}</b>${via.length ? " by " + esc(via.join(", ")) : ""}`;
@@ -260,7 +260,7 @@ function drawPlaces() {
   const b = band(sel), side = MapSheet.labelSides();
   let html = M.nodes.map(n => {
     const [x, y] = MapSheet.P(n.id);
-    const cls = ["node", n.id === "city" ? "city" : "", /fort|outpost/.test(n.icon || "") || n.id === "ledger_hold" ? "fort" : "",
+    const cls = ["node", /fort|outpost/.test(n.icon || "") || n.id === "ledger_hold" ? "fort" : "",
       n.ethereal ? "ethereal" : "", b && b.node === n.id ? "here" : "", hoverNode === n.id ? "hover" : ""].join(" ");
     return `<div class="${cls}" data-node="${n.id}" style="left:${x}px;top:${y}px"><div class="m">${n.icon ? ico(n.icon) : ""}</div>
       <div class="n ${side[n.id]}">${esc(n.name)}</div>${n.alert ? '<div class="wax">!</div>' : ""}</div>`;

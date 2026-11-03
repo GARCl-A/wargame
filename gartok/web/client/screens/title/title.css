@@ -53,13 +53,9 @@
 .node .m{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
   background:radial-gradient(circle at 40% 35%,#f3e7c8,#dcc89f);box-shadow:0 0 0 1.6px #2a1a0e,0 0 0 4px rgba(230,213,176,.9),0 0 0 5px rgba(42,26,12,.45)}
 .node .m .ico{width:17px;height:17px;color:#2a1a0e}
-.node.city .m{left:-24px;top:-24px;width:48px;height:48px;box-shadow:0 0 0 2.4px #1d120a,0 0 0 6px #e6d5b0,0 0 0 7.5px #1d120a}
-.node.city .m .ico{width:27px;height:27px}
 .node .n{position:absolute;left:0;top:20px;transform:translateX(-50%);white-space:nowrap;
   font:16px/1 var(--read);color:#2c1c0e;text-shadow:0 0 3px #e6d5b0,0 0 3px #e6d5b0,0 0 5px #e6d5b0}
-.node.city .n{top:32px;font:20px/1 "IM Fell English SC",serif;letter-spacing:.06em}
 .node .n.up{top:auto;bottom:20px}
-.node.city .n.up{bottom:32px}
 .node .n.r{left:22px;top:-8px;transform:none}
 .node .n.l{left:auto;right:22px;top:-8px;transform:none}
 .flag{position:absolute;width:0;height:0}

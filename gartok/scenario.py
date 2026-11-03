@@ -262,11 +262,11 @@ class StreetScenario(Scenario):
 
 def scenario_for(node):
     """A node's fight scenario: its own `node.scenario()`, `StreetScenario` inside the
-    City's jurisdiction (daylight by day, street torches at night), or `WildsScenario`
+    Ankareth's jurisdiction (daylight by day, street torches at night), or `WildsScenario`
     out in the open -- on the node's own floor when it names one (a road's packed earth)."""
     if node.scenario is not None:
         scen = node.scenario()
-    elif getattr(node, "jurisdiction", None) == "the_city":
+    elif getattr(node, "jurisdiction", None) == "ankareth":
         scen = StreetScenario()
     else:
         scen = WildsScenario()
