@@ -17,13 +17,6 @@ record it in `AGENTS.md` or the doc that owns it.
 
 In this order. Why each one comes first is in italics.
 
-3. **Claim: the lumber licence and the Claim overlap, and nobody knows who gathers (playtest 2026-11-02).**
-   The Claim now collides with the Lumberyard licence on lumber collection, and the screen does not say who
-   in the Claim is gathering wood or what that takes. Pick one owner of the rule, show per member
-   whether they gather and the requirement they lack. Principle (author): every gather activity should have
-   the gather tab. *Group B of the proof of concept gathers Lumber: the "gather" step must not be built on
-   an ambiguous rule.*
-
 5. **A log of what happened while the days passed (Johann, 2026-11-01).** Today the lines of a jump
    (meals eaten, food rotted, hunger, purchases) reach the map as one "Since the last order" card (last
    12 lines, click to put it away) and are gone: `MapSession.state` drains `notices`, and the guild

@@ -56,7 +56,7 @@ class Order:
     prev_node: str | None = None   # guard: node to fall back to on "flee"
     resume_path: tuple = ()  # guard/ambush: travel waypoints still owed once resolved (empty = was the final stop)
     pack: tuple = ()         # ambush: the enemy Units rolled at the moment of the catch (encounters.py)
-    job: str | None = None   # garrison: which job (economy.GARRISON_JOBS) the group is working
+    job: str | None = None   # garrison: which job the group is working; work: the garrison job it goes back to
     task: str | None = None  # solo: "hospital" or "craft"
     who: str | None = None   # solo: uid of the member doing the task
     recipe: str | None = None  # solo craft: what is being made
@@ -66,6 +66,7 @@ class Order:
     crew: tuple = ()         # stint: uids of the members it settles for (the performers, the patients)
     wagon: str | None = None  # stint "repair": uid of the wagon being mended
     state: dict | None = None  # hunting: the hunt out on the clock and what its stretch rolled (`HuntSession`)
+    prior: "Order | None" = None  # claim attack: what the band was doing, back on a win
 
     @property
     def interactive(self):
@@ -102,16 +103,23 @@ def next_leg(src, remaining_path, speed, pace=1.0):
                 path=tuple(remaining_path[1:]))
 
 
-def work(guild, group, hours, gather=False, task=None):
+def work(guild, group, hours, gather=False, task=None, resume=None):
     """Order `group` to work `hours` where it stands. Brisk Hands can shrink
     the clock cost below the nominal `hours` pay/XP is banked on -- see
-    `Guild.work_speedup`. With `gather` the shift yields the node's drops, not the wage."""
+    `Guild.work_speedup`. With `gather` the shift yields the node's drops, not the wage.
+    `resume` is the garrison job the group goes back to when the shift is over."""
     if gather and not guild.has_licence(group.node):
         raise ValueError(f"no gathering licence for {group.node!r}")
     if gather and not any(economy.owns_tool(u, group.node) for u in group.members):
-        raise ValueError(f"no one in {group.display_name} carries the node's {economy.WORK_TOOLS[group.node]}")
+        raise ValueError(f"no one in {group.display_name} carries the node's {economy.GATHER_TOOLS[group.node]}")
     clock_hours = hours * guild.work_speedup(group.members)
-    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task)
+    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task, job=resume)
+
+
+def holds_post(order):
+    """A garrison order, or the shift a garrison works and goes back to (`work`'s `resume`): the
+    group is still holding its post meanwhile."""
+    return order is not None and (order.kind == "garrison" or (order.kind == "work" and order.job is not None))
 
 
 def put_out(guild, group):

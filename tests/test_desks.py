@@ -198,17 +198,6 @@ def test_the_claim_desk_banks_the_lumber_in_the_cart_too():
     assert guild.wilds_claim_fence_lumber == 5 and not cart.count_of("Lumber") and not u.count_of("Lumber")
 
 
-def test_the_claim_desk_hands_out_only_the_lumber_a_pack_can_carry():
-    guild, g, u = _band(world.WILDS_TERRITORY_NODE)
-    u._base_inventory = []
-    u._derive_combat()
-    room = int((u.carry_max - u.load) // items.item_weight("Lumber"))
-    guild.garrison_stock[world.WILDS_TERRITORY_NODE] = ["Lumber"] * (room + 3)
-    claim_desk.ClaimDesk(guild, g)._collect_lumber()
-    assert u.count_of("Lumber") == room
-    assert guild.garrison_stock[world.WILDS_TERRITORY_NODE] == ["Lumber"] * 3
-
-
 def test_the_claim_desk_scouts_and_banks_the_carried_lumber():
     guild, g, u = _band(world.WILDS_TERRITORY_NODE)
     desk = claim_desk.ClaimDesk(guild, g)
@@ -227,8 +216,6 @@ def test_the_claim_desk_garrisons_and_stands_down():
     guild.wilds_claim_stage = "SWEPT"
     desk = claim_desk.ClaimDesk(guild, g)
     desk._start_garrison()
-    assert g.order.kind == "garrison" and g.order.job == "lumber" and guild.wilds_claim_stage == "SUSTAINING"
-    desk._toggle_garrison_job()
-    assert g.order.job == "hold"
+    assert g.order.kind == "garrison" and g.order.job == "hold" and guild.wilds_claim_stage == "SUSTAINING"
     desk._leave_garrison()
     assert g.order.kind != "garrison"

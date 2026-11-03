@@ -72,9 +72,9 @@ class GatherDesk:
         return line + f" · the licence pays for itself in ~{price / haul:.0f} days of gathering"
 
     def hub_cards(self):
-        price = gather.licence_price(self.node.id)
+        purse = {"label": "party purse", "value": fmt_money(sum(u.money for u in self.group.members)), "tone": "money"}
+        if not gather.needs_licence(self.node.id):
+            return [purse]
         held = self.guild.has_licence(self.node.id)
-        purse = sum(u.money for u in self.group.members)
-        return [{"label": "licence", "value": "held" if held else fmt_money(price),
-                 "tone": "good" if held else None},
-                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
+        return [{"label": "licence", "value": "held" if held else fmt_money(gather.licence_price(self.node.id)),
+                 "tone": "good" if held else None}, purse]

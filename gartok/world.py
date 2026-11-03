@@ -266,7 +266,7 @@ NODES = [
     Node("wilds_territory", "The Claim", "town", (0.97, 0.31),
          "A stretch of the Wilds the guild means to make its own -- if it can "
          "clear it, fence it, and hold it.", ErmosScenario,
-         garrison_job="lumber", functions=("claim",)),
+         garrison_job="hold", functions=("claim",)),
     Node("library", "The Library", "town", (0.12, 0.32),
          "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
          jurisdiction="the_city", language="Draconic", alignment="Lawful and Evil", functions=("library", "shop"),

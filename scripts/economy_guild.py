@@ -310,7 +310,7 @@ class Sim:
         self.horizon = horizon if horizon is not None else float("inf")
         self.champion_beaten = False
         self.claim_day = None                 # the day the Claim became the guild's
-        self.claim_lumber = 0                 # Lumber the garrison gathered and brought home
+        self.claim_lumber = 0                 # Lumber the garrison gathered at the Claim
         self.treated = 0                      # copper paid to the Medic
         self.bouts = 0                        # staked arena bouts fought
         self.start_xp = sum(u.combat_xp for u in squad)
@@ -962,26 +962,30 @@ class Sim:
         g = self.guild
         if g.wilds_claim_stage == "SWEPT":
             g.wilds_claim_start_sustaining()
-        self.group.order = orders.garrison("lumber")
+        self.group.order = orders.garrison("hold")
         while (self.elapsed < self.horizon and self.food_days >= 1 and g.wilds_claim_owner != "seized"
                and not any(u.hp * 4 < u.hp_max for u in self.members)):
-            result = campaign.advance(g, dt=24)
-            self._refill_shelves()
-            if result.wiped or g.empty:
-                raise Wiped
-            for grp, pend in result.pending:
-                self._claim_fight(grp, pend)
+            gathers = bool(gather.gatherers(self.members, CLAIM_NODE))
+            if gathers:
+                self.group.order = orders.work(g, self.group, SHIFT_HOURS, gather=True, resume="hold")
+                held = {name: sum(u.count_of(name) for u in self.members) for name, _ in gather.TABLES[CLAIM_NODE]}
+                self._claim_step(campaign.advance(g))
+                for name, had in held.items():
+                    self.sellable[name] += max(0, sum(u.count_of(name) for u in self.members) - had)
+                    self.claim_lumber += max(0, sum(u.count_of(name) for u in self.members) - had) * (name == "Lumber")
+            self._claim_step(campaign.advance(g, dt=24 - SHIFT_HOURS if gathers else 24))
             if self.group.order is None:
-                self.group.order = orders.garrison("lumber")
+                self.group.order = orders.garrison("hold")
             self.snap()
         self.group.order = None
-        stock = g.garrison_stock.setdefault(CLAIM_NODE, [])
-        for u in self.members:
-            while stock and u.load + items.item_weight("Lumber") <= u.carry_max:
-                stock.pop()
-                u.give_to_pack("Lumber")
-                self.sellable["Lumber"] += 1
-                self.claim_lumber += 1
+
+    def _claim_step(self, result):
+        """What a stretch at the Claim threw up: a pack on the gathering crew or a raid on the garrison."""
+        self._refill_shelves()
+        if result.wiped or self.guild.empty:
+            raise Wiped
+        for grp, pend in result.pending:
+            (self._gather_fight if pend.kind == "gather_ambush" else self._claim_fight)(grp, pend)
 
     # -- the market -------------------------------------------------------- #
     def market(self, node_id=None):

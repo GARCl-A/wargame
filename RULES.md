@@ -1087,8 +1087,8 @@ this attacker still come?*
 | The Biwolf | a hunt after dark with the tanner's job out and the meat in the pack | the Biwolf and his escort | fight | determined |
 | Stopped by the guard | a jurisdiction node, members carrying crime | the City guard | surrender, bluff, bribe, run back, fight | determined |
 | Raid on the house | arriving at a squatted property | the City guard | fight | determined |
-| Raid on the claim | a day passing, a garrison sustaining the claim | raiders | fight | determined |
-| The claim is seized | a day passing, the claim established and garrisoned | raiders | fight | determined |
+| Raid on the claim | a day passing, a garrison sustaining the claim | raiders | fight | opportunist |
+| The claim is seized | a day passing, the claim established and someone at it | raiders | fight | opportunist |
 | Title defense | entering the arena with the champion when the challenge is due | a challenger a level above | fight | determined |
 | Retake the claim | arriving at the claim after it was seized | the group | fight | sought |
 | The Claim's CLEAR and SWEEP | the claim's hub | the group | not go in | sought |
@@ -1829,19 +1829,30 @@ shipped start to finish (buy/claim, use, lose, recover):
   until the claim can produce its own); **Sustain** parks a garrisoned group
   there for a countdown, rolling a raid chance
   (`economy.WILDS_RAID_CHANCE` = 0.2) per calendar day crossed, never per `campaign.advance()` call — losing only
-  resets the sustain timer, never the earlier stages. Once **Established**,
-  the garrison produces Lumber daily (`economy.GARRISON_JOBS`,
-  `Guild._garrison_upkeep`) and the claim becomes a real target: an
-  unguarded one can be **silently seized** (no fight); a guarded one that
-  loses its defense is also seized, but the structure survives either way —
+  resets the sustain timer, never the earlier stages. An attack is one roll a
+  day for the claim, not one per band, and one fight: everyone physically at
+  the claim (`forced.claim_crew`: the garrison, the gatherers, a band that
+  stopped by; not one on the road or hunting) is called to arms, whatever it
+  was doing, and the raiders come only if they would take that whole crew on
+  (`encounters.would_attack`, an opportunist's rule). A win sends every band back to
+  what it was doing (`Order.prior`); a loss leaves the survivors with no orders.
+  Once the garrison
+  opens, the claim has a Gathering tab: the same Axe, work level 2 and shift
+  as the Lumber Yard's, but no licence (the ground is the guild's) and no
+  wage, a bonus roll for Fruit and the Wilds' own packs (`gather.CLAIM`); a
+  garrison that gathers is still holding its post (`orders.holds_post`) and
+  goes back to it when the shift ends. Once **Established** the claim becomes a real target: a
+  claim with nobody at it can be **silently seized** (no fight); one whose crew
+  loses the fight is also seized, but the structure survives either way —
   **retaking** it is a normal arrival fight against the occupiers, never a
   redo of the claim campaign.
 - **The garrison engine** underneath both (`orders.garrison(job)`,
   `Group.locked` vs `Group.busy`) is generic per node
-  (`guild.garrison_stock[node_id]`), not hard-wired to either property — the
+  (`world.Node.garrison_job`), not hard-wired to either property — the
   Tavern's "study" job (see Magic above) reuses the exact same order kind.
-- **Not built yet, on purpose:** no autonomous job besides Wilds Lumber
-  (the City property has none), no mechanical battle-map cover from fences
+- **Not built yet, on purpose:** no autonomous job (a garrison only holds,
+  studies or keeps a rite; the Claim's wood is gathered by shift, not by
+  itself), no mechanical battle-map cover from fences
   (a checklist step only, no combat-terrain hookup), no per-unit job choice
   inside a garrison.
 

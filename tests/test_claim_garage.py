@@ -122,6 +122,7 @@ def test_an_unguarded_seizure_takes_it_too(monkeypatch):
     guild, g, _ = _setup("ESTABLISHED", garrisoned=False)
     guild.wilds_claim_owner = "guild"
     _park_all(guild, g)
+    g.node = "wilds"
     _roll(monkeypatch, 0.0)
     forced.wilds_claim_seizure_check(guild, 1)
     assert guild.claim_garage.empty
@@ -135,9 +136,9 @@ def test_a_lost_seizure_fight_takes_it_and_a_won_one_keeps_it():
 
     guild, g, _ = _setup("ESTABLISHED")
     _park_all(guild, g)
-    forced.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", job="lumber"), Outcome(True))
+    forced.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", prior=orders.garrison("lumber")), Outcome(True))
     assert not guild.claim_garage.empty
-    forced.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", job="lumber"), Outcome(False))
+    forced.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", prior=orders.garrison("lumber")), Outcome(False))
     assert guild.claim_garage.empty
 
 

@@ -42,6 +42,20 @@ def _ambushed(node="city", dest="road", members=1):
 
 # --------------------------------------------------------------------------- #
 # the order itself                                                            #
+def test_a_band_called_to_arms_keeps_what_it_was_doing_through_the_save_file():
+    g = Group([Unit("player")], node="wilds")
+    shift = orders.Order("work", eta=16, remaining=9, hours=16, gather=True, job="hold")
+    g.pending = orders.Order("wilds_aid", prior=shift)
+    guild = Guild(None, groups=[g])
+    world_id = persist.new_world_id()
+
+    persist.save_game(world_id, guild)
+    loaded = persist.load_game(world_id).groups[0]
+
+    assert loaded.pending.kind == "wilds_aid" and loaded.pending.prior.remaining == 9
+    assert loaded.pending.prior.job == "hold" and loaded.pending.prior.gather
+
+
 # --------------------------------------------------------------------------- #
 
 def test_a_multi_leg_travel_order_round_trips_with_its_waypoints():
@@ -110,7 +124,7 @@ def test_a_pending_guard_catch_keeps_who_was_caught():
 
 def test_a_pending_fight_survives_the_save_file_and_a_wilds_raid_job_with_it():
     g = Group([Unit("player")], node="wilds")
-    g.pending = orders.Order("wilds_raid", job="lumber",
+    g.pending = orders.Order("wilds_raid", prior=orders.garrison("lumber"),
                              pack=tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL) for _ in range(2)))
     guild = Guild(None, groups=[g])
     world_id = persist.new_world_id()
@@ -118,7 +132,7 @@ def test_a_pending_fight_survives_the_save_file_and_a_wilds_raid_job_with_it():
     persist.save_game(world_id, guild)
     loaded = persist.load_game(world_id).groups[0]
 
-    assert loaded.pending.kind == "wilds_raid" and loaded.pending.job == "lumber"
+    assert loaded.pending.kind == "wilds_raid" and loaded.pending.prior.job == "lumber"
     assert len(loaded.pending.pack) == 2
 
 
@@ -233,7 +247,7 @@ def test_a_wilds_raid_on_a_garrison_is_parked_too():
     finally:
         economy.WILDS_RAID_CHANCE = orig
 
-    assert g.pending is not None and g.pending.kind == "wilds_raid" and g.pending.job == "lumber"
+    assert g.pending is not None and g.pending.kind == "wilds_raid" and g.pending.prior.job == "lumber"
     assert g.locked
 
     forced.resolve_wilds_raid(guild, g, g.pending, SimpleNamespace(won=True))

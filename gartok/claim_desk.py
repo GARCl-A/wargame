@@ -1,10 +1,10 @@
 """The Wilds Claim's work with no window: scouting, the Lumber hauled for the fences and the fences raised, the
-garrison and its job, the hearth (campfire or oven), and the Lumber the garrison banks. The two fights (CLEAR,
+garrison, and the hearth (campfire or oven). Gathering Lumber is the Gathering tab's (`gather.py`). The two fights (CLEAR,
 SWEEP) are the front-end's to play (`guild_claim` says what they are). pygame's `WildsClaimScreen` and
 `web/claim_tab.py` are the windows over `ClaimDesk`.
 """
 
-from . import economy, items, orders, stints
+from . import economy, orders, stints
 
 
 class ClaimDesk:
@@ -31,18 +31,6 @@ class ClaimDesk:
             self.notice = f"deposited {total} Lumber toward the fences."
         else:
             self.notice = "nobody here is carrying Lumber."
-
-    def _collect_lumber(self):
-        stock = self.guild.garrison_stock.setdefault(self.group.node, [])
-        taken = 0
-        for m in self.group.members:
-            while stock and m.load + items.item_weight("Lumber") <= m.carry_max:
-                stock.pop()
-                m.give_to_pack("Lumber")
-                m._derive_combat()
-                taken += 1
-        self.notice = (f"collected {taken} Lumber." if taken
-                       else "no room to carry any Lumber right now.")
 
     # the claim's work with hours to it: each returns its stint for the band, or None (the notice says why)
     def _scout(self):
@@ -74,14 +62,8 @@ class ClaimDesk:
             m._derive_combat()
 
     def _start_garrison(self):
-        self.group.order = orders.garrison("lumber")
+        self.group.order = orders.garrison("hold")
         self.guild.wilds_claim_start_sustaining()
-
-    def _toggle_garrison_job(self):
-        order = self.group.order
-        if order is None or order.kind != "garrison":
-            return
-        order.job = "lumber" if order.job == "hold" else "hold"
 
     def _leave_garrison(self):
         if self.group.order is not None and self.group.order.kind == "garrison":

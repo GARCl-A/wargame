@@ -65,7 +65,7 @@ class LaborMixin:
         return events
 
     def has_licence(self, node_id):
-        return node_id in self.licences
+        return node_id in self.licences or not gather.needs_licence(node_id)
 
     def licence_shortfall(self, node_id, payers):
         """Copper `payers` lack for the node's licence, 0 when they can pay it."""
@@ -75,7 +75,7 @@ class LaborMixin:
     def buy_licence(self, node_id, payers):
         """Buy the gathering licence of `node_id` for the whole guild, paid richest first by
         `payers`. False, with nothing taken, when it is not on sale, already held or too dear."""
-        if not gather.can_gather(node_id) or node_id in self.licences:
+        if not gather.needs_licence(node_id) or node_id in self.licences:
             return False
         holders = list((*payers.members, *getattr(payers, "stores", ())) if hasattr(payers, "members") else payers)
         if self.licence_shortfall(node_id, holders):
@@ -98,7 +98,7 @@ class LaborMixin:
             if attacks:
                 name = world.node(node_id).name
                 return ([f"{name}: a pack finds {group.display_name} at work."],
-                        orders.Order("gather_ambush", pack=tuple(pack), hours=order.hours))
+                        orders.Order("gather_ambush", pack=tuple(pack), hours=order.hours, job=order.job))
         return self.bank_haul(group.members, order.hours, node_id), None
 
     def gather_risk_mult(self, group, node_id):

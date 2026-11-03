@@ -134,16 +134,10 @@ class HoldingsMixin:
     # ------------------------------------------------------------------ #
     # the garrison: a Group parked on a "garrison" order, working a job    #
     # ------------------------------------------------------------------ #
-    def garrison_stock_at(self, node_id):
-        return self.garrison_stock.get(node_id, [])
-
     def _garrison_upkeep(self):
-        """Once a day: every group parked on a `"garrison"` order banks its
-        job's output into `garrison_stock`, keyed by the node it's standing
-        on. A node whose `garrison_job` doesn't match the order's own `job`
-        (or offers none at all -- true of every node today, see
-        `world.Node.garrison_job`) produces nothing; the group still sits
-        there, fed by the normal per-group upkeep, just not working."""
+        """Once a day: every group parked on a `"garrison"` order works its job (a study, a rite).
+        A node whose `garrison_job` doesn't match the order's own `job` produces nothing; the group
+        still sits there, fed by the normal per-group upkeep, just not working."""
         events = []
         for g in self.groups:
             if g.empty or g.order is None or g.order.kind != "garrison":
@@ -168,13 +162,6 @@ class HoldingsMixin:
                     g.order = None
                     events.append(f"{node.name}: no one can pay for another night -- rooms released.")
                 continue
-
-            item = economy.GARRISON_JOBS.get(g.order.job)
-            if item is None:
-                continue
-            count = economy.GARRISON_YIELD_PER_MEMBER_PER_DAY * len(g.members)
-            self.garrison_stock.setdefault(g.node, []).extend([item] * count)
-            events.append(f"{node.name}: the garrison gathers {count} {item}.")
         return events
 
     def pay_bankers_debt(self, amount):

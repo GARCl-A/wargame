@@ -6,7 +6,7 @@ Mixed into `guild.Guild`; see `economy.WILDS_CLAIM_*` and
 
 import random
 
-from . import data, economy, recorder, wagon_watch, world
+from . import data, economy, orders, recorder, wagon_watch, world
 
 # The Wilds claim's own stage machine (see economy.WILDS_CLAIM_*).
 WILDS_CLAIM_STAGES = ("NONE", "SCOUTED", "CLEARED", "FENCED", "SWEPT", "SUSTAINING", "ESTABLISHED")
@@ -102,13 +102,16 @@ class WildsClaimMixin:
     def claim_garrison(self):
         """The living group parked, garrisoning, at the claim node right now, or None."""
         return next((g for g in self.groups
-                     if g.order is not None and g.order.kind == "garrison"
+                     if orders.holds_post(g.order)
                      and g.node == world.WILDS_TERRITORY_NODE and not g.empty), None)
 
     @property
-    def claim_garage_open(self):
-        """Open the moment the garrison opens (the 10 days to hold), until it is seized."""
+    def claim_held(self):
+        """The garrison has opened (the 10 days to hold) and the claim is not seized: its garage and its
+        gathering are open."""
         return self.wilds_claim_stage in ("SUSTAINING", "ESTABLISHED") and self.wilds_claim_owner != "seized"
+
+    claim_garage_open = claim_held
 
     def wilds_claim_seize(self):
         """The occupiers take the ground, and whatever was parked there."""

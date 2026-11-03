@@ -18,8 +18,9 @@ FORCED_TABLE = {
     "fortress_ambush": DETERMINED,
     "guard": DETERMINED,
     "eviction": DETERMINED,
-    "wilds_raid": DETERMINED,
-    "wilds_seizure": DETERMINED,
+    "wilds_raid": OPPORTUNIST,
+    "wilds_seizure": OPPORTUNIST,
+    "wilds_aid": OPPORTUNIST,
     "wilds_retake": SOUGHT,
 }
 

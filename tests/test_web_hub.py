@@ -1180,12 +1180,9 @@ def test_garrisoning_the_swept_claim_goes_to_the_map_and_opens_the_garage():
     assert m.act(g.gid, "visit_claim") == {"screen": "hub"}
     hub = m.game.session
     st = hub.state()
-    assert [t["key"] for t in st["tabs"]] == ["claim", "garage"]
+    assert [t["key"] for t in st["tabs"]] == ["claim", "gather", "garage"]
     c = st["claim"]
     assert c["here"] and c["garrison"] == g.display_name and c["days_left"] == economy.WILDS_CLAIM_SUSTAIN_DAYS
-    job = g.order.job
-    hub.verb("claim", True)(hub, {"verb": "garrison_job"})
-    assert g.order.job != job
     c = hub.verb("claim", True)(hub, {"verb": "leave_garrison"})["claim"]
     assert g.order.kind != "garrison" and [a["verb"] for a in c["actions"]] == ["garrison"]
 
@@ -1210,14 +1207,19 @@ def test_the_hearth_lights_a_fire_that_opens_the_kitchen_and_an_oven_takes_the_b
     assert guild.claim_oven and not g.members[1].count_of(economy.CLAIM_OVEN_BRICK)
 
 
-def test_the_established_claim_hands_over_its_banked_lumber_and_a_seized_one_offers_nothing():
+def test_the_established_claim_gathers_without_a_licence_and_a_seized_one_offers_nothing():
     hub, guild, g = _claim("ESTABLISHED")
     guild.wilds_claim_owner = "guild"
-    guild.garrison_stock.setdefault(g.node, []).extend(["Lumber"] * 3)
-    c = hub.state()["claim"]
-    assert c["banked"] == 3 and [s["state"] for s in c["steps"]] == ["done"] * 6
-    c = hub.verb("claim", True)(hub, {"verb": "collect"})["claim"]
-    assert c["banked"] == 0 and sum(u.count_of("Lumber") for u in g.members) == 3
+    g.members[0].give_to_pack("Axe")
+    g.order = orders.garrison("hold")
+    assert [s["state"] for s in hub.state()["claim"]["steps"]] == ["done"] * 6
+    gt = hub.pick_tab("gather")["gather"]
+    assert gt["held"] and gt["price"] is None and gt["bonus"]["name"] == "Fruit" and gt["can"]
+    assert [d["name"] for d in gt["drops"]] == ["Lumber", "Fruit"]
+    assert [s["hours"] for s in gt["shifts"]] == [4, 8, 12, 16]
+    hub.verb("gather", True)(hub, {"hours": 4})
+    assert orders.holds_post(g.order)
+    hub.pick_tab("claim")
     guild.wilds_claim_owner = "seized"
     st = hub.state()
     assert [t["key"] for t in st["tabs"]] == ["claim"] and st["claim"]["actions"] == []

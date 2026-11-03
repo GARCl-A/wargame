@@ -37,6 +37,7 @@ LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
 LUMBER_LEVEL_OWN_AXE = 1                # the yard's ceiling once you bring your own Axe
 MINE_WAGE_PREMIUM = 1                   # $ more per paid block at the Mine than at the yard: its road is the Old Road
 WORK_TOOLS = {"lumber_yard": "Axe", "mine": "Pick"}   # work node -> the tool that, owned, lifts a worker to level 1
+GATHER_TOOLS = {**WORK_TOOLS, "wilds_territory": "Axe"}   # every gathering node -> its tool: the Claim has no wage, only the haul
 
 # The tavern stage: bring a Musical Instrument and play for the crowd. Each hour
 # is a Charisma test (`d20 + CHA mod`) tipped one coin per PERFORM_TIP_STEP over
@@ -101,15 +102,6 @@ CITY_PROPERTY_TAX_PERIOD_DAYS = 7
 CITY_PROPERTY_MISSED_PAYMENTS_LIMIT = 3       # this many unpaid cycles -> the Bankers come to collect
 CITY_PROPERTY_DEBT_GRACE_DAYS = 14            # days of ignored debt before the guard gets involved
 
-# The garrison: parking a Group indefinitely at a property to work a job
-# instead of asking for fresh orders every day (`orders.garrison`,
-# `world.Node.garrison_job`, `Guild._garrison_upkeep`). v1 ships exactly one
-# job -- Wilds wood-gathering, once Sistema 3 adds the Wilds territory node --
-# but the mechanism (job name -> output item, yield per member) is generic so
-# a future job is just another `GARRISON_JOBS` entry, not new plumbing.
-GARRISON_JOBS = {"lumber": "Lumber", "study": None, "hold": None}   # order.job -> the item name it produces (None if it produces no items); "hold" only stands guard, which counts as resting
-GARRISON_YIELD_PER_MEMBER_PER_DAY = 1          # units of that item, per garrisoned member, per day
-
 OVEN_PRICE = 150                  # copper, bought from the Bankers once the house is the guild's
 GARAGE_PRICE = 690                # copper per tier, flat: 150 to build + 3 cp/kg for the 180 kg a Cart and an Ox open
 CAMPFIRE_HOURS = 1                # time to build a fire at the claim
@@ -127,7 +119,7 @@ FIELD_CAMPFIRE_COAL = "1kg Coal"
 TAVERN_STUDY_COST_PER_DAY = 15   # copper, per member per day to rent a quiet room to study
 
 LUMBER_PRICE = 7   # copper, market buy price -- the guild has to import its own building material,
-                    # nothing gathers it for free until the claim below is ESTABLISHED (see GARRISON_JOBS)
+                    # nothing gathers it for free until the claim below is garrisoned (the Gathering tab there)
 
 # The Wilds claim campaign ([[gartok-property-two-paths]]'s "Wilds" path):
 # six stages (`world.WILDS_CLAIM_STAGES`), two of them real fights, one a
@@ -379,9 +371,9 @@ def deal_value(mods, item, side):
 
 
 def owns_tool(unit, node_id):
-    """The worker carries the node's own tool (`WORK_TOOLS`): in the pack is enough, it does not
+    """The worker carries the node's own tool (`GATHER_TOOLS`): in the pack is enough, it does not
     have to be the weapon in hand."""
-    tool = WORK_TOOLS[node_id]
+    tool = GATHER_TOOLS[node_id]
     return unit.has_item(tool) or unit.equipped_weapon == tool or unit.equipped_tongue == tool
 
 

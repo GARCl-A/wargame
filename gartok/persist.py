@@ -173,6 +173,7 @@ def order_to_dict(order):
     for key in _ORDER_SEQUENCES:
         d[key] = list(d[key])
     d["pack"] = [unit_to_dict(u) for u in order.pack]
+    d["prior"] = order_to_dict(order.prior) if order.prior is not None else None
     return d
 
 
@@ -182,6 +183,7 @@ def order_from_dict(d):
         if key in kwargs:
             kwargs[key] = tuple(kwargs[key])
     kwargs["pack"] = tuple(Unit.from_save(u) for u in d["pack"])
+    kwargs["prior"] = order_from_dict(d["prior"]) if d.get("prior") else None
     return Order(**kwargs)
 
 
@@ -230,7 +232,7 @@ def group_from_dict(d):
 # here instead of bumping SAVE_VERSION.
 PAYLOAD_DEFAULTS = {
     "battles_won": 0, "reputation": {}, "deeds_done": [], "arena_challenge_day": None,
-    "bankers_debt": 0, "property_city_debt_since": None, "garrison_stock": {},
+    "bankers_debt": 0, "property_city_debt_since": None,
     "wilds_claim_stage": "NONE", "wilds_claim_fence_lumber": 0,
     "wilds_claim_sustain_days_left": None, "wilds_claim_owner": None,
     "wilds_claim_campfire": False, "claim_oven": False,
@@ -271,7 +273,6 @@ def _payload(guild, kind, label):
         "wilds_claim_garage": garage_to_dict(guild.claim_garage),
         "bankers_debt": guild.bankers_debt,
         "property_city_debt_since": guild.bankers_debt_since,
-        "garrison_stock": {node_id: list(items) for node_id, items in guild.garrison_stock.items()},
         "wilds_claim_stage": guild.wilds_claim_stage,
         "wilds_claim_fence_lumber": guild.wilds_claim_fence_lumber,
         "wilds_claim_sustain_days_left": guild.wilds_claim_sustain_days_left,
@@ -370,7 +371,6 @@ def load_game(world, save_id=CURRENT):
                                     garage=garage_from_dict(payload["property_city_garage"])),
                  bankers_debt=payload["bankers_debt"],
                  bankers_debt_since=payload["property_city_debt_since"],
-                 garrison_stock=payload["garrison_stock"],
                  wilds_claim_stage=payload["wilds_claim_stage"],
                  wilds_claim_fence_lumber=payload["wilds_claim_fence_lumber"],
                  wilds_claim_sustain_days_left=payload["wilds_claim_sustain_days_left"],
