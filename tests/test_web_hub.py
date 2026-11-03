@@ -513,7 +513,7 @@ def test_a_workbench_lists_who_works_here_and_the_picked_ones_recipes_with_what_
     assert all(items.get_recipe(r["id"]).station == "carpenter" for r in c["recipes"])
     g.members[1].give_to_pack("Lumber", 2)
     club = next(r for r in hub.state()["craft"]["recipes"] if r["id"] == "Club")
-    assert club["can"] and club["uses"][0]["have"] == 2 and club["alone"] == "not in their own pack"
+    assert club["can"] and club["uses"][0]["have"] == 2 and club["alone"] is None
     with pytest.raises(ValueError):
         hub.crafter("nobody")
 
