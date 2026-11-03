@@ -1,4 +1,4 @@
-# Backlog — everything still open
+﻿# Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
 `docs/plans/` ([loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
@@ -32,9 +32,9 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- The *Small* items below, in order: the bugs (the save that does not hold a lost hunt first, then the
-  fighter that cannot move and the rest of the 2026-11-02 ones), the overflows, the food's visibility, the
-  icons' authors, then the skills.
+- The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
+  ones), the overflows, the icons' authors, then the skills. The save bug, the Claim's two items, the food's
+  visibility, the log of the days and the Ankareth rename moved to [programmable_orders.md](programmable_orders.md).
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -49,14 +49,6 @@ the rest.
 
 ## Small
 
-- **Bug: a save loaded after a lost hunt fight does not hold the fight (playtest 2026-11-02).** The squad
-  lost a fight during a Wilds hunt; loading the save from before it brought back neither the fight nor the
-  hunt that had started it, so the saved state was not the state of the game that had been played. Find what
-  the save drops (the hunt stretch, `Group.pending`, `order`; a battle in progress is never saved, by design)
-  and decide what a save taken before a fight must hold: the hunt, so the fight can be rolled again, or
-  nothing past the last stop. Ask the author which save it was (manual or autosave); the recording of the
-  session is in the repo. Test: save at the start of a hunt, lose the fight, load, the same hunt is there.
-
 - **Bug: the tavern says "REJECTED THIS WEEK" while another member can still try (playtest 2026-11-02).**
   Two members can recruit the same candidate, one fails, and the row keeps the label (`tavern.py`
   `REJECTED_LABEL`) even though the bar is per recruiter (`recruit.bar`). Show the label only when nobody
@@ -66,11 +58,7 @@ the rest.
   "Train a designated Treefolk recruit..." (`factions.py`) does not raise the exclamation mark on the map
   and is listed with the supply run under *Work*; it belongs to *Jobs*. Test: the mark and the tab.
 
-- **Show food's shelf life and the rations where the decision is made (playtest 2026-11-02, Johann
-  2026-10-31).** The supply is a constraint on purpose (*Playtest notes -> 2026-10-31*), so the player has
-  to be able to see it: the shelf life in the shop row; each food's own expiry in the inventory (today a
-  stack hides the validity of its items); the ration count on the craft screen; and the rations a trip or a
-  defence needs in the travel preview, with a warning on the first trip. Ancient Ruins, in-game day 75,
+- **Bug: a fighter cannot move and the action bar does not say why (playtest 2026-11-02).** Ancient Ruins, in-game day 75,
   against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
   Rebuild the fight from its combat-log JSONL (`CombatLog`; the author has it as a local recording of
   2026-10-30 on another machine; it is not in the repo, so ask for it), find the
@@ -89,16 +77,6 @@ the rest.
   held several quivers (check whether empty quivers stack, are all counted, or are the wrong item). Name the
   missing ammunition on the disabled Shoot and on the sheet. Test: bow with only empty quivers.
 
-- **Bug: the Claim cannot use the carts' items to build the furnace (playtest 2026-11-02).** Building
-  reads only the members' packs, not the carts' stock. Make the build draw from the same stock the Claim's
-  other crafts do and test it.
-
-- **Claim: the lumber licence and the Claim overlap, and nobody knows who gathers (playtest 2026-11-02).**
-  The Claim now collides with the Lumberyard licence on lumber collection, and the screen does not say who
-  in the Claim is gathering wood or what that takes. Pick one owner of the rule, show per member
-  whether they gather and the requirement they lack. Principle (author): every gather activity should have
-  the gather tab.
-
 - **Overflows and unclear counters (playtest 2026-11-02).** (1) Loot screen: the text of what went to each
   inventory overflows. (2) Post-fight screen: with many foes (the Snake Dragon dungeon) the enemy list
   overflows. (3) Wilds garrison: when holding for 10 days, the time left is not clear, and the *advance 24 h*
@@ -108,19 +86,6 @@ the rest.
 - **The floor items of a dungeon do not look interactive (playtest 2026-11-02).** In the dragon's lair a
   chest on the floor cannot be told from decor. Make interactive ground objects explicit (a marker or
   highlight) and say what they are on hover or click.
-
-- **A log of what happened while the days passed (Johann, 2026-11-01).** Today the lines of a jump
-  (meals eaten, food rotted, hunger, purchases) reach the map as one "Since the last order" card (last
-  12 lines, click to put it away) and are gone: `MapSession.state` drains `notices`, and the guild
-  screen's Notices are the charter's, not a history. Keep a bounded, per-guild list of the day's events
-  (saved, or at least kept for the session) with a tab or button to reread it. Size once the card
-  decides how much to keep.
-
-- **Ankareth is the town, the node is the bank (author, note outside playtests).** `world.py` names the
-  `city` node "Ankareth", but the arena, the market and the smithy are their own nodes: the node is the
-  bank. Name the node for what it is, keep "Ankareth" for the region, and replace the circle that marks
-  Ankareth's jurisdiction on the map (`MapSheet`, `sheet.js`) with something that does not read as a road.
-  Grep the strings and tests that use the name first.
 
 - **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
   authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
@@ -498,8 +463,8 @@ items it touches. Raw feedback, not yet sized:
   races that begin as casters).
 - **Switching between groups.** The author asked if it is pleasant; the answer was not clear in the record.
   Ask again. The friend's view: up to 8 units is fine, more groups slow it unless there is automation.
-- **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received.
-  Already in *Older raw notes* (programmable order chains) and *Epic*.
+- **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received:
+  [programmable_orders.md](programmable_orders.md).
 
 - **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
   mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
@@ -524,23 +489,8 @@ has one "Enter" button and its functions are tabs inside.
   repeated every level.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
-- **Programmable order chains for a group** (see *Programmable orders: brainstorm and spec* in *Needs
-  more information*), e.g. gather Lumber at the Yard -> sell Lumber and
-  buy food -> gather again. Large; ties to `orders.py` and the sim's planner. Intent (author
-  2026-10-31): macro management through automation, **optional**. The main group is played by hand;
-  the secondary groups run routines (collect wood, buy vials, craft healing potions and stock the guild
-  inventory; study a spell for two months) and the player collects when back from the expedition. A
-  player who likes clicking can still do 80 clicks a day. The player never runs two adventures at
-  once: automation is for the world around the expedition. It is why the game has several groups
-  (without it they feel slow, as in RimWorld). The author knows it may push some players away and goes
-  ahead: the game is first for them. The tester's view: it only attracts, it turns micro into macro.
-- **The Battlefield beyond the Faith mission.** For now its only use is the Faith Order's errands, and
-  it stays that way (author 2026-10-17). Later it becomes one more place of Ledger Hold work and missions:
-  what an open skirmish pays, how often the front has a fight. The supply run's walked order with an
-  ambush part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse. Ledger Hold would then have
-  two jobs, the supply run and the front itself (author 2026-10-30): the player enlists as reinforcement,
-  is paid to arrive and to fight in the skirmish already under way, and the job is to win it. That is
-  not a walked order with an ambush: the battle is the job, so it needs its own order kind.
+- **Programmable order chains for a group:** [programmable_orders.md](programmable_orders.md).
+- **The Battlefield beyond the Faith mission:** [programmable_orders.md](programmable_orders.md).
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there. Postponed (2026-10-12 &
   2026-10-19) to design an excavation system with tools (Shovel / Pick), multi-step iterations,
   artifacts, money and lost lore. The Ruins now remember a raid (`Guild.ruins_cleared`) and drop off the
@@ -555,36 +505,7 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
-- **Programmable orders: brainstorm and spec (author 2026-11-01).** Not a build task: first find out
-  exactly what the author wants, then write it in a plan (`docs/plans/programmable_orders.md`) so the
-  implementations are chosen from a real specification. Several entries want a composed or automated order
-  and today each names its own shape: the programmable chains and the secondary groups on routines (*Older
-  raw notes*), the Ledger Hold front where the battle is the job (*The Battlefield beyond the Faith
-  mission*), the production chain's gather-sell-buy loop, and the stints in `stints.py`. Deliverables: (1)
-  brainstorm with the author the use cases (which routines, who runs them, what interrupts them, what the
-  player collects and when); (2) identify every place that already runs an order (`orders.py`,
-  `stints.py`, `MapSession.spend`, the supply run and the hunt) and what they share; (3) document the
-  options (a list of ordinary orders run by the one clock, or a new order kind with state) with a
-  recommendation. Constraint to keep: only `campaign.advance` moves the clock.
-  **The proof of concept (author 2026-11-01) is the acceptance scenario of the spec**: if the plan's
-  design cannot run it, the design is wrong. Three groups: (A) played by hand, hunting in the Wilds;
-  (B) automated, gathering Lumber at the Lumber Yard into the group's own inventory; (C) an automated
-  trader that takes B's Lumber, walks to the farm, sells it, buys potatoes, walks back to B, hands the
-  potatoes over, takes the new Lumber, and repeats. While the player plays A normally (time passes, A's
-  play is never slowed or interrupted by B and C), the B-C loop keeps running. Pass criteria: nobody
-  starves, nobody ends stuck, neither activity stops by itself. It exercises what the spec has to
-  answer: an order that moves goods between two groups (inventory to inventory, so both must be at the
-  same node), an order that walks a route and trades at each stop, a loop that resumes after each
-  interruption, food as a need the routine itself must satisfy, and many groups advancing together on
-  the one clock while one of them is played by hand. Turn it into a test (a headless run over N game
-  days checking the three criteria) once the design is chosen.
-  Decided with the author (2026-11-01): an *order* is a list of steps and conditionals the player
-  builds and assigns to a group, which then runs under it. Goods change hands between inventories of
-  two groups only at the same node; B stays parked at the Yard and only C walks. A hand-over takes
-  everything by default, with an optional condition ("wait for X Lumber"). The profit stays with C
-  (nothing forbids a step that returns coins to B). Hunger ("low on food") and an ambush both drop the
-  group out of automatic mode to manual; a step that cannot run (no coins, no stock, blocked route)
-  stops the order and warns the player.
+- **Programmable orders: brainstorm and spec (author 2026-11-01):** [programmable_orders.md](programmable_orders.md).
 
 - **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
   code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar
