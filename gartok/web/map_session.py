@@ -382,8 +382,8 @@ class MapSession(MapView, Session):
                                  if plan.capped else None)})
         return {
             "fire": fire,
-            "stance": [{"key": key, "label": key.capitalize(), "sub": sub, "tip": STANCE_NOTES[key], "on": g.stance == key}
-                       for key, sub in ((NORMAL, "the usual odds"), (CAUTIOUS, "fewer ambushes, with a Scout"))],
+            "stance": [{"key": key, "label": key.capitalize(), "tip": STANCE_NOTES[key], "on": g.stance == key}
+                       for key in ((NORMAL), (CAUTIOUS))],
             "rest": rows,
             "starving": g.rations == 0,
             "hurt": ([f"{hurt[0].name} is hurt."] if len(hurt) == 1 else
@@ -440,7 +440,7 @@ class MapSession(MapView, Session):
                     "danger": False, "enabled": True, "text": "Every band holds a post. Let the day run."}
         return {"key": "cycle_idle", "label": "Next band", "danger": False, "enabled": len(idle) > 1,
                 "sub": f"{len(idle)} waiting" if len(idle) > 1 else "none idle", "idle": [g.gid for g in idle],
-                "text": (f"The clock waits on {idle[0].display_name}. Give it an order and the day runs on by itself."
+                "text": (f"The clock waits on {idle[0].display_name}."
                          if len(idle) == 1 else f"{len(idle)} bands wait. The seal steps to the next one."
                          if idle else "The clock runs.")}
 

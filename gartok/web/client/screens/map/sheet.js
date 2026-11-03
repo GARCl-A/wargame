@@ -243,7 +243,7 @@ const MapSheet = (() => {
     if (hoverPath && hoverPath.length > 1) { g.strokeStyle = "rgba(122,35,24,.85)"; inkLine(hoverPath.map(P), 2.6, [2, 5]); }
 
     g.save(); g.translate(40, H - 120); g.rotate(-.04);
-    text("here the map is not yet drawn", 0, 0, "italic 18px 'IM Fell English'", "rgba(70,45,22,.5)"); g.restore();
+    g.restore();
     compass();
     const city = M.nodes.find(n => n.id === "city");
     text(`THE ENVIRONS OF ${(city ? city.name : "the guild").toUpperCase()}`, 46, 64, "700 25px Cinzel", "#2c1c0e");
