@@ -21,6 +21,7 @@ from .. import (
     persist,
     recruit,
     rest,
+    routines,
     settings,
     stints,
     vocations,
@@ -260,7 +261,7 @@ class MapSession(MapView, Session):
             return "Ambushed" if g.pending.kind in ("ambush", "fortress_ambush") else "Fight due", "bad"
         o = g.order
         if o is None or o.kind == "idle":
-            return "No orders", "idle"
+            return ("Routine stopped", "bad") if g.routine is not None and g.routine.paused else ("No orders", "idle")
         label = (stints.doing(o) if stints.is_stint(o) else "gather" if o.kind == "work" and o.gather
                  else "search" if o.task in campaign.SEARCHES else o.task if o.kind == "solo"
                  else "travelling" if o.kind == "travel" else o.kind)
@@ -583,6 +584,10 @@ class MapSession(MapView, Session):
             return self._enter(g, orders.interactive("claim", hours=0))
         elif g.busy:
             raise ValueError(f"{g.display_name} is busy")
+        elif key == "continue_routine":
+            if g.routine is None or not g.routine.paused:
+                raise ValueError(f"{g.display_name} has no stopped routine")
+            self.say(routines.resume(self.guild, g), "guild", g)
         elif key.startswith("rest:"):
             which = key.split(":")[1]
             plan = rest.until_full(self.guild, g) if which == "full" else rest.fixed(self.guild, float(which))

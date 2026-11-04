@@ -68,7 +68,8 @@ class MapView:
             return f"ambushed -- {n} enem{'y' if n == 1 else 'ies'} block the path"
         o = group.order
         if o is None or o.kind == "idle":
-            return "idle"
+            routine = group.routine
+            return f"routine stopped -- {routine.paused}" if routine is not None and routine.paused else "idle"
         if o.kind == "travel" and o.task == "supply_run":
             return f"supply run → {world.node(o.dest).name} ({o.remaining + o.owed:.1f} h)"
         if o.kind == "travel":
@@ -216,6 +217,10 @@ class MapView:
             return blocks
 
         blocks = []
+        routine = g.routine
+        if routine is not None and routine.paused:
+            blocks += [{"type": "text", "text": f"Routine stopped: {routine.paused}", "tone": "warn"},
+                       {"type": "button", "key": "continue_routine", "label": "CONTINUE ROUTINE", "primary": True}]
         if here.is_battle:
             defense = here.arena and arena.defense_due(self.guild)
             label = ("DEFEND YOUR TITLE" if defense else
