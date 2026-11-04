@@ -524,8 +524,8 @@ has one "Enter" button and its functions are tabs inside.
 # Needs more information
 
 - **Programmable orders: what is left (author 2026-11-01):** [programmable_orders.md](programmable_orders.md)
-  (the screen blocks, and the playtest with every routine open; whether switching between groups is pleasant
-  is only answered at the end of that playtest).
+  (the playtest with every routine open; whether switching between groups is pleasant is only answered at the
+  end of that playtest).
 
 - **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
   code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar

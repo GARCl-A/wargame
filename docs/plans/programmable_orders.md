@@ -160,21 +160,14 @@ and place open; the unlocks are in the backlog (*Routine unlocks*).
 
 The editor is block programming, a linear stack with nesting for `repeat`.
 
-**Blocks for screens (author 2026-11-04).** Beyond `trade` and `craft`, only these screens get a block;
-the rest (bank, perform, medic, stables, claim scouting and fences) stay out until the author asks. Study
-is in (the Tavern's rooms, `Study`, on a garrison that ends after its days); these are left:
+**Blocks for screens (author 2026-11-04).** Beyond `trade`, `craft`, `study`, `repair`, `store` and `fetch`, no screen
+gets a block; the rest (bank, perform, medic, stables, claim scouting and fences) stay out until the author asks.
+Building the oven and lighting a fire are not blocks at all: a routine only uses a hearth that already burns. A block
+emits the same order the screen's desk issues, so the cost is paid the way the screen pays it. `Craft` follows the player's rules: the group's node must have the recipe's station
+(`workbench.stations_at`: the node's bench, the house kitchen with an oven, the claim hearth that can cook, a field
+campfire that burns) and someone in the group must know the recipe.
 
-- **Mend a wagon** (`repair` stint): a wagon of the group's hitch or of a garage at the node; the Lumber is
-  taken up front by the desk (`repair_short` / `repair_lumber` on the guild), a short stock stops the routine.
-- **Build the oven** (`claim_oven`) and **light the campfire** (`claim_fire`): the Wilds Claim, bricks and
-  fuel carried by the band (`ClaimDesk`), the same stop when it is short.
-- **Store and fetch items** at the City house stash, the garage or the claim's stores (`HouseVault`): like
-  `take` / `hand_over`, with the stash as the other end.
-
-A block emits the same order the screen's desk issues (`stints.order`), so the cost is paid the way the
-screen pays it and the desk keeps the one place that knows it. Wagons have no identifier today (author
-2026-11-04): they get an id and a name the player can set and change, and the block names a wagon by it.
-Still to decide: which stash a node offers.
+Still open: the Claim has no inventory yet; when it gets one it is a stash like the house (`Store` / `Fetch` `place`).
 
 **Playtest with every routine open (author 2026-11-04).** The unlocks (*Routine unlocks* in the backlog) are
 only a possible idea until this playtest. Its end also answers whether switching between groups is pleasant.

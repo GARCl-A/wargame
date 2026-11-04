@@ -9,16 +9,32 @@ condition holds. Only the timed blocks that finish by elapsing (`Gather`, `Work`
 that the order resolving normally steps the pointer on; an interrupted order leaves the pointer on its
 block and the routine paused until `resume` (the player's *Continue*).
 
-Goods move between the packs of the members of two groups at the same node, never wagons or herds."""
+Goods move between the packs of the members of two groups at the same node, never wagons or herds; `Store` and
+`Fetch` move them between the packs and a stash at the node (the house, the strongbox, the garaged wagons)."""
 
 import operator
 from dataclasses import dataclass, field, fields, is_dataclass
 
-from . import economy, gather, magic, orders, solo, vocations, world
+from . import (
+    economy,
+    gather,
+    holdings,
+    magic,
+    orders,
+    solo,
+    stints,
+    vocations,
+    wagon,
+    workbench,
+    world,
+)
+from .items import item_weight
 
 MAX_INSTANT = 16        # blocks that spend no time, one after another, before the routine is paused
 WAIT_HOURS = 1          # how often a `Wait` looks at its condition again
 HAND_OVER_WAIT_HOURS = 24
+
+PLACES = ("house", "bank", "garage")      # the stashes a `Store` or `Fetch` can name
 
 _OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
 
@@ -165,6 +181,32 @@ class Study:
 
 
 @dataclass(frozen=True)
+class Repair:
+    """Mend the wagon called `wagon` (a nickname, or its kind when it has none) -- one of the group's hitch or
+    parked in a garage at this node -- the way the garage's desk does: the Lumber is paid up front, an hour
+    runs, then the INT check. A wagon that needs no mending is passed."""
+    wagon: str
+
+
+@dataclass(frozen=True)
+class Store:
+    """Put `count` of `item` (all of it by default) from the group's packs into the stash at `place`:
+    "house" (the City house's chest), "bank" (the strongbox) or "garage" (the cargo of the wagons parked there)."""
+    place: str
+    item: str
+    count: int | None = None
+
+
+@dataclass(frozen=True)
+class Fetch:
+    """Take `count` of `item` (all of it by default) out of the stash at `place` into the group's packs, as many
+    as the packs can carry."""
+    place: str
+    item: str
+    count: int | None = None
+
+
+@dataclass(frozen=True)
 class Rest:
     hours: float = 8
 
@@ -252,7 +294,7 @@ class Routine:
             self.path.pop()                            # the Repeat is looked at again
 
 
-_KINDS = {c.__name__: c for c in (Ref, Cond, Travel, Gather, Work, Craft, Study, Rest, Wait, Take, HandOver, Trade, Repeat, Routine)}
+_KINDS = {c.__name__: c for c in (Ref, Cond, Travel, Gather, Work, Craft, Study, Repair, Store, Fetch, Rest, Wait, Take, HandOver, Trade, Repeat, Routine)}
 
 
 def dump(obj):
@@ -346,6 +388,12 @@ def _run(guild, group, routine, block):
         return _craft(guild, group, routine, block)
     if isinstance(block, Study):
         return _study(group, routine, block)
+    if isinstance(block, Repair):
+        return _repair(guild, group, routine, block)
+    if isinstance(block, Store):
+        return _store(guild, group, block)
+    if isinstance(block, Fetch):
+        return _fetch(guild, group, block)
     if isinstance(block, Rest):
         routine.inflight = True
         return orders.rest(block.hours)
@@ -359,8 +407,12 @@ def _run(guild, group, routine, block):
 
 
 def _craft(guild, group, routine, block):
-    reason = "no one in the group can craft it"
+    reason = workbench.blocker(guild, group, block.recipe)
+    if reason:
+        return reason
     for unit in group.members:
+        if block.recipe.split(":")[0] not in unit.known_recipes:
+            continue
         ok, lines = solo.craft(guild, group, unit, block.recipe, block.hours, alone=False)
         if ok:
             routine.inflight = True
@@ -383,6 +435,83 @@ def _study(group, routine, block):
         return "no one can pay for the rooms"
     routine.inflight = True
     return orders.garrison("study", days=block.days)
+
+
+def _wagon_named(guild, group, name):
+    """The wagon `name` means (its nickname, its kind, or its id): the group's own, then those parked in a
+    garage here. Of several alike, one that needs mending comes first."""
+    parked = [w for garage in holdings.garages_at(guild, world.node(group.node)) for w in garage.wagons]
+    named = [w for w in (*group.wagons, *parked) if name.lower() in (w.label.lower(), w.uid)]
+    return next((w for w in named if w.needs_repair), next(iter(named), None))
+
+
+def _repair(guild, group, routine, block):
+    found = _wagon_named(guild, group, block.wagon)
+    if found is None:
+        return f"no wagon called {block.wagon} here"
+    if not found.needs_repair:
+        return None
+    short = guild.repair_short(group.members, found)
+    if short:
+        return short.rstrip(".")
+    guild.repair_lumber(group.members, found)
+    routine.inflight = True
+    return stints.order("repair", wagon.REPAIR_HOURS, group.members, wagon=found.uid)
+
+
+def _stashes(guild, group, place):
+    node = world.node(group.node)
+    if place == "house":
+        return [guild.house.stash] if node.has("property") and guild.house.owned else []
+    if place == "bank":
+        return [guild.bank] if node.has("bank") and guild.bank.open else []
+    return [w.stash for garage in holdings.garages_at(guild, node) for w in garage.wagons]
+
+
+def _weigh(item):
+    return item_weight(item) or 0.001
+
+
+def _store(guild, group, block):
+    stashes = _stashes(guild, group, block.place)
+    if not stashes:
+        return f"no {block.place} here"
+    held = count_of(group, block.item)
+    if not held:
+        return f"no {block.item} to store"
+    wanted = held if block.count is None else min(block.count, held)
+    stored = 0
+    for stash in stashes:
+        n = min(wanted - stored, int(stash.free // _weigh(block.item)))
+        for u in group.members:
+            take = min(n, u.count_of(block.item))
+            if take > 0:
+                n -= u.remove_named(block.item, take)
+                stash.put(block.item, take)
+                stored += take
+                u._derive_combat()
+            if n <= 0:
+                break
+    return None if stored else f"no room for {block.item} in the {block.place}"
+
+
+def _fetch(guild, group, block):
+    stashes = _stashes(guild, group, block.place)
+    if not stashes:
+        return f"no {block.place} here"
+    if not sum(s.count_of(block.item) for s in stashes):
+        return f"no {block.item} in the {block.place}"
+    wanted = sum(s.count_of(block.item) for s in stashes) if block.count is None else block.count
+    fetched = 0
+    for stash in stashes:
+        for u in group.members:
+            room = int(max(0, u.carry_max - u.load) // _weigh(block.item))
+            n = min(room, wanted - fetched, stash.count_of(block.item))
+            if n > 0:
+                fetched += stash.remove_named(block.item, n)
+                u.give_to_pack(block.item, n)
+                u._derive_combat()
+    return None if fetched else "the packs cannot carry more"
 
 
 def _other_here(guild, group, ref):

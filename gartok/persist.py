@@ -146,12 +146,12 @@ def unit_to_dict(u):
 def wagon_to_dict(w):
     return {"uid": w.uid, "kind": w.kind, "hp": w.hp, "travelled": w.travelled,
             "contents": _serialize_pack(w.stash.items),
-            "locked_items": dict(w.locked_items)}
+            "locked_items": dict(w.locked_items), "nickname": w.nickname}
 
 
 def wagon_from_dict(d):
     return Wagon(d["kind"], d["hp"], d["contents"], d["uid"], d["travelled"],
-                 locked_items=d.get("locked_items", {}))
+                 locked_items=d.get("locked_items", {}), nickname=d.get("nickname", ""))
 
 
 def garage_from_dict(d, unlimited=False):

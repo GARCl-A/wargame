@@ -60,13 +60,14 @@ def repairer(crew):
 
 
 class Wagon(Creature):
-    def __init__(self, kind="Cart", hp=None, contents=None, uid=None, travelled=0.0, locked_items=None):
+    def __init__(self, kind="Cart", hp=None, contents=None, uid=None, travelled=0.0, locked_items=None, nickname=""):
         vehicle = VEHICLES[kind]
         super().__init__(uid or uuid4().hex, vehicle.hp_max if hp is None else min(hp, vehicle.hp_max),
                          contents, locked_items=locked_items)
         self.kind = kind
         self.vehicle = vehicle
         self.travelled = travelled     # map distance since it last lost a point
+        self.nickname = nickname       # the name the player gave it; a routine's block finds the wagon by it
         self._group = None         # set by `Group.add_wagon`; where the pulling animals are found
 
     @property
@@ -74,6 +75,10 @@ class Wagon(Creature):
         return self.kind
 
     full_name = name
+
+    @property
+    def label(self):
+        return self.nickname or self.kind
 
     @property
     def price(self):

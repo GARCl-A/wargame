@@ -94,6 +94,14 @@ def _check(guild, block):
             raise ValueError(f"unknown thing to study: {block.target}")
         if not block.days > 0:
             raise ValueError("days are more than zero")
+    elif isinstance(block, routines.Repair):
+        if not block.wagon.strip():
+            raise ValueError("name the wagon to mend")
+    elif isinstance(block, (routines.Store, routines.Fetch)):
+        if block.place not in routines.PLACES:
+            raise ValueError(f"unknown stash: {block.place}")
+        _item(block.item)
+        _count(block.count)
     elif isinstance(block, routines.Wait):
         _cond(block.cond)
     elif isinstance(block, (routines.Take, routines.HandOver)):

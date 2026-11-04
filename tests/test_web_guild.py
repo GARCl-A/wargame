@@ -222,6 +222,23 @@ def test_the_wagon_takes_cargo_up_to_its_room_and_an_animal_hitches_by_its_portr
     assert a.count_of("Lumber") == 400 and "fit" in st["notice"]
 
 
+def test_a_wagon_is_named_and_the_name_is_saved_and_kept_unique():
+    sheet, guild, g = _sheet("manage_group")
+    cart, other = Wagon("Cart"), Wagon("Cart", nickname="Old Rattle")
+    g.add_wagon(cart)
+    g.add_wagon(other)
+    sheet._set_band(g.gid)
+    st = sheet.rename_wagon(cart.uid, "  Ironside ")
+    assert cart.label == "Ironside" and st["bands"]["wagons"][0]["name"] == "Ironside" and st["bands"]["wagons"][0]["kind"] == "Cart"
+    with pytest.raises(ValueError):
+        sheet.rename_wagon(cart.uid, "old rattle")
+    with pytest.raises(ValueError):
+        sheet.rename_wagon("nobody", "x")
+    assert sheet.rename_wagon(cart.uid, "")["bands"]["wagons"][0]["name"] == "Cart"
+    again = persist.wagon_from_dict(persist.wagon_to_dict(other))
+    assert again.nickname == "Old Rattle"
+
+
 def test_a_band_is_renamed_and_a_captive_released():
     sheet, guild, g = _sheet("manage_group")
     st = sheet.rename("  The Quiet Ones ")

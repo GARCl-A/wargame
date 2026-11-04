@@ -94,6 +94,10 @@ def test_the_proof_of_concept_routines_pass_the_check():
     (r.Trade(sell=("Moonbeam",)), "unknown item"),
     (r.Trade(food_days=-1), "below zero"),
     (r.Repeat(r.coins(r.own()) < 1, [r.Travel("nowhere")]), "unknown place"),
+    (r.Repair(" "), "name the wagon"),
+    (r.Store("vault", "Lumber"), "unknown stash"),
+    (r.Fetch("house", "Moonbeam"), "unknown item"),
+    (r.Fetch("bank", "Lumber", 0), "at least 1"),
 ])
 def test_the_check_refuses_what_names_something_that_does_not_exist(block, message):
     with pytest.raises(ValueError, match=message):

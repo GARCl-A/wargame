@@ -7,7 +7,7 @@
 "use strict";
 
 const Bands = (() => {
-  let B = null, picks = null, drag = null, naming = false;
+  let B = null, picks = null, drag = null, naming = false, namingWagon = null;
   const mark = dropMarker();
   const owners = () => [...B.packs, ...B.wagons];
   const owner = id => owners().find(p => p.id === id);
@@ -84,7 +84,7 @@ const Bands = (() => {
     const rows = w.pack.length ? w.pack.map(r => row(w, r, r.loc, null)).join("") : `<div class="empty-note">No cargo.</div>`;
     const repair = w.repair ? `<div class="cbtn"><div class="ghost-btn ${w.repair.on ? "" : "off"}" data-btn="repair:${w.id}"${tip(`${w.repair.cost} ${w.repair.item} and ${w.repair.hours} h, then an INT check`)}>Repair · ${w.repair.cost} ${esc(w.repair.item)}</div></div>` : "";
     return `<div class="col wag" data-owner="${w.id}" data-hitch="${w.id}">
-      <div class="colh"><div class="medal beastmed">${ico(w.glyph)}</div><div style="min-width:0"><h3>${esc(w.name)}</h3><div class="race">${w.drawn.length ? "pulled by the " + esc(w.drawn.map(a => a.name.toLowerCase()).join(" and ")) : "nothing hitched"}</div></div></div>
+      <div class="colh"><div class="medal beastmed">${ico(w.glyph)}</div><div style="min-width:0">${namingWagon === w.id ? `<input id="wrename" maxlength="24" value="${esc(w.name === w.kind ? "" : w.name)}" placeholder="${esc(w.kind)}">` : `<h3>${esc(w.name)}<i class="pen" data-pen="${w.id}" data-tip="Name the wagon">✎</i></h3>`}<div class="race">${w.drawn.length ? "pulled by the " + esc(w.drawn.map(a => a.name.toLowerCase()).join(" and ")) : "nothing hitched"}</div></div></div>
       <div class="whp">${Array.from({length: w.hp[1]}, (_, i) => `<i class="${i < w.hp[0] ? "" : "off"}"></i>`).join("")}</div>
       <div class="wnote ${w.broken ? "bad" : ""}">${w.hp[0]} of ${w.hp[1]} hull${w.broken ? " · broken" : " · the road wears it"}${w.riders.length ? ` · riding: ${esc(w.riders.join(", "))}` : ""}</div>
       ${repair}<div class="csec lbl">Hitched</div>${drawn}
@@ -116,6 +116,16 @@ const Bands = (() => {
       + `<div id="cols" class="${locked}">${B.packs.map(column).join("")}</div><div id="side" class="${locked}">${side()}</div>`;
     $("cols").scrollLeft = keep.cols;
     document.querySelectorAll(".col[data-owner]").forEach(c => { const l = c.querySelector(".packlist"); if (l) l.scrollTop = keep.lists[c.dataset.owner] || 0; });
+    const wrename = $("wrename");
+    if (wrename) {
+      wrename.focus();
+      wrename.select();
+      wrename.onkeydown = e => {
+        if (e.key === "Enter") { const id = namingWagon; namingWagon = null; post("rename_wagon", {id, name: wrename.value}); }
+        else if (e.key === "Escape") { namingWagon = null; redraw(); e.stopPropagation(); }
+      };
+      wrename.onblur = () => { if (namingWagon) { namingWagon = null; redraw(); } };
+    }
     const input = $("rename");
     if (input) {
       input.focus();
@@ -163,6 +173,8 @@ const Bands = (() => {
   function click(el, e) {
     const c = el.closest(".bchip[data-band]");
     if (el.closest("#pen")) { naming = true; return redraw(); }
+    const wpen = el.closest("[data-pen]");
+    if (wpen) { namingWagon = wpen.dataset.pen; return redraw(); }
     if (c) {
       if (c.dataset.band !== B.gid) { picks = null; post("band", {gid: c.dataset.band}); }
       return;

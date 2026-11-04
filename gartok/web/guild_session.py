@@ -62,6 +62,7 @@ class GuildSession(Session):
         "talents": lambda s, b: s.talents(),
         "band": lambda s, b: s.pick_band(b["gid"]),
         "rename": lambda s, b: s.rename(b.get("name", "")),
+        "rename_wagon": lambda s, b: s.rename_wagon(b["id"], b.get("name", "")),
         "move": lambda s, b: s.move(b["picks"], b["to"], b.get("zone", "pack")),
         "menu": lambda s, b: s.menu(b["pick"]),
         "menu_run": lambda s, b: s.menu_run(b["pick"], int(b["row"])),
@@ -294,7 +295,7 @@ class GuildSession(Session):
     def _wagon(self, w):
         g = self.group
         have = sum(u.count_of(wagon_mod.REPAIR_ITEM) for u in g.members)
-        return {"id": w.uid, "name": w.kind, "glyph": WAGON_GLYPH, "hp": [w.hp, w.hp_max], "broken": w.broken,
+        return {"id": w.uid, "name": w.label, "kind": w.kind, "glyph": WAGON_GLYPH, "hp": [w.hp, w.hp_max], "broken": w.broken,
                 "drawn": [{"uid": a.uid, "name": a.species, "portrait": _face(a.species, a.uid), "tack": a.tack,
                            "unfed": a.unfed_days} for a in w.draft],
                 "riders": [u.name for u in w.passengers],
@@ -424,6 +425,17 @@ class GuildSession(Session):
 
     def rename(self, name):
         self.group.name = name.strip()[:24] or None
+        self.map._save()
+        return self.state()
+
+    def rename_wagon(self, uid, name):
+        wagon = next((w for w in self.group.wagons if w.uid == uid), None)
+        if wagon is None:
+            raise ValueError("no such wagon in this band")
+        name = name.strip()[:24]
+        if name and any(w.label.lower() == name.lower() for g in self.guild.groups for w in g.wagons if w is not wagon):
+            raise ValueError("another wagon already has that name")
+        wagon.nickname = name
         self.map._save()
         return self.state()
 
@@ -597,8 +609,13 @@ class GuildSession(Session):
                 "recipes": sorted(items.CRAFTING_RECIPES),
                 "studies": [*((sp.id, f"{sp.name} (spell)") for sp in magic.SPELLS.values()),
                             *((lang, f"{lang} (language)") for lang in data.LANGUAGES)],
+                "wagons": sorted({w.label for w in self._wagons_of_guild()}),
                 "groups": [g.display_name for g in self.guild.groups if not g.empty],
                 "doing": ["gather", "work", "craft", "rest", "travel"]}
+
+    def _wagons_of_guild(self):
+        g = self.guild
+        return [*(w for grp in g.groups for w in grp.wagons), *g.house.garage.wagons, *g.claim_garage.wagons]
 
     def _routines(self):
         g = self.guild

@@ -207,6 +207,8 @@
 .bchip.on b{color:var(--brass-hi)}
 .bchip .pen{font-style:normal;color:#8f7652;font:16px/1 var(--read);margin-left:6px;cursor:pointer}
 .bchip .pen:hover{color:var(--brass-hi)}
+.wag .pen{font-style:normal;color:#8f7652;font:14px/1 var(--read);margin-left:6px;cursor:pointer}
+.wag .pen:hover{color:var(--brass-hi)}
 .bchip input{font:700 14px/1 Cinzel,serif;color:var(--brass-hi);background:#120d08;border:1px solid var(--brass);padding:3px 5px;width:200px;margin-left:8px;outline:none}
 .bchip.fight span{color:#e2a194}
 .vline{width:1px;align-self:stretch;margin:12px 0;flex:none;background:linear-gradient(transparent,rgba(201,163,94,.35),transparent)}

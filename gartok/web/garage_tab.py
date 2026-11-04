@@ -63,7 +63,7 @@ class GarageTab:
     def _wagon(self, w, parked):
         have = sum(u.count_of(wagon_mod.REPAIR_ITEM) for u in self.group.members)
         room = self.garage.wagon_room > 0
-        return {"uid": w.uid, "name": w.kind, "glyph": WAGON_GLYPH, "parked": parked, "broken": w.broken,
+        return {"uid": w.uid, "name": w.label, "glyph": WAGON_GLYPH, "parked": parked, "broken": w.broken,
                 "sub": f"HP {w.hp} / {w.hp_max} · cargo {w.stash.load:g} kg",
                 "can": True if parked else room, "why": None if parked or room else "every bay holds a wagon",
                 "repair": {"cost": w.repair_cost, "item": wagon_mod.REPAIR_ITEM, "can": have >= w.repair_cost}

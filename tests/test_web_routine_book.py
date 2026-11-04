@@ -7,6 +7,7 @@ from gartok import persist, recorder
 from gartok import routines as r
 from gartok.group import Group
 from gartok.guild import Guild
+from gartok.wagon import Wagon
 from gartok.web.guild_session import GuildSession
 from gartok.web.map_session import MapSession
 from tests.helpers import standard_unit
@@ -23,13 +24,15 @@ def sheet(tmp_path, monkeypatch):
 
 
 def test_the_tab_lists_the_pages_the_seats_and_what_the_editor_may_name(sheet):
-    session, _ = sheet
+    session, guild = sheet
     state = session.state()["routines"]
     assert state["pages"] == [] and state["seats"] == [0, 0] and state["next"] > 0
     vocab = state["vocab"]
     assert ["farm", "The Farm"] in vocab["nodes"] and "Gatherers" in vocab["groups"]
     assert any("Lumber" in names for _, names in vocab["items"]) and "Minor Healing Potion" in vocab["recipes"]
     assert [t["key"] for t in session.state()["tabs"]][-1] == "routines"
+    guild.groups[0].add_wagon(Wagon("Cart", nickname="Ironside"))
+    assert session.state()["routines"]["vocab"]["wagons"] == ["Ironside"]
 
 
 def test_a_page_is_written_filled_in_and_torn(sheet):

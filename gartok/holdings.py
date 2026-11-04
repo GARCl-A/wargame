@@ -115,6 +115,16 @@ class CityProperty:
         self.stash.items = []
 
 
+def garages_at(guild, node):
+    """The garages a band can reach at `node`: the house's once it is owned, the Claim's once it is held."""
+    found = []
+    if node.has("property") and guild.house.owned:
+        found.append(guild.house.garage)
+    if node.has("claim") and guild.claim_held:
+        found.append(guild.claim_garage)
+    return found
+
+
 class GarageDesk:
     """A garage's counter with no window: park the band's wagons and animals, take them out, repair a wagon,
     and (at the house) add bays. The party pays out of its pooled coin, richest first, like the stables.

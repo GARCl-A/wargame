@@ -18,6 +18,7 @@ from gartok import routines as r
 from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
+from gartok.wagon import Wagon
 from tests.helpers import standard_unit
 from tests.test_solo import RECIPE, _crafter
 
@@ -291,7 +292,7 @@ def test_a_gather_block_does_not_ask_for_the_economic_licence(monkeypatch):
 def test_a_craft_block_makes_the_recipe_and_stops_when_it_cannot(monkeypatch):
     monkeypatch.setattr(unit_loadout, "roll", lambda n, d: 9999)
     u = _crafter()
-    g = Group([u], node="city", name="Smiths", leader=u)
+    g = Group([u], node="smith", name="Smiths", leader=u)
     guild = _guild(g)
     r.assign(guild, g, r.Routine([r.Craft(RECIPE, 4), r.Rest(1)]))
     assert g.order.kind == "solo" and g.order.recipe == RECIPE
@@ -299,9 +300,155 @@ def test_a_craft_block_makes_the_recipe_and_stops_when_it_cannot(monkeypatch):
     assert u.has_item(RECIPE) and g.order.kind == "rest"
 
     bare = _crafter(material=False)
-    broke = Group([bare], node="city", name="Bare", leader=bare)
+    broke = Group([bare], node="smith", name="Bare", leader=bare)
     r.assign(_guild(broke), broke, r.Routine([r.Craft(RECIPE, 4)]))
     assert broke.routine.paused and broke.order is None
+
+
+def _cook(node, **setup):
+    u = standard_unit()
+    u.give_to_pack("Meat")
+    g = Group([u], node=node, name="Cooks", leader=u)
+    guild = _guild(g)
+    if setup.pop("house_oven", False):
+        guild.house.owned, guild.house.oven = True, True
+    for key, value in setup.items():
+        setattr(guild, key, value)
+    return guild, g, u
+
+
+def test_a_craft_block_needs_the_station_a_player_would_use(monkeypatch):
+    monkeypatch.setattr(unit_loadout, "roll", lambda n, d: 9999)
+    u = _crafter()
+    g = Group([u], node="city", name="Smiths", leader=u)
+    r.assign(_guild(g), g, r.Routine([r.Craft(RECIPE, 4)]))
+    assert g.order is None and "no forge station here" in g.routine.paused
+
+
+def test_a_craft_block_cooks_only_where_there_is_a_hearth(monkeypatch):
+    monkeypatch.setattr(unit_loadout, "roll", lambda n, d: 9999)
+    for node, setup in (("city", {}), ("wilds_territory", {}), ("farm", {"claim_oven": True})):
+        guild, g, _ = _cook(node, **setup)
+        r.assign(guild, g, r.Routine([r.Craft("Roast Meat", 4)]))
+        assert g.order is None and "no cooking station here" in g.routine.paused, node
+    for node, setup in (("city", {"house_oven": True}), ("wilds_territory", {"claim_oven": True}),
+                        ("wilds_territory", {"wilds_claim_campfire": True})):
+        guild, g, u = _cook(node, **setup)
+        r.assign(guild, g, r.Routine([r.Craft("Roast Meat", 4)]))
+        assert g.order.kind == "solo", (node, setup)
+        campaign.advance(guild)
+        assert u.count_of("Roast Meat") == 1
+
+
+def test_a_craft_block_uses_a_burning_field_campfire(monkeypatch):
+    monkeypatch.setattr(unit_loadout, "roll", lambda n, d: 9999)
+    guild, g, u = _cook("farm")
+    g.campfire_node, g.campfire_expires = "farm", guild.clock.seconds + 4 * 3600
+    r.assign(guild, g, r.Routine([r.Craft("Roast Meat", 4)]))
+    assert g.order.kind == "solo"
+
+
+def test_a_craft_block_needs_someone_who_knows_the_recipe():
+    u = standard_unit()
+    g = Group([u], node="smith", name="Smiths", leader=u)
+    r.assign(_guild(g), g, r.Routine([r.Craft(RECIPE, 4)]))
+    assert g.order is None and "nobody in the group knows" in g.routine.paused
+
+
+def _hauler(node="city", lumber=5):
+    u = standard_unit()
+    u.give_to_pack("Potato", 3)
+    if lumber:
+        u.give_to_pack("Lumber", lumber)
+    g = Group([u], node=node, name="Haulers", leader=u)
+    return _guild(g), g, u
+
+
+def test_a_repair_block_mends_the_named_wagon_with_the_desks_rules(monkeypatch):
+    monkeypatch.setattr(data, "d20", lambda: 20)
+    guild, g, u = _hauler()
+    cart = Wagon("Cart", hp=1, nickname="Ironside")
+    g.add_wagon(cart)
+    r.assign(guild, g, r.Routine([r.Repair("ironside"), r.Rest(1)]))
+    assert g.order.kind == "work" and g.order.task == "repair" and u.count_of("Lumber") == 5 - cart.repair_cost
+    campaign.advance(guild)
+    assert cart.hp > 1 and g.order.kind == "rest"
+
+
+def test_a_repair_block_reaches_a_wagon_parked_in_the_garage_here(monkeypatch):
+    monkeypatch.setattr(data, "d20", lambda: 20)
+    guild, g, u = _hauler()
+    guild.house.owned = True
+    parked = Wagon("Cart", hp=1, nickname="Spare")
+    guild.house.garage.tier, guild.house.garage.wagons = 1, [parked]
+    r.assign(guild, g, r.Routine([r.Repair("Spare")]))
+    campaign.advance(guild)
+    assert parked.hp > 1 and g.routine is None
+    elsewhere, e, _ = _hauler(node="smith")
+    e.add_wagon(Wagon("Cart", hp=1, nickname="Spare"))
+    r.assign(elsewhere, e, r.Routine([r.Repair("Nobody")]))
+    assert "no wagon called Nobody" in e.routine.paused
+
+
+def test_a_repair_block_stops_short_of_lumber_and_passes_a_sound_wagon():
+    guild, g, u = _hauler(lumber=0)
+    g.add_wagon(Wagon("Cart", hp=1, nickname="Ironside"))
+    r.assign(guild, g, r.Routine([r.Repair("Ironside")]))
+    assert "Lumber" in g.routine.paused and g.order is None
+    sound, s, _ = _hauler()
+    s.add_wagon(Wagon("Cart", nickname="Ironside"))
+    r.assign(sound, s, r.Routine([r.Repair("Ironside"), r.Rest(1)]))
+    assert s.order.kind == "rest"
+
+
+def test_store_and_fetch_move_goods_between_the_packs_and_the_house():
+    guild, g, u = _hauler()
+    guild.house.owned = True
+    r.assign(guild, g, r.Routine([r.Store("house", "Lumber", 3), r.Rest(1)]))
+    assert u.count_of("Lumber") == 2 and guild.house.stash.count_of("Lumber") == 3
+    g.order, g.routine = None, None
+    r.assign(guild, g, r.Routine([r.Fetch("house", "Lumber"), r.Rest(1)]))
+    assert u.count_of("Lumber") == 5 and guild.house.stash.count_of("Lumber") == 0
+
+
+def test_store_and_fetch_stop_where_there_is_no_stash_or_no_room():
+    guild, g, u = _hauler()
+    r.assign(guild, g, r.Routine([r.Store("house", "Lumber")]))
+    assert "no house here" in g.routine.paused
+    guild.house.owned = True
+    guild.house.stash.capacity = 0
+    r.resume(guild, g)
+    assert "no room" in g.routine.paused and u.count_of("Lumber") == 5
+    g.routine = None
+    r.assign(guild, g, r.Routine([r.Fetch("house", "Lumber")]))
+    assert "no Lumber in the house" in g.routine.paused
+    g.routine = None
+    r.assign(guild, g, r.Routine([r.Store("bank", "Lumber")]))
+    assert "no bank here" in g.routine.paused
+
+
+def test_a_fetch_is_cut_to_what_the_packs_carry():
+    guild, g, u = _hauler(lumber=0)
+    guild.house.owned = True
+    guild.house.stash.put("Lumber", 400)
+    r.assign(guild, g, r.Routine([r.Fetch("house", "Lumber"), r.Rest(1)]))
+    got = u.count_of("Lumber")
+    assert 0 < got < 400 and guild.house.stash.count_of("Lumber") == 400 - got
+
+
+def test_a_parked_wagons_cargo_can_be_fetched_and_stored_back():
+    guild, g, u = _hauler(lumber=0)
+    guild.house.owned = True
+    parked = Wagon("Cart", nickname="Spare")
+    parked.stash.put("Lumber", 4)
+    guild.house.garage.tier, guild.house.garage.wagons = 1, [parked]
+    r.assign(guild, g, r.Routine([r.Fetch("garage", "Lumber"), r.Rest(1)]))
+    assert u.count_of("Lumber") == 4 and parked.stash.count_of("Lumber") == 0
+
+
+def test_the_new_blocks_survive_the_save():
+    blocks = (r.Repair("Ironside"), r.Store("house", "Lumber", 2), r.Fetch("bank", "Lumber"))
+    assert r.load(r.dump(r.Routine(blocks))).blocks == blocks
 
 
 SPELL = "light_globe"

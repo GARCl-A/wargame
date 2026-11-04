@@ -10,11 +10,11 @@ const Book = (() => {
   let R = null, P = null, menu = null, refOpen = null, drag = null, sure = false, mode = "book", AT = null, STOP = null, BAND = null, keepTop = 0;
   const OPS = ["<", "<=", ">", ">="], OPL = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"};
   const DOING = {gather: "gathering", work: "working", craft: "crafting", rest: "resting", travel: "travelling"};
-  const SIGN = {Wait: "⏳", Take: "⤓", HandOver: "⇄", Repeat: "↻", Trade: "¤", Travel: "➜", Gather: "⛏", Work: "⚒", Craft: "✎", Study: "✧", Rest: "☾"};
+  const SIGN = {Wait: "⏳", Take: "⤓", HandOver: "⇄", Repeat: "↻", Trade: "¤", Travel: "➜", Gather: "⛏", Work: "⚒", Craft: "✎", Study: "✧", Repair: "🔧", Store: "⤒", Fetch: "⤓", Rest: "☾"};
   const KINDS = [
     ["Move and work", [["Travel", "Travel", "to a place"], ["Gather", "Gather", "for N hours"], ["Work", "Work", "for N hours"],
-      ["Craft", "Craft", "a recipe"], ["Study", "Study", "a spell or a language"], ["Rest", "Rest", "for N hours"]]],
-    ["Goods", [["Take", "Take", "from a group here"], ["HandOver", "Hand over", "to a group here"], ["Trade", "Trade", "sell, buy, food"]]],
+      ["Craft", "Craft", "a recipe"], ["Study", "Study", "a spell or a language"], ["Repair", "Mend a wagon", "one hour, Lumber paid"], ["Rest", "Rest", "for N hours"]]],
+    ["Goods", [["Take", "Take", "from a group here"], ["HandOver", "Hand over", "to a group here"], ["Store", "Store", "in the house, bank or garage"], ["Fetch", "Fetch", "from the house, bank or garage"], ["Trade", "Trade", "sell, buy, food"]]],
     ["Flow", [["Wait", "Wait until", "a number holds"], ["Repeat", "Repeat", "while / until"]]]];
 
   const ref = (how, arg = null) => ({_: "Ref", how, arg});
@@ -25,6 +25,9 @@ const Book = (() => {
     Work: () => ({_: "Work", hours: 16}),
     Craft: () => ({_: "Craft", recipe: R.vocab.recipes[0], hours: 8}),
     Study: () => ({_: "Study", target: R.vocab.studies[0][0], days: 1}),
+    Repair: () => ({_: "Repair", wagon: R.vocab.wagons[0] || "Cart"}),
+    Store: () => ({_: "Store", place: "house", item: "Lumber", count: null}),
+    Fetch: () => ({_: "Fetch", place: "house", item: "Lumber", count: null}),
     Rest: () => ({_: "Rest", hours: 8}),
     Wait: () => ({_: "Wait", cond: cond("coins", ref("own"), ">=", 1)}),
     Take: () => ({_: "Take", source: other(), item: "Lumber", count: null, until_days: null}),
@@ -49,6 +52,8 @@ const Book = (() => {
   }).join("")}</select>`;
   const itemSelect = (val, f) => `<select class="fld" data-f="${f}">${R.vocab.items.map(([kind, names]) =>
     `<optgroup label="${esc(kind)}">${names.map(n => `<option${n === val ? " selected" : ""}>${esc(n)}</option>`).join("")}</optgroup>`).join("")}</select>`;
+  const wagonSelect = val => select([...new Set([...R.vocab.wagons, val])], val, "wagon");
+  const PLACES = [["house", "the house"], ["bank", "the strongbox"], ["garage", "the garage's wagons"]];
   const num = (val, f, ph = "") => `<input class="fld num" data-f="${f}" value="${val ?? ""}" placeholder="${ph}" size="2" inputmode="decimal">`;
 
   function refField(r, key, ownOk) {
@@ -84,6 +89,12 @@ const Book = (() => {
       case "Rest": return `Rest for ${num(b.hours, "hours")} hours`;
       case "Craft": return `Craft ${select(R.vocab.recipes, b.recipe, "recipe")} for ${num(b.hours, "hours")} hours`;
       case "Study": return `Study ${select(R.vocab.studies, b.target, "target")} for ${num(b.days, "days")} days`;
+      case "Repair": return `Mend the wagon ${wagonSelect(b.wagon)}`;
+      case "Store": case "Fetch": {
+        const m = b.count != null ? "n" : "all";
+        return `${b._ === "Store" ? "Store" : "Fetch"} ${select([["all", "all"], ["n", "a number"]], m, "mode")}${m === "n" ? " " + num(b.count, "count") : ""}
+          ${itemSelect(b.item, "item")} ${b._ === "Store" ? "in" : "from"} ${select(PLACES, b.place, "place")}`;
+      }
       case "Wait": return `Wait until ${condText(b.cond, p)}`;
       case "Take": {
         const m = takeMode(b);

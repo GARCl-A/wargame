@@ -8,11 +8,38 @@ immediately; progress is 1d20+INT an hour. `web/craft_tab.py` draws `Bench`.
 
 from collections import Counter
 
-from . import items, solo
+from . import items, solo, world
 from .unit_loadout import pooled_unlocked
 
 WAIT_HOURS = (1, 4, 8)          # a solo task the whole group waits out
 ALONE_HOURS = (4, 8, 16)        # a solo task: the crafter splits off and the map runs the clock
+
+
+NODE_STATION = {"forge": "forge", "carpenter": "carpenter", "apothecary": "apothecary", "library": "scriptorium"}
+
+
+def stations_at(guild, group):
+    """The stations a band can work where it stands: the node's own bench, the house's kitchen once it has
+    an oven, the claim's once its hearth can cook, a field campfire while it burns."""
+    node = world.node(group.node)
+    found = {station for function, station in NODE_STATION.items() if node.has(function)}
+    kitchen = ((node.has("property") and guild.house.owned and guild.house.oven)
+               or (node.has("claim") and guild.wilds_claim_can_cook)
+               or group.has_campfire(guild.clock.seconds))
+    return found | {items.CraftingStation.COOKING} if kitchen else found
+
+
+def blocker(guild, group, recipe):
+    """Why `group` cannot work `recipe` where it stands -- the recipe is unknown, nobody in it knows it,
+    or the node has no station for it -- or None. The tab's own rules, for a routine's `Craft`."""
+    data = items.get_recipe(recipe)
+    if data is None:
+        return f"unknown recipe {recipe}"
+    if not any(recipe.split(":")[0] in u.known_recipes for u in group.members):
+        return f"nobody in the group knows {data.target}"
+    if data.station not in stations_at(guild, group):
+        return f"no {data.station} station here"
+    return None
 
 
 class Bench:
