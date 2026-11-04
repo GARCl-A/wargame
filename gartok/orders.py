@@ -103,12 +103,13 @@ def next_leg(src, remaining_path, speed, pace=1.0):
                 path=tuple(remaining_path[1:]))
 
 
-def work(guild, group, hours, gather=False, task=None, resume=None):
+def work(guild, group, hours, gather=False, task=None, resume=None, licensed=True):
     """Order `group` to work `hours` where it stands. Brisk Hands can shrink
     the clock cost below the nominal `hours` pay/XP is banked on -- see
     `Guild.work_speedup`. With `gather` the shift yields the node's drops, not the wage.
-    `resume` is the garrison job the group goes back to when the shift is over."""
-    if gather and not guild.has_licence(group.node):
+    `resume` is the garrison job the group goes back to when the shift is over. A routine's gather
+    passes `licensed=False`: the economic licence is not its business."""
+    if gather and licensed and not guild.has_licence(group.node):
         raise ValueError(f"no gathering licence for {group.node!r}")
     if gather and not any(economy.owns_tool(u, group.node) for u in group.members):
         raise ValueError(f"no one in {group.display_name} carries the node's {economy.GATHER_TOOLS[group.node]}")

@@ -101,12 +101,11 @@ over N game days checking the three criteria) once the design is chosen.
 
 1. **Programmable orders (author 2026-11-03).** Decided in the brainstorm. Built so far: the
    chronological slices of a forced `dt` in `campaign._advance`, and the engine in `routines.py` (`Travel`,
-   `Gather`, `Work`, `Rest`, `Wait`, `Take`, `HandOver`, `Trade`, `Repeat`, the conditions, the pause and
-   *Continue*, the save). The proof of concept above runs green as `tests/test_routines_poc.py` (24 game
-   days, A by hand). Still to build: the `Craft` block, a `Trade` spending limit, the Book of routines
-   (slots from reputation, the unlocks), the block editor and its tab with the tutorial card, the
-   *Continue* button, and the `Gather` block skipping `orders.work`'s licence check. What is still open is
-   listed at the end.
+   `Gather`, `Work`, `Craft`, `Rest`, `Wait`, `Take`, `HandOver`, `Trade` (with its `max_spend` cap), `Repeat`,
+   the conditions, the pause and *Continue*, the save; `Gather` skips the economic licence). The proof of
+   concept above runs green as `tests/test_routines_poc.py` (24 game days, A by hand). Still to build: the
+   Book of routines (slots from reputation, the unlocks), the block editor and its tab with the tutorial
+   card, and the *Continue* button. What is still open is listed at the end.
 
 ## Spec
 

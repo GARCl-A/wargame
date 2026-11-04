@@ -2,12 +2,23 @@
 
 import random
 
-from gartok import campaign, forced, orders, persist, world
+from gartok import (
+    campaign,
+    economy,
+    forced,
+    gather,
+    orders,
+    persist,
+    trade,
+    unit_loadout,
+    world,
+)
 from gartok import routines as r
 from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
 from tests.helpers import standard_unit
+from tests.test_solo import RECIPE, _crafter
 
 
 def _band(node, name, potatoes=3, money=0):
@@ -241,7 +252,6 @@ def _after(guild, g):
 
 
 def test_a_routine_trade_is_the_same_as_the_player_working_the_counter_by_hand():
-    from gartok import trade
     by_hand, hand_group = _farm_visit()
     counter = trade.Counter(by_hand, list(hand_group.members), world.node("farm"))
     by_hand.autosell = {"Lumber"}
@@ -255,3 +265,39 @@ def test_a_routine_trade_is_the_same_as_the_player_working_the_counter_by_hand()
 
     assert routine_group.routine is None
     assert _after(routine, routine_group) == _after(by_hand, hand_group)
+
+
+def test_a_trade_with_a_spending_limit_buys_only_what_the_limit_pays_for():
+    g = _band("farm", "Frugal", potatoes=0, money=1000)
+    guild = _guild(g)
+    price = economy.buy_price("Potato", trade.Counter(guild, list(g.members), world.node("farm")).deal)
+    r.assign(guild, g, r.Routine([r.Trade(buy=(("Potato", 10),), max_spend=price * 3)]))
+    assert g.routine is None and g.members[0].count_of("Potato") == 3
+
+
+def test_a_gather_block_does_not_ask_for_the_economic_licence(monkeypatch):
+    _quiet(monkeypatch)
+    g = _band("lumber_yard", "Choppers")
+    g.members[0].give_to_pack(gather.tool("lumber_yard"))
+    guild = _guild(g)
+    assert not guild.has_licence("lumber_yard")
+    r.assign(guild, g, r.Routine([r.Gather(8)]))
+    assert g.order.kind == "work" and g.order.gather
+    campaign.advance(guild)
+    assert g.members[0].count_of("Lumber") > 0 and g.routine is None
+
+
+def test_a_craft_block_makes_the_recipe_and_stops_when_it_cannot(monkeypatch):
+    monkeypatch.setattr(unit_loadout, "roll", lambda n, d: 9999)
+    u = _crafter()
+    g = Group([u], node="city", name="Smiths", leader=u)
+    guild = _guild(g)
+    r.assign(guild, g, r.Routine([r.Craft(RECIPE, 4), r.Rest(1)]))
+    assert g.order.kind == "solo" and g.order.recipe == RECIPE
+    campaign.advance(guild)
+    assert u.has_item(RECIPE) and g.order.kind == "rest"
+
+    bare = _crafter(material=False)
+    broke = Group([bare], node="city", name="Bare", leader=bare)
+    r.assign(_guild(broke), broke, r.Routine([r.Craft(RECIPE, 4)]))
+    assert broke.routine.paused and broke.order is None

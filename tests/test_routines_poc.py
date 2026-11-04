@@ -35,7 +35,6 @@ def _stage():
     a = guild.groups[0]
     a.name = "Hunters"
     guild.groups.extend([b, c])
-    guild.licences.add("lumber_yard")
     return guild, a, b, c
 
 

@@ -14,7 +14,7 @@ Goods move between the packs of the members of two groups at the same node, neve
 import operator
 from dataclasses import dataclass, field, fields, is_dataclass
 
-from . import gather, orders, vocations
+from . import economy, gather, orders, solo, vocations
 
 MAX_INSTANT = 16        # blocks that spend no time, one after another, before the routine is paused
 WAIT_HOURS = 1          # how often a `Wait` looks at its condition again
@@ -150,6 +150,13 @@ class Work:
 
 
 @dataclass(frozen=True)
+class Craft:
+    """Put `hours` into `recipe`: the first member who can make it works while the group waits."""
+    recipe: str
+    hours: float = 8
+
+
+@dataclass(frozen=True)
 class Rest:
     hours: float = 8
 
@@ -182,11 +189,13 @@ class HandOver:
 @dataclass(frozen=True)
 class Trade:
     """At the shop where the group stands: sell all it carries of the `sell` items, then buy `buy`
-    ((item, count) pairs) and as much `food` as it takes to last `food_days`."""
+    ((item, count) pairs) and as much `food` as it takes to last `food_days`, spending at most
+    `max_spend` copper on the buying (a cap, not a failure: the cart is cut to fit, in order)."""
     sell: tuple = ()
     buy: tuple = ()
     food_days: float | None = None
     food: str = "Potato"
+    max_spend: int | None = None
 
     def __post_init__(self):
         object.__setattr__(self, "sell", tuple(self.sell))
@@ -233,7 +242,7 @@ class Routine:
             self.path.pop()                            # the Repeat is looked at again
 
 
-_KINDS = {c.__name__: c for c in (Ref, Cond, Travel, Gather, Work, Rest, Wait, Take, HandOver, Trade, Repeat, Routine)}
+_KINDS = {c.__name__: c for c in (Ref, Cond, Travel, Gather, Work, Craft, Rest, Wait, Take, HandOver, Trade, Repeat, Routine)}
 
 
 def dump(obj):
@@ -318,11 +327,13 @@ def _run(guild, group, routine, block):
         if isinstance(block, Gather) and not gather.can_gather(group.node):
             return "nothing to gather here"
         try:
-            order = orders.work(guild, group, block.hours, gather=isinstance(block, Gather))
+            order = orders.work(guild, group, block.hours, gather=isinstance(block, Gather), licensed=False)
         except ValueError as err:
             return str(err)
         routine.inflight = True
         return order
+    if isinstance(block, Craft):
+        return _craft(guild, group, routine, block)
     if isinstance(block, Rest):
         routine.inflight = True
         return orders.rest(block.hours)
@@ -333,6 +344,17 @@ def _run(guild, group, routine, block):
     if isinstance(block, Trade):
         return _trade(guild, group, block)
     return _hand_over(guild, group, routine, block)
+
+
+def _craft(guild, group, routine, block):
+    reason = "no one in the group can craft it"
+    for unit in group.members:
+        ok, lines = solo.craft(guild, group, unit, block.recipe, block.hours, alone=False)
+        if ok:
+            routine.inflight = True
+            return group.order
+        reason = lines[0].rstrip(".")
+    return reason
 
 
 def _other_here(guild, group, ref):
@@ -381,6 +403,16 @@ def _move(src, dst, item, count):
     return taken
 
 
+def _within(wants, budget, deal):
+    """`wants` cut, in order, to what `budget` copper pays for."""
+    fitted = {}
+    for name, count in wants.items():
+        price = economy.buy_price(name, deal)
+        fitted[name] = min(count, budget // price)
+        budget -= fitted[name] * price
+    return fitted
+
+
 def _trade(guild, group, block):
     from . import trade, world
     node = world.node(group.node)
@@ -398,6 +430,8 @@ def _trade(guild, group, block):
     if block.food_days is not None:
         short = max(0, group.rations_for(block.food_days) - group.rations)
         wants[block.food] = wants.get(block.food, 0) + short
+    if block.max_spend is not None:
+        wants = _within(wants, block.max_spend, counter.deal)
     before = {name: count_of(group, name) for name in wants}
     counter.buy_named(wants)
     if any(count_of(group, name) - before[name] < count for name, count in wants.items()):
