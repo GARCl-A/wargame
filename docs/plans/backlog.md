@@ -8,7 +8,8 @@ What is already built is in the code, its tests and the git log.
 
 Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do*
 items, the plan pointers and the sim's `roll_pack` claim again on 2026-11-01; the items of 2026-11-03
-were only checked against the names they cite). When an item is done, delete it here and, if it
+were only checked against the names they cite; on 2026-11-04 the tavern label, the unsafe nodes, the
+venom-gland drops, the sound cues and the Claim's missing inventory were checked again). When an item is done, delete it here and, if it
 changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts, in this order:
@@ -69,15 +70,14 @@ the rest.
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
   today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
 
-- **Bug: Ribit's sheet is inconsistent (playtest 2026-11-02).** Recruited, he shows Work 4 but only *Brisk
-  Hands* (`npcs/ribit.json` lists `carrier` and `brisk_hands`); the author expected *Brawny* too. Find which
-  is wrong, the file or the sheet's Work count, then audit every `npcs/*.json` the same way (talents against
-  prerequisites and the level's talent points) with a test that fails on an inconsistent authored NPC.
+- **Bug: Ribit's sheet is inconsistent (playtest 2026-11-02).** He has Work level 4 but only two work
+  talents (`npcs/ribit.json` lists `carrier` and `brisk_hands`; decided 2026-11-04: the file is wrong).
+  Give him two more work talents (the author expected *Brawny*). Then a test over every `npcs/*.json`
+  that fails when an authored NPC holds fewer talents than its level's talent points give, or breaks a
+  talent's prerequisites.
 
-- **An archer with no arrows still shows no warning in the action bar (playtest 2026-11-02).** The pack row
-  and the sheet now name the arrows left, and an emptied quiver in front of a full one no longer leaves the
-  archer dry. Left: name the missing ammunition on the bar when a bow is swung as a melee. Test: bow with
-  only empty quivers.
+- **An archer with no arrows shows no warning in the action bar (playtest 2026-11-02).** Name the missing
+  ammunition on the bar when a bow is swung as a melee. Test: bow with only empty quivers.
 
 - **Overflows and unclear counters (playtest 2026-11-02).** (1) Loot screen: the text of what went to each
   inventory overflows. (2) Post-fight screen: with many foes (the Snake Dragon dungeon) the enemy list
@@ -101,10 +101,10 @@ the rest.
   gone, one line in `AGENTS.md` only if an agent would break something without it. Nothing in the repo
   depends on them being there.
 
-- **Tidy the built package's folders (author 2026-11-03).** The exe creates its folders next to itself
-  (`saves`, and soon `log-export` for the guild log's export). Decide how the built game's folder reads
-  (one data folder holding saves and exports, versus one folder each) so the build does not scatter
-  folders over the player's PC; the log's export writes wherever this lands.
+- **Tidy the built package's folders (decided 2026-11-04).** The exe creates its folders next to itself
+  (`saves`, and soon `log-export` for the guild log's export). One data folder beside the exe:
+  `GartokData/Saves`, `GartokData/Exports` (the guild log's export) and `GartokData/OldLogs`. Move the
+  game's writes there and update `build_exe.bat`.
 
 ## Medium
 
@@ -142,8 +142,10 @@ the rest.
 - **One colour per name, then the map screen's pass on every screen (author, notes outside playtests).**
   Two steps, in this order. (1) *Tokens:* the CSS declares about 70 custom properties (23 in `shell.css`)
   against about 1600 literal colours in 17 files, so nobody can tell which colours are in use and a new
-  one is a random hash. Collect every colour in use, merge the near-equal ones, name the survivors in
-  `:root` (`shell.css`) and replace the literals; record the names in `docs/web_ui/web_client.md`.
+  one is a random hash. The goal (author 2026-11-04) is to cut the number of colours, not only to name
+  them: nobody needs 1600, and the palette should be small enough that a retheme is a change of a few
+  hashes. Collect every colour in use, merge the near-equal ones, name the survivors
+  in `:root` (`shell.css`) and replace the literals; record the names in `docs/web_ui/web_client.md`.
   (2) *The map's pass:* the author enlarged and recoloured the ledger's `.lbl` on the map (reputation, purse,
   members), merged the *party* panel into *Bands* and cut strings (2026-11-02/03). Split each change into
   what *should* spread, to keep text, fonts and colours one pattern (`.lbl` is redefined in `guild`, `hub`,
@@ -189,12 +191,14 @@ the rest.
   what the side sees; paint a first frame (cached floor) before the light.
 
 - **Hover on the vocation's races shows their modifiers (author 2026-11-01).** On the vocation pick,
-  hovering a race lists its attribute modifiers and racial abilities, read off the registries. Only if
-  vocations stay (see *Vocations: difficulty or build?* below).
+  hovering a race lists its attribute modifiers and racial abilities, read off the registries. Vocations
+  stay (author 2026-11-04).
 
 - **The dictionary crafts too fast (playtest 2026-11-01).** One was made on day 18 in about 4 or 5 hours.
-  Find the time the craft takes (`craft_level.py` and the recipe) and set a target with the author, then
-  review the other crafts' times against it.
+  Target (author 2026-11-04): a character with INT 10 and no bonus takes about 3 days. Find the time the
+  craft takes (`craft_level.py` and the recipe) and bring it to that, without lengthening the other
+  crafts (the author fears slow, boring crafts): check their times against the dictionary's before
+  touching any.
 
 - **Is a STR/CON-heavy draft objectively best? (author 2026-11-01).** The author drafts a Charisma leader
   plus the strongest, toughest bodies for the rest and cannot tell bias from fact. Measure with the headless
@@ -345,8 +349,8 @@ agent asks for art instead of generating it. Order is the suggested priority.
   the guild has met, owned or learned (`intel`, known recipes, the talents of the races in the guild), with
   a locked-entry stub or no entry at all. Cases given (author 2026-11-01): a shop's items appear once the
   guild has entered a shop that stocks them; a race appears when the guild hires one or finishes a 100%
-  assess of it; a beast appears at a 100% assess. Open: whether the wiki builds partial entries (the
-  assess filling a beast in bit by bit). Cases still to decide: recipes (known, or seen crafted), talents
+  assess of it; a beast appears at a 100% assess. Decided 2026-11-04: entries are partial (the assess
+  fills a beast in bit by bit). Cases still to decide: recipes (known, or seen crafted), talents
   (of the races in the guild), conditions (first suffered or inflicted), weapon traits and actions (when a
   unit owns or gets them), places and factions (visited, met), spells (known or a scroll owned), what
   comes with the guild on day one (the rules chapters). Then whether the wiki says that something is still
@@ -405,9 +409,9 @@ below can be rebuilt from them.
 
 ## 2026-11-01
 
-- **Vocations: difficulty or build? (author 2026-11-01).** If vocations stay, is playing Marsh objectively
-  worse than Caravan? Either flag it to the player ("risky" and the like), or balance them to be equally
-  desirable. Either way the game needs a way to test the vocations' balance (`balance_sim.py`,
+- **Vocations: difficulty or build? (author 2026-11-01).** Vocations stay and get more investment (author
+  2026-11-04). Is playing Marsh objectively worse than Caravan? Either flag it to the player ("risky" and
+  the like), or balance them to be equally desirable. Either way the game needs a way to test the vocations' balance (`balance_sim.py`,
   `economy_sim.py`; see *Vocations are far apart* under 2026-10-31).
 - **The AI over-uses two things.** It stabilises allies (it loses turns and fights) and it pushes then
   flees (day 17: a wolf pushed, ran off and came back; it may push only to cut the flank when it could just
@@ -456,13 +460,12 @@ items it touches. Raw feedback, not yet sized:
   elsewhere at level 0.
 - **Food was learned wrong.** He bought what looked like 20 days of shelf life and it spoiled; beer
   first (cheap at 4 copper and durable), then Potato; a farm trip for it did not pay against Fruit at the
-  grocery. Show shelf life in the shop row. Check the economy report: is beer the best buy per day? No
+  grocery. Check the economy report: is beer the best buy per day? No
   hangover for a beer-only diet (author 2026-10-31: does not like it). Decided: the supply is a
   constraint on purpose, not an afterthought: a group of ten plus a cart eats eleven meals a day, a
   10-day territory defence needs ~110 meals and a tavern holds tens (about 15 beers, 10 meats, 30
   potatoes). Salted meat and beer are the end-game foods (30 and 20 days), Potato lasts 7, fruit 1;
-  hunting pays through meat and hides sold, then potatoes bought. The shop row, the pack rows,
-  the craft screen and the travel slip now show it.
+  hunting pays through meat and hides sold, then potatoes bought.
 - **Hunting is not cheaper than buying** (the first mechanic he tried); the author felt it was badly
   balanced but it is **not validated**: it needs an economic analysis first (author 2026-10-31).
   Re-run `scripts/economy_report.py` for the Wilds hunt (meat and hides sold, then food bought) against
@@ -490,8 +493,7 @@ items it touches. Raw feedback, not yet sized:
 - **The Reputations tasks only half guide a start.** Found them "almost intuitive", not a clear "how
   to begin". Check whether the first deeds read as a path.
 - **Rations are learned the expensive way.** Travel eats rations (once a day) and he found out by
-  spending them. The wiki was opened once and never used. The travel slip now shows the rations a trip
-  takes and warns when the band is short; left here: a link from the tutorial to the wiki.
+  spending them. The wiki was opened once and never used. Left: a link from the tutorial to the wiki.
 - Good sign: he understood the screens by playing and asked whether to continue (about 2 h in).
 
 ## Older raw notes (2026-10-12, 2026-10-21)
@@ -529,6 +531,16 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
+- **Catfolk as a 19th playable race (a friend's request, 2026-11-04).** Adding a race is registry work
+  (`data.py`, `art_files.RACE_ICON`, portraits, abilities, `REFERENCE.md`, tests). The open point is the
+  vocations: each of the 6 holds 6 of the 18 races (36 slots, 2 per race on average; Orc and Hobgoblin sit
+  in one, Kobold and Kenku in three), and the draft pool guarantees only the vocation's own races. A race in
+  no vocation shows up only through the natural table. Decided 2026-11-04: the Catfolk takes the place of
+  a race in a vocation (the 6-race rule stays), one that sits in three (Kobold: Delvers, Scholars, Marsh;
+  Kenku: Scholars, Caravan, Marsh). Direction: Caravan (author 2026-11-04); the Kenku is the one race there
+  that sits in three vocations, so it is the natural one to leave. Open: confirm that swap, and the
+  Catfolk's modifiers and racial ability. Do it with the vocation balance work (*Vocations: difficulty or build?*).
+
 - **Playtest with every routine open (author 2026-11-04).** Every block and place is open to a routine today.
   The playtest decides *Routine unlocks* (in *Large*), whether the editor needs validation marks (today a routine
   that cannot run stops at run time with its reason and *Continue*), and whether switching between groups is
@@ -542,7 +554,8 @@ has one "Enter" button and its functions are tabs inside.
 - **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
   targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
   order of impact.
-  1. *The Games pay too little for their risk (direction decided 2026-11-01, numbers open).* A Games bout
+  1. *The Games pay too little for their risk? (direction decided 2026-11-01; the author feels it balanced
+     on 2026-11-04, so this is a measurement, not a call: drop the item if the numbers agree).* A Games bout
      (Brawl or Capture the Flag, 3 a side) costs $30 a fighter ($90 for the three) and pays a flat $130,
      against three opponents rolled level 1 to 6 each (`encounters.ARENA_LEVEL_WEIGHTS`: 30/24/18/13/9/6,
      mostly 1 to 3, mean ~2.7); the Ribbit Brothers' bout costs $40 a fighter for $450, six a side,
@@ -654,12 +667,13 @@ has one "Enter" button and its functions are tabs inside.
     it. Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the
     farm patch comes up.
 
-- **Holy Symbol source (author 2026-11-01, direction 2026-11-04).** No recruit starts with one (only the Priest
-  did) and no shelf sells it, while Faith's rite (`rite.py`) consumes it, so the Faith school has no way to
-  get it. Not for sale at the Market. Direction: (1) a super rare drop from bandit ambushes; (2) one quest
-  with a guaranteed Holy Symbol as an extra loot, tied to the author's idea of a node between the country
-  roads and the church. Open: the drop chance, which quest, and that node. Until then the rite cannot start
-  in a new game.
+- **Holy Symbol source (author 2026-11-01, quest decided 2026-11-04).** No recruit starts with one (only the
+  Priest did) and no shelf sells it, while Faith's rite (`rite.py`) consumes it, so the Faith school has no
+  way to get it. Not for sale at the Market. Direction: (1) a super rare drop from bandit ambushes; (2) a
+  Farmer's quest: his daughter went to the church and has sent no word for a while; an investigation ends
+  with the body found on the new node between the church and the country roads, and the Holy Symbol is on
+  it. Open: the drop chance, the node, and the investigation's steps. Until then the rite cannot start in a
+  new game.
 
 - **Does an arena bout cost hours? (author 2026-11-01)** A bout advances the clock only by its rounds
   (6 s each, `campaign.py`), which is about a minute: a squad can chain bouts the same day with no

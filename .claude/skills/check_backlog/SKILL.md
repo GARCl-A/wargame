@@ -43,8 +43,6 @@ mid-task), say so in one line and leave it out of the audit.
    - **Design decisions** (architecture / system shape): what must be decided,
      the options, and a recommendation.
    - **Unanswered business / scope questions**: what the user has to answer.
-   Point out items that share a mechanism (e.g. two features that need the same
-   new order kind) so the decision is made once.
 
 4. **Action plan.** An ordered list of what the user should focus on now,
    starting with the cheap doc fixes from step 1. Close by offering to apply
