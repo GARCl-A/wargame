@@ -6,11 +6,8 @@ that owns the subject: the test suite [../../tests/README.md](../../tests/README
 [../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
 What is already built is in the code, its tests and the git log.
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-22 (the *Ready to do*
-items, the plan pointers and the sim's `roll_pack` claim again on 2026-11-01; the items of 2026-11-03
-were only checked against the names they cite; on 2026-11-04 the tavern label, the unsafe nodes, the
-venom-gland drops, the sound cues and the Claim's missing inventory were checked again). When an item is done, delete it here and, if it
-changed a design premise, record it in `AGENTS.md` or the doc that owns it.
+Sizes are estimates. When an item is done, delete it here and, if it changed a design premise, record it in
+`AGENTS.md` or the doc that owns it.
 
 Parts, in this order:
 
@@ -36,6 +33,7 @@ combat presentation and the hub kit are done. Left:
 - **Translation to pt-br** (Large). The game is all English and the friends' playtest is in Portuguese: do it
   before the build goes out. Plan, phases and open decisions: [translation_pt_br.md](translation_pt_br.md).
   The translation must be COMPLETE before the next playtest (author 2026-11-04): every phase, not a slice.
+- **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
 - The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
   ones), the overflows, the icons' authors, then the skills.
 
@@ -108,6 +106,20 @@ the rest.
 
 ## Medium
 
+- **The Claim gets an inventory.** A stash like the house's; a routine's `Store` / `Fetch` (`place`) can name
+  it (`routines._stashes` knows only the house, the bank and the garage today). End-to-end: the Claim's
+  tab, the routine editor's place list, tests.
+
+- **Review the races' balance (author 2026-11-04).** Every race's six modifiers sum to 0, but the sum does not
+  make them equal: some attributes are worth more than others, and the Hit Die is outside the sum. Weigh the
+  attributes (the headless fights and the economy sim show which ones carry), then count the Hit Die and the
+  racial ability, and retune the outliers. Do it with *Vocations: difficulty or build?*.
+
+- **Talent prerequisites become a list; trees grow to T4 and T5 (author 2026-11-04).** `Talent.requires` is a
+  single id (`talents.py`, read by `reference.py`, `missions.py`, `wiki_session.py` and `talents.js`); make it
+  a tuple that may name talents of other trees (the second requirement is drawn as a red dotted line, see
+  *Notes to remember*), and allow tiers 4 and 5 (the trees stop at 3 today and will keep growing). Then the
+  talents of *Needs more information -> Talent ideas* can be built.
 
 - **Tactical analysis of every action (author 2026-11-01).** Takedown went in weak on purpose: it trades
   the point it costs for the point the foe spends standing, and headless fights (mirrored squads, the AI
@@ -143,9 +155,10 @@ the rest.
   Two steps, in this order. (1) *Tokens:* the CSS declares about 70 custom properties (23 in `shell.css`)
   against about 1600 literal colours in 17 files, so nobody can tell which colours are in use and a new
   one is a random hash. The goal (author 2026-11-04) is to cut the number of colours, not only to name
-  them: nobody needs 1600, and the palette should be small enough that a retheme is a change of a few
-  hashes. Collect every colour in use, merge the near-equal ones, name the survivors
-  in `:root` (`shell.css`) and replace the literals; record the names in `docs/web_ui/web_client.md`.
+  them: the palette should be small enough that a retheme is a change of a few hashes. Go slowly: first
+  catalogue every colour in use (about 360 distinct hex values today, besides `rgba()` and named ones) with
+  where and what for, and find out why there are so many; only then merge the near-equal ones, name the
+  survivors in `:root` (`shell.css`) and replace the literals; record the names in `docs/web_ui/web_client.md`.
   (2) *The map's pass:* the author enlarged and recoloured the ledger's `.lbl` on the map (reputation, purse,
   members), merged the *party* panel into *Bands* and cut strings (2026-11-02/03). Split each change into
   what *should* spread, to keep text, fonts and colours one pattern (`.lbl` is redefined in `guild`, `hub`,
@@ -182,7 +195,8 @@ the rest.
   Playtest 2026-11-01 adds two: the level-up cue is much louder than a click (lower its `LEVEL`), and the
   sound lags behind the click (measure first whether it is the audio start or the round trip to the server).
 
-- **The battle takes ~1 s to open, and each action repaints for ~230 ms (playtest 2026-11-01).** Title,
+- **The battle takes ~1 s to open, and each action repaints for ~230 ms (playtest 2026-11-01; the author does
+  not feel it, so investigate before changing anything).** Title,
   map and hub are ready in ~350-450 ms; the battle is not, even with every file cached. The time is not the
   files: `Board.draw` (`screens/battle/board.js`) runs on every state change and costs ~230 ms in a headless Chromium
   without GPU, most of it `fogAndLight` (blurred light and fog layers at full resolution) and `memory`;
@@ -191,8 +205,7 @@ the rest.
   what the side sees; paint a first frame (cached floor) before the light.
 
 - **Hover on the vocation's races shows their modifiers (author 2026-11-01).** On the vocation pick,
-  hovering a race lists its attribute modifiers and racial abilities, read off the registries. Vocations
-  stay (author 2026-11-04).
+  hovering a race lists its attribute modifiers and racial abilities, read off the registries.
 
 - **The dictionary crafts too fast (playtest 2026-11-01).** One was made on day 18 in about 4 or 5 hours.
   Target (author 2026-11-04): a character with INT 10 and no bonus takes about 3 days. Find the time the
@@ -350,7 +363,10 @@ agent asks for art instead of generating it. Order is the suggested priority.
   a locked-entry stub or no entry at all. Cases given (author 2026-11-01): a shop's items appear once the
   guild has entered a shop that stocks them; a race appears when the guild hires one or finishes a 100%
   assess of it; a beast appears at a 100% assess. Decided 2026-11-04: entries are partial (the assess
-  fills a beast in bit by bit). Cases still to decide: recipes (known, or seen crafted), talents
+  fills a beast in bit by bit). What exists to gate on: the guild's `Bestiary` (`intel.py`: races fought,
+  abilities seen, the best read of each authored NPC) and each unit's `known_recipes`; nothing records an item
+  seen, so an item's entry needs a new saved set. A recipe's entry shows only for a recipe someone knows; an
+  item's entry does not depend on knowing its recipe. Cases still to decide: recipes (known, or seen crafted), talents
   (of the races in the guild), conditions (first suffered or inflicted), weapon traits and actions (when a
   unit owns or gets them), places and factions (visited, met), spells (known or a scroll owned), what
   comes with the guild on day one (the rules chapters). Then whether the wiki says that something is still
@@ -366,7 +382,7 @@ agent asks for art instead of generating it. Order is the suggested priority.
 ## Notes to remember when the case comes up
 
 - **A talent with more than one prerequisite.** The tree already draws the second requirement as a red dotted
-  line, but no talent has one yet. The day one does, check that this is how it reads.
+  line, but no talent has one yet. When the prerequisites become a list, check that this is how it reads.
 - **Roster of characters, not an army of clones (author 2026-10-31).** Many action-bar entries and each
   unit a character in its own right, friction accepted. The trade-off, named: eight identical units are
   fast to play (move, hit, hit), eight complex ones mean hundreds of buttons a turn.
@@ -398,8 +414,8 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 ## 2026-11-02
 
-Recordings of the session (saves and combat logs) are in the repo with the notes' commit; the fights named
-below can be rebuilt from them.
+The session's recordings (saves and combat logs) are not in the repo yet; the author sends them when a note
+needs a fight rebuilt.
 
 - **Is the two-step charge worth it? (author 2026-11-02, doubt).** Having one charge with two different
   values feels more of a hindrance than interesting. Review the rule against the Aurochs fight (day 112) and
@@ -508,8 +524,6 @@ has one "Enter" button and its functions are tabs inside.
   repeated every level.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
-- **The Claim has no inventory.** When it gets one it is a stash like the house, and a routine's `Store` / `Fetch`
-  (`place`) can name it.
 - **The Battlefield beyond the Faith mission.** For now its only use is the Faith Order's errands, and it
   stays that way (author 2026-10-17). Later it becomes one more place of Ledger Hold work and missions: what
   an open skirmish pays, how often the front has a fight. The supply run's walked order with an ambush
@@ -531,15 +545,14 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
-- **Catfolk as a 19th playable race (a friend's request, 2026-11-04).** Adding a race is registry work
-  (`data.py`, `art_files.RACE_ICON`, portraits, abilities, `REFERENCE.md`, tests). The open point is the
-  vocations: each of the 6 holds 6 of the 18 races (36 slots, 2 per race on average; Orc and Hobgoblin sit
-  in one, Kobold and Kenku in three), and the draft pool guarantees only the vocation's own races. A race in
-  no vocation shows up only through the natural table. Decided 2026-11-04: the Catfolk takes the place of
-  a race in a vocation (the 6-race rule stays), one that sits in three (Kobold: Delvers, Scholars, Marsh;
-  Kenku: Scholars, Caravan, Marsh). Direction: Caravan (author 2026-11-04); the Kenku is the one race there
-  that sits in three vocations, so it is the natural one to leave. Open: confirm that swap, and the
-  Catfolk's modifiers and racial ability. Do it with the vocation balance work (*Vocations: difficulty or build?*).
+- **Catfolk as a 19th playable race (a friend's request, decided 2026-11-04).** Medium, d6, +1 DEX, +1 CHA,
+  -1 STR, -1 INT (sums to 0 like the other 18), as rare as the Kenku (3 of 100). Racial ability *Catfall*: the
+  first 3 levels of a fall do no damage (`battle.apply_fall`: the first level is already free, so a drop of up
+  to 4 levels costs nothing; it overlaps no ability). The Catfolk takes the Kenku's place in Caravan (the
+  Kenku keeps Scholars and Marsh). The d100 table gives it 3 positions, one taken from each of Dwarf, Elf
+  and Goblin (15 -> 14). Left for the next round: the language, the portraits, `art_files.RACE_ICON`, the
+  racial talents (every playable race holds at least three, one for each pick through racial 15), the
+  registry entries and `REFERENCE.md`. Do it with the vocation balance work (*Vocations: difficulty or build?*).
 
 - **Playtest with every routine open (author 2026-11-04).** Every block and place is open to a routine today.
   The playtest decides *Routine unlocks* (in *Large*), whether the editor needs validation marks (today a routine
@@ -605,27 +618,30 @@ has one "Enter" button and its functions are tabs inside.
      Decided (author 2026-11-01): the best roll counts (the talent is a way to try more than once); the
      holder becomes `recruited_by`; "could recruit" means every requirement the ally would need to
      recruit that target alone (`slots_free`, the shared language, the rest of `recruit.py`'s checks).
-     Open: three nodes or one chain, which tier; and whether "group size limit" is `cohesion.py`'s
-     capacity (to be replaced by Loyalty, see above).
+     Decided (author 2026-11-04): three separate nodes that may connect. Group size +1: *combat*, T4 or T5
+     (recruiting is the strongest thing in the game so far). Crowd penalty -10%: *combat*, T3 or T4. Joint
+     pitch: *work*, T2 or T3, after Fixer. Open: whether "group size limit" is `cohesion.py`'s capacity (to be
+     replaced by Loyalty, see above).
   2. *Intelligence tree (combat), two talents:* (a) **group leader only: places the whole group** before
      the fight; (b) **places only oneself**. Together they are a ladder (b the early node, a the late one),
      and (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
      the UI is like the flag's placement (a pre-fight setup step, `BattleSession` already has "flag" and
      "trap"), placing the characters one after another in initiative order. (a) works only when the
      leader is on the board (an arena bout picks its fighters, a hunt leaves its guards behind: without
-     the leader, no one places the group). Open: how `ai/` places its own side: keep today's start
-     for now, then record how the author places in a few scenarios and train the AI on them.
+     the leader, no one places the group). `ai/` places its own side at random at first; after a playtest with the talent, the author's placements
+     train it. Open: the tier of each.
   3. *Charisma + Wisdom compound:* Demoralize on beasts. The point is the language: a beast has none,
      so `Demoralize._can_provoke` (`actions/combat.py`) never allows it. The talent gives the holder what
      `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets
      with no language of their own. The effect on the beast is the same as on a humanoid
-     (`Demoralized`: cannot move, lower defenses). Open: the compound talents' shape (no cross-tree node
-     yet, see *Notes to remember -> a talent with more than one prerequisite*) and whether it also needs the holder
-     to be able to see the beast for a turn (the existing sight check already does).
+     (`Demoralized`: cannot move, lower defenses). Decided (author 2026-11-04): it requires a Charisma (combat) talent and a Wisdom (combat) talent, which
+     needs the list of prerequisites (*Ready to do -> Medium*). Open: whether it also needs the holder to be
+     able to see the beast for a turn (the existing sight check already does).
   4. *Archery (playtest 2026-11-02):* a combat talent giving +1 damage with a bow; and a second that
      adds a conditional *Brutal* to the blow, possibly "in a straight line" along the 8 directions (the
-     shot must travel straight). The *Brutal N* keyword exists (`keywords.py`); the open point is the
-     condition and the tier.
+     shot must travel straight). Decided (author 2026-11-04): the +1 damage comes first and the Brutal one chains after it. "In a straight
+     line" is the queen's move: shooter and target aligned on a row, a column or a diagonal. The *Brutal N*
+     keyword exists (`keywords.py`). Open: the tiers.
 
 - **Assess grows into an Intelligence combat tree (author 2026-10-31).** Study the foe, and what you
   know grants crit and to-hit: a turn spent investigating before the beating is a real option. Not built
@@ -672,7 +688,8 @@ has one "Enter" button and its functions are tabs inside.
   way to get it. Not for sale at the Market. Direction: (1) a super rare drop from bandit ambushes; (2) a
   Farmer's quest: his daughter went to the church and has sent no word for a while; an investigation ends
   with the body found on the new node between the church and the country roads, and the Holy Symbol is on
-  it. Open: the drop chance, the node, and the investigation's steps. Until then the rite cannot start in a
+  it. Open: the drop chance, the node, and the investigation's steps (it needs the story thought through). Order
+  (author 2026-11-04): after the translation, before the next playtest. Until then the rite cannot start in a
   new game.
 
 - **Does an arena bout cost hours? (author 2026-11-01)** A bout advances the clock only by its rounds
