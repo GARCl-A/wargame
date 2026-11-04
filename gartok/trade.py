@@ -252,12 +252,13 @@ class Counter(economy.PartyPurse):
     def _marked(self):
         return getattr(self.guild, "autosell", None) or set()
 
-    def _marked_stock(self):
-        """`([(member, loc)], {pick: qty})` for every marked item the shoppers and stores carry -- all of a
-        stack but the padlocked part."""
+    def _marked_stock(self, names=None):
+        """`([(member, loc)], {pick: qty})` for every marked item (or every one of `names`) the shoppers and
+        stores carry -- all of a stack but the padlocked part."""
+        names = self._marked() if names is None else names
         picks, qty = [], {}
         for member in (*self.shoppers, *self.stores):
-            left = {n: member.unlocked_of(n) for n in self._marked()}
+            left = {n: member.unlocked_of(n) for n in names}
             for loc, (name, held) in enumerate(member._base_inventory):
                 take = min(held, left.get(name, 0))
                 if take > 0:
@@ -270,13 +271,25 @@ class Counter(economy.PartyPurse):
         picks, qty = self._marked_stock()
         return sum(economy.sell_price(self._name_of(p), self.deal) * qty[p] for p in picks)
 
-    def _sell_marked(self):
-        picks, qty = self._marked_stock()
+    def _sell_marked(self, names=None):
+        picks, qty = self._marked_stock(names)
         if not picks:
-            self.notice = "nothing marked for auto-sell in the packs."
+            self.notice = "nothing marked for auto-sell in the packs." if names is None else "nothing to sell."
             return
         self.selected, self._sel_qty = picks, qty
         self._sell()
+
+    def sell_named(self, names):
+        """SELL MARKED for these items instead of the marks: what a routine's trade does at the counter."""
+        self._sell_marked(names)
+
+    def buy_named(self, wants):
+        """BUY with a cart of `{name: count}`, each into whoever has the most room: what a routine's trade
+        does at the counter."""
+        wants = {name: count for name, count in wants.items() if count > 0}
+        self.selected = [("stock", name) for name in wants]
+        self.qty = dict(wants)
+        self._buy_cart()
 
     def _toggle_marked(self, name):
         marked = self.guild.autosell

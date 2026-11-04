@@ -41,6 +41,7 @@ from . import (
     orders,
     ox,
     recorder,
+    routines,
     serpent_nest,
     solo,
     stints,
@@ -354,38 +355,93 @@ def _advance(guild, dt=None, busy=()):
     payoff runs through `Guild._garrison_upkeep` on every day crossed
     instead), so folding it in here would either wreck the soonest-completion
     jump (its `remaining` is meaningless) or, on a forced stop, decrement it
-    toward a spurious "completion" no kind branch below handles."""
-    from . import rest
+    toward a spurious "completion" no kind branch below handles.
 
+    A forced `dt` is walked in slices, each ending where the soonest order completes: an order that
+    resolves hands its group the next one (the next leg of a route) at that very instant, so the hours
+    left in `dt` are spent on it and not lost. Daily upkeep runs per slice."""
     jumped = dt is not None
-    active = [g for g in guild.groups if g.busy and g.order.kind != "garrison"]
     if not jumped:
+        active = _in_flight(guild)
         if not active:
             return TickResult(hungry=[u for u in guild.roster if u.hunger_level > 0])
         dt = min(g.order.remaining for g in active)
 
     before_levels = {u.uid: aftermath.level_snapshot(u) for u in guild.roster}
     start_day = guild.clock.day
-    events, casualties = guild.pass_time(dt, busy=busy)   # its own lines are in the log already
-    days_crossed = guild.clock.day - start_day
+    events, casualties, pending = [], [], []
+    budget, instant = dt, 0
 
     def note(lines, kind, group=None):
         guild.log.record(lines, guild.clock.seconds, kind, group.display_name if group else None)
         return lines
 
-    if jumped:
-        events += note(guild.eat_now_pass(), "food")
-    
-    hungry = [u for u in guild.roster if u.hunger_level > 0]
-    
-    if guild.empty:
-        return TickResult(events=events, wiped=True, casualties=casualties, hungry=hungry)
+    while True:
+        active = _in_flight(guild)
+        step = budget
+        if jumped and active:
+            step = max(0, min(budget, min(g.order.remaining for g in active)))
+        budget -= step
+        last = budget <= 1e-9
+        slice_events, slice_dead = guild.pass_time(step, busy=busy)   # its own lines are in the log already
+        events += slice_events
+        casualties += slice_dead
 
-    pending = []
+        if jumped and last:
+            events += note(guild.eat_now_pass(), "food")
+
+        hungry = [u for u in guild.roster if u.hunger_level > 0]
+
+        if guild.empty:
+            return TickResult(events=events, wiped=True, casualties=casualties, hungry=hungry)
+
+        fresh = len(pending)
+        events += _settle(guild, active, step, pending, note)
+        for g, order in pending[fresh:]:
+            if order.kind in forced.EVENTS:
+                g.pending = order              # set before the dailies, so a caught band is not called to the claim
+        instant = instant + 1 if step <= 1e-9 else 0
+        if last or instant > MAX_INSTANT_SLICES:
+            break
+
+    days_crossed = guild.clock.day - start_day
+    forced_events, forced_pending = forced.daily_checks(guild, days_crossed)
+    events += note(forced_events, "fight")
+    for g, order in forced_pending:
+        g.pending = order
+    pending += forced_pending
+    level_ups = []
+    for u in guild.roster:
+        b = before_levels.get(u.uid)
+        if b is None:
+            continue
+        a = aftermath.level_snapshot(u)
+        if (a["combat"], a.get("work", 0), a["magic"]) > (b["combat"], b.get("work", 0), b["magic"]):
+            level_ups.append(aftermath.LevelUp(u, b, a))
+            track = "combat" if a["combat"] > b["combat"] else "work" if a.get("work", 0) > b.get("work", 0) else "magic"
+            note([f"{u.name} reached {track} level {a[track]}!"], "work", guild.group_of(u))
+    return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties,
+                      hungry=hungry, level_ups=level_ups)
+
+
+MAX_INSTANT_SLICES = 64     # orders that resolve in no time, one after another, before the tick gives up
+
+
+def _in_flight(guild):
+    """The groups whose order counts down on the clock (a garrison never completes)."""
+    return [g for g in guild.groups if g.busy and g.order.kind != "garrison"]
+
+
+def _settle(guild, active, step, pending, note):
+    """Count `step` hours off every order in `active` and resolve the ones that reached zero. A group
+    that needs a screen (or a fight) is appended to `pending`; returns the notices to show."""
+    from . import rest
+
+    events = []
     for g in active:
         if g.empty:                            # starved out during this tick's upkeep
             continue
-        g.order.remaining -= dt
+        g.order.remaining -= step
         if g.order.remaining > 1e-9:
             continue
         order = g.order
@@ -463,26 +519,17 @@ def _advance(guild, dt=None, busy=()):
             pending.append((g, order))
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
-    for g, order in pending:
-        if order.kind in forced.EVENTS:
-            g.pending = order                  # set before the dailies, so a caught band is not called to the claim
-    forced_events, forced_pending = forced.daily_checks(guild, days_crossed)
-    events += note(forced_events, "fight")
-    for g, order in forced_pending:
-        g.pending = order
-    pending += forced_pending
-    level_ups = []
-    for u in guild.roster:
-        b = before_levels.get(u.uid)
-        if b is None:
+    for g in guild.groups:
+        routine = g.routine
+        if routine is None or routine.paused or g.order is not None or g.fight_due or g.empty:
             continue
-        a = aftermath.level_snapshot(u)
-        if (a["combat"], a.get("work", 0), a["magic"]) > (b["combat"], b.get("work", 0), b["magic"]):
-            level_ups.append(aftermath.LevelUp(u, b, a))
-            track = "combat" if a["combat"] > b["combat"] else "work" if a.get("work", 0) > b.get("work", 0) else "magic"
-            note([f"{u.name} reached {track} level {a[track]}!"], "work", guild.group_of(u))
-    return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties,
-                      hungry=hungry, level_ups=level_ups)
+        if any(g is waiting for waiting, _ in pending):
+            events += note(routines.interrupt(g, "something came up"), "guild", g)
+        elif any(u.hunger_level for u in g.members):
+            events += note(routines.interrupt(g, "hungry"), "guild", g)
+        else:
+            events += note(routines.advance(guild, g), "guild", g)
+    return events
 
 
 def _fletcher_rest_pass(guild, group):

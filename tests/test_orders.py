@@ -91,6 +91,23 @@ def test_multi_hop_travel_stops_at_each_waypoint_instead_of_jumping_to_the_end()
         world.ROAD_AMBUSH_CHANCE = orig_chance
 
 
+def test_a_forced_stretch_spends_its_leftover_hours_on_the_next_leg(monkeypatch):
+    random.seed(1)
+    monkeypatch.setattr(world, "ROAD_AMBUSH_CHANCE", 0.0)
+    walking = Group([walker()], node="city")
+    walking.order = orders.travel(walking, "wilds")             # city -> road 4 h, road -> wilds 6 h
+    short = Group([walker()], node="city")
+    short.order = orders.travel(short, "market")                # 1 h, idle for the other 6
+    guild = _guild(walking, short)
+    t0 = guild.clock.seconds
+
+    campaign.advance(guild, dt=7)
+
+    assert guild.clock.seconds - t0 == 7 * 3600
+    assert walking.node == "road" and walking.order.dest == "wilds" and walking.order.remaining == 3
+    assert short.node == "market" and short.order is None
+
+
 def test_travel_to_an_unreachable_node_raises():
     random.seed(1)
     g = Group([walker()], node="city")

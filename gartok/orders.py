@@ -34,7 +34,7 @@ from dataclasses import dataclass
 
 from . import economy, world
 
-AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
+AUTO_KINDS = frozenset({"travel", "work", "rest", "solo", "wait"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "carpenter", "apothecary",
                                "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine",
@@ -173,6 +173,12 @@ def rest(hours):
     as resting (`Guild.pass_time`) -- it heals -- instead of busy. `rest.py`
     says how long a stretch is worth, for the "until full" row."""
     return Order("rest", eta=hours, remaining=hours, hours=hours)
+
+
+def wait(hours):
+    """Order a group to stand where it is for `hours` and look again: a routine's `Wait` block. Nothing
+    happens when it ends (`campaign` only hands the group back to its routine)."""
+    return Order("wait", eta=hours, remaining=hours, hours=hours)
 
 
 def solo(task, who, hours, recipe=None, clock_hours=None):

@@ -99,10 +99,14 @@ over N game days checking the three criteria) once the design is chosen.
 
 # 3. To do
 
-1. **Programmable orders: the spec (author 2026-11-03).** Decided in the brainstorm; the build is not
-   started. What is still open is listed at the end. The acceptance test (the proof of concept above, as a
-   headless run over 24 game days) is `tests/test_routines_poc.py`, a strict xfail until routines exist:
-   its `_program` helper is the sketch of the block vocabulary, and the build removes the mark.
+1. **Programmable orders (author 2026-11-03).** Decided in the brainstorm. Built so far: the
+   chronological slices of a forced `dt` in `campaign._advance`, and the engine in `routines.py` (`Travel`,
+   `Gather`, `Work`, `Rest`, `Wait`, `Take`, `HandOver`, `Trade`, `Repeat`, the conditions, the pause and
+   *Continue*, the save). The proof of concept above runs green as `tests/test_routines_poc.py` (24 game
+   days, A by hand). Still to build: the `Craft` block, a `Trade` spending limit, the Book of routines
+   (slots from reputation, the unlocks), the block editor and its tab with the tutorial card, the
+   *Continue* button, and the `Gather` block skipping `orders.work`'s licence check. What is still open is
+   listed at the end.
 
 ## Spec
 

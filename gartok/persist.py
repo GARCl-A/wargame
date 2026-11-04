@@ -29,7 +29,7 @@ import time
 import uuid
 from dataclasses import fields
 
-from . import captives, missions, wildfire
+from . import captives, missions, routines, wildfire
 from .animals import Animal
 from .clock import Clock
 from .group import NORMAL, Group
@@ -195,6 +195,7 @@ def group_to_dict(g):
         "order": order_to_dict(g.order) if g.order is not None else None,
         "pending": order_to_dict(g.pending) if g.pending is not None else None,
         "due_hunt": order_to_dict(g.due_hunt) if g.due_hunt is not None else None,
+        "routine": routines.dump(g.routine) if g.routine is not None else None,
         "leader": g.leader.uid if g.leader else None,
         "members": [unit_to_dict(u) for u in g.members],
         "wagons": [wagon_to_dict(w) for w in g.wagons],
@@ -225,6 +226,8 @@ def group_from_dict(d):
         group.pending = order_from_dict(d["pending"])
     if d.get("due_hunt"):
         group.due_hunt = order_from_dict(d["due_hunt"])
+    if d.get("routine"):
+        group.routine = routines.load(d["routine"])
     return group
 
 

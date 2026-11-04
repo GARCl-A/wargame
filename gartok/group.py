@@ -71,6 +71,7 @@ class Group:
         self.stance = NORMAL              # travel stance, see vocations.ambush_mult
         self.pending = None               # a forced Order (forced.EVENTS) that came due and awaits its fight
         self.due_hunt = None              # a `hunting` Order up and waiting on its hunt screen, kept for the save
+        self.routine = None               # routines.Routine running under the orders, or None
         self.leader = leader              # Unit; None resolves via ensure_leader below
         self.herd = list(herd or [])      # animals.Animal -- lost with the group
         self.captives = []                # captives.Captive: bound foes, not members (captives.py)

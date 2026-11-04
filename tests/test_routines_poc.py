@@ -1,13 +1,10 @@
-"""The proof of concept of programmable orders (docs/plans/programmable_orders.md).
-
-A strict xfail until routines exist: once the build makes it pass, the test fails and the mark goes.
-`_program` is the one place that speaks the routine vocabulary."""
+"""The proof of concept of programmable orders (docs/plans/programmable_orders.md): A is played by hand
+in the Wilds while B gathers Lumber and C trades it for potatoes, on routines, over 24 game days."""
 
 import random
 
-import pytest
-
 from gartok import campaign, forced, gather
+from gartok import routines as r
 from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
@@ -16,7 +13,7 @@ from tests.helpers import standard_unit
 DAYS = 24
 WINDOW_DAYS = 3
 LUMBER_BATCH = 8
-POTATOES_BOUGHT = 4
+FOOD_DAYS = 3
 POTATOES_HANDED = 3
 
 
@@ -42,22 +39,21 @@ def _stage():
     return guild, a, b, c
 
 
-def _program(b, c):
-    from gartok import routines as r
+def _program(guild, b, c):
     mill = r.group("Gatherers")
-    b.routine = r.Routine([
-        r.repeat_until(r.coins(r.group("Trader")) >= 500, [r.gather(hours=16)]),
-    ])
-    c.routine = r.Routine([
-        r.repeat_while(r.coins(r.own()) < 500, [
-            r.wait_until(r.items(mill, "Lumber") >= LUMBER_BATCH),
-            r.take(mill, "Lumber"),
-            r.travel("farm"),
-            r.trade(sell="Lumber", buy={"Potato": POTATOES_BOUGHT}),
-            r.travel("lumber_yard"),
-            r.hand_over(mill, "Potato", POTATOES_HANDED),
+    r.assign(guild, b, r.Routine([
+        r.Repeat(r.coins(r.group("Trader")) >= 500, [r.Gather(16)], until=True),
+    ]))
+    r.assign(guild, c, r.Routine([
+        r.Repeat(r.coins(r.own()) < 500, [
+            r.Wait(r.items(mill, "Lumber") >= LUMBER_BATCH),
+            r.Take(mill, "Lumber"),
+            r.Travel("farm"),
+            r.Trade(sell=("Lumber",), buy=(("Potato", POTATOES_HANDED),), food_days=FOOD_DAYS),
+            r.Travel("lumber_yard"),
+            r.HandOver(mill, "Potato", POTATOES_HANDED),
         ]),
-    ])
+    ]))
 
 
 def _lumber_made(guild, b, c):
@@ -76,13 +72,12 @@ def _hunt_by_hand(a):
             u.give_to_pack("Potato", 3 - have)
 
 
-@pytest.mark.xfail(strict=True, reason="routines are not built yet (programmable_orders.md)")
 def test_a_hunter_played_by_hand_while_a_gatherer_and_a_trader_run_on_routines(monkeypatch):
     random.seed(7)
     monkeypatch.setattr(forced, "arrival_pause", lambda *args, **kwargs: None)
     monkeypatch.setattr(gather, "ambushed", lambda *args, **kwargs: False)
     guild, a, b, c = _stage()
-    _program(b, c)
+    _program(guild, b, c)
     roster = len(guild.roster)
     steps = [16, 8, 24, None]
     made = sold = 0
