@@ -4,6 +4,7 @@ import random
 
 from gartok import (
     campaign,
+    data,
     economy,
     forced,
     gather,
@@ -301,3 +302,95 @@ def test_a_craft_block_makes_the_recipe_and_stops_when_it_cannot(monkeypatch):
     broke = Group([bare], node="city", name="Bare", leader=bare)
     r.assign(_guild(broke), broke, r.Routine([r.Craft(RECIPE, 4)]))
     assert broke.routine.paused and broke.order is None
+
+
+SPELL = "light_globe"
+SCROLL = "Scroll of Light Globe"
+
+
+def _student(node="tavern", money=300, scroll=True, name="Scholars"):
+    u = standard_unit()
+    u.money = money
+    u.magic_sources = ["nature"]
+    u.give_to_pack("Potato", 1)
+    if scroll:
+        u.give_to_pack(SCROLL)
+    return Group([u], node=node, name=name, leader=u)
+
+
+def test_a_study_block_boards_the_group_for_its_days_and_pays_the_rent(monkeypatch):
+    _quiet(monkeypatch)
+    monkeypatch.setattr(data, "roll", lambda n, d: 10)
+    g = _student()
+    guild = _guild(g)
+    u = g.members[0]
+    r.assign(guild, g, r.Routine([r.Study(SPELL, 3)]))
+    assert g.order.kind == "garrison" and g.order.job == "study" and u.study_target == SPELL
+
+    campaign.advance(guild)
+    assert g.routine is None and g.order is None
+    assert u.money == 300 - 3 * economy.TAVERN_STUDY_COST_PER_DAY
+    assert u.study_progress == {SPELL: 30} and u.count_of("Potato") == 1           # the rooms include the meal
+
+
+def test_study_passes_one_after_another_keep_their_progress_until_the_spell_is_mastered(monkeypatch):
+    _quiet(monkeypatch)
+    monkeypatch.setattr(data, "roll", lambda n, d: 20)
+    g = _student()
+    guild = _guild(g)
+    u = g.members[0]
+    r.assign(guild, g, r.Routine([r.Study(SPELL, 1)] * 8))
+    while g.routine is not None and not g.routine.paused:
+        campaign.advance(guild)
+
+    assert SPELL in u.spells_known and u.study_target is None
+    assert g.routine.paused == "nobody can study that"
+
+
+def test_a_study_block_stops_where_there_are_no_rooms_nothing_to_learn_or_no_coin(monkeypatch):
+    _quiet(monkeypatch)
+    for band, why in ((_student("market"), "there are no rooms to study in here"),
+                      (_student(scroll=False), "nobody can study that"),
+                      (_student(money=10), "no one can pay for the rooms")):
+        guild = _guild(band)
+        r.assign(guild, band, r.Routine([r.Study(SPELL, 2)]))
+        assert band.routine.paused == why and band.order is None
+
+
+def test_the_book_refuses_a_study_of_what_does_not_exist_or_for_no_days():
+    from gartok import routine_book
+    guild = _guild(_student())
+    for block in (r.Study("not_a_spell", 1), r.Study(SPELL, 0)):
+        try:
+            routine_book.check(guild, (block,))
+            assert False, "expected a ValueError"
+        except ValueError:
+            pass
+    routine_book.check(guild, (r.Study(SPELL, 2), r.Study("Dwarvish", 1)))
+
+
+def test_the_group_studies_earns_and_comes_back_to_study(monkeypatch):
+    _quiet(monkeypatch)
+    monkeypatch.setattr(data, "roll", lambda n, d: 20)
+    monkeypatch.setattr(economy, "LUMBER_WAGE", 10)       # the loop is what is tested, not the day labour's balance
+    g = _student(money=60)
+    guild = _guild(g)
+    u = g.members[0]
+    r.assign(guild, g, r.Routine([r.Repeat(r.coins(r.own()) >= 0, [
+        r.Repeat(r.coins(r.own()) >= 30, [r.Study(SPELL, 1)]),
+        r.Trade(food_days=6),
+        r.Travel("lumber_yard"),
+        r.Repeat(r.coins(r.own()) < 60, [r.Work(8)]),
+        r.Travel("tavern"),
+    ])]))
+    seen_at = set()
+    for _ in range(4000):
+        if g.routine is None or g.routine.paused:
+            break
+        campaign.advance(guild)
+        seen_at.add(g.node)
+        assert u.hunger_level == 0
+
+    assert {"tavern", "lumber_yard"} <= seen_at                      # it went to earn and came back
+    assert SPELL in u.spells_known
+    assert g.routine.paused == "nobody can study that"

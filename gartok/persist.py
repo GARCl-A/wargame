@@ -112,7 +112,7 @@ def unit_to_dict(u):
         "magic_sources": list(u.magic_sources),  # schools of nature / blood / faith the unit is initiated in (see magic.py)
         "spells_known": list(u.spells_known),
         "study_target": u.study_target,          # spell id or language name being studied at the taverna, or None
-        "study_progress": u.study_progress,
+        "study_progress": dict(u.study_progress),
         "magic_blood": u.magic_blood,
         "blood_tested": u.blood_tested,
         "blood_test_days": u.blood_test_days,

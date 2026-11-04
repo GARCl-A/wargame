@@ -280,7 +280,7 @@ class GuildSheet:
             spell = magic.SPELLS.get(unit.study_target)
             name = spell.name if spell else unit.study_target
             need = magic.points_to_learn(spell.level if spell else 0)
-            cur = min(unit.study_progress, need)
+            cur = min(unit.study_progress.get(unit.study_target, 0), need)
             tracks.append({"label": "Academic study", "value": f"{name}  ({cur}/{need} pts)",
                            "frac": cur / need if need else 0,
                            "text": "Studying at the taverna: daily progress toward mastery.",

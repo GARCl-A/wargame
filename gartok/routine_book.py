@@ -8,7 +8,7 @@ group is given a copy, which becomes its `Routine`."""
 
 from dataclasses import dataclass
 
-from . import items, routines, world
+from . import data, items, magic, routines, world
 
 NAME_MAX = 32
 NOTE_MAX = 120
@@ -89,6 +89,11 @@ def _check(guild, block):
             raise ValueError("hours are more than zero")
         if isinstance(block, routines.Craft) and block.recipe not in items.CRAFTING_RECIPES:
             raise ValueError(f"unknown recipe: {block.recipe}")
+    elif isinstance(block, routines.Study):
+        if block.target not in magic.SPELLS and block.target not in data.LANGUAGES:
+            raise ValueError(f"unknown thing to study: {block.target}")
+        if not block.days > 0:
+            raise ValueError("days are more than zero")
     elif isinstance(block, routines.Wait):
         _cond(block.cond)
     elif isinstance(block, (routines.Take, routines.HandOver)):

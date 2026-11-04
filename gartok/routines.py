@@ -14,7 +14,7 @@ Goods move between the packs of the members of two groups at the same node, neve
 import operator
 from dataclasses import dataclass, field, fields, is_dataclass
 
-from . import economy, gather, orders, solo, vocations
+from . import economy, gather, magic, orders, solo, vocations, world
 
 MAX_INSTANT = 16        # blocks that spend no time, one after another, before the routine is paused
 WAIT_HOURS = 1          # how often a `Wait` looks at its condition again
@@ -157,6 +157,14 @@ class Craft:
 
 
 @dataclass(frozen=True)
+class Study:
+    """Study `target` (a spell id or a language name) in the Tavern's rooms for `days`: whoever in the group
+    can learn it takes it up and pays the rent, a meal included."""
+    target: str
+    days: float = 1
+
+
+@dataclass(frozen=True)
 class Rest:
     hours: float = 8
 
@@ -244,7 +252,7 @@ class Routine:
             self.path.pop()                            # the Repeat is looked at again
 
 
-_KINDS = {c.__name__: c for c in (Ref, Cond, Travel, Gather, Work, Craft, Rest, Wait, Take, HandOver, Trade, Repeat, Routine)}
+_KINDS = {c.__name__: c for c in (Ref, Cond, Travel, Gather, Work, Craft, Study, Rest, Wait, Take, HandOver, Trade, Repeat, Routine)}
 
 
 def dump(obj):
@@ -336,6 +344,8 @@ def _run(guild, group, routine, block):
         return order
     if isinstance(block, Craft):
         return _craft(guild, group, routine, block)
+    if isinstance(block, Study):
+        return _study(group, routine, block)
     if isinstance(block, Rest):
         routine.inflight = True
         return orders.rest(block.hours)
@@ -357,6 +367,22 @@ def _craft(guild, group, routine, block):
             return group.order
         reason = lines[0].rstrip(".")
     return reason
+
+
+def _study(group, routine, block):
+    if world.node(group.node).garrison_job != "study":
+        return "there are no rooms to study in here"
+    holders = [*group.members, *group.wagons, *group.herd]
+    students = [u for u in group.members if magic.can_study(u, block.target, group)]
+    if not students:
+        return "nobody can study that"
+    for u in students:
+        if u.study_target != block.target:      # a student at it already keeps the progress made
+            magic.begin_study(u, block.target, holders)
+    if not magic.rent_covered(group):
+        return "no one can pay for the rooms"
+    routine.inflight = True
+    return orders.garrison("study", days=block.days)
 
 
 def _other_here(guild, group, ref):

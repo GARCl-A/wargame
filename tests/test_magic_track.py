@@ -130,7 +130,7 @@ def test_finishing_a_spell_study_banks_magic_xp():
     u.add_magic_source("nature")
     u.give_to_pack("Scroll of Light Globe")
     magic.begin_study(u, "light_globe")
-    u.study_progress = magic.points_to_learn(0)
+    u.study_progress = {"light_globe": magic.points_to_learn(0)}
     magic.progress_study(u)
     assert "light_globe" in u.spells_known
     assert u.magic_xp == magic.study_xp(magic.SPELLS["light_globe"])

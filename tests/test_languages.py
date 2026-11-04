@@ -94,7 +94,7 @@ def test_studying_a_language_needs_no_magic_source():
     finally:
         data.roll = saved
 
-    assert u.study_progress == 10 + u.mod_intelligence
+    assert u.study_progress == {"Elvish": 10 + u.mod_intelligence}
     assert u.money == 1000 - 15                    # economy.TAVERN_STUDY_COST_PER_DAY
     assert "Elvish" not in u.languages             # not enough points yet
 
@@ -103,7 +103,7 @@ def test_studying_masters_the_language_once_enough_points_are_banked():
     random.seed(1)
     u = _student()
     u.money = 1000
-    u.study_progress = magic.points_to_learn(0) - 1
+    u.study_progress = {"Elvish": magic.points_to_learn(0) - 1}
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -117,7 +117,7 @@ def test_studying_masters_the_language_once_enough_points_are_banked():
 
     assert "Elvish" in u.languages
     assert u.study_target is None
-    assert u.study_progress == 0
+    assert u.study_progress == {}
 
 
 def test_studying_a_language_without_the_dictionary_makes_no_progress():
@@ -131,7 +131,7 @@ def test_studying_a_language_without_the_dictionary_makes_no_progress():
 
     guild.pass_time(24)
 
-    assert u.study_progress == 0
+    assert u.study_progress == {}
     assert u.money == 1000 - 15         # the room is still rented either way
 
 
@@ -143,7 +143,7 @@ def test_progress_study_ignores_a_target_that_is_neither_spell_nor_language():
     event = magic.progress_study(u)
 
     assert event is None
-    assert u.study_progress == 0
+    assert u.study_progress == {}
     assert u.money == 1000 - 15         # the room is still rented either way
 
 
@@ -165,7 +165,7 @@ def test_studying_a_language_with_shared_party_dictionary():
 
     guild.pass_time(24)
 
-    assert student.study_progress > 0
+    assert any(student.study_progress.values())
     assert student.money == 1000 - 15
 
 
@@ -190,7 +190,7 @@ def test_beginning_a_study_pulls_one_dictionary_into_the_students_pack():
     donor = magic.begin_study(student, "Elvish", [student, companion])
 
     assert donor is companion
-    assert student.study_target == "Elvish" and student.study_progress == 0
+    assert student.study_target == "Elvish" and not student.study_progress
     assert student.count_of("Dictionary of Elvish") == 1
     assert companion.count_of("Dictionary of Elvish") == 1            # peeled off the stack
     assert student.locked_of("Dictionary of Elvish") == 1
@@ -222,7 +222,7 @@ def test_ending_a_study_releases_the_lock_on_the_study_item():
     companion.give_to_pack("Dictionary of Elvish")
     magic.begin_study(student, "Elvish", [student, companion])
     magic.end_study(student)
-    assert student.study_target is None and student.study_progress == 0
+    assert student.study_target is None and not student.study_progress
     assert student.locked_of("Dictionary of Elvish") == 0
     distribute_load([student, companion])                       # free to move again
     assert student.count_of("Dictionary of Elvish") + companion.count_of("Dictionary of Elvish") == 1
@@ -236,7 +236,7 @@ def test_mastering_a_language_releases_the_lock_too():
     student.money = 1000
     companion.give_to_pack("Dictionary of Elvish")
     magic.begin_study(student, "Elvish", [student, companion])
-    student.study_progress = magic.points_to_learn(0)
+    student.study_progress = {"Elvish": magic.points_to_learn(0)}
     magic.progress_study(student)
     assert "Elvish" in student.languages
     assert student.locked_of("Dictionary of Elvish") == 0
@@ -255,4 +255,4 @@ def test_linguist_talent_boosts_language_study_progress(monkeypatch):
     monkeypatch.setattr(data, "roll", lambda n, d: 10)
 
     magic.progress_study(student)
-    assert student.study_progress == max(0, 10 + student.mod_intelligence + 2)
+    assert student.study_progress == {"Orcish": max(0, 10 + student.mod_intelligence + 2)}

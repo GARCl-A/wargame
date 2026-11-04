@@ -16,9 +16,11 @@ from typing import ClassVar
 
 from .. import (
     art_files,
+    data,
     factions,
     item_icon,
     items,
+    magic,
     missions,
     objectives,
     routine_book,
@@ -593,6 +595,8 @@ class GuildSession(Session):
         return {"nodes": [[n.id, n.name] for n in world.known(self.guild)],
                 "items": [[kind, sorted(names)] for kind, names in sorted(by_type.items())],
                 "recipes": sorted(items.CRAFTING_RECIPES),
+                "studies": [*((sp.id, f"{sp.name} (spell)") for sp in magic.SPELLS.values()),
+                            *((lang, f"{lang} (language)") for lang in data.LANGUAGES)],
                 "groups": [g.display_name for g in self.guild.groups if not g.empty],
                 "doing": ["gather", "work", "craft", "rest", "travel"]}
 

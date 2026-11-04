@@ -350,12 +350,13 @@ def _advance(guild, dt=None, busy=()):
     without waiting for the next daily meal). Resting is not this: it is a
     group's `rest` order, so the other groups are not frozen by it.
 
-    A `"garrison"` order (`orders.py`) is excluded from `active` on purpose --
+    A `"garrison"` order (`orders.py`) with no `days` is excluded from `active` on purpose --
     it has no `eta`/`remaining` countdown to chase (it never completes; its
     payoff runs through `Guild._garrison_upkeep` on every day crossed
     instead), so folding it in here would either wreck the soonest-completion
     jump (its `remaining` is meaningless) or, on a forced stop, decrement it
-    toward a spurious "completion" no kind branch below handles.
+    toward a spurious "completion" no kind branch below handles. One issued with
+    `days` is counted down like any order and just goes idle when they are up.
 
     A forced `dt` is walked in slices, each ending where the soonest order completes: an order that
     resolves hands its group the next one (the next leg of a route) at that very instant, so the hours
@@ -428,8 +429,8 @@ MAX_INSTANT_SLICES = 64     # orders that resolve in no time, one after another,
 
 
 def _in_flight(guild):
-    """The groups whose order counts down on the clock (a garrison never completes)."""
-    return [g for g in guild.groups if g.busy and g.order.kind != "garrison"]
+    """The groups whose order counts down on the clock (a garrison with no `days` never completes)."""
+    return [g for g in guild.groups if g.busy and orders.counts_down(g.order)]
 
 
 def _settle(guild, active, step, pending, note):
@@ -439,7 +440,7 @@ def _settle(guild, active, step, pending, note):
 
     events = []
     for g in active:
-        if g.empty:                            # starved out during this tick's upkeep
+        if g.empty or g.order is None:         # starved out, or a garrison let go, during this tick's upkeep
             continue
         g.order.remaining -= step
         if g.order.remaining > 1e-9:

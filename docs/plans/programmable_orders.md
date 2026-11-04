@@ -2,26 +2,17 @@
 
 The author's next arc (decided 2026-11-03): automation of the world around the expedition. The backlog
 holds nothing of it any more: everything open on this subject is here, and the author works through this
-file until it is done. Three parts, in this order:
+file until it is done. Two parts, in this order:
 
-1. **Before programmable orders** — what is built first, because the orders stand on it.
-2. **Current content** — everything the backlog said on the subject, moved here unchanged in meaning.
-3. **To do** — the arc itself.
+1. **Current content** — everything the backlog said on the subject, moved here unchanged in meaning.
+2. **To do** — the arc itself.
 
 When an item is done, delete it here (the record is the git log) and, if it changed a design premise,
 record it in `AGENTS.md` or the doc that owns it.
 
 ---
 
-# 1. Before programmable orders
-
-Nothing is open here any more. Left for later, they come up with the work (author 2026-11-03): the tests the pygame campaign's cut lost
-(everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled; backlog,
-*Medium*), which cover the interruption and the resume the loop depends on.
-
----
-
-# 2. Current content
+# 1. Current content
 
 Everything the backlog held on the subject.
 
@@ -37,7 +28,10 @@ attracts, it turns micro into macro.
 
 Johann's session (2026-10-31): automation (secondary groups on routines) is the author's answer to the macro
 load and was well received. His view on groups: up to 8 units is fine, more groups slow it unless there is
-automation. Whether switching between groups is pleasant was not clear in the record: ask again.
+automation.
+
+**Question for the next playtest (author 2026-11-04):** is switching between groups pleasant? The record
+did not say. The build goes to the other testers again only after a few more features.
 
 ## The entries that want a composed order
 
@@ -52,14 +46,8 @@ Several entries want a composed or automated order and today each names its own 
   the supply run and the front itself (author 2026-10-30): the player enlists as reinforcement, is paid to
   arrive and to fight in the skirmish already under way, and the job is to win it. That is not a walked
   order with an ambush: the battle is the job, so it needs its own order kind.
-- **The production chain's gather-sell-buy loop** (backlog, *Large -> Production chain between groups*):
-  the carpenter buys wood from the lumberjack and iron from the smith, the smith buys ore and coal from the
-  mine; endless day labour at the Yard should flood wood prices. Not part of this arc: the proof of concept
-  runs at fixed prices.
 - **The stints in `stints.py`** (hours a band spends on a screen are an order, run through
   `MapSession.spend`).
-- **The campaign AI** ([campaign_ai_roadmap.md](campaign_ai_roadmap.md)): its planner enumerates and prices
-  offers; the spec has to know the model of an order so the two do not grow apart.
 
 ## Decided with the author (2026-11-01)
 
@@ -97,9 +85,9 @@ over N game days checking the three criteria) once the design is chosen.
 
 ---
 
-# 3. To do
+# 2. To do
 
-1. **Programmable orders (author 2026-11-03).** Decided in the brainstorm. Built so far: the
+**Programmable orders (author 2026-11-03).** Decided in the brainstorm. Built so far: the
    chronological slices of a forced `dt` in `campaign._advance`, and the engine in `routines.py` (`Travel`,
    `Gather`, `Work`, `Craft`, `Rest`, `Wait`, `Take`, `HandOver`, `Trade` (with its `max_spend` cap), `Repeat`,
    the conditions, the pause and *Continue*, the save; `Gather` skips the economic licence; the map's
@@ -109,8 +97,9 @@ over N game days checking the three criteria) once the design is chosen.
    tab writes, renames and tears out routines (`routine_book.Page`, `check`, saved with the guild) with its
    tutorial card, and the group's side is in: the BANDS tab's Routine view equips a copy of a page, adjusts it
    with the same editor, shows where the band is and why it stopped (*Continue*), takes it off and saves it
-   back to the Book. The first build has every block and place open; the unlocks are in the backlog. Still to decide: the
-   validation marks (below).
+   back to the Book. The first build has every block and place open; the unlocks are in the backlog. No validation marks
+   (author 2026-11-04): a routine that cannot run stops at run time with its reason and *Continue*; whether marks
+   in the editor are needed is for the playtests to show.
 
 **The editor (author 2026-11-03; approved mock in `docs/web_ui/references/routines_mockup/`).** The
 Book of routines is a tab of the guild's sheet, where routines are written. A group's own screen equips one
@@ -118,7 +107,7 @@ and adjusts it. Each block is a sentence with inline fields. Blocks are added wi
 palette-and-drag variant lost: the "+" gives the stack more room) and moved by dragging a line by its grip.
 An equipped routine is a **copy** kept on that group, never shared with the Book or with other groups: a
 tweak (which group to take from, how much food) is "a little detail" that stays there; a "Save back to Book"
-button, new work, sends it back when wanted. Still to decide: the validation marks (item 6 of the brainstorm).
+button, new work, sends it back when wanted.
 
 ## Spec
 
@@ -163,28 +152,28 @@ on the interrupted block; the player plays it by hand and presses *Continue*. A 
 coins, no stock, blocked route) does the same and warns. Silent failures go to the guild log. A `locked`
 group (pending forced fight) is never advanced by its routine.
 
-**The Book of routines (progression, author 2026-11-03).** The player starts with zero automation; the
-frame is Final Fantasy XII's gambits. Two separate gates:
+**The Book of routines (progression).** The player starts with zero automation; the frame is Final Fantasy
+XII's gambits. **Automation slots come from reputation**, the same shape as the group slots (`Guild.fame`,
+RULES.md *Fame and group slots*): the more the guild has done, the more groups it can leave on a routine at
+once. A routine runs on as many groups as there are free automation slots. The first build has every block
+and place open; the unlocks are in the backlog (*Routine unlocks*).
 
-- **Automation slots come from reputation**, the same shape as the group slots (`Guild.fame`, RULES.md
-  *Fame and group slots*): the more the guild has done, the more groups it can leave on a routine at once.
-  A routine runs on as many groups as there are free automation slots.
-- **Blocks are mission rewards.** What is unlocked is the block itself: every action (`work`, `gather`,
-  `craft`, `rest`, `travel`, `trade`, `hand_over`, `take`) and every condition (items, coins, HP%...) is
-  a right the player earns. The routines' theme is its own, apart from the economic gather licence
-  (`Guild.has_licence`), which they never read.
-- **Places are gated the same way:** a node (the Lumber Yard...) only accepts being put in a routine after
-  its mission.
-- **First build: everything unlocked.** The gates come later, one by one, as an arc of missions, so the
-  routines can be tested whole first.
+The editor is block programming, a linear stack with nesting for `repeat`.
 
-The player builds with what has been unlocked. The editor is block programming, a linear stack with
-nesting for `repeat`.
+**Blocks for screens (author 2026-11-04).** Beyond `trade` and `craft`, only these screens get a block;
+the rest (bank, perform, medic, stables, claim scouting and fences) stay out until the author asks. Study
+is in (the Tavern's rooms, `Study`, on a garrison that ends after its days); these are left:
 
-**Out of scope for the first build.** The campaign AI learning routines (it keeps issuing loose orders,
-reading the same block vocabulary so the planner and the spec do not grow apart); the production chain's
-dynamic prices (the proof of concept runs at fixed prices); interactive screens (`market`, `forge`...) as
-blocks: only silent orders plus `trade` and `craft`.
+- **Mend a wagon** (`repair` stint): a wagon of the group's hitch or of a garage at the node; the Lumber is
+  taken up front by the desk (`repair_short` / `repair_lumber` on the guild), a short stock stops the routine.
+- **Build the oven** (`claim_oven`) and **light the campfire** (`claim_fire`): the Wilds Claim, bricks and
+  fuel carried by the band (`ClaimDesk`), the same stop when it is short.
+- **Store and fetch items** at the City house stash, the garage or the claim's stores (`HouseVault`): like
+  `take` / `hand_over`, with the stash as the other end.
+
+A block emits the same order the screen's desk issues (`stints.order`), so the cost is paid the way the
+screen pays it and the desk keeps the one place that knows it. Still to decide: how the block names a wagon
+(by name, "the first damaged one"), and which stash a node offers.
 
 The Book's tab needs its tutorial card (`tutorial_key()` on its session and a `tutorial.<id>` block in
 `locales/en.json`, per `AGENTS.md`): part of the build, not an open question.

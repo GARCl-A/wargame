@@ -219,9 +219,15 @@ the rest.
 ## Large
 
 - **Routine unlocks (author 2026-11-04).** Today every block and every place is open to a routine
-  ([programmable_orders.md](programmable_orders.md), *The Book of routines*). Left: which missions unlock which
-  blocks (actions and conditions) and which places (a node only accepts a routine after its mission), and the
-  automation seats' own constants (`routine_book.BASE_SLOTS`, `FAME_PER_SLOT`).
+  ([programmable_orders.md](programmable_orders.md), *The Book of routines*). Left: blocks are mission
+  rewards (every action `work`, `gather`, `craft`, `rest`, `travel`, `trade`, `hand_over`, `take` and every
+  condition, items, coins, HP%..., is a right the player earns); a node (the Lumber Yard...) only accepts a
+  routine after its mission; one gate at a time, as an arc of missions. The routines' theme is its own, apart
+  from the economic gather licence (`Guild.has_licence`), which they never read. Also the automation seats'
+  own constants (`routine_book.BASE_SLOTS`, `FAME_PER_SLOT`).
+- **Campaign AI reading routines (author 2026-11-04).** It keeps issuing loose orders; later it reads the
+  same block vocabulary of `routines.py` so the planner ([campaign_ai_roadmap.md](campaign_ai_roadmap.md))
+  and the spec do not grow apart. Not part of the programmable orders arc.
 - **Weapon actions: tune the favoured cases after a playtest.** Out of its case an
   action is one strike; in it the strike lands twice over plus a small edge (RULES.md *Weapon actions*,
   `favoured` on each action, the premise held by `test_ai_actions`). Left: whether each case comes up

@@ -482,7 +482,7 @@ def test_gnome_magic_excitement_doubles_progress_die_on_first_study_day():
     gnome.money = 100
     gnome.give_to_pack("Scroll of Magic Missile")
     gnome.study_target = "magic_missile"
-    gnome.study_progress = 0
+    gnome.study_progress = {}
 
     rolls = []
     def fake_roll(n, sides):
@@ -494,7 +494,7 @@ def test_gnome_magic_excitement_doubles_progress_die_on_first_study_day():
 
     assert len(rolls) == 1
     assert rolls[0] == (2, 20)
-    assert gnome.study_progress > 0
+    assert any(gnome.study_progress.values())
 
     with patch("gartok.magic.data.roll", side_effect=fake_roll):
         magic.progress_study(gnome)

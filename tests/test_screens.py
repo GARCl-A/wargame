@@ -178,7 +178,7 @@ def test_a_member_studying_shows_the_study_track():
     from gartok.guild_sheet import GuildSheet
     u = Unit("player")
     u.study_target = "magic_missile"
-    u.study_progress = 30
+    u.study_progress = {"magic_missile": 30}
     tracks = GuildSheet._tracks(u)
     assert tracks[-1]["label"] == "Academic study" and "Magic Missile" in tracks[-1]["value"]
 

@@ -16,9 +16,9 @@ the next group's completion.
 
 `"garrison"` is a fourth kind the player DOES issue, but it fits neither
 bucket above: nothing resolves it (no `eta`/`remaining` countdown -- it just
-sits on the group until cancelled or interrupted), and no screen opens for it
-either. `campaign.advance` excludes it from the groups it chases toward
-completion for exactly that reason (see its own docstring); its daily payoff
+sits on the group until cancelled or interrupted, unless it was issued with a
+number of `days`, which a routine does), and no screen opens for it either.
+`campaign.advance` excludes it from the groups it chases toward completion for exactly that reason (see its own docstring); its daily payoff
 runs instead through `Guild._garrison_upkeep`, alongside food, on every day
 crossed. `Group.busy` still reports True for it (a garrisoned group doesn't
 need fresh orders, same as any other order in flight) but `Group.locked`
@@ -201,14 +201,22 @@ def interactive(kind, hours=APPROACH_HOURS):
     return Order(kind, eta=hours, remaining=hours)
 
 
-def garrison(job):
+def garrison(job, days=None):
     """Park a group where it stands, working `job` indefinitely -- see the
     module docstring for why this is neither an `AUTO_KINDS` nor an
     `INTERACTIVE_KINDS` member. Ended only by the player cancelling it (any
     fresh order) or an event forcing the issue (an "eviction" raid);
     `Guild._garrison_upkeep` reads `job` once a day to bank output, if the
-    group's node actually offers it (`world.Node.garrison_job`)."""
-    return Order("garrison", job=job)
+    group's node actually offers it (`world.Node.garrison_job`). With `days` it
+    ends by itself after that many days, counted on the clock like any order:
+    a routine's block waits on it."""
+    hours = days * 24 if days else 0.0
+    return Order("garrison", eta=hours, remaining=hours, job=job)
+
+
+def counts_down(order):
+    """True for an order the clock counts down to its end: every kind but a garrison with no end."""
+    return order.kind != "garrison" or order.eta > 0
 
 
 def is_resting(order):

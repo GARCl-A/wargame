@@ -11,7 +11,7 @@ import random
 from gartok import campaign, orders
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Unit, world
+from tests.helpers import Unit, standard_unit, world
 
 
 def _job_node(node_id="market", job="hold"):
@@ -152,3 +152,60 @@ def test_a_forced_maintenance_stop_does_not_disturb_a_garrison_order():
         assert g.order.kind == "garrison"
     finally:
         node.garrison_job = orig
+
+
+# --------------------------------------------------------------------------- #
+# a garrison with days: counted on the clock, a routine's block waits on it    #
+# --------------------------------------------------------------------------- #
+
+def _bounded(days, node="market"):
+    g = Group([standard_unit()], node=node)
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("hold", days=days)
+    return guild, g
+
+
+def test_a_garrison_with_days_ends_by_itself_and_the_clock_runs_to_it():
+    guild, g = _bounded(3)
+    assert guild.can_auto_advance
+    start = guild.clock.seconds
+
+    campaign.advance(guild)
+    assert g.order is None
+    assert guild.clock.seconds - start == 3 * 24 * 3600
+
+
+def test_a_garrison_without_days_is_still_never_counted():
+    g = Group([standard_unit()], node="market")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("hold")
+    assert not orders.counts_down(g.order) and not guild.can_auto_advance
+
+
+def test_a_garrison_with_days_counts_down_in_a_forced_stop_beside_other_orders():
+    guild, g = _bounded(2)
+    walker = Group([standard_unit()], node="city")
+    guild.groups.append(walker)
+    walker.order = orders.travel(walker, "market")
+
+    campaign.advance(guild, dt=24)
+    assert g.order is not None and 0 < g.order.remaining < g.order.eta
+    campaign.advance(guild, dt=24)
+    assert g.order is None
+
+
+def test_rooms_released_in_the_tick_leave_the_bounded_garrison_idle_without_a_crash():
+    g = Group([standard_unit()], node="tavern")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("study", days=3)           # nobody has a target: the upkeep lets the rooms go
+
+    result = campaign.advance(guild)
+    assert g.order is None
+    assert any("rooms released" in e for e in result.events)
+
+
+def test_the_days_of_a_garrison_survive_a_save():
+    from gartok import persist
+    order = orders.garrison("study", days=2)
+    back = persist.order_from_dict(persist.order_to_dict(order))
+    assert back == order and orders.counts_down(back)

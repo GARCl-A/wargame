@@ -75,7 +75,7 @@ def test_studying_goes_on_with_the_dictionary_left_in_the_cart():
     group.node = "tavern"
     group.order = orders.garrison("study")
     guild.pass_time(24)
-    assert u.study_progress > 0
+    assert any(u.study_progress.values())
 
 
 def test_cart_coins_pay_for_medic_treatment():
@@ -114,7 +114,7 @@ def test_cart_coins_pay_for_daily_study_rent():
     u.money = 0
     assert u in magic.rent_covered(group)
     msg = magic.progress_study(u, group=group)
-    assert u.study_progress > 0
+    assert any(u.study_progress.values())
     assert cart.money == 30 - economy.TAVERN_STUDY_COST_PER_DAY
 
 

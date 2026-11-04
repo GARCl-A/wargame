@@ -84,6 +84,17 @@ def _has_study_item(unit, item_name, group=None):
     return unit.has_item(item_name) or (
         group is not None and any(m.has_item(item_name) for m in (*group.members, *group.wagons, *group.herd)))
 
+def can_study(unit, target_id, group=None):
+    """True if `unit` could study `target_id` (a spell id or a language name) now: it is not yet known
+    and its Scroll / Dictionary is carried by the unit or, with `group`, by anyone in it."""
+    spell = SPELLS.get(target_id)
+    if spell is not None:
+        learnable = can_study_spell(unit, spell)
+    else:
+        learnable = target_id in data.LANGUAGES and target_id not in unit.languages
+    return learnable and _has_study_item(unit, study_item_name(target_id), group=group)
+
+
 def study_item_name(target_id):
     """The pack item a study target is read from: a scroll for a spell id, a
     dictionary for a language."""
@@ -95,9 +106,11 @@ def begin_study(unit, target_id, mates=()):
     """Set `unit` studying `target_id`. The study item is pulled into the student's
     own pack -- one copy peeled off a mate's stack if they don't hold it -- and
     locked there so redistributing the load doesn't carry it off. Returns the
-    mate it came from, or None."""
+    mate it came from, or None. The points made on any target stay with it: going
+    back to one picks up where it was left."""
+    if unit.study_target and unit.study_target != target_id:
+        end_study(unit)
     unit.study_target = target_id
-    unit.study_progress = 0
     name = study_item_name(target_id)
     donor = None
     if not unit.has_item(name):
@@ -112,7 +125,7 @@ def begin_study(unit, target_id, mates=()):
 
 
 def end_study(unit):
-    """Stop `unit` studying: clear the target and progress, and release the lock
+    """Stop `unit` studying: clear the target (its points are kept) and release the lock
     `begin_study` put on the study item."""
     if unit.study_target:
         name = study_item_name(unit.study_target)
@@ -121,7 +134,6 @@ def end_study(unit):
         else:
             unit.locked_items.pop(name, None)
     unit.study_target = None
-    unit.study_progress = 0
 
 
 def progress_study(unit, group=None):
@@ -177,9 +189,11 @@ def _progress_spell(unit, spell, group=None):
         return None
     bonus = 2 if "Kobold" in unit.race.get("races", (unit.race["name"],)) and "blood" in spell.sources else 0
     dice_qty = (2 if "gnome_magic_excitement" in unit.talents["racial"]
-                and unit.study_progress == 0 else 1)
-    unit.study_progress += max(0, data.roll(dice_qty, 20) + unit.mod_intelligence + bonus)
-    if unit.study_progress >= points_to_learn(spell.level):
+                and spell.id not in unit.study_progress else 1)
+    points = unit.study_progress.get(spell.id, 0) + max(0, data.roll(dice_qty, 20) + unit.mod_intelligence + bonus)
+    unit.study_progress[spell.id] = points
+    if points >= points_to_learn(spell.level):
+        unit.study_progress.pop(spell.id)
         unit.spells_known.append(spell.id)
         end_study(unit)
         unit.magic_xp += study_xp(spell)
@@ -191,8 +205,10 @@ def _progress_language(unit, language, group=None):
     if not _has_study_item(unit, f"Dictionary of {language}", group=group):
         return None
     bonus = unit.talent_bonus("language_study")
-    unit.study_progress += max(0, data.roll(1, 20) + unit.mod_intelligence + bonus)
-    if unit.study_progress >= points_to_learn(0):     # same threshold as a level-0 spell
+    points = unit.study_progress.get(language, 0) + max(0, data.roll(1, 20) + unit.mod_intelligence + bonus)
+    unit.study_progress[language] = points
+    if points >= points_to_learn(0):     # same threshold as a level-0 spell
+        unit.study_progress.pop(language)
         unit.languages.append(language)
         unit._sync_dictionary_recipes()
         end_study(unit)

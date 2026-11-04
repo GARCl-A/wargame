@@ -254,7 +254,7 @@ def test_studying_accumulates_progress_toward_the_spell():
     finally:
         data.roll = saved
 
-    assert u.study_progress == 10 + u.mod_intelligence
+    assert u.study_progress == {"light_globe": 10 + u.mod_intelligence}
     assert u.money == 1000 - 15                    # economy.TAVERN_STUDY_COST_PER_DAY
     assert "light_globe" not in u.spells_known     # not enough points yet
 
@@ -263,7 +263,7 @@ def test_studying_masters_the_spell_once_enough_points_are_banked():
     random.seed(1)
     u = _student()
     u.money = 1000
-    u.study_progress = magic.points_to_learn(magic.SPELLS["light_globe"].level) - 1
+    u.study_progress = {"light_globe": magic.points_to_learn(magic.SPELLS["light_globe"].level) - 1}
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -277,7 +277,7 @@ def test_studying_masters_the_spell_once_enough_points_are_banked():
 
     assert "light_globe" in u.spells_known
     assert u.study_target is None
-    assert u.study_progress == 0
+    assert u.study_progress == {}
 
 
 def test_studying_without_gold_makes_no_progress():
@@ -290,7 +290,7 @@ def test_studying_without_gold_makes_no_progress():
 
     guild.pass_time(24)
 
-    assert u.study_progress == 0
+    assert u.study_progress == {}
     assert u.money == 0
 
 
@@ -305,7 +305,7 @@ def test_studying_without_the_scroll_makes_no_progress():
 
     guild.pass_time(24)
 
-    assert u.study_progress == 0
+    assert u.study_progress == {}
     assert u.money == 1000 - 15         # the room is still rented either way
 
 
@@ -324,7 +324,7 @@ def test_magic_state_survives_a_save_round_trip():
     u.magic_sources = ["nature"]
     u.spells_known = ["light_globe", "sleep"]
     u.study_target = "magic_missile"
-    u.study_progress = 42
+    u.study_progress = {"magic_missile": 42}
     guild = Guild([u])
     try:
         persist.save_game(slot, guild)
@@ -333,7 +333,7 @@ def test_magic_state_survives_a_save_round_trip():
         assert back_u.magic_sources == ["nature"]
         assert back_u.spells_known == ["light_globe", "sleep"]
         assert back_u.study_target == "magic_missile"
-        assert back_u.study_progress == 42
+        assert back_u.study_progress == {"magic_missile": 42}
     finally:
         persist.delete_world(slot)
 
@@ -433,3 +433,36 @@ def test_every_school_round_trips_through_a_save():
     u.magic_sources = ["blood", "faith"]
     back = Unit.from_save(persist.unit_to_dict(u))
     assert back.magic_sources == ["blood", "faith"]
+
+
+def test_points_made_on_a_spell_wait_for_the_student_who_switches_and_comes_back():
+    random.seed(1)
+    u = _student()
+    u.give_to_pack("Dictionary of Elvish")
+    u.money = 1000
+    saved, data.roll = data.roll, lambda n, faces: 10
+    try:
+        magic.progress_study(u)
+        magic.begin_study(u, "Elvish")
+        assert u.study_progress == {"light_globe": 10 + u.mod_intelligence}
+        magic.progress_study(u)
+        magic.end_study(u)
+        magic.begin_study(u, "light_globe")
+        magic.progress_study(u)
+    finally:
+        data.roll = saved
+
+    assert u.study_progress == {"light_globe": 2 * (10 + u.mod_intelligence), "Elvish": 10 + u.mod_intelligence}
+    assert u.locked_of("Dictionary of Elvish") == 0              # switching released the old item's lock
+    assert u.locked_of("Scroll of Light Globe") == 1
+
+
+def test_a_number_for_the_study_progress_is_read_as_the_points_on_the_target():
+    from gartok.unit import Unit as U
+    u = Unit("player")
+    u.study_target = "light_globe"
+    d = persist.unit_to_dict(u)
+    d["study_progress"] = 42
+    assert U.from_save(d).study_progress == {"light_globe": 42}
+    d["study_target"] = None
+    assert U.from_save(d).study_progress == {}

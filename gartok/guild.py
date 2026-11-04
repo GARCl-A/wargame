@@ -74,7 +74,7 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 `justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
-from . import cohesion, intel
+from . import cohesion, intel, orders
 from .clock import Clock
 from .group import BASE_SLOTS, FAME_PER_SLOT, Group
 from .guild_claim import (
@@ -417,7 +417,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         """Nothing needs the player right now, but at least one group still
         has an order in flight -- keep the clock running on its own instead
         of waiting on a click."""
-        return not self.needs_orders and any(g.busy and g.order.kind != "garrison" for g in self.groups)
+        return not self.needs_orders and any(g.busy and orders.counts_down(g.order) for g in self.groups)
 
     @property
     def arena_reputation(self):

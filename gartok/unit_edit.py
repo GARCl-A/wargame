@@ -120,7 +120,8 @@ class EditMixin:
                                  if talents.get(tid).school is None
                                  or talents.get(tid).school in self.magic_sources]
         self.study_target = None
-        self.study_progress = 0
+        self.study_progress = {k: v for k, v in self.study_progress.items()
+                               if k not in magic.SPELLS or magic.casts(self, magic.SPELLS[k])}
         self._apply_attributes()
         self._derive_combat()
 
@@ -135,8 +136,9 @@ class EditMixin:
                 self.spells_known.remove(spell_id)
         elif spell_id not in self.spells_known and magic.casts(self, spell):
             self.spells_known.append(spell_id)
+            self.study_progress.pop(spell_id, None)
             if self.study_target == spell_id:
-                self.study_target, self.study_progress = None, 0
+                self.study_target = None
 
     def set_money(self, copper):
         self.money = max(0, int(copper))

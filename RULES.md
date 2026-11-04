@@ -368,6 +368,9 @@ character can pick this up. `magic.language_for_dictionary` and
 `magic.progress_study`'s language branch do the work; state still lives on
 the shared `Unit.study_target` / `study_progress` pair, so a character is
 always studying at most one thing (a spell *or* a language, never both).
+`study_progress` maps each target to the points made on it: switching to another
+target, or stopping, keeps them, and going back picks up where it was left; mastering
+a target clears its entry.
 
 - **The item**: a `Dictionary of <Language>` in the pack, bought or traded for a language
   *other than* the ones the character already speaks.

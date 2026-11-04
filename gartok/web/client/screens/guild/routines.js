@@ -10,10 +10,10 @@ const Book = (() => {
   let R = null, P = null, menu = null, refOpen = null, drag = null, sure = false, mode = "book", AT = null, STOP = null, BAND = null, keepTop = 0;
   const OPS = ["<", "<=", ">", ">="], OPL = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"};
   const DOING = {gather: "gathering", work: "working", craft: "crafting", rest: "resting", travel: "travelling"};
-  const SIGN = {Wait: "⏳", Take: "⤓", HandOver: "⇄", Repeat: "↻", Trade: "¤", Travel: "➜", Gather: "⛏", Work: "⚒", Craft: "✎", Rest: "☾"};
+  const SIGN = {Wait: "⏳", Take: "⤓", HandOver: "⇄", Repeat: "↻", Trade: "¤", Travel: "➜", Gather: "⛏", Work: "⚒", Craft: "✎", Study: "✧", Rest: "☾"};
   const KINDS = [
     ["Move and work", [["Travel", "Travel", "to a place"], ["Gather", "Gather", "for N hours"], ["Work", "Work", "for N hours"],
-      ["Craft", "Craft", "a recipe"], ["Rest", "Rest", "for N hours"]]],
+      ["Craft", "Craft", "a recipe"], ["Study", "Study", "a spell or a language"], ["Rest", "Rest", "for N hours"]]],
     ["Goods", [["Take", "Take", "from a group here"], ["HandOver", "Hand over", "to a group here"], ["Trade", "Trade", "sell, buy, food"]]],
     ["Flow", [["Wait", "Wait until", "a number holds"], ["Repeat", "Repeat", "while / until"]]]];
 
@@ -24,6 +24,7 @@ const Book = (() => {
     Gather: () => ({_: "Gather", hours: 16}),
     Work: () => ({_: "Work", hours: 16}),
     Craft: () => ({_: "Craft", recipe: R.vocab.recipes[0], hours: 8}),
+    Study: () => ({_: "Study", target: R.vocab.studies[0][0], days: 1}),
     Rest: () => ({_: "Rest", hours: 8}),
     Wait: () => ({_: "Wait", cond: cond("coins", ref("own"), ">=", 1)}),
     Take: () => ({_: "Take", source: other(), item: "Lumber", count: null, until_days: null}),
@@ -82,6 +83,7 @@ const Book = (() => {
       case "Work": return `Work for ${num(b.hours, "hours")} hours`;
       case "Rest": return `Rest for ${num(b.hours, "hours")} hours`;
       case "Craft": return `Craft ${select(R.vocab.recipes, b.recipe, "recipe")} for ${num(b.hours, "hours")} hours`;
+      case "Study": return `Study ${select(R.vocab.studies, b.target, "target")} for ${num(b.days, "days")} days`;
       case "Wait": return `Wait until ${condText(b.cond, p)}`;
       case "Take": {
         const m = takeMode(b);

@@ -46,7 +46,7 @@ SAVE_DEFAULTS = {
     "treated": False, "consecutive_rest_hours": 0, "unbroken_rest_hours": 0, "non_lethal_damage": 0,
     "last_daily_luck_day": 0,
     "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
-    "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": 0,
+    "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": {},
     "magic_blood": None, "blood_tested": False, "blood_test_days": 0, "rite_school": None, "rite_progress": {},
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
@@ -69,7 +69,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.magic_sources = []
         self.spells_known = []
         self.study_target = None
-        self.study_progress = 0
+        self.study_progress = {}                       # study target -> points so far: switching away keeps them
         self.blood_tested = False                      # the Blood Cult has tested `magic_blood` (rite.py)
         self.blood_test_days = 0
         self.rite_school = None                        # the school whose rite this unit boards for, or None
@@ -184,7 +184,9 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.magic_sources = list(d["magic_sources"])
         u.spells_known = list(d["spells_known"])
         u.study_target = d["study_target"]
-        u.study_progress = d["study_progress"]
+        progress = d["study_progress"]      # a bare number (an authored NPC, an older save) is the points on the target
+        u.study_progress = dict(progress) if isinstance(progress, dict) else (
+            {u.study_target: progress} if progress and u.study_target else {})
         u.blood_tested = d["blood_tested"]
         u.blood_test_days = d["blood_test_days"]
         u.rite_school = d["rite_school"]

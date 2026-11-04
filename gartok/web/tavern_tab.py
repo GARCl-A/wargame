@@ -199,7 +199,7 @@ class TavernTab:
                 name, needed = f"Scroll of {spell.name}", magic.points_to_learn(spell.level)
             else:
                 name, needed = f"Dictionary of {m.study_target}", magic.points_to_learn(0)
-            target = {"name": name, "progress": m.study_progress, "needed": needed}
+            target = {"name": name, "progress": m.study_progress.get(m.study_target, 0), "needed": needed}
         schools = "/".join(x.capitalize() for x in m.magic_sources) + " magic" if m.magic_sources else "no magic"
         return {"uid": m.uid, "name": m.name, "portrait": _portrait(m),
                 "sub": f"{_kind(m)} · INT {m.mod_intelligence:+} · {schools} · ${m.money}", "target": target,
