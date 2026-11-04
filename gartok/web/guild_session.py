@@ -6,6 +6,7 @@
     THE GUILD    the charter (founding trade, fame and band slots, standing, the bands, the notices)
                  and the holdings
     REPUTATIONS  the objectives and each known faction's deeds and unlocks
+    ROUTINES     the Book: the routines the player has written, as a stack of sentences (the editor)
 
 The reads and the rules are `guild_sheet.GuildSheet` for the roster, the sheet, the roles and the charter,
 and `band_kit.BandKit` for the band's kit (the moves, the item menu, the wagon and the herd).
@@ -22,6 +23,7 @@ from .. import (
     objectives,
     routine_book,
     store_column,
+    world,
 )
 from .. import wagon as wagon_mod
 from ..animals import Animal
@@ -39,7 +41,8 @@ from .sheet_view import animal_sheet, member_sheet
 from .shop_tab import _tip
 from .stable_tab import WAGON_GLYPH, _face
 
-TABS = (("members", "Members"), ("bands", "Bands"), ("guild", "The Guild"), ("reputations", "Reputations"))
+TABS = (("members", "Members"), ("bands", "Bands"), ("guild", "The Guild"), ("reputations", "Reputations"),
+        ("routines", "Routines"))
 ZONES = ("pack", "hand", "offhand", "tongue", "artifact", "armor", "tack", "hitch")
 WORN = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Body"), ("artifact", "Artifact"))
 
@@ -62,6 +65,10 @@ class GuildSession(Session):
         "split": lambda s, b: s.split(b["pick"], int(b["qty"])),
         "lock": lambda s, b: s.lock(b["owner"], b["name"]),
         "button": lambda s, b: s.button(b["key"]),
+        "book_pick": lambda s, b: s.book_pick(int(b["i"])),
+        "book_new": lambda s, b: s.book_new(b.get("name", "")),
+        "book_save": lambda s, b: s.book_save(int(b["i"]), b.get("name", ""), b.get("note", ""), b["blocks"]),
+        "book_tear": lambda s, b: s.book_tear(int(b["i"])),
         "back": lambda s, b: s.map.back(),
     }
 
@@ -72,6 +79,7 @@ class GuildSession(Session):
         self.tab = tab
         self.notice = None
         self.gear = None
+        self.page = 0
         self._set_band(gid or self._default_band())
         if tab == "bands" and self.gear.group.members:
             self.desk.member = self.gear.group.members[0]
@@ -101,7 +109,7 @@ class GuildSession(Session):
             "tab": self.tab, "alerts": alerts, "notice": notice,
         }
         out[self.tab] = {"members": self._members, "bands": self._bands, "guild": self._charter,
-                         "reputations": self._reputations}[self.tab]()
+                         "reputations": self._reputations, "routines": self._routines}[self.tab]()
         return out
 
     def tutorial_key(self):
@@ -502,3 +510,56 @@ class GuildSession(Session):
                                        >= u.rep_required, "need": u.rep_required} for u in factions.get_unlocks(f.id)]}
                          for f in factions.known(g)],
         }
+
+    # ------------------------------------------------------------------ #
+    # ROUTINES                                                            #
+    # ------------------------------------------------------------------ #
+    def _vocab(self):
+        by_type = {}
+        for name, d in items.all_items().items():
+            by_type.setdefault(str(d.type).title(), []).append(name)
+        return {"nodes": [[n.id, n.name] for n in world.known(self.guild)],
+                "items": [[kind, sorted(names)] for kind, names in sorted(by_type.items())],
+                "recipes": sorted(items.CRAFTING_RECIPES),
+                "groups": [g.display_name for g in self.guild.groups if not g.empty],
+                "doing": ["gather", "work", "craft", "rest", "travel"]}
+
+    def _routines(self):
+        g = self.guild
+        self.page = min(self.page, max(0, len(g.routine_pages) - 1))
+        return {"seats": [routine_book.used(g), routine_book.slots(g)], "next": routine_book.fame_to_next_slot(g),
+                "pick": self.page, "vocab": self._vocab(),
+                "pages": [p.to_dict() for p in g.routine_pages]}
+
+    def _page(self, i):
+        if not 0 <= i < len(self.guild.routine_pages):
+            raise ValueError("no such routine")
+
+    def book_pick(self, i):
+        self._page(i)
+        self.page = i
+        return self.state()
+
+    def book_new(self, name):
+        self.page = routine_book.write(self.guild, name or self._fresh_name())
+        self.map._save()
+        return self.state()
+
+    def _fresh_name(self):
+        taken = {p.name for p in self.guild.routine_pages}
+        n = len(taken) + 1
+        while f"New routine {n}" in taken:
+            n += 1
+        return f"New routine {n}"
+
+    def book_save(self, i, name, note, blocks):
+        self._page(i)
+        routine_book.save(self.guild, i, name, note, blocks)
+        self.map._save()
+        return self.state()
+
+    def book_tear(self, i):
+        self._page(i)
+        routine_book.tear(self.guild, i)
+        self.map._save()
+        return self.state()

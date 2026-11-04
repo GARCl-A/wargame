@@ -2,6 +2,7 @@
 
 import pytest
 
+from gartok import persist
 from gartok import routine_book as book
 from gartok import routines as r
 from gartok.clock import Clock
@@ -59,3 +60,84 @@ def test_replacing_the_routine_of_a_group_needs_no_second_seat():
     book.assign(guild, g, r.Routine([r.Trade(sell=("Lumber",))]))
     book.assign(guild, g, r.Routine([r.Rest(1)]))
     assert g.routine.blocks == (r.Rest(1),) and book.used(guild) == 1
+
+
+def _poc_blocks():
+    mill = r.group("Gatherers")
+    trader = (r.Repeat(r.coins(r.own()) < 500, [
+        r.Wait(r.items(mill, "Lumber") >= 8),
+        r.Take(mill, "Lumber"),
+        r.Travel("farm"),
+        r.Trade(sell=("Lumber",), buy=(("Potato", 3),), food_days=3),
+        r.Travel("lumber_yard"),
+        r.HandOver(mill, "Potato", 3),
+    ]),)
+    gatherer = (r.Repeat(r.coins(r.group("Trader")) >= 500, [r.Gather(16)], until=True),)
+    return trader, gatherer
+
+
+def test_the_proof_of_concept_routines_pass_the_check():
+    guild = _guild("city")
+    for blocks in _poc_blocks():
+        book.check(guild, blocks)
+
+
+@pytest.mark.parametrize("block, message", [
+    (r.Travel("nowhere"), "unknown place"),
+    (r.Gather(0), "hours"),
+    (r.Craft("Nothing", 8), "unknown recipe"),
+    (r.Wait(r.items(r.own(), "Moonbeam") >= 1), "unknown item"),
+    (r.Wait(r.Cond("coins", r.own(), None, "==", 1)), "unknown condition"),
+    (r.Take(r.own(), "Lumber"), "another group"),
+    (r.HandOver(r.Ref("named", None), "Lumber"), "name the group"),
+    (r.HandOver(r.group("B"), "Lumber", 0), "at least 1"),
+    (r.Trade(sell=("Moonbeam",)), "unknown item"),
+    (r.Trade(food_days=-1), "below zero"),
+    (r.Repeat(r.coins(r.own()) < 1, [r.Travel("nowhere")]), "unknown place"),
+])
+def test_the_check_refuses_what_names_something_that_does_not_exist(block, message):
+    with pytest.raises(ValueError, match=message):
+        book.check(_guild("city"), (block,))
+
+
+def test_a_page_is_written_saved_renamed_and_torn():
+    guild = _guild("city")
+    i = book.write(guild, "  Potato   trader ")
+    assert guild.routine_pages[i].name == "Potato trader"
+    trader, _ = _poc_blocks()
+    book.save(guild, i, "Trader", "a note", r.dump(trader))
+    assert guild.routine_pages[i].blocks == trader and guild.routine_pages[i].note == "a note"
+    book.tear(guild, i)
+    assert guild.routine_pages == []
+
+
+def test_a_page_needs_its_own_name():
+    guild = _guild("city")
+    book.write(guild, "A")
+    with pytest.raises(ValueError, match="needs a name"):
+        book.write(guild, "   ")
+    with pytest.raises(ValueError, match="already a routine called A"):
+        book.write(guild, "A")
+
+
+def test_a_refused_save_leaves_the_page_as_it_was():
+    guild = _guild("city")
+    i = book.write(guild, "A")
+    with pytest.raises(ValueError, match="unknown place"):
+        book.save(guild, i, "B", "", r.dump((r.Travel("nowhere"),)))
+    with pytest.raises(ValueError, match="not well formed"):
+        book.save(guild, i, "B", "", [{"_": "Nope"}])
+    with pytest.raises(ValueError, match="not well formed"):
+        book.save(guild, i, "B", "", [{"_": "Gather", "hours": "many"}])
+    assert guild.routine_pages[0].name == "A" and guild.routine_pages[0].blocks == ()
+
+
+def test_the_written_routines_survive_a_save():
+    guild = _guild("city")
+    trader, gatherer = _poc_blocks()
+    book.save(guild, book.write(guild, "Trader"), "Trader", "carries", r.dump(trader))
+    book.save(guild, book.write(guild, "Gatherer"), "Gatherer", "", r.dump(gatherer))
+    world_id = persist.new_world_id()
+    persist.save_game(world_id, guild)
+    loaded = persist.load_game(world_id)
+    assert [(p.name, p.note, p.blocks) for p in loaded.routine_pages] == [("Trader", "carries", trader), ("Gatherer", "", gatherer)]

@@ -75,6 +75,14 @@
           "There is no score and no fight you must win. The objectives at the top are small tasks that show you what the guild can do; take them in any order.",
           "Below them, each faction lists its deeds. Reputation only moves when you pull one off -- a one-shot achievement, not a grind -- and it unlocks what the card lists. The Pits and the Bankers are open from day one; the others appear once you walk into their places."
         ]
+      },
+      "routines": {
+        "title": "Orders that run on their own",
+        "body": [
+          "The Book holds the routines you write: a stack of steps a band can run while you play another. Press + between two lines to add a step, drag a line by its grip to move it, and click any underlined word to change it.",
+          "A step that reads another band (take from, hand over to, wait until) names it by its name, or as the band here doing something, or as any other band here. The second survives swapping the band for another.",
+          "Fame buys seats: each band on a routine takes one. A band is given a routine from its own screen."
+        ]
       }
     },
     "squad": {

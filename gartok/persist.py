@@ -29,7 +29,7 @@ import time
 import uuid
 from dataclasses import fields
 
-from . import captives, missions, routines, wildfire
+from . import captives, missions, routine_book, routines, wildfire
 from .animals import Animal
 from .clock import Clock
 from .group import NORMAL, Group
@@ -247,7 +247,7 @@ PAYLOAD_DEFAULTS = {
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True, "revealed": [], "met_factions": [], "supply_runs_completed": 0,
     "wildfire": None, "boss_talks_seen": [], "objectives_done": [], "ruins_cleared": [],
-    "game_version": "unknown", "log": [],
+    "game_version": "unknown", "log": [], "routine_pages": [],
 }
 
 
@@ -294,6 +294,7 @@ def _payload(guild, kind, label):
         "items_sold_kinds": sorted(guild.items_sold_kinds),
         "autosell": sorted(guild.autosell),
         "licences": sorted(guild.licences),
+        "routine_pages": [p.to_dict() for p in guild.routine_pages],
         "bestiary": guild.bestiary.to_dict(),
         "missions": [missions.mission_to_dict(m) for m in guild.missions],
         "leader": guild.leader.uid if guild.leader else None,
@@ -387,6 +388,7 @@ def load_game(world, save_id=CURRENT):
                  items_sold_kinds=payload["items_sold_kinds"],
                  autosell=payload["autosell"],
                  licences=payload["licences"],
+                 routine_pages=[routine_book.Page.from_dict(d) for d in payload["routine_pages"]],
                  bestiary=Bestiary.from_dict(payload["bestiary"]),
                  missions=[missions.mission_from_dict(d) for d in payload["missions"]],
                  taverna_week=payload["taverna_week"],

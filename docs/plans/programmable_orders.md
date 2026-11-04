@@ -105,11 +105,13 @@ over N game days checking the three criteria) once the design is chosen.
    the conditions, the pause and *Continue*, the save; `Gather` skips the economic licence; the map's
    CONTINUE ROUTINE button and the "Routine stopped" chip). The proof of concept above runs green as
    `tests/test_routines_poc.py` (24 game days, A by hand). The Book's automation seats
-   are in (`routine_book.py`, from fame, none to start). Still to build: the unlocks (first build: all open)
-   and the block editor and its tab with the tutorial card, which also takes a group off its routine. What
-   is still open is listed at the end.
+   are in (`routine_book.py`, from fame, none to start), and so is the Book itself: the guild sheet's ROUTINES
+   tab writes, renames and tears out routines (`routine_book.Page`, `check`, saved with the guild) with its
+   tutorial card. Still to build: the group's side (equip a copy from the BANDS tab, adjust its fields, take it
+   off, save it back to the Book) and the unlocks (first build: all open). What is still open is listed at the
+   end.
 
-**The editor (author 2026-11-03; mock in `docs/web_ui/references/routines_mockup/`, pending approval).** The
+**The editor (author 2026-11-03; approved mock in `docs/web_ui/references/routines_mockup/`).** The
 Book of routines is a tab of the guild's sheet, where routines are written. A group's own screen equips one
 and adjusts it. Each block is a sentence with inline fields. Blocks are added with a "+" between lines (the
 palette-and-drag variant lost: the "+" gives the stack more room) and moved by dragging a line by its grip.

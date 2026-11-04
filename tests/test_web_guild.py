@@ -1,4 +1,4 @@
-"""The guild's sheet in the browser: its four tabs (members, bands, the charter, reputations) through the
+"""The guild's sheet in the browser: its tabs (members, bands, the charter, reputations, routines) through the
 same session the server routes to."""
 
 import pytest
@@ -56,7 +56,7 @@ def test_the_maps_guild_button_opens_the_sheet_on_members_and_gear_opens_that_ba
     sheet, guild, _ = _sheet("guild")
     assert isinstance(sheet, GuildSession)
     st = sheet.state()
-    assert st["tab"] == "members" and [t["key"] for t in st["tabs"]] == ["members", "bands", "guild", "reputations"]
+    assert st["tab"] == "members" and [t["key"] for t in st["tabs"]] == ["members", "bands", "guild", "reputations", "routines"]
     assert st["count"] == 5 and st["band_count"] == 2
     gear, guild, g = _sheet("manage_group", which=1)
     st = gear.state()

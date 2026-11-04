@@ -227,7 +227,7 @@ const SCREENS = {
   battle: {css: ["battle.css"], js: ["board.js", "battle.js"]},
   map: {css: ["map.css"], js: ["sheet.js", "map.js"]},
   hub: {css: ["hub.css"], js: ["shop.js", "labor.js", "medic.js", "jobs.js", "craft.js", "stables.js", "tavern.js", "initiation.js", "vault.js", "claim.js", "ledger.js", "hub.js"]},
-  guild: {css: ["guild.css"], js: ["bands.js", "guild.js"]},
+  guild: {css: ["guild.css", "routines.css"], js: ["bands.js", "routines.js", "guild.js"]},
   talk: {css: ["talk.css"], js: ["talk.js"]},
   report: {css: ["report.css"], js: ["report.js"]},
   talents: {css: ["talents.css"], js: ["talents.js"]},

@@ -140,7 +140,7 @@ def test_the_guild_sheets_card_follows_its_tab(saves):
         s.pick_tab(k)
         keys[k] = s.tutorial_key()
     assert keys == {"members": "guild.members", "bands": "group", "guild": "guild.overview",
-                    "reputations": "guild.reputations"}
+                    "reputations": "guild.reputations", "routines": "guild.routines"}
 
 
 def test_the_draft_welcomes_first_then_names_each_steps_card():

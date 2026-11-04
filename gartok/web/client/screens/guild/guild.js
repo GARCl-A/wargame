@@ -1,6 +1,6 @@
 // The guild's sheet: the frame (banner, tabs, the way back) and three of its tabs. MEMBERS is the roster on
 // leather, the picked member's sheet as an open book and what can be done for them; THE GUILD the charter and
-// the holdings; REPUTATIONS the objectives and the factions. BANDS draws itself (bands.js). Every verb answers
+// the holdings; REPUTATIONS the objectives and the factions. BANDS draws itself (bands.js), ROUTINES too (routines.js). Every verb answers
 // the whole sheet.
 "use strict";
 
@@ -167,6 +167,8 @@ function draw() {
   if (G.tab === "members") drawMembers();
   else if (G.tab === "guild") drawCharter();
   else if (G.tab === "reputations") drawReputations();
+  else if (G.tab === "routines") Book.draw(G.routines);
+  else if (G.tab === "routines") Book.draw(G.routines);
   else Bands.draw(G.bands);
   toast(G.notice);
 }
@@ -182,7 +184,7 @@ $("tabs").addEventListener("click", e => {
 });
 $("back").onclick = back;
 $("body").addEventListener("click", e => {
-  if (!G || G.tab === "bands") return;
+  if (!G || G.tab === "bands" || G.tab === "routines") return;
   const el = e.target;
   const f = el.closest("[data-filter]");
   if (f) return post("filter", {mode: f.dataset.filter});
@@ -211,14 +213,14 @@ $("body").addEventListener("click", e => {
   if (row && row.dataset.band) post("band", {gid: row.dataset.band});
 });
 addEventListener("keydown", e => {
-  if (e.target.tagName === "INPUT") return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
   if (e.key === "Tab" && G) {
     e.preventDefault();
     const keys = G.tabs.map(t => t.key), i = keys.indexOf(G.tab);
     post("tab", {key: keys[(i + (e.shiftKey ? -1 : 1) + keys.length) % keys.length]});
     return;
   }
-  if (e.key === "Escape" && !(G && G.tab === "bands" && Bands.escape())) back();
+  if (e.key === "Escape" && !(G && G.tab === "bands" && Bands.escape()) && !(G && G.tab === "routines" && Book.escape())) back();
 });
 
 api("/api/guild/state").then(r => { G = r; draw(); });
