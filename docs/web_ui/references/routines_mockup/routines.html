@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Routines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IM+Fell+English:ital@0;1&display=block" rel="stylesheet">
+<script src="../sheets_mockup/icons.js"></script>
+<style>
+:root{
+  --ink:#24180e; --ink-2:#4a3522; --paper:#eadcbc; --paper-2:#d9c49b;
+  --brass:#c9a35e; --brass-hi:#f0d79e; --brass-lo:#7d5c28;
+  --blood:#9a2f22; --blood-hi:#c9473a; --verd:#4f8a7d; --verd-lo:#2f5a52; --redink:#8e2a1e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  font-family:"EB Garamond",serif;color:var(--paper);
+  background:radial-gradient(ellipse 70% 60% at 45% 45%, #3b2a1b 0%, #20170f 55%, #0d0906 100%);overflow:hidden}
+#vignette{position:absolute;inset:0;pointer-events:none;z-index:50;
+  background:radial-gradient(ellipse 85% 80% at 45% 46%, transparent 55%, rgba(0,0,0,.72) 100%)}
+.ico{display:inline-block}.ico svg{width:100%;height:100%;display:block}
+.leather{position:absolute;border-radius:4px;background:linear-gradient(180deg,#2c2117,#1a130d);
+  box-shadow:inset 0 1px 0 rgba(240,215,158,.18),inset 0 0 0 1px rgba(201,163,94,.22),0 10px 22px rgba(0,0,0,.6)}
+.lbl{font:600 11px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;text-transform:uppercase}
+.page{position:absolute;color:var(--ink);border-radius:2px;
+  background:radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.25),transparent 60%),
+    radial-gradient(ellipse at 90% 100%,rgba(120,80,30,.22),transparent 55%),linear-gradient(175deg,#efe2c3,#dcc79d);
+  box-shadow:inset 0 0 40px rgba(110,70,25,.28),0 0 0 1px #5d4426,0 14px 24px rgba(0,0,0,.6)}
+.page:before{content:"";position:absolute;inset:7px;border:1px solid rgba(80,52,24,.45);box-shadow:inset 0 0 0 4px rgba(80,52,24,.22);pointer-events:none}
+.kicker{font:600 11px/1 Cinzel,serif;letter-spacing:.3em;color:#7d5c37;display:flex;align-items:center;gap:10px;text-transform:uppercase}
+.kicker:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(90,60,30,.5),transparent)}
+.mark{display:inline-block;font:600 10px/1 Cinzel,serif;letter-spacing:.14em;padding:5px 8px 4px;border-radius:2px;border:1px solid rgba(201,163,94,.3);color:#b9a27c;text-transform:uppercase;white-space:nowrap}
+.mark.good{border-color:rgba(127,165,87,.6);color:#a9c98a;background:rgba(110,148,72,.12)}
+.mark.bad{border-color:rgba(201,71,58,.6);color:#f0b3a6;background:rgba(154,47,34,.25)}
+.mark.warn{border-color:rgba(224,168,90,.55);color:#e8c48a;background:rgba(224,168,90,.1)}
+.mark.new{border-color:rgba(91,143,192,.6);color:#9cc4e8;background:rgba(46,95,142,.2)}
+.paper .mark.warn{color:#7a4a10;border-color:rgba(160,100,30,.6);background:rgba(224,168,90,.25)}
+.ghost-btn{height:38px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:3px;cursor:pointer;
+  font:600 11px/1 Cinzel,serif;letter-spacing:.2em;color:#b9a27c;text-transform:uppercase;white-space:nowrap;
+  border:1px solid rgba(201,163,94,.28);background:linear-gradient(#211810,#17110b)}
+.ghost-btn .ico{width:18px;height:18px}
+.ghost-btn:hover{color:var(--brass-hi);border-color:rgba(201,163,94,.6)}
+.seal{height:44px;padding:0 24px;display:grid;place-items:center;border-radius:2px;white-space:nowrap;cursor:pointer;
+  font:700 12px/1 Cinzel,serif;letter-spacing:.2em;color:#fbe9dd;text-transform:uppercase;
+  background:linear-gradient(#b0402f,#7a2218);box-shadow:0 0 0 1px #3a0c06,0 6px 12px rgba(0,0,0,.4)}
+.medal{border-radius:50%;overflow:hidden;flex:none;box-shadow:0 0 0 2px #120d08,0 0 0 3px var(--side,#5b8fc0),0 0 0 5px #120d08,0 4px 8px rgba(0,0,0,.6)}
+.medal img{width:100%;height:100%;display:block}
+
+/* top bar */
+#top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center;z-index:2}
+.banner{width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;margin-right:18px;
+  background:radial-gradient(circle at 38% 32%,#d9b66e,#b0873a 55%,#6b4a1c);
+  box-shadow:0 0 0 2px #120d08,0 0 0 4px var(--brass),0 0 0 6px #120d08,0 6px 10px rgba(0,0,0,.6),inset 0 -8px 14px rgba(0,0,0,.35)}
+.banner .ico{width:38px;height:38px;color:#1a120a}
+.cartouche{width:520px;flex:none}
+.cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.12em;color:var(--brass-hi);text-transform:uppercase;text-shadow:0 1px 0 #000}
+.cartouche .sub{margin-top:8px;font:italic 17px/1 "IM Fell English",serif;color:#b9a27c}
+.cartouche .sub b{font-style:normal;color:#d9c49b;font-weight:400}
+.tabs{display:flex;gap:4px;flex:1;justify-content:center}
+.tabs span{font:600 12px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;padding:10px 18px;border-bottom:1px solid rgba(201,163,94,.2);text-transform:uppercase}
+.tabs span.on{color:var(--brass-hi);border-bottom:2px solid var(--brass)}
+.topright{display:flex;gap:10px}
+
+/* seats plate + routine list */
+.pips{display:flex;gap:8px}
+.pip{width:22px;height:22px;border-radius:50%;border:2px solid rgba(201,163,94,.5);box-shadow:inset 0 0 0 3px #1a130d}
+.pip.used{background:radial-gradient(circle at 35% 30%,#f0d79e,#b0873a);}
+.rcard{position:relative;margin:0 14px 10px;padding:14px 16px;border-radius:3px;cursor:pointer;
+  border:1px solid rgba(201,163,94,.2);background:linear-gradient(#241a11,#1a130d)}
+.rcard.on{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass-lo),0 0 18px rgba(201,163,94,.15)}
+.rcard b{display:block;font:700 15px/1 Cinzel,serif;letter-spacing:.1em;color:var(--brass-hi);text-transform:uppercase}
+.rcard p{margin-top:8px;font:italic 16px/1.2 "IM Fell English",serif;color:#b9a27c}
+.rcard .on-chip{margin-top:10px;display:flex;gap:8px;align-items:center}
+
+/* routine on paper */
+.paper{padding:30px 38px}
+.paper h2{font:700 26px/1 Cinzel,serif;letter-spacing:.1em;color:var(--ink);text-transform:uppercase}
+.paper .desc{margin:10px 0 20px;font:italic 19px/1.2 "IM Fell English",serif;color:#6b5236}
+.stack{position:relative}
+.blk{position:relative;display:flex;gap:14px;align-items:flex-start;padding:11px 14px 11px 12px;border-radius:3px;
+  border:1px solid rgba(90,60,30,.38);background:rgba(255,250,235,.32);font:500 20px/1.55 "EB Garamond",serif;color:var(--ink)}
+.blk .glyph{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;margin-top:1px;
+  background:radial-gradient(circle at 35% 30%,var(--verd),var(--verd-lo));color:#eadcbc;font:600 18px/1 "EB Garamond",serif;
+  box-shadow:0 0 0 1.5px #1c2e2a,0 2px 4px rgba(0,0,0,.35)}
+.blk .glyph .ico{width:20px;height:20px}
+.blk .sent{flex:1;min-width:0}
+.blk .sent .row{display:block}
+.blk .sent .row+.row{margin-top:3px}
+.grip{position:absolute;left:-26px;top:14px;width:20px;text-align:center;font:700 18px/1 sans-serif;color:#7d5c37;cursor:grab;opacity:0}
+.blk:hover .grip{opacity:.9}
+.mode-group .grip{display:none}
+.blk.moving{opacity:.35}
+.blk .del{position:absolute;right:8px;top:8px;width:24px;height:24px;border-radius:50%;display:none;place-items:center;cursor:pointer;
+  font:600 14px/1 sans-serif;color:#7b4a3a;background:rgba(154,47,34,.12)}
+.blk:hover .del{display:grid}
+.blk.run{border-color:var(--brass-lo);background:linear-gradient(90deg,rgba(240,215,158,.55),rgba(255,250,235,.4));
+  box-shadow:0 0 0 2px var(--brass),0 0 18px rgba(201,163,94,.45)}
+.blk.run .glyph{background:radial-gradient(circle at 35% 30%,#f0d79e,#b0873a);color:#2a1a08}
+.blk.stop{border-color:var(--blood);background:rgba(154,47,34,.13);box-shadow:0 0 0 2px rgba(154,47,34,.55)}
+.blk.stop .glyph{background:radial-gradient(circle at 35% 30%,var(--blood-hi),var(--blood))}
+.blk.done{opacity:.62}
+.tag{flex:none;align-self:center;margin-right:30px;font:700 10.5px/1 Cinzel,serif;letter-spacing:.16em;text-transform:uppercase;padding:7px 10px 6px;border-radius:2px;white-space:nowrap}
+.tag.run{color:#f0d79e;background:linear-gradient(#2c2117,#1a130d);box-shadow:0 0 0 1px var(--brass-lo)}
+.tag.stop{color:#fbe9dd;background:linear-gradient(#b0402f,#7a2218)}
+.why{display:block;margin-top:6px;font:italic 19px/1.25 "IM Fell English",serif;color:var(--redink)}
+.body{margin:0 0 0 30px;padding-left:20px;border-left:3px solid rgba(125,92,40,.55)}
+.gap{position:relative;height:12px;display:flex;align-items:center;justify-content:center}
+.gap:before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(90,60,30,.18)}
+.gap .plus{position:relative;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;cursor:pointer;opacity:.42;
+  font:700 15px/1 sans-serif;color:#5d4426;background:#e3d1a9;border:1px solid rgba(90,60,30,.45)}
+.gap:hover .plus,.gap.open .plus{opacity:1;background:var(--brass-hi)}
+.gap.over{height:46px}
+.gap.over:before{height:46px;top:0;background:rgba(79,138,125,.18);border:2px dashed var(--verd)}
+.gap.over .plus{display:none}
+.gap .drop{display:none;position:relative;font:600 12px/1 Cinzel,serif;letter-spacing:.2em;color:var(--verd-lo);text-transform:uppercase}
+.gap.over .drop{display:block}
+.mode-group .gap{display:none}
+.mode-group .blk .del{display:none!important}
+.menu,.refpop{position:absolute;z-index:40;left:50%;top:26px;transform:translateX(-50%);width:430px;border-radius:4px;padding:14px 8px 8px;text-align:left;
+  background:linear-gradient(#2c2117,#1a130d);box-shadow:inset 0 0 0 1px rgba(201,163,94,.35),0 16px 34px rgba(0,0,0,.7);color:var(--paper)}
+.menu h6,.refpop h6{font:600 10.5px/1 Cinzel,serif;letter-spacing:.24em;color:#8f7652;text-transform:uppercase;padding:8px 10px 6px}
+.menu .o,.refpop .o{display:flex;gap:12px;align-items:center;padding:8px 10px;border-radius:2px;font:500 19px/1.1 "EB Garamond",serif;cursor:pointer;color:var(--paper)}
+.menu .o:hover,.refpop .o:hover{background:rgba(201,163,94,.16)}
+.menu .o .g,.menu .o .g .ico,.menu .o small,.refpop .o small{margin-left:auto;font:italic 15px/1 "IM Fell English",serif;color:#a58e68;text-align:right}
+.refpop{top:34px;left:0;transform:none;width:470px}
+.refpop .o.cur{color:var(--brass-hi);background:rgba(201,163,94,.12)}
+.refpop .o.cur:after{content:"●";margin-left:auto;color:var(--brass);font-size:12px}
+.refpop .note{padding:0 10px 8px;font:italic 16px/1.2 "IM Fell English",serif;color:#a58e68}
+.refpop hr{border:0;border-top:1px solid rgba(201,163,94,.2);margin:6px 8px}
+.refw{position:relative;display:inline-block}
+.ref{font:inherit;color:var(--ink);font-weight:600;cursor:pointer;padding:0 8px 0 8px;border:0;border-bottom:1.5px dashed #7d5c37;background:rgba(255,250,235,.6)}
+.ref:after{content:" ▾";font-size:.7em;color:#7d5c37}
+.refw.open .ref{background:var(--brass-hi);border-bottom-style:solid}
+select.fld,input.fld{font:inherit;font-weight:600;color:var(--ink);cursor:pointer;border:0;border-bottom:1.5px dashed #7d5c37;border-radius:0;background-color:rgba(255,250,235,.6);padding:0 6px}
+select.fld{appearance:none;field-sizing:content;padding-right:20px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0h10L5 6z' fill='%237d5c37'/></svg>");background-repeat:no-repeat;background-position:right 6px center}
+input.fld{field-sizing:content;min-width:2.2em;text-align:center;cursor:text}
+input.fld::placeholder{font-weight:400;font-style:italic;color:#8a7352}
+select.fld:focus,input.fld:focus{outline:2px solid var(--brass);outline-offset:1px}
+.chip{display:inline-flex;align-items:center;gap:6px;margin:0 4px 0 0;padding:0 8px;border-radius:12px;background:rgba(79,138,125,.18);border:1px solid rgba(47,90,82,.5);font-weight:600}
+.chip i{font-style:normal;cursor:pointer;color:#7b4a3a;font-size:15px}
+.chip input.fld{background:transparent;border-bottom:1px solid #7d5c37;width:2em}
+.plain{color:#6b5236;font-weight:400}
+.tog{display:inline-flex;align-items:center;gap:10px;font:italic 18px/1.2 "IM Fell English",serif;color:#5d4426;cursor:pointer}
+.sw{position:relative;width:38px;height:20px;border-radius:10px;background:#a79270;box-shadow:inset 0 1px 3px rgba(0,0,0,.4);flex:none}
+.sw:after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#efe2c3;box-shadow:0 1px 2px rgba(0,0,0,.4);transition:left .12s}
+.sw.on{background:var(--verd)}.sw.on:after{left:21px}
+.tog.hot{padding:4px 10px;border-radius:3px;background:rgba(224,168,90,.28);outline:1px solid rgba(160,100,30,.55)}
+
+/* group screen */
+.chips{display:flex;gap:12px;padding:12px 14px}
+.gchip{display:flex;align-items:center;gap:12px;padding:8px 18px 8px 10px;border-radius:3px;border:1px solid rgba(201,163,94,.2);background:linear-gradient(#241a11,#1a130d)}
+.gchip.on{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass-lo),0 0 16px rgba(201,163,94,.15)}
+.gchip .medal{width:44px;height:44px}
+.gchip b{display:block;font:700 15px/1 Cinzel,serif;letter-spacing:.1em;color:var(--brass-hi);text-transform:uppercase}
+.gchip small{display:block;margin-top:6px;font:italic 16px/1 "IM Fell English",serif;color:#a58e68}
+.gchip .mark{margin-left:6px}
+.facts{padding:0 26px}
+.fact{display:flex;justify-content:space-between;align-items:baseline;padding:13px 0;border-bottom:1px solid rgba(201,163,94,.14);font:500 19px/1 "EB Garamond",serif;color:#d9c49b}
+.fact span:first-child{font:600 11px/1 Cinzel,serif;letter-spacing:.22em;color:#8f7652;text-transform:uppercase}
+.fact b{font-weight:600;color:var(--brass-hi)}
+.fact b.bad{color:#e2a194}
+.note-l{padding:16px 26px;font:italic 18px/1.25 "IM Fell English",serif;color:#a58e68}
+.strip{display:flex;align-items:center;gap:14px;padding:0 20px}
+.sel-l{height:42px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:3px;border:1px solid rgba(201,163,94,.35);background:#120d08;
+  font:600 14px/1 Cinzel,serif;letter-spacing:.12em;color:var(--brass-hi);text-transform:uppercase}
+.sel-l small{font:italic 16px/1 "IM Fell English",serif;letter-spacing:0;color:#a58e68;text-transform:none}
+  background:linear-gradient(175deg,#efe2c3,#dcc79d);box-shadow:0 0 0 1px #5d4426,0 3px 6px rgba(0,0,0,.5);font:600 18px/1 "EB Garamond",serif}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="top">
+    <div class="banner" id="banner"></div>
+    <div class="cartouche"><div class="place">Recebiheranca</div><div class="sub" id="sub"></div></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="topright"><div class="ghost-btn" id="tr1"></div><div class="ghost-btn" id="tr2"></div></div>
+  </div>
+  <div id="view"></div>
+  <div id="vignette"></div>
+</div>
+<script>
+// ---- the prototype: one page, ?state=book | cond | group_running | group_stopped
+// Everything on it that is an inline field is a real control; "+" adds a block, the grip at its left moves it.
+// The vocabulary mirrors gartok/routines.py. Marked NEW = not in the engine yet.
+const Q=new URLSearchParams(location.search);
+const state=Q.get("state")||"book";
+const ico=n=>`<span class="ico"><svg viewBox="0 0 512 512">${ICONS[n]||""}</svg></span>`;
+const NODES={lumber_yard:"Lumber Yard",farm:"Farm",wilds:"Wilds",ledger_hold:"Ledger Hold",iron_mine:"Iron Mine"};
+const ITEMS=["Lumber","Potato","Iron Ore","Coal","Vial","Healing Potion"];
+const GROUPS=["Hunters","Gatherers","Trader"];
+const DOING={gather:"gathering",work:"working",craft:"crafting",rest:"resting",travel:"travelling"};
+const OPS=["<","<=",">",">="];
+const OPL={"<":"<","<=":"≤",">":">",">=":"≥"};
+const GL={travel:ico("journey"),gather:ico("log"),work:ico("battle-axe"),craft:ico("scroll-unfurled"),rest:ico("alarm-clock"),
+  wait:"⏳",take:"⤓",hand:"⇄",trade:ico("two-coins"),repeat:"↻"};
+const KINDS=[
+  ["Move and work",[["travel","Travel","to a place"],["gather","Gather","for N hours"],["work","Work","for N hours"],["craft","Craft","a recipe"],["rest","Rest","for N hours"]]],
+  ["Goods",[["take","Take","from a group here"],["hand","Hand over","to a group here"],["trade","Trade","sell, buy, food"]]],
+  ["Flow",[["wait","Wait until","a number holds"],["repeat","Repeat","while / until"]]]];
+const cond=(what,ref,op,v)=>({what,ref,op,v});
+const NAMED=n=>({how:"named",arg:n});
+const NEW={
+  travel:()=>({k:"travel",node:"farm"}),gather:()=>({k:"gather",h:16}),work:()=>({k:"work",h:16}),
+  craft:()=>({k:"craft",recipe:"Healing Potion",h:8}),rest:()=>({k:"rest",h:8}),
+  wait:()=>({k:"wait",cond:cond("i:Lumber",NAMED("Gatherers"),">=",8)}),
+  take:()=>({k:"take",ref:NAMED("Gatherers"),item:"Lumber",mode:"all",n:3}),
+  hand:()=>({k:"hand",ref:NAMED("Gatherers"),item:"Potato",mode:"all",n:3,fallback:true}),
+  trade:()=>({k:"trade",sell:[],buy:[],food:null,cap:null}),
+  repeat:()=>({k:"repeat",until:false,cond:cond("coins",{how:"own"},"<",500),body:[]})};
+
+// the proof of concept's routines (tests/test_routines_poc.py)
+const ROUTINES=[
+  {name:"Potato trader",desc:"Carries the Gatherers' Lumber to the Farm, sells it, buys potatoes and brings them back.",by:"Trader",
+   blocks:[{k:"repeat",until:false,cond:cond("coins",{how:"own"},"<",500),body:[
+     {k:"wait",cond:cond("i:Lumber",NAMED("Gatherers"),">=",8)},
+     {k:"take",ref:NAMED("Gatherers"),item:"Lumber",mode:"all",n:null},
+     {k:"travel",node:"farm"},
+     {k:"trade",sell:["Lumber"],buy:[["Potato",3]],food:3,cap:null},
+     {k:"travel",node:"lumber_yard"},
+     {k:"hand",ref:NAMED("Gatherers"),item:"Potato",mode:"n",n:3,fallback:true}]}]},
+  {name:"Lumber gatherer",desc:"Gathers Lumber at the yard until the trader has earned enough.",by:"Gatherers",
+   blocks:[{k:"repeat",until:true,cond:cond("coins",NAMED("Trader"),">=",500),body:[{k:"gather",h:16}]}]},
+  {name:"Healing stock",desc:"Buy vials, craft healing potions, rest.",by:null,
+   blocks:[{k:"travel",node:"ledger_hold"},{k:"craft",recipe:"Healing Potion",h:8},{k:"rest",h:8}]}];
+let cur=0;
+const isGroup=state.startsWith("group");
+if(isGroup)ROUTINES[0].blocks=JSON.parse(JSON.stringify(ROUTINES[0].blocks));
+const UI={menu:null,ref:null,demo:false};
+if(state==="book")UI.menu="0|0";
+if(state==="cond"){UI.ref="0,0|cond.ref"}
+const RUN=state==="group_running"?{at:"0,2",tag:"On the road · 5 h left"}:null;
+const STOP=state==="group_stopped"?{at:"0,3",why:"Stopped: the Farm has no Potato to sell. Fix it by hand, then press Continue."}:null;
+const POINT=(RUN||STOP||{}).at;
+
+// ---- paths: "0,2" = blocks[0].body[2]; a list is "" (root) or "0" (blocks[0].body)
+const R=()=>ROUTINES[cur];
+const blockAt=p=>{const a=p.split(",").map(Number);let l=R().blocks,b;for(const i of a){b=l[i];l=b.body}return b};
+const listOf=p=>p===""?R().blocks:blockAt(p).body;
+const setDeep=(o,f,v)=>{const a=f.split(".");const last=a.pop();a.reduce((x,k)=>x[k],o)[last]=v};
+
+// ---- labels
+const refLabel=r=>r.how==="own"?"this group":r.how==="named"?r.arg:r.how==="doing"?`a group here ${DOING[r.arg]}`:"any other group here";
+const S=(opts,val,f)=>`<select class="fld" data-f="${f}">${opts.map(o=>{const[v,l]=Array.isArray(o)?o:[o,o];return `<option value="${v}"${v==val?" selected":""}>${l}</option>`}).join("")}</select>`;
+const N=(val,f,ph="")=>`<input class="fld" data-f="${f}" value="${val==null?"":val}" placeholder="${ph}" size="2">`;
+const WHATS=[...ITEMS.map(i=>["i:"+i,i]),["coins","coins"],["hp","lowest HP %"],["food","food days"]];
+function REF(r,key,own){
+  const id=key,open=UI.ref===id;
+  let pop="";
+  if(open){
+    const cur=(h,a)=>r.how===h&&(a==null||r.arg===a)?" cur":"";
+    pop=`<div class="refpop">${own?`<div class="o${cur("own")}" data-set="${id}" data-how="own">This group<small>the one running the routine</small></div><hr>`:""}
+      <h6>By name</h6>${GROUPS.map(g=>`<div class="o${cur("named",g)}" data-set="${id}" data-how="named" data-arg="${g}">${g}</div>`).join("")}
+      <div class="note">Follows the name: if the group is renamed, the block stops finding it.</div><hr>
+      <h6>A group here, doing…</h6>
+      ${Object.entries(DOING).slice(0,4).map(([k,l])=>`<div class="o${cur("doing",k)}" data-set="${id}" data-how="doing" data-arg="${k}">a group here ${l}</div>`).join("")}
+      <div class="note">Follows whoever is doing it: swap the group and the routine still works.</div><hr>
+      <div class="o${cur("here")}" data-set="${id}" data-how="here">Any other group here<small>the first one found at this place</small></div></div>`;
+  }
+  return `<span class="refw${open?" open":""}"><button class="ref" data-ref="${id}">${refLabel(r)}</button>${pop}</span>`;
+}
+function COND(c,p,own=true){
+  const item=c.what.startsWith("i:")||c.what==="coins";
+  return `${S(WHATS,c.what,"cond.what")} ${item?"held by":"of"} ${REF(c.ref,p+"|cond.ref",own)} ${S(OPS.map(o=>[o,OPL[o]]),c.op,"cond.op")} ${N(c.v,"cond.v")}`;
+}
+const chips=(list,f,pairs)=>list.map((x,i)=>`<span class="chip">${pairs?N(x[1],`${f}.${i}.1`)+" "+x[0]:x}<i data-x="${f}.${i}">×</i></span>`).join("")+
+  `<select class="fld" data-add="${f}"><option>+ item</option>${ITEMS.map(i=>`<option>${i}</option>`).join("")}</select>`;
+
+function inner(b,p){
+  switch(b.k){
+    case"travel":return `Travel to ${S(Object.entries(NODES),b.node,"node")}`;
+    case"gather":return `Gather for ${N(b.h,"h")} hours`;
+    case"work":return `Work for ${N(b.h,"h")} hours`;
+    case"rest":return `Rest for ${N(b.h,"h")} hours`;
+    case"craft":return `Craft ${S(["Healing Potion","Arrow","Rope"],b.recipe,"recipe")} for ${N(b.h,"h")} hours`;
+    case"wait":return `Wait until ${COND(b.cond,p)}`;
+    case"take":return `<span class="row">Take ${S([["all","all"],["n","a number"],["food","enough for"]],b.mode,"mode")}${b.mode==="n"?" "+N(b.n,"n"):""}${b.mode==="food"?" "+N(b.n,"n")+" days of":""} ${S(ITEMS,b.item,"item")} from ${REF(b.ref,p+"|ref",false)}</span>`;
+    case"hand":return `<span class="row">Hand over ${S([["all","all"],["n","a number"]],b.mode,"mode")}${b.mode==="n"?" "+N(b.n,"n"):""} ${S(ITEMS,b.item,"item")} to ${REF(b.ref,p+"|ref",false)}</span>
+      <span class="row"><span class="tog${STOP&&STOP.at===p?" hot":""}" data-tog="fallback"><span class="sw${b.fallback?" on":""}"></span>If it is not here, wait 1 day, then stop the routine</span></span>`;
+    case"trade":return `<span class="row">Trade here: <span class="plain">sell all</span> ${chips(b.sell,"sell")}</span>
+      <span class="row"><span class="plain">buy</span> ${chips(b.buy,"buy",true)}</span>
+      <span class="row"><span class="plain">and food for</span> ${N(b.food,"food","—")} days · <span class="plain">spend at most</span> ${N(b.cap,"cap","no limit")} coins</span>`;
+    case"repeat":return `Repeat ${S([["while","while"],["until","until"]],b.until?"until":"while","until")} ${COND(b.cond,p)}`;
+  }
+}
+function gap(lp,i){
+  const id=lp+"|"+i,open=UI.menu===id;
+  let menu="";
+  if(open)menu=`<div class="menu">${KINDS.map(([g,l])=>`<h6>${g}</h6>`+l.map(([k,n,h])=>`<div class="o" data-new="${k}" data-list="${lp}" data-i="${i}"><span class="g">${GL[k]}</span>${n}<small>${h}</small></div>`).join("")).join("")}</div>`;
+  const demo=false;
+  return `<div class="gap${open?" open":""}${demo?" over":""}" data-list="${lp}" data-i="${i}"><span class="plus" data-plus="${id}">+</span><span class="drop">Hand over</span>${menu}</div>`;
+}
+function stack(blocks,lp,ctx){
+  let h=gap(lp,0);
+  blocks.forEach((b,i)=>{
+    const p=lp===""?""+i:lp+","+i;
+    const anc=POINT&&POINT.startsWith(p+",");
+    const run=RUN&&RUN.at===p,stop=STOP&&STOP.at===p;
+    const done=POINT&&!anc&&!run&&!stop&&ctx.before;
+    if(run||stop)ctx.before=false;
+    h+=`<div class="blk${run?" run":""}${stop?" stop":""}${done?" done":""}" data-p="${p}"><span class="grip" draggable="true" data-move="${p}">⠿</span><span class="glyph">${GL[b.k]}</span>
+      <div class="sent">${inner(b,p)}${stop?`<span class="why">${STOP.why}</span>`:""}${!isGroup&&b.k==="hand"&&state.startsWith("book")?`<span class="row" style="margin-top:6px"><span class="mark warn">Check: the receiving group needs to be at the Lumber Yard</span></span>`:""}</div>
+      ${run?`<span class="tag run">${RUN.tag}</span>`:""}${stop?`<span class="tag stop">Stopped</span>`:""}
+      <span class="del" data-del="${p}">×</span></div>`;
+    if(b.k==="repeat")h+=`<div class="body">${stack(b.body,p,ctx)}</div>`;
+    h+=gap(lp,i+1);
+  });
+  return h;
+}
+function paper(x,y,w,hgt){
+  const r=R();
+  return `<div class="page paper mode-${isGroup?"group":"plus"}" style="left:${x}px;top:${y}px;width:${w}px;height:${hgt}px">
+    <div class="kicker">${isGroup?"The routine on this group":"Routine"}</div>
+    ${isGroup?"":`<h2 style="margin-top:14px">${r.name}</h2>`}
+    <div class="desc" style="margin-top:${isGroup?14:10}px">${r.desc}</div>
+    <div class="stack">${stack(r.blocks,"",{before:true})}</div></div>`;
+}
+const topbar=(tab,sub)=>{
+  banner.innerHTML=ico("book-cover");
+  document.getElementById("sub").innerHTML=sub;
+  tabs.innerHTML=["Members","Bands","The Guild","Reputations","Routines"].map(t=>`<span class="${t===tab?"on":""}">${t}</span>`).join("");
+  tr1.innerHTML=ico("locked-chest")+"City vault";tr2.innerHTML=ico("journey")+"Back to map";
+};
+function bookView(){
+  topbar("Routines","Day <b>70</b> · <b>52</b> victories · <b>9</b> members in <b>3</b> bands");
+  const fame=14,slots=Math.floor(fame/6),used=ROUTINES.filter(r=>r.by).length-0;
+  return `
+  <div class="leather" style="left:32px;top:112px;width:1856px;height:76px;display:flex;align-items:center;gap:30px;padding:0 28px">
+    <div><div class="lbl">Book of routines</div><div style="margin-top:8px;font:italic 18px/1 'IM Fell English',serif;color:#b9a27c">Groups you may leave on a routine at once</div></div>
+    <div class="pips">${Array.from({length:slots},(_,i)=>`<span class="pip${i<used?" used":""}"></span>`).join("")}</div>
+    <div style="font:600 17px/1 'EB Garamond',serif;color:#d9c49b"><b style="color:var(--brass-hi)">${used}</b> of <b style="color:var(--brass-hi)">${slots}</b> seats taken</div>
+    <div style="margin-left:auto;font:italic 17px/1 'IM Fell English',serif;color:#a58e68">next seat in <b style="font-style:normal;color:#d9c49b">${6-fame%6}</b> reputation</div>
+  </div>
+  <div class="leather" style="left:32px;top:204px;width:440px;height:844px;padding-top:18px">
+    <div class="lbl" style="padding:0 20px 14px">Written routines</div>
+    ${ROUTINES.map((r,i)=>`<div class="rcard${i===cur?" on":""}" data-pick="${i}"><b>${r.name}</b><p>${r.desc}</p>
+      <div class="on-chip">${r.by?`<span class="mark good">On: ${r.by}</span>`:`<span class="mark">Not equipped</span>`}</div></div>`).join("")}
+    <div class="ghost-btn" style="margin:14px;justify-content:center">+ New routine</div>
+    <div class="note-l">A routine is written here. A group is given one from its own screen, where its fields can be adjusted.</div>
+  </div>
+  ${paper(496,204,1392,844)}
+  `;
+}
+function groupView(){
+  topbar("Bands","Day <b>70</b> · <b>52</b> victories · <b>9</b> members in <b>3</b> bands");
+  const run=!!RUN;
+  const img=n=>`../sheets_mockup/img/${n}`;
+  const chip=(n,sub,m,on,pic,side)=>`<div class="gchip${on?" on":""}"><div class="medal" style="--side:${side}"><img src="${img(pic)}"></div><div><b>${n}</b><small>${sub}</small></div>${m}</div>`;
+  const r=R();
+  return `
+  <div class="leather chips" style="left:32px;top:112px;width:1856px;height:84px">
+    ${chip("Hunters","Wilds · played by hand",`<span class="mark">Manual</span>`,false,"dwarf_1273682275.png","#5b8fc0")}
+    ${chip("Gatherers","Lumber Yard · gathering",`<span class="mark good">Routine</span>`,false,"dwarf_3655935669.png","#4f8a7d")}
+    ${chip("Trader",run?"on the road to the Farm":"Farm · stopped",run?`<span class="mark good">Routine</span>`:`<span class="mark bad">Stopped</span>`,true,"human_1549583429.png",run?"#4f8a7d":"#c9473a")}
+    <div style="margin-left:auto;align-self:center" class="lbl">Seats ${2-0} · 2 of 2 taken</div>
+  </div>
+  <div class="leather" style="left:32px;top:212px;width:560px;height:836px">
+    <div style="display:flex;gap:18px;align-items:center;padding:26px 26px 18px">
+      <div class="medal" style="width:84px;height:84px;--side:${run?"#4f8a7d":"#c9473a"}"><img src="${img("human_1549583429.png")}"></div>
+      <div><div style="font:700 24px/1 Cinzel,serif;letter-spacing:.1em;color:var(--brass-hi);text-transform:uppercase">Trader</div>
+      <div style="margin-top:8px;font:italic 18px/1 'IM Fell English',serif;color:#b9a27c">1 member · Human Merchant</div></div>
+    </div>
+    <div class="facts">
+      <div class="fact"><span>Where</span><b>${run?"Road to the Farm":"The Farm"}</b></div>
+      <div class="fact"><span>Doing</span><b${run?"":' class="bad"'}>${run?"Walking · 5 h left":"Waiting on you"}</b></div>
+      <div class="fact"><span>Carrying</span><b>${run?"8 Lumber · 41 coins":"126 coins"}</b></div>
+      <div class="fact"><span>Food</span><b${run?"":' class="bad"'}>${run?"3 days":"1½ days"}</b></div>
+    </div>
+    <div class="note-l">${run?"The routine runs on its own. Nothing here slows the band you are playing.":"The routine stopped here and left the pointer on the block. Play it by hand, then press Continue."}</div>
+  </div>
+  <div class="leather strip" style="left:616px;top:212px;width:1272px;height:76px">
+    <span class="lbl">Equipped</span>
+    <div class="sel-l">${r.name} <small>· a copy, edits stay on this group</small> ▾</div>
+    <div class="ghost-btn" style="margin-left:6px">Save back to Book <span class="mark new" style="margin-left:6px">new</span></div>
+    <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+      ${run?`<span class="mark good">Running</span>`:`<div class="seal">Continue</div>`}
+      <div class="ghost-btn">Take off routine</div>
+    </div>
+  </div>
+  ${paper(616,304,1272,744)}`;
+}
+const view=document.getElementById("view");
+function render(){
+  view.innerHTML=isGroup?groupView():bookView();
+}
+render();
+
+// ---- interaction (live in the prototype)
+view.addEventListener("click",e=>{
+  const t=e.target.closest("[data-plus],[data-new],[data-ref],[data-set],[data-del],[data-x],[data-pick],[data-tog],.rcard");
+  UI.demo=false;
+  if(!t){if(UI.menu||UI.ref){UI.menu=UI.ref=null;render()}return}
+  const d=t.dataset;
+  if(d.plus!=null){UI.menu=UI.menu===d.plus?null:d.plus;UI.ref=null}
+  else if(d.new){const l=listOf(d.list);l.splice(+d.i,0,NEW[d.new]());UI.menu=null}
+  else if(d.ref!=null){UI.ref=UI.ref===d.ref?null:d.ref;UI.menu=null}
+  else if(d.set){const[p,f]=d.set.split("|");const b=blockAt(p);
+    const how=d.how,arg=d.arg||null;const key=f.split(".").pop();const holder=f.startsWith("cond.")?b.cond:b;holder[key]=how==="own"||how==="here"?{how}:{how,arg};UI.ref=null}
+  else if(d.del!=null){const a=d.del.split(",");const i=+a.pop();(a.length?blockAt(a.join(",")).body:R().blocks).splice(i,1)}
+  else if(d.x){const p=t.closest("[data-p]").dataset.p;const b=blockAt(p);const a=d.x.split(".");b[a[0]].splice(+a[1],1)}
+  else if(d.tog){const b=blockAt(t.closest("[data-p]").dataset.p);b.fallback=!b.fallback}
+  else if(d.pick!=null){cur=+d.pick}
+  render();
+});
+view.addEventListener("change",e=>{
+  const el=e.target,blk=el.closest("[data-p]");
+  if(!blk)return;
+  const b=blockAt(blk.dataset.p);
+  if(el.dataset.add){const kind=el.dataset.add;if(el.value!=="+ item")b[kind].push(kind==="buy"?[el.value,1]:el.value)}
+  else if(el.dataset.f){
+    let v=el.value;const f=el.dataset.f;
+    if(el.tagName==="INPUT"){v=v===""?null:Math.max(0,+v||0)}
+    if(f==="until"){b.until=v==="until"}
+    else if(f==="cond.what"){b.cond.what=v}
+    else if(f.includes(".")&&f.split(".").length===3){const a=f.split(".");b[a[0]][+a[1]][+a[2]]=Math.max(0,+v||0)}
+    else if(f.startsWith("cond.")){b.cond[f.slice(5)]=el.tagName==="INPUT"?v:v}
+    else b[f]=v;
+  }
+  render();
+});
+// drag a block by its grip to move it onto another line
+let dragFrom=null;
+view.addEventListener("dragstart",e=>{const g=e.target.closest("[data-move]");if(!g)return;dragFrom=g.dataset.move;UI.demo=false;
+  e.dataTransfer.setData("text/plain",dragFrom);g.closest(".blk").classList.add("moving");
+  document.querySelector(".page").classList.add("dragging")});
+view.addEventListener("dragover",e=>{const g=e.target.closest(".gap");if(!g||dragFrom==null)return;e.preventDefault();
+  document.querySelectorAll(".gap.over").forEach(x=>x!==g&&x.classList.remove("over"));g.classList.add("over")});
+view.addEventListener("drop",e=>{const g=e.target.closest(".gap");if(!g||dragFrom==null)return;e.preventDefault();
+  const a=dragFrom.split(",").map(Number),from=a.pop(),fromList=a.join(",");
+  const toList=g.dataset.list;let to=+g.dataset.i;
+  const into=toList===dragFrom||toList.startsWith(dragFrom+",");          // a Repeat never goes inside itself
+  if(!into){const src=listOf(fromList),[blk]=src.splice(from,1);
+    if(fromList===toList&&from<to)to--;
+    listOf(fromList===toList||!toList.startsWith(fromList)?toList:shiftPath(toList,fromList,from)).splice(to,0,blk)}
+  dragFrom=null;render()});
+view.addEventListener("dragend",()=>{dragFrom=null;render()});
+// removing a block ahead of a path in the same list shifts that path down by one
+function shiftPath(path,fromList,from){const parts=path.split(","),d=fromList===""?0:fromList.split(",").length;
+  if(+parts[d]>from)parts[d]=+parts[d]-1;return parts.join(",")}
+
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=document.getElementById("stage");
+  st.style.transform=`scale(${s})`;st.style.left=(innerWidth-1920*s)/2+"px";st.style.top=(innerHeight-1080*s)/2+"px";}
+addEventListener("resize",fit);fit();
+</script>
+</body>
+</html>

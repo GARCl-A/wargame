@@ -109,6 +109,14 @@ over N game days checking the three criteria) once the design is chosen.
    and the block editor and its tab with the tutorial card, which also takes a group off its routine. What
    is still open is listed at the end.
 
+**The editor (author 2026-11-03; mock in `docs/web_ui/references/routines_mockup/`, pending approval).** The
+Book of routines is a tab of the guild's sheet, where routines are written. A group's own screen equips one
+and adjusts it. Each block is a sentence with inline fields. Blocks are added with a "+" between lines (the
+palette-and-drag variant lost: the "+" gives the stack more room) and moved by dragging a line by its grip.
+An equipped routine is a **copy** kept on that group, never shared with the Book or with other groups: a
+tweak (which group to take from, how much food) is "a little detail" that stays there; a "Save back to Book"
+button, new work, sends it back when wanted. Still to decide: the validation marks (item 6 of the brainstorm).
+
 ## Spec
 
 **Model.** A *routine* is a layer above `Order`: `Group.routine` holds the blocks and a pointer, and each

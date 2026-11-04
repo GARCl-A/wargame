@@ -121,6 +121,7 @@ Each folder under [references/](references/) is the approved look of a family, o
 | `report_mockup/` | after a fight: the fallen, the report, a level-up, the field, the purse |
 | `talents_mockup/` | the talent tree: THE MAP and THE BRANCH |
 | `draft_mockup/` | a new guild: vocation, pool, commission, charter |
+| `routines_mockup/` | the Book of routines and a group's routine: block editor, running, stopped |
 
 ## Known limits
 
