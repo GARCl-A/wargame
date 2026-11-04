@@ -32,6 +32,10 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
+- **Translation to pt-br** (Large). The game is all English and the friends' playtest is in Portuguese: do it
+  before the build goes out. Plan, phases and open decisions: [translation_pt_br.md](translation_pt_br.md).
+  At least phases 1-2 (framework, web client) and the settings switch; the rest can follow in slices, English
+  is the fallback.
 - The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
   ones), the overflows, the icons' authors, then the skills. The save bug, the Claim's two items, the food's
   visibility, and the log of the days moved to [programmable_orders.md](programmable_orders.md).

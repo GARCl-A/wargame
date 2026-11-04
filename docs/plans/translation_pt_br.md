@@ -1,0 +1,106 @@
+# Plan — Brazilian Portuguese translation (`pt-br`)
+
+Goal: the whole game playable in `pt-br`, chosen in Settings, with English still the default and the
+fallback. Status: **not started**; estimated before the friends' playtest (see [backlog.md](backlog.md)).
+
+Sizes below come from greps (2026-11-04), not from reading each module: re-count at the start of each phase.
+
+## What exists
+
+- `gartok/i18n.py`: nested `locales/<lang>.json` flattened to dotted keys; `t()` falls back current language
+  → `en` → the key itself; `has()`, `set_language()`, `language()`. Global language, no interpolation, no plural.
+- Converted so far: `tutorial.*` (~107 keys), `arena_talk.*`, the credits. Everything else is literal English.
+
+## What is left (the size of it)
+
+| Area | Where | Size |
+|---|---|---|
+| Sentences in code | `gartok/` — combat log, action messages, web tabs and sessions, job offers, dialogues | ~1,100 literals + ~700 f-strings |
+| Manual plurals and casing | `+ "s"`, `.title()`, `.capitalize()` | ~54 sites |
+| Catalog text | `items.py` (1,127 lines), `talents.py`, `conditions.py`, `abilities.py`, `weapon_traits.py` | names + descriptions |
+| Content JSON | `npcs/`, `maps/`, dialogue data | text embedded in files |
+| Web client | `gartok/web/client/` — ~7k lines JS, ~370 lines HTML, ~40 fixed labels | most text arrives from the server |
+| Docs generated from registries | `REFERENCE.md` | stays English |
+| Tests | assertions on English text | pin the language to `en` |
+
+## Decisions to take first
+
+1. **Name vs id.** Names double as identifiers today (`Copper Coin`, `Gold Coin`, recipes, material sources,
+   `item_icon.ICONS`, `art_files.RACE_ICON`, `map_view.NODE_ICON`, saves). The displayed name must come from
+   a catalog key and never feed back into logic. Decide the id scheme (the existing English name stays the
+   id; display goes through `i18n.name(kind, id)`) and check that saves need no bump.
+2. **Language scope.** One process-wide language (single player, simplest) or per web session (needed only
+   if the server ever serves two people at once). Start per process, behind the `i18n.language()` API so
+   it can change later.
+3. **Where the combat log lives.** The log is JSONL and rebuilds a fight (`CombatLog.record`). Record
+   structured events (key + parameters) and render text at display time, so a recording replays in any
+   language. If that is too big a change, record the rendered English and translate only the live view;
+   decide before phase 3.
+4. **Content JSON.** NPC/map/dialogue text: per-file `text` keys resolved through `i18n`, or a parallel
+   `*.pt-br.json` per file. Prefer keys in the catalog, so one place holds all translations.
+5. **Grammar.** Portuguese needs gender and articles ("o/a", "do/da", "no/na"). Plain concatenation breaks
+   it. Rule: no sentence is built by joining translated fragments; each sentence is one key with
+   placeholders, and a noun that changes an article carries its gender in the catalog entry
+   (`{"name": "Espada Longa", "gender": "f"}`).
+
+## Phases
+
+Each phase ends with the test gate green and the game playable, English unchanged. Fallback to `en` keeps a
+half-translated build usable.
+
+### 1. Framework
+
+- `i18n.t(key, **params)` with `str.format` placeholders; plural helper (`i18n.plural(key, n)` with
+  `one`/`other` forms).
+- `i18n.name(kind, id)` for catalog names/descriptions with fallback to the id.
+- Settings: a `language` entry in `settings.SPEC` (`en`, `pt-br`), saved with the other settings;
+  `set_language` at boot. Language names are written in their own language.
+- Test: every key in `locales/pt-br.json` exists in `en.json` and uses the same placeholders; every `en`
+  key has a `pt-br` one (a gap list is allowed while phases are open, then the test goes strict).
+- Test: a test that runs the whole suite's text assertions with `en` pinned (a fixture in `conftest.py`).
+- Tooling: `scripts/i18n_audit.py` lists remaining literal sentences per module (AST: string constants with
+  a space and a letter, in a call that reaches the UI or log), so progress is a number that falls.
+- Docs: `AGENTS.md` ("All text is English" becomes "all text has an `en` key"), `README.md` recipe,
+  `tests/README.md`.
+
+### 2. Web client and chrome
+
+Menus, tabs, buttons, tooltips, settings, errors, the 31 HTML screens' fixed labels, the JS strings.
+Client text moves to keys served by the session (`/locale` payload) and the client reads them. Tutorial
+cards and credits get their `pt-br` text here too.
+
+### 3. Messages and combat log
+
+Action messages, end-of-turn, traps/flags, results, AI-visible text excluded (the AI reads data, not
+prose). Convert module by module (`actions/`, `combat_log.py`, `campaign_fight.py`, `hunt`, `craft`,
+`trade`, `work_desk`, `vault`, `job_board`, …), highest-traffic first. Replace manual plurals as they are met.
+
+### 4. Catalog
+
+Item, talent, condition, racial ability, weapon trait, race, node, faction, skill and material names and
+descriptions. `REFERENCE.md` stays English (generated from registries, the `REFERENCE.md must match the
+registries` test keeps passing); the in-game wiki reads the catalog keys so it shows `pt-br`.
+
+### 5. Content and dialogue
+
+NPC names/lines, map names, job and event text, forced events, the arena talk. Needs the decision above
+on JSON text.
+
+### 6. Translate and review
+
+Fill `pt-br.json` (draft with a model, then the author reads it in play, as with the tutorial cards).
+Check: overflow on long strings (Portuguese runs ~20–30% longer: the overflow items in the backlog apply),
+accents and the font's glyph coverage (ç, ã, õ, é…), sort order, number and money formats.
+
+## Rules while the work is open
+
+- A new feature adds its text as keys from day one (never a new literal sentence in `gartok/`).
+- Commits stay Portuguese without accents, as always; this is about game text only.
+- Don't mix a phase with other changes: one phase per commit series, gate green after each.
+
+## Done when
+
+- `scripts/i18n_audit.py` reports zero literal sentences outside the allow-list (ids, log keys, dev text).
+- The key-parity test is strict.
+- A full run (title → guild → map → battle → report) in `pt-br` shows no English and no raw key.
+- The author has read the `pt-br` text in play.
