@@ -1,7 +1,8 @@
 # Plan — Brazilian Portuguese translation (`pt-br`)
 
 Goal: the whole game playable in `pt-br`, chosen in Settings, with English still the default and the
-fallback. Status: **not started**; estimated before the friends' playtest (see [backlog.md](backlog.md)).
+fallback. Status: **not started**. The translation must be COMPLETE before the next playtest (author 2026-11-04),
+all six phases (see [backlog.md](backlog.md)).
 
 Sizes below come from greps (2026-11-04), not from reading each module: re-count at the start of each phase.
 
@@ -23,25 +24,21 @@ Sizes below come from greps (2026-11-04), not from reading each module: re-count
 | Docs generated from registries | `REFERENCE.md` | stays English |
 | Tests | assertions on English text | pin the language to `en` |
 
-## Decisions to take first
+## Decisions (author 2026-11-04)
 
-1. **Name vs id.** Names double as identifiers today (`Copper Coin`, `Gold Coin`, recipes, material sources,
-   `item_icon.ICONS`, `art_files.RACE_ICON`, `map_view.NODE_ICON`, saves). The displayed name must come from
-   a catalog key and never feed back into logic. Decide the id scheme (the existing English name stays the
-   id; display goes through `i18n.name(kind, id)`) and check that saves need no bump.
-2. **Language scope.** One process-wide language (single player, simplest) or per web session (needed only
-   if the server ever serves two people at once). Start per process, behind the `i18n.language()` API so
-   it can change later.
-3. **Where the combat log lives.** The log is JSONL and rebuilds a fight (`CombatLog.record`). Record
-   structured events (key + parameters) and render text at display time, so a recording replays in any
-   language. If that is too big a change, record the rendered English and translate only the live view;
-   decide before phase 3.
-4. **Content JSON.** NPC/map/dialogue text: per-file `text` keys resolved through `i18n`, or a parallel
-   `*.pt-br.json` per file. Prefer keys in the catalog, so one place holds all translations.
-5. **Grammar.** Portuguese needs gender and articles ("o/a", "do/da", "no/na"). Plain concatenation breaks
-   it. Rule: no sentence is built by joining translated fragments; each sentence is one key with
-   placeholders, and a noun that changes an article carries its gender in the catalog entry
-   (`{"name": "Espada Longa", "gender": "f"}`).
+1. **Id vs name: decided.** An id is an id and the string on screen is another thing; the displayed name comes
+   from a catalog key and never feeds back into logic. Breaking saves for a better standard is accepted
+   (`SAVE_VERSION` bump, no migration), so ids are not bound to today's English names. Wagons get ids and
+   names the player can set (see [programmable_orders.md](programmable_orders.md)).
+2. **One catalog: leaning, not certain.** A single i18n catalog rather than one per domain; revisit if it
+   gets in the way. Language is per process behind the `i18n.language()` API.
+3. **Combat log: decided.** It records ids and parameters; the human string is rendered only in the interface,
+   so a recording replays in any language.
+4. **Content JSON.** NPC/map/dialogue text: keys in the catalog, resolved through `i18n` (still open
+   whether per-file `text` keys or a parallel file; prefer the catalog).
+5. **Grammar.** Portuguese needs gender and articles ("o/a", "do/da", "no/na"). Rule: no sentence is built
+   by joining translated fragments; each sentence is one key with placeholders, and a noun that changes an
+   article carries its gender in the catalog entry (`{"name": "Espada Longa", "gender": "f"}`).
 
 ## Phases
 

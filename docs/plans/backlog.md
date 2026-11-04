@@ -34,11 +34,9 @@ combat presentation and the hub kit are done. Left:
   and flags what still rings false.
 - **Translation to pt-br** (Large). The game is all English and the friends' playtest is in Portuguese: do it
   before the build goes out. Plan, phases and open decisions: [translation_pt_br.md](translation_pt_br.md).
-  At least phases 1-2 (framework, web client) and the settings switch; the rest can follow in slices, English
-  is the fallback.
+  The translation must be COMPLETE before the next playtest (author 2026-11-04): every phase, not a slice.
 - The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
-  ones), the overflows, the icons' authors, then the skills. The save bug, the Claim's two items, the food's
-  visibility, and the log of the days moved to [programmable_orders.md](programmable_orders.md).
+  ones), the overflows, the icons' authors, then the skills.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -222,13 +220,14 @@ the rest.
 
 ## Large
 
-- **Routine unlocks (author 2026-11-04).** Today every block and every place is open to a routine
-  ([programmable_orders.md](programmable_orders.md), *The Book of routines*). Left: blocks are mission
+- **Routine unlocks (author 2026-11-04). A POSSIBLE IDEA, not a design decision.** It is decided only after
+  the playtest with every routine open from the start. Today every block and every place is open to a routine
+  ([programmable_orders.md](programmable_orders.md), *The Book of routines*). The idea: blocks are mission
   rewards (every action `work`, `gather`, `craft`, `rest`, `travel`, `trade`, `hand_over`, `take` and every
   condition, items, coins, HP%..., is a right the player earns); a node (the Lumber Yard...) only accepts a
   routine after its mission; one gate at a time, as an arc of missions. The routines' theme is its own, apart
-  from the economic gather licence (`Guild.has_licence`), which they never read. Also the automation seats'
-  own constants (`routine_book.BASE_SLOTS`, `FAME_PER_SLOT`).
+  from the economic gather licence (`Guild.has_licence`), which they never read. The seats' constants
+  (`routine_book.BASE_SLOTS`, `FAME_PER_SLOT`) exist; their values are tuned with it.
 - **Campaign AI reading routines (author 2026-11-04).** It keeps issuing loose orders; later it reads the
   same block vocabulary of `routines.py` so the planner ([campaign_ai_roadmap.md](campaign_ai_roadmap.md))
   and the spec do not grow apart. Not part of the programmable orders arc.
@@ -524,7 +523,9 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
-- **Programmable orders: brainstorm and spec (author 2026-11-01):** [programmable_orders.md](programmable_orders.md).
+- **Programmable orders: what is left (author 2026-11-01):** [programmable_orders.md](programmable_orders.md)
+  (the screen blocks, and the playtest with every routine open; whether switching between groups is pleasant
+  is only answered at the end of that playtest).
 
 - **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
   code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar
@@ -646,10 +647,12 @@ has one "Enter" button and its functions are tabs inside.
     it. Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the
     farm patch comes up.
 
-- **DECIDE HOW HOLY SYMBOL DROPS (author 2026-11-01).** No recruit starts with one (only the Priest did) and no shelf sells it, while Faith's rite
-  (`rite.py`) consumes it, so the Faith school has no way to get it.
-  Not for sale at the Market (author's call). Decide the source: a lair pile, a mission reward, a rare
-  drop from a given foe, or a temple quest. Until then the rite cannot start in a new game.
+- **Holy Symbol source (author 2026-11-01, direction 2026-11-04).** No recruit starts with one (only the Priest
+  did) and no shelf sells it, while Faith's rite (`rite.py`) consumes it, so the Faith school has no way to
+  get it. Not for sale at the Market. Direction: (1) a super rare drop from bandit ambushes; (2) one quest
+  with a guaranteed Holy Symbol as an extra loot, tied to the author's idea of a node between the country
+  roads and the church. Open: the drop chance, which quest, and that node. Until then the rite cannot start
+  in a new game.
 
 - **Does an arena bout cost hours? (author 2026-11-01)** A bout advances the clock only by its rounds
   (6 s each, `campaign.py`), which is about a minute: a squad can chain bouts the same day with no

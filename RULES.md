@@ -1216,7 +1216,7 @@ the guild only has so many of them (`Guild.group_slots`).
 
 - **Fame** (`Guild.fame`) is the plain sum of every faction's reputation —
   deeds are one-shot and finite, so it is a measure of how widely the guild is
-  known, never a grind. **Slots** = `BASE_SLOTS` (2) + `fame // FAME_PER_SLOT`
+  known, never a grind. **Slots** = `group.BASE_SLOTS` (2) + `fame // FAME_PER_SLOT`
   (3). Fantasy: the better known the guild, the more people will work for it
   separately under one name.
 - **Every group takes a slot** — the garrison holding a base, the band cutting

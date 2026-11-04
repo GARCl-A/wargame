@@ -172,8 +172,9 @@ is in (the Tavern's rooms, `Study`, on a garrison that ends after its days); the
   `take` / `hand_over`, with the stash as the other end.
 
 A block emits the same order the screen's desk issues (`stints.order`), so the cost is paid the way the
-screen pays it and the desk keeps the one place that knows it. Still to decide: how the block names a wagon
-(by name, "the first damaged one"), and which stash a node offers.
+screen pays it and the desk keeps the one place that knows it. Wagons have no identifier today (author
+2026-11-04): they get an id and a name the player can set and change, and the block names a wagon by it.
+Still to decide: which stash a node offers.
 
-The Book's tab needs its tutorial card (`tutorial_key()` on its session and a `tutorial.<id>` block in
-`locales/en.json`, per `AGENTS.md`): part of the build, not an open question.
+**Playtest with every routine open (author 2026-11-04).** The unlocks (*Routine unlocks* in the backlog) are
+only a possible idea until this playtest. Its end also answers whether switching between groups is pleasant.
