@@ -116,6 +116,7 @@ function drawCharter() {
         <div class="fame"><b>${C.fame}</b><span>the sum of every faction's regard;<br>${C.fame_next ? `${C.fame_next} more opens another band` : "every band seat is open"}</span></div>
         <div class="slots">${Array.from({length: C.slots[1]}, (_, i) => `<i class="${i < C.slots[0] ? "on" : ""}"></i>`).join("")}</div>
         <p>${C.slots[0]} of ${C.slots[1]} bands in the field. A band past its leader's hold, with no seat free, starts to lose its weakest.</p>
+        <p>${C.routine_slots[0]} of ${C.routine_slots[1]} bands on a routine${C.routine_slots[1] ? "" : ` · ${C.routine_next} more fame opens the first`}.</p>
         <div class="kicker" style="margin-top:30px">Standing</div><div class="stand">${standing}</div>
       </div>
       <div>

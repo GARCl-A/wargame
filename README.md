@@ -132,7 +132,8 @@ gartok/
   medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab
   rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
-  routines.py       the blocks a player gives a group to run under its orders (travel, gather, wait, take, hand over, trade, repeat); `campaign.advance` asks it for the next order
+  routine_book.py   the Book of routines: how many groups the guild may leave on a routine (seats from fame, none to start)
+  routines.py       the blocks a player gives a group to run under its orders (travel, gather, work, craft, rest, wait, take, hand over, trade, repeat); `campaign.advance` asks it for the next order
   rest.py           what a rest order costs in rations and how long "until full" lasts
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
   objectives.py     the guild's 17 small orientation tasks (REPUTATIONS tab), each teaching a system

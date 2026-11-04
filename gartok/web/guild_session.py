@@ -20,6 +20,7 @@ from .. import (
     items,
     missions,
     objectives,
+    routine_book,
     store_column,
 )
 from .. import wagon as wagon_mod
@@ -473,6 +474,8 @@ class GuildSession(Session):
         return {
             "vocation": s._vocation(),
             "fame": g.fame, "fame_next": g.fame_to_next_slot, "slots": [len(g.groups), g.group_slots],
+            "routine_slots": [routine_book.used(g), routine_book.slots(g)],
+            "routine_next": routine_book.fame_to_next_slot(g),
             "standing": [{"name": f.name, "rep": g.reputation.get(f.id, 0)} for f in known],
             "groups": [{**r, "gid": gr.gid, "task": self._task(gr.gid).capitalize()}
                        for r, gr in zip(s._group_rows(), g.groups)],

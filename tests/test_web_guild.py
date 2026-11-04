@@ -3,7 +3,7 @@ same session the server routes to."""
 
 import pytest
 
-from gartok import orders, persist, recorder
+from gartok import orders, persist, recorder, routine_book
 from gartok.animals import HARNESS, Animal
 from gartok.captives import Captive
 from gartok.group import Group
@@ -245,6 +245,7 @@ def test_the_charter_reads_the_bands_the_slots_and_the_strongbox_inside():
     st = sheet.pick_tab("guild")["guild"]
     assert [r["gid"] for r in st["groups"]] == [gr.gid for gr in guild.groups]
     assert st["slots"] == [2, guild.group_slots]
+    assert st["routine_slots"] == [0, 0] and st["routine_next"] == routine_book.FAME_PER_SLOT
     box = next(h for h in st["holdings"] if h["name"] == "Strongbox")
     assert box["inside"] == [{"name": "Rope", "qty": 2, "glyph": box["inside"][0]["glyph"]}]
     assert {h["name"] for h in st["holdings"]} == {"City house", "The Claim", "Strongbox"}

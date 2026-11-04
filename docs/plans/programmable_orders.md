@@ -102,10 +102,12 @@ over N game days checking the three criteria) once the design is chosen.
 1. **Programmable orders (author 2026-11-03).** Decided in the brainstorm. Built so far: the
    chronological slices of a forced `dt` in `campaign._advance`, and the engine in `routines.py` (`Travel`,
    `Gather`, `Work`, `Craft`, `Rest`, `Wait`, `Take`, `HandOver`, `Trade` (with its `max_spend` cap), `Repeat`,
-   the conditions, the pause and *Continue*, the save; `Gather` skips the economic licence). The proof of
-   concept above runs green as `tests/test_routines_poc.py` (24 game days, A by hand). Still to build: the
-   Book of routines (slots from reputation, the unlocks), the block editor and its tab with the tutorial
-   card, and the *Continue* button. What is still open is listed at the end.
+   the conditions, the pause and *Continue*, the save; `Gather` skips the economic licence; the map's
+   CONTINUE ROUTINE button and the "Routine stopped" chip). The proof of concept above runs green as
+   `tests/test_routines_poc.py` (24 game days, A by hand). The Book's automation seats
+   are in (`routine_book.py`, from fame, none to start). Still to build: the unlocks (first build: all open)
+   and the block editor and its tab with the tutorial card, which also takes a group off its routine. What
+   is still open is listed at the end.
 
 ## Spec
 

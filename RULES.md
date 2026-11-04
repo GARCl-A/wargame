@@ -1222,6 +1222,9 @@ the guild only has so many of them (`Guild.group_slots`).
   as is (it just can't split further); a freed prisoner always gets a place.
 - Fame sets **how many** groups; the group leader's Charisma still sets **how
   big** each can be (`Group.capacity`).
+- **Automation seats** (`routine_book.py`) follow the same shape: a new guild has
+  none, and every 6 points of fame open one more group that may be
+  left on a routine. A group holding a routine, stopped or running, takes a seat.
 
 **Cohesion** (`cohesion.py`, run once a day from `Guild._daily_upkeep`). A group
 past its capacity is overextended (the Mental Defense penalty stays as the
