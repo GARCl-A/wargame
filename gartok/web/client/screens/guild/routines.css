@@ -88,3 +88,26 @@ select.fld:focus,input.fld:focus{outline:2px solid var(--brass);outline-offset:1
 .sw{position:relative;width:38px;height:20px;border-radius:10px;background:#a79270;box-shadow:inset 0 1px 3px rgba(0,0,0,.4);flex:none}
 .sw:after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#efe2c3;box-shadow:0 1px 2px rgba(0,0,0,.4);transition:left .12s}
 .sw.on{background:var(--vd)}.sw.on:after{left:21px}
+
+/* a band's own copy, on the BANDS tab */
+.bchip .mark{margin-left:10px}
+#bar .vtog{display:flex;margin-left:auto;border:1px solid rgba(201,163,94,.3);border-radius:3px;overflow:hidden;flex:none}
+#bar .vtog span{padding:10px 16px;font:600 10.5px/1 Cinzel,serif;letter-spacing:.2em;text-transform:uppercase;color:#a58e68;cursor:pointer}
+#bar .vtog span.on{background:rgba(240,215,158,.14);color:var(--brass-hi);cursor:default}
+#bar .vtog+.acts{margin-left:0}
+#gbar{left:32px;top:196px;width:1856px;height:68px;display:flex;align-items:center;gap:20px;padding:0 24px}
+#gbar .eq b{font:700 15px/1 Cinzel,serif;letter-spacing:.1em;color:var(--brass-hi);text-transform:uppercase}
+#gbar .eq i{margin-left:12px;font:italic 18px/1 "IM Fell English",serif;color:#a58e68}
+#gbar .sp{flex:1}
+#gbar .ghost-btn{height:34px;cursor:pointer;font:600 10.5px/1 Cinzel,serif;letter-spacing:.18em;text-transform:uppercase}
+#gbar .ghost-btn.warn{color:#fbe9dd;background:var(--blood)}
+#gbar .ghost-btn.go{background:var(--blood);color:#fbe9dd;border-color:var(--blood);padding:0 26px;height:42px}
+#bpage .desc.ro{margin:10px 0 20px}
+#bpage .pages{display:flex;flex-wrap:wrap;gap:12px;max-width:900px}
+#bpage .rcard{margin:0;min-width:260px;cursor:pointer;background:rgba(255,250,235,.45);border-color:rgba(90,60,30,.4)}
+#bpage .rcard b{color:var(--ink)}
+.blk.now{background:rgba(240,215,158,.55);border-color:var(--brass)}
+.blk.stop{background:rgba(154,47,34,.14);border-color:var(--blood)}
+.blk .where{position:absolute;right:44px;top:12px;padding:5px 10px;border-radius:2px;font:600 9.5px/1 Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;color:#eadcbc;background:#1a130d}
+.blk.stop .where{background:var(--blood)}
+.blk .why{margin:2px 0 0;font:italic 18px/1.2 "IM Fell English",serif;color:#8a2a20}

@@ -141,3 +141,64 @@ def test_the_written_routines_survive_a_save():
     persist.save_game(world_id, guild)
     loaded = persist.load_game(world_id)
     assert [(p.name, p.note, p.blocks) for p in loaded.routine_pages] == [("Trader", "carries", trader), ("Gatherer", "", gatherer)]
+
+
+def test_a_group_is_given_a_copy_that_its_own_edits_never_touch():
+    guild = _guild("city")
+    guild.reputation["arena"] = book.FAME_PER_SLOT
+    guild.routine_pages.append(book.Page("Walker", (r.Rest(8), r.Travel("farm")), "a note"))
+    group = guild.groups[0]
+    book.equip(guild, group, 0)
+    assert group.routine.name == "Walker" and group.routine.note == "a note" and group.order is not None
+    book.adjust(guild, group, r.dump((r.Rest(2),)))
+    assert group.routine.blocks == (r.Rest(2),) and guild.routine_pages[0].blocks == (r.Rest(8), r.Travel("farm"))
+
+
+def test_equipping_needs_a_free_seat_and_a_group_without_a_routine():
+    guild = _guild("city")
+    guild.routine_pages.append(book.Page("Walker", (r.Rest(8),)))
+    with pytest.raises(ValueError, match="no free automation slot"):
+        book.equip(guild, guild.groups[0], 0)
+    guild.reputation["arena"] = book.FAME_PER_SLOT
+    book.equip(guild, guild.groups[0], 0)
+    with pytest.raises(ValueError, match="already has a routine"):
+        book.equip(guild, guild.groups[0], 0)
+
+
+def test_adjusting_keeps_the_pointer_when_the_block_is_still_there_and_starts_over_when_not():
+    guild = _guild("city")
+    guild.reputation["arena"] = book.FAME_PER_SLOT
+    group = guild.groups[0]
+    book.assign(guild, group, r.Routine([r.Rest(1), r.Rest(2), r.Rest(3)], path=[2]))
+    book.adjust(guild, group, r.dump((r.Rest(1), r.Rest(2), r.Rest(9))))
+    assert group.routine.path == [2]
+    book.adjust(guild, group, r.dump((r.Rest(1),)))
+    assert group.routine.path == [0]
+    with pytest.raises(ValueError, match="unknown place"):
+        book.adjust(guild, group, r.dump((r.Travel("nowhere"),)))
+    assert group.routine.blocks == (r.Rest(1),)
+
+
+def test_taking_off_and_saving_back_to_the_book():
+    guild = _guild("city")
+    guild.reputation["arena"] = book.FAME_PER_SLOT
+    guild.routine_pages.append(book.Page("Walker", (r.Rest(8),)))
+    group = guild.groups[0]
+    book.equip(guild, group, 0)
+    book.adjust(guild, group, r.dump((r.Rest(3),)))
+    assert book.save_back(guild, group) == 1
+    assert [p.name for p in guild.routine_pages] == ["Walker", "Walker 2"]
+    assert guild.routine_pages[1].blocks == (r.Rest(3),) and guild.routine_pages[0].blocks == (r.Rest(8),)
+    book.take_off(group)
+    assert group.routine is None and book.used(guild) == 0
+
+
+def test_a_copy_travels_in_the_save_with_its_name():
+    guild = _guild("city")
+    guild.reputation["arena"] = book.FAME_PER_SLOT
+    guild.routine_pages.append(book.Page("Walker", (r.Rest(8),), "n"))
+    book.equip(guild, guild.groups[0], 0)
+    d = r.dump(guild.groups[0].routine)
+    back = r.load(d)
+    assert (back.name, back.note) == ("Walker", "n")
+    assert r.load({k: v for k, v in d.items() if k not in ("name", "note")}).name == ""

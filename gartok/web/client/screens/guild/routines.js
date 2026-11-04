@@ -2,11 +2,12 @@
 // sentences with inline fields (after references/routines_mockup). A "+" between two lines adds a block, a
 // line moves by its grip, any underlined word changes it. The page is the `routines.dump` shape the server
 // keeps: an edit changes the working copy and posts the whole page, and the server's answer redraws the tab
-// (a refusal puts the page back as it was).
+// (a refusal puts the page back as it was). The same editor writes the copy a band was given, on the BANDS
+// tab's routine view (`group`): there it adjusts fields and blocks, never the Book's page.
 "use strict";
 
 const Book = (() => {
-  let R = null, P = null, menu = null, refOpen = null, drag = null, sure = false;
+  let R = null, P = null, menu = null, refOpen = null, drag = null, sure = false, mode = "book", AT = null, STOP = null, BAND = null, keepTop = 0;
   const OPS = ["<", "<=", ">", ">="], OPL = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"};
   const DOING = {gather: "gathering", work: "working", craft: "crafting", rest: "resting", travel: "travelling"};
   const SIGN = {Wait: "⏳", Take: "⤓", HandOver: "⇄", Repeat: "↻", Trade: "¤", Travel: "➜", Gather: "⛏", Work: "⚒", Craft: "✎", Rest: "☾"};
@@ -112,8 +113,9 @@ const Book = (() => {
     let h = gap(list, 0);
     blocks.forEach((b, i) => {
       const p = list === "" ? "" + i : `${list},${i}`;
-      h += `<div class="blk" data-p="${p}"><span class="grip" draggable="true" data-move="${p}"${tip("Drag to move this line")}>⠿</span><span class="glyph">${SIGN[b._]}</span>
-        <div class="sent">${sentence(b, p)}</div><span class="del" data-del="${p}"${tip("Remove this block")}>×</span></div>`;
+      const now = AT === p ? (STOP ? " stop" : " now") : "";
+      h += `<div class="blk${now}" data-p="${p}"><span class="grip" draggable="true" data-move="${p}"${tip("Drag to move this line")}>⠿</span><span class="glyph">${SIGN[b._]}</span>
+        <div class="sent">${sentence(b, p)}${AT === p && STOP ? `<p class="why">Stopped: ${esc(STOP)}. Fix it by hand, then press Continue.</p>` : ""}</div><span class="del" data-del="${p}"${tip("Remove this block")}>×</span>${now ? `<span class="where">${STOP ? "Stopped" : "Here"}</span>` : ""}</div>`;
       if (b._ === "Repeat") h += `<div class="body">${stack(b.body, p)}</div>`;
       h += gap(list, i + 1);
     });
@@ -146,6 +148,8 @@ const Book = (() => {
   }
 
   function draw(routines) {
+    mode = "book";
+    AT = STOP = null;
     R = routines;
     const src = R.pages[R.pick];
     P = src ? JSON.parse(JSON.stringify(src)) : null;
@@ -159,13 +163,55 @@ const Book = (() => {
 
   async function save() {
     menu = refOpen = null;
+    if (mode === "group") {
+      if (!await post("routine_save", {blocks: P.blocks})) redraw();
+      return;
+    }
     const r = await post("book_save", {i: R.pick, name: P.name, note: P.note, blocks: P.blocks});
     if (!r) draw(G.routines);
   }
 
+  // ---------------------------------------------------------------- a band's own copy
+  function group(st) {
+    mode = "group";
+    BAND = st;
+    R = st.routine || {vocab: null};
+    keepTop = $("bpage") ? $("bpage").scrollTop : 0;
+    if (!st.routine) {
+      P = null;
+      const [used, slots] = st.equip.seats, pages = st.equip.pages;
+      const cards = pages.map(([i, n]) => `<div class="rcard" data-equip="${i}"><b>${esc(n)}</b></div>`).join("");
+      return `<div class="paper" id="bpage" style="left:32px;top:196px;width:1856px;height:852px"><div class="kicker">This band has no routine</div>
+        <div class="desc" style="margin-top:20px">${!pages.length ? "Nothing is written yet. The Routines tab is where the Book is filled."
+          : used >= slots ? "Every seat is taken. Take a routine off another band, or earn reputation for a new seat."
+          : "Pick a routine from the Book: the band gets a copy, and what it changes there stays on this band."}</div>
+        <div class="pages">${cards}</div></div>`;
+    }
+    P = JSON.parse(JSON.stringify(st.routine));
+    AT = P.at;
+    STOP = P.paused;
+    const state = STOP ? `<div class="ghost-btn go" id="bcont">Continue</div>` : `<span class="mark good">Running</span>`;
+    return `<div class="leather" id="gbar"><span class="lbl">Equipped</span>
+        <div class="eq"><b>${esc(P.name || "A routine")}</b><i>a copy, edits stay on this band</i></div>
+        <div class="ghost-btn" id="bback"${tip("Write this copy into the Book as a page of its own")}>Save back to Book</div>
+        <span class="sp"></span>${state}
+        <div class="ghost-btn${sure ? " warn" : ""}" id="btake">${sure ? "Press again to take it off" : "Take off routine"}</div></div>
+      <div class="paper" id="bpage" style="left:32px;top:276px;width:1856px;height:772px"><div class="kicker">The routine on this band</div>
+      ${P.note ? `<div class="desc ro">${esc(P.note)}</div>` : ""}
+      <div class="stack">${stack(P.blocks, "")}</div></div>`;
+  }
+
+  function settle() {
+    drag = null;
+    if ($("bpage")) $("bpage").scrollTop = keepTop;
+    const pop = document.querySelector(".menu, .refpop");
+    if (pop && pop.getBoundingClientRect().bottom > $("screen").getBoundingClientRect().bottom - 16) pop.classList.add("up");
+  }
+  const redraw = () => mode === "group" ? Bands.draw(BAND) : draw(R);
+
   // ---------------------------------------------------------------- the verbs
   const body = $("body");
-  const mine = () => G && G.tab === "routines" && R;
+  const mine = () => G && R && (mode === "group" ? G.tab === "bands" && G.bands.view === "routine" : G.tab === "routines");
   function holder(p, f) {
     const b = blockAt(p);
     return f.startsWith("cond.") ? b.cond : b;
@@ -177,22 +223,30 @@ const Book = (() => {
 
   body.addEventListener("click", e => {
     if (!mine()) return;
-    const t = e.target.closest("[data-plus],[data-new],[data-ref],[data-set],[data-del],[data-x],[data-pick],[data-tog],#bnew,#btear");
+    const t = e.target.closest("[data-plus],[data-new],[data-ref],[data-set],[data-del],[data-x],[data-pick],[data-tog],#bnew,#btear,#bback,#btake,#bcont,[data-equip]");
     if (!t) {
-      if (menu || refOpen || sure) { menu = refOpen = null; sure = false; draw(R); }
+      if (menu || refOpen || sure) { menu = refOpen = null; sure = false; redraw(); }
       return;
     }
     const d = t.dataset;
+    if (d.equip != null) return post("equip", {i: +d.equip});
+    if (t.id === "bback") return post("save_back");
+    if (t.id === "bcont") return post("continue_routine");
+    if (t.id === "btake") {
+      if (!sure) { sure = true; return redraw(); }
+      sure = false;
+      return post("take_off");
+    }
     if (t.id === "bnew") return post("book_new", {});
     if (t.id === "btear") {
-      if (!sure) { sure = true; return draw(R); }
+      if (!sure) { sure = true; return redraw(); }
       sure = false;
       return post("book_tear", {i: R.pick});
     }
     sure = false;
     if (d.pick != null) return post("book_pick", {i: +d.pick});
-    if (d.plus != null) { menu = menu === d.plus ? null : d.plus; refOpen = null; return draw(R); }
-    if (d.ref != null) { refOpen = refOpen === d.ref ? null : d.ref; menu = null; return draw(R); }
+    if (d.plus != null) { menu = menu === d.plus ? null : d.plus; refOpen = null; return redraw(); }
+    if (d.ref != null) { refOpen = refOpen === d.ref ? null : d.ref; menu = null; return redraw(); }
     if (d.new) { listOf(d.list).splice(+d.i, 0, fresh[d.new]()); return save(); }
     if (d.set) { setRef(d.set, d.how, d.arg); return save(); }
     if (d.del != null) {
@@ -267,21 +321,21 @@ const Book = (() => {
     let to = +g.dataset.i;
     const inside = toList === drag || toList.startsWith(drag + ",");
     drag = null;
-    if (inside) return draw(R);
+    if (inside) return redraw();
     const [blk] = listOf(fromList).splice(from, 1);
     if (fromList === toList && from < to) to--;
     listOf(fromList === toList || !toList.startsWith(fromList) ? toList : shift(toList, fromList, from)).splice(to, 0, blk);
     save();
   });
-  body.addEventListener("dragend", () => { if (drag != null) { drag = null; draw(R); } });
+  body.addEventListener("dragend", () => { if (drag != null) { drag = null; redraw(); } });
 
   function escape() {
     if (!menu && !refOpen && !sure) return false;
     menu = refOpen = null;
     sure = false;
-    draw(R);
+    redraw();
     return true;
   }
 
-  return {draw, escape};
+  return {draw, escape, group, settle};
 })();

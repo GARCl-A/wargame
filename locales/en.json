@@ -76,6 +76,13 @@
           "Below them, each faction lists its deeds. Reputation only moves when you pull one off -- a one-shot achievement, not a grind -- and it unlocks what the card lists. The Pits and the Bankers are open from day one; the others appear once you walk into their places."
         ]
       },
+      "band_routine": {
+        "title": "A routine on a band",
+        "body": [
+          "Pick a routine from the Book and the band is given a copy: change its fields or steps here and only this band's copy changes. SAVE BACK TO BOOK writes the copy down as a page of its own.",
+          "The lit line is where the band is. When a step cannot run, or an ambush or hunger interrupts, the routine stops on that line and the band waits for you: put it right by hand, then press CONTINUE. TAKE OFF ROUTINE frees the seat."
+        ]
+      },
       "routines": {
         "title": "Orders that run on their own",
         "body": [

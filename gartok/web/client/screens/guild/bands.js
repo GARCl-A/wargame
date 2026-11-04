@@ -29,18 +29,19 @@ const Bands = (() => {
       : `<b${tip(c.name)}><em class="bn">${esc(c.name)}</em>${on ? `<i class="pen" id="pen" data-tip="Rename the band">✎</i>` : ""}</b>`;
     return `<div class="bchip ${on ? "on" : ""} ${c.locked ? "fight" : ""}" data-band="${c.gid}">
       <div class="medals">${c.faces.map(f => `<div class="medal">${face(f, c.name)}</div>`).join("")}</div>
-      <div>${name}<span>${esc(c.where)} · ${esc(c.task)} · ${c.size} of ${c.capacity}</span></div></div>`;
+      <div>${name}<span>${esc(c.where)} · ${esc(c.task)} · ${c.size} of ${c.capacity}</span></div>${c.mark ? `<em class="mark ${c.mark[1]}">${esc(c.mark[0])}</em>` : ""}</div>`;
   }
 
   function bar() {
     const [l, n] = B.load, tight = l > n * .9;
-    const acts = B.actions.map(a => `<div class="ghost-btn ${a.on && !B.locked ? "" : "off"}" data-btn="${a.key}"${tip(a.tip)}>${ico(a.glyph)}${esc(a.label)}</div>`).join("");
+    const views = [["packs", "Packs"], ["routine", "Routine"]].map(([k, l]) => `<span class="${B.view === k ? "on" : ""}" data-view="${k}">${l}</span>`).join("");
+    const acts = B.view === "routine" ? "" : B.actions.map(a => `<div class="ghost-btn ${a.on && !B.locked ? "" : "off"}" data-btn="${a.key}"${tip(a.tip)}>${ico(a.glyph)}${esc(a.label)}</div>`).join("");
     return `<div class="leather" id="bar"><div class="chips2">${B.chips.map(chip).join("")}</div><div class="vline"></div>
       <div class="metric ${l > n ? "bad" : tight ? "tight" : ""}"><span class="lbl">Band load</span><b>${l} <small>/ ${n} kg</small></b></div>
       <div class="metric ${B.rations ? "" : "bad"}"><span class="lbl">Rations</span><b>${B.rotten ? `${B.rotten} (all rotten)` : plural(B.rations, "day")}</b></div>
       <div class="metric"><span class="lbl">Pace</span><b>${esc(B.speed)}</b></div>
       ${B.over ? `<div class="metric bad"${tip(`Past the leader's hold: −${B.over} mental defense`)}><span class="lbl">Over its hold</span><b>${B.over}</b></div>` : ""}
-      <div class="acts">${acts}</div></div>`;
+      <div class="vtog">${views}</div><div class="acts">${acts}</div></div>`;
   }
 
   // ---------------------------------------------------------------- the columns
@@ -107,6 +108,10 @@ const Bands = (() => {
     const keep = {cols: $("cols") ? $("cols").scrollLeft : 0, lists: {}};
     document.querySelectorAll(".col[data-owner]").forEach(c => { const l = c.querySelector(".packlist"); if (l) keep.lists[c.dataset.owner] = l.scrollTop; });
     const locked = B.locked ? "locked" : "";
+    if (B.view === "routine") {
+      $("body").innerHTML = bar() + (B.locked ? `<div class="lockline">${esc(B.lock_tip)}</div>` : "") + Book.group(B);
+      return Book.settle();
+    }
     $("body").innerHTML = bar() + (B.locked ? `<div class="lockline">${esc(B.lock_tip)}</div>` : "")
       + `<div id="cols" class="${locked}">${B.packs.map(column).join("")}</div><div id="side" class="${locked}">${side()}</div>`;
     $("cols").scrollLeft = keep.cols;
@@ -160,6 +165,11 @@ const Bands = (() => {
     if (el.closest("#pen")) { naming = true; return redraw(); }
     if (c) {
       if (c.dataset.band !== B.gid) { picks = null; post("band", {gid: c.dataset.band}); }
+      return;
+    }
+    const v = el.closest("[data-view]");
+    if (v) {
+      if (v.dataset.view !== B.view) post("view", {view: v.dataset.view});
       return;
     }
     const b = el.closest("[data-btn]");
@@ -261,7 +271,7 @@ const Bands = (() => {
     else if (el && el.closest("#body")) click(el, e);
   });
   body.addEventListener("contextmenu", e => {
-    if (!B || G.tab !== "bands") return;
+    if (!B || G.tab !== "bands" || B.view === "routine") return;
     e.preventDefault();
     const it = source(e.target);
     if (it && it.loc !== "hitch") menu(e, it);
@@ -269,6 +279,7 @@ const Bands = (() => {
   addEventListener("pointerdown", e => { if (!e.target.closest("#menu")) $("menu").hidden = true; }, true);
 
   function escape() {
+    if (B.view === "routine") return Book.escape();
     if (!$("menu").hidden) { $("menu").hidden = true; return true; }
     if (picks) { picks = null; redraw(); return true; }
     return false;

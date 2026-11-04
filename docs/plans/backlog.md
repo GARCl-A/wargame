@@ -218,6 +218,10 @@ the rest.
 
 ## Large
 
+- **Routine unlocks (author 2026-11-04).** Today every block and every place is open to a routine
+  ([programmable_orders.md](programmable_orders.md), *The Book of routines*). Left: which missions unlock which
+  blocks (actions and conditions) and which places (a node only accepts a routine after its mission), and the
+  automation seats' own constants (`routine_book.BASE_SLOTS`, `FAME_PER_SLOT`).
 - **Weapon actions: tune the favoured cases after a playtest.** Out of its case an
   action is one strike; in it the strike lands twice over plus a small edge (RULES.md *Weapon actions*,
   `favoured` on each action, the premise held by `test_ai_actions`). Left: whether each case comes up

@@ -137,13 +137,7 @@ def write(guild, name):
 def save(guild, index, name, note, blocks_data):
     """Replace page `index` with what the editor sent (the `routines.dump` shape). Nothing changes on a refusal."""
     page = guild.routine_pages[index]
-    try:
-        blocks = routines.load(blocks_data)
-        if not isinstance(blocks, tuple):
-            raise TypeError("a routine is a list of blocks")
-        check(guild, blocks)
-    except (KeyError, TypeError) as err:
-        raise ValueError("that routine is not well formed") from err
+    blocks = _parse(guild, blocks_data)
     page.name = _clean_name(guild, name, page)
     page.note = " ".join((note or "").split())[:NOTE_MAX]
     page.blocks = blocks
@@ -151,3 +145,62 @@ def save(guild, index, name, note, blocks_data):
 
 def tear(guild, index):
     del guild.routine_pages[index]
+
+
+def _parse(guild, blocks_data):
+    try:
+        blocks = routines.load(blocks_data)
+        if not isinstance(blocks, tuple):
+            raise TypeError("a routine is a list of blocks")
+        check(guild, blocks)
+    except (KeyError, TypeError) as err:
+        raise ValueError("that routine is not well formed") from err
+    return blocks
+
+
+def equip(guild, group, index):
+    """Give an idle `group` a copy of page `index`: what it adjusts afterwards never touches the Book."""
+    page = guild.routine_pages[index]
+    if group.routine is not None:
+        raise ValueError(f"{group.display_name} already has a routine")
+    copy = routines.Routine(routines.load(routines.dump(page.blocks)), name=page.name, note=page.note)
+    return assign(guild, group, copy)
+
+
+def _fits(blocks, path):
+    level = blocks
+    for depth, i in enumerate(path):
+        if i >= len(level):
+            return False
+        if depth < len(path) - 1:
+            if not isinstance(level[i], routines.Repeat):
+                return False
+            level = level[i].body
+    return True
+
+
+def adjust(guild, group, blocks_data):
+    """Replace the blocks of the routine on `group`; the pointer stays when it still points at a block, else
+    the routine starts over. Nothing changes on a refusal."""
+    routine = group.routine
+    blocks = _parse(guild, blocks_data)
+    routine.blocks = blocks
+    if not _fits(blocks, routine.path):
+        routine.path, routine.inflight, routine.waited_since = [0], False, None
+
+
+def take_off(group):
+    """The group is given back to the player; an order already out is left to finish."""
+    group.routine = None
+
+
+def save_back(guild, group):
+    """Send the group's copy to the Book as a page of its own. Returns its index."""
+    routine = group.routine
+    base = routine.name or "Routine"
+    name, n = base, 1
+    while any(p.name == name for p in guild.routine_pages):
+        n += 1
+        name = f"{base} {n}"[:NAME_MAX]
+    guild.routine_pages.append(Page(name, routine.blocks, routine.note))
+    return len(guild.routine_pages) - 1

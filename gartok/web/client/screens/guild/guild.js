@@ -168,7 +168,6 @@ function draw() {
   else if (G.tab === "guild") drawCharter();
   else if (G.tab === "reputations") drawReputations();
   else if (G.tab === "routines") Book.draw(G.routines);
-  else if (G.tab === "routines") Book.draw(G.routines);
   else Bands.draw(G.bands);
   toast(G.notice);
 }

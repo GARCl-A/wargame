@@ -220,6 +220,8 @@ class Routine:
     inflight: bool = False                             # a timed block's order is out: its resolving finishes the block
     paused: str | None = None                          # why the routine is waiting on the player
     waited_since: float | None = None                  # clock second a `HandOver` began waiting for its receiver
+    name: str = ""                                     # the Book page this is a copy of, for the group's screen
+    note: str = ""
 
     def __post_init__(self):
         self.blocks = tuple(self.blocks)

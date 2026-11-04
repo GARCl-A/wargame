@@ -107,9 +107,10 @@ over N game days checking the three criteria) once the design is chosen.
    `tests/test_routines_poc.py` (24 game days, A by hand). The Book's automation seats
    are in (`routine_book.py`, from fame, none to start), and so is the Book itself: the guild sheet's ROUTINES
    tab writes, renames and tears out routines (`routine_book.Page`, `check`, saved with the guild) with its
-   tutorial card. Still to build: the group's side (equip a copy from the BANDS tab, adjust its fields, take it
-   off, save it back to the Book) and the unlocks (first build: all open). What is still open is listed at the
-   end.
+   tutorial card, and the group's side is in: the BANDS tab's Routine view equips a copy of a page, adjusts it
+   with the same editor, shows where the band is and why it stopped (*Continue*), takes it off and saves it
+   back to the Book. The first build has every block and place open; the unlocks are in the backlog. Still to decide: the
+   validation marks (below).
 
 **The editor (author 2026-11-03; approved mock in `docs/web_ui/references/routines_mockup/`).** The
 Book of routines is a tab of the guild's sheet, where routines are written. A group's own screen equips one
@@ -184,11 +185,6 @@ nesting for `repeat`.
 reading the same block vocabulary so the planner and the spec do not grow apart); the production chain's
 dynamic prices (the proof of concept runs at fixed prices); interactive screens (`market`, `forge`...) as
 blocks: only silent orders plus `trade` and `craft`.
-
-**Open.**
-
-1. **Which missions unlock which blocks and places**, and the automation slots' own constants (base slots,
-   reputation per extra slot). Content, for the arc after the first build.
 
 The Book's tab needs its tutorial card (`tutorial_key()` on its session and a `tutorial.<id>` block in
 `locales/en.json`, per `AGENTS.md`): part of the build, not an open question.

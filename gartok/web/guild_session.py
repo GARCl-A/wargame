@@ -22,6 +22,7 @@ from .. import (
     missions,
     objectives,
     routine_book,
+    routines,
     store_column,
     world,
 )
@@ -69,6 +70,12 @@ class GuildSession(Session):
         "book_new": lambda s, b: s.book_new(b.get("name", "")),
         "book_save": lambda s, b: s.book_save(int(b["i"]), b.get("name", ""), b.get("note", ""), b["blocks"]),
         "book_tear": lambda s, b: s.book_tear(int(b["i"])),
+        "view": lambda s, b: s.show_view(b["view"]),
+        "equip": lambda s, b: s.equip(int(b["i"])),
+        "routine_save": lambda s, b: s.routine_save(b["blocks"]),
+        "take_off": lambda s, b: s.take_off(),
+        "save_back": lambda s, b: s.save_back(),
+        "continue_routine": lambda s, b: s.continue_routine(),
         "back": lambda s, b: s.map.back(),
     }
 
@@ -80,6 +87,7 @@ class GuildSession(Session):
         self.notice = None
         self.gear = None
         self.page = 0
+        self.view = "packs"
         self._set_band(gid or self._default_band())
         if tab == "bands" and self.gear.group.members:
             self.desk.member = self.gear.group.members[0]
@@ -113,7 +121,9 @@ class GuildSession(Session):
         return out
 
     def tutorial_key(self):
-        return {"bands": "group", "guild": "guild.overview"}.get(self.tab, f"guild.{self.tab}")
+        if self.tab == "bands":
+            return "guild.band_routine" if self.view == "routine" else "group"
+        return {"guild": "guild.overview"}.get(self.tab, f"guild.{self.tab}")
 
     def sheet_units(self):
         return self.desk._everyone()
@@ -325,7 +335,19 @@ class GuildSession(Session):
     def _chip(self, g):
         return {"gid": g.gid, "name": g.display_name, "where": node_label(g.node), "task": self._task(g.gid),
                 "size": len(g.members), "capacity": g.capacity, "faces": [_portrait(u) for u in g.members[:4]],
-                "locked": g.fight_due}
+                "locked": g.fight_due, "mark": self._mark(g)}
+
+    @staticmethod
+    def _mark(g):
+        if g.routine is None:
+            return None
+        return ["Stopped", "bad"] if g.routine.paused else ["Routine", "good"]
+
+    def _routine_of(self, g):
+        r = g.routine
+        return None if r is None else {
+            "name": r.name, "note": r.note, "blocks": routines.dump(r.blocks), "at": ",".join(map(str, r.path)),
+            "paused": r.paused, "running": not r.paused, "vocab": self._vocab()}
 
     def _bands(self):
         g = self.group
@@ -337,6 +359,9 @@ class GuildSession(Session):
             "chips": [self._chip(gr) for gr in self.guild.groups if not gr.empty],
             "gid": g.gid, "name": g.display_name, "custom": g.name or "",
             "locked": g.fight_due, "lock_tip": FIGHT_DUE_TIP if g.fight_due else "",
+            "routine": self._routine_of(g), "view": self.view,
+            "equip": {"pages": [[i, p.name] for i, p in enumerate(self.guild.routine_pages)],
+                      "seats": [routine_book.used(self.guild), routine_book.slots(self.guild)]},
             "load": [round(g.total_load, 1), g.total_carry_normal, g.total_carry_max],
             "rations": g.rations_days, "rotten": 0 if g.rations else g.rotten_rations, "speed": f"{g.speed:g} m",
             "over": g.overextension,
@@ -347,6 +372,53 @@ class GuildSession(Session):
             "captives": [{"uid": c.unit.uid, "name": c.name, "race": c.unit.race["name"], "days": c.days_left(today)}
                          for c in g.captives],
         }
+
+    def show_view(self, view):
+        if view not in ("packs", "routine"):
+            raise ValueError("no such view")
+        self.view = view
+        return self.state()
+
+    def _routine_group(self):
+        g = self.group
+        if g.routine is None:
+            raise ValueError(f"{g.display_name} has no routine")
+        return g
+
+    def equip(self, i):
+        self._check_free()
+        self._page(i)
+        lines = routine_book.equip(self.guild, self.group, i)
+        self.view = "routine"
+        self.map.say(lines, "guild", self.group)
+        self.map._save()
+        return self.state()
+
+    def routine_save(self, blocks):
+        routine_book.adjust(self.guild, self._routine_group(), blocks)
+        self.map._save()
+        return self.state()
+
+    def take_off(self):
+        routine_book.take_off(self._routine_group())
+        self.view = "packs"
+        self.map._save()
+        return self.state()
+
+    def save_back(self):
+        self._routine_group()
+        self.page = routine_book.save_back(self.guild, self.group)
+        self.notice = f"Sent to the Book as {self.guild.routine_pages[self.page].name}"
+        self.map._save()
+        return self.state()
+
+    def continue_routine(self):
+        g = self._routine_group()
+        if not g.routine.paused:
+            raise ValueError(f"{g.display_name} has no stopped routine")
+        self.map.say(routines.resume(self.guild, g), "guild", g)
+        self.map._save()
+        return self.state()
 
     def rename(self, name):
         self.group.name = name.strip()[:24] or None
