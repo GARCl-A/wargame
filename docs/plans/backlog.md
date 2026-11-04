@@ -222,7 +222,7 @@ the rest.
 
 - **Routine unlocks (author 2026-11-04). A POSSIBLE IDEA, not a design decision.** It is decided only after
   the playtest with every routine open from the start. Today every block and every place is open to a routine
-  ([programmable_orders.md](programmable_orders.md), *The Book of routines*). The idea: blocks are mission
+  (`routine_book.py`, the Book of routines). The idea: blocks are mission
   rewards (every action `work`, `gather`, `craft`, `rest`, `travel`, `trade`, `hand_over`, `take` and every
   condition, items, coins, HP%..., is a right the player earns); a node (the Lumber Yard...) only accepts a
   routine after its mission; one gate at a time, as an arc of missions. The routines' theme is its own, apart
@@ -481,8 +481,7 @@ items it touches. Raw feedback, not yet sized:
   races that begin as casters).
 - **Switching between groups.** The author asked if it is pleasant; the answer was not clear in the record.
   Ask again. The friend's view: up to 8 units is fine, more groups slow it unless there is automation.
-- **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received:
-  [programmable_orders.md](programmable_orders.md).
+- **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received.
 
 - **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
   mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
@@ -507,8 +506,15 @@ has one "Enter" button and its functions are tabs inside.
   repeated every level.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
-- **Programmable order chains for a group:** [programmable_orders.md](programmable_orders.md).
-- **The Battlefield beyond the Faith mission:** [programmable_orders.md](programmable_orders.md).
+- **The Claim has no inventory.** When it gets one it is a stash like the house, and a routine's `Store` / `Fetch`
+  (`place`) can name it.
+- **The Battlefield beyond the Faith mission.** For now its only use is the Faith Order's errands, and it
+  stays that way (author 2026-10-17). Later it becomes one more place of Ledger Hold work and missions: what
+  an open skirmish pays, how often the front has a fight. The supply run's walked order with an ambush
+  part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse. Ledger Hold would then have two jobs,
+  the supply run and the front itself (author 2026-10-30): the player enlists as reinforcement, is paid to
+  arrive and to fight in the skirmish already under way, and the job is to win it. That is not a walked
+  order with an ambush: the battle is the job, so it needs its own order kind.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there. Postponed (2026-10-12 &
   2026-10-19) to design an excavation system with tools (Shovel / Pick), multi-step iterations,
   artifacts, money and lost lore. The Ruins now remember a raid (`Guild.ruins_cleared`) and drop off the
@@ -523,9 +529,10 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
-- **Programmable orders: what is left (author 2026-11-01):** [programmable_orders.md](programmable_orders.md)
-  (the playtest with every routine open; whether switching between groups is pleasant is only answered at the
-  end of that playtest).
+- **Playtest with every routine open (author 2026-11-04).** Every block and place is open to a routine today.
+  The playtest decides *Routine unlocks* (in *Large*), whether the editor needs validation marks (today a routine
+  that cannot run stops at run time with its reason and *Continue*), and whether switching between groups is
+  pleasant. The build goes to the other testers again only after a few more features.
 
 - **Loyalty, the oath and who the members are** — plan: [loyalty.md](loyalty.md) (design talk 2026-10-23, no
   code). The player is the guild; a member is a statblock + named traits + an aspiration; one loyalty bar

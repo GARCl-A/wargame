@@ -1,4 +1,4 @@
-"""The proof of concept of programmable orders (docs/plans/programmable_orders.md): A is played by hand
+"""The proof of concept of programmable orders: A is played by hand
 in the Wilds while B gathers Lumber and C trades it for potatoes, on routines, over 24 game days."""
 
 import random

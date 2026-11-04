@@ -29,7 +29,7 @@ Sizes below come from greps (2026-11-04), not from reading each module: re-count
 1. **Id vs name: decided.** An id is an id and the string on screen is another thing; the displayed name comes
    from a catalog key and never feeds back into logic. Breaking saves for a better standard is accepted
    (`SAVE_VERSION` bump, no migration), so ids are not bound to today's English names. Wagons get ids and
-   names the player can set (see [programmable_orders.md](programmable_orders.md)).
+   names the player can set.
 2. **One catalog: leaning, not certain.** A single i18n catalog rather than one per domain; revisit if it
    gets in the way. Language is per process behind the `i18n.language()` API.
 3. **Combat log: decided.** It records ids and parameters; the human string is rendered only in the interface,
