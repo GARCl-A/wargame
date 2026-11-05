@@ -36,7 +36,7 @@ class LedgerTab:
     def state(self):
         s = self.s
         members = [{"uid": u.uid, "name": u.name, "portrait": _portrait(u),
-                    "sub": u.race['name'],
+                    "sub": u.race_label,
                     "chest": u.has_item(data.MISSION_CHEST_ITEM), "letter": u.has_item(data.LETTER_ITEM)}
                    for u in self.group.members]
         notice, s.notice = s.notice, None

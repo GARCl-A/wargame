@@ -23,7 +23,7 @@ def _chips(u, limit=None):
 
 
 def _kind(u):
-    return u.race['name']
+    return u.race_label
 
 
 class TavernTab:
@@ -83,7 +83,7 @@ class TavernTab:
 
     def _dossier(self, c):
         kit = [n for n in (c.equipped_weapon, c.armor_name) if n] + [i.name for i in c.inventory]
-        return {"uid": c.uid, "name": c.name, "portrait": _portrait(c), "sub": f"{_kind(c)} · {c.alignment}",
+        return {"uid": c.uid, "name": c.name, "portrait": _portrait(c), "sub": f"{_kind(c)} · {i18n.name('alignment', c.alignment)}",
                 "chips": _chips(c), "facts": [("HP", str(c.hp_max)), ("AC", str(c.ac)), ("Speed", i18n.t("tavern_tab.sq", speed=c.speed)),
                                               ("Attack", c.weapon.name)],
                 "kit": [{"name": n, "glyph": item_icon.glyph(n)} for n in kit],

@@ -67,7 +67,7 @@ class HoldingsMixin:
             return i18n.t("guild_holdings.needs_no_repair", name=name)
         cost = wagon.repair_cost
         if sum(u.count_of(wagons.REPAIR_ITEM) for u in crew) < cost:
-            return i18n.t("guild_holdings.it_takes_to_mend", cost=cost, repair_item=wagons.REPAIR_ITEM, name=name)
+            return i18n.t("guild_holdings.it_takes_to_mend", cost=cost, repair_item=i18n.name("item", wagons.REPAIR_ITEM), name=name)
         return None
 
     def repair_lumber(self, crew, wagon):
@@ -83,7 +83,7 @@ class HoldingsMixin:
         smith = wagons.repairer(crew)
         total = data.d20() + smith.mod_intelligence
         if total < wagons.REPAIR_DC:
-            return False, [i18n.t("guild_holdings.fails_to_mend_vs_dc", name=smith.name, item=name, total=total, repair_dc=wagons.REPAIR_DC, repair_item=wagons.REPAIR_ITEM)]
+            return False, [i18n.t("guild_holdings.fails_to_mend_vs_dc", name=smith.name, item=name, total=total, repair_dc=wagons.REPAIR_DC, repair_item=i18n.name("item", wagons.REPAIR_ITEM))]
         mult = 2 if any(u.has_talent('wheelwright') for u in crew) else 1
         gained = wagon.repair(mult=mult)
         return True, [i18n.t("guild_holdings.mends_hp", name=smith.name, item=name, gained=gained, hp=wagon.hp, hp_max=wagon.hp_max)]

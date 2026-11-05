@@ -48,7 +48,7 @@ const Shop = (() => {
       : Kit.stepper(q);
     return `<div class="row ${out ? "out" : ""} ${sel ? "picked" : ""}" data-ware="${esc(r.name)}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
-      <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${esc(r.use)}</div></div>
+      <div style="min-width:0"><div class="nm">${esc(nm("item", r.name))}</div><div class="use">${esc(r.use)}</div></div>
       <div class="wt r">${r.weight.toFixed(1)} <small>${tr("kit.kg")}</small></div>
       <div class="stk c">${stock}${pips}</div>
       <div class="price r ${tone}">${r.price}</div>${buy}</div>`;
@@ -217,11 +217,11 @@ const Shop = (() => {
     let glyph, name, line, tag, gain = false;
     if (src.ware) {
       const r = ware(src.ware), q = qty[r.name] || 1;
-      [glyph, name, line, tag] = [r.glyph, q > 1 ? `${r.name} ×${q}` : r.name, `${r.use} · ${(r.weight * q).toFixed(1)} kg`, money(r.price * q)];
+      [glyph, name, line, tag] = [r.glyph, q > 1 ? `${nm("item", r.name)} ×${q}` : nm("item", r.name), `${r.use} · ${(r.weight * q).toFixed(1)} kg`, money(r.price * q)];
     } else {
       const list = picks && picks.items && picks.items.some(p => same(p, src.item)) ? picks.items : [src.item];
       const it = list[0], t = sellTotal(list);
-      [glyph, name, line] = [it.glyph, list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name, kg(it.qty, it.kg)];
+      [glyph, name, line] = [it.glyph, list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${nm("item", it.name)} ×${it.qty}` : nm("item", it.name), kg(it.qty, it.kg)];
       tag = t ? "+" + money(t) : "";
       gain = true;
     }

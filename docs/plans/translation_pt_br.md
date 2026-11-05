@@ -1,7 +1,7 @@
 # Plan — Brazilian Portuguese translation (`pt-br`)
 
 Goal: the whole game playable in `pt-br`, chosen in Settings, with English still the default and the
-fallback. Status: **phases 1-3 done** (2026-11-05; phase 3's deliberate limits are listed under it); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
+fallback. Status: **phases 1-4 done** (2026-11-05; each phase's deliberate limits are listed under it); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
 all six phases (see [backlog.md](backlog.md)).
 
 Sizes below come from greps (2026-11-04), not from reading each module: re-count at the start of each phase.
@@ -98,6 +98,22 @@ keeper lines, arena blurbs) in phase 5; dev text (`combat_lab`, `reference`, `wi
 Item, talent, condition, racial ability, weapon trait, race, node, faction, skill and material names and
 descriptions. `REFERENCE.md` stays English (generated from registries, the `REFERENCE.md must match the
 registries` test keeps passing); the in-game wiki reads the catalog keys so it shows `pt-br`.
+
+Done (2026-11-05): two kinds of registry. An entry with an `id` (talent, racial ability, weapon trait, faction, spell, poison,
+vocation, archetype) has no text in the code: `name` / `desc` are properties that read `name.<kind>.<id>` / `desc.<kind>.<id>`
+(`i18n.name`, `i18n.desc`) on every access, the English moved into `locales/en.json` and `REFERENCE.md` came out identical. A thing
+whose id is its English name (items, races, alignments, sizes) keeps the name as the id and is shown through `i18n.name(kind, name)`:
+the item tooltip, shelf life and stack notes (`item.*`), `Unit.race_label` for the races in every web payload, the alignments,
+the wiki cards, the notices that name an item or tool, and in the client `nm("item", name)` (the server serves the `name.*` group
+with `/api/locale`; the string posted back is still the id). A node keeps its English name as the default (a node made in play has no entry) and `name.node.<id>` wins; every item, race, size and static node has its `name.*` entry in `en.json`. A scroll is found through its spell by the item's `spell_id`, never by a shown name.
+`tests/test_i18n_catalog.py` plays the first days with every shown name altered: it fails when a rule reads a shown name as an id.
+`i18n_audit.py` ignores the strings that are catalog ids (item and race names, alignments, sizes) and the Editor's help text.
+Deliberate limits, for phase 6: `pt-br` entries for items/races/nodes/spells (the English fallback shows until someone writes them,
+composed names such as "Large Dagger", "Scroll of X", "Dictionary of X" included: write each one out); an item or race in a
+sentence has no article by gender yet (`i18n.gender` exists); a beast's unit name is its species, shown as written; the
+condition names inside `log.mod.*` labels are phase 3's; `magic.py`, `intel.py`, `unit_derive.py`, `group.py`, `sources.py`,
+`wiki_terms.py` and `talent_session` still hold stat labels and derivation notes (audit); node and faction lore (`blurb`, deeds)
+is phase 5.
 
 ### 5. Content and dialogue
 

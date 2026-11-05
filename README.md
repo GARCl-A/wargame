@@ -178,7 +178,7 @@ gartok/
   map_lib.py        the map library (git-tracked maps/*.json) + npc_units
 
   # onboarding + translation (i18n.py is project-wide; tutorial is its first consumer)
-  i18n.py           dotted-key string catalogs (locales/*.json): t / plural / name / gender, language fallback
+  i18n.py           dotted-key string catalogs (locales/*.json): t / plural / name / desc / gender, language fallback
   tutorial.py       the tutorial's ids + TutorialState (seen/enabled)
 
   wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
@@ -275,9 +275,19 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   fragments joined; a count is `i18n.plural(key, n)` with `key.one` / `key.other`; the shown name of an item,
   talent... is `i18n.name(kind, id)` from `name.<kind>.<id>`, with `.gender` when an article depends on it).
   The `pt-br` text goes in `locales/pt-br.json` under the same key and the same placeholders (a test checks).
+- **A catalog thing's name and description** (a talent, racial ability, weapon trait, faction, spell, poison,
+  vocation, archetype): its registry entry carries no text, only the `id`; `name` / `desc` (`effect`, `perk`) are
+  properties reading `name.<kind>.<id>` and `desc.<kind>.<id>` (`i18n.name`, `i18n.desc(kind, id, **params)`) on every
+  access, so a language change needs no reload of the registry. A new entry adds both keys to `locales/en.json`
+  (a test fails on a gap). A thing whose id *is* its English name (an item, a race, an alignment, a size) keeps that
+  name as its id and is shown with `i18n.name(kind, name)` (the `Unit.race_label` property for a race; the client's
+  `nm(kind, id)` for an item name it draws): never compare, store or post back the shown string. A node keeps its
+  English name as the default and `name.node.<id>` overrides it. `tests/test_i18n_catalog.py` plays the first days
+  with every shown name altered, and fails when a rule reads a shown name as an id.
   The language is the `language` setting, applied at boot and on the settings screen. Converted so far:
   `tutorial.*`, `arena_talk.*`, `credits.*`, the web client's `ui.*`, the combat actions (`action.*`, `log.*`,
-  `fx.*`) and every notice, error and label of the rule modules and web sessions/tabs (one key group per module); `python scripts/i18n_audit.py` counts the literal sentences left (plan: `docs/plans/translation_pt_br.md`).
+  `fx.*`), every notice, error and label of the rule modules and web sessions/tabs (one key group per module) and the
+  catalog text (`name.*`, `desc.*`, `item.*`); `python scripts/i18n_audit.py` counts the literal sentences left (plan: `docs/plans/translation_pt_br.md`).
 - **A battle log line**: `battle.log("log.key", actor=unit.name, ...)`, one full sentence per key. The combat log
   keeps key and params, so a fight reads in any language. A catalog thing inside a line is an `i18n.Ref(kind, id,
   default)` (`actions.base.item_ref(name)` for an item), a sentence inside a line an `i18n.Msg`; both resolve when the

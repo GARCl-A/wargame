@@ -25,11 +25,12 @@ CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), 
 MAX_QUERY = 24
 
 
-def _entry(name, kind="", meta=(), body=(), tags=(), glyph=None, find=(), eid=None, links=()):
+def _entry(name, kind="", meta=(), body=(), tags=(), glyph=None, find=(), eid=None, links=(), label=None):
     """One card: `find` is what the filter reads besides the name and the kind; `links` are the terms
-    it names, each a tag that opens the term's entry and shows it on hover."""
-    return {"id": eid or name, "name": name, "kind": kind, "meta": [m for m in meta if m], "body": list(body),
-            "tags": list(tags), "links": list(links), "glyph": glyph, "_find": " ".join([name, kind, *find]).lower()}
+    it names, each a tag that opens the term's entry and shows it on hover. `name` is the id the entry is
+    found by; `label` is what the player reads in its place when the catalog names it."""
+    return {"id": eid or name, "name": label or name, "kind": kind, "meta": [m for m in meta if m], "body": list(body),
+            "tags": list(tags), "links": list(links), "glyph": glyph, "_find": " ".join([label or name, name, kind, *find]).lower()}
 
 
 def _link(tid, label):
@@ -49,15 +50,19 @@ def _item(it):
     if it.hands == 2:
         tags.append("Two-handed")
     return _entry(it.name, it.type.value, [i18n.t("wiki_session.kg", weight=it.weight), f"${it.price}", it.rarity.value], tags=tags,
-                  glyph=item_icon.glyph(it.name), links=links, find=[x["label"] for x in links])
+                  glyph=item_icon.glyph(it.name), links=links, find=[x["label"] for x in links],
+                  label=i18n.name("item", it.name))
 
 
 def _recipe(target, rec):
     station = rec.station.value.title()
+    shown = i18n.name("item", target)
     return _entry(f"{target} ×{rec.yield_qty}" if rec.yield_qty > 1 else target, station,
                   [f"{rec.batch_hours:.1f} h a batch", i18n.t("wiki_session.level", level=rec.level)],
-                  [" + ".join(rec.materials)] + ([i18n.t("wiki_session.tools", join=', '.join(rec.tools))] if rec.tools else []),
-                  glyph=item_icon.glyph(target), find=[" ".join(rec.materials)])
+                  [" + ".join(i18n.name("item", m) for m in rec.materials)]
+                  + ([i18n.t("wiki_session.tools", join=', '.join(i18n.name("item", t) for t in rec.tools))] if rec.tools else []),
+                  glyph=item_icon.glyph(target), find=[" ".join(rec.materials)],
+                  label=f"{shown} ×{rec.yield_qty}" if rec.yield_qty > 1 else shown)
 
 
 def _terms(chapter):
@@ -89,7 +94,7 @@ def _talents():
 def _races():
     return [_entry(e["name"], "Race", [e["meta"]], e["abilities"], tags=e["mods"].split("  "),
                    glyph=f"head/{art_files.RACE_ICON[e['name']]}" if e["name"] in art_files.RACE_ICON else None,
-                   find=[e["meta"], *e["abilities"], *e["talents"]])
+                   find=[e["meta"], *e["abilities"], *e["talents"]], label=i18n.name("race", e["name"]))
             | {"track": e["talents"]} for e in wiki_races.entries()]
 
 
@@ -102,7 +107,7 @@ def _beasts():
         drops = ([f"{b['drop_item']} ({round(b.get('drop_chance', 0) * 100)}%)"] if b.get("drop_item") else []) + \
                 [f"{it} ×{qty} ({round(ch * 100)}%)" for it, ch, qty in b.get("also_drops", ())]
         out.append(_entry(b["name"], b.get("kind", "beast"), [i18n.t("wiki_session.hit_die_d", b=b['hd']), b["size"], i18n.t("wiki_session.speed_m", b=b['speed'])],
-                          [i18n.t("wiki_session.drops", value=', '.join(drops) or 'nothing')], tags=traits, find=traits))
+                          [i18n.t("wiki_session.drops", value=', '.join(drops) or 'nothing')], tags=traits, find=traits, label=i18n.name("race", b["name"])))
     return out
 
 
@@ -110,7 +115,7 @@ def _rules():
     return [_entry(title.title(), body=lines, find=lines) for title, lines in wiki_rules.sections()]
 
 
-BUILD = {"items": lambda: [_item(i) for i in sorted(items.all_items().values(), key=lambda i: i.name)],
+BUILD = {"items": lambda: [_item(i) for i in sorted(items.all_items().values(), key=lambda i: i18n.name("item", i.name))],
          "recipes": lambda: sorted((_recipe(target, rec)
                                     for target, rl in items.CRAFTING_RECIPES.items()
                                     for rec in (rl if isinstance(rl, (list, tuple)) else [rl])),

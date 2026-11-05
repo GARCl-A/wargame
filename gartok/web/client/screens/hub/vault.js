@@ -35,7 +35,7 @@ const Vault = (() => {
       ? Kit.stepper(q) : "<span></span>";
     return `<div class="row ${picked(CHEST, r.loc) ? "picked" : ""}" data-owner="${CHEST}" data-loc="${r.loc}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
-      <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${tr("vault.in_all", {weight: esc(kg(r.qty, r.kg))})}${r.note ? ` · ${esc(r.note)}` : ""}</div></div>
+      <div style="min-width:0"><div class="nm">${esc(nm("item", r.name))}</div><div class="use">${tr("vault.in_all", {weight: esc(kg(r.qty, r.kg))})}${r.note ? ` · ${esc(r.note)}` : ""}</div></div>
       <div class="wt r">${r.kg.toFixed(r.kg < 0.1 ? 3 : 1)} <small>${tr("kit.kg")}</small></div>
       <div class="stk c">×${r.qty}</div><span></span>${step}</div>`;
   }
@@ -156,7 +156,7 @@ const Vault = (() => {
 
   function ghost(it) {
     const list = picks && picks.some(p => same(p, it)) ? picks : [it];
-    const name = list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name;
+    const name = list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${nm("item", it.name)} ×${it.qty}` : nm("item", it.name);
     $("ghost").innerHTML = `${ico(list[0].glyph)}<div><b>${esc(name)}</b><span>${esc(kg(1, weight(list)))}</span></div>`;
   }
 

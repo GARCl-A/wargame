@@ -8,9 +8,11 @@ const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&
 
 // the game's text in the language of the settings: `ui.*` keys the server serves once (/api/locale), read
 // with tr() ("{name}" fields), trn() (a "one"/"other" pair) and, in a screen's HTML, data-t="key"
-const Locale = {lang: "en", text: {}};
+const Locale = {lang: "en", text: {}, names: {}};
 const fill = (text, p) => p ? text.replace(/\{(\w+)\}/g, (m, k) => k in p ? p[k] : m) : text;
 const tr = (key, p) => fill(Locale.text[key] ?? key, p);
+// the shown name of a catalog thing (`name.<kind>.<id>`): the id itself when no one wrote one
+const nm = (kind, id) => Locale.names[`${kind}.${id}`] ?? Locale.names[`${kind}.${id}.name`] ?? id;
 const trn = (key, n, p = {}) => tr(`${key}.${n === 1 ? "one" : "other"}`, {n, ...p});
 function translate(root) {
   for (const el of root.querySelectorAll("[data-t]")) el.textContent = tr(el.dataset.t);
@@ -155,7 +157,7 @@ const Sheet = (() => {
         <div class="box"${tip(u.hp_tip, "sum")}><div class="k">${tr("sheet.hp")}</div><div class="hp"><span class="v">${u.hp[0]}</span><small>/ ${u.hp[1]}</small></div><div class="hpline"><i class="${hpcls(...u.hp)}" style="width:${u.hp[0] / u.hp[1] * 100}%"></i></div></div>
         ${u.stats.map(s => `<div class="box"${tip(s.tip, "sum")}><div class="k">${s.k}</div><div class="v">${esc(String(s.v).replace("-", "−"))}</div></div>`).join("")}
       </div>
-      <div class="weapon">${ico(u.weapon.glyph)}<div><h3>${esc(u.weapon.name)}</h3><div class="tags">${esc(u.weapon.tags.replace(/ {2}· {2}/g, " · "))} · ${esc(u.weapon.crit)}</div></div></div>
+      <div class="weapon">${ico(u.weapon.glyph)}<div><h3>${esc(nm("item", u.weapon.name))}</h3><div class="tags">${esc(u.weapon.tags.replace(/ {2}· {2}/g, " · "))} · ${esc(u.weapon.crit)}</div></div></div>
       <div class="chips">${u.weapon.chips.map(c => `<div class="chip"${tip(c.tip)}><span>${c.k}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"${tip(u.weapon.action_tip, "item")}><span>${tr("sheet.action")}</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
       <div class="sec2"><div class="kicker">${tr("sheet.kit")}</div><div class="kit">
         ${u.kit.map(r => `<div class="r"><span>${r.k}</span><b>${r.k === "Purse" ? `<i class="coindot"></i> ` : ""}${esc(r.v)}</b><em class="${r.bad ? "bad" : ""}">${esc(r.note)}</em></div>`).join("")}

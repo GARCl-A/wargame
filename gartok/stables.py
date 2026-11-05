@@ -59,7 +59,7 @@ class Stables:
         if animal.tack is None and self._pay(tack_price(tack), f"a {tack}"):
             animal.give_to_tack(tack)
             self.group.hitch_idle()
-            self.notice = i18n.t("stables.now_wears", species=animal.species, tack=tack)
+            self.notice = i18n.t("stables.now_wears", species=animal.species, tack=i18n.name("item", tack))
 
     def _sell_animal(self, animal):
         if animal.stash.items:

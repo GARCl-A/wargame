@@ -47,7 +47,7 @@ class VaultTab:
 
     def _row(self, owner, loc, name, qty, note=""):
         row = {"loc": loc, "name": name, "qty": qty, "glyph": item_icon.glyph(name), "kg": items.item_weight(name),
-               "coin": items.is_coin(name), "tip": _tip(name), "note": note}
+               "coin": items.is_coin(name), "tip": _tip(name), "note": note, "urgent": items.note_urgent(note)}
         if not self.exchanges:
             return row
         holder = self.s._holder_of(owner)
@@ -72,7 +72,7 @@ class VaultTab:
                          "glyph": item_icon.glyph(name) if name else None,
                          "kg": items.item_weight(name) if name else 0, "tip": _tip(name) if name else ""})
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
-                "sub": u.race['name'],
+                "sub": u.race_label,
                 "hurt": u.hp < u.hp_max, "money": u.money,
                 "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max,
                 "worn": worn, "pack": self._pack(u)}

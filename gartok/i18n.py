@@ -121,6 +121,12 @@ def name(kind, ident):
     return ident
 
 
+def desc(kind, ident, **fmt):
+    """The description of a catalog thing (`desc.<kind>.<id>`), `""` when no one wrote it."""
+    key = f"desc.{kind}.{ident}"
+    return t(key, **fmt) if has(key) else ""
+
+
 def gender(kind, ident):
     """`"m"` or `"f"` of a catalog name (`"m"` when the entry carries none)."""
     return _lookup(f"name.{kind}.{ident}.gender") or "m"

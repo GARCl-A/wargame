@@ -3,29 +3,40 @@
 import random
 from dataclasses import dataclass
 
-from . import data, economy, i18n
+from . import data, economy, i18n, items
 
 
 @dataclass(frozen=True)
 class Spell:
     id: str
-    name: str
     level: int
     sources: tuple
 
+    @property
+    def name(self):
+        return i18n.name("spell", self.id)
+
+    @property
+    def scroll_name(self):
+        """The id of the scroll item that teaches it: the item of the registry whose `spell_id` this is."""
+        return _SCROLLS.get(self.id)
+
+
+_SCROLLS = {d.spell_id: d.name for d in items.all_items().values() if d.spell_id}
+
 SPELLS = {
-    "light_globe": Spell("light_globe", "Light Globe", 0, ("nature", "blood", "faith")),
-    "magic_missile": Spell("magic_missile", "Magic Missile", 0, ("nature", "blood", "faith")),
-    "floating_disk": Spell("floating_disk", "Floating Disk", 0, ("nature", "blood", "faith")),
-    "grasping_roots": Spell("grasping_roots", "Grasping Roots", 0, ("nature",)),
-    "hex": Spell("hex", "Hex", 0, ("blood",)),
-    "spare_the_dying": Spell("spare_the_dying", "Spare the Dying", 0, ("faith",)),
-    "sleep": Spell("sleep", "Sleep", 1, ("nature", "blood", "faith")),
-    "water_jet": Spell("water_jet", "Water Jet", 1, ("nature",)),
-    "dragonfire": Spell("dragonfire", "Dragonfire", 1, ("blood",)),
-    "healing_touch": Spell("healing_touch", "Healing Touch", 1, ("faith",)),
-    "invisibility": Spell("invisibility", "Invisibility", 2, ("nature", "blood", "faith")),
-    "raise_dead": Spell("raise_dead", "Raise Dead", 2, ("faith",)),
+    "light_globe": Spell("light_globe", 0, ("nature", "blood", "faith")),
+    "magic_missile": Spell("magic_missile", 0, ("nature", "blood", "faith")),
+    "floating_disk": Spell("floating_disk", 0, ("nature", "blood", "faith")),
+    "grasping_roots": Spell("grasping_roots", 0, ("nature",)),
+    "hex": Spell("hex", 0, ("blood",)),
+    "spare_the_dying": Spell("spare_the_dying", 0, ("faith",)),
+    "sleep": Spell("sleep", 1, ("nature", "blood", "faith")),
+    "water_jet": Spell("water_jet", 1, ("nature",)),
+    "dragonfire": Spell("dragonfire", 1, ("blood",)),
+    "healing_touch": Spell("healing_touch", 1, ("faith",)),
+    "invisibility": Spell("invisibility", 2, ("nature", "blood", "faith")),
+    "raise_dead": Spell("raise_dead", 2, ("faith",)),
 }
 
 SOURCES = ("nature", "blood", "faith")
@@ -54,7 +65,7 @@ def spell_for_scroll(item_name):
     """The Spell a `Scroll of <Name>` item names, or None (not a scroll, or
     no spell matches)."""
     name = _item_str(item_name)
-    return next((s for s in SPELLS.values() if name == f"Scroll of {s.name}"), None)
+    return next((s for s in SPELLS.values() if name == s.scroll_name), None)
 
 def language_for_dictionary(item_name):
     """The Language a `Dictionary of <Name>` item names, or None (not a
@@ -99,7 +110,7 @@ def study_item_name(target_id):
     """The pack item a study target is read from: a scroll for a spell id, a
     dictionary for a language."""
     spell = SPELLS.get(target_id)
-    return f"Scroll of {spell.name}" if spell is not None else f"Dictionary of {target_id}"
+    return spell.scroll_name if spell is not None else f"Dictionary of {target_id}"
 
 
 def begin_study(unit, target_id, mates=()):
@@ -185,7 +196,7 @@ def can_study_spell(unit, spell):
     return casts(unit, spell) and spell.id not in unit.spells_known
 
 def _progress_spell(unit, spell, group=None):
-    if not can_study_spell(unit, spell) or not _has_study_item(unit, f"Scroll of {spell.name}", group=group):
+    if not can_study_spell(unit, spell) or not _has_study_item(unit, spell.scroll_name, group=group):
         return None
     bonus = 2 if "Kobold" in unit.race.get("races", (unit.race["name"],)) and "blood" in spell.sources else 0
     dice_qty = (2 if "gnome_magic_excitement" in unit.talents["racial"]

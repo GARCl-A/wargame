@@ -207,8 +207,7 @@ class HubSession(Session):
             return {"place": node.name}
         bent = ""
         if node.alignment:
-            law, moral = node.alignment.split(" and ")
-            bent = law if law == moral else f"{law} {moral}"
+            bent = i18n.name("alignment_bent", node.alignment)
         return {"place": node.name, "name": vendor.name, "caption": f"{vendor.race} {vendor.role}",
                 "bent": bent, "line": vendor.line, "portrait": vendor.portrait}
 

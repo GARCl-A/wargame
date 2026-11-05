@@ -32,6 +32,7 @@ class WorkDesk:
                 self._rations_card()]
 
     def _crew_note(self, u, tool):
+        tool = i18n.name("item", tool)
         level = economy.work_level(u, self.node.id)
         own = level >= economy.LUMBER_LEVEL_OWN_AXE
         if own and u.work_level > level:
@@ -55,6 +56,7 @@ class GatherDesk:
 
     def _gather_note(self, u, tool):
         """What a shift of gathering does for `u`: their haul and work XP, or that they only stand guard."""
+        tool = i18n.name("item", tool)
         if not economy.owns_tool(u, self.node.id):
             return i18n.t("work_desk.no_stands_guard_no_haul", tool=tool)
         level = gather.LEVEL[self.node.id]

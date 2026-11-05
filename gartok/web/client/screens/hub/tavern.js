@@ -36,7 +36,7 @@ const Tavern = (() => {
 
   function dossier(d) {
     const facts = d.facts.map(([k, v]) => `<span><em>${esc(k)}</em>${esc(v)}</span>`).join("");
-    const kit = d.kit.map(i => `<span class="ico mask"${tip(i.name)} style="--icon:url(/assets/icons/${i.glyph}.svg)"></span>`).join("");
+    const kit = d.kit.map(i => `<span class="ico mask"${tip(nm("item", i.name))} style="--icon:url(/assets/icons/${i.glyph}.svg)"></span>`).join("");
     const pitchers = d.pitchers.map(m => `<div class="pitcher ${m.picked ? "on" : ""} ${m.signed ? "signed" : ""}" data-pitcher="${esc(m.uid)}">
         <div class="medal">${face(m.portrait, m.name)}</div>
         <div><div class="nm">${esc(m.name)}${m.signed ? ` · ${tr("tavern.signed")}` : ""}</div><div class="use">${esc(m.sub)}</div></div>

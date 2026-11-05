@@ -282,7 +282,7 @@ class MapSession(MapView, Session):
             "pace": world.hours(1, g.speed) * self._pace(g),
             "members": [self._member(u, g) for u in g.members],
             "trip": self._trip(g),
-            "split": [{"uid": u.uid, "name": u.name, "sub": i18n.t("map_session.hp", race=u.race['name'], hp=u.hp, hp_max=u.hp_max),
+            "split": [{"uid": u.uid, "name": u.name, "sub": i18n.t("map_session.hp", race=u.race_label, hp=u.hp, hp_max=u.hp_max),
                        "portrait": _portrait(u)} for u in g.members]
                      + [{"uid": w.uid, "name": w.kind, "sub": "wagon"} for w in g.wagons]
                      + [{"uid": a.uid, "name": a.species, "sub": "animal"} for a in g.herd],
@@ -295,7 +295,7 @@ class MapSession(MapView, Session):
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "lead": u is g.leader,
                 "hp": u.hp, "hp_max": u.hp_max, "hungry": u.hunger_level > 0, "sick": bool(u.sick),
                 "poisoned": bool(u.poisoned),
-                "sub": i18n.t("map_session.lvl", race=u.race['name'], racial_level=u.racial_level)}
+                "sub": i18n.t("map_session.lvl", race=u.race_label, racial_level=u.racial_level)}
 
     def _pace(self, g):
         return vocations.travel_mult(self.guild, g)
@@ -362,7 +362,7 @@ class MapSession(MapView, Session):
             held = self.guild.has_licence(here.id)
             out.append({"value": i18n.t("map_session.licence_held") if held else i18n.t("map_session.no_licence"), "label": i18n.t("map_session.gathering"), "no": not held})
             hands = len(gather.gatherers(g.members, here.id))
-            out.append({"value": f"{hands}/{len(g.members)}", "label": i18n.t("map_session.own", tool=gather.tool(here.id)),
+            out.append({"value": f"{hands}/{len(g.members)}", "label": i18n.t("map_session.own", tool=i18n.name("item", gather.tool(here.id))),
                         "no": hands < len(g.members)})
         out.append({"value": str(len(g.members)), "label": "Workers"})
         return out

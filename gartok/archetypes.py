@@ -9,7 +9,7 @@ commission tokens to guarantee functional squad roles without endless rerolling.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import items
+from . import i18n, items
 from .data import ATTRIBUTES
 from .unit import Unit
 
@@ -23,12 +23,12 @@ def risks(u: Unit) -> list[str]:
     """Why `u` is a hard pick: each reason as the card words it. Empty for an ordinary body."""
     out = []
     if u.constitution <= RISKY_CON:
-        out.append(f"CON {u.constitution}: heals slowly and little")
+        out.append(i18n.t("archetype.risk.con", con=u.constitution))
     total = sum(getattr(u, a) for a in ATTRIBUTES)
     if total <= RISKY_TOTAL:
-        out.append(f"attributes add up to {total} (average 63)")
+        out.append(i18n.t("archetype.risk.total", total=total))
     if u.carry_normal < STARTER_KIT_KG:
-        out.append(f"carries only {u.carry_normal:g} kg: the {STARTER_KIT_KG:g} kg starting kit overloads them")
+        out.append(i18n.t("archetype.risk.carry", carry=f"{u.carry_normal:g}", kit=f"{STARTER_KIT_KG:g}"))
     return out
 
 
@@ -37,10 +37,14 @@ class Archetype:
     key: str
     label: str
     rule: str                  # the threshold in a few characters, for the card and the tutorial
-    desc: str                  # what it is good for
     predicate: Callable[[Unit], bool]
     style: str = "brass"
     why: Callable[[Unit], list[str]] | None = None      # reasons shown with the tag, when it needs them
+
+    @property
+    def desc(self) -> str:
+        """What it is good for."""
+        return i18n.desc("archetype", self.key)
 
     @property
     def text(self) -> str:
@@ -53,7 +57,6 @@ ARCHETYPES = {
         label="LEADER",
         rule="CHA +2",
         style="brass",
-        desc="Sets how many people the guild can take in and how well recruiting goes. Also haggles and lifts morale.",
         predicate=lambda u: u.mod_charisma >= 2,
     ),
     "STRONG": Archetype(
@@ -61,7 +64,6 @@ ARCHETYPES = {
         label="STRONG",
         rule="STR +2",
         style="green",
-        desc="Hits hard in melee and carries heavy armor, tools and spoils.",
         predicate=lambda u: u.mod_strength >= 2,
     ),
     "TOUGH": Archetype(
@@ -69,7 +71,6 @@ ARCHETYPES = {
         label="TOUGH",
         rule="8+ HP",
         style="green",
-        desc="A big pool of HP: survives more than one hit. Not the same as CON, the hit die decides it.",
         predicate=lambda u: u.hp_max >= 8,
     ),
     "HEALTHY": Archetype(
@@ -77,7 +78,6 @@ ARCHETYPES = {
         label="HEALTHY",
         rule="CON +2",
         style="green",
-        desc="Heals more HP on every rest, holds their breath longer and shrugs off poison.",
         predicate=lambda u: u.mod_constitution >= 2,
     ),
     "NIMBLE": Archetype(
@@ -85,7 +85,6 @@ ARCHETYPES = {
         label="NIMBLE",
         rule="DEX +2",
         style="green",
-        desc="Harder to hit, and accurate with finesse weapons.",
         predicate=lambda u: u.mod_dexterity >= 2,
     ),
     "GENIUS": Archetype(
@@ -93,7 +92,6 @@ ARCHETYPES = {
         label="GENIUS",
         rule="INT +2",
         style="green",
-        desc="Crafts faster, reads manuals and does research.",
         predicate=lambda u: u.mod_intelligence >= 2,
     ),
     "WISE": Archetype(
@@ -101,7 +99,6 @@ ARCHETYPES = {
         label="WISE",
         rule="WIS +2",
         style="green",
-        desc="Acts earlier in a fight, resists the mind and treats wounds in the field.",
         predicate=lambda u: u.mod_wisdom >= 2,
     ),
     "RISKY": Archetype(
@@ -109,7 +106,6 @@ ARCHETYPES = {
         label="RISKY",
         rule=f"CON ≤ {RISKY_CON} · total ≤ {RISKY_TOTAL} · can barely carry gear",
         style="warn",
-        desc="A hard pick: a frail body that has to be played around. Not always a bad one: a fine leader can be fragile.",
         predicate=lambda u: bool(risks(u)),
         why=risks,
     ),

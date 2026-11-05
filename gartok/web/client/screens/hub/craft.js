@@ -9,8 +9,8 @@ const Craft = (() => {
 
   function uses(r) {
     // a batch under way already took its materials: only the next one would want them
-    const mats = r.uses.map(u => `<span class="${u.have >= u.need || r.active ? "" : "short"}">${u.need}× ${esc(u.name)} <small>(${u.have})</small></span>`);
-    const tools = r.tools.map(t => `<span class="${t.have ? "" : "short"}">${esc(t.name)} <small>${tr("craft.tool")}</small></span>`);
+    const mats = r.uses.map(u => `<span class="${u.have >= u.need || r.active ? "" : "short"}">${u.need}× ${esc(nm("item", u.name))} <small>(${u.have})</small></span>`);
+    const tools = r.tools.map(t => `<span class="${t.have ? "" : "short"}">${esc(nm("item", t.name))} <small>${tr("craft.tool")}</small></span>`);
     return [...mats, ...tools].join("");
   }
 
@@ -32,7 +32,7 @@ const Craft = (() => {
       : `<p class="why">${tr("craft.materials")}</p>`;
     return `<div class="recipe ${r.active ? "active" : ""} ${r.can ? "" : "out"}">
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
-      <div><div class="jhead"><span class="nm">${esc(r.target)}</span>${chips.join("")}</div>
+      <div><div class="jhead"><span class="nm">${esc(nm("item", r.target))}</span>${chips.join("")}</div>
         <div class="mats">${uses(r)}</div>${line}</div>
       <div class="acts">${act}</div></div>`;
   }

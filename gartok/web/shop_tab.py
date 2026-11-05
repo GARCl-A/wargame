@@ -107,7 +107,7 @@ class ShopTab:
                 "kg": items.item_weight(name), "coin": items.is_coin(name),
                 "sell": None if items.is_coin(name) else economy.sell_price(name, m.deal),
                 "locked": owner.locked_of(name) > 0, "marked": name in m._marked(),
-                "tip": _tip(name), "note": note}
+                "tip": _tip(name), "note": note, "urgent": items.note_urgent(note)}
 
     def _pack(self, owner):
         return [self._row(owner, idx, items.stack_name(e), e[1], items.stack_note(e))
@@ -128,7 +128,7 @@ class ShopTab:
                          "sell": economy.sell_price(name, self.m.deal) if name else None,
                          "tip": _tip(name) if name else ""})
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
-                "sub": u.race['name'],
+                "sub": u.race_label,
                 "voice": voice, "hurt": u.hp < u.hp_max,
                 "money": u.money, "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max,
                 "worn": worn, "pack": self._pack(u)}

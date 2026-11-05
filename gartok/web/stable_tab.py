@@ -38,7 +38,7 @@ class StableTab(Stables):
             raise ValueError(i18n.t("stable_tab.no_tack", tack=repr(tack)))
         a = self._animal(uid)
         if a.tack:
-            raise ValueError(i18n.t("stable_tab.already_wears", species=a.species, tack=a.tack))
+            raise ValueError(i18n.t("stable_tab.already_wears", species=a.species, tack=i18n.name("item", a.tack)))
         self._fit(a, tack)
 
     def sell(self, uid):

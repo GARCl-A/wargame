@@ -208,7 +208,7 @@ const Bands = (() => {
   function ghost(src) {
     const list = picks && picks.some(p => same(p, src)) ? picks : [src];
     const it = list[0];
-    $("ghost").innerHTML = `${ico(it.glyph)}<div><b>${esc(list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name)}</b><span>${src.loc === "hitch" ? tr("bands.onto_wagon") : kg(it.qty, it.kg)}</span></div>`;
+    $("ghost").innerHTML = `${ico(it.glyph)}<div><b>${esc(list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${nm("item", it.name)} ×${it.qty}` : nm("item", it.name))}</b><span>${src.loc === "hitch" ? tr("bands.onto_wagon") : kg(it.qty, it.kg)}</span></div>`;
   }
 
   function target(el) {

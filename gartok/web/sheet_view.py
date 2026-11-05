@@ -66,8 +66,8 @@ def member_sheet(u, guild=None, task=None):
     if getattr(u, "arena_title", False):
         stamps.append({"text": i18n.t("sheet_view.champion_of_pit"), "tone": ""})
     return {
-        "uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race["name"],
-        "age": u.age, "align": u.alignment.capitalize(),
+        "uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race_label,
+        "age": u.age, "align": i18n.name("alignment", u.alignment),
         "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
         "where": node_label(grp.node) if grp else i18n.t("sheet_view.not_yet_sworn_in") if guild is None else "Camp",
         "task": task or (GuildSheet._group_task(grp).lower() if grp else i18n.t("sheet_view.no_orders")),

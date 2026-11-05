@@ -1,6 +1,7 @@
 """README.md's code map stays true: every module is in it, and every file it names exists."""
 
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -16,9 +17,17 @@ def _tracked_basenames():
     return names
 
 
+def _ignored(paths):
+    """The paths git ignores (a file the build writes, like `build_info.py`, is not a module of the code map)."""
+    done = subprocess.run(["git", "check-ignore", *(p.relative_to(ROOT).as_posix() for p in paths)], cwd=ROOT, capture_output=True, text=True, check=False)
+    return {Path(line).name for line in done.stdout.splitlines()}
+
+
 def test_every_module_of_gartok_is_in_the_readme_map():
-    missing = [p.name for p in sorted((ROOT / "gartok").glob("*.py"))
-               if p.name not in ("__init__.py", "__main__.py")
+    modules = sorted((ROOT / "gartok").glob("*.py"))
+    ignored = _ignored(modules)
+    missing = [p.name for p in modules
+               if p.name not in ("__init__.py", "__main__.py") and p.name not in ignored
                and not re.search(rf"(?<![\w/.]){re.escape(p.name)}", README)]
     assert not missing, f"add to README's Structure: {missing}"
 

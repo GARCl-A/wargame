@@ -54,7 +54,7 @@ import os
 import random
 from dataclasses import dataclass
 
-from . import encounters
+from . import encounters, i18n
 from .ox_fields import OxFieldsScenario
 from .scenario import ArenaScenario, CustomScenario, ErmosScenario
 
@@ -103,7 +103,7 @@ class Node:
                  garrison_job=None, wagon_risk=0.0, vendors=None, shop_label=None,
                  hidden=False, floor=None):
         self.id = id
-        self.name = name
+        self._name = name                    # the English default; the catalog's `name.node.<id>` wins
         self.kind = kind
         self.pos = pos
         self.blurb = blurb
@@ -122,6 +122,11 @@ class Node:
         self.shop_label = shop_label         # the map button's text for the `shop` function (default: the function's)
         self.hidden = hidden
         self.floor = floor                   # its fights' floor (`ui/floors.py`) over the scenario's own
+
+    @property
+    def name(self):
+        shown = i18n.name("node", self.id)
+        return self._name if shown == self.id else shown
 
     def has(self, function):
         return function in self.functions

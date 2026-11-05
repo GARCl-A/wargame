@@ -30,7 +30,7 @@ class MedicTab(medic.Ward):
         for q in self._quotes():
             u = by_uid[q.uid]
             ward.append({"uid": q.uid, "name": q.name, "portrait": _portrait(u),
-                         "sub": f"{u.race['name']} · HP {u.hp} / {u.hp_max}",
+                         "sub": f"{u.race_label} · HP {u.hp} / {u.hp_max}",
                          "parts": [{"label": lbl, "cost": c, "hours": h} for lbl, c, h in q.parts],
                          "cost": q.cost, "hours": q.hours, "stay": not q.offered, "picked": q.uid in self.picked})
         picked = self._picked_quotes()

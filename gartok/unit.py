@@ -22,7 +22,7 @@ import copy
 import random
 import uuid
 
-from . import abilities, data, economy, items, magic, names, starter_kit, talents
+from . import abilities, data, economy, i18n, items, magic, names, starter_kit, talents
 from .data import ATTRIBUTES, roll
 from .unit_derive import DerivationMixin
 from .unit_edit import EditMixin
@@ -231,6 +231,11 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
     @property
     def ability(self):
         return self._ability
+
+    @property
+    def race_label(self):
+        """The race as the player reads it (`race["name"]` stays its id)."""
+        return i18n.name("race", self.race["name"])
     # ------------------------------------------------------------------ #
     # generation                                                         #
     # ------------------------------------------------------------------ #

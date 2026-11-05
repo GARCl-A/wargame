@@ -216,7 +216,7 @@ def make_handler(game):
                 return self._json({"screen": s.screen, "lab": game.lab is not None,
                                    "volume": settings.get("volume")})
             if parts == ["locale"] and not post:
-                return self._json({"lang": i18n.language(), "text": i18n.group("ui")})
+                return self._json({"lang": i18n.language(), "text": i18n.group("ui"), "names": i18n.group("name")})
             if parts == ["sounds"] and not post:
                 return self._json({"cues": {cue: [f"/assets/sounds/{f}" for f in files]
                                             for cue, files in sound.CUES.items()},

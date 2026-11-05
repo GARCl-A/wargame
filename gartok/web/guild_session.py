@@ -249,7 +249,7 @@ class GuildSession(Session):
 
     def _item(self, owner, loc, name, qty, note=""):
         return {"loc": loc, "name": name, "qty": qty, "glyph": item_icon.glyph(name), "kg": items.item_weight(name),
-                "coin": items.is_coin(name), "locked": owner.locked_of(name) > 0, "tip": _tip(name), "note": note}
+                "coin": items.is_coin(name), "locked": owner.locked_of(name) > 0, "tip": _tip(name), "note": note, "urgent": items.note_urgent(note)}
 
     def _pack(self, owner):
         return [self._item(owner, i, items.stack_name(e), e[1], items.stack_note(e))
@@ -273,7 +273,7 @@ class GuildSession(Session):
                     "tip": i18n.t("guild_session.make_them_walk") if riding else i18n.t("guild_session.let_them_ride") if u.afoot else i18n.t("guild_session.no_room_on_wagons")}
         hunger = u.hunger_level > 0
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
-                "sub": u.race['name'],
+                "sub": u.race_label,
                 "lead": u is g.leader, "hurt": u.hp < u.hp_max, "hungry": hunger,
                 "money": u.money, "kg": round(u.load, 2), "normal": u.carry_normal, "max": u.carry_max,
                 "worn": worn, "pack": self._pack(u), "ride": ride}
@@ -372,7 +372,7 @@ class GuildSession(Session):
             "packs": [*(self._column(u) for u in g.members), *(self._animal_column(a) for a in g.herd)],
             "wagons": [self._wagon(w) for w in g.wagons],
             "jobs": self._jobs(),
-            "captives": [{"uid": c.unit.uid, "name": c.name, "race": c.unit.race["name"], "days": c.days_left(today)}
+            "captives": [{"uid": c.unit.uid, "name": c.name, "race": c.unit.race_label, "days": c.days_left(today)}
                          for c in g.captives],
         }
 

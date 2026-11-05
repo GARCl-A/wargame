@@ -8,6 +8,7 @@ not what to translate. `python scripts/i18n_audit.py [--top N] [--module NAME]`.
 
 import argparse
 import ast
+import functools
 import re
 from pathlib import Path
 
@@ -15,6 +16,16 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "gartok"
 SKIP_MODULES = {"i18n.py"}
 WORDS = re.compile(r"[A-Za-z]{2,}[:,.]?\s+[A-Za-z]{2,}|[A-Za-z]{2,}[:,.]?\s+\{|\}[:,.]?\s+[A-Za-z]{2,}")
+
+
+@functools.cache
+def _ids():
+    """Strings that are the id of a catalog thing, not a sentence: an item or race called by its English name
+    (the name is the key, `i18n.name` shows it), an alignment, a size."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from gartok import data, items
+    return set(items.all_items()) | set(data.ALL_RACE_NAMES) | {a for _, a in data.ALIGNMENTS} | set(data.SIZE_ORDER)
 
 
 def _docstrings(tree):
@@ -58,7 +69,7 @@ def sentences(path):
                 out.append((node.lineno, text))
     for node in ast.walk(tree):
         if (isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skip
-                and id(node) not in inside and WORDS.search(node.value)):
+                and id(node) not in inside and node.value not in _ids() and WORDS.search(node.value)):
             out.append((node.lineno, node.value))
     return sorted(out)
 

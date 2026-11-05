@@ -225,7 +225,7 @@ const isPicked = (from, loc) => pick && pick.from === from && pick.loc === loc;
 function ware(w) {
   const on = isPicked("field", w.loc), n = qty[w.name] ?? w.qty;
   return `<div class="ware ${on ? "on" : ""} ${w.coin ? "coins" : ""}" data-from="field" data-loc="${w.loc}"${tip(w.tip, "item")}>
-    <span class="g">${g(w.glyph)}</span><span class="nm">${esc(w.name)}${w.coin ? `<small>${money(w.coin)}</small>` : ""}</span>
+    <span class="g">${g(w.glyph)}</span><span class="nm">${esc(nm("item", w.name))}${w.coin ? `<small>${money(w.coin)}</small>` : ""}</span>
     <span class="q">×${w.qty}</span><span class="kg">${kilos(w.qty * w.kg)}</span>
     <span class="take"><i data-q="-1">−</i><b>${on ? Math.min(n, w.qty) : "·"}</b><i data-q="1">+</i></span></div>`;
 }
@@ -315,7 +315,7 @@ function slip(src) {
   const it = itemOf(src.from, src.loc);
   if (!it) return;
   const s = $("slip");
-  s.innerHTML = `<span class="g">${g(it.glyph)}</span><div><b>${esc(it.name)}</b><br><span>${tr(src.from === "field" ? "report.from_field" : "report.from_pack")}</span></div>`;
+  s.innerHTML = `<span class="g">${g(it.glyph)}</span><div><b>${esc(nm("item", it.name))}</b><br><span>${tr(src.from === "field" ? "report.from_field" : "report.from_pack")}</span></div>`;
   s.hidden = false;
 }
 

@@ -479,7 +479,7 @@ def _store(guild, group, block):
         return i18n.t("routines.no_here", place=block.place)
     held = count_of(group, block.item)
     if not held:
-        return i18n.t("routines.no_to_store", item=block.item)
+        return i18n.t("routines.no_to_store", item=i18n.name("item", block.item))
     wanted = held if block.count is None else min(block.count, held)
     stored = 0
     for stash in stashes:
@@ -493,7 +493,7 @@ def _store(guild, group, block):
                 u._derive_combat()
             if n <= 0:
                 break
-    return None if stored else i18n.t("routines.no_room_for_in", item=block.item, place=block.place)
+    return None if stored else i18n.t("routines.no_room_for_in", item=i18n.name("item", block.item), place=block.place)
 
 
 def _fetch(guild, group, block):
@@ -501,7 +501,7 @@ def _fetch(guild, group, block):
     if not stashes:
         return i18n.t("routines.no_here", place=block.place)
     if not sum(s.count_of(block.item) for s in stashes):
-        return i18n.t("routines.no_in", item=block.item, place=block.place)
+        return i18n.t("routines.no_in", item=i18n.name("item", block.item), place=block.place)
     wanted = sum(s.count_of(block.item) for s in stashes) if block.count is None else block.count
     fetched = 0
     for stash in stashes:
@@ -530,7 +530,7 @@ def _take(guild, group, block):
         if not wanted:
             return None
     if not _move(source, group, block.item, wanted):
-        return i18n.t("routines.no_to_take", item=block.item)
+        return i18n.t("routines.no_to_take", item=i18n.name("item", block.item))
     return None
 
 
@@ -542,7 +542,7 @@ def _hand_over(guild, group, routine, block):
         routine.waited_since = guild.clock.seconds
         return orders.wait(HAND_OVER_WAIT_HOURS)
     if not _move(group, receiver, block.item, block.count):
-        return i18n.t("routines.no_to_hand_over", item=block.item)
+        return i18n.t("routines.no_to_hand_over", item=i18n.name("item", block.item))
     return None
 
 

@@ -47,7 +47,7 @@ const Labor = (() => {
     const guards = !G.guards.length ? ""
       : !G.can ? `<p class="warn">${tr("labor.none_carry", {tool})}</p>`
       : `<p class="warn">${trn("labor.guards", G.guards.length, {names, tool})}</p>`;
-    const drops = G.drops.map(d => `<div class="it">${ico(d.glyph)}<div class="n">${esc(d.name)} <small>${tr("labor.sells_for", {price: money(d.sell)})}</small></div>
+    const drops = G.drops.map(d => `<div class="it">${ico(d.glyph)}<div class="n">${esc(nm("item", d.name))} <small>${tr("labor.sells_for", {price: money(d.sell)})}</small></div>
       <span class="q">${d.pct}%</span><span></span></div>`).join("");
     const bonus = G.bonus ? `<p class="hint">${tr("labor.bonus", {pct: G.bonus.pct, name: esc(G.bonus.name), price: money(G.bonus.sell)})}</p>` : "";
     const report = G.report.length

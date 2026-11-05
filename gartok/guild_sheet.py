@@ -100,7 +100,7 @@ class GuildSheet:
             badges.append((i18n.t("guild_sheet.group_leader"), ""))
         return {
             "key": unit.uid, "name": unit.name, "selected": selected, "badges": badges,
-            "sub": (i18n.t("guild_sheet.lv_c_w", race=unit.race['name'], racial_level=unit.racial_level, combat_level=unit.combat_level, work_level=unit.work_level)),
+            "sub": (i18n.t("guild_sheet.lv_c_w", race=unit.race_label, racial_level=unit.racial_level, combat_level=unit.combat_level, work_level=unit.work_level)),
             "hp": (max(0, unit.hp), unit.hp_max),
         }
 

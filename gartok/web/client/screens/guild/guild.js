@@ -130,7 +130,7 @@ function drawCharter() {
   const holds = C.holdings.map(h => {
     const look = h.inside ? `<div class="loadbar"><i style="width:${h.load[0] / h.load[1] * 100}%"></i></div>
       <div class="act"><div class="ghost-btn" data-look="${esc(h.name)}">${showing.has(h.name) ? tr("guild.close") : tr("guild.look")}</div></div>
-      ${showing.has(h.name) ? `<div class="inside">${h.inside.length ? h.inside.map(it => `<div class="it">${ico(it.glyph)}<div class="n">${esc(it.name)}</div><span class="q">${it.qty > 1 ? "×" + it.qty : ""}</span><span></span></div>`).join("")
+      ${showing.has(h.name) ? `<div class="inside">${h.inside.length ? h.inside.map(it => `<div class="it">${ico(it.glyph)}<div class="n">${esc(nm("item", it.name))}</div><span class="q">${it.qty > 1 ? "×" + it.qty : ""}</span><span></span></div>`).join("")
         : `<div class="empty-note">${tr("guild.empty")}</div>`}<div class="empty-note">${tr("guild.bank_note")}</div></div>` : ""}` : "";
     return `<div class="hold ${tone[h.tone]}">${ico(HOLD_ICON[h.name] || "item/locked-chest")}<div>
       <h3>${esc(h.name)}<span class="mark ${tone[h.tone]}">${esc(h.status.toLowerCase())}</span></h3><p>${esc(h.detail)}</p>${look}</div></div>`;

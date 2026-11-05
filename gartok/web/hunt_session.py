@@ -352,7 +352,7 @@ class HuntSession(Session):
 
     def _member(self, u):
         into, span = progression.to_next(progression.WORK_XP_THRESHOLDS, u.work_xp)
-        return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race["name"],
+        return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race_label,
                 "hp": [max(0, u.hp), u.hp_max], "ac": u.ac,
                 "load": [round(u.load, 1), u.carry_normal, u.carry_max], "rations": u.rations,
                 "work": {"level": u.work_level, "into": into, "span": span},
@@ -415,5 +415,5 @@ class HuntSession(Session):
                 i18n.plural("hunt_session.pack_of_hostile_cuts_across", n))
         return {"title": i18n.t("hunt_session.biwolf_2") if s.biwolf else i18n.t("hunt_session.ambush_in_wilds_2"), "lead": lead, "line": None,
                 "swift": self.look.state(),
-                "foes": [{"name": u.name, "race": u.race["name"], "portrait": _portrait(u),
+                "foes": [{"name": u.name, "race": u.race_label, "portrait": _portrait(u),
                           "weapon": u.equipped_weapon or i18n.t("hunt_session.claws_and_teeth")} for u in foes]}

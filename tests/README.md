@@ -30,7 +30,8 @@ developing, run the files of the area you change. Open work on the suite is in
 - **English by default.** An autouse fixture in `tests/conftest.py` sets `i18n` to `en` before and after each
   test, so a text assertion never meets the saved language. A test of another language sets it itself.
   `test_i18n.py` also fails when a `pt-br` key has no `en` twin or other placeholders (strict about gaps
-  once the translation's last phase lands: `STRICT`).
+  once the translation's last phase lands: `STRICT`). `test_i18n_catalog.py` checks the registries' names and
+  descriptions follow the language and plays the first days under a `pt-br` whose every name is altered.
 - **`encumbered` is a derived flag.** A pack change does not refresh it; the caller runs
   `_derive_combat()` (as `outfit.py` does after each potion). A test that reads it after
   `give_to_pack` or `money =` must derive first.

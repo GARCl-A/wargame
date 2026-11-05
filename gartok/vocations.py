@@ -11,7 +11,7 @@ guild-day.
 import random
 from dataclasses import dataclass
 
-from . import data
+from . import data, i18n
 from .group import CAUTIOUS
 
 WARBAND, DELVERS, WILDS, SCHOLARS, CARAVAN, MARSH = (
@@ -32,42 +32,30 @@ POOL_SIZE = 9
 @dataclass(frozen=True)
 class Vocation:
     id: str
-    name: str
     races: tuple
-    perk: str
-    motto: str = ""
     active: bool = True     # False: the perk waits on a system that does not exist yet
+
+    @property
+    def name(self):
+        return i18n.name("vocation", self.id)
+
+    @property
+    def perk(self):
+        return i18n.desc("vocation", self.id, cohesion_bonus=COHESION_BONUS, gather_bonus=GATHER_BONUS,
+                         info_bonus=INFO_BONUS, food_pause_every=FOOD_PAUSE_EVERY)
+
+    @property
+    def motto(self):
+        return i18n.desc("vocation_motto", self.id)
 
 
 VOCATIONS = {v.id: v for v in (
-    Vocation(WARBAND, "Warband",
-             ("Orc", "Hobgoblin", "Goblin", "Goliath", "Gnoll", "Lizardfolk"),
-             f"+{COHESION_BONUS} Mental Defense in the daily cohesion roll: fewer walk-outs "
-             "from an overextended group.",
-             motto="We hold the line together, or not at all."),
-    Vocation(DELVERS, "Delvers",
-             ("Dwarf", "Kobold", "Gnome", "Automaton", "Goblin", "Goliath"),
-             f"+{GATHER_BONUS:.0%} yield from gathering: work shifts, and the meat, "
-             "mushrooms and fruit of a hunt or forage.",
-             motto="What the earth keeps, we take back up."),
-    Vocation(WILDS, "Wilds",
-             ("Centaur", "Elf", "Treefolk", "Grippli", "Gnoll", "Sprite"),
-             "Ambushes are 20% less likely while a group travels Cautious: on the Old Road "
-             "and on a hunt.",
-             motto="The road is long; the woods are longer."),
-    Vocation(SCHOLARS, "Scholars",
-             ("Kobold", "Gnome", "Elf", "Sprite", "Kenku", "Human"),
-             f"+{INFO_BONUS} on the INT roll that reveals enemy information: the opening read "
-             "and Assess.",
-             motto="Know the beast before you meet it."),
-    Vocation(CARAVAN, "Caravan",
-             ("Human", "Halfling", "Dwarf", "Catfolk", "Automaton", "Centaur"),
-             "Travel takes 15% fewer hours.",
-             motto="A coin that sits still is a coin half spent."),
-    Vocation(MARSH, "Marsh",
-             ("Grippli", "Lizardfolk", "Treefolk", "Halfling", "Kobold", "Kenku"),
-             f"On every {FOOD_PAUSE_EVERY}th day no food in the guild ages.",
-             motto="The bog keeps what it is given."),
+    Vocation(WARBAND, ("Orc", "Hobgoblin", "Goblin", "Goliath", "Gnoll", "Lizardfolk")),
+    Vocation(DELVERS, ("Dwarf", "Kobold", "Gnome", "Automaton", "Goblin", "Goliath")),
+    Vocation(WILDS, ("Centaur", "Elf", "Treefolk", "Grippli", "Gnoll", "Sprite")),
+    Vocation(SCHOLARS, ("Kobold", "Gnome", "Elf", "Sprite", "Kenku", "Human")),
+    Vocation(CARAVAN, ("Human", "Halfling", "Dwarf", "Catfolk", "Automaton", "Centaur")),
+    Vocation(MARSH, ("Grippli", "Lizardfolk", "Treefolk", "Halfling", "Kobold", "Kenku")),
 )}
 
 

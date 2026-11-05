@@ -245,7 +245,7 @@ class ArenaSession(Session):
                           "tone": "warn"})
         if u.pending_picks:
             flags.append({"text": i18n.t("arena_session.talent_pick_ready"), "tone": "good"})
-        return {"uid": u.uid, "name": u.name, "race": u.race["name"],                 "portrait": _portrait(u), "hp": [max(0, u.hp), u.hp_max], "ac": u.ac, "md": u.mental_defense,
+        return {"uid": u.uid, "name": u.name, "race": u.race_label,                 "portrait": _portrait(u), "hp": [max(0, u.hp), u.hp_max], "ac": u.ac, "md": u.mental_defense,
                 "speed": u.speed, "weapon": u.weapon.name, "dmg": f"{n}d{faces}",
                 "money": u.money, "money_text": fmt_money(u.money), "level": lvl, "flags": flags,
                 "unfit": u.incapacitated, "picked": u in self.picked,
@@ -258,4 +258,4 @@ class ArenaSession(Session):
         else:
             faces = arena.load_ribbit_brothers()
         return {**r, "who": self.offered,
-                "faces": [{"name": u.name, "portrait": _portrait(u), "race": u.race["name"]} for u in faces]}
+                "faces": [{"name": u.name, "portrait": _portrait(u), "race": u.race_label} for u in faces]}

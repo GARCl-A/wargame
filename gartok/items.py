@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 
-from . import weapon_traits
+from . import i18n, weapon_traits
 
 
 class ItemType(StrEnum):
@@ -582,7 +582,7 @@ def shelf_life(name) -> str:
     item = get(name)
     if item is None or not item.food or item.lifespan is None:
         return ""
-    return f"keeps {item.lifespan} day{'s' * (item.lifespan != 1)}"
+    return i18n.plural("item.keeps", item.lifespan)
 
 
 def stack_note(entry) -> str:
@@ -593,10 +593,15 @@ def stack_note(entry) -> str:
     item = entry.defn
     if item.food and item.lifespan is not None:
         left = item.lifespan - entry.days_old
-        return "rotten" if left < 0 else "last day" if left == 0 else f"{left} day{'s' * (left != 1)} left"
+        return i18n.t("item.rotten") if left < 0 else i18n.t("item.last_day") if left == 0 else i18n.plural("item.days_left", left)
     if item.max_charges and entry.charges is not None:
         return f"{entry.charges}/{item.max_charges}"
     return ""
+
+
+def note_urgent(note: str) -> bool:
+    """Whether a `stack_note` is the food about to turn: the shelf draws it as a warning."""
+    return note in (i18n.t("item.rotten"), i18n.t("item.last_day"))
 
 
 def create_instance(key: str, qty: int = 1, days_old: int = 0, charges: int | None = None) -> ItemInstance:
@@ -1050,8 +1055,8 @@ def _main_tag(it: ItemDef) -> str:
 
 def armor_note(it: ItemDef) -> str:
     """The armor slot's one-line summary: AC, plus the guard-test bonus if any."""
-    note = f"+{it.ac} AC"
-    return f"{note} · +{it.guard_bonus} guard" if it.guard_bonus else note
+    key = "item.armor_note_guard" if it.guard_bonus else "item.armor_note"
+    return i18n.t(key, ac=it.ac, guard=it.guard_bonus)
 
 
 def item_tooltip(name: str) -> tuple[str, str]:
@@ -1064,64 +1069,64 @@ def item_tip_lines(name: str) -> list[str]:
     """An item's tooltip as its name, then one line per fact (a trait, an action, the weight)."""
     it = get(name)
     if it is None:
-        return [name]
+        return [i18n.name("item", name)]
 
     desc = []
     if it.type == ItemType.WEAPON:
         n, faces = it.damage or (1, 4)
-        hands = "Two-handed" if it.hands >= 2 else "One-handed"
-        reach = f"{it.range * 1.5:g}m range" if it.range else "Melee"
-        desc.append(f"Weapon: {n}d{faces} damage  ·  {hands}  ·  {reach}.")
+        hands = i18n.t("item.tip.two_handed" if it.hands >= 2 else "item.tip.one_handed")
+        reach = i18n.t("item.tip.range", m=f"{it.range * 1.5:g}") if it.range else i18n.t("item.tip.melee")
+        desc.append(i18n.t("item.tip.weapon", n=n, faces=faces, hands=hands, reach=reach))
         for tid in it.traits:
             wt = weapon_traits.get(tid)
             if wt is not None:
                 if tid == "thrown" and it.thrown:
-                    desc.append(f"Thrown: Can be thrown up to {it.thrown * 1.5:g}m.")
+                    desc.append(i18n.t("item.tip.thrown", m=f"{it.thrown * 1.5:g}"))
                 else:
                     desc.append(f"{wt.name}: {wt.desc}")
     elif it.type == ItemType.ARMOR:
-        desc.append(f"Armor: +{it.ac} Armor Class.")
+        desc.append(i18n.t("item.tip.armor", ac=it.ac))
         if it.max_dex is not None:
-            desc.append(f"Maximum Dexterity bonus to AC is capped at +{it.max_dex}.")
+            desc.append(i18n.t("item.tip.max_dex", max_dex=it.max_dex))
         if it.speed:
-            desc.append(f"Heavy: Reduces movement speed by {it.speed} cells.")
+            desc.append(i18n.t("item.tip.heavy", speed=it.speed))
         if it.guard_bonus:
-            desc.append(f"Disguise: +{it.guard_bonus} to the guard test for a character with a record.")
+            desc.append(i18n.t("item.tip.disguise", guard=it.guard_bonus))
     elif it.type == ItemType.SHIELD:
-        desc.append(f"Shield: +{it.ac} Armor Class when equipped in the off-hand.")
+        desc.append(i18n.t("item.tip.shield", ac=it.ac))
     elif it.type == ItemType.ARTIFACT:
         if it.name == BIWOLF_LEATHER_ITEM:
-            desc.append("Artifact: worn in its own slot.")
-            desc.append("Passive: +1 AC against anything that is not a humanoid.")
+            desc.append(i18n.t("item.tip.artifact"))
+            desc.append(i18n.t("item.tip.biwolf"))
         elif it.name == THUNDERHIDE_ITEM:
-            desc.append("Artifact: worn in its own slot.")
-            desc.append("Passive: +1 Strength while worn.")
+            desc.append(i18n.t("item.tip.artifact"))
+            desc.append(i18n.t("item.tip.thunderhide"))
         else:
-            desc.append("Artifact: worn in its own slot, it grants a combat action.")
+            desc.append(i18n.t("item.tip.artifact_action"))
         if it.name == SIGNAL_HORN_ITEM:
-            desc.append("Once per battle, 2 points: allies within 10 squares gain +2 initiative.")
+            desc.append(i18n.t("item.tip.signal_horn"))
     elif it.name == FIRST_AID_ITEM or it.id == "first_aid_kit":
         charges = it.max_charges or 10
-        desc.append(f"Restores HP or stabilizes a dying unit. Starts with {charges} charges.")
+        desc.append(i18n.t("item.tip.first_aid", charges=charges))
     elif it.name == AMMO_ITEM or it.id == "quiver":
         ammo = it.max_charges or 20
-        desc.append(f"Ammunition for ranged weapons. Holds {ammo} arrows/bolts.")
+        desc.append(i18n.t("item.tip.quiver", ammo=ammo))
     elif it.name == "Minor Healing Potion" or it.id == "minor_healing_potion":
-        desc.append("Restores 1d6 HP when consumed.")
+        desc.append(i18n.t("item.tip.potion"))
     elif it.name == TORCH_ITEM or it.id == "torch":
         r = it.light_radius or 4
-        desc.append(f"Provides light in a {r * 1.5:g}m radius. Can be dropped on the ground.")
+        desc.append(i18n.t("item.tip.torch", m=f"{r * 1.5:g}"))
     elif it.type == ItemType.LIGHT or it.light_radius > 0:
-        desc.append(f"Provides light in a {it.light_radius * 1.5:g}m radius when equipped in the off-hand.")
+        desc.append(i18n.t("item.tip.light", m=f"{it.light_radius * 1.5:g}"))
     elif it.food:
-        desc.append("A day's ration. Prevents starvation when resting.")
+        desc.append(i18n.t("item.tip.food"))
         if it.lifespan is not None:
-            desc.append(f"Spoils in {it.lifespan} day(s).")
+            desc.append(i18n.t("item.tip.spoils", n=it.lifespan))
 
     if is_material(it) and it.type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.SHIELD):
-        desc.append("Crafting material: used in workshop recipes.")
+        desc.append(i18n.t("item.tip.material"))
 
-    desc.append(f"Weight: {it.weight:g} kg.")
-    return [it.name, *desc]
+    desc.append(i18n.t("item.tip.weight", kg=f"{it.weight:g}"))
+    return [i18n.name("item", it.name), *desc]
 
 

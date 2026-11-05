@@ -27,8 +27,6 @@ from . import data, i18n
 @dataclass(frozen=True)
 class Ability:
     id: str
-    name: str
-    effect: str
 
     # --- passives (Unit combat derivation) ------------------------------- #
     hp_max: int = 0
@@ -61,6 +59,18 @@ class Ability:
     on_attack_miss: Callable | None = None  # (battle, unit, target, bonus, ac, log)  (once per battle)
     on_downed: Callable | None = None       # (unit, log) -> bool (True = survived)   (once per battle)
     on_turn_start: Callable | None = None   # (unit, log)
+
+    @property
+    def name(self):
+        if "+" in self.id:
+            return ", ".join(ABILITIES[i].name for i in self.id.split("+"))
+        return i18n.name("ability", self.id)
+
+    @property
+    def effect(self):
+        if "+" in self.id:
+            return " ".join(f"{ABILITIES[i].name}: {ABILITIES[i].effect}" for i in self.id.split("+"))
+        return i18n.desc("ability", self.id, darkvision=data.DARKVISION, automaton_repair_dc=data.AUTOMATON_REPAIR_DC)
 
     @property
     def desc(self):
@@ -102,89 +112,35 @@ def _ferocity(unit, log):
 # --------------------------------------------------------------------------- #
 
 _LIST = [
-    Ability("browbeat", "Browbeat",
-            "+2 to Demoralize against a target with a lower Strength modifier.",
-            demoralize_vs_weaker=2),
-    Ability("darkvision", "Darkvision",
-            f"sees {data.DARKVISION} squares in the dark as if it were lit.",
-            darkvision=data.DARKVISION),
-    Ability("inorganic_body", "Inorganic Body",
-            "at 0 HP goes BROKEN instead of dying (no death save) until an ally "
-            f"repairs it (Stabilize: INT vs DC {data.AUTOMATON_REPAIR_DC}).",
-            breaks_when_downed=True),
-    Ability("gallop", "Gallop",
-            "+3 m (2 squares) of speed.", speed=2),
-    Ability("sleep_immunity", "Sleep Immunity",
-            "immune to sleep effects.", sleep_immunity=True),
-    Ability("strong_stomach", "Strong Stomach",
-            "Can eat Rotten Food without getting sick."),
-    Ability("nature_magic", "Nature Magic",
-            "innate nature magic: starts initiated and knowing one nature cantrip."),
-    Ability("pack_tactics", "Pack Tactics",
-            "+2 [circumstance] to attack if an ally is adjacent to the target.",
-            attack_mods=_pack_tactics_mods),
-    Ability("strong_body", "Strong Body",
-            "for carry capacity (and only that), counts as a Large creature.",
-            carry_size="Large"),
-    Ability("beast_of_burden", "Beast of Burden",
-            "carries and draws twice what its size and Strength allow.",
-            carry_mult=2.0),
-    Ability("amphibious", "Amphibious",
-            "breathes water: never runs out of breath while submerged, so it can "
-            "stay underwater indefinitely.",
-            water_breathing=True),
-    Ability("innocent_face", "Innocent Face",
-            "an unassuming face that guards tend to ignore: crime rating "
-            "naturally decays by 1 every 7 days."),
-    Ability("climber", "Climber",
-            "climbs any surface of DC 25 or lower with no check (still costs the action).",
-            auto_climb_dc=25),
-    Ability("extra_language", "Extra Language",
-            "speaks a second random language: can Demoralize enemies that share "
-            "either of the two.",
-            extra_languages=1),
-    Ability("catfall", "Catfall",
-            "always lands on their feet: 3 more levels of a fall cost nothing (a drop of up "
-            "to 4 levels does no damage).",
-            fall_free=3),
-    Ability("mimic_sounds", "Mimic Sounds",
-            "can Demoralize with no shared language (mimics the target's voice) "
-            "-- offence only; being demoralized still needs a common tongue.",
-            demoralize_ignores_language=True),
-    Ability("blood_magic", "Blood Magic",
-            "ancestral blood magic: starts initiated in blood magic, "
-            "+2 to spell study rolls."),
-    Ability("autotroph", "Autotroph",
-            "photosynthesises: never needs to eat, immune to the hunger rules."),
-    Ability("ferocity", "Ferocity",
-            "once per battle, when downed drops to 0 HP and dying, but only "
-            "falls at the end of their turn (the death save runs normally from there).",
-            on_downed=_ferocity),
-    Ability("flight", "Flight",
-            "flies: moves freely in three dimensions (up and down pits with no "
-            "check, ignores terrain) and never takes falling damage.",
-            flies=True),
-    Ability("spider_venom", "Spider Venom",
-            "a bite that draws blood forces a Constitution save (DC 11 + the spider's "
-            "racial level) or the victim is poisoned: Giant Spider Venom, one stack "
-            "more per failed save, each eating a point of Dexterity.",
-            venom="giant_spider_venom"),
-    Ability("serpentine", "Serpentine",
-            "a body that strikes before it is seen: every attack is a finesse attack (the better "
-            "of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs.",
-            finesse=True),
-    Ability("wolf_pack_tactics", "Pack Tactics",
-            "+1 [melee] damage (a real bite); +2 [circumstance] to attack per "
-            "ally already on the target, not just the first.",
-            melee_damage=1, attack_mods=_wolf_pack_tactics_mods),
-    Ability("reach", "Reach",
-            "long arms on a huge body: melee attacks reach 1 square farther.",
-            melee_reach=1),
+    Ability("browbeat", demoralize_vs_weaker=2),
+    Ability("darkvision", darkvision=data.DARKVISION),
+    Ability("inorganic_body", breaks_when_downed=True),
+    Ability("gallop", speed=2),
+    Ability("sleep_immunity", sleep_immunity=True),
+    Ability("strong_stomach"),
+    Ability("nature_magic"),
+    Ability("pack_tactics", attack_mods=_pack_tactics_mods),
+    Ability("strong_body", carry_size="Large"),
+    Ability("beast_of_burden", carry_mult=2.0),
+    Ability("amphibious", water_breathing=True),
+    Ability("innocent_face"),
+    Ability("climber", auto_climb_dc=25),
+    Ability("extra_language", extra_languages=1),
+    Ability("catfall", fall_free=3),
+    Ability("mimic_sounds", demoralize_ignores_language=True),
+    Ability("blood_magic"),
+    Ability("autotroph"),
+    Ability("ferocity", on_downed=_ferocity),
+    Ability("flight", flies=True),
+    Ability("spider_venom", venom="giant_spider_venom"),
+    Ability("serpentine", finesse=True),
+    Ability("wolf_pack_tactics", melee_damage=1, attack_mods=_wolf_pack_tactics_mods),
+    Ability("reach", melee_reach=1),
 ]
 
 ABILITIES = {a.id: a for a in _LIST}
 
-_NONE = Ability("none", "No ability", "no effect.")
+_NONE = Ability("none")
 
 
 _SUMMED = ("hp_max", "speed", "fall_free", "ac_natural", "damage_reduction", "initiative",
@@ -223,8 +179,7 @@ def _combined(ids):
     merged["on_attack_miss"] = _chain([p.on_attack_miss for p in parts], list)
     merged["on_downed"] = _chain([p.on_downed for p in parts], any)
     merged["on_turn_start"] = _chain([p.on_turn_start for p in parts], list)
-    return Ability("+".join(ids), ", ".join(p.name for p in parts),
-                   " ".join(f"{p.name}: {p.effect}" for p in parts), **merged)
+    return Ability("+".join(ids), **merged)
 
 
 def get(spec):

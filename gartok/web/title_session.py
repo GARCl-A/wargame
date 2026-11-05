@@ -170,7 +170,7 @@ class TitleSession(Session):
         bands = [b for b in g.groups if not b.empty]
         out["ledger"].append((len(bands), i18n.t("title_session.ledger.bands")))
         out["faces"] = [{"name": u.name, "portrait": _portrait(u),
-                         "what": i18n.t("title_session.lvl", race=u.race['name'], combat_level=u.combat_level), "hurt": u.hp < u.hp_max}
+                         "what": i18n.t("title_session.lvl", race=u.race_label, combat_level=u.combat_level), "hurt": u.hp < u.hp_max}
                         for u in g.roster[:CHARTER_FACES]]
         out["more"] = max(0, len(g.roster) - CHARTER_FACES)
         lead = max(bands, key=len) if bands else None

@@ -195,7 +195,7 @@ class Initiation:
             rows.append({"key": u.uid, "name": u.name, "status": self._status(u),
                          "face": {"race": u.race["name"], "portrait_id": getattr(u, "portrait_id", None),
                                   "token": u.token},
-                         "sub": i18n.t("rite.int_2", race=u.race['name'], mod_intelligence=u.mod_intelligence),
+                         "sub": i18n.t("rite.int_2", race=u.race_label, mod_intelligence=u.mod_intelligence),
                          "note": blocked or "", "enabled": blocked is None, "picked": u.uid == self.picked})
         return rows
 

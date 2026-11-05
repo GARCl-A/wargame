@@ -30,16 +30,20 @@ reads campaign state straight off that.
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from . import i18n
 from .constants import fmt_money
 
 
 @dataclass(frozen=True)
 class Faction:
     id: str
-    name: str
     blurb: str
     hidden: bool = False                      # unknown to the guild until it enters one of `nodes`
     nodes: tuple[str, ...] = ()               # the nodes that belong to it
+
+    @property
+    def name(self):
+        return i18n.name("faction", self.id)
 
 
 @dataclass(frozen=True)
@@ -100,24 +104,15 @@ def _arena_tier(event):
 
 
 _FACTIONS = [
-    Faction("arena", "The Pits",
-            "The staked bouts in the cellars under the city. Win, and be known."),
-    Faction("bankers", "The Bankers",
-            "The coin-keepers of the city. They rent strongboxes and trade in property."),
-    Faction("library", "The Library",
-            "Scholars and linguists. They trade in knowledge.", hidden=True, nodes=("library",)),
-    Faction("tanners", "The Tanners",
-            "The leatherworkers of the city. They pay for what the Wilds sheds.", hidden=True, nodes=("tanner",)),
-    Faction("apothecary", "The Apothecary",
-            "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents.", hidden=True, nodes=("apothecary",)),
-    Faction("ledger_hold", "Ledger Hold",
-            "The fortified garrison of the march. They train soldiers and hold the border.", hidden=True, nodes=("ledger_hold",)),
-    Faction("blood_cult", "The Blood Cult",
-            "Mages born to it, hidden under the ruins: the magic runs in their line, from a dragon, an angel or a demon somewhere back. They study the blood that carries it.", hidden=True, nodes=("blood_sanctuary",)),
-    Faction("nature_coven", "The Nature Coven",
-            "Mages of the green, hidden deep in the Wilds. They keep to themselves.", hidden=True, nodes=("nature_grove",)),
-    Faction("faith_order", "The Faith Order",
-            "Mages of faith, hidden in a cathedral in the hills. They answer to a higher call.", hidden=True, nodes=("faith_cathedral",)),
+    Faction("arena", "The staked bouts in the cellars under the city. Win, and be known."),
+    Faction("bankers", "The coin-keepers of the city. They rent strongboxes and trade in property."),
+    Faction("library", "Scholars and linguists. They trade in knowledge.", hidden=True, nodes=("library",)),
+    Faction("tanners", "The leatherworkers of the city. They pay for what the Wilds sheds.", hidden=True, nodes=("tanner",)),
+    Faction("apothecary", "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents.", hidden=True, nodes=("apothecary",)),
+    Faction("ledger_hold", "The fortified garrison of the march. They train soldiers and hold the border.", hidden=True, nodes=("ledger_hold",)),
+    Faction("blood_cult", "Mages born to it, hidden under the ruins: the magic runs in their line, from a dragon, an angel or a demon somewhere back. They study the blood that carries it.", hidden=True, nodes=("blood_sanctuary",)),
+    Faction("nature_coven", "Mages of the green, hidden deep in the Wilds. They keep to themselves.", hidden=True, nodes=("nature_grove",)),
+    Faction("faith_order", "Mages of faith, hidden in a cathedral in the hills. They answer to a higher call.", hidden=True, nodes=("faith_cathedral",)),
 ]
 
 def _delivered(thing, school):

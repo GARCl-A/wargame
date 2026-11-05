@@ -13,7 +13,7 @@ def item_ref(name, lower=False):
     """The catalog reference of an item by its shown name (the name itself when it is no catalog item)."""
     item = items.get(name)
     if item:
-        return i18n.Ref("item", item.id, name, lower)
+        return i18n.Ref("item", item.name, name, lower)
     return name.lower() if lower else name
 
 

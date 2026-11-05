@@ -134,21 +134,21 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
     activities = []
     for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
         if worker_level == 0:
-            activities.append(i18n.t("progression.bare_handed_or", place=place, tool=tool))
+            activities.append(i18n.t("progression.bare_handed_or", place=place, tool=i18n.name("item", tool)))
         elif worker_level == 1:
             if unit is not None:
                 from . import economy
                 if economy.work_level(unit, node_id) >= 1:
-                    activities.append(i18n.t("progression.with_your", place=place, tool=tool))
+                    activities.append(i18n.t("progression.with_your", place=place, tool=i18n.name("item", tool)))
                 else:
-                    activities.append(i18n.t("progression.requires_owning", place=place, tool=i18n.t("article.an" if tool[0] in "AEIOU" else "article.a", name=tool)))
+                    activities.append(i18n.t("progression.requires_owning", place=place, tool=i18n.t("article.an" if tool[0] in "AEIOU" else "article.a", name=i18n.name("item", tool))))
             else:
-                activities.append(i18n.t("progression.requires", place=place, tool=tool))
+                activities.append(i18n.t("progression.requires", place=place, tool=i18n.name("item", tool)))
 
     from . import gather
     for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
         if worker_level <= gather.LEVEL[node_id]:
-            activities.append(i18n.t("progression.gathering_lv_licence_and_your", place=place, level=gather.LEVEL[node_id], tool=tool))
+            activities.append(i18n.t("progression.gathering_lv_licence_and_your", place=place, level=gather.LEVEL[node_id], tool=i18n.name("item", tool)))
 
     # Tavern stage
     if worker_level <= 1:

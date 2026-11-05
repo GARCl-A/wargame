@@ -416,7 +416,7 @@ def test_schools_are_not_exclusive():
 def test_dropping_one_school_forgets_only_spells_no_other_school_casts(monkeypatch):
     u = Unit("player")
     u.magic_sources = []
-    nature_only = magic.Spell("gale", "Gale", 0, ("nature",))
+    nature_only = magic.Spell("gale", 0, ("nature",))
     monkeypatch.setitem(magic.SPELLS, nature_only.id, nature_only)
     u.set_magic_source("nature")
     u.set_magic_source("faith")

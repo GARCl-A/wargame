@@ -395,7 +395,7 @@ class Counter(economy.PartyPurse):
             member._derive_combat()
             self.qty.pop(name, None)
             recorder.emit("buy", node=self._node_id(), item=name, qty=1, price=price, zone=zone)
-            self.notice = i18n.t("trade.bought_equipped", name=member.name, item=name)
+            self.notice = i18n.t("trade.bought_equipped", name=member.name, item=i18n.name("item", name))
             self._opening_goals(name)
             self._settle_market()
             return
@@ -412,7 +412,7 @@ class Counter(economy.PartyPurse):
         member._derive_combat()
         self._bought(paid, names, zone)
         bought = sum(paid.values())
-        what = names[0] if len(names) == 1 else i18n.t("trade.items")
+        what = i18n.name("item", names[0]) if len(names) == 1 else i18n.t("trade.items")
         if bought and stopped:
             self.notice = i18n.t("trade.bought_of", name=member.name, bought=bought, wanted=wanted, stopped=stopped)
         elif bought:

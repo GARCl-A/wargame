@@ -149,7 +149,7 @@ class LaborMixin:
             events += u.bank_work(hours, gather.LEVEL[node_id])
             found.append(f"{u.name} {gather.describe(haul)}")
         if guards:
-            events.insert(0, i18n.t("guild_labor.had_no_stood_guard_no", join=', '.join(guards), tool=gather.tool(node_id)))
+            events.insert(0, i18n.t("guild_labor.had_no_stood_guard_no", join=', '.join(guards), tool=i18n.name("item", gather.tool(node_id))))
         if found:
             events.insert(0, i18n.t("guild_labor.gathered_h", name=world.node(node_id).name, hours=hours, join='; '.join(found)))
         return events
