@@ -77,10 +77,12 @@ prose). Convert module by module (`actions/`, `combat_log.py`, `campaign_fight.p
 
 Mechanism (done): `battle.log(key, **params)` keeps an `i18n.Msg`; the combat log (format 2) stores `{k, p}`
 for a converted line and a plain string for one not converted yet; `i18n.Ref` names a catalog thing and resolves at
-render time; `i18n.Text` makes an action's name/description a catalog read. Done: `actions/base.py` (the roll
-resolution), `actions/combat.py`, `weapon_actions.py` and `support.py`. Left: `actions/spells.py` and the rest of `actions/`, then the rest of the list. Roll modifier
-labels (`+2(Flank [circumstance])`) and `unit_*` messages that take `battle.log` as a callback are still literal;
-`campaign._death_note` still finds the death by text and must read the key once those lines are converted.
+render time; `i18n.Text` makes an action's name/description a catalog read. Done: `actions/` (all of it, spells and
+movement included), the turn flow, traps, falls, drowning and death saves in `battle.py`, the `go_down`/condition/ferocity
+lines (`combatant.py`, `conditions.py`, `abilities.py`), the roll modifier labels (`log.mod.*`), `web/battle_session.py`
+errors, and the `unit_poison`/`unit_levels`/`unit_hunger` messages; `campaign._death_note` reads the line keys. Left: the
+rest of the list (`web/campaign_fight.py`, `combat_lab.py`, `hunt`, `craft`, `trade`, `work_desk`, `vault`, `job_board`, ...),
+the attribute abbreviations (STR/DEX/CHA, a glossary decision) and `scenario.held_note`.
 
 ### 4. Catalog
 

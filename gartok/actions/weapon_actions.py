@@ -113,7 +113,7 @@ class PreciseThrust(Action):
         actor.walking = False
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
-        mods.append((2, "circumstance", "Precise Thrust"))
+        mods.append((2, "circumstance", i18n.t("log.mod.precise_thrust")))
 
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
@@ -171,7 +171,7 @@ class Cleave(Action):
         # 1. Primary strike
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         if sec is not None:
-            mods.append((2, "circumstance", "Cleave"))
+            mods.append((2, "circumstance", i18n.t("log.mod.cleave")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -182,7 +182,7 @@ class Cleave(Action):
         # 2. Secondary strike on adjacent foe
         if sec is not None and sec.alive:
             mods2 = actor.attack_mods(sec, _pack_flank(battle, actor, sec), battle=battle)
-            mods2.append((2, "circumstance", "Cleave"))
+            mods2.append((2, "circumstance", i18n.t("log.mod.cleave")))
             bonus2, applied2 = resolve_bonus(mods2)
             detail2 = " ".join(f"{v:+}({r})" for v, r in applied2)
             nat2 = d20()
@@ -303,7 +303,7 @@ class MaimingStrike(Action):
         unguarded = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         if unguarded:
-            mods.append((2, "circumstance", "Maiming Strike"))
+            mods.append((2, "circumstance", i18n.t("log.mod.maiming_strike")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -654,7 +654,7 @@ class LongThrust(Action):
         actor.ap -= self.cost
         actor.walking = False
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
-        mods.append((self.TO_HIT, "circumstance", "Long Thrust"))
+        mods.append((self.TO_HIT, "circumstance", i18n.t("log.mod.long_thrust")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         prefix = Msg("log.long_thrust.head", actor=actor.name, target=target.name)

@@ -56,7 +56,7 @@ class Demoralized(Condition):
         return [(-1, "status", "Demoralized")]
 
     def on_turn_end(self, unit, log):
-        log(f"{unit.name} recovers (no longer demoralized).")
+        log("log.cond.demoralized_ends", unit=unit.name)
         return True
 
 
@@ -86,7 +86,7 @@ class Entangled(Condition):
 
     def on_turn_end(self, unit, log):
         if self.held:
-            log(f"{unit.name} tears free of the web.")
+            log("log.cond.entangled_ends", unit=unit.name)
         return self.held
 
 
@@ -107,7 +107,7 @@ class Grappled(Condition):
     def on_turn_start(self, unit, log):
         if self.grappler is not None:
             if not getattr(self.grappler, "alive", True):
-                log(f"{unit.name} is no longer grappled (grappler is down).")
+                log("log.cond.grappled_ends", unit=unit.name)
                 return True
         return False
 
@@ -134,7 +134,7 @@ class Sleeping(Condition):
         if self.duration is not None:
             self.duration -= 1
             if self.duration <= 0:
-                log(f"{unit.name} stirs and wakes up.")
+                log("log.cond.wakes", unit=unit.name)
                 return True
         return False
 
@@ -160,14 +160,14 @@ class Bleeding(Condition):
     def on_turn_end(self, unit, log):
         if unit.hp <= 0:
             return True
-        log(f"{unit.name} bleeds.")
+        log("log.cond.bleeds", unit=unit.name)
         unit.take_damage(self.damage, log, ignore_dr=True)
         self.duration -= 1
         if unit.hp <= 0:
             return True
         if self.duration > 0:
             return False
-        log(f"{unit.name} stops bleeding.")
+        log("log.cond.bleeding_ends", unit=unit.name)
         return True
 
 
@@ -187,7 +187,7 @@ class Maimed(Condition):
 
     def on_turn_end(self, unit, log):
         if self.held:
-            log(f"{unit.name} recovers from the maiming blow.")
+            log("log.cond.maimed_ends", unit=unit.name)
         return self.held
 
 
@@ -204,7 +204,7 @@ class ShieldHooked(Condition):
 
     def on_turn_end(self, unit, log):
         if self.held:
-            log(f"{unit.name}'s shield is no longer tangled.")
+            log("log.cond.shield_ends", unit=unit.name)
         return self.held
 
 
@@ -240,7 +240,7 @@ class Rooted(Condition):
 
     def on_turn_end(self, unit, log):
         if self.held:
-            log(f"{unit.name} pulls free of the roots.")
+            log("log.cond.rooted_ends", unit=unit.name)
         return self.held
 
 
@@ -272,7 +272,7 @@ class Hexed(Condition):
         if not self.held:
             return False
         unit.hp_max += self.hp_lost
-        log(f"{unit.name} shakes off the hex.")
+        log("log.cond.hexed_ends", unit=unit.name)
         return True
 
 
@@ -290,5 +290,5 @@ class PixieFlight(Condition):
     def on_turn_end(self, unit, log):
         if not self.held:
             return False
-        log(f"{unit.name}'s pixie dust wears off.")
+        log("log.cond.pixie_ends", unit=unit.name)
         return True

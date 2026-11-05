@@ -25,6 +25,7 @@ from .combatant import AP_PER_TURN, Combatant
 from .conditions import Entangled
 from .data import d20
 from .ground import GroundObject
+from .i18n import Ref
 from .scenario import ArenaScenario, own_half
 
 __all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
@@ -158,7 +159,7 @@ class Battle:
         for u in self.units:
             u.check_collapse(self.log)
         self._roll_initiative()
-        self.log("--- Round 1 ---")
+        self.log("log.round", n=1)
         self._announce_turn()
 
     def reinforce(self, unit, candidates, team="enemy"):
@@ -294,17 +295,17 @@ class Battle:
         def run():
             self.winner = "player"
             self.withdrew = True
-            self.log("The squad withdraws from the field.")
+            self.log("log.withdraw")
             self._resolve_dangling_dying()
             self._log_aftermath()
-            self.log(f"*** Victory: {self.winner} ***")
+            self.log("log.victory", winner=self.winner)
         self._recorded("withdraw", self.player_units[0], None, run)
 
     def check_objective(self):
         """Let a caller (the screen, mid-turn) settle a scenario objective the
         instant it is met, instead of waiting for the turn to end."""
         if self.winner is None and self._check_winner():
-            self.log(f"*** Victory: {self.winner} ***")
+            self.log("log.victory", winner=self.winner)
 
     def _roll_initiative(self):
         for u in self.units:
@@ -564,7 +565,7 @@ class Battle:
             return
         n, faces = data.FIRE_DICE
         dmg = data.roll(n * len(hot), faces)
-        self.log(f"{unit.name} is in the flames! ({n * len(hot)}d{faces})")
+        self.log("log.fire", unit=unit.name, dice=f"{n * len(hot)}d{faces}")
         self.fx(unit.pos, f"-{dmg}", "crit")
         unit.take_damage(dmg, self.log)
 
@@ -629,7 +630,7 @@ class Battle:
             unit.walking = True
             unit.moved = 0
             unit.diag_steps = 0              # a fresh walk restarts the diagonal alternation
-            self.log(f"{unit.name} moves (1 action point).")
+            self.log("log.moves", unit=unit.name)
             
         platforms = self._platforms()
         current_z = self.elevation(unit)
@@ -638,7 +639,7 @@ class Battle:
             lurker = self._unseen_at(unit, step)
             if lurker is not None:
                 lurker.reveal_to(unit.team)
-                self.log(f"{unit.name} bumps into something unseen -- {lurker.name} is there!")
+                self.log("log.bumps", unit=unit.name, lurker=lurker.name)
                 self.fx(step, "!", "crit")
                 unit.moved = unit.speed
                 break
@@ -681,7 +682,7 @@ class Battle:
                 grappler = cond.grappler
                 if not grappler.alive or getattr(grappler, "downed", False) or self.units_distance(u, grappler) > 1:
                     u.conditions.remove(cond)
-                    self.log(f"  {u.name} is no longer grappled.")
+                    self.log("log.ungrappled", unit=u.name)
 
     # ------------------------------------------------------------------ #
     # turn flow                                                          #
@@ -728,14 +729,13 @@ class Battle:
         if players_up and dying_allies:
             if not self._mopup_open:
                 self._mopup_open = True
-                self.log("Enemies down -- stabilize the downed allies before "
-                         "the fight ends.")
+                self.log("log.mopup_stabilize")
             return None
 
         if self.lethal and players_up and self._capturable():
             if self._capture_round is None:
                 self._capture_round = self.round_no
-                self.log("Enemies down -- one round to bind the fallen before the fight ends.")
+                self.log("log.mopup_bind")
             if self.round_no <= self._capture_round + 1:
                 return None
 
@@ -754,9 +754,9 @@ class Battle:
         if self.winner == "player":
             for u in self.units:
                 if u.team == "player" and u.status == "stable":
-                    self.log(f"{u.name} was stabilized and survived unconscious.")
+                    self.log("log.aftermath.stable", unit=u.name)
                 elif u.team == "player" and u.status == "broken":
-                    self.log(f"{u.name} was recovered broken.")
+                    self.log("log.aftermath.broken", unit=u.name)
 
     # ------------------------------------------------------------------ #
     # falling, stabilizing and death                                     #
@@ -768,14 +768,14 @@ class Battle:
         if drop <= 1 or unit.flies:
             return
         if self.board.is_deep_water(unit.pos):
-            log(f"{unit.name} plunges into deep water -- the water breaks the fall.")
+            log("log.fall.water", unit=unit.name)
             return
         dice = drop - 1 - unit.ability.fall_free
         if dice <= 0:
-            log(f"{unit.name} falls {drop} levels and lands on their feet.")
+            log("log.fall.feet", unit=unit.name, n=drop)
             return
         dmg = data.roll(dice, 6)
-        log(f"{unit.name} falls {drop} levels -> {dmg} damage ({dice}d6).")
+        log("log.fall.hurt", unit=unit.name, n=drop, dmg=dmg, dice=dice)
         unit.take_damage(dmg, log)
 
     def plant_web(self, spider, anchor):
@@ -801,19 +801,19 @@ class Battle:
     def trigger_trap(self, unit, trap):
         from . import data
         self.ground.remove(trap)
-        self.log(f"{unit.name} steps on a {trap.trap_type}!")
+        self.log("log.trap.steps", unit=unit.name, trap=Ref("trap", trap.trap_type, trap.trap_type))
         if trap.trap_type == "bear trap":
             dmg = data.roll(1, 8)
-            self.log(f"  *SNAP* {unit.name} takes {dmg} damage and is stopped.")
+            self.log("log.trap.snap", unit=unit.name, dmg=dmg)
             unit.take_damage(dmg, self.log)
             unit.moved = unit.speed # stop movement
         elif trap.trap_type == "web":
             self.remove_web(trap)
-            self.log(f"  *THWIP* {unit.name} is stuck fast in the web!")
+            self.log("log.trap.web", unit=unit.name)
             unit.add_condition(Entangled())
             unit.moved = unit.speed
         elif trap.trap_type == "alarm trap":
-            self.log(f"  *RING RING RING* A loud alarm sounds! Everyone's attention is drawn to {unit.name}.")
+            self.log("log.trap.alarm", unit=unit.name)
             unit.moved += 1 # small movement penalty
             self.alarm_triggered = True
             for u in getattr(self, "units", []):
@@ -834,11 +834,10 @@ class Battle:
         capacity = data.BREATH_BASE + unit.mod_constitution
         over = unit.rounds_submerged - capacity
         if over <= 0:
-            self.log(f"{unit.name} holds their breath underwater "
-                     f"({unit.rounds_submerged}/{max(capacity, 0)}).")
+            self.log("log.submerged", unit=unit.name, n=unit.rounds_submerged, cap=max(capacity, 0))
             return
         dmg = data.roll(over, 6)
-        self.log(f"{unit.name} is drowning! ({over}d6)")
+        self.log("log.drowning", unit=unit.name, dice=f"{over}d6")
         unit.take_damage(dmg, self.log)
 
     def _death_save(self, unit):
@@ -848,21 +847,20 @@ class Battle:
         if roll < data.DEATH_SAVE_MIN and unit.can_use_luck(self.clock_day):
             unit.use_luck(self.clock_day)
             roll2 = d20()
-            self.log(f"  Halfling Luck! {unit.name} rerolls death save: d20({roll2}).")
+            self.log("log.death_save.luck", unit=unit.name, nat=roll2)
             roll = roll2
         if roll >= data.DEATH_SAVE_MIN:
             unit.status = "stable"
-            self.log(f"{unit.name}: death save d20({roll}) -> survives, "
-                     f"unconscious at 0 HP.")
+            self.log("log.death_save.survives", unit=unit.name, nat=roll)
         else:
             unit.status = "dead"
-            self.log(f"{unit.name}: death save d20({roll}) -> dies.")
+            self.log("log.death_save.dies", unit=unit.name, nat=roll)
         return unit.status
 
     def stabilize(self, unit):
         """Bring a dying unit to `stable` (from a successful Stabilize / FirstAid)."""
         unit.status = "stable"
-        self.log(f"{unit.name} was stabilized (unconscious at 0 HP until the end of the fight).")
+        self.log("log.stabilized", unit=unit.name)
 
     def repair(self, unit):
         """Bring a broken automaton back into the fight at 1 HP (successful ally
@@ -870,7 +868,7 @@ class Battle:
         unit.status = "up"
         unit.hp = 1
         unit.death_clock = 0
-        self.log(f"{unit.name} is back online (1 HP).")
+        self.log("log.repaired", unit=unit.name)
 
     def tick_dying(self, unit):
         """The dying unit's turn: tick the counter, roll the death save on the DYING_TURNS-th."""
@@ -878,7 +876,7 @@ class Battle:
         if unit.death_clock >= data.DYING_TURNS:
             self._death_save(unit)
         else:
-            self.log(f"{unit.name} is dying ({unit.death_clock}/{data.DYING_TURNS}).")
+            self.log("log.dying", unit=unit.name, n=unit.death_clock, total=data.DYING_TURNS)
 
     def _resolve_dangling_dying(self):
         """Battle over: every unit still dying makes one last death save."""
@@ -892,11 +890,11 @@ class Battle:
         for u in self.units:
             if u.team == team and u.status in ("dying", "stable", "broken"):
                 u.status = "dead"
-                self.log(f"{u.name} doesn't survive their wounds after the defeat.")
+                self.log("log.defeat_wipe", unit=u.name)
 
     def _announce_turn(self):
         u = self.active
-        self.log(f"{u.name}'s turn ({u.team}).")
+        self.log("log.turn", unit=u.name, team=u.team)
         self.scenario.on_turn_start(self, u)
 
     def end_turn(self):
@@ -914,13 +912,13 @@ class Battle:
         round, before it spends anything, and only while someone standing still acts
         after it (otherwise there is nothing to wait for)."""
         if unit is not self.active or self.winner is not None:
-            return "it is not your turn"
+            return i18n.t("action.delay.not_your_turn")
         if unit.delay_round == self.round_no:
-            return "already delayed this round"
+            return i18n.t("action.delay.once")
         if unit.ap < AP_PER_TURN or unit.moved or unit.walking:
-            return "you already spent a point this turn: Delay only works before you act"
+            return i18n.t("action.delay.spent")
         if not any(u.alive for u in self.order[self.turn_idx + 1:]):
-            return "nobody is left to act after you"
+            return i18n.t("action.delay.nobody")
         return ""
 
     def can_delay(self, unit):
@@ -930,7 +928,7 @@ class Battle:
         self.order.append(self.order.pop(self.turn_idx))
         unit.delayed = True
         unit.delay_round = self.round_no
-        self.log(f"{unit.name} holds back and waits.")
+        self.log("log.delay", unit=unit.name)
         self.turn_idx -= 1                   # _advance_turn steps onto whoever slid into this slot
         self._advance_turn()
 
@@ -960,7 +958,7 @@ class Battle:
             if self.turn_idx >= len(self.order):
                 self.turn_idx = 0
                 self.round_no += 1
-                self.log(f"--- Round {self.round_no} ---")
+                self.log("log.round", n=self.round_no)
                 self.scenario.on_round(self)
                 if self.is_ctf:
                     self._promote_fallen_runners()
@@ -969,13 +967,13 @@ class Battle:
                 u.delayed = False            # downed while waiting: a revived turn starts fresh
                 self.tick_dying(u)
                 if self._check_winner():
-                    self.log(f"*** Victory: {self.winner} ***")
+                    self.log("log.victory", winner=self.winner)
                     return
                 continue
             if u.alive:
                 break
         if self._check_winner():
-            self.log(f"*** Victory: {self.winner} ***")
+            self.log("log.victory", winner=self.winner)
             return
         if self.active.delayed:
             self.active.delayed = False      # the turn it began before waiting: no second start_turn
@@ -984,11 +982,11 @@ class Battle:
             self._apply_submersion(self.active)
             self._apply_fire(self.active)
         if self._check_winner():
-            self.log(f"*** Victory: {self.winner} ***")
+            self.log("log.victory", winner=self.winner)
             return
 
         if self.active.has_condition("sleeping"):
-            self.log(f"{self.active.name} is fast asleep... (turn skipped).")
+            self.log("log.asleep", unit=self.active.name)
             self.end_turn()
             return
         if self._skip_surprised():
@@ -999,7 +997,7 @@ class Battle:
     def _skip_surprised(self):
         if not self.active.has_condition("surprised"):
             return False
-        self.log(f"{self.active.name} is caught off guard (turn lost).")
+        self.log("log.surprised", unit=self.active.name)
         self.end_turn()
         return True
 
@@ -1023,6 +1021,6 @@ class Battle:
         self.active.start_turn(self.log)
         self._apply_submersion(self.active)
         if surprised:
-            self.log(f"The {surprised} side is caught off guard!")
+            self.log("log.surprised_side", team=surprised)
         if not self._skip_surprised():
             self._announce_turn()

@@ -66,14 +66,14 @@ def test_ferocity_falls_at_end_of_turn_then_clock_runs():
     base._ability = abilities.get("ferocity")
     u = Combatant(base)
     u.hp = 3
-    u.take_damage(99, lambda _: None)
+    u.take_damage(99, lambda *_a, **_k: None)
     assert u.alive and u.hp == 0 and u.ferocity_pending      # 0 PV but still standing
     assert u.death_clock == 0
-    u.end_turn(lambda _: None)
+    u.end_turn(lambda *_a, **_k: None)
     assert u.dying and not u.ferocity_pending and u.death_clock == 0
     # once per battle: a second fatal hit drops it straight into dying
     u.status, u.hp, u.death_clock = "up", 3, 0
-    u.take_damage(99, lambda _: None)
+    u.take_damage(99, lambda *_a, **_k: None)
     assert u.dying and not u.ferocity_pending
 
 

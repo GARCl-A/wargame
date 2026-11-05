@@ -347,5 +347,4 @@ def test_a_converted_line_is_stored_as_key_and_params_and_reads_in_any_language(
     lines = [ln for r in rows if r["e"] == "act" for ln in r["log"]]
     keyed = [ln for ln in lines if isinstance(ln, dict)]
     assert keyed and all(set(ln) == {"k", "p"} for ln in keyed)
-    assert any(isinstance(ln, str) for ln in lines), "a literal not converted yet stays a string"
     assert all(isinstance(i18n.from_json(ln), str) and ln["k"] not in i18n.from_json(ln) for ln in keyed)

@@ -15,9 +15,10 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import data, intel, items, natural_weapons, progression
+from . import data, i18n, intel, items, natural_weapons, progression
 from .conditions import Hexed
 from .data import resolve_bonus, roll
+from .i18n import Ref
 from .unit import flatten_pack
 
 AP_PER_TURN = 2
@@ -221,21 +222,20 @@ class Combatant:
         self.ferocity_pending = False
         if self.raised:
             self.status = "dead"
-            log(f"  {self.name} collapses, dead for good.")
+            log("log.down.raised", unit=self.name)
             return
         if self.nonlethal or knockout:
             self.status = "stable"           # knocked out, survives
-            log(f"  {self.name} is knocked out" + (" (non-lethal fight)." if self.nonlethal else "."))
+            log("log.down.knocked_out_fight" if self.nonlethal else "log.down.knocked_out", unit=self.name)
             return
         if self._ability.breaks_when_downed:
             if self.status != "broken":
                 self.status = "broken"
-                log(f"  {self.name} stops working: BROKEN "
-                    f"(only back up if an ally repairs it).")
+                log("log.down.broken", unit=self.name)
             return
         self.status = "dying"
         self.death_clock = 0
-        log(f"  {self.name} goes down, dying ({data.DYING_TURNS} turns to the death save).")
+        log("log.down.dying", unit=self.name, turns=data.DYING_TURNS)
 
     def check_collapse(self, log):
         """A physical attribute (Str / Dex / Con) at zero drops a standing unit to
@@ -243,7 +243,7 @@ class Combatant:
         takes another point."""
         gone = self.char.zeroed_attribute
         if gone and self.alive:
-            log(f"  {self.name}'s {gone.capitalize()} is gone -- collapses.")
+            log("log.down.zeroed", unit=self.name, attribute=Ref("attribute", gone, gone.capitalize()))
             self.go_down(log)
 
     # ------------------------------------------------------------------ #
@@ -276,7 +276,7 @@ class Combatant:
         inv = self.condition("invisible")
         if inv is not None:
             self.conditions.remove(inv)
-            log(f"{self.name} flickers into sight!")
+            log("log.flickers", unit=self.name)
 
     def _condition_mods(self, field):
         mods = []
@@ -636,7 +636,7 @@ class Combatant:
         if battle is not None and target is not None and hasattr(self, "char"):
             full_bonus = self.char.talent_bonus("full_intel_to_hit")
             if full_bonus and intel.has_full_intel(battle, self.team, target):
-                mods.append((full_bonus, "circumstance", "Exploit Weakness"))
+                mods.append((full_bonus, "circumstance", i18n.t("log.mod.exploit_weakness")))
             mods += self.racial_hit_mods(battle, target)
         return mods
 
@@ -646,24 +646,24 @@ class Combatant:
         mods = []
         grudge = c.talent_bonus("grudge")
         if grudge and target in self.hurt_by:
-            mods.append((grudge, None, "Grudge"))
+            mods.append((grudge, None, i18n.t("log.mod.grudge")))
         ambush = c.talent_bonus("ambush_predator")
         if ambush and target.turns_taken == 0:
-            mods.append((ambush, None, "Ambush Predator"))
+            mods.append((ambush, None, i18n.t("log.mod.ambush_predator")))
         whip = c.talent_bonus("under_the_whip")
         if whip and any(u.alive and u.team == self.team and u is not self
                         and u.combat_level > self.combat_level
                         and battle.units_distance(self, u) <= UNDER_THE_WHIP_RANGE
                         for u in battle.units):
-            mods.append((whip, None, "Under the Whip"))
+            mods.append((whip, None, i18n.t("log.mod.under_the_whip")))
         arena = c.talent_bonus("arena_born")
         if arena and getattr(battle, "arena", False):
-            mods.append((arena, None, "Arena Born"))
+            mods.append((arena, None, i18n.t("log.mod.arena_born")))
         mount = self.mounted_on
         if mount is not None and len(mount.path) > 1:
             charge = mount.char.talent_bonus("cavalry_charge")
             if charge:
-                mods.append((charge, None, "Cavalry Charge"))
+                mods.append((charge, None, i18n.t("log.mod.cavalry_charge")))
         return mods
 
     def crit_brutal(self):
@@ -697,10 +697,10 @@ class Combatant:
         sleeping_cond = next((c for c in self.conditions if c.id == "sleeping"), None)
         if sleeping_cond:
             self.conditions.remove(sleeping_cond)
-            log(f"{self.name} is jolted awake by the attack!")
+            log("log.jolted", unit=self.name)
             
         self.hp -= amount
-        log(f"{self.name} takes {amount} damage (HP {max(self.hp, 0)}/{self.hp_max}).")
+        log("log.takes_damage", unit=self.name, dmg=amount, hp=max(self.hp, 0), hp_max=self.hp_max)
         inv = self.condition("invisible")
         if inv is not None and amount > 0:
             inv.wounded = True
@@ -732,7 +732,7 @@ class Combatant:
         if self.ferocity_pending:
             self.ferocity_pending = False
             if self.hp <= 0 and self.alive:
-                log(f"{self.name}: ferocity runs out.")
+                log("log.ferocity_ends", unit=self.name)
                 self.go_down(log)
                 downer = self.ferocity_downer
                 if downer is not None and downer.team != self.team:

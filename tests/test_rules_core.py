@@ -41,7 +41,7 @@ def test_defend_gives_1_ac_and_expires_next_turn():
     base = u.ac
     u.add_condition(Defending())
     assert u.ac == base + 1
-    u.start_turn(lambda _: None)
+    u.start_turn(lambda *_a, **_k: None)
     assert u.ac == base and not u.defending
 
 
@@ -50,7 +50,7 @@ def test_demoralized_penalizes_and_expires_at_turn_end():
     ac, md = u.ac, u.mental_defense
     u.add_condition(Demoralized())
     assert u.ac == ac - 1 and u.mental_defense == md - 1
-    u.end_turn(lambda _: None)
+    u.end_turn(lambda *_a, **_k: None)
     assert not u.demoralized
 
 

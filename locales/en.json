@@ -2019,7 +2019,11 @@
     "found": "Found!",
     "web_cleared": "Web Cleared!",
     "trap_disarmed": "Trap Disarmed!",
-    "captured": "Captured"
+    "captured": "Captured",
+    "hexed": "hexed",
+    "rooted": "rooted",
+    "stable": "stable",
+    "rises": "rises!"
   },
   "log": {
     "roll": {
@@ -2251,7 +2255,171 @@
       "recovered": "  {actor} disarms the {trap} and recovers a {item}!",
       "fumble": "  Critical fumble! {actor} accidentally triggers the trap!"
     },
-    "capture": "{actor} binds {target} with {tool}: captured."
+    "capture": "{actor} binds {target} with {tool}: captured.",
+    "spell": {
+      "casts": "{actor} casts {spell} on {target}!",
+      "crit_miss": " Critical miss!",
+      "hit_magic": " Hit ({score} vs AC {ac}) for {dmg} magic damage.",
+      "hit_plain": " Hit ({score} vs AC {ac}) for {dmg} damage.",
+      "hit_fire": " Hit ({score} vs AC {ac}) for {dmg} fire damage.",
+      "miss": " Miss ({score} vs AC {ac}).",
+      "roll_md": " d20({atk}) {bonus:+}(INT) = {score} vs MD {md}",
+      "roll_ac": " d20({atk}) {bonus:+}(INT) = {score} vs AC {ac}",
+      "roll_crit_miss": "{roll} -> Critical miss!",
+      "roll_lands": "{roll} -> lands.",
+      "roll_resisted": "{roll} -> resisted."
+    },
+    "sleep": {
+      "immune": "  {target} is immune to sleep effects!",
+      "crit": "{roll} -> CRITICAL HIT! {target} falls asleep ({n} rds)!",
+      "lands": "{roll} -> lands. {target} falls asleep ({n} rds)!"
+    },
+    "water_jet": {
+      "throws": "  The water throws {target} back to {cell}."
+    },
+    "dragonfire": {
+      "spits": "{actor} spits {spell} at {target}!"
+    },
+    "grasping_roots": {
+      "grip": "  Roots grip {target}'s legs: one cell of walking until its next turn is over."
+    },
+    "hex": {
+      "bites": "  {target} is hexed: {scores} -1.",
+      "nothing": "  {target} is hexed: nothing gives."
+    },
+    "spare_the_dying": {
+      "touch": "{actor} lays a hand on {target} and casts {spell}."
+    },
+    "healing_touch": {
+      "self": "{actor} casts {spell} on themself, healing {heal} HP.",
+      "self_up": "{actor} casts {spell} on themself, healing {heal} HP -- back on their feet.",
+      "other": "{actor} casts {spell} on {target}, healing {heal} HP.",
+      "other_up": "{actor} casts {spell} on {target}, healing {heal} HP -- back on their feet."
+    },
+    "light_globe": {
+      "casts": "{actor} casts {spell}."
+    },
+    "floating_disk": {
+      "casts": "{actor} casts {spell} at height {z}."
+    },
+    "invisibility": {
+      "casts": "{actor} casts {spell} and fades from sight."
+    },
+    "raise_dead": {
+      "rises": "The earth stirs at {cell} -- {body} rises again!"
+    },
+    "share_magic": {
+      "alone": "{actor} tries to share magic, but no allies are nearby!",
+      "learns": "{actor} shares magic! {ally} temporarily learns {spell}.",
+      "knows": "{actor} tries to share magic, but {ally} already knows {spell}."
+    },
+    "round": "--- Round {n} ---",
+    "withdraw": "The squad withdraws from the field.",
+    "victory": "*** Victory: {winner} ***",
+    "fire": "{unit} is in the flames! ({dice})",
+    "moves": "{unit} moves (1 action point).",
+    "bumps": "{unit} bumps into something unseen -- {lurker} is there!",
+    "ungrappled": "  {unit} is no longer grappled.",
+    "mopup_stabilize": "Enemies down -- stabilize the downed allies before the fight ends.",
+    "mopup_bind": "Enemies down -- one round to bind the fallen before the fight ends.",
+    "aftermath": {
+      "stable": "{unit} was stabilized and survived unconscious.",
+      "broken": "{unit} was recovered broken."
+    },
+    "fall": {
+      "water": "{unit} plunges into deep water -- the water breaks the fall.",
+      "feet": "{unit} falls {n} levels and lands on their feet.",
+      "hurt": "{unit} falls {n} levels -> {dmg} damage ({dice}d6)."
+    },
+    "trap": {
+      "steps": "{unit} steps on a {trap}!",
+      "snap": "  *SNAP* {unit} takes {dmg} damage and is stopped.",
+      "web": "  *THWIP* {unit} is stuck fast in the web!",
+      "alarm": "  *RING RING RING* A loud alarm sounds! Everyone's attention is drawn to {unit}."
+    },
+    "submerged": "{unit} holds their breath underwater ({n}/{cap}).",
+    "drowning": "{unit} is drowning! ({dice})",
+    "death_save": {
+      "luck": "  Halfling Luck! {unit} rerolls death save: d20({nat}).",
+      "survives": "{unit}: death save d20({nat}) -> survives, unconscious at 0 HP.",
+      "dies": "{unit}: death save d20({nat}) -> dies."
+    },
+    "stabilized": "{unit} was stabilized (unconscious at 0 HP until the end of the fight).",
+    "repaired": "{unit} is back online (1 HP).",
+    "dying": "{unit} is dying ({n}/{total}).",
+    "defeat_wipe": "{unit} doesn't survive their wounds after the defeat.",
+    "turn": "{unit}'s turn ({team}).",
+    "delay": "{unit} holds back and waits.",
+    "asleep": "{unit} is fast asleep... (turn skipped).",
+    "surprised": "{unit} is caught off guard (turn lost).",
+    "surprised_side": "The {team} side is caught off guard!",
+    "cond": {
+      "demoralized_ends": "{unit} recovers (no longer demoralized).",
+      "entangled_ends": "{unit} tears free of the web.",
+      "grappled_ends": "{unit} is no longer grappled (grappler is down).",
+      "wakes": "{unit} stirs and wakes up.",
+      "bleeds": "{unit} bleeds.",
+      "bleeding_ends": "{unit} stops bleeding.",
+      "maimed_ends": "{unit} recovers from the maiming blow.",
+      "shield_ends": "{unit}'s shield is no longer tangled.",
+      "rooted_ends": "{unit} pulls free of the roots.",
+      "hexed_ends": "{unit} shakes off the hex.",
+      "pixie_ends": "{unit}'s pixie dust wears off."
+    },
+    "ferocity": "  Ferocity! {unit} hits 0 HP but stays on their feet until the end of their turn.",
+    "down": {
+      "raised": "  {unit} collapses, dead for good.",
+      "knocked_out": "  {unit} is knocked out.",
+      "broken": "  {unit} stops working: BROKEN (only back up if an ally repairs it).",
+      "dying": "  {unit} goes down, dying ({turns} turns to the death save).",
+      "zeroed": "  {unit}'s {attribute} is gone -- collapses.",
+      "knocked_out_fight": "  {unit} is knocked out (non-lethal fight)."
+    },
+    "flickers": "{unit} flickers into sight!",
+    "jolted": "{unit} is jolted awake by the attack!",
+    "takes_damage": "{unit} takes {dmg} damage (HP {hp}/{hp_max}).",
+    "ferocity_ends": "{unit}: ferocity runs out.",
+    "climb": {
+      "up": "up",
+      "down": "down",
+      "auto": "{actor} climbs {way} (Climber -- no check).",
+      "roll": "{actor} climbs {way}: d20({nat}) {str:+}(STR) = {total} vs DC {dc}",
+      "over": "{roll}  -> up and over.",
+      "clear": "{roll}  -> down.",
+      "slips": "{roll}  -> slips, stays put."
+    },
+    "drop": {
+      "into": "{actor} drops into the pit at {cell}."
+    },
+    "jump": "{actor} jumps: d20({nat}) {str:+}(STR) = {total} -> {dist} squares, lands at {cell}.",
+    "swim": "{actor} swims: d20({nat}) {str:+}(STR) = {total} -> {dist} squares, to {cell}.",
+    "mod": {
+      "flank": "Flank",
+      "browbeat": "Browbeat",
+      "menacing": "Menacing",
+      "precise_thrust": "Precise Thrust",
+      "cleave": "Cleave",
+      "maiming_strike": "Maiming Strike",
+      "long_thrust": "Long Thrust",
+      "pack_tactics": "Pack Tactics",
+      "exploit_weakness": "Exploit Weakness",
+      "grudge": "Grudge",
+      "ambush_predator": "Ambush Predator",
+      "under_the_whip": "Under the Whip",
+      "arena_born": "Arena Born",
+      "cavalry_charge": "Cavalry Charge",
+      "nonlethal": " -{n}(non-lethal)",
+      "obscured": " -{n}(obscured)"
+    },
+    "mod_kind": {
+      "circumstance": "circumstance",
+      "training": "training",
+      "natural": "natural",
+      "item": "item",
+      "armor": "armor",
+      "shield": "shield",
+      "status": "status"
+    }
   },
   "action": {
     "attack": {
@@ -2507,7 +2675,11 @@
     "delay": {
       "name": "Delay",
       "desc": "Drop to the end of the initiative order, once per round. Only before you spend any points.",
-      "label": "Delay: let the others act first (once a round, before you spend a point)"
+      "label": "Delay: let the others act first (once a round, before you spend a point)",
+      "not_your_turn": "it is not your turn",
+      "once": "already delayed this round",
+      "spent": "you already spent a point this turn: Delay only works before you act",
+      "nobody": "nobody is left to act after you"
     },
     "signal_horn": {
       "name": "Signal Horn",
@@ -2536,6 +2708,126 @@
       "name": "Capture",
       "desc": "Bind an adjacent fallen foe with a Rope or Chains; it leaves the fight as your captive.",
       "reason": "Needs a Rope or Chains."
+    },
+    "cast_magic_missile": {
+      "desc": "A foe in sight within {reach} squares, d20 + INT against AC: {dice} damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect."
+    },
+    "cast_sleep": {
+      "desc": "A foe within {reach} squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for up to max(1, 10 - CON mod - WIS mod) rounds, ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected."
+    },
+    "cast_water_jet": {
+      "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against AC: {dice} + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns)."
+    },
+    "cast_dragonfire": {
+      "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against AC: {dice} fire damage. Blood magic costs no hit points."
+    },
+    "cast_grasping_roots": {
+      "desc": "A foe in sight within {reach} squares, d20 + INT against AC: it walks 1 square at most until the end of its next turn. A recast refreshes it."
+    },
+    "cast_hex": {
+      "desc": "A foe in sight within {reach} squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores until the end of its next turn, which bites only where a score is even. Never stacks; a recast refreshes it."
+    },
+    "cast_spare_the_dying": {
+      "desc": "Touch: a dying ally in reach is stable, no check."
+    },
+    "cast_healing_touch": {
+      "desc": "Touch: an ally in reach, or the caster, heals {dice}, nothing added; a body on the ground (dying or stable) is back on its feet."
+    },
+    "cast_light_globe": {
+      "desc": "Drops a light source on a free square within {reach} squares."
+    },
+    "cast_floating_disk": {
+      "desc": "A magical platform on a free square within {reach} squares, at a chosen height: units walking at that height cross pits and deep water over it. One unit per square.",
+      "ground": "Ground",
+      "caster": "Caster",
+      "pit_floor": "Pit floor"
+    },
+    "cast_invisibility": {
+      "desc": "The caster vanishes from every other side's sight until it hurts someone."
+    },
+    "cast_raise_dead": {
+      "desc": "A dead body (not dying, not stable) within {reach} squares and in sight stands up on the caster's side with 1 HP, the same body with its gear, immune to Sleep. One that falls again is dead for good."
+    },
+    "share_magic": {
+      "name": "Share Magic",
+      "desc": "Temporarily share a known spell with a random ally for this battle.",
+      "reason_initiate": "Not a Sprite Initiate.",
+      "reason_spells": "No spells known."
+    },
+    "move": {
+      "name": "Move",
+      "desc": "Move up to your speed."
+    },
+    "climb": {
+      "name": "Climb",
+      "desc": "Climb an obstacle.",
+      "label": "Climb (1 pt, STR vs surface DC)"
+    },
+    "drop": {
+      "name": "Drop in",
+      "desc": "Drop into a lower adjacent square.",
+      "label": "Drop into the pit (1 pt, take the fall)"
+    },
+    "jump": {
+      "name": "Jump",
+      "desc": "Jump across gaps or obstacles.",
+      "label": "Jump (1 pt, STR: clears result/5 squares)"
+    },
+    "swim": {
+      "name": "Swim",
+      "desc": "Swim through deep water.",
+      "label": "Swim (1 pt, STR: crosses result/5 squares, half speed)"
+    },
+    "empty_hand": {
+      "thrown": "no {weapon} in hand (thrown at {at})",
+      "thrown_lying": "no {weapon} in hand (thrown at {at}, on the ground at {lying})"
+    }
+  },
+  "unit": {
+    "poison": {
+      "eases": "{unit}'s {poison} eases to {n}.",
+      "wears_off": "{unit}'s {poison} wears off."
+    },
+    "antidote": {
+      "roll": "CON d20({nat}) {con:+} = {total} vs DC {dc}",
+      "fails": "The Antidote does not take on {unit} ({roll}).",
+      "clears": "The Antidote clears {poison} from {unit} ({roll}).",
+      "eases": "The Antidote eases {poison} on {unit} to {n} ({roll})."
+    },
+    "work": {
+      "below": "{unit}: no work XP -- this job is below work level {n}.",
+      "to_next": "{done}/{span} h to work level {n}",
+      "maxed": "work level maxed",
+      "banked": "{unit}: +{h} work h ({togo}).",
+      "level_up": "{unit} reached work level {n}!"
+    },
+    "hunger": {
+      "hungry": "hungry",
+      "starving": "starving",
+      "dying": "starving to death"
+    }
+  },
+  "battle": {
+    "err": {
+      "no_seat": "nobody is waiting for the seat",
+      "lab_end": "a lab fight has nothing after it",
+      "not_over": "the fight is not over",
+      "cannot_leave": "the squad cannot leave yet",
+      "not_your_turn": "not your turn",
+      "out_of_reach": "out of reach",
+      "no_action": "no action {id}",
+      "cell": "{action} cannot reach that cell",
+      "target": "{action} cannot take that target",
+      "pick_up": "that cannot be picked up now",
+      "now": "{action} cannot be done now",
+      "place": "that cannot be placed there",
+      "no_talk": "nobody is talking",
+      "go_on": "go on first",
+      "speaker": "no such speaker"
+    },
+    "talk": {
+      "caption": "CHA {cha:+d} · INT {int:+d} · {languages}",
+      "no_language": "no language"
     }
   }
 }

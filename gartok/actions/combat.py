@@ -286,7 +286,7 @@ class Throw(Action):
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True, battle=battle)
         if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+            mods.append((2, "circumstance", i18n.t("log.mod.flank")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -355,10 +355,10 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
         mods.append((1, "circumstance", i18n.t("log.mod_champion")))
     browbeat = actor.ability.demoralize_vs_weaker
     if browbeat and actor.mod_strength > target.mod_strength:
-        mods.append((browbeat, "circumstance", "Browbeat"))
+        mods.append((browbeat, "circumstance", i18n.t("log.mod.browbeat")))
     demo_bonus = getattr(actor.char, "talent_bonus", lambda x: 0)("demoralize_bonus") if hasattr(actor, "char") else 0
     if demo_bonus:
-        mods.append((demo_bonus, "training", "Menacing"))
+        mods.append((demo_bonus, "training", i18n.t("log.mod.menacing")))
     bonus, applied = resolve_bonus(mods)
     detail = " ".join(f"{v:+}({r})" for v, r in applied)
 

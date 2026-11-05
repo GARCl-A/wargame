@@ -9,6 +9,8 @@ module that fits (base / combat / movement / support / spells) and one entry in 
 registry below. Nothing else needs to know it exists.
 """
 
+from .. import i18n
+from . import weapon_actions
 from .base import (  # noqa: F401
     Action,
     _attackable_target,
@@ -26,6 +28,7 @@ from .base import (  # noqa: F401
     _shared_language,
     _shovable_target,
     _sign,
+    item_ref,
 )
 from .combat import (  # noqa: F401
     Attack,
@@ -75,9 +78,9 @@ from .spells import (  # noqa: F401
 from .support import (
     Assess,
     Capture,
+    Delay,
     Disarm,
     Dismount,
-    Delay,
     DrinkPotion,
     EatCorpse,
     EndTurn,
@@ -92,8 +95,6 @@ from .support import (
     Stabilize,
     WakeUp,
 )
-
-from . import weapon_actions
 from .weapon_actions import (
     ArmorPierce,
     Cleave,
@@ -101,13 +102,13 @@ from .weapon_actions import (
     HookShield,
     JavelinCharge,
     LongThrust,
-    Wrest,
     MaimingStrike,
     ParryStrike,
     PowerShot,
     PreciseThrust,
     RepelStrike,
     SneakAttack,
+    Wrest,
 )
 
 # --------------------------------------------------------------------------- #
@@ -260,11 +261,9 @@ def empty_hand_reason(battle, actor, action):
     if not (not actor.armed and actor.let_go and w is not None and action in WEAPON_ACTIONS
             and w.has_trait(action.id)):
         return ""
-    why = f"thrown at {actor.let_go['at']}"
     lying = next((o.pos for o in battle.ground if o.is_weapon and o.weapon_name == actor.weapon_name), None)
-    if lying is not None:
-        why += f", on the ground at {lying}"
-    return f"no {actor.weapon_name} in hand ({why})"
+    return i18n.t("action.empty_hand.thrown" if lying is None else "action.empty_hand.thrown_lying",
+                  weapon=item_ref(actor.weapon_name), at=str(actor.let_go["at"]), lying=str(lying))
 
 
 def panel(battle, actor, tab, my_turn, show_blocked=False):

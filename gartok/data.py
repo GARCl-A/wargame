@@ -13,7 +13,7 @@ design-prose doc; `python -m gartok.reference` turns these tables into
 import math
 import random
 
-from . import items
+from . import i18n, items
 
 # --------------------------------------------------------------------------- #
 # Dice                                                                         #
@@ -66,7 +66,8 @@ def resolve_bonus(mods):
                 best_by_type[kind] = (value, label)
     for kind, (value, label) in best_by_type.items():
         total += value
-        applied.append((value, f"{label} [{kind}]"))
+        kind_key = "log.mod_kind." + kind
+        applied.append((value, f"{label} [{i18n.t(kind_key) if i18n.has(kind_key) else kind}]"))
     return total, applied
 
 

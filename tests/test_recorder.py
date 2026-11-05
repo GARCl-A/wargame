@@ -160,8 +160,8 @@ def test_a_fall_in_battle_leaves_a_death_row_with_how_it_happened(tmp_path):
     battle.winner = "player"
     victim = battle.player_units[1]
     battle.log("The Wolf bites Victim.")
-    battle.log(f"  {victim.name} goes down, dying (4 turns to the death save).")
-    battle.log(f"{victim.name}: death save d20(3) -> dies.")
+    battle.log("log.down.dying", unit=victim.name, turns=4)
+    battle.log("log.death_save.dies", unit=victim.name, nat=3)
     victim.status = "dead"
     battle.player_units[0].status = "up"
 
@@ -180,8 +180,8 @@ def test_a_defeat_is_told_apart_from_a_failed_death_save(tmp_path):
     recorder.attach(str(tmp_path), guild)
     battle = Battle(squad, [Unit("enemy")])
     battle.winner = "enemy"
-    battle.log(f"  {battle.player_units[0].name} goes down, dying (4 turns to the death save).")
-    battle.log(f"{battle.player_units[0].name} doesn't survive their wounds after the defeat.")
+    battle.log("log.down.dying", unit=battle.player_units[0].name, turns=4)
+    battle.log("log.defeat_wipe", unit=battle.player_units[0].name)
     battle.player_units[0].status = "dead"
 
     campaign.absorb_battle(guild, squad, battle)

@@ -96,12 +96,12 @@ def test_every_key_the_code_asks_of_the_catalog_exists():
     import pathlib
     root = pathlib.Path(__file__).resolve().parents[1] / "gartok"
     en = i18n.catalog("en")
-    prefixes = ("log.", "fx.", "action.")
+    prefixes = ("log.", "fx.", "action.", "unit.", "battle.")
     missing = []
     for path in root.rglob("*.py"):
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith(prefixes) \
-                    and " " not in node.value and "{" not in node.value:
+                    and " " not in node.value and "{" not in node.value and not node.value.endswith("."):
                 key = node.value
                 if key not in en and f"{key}.one" not in en and not any(k.startswith(key + ".") for k in en):
                     missing.append(f"{path.name}: {key}")

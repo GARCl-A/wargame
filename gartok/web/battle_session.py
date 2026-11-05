@@ -15,6 +15,7 @@ from .. import (
     art_files,
     data,
     dialogue,
+    i18n,
     intel,
     item_icon,
     lighting,
@@ -168,16 +169,16 @@ class BattleSession(Session):
     def take_seat(self, inspect=None):
         """The next person has the screen: show them their side."""
         if self.handoff is None:
-            raise ValueError("nobody is waiting for the seat")
+            raise ValueError(i18n.t("battle.err.no_seat"))
         self.team, self.handoff = self.handoff, None
         return self.snapshot(inspect)
 
     def done(self):
         """Leave the finished fight for what follows it: the campaign's report."""
         if self.then is None:
-            raise ValueError("a lab fight has nothing after it")
+            raise ValueError(i18n.t("battle.err.lab_end"))
         if self.battle.winner is None:
-            raise ValueError("the fight is not over")
+            raise ValueError(i18n.t("battle.err.not_over"))
         return self.then()
 
     def tutorial_key(self):
@@ -257,16 +258,16 @@ class BattleSession(Session):
             return self._place(action_id, cell)
         if action_id == "withdraw":
             if not (b.can_withdraw and self.controllers["player"] == "human" and self.talk is None):
-                raise ValueError("the squad cannot leave yet")
+                raise ValueError(i18n.t("battle.err.cannot_leave"))
             b.withdraw()
             return
         if not self.my_turn():
-            raise ValueError("not your turn")
+            raise ValueError(i18n.t("battle.err.not_your_turn"))
         actor = b.active
         if action_id == "move":
             dest = self._anchor(actor, cell)
             if dest is None:
-                raise ValueError("out of reach")
+                raise ValueError(i18n.t("battle.err.out_of_reach"))
             actions.MOVE.execute(b, actor, dest)
         elif action_id == "defend_end":
             if actions.DEFEND.can(b, actor):
@@ -275,12 +276,12 @@ class BattleSession(Session):
         else:
             action = self._action(action_id)
             if action is None:
-                raise ValueError(f"no action {action_id}")
+                raise ValueError(i18n.t("battle.err.no_action", id=action_id))
             if action is actions.END:
                 b.end_turn()
             elif action.target == "cell":
                 if cell is None or not action.can(b, actor, cell):
-                    raise ValueError(f"{action.name} cannot reach that cell")
+                    raise ValueError(i18n.t("battle.err.cell", action=action.name))
                 if hasattr(action, "heights"):
                     heights = [z for z, _ in action.heights(b, actor, cell)]
                     action.execute(b, actor, cell, elevation=elevation if elevation in heights else heights[0])
@@ -289,16 +290,16 @@ class BattleSession(Session):
             elif action.aimed:
                 unit = self.unit(target) if target is not None else None
                 if unit is None or not action.can(b, actor, unit):
-                    raise ValueError(f"{action.name} cannot take that target")
+                    raise ValueError(i18n.t("battle.err.target", action=action.name))
                 action.execute(b, actor, unit)
             elif action is actions.PICK_UP and item is not None:
                 obj = b.ground[item] if 0 <= item < len(b.ground) else None
                 if obj not in actions.PICK_UP.options(b, actor):
-                    raise ValueError("that cannot be picked up now")
+                    raise ValueError(i18n.t("battle.err.pick_up"))
                 action.execute(b, actor, obj)
             else:
                 if not action.can(b, actor):
-                    raise ValueError(f"{action.name} cannot be done now")
+                    raise ValueError(i18n.t("battle.err.now", action=action.name))
                 action.execute(b, actor)
         self._after_action()
 
@@ -312,7 +313,7 @@ class BattleSession(Session):
         elif action_id == "skip_traps" and setup == "trap":
             b.skip_traps()
         else:
-            raise ValueError("that cannot be placed there")
+            raise ValueError(i18n.t("battle.err.place"))
 
     def _setup_state(self):
         b, setup = self.battle, self._setup()
@@ -336,15 +337,15 @@ class BattleSession(Session):
     def _answer(self, verb, speaker, go_on):
         talk = self.talk
         if talk is None:
-            raise ValueError("nobody is talking")
+            raise ValueError(i18n.t("battle.err.no_talk"))
         if go_on:
             talk.go_on()
             return
         if talk.result is not None:
-            raise ValueError("go on first")
+            raise ValueError(i18n.t("battle.err.go_on"))
         if speaker is not None:
             if not 0 <= int(speaker) < len(talk.members):
-                raise ValueError("no such speaker")
+                raise ValueError(i18n.t("battle.err.speaker"))
             talk.pick(talk.members[int(speaker)])
         if verb is not None:
             talk.choose(verb)
@@ -362,8 +363,8 @@ class BattleSession(Session):
                 "portrait": asset_url(art_files.portrait_path(lead.race["name"], getattr(lead, "portrait_id", None)))},
             "foes": [f"{u.name} · {u.race['name']}" for u in enc.foes],
             "speakers": [{"id": i, "name": u.name, "selected": u is speaker,
-                          "caption": f"CHA {u.mod_charisma:+d} · INT {u.mod_intelligence:+d} · "
-                                     f"{', '.join(u.languages) or 'no language'}"}
+                          "caption": i18n.t("battle.talk.caption", cha=u.mod_charisma, int=u.mod_intelligence,
+                                         languages=", ".join(u.languages) or i18n.t("battle.talk.no_language"))}
                          for i, u in enumerate(members)] if enc.offered() else [],
             "options": [] if speaker is None or result is not None else [
                 {"id": o.verb, "label": o.label, "note": o.note, "check": o.check, "odds": o.odds, "block": o.block}

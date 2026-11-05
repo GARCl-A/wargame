@@ -26,7 +26,7 @@ def _won(battle, killer=0):
 def _death(battle, victim, by):
     victim.hp, victim.status = 0, "dead"
     victim.downed_by = by
-    battle.log(f"{victim.name} goes down.")
+    battle.log("log.down.dying", unit=victim.name, turns=4)
 
 
 def test_the_report_names_who_downed_whom_and_the_squad_status():

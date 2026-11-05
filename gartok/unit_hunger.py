@@ -3,7 +3,7 @@
 Mixed into `unit.Unit`; see RULES.md (the Leshy "Autotroph" is exempt).
 """
 
-from . import data, items, poisons
+from . import data, i18n, items, poisons
 
 BLOOM_FRUIT = "Bloom Fruit"     # what a Treefolk with Bountiful Harvest bears: food that heals
 BLOOM_HEAL = (1, 4)
@@ -68,7 +68,7 @@ class HungerMixin:
 
     @property
     def hunger_label(self):
-        return ("", "hungry", "starving", "starving to death")[self.hunger_level]
+        return ("", i18n.t("unit.hunger.hungry"), i18n.t("unit.hunger.starving"), i18n.t("unit.hunger.dying"))[self.hunger_level]
 
     @property
     def incapacitated(self):

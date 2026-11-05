@@ -6,7 +6,8 @@ into the save): `poisons` maps a poison id to `{"level", "hours", "dc"}` and
 attribute loss itself is applied in `Unit._apply_attributes` via `poison_penalty`.
 """
 
-from . import data, items, poisons
+from . import data, i18n, items, poisons
+from .i18n import Ref
 
 PHYSICAL = ("strength", "dexterity", "constitution")
 
@@ -81,9 +82,9 @@ class PoisonMixin:
                 changed = True
                 if st["level"] > 0:
                     st["hours"] += poison.hours
-                    events.append(f"{self.name}'s {poison.name} eases to {st['level']}.")
+                    events.append(i18n.t("unit.poison.eases", unit=self.name, poison=Ref("poison", pid, poison.name), n=st["level"]))
                 else:
-                    events.append(f"{self.name}'s {poison.name} wears off.")
+                    events.append(i18n.t("unit.poison.wears_off", unit=self.name, poison=Ref("poison", pid, poison.name)))
             if st["level"] <= 0:
                 del self.poisons[pid]
         if changed:
@@ -104,17 +105,17 @@ class PoisonMixin:
         st, poison = self.poisons[pid], poisons.get(pid)
         ok, nat, total = self.poison_save(st["dc"])
         self.antidote_cooldown = poisons.ANTIDOTE_COOLDOWN_HOURS
-        roll = f"CON d20({nat}) {self.mod_constitution:+} = {total} vs DC {st['dc']}"
+        roll = i18n.t("unit.antidote.roll", nat=nat, con=self.mod_constitution, total=total, dc=st["dc"])
+        shown = Ref("poison", pid, poison.name)
         if not ok:
-            return False, f"The Antidote does not take on {self.name} ({roll})."
+            return False, i18n.t("unit.antidote.fails", unit=self.name, roll=roll)
         st["level"] -= 1
         st["hours"] = poison.hours
         if st["level"] <= 0:
             del self.poisons[pid]
-            msg = f"The Antidote clears {poison.name} from {self.name} ({roll})."
+            msg = i18n.t("unit.antidote.clears", poison=shown, unit=self.name, roll=roll)
         else:
-            msg = (f"The Antidote eases {poison.name} on {self.name} to "
-                   f"{st['level']} ({roll}).")
+            msg = i18n.t("unit.antidote.eases", poison=shown, unit=self.name, n=st["level"], roll=roll)
         self._apply_attributes()
         self._derive_combat()
         return True, msg

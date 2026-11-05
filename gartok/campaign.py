@@ -120,20 +120,25 @@ def _carry_forward(member, combatant):
     member.hp = min(member.hp_max, member.hp + member.talent_bonus("post_combat_heal"))
 
 
+def _is(line, keys):
+    msg = getattr(line, "msg", None)
+    return msg is not None and msg.key in keys
+
+
 def _death_note(battle, combatant):
     """How a fallen combatant was lost, read off the battle log: the way the death came
     (a failed death save, or the defeat that finished everyone on the ground) and the lines
     leading up to the fall."""
     lines, name = battle.log_lines, combatant.name
 
-    def last(*needles, before=len(lines)):
+    def last(*keys, before=len(lines)):
         return next((i for i in range(before - 1, -1, -1)
-                     if name in lines[i] and any(n in lines[i] for n in needles)), None)
+                     if _is(lines[i], keys) and lines[i].msg.params.get("unit") == name), None)
 
-    end = last("dies", "survive their wounds")
-    how = "unknown" if end is None else "defeat" if "survive their wounds" in lines[end] else "death_save"
-    down = last("goes down", "collapses", before=len(lines) if end is None else end + 1)
-    trail = [] if down is None else [ln.strip() for ln in lines[max(0, down - 3):down + 1]]
+    end = last("log.death_save.dies", "log.defeat_wipe")
+    how = "unknown" if end is None else "defeat" if lines[end].msg.key == "log.defeat_wipe" else "death_save"
+    down = last("log.down.dying", "log.down.raised", "log.down.zeroed", before=len(lines) if end is None else end + 1)
+    trail = [] if down is None else [str(ln).strip() for ln in lines[max(0, down - 3):down + 1]]
     foes = [c.name for c in battle.enemy_units][:8]
     return {"how": how, "round": battle.round_no, "foes": foes, "trail": trail}
 

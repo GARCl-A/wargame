@@ -6,7 +6,7 @@ Mixed into `unit.Unit`. The mean of the track levels grants hit dice; see
 
 import random
 
-from . import economy, items, magic, progression, recorder, talents
+from . import economy, i18n, items, magic, progression, recorder, talents
 from .data import mod, roll
 
 
@@ -25,15 +25,16 @@ class LevelingMixin:
         self.work_hours += banked
         self.collect_levels()
         if not banked:
-            lines = [f"{self.name}: no work XP -- this job is below work level {self.work_level}."]
+            lines = [i18n.t("unit.work.below", unit=self.name, n=self.work_level)]
         else:
             marks, span = progression.to_next(progression.WORK_XP_THRESHOLDS, self.work_xp)
             into_h = marks * economy.LUMBER_XP_HOURS + self.work_hours % economy.LUMBER_XP_HOURS
             span_h = span * economy.LUMBER_XP_HOURS
-            togo = f"{into_h}/{span_h} h to work level {self.work_level + 1}" if span else "work level maxed"
-            lines = [f"{self.name}: +{banked} work h ({togo})."]
+            togo = (i18n.t("unit.work.to_next", done=into_h, span=span_h, n=self.work_level + 1) if span
+                    else i18n.t("unit.work.maxed"))
+            lines = [i18n.t("unit.work.banked", unit=self.name, h=banked, togo=togo)]
         if self.work_level > old_level:
-            lines.append(f"{self.name} reached work level {self.work_level}!")
+            lines.append(i18n.t("unit.work.level_up", unit=self.name, n=self.work_level))
         return lines
 
     # ------------------------------------------------------------------ #

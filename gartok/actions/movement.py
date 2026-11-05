@@ -1,8 +1,9 @@
 """Movement actions: Move, and the Z axis (Climb, Drop in, Jump, Swim)."""
 
-
+from .. import i18n
 from ..board import cells_in_radius, grid_distance, line_cells
 from ..data import d20
+from ..i18n import Msg
 from .base import Action, _cell_free
 
 JUMP_DIVISOR = 5          # Jump: (d20 + Strength) / this = squares cleared, capped at speed
@@ -14,9 +15,8 @@ SWIM_DIVISOR = 5          # Swim: (d20 + Strength) / this = squares crossed, cap
 # --------------------------------------------------------------------------- #
 
 class Move(Action):
-    id, name, cost, target = "move", "Move", 1, "cell"
+    id, cost, target = "move", 1, "cell"
     announce = False
-    desc = "Move up to your speed."
 
     def available(self, battle, actor):
         if getattr(actor, "mounted_on", None) is not None:
@@ -79,14 +79,13 @@ class Climb(_VerticalStep):
     (bare stone 15, a rope 10); the Lizardfolk's Climber clears it with no roll.
     A slip just costs the action."""
 
-    id, name, cost = "climb", "Climb", 1
-    desc = "Climb an obstacle."
+    id, cost = "climb", 1
 
     def _wants(self, z_nb, z_here):
         return z_nb != z_here
 
     def label(self, battle, actor):
-        return "Climb (1 pt, STR vs surface DC)"
+        return i18n.t("action.climb.label")
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -97,36 +96,34 @@ class Climb(_VerticalStep):
         z_to = battle.elevation_at(target, actor)
         low_cell = target if z_to < z_from else actor.pos
         dc = battle.board.surface_dc(low_cell)
-        way = "down" if z_to < z_from else "up"
+        way = Msg("log.climb.down" if z_to < z_from else "log.climb.up")
         if actor.auto_climb(dc):
             actor.pos = target
             actor.z = z_to
-            battle.log(f"{actor.name} climbs {way} (Climber -- no check).")
+            battle.log("log.climb.auto", actor=actor.name, way=way)
             return
         nat = d20()
         total = nat + actor.mod_strength
-        desc = (f"{actor.name} climbs {way}: d20({nat}) {actor.mod_strength:+}(STR) "
-                f"= {total} vs DC {dc}")
+        roll = Msg("log.climb.roll", actor=actor.name, way=way, nat=nat, str=actor.mod_strength, total=total, dc=dc)
         if nat == 20 or total >= dc:
             actor.pos = target
             actor.z = z_to
-            battle.log(f"{desc}  -> {'up and over' if way == 'up' else 'down'}.")
+            battle.log("log.climb.over" if z_to > z_from else "log.climb.clear", roll=roll)
         else:
-            battle.log(desc + "  -> slips, stays put.")
+            battle.log("log.climb.slips", roll=roll)
 
 
 class DropIn(_VerticalStep):
     """Throw yourself into the pit -- a deliberate drop into a lower adjacent
     square, no check, but you take the fall (every level past the first is 1d6)."""
 
-    id, name, cost = "drop", "Drop in", 1
-    desc = "Drop into a lower adjacent square."
+    id, cost = "drop", 1
 
     def _wants(self, z_nb, z_here):
         return z_nb < z_here
 
     def label(self, battle, actor):
-        return "Drop into the pit (1 pt, take the fall)"
+        return i18n.t("action.drop.label")
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -137,7 +134,7 @@ class DropIn(_VerticalStep):
         z_to = battle.elevation_at(target, actor)
         actor.pos = target
         actor.z = z_to
-        battle.log(f"{actor.name} drops into the pit at {target}.")
+        battle.log("log.drop.into", actor=actor.name, cell=str(target))
         battle.apply_fall(actor, z_from - z_to, battle.log)
 
 
@@ -146,8 +143,7 @@ class Jump(Action):
     your speed) straight toward the aimed cell, sailing over any pit in between.
     A wall or a body ends the jump short; land lower than you left and you fall."""
 
-    id, name, cost, target, aimed = "jump", "Jump", 1, "cell", True
-    desc = "Jump across gaps or obstacles."
+    id, cost, target, aimed = "jump", 1, "cell", True
 
     @staticmethod
     def _reach(actor, total):
@@ -170,7 +166,7 @@ class Jump(Action):
         return grid_distance(actor.pos, target) <= self._max_reach(battle, actor)
 
     def label(self, battle, actor):
-        return "Jump (1 pt, STR: clears result/5 squares)"
+        return i18n.t("action.jump.label")
 
     def highlight_cells(self, battle, actor):
         r = self._max_reach(battle, actor)
@@ -197,8 +193,7 @@ class Jump(Action):
         z_to = battle.elevation_at(landing, actor)
         actor.pos = landing
         actor.z = z_to
-        battle.log(f"{actor.name} jumps: d20({nat}) {actor.mod_strength:+}(STR) = "
-                   f"{total} -> {dist} squares, lands at {landing}.")
+        battle.log("log.jump", actor=actor.name, nat=nat, str=actor.mod_strength, total=total, dist=dist, cell=str(landing))
         if z_to < z_from:
             battle.apply_fall(actor, z_from - z_to, battle.log)
 
@@ -210,8 +205,7 @@ class Swim(Action):
     out of the pit with a Climb). No check to stay afloat; a poor roll just means
     a short swim."""
 
-    id, name, cost, target, aimed = "swim", "Swim", 1, "cell", True
-    desc = "Swim through deep water."
+    id, cost, target, aimed = "swim", 1, "cell", True
 
     def _at_water(self, battle, actor):
         """The actor is in deep water, or on a cell touching it (can push off)."""
@@ -245,7 +239,7 @@ class Swim(Action):
         return grid_distance(actor.pos, target) <= self._max_reach(battle, actor)
 
     def label(self, battle, actor):
-        return "Swim (1 pt, STR: crosses result/5 squares, half speed)"
+        return i18n.t("action.swim.label")
 
     def highlight_cells(self, battle, actor):
         r = self._max_reach(battle, actor)
@@ -275,7 +269,7 @@ class Swim(Action):
         z_from = battle.elevation(actor)
         z_to = battle.board.elevation_at(landing)
         actor.pos = landing
-        battle.log(f"{actor.name} swims: d20({nat}) {actor.mod_strength:+}(STR) = "
-                   f"{total} -> {total // SWIM_DIVISOR} squares, to {landing}.")
+        battle.log("log.swim", actor=actor.name, nat=nat, str=actor.mod_strength, total=total,
+                   dist=total // SWIM_DIVISOR, cell=str(landing))
         if z_to < z_from:
             battle.apply_fall(actor, z_from - z_to, battle.log)

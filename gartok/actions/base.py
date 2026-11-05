@@ -349,11 +349,11 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     pulled = nonlethal_penalty(attacker)
     if pulled:
         bonus -= pulled
-        detail += f" -{pulled}(non-lethal)"
+        detail += i18n.t("log.mod.nonlethal", n=pulled)
     obscured = obscured_penalty(battle, attacker, target)
     if obscured:
         bonus -= obscured
-        detail += f" -{obscured}(obscured)"
+        detail += i18n.t("log.mod.obscured", n=obscured)
     total = nat + bonus
     melee = not thrown and (weapon is not None or not attacker.ranged)
     ac = target.ac_vs(attacker, armor_pierce=armor_pierce, ranged=not melee)

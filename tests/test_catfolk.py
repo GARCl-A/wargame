@@ -81,7 +81,7 @@ def test_the_ai_reckons_the_fall_a_catfolk_shrugs_off_as_free():
 # --- Bleeding ------------------------------------------------------------------ #
 
 def _tick(unit):
-    unit.end_turn(lambda _msg: None)
+    unit.end_turn(lambda *_a, **_k: None)
 
 
 def test_bleeding_stacks_damage_and_renews_duration_to_the_longer():

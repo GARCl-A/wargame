@@ -21,7 +21,7 @@ import math
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 
-from . import data
+from . import data, i18n
 
 
 @dataclass(frozen=True)
@@ -72,7 +72,7 @@ class Ability:
 # --------------------------------------------------------------------------- #
 
 def _pack_tactics_mods(unit, target, flanking):
-    return [(2, "circumstance", "Pack Tactics")] if flanking else []
+    return [(2, "circumstance", i18n.t("log.mod.pack_tactics"))] if flanking else []
 
 
 def _wolf_pack_tactics_mods(unit, target, flanking):
@@ -80,7 +80,7 @@ def _wolf_pack_tactics_mods(unit, target, flanking):
     are already on the target, same "circumstance" bonus type as the Goblin's
     (see `_pack_flank` in `actions.py`, which now hands back the adjacent-ally
     *count* instead of a bare bool)."""
-    return [(2 * flanking, "circumstance", "Pack Tactics")] if flanking else []
+    return [(2 * flanking, "circumstance", i18n.t("log.mod.pack_tactics"))] if flanking else []
 
 
 
@@ -94,7 +94,7 @@ def _ferocity(unit, log):
     unit.hp = 0
     unit.death_clock = 0
     unit.ferocity_pending = True
-    log(f"  Ferocity! {unit.name} hits 0 HP but stays on their feet until the end of their turn.")
+    log("log.ferocity", unit=unit.name)
 
 
 # --------------------------------------------------------------------------- #
