@@ -13,11 +13,11 @@ from . import i18n, persist
 PATH = os.path.join(os.path.dirname(persist.SAVE_DIR), "settings.json")
 
 SPEC = {
-    "chord_ms": ("ARROW CHORD", (0, 20, 40, 70, 100), 40),
-    "record_play": ("PLAY RECORDER", ("OFF", "ON"), "OFF"),
-    "volume": ("VOLUME", (0, 25, 50, 75, 100), 75),
-    "log_lines": ("LOG LINES", (500, 1000, 2000, 5000), 2000),
-    "language": ("LANGUAGE", tuple(i18n.LANGUAGES), i18n.DEFAULT_LANG),
+    "chord_ms": ("settings.name.chord_ms", (0, 20, 40, 70, 100), 40),
+    "record_play": ("settings.name.record_play", ("OFF", "ON"), "OFF"),
+    "volume": ("settings.name.volume", (0, 25, 50, 75, 100), 75),
+    "log_lines": ("settings.name.log_lines", (500, 1000, 2000, 5000), 2000),
+    "language": ("settings.name.language", tuple(i18n.LANGUAGES), i18n.DEFAULT_LANG),
 }
 
 _values = None
@@ -71,12 +71,12 @@ def step_up(key):
 
 
 def label(key):
-    name, _, _ = SPEC[key]
+    name = i18n.t(SPEC[key][0])
     value = get(key)
     if key.endswith("_ms"):
-        return f"{name}: {value} MS"
+        return i18n.t("settings.ms", name=name, value=value)
     if key == "volume":
-        return f"{name}: {value}%" if value else f"{name}: OFF"
+        return f"{name}: {value}%" if value else i18n.t("settings.off", name=name)
     return f"{name}: {value}"
 
 

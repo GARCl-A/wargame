@@ -25,7 +25,7 @@ all (death, or peeled into a different group by a split).
 
 from uuid import uuid4
 
-from . import economy, items
+from . import economy, i18n, items
 from .animals import feed_herd, feed_hungry
 from .data import METERS_PER_SQUARE
 
@@ -111,7 +111,7 @@ class Group:
                 for animal in self.herd:
                     if animal.hitch == wagon.uid:
                         animal.hitch = None
-                events.append(f"the {wagon.kind.lower()} of {self.display_name} breaks down on the road.")
+                events.append(i18n.t("group_msg.of_breaks_down_on_road", lower=wagon.kind.lower(), display_name=self.display_name))
         return events
 
     def hitch(self, animal, wagon, *, swap=False):
@@ -262,9 +262,9 @@ class Group:
         already a member (a group is a physical thing; leading it from
         elsewhere makes no sense)."""
         if unit not in self.members:
-            raise ValueError("leader must be a member of the group")
+            raise ValueError(i18n.t("group_msg.leader_must_be_member_of"))
         if self.fight_due:
-            raise ValueError("can't change leaders with a fight about to start")
+            raise ValueError(i18n.t("group_msg.can_t_change_leaders_with"))
         self.leader = unit
 
     @property

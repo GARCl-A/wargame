@@ -15,17 +15,17 @@ study target (a scroll or dictionary the band carries) gains daily progress towa
 language.
 """
 
-from . import economy, magic, orders, recorder, recruit, stints
+from . import economy, i18n, magic, orders, recorder, recruit, stints
 from .constants import fmt_money
 from .data import alignment_distance
 
 ARCHETYPE_TONE = {"brass": "money", "green": "good", "muted": "muted"}
-BAIL_BONUS = (2, "paid bail")
+BAIL_BONUS = (2, "tavern.paid_bail")
 
 
 class Tavern:
-    REJECTED_LABEL = "REJECTED THIS WEEK"
-    EMPTY_LIST = "No one looking for work right now. Come back when the crowd changes."
+    REJECTED_LABEL = "tavern.rejected_this_week"
+    EMPTY_LIST = "tavern.empty_list"
     PITCH_BONUS = ()                      # (value, label) mods added to every pitch roll
     SEEN_KEY = "taverna"
 
@@ -54,14 +54,14 @@ class Tavern:
             self.selected_recruiter = self.party[0] if self.party else None
 
     def hub_cards(self):
-        purse = {"label": "party purse", "value": fmt_money(self._wealth()), "tone": "money"}
+        purse = {"label": i18n.t("tavern.party_purse"), "value": fmt_money(self._wealth()), "tone": "money"}
         if self.tab != "recruits":
             return [purse]
         size = len(self.guild.roster)
         days = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
-        return [{"label": "guild size", "value": str(size)},
-                {"label": "crowd penalty", "value": f"-{recruit.size_penalty(size)}"},
-                {"label": "new faces in", "value": f"{days} day{'s' if days != 1 else ''}"},
+        return [{"label": i18n.t("tavern.guild_size"), "value": str(size)},
+                {"label": i18n.t("tavern.crowd_penalty"), "value": f"-{recruit.size_penalty(size)}"},
+                {"label": i18n.t("tavern.new_faces_in"), "value": i18n.plural("tavern.days", days)},
                 purse]
 
     def _barred(self, cand, member):
@@ -79,7 +79,7 @@ class Tavern:
         return self._bail(cand) << self.raise_k
 
     def _raise_mods(self):
-        return [(self.raise_k, "extra bail")] if self.raise_k else []
+        return [(self.raise_k, i18n.t("tavern.extra_bail"))] if self.raise_k else []
 
     def _raise(self, delta):
         """Move the offer one doubling up (while the purse covers it) or down."""
@@ -120,20 +120,20 @@ class Tavern:
     def _cand_status(self, cand):
         if cand.uid in self.last:
             pitch, _who = self.last[cand.uid]
-            return ("enlisted", "good") if pitch.ok else (self.REJECTED_LABEL.lower(), "bad")
+            return ("enlisted", "good") if pitch.ok else (i18n.t(self.REJECTED_LABEL), "bad")
         best = self._best(cand)
         if best is not None:
-            return f"{best[0].name} can pitch", "good"
-        return "cannot pitch", "bad"
+            return i18n.t("tavern.can_pitch", name=best[0].name), "good"
+        return i18n.t("tavern.cannot_pitch"), "bad"
 
     def _pitch_condition(self, cand, m):
         if recruit.slots_free(self.guild, m) <= 0:
-            return "no recruitment slot", "bad"
+            return i18n.t("tavern.no_recruitment_slot"), "bad"
         if self._barred(cand, m):
-            return "already tried this week", "bad"
+            return i18n.t("tavern.already_tried_this_week"), "bad"
         if not recruit.can_pitch(m, cand):
-            return "no shared language", "bad"
-        return f"1d20{self._net(m, cand):+} vs 1d20{cand.mod_charisma:+}", "good"
+            return i18n.t("tavern.no_shared_language"), "bad"
+        return i18n.t("tavern.d_vs_d", net=self._net(m, cand), mod_charisma=cand.mod_charisma), "good"
 
     def _pick_candidate(self, i):
         """Read candidate `i`'s dossier; the one pitching moves to the strongest pitch still open
@@ -153,22 +153,22 @@ class Tavern:
 
     def _rent_study(self):
         if not any(m.study_target for m in self.party):
-            self.notice = "Set a study target for someone before renting rooms."
+            self.notice = i18n.t("tavern.set_study_target_for_someone")
             return
         self.group.order = orders.garrison("study")
-        self.notice = "Party rented quiet rooms and begins studying daily."
+        self.notice = i18n.t("tavern.party_rented_quiet_rooms_and")
 
     def _cancel_study(self):
         self.group.order = None
-        self.notice = "Study order cancelled. Party is now idle."
+        self.notice = i18n.t("tavern.study_order_cancelled_party_is")
 
     def _set_target(self, member, opt):
         magic.begin_study(member, opt["id"], self._study_holders())
-        self.notice = f"{member.name} begins studying {opt['name']}."
+        self.notice = i18n.t("tavern.begins_studying", name=member.name, opt=opt['name'])
 
     def _stop_study(self, member):
         magic.end_study(member)
-        self.notice = f"{member.name} stopped studying."
+        self.notice = i18n.t("tavern.stopped_studying", name=member.name)
 
     def _performers(self):
         return [m for m in self.party if m in self.guild.roster and economy.can_perform(m)
@@ -178,7 +178,7 @@ class Tavern:
         """The show the picked players put on: a `perform` stint for the band, or None (the notice says why)."""
         crew = self._performers()
         if not crew:
-            self.notice = "Pick someone with a Musical Instrument to play."
+            self.notice = i18n.t("tavern.pick_someone_with_musical_instrument")
             return None
         hours = self.perform_hours
         return stints.order("perform", hours, crew, clock_hours=hours * self.guild.work_speedup(crew))
@@ -187,34 +187,34 @@ class Tavern:
     def _signed_line(cand):
         align = getattr(cand, "alignment", "")
         if "Good" in align:
-            return "You have my word and my blade. Point the way."
+            return i18n.t("tavern.you_have_my_word_and")
         if "Evil" in align:
-            return "Pay my share on time and nobody else bleeds."
+            return i18n.t("tavern.pay_my_share_on_time")
         if "Lawful" in align:
-            return "A fair contract. Tell me where I stand in the line."
+            return i18n.t("tavern.fair_contract_tell_me_where")
         if "Chaotic" in align:
-            return "Better than drinking alone. Let's see what you're walking into."
-        return "My kit is packed. Lead on."
+            return i18n.t("tavern.better_than_drinking_alone_let")
+        return i18n.t("tavern.my_kit_is_packed_lead")
 
     def _pitch(self, member):
         if self.sel is None or self.sel >= len(self.candidates):
             return
         cand = self.candidates[self.sel]
         if recruit.slots_free(self.guild, member) <= 0:
-            self.notice = f"{member.name} has no recruitment slots available."
+            self.notice = i18n.t("tavern.has_no_recruitment_slots_available", name=member.name)
             return
         if not recruit.can_pitch(member, cand):
-            self.notice = f"{member.name} and {cand.name} share no language."
+            self.notice = i18n.t("tavern.and_share_no_language", name=member.name, other=cand.name)
             return
         if self._barred(cand, member):
-            self.notice = f"{member.name} already tried {cand.name} this week."
+            self.notice = i18n.t("tavern.already_tried_this_week_2", name=member.name, other=cand.name)
             return
         cost = self._due(cand)
         if cost and self._wealth() < cost:
-            self.notice = f"Not enough coin to pay {cand.name}'s bail ({fmt_money(cost)})."
+            self.notice = i18n.t("tavern.not_enough_coin_to_pay", name=cand.name, fmt_money=fmt_money(cost))
             return
         pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day,
-                                 extra_mods=[*self.PITCH_BONUS, *self._raise_mods()])
+                                 extra_mods=[*((v, i18n.t(label)) for v, label in self.PITCH_BONUS), *self._raise_mods()])
         self.last[cand.uid] = (pitch, member)
         paid = cost if pitch.ok else 0
         raised, self.raise_k = self.raise_k, 0
@@ -232,7 +232,7 @@ class Tavern:
             if cand in self.candidates:
                 self.candidates.remove(cand)
             self.signed = {"unit": cand, "by": member, "pitch": pitch, "line": self._signed_line(cand)}
-            self.notice = f"{'Bail paid! ' if cost else ''}{cand.name} signs with the guild (recruited by {member.name})!"
+            self.notice = i18n.t("tavern.signed_bail" if cost else "tavern.signed", name=cand.name, by=member.name)
             if self.candidates:
                 self.sel = min(self.sel, len(self.candidates) - 1)
             else:
@@ -240,9 +240,9 @@ class Tavern:
         else:
             self._bar(cand, member)
             if cost:
-                self.notice = f"{cand.name} turns {member.name} down. The bail stays in your purse."
+                self.notice = i18n.t("tavern.turns_down_bail_stays_in", name=cand.name, other=member.name)
             else:
-                self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
+                self.notice = i18n.t("tavern.turns_down_they_can_only", name=cand.name, other=member.name)
 
     def _study_holders(self):
         """Whoever may hold a study item: the group's members, then its wagons and animals."""
@@ -263,10 +263,10 @@ class Tavern:
                         options.append({
                             "kind": "spell",
                             "id": spell.id,
-                            "name": f"Scroll of {spell.name}",
+                            "name": i18n.t("tavern.scroll_of", name=spell.name),
                             "holder": m.name,
                             "level": spell.level,
-                            "desc": f"Spell Lvl {spell.level} ({spell.sources}) · {pts} pts to master · carried by {m.name}"
+                            "desc": i18n.t("tavern.spell_lvl_pts_to_master", level=spell.level, sources=spell.sources, pts=pts, name=m.name)
                         })
                 lang = magic.language_for_dictionary(item)
                 if lang and lang.name not in student.languages:
@@ -276,10 +276,10 @@ class Tavern:
                         options.append({
                             "kind": "lang",
                             "id": lang.name,
-                            "name": f"Dictionary of {lang.name}",
+                            "name": i18n.t("tavern.dictionary_of", name=lang.name),
                             "holder": m.name,
                             "level": 0,
-                            "desc": f"Language · {pts} pts to learn · carried by {m.name}"
+                            "desc": i18n.t("tavern.language_pts_to_learn_carried", pts=pts, name=m.name)
                         })
         return options
 
@@ -288,8 +288,8 @@ class Prison(Tavern):
     """The cells: the strangers are the guild's weekly `prison_pool`. The bail on offer buys +2 on the
     Charisma contest and each doubling of it +1 more; it is taken only if the pitch wins."""
 
-    REJECTED_LABEL = "WALKED FREE THIS WEEK"
-    EMPTY_LIST = "The cells are empty right now. Come back when the crowd changes."
+    REJECTED_LABEL = "tavern.walked_free_this_week"
+    EMPTY_LIST = "tavern.empty_prison"
     PITCH_BONUS = (BAIL_BONUS,)
     SEEN_KEY = "prison"
 

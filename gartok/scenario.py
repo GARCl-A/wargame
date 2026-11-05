@@ -22,7 +22,7 @@ torch scatter). A concrete location on the world map picks a subclass:
 import functools
 import random
 
-from . import data, encounters
+from . import data
 from .board import COLS, ROWS, Board, cells
 from .ground import GroundObject
 
@@ -92,7 +92,7 @@ class Scenario:
         a scenario whose objective can be met before every foe is down says yes."""
         return False
 
-    held_note = "The last foe is down."
+    held_note = "log.held.last_foe"
 
     def holds_field(self, battle):
         """Does the fight run on once every foe is down (`Battle._check_winner`)? A place the
@@ -551,7 +551,7 @@ class AncientRuinsScenario(Scenario):
             return "player"
         return None
 
-    held_note = "The last foe is down. The ruins are yours to search -- leave by the entrance."
+    held_note = "log.held.ruins"
 
     def holds_field(self, battle):
         return True

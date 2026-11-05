@@ -80,6 +80,16 @@ def t(key, **fmt):
     return value.format(**fmt) if fmt else value
 
 
+def sentence(text):
+    """`text` opening a sentence: its first letter in capitals, the rest as written."""
+    return text[:1].upper() + text[1:]
+
+
+def count(noun, n):
+    """`n` of a counted thing: `count.<noun>.one` / `.other` in the catalog ("3 days")."""
+    return plural(f"count.{noun}", n)
+
+
 def plural(key, n, **fmt):
     """`key.one` when `n == 1`, else `key.other`; `{n}` is always a placeholder. Portuguese reads 0 as
     plural ("0 dias") like English, so the two forms are all either language needs."""

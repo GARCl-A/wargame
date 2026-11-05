@@ -3,7 +3,7 @@
 import random
 from dataclasses import dataclass
 
-from . import data, economy
+from . import data, economy, i18n
 
 
 @dataclass(frozen=True)
@@ -149,7 +149,7 @@ def progress_study(unit, group=None):
     stores = getattr(group, "stores", ()) if group else ()
     mates = [m for m in (*group.members, *stores) if m is not unit] if group else []
     if unit.money + sum(m.money for m in mates) < cost:
-        return f"{unit.name} could not afford the rent to study."
+        return i18n.t("magic.could_not_afford_rent_to", name=unit.name)
     own = min(unit.money, cost)
     unit.money -= own
     economy.charge_richest_first(mates, cost - own)
@@ -198,7 +198,7 @@ def _progress_spell(unit, spell, group=None):
         end_study(unit)
         unit.magic_xp += study_xp(spell)
         unit.collect_levels()
-        return f"{unit.name} masters the spell {spell.name}! (+{study_xp(spell)} magic XP)"
+        return i18n.t("magic.masters_spell_magic_xp", name=unit.name, spell=spell.name, study_xp=study_xp(spell))
     return None
 
 def _progress_language(unit, language, group=None):
@@ -212,5 +212,5 @@ def _progress_language(unit, language, group=None):
         unit.languages.append(language)
         unit._sync_dictionary_recipes()
         end_study(unit)
-        return f"{unit.name} learns to speak {language}!"
+        return i18n.t("magic.learns_to_speak", name=unit.name, language=language)
     return None

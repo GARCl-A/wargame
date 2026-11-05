@@ -29,9 +29,9 @@ class SettingsSession(Session):
         "back": lambda s, b: s.back_to(),
     }
 
-    def __init__(self, back, back_label="Back", guild=None, save=None):
+    def __init__(self, back, back_label=None, guild=None, save=None):
         self.back_to = back
-        self.back_label = back_label
+        self.back_label = back_label or i18n.t("ui.title.back")
         self.guild = guild
         self.save = save or (lambda: None)
         self.reset_note = False

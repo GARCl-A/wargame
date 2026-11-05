@@ -36,16 +36,16 @@ def _link(label, text, pattern):
 
 def sections():
     icons, sounds = _read("icons"), _read("sounds")
-    icon_links = [_link("License: CC BY 3.0", icons, r"License:\s+(https?://\S+)"),
-                  _link("Source: game-icons.net", icons, r"Source:\s+(https?://\S+)")]
-    sound_links = [_link("License: CC0", sounds, r"(http://creativecommons\.org/publicdomain/zero/\S+)"),
-                   {"label": "Source: www.kenney.nl", "url": "https://www.kenney.nl"}]
+    icon_links = [_link(i18n.t("credits_session.license_cc_by"), icons, r"License:\s+(https?://\S+)"),
+                  _link(i18n.t("credits_session.source_game_icons_net"), icons, r"Source:\s+(https?://\S+)")]
+    sound_links = [_link(i18n.t("credits_session.license_cc"), sounds, r"(http://creativecommons\.org/publicdomain/zero/\S+)"),
+                   {"label": i18n.t("credits_session.source_www_kenney_nl"), "url": "https://www.kenney.nl"}]
     return [
         {"id": "icons", "heading": i18n.t("credits.icons.heading"), "intro": i18n.t("credits.icons.intro"),
          "people_label": i18n.t("credits.icons.authors"), "people": authors(icons),
          "links": [x for x in icon_links if x]},
         {"id": "sounds", "heading": i18n.t("credits.sounds.heading"), "intro": i18n.t("credits.sounds.intro"),
-         "people_label": None, "people": [{"name": "Kenney Vleugels", "url": "https://www.kenney.nl"}],
+         "people_label": None, "people": [{"name": i18n.t("credits_session.kenney_vleugels"), "url": "https://www.kenney.nl"}],
          "links": [x for x in sound_links if x]},
     ]
 
@@ -55,9 +55,9 @@ class CreditsSession(Session):
     GET: ClassVar[dict] = {"state": lambda s, q: s.state()}
     POST: ClassVar[dict] = {"back": lambda s, b: s.back_to()}
 
-    def __init__(self, back, back_label="Back"):
+    def __init__(self, back, back_label=None):
         self.back_to = back
-        self.back_label = back_label
+        self.back_label = back_label or i18n.t("ui.title.back")
 
     def state(self):
         return {"title": i18n.t("credits.title"), "kicker": i18n.t("credits.kicker"),

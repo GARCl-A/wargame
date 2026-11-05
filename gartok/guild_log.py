@@ -10,6 +10,7 @@ import bisect
 import os
 import re
 
+from . import i18n
 from .clock import SECONDS_PER_DAY, SECONDS_PER_HOUR
 
 KINDS = ("food", "work", "craft", "travel", "rest", "fight", "talk", "guild", "day")
@@ -103,7 +104,7 @@ class GuildLog:
         n = self._oldest_half()
         folder = export_dir()
         os.makedirs(folder, exist_ok=True)
-        safe = re.sub(r"[^\w .-]", "", guild_name or "The Guild").strip() or "The Guild"
+        safe = re.sub(r"[^\w .-]", "", guild_name or i18n.t("guild_log.guild")).strip() or i18n.t("guild_log.guild")
         path = os.path.join(folder, f"{safe}-day{day}.txt")
         stem, n_file = path[:-4], 1
         while os.path.exists(path):
@@ -112,7 +113,7 @@ class GuildLog:
         with open(path, "w", encoding="utf-8") as fh:
             for row in self.rows(self.entries[:n]):
                 who = f"[{row['band']}] " if row["band"] else ""
-                fh.write(f"Day {row['day']} {row['at']}  {who}{row['text']}\n")
+                fh.write(i18n.t("guild_log.day", day=row['day'], at=row['at'], who=who, text=row['text']))
         self.discard_oldest()
         return path
 

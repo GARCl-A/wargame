@@ -19,6 +19,7 @@ from . import (
     economy,
     gather,
     holdings,
+    i18n,
     magic,
     orders,
     solo,
@@ -316,7 +317,7 @@ def load(data):
 def assign(guild, group, routine):
     """Put `routine` on an idle `group` and start its first block. Returns the log lines."""
     if group.order is not None or group.fight_due:
-        raise ValueError(f"{group.display_name} is busy")
+        raise ValueError(i18n.t("routines.is_busy", display_name=group.display_name))
     group.routine = routine
     return advance(guild, group)
 
@@ -333,7 +334,7 @@ def interrupt(group, reason):
     """Hand the group back to the player, the pointer left on the block that was running."""
     routine = group.routine
     routine.paused, routine.inflight = reason, False
-    return [f"{group.display_name}: routine stopped -- {reason}."]
+    return [i18n.t("routines.routine_stopped", display_name=group.display_name, reason=reason)]
 
 
 def advance(guild, group):
@@ -349,7 +350,7 @@ def advance(guild, group):
         block = routine.current()
         if block is None:
             group.routine = None
-            return [f"{group.display_name}: routine finished."]
+            return [i18n.t("routines.routine_finished", display_name=group.display_name)]
         if isinstance(block, Repeat):
             if block.cond.holds(guild, group) != block.until and block.body:
                 routine.path.append(0)
@@ -363,7 +364,7 @@ def advance(guild, group):
             group.order = outcome
             return []
         routine.step_on()
-    return interrupt(group, "too many blocks in no time")
+    return interrupt(group, i18n.t("routines.too_many_blocks_in_no"))
 
 
 def _run(guild, group, routine, block):
@@ -377,7 +378,7 @@ def _run(guild, group, routine, block):
             return str(err)
     if isinstance(block, (Gather, Work)):
         if isinstance(block, Gather) and not gather.can_gather(group.node):
-            return "nothing to gather here"
+            return i18n.t("routines.nothing_to_gather_here")
         try:
             order = orders.work(guild, group, block.hours, gather=isinstance(block, Gather), licensed=False)
         except ValueError as err:
@@ -423,16 +424,16 @@ def _craft(guild, group, routine, block):
 
 def _study(group, routine, block):
     if world.node(group.node).garrison_job != "study":
-        return "there are no rooms to study in here"
+        return i18n.t("routines.there_are_no_rooms_to")
     holders = [*group.members, *group.wagons, *group.herd]
     students = [u for u in group.members if magic.can_study(u, block.target, group)]
     if not students:
-        return "nobody can study that"
+        return i18n.t("routines.nobody_can_study_that")
     for u in students:
         if u.study_target != block.target:      # a student at it already keeps the progress made
             magic.begin_study(u, block.target, holders)
     if not magic.rent_covered(group):
-        return "no one can pay for the rooms"
+        return i18n.t("routines.no_one_can_pay_for")
     routine.inflight = True
     return orders.garrison("study", days=block.days)
 
@@ -448,7 +449,7 @@ def _wagon_named(guild, group, name):
 def _repair(guild, group, routine, block):
     found = _wagon_named(guild, group, block.wagon)
     if found is None:
-        return f"no wagon called {block.wagon} here"
+        return i18n.t("routines.no_wagon_called_here", wagon=block.wagon)
     if not found.needs_repair:
         return None
     short = guild.repair_short(group.members, found)
@@ -475,10 +476,10 @@ def _weigh(item):
 def _store(guild, group, block):
     stashes = _stashes(guild, group, block.place)
     if not stashes:
-        return f"no {block.place} here"
+        return i18n.t("routines.no_here", place=block.place)
     held = count_of(group, block.item)
     if not held:
-        return f"no {block.item} to store"
+        return i18n.t("routines.no_to_store", item=block.item)
     wanted = held if block.count is None else min(block.count, held)
     stored = 0
     for stash in stashes:
@@ -492,15 +493,15 @@ def _store(guild, group, block):
                 u._derive_combat()
             if n <= 0:
                 break
-    return None if stored else f"no room for {block.item} in the {block.place}"
+    return None if stored else i18n.t("routines.no_room_for_in", item=block.item, place=block.place)
 
 
 def _fetch(guild, group, block):
     stashes = _stashes(guild, group, block.place)
     if not stashes:
-        return f"no {block.place} here"
+        return i18n.t("routines.no_here", place=block.place)
     if not sum(s.count_of(block.item) for s in stashes):
-        return f"no {block.item} in the {block.place}"
+        return i18n.t("routines.no_in", item=block.item, place=block.place)
     wanted = sum(s.count_of(block.item) for s in stashes) if block.count is None else block.count
     fetched = 0
     for stash in stashes:
@@ -511,7 +512,7 @@ def _fetch(guild, group, block):
                 fetched += stash.remove_named(block.item, n)
                 u.give_to_pack(block.item, n)
                 u._derive_combat()
-    return None if fetched else "the packs cannot carry more"
+    return None if fetched else i18n.t("routines.packs_cannot_carry_more")
 
 
 def _other_here(guild, group, ref):
@@ -522,14 +523,14 @@ def _other_here(guild, group, ref):
 def _take(guild, group, block):
     source = _other_here(guild, group, block.source)
     if source is None:
-        return "no group to take from"
+        return i18n.t("routines.no_group_to_take_from")
     wanted = block.count
     if block.until_days is not None:
         wanted = max(0, group.rations_for(block.until_days) - group.rations)
         if not wanted:
             return None
     if not _move(source, group, block.item, wanted):
-        return f"no {block.item} to take"
+        return i18n.t("routines.no_to_take", item=block.item)
     return None
 
 
@@ -537,11 +538,11 @@ def _hand_over(guild, group, routine, block):
     receiver = _other_here(guild, group, block.to)
     if receiver is None:
         if not block.fallback or routine.waited_since is not None:
-            return "the receiving group is not here"
+            return i18n.t("routines.receiving_group_is_not_here")
         routine.waited_since = guild.clock.seconds
         return orders.wait(HAND_OVER_WAIT_HOURS)
     if not _move(group, receiver, block.item, block.count):
-        return f"no {block.item} to hand over"
+        return i18n.t("routines.no_to_hand_over", item=block.item)
     return None
 
 
@@ -574,7 +575,7 @@ def _trade(guild, group, block):
     from . import trade, world
     node = world.node(group.node)
     if "shop" not in node.functions:
-        return "no shop here"
+        return i18n.t("routines.no_shop_here")
     counter = trade.Counter(guild, list(group.members), node)
     for name in block.sell:
         held = count_of(group, name)

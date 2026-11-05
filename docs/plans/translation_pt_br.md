@@ -1,7 +1,7 @@
 # Plan — Brazilian Portuguese translation (`pt-br`)
 
 Goal: the whole game playable in `pt-br`, chosen in Settings, with English still the default and the
-fallback. Status: **phase 1 done** (2026-11-04); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
+fallback. Status: **phases 1-3 done** (2026-11-05; phase 3's deliberate limits are listed under it); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
 all six phases (see [backlog.md](backlog.md)).
 
 Sizes below come from greps (2026-11-04), not from reading each module: re-count at the start of each phase.
@@ -80,9 +80,18 @@ for a converted line and a plain string for one not converted yet; `i18n.Ref` na
 render time; `i18n.Text` makes an action's name/description a catalog read. Done: `actions/` (all of it, spells and
 movement included), the turn flow, traps, falls, drowning and death saves in `battle.py`, the `go_down`/condition/ferocity
 lines (`combatant.py`, `conditions.py`, `abilities.py`), the roll modifier labels (`log.mod.*`), `web/battle_session.py`
-errors, and the `unit_poison`/`unit_levels`/`unit_hunger` messages; `campaign._death_note` reads the line keys. Left: the
-rest of the list (`web/campaign_fight.py`, `combat_lab.py`, `hunt`, `craft`, `trade`, `work_desk`, `vault`, `job_board`, ...),
-the attribute abbreviations (STR/DEX/CHA, a glossary decision) and `scenario.held_note`.
+errors, and the `unit_poison`/`unit_levels`/`unit_hunger` messages; `campaign._death_note` reads the line keys; `web/campaign_fight.py`, the `campaign.py` notices, `hunt.py`, `stints.py` and `scenario.held_note`
+(`campaign.*`, `hunt.*`, `stint.*`, `log.held.*`). Left: the
+rest of the list (`combat_lab.py` descriptions, `craft`, `trade`, `work_desk`, `vault`, `job_board`, `tavern`, `ledger`, `routines`, ...),
+and the attribute abbreviations (STR/DEX/CHA, a glossary decision).
+
+Phase 3 closed (2026-11-05): every notice, result, error, button label and status chip of the rule modules and the web
+sessions/tabs is a key (one group per module). Deliberate limits: `routine.paused` reasons and the memorial `cause` are stored
+as already-translated strings; text built from ids with `.title()`/`.capitalize()` (school, stage, node ids) and the attribute
+abbreviations stay for the phase 6 review; the title quote marks its bold part with `**` (the client turns it into `<b>`).
+Left for later phases (audit, 1,238 literals): catalog text (`talents`, `items`, `abilities`, `weapon_traits`, `data`) in
+phase 4; authored content (`world`, `factions`, `dialogue`, `missions`, `forced`, `objectives`, `node_functions`, `job_board`
+keeper lines, arena blurbs) in phase 5; dev text (`combat_lab`, `reference`, `wiki_rules`).
 
 ### 4. Catalog
 

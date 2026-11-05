@@ -9,7 +9,7 @@ craft (`craft`) share this one mechanism.
 
 from collections import Counter
 
-from . import items, medic, orders
+from . import i18n, items, medic, orders
 
 
 def craft(guild, group, unit, recipe, hours, *, alone=True):
@@ -19,7 +19,7 @@ def craft(guild, group, unit, recipe, hours, *, alone=True):
     slot allows it); otherwise the whole group waits. The crafting is rolled when the hours are
     done. Returns `(ok, lines)`."""
     if group.locked:
-        return False, ["A group with an order in flight cannot start a craft."]
+        return False, [i18n.t("solo.group_with_order_in_flight")]
     pool = _stock(group, unit)
     blocked = guild.craft_blocker(unit, recipe, pool)
     if blocked:
@@ -28,11 +28,11 @@ def craft(guild, group, unit, recipe, hours, *, alone=True):
     target = items.CRAFTING_RECIPES[recipe].target if recipe in items.CRAFTING_RECIPES else recipe
     if alone:
         if guild.send_alone(group, unit, order, f"{unit.name} (crafting)") is None:
-            return False, ["No free group slot to send them alone."]
+            return False, [i18n.t("solo.no_free_group_slot_to")]
         _carry_along(unit, recipe, pool)
-        return True, [f"{unit.name} sets to work on {target} for {hours} h."]
+        return True, [i18n.t("solo.sets_to_work_on_for", name=unit.name, target=target, hours=hours)]
     group.order = order
-    return True, [f"The group waits while {unit.name} works on {target} for {hours} h."]
+    return True, [i18n.t("solo.group_waits_while_works_on", name=unit.name, target=target, hours=hours)]
 
 
 def _stock(group, unit):

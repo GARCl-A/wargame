@@ -22,15 +22,49 @@ import sys
 
 from .. import actions
 from ..board import grid_distance
-from .attack import _best_cone, _breath_spot, _finish_off, _hex_or_roots, _pick_attack, _sleep_immune, _try_breath, _try_capture, _try_shove, _try_throw
+from .attack import (
+    _best_cone,
+    _breath_spot,
+    _finish_off,
+    _hex_or_roots,
+    _pick_attack,
+    _sleep_immune,
+    _try_breath,
+    _try_capture,
+    _try_shove,
+    _try_throw,
+)
 from .common import _wants_alive
-from .flee import FLEE_HP, SKITTISH_STAMINA, _leave_fire, _should_flee, _skitter, _try_vanish
-from .movement import _recover_torch, _recover_weapon, _step_over_terrain, _step_toward, _try_assess, trap_cell
+from .flee import (
+    FLEE_HP,
+    SKITTISH_STAMINA,
+    _leave_fire,
+    _should_flee,
+    _skitter,
+    _try_vanish,
+)
+from .movement import (
+    _recover_torch,
+    _recover_weapon,
+    _step_over_terrain,
+    _step_toward,
+    _try_assess,
+    trap_cell,
+)
+from .reckon import _two_points, _unflank_worth, _weapon_action_worth
 from .scripted import _ctf_goal, _heist, _patrol
 from .support import _ally_to_help, _try_drink_potion, _try_healing_touch
-from .target import GROUP_GAP, SEARCH_STEP, _approach_reach, _flank_cell, _focus_key, _search, _search_goal, _target
+from .target import (
+    GROUP_GAP,
+    SEARCH_STEP,
+    _approach_reach,
+    _flank_cell,
+    _focus_key,
+    _search,
+    _search_goal,
+    _target,
+)
 from .turn import take_turn
-from .reckon import _two_points, _unflank_worth, _weapon_action_worth
 
 
 def module_of(name):

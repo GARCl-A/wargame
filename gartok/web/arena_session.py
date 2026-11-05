@@ -8,7 +8,7 @@ them (`AdelioPromptScreen`, `RibbitPromptScreen`), which opens the Tavern's RECR
 
 from typing import ClassVar
 
-from .. import arena, art_files, economy, matchup, objectives, orders, world
+from .. import arena, art_files, economy, i18n, matchup, objectives, orders, world
 from ..battle import Battle
 from ..constants import fmt_money
 from .campaign_fight import _enter
@@ -123,22 +123,22 @@ class ArenaSession(Session):
     def why(self):
         """Why the bout cannot be fought as picked, or None."""
         if not self.picked:
-            return "Pick who fights"
+            return i18n.t("arena_session.pick_who_fights")
         if len(self.picked) > self.offer.player_cap:
-            return f"At most {self.offer.player_cap} may fight this bout"
+            return i18n.t("arena_session.at_most_may_fight_this", player_cap=self.offer.player_cap)
         if self.group.money < self.cost:
-            return f"The band holds {fmt_money(self.group.money)} of the {fmt_money(self.cost)} stake"
+            return i18n.t("arena_session.band_holds_of_stake", held=fmt_money(self.group.money), stake=fmt_money(self.cost))
         return None
 
     # ------------------------------------------------------------------ #
     def _bouts_open(self):
         if self.offered is not None:
-            raise ValueError("the bout is over")
+            raise ValueError(i18n.t("arena_session.bout_is_over"))
 
     def pick_bout(self, i):
         self._bouts_open()
         if not 0 <= i < len(self.bouts):
-            raise ValueError("no such bout")
+            raise ValueError(i18n.t("arena_session.no_such_bout"))
         self.at = i
         del self.picked[self.offer.player_cap:]     # a smaller bout drops the overflow
         return self.state()
@@ -147,13 +147,13 @@ class ArenaSession(Session):
         self._bouts_open()
         u = next((m for m in self.group.members if m.uid == uid), None)
         if u is None:
-            raise ValueError("no such member in the band")
+            raise ValueError(i18n.t("arena_session.no_such_member_in_band"))
         if u in self.picked:
             self.picked.remove(u)
         elif u.incapacitated:
-            raise ValueError(f"{u.name} has collapsed from hunger and cannot fight")
+            raise ValueError(i18n.t("arena_session.has_collapsed_from_hunger_and", name=u.name))
         elif len(self.picked) >= self.offer.player_cap:
-            raise ValueError(f"at most {self.offer.player_cap} may fight this bout")
+            raise ValueError(i18n.t("arena_session.at_most_may_fight_this_2", player_cap=self.offer.player_cap))
         else:
             self.picked.append(u)
         return self.state()
@@ -183,7 +183,7 @@ class ArenaSession(Session):
     def recruit(self):
         """Talk them round: the Tavern's RECRUIT with them as the only strangers."""
         if self.offered is None:
-            raise ValueError("nobody to recruit here")
+            raise ValueError(i18n.t("arena_session.nobody_to_recruit_here"))
         from .hub_session import HubSession
         if self.offered == "adelio":
             adelio = arena.load_champion()
@@ -197,7 +197,7 @@ class ArenaSession(Session):
 
     def leave(self):
         if self.offered is None:
-            raise ValueError("nobody to leave here")
+            raise ValueError(i18n.t("arena_session.nobody_to_leave_here"))
         from .dialogue_session import _to_map
         return _to_map(self.map, self.group)
 
@@ -221,8 +221,7 @@ class ArenaSession(Session):
                 "why": self.why,
                 "defense": None if not due else {
                     "name": champ.name, "by": arena.defense_deadline(self.guild),
-                    "line": f"{champ.name} must come to the Pit to defend the title by day "
-                            f"{arena.defense_deadline(self.guild)}; this band does not bring them."}}
+                    "line": i18n.t("arena_session.must_come_to_pit_to", name=champ.name, defense_deadline=arena.defense_deadline(self.guild))}}
 
     def _bout(self, i, b):
         return {"i": i, "name": b.name, "kind": _kind(b), "blurb": BLURBS[_kind(b)],
@@ -236,16 +235,16 @@ class ArenaSession(Session):
         n, faces = u.weapon["damage"]
         flags = []
         if u.incapacitated:
-            flags.append({"text": "Collapsed from hunger", "tone": "bad"})
+            flags.append({"text": i18n.t("arena_session.collapsed_from_hunger"), "tone": "bad"})
         elif u.hunger_level:
-            flags.append({"text": f"Hunger: {u.hunger_label}", "tone": "bad" if u.hunger_level >= 2 else "warn"})
+            flags.append({"text": i18n.t("arena_session.hunger", hunger_label=u.hunger_label), "tone": "bad" if u.hunger_level >= 2 else "warn"})
         if u.sick:
             flags.append({"text": "Sick", "tone": "bad"})
         if u.combat_level > arena.bout_max_combat_level(self.offer):
-            flags.append({"text": f"No combat XP: the foes stop at level {arena.bout_max_combat_level(self.offer)}",
+            flags.append({"text": i18n.t("arena_session.no_combat_xp_foes_stop", bout_max_combat_level=arena.bout_max_combat_level(self.offer)),
                           "tone": "warn"})
         if u.pending_picks:
-            flags.append({"text": "Talent pick ready", "tone": "good"})
+            flags.append({"text": i18n.t("arena_session.talent_pick_ready"), "tone": "good"})
         return {"uid": u.uid, "name": u.name, "race": u.race["name"],                 "portrait": _portrait(u), "hp": [max(0, u.hp), u.hp_max], "ac": u.ac, "md": u.mental_defense,
                 "speed": u.speed, "weapon": u.weapon.name, "dmg": f"{n}d{faces}",
                 "money": u.money, "money_text": fmt_money(u.money), "level": lvl, "flags": flags,

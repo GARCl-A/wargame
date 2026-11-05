@@ -19,7 +19,7 @@
 
 import random
 
-from . import data, dialogue, encounters, items, missions, npc_lib
+from . import data, dialogue, encounters, i18n, items, missions, npc_lib
 from .board import Board, grid_distance
 from .conditions import Demoralized, Surprised
 from .ground import GroundObject
@@ -88,18 +88,16 @@ def search(guild, group, rng=random):
     order) looking for the lair. Only finds it while
     the Dragon's Clutch is out. -> (found, message)."""
     scout = _scout(group.members)
-    who = scout.name if scout else "The squad"
+    who = scout.name if scout else i18n.t("lair.squad")
     if missions.pending_clutch(guild) is None:
-        return False, f"{who} walks the deep galleries for {SEARCH_HOURS} hours: rock, and the miners' echoes."
+        return False, i18n.t("lair.walks_deep_galleries_for_hours", who=who, search_hours=SEARCH_HOURS)
     nat = rng.randint(1, 20)
     wis = scout.mod_wisdom if scout else 0
     total = nat + wis
     if total >= SEARCH_DC:
         guild.reveal_node(NODE)
-        return True, (f"{who} follows the warm air past where the miners stopped, to a cave that smells "
-                      "of sulphur and old gold. The Dragon's Lair is found.")
-    return False, (f"{who} searches for {SEARCH_HOURS} hours and finds no way down "
-                   f"(d20({nat}) {wis:+}(WIS) = {total} vs DC {SEARCH_DC}).")
+        return True, (i18n.t("lair.follows_warm_air_past_where", who=who))
+    return False, (i18n.t("lair.searches_for_hours_and_finds", who=who, search_hours=SEARCH_HOURS, nat=nat, wis=wis, total=total, search_dc=SEARCH_DC))
 
 
 def kobold(level, rng=random):
@@ -181,7 +179,7 @@ class LairScenario(Scenario):
         for p in EGG_CELLS:
             battle.ground.append(GroundObject.relic(p, EGG))
         for p in HOARD_PILES:
-            pile = [f"{self.rng.randint(*PILE_COPPER)} copper"]
+            pile = [i18n.t("lair.copper", randint=self.rng.randint(*PILE_COPPER))]
             if self.rng.random() < PILE_GEM_ODDS:
                 pile.append(data.GEM_ITEM)
             if p == HEX_CELL:
@@ -198,13 +196,13 @@ class LairScenario(Scenario):
         if self.stage == "awake" or dragon is None or not dragon.alive or amount <= 0:
             return
         self.noise += amount
-        battle.log(f"  ({what}: the noise in the lair is {self.noise}/{WAKE_AT})")
+        battle.log(i18n.t("lair.noise_in_lair_is", what=what, noise=self.noise, wake_at=WAKE_AT))
         if self.noise >= WAKE_AT:
             self.wake(battle, dragon)
         elif self.noise >= STIR_AT and self.stage == "asleep":
             self.stage = "stirring"
             dragon.awareness_radius = STIR_SIGHT
-            battle.log(f"{dragon.name} stirs in its sleep, and one eye half opens...")
+            battle.log(i18n.t("lair.stirs_in_its_sleep_and", name=dragon.name))
             battle.fx(dragon.pos, "stirs...", "faint")
 
     def wake(self, battle, dragon):
@@ -212,7 +210,7 @@ class LairScenario(Scenario):
         dragon.dormant = False
         dragon.alerted = True
         battle.aggressor = "enemy"         # the lair hunts the thieves now (`ai.target._search`)
-        battle.log(f"*** {dragon.name} wakes! ***")
+        battle.log(i18n.t("lair.wakes", name=dragon.name))
         battle.fx(dragon.pos, "AWAKE!", "crit")
 
     def _near_dragon(self, battle, unit):
@@ -222,26 +220,26 @@ class LairScenario(Scenario):
     def on_turn_start(self, battle, unit):
         self._hp = (unit, {u: u.hp for u in battle.units})
         if getattr(unit, "patrol_id", None) in self.alarm_due and unit.alive:
-            self.raise_alarm(battle, f"{unit.name} lived to ring the alarm")
+            self.raise_alarm(battle, i18n.t("lair.lived_to_ring_alarm", name=unit.name))
 
     def on_turn_end(self, battle, unit):
         start = self._hp
         if start is not None and start[0] is unit and any(u.hp < hp for u, hp in start[1].items()):
-            self.hear(battle, BLOW, "steel rings in the dark")
+            self.hear(battle, BLOW, i18n.t("lair.steel_rings_in_dark"))
         if unit.team != "player" or not unit.alive or self.stage == "awake":
             return
         steps = max(0, len(unit.path) - 1)
         if not steps or not self._near_dragon(battle, unit):
             return
         if steps > unit.speed // 2:
-            self.hear(battle, RUN, f"{unit.name} runs")
+            self.hear(battle, RUN, i18n.t("lair.runs", name=unit.name))
         else:
             dragon = dragon_of(battle)
             nat = self.rng.randint(1, 20)
             if nat + unit.mod_dexterity < 10 + dragon.mod_wisdom:
-                self.hear(battle, MISSTEP, f"{unit.name} misplaces a foot")
+                self.hear(battle, MISSTEP, i18n.t("lair.misplaces_foot", name=unit.name))
         if unit.armor is not None and unit.armor.speed_penalty:
-            self.hear(battle, CLANK, f"{unit.name}'s armour clanks")
+            self.hear(battle, CLANK, i18n.t("lair.s_armour_clanks", name=unit.name))
 
     def on_round(self, battle):
         if self.stage == "awake" and battle.fire:
@@ -249,9 +247,9 @@ class LairScenario(Scenario):
 
     def on_pick_up(self, battle, unit, obj):
         if obj.is_chest:
-            self.hear(battle, HOARD, f"{unit.name} scoops up the hoard")
+            self.hear(battle, HOARD, i18n.t("lair.scoops_up_hoard", name=unit.name))
         elif obj.is_relic and obj.item_name == EGG:
-            self.hear(battle, LIFT, f"{unit.name} lifts an egg")
+            self.hear(battle, LIFT, i18n.t("lair.lifts_egg", name=unit.name))
 
     # -- the patrols --------------------------------------------------- #
     def patrol(self, battle, pid):
@@ -262,12 +260,12 @@ class LairScenario(Scenario):
         battle.aggressor = "enemy"
         if not self.alarm:
             self.alarm = True
-            battle.log(f"*** {why}: the alarm rings through the lair! ***")
+            battle.log(i18n.t("lair.alarm_rings_through_lair", why=why))
         for u in battle.foe_units:
             if getattr(u, "patrol_id", None) is not None:
                 u.alerted = True
                 u.patrol_route = None
-        self.hear(battle, ALARM, "the alarm")
+        self.hear(battle, ALARM, i18n.t("lair.alarm"))
 
     def contact(self, battle, unit, seen):
         """A patrol member on its rounds sees the squad. -> "fight" (its side fights now), "wait"
@@ -276,7 +274,7 @@ class LairScenario(Scenario):
         if any(getattr(u, "alerted", False) for u in self.patrol(battle, pid)):
             return "fight"
         if any(carries_egg(s) for s in seen):
-            self.raise_alarm(battle, f"{unit.name} sees the master's egg")
+            self.raise_alarm(battle, i18n.t("lair.sees_master_s_egg", name=unit.name))
             return "fight"
         if pid in self.parleyed:
             return "pass"
@@ -303,13 +301,13 @@ class LairScenario(Scenario):
             u.patrol_route = None
         opening = result.opening
         if opening is not None and opening.surprised == "player":
-            self.raise_alarm(battle, "The bluff fails")
+            self.raise_alarm(battle, i18n.t("lair.bluff_fails"))
             for c in battle.player_units:
                 if c.alive:
                     c.add_condition(Surprised())
         else:
             self.alarm_due.add(pid)
-            battle.log("  Silence them before they can call out!")
+            battle.log(i18n.t("lair.silence_them_before_they_can"))
         if opening is not None and opening.demoralized == "enemy":
             for u in patrol:
                 u.add_condition(Demoralized())

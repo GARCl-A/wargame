@@ -7,7 +7,7 @@ Pure functions over the battle state:
   (what the PLAYER sees now), which is the character's vision, not the player's.
 """
 
-from . import data
+from . import data, i18n
 from .board import cells, grid_distance
 
 
@@ -184,11 +184,11 @@ def visible_cells(battle, obs):
 def vision_desc(unit):
     """Short phrase for the panel: how this unit sees in the dark."""
     if unit.ability.darkvision:
-        return f"darkvision, {unit.ability.darkvision} squares"
+        return i18n.t("vision.darkvision_squares", darkvision=unit.ability.darkvision)
     if dark_range(unit):
-        return f"twilight sight, {dark_range(unit)} squares"
+        return i18n.t("vision.twilight_sight_squares", dark_range=dark_range(unit))
     if unit.has_torch:
-        return f"torch in hand, {data.TORCH_RADIUS} squares"
+        return i18n.t("vision.torch_in_hand_squares", torch_radius=data.TORCH_RADIUS)
     if unit.has_lantern:
-        return f"lantern in hand, {data.LIGHT_SOURCES[data.LANTERN_ITEM]} squares"
-    return "no light of their own (only sees light along the line of sight)"
+        return i18n.t("vision.lantern_in_hand_squares", light_sources=data.LIGHT_SOURCES[data.LANTERN_ITEM])
+    return i18n.t("vision.no_light_of_their_own")

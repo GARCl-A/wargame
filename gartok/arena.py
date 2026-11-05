@@ -80,7 +80,7 @@ BOSS_TALKS = {
 
 def scrapper_bout():
     """An introductory fight in the Pit."""
-    return world.Bout("The Pit: Scrapper", entry=3, purse=11, enemies=3, level=0, rep=0)
+    return world.Bout(i18n.t("arena.pit_scrapper"), entry=3, purse=11, enemies=3, level=0, rep=0)
 
 
 def champion_bout():
@@ -89,14 +89,14 @@ def champion_bout():
     `app._start_battle` at the authored map (`maps/the-pit.json`) instead of the
     procedural `ArenaScenario`; the win condition is unchanged -- put the whole
     champion team down, the hole is only scenery."""
-    return world.Bout("Challenge the Champion", entry=CHAMPION_ENTRY,
+    return world.Bout(i18n.t("arena.challenge_champion"), entry=CHAMPION_ENTRY,
                        purse=CHAMPION_PURSE, enemies=1 + CHAMPION_GOONS,
                        champion=True, map_slug=CHAMPION_MAP)
 
 
 def defense_bout():
     """A mandatory 1v1 title defense (no stake, a purse for a win)."""
-    return world.Bout("Defend the Title", entry=0, purse=DEFENSE_PURSE,
+    return world.Bout(i18n.t("arena.defend_title"), entry=0, purse=DEFENSE_PURSE,
                       enemies=1, defense=True)
 
 
@@ -104,7 +104,7 @@ def brawl_bout():
     """The Games' straight fight: a 3v3 with a bigger stake and purse than the
     rep ladder, against opponents scaled level 1..6 (`stage2_pack`). Offered once
     the champion has been dethroned."""
-    return world.Bout("Games: Brawl", entry=STAGE2_ENTRY, purse=STAGE2_PURSE,
+    return world.Bout(i18n.t("arena.games_brawl"), entry=STAGE2_ENTRY, purse=STAGE2_PURSE,
                       enemies=STAGE2_ENEMIES, stage2=True)
 
 
@@ -112,7 +112,7 @@ def ctf_bout():
     """The Games' capture-the-flag bout: same stake and field as the brawl, but
     fought on a `FlagScenario` -- it ends when a fighter carries the enemy flag
     back to their own, not when a side is wiped."""
-    return world.Bout("Games: Capture the Flag", entry=STAGE2_ENTRY,
+    return world.Bout(i18n.t("arena.games_capture_flag"), entry=STAGE2_ENTRY,
                       purse=STAGE2_PURSE, enemies=STAGE2_ENEMIES,
                       stage2=True, ctf=True)
 
@@ -121,7 +121,7 @@ def boss_bout():
     """The Games' capstone: the three Ribbit brothers (the authored NPC team the
     `BOSS_MAP` places) plus `BOSS_GOONS` goons at `BOSS_GOON_LEVEL`, fought
     capture-the-flag on that map. A 6-a-side bout -- `squad_max=BOSS_SQUAD`."""
-    return world.Bout("Games: The Ribbit Brothers", entry=BOSS_ENTRY,
+    return world.Bout(i18n.t("arena.games_ribbit_brothers"), entry=BOSS_ENTRY,
                       purse=BOSS_PURSE, enemies=BOSS_GOONS, level=BOSS_GOON_LEVEL,
                       stage2=True, ctf=True, boss=True, map_slug=BOSS_MAP,
                       squad_max=BOSS_SQUAD)
@@ -180,23 +180,22 @@ def sync(guild):
     if day is not None and guild.clock.day > day + CHALLENGE_GRACE:
         champ.arena_title = False
         guild.arena_challenge_day = None
-        return [f"{champ.name} never answered the challenge -- "
-                f"the Champion of the Pit title is forfeit."]
+        return [i18n.t("arena.never_answered_challenge_champion_of", name=champ.name)]
     return []
 
 def bout_level_range(bout, squad):
     """Returns a string describing the expected enemy levels for the UI."""
     if bout.champion:
         avg = sum(u.mean_level for u in squad) // max(1, len(squad)) if squad else 0
-        return f"Lv {avg + 1} + Lackeys (Lv 0)"
+        return i18n.t("arena.lv_lackeys_lv", value=avg + 1)
     if bout.defense:
         avg = sum(u.mean_level for u in squad) // max(1, len(squad)) if squad else 0
-        return f"Lv {avg + 1}"
+        return i18n.t("arena.lv", value=avg + 1)
     if bout.stage2:
         if bout.boss:
-            return f"Bosses + Lackeys (Lv {bout.level})"
+            return i18n.t("arena.bosses_lackeys_lv", level=bout.level)
         return "Lv 1-6"
-    return f"Lv {bout.level}"
+    return i18n.t("arena.lv_2", level=bout.level)
 
 
 def bout_max_combat_level(bout):

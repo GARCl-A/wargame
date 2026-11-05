@@ -6,7 +6,7 @@ Nothing is stored here -- the wagons and the animals live on the `Group` and tra
 `economy.SELL_FACTOR` of the price to the group's leader. `web/stable_tab.py` draws them.
 """
 
-from . import animals, economy, items, recorder, wagon
+from . import animals, economy, i18n, items, recorder, wagon
 from .constants import fmt_money
 
 
@@ -26,7 +26,7 @@ class Stables:
     def hub_cards(self):
         g = self.group
         return [{"label": "herd", "value": f"{len(g.herd)} / {g.herd_capacity}"},
-                {"label": "party purse", "value": fmt_money(self.wealth), "tone": "money"}]
+                {"label": i18n.t("stables.party_purse"), "value": fmt_money(self.wealth), "tone": "money"}]
 
     @property
     def wealth(self):
@@ -38,7 +38,7 @@ class Stables:
 
     def _pay(self, price, what):
         if self.wealth < price:
-            self.notice = f"{what} costs {fmt_money(price)} -- the party has {fmt_money(self.wealth)}."
+            self.notice = i18n.t("stables.costs_party_has", what=what, cost=fmt_money(price), wealth=fmt_money(self.wealth))
             return False
         economy.charge_richest_first((*self.group.members, *getattr(self.group, "stores", ())), price)
         return True
@@ -49,28 +49,28 @@ class Stables:
     def _buy_animal(self, species):
         animal = animals.Animal(species)
         if not self.group.can_take(animal):
-            self.notice = f"{self._keeper.name} can control a herd of {self.group.herd_capacity} at most."
+            self.notice = i18n.t("stables.can_control_herd_of_at", name=self._keeper.name, herd_capacity=self.group.herd_capacity)
         elif self._pay(animal.price, f"a {species}"):
             self.group.herd.append(animal)
             recorder.emit("animal", what="buy", species=species, price=animal.price)
-            self.notice = f"a {species} joins the group."
+            self.notice = i18n.t("stables.joins_group", species=species)
 
     def _fit(self, animal, tack):
         if animal.tack is None and self._pay(tack_price(tack), f"a {tack}"):
             animal.give_to_tack(tack)
             self.group.hitch_idle()
-            self.notice = f"the {animal.species} now wears a {tack}."
+            self.notice = i18n.t("stables.now_wears", species=animal.species, tack=tack)
 
     def _sell_animal(self, animal):
         if animal.stash.items:
-            self.notice = f"unload the {animal.species} first."
+            self.notice = i18n.t("stables.unload_first", species=animal.species)
             return
         if animal.tack:
             self._keeper.give_to_pack(animal.take_tack())
         self.group.herd.remove(animal)
         self._receive(resale(animal.price))
         recorder.emit("animal", what="sell", species=animal.species, price=resale(animal.price))
-        self.notice = f"sold the {animal.species}."
+        self.notice = i18n.t("stables.sold", species=animal.species)
 
 
 class WagonYard(Stables):
@@ -78,21 +78,21 @@ class WagonYard(Stables):
 
     def hub_cards(self):
         return [{"label": "wagons", "value": str(len(self.group.wagons))},
-                {"label": "party purse", "value": fmt_money(self.wealth), "tone": "money"}]
+                {"label": i18n.t("stables.party_purse"), "value": fmt_money(self.wealth), "tone": "money"}]
 
     def _buy_wagon(self, kind):
         if self._pay(wagon.VEHICLES[kind].price, f"a {kind.lower()}"):
             self.group.add_wagon(wagon.Wagon(kind))
             self.group.hitch_idle()
-            self.notice = f"the {kind.lower()} is yours -- harness an animal to pull it."
+            self.notice = i18n.t("stables.is_yours_harness_animal_to", lower=kind.lower())
 
     def _sell_wagon(self, sold):
         if sold.stash.items:
-            self.notice = f"unload the {sold.kind.lower()} first."
+            self.notice = i18n.t("stables.unload_first_2", lower=sold.kind.lower())
             return
         self.group.remove_wagon(sold)
         self._receive(resale(sold.price))
-        self.notice = f"sold the {sold.kind.lower()}."
+        self.notice = i18n.t("stables.sold_2", lower=sold.kind.lower())
 
     def _wagon_label(self, w):
         """"Cart" alone, "Cart 2" when the group keeps several."""

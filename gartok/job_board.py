@@ -4,14 +4,14 @@ the turn-in and its notice, each card's line and button. `Board` is what every g
 `web/jobs_tab.py` draws them.
 """
 
-from . import factions, lair, missions, wildfire, world
+from . import factions, i18n, lair, missions, wildfire, world
 from .constants import fmt_money
 
 TAG_TONE = {"economic": "money", "trust": "money", "bankers": "money", "apothecary": "good", "ruins": "bad"}
 
 
 class Board:
-    accept_label = "ACCEPT THE JOB"
+    accept_label = "job_board.accept_job"
 
     def __init__(self, guild, group):
         self.guild, self.group = guild, group
@@ -23,9 +23,9 @@ class Board:
         ids = {t.id for t in templates}
         held = sum(1 for m in self.guild.missions if m.template_id in ids and m.state == "active")
         purse = sum(u.money for u in self.group.members)
-        return [{"label": "jobs on the board", "value": str(len(templates))},
+        return [{"label": i18n.t("job_board.jobs_on_board"), "value": str(len(templates))},
                 {"label": "taken", "value": str(held)},
-                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
+                {"label": i18n.t("job_board.party_purse"), "value": fmt_money(purse), "tone": "money"}]
 
     @property
     def subtitle_text(self):
@@ -47,19 +47,19 @@ class Board:
         raise NotImplementedError
 
     def get_turn_in_label(self, t, progress, ready):
-        return "TURN IN" if ready else f"NEED {t.goal_qty - progress} MORE"
+        return i18n.t("job_board.turn_in") if ready else i18n.t("job_board.need_more", value=t.goal_qty - progress)
 
     def footer_action(self):
         """`(label, enabled)` for a second button beside the leave one (a keeper buying
         something), or None for none."""
-        return None
+        return
 
     def run_footer_action(self):
         """Press the footer action: -> the notice to show."""
-        return None
+        return
 
     def get_success_notice(self, reward):
-        return f"paid out {fmt_money(reward)}, split across the group."
+        return i18n.t("job_board.paid_out_split_across_group", fmt_money=fmt_money(reward))
 
     @property
     def _template(self):
@@ -124,9 +124,9 @@ class Board:
         earned = missions.turn_in(self.guild, m)
         self.notice = self.get_success_notice(t.reward)
         if t.reward_recipe:
-            self.notice += f"  ·  the group learns to craft the {t.reward_recipe}"
+            self.notice += i18n.t("job_board.group_learns_to_craft", reward_recipe=t.reward_recipe)
         if t.reward_item:
-            self.notice += f"  ·  you are given a {t.reward_item}"
+            self.notice += i18n.t("job_board.you_are_given", reward_item=t.reward_item)
         for d in earned:
             self.notice += "  ·  " + factions.deed_notice(d)
         return True
@@ -139,16 +139,16 @@ class Board:
         offered = self._is_offered(t)
         wait = missions.retry_in(self.guild, t)
         if wait:
-            label = f"Failed: try again in {wait} day{'s' if wait != 1 else ''}"
+            label = i18n.plural("job_board.retry_in", wait)
         elif missions.closed(self.guild, t):
-            label = "Failed: it went to another school"
+            label = i18n.t("job_board.failed_it_went_to_another")
         elif self._completed_of(t):
             done = any(x.template_id == t.id and x.state == "done" for x in self.guild.missions)
-            label = "Job completed" if done else "Job failed"
+            label = i18n.t("job_board.job_completed") if done else i18n.t("job_board.job_failed")
         elif offered:
-            label = self.accept_label
+            label = i18n.t(self.accept_label)
         else:
-            label = "Out with another group"
+            label = i18n.t("job_board.out_with_another_group")
         return ("accept", t.id), label, offered
 
 
@@ -172,17 +172,17 @@ class TannerBoard(Board):
                 or next(iter(mine), None))
 
     def get_req_str(self, t):
-        pay = f"  ·  pay: {fmt_money(t.reward)}" if t.reward else ""
-        due = "no deadline" if t.deadline_days is None else f"deadline: {t.deadline_days} days"
-        return f"goal: {t.goal_qty}x {t.goal_item}{pay}  ·  {due}"
+        pay = i18n.t("job_board.pay", fmt_money=fmt_money(t.reward)) if t.reward else ""
+        due = i18n.t("job_board.no_deadline") if t.deadline_days is None else i18n.t("job_board.deadline_days", deadline_days=t.deadline_days)
+        return i18n.t("job_board.goal_x", goal_qty=t.goal_qty, goal_item=t.goal_item, pay=pay, due=due)
 
     def get_status_str(self, t, progress, ready, days_left):
-        left = "" if days_left is None else f"  ·  {days_left} day(s) left"
+        left = "" if days_left is None else i18n.t("job_board.day_s_left", days_left=days_left)
         return f"{progress} / {t.goal_qty} {t.goal_item}{left}"
 
     def get_success_notice(self, reward):
         if not reward:
-            return "the tanner takes the leather and puts your name about."
+            return i18n.t("job_board.tanner_takes_leather_and_puts")
         return super().get_success_notice(reward)
 
 
@@ -195,10 +195,10 @@ class ApothecaryBoard(Board):
                      if t.giver == self.GIVER and t.node == self.group.node), None)
 
     def get_req_str(self, t):
-        return f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {fmt_money(t.reward)}  ·  deadline: {t.deadline_days} days"
+        return i18n.t("job_board.goal_x_pay_deadline_days", goal_qty=t.goal_qty, goal_item=t.goal_item, fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
 
     def get_status_str(self, t, progress, ready, days_left):
-        return f"{progress} / {t.goal_qty} {t.goal_item}  ·  {days_left} day(s) left"
+        return i18n.t("job_board.day_s_left_2", progress=progress, goal_qty=t.goal_qty, goal_item=t.goal_item, days_left=days_left)
 
 
 class LibraryBoard(Board):
@@ -213,12 +213,12 @@ class LibraryBoard(Board):
 
     def get_req_str(self, t):
         if t.goal_item == "Any Dictionary":
-            return f"goal: {t.goal_qty}x Dictionary (Unarchived Tongue)  ·  pay: {fmt_money(t.reward)}  ·  deadline: {t.deadline_days} days"
-        return f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {fmt_money(t.reward)}  ·  deadline: {t.deadline_days} days"
+            return i18n.t("job_board.goal_x_dictionary_unarchived_tongue", goal_qty=t.goal_qty, fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
+        return i18n.t("job_board.goal_x_pay_deadline_days", goal_qty=t.goal_qty, goal_item=t.goal_item, fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
 
     def get_status_str(self, t, progress, ready, days_left):
         item_label = "Dictionary" if t.goal_item == "Any Dictionary" else t.goal_item
-        return f"{progress} / {t.goal_qty} {item_label}  ·  {days_left} day(s) left"
+        return i18n.t("job_board.day_s_left_3", progress=progress, goal_qty=t.goal_qty, item_label=item_label, days_left=days_left)
 
 
 KEEPER_LINE = {
@@ -231,7 +231,7 @@ KEEPER_LINE = {
 class ShrineBoard(Board):
     """A hidden sanctuary's board: the school's keeper takes the Ancient Codex and whatever else that
     school asks for, the Snake Dragon among them."""
-    accept_label = "TAKE ON THE TASK"
+    accept_label = "job_board.take_task"
 
     @property
     def _giver(self):
@@ -249,41 +249,39 @@ class ShrineBoard(Board):
 
     def get_req_str(self, t):
         if t is missions.NATURE_WILDFIRE:
-            return (f"goal: talk the Ogre round or beat him, and put out what fires you can  ·  "
-                    f"{t.deadline_days} days  ·  the Coven gives a {wildfire.REWARD}")
+            return (i18n.t("job_board.goal_talk_ogre_round_or", deadline_days=t.deadline_days, REWARD=wildfire.REWARD))
         if t is missions.FAITH_NECROMANCER:
-            return (f"goal: find and put down whoever raises the dead at {world.node(t.fight_at).name}  ·  "
-                    f"{t.deadline_days} days")
+            return (i18n.t("job_board.goal_find_and_put_down", name=world.node(t.fight_at).name, deadline_days=t.deadline_days))
         if t.fight_at:
-            goal = f"win the skirmish at {world.node(t.fight_at).name}, every soldier alive"
+            goal = i18n.t("job_board.win_skirmish_at_every_soldier", name=world.node(t.fight_at).name)
             if t.starting_item and not any(m.template_id == t.id for m in self.guild.missions):
-                goal += f"  ·  you get {t.starting_qty}x {t.starting_item}"
+                goal += i18n.t("job_board.you_get_x", starting_qty=t.starting_qty, starting_item=t.starting_item)
         else:
-            goal = f"the {t.goal_item}, alive" if t.goal_captive else f"{t.goal_qty}x {t.goal_item}"
-        due = f"{t.deadline_days} days" if t.deadline_days else "no deadline"
-        prize = f"  ·  you get a {t.reward_item}" if t.reward_item else ""
-        return f"goal: {goal}  ·  {due}{prize}"
+            goal = i18n.t("job_board.alive", goal_item=t.goal_item) if t.goal_captive else f"{t.goal_qty}x {t.goal_item}"
+        due = i18n.t("job_board.days", deadline_days=t.deadline_days) if t.deadline_days else i18n.t("job_board.no_deadline")
+        prize = i18n.t("job_board.you_get", reward_item=t.reward_item) if t.reward_item else ""
+        return i18n.t("job_board.goal", goal=goal, due=due, prize=prize)
 
     def get_status_str(self, t, progress, ready, days_left):
         if t is missions.NATURE_WILDFIRE:
             state = self.guild.wildfire
-            burned = f"  ·  {state.burned} burned" if state is not None and state.burned else ""
-            due = f"  ·  {days_left} day(s) left" if days_left is not None else ""
-            return f"the fires burn round The Wilds{due}{burned}"
+            burned = i18n.t("job_board.burned", burned=state.burned) if state is not None and state.burned else ""
+            due = i18n.t("job_board.day_s_left", days_left=days_left) if days_left is not None else ""
+            return i18n.t("job_board.fires_burn_round_wilds", due=due, burned=burned)
         if t.fight_at:
-            due = f"  ·  {days_left} day(s) left" if days_left is not None else ""
+            due = i18n.t("job_board.day_s_left", days_left=days_left) if days_left is not None else ""
             if t is missions.FAITH_NECROMANCER:
-                return f"the dead rise at {world.node(t.fight_at).name}: find the one who wakes them{due}"
-            return f"fight at {world.node(t.fight_at).name}, lose no soldier{due}"
+                return i18n.t("job_board.dead_rise_at_find_one", name=world.node(t.fight_at).name, due=due)
+            return i18n.t("job_board.fight_at_lose_no_soldier", name=world.node(t.fight_at).name, due=due)
         return f"{progress} / {t.goal_qty} {t.goal_item}"
 
     def get_turn_in_label(self, t, progress, ready):
         if t.fight_at:
-            return f"GO TO {world.node(t.fight_at).name.upper()}"
-        return "HAND IT OVER" if ready else f"NEED {t.goal_qty - progress} MORE"
+            return i18n.t("job_board.go_to", upper=world.node(t.fight_at).name.upper())
+        return i18n.t("job_board.hand_it_over") if ready else i18n.t("job_board.need_more", value=t.goal_qty - progress)
 
     def get_success_notice(self, reward):
-        return "the keeper takes it and speaks your name to the school."
+        return i18n.t("job_board.keeper_takes_it_and_speaks")
 
     def _egg_holder(self):
         if self._giver == "blood" and missions.pending_clutch(self.guild) is not None:
@@ -294,7 +292,7 @@ class ShrineBoard(Board):
         holder = self._egg_holder()
         if holder is None and not any(u.count_of(lair.EGG) for u in self.group.members):
             return None
-        return f"SELL A DRAGON EGG  ·  ${lair.SHRINE_EGG_PRICE}", holder is not None
+        return i18n.t("job_board.sell_dragon_egg", SHRINE_EGG_PRICE=lair.SHRINE_EGG_PRICE), holder is not None
 
     def run_footer_action(self):
         holder = self._egg_holder()
@@ -302,7 +300,7 @@ class ShrineBoard(Board):
             return None
         holder.remove_named(lair.EGG, 1)
         holder.money += lair.SHRINE_EGG_PRICE
-        return f"the keeper weighs the egg in both hands and pays {holder.name} ${lair.SHRINE_EGG_PRICE}."
+        return i18n.t("job_board.keeper_weighs_egg_in_both", name=holder.name, SHRINE_EGG_PRICE=lair.SHRINE_EGG_PRICE)
 
 
 class TrustBoard(Board):
@@ -310,25 +308,25 @@ class TrustBoard(Board):
     (`missions.TRUST_CHEST.starting_item`); the goal is the letter of receipt Ledger Hold
     (`ledger.py`) trades for it once the band gets there safely."""
     TEMPLATE = missions.TRUST_CHEST
-    accept_label = "ACCEPT THE TEST OF TRUST"
+    accept_label = "job_board.accept_trust"
     subtitle_text = '"Prove the guild can be trusted with something precious."'
 
     def get_template(self):
         return self.TEMPLATE
 
     def get_req_str(self, t):
-        return f"carry: {t.starting_item}  ·  bring back: {t.goal_item}  ·  deadline: {t.deadline_days} days"
+        return i18n.t("job_board.carry_bring_back_deadline_days", starting_item=t.starting_item, goal_item=t.goal_item, deadline_days=t.deadline_days)
 
     def get_status_str(self, t, progress, ready, days_left):
         if ready:
-            return f"{t.goal_item} in hand  ·  {days_left} day(s) left"
-        return f"carrying the sealed chest to Ledger Hold  ·  {days_left} day(s) left"
+            return i18n.t("job_board.in_hand_day_s_left", goal_item=t.goal_item, days_left=days_left)
+        return i18n.t("job_board.carrying_sealed_chest_to_ledger", days_left=days_left)
 
     def get_turn_in_label(self, t, progress, ready):
-        return "TURN IN THE LETTER" if ready else "NOT BACK YET"
+        return i18n.t("job_board.turn_in_letter") if ready else i18n.t("job_board.not_back_yet")
 
     def get_success_notice(self, reward):
-        return "the Bankers accept the letter -- your trust is earned."
+        return i18n.t("job_board.bankers_accept_letter_your_trust")
 
 
 # a node's function -> its giver's board, in the order a node's tabs list them

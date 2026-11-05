@@ -8,7 +8,7 @@ the purse lands whole on one fighter.
 from types import SimpleNamespace
 from typing import ClassVar
 
-from .. import art_files, factions, item_icon, items, progression, world
+from .. import art_files, factions, i18n, item_icon, items, progression, world
 from ..aftermath import card
 from ..constants import fmt_money
 from ..spoils import Spoils
@@ -16,12 +16,11 @@ from .map_session import _portrait, _when
 from .session import Session, asset_url
 from .shop_tab import SLOTS, _tip
 
-LABELS = {"memorial": "The fallen", "report": "The report", "level": "Level up", "loot": "The field",
-          "purse": "The purse", "map": "The map"}
-CATEGORIES = (("Coin", lambda d: items.is_coin(d.name)),
-              ("Weapons", lambda d: d.type == items.ItemType.WEAPON),
-              ("Armour", lambda d: d.type in (items.ItemType.ARMOR, items.ItemType.SHIELD)),
-              ("Everything else", lambda d: True))
+LABELS = {k: f"report_session.label.{k}" for k in ("memorial", "report", "level", "loot", "purse", "map")}
+CATEGORIES = (("coin", lambda d: items.is_coin(d.name)),
+              ("weapons", lambda d: d.type == items.ItemType.WEAPON),
+              ("armour", lambda d: d.type in (items.ItemType.ARMOR, items.ItemType.SHIELD)),
+              ("other", lambda d: True))
 
 
 def _face(race, pid):
@@ -102,7 +101,7 @@ class ReportSession(Session):
     def next(self):
         kind, _ = self.stage
         if kind == "purse" and self.paid_to is None:
-            raise ValueError("someone must pocket the purse first")
+            raise ValueError(i18n.t("report_session.someone_must_pocket_purse_first"))
         self.at_stage += 1
         self.refused = None
         if self.stage[0] == "map":
@@ -113,17 +112,17 @@ class ReportSession(Session):
         from .talent_session import TalentSession
         kind, i = self.stage
         if kind != "level":
-            raise ValueError("no level-up on the table")
+            raise ValueError(i18n.t("report_session.no_level_up_on_table"))
         unit = self.outcome.level_ups[i].unit
         if not unit.pending_picks:
-            raise ValueError(f"{unit.name} has no talent to pick")
+            raise ValueError(i18n.t("report_session.has_no_talent_to_pick", name=unit.name))
         chain = []
         for c in self._chain():
             chain.append({**c, "at": "done"} if c["id"] == "level" else c)
             if c["id"] == "level":
                 chain.append({"id": "talents", "label": "Talents", "at": "now"})
         self.map.game.open(TalentSession(self.map, unit, self.outcome.survivors, self._resume,
-                                         back_label="Back to the level-up", chain=chain))
+                                         back_label=i18n.t("report_session.back_to_level_up"), chain=chain))
         return {"screen": TalentSession.screen}
 
     def _resume(self):
@@ -133,7 +132,7 @@ class ReportSession(Session):
     def _member(self, uid):
         u = next((u for u in self.outcome.survivors if u.uid == uid), None)
         if u is None:
-            raise ValueError("no such member")
+            raise ValueError(i18n.t("report_session.no_such_member"))
         return u
 
     def _pick(self, b):
@@ -142,17 +141,17 @@ class ReportSession(Session):
         if b["from"] == "field":
             loc = int(b["loc"])
             if not 0 <= loc < len(ls.pool):
-                raise ValueError("no such stack on the field")
+                raise ValueError(i18n.t("report_session.no_such_stack_on_field"))
             owner = "pool"
             held = ls.pool[loc][1]
         else:
             owner, loc = self._member(b["from"]), b["loc"]
             if isinstance(loc, str):
                 if loc not in dict(SLOTS) or ls._item_at(owner, loc) is None:
-                    raise ValueError(f"nothing in that {loc} slot")
+                    raise ValueError(i18n.t("report_session.nothing_in_that_slot", loc=loc))
                 return owner, loc
             if not 0 <= loc < len(owner._base_inventory):
-                raise ValueError("no such stack")
+                raise ValueError(i18n.t("report_session.no_such_stack"))
             held = owner._base_inventory[loc][1]
         ls._sel_qty[(owner, loc)] = max(1, min(held, int(b.get("qty") or held)))
         return owner, loc
@@ -162,15 +161,15 @@ class ReportSession(Session):
         `Spoils._give_many`; a load the member cannot carry is refused with why."""
         ls = self.loot
         if self.stage[0] != "loot" or ls is None:
-            raise ValueError("the field is not on the table")
+            raise ValueError(i18n.t("report_session.field_is_not_on_table"))
         if zone not in ("pack", *dict(SLOTS)):
-            raise ValueError(f"no such slot: {zone}")
+            raise ValueError(i18n.t("report_session.no_such_slot", zone=zone))
         ls.selected, ls._sel_qty = [], {}
         ls.selected = [self._pick(b) for b in picks]
         if not ls.selected:
-            raise ValueError("nothing picked")
+            raise ValueError(i18n.t("report_session.nothing_picked"))
         if to == "field" and any(owner == "pool" for owner, _ in ls.selected):
-            raise ValueError("that is on the field already")
+            raise ValueError(i18n.t("report_session.that_is_on_field_already"))
         moving = [(ls._item_at(*p), ls._qty_at(*p), p[0]) for p in ls.selected]
         dst = "pool" if to == "field" else self._member(to)
         before = None if dst == "pool" else self._counts(dst)
@@ -191,12 +190,11 @@ class ReportSession(Session):
     def _why(self, dst, zone, moving):
         name = moving[0][0]
         if zone != "pack":
-            return {"uid": dst.uid, "item": name, "why": f"{dst.name} cannot take the {name} in that slot."}
+            return {"uid": dst.uid, "item": name, "why": i18n.t("report_session.cannot_take_in_that_slot", name=dst.name, item=name)}
         add = sum(items.item_weight(n) * q for n, q, owner in moving if owner == "pool")
-        what = f"the {name}'s {_kg(add)}" if len(moving) == 1 else f"these {_kg(add)}"
+        what = i18n.t("report_session.s", name=name, kg=_kg(add)) if len(moving) == 1 else i18n.t("report_session.these", kg=_kg(add))
         return {"uid": dst.uid, "item": name,
-                "why": f"{dst.name} already carries {_kg(dst.load)} of a {_kg(dst.carry_max)} limit; "
-                       f"{what} would put them at {_kg(dst.load + add)}."}
+                "why": i18n.t("report_session.already_carries_of_limit_would", name=dst.name, load=_kg(dst.load), limit=_kg(dst.carry_max), what=what, total=_kg(dst.load + add))}
 
     def _counts(self, u):
         out = {}
@@ -218,7 +216,7 @@ class ReportSession(Session):
     def auto(self):
         ls = self.loot
         if self.stage[0] != "loot" or ls is None:
-            raise ValueError("the field is not on the table")
+            raise ValueError(i18n.t("report_session.field_is_not_on_table"))
         before = {u.uid: self._counts(u) for u in ls.survivors}
         ls._auto_pick()
         for u in ls.survivors:
@@ -233,7 +231,7 @@ class ReportSession(Session):
         """The packs evened out; what came off the field stays marked on whoever holds it now."""
         ls = self.loot
         if self.stage[0] != "loot" or ls is None:
-            raise ValueError("the field is not on the table")
+            raise ValueError(i18n.t("report_session.field_is_not_on_table"))
         owed = {}
         for got in self.taken.values():
             for name, n in got.items():
@@ -252,9 +250,9 @@ class ReportSession(Session):
     def give(self, uid):
         """The purse lands whole on one fighter."""
         if self.stage[0] != "purse":
-            raise ValueError("there is no purse on the table")
+            raise ValueError(i18n.t("report_session.there_is_no_purse_on"))
         if self.paid_to is not None:
-            raise ValueError(f"{self.paid_to.name} already pockets the purse")
+            raise ValueError(i18n.t("report_session.already_pockets_purse", name=self.paid_to.name))
         u = self._member(uid)
         u.money += self.outcome.arena_reward
         self.paid_to = u
@@ -278,7 +276,7 @@ class ReportSession(Session):
         out = []
         for kind in dict.fromkeys(k for k, _ in self.stages):
             at = [n for n, (k, _) in enumerate(self.stages) if k == kind]
-            out.append({"id": kind, "label": self.labels[kind],
+            out.append({"id": kind, "label": i18n.t(self.labels[kind]),
                         "at": "done" if self.at_stage > at[-1] else "now" if self.at_stage >= at[0] else "later"})
         return out
 
@@ -289,29 +287,28 @@ class ReportSession(Session):
             at = "done" if n < self.at_stage else "now" if n == self.at_stage else "later"
             faces = []
             if kind == "memorial":
-                title, line = "The fallen", " and ".join(m.name for m in o.memorials)
+                title, line = i18n.t("report_session.fallen"), " and ".join(m.name for m in o.memorials)
                 line += ", seen" if at == "done" else ""
             elif kind == "report":
-                title, line = "The report", "this page" if at == "now" else "who stood, who fell"
+                title, line = i18n.t("report_session.report"), i18n.t("report_session.this_page") if at == "now" else i18n.t("report_session.who_stood_who_fell")
             elif kind == "level":
                 lu = o.level_ups[i]
                 track, level = lu.headline
                 picks = len(lu.unit.pending_picks)
-                title = f"{lu.unit.name} reaches {track.lower()} level {level}"
-                line = f"{len(lu.gains)} number{'s' if len(lu.gains) != 1 else ''} rise"
-                line += f", {picks} talent{'s' if picks != 1 else ''} to pick" if picks else ""
+                title = i18n.t("report_session.reaches_level", name=lu.unit.name, lower=track.lower(), level=level)
+                line = i18n.plural("report_session.number_rise", len(lu.gains))
+                line += i18n.plural("report_session.talent_to_pick", picks) if picks else ""
                 faces = [_portrait(lu.unit)]
             elif kind == "loot":
                 stacks = self.loot.pool
                 n_things = sum(q for _, q in stacks)
                 weight = sum(items.item_weight(nm) * q for nm, q in stacks)
-                title = "The field"
-                line = (f"{len(stacks)} stack{'s' if len(stacks) != 1 else ''}, {n_things} things, {_kg(weight)}: "
-                        "take what the packs can carry")
+                title = i18n.t("report_session.field")
+                line = (i18n.plural("report_session.stacks_take_what_packs", len(stacks), n_things=n_things, kg=_kg(weight)))
             elif kind == "purse":
-                title, line = "The purse", f"{fmt_money(o.arena_reward)} to one fighter"
+                title, line = i18n.t("report_session.purse"), i18n.t("report_session.to_one_fighter", fmt_money=fmt_money(o.arena_reward))
             else:
-                title, line = "The map", f"{self.group.display_name} goes back to the map"
+                title, line = i18n.t("report_session.map"), i18n.t("report_session.goes_back_to_map", display_name=self.group.display_name)
             rows.append({"id": kind, "title": title, "line": line, "at": at, "faces": faces})
         return rows
 
@@ -364,28 +361,28 @@ class ReportSession(Session):
             nxt = [into, span]
         total = sum(1 for k, _ in self.stages if k == "level")
         return {"uid": u.uid, "name": u.name, "race": u.race["name"],                 "portrait": _portrait(u), "track": track, "level": level,
-                "tag": "Level up" if total <= 1 else f"Level up · {i + 1} of {total}", "after": self._after(lu),
+                "tag": i18n.t("report_session.level_up") if total <= 1 else i18n.t("report_session.level_up_of", value=i + 1, total=total), "after": self._after(lu),
                 "gains": [[label, a, b] for label, a, b in lu.gains], "next": nxt,
                 "xp_gain": row.xp_gain if row else 0, "picks": len(u.pending_picks), "hp": [u.hp, u.hp_max]}
 
     def _after(self, lu):
-        return f"the fight on the {self.place}"
+        return i18n.t("report_session.fight_on", place=self.place)
 
     def _loot(self):
         ls = self.loot
         cats, seen = [], set()
-        for label, test in CATEGORIES:
+        for cat, test in CATEGORIES:
             rows = []
             for idx, (name, qty) in enumerate(ls.pool):
                 d = items.get(name)
-                if idx in seen or d is None and label != "Everything else" or d is not None and not test(d):
+                if idx in seen or d is None and cat != "other" or d is not None and not test(d):
                     continue
                 seen.add(idx)
                 rows.append({"loc": idx, "name": name, "qty": qty, "glyph": item_icon.glyph(name),
                              "kg": items.item_weight(name), "coin": items.COIN_VALUE.get(name, 0) * qty,
                              "tip": _tip(name)})
             if rows:
-                cats.append({"label": label, "rows": rows})
+                cats.append({"label": i18n.t(f"report_session.cat.{cat}"), "rows": rows})
         return {"cats": cats, "stacks": len(ls.pool), "things": sum(q for _, q in ls.pool),
                 "kg": round(sum(items.item_weight(n) * q for n, q in ls.pool), 2),
                 "packs": [self._column(u) for u in ls.survivors], "refused": self.refused,
@@ -425,14 +422,14 @@ class ReportSession(Session):
                 "note": o.arena_title_event}
 
 
-AFTER = {"WORK": "the work at", "MAGIC": "the study at", "COMBAT": "the days at"}
+AFTER = {k: f"report_session.after.{k}" for k in ("WORK", "MAGIC", "COMBAT")}
 
 
 class LevelUps(ReportSession):
     """The level-ups the clock brought (a work shift, a study), a page each as after a fight, then `then`
     (the map, or the work tab that ran the shift), as pygame's `_chain_level_ups` played them."""
 
-    labels: ClassVar[dict] = {"level": "Level up", "map": "Go on"}
+    labels: ClassVar[dict] = {"level": "report_session.label.level", "map": "report_session.go_on"}
 
     def __init__(self, map_session, level_ups, then):
         self.map = map_session
@@ -450,5 +447,5 @@ class LevelUps(ReportSession):
 
     def _after(self, lu):
         g = self.guild.group_of(lu.unit)
-        where = world.node(g.node).name if g is not None and g.node else "the guild"
-        return f"{AFTER[lu.headline[0]]} {where}"
+        where = world.node(g.node).name if g is not None and g.node else i18n.t("report_session.guild")
+        return i18n.t(AFTER[lu.headline[0]], where=where)

@@ -2,9 +2,21 @@
 
 from .. import actions, intel, natural_weapons
 from ..board import cells, grid_distance
-from .common import _avg_die, _axes, _hand_die, _runs_flag, _wants_alive
 from . import reckon
-from .reckon import _bleed_tick, _blow, _hex_worth, _hit_odds, _jet_avg, _jet_burns, _point_worth, _roots_worth, _shove_worth, _two_points, _weapon_action_worth
+from .common import _avg_die, _axes, _hand_die, _runs_flag, _wants_alive
+from .reckon import (
+    _bleed_tick,
+    _blow,
+    _hex_worth,
+    _hit_odds,
+    _jet_avg,
+    _jet_burns,
+    _point_worth,
+    _roots_worth,
+    _shove_worth,
+    _two_points,
+    _weapon_action_worth,
+)
 
 
 def _pick_attack(battle, unit, target):

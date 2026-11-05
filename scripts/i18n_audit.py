@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "gartok"
 SKIP_MODULES = {"i18n.py"}
-WORDS = re.compile(r"[A-Za-z]{2,}\s+[A-Za-z]{2,}")
+WORDS = re.compile(r"[A-Za-z]{2,}[:,.]?\s+[A-Za-z]{2,}|[A-Za-z]{2,}[:,.]?\s+\{|\}[:,.]?\s+[A-Za-z]{2,}")
 
 
 def _docstrings(tree):

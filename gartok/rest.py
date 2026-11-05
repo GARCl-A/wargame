@@ -17,6 +17,7 @@ import copy
 import math
 from dataclasses import dataclass
 
+from . import i18n
 from .clock import SECONDS_PER_DAY, SECONDS_PER_HOUR
 from .guild_upkeep import HOURS_PER_HEAL, nonlethal_clear_hours, rest_heal
 
@@ -51,7 +52,7 @@ def midnights(guild, hours):
 
 def format_hours(hours):
     if hours < 1:
-        return f"{round(hours * 60)} min"
+        return i18n.t("rest.min", round=round(hours * 60))
     days, rest = divmod(round(hours), 24)
     return " ".join(([f"{days} d"] if days else []) + ([f"{rest} h"] if rest else []))
 
@@ -105,12 +106,12 @@ def until_full(guild, group):
     guild._eat_now(camp.members, camp.larder)
     starved = next((u for u in camp.members if u.hunger_level), None)
     if starved is not None:
-        return RestPlan(reason=f"{starved.name} is hungry and has nothing to eat")
+        return RestPlan(reason=i18n.t("rest.is_hungry_and_has_nothing", name=starved.name))
 
     triage = group.has_talent("triage")
     heals = {id(u): _heal_times(u, triage) for u in camp.members if u.hp < u.hp_max}
     if not heals:
-        return RestPlan(reason="nobody is hurt once they have eaten")
+        return RestPlan(reason=i18n.t("rest.nobody_is_hurt_once_they"))
     full_at = max(times[-1] for times in heals.values())
     first = hours_to_midnight(guild)
     wanted = midnights(guild, full_at)
@@ -142,18 +143,18 @@ def _last_day(group):
     spoiling = sorted({e.name for e in food if not e.is_rotten() and e.defn.lifespan is not None
                        and e.days_old + 2 > e.defn.lifespan})
     if spoiling:
-        return f"the group is down to its last day of fresh food ({', '.join(spoiling)} spoils within two days)"
+        return i18n.t("rest.group_is_down_to_its", join=', '.join(spoiling))
     if any(e.name.startswith("Rotten Food") for e in food):
-        return "the group is down to its last day of fresh food (the rest is Rotten Food)"
-    return "the group is already down to its last day of rations"
+        return i18n.t("rest.group_is_down_to_its_2")
+    return i18n.t("rest.group_is_already_down_to")
 
 
 def _blocked(group):
     if not any(u.hp < u.hp_max for u in group.members):
-        return "nobody is hurt"
+        return i18n.t("rest.nobody_is_hurt")
     poisoned = next((u for u in group.members if u.poisons), None)
     if poisoned is not None:
-        return f"{poisoned.name} is poisoned"
+        return i18n.t("rest.is_poisoned", name=poisoned.name)
     return None
 
 

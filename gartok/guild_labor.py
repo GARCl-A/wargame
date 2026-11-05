@@ -7,7 +7,18 @@ since it advances the clock itself.
 import random
 from collections import Counter
 
-from . import economy, encounters, factions, gather, items, orders, recorder, vocations, world
+from . import (
+    economy,
+    encounters,
+    factions,
+    gather,
+    i18n,
+    items,
+    orders,
+    recorder,
+    vocations,
+    world,
+)
 from .constants import fmt_money
 from .unit_loadout import pooled_unlocked
 
@@ -56,11 +67,11 @@ class LaborMixin:
             paid.append(self._pay_worker(u, pay, hours, level, events))
         if earners:
             names = ", ".join(u.name for u in earners)
-            wage = (f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1
-                    else f"+{fmt_money(sum(paid))} total")
-            note = f"{world.node(node_id).name}: {names} worked {hours} h ({wage})."
+            wage = (i18n.t("guild_labor.each", fmt_money=fmt_money(paid[0])) if len(set(paid)) == 1
+                    else i18n.t("guild_labor.total", fmt_money=fmt_money(sum(paid))))
+            note = i18n.t("guild_labor.worked_h", name=world.node(node_id).name, names=names, hours=hours, wage=wage)
             if clock_hours < hours:
-                note += f"  Brisk Hands: crew done in {clock_hours:g} h."
+                note += i18n.t("guild_labor.brisk_hands_crew_done_in", clock_hours=clock_hours)
             events.append(note)
         return events
 
@@ -97,7 +108,7 @@ class LaborMixin:
                           result="fight" if attacks else "dismissed")
             if attacks:
                 name = world.node(node_id).name
-                return ([f"{name}: a pack finds {group.display_name} at work."],
+                return ([i18n.t("guild_labor.pack_finds_at_work", name=name, display_name=group.display_name)],
                         orders.Order("gather_ambush", pack=tuple(pack), hours=order.hours, job=order.job))
         return self.bank_haul(group.members, order.hours, node_id), None
 
@@ -138,10 +149,9 @@ class LaborMixin:
             events += u.bank_work(hours, gather.LEVEL[node_id])
             found.append(f"{u.name} {gather.describe(haul)}")
         if guards:
-            events.insert(0, f"{', '.join(guards)} had no {gather.tool(node_id)}: stood guard, "
-                             f"no haul and no work XP.")
+            events.insert(0, i18n.t("guild_labor.had_no_stood_guard_no", join=', '.join(guards), tool=gather.tool(node_id)))
         if found:
-            events.insert(0, f"{world.node(node_id).name}: gathered {hours} h ({'; '.join(found)}).")
+            events.insert(0, i18n.t("guild_labor.gathered_h", name=world.node(node_id).name, hours=hours, join='; '.join(found)))
         return events
 
     def supply_leg(self, group, src, path, rng=random):
@@ -177,8 +187,8 @@ class LaborMixin:
             paid.append(gain)
         if earners:
             names = ", ".join(u.name for u in earners)
-            wage = f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1 else f"+{fmt_money(sum(paid))} total"
-            events.insert(0, f"Ledger Hold: {names} completed the frontier supply run ({wage}).")
+            wage = i18n.t("guild_labor.each", fmt_money=fmt_money(paid[0])) if len(set(paid)) == 1 else i18n.t("guild_labor.total", fmt_money=fmt_money(sum(paid)))
+            events.insert(0, i18n.t("guild_labor.ledger_hold_completed_frontier_supply", names=names, wage=wage))
         self.supply_runs_completed += 1
         for d in factions.settle(self, factions.Event("supply_run")):
             events.append(factions.deed_notice(d))
@@ -197,7 +207,7 @@ class LaborMixin:
         stint): the clock runs through `tick`, then `perform_tips` pays the crew."""
         crew = [u for u in performers if u in self.roster and economy.can_perform(u)]
         if not crew:
-            return ["Nobody here has an instrument to play."], []
+            return [i18n.t("guild_labor.nobody_here_has_instrument_to")], []
         events, casualties = self.tick(int(hours) * self.work_speedup(crew), busy=crew)
         return events + self.perform_tips(crew, hours), casualties
 
@@ -214,7 +224,7 @@ class LaborMixin:
             shows.append((u, self._pay_worker(u, pay, hours, economy.PERFORM_LEVEL, xp_lines)))
         if shows:
             tips = ", ".join(f"{u.name} {fmt_money(g)}" for u, g in shows)
-            events.append(f"Tavern stage: played {hours} h ({tips}).")
+            events.append(i18n.t("guild_labor.tavern_stage_played_h", hours=hours, tips=tips))
             events += xp_lines
         return events
 
@@ -236,14 +246,14 @@ class LaborMixin:
         or None when they can. Takes nothing."""
         data = items.get_recipe(recipe)
         if data is None:
-            return f"Unknown recipe {recipe}."
+            return i18n.t("guild_labor.unknown_recipe", recipe=recipe)
         lacking = items.missing_tools(data, pool)
         target = data.target
         if lacking:
-            return f"{unit.name} can't craft {target} -- needs a {', '.join(lacking)}."
+            return i18n.t("guild_labor.can_t_craft_needs", name=unit.name, target=target, join=', '.join(lacking))
         need = Counter(data.materials)
         if unit.crafting_target != recipe and any(pooled_unlocked(pool, m) < q for m, q in need.items()):
-            return f"{unit.name} can't craft {target} -- missing materials."
+            return i18n.t("guild_labor.can_t_craft_missing_materials", name=unit.name, target=target)
         return None
 
     def crafting_shift(self, unit, recipe, hours, pool=None):
@@ -290,11 +300,10 @@ class LaborMixin:
 
         if made:
             total = made * recipe_data.yield_qty
-            more = f" -- out of materials after {worked}h" if worked < hours and not unit.crafting_target else ""
-            events.append(f"{unit.name} finished crafting: {recipe_data.target}"
-                          f"{f' x{total}' if total > 1 else ''}!{more}")
+            more = i18n.t("guild_labor.out_of_materials_after_h", worked=worked) if worked < hours and not unit.crafting_target else ""
+            events.append(i18n.t("guild_labor.finished_crafting", name=unit.name, target=recipe_data.target, value=f' x{total}' if total > 1 else '', more=more))
         else:
-            events.append(f"{unit.name} worked on {recipe_data.target} for {worked}h (+{progress_total} progress).")
+            events.append(i18n.t("guild_labor.worked_on_for_h_progress", name=unit.name, target=recipe_data.target, worked=worked, progress_total=progress_total))
         return events
 
     def _start_batch(self, unit, recipe, progress=0, pool=None):

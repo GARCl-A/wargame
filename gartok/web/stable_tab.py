@@ -6,7 +6,7 @@ The rules are `stables`' (`Stables`, `WagonYard`), which pygame's tabs read too:
 the tack and the resale.
 """
 
-from .. import animals, art_files, data, items, wagon
+from .. import animals, art_files, data, i18n, items, wagon
 from ..stables import Stables, WagonYard, resale
 from .session import asset_url
 
@@ -25,20 +25,20 @@ class StableTab(Stables):
     def _animal(self, uid):
         a = next((a for a in self.group.herd if a.uid == uid), None)
         if a is None:
-            raise ValueError("no such animal in the herd")
+            raise ValueError(i18n.t("stable_tab.no_such_animal_in_herd"))
         return a
 
     def buy(self, species):
         if species not in data.LIVESTOCK:
-            raise ValueError(f"no {species!r} for sale")
+            raise ValueError(i18n.t("stable_tab.no_for_sale", species=repr(species)))
         self._buy_animal(species)
 
     def fit(self, uid, tack):
         if tack not in (animals.HARNESS, animals.PACK_SADDLE):
-            raise ValueError(f"no tack {tack!r}")
+            raise ValueError(i18n.t("stable_tab.no_tack", tack=repr(tack)))
         a = self._animal(uid)
         if a.tack:
-            raise ValueError(f"the {a.species} already wears a {a.tack}")
+            raise ValueError(i18n.t("stable_tab.already_wears", species=a.species, tack=a.tack))
         self._fit(a, tack)
 
     def sell(self, uid):
@@ -48,16 +48,16 @@ class StableTab(Stables):
         a = animals.Animal(species)
         fits = self.group.can_take(a)
         return {"name": species, "portrait": _face(species), "price": a.price,
-                "sub": f"carries {a.back_load:g} kg · draws {a.draw:g} kg · speed {a.speed:g} m",
-                "can": fits and self.wealth >= a.price, "why": None if fits else "the herd is full"}
+                "sub": i18n.t("stable_tab.carries_kg_draws_kg_speed", back_load=a.back_load, draw=a.draw, speed=a.speed),
+                "can": fits and self.wealth >= a.price, "why": None if fits else i18n.t("stable_tab.herd_is_full")}
 
     def _kept(self, a):
         pulled = self.group.pulling(a)
-        job = (f"pulls the {pulled.kind.lower()}" if pulled else "unhitched" if a.role == "draft"
-               else "carries cargo" if a.role == "pack" else "no tack")
+        job = (i18n.t("stable_tab.pulls", lower=pulled.kind.lower()) if pulled else i18n.t("animals.unhitched") if a.role == "draft"
+               else i18n.t("stable_tab.carries_cargo") if a.role == "pack" else i18n.t("stable_tab.no_tack_2"))
         price = {t: items.get(t).price for t in (animals.HARNESS, animals.PACK_SADDLE)}
         return {"uid": a.uid, "name": a.species, "portrait": _face(a.species, a.uid), "tack": a.tack, "job": job,
-                "sub": f"speed {a.speed:g} m · HP {a.hp} / {a.hp_max}" + (f" · {a.stash.load:g} kg aboard" if a.stash.items else ""),
+                "sub": i18n.t("stable_tab.speed_m_hp", speed=a.speed, hp=a.hp, hp_max=a.hp_max) + (i18n.t("stable_tab.kg_aboard", load=a.stash.load) if a.stash.items else ""),
                 "unfed": a.unfed_days, "loaded": bool(a.stash.items), "resale": resale(a.price),
                 "fits": [] if a.tack else [{"tack": t, "price": p, "can": self.wealth >= p} for t, p in price.items()]}
 
@@ -74,26 +74,25 @@ class WagonTab(StableTab, WagonYard):
 
     def buy(self, kind):
         if kind not in wagon.VEHICLES:
-            raise ValueError(f"no {kind!r} for sale")
+            raise ValueError(i18n.t("stable_tab.no_for_sale_2", kind=repr(kind)))
         self._buy_wagon(kind)
 
     def sell(self, uid):
         w = next((w for w in self.group.wagons if w.uid == uid), None)
         if w is None:
-            raise ValueError("no such wagon")
+            raise ValueError(i18n.t("stable_tab.no_such_wagon"))
         self._sell_wagon(w)
 
     def _offer(self, v):
         return {"name": v.name, "glyph": WAGON_GLYPH, "price": v.price, "can": self.wealth >= v.price,
-                "sub": f"holds {v.capacity} kg · {v.slots} animal{'s' if v.slots != 1 else ''} to pull"}
+                "sub": i18n.plural("stable_tab.holds", v.slots, capacity=v.capacity)}
 
     def _kept(self, w):
-        riders = f" · {w.passenger_weight:g} kg of riders" if w.passengers else ""
+        riders = i18n.t("stable_tab.kg_of_riders", passenger_weight=w.passenger_weight) if w.passengers else ""
         return {"uid": w.uid, "name": self._wagon_label(w), "glyph": WAGON_GLYPH,
                 "pulled": [a.species for a in w.draft], "broken": w.broken,
                 "cargo": round(w.stash.load, 2), "capacity": w.capacity, "budget": w.budget,
-                "sub": f"HP {w.hp} / {w.hp_max} · speed {f'{w.speed:g} m' if w.speed else '--'} · "
-                       f"{w.rations} meals aboard{riders}",
+                "sub": i18n.t("stable_tab.hp_speed_meals_aboard", hp=w.hp, hp_max=w.hp_max, value=f'{w.speed:g} m' if w.speed else '--', rations=w.rations, riders=riders),
                 "loaded": bool(w.stash.items), "resale": resale(w.price)}
 
     def state(self):

@@ -1,6 +1,6 @@
 """Adapter: what `intel.known_fields` says of a foe, as the plain dict `ui/foe_panel` draws."""
 
-from . import intel, wiki_terms
+from . import i18n, intel, wiki_terms
 
 
 def _row(label, value, tip=None):
@@ -47,8 +47,8 @@ def foe_card(known):
             shown, tip = (None, None) if value is None else _format(name, value)
             rows.append(_row(intel.LABELS[name], shown, tip))
         bands.append({"label": label, "open": any(r["value"] is not None for r in rows), "rows": rows})
-    read = ("not read yet" if known.margin is None
-            else f"INT read {known.margin:+} on DC {known.dc}")
+    read = (i18n.t("foe_card.not_read_yet") if known.margin is None
+            else i18n.t("foe_card.int_read_on_dc", margin=known.margin, dc=known.dc))
     return {"name": v["name"], "race": v["race"], "size": v["size"], "alignment": v["alignment"],
             "conditions": v["conditions"], "steps": known.steps, "steps_max": intel.STEPS,
             "weapon": {"name": v["weapon"], "action": v["weapon_action"],

@@ -32,7 +32,7 @@ that same stranger again until the pool turns over (`taverna_blocked`).
 import random
 from dataclasses import dataclass, field
 
-from . import data
+from . import data, i18n
 from .unit import Unit
 
 FREE_SLOTS = 2                 # a guild this small recruits with no size penalty
@@ -113,17 +113,17 @@ def convince(recruiter, candidate, roster_size, rng=random, day=1, extra_mods=No
     """
     lang = shared_languages(recruiter, candidate)
     if not lang:
-        return Pitch(False, reason="no shared language")
+        return Pitch(False, reason=i18n.t("recruit.no_shared_language"))
 
     mods = list(extra_mods or [])
     dist = data.alignment_distance(recruiter.alignment, candidate.alignment)
     red = int(recruiter.talent_bonus("align_distance_reduction"))
     eff_dist = max(0, dist - red)
     if eff_dist:
-        mods.append((-ALIGNMENT_PENALTY * eff_dist, f"opposite alignment ({eff_dist})"))
+        mods.append((-ALIGNMENT_PENALTY * eff_dist, i18n.t("recruit.opposite_alignment", eff_dist=eff_dist)))
     pen = size_penalty(roster_size)
     if pen:
-        mods.append((-pen, f"guild of {roster_size}"))
+        mods.append((-pen, i18n.t("recruit.guild_of", roster_size=roster_size)))
     knack = recruiter.talent_bonus("recruit_cha")     # Fixer talent
     if knack:
         mods.append((knack, "Fixer"))
@@ -135,12 +135,12 @@ def convince(recruiter, candidate, roster_size, rng=random, day=1, extra_mods=No
         recruiter.use_luck(day)
         rr2 = rng.randint(1, 20)
         r_total2 = rr2 + recruiter.mod_charisma + sum(v for v, _ in mods)
-        mods.append((0, "Halfling Luck (reroll)"))
+        mods.append((0, i18n.t("recruit.halfling_luck_reroll")))
         rr, r_total = rr2, r_total2
 
     ok = r_total > c_total                       # a tie goes to the stranger: they stay put
     return Pitch(ok, rr, r_total, cr, c_total, mods, lang[0],
-                 reason="" if ok else "not convinced")
+                 reason="" if ok else i18n.t("recruit.not_convinced"))
 
 
 # --------------------------------------------------------------------------- #
@@ -226,7 +226,7 @@ def overflow_warning(guild, recruiter):
     overextended group."""
     if guild.can_absorb(guild.group_of(recruiter)):
         return None
-    return "Their group is full and the guild has no free group slot: someone may walk out."
+    return i18n.t("recruit.their_group_is_full_and")
 
 
 def pitch_block_reason(guild, party, candidate, is_barred=barred):
@@ -239,24 +239,24 @@ def pitch_block_reason(guild, party, candidate, is_barred=barred):
     if eligible:
         return None
     if not party:
-        return "party is empty"
+        return i18n.t("recruit.party_is_empty")
     if not any(slots_free(guild, m) > 0 for m in party):
-        return "no recruitment slots available"
+        return i18n.t("recruit.no_recruitment_slots_available")
 
     speakers = [m for m in party if can_pitch(m, candidate)]
     if not speakers:
-        return "no one in the party can speak with them"
+        return i18n.t("recruit.no_one_in_party_can")
 
     barred_speakers = [m for m in speakers if is_barred(guild, candidate, m)]
     unbarred_speakers = [m for m in speakers if not is_barred(guild, candidate, m)]
 
     if not unbarred_speakers:
         if len(speakers) == len(party):
-            return "everyone already tried this week"
-        return "all speakers already tried this week"
+            return i18n.t("recruit.everyone_already_tried_this_week")
+        return i18n.t("recruit.all_speakers_already_tried_this")
 
     if barred_speakers and unbarred_speakers:
-        return "speakers already tried or have no room"
+        return i18n.t("recruit.speakers_already_tried_or_have")
 
-    return "speakers have no sponsor slots free"
+    return i18n.t("recruit.speakers_have_no_sponsor_slots")
 

@@ -6,7 +6,7 @@ The player has 3 Commission Tokens across the whole draft to call the archetypes
 A replaced card that was picked leaves the squad. The name and banner are cosmetic (`Guild.name`,
 `banner_color`, `banner_icon`); the leader is `Guild.leader`. `web/draft_session.py` drives it."""
 
-from . import art_files, recruit, vocations
+from . import art_files, i18n, recruit, vocations
 from .archetypes import generate_candidate
 from .guild import BANNER_COLORS
 from .unit import Unit
@@ -19,9 +19,9 @@ MAX_GUILD_NAME = 24
 
 def leader_recruits(u):
     """How many people `u` could sponsor as the guild's leader, and why."""
-    parts = [f"base {recruit.BASE_RECRUIT_CAPACITY}", f"CHA {u.mod_charisma:+d}"]
+    parts = [i18n.t("draft_rules.base", base_recruit_capacity=recruit.BASE_RECRUIT_CAPACITY), i18n.t("draft_rules.cha", mod_charisma=u.mod_charisma)]
     if u.racial_level:
-        parts.append(f"level {u.racial_level:+d}")
+        parts.append(i18n.t("draft_rules.level", racial_level=u.racial_level))
     return recruit.leader_capacity(u), " · ".join(parts)
 
 

@@ -3,7 +3,7 @@ screen that shows a person opens (`Session.sheet`, `Sheet` in `shell.js`). A uni
 draft's pool) has no band, roles or record of who brought them in.
 """
 
-from .. import data, item_icon, talents, wiki_terms
+from .. import data, i18n, item_icon, talents, wiki_terms
 from ..animals import Animal
 from ..combatant import Combatant
 from ..constants import fmt_money
@@ -20,13 +20,13 @@ def _breakdown(title, terms, total):
 
 def _hp_tip(u):
     b = u.hp_breakdown()
-    lines = ["Hit points", f"{b['hit_dice']} hit dice of d{b['hd']}: {b['dice_sum']}", f"CON {b['con_total']:+}"]
+    lines = [i18n.t("sheet_view.hit_points"), i18n.t("sheet_view.hit_dice_of_d", dice=b['hit_dice'], die=b['hd'], total=b['dice_sum']), i18n.t("sheet_view.con", b=b['con_total'])]
     if b["talent_total"]:
-        lines.append(f"Talents {b['talent_total']:+}")
+        lines.append(i18n.t("sheet_view.talents", b=b['talent_total']))
     if b["ability_bonus"]:
         lines.append(f"{b['ability_name']} {b['ability_bonus']:+}")
     if b["starving"]:
-        lines.append("Starving: held at 1")
+        lines.append(i18n.t("sheet_view.starving_held_at"))
     return "\n".join([*lines, f"= {b['final_max']}"])
 
 
@@ -37,10 +37,10 @@ def _talents(u):
 
 def _record(s, u):
     who = s._recruited_by(u)
-    out = [f"Recruited by {who}." if who else "A founding member of the guild.",
+    out = [i18n.t("sheet_view.recruited_by", who=who) if who else i18n.t("sheet_view.founding_member_of_guild"),
            s._sponsor_line(u).replace(" -- ", ": ") + "."]
     if getattr(u, "arena_title", False):
-        out.append("Holds the title Champion of the Pit.")
+        out.append(i18n.t("sheet_view.holds_title_champion_of_pit"))
     if getattr(u, "bio", ""):
         out.append(u.bio)
     return out
@@ -60,22 +60,22 @@ def member_sheet(u, guild=None, task=None):
     stamps = []
     if s is not None:
         if u is guild.leader:
-            stamps.append({"text": "Guild leader", "tone": "leader"})
+            stamps.append({"text": i18n.t("sheet_view.guild_leader"), "tone": "leader"})
         elif s._is_group_leader(u):
-            stamps.append({"text": "Leads the band", "tone": "leader"})
+            stamps.append({"text": i18n.t("sheet_view.leads_band"), "tone": "leader"})
     if getattr(u, "arena_title", False):
-        stamps.append({"text": "Champion of the Pit", "tone": ""})
+        stamps.append({"text": i18n.t("sheet_view.champion_of_pit"), "tone": ""})
     return {
         "uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race["name"],
         "age": u.age, "align": u.alignment.capitalize(),
         "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
-        "where": node_label(grp.node) if grp else "Not yet sworn in" if guild is None else "Camp",
-        "task": task or (GuildSheet._group_task(grp).lower() if grp else "no orders"),
+        "where": node_label(grp.node) if grp else i18n.t("sheet_view.not_yet_sworn_in") if guild is None else "Camp",
+        "task": task or (GuildSheet._group_task(grp).lower() if grp else i18n.t("sheet_view.no_orders")),
         "stamps": stamps, "status": ch["status"], "hungry": u.hunger_level > 0,
         "attrs": [{"k": k, "v": v, "mod": mod, "low": low} for k, v, mod, low in ch["attrs"]],
         "hp": list(ch["hp"]), "hp_tip": _hp_tip(u),
-        "stats": [{"k": "AC", "v": ch["ac"], "tip": _breakdown("Armour class", u.ac_breakdown(), c.ac)},
-                  {"k": "MD", "v": ch["md"], "tip": _breakdown("Mental defense", u.md_breakdown(), c.mental_defense)},
+        "stats": [{"k": "AC", "v": ch["ac"], "tip": _breakdown(i18n.t("sheet_view.armour_class"), u.ac_breakdown(), c.ac)},
+                  {"k": "MD", "v": ch["md"], "tip": _breakdown(i18n.t("sheet_view.mental_defense"), u.md_breakdown(), c.mental_defense)},
                   {"k": "SPD", "v": ch["spd"], "tip": _breakdown("Speed (squares)", u.speed_breakdown(), c.speed)},
                   {"k": "INIT", "v": ch["init"], "tip": _breakdown("Initiative", u.initiative_breakdown(), ch["init"])}],
         "weapon": {"name": weapon["name"], "tags": weapon["tags"], "crit": w["crit"], "action": w["action"],
@@ -85,11 +85,11 @@ def member_sheet(u, guild=None, task=None):
         "kit": [{"k": "Hands", "v": gear["hands"], "note": ""},
                 {"k": "Body", "v": gear["armor"], "note": gear["armor_note"]},
                 {"k": "Purse", "v": fmt_money(gear["coins"]), "note": ""},
-                {"k": "Rations", "v": "Feeds on light" if autotroph else str(rations or "None"),
-                 "note": "" if autotroph else "days of food" if rations else "nothing to eat in the pack",
+                {"k": "Rations", "v": i18n.t("sheet_view.feeds_on_light") if autotroph else str(rations or "None"),
+                 "note": "" if autotroph else i18n.t("sheet_view.days_of_food") if rations else i18n.t("sheet_view.nothing_to_eat_in_pack"),
                  "bad": not autotroph and not rations},
-                {"k": "Load", "v": f"{load[0]:.1f} kg",
-                 "note": f"of {load[1]:g} at a normal pace, {load[2]:g} at most", "bad": load[0] > load[1]}],
+                {"k": "Load", "v": i18n.t("sheet_view.kg", load=load[0]),
+                 "note": i18n.t("sheet_view.of_at_normal_pace_at", load=load[1], most=load[2]), "bad": load[0] > load[1]}],
         "ability": list(ch["ability"]), "langs": ch["langs"], "racial": u.racial_level,
         "tracks": [{k: t[k] for k in ("label", "value", "frac", "text", "tip")} for t in GuildSheet._tracks(u)],
         "talents": _talents(u),
@@ -103,7 +103,7 @@ def animal_sheet(a, guild):
     pulled = grp.pulling(a) if grp else None
     return {
         "uid": a.uid, "beast": True, "name": a.species, "portrait": _face(a.species, a.uid),
-        "sub": f"{a.size} animal", "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
+        "sub": i18n.t("sheet_view.animal", size=a.size), "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
         "where": node_label(grp.node) if grp else "Camp",
         "hp": [max(0, a.hp), a.hp_max],
         "attrs": [{"k": k, "v": a.attributes[n], "mod": data.mod(a.attributes[n]), "low": False}

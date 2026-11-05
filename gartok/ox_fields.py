@@ -14,7 +14,7 @@ The fight is won the moment Aurochs falls, whatever is still standing.
 import math
 import random
 
-from . import data, encounters
+from . import data, encounters, i18n
 from .board import Board, grid_distance
 from .scenario import Scenario
 
@@ -88,7 +88,7 @@ def direction_name(src, dst):
     """The compass word for the way from `src` to `dst`."""
     dx, dy = dst[0] - src[0], dst[1] - src[1]
     if not (dx or dy):
-        return "right here"
+        return i18n.t("ox_fields.right_here")
     ang = math.degrees(math.atan2(dy, dx)) % 360
     return _COMPASS[int((ang + 22.5) // 45) % 8]
 
@@ -139,7 +139,7 @@ class OxFieldsScenario(Scenario):
         if not any(battle.can_see_unit(p, beasts[0]) for p in party):
             mid = (sum(p.pos[0] for p in party) // len(party),
                    sum(p.pos[1] for p in party) // len(party))
-            battle.log(f"Hooves drum somewhere to the {direction_name(mid, beasts[0].pos)}.")
+            battle.log(i18n.t("ox_fields.hooves_drum_somewhere_to", direction_name=direction_name(mid, beasts[0].pos)))
         if battle.round_no % CALL_EVERY or self.calls >= CALL_MAX:
             return
         level = max(1, min(CALL_LEVEL_MAX, round(sum(u.combat_level for u in party) / len(party)) - 2))
@@ -149,6 +149,5 @@ class OxFieldsScenario(Scenario):
         placed = battle.reinforce(calf, far)
         if placed is not None:
             self.calls += 1
-            battle.log("Aurochs bellows -- an answering call rolls across the fields, "
-                       "and an ox charges in!")
+            battle.log(i18n.t("ox_fields.aurochs_bellows_answering_call_rolls"))
 

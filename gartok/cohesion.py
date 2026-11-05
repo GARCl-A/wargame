@@ -14,7 +14,7 @@ the same way, with one 7-day notice per group: when it lapses and the herd is
 still too big, one animal strays off and the notice restarts.
 """
 
-from . import data, items, vocations
+from . import data, i18n, items, vocations
 
 NOTICE_DAYS = 7
 
@@ -52,10 +52,10 @@ def depart(guild, unit):
         leader._derive_combat()
         if left_items and group in guild.groups:
             group.distribute_load(share_coins=False)
-    took = {"Lawful": "only what they wear and wield",
-            "Neutral": "their gear and pack, but no coin",
-            "Chaotic": "everything they could carry"}[law]
-    return f"{unit.name} leaves the guild, taking {took}."
+    took = {"Lawful": i18n.t("cohesion.only_what_they_wear_and"),
+            "Neutral": i18n.t("cohesion.their_gear_and_pack_but"),
+            "Chaotic": i18n.t("cohesion.everything_they_could_carry")}[law]
+    return i18n.t("cohesion.leaves_guild_taking", name=unit.name, took=took)
 
 
 def _resolve_notices(guild):
@@ -68,14 +68,14 @@ def _resolve_notices(guild):
                 or unit is group.leader or unit is guild.leader):
             guild.leaving.pop(uid)
             if unit is not None:
-                events.append(f"{unit.name} settles back in and drops the notice.")
+                events.append(i18n.t("cohesion.settles_back_in_and_drops", name=unit.name))
             continue
         if group.locked:
             continue
         if guild.free_slots:
             guild.leaving.pop(uid)
             guild.split_group(group, [unit])
-            events.append(f"{unit.name} finds room of their own and leaves {group.display_name}.")
+            events.append(i18n.t("cohesion.finds_room_of_their_own", name=unit.name, display_name=group.display_name))
         elif guild.clock.day >= due:
             guild.leaving.pop(uid)
             events.append(depart(guild, unit))
@@ -99,12 +99,10 @@ def _roll_groups(guild, d20):
             continue
         if guild.free_slots:
             guild.split_group(group, [unit])
-            events.append(f"{unit.name} can't stand the crowd and breaks away from "
-                          f"{group.display_name}.")
+            events.append(i18n.t("cohesion.can_t_stand_crowd_and", name=unit.name, display_name=group.display_name))
         else:
             guild.leaving[unit.uid] = guild.clock.day + NOTICE_DAYS
-            events.append(f"{unit.name} can't stand the crowd and gives notice: "
-                          f"{NOTICE_DAYS} days to make room or they leave the guild.")
+            events.append(i18n.t("cohesion.can_t_stand_crowd_and_2", name=unit.name, notice_days=NOTICE_DAYS))
     return events
 
 
@@ -114,7 +112,7 @@ def stray(group):
     the latest taken, who slips its bonds."""
     if not group.herd:
         captive = group.captives.pop()
-        return f"{captive.name} slips its bonds: {group.display_name} cannot watch that many."
+        return i18n.t("cohesion.slips_its_bonds_cannot_watch", name=captive.name, display_name=group.display_name)
     animal = min(reversed(group.herd), key=lambda a: a.tack is not None)
     group.herd.remove(animal)
     keeper = group.leader or group.members[0]
@@ -122,7 +120,7 @@ def stray(group):
         keeper.give_to_pack(animal.take_tack())
     for name, qty in animal.stash.items:
         keeper.give_to_pack(name, qty)
-    return f"A {animal.species} strays off: {group.display_name} cannot control that big a herd."
+    return i18n.t("cohesion.strays_off_cannot_control_that", species=animal.species, display_name=group.display_name)
 
 
 def herd_notices(guild):
@@ -134,8 +132,7 @@ def herd_notices(guild):
             group.herd_notice = None
         elif group.herd_notice is None:
             group.herd_notice = guild.clock.day + NOTICE_DAYS
-            events.append(f"{group.display_name} has more animals than it can control: "
-                          f"{NOTICE_DAYS} days before one strays.")
+            events.append(i18n.t("cohesion.has_more_animals_than_it", display_name=group.display_name, notice_days=NOTICE_DAYS))
     return events
 
 

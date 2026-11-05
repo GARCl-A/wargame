@@ -3,7 +3,7 @@ click leaves them outside; one guard keeps it safe (`wagon_watch`). GO IN hands 
 
 from typing import ClassVar
 
-from .. import wagon_watch, world
+from .. import i18n, wagon_watch, world
 from ..map_view import node_icon
 from .map_session import _portrait, _when
 from .session import Session
@@ -15,7 +15,7 @@ def watch_state(group, goes):
     guards = [u for u in group.members if u not in goes]
     return {"members": [{"uid": u.uid, "name": u.name, "portrait": _portrait(u),
                          "what": u.race['name'],
-                         "level": f"level {u.combat_level}", "goes": u in goes} for u in group.members],
+                         "level": i18n.t("watch_session.level", combat_level=u.combat_level), "goes": u in goes} for u in group.members],
             "going": len(goes), "outside": len(guards), "guarded": bool(guards),
             "risk": wagon_watch.risk(group, node), "place_risk": node.wagon_risk,
             "flight": wagon_watch.flight_chance(group)}
@@ -25,11 +25,11 @@ def toggle(group, goes, uid):
     """`goes` with the member `uid` moved in or out; the last one in cannot stay out."""
     u = next((m for m in group.members if m.uid == uid), None)
     if u is None:
-        raise ValueError("no such member in the band")
+        raise ValueError(i18n.t("watch_session.no_such_member_in_band"))
     if u not in goes:
         return [m for m in group.members if m in goes or m is u]
     if len(goes) == 1:
-        raise ValueError("someone has to go in")
+        raise ValueError(i18n.t("watch_session.someone_has_to_go_in"))
     return [m for m in goes if m is not u]
 
 

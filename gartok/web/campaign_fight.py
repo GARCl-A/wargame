@@ -15,6 +15,7 @@ from .. import (
     factions,
     fight_nature,
     forced,
+    i18n,
     lair,
     missions,
     necromancer,
@@ -67,6 +68,7 @@ def claim_fight(map_session, group):
     the claim moves a stage."""
     guild, node = map_session.guild, world.node(group.node)
     _verb, title, size, level = FIGHTS[guild.wilds_claim_stage]
+    title = i18n.t(title)
     stage = AFTER_CLAIM_FIGHT[guild.wilds_claim_stage]
     battle = Battle(list(group.members), [encounters.build_enemy(level) for _ in range(size)],
                     scenario=node.scenario(), daylight=guild.clock.is_daylight, lethal=True, arena=False,
@@ -74,9 +76,9 @@ def claim_fight(map_session, group):
 
     def settle(outcome):
         if not outcome.won:
-            return ["The attempt fails -- the claim's stage is unchanged."]
+            return [i18n.t("campaign.claim.fail")]
         {"CLEARED": guild.wilds_claim_mark_cleared, "SWEPT": guild.wilds_claim_mark_swept}[stage]()
-        return [f"The Wilds claim advances -- now {stage.title()}."]
+        return [i18n.t("campaign.claim.advance", stage=i18n.name("claim_stage", stage))]
 
     return _enter(map_session, group, battle, node, node.id, title, settle, nature=CLAIM_NATURE)
 
@@ -86,9 +88,10 @@ def delve(map_session, group, kind):
     `_enter_nest` and `_enter_lair`: a band with a wagon first says who minds it, the rest go in."""
     if kind == "ancient_ruins" and ruins_empty(map_session.guild):
         from .dialogue_session import _to_map
-        map_session.say("The Ancient Ruins lie silent: nothing is left down there.", "guild", group)
+        map_session.say(i18n.t("campaign.delve.ruins_empty"), "guild", group)
         return _to_map(map_session, group)
-    label, title, lead, build = DELVES[kind]
+    build = DELVES[kind]
+    label, title, lead = (i18n.t(f"campaign.delve.{kind}.{field}") for field in ("label", "title", "lead"))
     return _watched(map_session, group, label, lead,
                     lambda squad, guarded: _delve(map_session, group, kind, title, build, squad, guarded))
 
@@ -126,21 +129,10 @@ def _nest(guild, squad):
 
 
 DELVES = {
-    "ancient_ruins": ("ENTER THE RUINS", "Into the Ruins",
-                      "The sunken library chambers: dark, lethal, and what the ruins keep is there to be carried out.",
-                      lambda guild, squad: AncientRuinsScenario(guild.ruins_cleared)),
-    "serpents_nest": ("ENTER THE NEST", "Into the Nest",
-                      "Five dark chambers of snakes, and the Snake Dragon at the bottom.", _nest),
-    "dragon_lair": ("ENTER THE LAIR", "Into the Lair",
-                    "Kobold patrols, a hoard, the clutch, and the dragon asleep beside it.",
-                    lambda guild, squad: lair.LairScenario(encounters.squad_level(squad))),
+    "ancient_ruins": lambda guild, squad: AncientRuinsScenario(guild.ruins_cleared),
+    "serpents_nest": _nest,
+    "dragon_lair": lambda guild, squad: lair.LairScenario(encounters.squad_level(squad)),
 }
-
-
-BATTLEFIELD_LEAD = "Four Ledger Hold soldiers hold the trenches against a warband. If one of them dies, the errand fails."
-NECROMANCER_LEAD = "The Battlefield at night: a warband, the dead of days before, and the necromancer unseen among them."
-CAMP_LEAD = "The Ogre's goblins feed the fire from their camp."
-FORTRESS_LEAD = "The Ogre's half-raised fortress, its bonfire spreading, and the Ogre inside."
 
 
 def errand(map_session, group, kind):
@@ -155,14 +147,16 @@ def errand(map_session, group, kind):
         if mission is None:
             return _to_map(map_session, group)
         night = mission.template_id == missions.FAITH_NECROMANCER.id
-        return _watched(map_session, group, "JOIN THE SKIRMISH", NECROMANCER_LEAD if night else BATTLEFIELD_LEAD,
+        return _watched(map_session, group, i18n.t("campaign.errand.skirmish"),
+                        i18n.t("campaign.lead.necromancer" if night else "campaign.lead.battlefield"),
                         lambda squad, guarded: _skirmish(map_session, group, mission, squad, guarded))
     focus = wildfire.focus_at(guild, group.node)
     hold = group.node == wildfire.FORTRESS_ID and wildfire.hold_standing(guild)
     if not hold and (focus is None or focus.cleared):
         return _to_map(map_session, group)
     camp = focus is not None and not focus.great
-    label, lead = ("ATTACK THE CAMP", CAMP_LEAD) if camp else ("STORM THE FORTRESS", FORTRESS_LEAD)
+    part = "camp" if camp else "fortress"
+    label, lead = i18n.t(f"campaign.errand.{part}"), i18n.t(f"campaign.lead.{part}")
     return _watched(map_session, group, label, lead,
                     lambda squad, guarded: _wildfire(map_session, group, kind, focus, squad, guarded))
 
@@ -171,9 +165,9 @@ def _skirmish(map_session, group, mission, squad, guarded):
     guild, node = map_session.guild, world.node(group.node)
     night = mission.template_id == missions.FAITH_NECROMANCER.id
     if night:
-        scenario, title = necromancer.NecromancerScenario(squad), "The necromancer"
+        scenario, title = necromancer.NecromancerScenario(squad), i18n.t("campaign.title.necromancer")
     else:
-        scenario, title = battlefield.BattlefieldScenario(squad), "Mercy at the Front"
+        scenario, title = battlefield.BattlefieldScenario(squad), i18n.t("campaign.title.battlefield")
     battle = Battle(squad, scenario.enemies, scenario=scenario, allies=scenario.allies,
                     others=getattr(scenario, "others", None), daylight=guild.clock.is_daylight, lethal=True,
                     clock_day=guild.clock.day, aggressor="enemy")
@@ -192,10 +186,10 @@ def _skirmish(map_session, group, mission, squad, guarded):
 def _wildfire(map_session, group, kind, focus, squad, guarded):
     guild, node = map_session.guild, world.node(group.node)
     if focus is not None and not focus.great:
-        scenario, foes, title = ErmosScenario(), wildfire.camp_crew(encounters.squad_level(squad)), "The goblin camp"
+        scenario, foes, title = ErmosScenario(), wildfire.camp_crew(encounters.squad_level(squad)), i18n.t("campaign.title.camp")
     else:
         foes = wildfire.ogre_band(hold=focus is None)
-        scenario, title = FortressScenario(foes, finished=focus is None), "The Ogre's fortress"
+        scenario, title = FortressScenario(foes, finished=focus is None), i18n.t("campaign.title.fortress")
     battle = Battle(squad, foes, scenario=scenario, daylight=guild.clock.is_daylight, lethal=True,
                     clock_day=guild.clock.day, aggressor="player")
 
@@ -235,8 +229,8 @@ def _enter(map_session, group, battle, node, kind, title, settle, *, nature, squ
     if map_session.world_id is not None:
         foes = len(battle.enemy_units)
         persist.save_game(map_session.world_id, guild, kind="auto",
-                          label=f"Before a fight at {node.name}: {foes} foe{'s' if foes != 1 else ''}"
-                                f"{' (auto-resolved)' if swift is not None else ''}")
+                          label=i18n.plural("campaign.autosave_swift" if swift is not None else "campaign.autosave",
+                                            foes, place=node.name))
     if swift is not None:
         _swift(battle, squad, swift)
         return _settle(map_session, group, squad, battle, node, kind, settle, offer, after)
@@ -263,13 +257,14 @@ def _settle(map_session, group, squad, battle, node, kind, settle, offer, after)
                   deaths=len(outcome.fallen), foes=len(battle.enemy_units), xp=sum(outcome.xp_awards.values()),
                   level=round(sum(u.combat_level for u in guild.roster) / max(1, len(guild.roster)), 2))
     xp = sum(outcome.xp_awards.values())
-    verdict = "won" if outcome.won else "lost"
-    fell = f", {len(outcome.fallen)} fell" if outcome.fallen else ""
-    gain = f", +{xp} combat XP" if xp else ""
-    map_session.say(f"Fight at {node.name}: {verdict}{fell}{gain}.", "fight", group)
+    fell = i18n.plural("campaign.fight.fell", len(outcome.fallen)) if outcome.fallen else ""
+    gain = i18n.t("campaign.fight.gain", xp=xp) if xp else ""
+    map_session.say(i18n.t("campaign.fight.line", place=node.name, verdict=i18n.t(
+        "campaign.fight.won" if outcome.won else "campaign.fight.lost"), fell=fell, gain=gain), "fight", group)
     map_session.say(outcome.captive_notes, "fight", group)
     map_session.say(settle(outcome), "fight", group)
-    map_session.say([f"{u.name} reached combat level {u.combat_level}!" for u in outcome.leveled_up], "fight", group)
+    map_session.say([i18n.t("campaign.fight.level_up", name=u.name, level=u.combat_level)
+                         for u in outcome.leveled_up], "fight", group)
     if outcome.campaign_over:
         map_session.wiped = True
     map_session._save()

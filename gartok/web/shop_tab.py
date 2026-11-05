@@ -5,7 +5,7 @@ counter's pick the way a drop would and calls the same method, so the prices, th
 the purse and the deeds stay one source.
 """
 
-from .. import art_files, economy, item_icon, items, store_column, trade
+from .. import art_files, economy, i18n, item_icon, items, store_column, trade
 from .session import asset_url
 
 SLOTS = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Armour"), ("artifact", "Artifact"))
@@ -69,11 +69,11 @@ class ShopTab:
             out["voice"] = {"uid": voice.uid, "name": voice.name, "portrait": _portrait(voice)}
             cha = voice.haggle_charisma_mod
             shared = [t for t in economy.vendor_tongues(lang) if t in voice.languages]
-            out["marks"] = [{"text": f"Speaks {', '.join(shared)}", "good": True},
-                            {"text": f"Cha {cha:+d}", "good": cha > 0},
+            out["marks"] = [{"text": i18n.t("shop_tab.speaks", join=', '.join(shared)), "good": True},
+                            {"text": i18n.t("shop_tab.cha", cha=cha), "good": cha > 0},
                             {"text": trade.BENT_WORDS[dist].capitalize(), "good": dist <= 1}]
         elif lang:
-            out["marks"] = [{"text": f"No one speaks {' or '.join(economy.vendor_tongues(lang))}", "good": False}]
+            out["marks"] = [{"text": i18n.t("shop_tab.no_one_speaks", join=' or '.join(economy.vendor_tongues(lang))), "good": False}]
         return out
 
     def _shelf(self):
@@ -83,7 +83,7 @@ class ShopTab:
         cats = []
         for label, key, names in m.get_categories():
             if key == "weapons":       # a Large weapon is a row of its own beside its Medium one
-                names = [n for b in names for n in (b, f"Large {b}")
+                names = [n for b in names for n in (b, i18n.t("shop_tab.large", b=b))
                          if items.get(n) and (n == b or (shop and n in shop.stock))]
             cats.append({"key": key, "label": label.title().replace(" And ", " & "),
                          "rows": [self._ware(n, key, targets) for n in names]})
@@ -151,7 +151,7 @@ class ShopTab:
     def _owner(self, oid):
         o = next((o for o in (*self.m.shoppers, *self.m.stores) if o.uid == oid), None)
         if o is None:
-            raise ValueError("no such pack")
+            raise ValueError(i18n.t("shop_tab.no_such_pack"))
         return o
 
     def _pick(self, b):
@@ -159,9 +159,9 @@ class ShopTab:
         owner, loc = self._owner(b["from"]), b["loc"]
         if isinstance(loc, str):
             if loc not in dict(SLOTS) or self.m._item_at(owner, loc) is None:
-                raise ValueError(f"nothing in that {loc} slot")
+                raise ValueError(i18n.t("shop_tab.nothing_in_that_slot", loc=loc))
         elif not 0 <= loc < len(owner._base_inventory):
-            raise ValueError("no such stack")
+            raise ValueError(i18n.t("shop_tab.no_such_stack"))
         return owner, loc
 
     def _qty(self, pick, qty):
@@ -173,7 +173,7 @@ class ShopTab:
     def buy(self, name, qty=1, to=None, zone="pack"):
         m = self.m
         if not any(r["name"] == name for c in self._shelf() for r in c["rows"]):
-            raise ValueError(f"{name} is not on this shelf")
+            raise ValueError(i18n.t("shop_tab.is_not_on_this_shelf", name=name))
         m.qty[name] = max(1, int(qty))
         if to is None:
             m.selected = [("stock", name)]
@@ -192,7 +192,7 @@ class ShopTab:
 
     def move(self, picks, to, zone="pack"):
         if zone not in ("pack", *dict(SLOTS)):
-            raise ValueError(f"no such slot: {zone}")
+            raise ValueError(i18n.t("shop_tab.no_such_slot", zone=zone))
         dest = self._owner(to)
         self._select(picks)
         self.m._drop_on_zone(dest, zone)
@@ -203,7 +203,7 @@ class ShopTab:
         self._select(picks)
         if not m._goods(m.selected):
             m.selected, m._sel_qty = [], {}
-            raise ValueError("nothing there the shop would buy")
+            raise ValueError(i18n.t("shop_tab.nothing_there_shop_would_buy"))
         m._sell()
         m.selected, m._sel_qty = [], {}
 

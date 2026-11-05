@@ -9,7 +9,7 @@ one alive takes it straight from the group (`missions.py`).
 
 from dataclasses import dataclass
 
-from . import items
+from . import i18n, items
 
 CAPTIVE_DAYS = 7
 HERD_WEIGHT = 1
@@ -44,14 +44,13 @@ def take(guild, group, combatants):
     lines = []
     for c in combatants:
         group.captives.append(Captive(c.char, guild.clock.day, getattr(c.char, "npc_slug", None)))
-        lines.append(f"{c.char.name} is led away in bonds -- a captive for {CAPTIVE_DAYS} days "
-                     f"(group screen, QUESTS & CAPTIVES).")
+        lines.append(i18n.t("captives.is_led_away_in_bonds", name=c.char.name, captive_days=CAPTIVE_DAYS))
     return lines
 
 
 def release(group, captive):
     group.captives.remove(captive)
-    return f"{captive.name} is set loose."
+    return i18n.t("captives.is_set_loose", name=captive.name)
 
 
 def daily(guild):
@@ -63,9 +62,9 @@ def daily(guild):
             body = CORPSES.get(cap.npc_slug)
             if body and group.leader is not None:
                 group.leader.give_to_pack(body)
-                lines.append(f"{cap.name} dies in captivity; {group.leader.name} keeps the body.")
+                lines.append(i18n.t("captives.dies_in_captivity_keeps_body", name=cap.name, captor=group.leader.name))
             else:
-                lines.append(f"{cap.name} dies in captivity.")
+                lines.append(i18n.t("captives.dies_in_captivity", name=cap.name))
     return lines
 
 

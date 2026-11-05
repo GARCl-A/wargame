@@ -6,7 +6,7 @@ carry. Whatever is still in the pile when the report moves on is left behind.
 
 from collections import Counter
 
-from . import items
+from . import i18n, items
 from .loadout_move import LoadoutMoveMixin
 from .unit_loadout import distribute_load
 
@@ -78,7 +78,7 @@ class Spoils(LoadoutMoveMixin):
         if any(owner == "pool" for owner, _ in picks):
             add = sum(items.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
             if dst.load + add > dst.carry_max:
-                self.notice = f"won't fit {dst.name}'s load."
+                self.notice = i18n.t("spoils.won_t_fit_s_load", name=dst.name)
                 self.selected = picks
                 return
 
@@ -134,7 +134,7 @@ class Spoils(LoadoutMoveMixin):
     def distribute(self):
         """Even the survivors' packs out by free carrying capacity, coins too; the field stays put."""
         if len(self.survivors) < 2:
-            raise ValueError("nobody to share the load with")
+            raise ValueError(i18n.t("spoils.nobody_to_share_load_with"))
         distribute_load(self.survivors)
         self.selected = []
         self._sel_qty = {}

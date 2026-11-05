@@ -14,7 +14,7 @@ the test only reveals it, and a failed test is final. The rite grants the school
 the magic talent track, no spell.
 """
 
-from . import data, economy, factions, orders, world
+from . import data, economy, factions, i18n, orders, world
 from .constants import fmt_money
 
 SANCTUARY = {"blood_sanctuary": "blood", "nature_grove": "nature", "faith_cathedral": "faith"}
@@ -44,22 +44,22 @@ def blocker(guild, group, unit, school):
     """Why `unit` cannot start (or go back to) `school`'s rite now, or None."""
     name = school.title()
     if school in unit.magic_sources:
-        return f"{unit.name} is already initiated in {name} magic."
+        return i18n.t("rite.is_already_initiated_in_magic", name=unit.name, school=name)
     if guild.reputation.get(FACTION[school], 0) < REP_NEEDED:
-        return f"The school takes no one until the guild has {REP_NEEDED} reputation with it."
+        return i18n.t("rite.school_takes_no_one_until", rep_needed=REP_NEEDED)
     if school == "blood" and unit.blood_tested and not unit.magic_blood:
-        return f"The Cult tested {unit.name}'s blood: there is no magic in it."
+        return i18n.t("rite.cult_tested_s_blood_there", name=unit.name)
     if school == "faith" and not paid(unit, school) and not any(u.has_item(HOLY_SYMBOL) for u in _holders(group)):
-        return f"The rite consumes a {HOLY_SYMBOL}, and the group carries none."
+        return i18n.t("rite.rite_consumes_and_group_carries", holy_symbol=HOLY_SYMBOL)
     if group.locked:
-        return "A group with an order in flight cannot leave anyone here."
+        return i18n.t("rite.group_with_order_in_flight")
     return None
 
 
 def stage(unit, school):
     """`(label, done, total)` of where `unit` stands in `school`'s rite."""
     if school == "blood" and not unit.blood_tested:
-        return "blood test", unit.blood_test_days, BLOOD_TEST_DAYS
+        return i18n.t("rite.blood_test"), unit.blood_test_days, BLOOD_TEST_DAYS
     return "learning", min(unit.rite_progress.get(school, 0), POINTS[school]), POINTS[school]
 
 
@@ -72,15 +72,15 @@ def begin(guild, group, unit, school):
     if school == "faith" and not paid(unit, school):
         holder = unit if unit.has_item(HOLY_SYMBOL) else next(u for u in _holders(group) if u.has_item(HOLY_SYMBOL))
         holder.remove_named(HOLY_SYMBOL, 1)
-        lines.append(f"The Order takes {holder.name}'s {HOLY_SYMBOL}.")
+        lines.append(i18n.t("rite.order_takes_s", name=holder.name, holy_symbol=HOLY_SYMBOL))
     unit.rite_progress.setdefault(school, 0)
     unit.rite_school = school
     order = orders.garrison(JOB)
     if guild.send_alone(group, unit, order, f"{unit.name} (rite)") is None:
         group.order = order
-        lines.append(f"No free group slot: the group waits while {unit.name} boards for the rite.")
+        lines.append(i18n.t("rite.no_free_group_slot_group", name=unit.name))
     else:
-        lines.append(f"{unit.name} stays to board at the sanctuary for the {school.title()} rite.")
+        lines.append(i18n.t("rite.stays_to_board_at_sanctuary", name=unit.name, title=school.title()))
     return True, lines
 
 
@@ -96,15 +96,15 @@ def progress(unit):
         unit.blood_tested = True
         if not unit.magic_blood:
             unit.rite_school = None
-            return f"The Blood Cult finds no magic in {unit.name}'s blood. They will not test it again."
-        return f"The Blood Cult finds magic in {unit.name}'s blood: the learning begins."
+            return i18n.t("rite.blood_cult_finds_no_magic", name=unit.name)
+        return i18n.t("rite.blood_cult_finds_magic_in", name=unit.name)
     unit.rite_progress[school] = unit.rite_progress.get(school, 0) + max(0, data.roll(1, 20) + unit.mod_intelligence)
     if unit.rite_progress[school] < POINTS[school]:
         return None
     unit.rite_school = None
     unit.add_magic_source(school)
     unit._derive_combat()
-    return f"{unit.name} is initiated into {school.title()} magic."
+    return i18n.t("rite.is_initiated_into_magic", name=unit.name, title=school.title())
 
 
 def boarders(group):
@@ -140,7 +140,7 @@ def daily(group):
     events = [e for e in (progress(u) for u in boarders(group)) if e]
     if not boarders(group):
         group.order = None
-        events.append(f"{world.node(group.node).name}: nobody left boarding for the rite.")
+        events.append(i18n.t("rite.nobody_left_boarding_for_rite", name=world.node(group.node).name))
     return events
 
 
@@ -159,33 +159,33 @@ class Initiation:
 
     def _status(self, u):
         if self.school in u.magic_sources:
-            return f"initiated in {self.school.title()} magic"
+            return i18n.t("rite.initiated_in_magic", title=self.school.title())
         label, done, total = stage(u, self.school)
         if label == "blood test":
-            left = f"{total - done} day(s) of testing, then {POINTS['blood']} learning points"
+            left = i18n.t("rite.day_s_of_testing_then", value=total - done, points=POINTS['blood'])
         else:
             per_day = max(1, 10.5 + u.mod_intelligence)
-            left = f"{done}/{total} learning points  ·  about {round((total - done) / per_day)} day(s) left"
+            left = i18n.t("rite.learning_points_about_day_s", done=done, total=total, round=round((total - done) / per_day))
         boarding = "boarding  ·  " if u.rite_school == self.school else ""
-        return f"{boarding}{left}  ·  INT {u.mod_intelligence:+}"
+        return i18n.t("rite.int", boarding=boarding, left=left, mod_intelligence=u.mod_intelligence)
 
     def _terms(self):
         faction = FACTION[self.school]
         have = self.guild.reputation.get(faction, 0)
-        terms = [("The school", f"{factions.FACTIONS[faction].name}: reputation {have} of {REP_NEEDED}",
+        terms = [(i18n.t("rite.school"), i18n.t("rite.reputation_of", name=factions.FACTIONS[faction].name, have=have, rep_needed=REP_NEEDED),
                   have >= REP_NEEDED)]
         if self.school == "faith":
-            terms.append(("Up front", f"one {HOLY_SYMBOL}, consumed", True))
+            terms.append((i18n.t("rite.up_front"), i18n.t("rite.one_consumed", holy_symbol=HOLY_SYMBOL), True))
         if self.school == "blood":
-            terms.append(("Blood test", f"{BLOOD_TEST_DAYS} days: only magic blood goes on; a failed test is final",
+            terms.append((i18n.t("rite.blood_test_2"), i18n.t("rite.days_only_magic_blood_goes", blood_test_days=BLOOD_TEST_DAYS),
                           True))
-        terms.append(("Learning", f"{POINTS[self.school]} points, 1d20 + INT a day, kept if you leave", True))
-        terms.append(("Board", f"${BOARD_PER_DAY} a day with the meal, only on a day with no food in the pack",
+        terms.append(("Learning", i18n.t("rite.points_d_int_day_kept", points=POINTS[self.school]), True))
+        terms.append(("Board", i18n.t("rite.day_with_meal_only_on", board_per_day=BOARD_PER_DAY),
                       True))
-        where = ("alone, in a group of their own" if self.guild.free_slots or len(self.group.members) == 1
-                 else "the whole group waits (no free group slot)")
-        terms.append(("Who waits", where, True))
-        terms.append(("Grants", "the school and its root in the magic talents; no spell", True))
+        where = (i18n.t("rite.alone_in_group_of_their") if self.guild.free_slots or len(self.group.members) == 1
+                 else i18n.t("rite.whole_group_waits_no_free"))
+        terms.append((i18n.t("rite.who_waits"), where, True))
+        terms.append(("Grants", i18n.t("rite.school_and_its_root_in"), True))
         return terms
 
     def _rows(self):
@@ -195,7 +195,7 @@ class Initiation:
             rows.append({"key": u.uid, "name": u.name, "status": self._status(u),
                          "face": {"race": u.race["name"], "portrait_id": getattr(u, "portrait_id", None),
                                   "token": u.token},
-                         "sub": f"{u.race['name']}  ·  INT {u.mod_intelligence:+}",
+                         "sub": i18n.t("rite.int_2", race=u.race['name'], mod_intelligence=u.mod_intelligence),
                          "note": blocked or "", "enabled": blocked is None, "picked": u.uid == self.picked})
         return rows
 
@@ -203,7 +203,7 @@ class Initiation:
         u = self._member(self.picked)
         if u is None or blocker(self.guild, self.group, u, self.school):
             return None
-        return "RESUME THE RITE" if paid(u, self.school) else "BEGIN THE RITE"
+        return i18n.t("rite.resume_rite") if paid(u, self.school) else i18n.t("rite.begin_rite")
 
     def _pick(self, uid):
         """Pick `uid` to stay (again: unpick); one who cannot stay is not picked, and says why."""
@@ -222,4 +222,4 @@ class Initiation:
 
     def hub_cards(self):
         purse = sum(u.money for u in self.group.members)
-        return [{"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
+        return [{"label": i18n.t("rite.party_purse"), "value": fmt_money(purse), "tone": "money"}]

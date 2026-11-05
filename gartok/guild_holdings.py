@@ -4,7 +4,7 @@ Bankers' debt and the garrison's stockpile.
 Mixed into `guild.Guild`; the stores themselves live in `holdings.py`.
 """
 
-from . import data, economy, magic, recorder, rite, world
+from . import data, economy, i18n, magic, recorder, rite, world
 from . import wagon as wagons
 from .constants import fmt_money
 
@@ -56,7 +56,7 @@ class HoldingsMixin:
             return False, [short], []
         self.repair_lumber(crew, wagon)
         events, casualties = self.tick(wagons.REPAIR_HOURS, busy=crew)
-        events = [*events, *(f"{u.name} starved to death." for u in casualties)]
+        events = [*events, *(i18n.t("guild_holdings.starved_to_death", name=u.name) for u in casualties)]
         ok, lines = self.repair_roll(crew, wagon)
         return ok, [*lines, *events], casualties
 
@@ -64,10 +64,10 @@ class HoldingsMixin:
         """Why `crew` cannot mend `wagon` now, or None."""
         name = wagon.kind.lower()
         if not wagon.needs_repair:
-            return f"the {name} needs no repair."
+            return i18n.t("guild_holdings.needs_no_repair", name=name)
         cost = wagon.repair_cost
         if sum(u.count_of(wagons.REPAIR_ITEM) for u in crew) < cost:
-            return f"it takes {cost} {wagons.REPAIR_ITEM} to mend the {name}."
+            return i18n.t("guild_holdings.it_takes_to_mend", cost=cost, repair_item=wagons.REPAIR_ITEM, name=name)
         return None
 
     def repair_lumber(self, crew, wagon):
@@ -83,11 +83,10 @@ class HoldingsMixin:
         smith = wagons.repairer(crew)
         total = data.d20() + smith.mod_intelligence
         if total < wagons.REPAIR_DC:
-            return False, [f"{smith.name} fails to mend the {name} ({total} vs DC {wagons.REPAIR_DC}) "
-                           f"-- the {wagons.REPAIR_ITEM} is wasted."]
+            return False, [i18n.t("guild_holdings.fails_to_mend_vs_dc", name=smith.name, item=name, total=total, repair_dc=wagons.REPAIR_DC, repair_item=wagons.REPAIR_ITEM)]
         mult = 2 if any(u.has_talent('wheelwright') for u in crew) else 1
         gained = wagon.repair(mult=mult)
-        return True, [f"{smith.name} mends the {name}: +{gained} HP ({wagon.hp}/{wagon.hp_max})."]
+        return True, [i18n.t("guild_holdings.mends_hp", name=smith.name, item=name, gained=gained, hp=wagon.hp, hp_max=wagon.hp_max)]
 
     def abandon_wagon(self, group, wagon):
         """Leave a wagon behind for good, cargo and all (the caller let the player unload
@@ -157,10 +156,10 @@ class HoldingsMixin:
                         events.append(event)
                 if not any(u.study_target for u in g.members):
                     g.order = None
-                    events.append(f"{node.name}: studies are over -- rooms released.")
+                    events.append(i18n.t("guild_holdings.studies_are_over_rooms_released", name=node.name))
                 elif not magic.rent_covered(g):
                     g.order = None
-                    events.append(f"{node.name}: no one can pay for another night -- rooms released.")
+                    events.append(i18n.t("guild_holdings.no_one_can_pay_for", name=node.name))
                 continue
         return events
 
@@ -190,15 +189,14 @@ class HoldingsMixin:
             house.tax_due_day = self.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
             if self.money >= economy.CITY_PROPERTY_TAX:
                 self._charge_roster(economy.CITY_PROPERTY_TAX)
-                events.append(f"The Bankers collect {fmt_money(economy.CITY_PROPERTY_TAX)} in property tax.")
+                events.append(i18n.t("guild_holdings.bankers_collect_in_property_tax", fmt_money=fmt_money(economy.CITY_PROPERTY_TAX)))
             else:
                 house.missed_payments += 1
-                events.append("The guild can't cover the property tax -- the Bankers note it.")
+                events.append(i18n.t("guild_holdings.guild_can_t_cover_property"))
         if (self.bankers_debt > 0 and self.bankers_debt_since is not None
                 and self.clock.day - self.bankers_debt_since >= economy.CITY_PROPERTY_DEBT_GRACE_DAYS):
             self.bankers_debt_since = self.clock.day     # resets the grace window
             if self.leader is not None:
                 self.leader.crime += 1
-                events.append(f"{self.leader.name}'s unpaid debt to the Bankers "
-                              "reaches the guard's ears.")
+                events.append(i18n.t("guild_holdings.s_unpaid_debt_to_bankers", name=self.leader.name))
         return events

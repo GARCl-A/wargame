@@ -4,20 +4,15 @@ the charter (the bands, the notices, the holdings, the founding trade). A tone i
 (`warn`, `bad`, `good`, or "" for plain). `web/guild_session.py` reads it.
 """
 
-from . import magic, progression, recruit, rite, vocations, world
+from . import i18n, magic, progression, recruit, rite, vocations, world
 from .animals import STARVE_DAYS, Animal
 from .constants import fmt_money
 from .group import capacity_for
 
-FILTERS = (
-    ("all", "ALL", "Every member of every group"),
-    ("idle", "IDLE", "Groups waiting for orders"),
-    ("busy", "BUSY", "Groups travelling, working or studying"),
-    ("alerts", "ALERTS", "Members and animals that are hungry, or have a level-up waiting"),
-)
+FILTERS = tuple((mode, f"guild_sheet.filter.{mode}") for mode in ("all", "idle", "busy", "alerts"))
 ATTRIBUTE_LABELS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
                     ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma"))
-FIGHT_DUE_TIP = "A fight is about to start -- this group can't change until it is over"
+FIGHT_DUE_TIP = "guild_sheet.fight_due_tip"
 
 
 def node_label(node_id):
@@ -38,7 +33,7 @@ def needs_attention(unit):
 
 
 def _days(n):
-    return f"{n} day{'s' if n != 1 else ''}"
+    return i18n.count("day", n)
 
 
 class GuildSheet:
@@ -72,7 +67,7 @@ class GuildSheet:
         if not getattr(unit, "recruited_by", None):
             return None
         who = next((u for u in self.roster if u.uid == unit.recruited_by), None)
-        return who.name if who else "someone long gone"
+        return who.name if who else i18n.t("guild_sheet.someone_long_gone")
 
     def _press(self, key):
         m = self.member
@@ -94,26 +89,25 @@ class GuildSheet:
     def _member_data(self, unit, selected):
         badges = []
         if unit.pending_picks:
-            badges.append(("LEVEL UP", "warn"))
+            badges.append((i18n.t("guild_sheet.level_up"), "warn"))
         if unit.hunger_level >= 1:
             badges.append(("HUNGRY", "bad"))
         if unit.sick:
             badges.append(("SICK", "bad"))
         if unit is self.guild.leader:
-            badges.append(("GUILD LEADER", ""))
+            badges.append((i18n.t("guild_sheet.guild_leader"), ""))
         elif self._is_group_leader(unit):
-            badges.append(("GROUP LEADER", ""))
+            badges.append((i18n.t("guild_sheet.group_leader"), ""))
         return {
             "key": unit.uid, "name": unit.name, "selected": selected, "badges": badges,
-            "sub": (f"{unit.race['name']} · Lv {unit.racial_level}"
-                    f"  (C{unit.combat_level} W{unit.work_level})"),
+            "sub": (i18n.t("guild_sheet.lv_c_w", race=unit.race['name'], racial_level=unit.racial_level, combat_level=unit.combat_level, work_level=unit.work_level)),
             "hp": (max(0, unit.hp), unit.hp_max),
         }
 
     @staticmethod
     def _animal_data(animal, grp, selected):
         pulled = grp.pulling(animal)
-        job = f"pulls {pulled.kind.lower()}" if pulled else animal.role or "no tack"
+        job = i18n.t("guild_sheet.pulls", lower=pulled.kind.lower()) if pulled else animal.role or i18n.t("guild_sheet.no_tack")
         return {
             "key": animal.uid, "name": animal.species, "selected": selected,
             "badges": [("HUNGRY", "bad")] if animal.unfed_days else [],
@@ -151,16 +145,15 @@ class GuildSheet:
     @staticmethod
     def _animal_work_rows(animal, pulled):
         if animal.role == "pack":
-            role = f"carries up to {animal.capacity:g} kg on its back"
+            role = i18n.t("guild_sheet.carries_up_to_kg_on", capacity=animal.capacity)
         elif animal.role == "draft":
-            hitched = f" -- hitched to the {pulled.kind.lower()}" if pulled else " -- not hitched"
-            role = f"pulls up to {animal.pull:g} kg{hitched}"
+            hitched = i18n.t("guild_sheet.hitched_to", lower=pulled.kind.lower()) if pulled else i18n.t("guild_sheet.not_hitched")
+            role = i18n.t("guild_sheet.pulls_up_to_kg", pull=animal.pull, hitched=hitched)
         else:
-            role = (f"idle: a Pack Saddle lets it carry {animal.back_load:g} kg, "
-                    f"a Harness lets it pull {animal.draw:g} kg")
-        fed = ((f"hungry {animal.unfed_days} day(s) -- starves at {STARVE_DAYS}", "bad") if animal.unfed_days
+            role = (i18n.t("guild_sheet.idle_pack_saddle_lets_it", back_load=animal.back_load, draw=animal.draw))
+        fed = ((i18n.t("guild_sheet.hungry_day_s_starves_at", unfed_days=animal.unfed_days, starve_days=STARVE_DAYS), "bad") if animal.unfed_days
                else ("fed", "good"))
-        load = f"{round(animal.load, 1):g} / {round(animal.carry_max, 1):g} kg"
+        load = i18n.t("guild_sheet.kg", load=round(animal.load, 1), most=round(animal.carry_max, 1))
         return [("TACK", animal.tack or "none", ""), ("ROLE", role, ""), ("LOAD", load, ""),
                 ("FEED", *fed), ("VALUE", fmt_money(animal.price), "")]
 
@@ -172,14 +165,13 @@ class GuildSheet:
         dmg = w["dmg"].split("(")[0].strip()
         reach = f"{unit.weapon['range'] * 1.5:g} m" if unit.weapon and unit.weapon.get("range") else "1.5 m"
         chips = [
-            ("ATTACK", bab, f"Attack modifier {bab} ({src}): d20 {bab} against the target's armor class"),
-            ("DAMAGE", dmg, f"{w['dmg']}: weapon dice plus strength on a hit"),
-            ("REACH", reach, "Distance this weapon can strike"),
+            ("ATTACK", bab, i18n.t("guild_sheet.attack_modifier_d_against_target", bab=bab, src=src, bonus=bab)),
+            ("DAMAGE", dmg, i18n.t("guild_sheet.weapon_dice_plus_strength_on", w=w['dmg'])),
+            ("REACH", reach, i18n.t("guild_sheet.distance_this_weapon_can_strike")),
         ]
         if c.needs_ammo:
-            chips.append(("AMMO", str(c.ammo), "Arrows or bolts left across the quivers carried; with none the weapon "
-                                               "is swung as a clumsy melee" if c.ammo else
-                          "No arrows or bolts: carry a quiver with arrows, or the weapon is swung as a clumsy melee"))
+            chips.append(("AMMO", str(c.ammo), i18n.t("guild_sheet.arrows_or_bolts_left_across") if c.ammo else
+                          i18n.t("guild_sheet.no_arrows_or_bolts_carry")))
         return {"name": w["nm"], "tags": w["tags"], "chips": chips}
 
     @staticmethod
@@ -192,7 +184,7 @@ class GuildSheet:
         return {
             "hands": f"{weapon} + {offhand}" if offhand and offhand != "None" else weapon,
             "armor": unit.armor_name if unit.armor else "None",
-            "armor_note": (f"+{unit.armor['ac']} AC" + (f"  -{unit.armor.speed_penalty} SPD"
+            "armor_note": (i18n.t("guild_sheet.ac", armor=unit.armor['ac']) + (i18n.t("guild_sheet.spd", speed_penalty=unit.armor.speed_penalty)
                                                        if unit.armor.speed_penalty else "")) if unit.armor else "",
             "coins": unit.money,
             "rations": (unit.rations, unit.ability.id == "autotroph"),
@@ -201,50 +193,50 @@ class GuildSheet:
 
     def _sponsor_line(self, unit):
         used, cap = recruit.slots_used(self.guild, unit), recruit.capacity(self.guild, unit)
-        left = (f"{cap - used} more may join on their word" if cap > used else "none left")
-        return f"Sponsored recruits: {used} of {cap} -- {left}"
+        left = (i18n.t("guild_sheet.more_may_join_on_their", value=cap - used) if cap > used else i18n.t("guild_sheet.none_left"))
+        return i18n.t("guild_sheet.sponsored_recruits_of", used=used, cap=cap, left=left)
 
     def _role_rows(self, unit, grp):
         cap = capacity_for(unit)
-        band = grp.display_name if grp else "the group"
+        band = grp.display_name if grp else i18n.t("guild_sheet.group")
         free_swap = self.guild.leader_swaps_used < 1
         rows = []
         if unit is self.guild.leader:
-            rows.append({"key": "guild_leader", "title": "Guild leader", "current": True,
-                         "sub": "Adds a CHA bonus to taverna recruitment",
-                         "action": None, "tip": "Leads the whole guild"})
+            rows.append({"key": "guild_leader", "title": i18n.t("guild_sheet.guild_leader_2"), "current": True,
+                         "sub": i18n.t("guild_sheet.adds_cha_bonus_to_taverna"),
+                         "action": None, "tip": i18n.t("guild_sheet.leads_whole_guild")})
         else:
-            rows.append({"key": "guild_leader", "title": "Guild leader", "current": False,
-                         "sub": "1 free transfer left" if free_swap else "No free transfer left",
-                         "action": ("MAKE GUILD LEADER", free_swap),
-                         "tip": "Make this member lead the whole guild"})
+            rows.append({"key": "guild_leader", "title": i18n.t("guild_sheet.guild_leader_2"), "current": False,
+                         "sub": i18n.t("guild_sheet.free_transfer_left") if free_swap else i18n.t("guild_sheet.no_free_transfer_left"),
+                         "action": (i18n.t("guild_sheet.make_guild_leader"), free_swap),
+                         "tip": i18n.t("guild_sheet.make_this_member_lead_whole")})
         fight_due = self._fight_due(unit)
         if self._is_group_leader(unit):
-            rows.append({"key": "group_leader", "title": "Group leader", "current": True,
-                         "sub": f"Leads {band} -- holds up to {cap} members", "action": None,
-                         "tip": "Group size capacity is 3 + CHA modifier + half racial level"})
+            rows.append({"key": "group_leader", "title": i18n.t("guild_sheet.group_leader_2"), "current": True,
+                         "sub": i18n.t("guild_sheet.leads_holds_up_to_members", band=band, cap=cap), "action": None,
+                         "tip": i18n.t("guild_sheet.group_size_capacity_is_cha")})
         else:
             can = grp is not None and len(grp.members) > 1 and not fight_due
-            rows.append({"key": "group_leader", "title": "Group leader", "current": False,
-                         "sub": f"Would hold up to {cap} members",
-                         "action": ("MAKE GROUP LEADER", can),
-                         "tip": FIGHT_DUE_TIP if fight_due else f"Make this member the leader of {band}"})
+            rows.append({"key": "group_leader", "title": i18n.t("guild_sheet.group_leader_2"), "current": False,
+                         "sub": i18n.t("guild_sheet.would_hold_up_to_members", cap=cap),
+                         "action": (i18n.t("guild_sheet.make_group_leader"), can),
+                         "tip": i18n.t(FIGHT_DUE_TIP) if fight_due else i18n.t("guild_sheet.make_this_member_leader_of", band=band)})
         can_share = unit.ability.id != "autotroph"
         if not can_share:
-            sub = "Does not eat or carry rations"
+            sub = i18n.t("guild_sheet.does_not_eat_or_carry")
         elif unit.share_food:
-            sub = "Feeds starving groupmates from its pack"
+            sub = i18n.t("guild_sheet.feeds_starving_groupmates_from_its")
         else:
-            sub = "Keeps its food in its own pack"
+            sub = i18n.t("guild_sheet.keeps_its_food_in_its")
         rows.append({"key": "share_food", "title": "Rations", "current": False, "sub": sub,
-                     "action": ("STOP SHARING" if unit.share_food else "SHARE RATIONS", can_share),
-                     "tip": "Pool rations so a hungry bandmate is fed first, or keep them private"})
+                     "action": (i18n.t("guild_sheet.stop_sharing") if unit.share_food else i18n.t("guild_sheet.share_rations"), can_share),
+                     "tip": i18n.t("guild_sheet.pool_rations_so_hungry_bandmate")})
         size = len(grp.members) if grp else 1
-        rows.append({"key": "distribute", "title": "Pack load", "current": False,
-                     "sub": (f"Even out pack items across {size} members" if size > 1
-                             else "Needs two or more members in the group"),
+        rows.append({"key": "distribute", "title": i18n.t("guild_sheet.pack_load"), "current": False,
+                     "sub": (i18n.t("guild_sheet.even_out_pack_items_across", size=size) if size > 1
+                             else i18n.t("guild_sheet.needs_two_or_more_members")),
                      "action": ("DISTRIBUTE", size > 1 and not fight_due),
-                     "tip": FIGHT_DUE_TIP if fight_due else "Rebalances unlocked pack items by free carrying capacity"})
+                     "tip": i18n.t(FIGHT_DUE_TIP) if fight_due else i18n.t("guild_sheet.rebalances_unlocked_pack_items_by")})
         return rows
 
     @staticmethod
@@ -254,44 +246,42 @@ class GuildSheet:
         into_r, span_r = progression.to_next(progression.RACIAL_XP_THRESHOLDS, unit.racial_xp)
         jobs = progression.eligible_work_activities(unit.work_level, unit)
         nxt = progression.next_racial_pick(unit.racial_level)
-        racial = (f"Combat {unit.combat_level} + Work {unit.work_level} levels. +1 hit die per level. "
-                  + (f"Next racial talent at Lv {nxt} ({nxt - unit.racial_level} to go)."
-                     if nxt else "Every racial talent earned."))
+        racial = (i18n.t("guild_sheet.combat_work_levels_hit_die", combat_level=unit.combat_level, work_level=unit.work_level)
+                  + (i18n.t("guild_sheet.next_racial_talent_at_lv", nxt=nxt, value=nxt - unit.racial_level)
+                     if nxt else i18n.t("guild_sheet.every_racial_talent_earned")))
         tracks = [
-            {"label": "Combat career", "value": f"LVL {unit.combat_level}  ({into_c}/{span_c} XP)" if span_c
-             else f"LVL {unit.combat_level}  (MAX)",
+            {"label": i18n.t("guild_sheet.combat_career"), "value": i18n.t("guild_sheet.lvl_xp", combat_level=unit.combat_level, into_c=into_c, span_c=span_c) if span_c
+             else i18n.t("guild_sheet.lvl_max", combat_level=unit.combat_level),
              "frac": into_c / span_c if span_c else 0,
-             "text": f"Down standing enemies of Lv {unit.combat_level}+ (Arena, Wilds, Ambushes).",
-             "tip": (f"Downing an enemy grants (enemy level - {unit.combat_level}) + 1 XP; "
-                     f"enemies below Lv {unit.combat_level} grant none.")},
-            {"label": "Base labor & work", "value": f"LVL {unit.work_level}  ({into_w}/{span_w} XP)" if span_w
-             else f"LVL {unit.work_level}  (MAX)",
+             "text": i18n.t("guild_sheet.down_standing_enemies_of_lv", combat_level=unit.combat_level),
+             "tip": (i18n.t("guild_sheet.downing_enemy_grants_enemy_level", combat_level=unit.combat_level, level=unit.combat_level))},
+            {"label": i18n.t("guild_sheet.base_labor_work"), "value": i18n.t("guild_sheet.lvl_xp_2", work_level=unit.work_level, into_w=into_w, span_w=span_w) if span_w
+             else i18n.t("guild_sheet.lvl_max_2", work_level=unit.work_level),
              "frac": into_w / span_w if span_w else 0,
-             "text": ("Facility labor: " + ", ".join(jobs)) if jobs
-             else f"No standard facilities teach past Lv {unit.work_level} yet.",
-             "tip": (f"1 mark per 16 hours of facility day-labour. Activity level must be at least "
-                     f"Lv {unit.work_level} to teach.")},
-            {"label": "Racial maturity", "value": f"LVL {unit.racial_level}  ({into_r}/{span_r})" if span_r
-             else f"LVL {unit.racial_level}  (MAX)",
+             "text": (i18n.t("guild_sheet.facility_labor") + ", ".join(jobs)) if jobs
+             else i18n.t("guild_sheet.no_standard_facilities_teach_past", work_level=unit.work_level),
+             "tip": (i18n.t("guild_sheet.mark_per_hours_of_facility", work_level=unit.work_level))},
+            {"label": i18n.t("guild_sheet.racial_maturity"), "value": i18n.t("guild_sheet.lvl", racial_level=unit.racial_level, into_r=into_r, span_r=span_r) if span_r
+             else i18n.t("guild_sheet.lvl_max_3", racial_level=unit.racial_level),
              "frac": into_r / span_r if span_r else 0, "text": racial,
-             "tip": "Racial XP is the sum of combat and work levels."},
+             "tip": i18n.t("guild_sheet.racial_xp_is_sum_of")},
         ]
         if unit.study_target:
             spell = magic.SPELLS.get(unit.study_target)
             name = spell.name if spell else unit.study_target
             need = magic.points_to_learn(spell.level if spell else 0)
             cur = min(unit.study_progress.get(unit.study_target, 0), need)
-            tracks.append({"label": "Academic study", "value": f"{name}  ({cur}/{need} pts)",
+            tracks.append({"label": i18n.t("guild_sheet.academic_study"), "value": i18n.t("guild_sheet.pts", name=name, cur=cur, need=need),
                            "frac": cur / need if need else 0,
-                           "text": "Studying at the taverna: daily progress toward mastery.",
-                           "tip": f"Rolls 1d20 + INT per day on a Study order. {cur}/{need} points."})
+                           "text": i18n.t("guild_sheet.studying_at_taverna_daily_progress"),
+                           "tip": i18n.t("guild_sheet.rolls_d_int_per_day", cur=cur, need=need)})
         if unit.rite_school:
             label, done, total = rite.stage(unit, unit.rite_school)
             unit_word = "days" if label == "blood test" else "pts"
-            tracks.append({"label": f"{unit.rite_school.title()} rite", "value": f"{label}  ({done}/{total} {unit_word})",
+            tracks.append({"label": i18n.t("guild_sheet.rite", title=unit.rite_school.title()), "value": f"{label}  ({done}/{total} {unit_word})",
                            "frac": done / total if total else 0,
-                           "text": "Boarding at the sanctuary: daily progress toward initiation.",
-                           "tip": f"Rolls 1d20 + INT per day while boarding. {done}/{total} {unit_word}."})
+                           "text": i18n.t("guild_sheet.boarding_at_sanctuary_daily_progress"),
+                           "tip": i18n.t("guild_sheet.rolls_d_int_per_day_2", done=done, total=total, unit_word=unit_word)})
         return tracks
 
     # ------------------------------------------------------------------ #
@@ -317,7 +307,7 @@ class GuildSheet:
         notice = {}
         for u in self.roster:
             if u.uid in left:
-                notice[self.guild.group_of(u).gid] = f"NOTICE: {u.name} leaves the guild in {_days(left[u.uid])}"
+                notice[self.guild.group_of(u).gid] = i18n.t("guild_sheet.notice_leaves_guild_in", name=u.name, days=_days(left[u.uid]))
         return [{"name": g.display_name, "where": node_label(g.node), "task": self._group_task(g),
                  "size": len(g.members), "capacity": g.capacity, "over": g.overextension,
                  "note": notice.get(g.gid, "")} for g in self.guild.groups]
@@ -326,16 +316,16 @@ class GuildSheet:
         """Whoever is about to walk out (bad), then any overextended group nobody has
         given notice from yet (warn), then a herd about to stray (warn)."""
         left = self._notice_days()
-        out = [(f"{u.name} has given notice and leaves the guild in {_days(left[u.uid])} -- "
-                + f"{self.guild.group_of(u).display_name} is over capacity with no free slot.", "bad")
+        out = [(i18n.t("guild_sheet.has_given_notice_and_leaves", name=u.name, days=_days(left[u.uid]))
+                + i18n.t("guild_sheet.is_over_capacity_with_no", display_name=self.guild.group_of(u).display_name), "bad")
                for u in self.roster if u.uid in left]
         warned = {self.guild.group_of(u) for u in self.roster if u.uid in left}
         if not self.guild.free_slots:
-            out += [(f"{g.display_name} is over capacity and the guild has no free slot: "
-                     + "its weakest member may give notice any day.", "warn")
+            out += [(i18n.t("guild_sheet.is_over_capacity_and_guild", display_name=g.display_name)
+                     + i18n.t("guild_sheet.its_weakest_member_may_give"), "warn")
                     for g in self.guild.groups if g.overextension and g not in warned]
         day = self.guild.clock.day
-        out += [(f"{g.display_name} cannot control its herd: an animal strays in "
+        out += [(i18n.t("guild_sheet.cannot_control_its_herd_animal", display_name=g.display_name)
                  + f"{_days(max(0, g.herd_notice - day))}.", "warn")
                 for g in self.guild.groups if g.herd_notice is not None]
         return out
@@ -344,36 +334,36 @@ class GuildSheet:
         guild, house = self.guild, self.guild.house
         out = []
         if not house.owned:
-            out.append(("City house", "NOT OWNED", "muted", "Buy one from the Bankers in the City."))
+            out.append((i18n.t("guild_sheet.city_house"), i18n.t("guild_sheet.not_owned"), "muted", i18n.t("guild_sheet.buy_one_from_bankers_in")))
         elif house.squatting:
-            out.append(("City house", "SQUATTED", "bad", "Unpaid tax: the guard raids it."))
+            out.append((i18n.t("guild_sheet.city_house"), "SQUATTED", "bad", i18n.t("guild_sheet.unpaid_tax_guard_raids_it")))
         elif house.missed_payments:
-            out.append(("City house", "BEHIND ON TAX", "warn",
-                        f"{house.missed_payments} missed payment{'s' if house.missed_payments != 1 else ''}."))
+            out.append((i18n.t("guild_sheet.city_house"), i18n.t("guild_sheet.behind_on_tax"), "warn",
+                        i18n.plural("guild_sheet.missed_payment", house.missed_payments)))
         else:
-            out.append(("City house", "OWNED", "good", "Tax paid up."))
+            out.append((i18n.t("guild_sheet.city_house"), "OWNED", "good", i18n.t("guild_sheet.tax_paid_up")))
 
         stage = guild.wilds_claim_stage
         held = any(g.node == world.WILDS_TERRITORY_NODE and g.order is not None
                    and g.order.kind == "garrison" and not g.empty for g in guild.groups)
         if stage == "NONE":
-            out.append(("The Claim", "NOT CLAIMED", "muted", "Scout it from the Wilds to start."))
+            out.append((i18n.t("guild_sheet.claim"), i18n.t("guild_sheet.not_claimed"), "muted", i18n.t("guild_sheet.scout_it_from_wilds_to")))
         elif stage == "ESTABLISHED" and guild.wilds_claim_owner == "seized":
-            out.append(("The Claim", "SEIZED", "bad", "Travel there and beat the occupiers to retake it."))
+            out.append((i18n.t("guild_sheet.claim"), "SEIZED", "bad", i18n.t("guild_sheet.travel_there_and_beat_occupiers")))
         elif stage == "ESTABLISHED":
-            out.append(("The Claim", "HELD" if held else "UNGUARDED", "good" if held else "warn",
-                        "A garrison stands on the land." if held
-                        else "An unguarded claim can be seized without a fight."))
+            out.append((i18n.t("guild_sheet.claim"), "HELD" if held else "UNGUARDED", "good" if held else "warn",
+                        i18n.t("guild_sheet.garrison_stands_on_land") if held
+                        else i18n.t("guild_sheet.unguarded_claim_can_be_seized")))
         else:
             left = guild.wilds_claim_sustain_days_left
-            detail = (f"{left} days to hold it" if stage == "SUSTAINING" and left is not None
-                      else "Claim campaign in progress.")
-            out.append(("The Claim", stage.title(), "warn", detail))
+            detail = (i18n.t("guild_sheet.days_to_hold_it", left=left) if stage == "SUSTAINING" and left is not None
+                      else i18n.t("guild_sheet.claim_campaign_in_progress"))
+            out.append((i18n.t("guild_sheet.claim"), stage.title(), "warn", detail))
 
         bank = guild.bank
         out.append(("Strongbox", "RENTED" if bank.open else "NONE", "good" if bank.open else "muted",
-                    f"{bank.load:g}/{bank.capacity:g} kg used" if bank.open
-                    else "Rent one at the bank in the City."))
+                    i18n.t("guild_sheet.kg_used", load=bank.load, capacity=bank.capacity) if bank.open
+                    else i18n.t("guild_sheet.rent_one_at_bank_in")))
         return [{"name": n, "status": st, "tone": tone, "detail": d} for n, st, tone, d in out]
 
     def _vocation(self):

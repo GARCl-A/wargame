@@ -6,7 +6,7 @@ The rules are `ledger.LedgerDesk`'s, which pygame's `LedgerScreen` reads too. Th
 the desk: `HubSession` sends the band back to the map, where the clock runs.
 """
 
-from .. import data
+from .. import data, i18n
 from ..ledger import LedgerDesk
 from .shop_tab import _portrait
 
@@ -20,9 +20,9 @@ class LedgerTab:
         """Press the desk's button `key`; one the desk does not offer now is refused."""
         offered = {p["button"][0]: p["button"][2] for p in self.s.panels() if p["button"]}
         if key not in offered:
-            raise ValueError("the desk offers no such thing now")
+            raise ValueError(i18n.t("ledger_tab.desk_offers_no_such_thing"))
         if not offered[key]:
-            raise ValueError("the desk cannot do that yet")
+            raise ValueError(i18n.t("ledger_tab.desk_cannot_do_that_yet"))
         self.s.notice = None
         self.s._act(key)
 

@@ -7,21 +7,13 @@ the stash's weight cap, the load limit on what comes out, the slots, the fee and
 vault's.
 """
 
-from .. import economy, item_icon, items, store_column
+from .. import economy, i18n, item_icon, items, store_column
 from ..vault import BankVault, HouseVault
 from .shop_tab import SLOTS, _portrait, _tip
 
 # what each stash says of itself: where it is held, and what stands in for it before the guild has one
-COPY = {
-    BankVault.OWNER: {"title": "The strongbox", "where": "held in the City", "closed": "No strongbox yet",
-                       "closed_line": "The guild keeps nothing of its own until it rents a chest from the Bankers. Rent "
-                                      "one below: what goes in stays in the City, safe from the road, and any band that "
-                                      "visits the bank can take it out."},
-    HouseVault.OWNER: {"title": "The house", "where": "the guild's house in the City", "closed": "No house yet",
-                               "closed_line": "The Bankers sell the guild a house in the City once they trust it. It "
-                                              "stores far more than the strongbox, takes an oven and a garage, and owes "
-                                              "the Bankers a tax every cycle."},
-}
+COPY = {owner: {field: f"vault_tab.{owner}.{field}" for field in ("title", "where", "closed", "closed_line")}
+        for owner in (BankVault.OWNER, HouseVault.OWNER)}
 
 
 class VaultTab:
@@ -41,7 +33,7 @@ class VaultTab:
         return {
             "cards": s.hub_cards(),
             "purse": s.purse,
-            "chest": {"owner": self.chest, "label": s.LABEL, **COPY[self.chest], "open": s._open(),
+            "chest": {"owner": self.chest, "label": i18n.t(s.LABEL), **{k: i18n.t(v) for k, v in COPY[self.chest].items()}, "open": s._open(),
                       "load": round(stash.load, 2), "capacity": stash.capacity,
                       "rows": [self._row(self.chest, i, items.stack_name(e), e[1], items.stack_note(e))
                                  for i, e in enumerate(stash.items)]},
@@ -100,7 +92,7 @@ class VaultTab:
             return self.chest
         o = next((o for o in (*self.s.party, *self.s.stores) if o.uid == oid), None)
         if o is None:
-            raise ValueError("no such pack")
+            raise ValueError(i18n.t("vault_tab.no_such_pack"))
         return o
 
     def _pick(self, b):
@@ -108,9 +100,9 @@ class VaultTab:
         owner, loc = self._owner(b["from"]), b["loc"]
         if isinstance(loc, str):
             if owner == self.chest or loc not in dict(SLOTS) or self.s._item_at(owner, loc) is None:
-                raise ValueError(f"nothing in that {loc} slot")
+                raise ValueError(i18n.t("vault_tab.nothing_in_that_slot", loc=loc))
         elif not 0 <= loc < len(self.s._inventory(owner)):
-            raise ValueError("no such stack")
+            raise ValueError(i18n.t("vault_tab.no_such_stack"))
         return owner, loc
 
     def move(self, picks, to, zone="pack"):
@@ -120,7 +112,7 @@ class VaultTab:
         if dest == self.chest:
             zone = self.chest
         elif zone not in ("pack", *dict(SLOTS)):
-            raise ValueError(f"no such slot: {zone}")
+            raise ValueError(i18n.t("vault_tab.no_such_slot", zone=zone))
         s.selected, s._sel_qty = [], {}
         for b in picks:
             pick = self._pick(b)
@@ -134,17 +126,17 @@ class VaultTab:
     def service(self, key):
         offer = next((x for x in self.s._services() if x[0] == key), None)
         if offer is None or not offer[3]:
-            raise ValueError("that is not on offer to this band now")
+            raise ValueError(i18n.t("vault_tab.that_is_not_on_offer"))
         self.s._run_service(key)
 
     def exchange(self, oid, n, melt=False):
         if not self.exchanges:
-            raise ValueError("gold is minted and melted at the bank")
+            raise ValueError(i18n.t("vault_tab.gold_is_minted_and_melted"))
         holder = self.s._holder_of(self._owner(oid))
         if not self.s._exchange(holder, "sell_gold" if melt else "buy_gold", int(n)):
-            raise ValueError(f"cannot {'melt' if melt else 'mint'} {n} gold coins there")
+            raise ValueError(i18n.t("vault_tab.cannot_melt" if melt else "vault_tab.cannot_mint", n=n))
 
     def distribute(self):
         if not self.s.CAN_DISTRIBUTE:
-            raise ValueError("the load is not shared out here")
+            raise ValueError(i18n.t("vault_tab.load_is_not_shared_out"))
         self.s._distribute_load()

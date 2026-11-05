@@ -15,7 +15,7 @@ Aurochs himself is authored (`npcs/aurochs.json`); killing him closes the trail
 
 import random
 
-from . import clock, data, fight_nature, missions, npc_lib
+from . import clock, data, fight_nature, i18n, missions, npc_lib
 from .ox_fields import AUROCHS_SLUG
 
 SCOUT_HOURS = 2
@@ -34,17 +34,15 @@ def scout_country_roads(guild, group):
     """The roll at the end of `SCOUT_HOURS` on the lanes (an `orders.search` order) for the fields the tanner talks
     about. Only finds them while the ox job is out. -> (found, message)."""
     scout = _scout(group.members)
-    who = scout.name if scout else "The squad"
+    who = scout.name if scout else i18n.t("ox.squad")
     if missions.pending_ox(guild) is None:
-        return False, f"{who} walks the lanes for {SCOUT_HOURS} hours: farms, fences and nothing worth the trip."
+        return False, i18n.t("ox.walks_lanes_for_hours_farms", who=who, scout_hours=SCOUT_HOURS)
     nat = data.d20()
     total = nat + (scout.mod_wisdom if scout else 0)
     if total >= SCOUT_DC:
         guild.reveal_node("ox_fields")
-        return True, (f"{who} follows the churned earth to where the land opens out. "
-                      "The Legendary Ox Fields are found.")
-    return False, (f"{who} searches the lanes for {SCOUT_HOURS} hours and finds no sign "
-                   f"(d20({nat}) {scout.mod_wisdom if scout else 0:+}(WIS) = {total} vs DC {SCOUT_DC}).")
+        return True, (i18n.t("ox.follows_churned_earth_to_where", who=who))
+    return False, (i18n.t("ox.searches_lanes_for_hours_and", who=who, scout_hours=SCOUT_HOURS, nat=nat, value=scout.mod_wisdom if scout else 0, total=total, scout_dc=SCOUT_DC))
 
 
 def track_dc(guild):

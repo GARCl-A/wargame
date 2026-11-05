@@ -11,7 +11,7 @@ do from the wagon, and the animals eat from the group's food, wagon first.
 
 from uuid import uuid4
 
-from . import abilities, data
+from . import abilities, data, i18n
 from .creature import Creature
 from .unit_derive import carry_thresholds
 from .unit_hunger import take_ration
@@ -37,9 +37,9 @@ def feed_herd(herd, packs_for):
         animal.unfed_days += 1
         if animal.unfed_days >= STARVE_DAYS:
             herd.remove(animal)
-            events.append(f"A {animal.species} starved to death.")
+            events.append(i18n.t("animals.starved_to_death", species=animal.species))
         else:
-            events.append(f"A {animal.species} went hungry.")
+            events.append(i18n.t("animals.went_hungry", species=animal.species))
     return events
 
 

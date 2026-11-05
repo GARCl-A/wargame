@@ -32,7 +32,7 @@ below (`caught`, `prev_node`, `resume_path`, `pack`, `job`) are theirs.
 
 from dataclasses import dataclass
 
-from . import economy, world
+from . import economy, i18n, world
 
 AUTO_KINDS = frozenset({"travel", "work", "rest", "solo", "wait"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
@@ -85,7 +85,7 @@ def travel(group, dest, pace=1.0):
     `next_leg` orders together as each one resolves."""
     full_path, distance = world.route(group.node, dest)
     if distance == float("inf"):
-        raise ValueError(f"no route from {group.node!r} to {dest!r}")
+        raise ValueError(i18n.t("orders.no_route_from_to", node=repr(group.node), dest=repr(dest)))
     if len(full_path) < 2:                      # already there
         return Order("travel", eta=0, remaining=0, dest=dest)
     return next_leg(group.node, full_path[1:], group.speed, pace)
@@ -110,9 +110,9 @@ def work(guild, group, hours, gather=False, task=None, resume=None, licensed=Tru
     `resume` is the garrison job the group goes back to when the shift is over. A routine's gather
     passes `licensed=False`: the economic licence is not its business."""
     if gather and licensed and not guild.has_licence(group.node):
-        raise ValueError(f"no gathering licence for {group.node!r}")
+        raise ValueError(i18n.t("orders.no_gathering_licence_for", node=repr(group.node)))
     if gather and not any(economy.owns_tool(u, group.node) for u in group.members):
-        raise ValueError(f"no one in {group.display_name} carries the node's {economy.GATHER_TOOLS[group.node]}")
+        raise ValueError(i18n.t("orders.no_one_in_carries_node", display_name=group.display_name, gather_tools=economy.GATHER_TOOLS[group.node]))
     clock_hours = hours * guild.work_speedup(group.members)
     return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task, job=resume)
 
@@ -159,10 +159,10 @@ def supply_run(guild, group):
     """Order `group` to walk a Ledger Hold supply caravan to the Frontier Outpost and back
     (`Guild.supply_leg` per leg). Needs Ledger Hold and `SUPPLY_RUN_CARGO_KG` of free cargo."""
     if group.node != SUPPLY_START:
-        raise ValueError(f"supply runs can only be issued at {SUPPLY_START}, got {group.node!r}")
+        raise ValueError(i18n.t("orders.supply_runs_can_only_be", supply_start=SUPPLY_START, node=repr(group.node)))
     if group.free_cargo_capacity < economy.SUPPLY_RUN_CARGO_KG:
         raise ValueError(
-            f"group needs at least {economy.SUPPLY_RUN_CARGO_KG} kg free cargo capacity, has {group.free_cargo_capacity:.1f}"
+            i18n.t("orders.group_needs_at_least_kg", supply_run_cargo_kg=economy.SUPPLY_RUN_CARGO_KG, free_cargo_capacity=group.free_cargo_capacity)
         )
     return guild.supply_leg(group, group.node, supply_route())
 
@@ -197,7 +197,7 @@ def interactive(kind, hours=APPROACH_HOURS):
     """A `market`/`bank`/`recruit`/`hunt`/`arena` order: a small approach cost,
     then `campaign.advance` hands the group back for its real screen."""
     if kind not in INTERACTIVE_KINDS:
-        raise ValueError(f"not an interactive kind: {kind!r}")
+        raise ValueError(i18n.t("orders.not_interactive_kind", kind=repr(kind)))
     return Order(kind, eta=hours, remaining=hours)
 
 

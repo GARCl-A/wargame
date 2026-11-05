@@ -15,7 +15,7 @@ it.
 import math
 from dataclasses import dataclass
 
-from . import economy, items, objectives, orders, poisons
+from . import economy, i18n, items, objectives, orders, poisons
 from .constants import fmt_money
 
 POTION = "Minor Healing Potion"
@@ -50,7 +50,7 @@ def quote(unit):
     parts = []
     if unit.hp < unit.hp_max:
         potions = math.ceil((unit.hp_max - unit.hp) / economy.MEDIC_POTION_HP)
-        parts.append((f"{unit.hp_max - unit.hp} HP", round(potions * _price(POTION)), economy.MEDIC_HP_HOURS))
+        parts.append((i18n.t("medic.hp", value=unit.hp_max - unit.hp), round(potions * _price(POTION)), economy.MEDIC_HP_HOURS))
     if unit.sick:
         kit = items.get(items.FIRST_AID_ITEM)
         parts.append(("Sickness", round(kit.price / kit.max_charges * economy.MEDIC_PRICE_FACTOR),
@@ -88,17 +88,17 @@ def visit(guild, group, patients):
     picked = [(u, quote(u)) for u in patients]
     picked = [(u, q) for u, q in picked if q.needs_care]
     if not picked:
-        return [], 0, ["Nobody picked needs treating."]
+        return [], 0, [i18n.t("medic.nobody_picked_needs_treating")]
     if not all(q.offered for _, q in picked):
-        return [], 0, ["A longer treatment needs a hospital stay."]
+        return [], 0, [i18n.t("medic.longer_treatment_needs_hospital_stay")]
     cost, hours = total([q for _, q in picked])
     holders = (*group.members, *getattr(group, "stores", ()))
     if sum(u.money for u in holders) < cost:
-        return [], 0, [f"The group cannot pay ${cost}."]
+        return [], 0, [i18n.t("medic.group_cannot_pay", cost=cost)]
     economy.charge_richest_first(holders, cost)
     objectives.complete(guild, "obj_medic")
     names = ", ".join(u.name for u, _ in picked)
-    return [u for u, _ in picked], hours, [f"The Medic treats {names}: ${cost}, {hours} h."]
+    return [u for u, _ in picked], hours, [i18n.t("medic.medic_treats_h", names=names, cost=cost, hours=hours)]
 
 
 def treated(guild, patients):
@@ -127,27 +127,27 @@ def admit(guild, group, patient):
     cannot be paid for or the group is busy."""
     q = quote(patient)
     if not q.needs_care:
-        return False, [f"{patient.name} needs no treatment."]
+        return False, [i18n.t("medic.needs_no_treatment", name=patient.name)]
     if q.offered:
-        return False, [f"{patient.name} needs only a visit, not a hospital stay."]
+        return False, [i18n.t("medic.needs_only_visit_not_hospital", name=patient.name)]
     if group.locked:
-        return False, ["A group with an order in flight cannot admit anyone."]
+        return False, [i18n.t("medic.group_with_order_in_flight")]
     holders = (*group.members, *getattr(group, "stores", ()))
     if sum(u.money for u in holders) < q.cost:
-        return False, [f"The group cannot pay ${q.cost}."]
+        return False, [i18n.t("medic.group_cannot_pay", cost=q.cost)]
     economy.charge_richest_first(holders, q.cost)
     objectives.complete(guild, "obj_medic")
     order = orders.solo("hospital", patient.uid, q.hours)
     if guild.send_alone(group, patient, order, f"{patient.name} (hospital)") is None:
         group.order = order
-        return True, [f"No free group slot: the group waits with {patient.name} (${q.cost}, {q.hours} h)."]
-    return True, [f"{patient.name} is admitted to the hospital: ${q.cost}, {q.hours} h."]
+        return True, [i18n.t("medic.no_free_group_slot_group", name=patient.name, cost=q.cost, hours=q.hours)]
+    return True, [i18n.t("medic.is_admitted_to_hospital_h", name=patient.name, cost=q.cost, hours=q.hours)]
 
 
 def discharge(patient):
     """Cures the patient; the player merges them back by hand."""
     cure(patient)
-    return f"{patient.name} leaves the hospital cured."
+    return i18n.t("medic.leaves_hospital_cured", name=patient.name)
 
 
 class Ward:
@@ -170,7 +170,7 @@ class Ward:
         """Pick or drop a patient: visits combine, a hospital stay is picked alone."""
         offered = {q.uid: q.offered for q in self._quotes()}
         if uid not in offered:
-            raise ValueError("nobody by that name needs treating")
+            raise ValueError(i18n.t("medic.nobody_by_that_name_needs"))
         self.notice = None
         if uid in self.picked:
             self.picked.discard(uid)
@@ -198,11 +198,11 @@ class Ward:
         return ok, lines, order
 
     def _stay_where(self):
-        return ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
-                else "the whole group waits (no free group slot)")
+        return (i18n.t("medic.in_hospital_out_of_group") if self.guild.free_slots or len(self.group.members) == 1
+                else i18n.t("medic.whole_group_waits_no_free"))
 
     def hub_cards(self):
         hurt = sum(1 for q in self._quotes())
         purse = sum(u.money for u in (*self.group.members, *getattr(self.group, "stores", ())))
-        return [{"label": "need treating", "value": str(hurt)},
-                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
+        return [{"label": i18n.t("medic.need_treating"), "value": str(hurt)},
+                {"label": i18n.t("medic.party_purse"), "value": fmt_money(purse), "tone": "money"}]

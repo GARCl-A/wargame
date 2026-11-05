@@ -8,7 +8,7 @@ group is given a copy, which becomes its `Routine`."""
 
 from dataclasses import dataclass
 
-from . import data, items, magic, routines, world
+from . import data, i18n, items, magic, routines, world
 
 NAME_MAX = 32
 NOTE_MAX = 120
@@ -32,7 +32,7 @@ def fame_to_next_slot(guild):
 def assign(guild, group, routine):
     """Put `routine` on an idle `group` if a seat is free. Returns the log lines."""
     if group.routine is None and used(guild) >= slots(guild):
-        raise ValueError("no free automation slot")
+        raise ValueError(i18n.t("routine_book.no_free_automation_slot"))
     return routines.assign(guild, group, routine)
 
 
@@ -55,21 +55,21 @@ _TIMED = (routines.Gather, routines.Work, routines.Craft, routines.Rest)
 
 def _item(name):
     if name not in items.all_items():
-        raise ValueError(f"unknown item: {name}")
+        raise ValueError(i18n.t("routine_book.unknown_item", name=name))
 
 
 def _ref(ref, own_ok):
     if ref.how not in ("own", "named", "doing", "here"):
-        raise ValueError(f"unknown way to name a group: {ref.how}")
+        raise ValueError(i18n.t("routine_book.unknown_way_to_name_group", how=ref.how))
     if ref.how == "own" and not own_ok:
-        raise ValueError("a block that moves goods needs another group")
+        raise ValueError(i18n.t("routine_book.block_that_moves_goods_needs"))
     if ref.how in ("named", "doing") and not ref.arg:
-        raise ValueError("name the group")
+        raise ValueError(i18n.t("routine_book.name_group"))
 
 
 def _cond(cond):
     if cond.op not in routines._OPS or cond.metric not in routines._METRICS:
-        raise ValueError("unknown condition")
+        raise ValueError(i18n.t("routine_book.unknown_condition"))
     if cond.metric == "items":
         _item(cond.item)
     _ref(cond.ref, True)
@@ -77,29 +77,29 @@ def _cond(cond):
 
 def _count(n):
     if n is not None and not n >= 1:
-        raise ValueError("a count is at least 1")
+        raise ValueError(i18n.t("routine_book.count_is_at_least"))
 
 
 def _check(guild, block):
     if isinstance(block, routines.Travel):
         if block.node not in {n.id for n in world.known(guild)}:
-            raise ValueError(f"unknown place: {block.node}")
+            raise ValueError(i18n.t("routine_book.unknown_place", node=block.node))
     elif isinstance(block, _TIMED):
         if not block.hours > 0:
-            raise ValueError("hours are more than zero")
+            raise ValueError(i18n.t("routine_book.hours_are_more_than_zero"))
         if isinstance(block, routines.Craft) and block.recipe not in items.CRAFTING_RECIPES:
-            raise ValueError(f"unknown recipe: {block.recipe}")
+            raise ValueError(i18n.t("routine_book.unknown_recipe", recipe=block.recipe))
     elif isinstance(block, routines.Study):
         if block.target not in magic.SPELLS and block.target not in data.LANGUAGES:
-            raise ValueError(f"unknown thing to study: {block.target}")
+            raise ValueError(i18n.t("routine_book.unknown_thing_to_study", target=block.target))
         if not block.days > 0:
-            raise ValueError("days are more than zero")
+            raise ValueError(i18n.t("routine_book.days_are_more_than_zero"))
     elif isinstance(block, routines.Repair):
         if not block.wagon.strip():
-            raise ValueError("name the wagon to mend")
+            raise ValueError(i18n.t("routine_book.name_wagon_to_mend"))
     elif isinstance(block, (routines.Store, routines.Fetch)):
         if block.place not in routines.PLACES:
-            raise ValueError(f"unknown stash: {block.place}")
+            raise ValueError(i18n.t("routine_book.unknown_stash", place=block.place))
         _item(block.item)
         _count(block.count)
     elif isinstance(block, routines.Wait):
@@ -109,7 +109,7 @@ def _check(guild, block):
         _item(block.item)
         _count(block.count)
         if isinstance(block, routines.Take) and block.until_days is not None and block.until_days <= 0:
-            raise ValueError("days of food are more than zero")
+            raise ValueError(i18n.t("routine_book.days_of_food_are_more"))
     elif isinstance(block, routines.Trade):
         for name in block.sell:
             _item(name)
@@ -118,12 +118,12 @@ def _check(guild, block):
             _count(count)
         _item(block.food)
         if any(x is not None and x < 0 for x in (block.food_days, block.max_spend)):
-            raise ValueError("a limit cannot be below zero")
+            raise ValueError(i18n.t("routine_book.limit_cannot_be_below_zero"))
     elif isinstance(block, routines.Repeat):
         _cond(block.cond)
         check(guild, block.body)
     else:
-        raise TypeError(f"unknown block: {type(block).__name__}")
+        raise TypeError(i18n.t("routine_book.unknown_block", name=type(block).__name__))
 
 
 def check(guild, blocks):
@@ -135,9 +135,9 @@ def check(guild, blocks):
 def _clean_name(guild, name, skip=None):
     name = " ".join((name or "").split())[:NAME_MAX]
     if not name:
-        raise ValueError("a routine needs a name")
+        raise ValueError(i18n.t("routine_book.routine_needs_name"))
     if any(p.name == name for p in guild.routine_pages if p is not skip):
-        raise ValueError(f"there is already a routine called {name}")
+        raise ValueError(i18n.t("routine_book.there_is_already_routine_called", name=name))
     return name
 
 
@@ -164,10 +164,10 @@ def _parse(guild, blocks_data):
     try:
         blocks = routines.load(blocks_data)
         if not isinstance(blocks, tuple):
-            raise TypeError("a routine is a list of blocks")
+            raise TypeError(i18n.t("routine_book.routine_is_list_of_blocks"))
         check(guild, blocks)
     except (KeyError, TypeError) as err:
-        raise ValueError("that routine is not well formed") from err
+        raise ValueError(i18n.t("routine_book.that_routine_is_not_well")) from err
     return blocks
 
 
@@ -175,7 +175,7 @@ def equip(guild, group, index):
     """Give an idle `group` a copy of page `index`: what it adjusts afterwards never touches the Book."""
     page = guild.routine_pages[index]
     if group.routine is not None:
-        raise ValueError(f"{group.display_name} already has a routine")
+        raise ValueError(i18n.t("routine_book.already_has_routine", display_name=group.display_name))
     copy = routines.Routine(routines.load(routines.dump(page.blocks)), name=page.name, note=page.note)
     return assign(guild, group, copy)
 

@@ -8,6 +8,7 @@ from .. import (
     abilities,
     art_files,
     data,
+    i18n,
     item_icon,
     items,
     talents,
@@ -44,18 +45,18 @@ def _item(it):
     tags += [tid.replace("_", " ").title() for tid in it.traits if not weapon_traits.get(tid)]
     links = [_link(tid, label) for tid, label in wiki_terms.of_item(it)]
     if it.range:
-        tags.append(f"Range {it.range} sq")
+        tags.append(i18n.t("wiki_session.range_sq", range=it.range))
     if it.hands == 2:
         tags.append("Two-handed")
-    return _entry(it.name, it.type.value, [f"{it.weight:g} kg", f"${it.price}", it.rarity.value], tags=tags,
+    return _entry(it.name, it.type.value, [i18n.t("wiki_session.kg", weight=it.weight), f"${it.price}", it.rarity.value], tags=tags,
                   glyph=item_icon.glyph(it.name), links=links, find=[x["label"] for x in links])
 
 
 def _recipe(target, rec):
     station = rec.station.value.title()
     return _entry(f"{target} ×{rec.yield_qty}" if rec.yield_qty > 1 else target, station,
-                  [f"{rec.batch_hours:.1f} h a batch", f"level {rec.level}"],
-                  [" + ".join(rec.materials)] + ([f"Tools: {', '.join(rec.tools)}"] if rec.tools else []),
+                  [f"{rec.batch_hours:.1f} h a batch", i18n.t("wiki_session.level", level=rec.level)],
+                  [" + ".join(rec.materials)] + ([i18n.t("wiki_session.tools", join=', '.join(rec.tools))] if rec.tools else []),
                   glyph=item_icon.glyph(target), find=[" ".join(rec.materials)])
 
 
@@ -78,9 +79,9 @@ def _talents():
     for track, t in rows:
         need = talents.get(t.requires) if t.requires else None
         races = (t.race,) if isinstance(t.race, str) else tuple(t.race or ())
-        out.append(_entry(t.name, f"{track} · tier {t.tier}",
-                          [f"needs {need.name if need else t.requires}" if t.requires else "a root",
-                           f"{', '.join(races)} only" if races else None],
+        out.append(_entry(t.name, i18n.t("wiki_session.tier", track=track, tier=t.tier),
+                          [i18n.t("wiki_session.needs", value=need.name if need else t.requires) if t.requires else "a root",
+                           i18n.t("wiki_session.only", join=', '.join(races)) if races else None],
                           [t.effect], glyph=t.icon, find=[t.effect, *races]))
     return out
 
@@ -100,8 +101,8 @@ def _beasts():
         traits = [t.name for a in ab if (t := abilities.get(a))]
         drops = ([f"{b['drop_item']} ({round(b.get('drop_chance', 0) * 100)}%)"] if b.get("drop_item") else []) + \
                 [f"{it} ×{qty} ({round(ch * 100)}%)" for it, ch, qty in b.get("also_drops", ())]
-        out.append(_entry(b["name"], b.get("kind", "beast"), [f"Hit Die d{b['hd']}", b["size"], f"Speed {b['speed']:g} m"],
-                          [f"Drops: {', '.join(drops) or 'nothing'}"], tags=traits, find=traits))
+        out.append(_entry(b["name"], b.get("kind", "beast"), [i18n.t("wiki_session.hit_die_d", b=b['hd']), b["size"], i18n.t("wiki_session.speed_m", b=b['speed'])],
+                          [i18n.t("wiki_session.drops", value=', '.join(drops) or 'nothing')], tags=traits, find=traits))
     return out
 
 
@@ -128,16 +129,16 @@ class WikiSession(Session):
         "back": lambda s, b: s.back_to(),
     }
 
-    def __init__(self, back, back_label="Back"):
+    def __init__(self, back, back_label=None):
         self.back_to = back
-        self.back_label = back_label
+        self.back_label = back_label or i18n.t("ui.title.back")
         self.tab = "items"
         self.query = ""
         self.focus = None
 
     def chapter(self, tab):
         if tab not in BUILD:
-            raise ValueError(f"no chapter called {tab}")
+            raise ValueError(i18n.t("wiki_session.no_chapter_called", tab=tab))
         self.tab = tab
         self.focus = None
         return self.state()
@@ -146,7 +147,7 @@ class WikiSession(Session):
         """Turn to the entry `ref` ("chapter:id") names, the filter cleared so it shows."""
         tab, _, eid = str(ref).partition(":")
         if tab not in BUILD or not any(e["id"] == eid for e in BUILD[tab]()):
-            raise ValueError(f"no entry called {ref}")
+            raise ValueError(i18n.t("wiki_session.no_entry_called", ref=ref))
         self.tab, self.query, self.focus = tab, "", eid
         return self.state()
 

@@ -6,7 +6,7 @@ The title's New guild opens it."""
 
 from typing import ClassVar
 
-from .. import art_files, persist, recorder, settings, vocations, wildfire, world
+from .. import art_files, i18n, persist, recorder, settings, vocations, wildfire, world
 from ..archetypes import ARCHETYPES, is_compatible, unit_archetypes
 from ..combatant import Combatant
 from ..draft import (
@@ -78,34 +78,34 @@ class DraftSession(Session):
     # ------------------------------------------------------------------ #
     def _at(self, *steps):
         if self.step not in steps:
-            raise ValueError(f"not on the {' or '.join(steps)} step")
+            raise ValueError(i18n.t("draft_session.not_on_step", join=' or '.join(steps)))
 
     def choose_vocation(self, vid):
         self._at("vocation")
         v = vocations.get(vid)
         if v is None:
-            raise ValueError(f"no vocation called {vid}")
+            raise ValueError(i18n.t("draft_session.no_vocation_called", vid=vid))
         if not v.active:
-            raise ValueError(f"{v.name} is not open yet")
+            raise ValueError(i18n.t("draft_session.is_not_open_yet", name=v.name))
         self.vocation = vid
         return self.state()
 
     def next(self):
         if self.step == "vocation":
             if self.vocation is None:
-                raise ValueError("pick a vocation first")
+                raise ValueError(i18n.t("draft_session.pick_vocation_first"))
             if self.draft is None or self.draft.vocation != self.vocation:
                 self.draft = Draft(self.vocation)
             self.step = "pick"
         elif self.step == "pick":
             if len(self.draft.picks) != TEAM_SIZE:
-                raise ValueError(f"pick {TEAM_SIZE} of the {POOL_SIZE}")
+                raise ValueError(i18n.t("draft_session.pick_of", team_size=TEAM_SIZE, pool_size=POOL_SIZE))
             self.draft.pending_labels = []
             if self.draft.leader_pick not in self.draft.picks:
                 self.draft.leader_pick = None
             self.step = "charter"
         else:
-            raise ValueError("the charter is the last step")
+            raise ValueError(i18n.t("draft_session.charter_is_last_step"))
         return self.state()
 
     def back(self):
@@ -121,12 +121,12 @@ class DraftSession(Session):
         """Pick or let go of a candidate; with a commission waiting, it replaces that candidate."""
         self._at("pick")
         if not 0 <= index < len(self.draft.pool):
-            raise ValueError("no such candidate")
+            raise ValueError(i18n.t("draft_session.no_such_candidate"))
         unit = self.draft.pool[index]
         if self.draft.pending_labels:
             self.draft.replace(unit)
         elif unit not in self.draft.picks and len(self.draft.picks) >= TEAM_SIZE:
-            raise ValueError(f"the squad is {TEAM_SIZE}: let one go first")
+            raise ValueError(i18n.t("draft_session.squad_is_let_one_go", team_size=TEAM_SIZE))
         else:
             self.draft.toggle_pick(unit)
         return self.state()
@@ -135,15 +135,15 @@ class DraftSession(Session):
         """Call for `labels`, a token each; the next candidate picked is replaced by one who has them."""
         self._at("pick")
         if not labels:
-            raise ValueError("tick at least one archetype")
+            raise ValueError(i18n.t("draft_session.tick_at_least_one_archetype"))
         if len(labels) > self.draft.tokens:
-            raise ValueError(f"{self.draft.tokens} token{'s' * (self.draft.tokens != 1)} left")
+            raise ValueError(i18n.plural("draft_session.token_left", self.draft.tokens))
         chosen = []
         for key in labels:
             if key not in ARCHETYPES:
-                raise ValueError(f"no archetype called {key}")
+                raise ValueError(i18n.t("draft_session.no_archetype_called", what=key))
             if not is_compatible(chosen, key):
-                raise ValueError(f"{key} does not go with {', '.join(chosen)}")
+                raise ValueError(i18n.t("draft_session.does_not_go_with", what=key, join=', '.join(chosen)))
             chosen.append(key)
         self.draft.pending_labels = chosen
         return self.state()
@@ -162,21 +162,21 @@ class DraftSession(Session):
         self._at("charter")
         name = str(name).strip()[:_UNIT_NAME]
         if not name:
-            raise ValueError("a founder needs a name")
+            raise ValueError(i18n.t("draft_session.founder_needs_name"))
         self._founder(index).name = name
         return self.state()
 
     def set_color(self, index):
         self._at("charter")
         if not 0 <= index < len(BANNER_COLORS):
-            raise ValueError("no such colour")
+            raise ValueError(i18n.t("draft_session.no_such_colour"))
         self.draft.banner_color = BANNER_COLORS[index][1]
         return self.state()
 
     def set_emblem(self, slug):
         self._at("charter")
         if slug not in {s for _, s, _ in art_files.BANNER_ICONS}:
-            raise ValueError(f"no emblem called {slug}")
+            raise ValueError(i18n.t("draft_session.no_emblem_called", slug=slug))
         self.draft.banner_icon = slug
         return self.state()
 
@@ -187,7 +187,7 @@ class DraftSession(Session):
 
     def _founder(self, index):
         if not 0 <= index < len(self.draft.picks):
-            raise ValueError("no such founder")
+            raise ValueError(i18n.t("draft_session.no_such_founder"))
         return self.draft.picks[index]
 
     def found(self, name=None):
@@ -198,9 +198,9 @@ class DraftSession(Session):
         if name is not None:
             self.set_name(name)
         if d.leader_pick is None:
-            raise ValueError("pick who leads the guild")
+            raise ValueError(i18n.t("draft_session.pick_who_leads_guild"))
         world_id = persist.new_world_id()
-        guild = Guild(d.picks, node=world.START_NODE, leader=d.leader_pick, name=d.guild_name or "The Guild",
+        guild = Guild(d.picks, node=world.START_NODE, leader=d.leader_pick, name=d.guild_name or i18n.t("draft_session.guild"),
                       banner_color=d.banner_color, banner_icon=d.banner_icon, tutorial=self.tutorial,
                       vocation=self.vocation)
         wildfire.sync_world(guild)
@@ -233,10 +233,10 @@ class DraftSession(Session):
         voc = vocations.get(self.vocation)
         now = STEPS.index(self.step)
         squad = ", ".join(u.name for u in d.picks) if d else ""
-        rows = [("Vocation", voc.name if voc and now > 0 else "The trade it is founded on"),
-                ("The squad", squad if now > 1 else f"{len(d.picks)} of {TEAM_SIZE} picked from the {POOL_SIZE}"
-                 if now == 1 else f"{TEAM_SIZE} of {POOL_SIZE}"),
-                ("The charter", "Its name, its arms, who leads")]
+        rows = [("Vocation", voc.name if voc and now > 0 else i18n.t("draft_session.trade_it_is_founded_on")),
+                (i18n.t("draft_session.squad"), squad if now > 1 else i18n.t("draft_session.of_picked_from", len=len(d.picks), team_size=TEAM_SIZE, pool_size=POOL_SIZE)
+                 if now == 1 else i18n.t("draft_session.of", team_size=TEAM_SIZE, pool_size=POOL_SIZE)),
+                (i18n.t("draft_session.charter"), i18n.t("draft_session.its_name_its_arms_who"))]
         return [{"label": label, "sub": sub, "state": "done" if i < now else "now" if i == now else "later"}
                 for i, (label, sub) in enumerate(rows)]
 

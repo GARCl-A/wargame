@@ -16,6 +16,8 @@ and serves the card itself (`/api/tutorial`).
 import os
 from typing import ClassVar
 
+from .. import i18n
+
 ASSETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
 
 
@@ -56,7 +58,7 @@ class Session:
         from .sheet_view import sheet_of
         u = next((u for u in self.sheet_units() if u.uid == uid), None)
         if u is None:
-            raise ValueError("nobody by that id here")
+            raise ValueError(i18n.t("session.nobody_by_that_id_here"))
         return sheet_of(u, getattr(self, "guild", None))
 
     def verb(self, name, post):

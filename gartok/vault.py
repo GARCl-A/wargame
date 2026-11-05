@@ -10,7 +10,7 @@ The bank is also the only place Gold Coins are minted or melted (`economy.buy_go
 `sell_gold`, `economy.GOLD_FEE` per coin each way), on a coin stack in a pack or the chest.
 """
 
-from . import economy, items, store_column
+from . import economy, i18n, items, store_column
 from .constants import fmt_money
 from .loadout_move import LoadoutMoveMixin
 
@@ -19,9 +19,9 @@ SLOTS = ("hand", "offhand", "tongue", "artifact", "armor")
 
 class Vault(economy.PartyPurse, LoadoutMoveMixin):
     OWNER = ""              # pick-owner key for the stash: "bank" / "house"
-    LABEL = ""              # "the strongbox"
-    CLOSED_NOTICE = ""      # said when depositing into a stash the guild doesn't hold yet
-    WHERE = ""              # completes "won't fit -- N kg free ..."
+    LABEL = ""              # catalog key of the stash's card label
+    CLOSED_NOTICE = ""      # catalog key, said when depositing into a stash the guild doesn't hold yet
+    NO_ROOM = ""            # catalog key of "won't fit -- N kg free ..." in this stash
     CAN_DISTRIBUTE = False
 
     def __init__(self, guild, party):
@@ -84,7 +84,7 @@ class Vault(economy.PartyPurse, LoadoutMoveMixin):
         if any(owner == self.OWNER for owner, _ in picks):
             add = sum(items.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
             if dst.load + add > dst.carry_max:
-                self.notice = f"won't fit {dst.name}'s load."
+                self.notice = i18n.t("vault.won_t_fit_s_load", name=dst.name)
                 self.selected = picks
                 return
 
@@ -92,7 +92,7 @@ class Vault(economy.PartyPurse, LoadoutMoveMixin):
             moving = [p for p in picks if p[0] is not dst]
             add = sum(items.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in moving)
             if not dst.stash.fits(add):
-                self.notice = f"won't fit -- {dst.stash.free:g} kg free on the {dst.name.lower()}."
+                self.notice = i18n.t("vault.won_t_fit_kg_free", free=dst.stash.free, lower=dst.name.lower())
                 self.selected = picks
                 return
 
@@ -137,11 +137,11 @@ class Vault(economy.PartyPurse, LoadoutMoveMixin):
         stash = self._stash()
         add = sum(items.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
         if not self._open():
-            self.notice = self.CLOSED_NOTICE
+            self.notice = i18n.t(self.CLOSED_NOTICE)
             self.selected = picks
             return
         if not stash.fits(add):
-            self.notice = f"won't fit -- {stash.free:g} kg free {self.WHERE}."
+            self.notice = i18n.t(self.NO_ROOM, free=f"{stash.free:g}")
             self.selected = picks
             return
         collected, touched = self._collect(picks)
@@ -151,15 +151,15 @@ class Vault(economy.PartyPurse, LoadoutMoveMixin):
         for u in touched:
             u._derive_combat()
         total = sum(q for _, q in collected)
-        one = collected[0][0] if total == 1 else f"{total} items"
-        self.notice = f"stashed {one}."
+        one = collected[0][0] if total == 1 else i18n.plural("vault.items", total)
+        self.notice = i18n.t("vault.stashed", one=one)
 
     def _distribute_load(self):
         from . import unit as unit_module
         if len(self.party) + len(self.stores) <= 1:
             return
         unit_module.distribute_load(self.party, share_coins=True, creatures=self.stores)
-        self.notice = "redistributed packs by carrying capacity."
+        self.notice = i18n.t("vault.redistributed_packs_by_carrying_capacity")
 
     def _purse_members(self):
         return self.party
@@ -168,18 +168,18 @@ class Vault(economy.PartyPurse, LoadoutMoveMixin):
         return self.stores
 
     def hub_cards(self):
-        cards = [{"label": "party purse", "value": fmt_money(self.purse), "tone": "money"}]
+        cards = [{"label": i18n.t("vault.party_purse"), "value": fmt_money(self.purse), "tone": "money"}]
         if self._open():
             stash = self._stash()
-            cards.insert(0, {"label": self.LABEL, "value": f"{stash.load:.1f} / {stash.capacity:.0f} kg"})
+            cards.insert(0, {"label": i18n.t(self.LABEL), "value": i18n.t("vault.kg", load=stash.load, capacity=stash.capacity)})
         return cards
 
 
 class BankVault(Vault):
     OWNER = "bank"
-    LABEL = "the strongbox"
-    CLOSED_NOTICE = "rent a strongbox first."
-    WHERE = "in the chest"
+    LABEL = "vault.label_bank"
+    CLOSED_NOTICE = "vault.closed_bank"
+    NO_ROOM = "vault.no_room_bank"
     CAN_DISTRIBUTE = True
 
     def _stash(self):
@@ -194,33 +194,30 @@ class BankVault(Vault):
         if not g.house.owned and not g.house.squatting and g.bankers_debt <= 0:
             rep_ok = g.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
             can_buy = rep_ok and not g.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
-            sub = (f"{fmt_money(economy.CITY_PROPERTY_PRICE)}  ·  needs {economy.CITY_PROPERTY_REP_GATE} "
-                   "standing with the Bankers")
-            services.append(("buy_property", "BUY THE HOUSE", sub, can_buy))
+            sub = (i18n.t("vault.needs_standing_with_bankers", fmt_money=fmt_money(economy.CITY_PROPERTY_PRICE), city_property_rep_gate=economy.CITY_PROPERTY_REP_GATE))
+            services.append(("buy_property", i18n.t("vault.buy_house"), sub, can_buy))
         if not g.bank.open:
             can_rent = self.purse >= economy.BANK_CHEST_PRICE
             services.append(("rent", "RENT A STRONGBOX",
-                             f"{fmt_money(economy.BANK_CHEST_PRICE)}  ·  {economy.BANK_CHEST_CAPACITY} kg held in the City",
+                             i18n.t("vault.kg_held_in_city", fmt_money=fmt_money(economy.BANK_CHEST_PRICE), bank_chest_capacity=economy.BANK_CHEST_CAPACITY),
                              can_rent))
         return services
 
     def _run_service(self, key):
         if key == "rent":
             if self.purse < economy.BANK_CHEST_PRICE:
-                self.notice = (f"the strongbox costs {fmt_money(economy.BANK_CHEST_PRICE)} -- "
-                               f"the party has {fmt_money(self.purse)}.")
+                self.notice = (i18n.t("vault.strongbox_costs_party_has", cost=fmt_money(economy.BANK_CHEST_PRICE), wealth=fmt_money(self.purse)))
                 return
             self.purse -= economy.BANK_CHEST_PRICE
             self.guild.rent_bank_chest()
-            self.notice = f"rented a strongbox -- {self.guild.bank.capacity} kg of storage at the bank."
+            self.notice = i18n.t("vault.rented_strongbox_kg_of_storage", capacity=self.guild.bank.capacity)
         elif key == "buy_property":
             if self.purse < economy.CITY_PROPERTY_PRICE:
-                self.notice = (f"the Bankers want {fmt_money(economy.CITY_PROPERTY_PRICE)} for "
-                               f"the house -- the party has {fmt_money(self.purse)}.")
+                self.notice = (i18n.t("vault.bankers_want_for_house_party", cost=fmt_money(economy.CITY_PROPERTY_PRICE), wealth=fmt_money(self.purse)))
                 return
             self.purse -= economy.CITY_PROPERTY_PRICE
             self.guild.buy_city_property()
-            self.notice = "bought a house in the City -- the Bankers' tax starts now."
+            self.notice = i18n.t("vault.bought_house_in_city_bankers")
 
     def _holder_of(self, owner):
         return self._stash() if owner == self.OWNER else owner
@@ -230,11 +227,11 @@ class BankVault(Vault):
         if mode == "buy_gold":
             if not economy.buy_gold(holder, n):
                 return False
-            self.notice = f"minted {n} gold coins for {fmt_money(economy.gold_price(n))}."
+            self.notice = i18n.t("vault.minted_gold_coins_for", n=n, fmt_money=fmt_money(economy.gold_price(n)))
         else:
             if not economy.sell_gold(holder, n):
                 return False
-            self.notice = f"melted {n} gold coins into {fmt_money(economy.gold_payout(n))}."
+            self.notice = i18n.t("vault.melted_gold_coins_into", n=n, fmt_money=fmt_money(economy.gold_payout(n)))
         if hasattr(holder, "_derive_combat"):
             holder._derive_combat()
         return True
@@ -242,9 +239,9 @@ class BankVault(Vault):
 
 class HouseVault(Vault):
     OWNER = "house"
-    LABEL = "the house"
-    CLOSED_NOTICE = "buy the house first."
-    WHERE = "at the property"
+    LABEL = "vault.label_house"
+    CLOSED_NOTICE = "vault.closed_house"
+    NO_ROOM = "vault.no_room_house"
 
     def _stash(self):
         return self.guild.house.stash
@@ -256,20 +253,19 @@ class HouseVault(Vault):
         g = self.guild
         rows = []
         if g.bankers_debt > 0:
-            rows.append(("pay_debt", "PAY TOWARD THE DEBT", "the Bankers' other services are shut until it is paid",
+            rows.append(("pay_debt", i18n.t("vault.pay_toward_debt"), i18n.t("vault.bankers_other_services_are_shut"),
                          self.purse > 0))
         if g.house.owned:
             if not g.house.oven:
-                rows.append(("oven", "BUY AN OVEN", f"{fmt_money(economy.OVEN_PRICE)}  ·  unlocks cooking at the house",
+                rows.append(("oven", i18n.t("vault.buy_oven"), i18n.t("vault.unlocks_cooking_at_house", fmt_money=fmt_money(economy.OVEN_PRICE)),
                              self.purse >= economy.OVEN_PRICE))
             return rows
         if g.house.squatting:
             return rows
         rep_ok = g.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
         can_buy = rep_ok and not g.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
-        sub = (f"{fmt_money(economy.CITY_PROPERTY_PRICE)}  ·  needs {economy.CITY_PROPERTY_REP_GATE} "
-               f"standing with the Bankers (have {g.reputation.get('bankers', 0)})")
-        return [*rows, ("buy", "BUY THE HOUSE", sub, can_buy)]
+        sub = (i18n.t("vault.needs_standing_with_bankers_have", fmt_money=fmt_money(economy.CITY_PROPERTY_PRICE), city_property_rep_gate=economy.CITY_PROPERTY_REP_GATE, get=g.reputation.get('bankers', 0)))
+        return [*rows, ("buy", i18n.t("vault.buy_house"), sub, can_buy)]
 
     def _run_service(self, key):
         if key == "buy":
@@ -277,41 +273,40 @@ class HouseVault(Vault):
             if not rep_ok or self.guild.bankers_services_blocked:
                 return
             if self.purse < economy.CITY_PROPERTY_PRICE:
-                self.notice = (f"the Bankers want {fmt_money(economy.CITY_PROPERTY_PRICE)} for "
-                               f"the house -- the party has {fmt_money(self.purse)}.")
+                self.notice = (i18n.t("vault.bankers_want_for_house_party", cost=fmt_money(economy.CITY_PROPERTY_PRICE), wealth=fmt_money(self.purse)))
                 return
             self.purse -= economy.CITY_PROPERTY_PRICE
             self.guild.buy_city_property()
-            self.notice = "bought a house in the City -- the Bankers' tax starts now."
+            self.notice = i18n.t("vault.bought_house_in_city_bankers")
         elif key == "oven":
             if self.purse < economy.OVEN_PRICE:
-                self.notice = f"an oven costs {fmt_money(economy.OVEN_PRICE)} -- the party has {fmt_money(self.purse)}."
+                self.notice = i18n.t("vault.oven_costs_party_has", cost=fmt_money(economy.OVEN_PRICE), wealth=fmt_money(self.purse))
                 return
             self.purse -= economy.OVEN_PRICE
             self.guild.buy_oven()
-            self.notice = "the oven is installed -- the house can cook now."
+            self.notice = i18n.t("vault.oven_is_installed_house_can")
         elif key == "pay_debt":
             amount = min(self.purse, self.guild.bankers_debt)
             if amount <= 0:
-                self.notice = "the party has no money to pay with."
+                self.notice = i18n.t("vault.party_has_no_money_to")
                 return
             self.purse -= amount
             self.guild.pay_bankers_debt(amount)
-            self.notice = (f"paid {fmt_money(amount)} toward the debt." if self.guild.bankers_debt > 0
-                           else "debt cleared -- the Bankers deal with the guild again.")
+            self.notice = (i18n.t("vault.paid_toward_debt", fmt_money=fmt_money(amount)) if self.guild.bankers_debt > 0
+                           else i18n.t("vault.debt_cleared_bankers_deal_with"))
 
     def hub_cards(self):
         g, house = self.guild, self.guild.house
         cards = super().hub_cards()
         if house.squatting:
-            cards.insert(0, {"label": "squatting", "value": "no tax", "sub": "the guard raids this place",
+            cards.insert(0, {"label": "squatting", "value": i18n.t("vault.no_tax"), "sub": i18n.t("vault.guard_raids_this_place"),
                              "tone": "bad"})
         elif house.owned:
             left = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT - house.missed_payments
-            sub = (f"{house.missed_payments} missed  ·  {max(0, left)} more before the Bankers act"
+            sub = (i18n.t("vault.missed_more_before_bankers_act", missed_payments=house.missed_payments, max=max(0, left))
                    if house.missed_payments else f"{fmt_money(economy.CITY_PROPERTY_TAX)} a cycle")
-            cards.insert(0, {"label": "next tax", "value": f"day {house.tax_due_day}", "sub": sub,
+            cards.insert(0, {"label": i18n.t("vault.next_tax"), "value": i18n.t("vault.day", tax_due_day=house.tax_due_day), "sub": sub,
                              "tone": "bad" if house.missed_payments else None})
         if g.bankers_debt > 0:
-            cards.insert(0, {"label": "owed to the bankers", "value": fmt_money(g.bankers_debt), "tone": "bad"})
+            cards.insert(0, {"label": i18n.t("vault.owed_to_bankers"), "value": fmt_money(g.bankers_debt), "tone": "bad"})
         return cards

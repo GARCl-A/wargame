@@ -276,8 +276,8 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   talent... is `i18n.name(kind, id)` from `name.<kind>.<id>`, with `.gender` when an article depends on it).
   The `pt-br` text goes in `locales/pt-br.json` under the same key and the same placeholders (a test checks).
   The language is the `language` setting, applied at boot and on the settings screen. Converted so far:
-  `tutorial.*`, `arena_talk.*`, `credits.*`, the web client's `ui.*`, and the combat actions (`action.*`, `log.*`,
-  `fx.*`); `python scripts/i18n_audit.py` counts the literal sentences left (plan: `docs/plans/translation_pt_br.md`).
+  `tutorial.*`, `arena_talk.*`, `credits.*`, the web client's `ui.*`, the combat actions (`action.*`, `log.*`,
+  `fx.*`) and every notice, error and label of the rule modules and web sessions/tabs (one key group per module); `python scripts/i18n_audit.py` counts the literal sentences left (plan: `docs/plans/translation_pt_br.md`).
 - **A battle log line**: `battle.log("log.key", actor=unit.name, ...)`, one full sentence per key. The combat log
   keeps key and params, so a fight reads in any language. A catalog thing inside a line is an `i18n.Ref(kind, id,
   default)` (`actions.base.item_ref(name)` for an item), a sentence inside a line an `i18n.Msg`; both resolve when the

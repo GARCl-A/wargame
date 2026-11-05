@@ -11,7 +11,17 @@ screen itself (setup, an interlude, an ambush) the hunt lives only here: a load 
 
 from typing import ClassVar
 
-from .. import hunt, missions, orders, ox, progression, wagon_watch, wildfire, world
+from .. import (
+    hunt,
+    i18n,
+    missions,
+    orders,
+    ox,
+    progression,
+    wagon_watch,
+    wildfire,
+    world,
+)
 from ..battle import Battle
 from ..map_view import node_icon
 from ..unit import distribute_load
@@ -98,7 +108,7 @@ class HuntSession(Session):
 
     def _phase(self, *allowed):
         if self.phase not in allowed:
-            raise ValueError("not now")
+            raise ValueError(i18n.t("hunt_session.not_now"))
 
     # ------------------------------------------------------------------ #
     # who minds the wagon                                                 #
@@ -129,7 +139,7 @@ class HuntSession(Session):
     def set_target(self, target):
         self._phase("setup")
         if self.tracking or target not in ("meat", "shrooms"):
-            raise ValueError("no such quarry")
+            raise ValueError(i18n.t("hunt_session.no_such_quarry"))
         self.target = self.state_.target = target
         return self.state()
 
@@ -142,24 +152,24 @@ class HuntSession(Session):
     def set_hours(self, h):
         self._phase("setup")
         if h not in self._offered():
-            raise ValueError("no such shift")
+            raise ValueError(i18n.t("hunt_session.no_such_shift"))
         self.hours = h
         return self.state()
 
     def distribute(self):
         self._phase("setup", "interlude")
         if len(self.party) < 2:
-            raise ValueError("nobody to share the load with")
+            raise ValueError(i18n.t("hunt_session.nobody_to_share_load_with"))
         distribute_load(self.party)
-        self.notice = "Redistributed packs by carrying capacity."
+        self.notice = i18n.t("hunt_session.redistributed_packs_by_carrying_capacity")
         return self.state()
 
     def talents(self, uid):
         from .talent_session import TalentSession
         u = next((m for m in self.party if m.uid == uid), None)
         if u is None or not u.pending_picks:
-            raise ValueError("no talent to pick")
-        self.map.game.open(TalentSession(self.map, u, self.party, self._resume, back_label="Back to the hunt"))
+            raise ValueError(i18n.t("hunt_session.no_talent_to_pick"))
+        self.map.game.open(TalentSession(self.map, u, self.party, self._resume, back_label=i18n.t("hunt_session.back_to_hunt")))
         return {"screen": TalentSession.screen}
 
     def _resume(self):
@@ -173,7 +183,7 @@ class HuntSession(Session):
         self._phase("setup")
         offered = self._offered()
         if not offered:
-            raise ValueError("Too dark to read the ground -- come back at dawn")
+            raise ValueError(i18n.t("hunt_session.too_dark_to_read_ground"))
         self.state_.hours_left = min(self.hours, max(offered)) if self.tracking else self.hours
         return self._stretch()
 
@@ -250,7 +260,7 @@ class HuntSession(Session):
         s, guild, node = self.state_, self.guild, self.node
         result = self.look.result if swift else None
         if swift and result is None:
-            raise ValueError("this fight is not a clean stomp")
+            raise ValueError(i18n.t("hunt_session.this_fight_is_not_clean"))
         battle = Battle(list(s.party), self.pack, scenario=node.scenario(), daylight=guild.clock.is_daylight,
                         lethal=node.lethal, arena=False, clock_day=guild.clock.day,
                         aggressor="player" if self.tracking else "enemy")
@@ -272,13 +282,13 @@ class HuntSession(Session):
             if s.biwolf:
                 escaped = hunt.biwolf_escaped(battle)
                 if missions.settle_biwolf(guild, escaped):
-                    notes.append("The Biwolf's leather is lost -- the tanner's job is failed for good.")
+                    notes.append(i18n.t("hunt_session.biwolf_s_leather_is_lost"))
                 elif escaped:
-                    notes.append("The Biwolf got away. He will come again to the smell of meat -- and not alone.")
+                    notes.append(i18n.t("hunt_session.biwolf_got_away_he_will"))
             if self.tracking and outcome.won:
-                notes.append("Aurochs, the immortal ox, is dead.")
+                notes.append(i18n.t("hunt_session.aurochs_immortal_ox_is_dead"))
                 if missions.fail_if_hide_lost(guild):
-                    notes.append("The hide is lost -- the tanner's job is failed for good.")
+                    notes.append(i18n.t("hunt_session.hide_is_lost_tanner_s"))
             self.events = []
             if outcome.won and s.party and s.hours_left > 0:
                 self.phase = "interlude"
@@ -287,7 +297,7 @@ class HuntSession(Session):
                 self._wrap_up()
             return self._resume()
 
-        title = "The ox's trail" if self.tracking else "The Biwolf" if s.biwolf else "Ambush in the Wilds"
+        title = i18n.t("hunt_session.ox_s_trail") if self.tracking else i18n.t("hunt_session.biwolf") if s.biwolf else i18n.t("hunt_session.ambush_in_wilds")
         nature = ox.TRACK_NATURE if self.tracking else hunt.BIWOLF_NATURE if s.biwolf else hunt.PACK_NATURE
         return _enter(self.map, self.group, battle, node, "hunt", title, settle, squad=list(s.party), after=after,
                       swift=result, nature=nature)
@@ -317,7 +327,7 @@ class HuntSession(Session):
         g, n = self.group, self.node
         day, at = _when(self.guild, 0)
         out = {"place": n.name, "band": g.display_name, "day": day, "at": at, "phase": self.phase,
-               "tracking": self.tracking, "title": "The Ox Fields" if self.tracking else "The Wilds",
+               "tracking": self.tracking, "title": i18n.t("hunt_session.ox_fields") if self.tracking else i18n.t("hunt_session.wilds"),
                "icon": "/".join(node_icon(n.id) or ("action", "wolf-howl")),
                "notice": self.notice, "events": list(self.events)}
         if self.phase == "watch":
@@ -330,14 +340,13 @@ class HuntSession(Session):
         if self.phase == "setup":
             out["setup"] = self._track_setup() if self.tracking else self._setup()
         elif self.phase == "interlude":
-            tally = (f"{s.meat} kg of meat so far." if s.target == "meat" else
-                     f"{s.shrooms_found} mushroom(s) and {s.fruit_found} fruit(s) so far.")
-            out["interlude"] = {"hours_left": s.hours_left, "line": f"Pack driven off. {s.hours_left} h left in "
-                                f"the shift, {tally}"}
+            tally = (i18n.t("hunt_session.kg_of_meat_so_far", meat=s.meat) if s.target == "meat" else
+                     i18n.t("hunt_session.mushroom_s_and_fruit_s", shrooms_found=s.shrooms_found, fruit_found=s.fruit_found))
+            out["interlude"] = {"hours_left": s.hours_left, "line": i18n.t("hunt_session.pack_driven_off_h_left", hours_left=s.hours_left, tally=tally)}
         elif self.phase == "ambush":
             out["ambush"] = self._ambush()
         else:
-            out["done"] = {"title": "The trail goes cold" if self.tracking else "Back from the Wilds",
+            out["done"] = {"title": i18n.t("hunt_session.trail_goes_cold") if self.tracking else i18n.t("hunt_session.back_from_wilds"),
                            "lines": list(self.result or []), "hours": s.hours_hunted, "fights": s.fights}
         return out
 
@@ -353,21 +362,21 @@ class HuntSession(Session):
         s = self.state_
         if self.tracking:
             best = max((u.mod_wisdom for u in s.party), default=0)
-            line = f"Best tracker: Wisdom {best:+d}"
+            line = i18n.t("hunt_session.best_tracker_wisdom", best=best)
         elif s.target == "meat":
             rate = hunt.party_yield(len(s.party)) * s.yield_mult * s.meat_mult / hunt.HUNT_MEAT_HOURS
-            line = f"Meat: {rate:.2f} kg an hour for the party"
+            line = i18n.t("hunt_session.meat_kg_hour_for_party", rate=rate)
             if s.meat_mult < 1:
-                line += f" (the wildfires left {s.meat_mult:.0%} of the game)"
+                line += i18n.t("hunt_session.wildfires_left_of_game", meat_mult=s.meat_mult)
         else:
             shroom, fruit = hunt.forage_chances(s)
-            line = f"Forage an hour: {shroom:.0%} mushroom, {fruit:.0%} fruit"
+            line = i18n.t("hunt_session.forage_hour_mushroom_fruit", shroom=shroom, fruit=fruit)
         out = {"line": line, "ambush_mult": None}
         if s.ambush_mult != 1.0 or s.night_mult != 1.0:
-            why = "the Ogre's goblins range the Wilds" if wildfire.hold_standing(self.guild) else "cautious"
-            out["ambush_mult"] = f"Ambush chance x{s.ambush_mult:.2f} ({why})"
+            why = i18n.t("hunt_session.ogre_s_goblins_range_wilds") if wildfire.hold_standing(self.guild) else i18n.t("hunt_session.cautious")
+            out["ambush_mult"] = i18n.t("hunt_session.ambush_chance_x", ambush_mult=s.ambush_mult, why=why)
             if s.night_mult != 1.0:
-                out["ambush_mult"] += f", x{s.night_mult:.2f} after dark"
+                out["ambush_mult"] += i18n.t("hunt_session.x_after_dark", night_mult=s.night_mult)
         return out
 
     def _setup(self):
@@ -375,15 +384,14 @@ class HuntSession(Session):
         crew = hunt.party_yield(len(s.party)) * s.yield_mult * s.meat_mult
         odds = round(hunt.AMBUSH_CHANCE_PER_HOUR * s.ambush_mult * 100)
         night = round(hunt.AMBUSH_CHANCE_PER_HOUR * s.ambush_mult * s.night_mult * 100)
-        return {"targets": [{"id": "meat", "name": "Hunt for meat", "sub": "1 kg for every 2 hours of a crew of three",
+        return {"targets": [{"id": "meat", "name": i18n.t("hunt_session.hunt_for_meat"), "sub": i18n.t("hunt_session.kg_for_every_hours_of"),
                              "on": s.target == "meat"},
-                            {"id": "shrooms", "name": "Forage the Wilds", "sub": "Red Mushrooms and fresh fruit",
+                            {"id": "shrooms", "name": i18n.t("hunt_session.forage_wilds"), "sub": i18n.t("hunt_session.red_mushrooms_and_fresh_fruit"),
                              "on": s.target == "shrooms"}],
                 "shifts": [{"hours": h, "on": h == self.hours,
-                            "sub": f"about {int(h * crew // hunt.HUNT_MEAT_HOURS)} kg of meat" if s.target == "meat"
-                            else "mushrooms and fruit"} for h in self.shifts],
-                "note": f"{odds}% chance each hour{f' ({night}% after dark)' if night != odds else ''} "
-                        "that a pack finds you first: a scaled fight, lethal, but the bodies are worth looting.",
+                            "sub": i18n.t("hunt_session.about_kg_of_meat", int=int(h * crew // hunt.HUNT_MEAT_HOURS)) if s.target == "meat"
+                            else i18n.t("hunt_session.mushrooms_and_fruit")} for h in self.shifts],
+                "note": i18n.t("hunt_session.chance_each_hour_dark" if night != odds else "hunt_session.chance_each_hour", odds=odds, night=night),
                 "why": None}
 
     def _track_setup(self):
@@ -391,24 +399,21 @@ class HuntSession(Session):
         dc = ox.track_dc(self.guild)
         return {"targets": [],
                 "shifts": [{"hours": h, "on": h == self.hours,
-                            "sub": f"{h} Wisdom check{'s' * (h != 1)}"} for h in offered],
-                "note": f"One check an hour against DC {dc}; a found trail opens the field and makes the next "
-                        f"DC {dc + ox.TRACK_DC_STEP}. The tracks can only be read by daylight.",
-                "why": None if offered else "Too dark to read the ground -- come back at dawn."}
+                            "sub": i18n.plural("hunt_session.wisdom_check", h)} for h in offered],
+                "note": i18n.t("hunt_session.one_check_hour_against_dc", dc=dc, next_dc=dc + ox.TRACK_DC_STEP),
+                "why": None if offered else i18n.t("hunt_session.too_dark_to_read_ground_2")}
 
     def _ambush(self):
         s = self.state_
         if self.tracking:
-            return {"title": "The trail is fresh!", "lead": "Aurochs is grazing somewhere on the open fields ahead.",
-                    "line": "A lethal chase: he runs from anyone near. Pin him in a canyon and bring him down, "
-                            "and every few rounds the herd answers his call.",
+            return {"title": i18n.t("hunt_session.trail_is_fresh"), "lead": i18n.t("hunt_session.aurochs_is_grazing_somewhere_on"),
+                    "line": i18n.t("hunt_session.lethal_chase_he_runs_from"),
                     "foes": []}
         foes = list(self.pack or [])
         n = len(foes)
-        lead = ("The smell of your meat drew the Biwolf out of the dark!" if s.biwolf else
-                f"A pack of {n} hostile{'s' * (n != 1)} cuts across the trail: a lethal fight, and victory leaves "
-                "the field to loot.")
-        return {"title": "The Biwolf!" if s.biwolf else "Ambush in the Wilds!", "lead": lead, "line": None,
+        lead = (i18n.t("hunt_session.smell_of_your_meat_drew") if s.biwolf else
+                i18n.plural("hunt_session.pack_of_hostile_cuts_across", n))
+        return {"title": i18n.t("hunt_session.biwolf_2") if s.biwolf else i18n.t("hunt_session.ambush_in_wilds_2"), "lead": lead, "line": None,
                 "swift": self.look.state(),
                 "foes": [{"name": u.name, "race": u.race["name"], "portrait": _portrait(u),
-                          "weapon": u.equipped_weapon or "Claws and teeth"} for u in foes]}
+                          "weapon": u.equipped_weapon or i18n.t("hunt_session.claws_and_teeth")} for u in foes]}

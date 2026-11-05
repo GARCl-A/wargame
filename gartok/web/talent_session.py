@@ -9,11 +9,11 @@ Opened from a member's sheet (`GuildSession.talents`) and a level-up (`ReportSes
 import copy
 from typing import ClassVar
 
-from .. import progression, talents
+from .. import i18n, progression, talents
 from .map_session import _portrait
 from .session import Session
 
-LABELS = {"combat": "Combat", "work": "Work", "racial": "Racial", "magic": "Magic"}
+LABELS = {k: f"talent_session.track.{k}" for k in ("combat", "work", "racial", "magic")}
 XP = {"combat": ("combat_xp", progression.COMBAT_XP_THRESHOLDS),
       "work": ("work_xp", progression.WORK_XP_THRESHOLDS),
       "magic": ("magic_xp", progression.MAGIC_XP_THRESHOLDS)}
@@ -21,6 +21,11 @@ ATTRS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
          ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma"))
 SHEET = (*ATTRS, ("Max HP", "hp_max"), ("AC", "ac"), ("Mental Def.", "mental_defense"),
          ("Speed", "speed"), ("Load limit", "carry_max"))
+STAT_KEYS = {"STR": "talent_session.stat.str", "DEX": "talent_session.stat.dex", "CON": "talent_session.stat.con",
+             "INT": "talent_session.stat.int", "WIS": "talent_session.stat.wis", "CHA": "talent_session.stat.cha",
+             "Max HP": "talent_session.stat.max_hp", "AC": "talent_session.stat.ac",
+             "Mental Def.": "talent_session.stat.mental_def", "Speed": "talent_session.stat.speed",
+             "Load limit": "talent_session.stat.load_limit"}
 
 
 def tree(unit, track):
@@ -55,13 +60,13 @@ class TalentSession(Session):
     def tutorial_key(self):
         return "level"
 
-    def __init__(self, map_session, unit, band, back, *, back_label="Back", chain=None):
+    def __init__(self, map_session, unit, band, back, *, back_label=None, chain=None):
         self.map = map_session
         self.guild = map_session.guild
         self.band = list(band) or [unit]
         self.unit = unit
         self.back_to = back
-        self.back_label = back_label
+        self.back_label = back_label or i18n.t("ui.title.back")
         self.chain = chain                       # the report's chain of screens, when a level-up sent it
         self.track = self.sel = None
         self._land()
@@ -85,29 +90,29 @@ class TalentSession(Session):
         if uid is not None and uid != self.unit.uid:
             u = next((m for m in self.band if m.uid == uid), None)
             if u is None:
-                raise ValueError("no such member in the band")
+                raise ValueError(i18n.t("talent_session.no_such_member_in_band"))
             self.unit = u
             self._land()
         if track is not None:
             if track not in talents.TRACKS:
-                raise ValueError(f"no such track: {track}")
+                raise ValueError(i18n.t("talent_session.no_such_track", track=track))
             if track != self.track:
                 self.track, self.sel = track, self._first(track)
         if tid is not None:
             if tid not in {t.id for t in tree(self.unit, self.track)}:
-                raise ValueError("that talent is not on this tree")
+                raise ValueError(i18n.t("talent_session.that_talent_is_not_on"))
             self.sel = tid
         return self.state()
 
     def take(self, track, tid):
         u, t = self.unit, talents.get(tid)
         if t is None or t.track != track or t not in tree(u, track):
-            raise ValueError("that talent is not on this tree")
+            raise ValueError(i18n.t("talent_session.that_talent_is_not_on"))
         state = node_state(u, track, t)
         if state != "open":
             raise ValueError(self._why(u, track, t, state))
         if not u.choose_talent(track, tid):
-            raise ValueError(f"{u.name} cannot take {t.name}")
+            raise ValueError(i18n.t("talent_session.cannot_take", name=u.name, talent=t.name))
         self.map._save()
         self.track, self.sel = track, tid
         return self.state()
@@ -139,7 +144,7 @@ class TalentSession(Session):
 
     def _track(self, u, track):
         nodes = tree(u, track)
-        out = {"track": track, "label": LABELS[track], "level": u.track_level[track],
+        out = {"track": track, "label": i18n.t(LABELS[track]), "level": u.track_level[track],
                "picks": max(0, u.picks_available(track)) if track in u.pending_picks else 0,
                "held": sum(u.holds_talent(track, t.id) for t in nodes), "total": len(nodes),
                "into": None, "span": None, "next_racial": None}
@@ -157,17 +162,17 @@ class TalentSession(Session):
 
     def _why(self, u, track, t, state):
         if state == "taken":
-            return f"{u.name} holds {t.name} already"
+            return i18n.t("talent_session.holds_already", name=u.name, talent=t.name)
         if state == "granted":
-            return f"{t.name} comes with initiation into {(t.school or 'a school').capitalize()}"
+            return i18n.t("talent_session.comes_with_initiation_into", name=t.name, capitalize=(t.school or 'a school').capitalize())
         if state == "locked":
-            return f"{t.name} needs {talents.get(t.requires).name} first"
+            return i18n.t("talent_session.needs_first", name=t.name, talent=talents.get(t.requires).name)
         if track == "magic" and not u.magic_sources:
-            return f"{u.name} has no school yet: a school opens with initiation at its sanctuary"
+            return i18n.t("talent_session.has_no_school_yet_school", name=u.name)
         if track == "racial":
             nxt = (progression.racial_picks(u.racial_level) + 1) * progression.RACIAL_PICK_EVERY
-            return f"the next racial pick comes at racial level {nxt}"
-        return f"{u.name} has no {LABELS[track].lower()} pick to spend; one comes with the next level"
+            return i18n.t("talent_session.next_racial_pick_comes_at", nxt=nxt)
+        return i18n.t("talent_session.has_no_pick_to_spend", name=u.name, track=i18n.t(f"talent_session.track_noun.{track}"))
 
     def _hand(self, u, track, t):
         state = node_state(u, track, t)
@@ -175,8 +180,8 @@ class TalentSession(Session):
         while chain[0].requires:
             chain.insert(0, talents.get(chain[0].requires))
         why = self._why(u, track, t, state)
-        out = {"id": t.id, "status": "Ready to take" if state == "open" else
-               "Held" if state == "taken" else why[0].upper() + why[1:],
+        out = {"id": t.id, "status": i18n.t("talent_session.ready_to_take") if state == "open" else
+               i18n.t("talent_session.held") if state == "taken" else i18n.sentence(why),
                "branch": [{"id": c.id, "name": c.name, "icon": c.icon or None, "state": node_state(u, track, c)}
                           for c in chain],
                "opens": [{"id": c.id, "name": c.name, "icon": c.icon or None, "state": node_state(u, track, c)}
@@ -195,4 +200,4 @@ class TalentSession(Session):
         twin._apply_attributes()
         twin._derive_combat()
         before, after = _sheet(u), _sheet(twin)
-        return [[k, before[k], after[k]] for k, _ in SHEET if before[k] != after[k]]
+        return [[i18n.t(STAT_KEYS[k]), before[k], after[k]] for k, _ in SHEET if before[k] != after[k]]

@@ -6,7 +6,7 @@ The rules are `rite.Initiation`'s: the terms, the blockers,
 the pick and the begin. The verb that may hand the band to the clock (`begin`) lives on `HubSession`, which holds the map.
 """
 
-from .. import factions, rite
+from .. import factions, i18n, rite
 from .shop_tab import _portrait
 
 
@@ -18,14 +18,14 @@ class InitiationTab:
 
     def pick(self, uid):
         if self.s._member(uid) is None:
-            raise ValueError("no such member in the band")
+            raise ValueError(i18n.t("initiation_tab.no_such_member_in_band"))
         self.report = []
         self.s._pick(uid)
 
     def begin(self):
         """Leave the picked one boarding. True when the rite began."""
         if self.s._action() is None:
-            raise ValueError("nobody picked can begin the rite")
+            raise ValueError(i18n.t("initiation_tab.nobody_picked_can_begin_rite"))
         ok, lines = self.s._begin()
         self.report = lines if ok else []
         return ok

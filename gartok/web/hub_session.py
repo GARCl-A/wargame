@@ -9,9 +9,10 @@ Claim its stages (`claim_tab`) with the same kitchen and garage, Ledger Hold its
 band's campfire in the field the same kitchen; a tab the browser does not draw says so inside the frame.
 """
 
+import re
 from typing import ClassVar
 
-from .. import art_files, economy, orders, world
+from .. import art_files, economy, i18n, orders, world
 from ..constants import fmt_money
 from ..map_view import node_icon
 from ..vault import BankVault, HouseVault
@@ -31,6 +32,11 @@ from .tavern_tab import TavernTab
 from .vault_tab import VaultTab
 from .work_tab import GatherTab, WorkTab
 
+
+def _slug(label):
+    return re.sub(r"\W+", "_", label.lower()).strip("_")
+
+
 # order kind -> its hub's tabs, where it is not the node's own list (`_node_tabs`)
 HUBS = {
     "forge": (("shop", "Shop"), ("craft", "Forge")),
@@ -49,7 +55,7 @@ HUB_KINDS = {"market", "carpenter", "stable", "shrine", "recruit", "property", "
 LIVE = {"shop", "work", "gather", "medic", "jobs", "stable", "wagons", "initiation", "prison", "vault", "property",
         "garage", "claim", "ledger", *CRAFT_TABS, *TAVERN_TABS}
 # what a tab not drawn yet is, for its note
-WHAT = {"tavern": "the tavern"}
+WHAT = {"tavern": "hub_session.what.tavern"}
 
 
 # tab -> its tutorial card
@@ -97,14 +103,14 @@ def _node_tabs(node):
 def _house_tabs(guild):
     """The City house's tabs: the kitchen once it has an oven, the garage once it is owned."""
     house = guild.house
-    return [("property", "The House"), *((("kitchen", "Kitchen"),) if house.owned and house.oven else ()),
+    return [("property", i18n.t("hub_session.house")), *((("kitchen", "Kitchen"),) if house.owned and house.oven else ()),
             *((("garage", "Garage"),) if house.owned else ())]
 
 
 def _claim_tabs(guild):
     """The Wilds Claim's tabs: gathering and the garage once the garrison opens them, the kitchen once
     the hearth can cook."""
-    return [("claim", "The Claim"), *((("gather", "Gathering"),) if guild.claim_held else ()),
+    return [("claim", i18n.t("hub_session.claim")), *((("gather", "Gathering"),) if guild.claim_held else ()),
             *((("kitchen", "Kitchen"),) if guild.wilds_claim_can_cook else ()),
             *((("garage", "Garage"),) if guild.claim_held else ())]
 
@@ -246,12 +252,12 @@ class HubSession(Session):
 
     def _open(self):
         if self.repossession_due:
-            raise ValueError("the Bankers want an answer about the house first")
+            raise ValueError(i18n.t("hub_session.bankers_want_answer_about_house"))
 
     @property
     def shop(self):
         if not any(k == "shop" for k, _ in self.tabs):
-            raise ValueError("this place has no shop")
+            raise ValueError(i18n.t("hub_session.this_place_has_no_shop"))
         if self._shop is None:
             self._shop = ShopTab(self.guild, self.group, self.node)
         return self._shop
@@ -259,7 +265,7 @@ class HubSession(Session):
     def _tab(self, key, attr, make):
         self._open()
         if not any(k == key for k, _ in self.tabs):
-            raise ValueError(f"no {key} tab here")
+            raise ValueError(i18n.t("hub_session.no_tab_here", what=key))
         if getattr(self, attr) is None:
             setattr(self, attr, make(self.guild, self.group, self.node))
         return getattr(self, attr)
@@ -299,7 +305,7 @@ class HubSession(Session):
     def tavern(self):
         prison = any(k == "prison" for k, _ in self.tabs)
         if not prison and not any(k in TAVERN_TABS for k, _ in self.tabs):
-            raise ValueError("no tavern here")
+            raise ValueError(i18n.t("hub_session.no_tavern_here"))
         if self._tavern is None:
             self._tavern = TavernTab(self.guild, self.group, self.node, prison=prison, candidates=self.candidates)
         return self._tavern
@@ -347,15 +353,15 @@ class HubSession(Session):
         squat in it; either way back to the map."""
         g, m = self.guild, self.map
         if not self.repossession_due:
-            raise ValueError("the Bankers want nothing of the house now")
+            raise ValueError(i18n.t("hub_session.bankers_want_nothing_of_house"))
         if choice == "return":
             g.repossess_city_property()
-            m.say(f"The property is returned to the Bankers -- the guild now owes {fmt_money(g.bankers_debt)}.", "guild")
+            m.say(i18n.t("hub_session.property_is_returned_to_bankers", fmt_money=fmt_money(g.bankers_debt)), "guild")
         elif choice == "squat":
             g.house.squat()
-            m.say("The guild keeps the house without paying -- the guard won't like that.", "guild")
+            m.say(i18n.t("hub_session.guild_keeps_house_without_paying"), "guild")
         else:
-            raise ValueError(f"no such answer: {choice}")
+            raise ValueError(i18n.t("hub_session.no_such_answer", choice=choice))
         return m.back()
 
     @property
@@ -429,7 +435,7 @@ class HubSession(Session):
         self._open()
         key = next((k for k, _ in self.tabs if k in CRAFT_TABS), None)
         if key is None:
-            raise ValueError("no workbench here")
+            raise ValueError(i18n.t("hub_session.no_workbench_here"))
         if self._craft is None:
             self._craft = CraftTab(self.guild, self.group, self.node, key)
         return self._craft
@@ -463,11 +469,11 @@ class HubSession(Session):
 
     def _shift(self, hours, **kw):
         if hours not in SHIFTS:
-            raise ValueError(f"no {hours} h shift")
+            raise ValueError(i18n.t("hub_session.no_h_shift", hours=hours))
         order = self.group.order
         held = order if kw.get("gather") and order is not None and order.kind == "garrison" else None
         if self.group.busy and held is None:
-            raise ValueError(f"{self.group.display_name} is busy")
+            raise ValueError(i18n.t("hub_session.is_busy", display_name=self.group.display_name))
         self.group.order = orders.work(self.guild, self.group, hours, resume=held and held.job, **kw)
         self.map.focus = self.group.gid
 
@@ -483,7 +489,7 @@ class HubSession(Session):
         `said`, what issuing it said) in `tab.report`, or on whatever the map opens, `said` among its
         notices, when something else stopped the clock first."""
         if order is not None and self.group.busy:
-            raise ValueError(f"{self.group.display_name} is busy")
+            raise ValueError(i18n.t("hub_session.is_busy", display_name=self.group.display_name))
         m = self.map
         start, said = len(m.notices), list(said)
         m.say(said, "work", self.group)
@@ -543,7 +549,7 @@ class HubSession(Session):
 
     def pick_tab(self, key):
         if not any(k == key for k, _ in self.tabs):
-            raise ValueError(f"no {key} tab here")
+            raise ValueError(i18n.t("hub_session.no_tab_here", what=key))
         self.tab = key
         return self.state()
 
@@ -557,11 +563,11 @@ class HubSession(Session):
         lang = getattr(n, "language", None)
         if isinstance(lang, (list, tuple)):
             lang = " or ".join(lang)
-        tongue = f" · the traders speak {lang}" if lang else ""
-        out = {"place": n.name, "sub": f"Day {c.day}, {part}{tongue}", "band": self.group.display_name,
+        tongue = i18n.t("hub_session.traders_speak", lang=lang) if lang else ""
+        out = {"place": n.name, "sub": i18n.t("hub_session.day", day=c.day, part=part, tongue=tongue), "band": self.group.display_name,
                "icon": "/".join(node_icon(n.id) or ("map", "signpost")), "keeper": keeper,
                "tabs": [] if self.repossession_due else
-                       [{"key": key, "label": label, "live": key in LIVE} for key, label in self.tabs],
+                       [{"key": key, "label": i18n.t(f"hub_session.tab.{_slug(label)}"), "live": key in LIVE} for key, label in self.tabs],
                "tab": self.tab}
         if self.repossession_due:
             missed = self.guild.house.missed_payments
@@ -598,6 +604,5 @@ class HubSession(Session):
             out["ledger"] = self.desk.state()
         else:
             label = next(lbl for key, lbl in self.tabs if key == self.tab)
-            out["away"] = {"title": label, "line": (f"{WHAT.get(self.tab, label).capitalize()} at {n.name} is not "
-                                                    "in the browser yet.")}
+            out["away"] = {"title": label, "line": (i18n.t("hub_session.at_is_not_in_browser", capitalize=i18n.sentence(i18n.t(WHAT[self.tab]) if self.tab in WHAT else label), name=n.name))}
         return out

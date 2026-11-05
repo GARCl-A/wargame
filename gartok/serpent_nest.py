@@ -16,7 +16,7 @@ the Dragon racial talents (`dragon`, `dragon_breath`).
 
 import random
 
-from . import data, encounters, missions, npc_lib
+from . import data, encounters, i18n, missions, npc_lib
 from .board import Board, grid_distance
 from .ground import GroundObject
 from .scenario import Scenario
@@ -70,18 +70,16 @@ def search(guild, group):
     order) for the den. Only finds it
     while a Snake Dragon job is out. -> (found, message)."""
     scout = _scout(group.members)
-    who = scout.name if scout else "The squad"
+    who = scout.name if scout else i18n.t("serpent_nest.squad")
     if missions.pending_snake(guild) is None:
-        return False, f"{who} beats the brush round the yard for {SEARCH_HOURS} hours: stumps and sawdust."
+        return False, i18n.t("serpent_nest.beats_brush_round_yard_for", who=who, search_hours=SEARCH_HOURS)
     nat = data.d20()
     wis = scout.mod_wisdom if scout else 0
     total = nat + wis
     if total >= SEARCH_DC:
         guild.reveal_node(NODE)
-        return True, (f"{who} follows the shed skins to a split in the rock below the yard. "
-                      "The Serpent's Nest is found.")
-    return False, (f"{who} searches for {SEARCH_HOURS} hours and finds no den "
-                   f"(d20({nat}) {wis:+}(WIS) = {total} vs DC {SEARCH_DC}).")
+        return True, (i18n.t("serpent_nest.follows_shed_skins_to_split", who=who))
+    return False, (i18n.t("serpent_nest.searches_for_hours_and_finds", who=who, search_hours=SEARCH_HOURS, nat=nat, wis=wis, total=total, search_dc=SEARCH_DC))
 
 
 def _sleeper(unit, cell):

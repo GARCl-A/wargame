@@ -7,7 +7,7 @@ per picked band. An item moves only inside the band: a trade never crosses place
 
 import random
 
-from . import captives, chest, data, items, magic, missions, stints
+from . import captives, chest, data, i18n, items, magic, missions, stints
 from .animals import Animal
 from .loadout_move import LoadoutMoveMixin
 from .wagon import REPAIR_HOURS, Wagon
@@ -74,9 +74,9 @@ class BandKit(LoadoutMoveMixin):
     @staticmethod
     def _no_room_note(store):
         if store.stash.capacity <= 0:
-            return (f"the {store.kind.lower()} has no animal hitched to pull it." if isinstance(store, Wagon)
-                    else f"the {store.species} wears no pack saddle.")
-        return f"won't fit -- {store.stash.free:g} kg free on the {store.name.lower()}."
+            return (i18n.t("band_kit.has_no_animal_hitched_to", lower=store.kind.lower()) if isinstance(store, Wagon)
+                    else i18n.t("band_kit.wears_no_pack_saddle", species=store.species))
+        return i18n.t("band_kit.won_t_fit_kg_free", free=store.stash.free, lower=store.name.lower())
 
     def _hitch_picked(self, wagon):
         """Drop an animal picked up by its header onto a wagon's header."""
@@ -85,11 +85,11 @@ class BandKit(LoadoutMoveMixin):
         if animal is None:
             return
         if self.group.pulling(animal) is wagon:
-            self.notice = f"the {animal.species} already pulls the {wagon.kind.lower()}."
+            self.notice = i18n.t("band_kit.already_pulls", species=animal.species, lower=wagon.kind.lower())
         elif self.group.hitch(animal, wagon, swap=True):
-            self.notice = f"the {animal.species} now pulls the {wagon.kind.lower()}."
+            self.notice = i18n.t("band_kit.now_pulls", species=animal.species, lower=wagon.kind.lower())
         else:
-            self.notice = f"the {animal.species} needs a Harness to pull anything."
+            self.notice = i18n.t("band_kit.needs_harness_to_pull_anything", species=animal.species)
 
     def _fit_tack(self, animal):
         """Put the first picked saddle or harness on `animal`; whatever it wore
@@ -107,7 +107,7 @@ class BandKit(LoadoutMoveMixin):
         if old:
             src.give_to_pack(old)
         self.selected = [p for p in self.selected if p != pick]
-        self.notice = f"the {animal.species} now wears the {name}."
+        self.notice = i18n.t("band_kit.now_wears", species=animal.species, name=name)
 
     # ------------------------------------------------------------------ #
     # the band's buttons                                                  #
@@ -117,8 +117,8 @@ class BandKit(LoadoutMoveMixin):
         if unit is None:
             return
         unit.afoot = not unit.afoot
-        self.notice = (f"{unit.name} walks beside the wagon." if unit.afoot
-                       else f"{unit.name} rides when there is room.")
+        self.notice = (i18n.t("band_kit.walks_beside_wagon", name=unit.name) if unit.afoot
+                       else i18n.t("band_kit.rides_when_there_is_room", name=unit.name))
 
     def _cycle_hitch(self, uid):
         animal = next((a for a in self.group.herd if a.uid == uid), None)
@@ -126,8 +126,8 @@ class BandKit(LoadoutMoveMixin):
             return
         self.group.next_hitch(animal)
         pulled = self.group.pulling(animal)
-        self.notice = (f"the {animal.species} pulls the {pulled.kind.lower()}." if pulled
-                       else f"the {animal.species} is unhitched.")
+        self.notice = (i18n.t("band_kit.pulls", species=animal.species, lower=pulled.kind.lower()) if pulled
+                       else i18n.t("band_kit.is_unhitched", species=animal.species))
 
     def _repair_wagon(self, uid):
         """-> the repair's stint for the band, or None when it cannot start (the notice says why)."""
@@ -135,7 +135,7 @@ class BandKit(LoadoutMoveMixin):
         if wagon is None:
             return None
         if self.group.busy:
-            self.notice = f"{self.group.display_name} is busy: a repair waits until it stops."
+            self.notice = i18n.t("band_kit.is_busy_repair_waits_until", display_name=self.group.display_name)
             return None
         short = self.guild.repair_short(self.group.members, wagon)
         if short:
@@ -160,7 +160,7 @@ class BandKit(LoadoutMoveMixin):
             self._release(key.partition(":")[2])
         elif key == "distribute":
             self.group.distribute_load()
-            self.notice = "Redistributed packs by carrying capacity."
+            self.notice = i18n.t("band_kit.redistributed_packs_by_carrying_capacity")
         elif key == "treat_sickness":
             self._treat_sickness()
         elif key == "treat_poison":
@@ -170,9 +170,9 @@ class BandKit(LoadoutMoveMixin):
                 return
             if self.group.can_light_campfire():
                 self.group.light_campfire(self.guild.clock.seconds)
-                self.notice = "Campfire lit! Burns for 4 hours."
+                self.notice = i18n.t("band_kit.campfire_lit_burns_for_hours")
             else:
-                self.notice = "Campfire requires Flint and Steel, 1 Lumber and 1 Coal in the pack."
+                self.notice = i18n.t("band_kit.campfire_requires_flint_and_steel")
 
     def _poison_cases(self):
         """`(patient, giver)` pairs: a poisoned member who may take an Antidote now,
@@ -210,7 +210,7 @@ class BandKit(LoadoutMoveMixin):
         """The first sick member someone else can tend; a member never treats themself."""
         target = next((s for s in self._sick() if self._healers(s)), None)
         if target is None:
-            self.notice = "No ally with a first-aid kit can treat this."
+            self.notice = i18n.t("band_kit.no_ally_with_first_aid")
             return
         healer = max(self._healers(target), key=lambda u: u.mod_wisdom)
         healer.first_aid_charges -= 1
@@ -218,16 +218,16 @@ class BandKit(LoadoutMoveMixin):
         total = data.d20() + healer.mod_wisdom + int(healer.talent_bonus("field_medic_bonus"))
         if total >= data.FIRST_AID_DC:
             target.treated = True
-            self.notice = f"{healer.name} successfully treated {target.name} (rolled {total})."
+            self.notice = i18n.t("band_kit.successfully_treated_rolled", name=healer.name, patient=target.name, total=total)
         else:
-            self.notice = f"{healer.name} failed to treat {target.name} (rolled {total})."
+            self.notice = i18n.t("band_kit.failed_to_treat_rolled", name=healer.name, patient=target.name, total=total)
 
     # ------------------------------------------------------------------ #
     # the item menu                                                       #
     # ------------------------------------------------------------------ #
     @staticmethod
     def _study_label(unit, target):
-        verb = "stop studying" if unit.study_target == target.id else "study"
+        verb = i18n.t("band_kit.stop_studying") if unit.study_target == target.id else "study"
         return f"{verb} {target.name}"
 
     def _menu_rows(self, picks):
@@ -236,12 +236,12 @@ class BandKit(LoadoutMoveMixin):
             return []
         self.selected = list(picks)
 
-        rows = [("drop", "Drop", None)]
+        rows = [("drop", i18n.t("band_kit.drop"), None)]
         solo_member = len(picks) == 1 and not self._is_store(picks[0][0])
         if solo_member and self._item_at(*picks[0]) in (data.BOX_OF_GEMS_ITEM, data.MISSION_CHEST_ITEM):
-            rows.append(("open", "OPEN THE CHEST", None))
+            rows.append(("open", i18n.t("band_kit.open_chest"), None))
         if solo_member and self._item_at(*picks[0]) == "Minor Healing Potion":
-            rows.append(("drink", "Drink", None))
+            rows.append(("drink", i18n.t("band_kit.drink"), None))
 
         if solo_member:
             unit, item = picks[0][0], self._item_at(*picks[0])
@@ -256,7 +256,7 @@ class BandKit(LoadoutMoveMixin):
         owners = {id(p[0]) for p in picks}
         lift = len(owners) > 1 or any(isinstance(p[1], str) for p in picks)
         dests = [u for u in self._owners() if lift or id(u) not in owners]
-        rows += [("member", f"to {u.name}", u.uid) for u in dests]
+        rows += [("member", i18n.t("band_kit.to", name=u.name), u.uid) for u in dests]
         return rows
 
     def _menu_run(self, picks, kind, arg):
@@ -287,20 +287,19 @@ class BandKit(LoadoutMoveMixin):
         opened, gems = (missions.open_mission_chest(self.guild, unit) if sealed
                         else chest.try_open(unit))
         if not opened:
-            self.notice = f"{unit.name} can't pick the lock -- the chest is still there."
+            self.notice = i18n.t("band_kit.can_t_pick_lock_chest", name=unit.name)
         elif sealed:
-            self.notice = (f"{unit.name} breaks the Bankers' seal -- {gems} {data.GEM_ITEM} "
-                           f"spill out, but the trust mission is ruined. Crime: {unit.crime}.")
+            self.notice = (i18n.t("band_kit.breaks_bankers_seal_spill_out", name=unit.name, gems=gems, gem_item=data.GEM_ITEM, crime=unit.crime))
         else:
-            self.notice = f"{unit.name} picks the lock -- {gems} {data.GEM_ITEM} inside."
+            self.notice = i18n.t("band_kit.picks_lock_inside", name=unit.name, gems=gems, gem_item=data.GEM_ITEM)
         self.selected = []
 
     def _drink_potion(self, unit):
         if unit.hp >= unit.hp_max:
-            self.notice = f"{unit.name} is already at full health."
+            self.notice = i18n.t("band_kit.is_already_at_full_health", name=unit.name)
         else:
             unit.remove_named("Minor Healing Potion")
             heal = random.randint(1, 6)
             unit.hp = min(unit.hp_max, unit.hp + heal)
-            self.notice = f"{unit.name} drinks a Minor Healing Potion, recovering {heal} HP."
+            self.notice = i18n.t("band_kit.drinks_minor_healing_potion_recovering", name=unit.name, heal=heal)
         self.selected = []

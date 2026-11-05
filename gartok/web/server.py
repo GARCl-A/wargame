@@ -134,7 +134,7 @@ def tutorial_header(session):
 def _tutorial(session, verb, post):
     key, state = session.tutorial_key(), session.tutorials()
     if key is None or state is None:
-        raise ValueError("this screen has no tutorial card")
+        raise ValueError(i18n.t("server.this_screen_has_no_tutorial"))
     if not post and verb is None:
         return {"key": key, **tutorial.card(key, session.tutorial_rows(key))}
     if post and verb == "dismiss":
@@ -244,7 +244,7 @@ def make_handler(game):
                                                          args.get("players", 1)))
                     return self._missing()
                 if screen != s.screen:
-                    return self._json({"error": f"the open screen is {s.screen}"}, 409)
+                    return self._json({"error": i18n.t("server.open_screen_is", screen=s.screen)}, 409)
                 handler = s.verb(verb, post)
                 if handler is None:
                     return self._missing()

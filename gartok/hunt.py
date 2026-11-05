@@ -24,6 +24,7 @@ from . import (
     data,
     encounters,
     fight_nature,
+    i18n,
     missions,
     npc_lib,
     vocations,
@@ -212,7 +213,7 @@ def grant_haul(state):
     if not hunters:
         for g in getattr(state, "guards", ()):
             lines += g.bank_work(state.hours_hunted, GUARD_WORK_LEVEL)
-        return lines + ["Nobody made it back with the haul."]
+        return lines + [i18n.t("hunt.nobody")]
 
     for u in hunters:
         lines += u.bank_work(state.hours_hunted, HUNT_LEVEL)
@@ -221,8 +222,8 @@ def grant_haul(state):
         lines += g.bank_work(state.hours_hunted, GUARD_WORK_LEVEL)
 
     if state.target == "ox":
-        who = hunters[0].name if len(hunters) == 1 else f"{len(hunters)} trackers"
-        lines.append(f"{who} spent {state.hours_hunted} h on the trail of the ox.")
+        who = hunters[0].name if len(hunters) == 1 else i18n.plural("hunt.trackers", len(hunters))
+        lines.append(i18n.t("hunt.ox", who=who, hours=state.hours_hunted))
         return lines
 
     if state.target == "meat":
@@ -230,16 +231,14 @@ def grant_haul(state):
         for i in range(meat):
             hunters[i % len(hunters)].give_to_pack(MEAT_ITEM)
 
-        who = hunters[0].name if len(hunters) == 1 else f"{len(hunters)} hunters"
+        who = hunters[0].name if len(hunters) == 1 else i18n.plural("hunt.hunters", len(hunters))
         if meat:
-            lines.append(f"{who} bring back {meat} kg of meat "
-                         f"({state.hours_hunted} h hunted).")
+            lines.append(i18n.t("hunt.meat", who=who, kg=meat, hours=state.hours_hunted))
             if any(u.has_talent("skinner") for u in hunters):
                 hunters[0].give_to_pack("1sqm Hide")
-                lines.append(f"{hunters[0].name} skins 1sqm Hide from the hunt.")
+                lines.append(i18n.t("hunt.skin", name=hunters[0].name, item=i18n.name("item", "1sqm Hide")))
         else:
-            lines.append(f"{who} come back empty-handed ({state.hours_hunted} h "
-                         f"hunted -- not enough for a kill).")
+            lines.append(i18n.t("hunt.empty_hunt", who=who, hours=state.hours_hunted))
     else:
         shrooms = state.shrooms_found
         fruit = getattr(state, "fruit_found", 0)
@@ -248,21 +247,18 @@ def grant_haul(state):
         for i in range(fruit):
             hunters[(i + shrooms) % len(hunters)].give_to_pack("Fruit")
 
-        who = hunters[0].name if len(hunters) == 1 else f"{len(hunters)} foragers"
+        who = hunters[0].name if len(hunters) == 1 else i18n.plural("hunt.foragers", len(hunters))
         items_found = []
         if shrooms:
-            items_found.append(f"{shrooms} Red Mushroom(s)")
+            items_found.append(i18n.t("hunt.found.mushroom", n=shrooms, item=i18n.name("item", "Red Mushroom")))
         if fruit:
-            items_found.append(f"{fruit} Fruit(s)")
+            items_found.append(i18n.t("hunt.found.fruit", n=fruit, item=i18n.name("item", "Fruit")))
 
         if items_found:
-            found_str = " and ".join(items_found)
-            lines.append(f"{who} bring back {found_str} "
-                         f"({state.hours_hunted} h foraged).")
+            found_str = i18n.t("hunt.found.and").join(items_found)
+            lines.append(i18n.t("hunt.forage", who=who, found=found_str, hours=state.hours_hunted))
         else:
-            lines.append(f"{who} come back empty-handed ({state.hours_hunted} h "
-                         f"foraged).")
+            lines.append(i18n.t("hunt.empty_forage", who=who, hours=state.hours_hunted))
     if state.fights:
-        pack = "pack" if state.fights == 1 else "packs"
-        lines.append(f"Fought off {state.fights} {pack} along the way.")
+        lines.append(i18n.plural("hunt.fought", state.fights))
     return lines

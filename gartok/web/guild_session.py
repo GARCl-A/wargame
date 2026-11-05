@@ -18,6 +18,7 @@ from .. import (
     art_files,
     data,
     factions,
+    i18n,
     item_icon,
     items,
     magic,
@@ -44,8 +45,7 @@ from .sheet_view import animal_sheet, member_sheet
 from .shop_tab import _tip
 from .stable_tab import WAGON_GLYPH, _face
 
-TABS = (("members", "Members"), ("bands", "Bands"), ("guild", "The Guild"), ("reputations", "Reputations"),
-        ("routines", "Routines"))
+TABS = tuple((k, f"guild_session.tab.{k}") for k in ("members", "bands", "guild", "reputations", "routines"))
 ZONES = ("pack", "hand", "offhand", "tongue", "artifact", "armor", "tack", "hitch")
 WORN = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Body"), ("artifact", "Artifact"))
 
@@ -110,12 +110,12 @@ class GuildSession(Session):
         pending = sum(1 for u in g.roster if u.pending_picks)
         alerts = sum(1 for u in self.desk._everyone() if self._alert(u))
         out = {
-            "name": g.name or "The Guild",
+            "name": g.name or i18n.t("guild_session.guild"),
             "banner": list(g.banner_color) if g.banner_color else None,
             "emblem": _icon(next(((c, s) for c, s, _ in art_files.BANNER_ICONS if s == g.banner_icon), None)),
             "day": g.clock.day, "won": g.battles_won, "count": len(g.roster),
             "band_count": len([gr for gr in g.groups if not gr.empty]), "pending": pending,
-            "tabs": [{"key": k, "label": label, "badge": pending if k == "members" and pending else 0}
+            "tabs": [{"key": k, "label": i18n.t(label), "badge": pending if k == "members" and pending else 0}
                      for k, label in TABS],
             "tab": self.tab, "alerts": alerts, "notice": notice,
         }
@@ -133,7 +133,7 @@ class GuildSession(Session):
 
     def pick_tab(self, key):
         if key not in dict(TABS):
-            raise ValueError(f"no such tab: {key}")
+            raise ValueError(i18n.t("guild_session.no_such_tab", what=key))
         self.tab = key
         return self.state()
 
@@ -160,7 +160,7 @@ class GuildSession(Session):
                   "folded": b["collapsed"], "count": b["count"],
                   "rows": [self._row(d, by_uid[d["key"]]) for d in b["members"]]} for b in s._roster_bands()]
         m = s.member
-        return {"filters": [{"mode": k, "label": label.title(), "tip": tip} for k, label, tip in FILTERS],
+        return {"filters": [{"mode": k, "label": i18n.t(f"{key}.label"), "tip": i18n.t(f"{key}.tip")} for k, key in FILTERS],
                 "filter": s.filter_mode, "roster": bands,
                 "slots": [len(self.guild.groups), self.guild.group_slots],
                 "sheet": None if m is None else animal_sheet(m, self.guild) if isinstance(m, Animal) else self._sheet(m)}
@@ -171,13 +171,13 @@ class GuildSession(Session):
     def pick_member(self, uid):
         u = next((u for u in self.desk._everyone() if u.uid == uid), None)
         if u is None:
-            raise ValueError("no such member")
+            raise ValueError(i18n.t("guild_session.no_such_member"))
         self.desk.member = u
         return self.state()
 
     def set_filter(self, mode):
-        if mode not in {k for k, _, _ in FILTERS}:
-            raise ValueError(f"no such filter: {mode}")
+        if mode not in {k for k, _ in FILTERS}:
+            raise ValueError(i18n.t("guild_session.no_such_filter", mode=mode))
         self.desk.filter_mode = mode
         return self.state()
 
@@ -206,7 +206,7 @@ class GuildSession(Session):
             if s.member is not None and not isinstance(s.member, Animal) else {}
         row = rows.get(key)
         if row is None or row["action"] is None or not row["action"][1]:
-            raise ValueError(row["tip"] if row else "no such role")
+            raise ValueError(row["tip"] if row else i18n.t("guild_session.no_such_role"))
         s._press(key)
         self.map._save()
         return self.state()
@@ -215,10 +215,10 @@ class GuildSession(Session):
         from .talent_session import TalentSession
         m = self.desk.member
         if m is None or isinstance(m, Animal):
-            raise ValueError("pick a member first")
+            raise ValueError(i18n.t("guild_session.pick_member_first"))
         g = self.guild.group_of(m)
         self.map.game.open(TalentSession(self.map, m, g.members if g else [m], self._resume,
-                                         back_label="Back to the guild"))
+                                         back_label=i18n.t("guild_session.back_to_guild")))
         return {"screen": TalentSession.screen}
 
     def _resume(self):
@@ -231,7 +231,7 @@ class GuildSession(Session):
     def _set_band(self, gid):
         g = next((g for g in self.guild.groups if g.gid == gid and not g.empty), None)
         if g is None:
-            raise ValueError("no such band")
+            raise ValueError(i18n.t("guild_session.no_such_band"))
         self.gear = BandKit(self.guild, g)
 
     def pick_band(self, gid):
@@ -245,7 +245,7 @@ class GuildSession(Session):
 
     def _check_free(self):
         if self.group.fight_due:
-            raise ValueError(FIGHT_DUE_TIP)
+            raise ValueError(i18n.t(FIGHT_DUE_TIP))
 
     def _item(self, owner, loc, name, qty, note=""):
         return {"loc": loc, "name": name, "qty": qty, "glyph": item_icon.glyph(name), "kg": items.item_weight(name),
@@ -270,7 +270,7 @@ class GuildSession(Session):
         if g.wagons:
             riding = u in g.riders
             ride = {"label": "Rides" if riding else "Walks", "on": riding or u.afoot,
-                    "tip": "Make them walk" if riding else "Let them ride" if u.afoot else "No room on the wagons"}
+                    "tip": i18n.t("guild_session.make_them_walk") if riding else i18n.t("guild_session.let_them_ride") if u.afoot else i18n.t("guild_session.no_room_on_wagons")}
         hunger = u.hunger_level > 0
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
                 "sub": u.race['name'],
@@ -281,7 +281,7 @@ class GuildSession(Session):
     def _animal_column(self, a):
         g = self.group
         pulled = g.pulling(a)
-        job = f"pulls the {pulled.kind.lower()}" if pulled else "unhitched" if a.role == "draft" else a.role or "no tack"
+        job = i18n.t("guild_session.pulls", lower=pulled.kind.lower()) if pulled else i18n.t("animals.unhitched") if a.role == "draft" else a.role or i18n.t("guild_session.no_tack")
         return {"id": a.uid, "name": a.species, "portrait": _face(a.species, a.uid), "store": True, "beast": True,
                 "sub": job, "hungry": bool(a.unfed_days), "unfed": a.unfed_days,
                 "money": a.money, "kg": round(a.load, 2), "normal": a.carry_normal, "max": a.carry_max,
@@ -289,7 +289,7 @@ class GuildSession(Session):
                           "glyph": item_icon.glyph(a.tack) if a.tack else None,
                           "kg": items.item_weight(a.tack) if a.tack else 0, "tip": _tip(a.tack) if a.tack else ""}],
                 "pack": self._pack(a),
-                "hitch": ({"label": f"Pulls the {pulled.kind.lower()}" if pulled else "Hitch it", "on": True}
+                "hitch": ({"label": i18n.t("guild_session.pulls_2", lower=pulled.kind.lower()) if pulled else i18n.t("guild_session.hitch_it"), "on": True}
                           if a.role == "draft" and g.wagons else None)}
 
     def _wagon(self, w):
@@ -320,19 +320,19 @@ class GuildSession(Session):
     def _actions(self):
         g, gear, now = self.group, self.gear, self.guild.clock.seconds
         out = [{"key": "distribute", "label": "Distribute", "glyph": "action/rally-the-troops",
-                "on": len(g.members) > 1, "tip": "Share the unlocked pack items out by what each can carry"}]
+                "on": len(g.members) > 1, "tip": i18n.t("guild_session.share_unlocked_pack_items_out")}]
         if gear._can_treat_sickness():
-            out.append({"key": "treat_sickness", "label": "Treat sickness", "glyph": "body/arm-bandage", "on": True,
-                        "tip": "A bandmate with a first-aid kit tends the sick"})
+            out.append({"key": "treat_sickness", "label": i18n.t("guild_session.treat_sickness"), "glyph": "body/arm-bandage", "on": True,
+                        "tip": i18n.t("guild_session.bandmate_with_first_aid_kit")})
         if gear._can_treat_poison():
-            out.append({"key": "treat_poison", "label": "Use antidote", "glyph": "action/drinking", "on": True,
-                        "tip": "A bandmate's Antidote for the poisoned"})
+            out.append({"key": "treat_poison", "label": i18n.t("guild_session.use_antidote"), "glyph": "action/drinking", "on": True,
+                        "tip": i18n.t("guild_session.bandmate_s_antidote_for_poisoned")})
         lit = g.has_campfire(now)
         out.append({"key": "campfire_cook", "label": f"Campfire ({g.campfire_hours_left(now):g} h)" if lit else "Campfire",
                     "glyph": "action/kindle", "on": lit or g.can_light_campfire(),
-                    "tip": "Cook at the band's fire" if lit
-                    else "Light a fire to cook: Flint and Steel, 1 Lumber and 1 Coal" if g.can_light_campfire()
-                    else "A campfire needs Flint and Steel, 1 Lumber and 1 Coal in the packs"})
+                    "tip": i18n.t("guild_session.cook_at_band_s_fire") if lit
+                    else i18n.t("guild_session.light_fire_to_cook_flint") if g.can_light_campfire()
+                    else i18n.t("guild_session.campfire_needs_flint_and_steel")})
         return out
 
     def _chip(self, g):
@@ -361,7 +361,7 @@ class GuildSession(Session):
         return {
             "chips": [self._chip(gr) for gr in self.guild.groups if not gr.empty],
             "gid": g.gid, "name": g.display_name, "custom": g.name or "",
-            "locked": g.fight_due, "lock_tip": FIGHT_DUE_TIP if g.fight_due else "",
+            "locked": g.fight_due, "lock_tip": i18n.t(FIGHT_DUE_TIP) if g.fight_due else "",
             "routine": self._routine_of(g), "view": self.view,
             "equip": {"pages": [[i, p.name] for i, p in enumerate(self.guild.routine_pages)],
                       "seats": [routine_book.used(self.guild), routine_book.slots(self.guild)]},
@@ -378,14 +378,14 @@ class GuildSession(Session):
 
     def show_view(self, view):
         if view not in ("packs", "routine"):
-            raise ValueError("no such view")
+            raise ValueError(i18n.t("guild_session.no_such_view"))
         self.view = view
         return self.state()
 
     def _routine_group(self):
         g = self.group
         if g.routine is None:
-            raise ValueError(f"{g.display_name} has no routine")
+            raise ValueError(i18n.t("guild_session.has_no_routine", display_name=g.display_name))
         return g
 
     def equip(self, i):
@@ -411,14 +411,14 @@ class GuildSession(Session):
     def save_back(self):
         self._routine_group()
         self.page = routine_book.save_back(self.guild, self.group)
-        self.notice = f"Sent to the Book as {self.guild.routine_pages[self.page].name}"
+        self.notice = i18n.t("guild_session.sent_to_book_as", name=self.guild.routine_pages[self.page].name)
         self.map._save()
         return self.state()
 
     def continue_routine(self):
         g = self._routine_group()
         if not g.routine.paused:
-            raise ValueError(f"{g.display_name} has no stopped routine")
+            raise ValueError(i18n.t("guild_session.has_no_stopped_routine", display_name=g.display_name))
         self.map.say(routines.resume(self.guild, g), "guild", g)
         self.map._save()
         return self.state()
@@ -431,10 +431,10 @@ class GuildSession(Session):
     def rename_wagon(self, uid, name):
         wagon = next((w for w in self.group.wagons if w.uid == uid), None)
         if wagon is None:
-            raise ValueError("no such wagon in this band")
+            raise ValueError(i18n.t("guild_session.no_such_wagon_in_this"))
         name = name.strip()[:24]
         if name and any(w.label.lower() == name.lower() for g in self.guild.groups for w in g.wagons if w is not wagon):
-            raise ValueError("another wagon already has that name")
+            raise ValueError(i18n.t("guild_session.another_wagon_already_has_that"))
         wagon.nickname = name
         self.map._save()
         return self.state()
@@ -442,33 +442,33 @@ class GuildSession(Session):
     def _owner(self, oid):
         o = self.gear._owners_by_uid().get(oid)
         if o is None:
-            raise ValueError("no such pack in this band")
+            raise ValueError(i18n.t("guild_session.no_such_pack_in_this"))
         return o
 
     def _pick(self, b):
         owner, loc = self._owner(b["from"]), b["loc"]
         if isinstance(loc, str):
             if loc not in dict(WORN) and loc not in ("tack", "hitch"):
-                raise ValueError(f"no such slot: {loc}")
+                raise ValueError(i18n.t("guild_session.no_such_slot", loc=loc))
             if loc == "hitch" and not isinstance(owner, Animal):
-                raise ValueError("only an animal is hitched")
+                raise ValueError(i18n.t("guild_session.only_animal_is_hitched"))
             if loc != "hitch" and self.gear._item_at(owner, loc) is None:
-                raise ValueError(f"nothing in that {loc} slot")
+                raise ValueError(i18n.t("guild_session.nothing_in_that_slot", loc=loc))
         elif not 0 <= loc < len(owner._base_inventory):
-            raise ValueError("no such stack")
+            raise ValueError(i18n.t("guild_session.no_such_stack"))
         return owner, loc
 
     def move(self, picks, to, zone="pack"):
         self._check_free()
         if zone not in ZONES:
-            raise ValueError(f"no such slot: {zone}")
+            raise ValueError(i18n.t("guild_session.no_such_slot_2", zone=zone))
         gear = self.gear
         gear.selected = [self._pick(p) for p in picks]
         gear._unit_by_uid = gear._owners_by_uid()
         gear._give_many(self._owner(to), zone)
         if gear.selected and zone != "pack":
             gear.selected = []
-            raise ValueError("that does not fit there")
+            raise ValueError(i18n.t("guild_session.that_does_not_fit_there"))
         gear.selected = []
         return self.state()
 
@@ -487,7 +487,7 @@ class GuildSession(Session):
             row = {"row": i, "kind": kind, "label": label[0].upper() + label[1:].lower() if label.isupper() else label}
             if kind == "member":
                 o = dests[arg]
-                row["label"] = f"to {o.name}"
+                row["label"] = i18n.t("guild_session.to", name=o.name)
                 row["free"] = round(o.stash.free if store_column.is_store(o) else o.carry_normal - o.load, 1)
             out.append(row)
         split = self.gear._splittable((owner, loc))
@@ -499,7 +499,7 @@ class GuildSession(Session):
         self._check_free()
         p, rows = self._menu_rows(pick)
         if not 0 <= row < len(rows):
-            raise ValueError("no such choice")
+            raise ValueError(i18n.t("guild_session.no_such_choice"))
         kind, _, arg = rows[row]
         self.gear._menu_run([p], kind, arg)
         self.gear.selected = []
@@ -510,8 +510,8 @@ class GuildSession(Session):
         self._check_free()
         owner, loc = self._pick(pick)
         if self.gear._splittable((owner, loc)) is None or not owner.split_pack(loc, qty):
-            raise ValueError("that stack will not split so")
-        self.notice = f"split {qty} {owner._base_inventory[loc][0]} into a stack of their own"
+            raise ValueError(i18n.t("guild_session.that_stack_will_not_split"))
+        self.notice = i18n.t("guild_session.split_into_stack_of_their", qty=qty, base_inventory=owner._base_inventory[loc][0])
         return self.state()
 
     def lock(self, oid, name):
@@ -525,17 +525,17 @@ class GuildSession(Session):
         if kind in ("ride", "hitch", "repair", "release"):
             known = {"ride": g.members, "hitch": g.herd, "repair": g.wagons}.get(kind)
             if known is not None and not any(x.uid == uid for x in known):
-                raise ValueError("nothing by that id in this band")
+                raise ValueError(i18n.t("guild_session.nothing_by_that_id_in"))
             if kind == "release" and not any(c.unit.uid == uid for c in g.captives):
-                raise ValueError("no such captive")
+                raise ValueError(i18n.t("guild_session.no_such_captive"))
             if kind == "ride":
                 u = next(x for x in g.members if x.uid == uid)
                 if u not in g.riders and not u.afoot:
-                    raise ValueError("no room on the wagons")
+                    raise ValueError(i18n.t("guild_session.no_room_on_wagons_2"))
         elif key == "campfire_cook":
             return self.map.act(g.gid, "campfire_cook")
         elif key not in {a["key"] for a in self._actions() if a["on"]}:
-            raise ValueError("that cannot be done now")
+            raise ValueError(i18n.t("guild_session.that_cannot_be_done_now"))
         gear._unit_by_uid = gear._owners_by_uid()
         order = gear._handle_button(key)
         if order is not None:
@@ -626,7 +626,7 @@ class GuildSession(Session):
 
     def _page(self, i):
         if not 0 <= i < len(self.guild.routine_pages):
-            raise ValueError("no such routine")
+            raise ValueError(i18n.t("guild_session.no_such_routine"))
 
     def book_pick(self, i):
         self._page(i)
@@ -643,7 +643,7 @@ class GuildSession(Session):
         n = len(taken) + 1
         while f"New routine {n}" in taken:
             n += 1
-        return f"New routine {n}"
+        return i18n.t("guild_session.new_routine", n=n)
 
     def book_save(self, i, name, note, blocks):
         self._page(i)

@@ -13,6 +13,7 @@ from gartok import (
     economy,
     gather,
     holdings,
+    i18n,
     items,
     job_board,
     ledger,
@@ -138,7 +139,7 @@ def test_the_tanner_board_signs_the_leader_and_pays_on_the_turn_in():
     board = job_board.TannerBoard(guild, g)
     t = board._template
     assert t is missions.TANNER_HIDES and board._offered
-    assert board._job_button(t, None, {})[1:] == (board.accept_label, True)
+    assert board._job_button(t, None, {})[1:] == (i18n.t(board.accept_label), True)
     assert board.accept(t) and board._mission_of(t) is not None
     assert not board.turn_in(t)
     u.give_to_pack(t.goal_item, t.goal_qty)

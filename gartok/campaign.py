@@ -35,6 +35,7 @@ from . import (
     economy,
     factions,
     forced,
+    i18n,
     lair,
     loot,
     objectives,
@@ -286,13 +287,11 @@ def _claim_champion_title(guild, squad, battle, outcome):
             if combatant is downer and member in guild.roster:
                 winner = member
     if winner is None:
-        outcome.arena_title_event = ("Nobody on your side put the champion down "
-                                     "cleanly -- the title stays vacant.")
+        outcome.arena_title_event = i18n.t("campaign.arena.vacant")
         return
     winner.arena_title = True
     guild.arena_challenge_day = guild.clock.day + arena.CHALLENGE_CYCLE
-    outcome.arena_title_event = (f"{winner.name} lands the finishing blow and "
-                                 f"takes the Champion of the Pit.")
+    outcome.arena_title_event = i18n.t("campaign.arena.won", name=winner.name)
 
 
 def _settle_title_defense(guild, outcome, won):
@@ -300,14 +299,12 @@ def _settle_title_defense(guild, outcome, won):
     if won:
         guild.arena_challenge_day = guild.clock.day + arena.CHALLENGE_CYCLE
         if champ is not None:
-            outcome.arena_title_event = (f"{champ.name} turns the challenger away "
-                                         f"and keeps the title.")
+            outcome.arena_title_event = i18n.t("campaign.arena.defended", name=champ.name)
     else:
         guild.arena_challenge_day = None
         if champ is not None:
             champ.arena_title = False
-            outcome.arena_title_event = (f"{champ.name} is beaten -- the Champion "
-                                         f"of the Pit title is lost.")
+            outcome.arena_title_event = i18n.t("campaign.arena.lost", name=champ.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -425,7 +422,7 @@ def _advance(guild, dt=None, busy=()):
         if (a["combat"], a.get("work", 0), a["magic"]) > (b["combat"], b.get("work", 0), b["magic"]):
             level_ups.append(aftermath.LevelUp(u, b, a))
             track = "combat" if a["combat"] > b["combat"] else "work" if a.get("work", 0) > b.get("work", 0) else "magic"
-            note([f"{u.name} reached {track} level {a[track]}!"], "work", guild.group_of(u))
+            note([i18n.t("campaign.reached_level", name=u.name, track=track, a=a[track])], "work", guild.group_of(u))
     return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties,
                       hungry=hungry, level_ups=level_ups)
 
@@ -516,8 +513,8 @@ def _settle(guild, active, step, pending, note):
             events += note(_fletcher_rest_pass(guild, g), "craft", g)
             still_hurt = [u for u in g.members if u.hp < u.hp_max]
             if still_hurt and rest.hours_to_midnight(guild) <= rest.JUST_BEFORE_MIDNIGHT * 2:
-                who = ", ".join(f"{u.name} {u.hp}/{u.hp_max} HP" for u in still_hurt)
-                events += note([f"{g.display_name}: stopped resting before midnight to keep a day of rations ({who})."], "rest", g)
+                who = ", ".join(i18n.t("campaign.rest.member", name=u.name, hp=u.hp, hp_max=u.hp_max) for u in still_hurt)
+                events += note([i18n.t("campaign.rest.stopped", group=g.display_name, who=who)], "rest", g)
         elif order.kind == "solo":
             events += note(solo.finish(guild, g, order), "craft", g)
         elif order.kind == "hunting":          # a hunt's stretch is up: its screen says what sprang
@@ -582,7 +579,7 @@ def _fletcher_rest_pass(guild, group):
             u.give_to_pack(data.AMMO_ITEM)
         u.quiver_charges = data.QUIVER_AMMO
 
-    return [f"{fletcher.name} carved arrows from 1 Lumber while resting, refilling quivers."]
+    return [i18n.t("campaign.rest.arrows", name=fletcher.name)]
 
 
 def _wear_wagons(group, src, dest):
@@ -602,12 +599,13 @@ def scout_ancient_ruins(guild, group):
     dc = 12
     if total >= dc:
         guild.reveal_node("ancient_ruins")
-        name = scout.name if scout else "The squad"
-        msg = f"{name} spots ancient stone markers half-buried in the scrub! The Ancient Ruins are discovered."
+        name = scout.name if scout else i18n.t("campaign.scout.squad")
+        msg = i18n.t("campaign.scout.found", name=name)
         return True, msg
     else:
-        name = scout.name if scout else "The squad"
-        msg = f"{name} spends {SCOUT_RUINS_HOURS} hours searching the brush, but finds no trace of the ruins (d20({nat}) {wis_mod:+}(WIS) = {total} vs DC {dc})."
+        name = scout.name if scout else i18n.t("campaign.scout.squad")
+        msg = i18n.t("campaign.scout.missed", name=name, hours=SCOUT_RUINS_HOURS, nat=nat, mod=f"{wis_mod:+}",
+                     total=total, dc=dc)
         return False, msg
 
 

@@ -18,7 +18,7 @@ the errand is the necromancer.
 
 import random
 
-from . import battlefield, encounters, npc_lib
+from . import battlefield, encounters, i18n, npc_lib
 from .board import Board
 from .conditions import Invisible
 from .data import race_by_name
@@ -121,11 +121,11 @@ class NecromancerScenario(Scenario):
         caster = the_necromancer(battle)
         if not self.caster_down and caster is not None and not caster.alive:
             self.caster_down = True
-            battle.log(f"{caster.name} falls -- and every dead thing he raised falls with him.")
+            battle.log(i18n.t("necromancer.falls_and_every_dead_thing", name=caster.name))
             for u in battle.units:
                 if u.team == UNDEAD and u.alive:
                     u.hp, u.status = 0, "dead"
-            battle.log("The necromancer is down. The squad may withdraw, or fight on for the field.")
+            battle.log(i18n.t("necromancer.necromancer_is_down_squad_may"))
 
     def can_withdraw(self, battle):
         return self.caster_down

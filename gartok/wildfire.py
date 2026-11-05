@@ -25,7 +25,7 @@ back on the map after a load.
 import random
 from dataclasses import dataclass, field
 
-from . import data, encounters, factions, missions, world
+from . import data, encounters, factions, i18n, missions, world
 
 DAYS = 14
 BURN_DAYS = 7
@@ -63,7 +63,7 @@ class Focus:
 
     @property
     def name(self):
-        return "The Great Focus" if self.great else f"Wildfire {self.id.rsplit('_', 1)[-1]}"
+        return i18n.t("wildfire.great_focus") if self.great else i18n.t("wildfire.wildfire", rsplit=self.id.rsplit('_', 1)[-1])
 
 
 @dataclass
@@ -92,26 +92,22 @@ class Wildfire:
 def _node(focus):
     if focus.great:
         return world.Node(focus.id, focus.name, "town", focus.pos,
-                          "Felled trees, a ring of half-raised walls and a bonfire the size of a house. "
-                          "The Ogre means to live here, and the forest burns for it.",
+                          i18n.t("wildfire.felled_trees_ring_of_half"),
                           functions=("ogre_fight",))
     return world.Node(focus.id, focus.name, "town", focus.pos,
-                      "A clearing on fire. Goblins feed it with green wood and argue over how.",
+                      i18n.t("wildfire.clearing_on_fire_goblins_feed"),
                       functions=("camp_fight",))
 
 
 def _fortress_node(state):
     if state.fortress == "friendly":
         return world.Node(FORTRESS_ID, "The Ogre's Fortress", "town", state.fortress_pos,
-                          "Stone walls in a clearing that stopped burning. The Ogre built it right, "
-                          "and keeps his goblins to the axe now. Their forge beats out weapons sized for "
-                          "bodies like his.",
+                          i18n.t("wildfire.stone_walls_in_clearing_that"),
                           language="Jotun", alignment="Chaotic and Neutral", functions=("shop",),
                           vendors={"shop": world.Vendor("Grumbold the Builder", "Ogre", "chieftain", "ogre.png",
-                                                        line="Big walls, big axes. Little people pay double. Joke! ...Mostly.")})
+                                                        line=i18n.t("wildfire.big_walls_big_axes_little"))})
     return world.Node(FORTRESS_ID, "The Ogre's Fortress", "town", state.fortress_pos,
-                      "Black stumps for a mile round a finished keep. The Ogre's goblins range the Wilds "
-                      "from it.", functions=("ogre_fight",))
+                      i18n.t("wildfire.black_stumps_for_mile_round"), functions=("ogre_fight",))
 
 
 def sync_world(guild):
@@ -166,10 +162,10 @@ def _vacate(guild, node_id):
         if g.node == node_id:
             g.node = "wilds"
             g.order = None
-            notes.append(f"{g.display_name}: the fire took the clearing -- back to The Wilds.")
+            notes.append(i18n.t("wildfire.fire_took_clearing_back_to", display_name=g.display_name))
         elif heading:
             g.order = None
-            notes.append(f"{g.display_name}: the clearing ahead is gone; the march stops.")
+            notes.append(i18n.t("wildfire.clearing_ahead_is_gone_march", display_name=g.display_name))
     return notes
 
 
@@ -183,14 +179,14 @@ def _remove(guild, state, focus):
 def _burn(guild, state, focus, spread):
     """`focus` burned through: the forest pays, and (`spread`) two new foci start beside it."""
     state.burned += 1
-    notes = [f"{focus.name} burned through a stretch of the Wilds."]
+    notes = [i18n.t("wildfire.burned_through_stretch_of_wilds", name=focus.name)]
     near = focus.pos
     links = {k: v + LINK for k, v in focus.links.items()}
     notes += _remove(guild, state, focus)
     if spread and not focus.great:
         for _ in range(SPREAD):
             child = _spawn(state, links, guild.clock.day, near=near, away=world.node("wilds").pos)
-            notes.append(f"The fire jumps on: {child.name} is burning.")
+            notes.append(i18n.t("wildfire.fire_jumps_on_is_burning", name=child.name))
     return notes
 
 
@@ -222,9 +218,8 @@ def _end(guild, state):
         m = mission(guild)
         if m is not None:
             m.state, m.failed_day = "failed", guild.clock.day
-        notes.append("The Ogre's fortress stands, ringed with ash. The Nature Coven's errand has failed.")
-    notes.append(f"The wildfires are over: {state.burned} burned, The Wilds yield "
-                 f"{round(meat_mult(guild) * 100)}% of their meat now.")
+        notes.append(i18n.t("wildfire.ogre_s_fortress_stands_ringed"))
+    notes.append(i18n.t("wildfire.wildfires_are_over_burned_wilds", burned=state.burned, round=round(meat_mult(guild) * 100)))
     return notes
 
 
@@ -263,15 +258,15 @@ def talk(guild, focus, unit, rng=random):
     mod = getattr(unit, f"mod_{attr}")
     nat = rng.randint(1, 20)
     total = nat + mod
-    roll = f"d20({nat}) {mod:+}({attr[:3].upper()}) = {total} vs DC {dc}"
-    who = "the Ogre" if focus.great else "the foreman"
+    roll = i18n.t("wildfire.d_vs_dc", nat=nat, mod=mod, upper=attr[:3].upper(), total=total, dc=dc)
+    who = i18n.t("wildfire.ogre") if focus.great else i18n.t("wildfire.foreman")
     if total < dc:
         focus.hostile = True
-        return False, f"{unit.name} cannot reach {who} ({roll}). They reach for their weapons!"
+        return False, i18n.t("wildfire.cannot_reach_they_reach_for", name=unit.name, who=who, roll=roll)
     focus.talk += 1
     if focus.talk < len(CHECKS):
-        return True, f"{unit.name} gets a hearing from {who} ({roll}). Now show them how."
-    return True, f"{unit.name} shows {who} how it is done ({roll}). " + _taught(guild, focus)
+        return True, i18n.t("wildfire.gets_hearing_from_now_show", name=unit.name, who=who, roll=roll)
+    return True, i18n.t("wildfire.shows_how_it_is_done", name=unit.name, who=who, roll=roll) + _taught(guild, focus)
 
 
 def _taught(guild, focus):
@@ -281,10 +276,10 @@ def _taught(guild, focus):
         _remove(guild, state, focus)
         state.fortress, state.fortress_pos = "friendly", pos
         world.add_node(_fortress_node(state), [("wilds", LINK)])
-        return "The Ogre builds it right, without the fire. " + _done(guild)
+        return i18n.t("wildfire.ogre_builds_it_right_without") + _done(guild)
     state.taught += 1
     _remove(guild, state, focus)
-    return "The goblins smother the fire and keep the lesson -- word will reach the Ogre."
+    return i18n.t("wildfire.goblins_smother_fire_and_keep")
 
 
 def put_out(guild, group, rng=random):
@@ -297,11 +292,11 @@ def put_out(guild, group, rng=random):
     unit = max(group.members, key=lambda u: u.mod_intelligence)
     nat = rng.randint(1, 20)
     total = nat + unit.mod_intelligence
-    roll = f"d20({nat}) {unit.mod_intelligence:+}(INT) = {total} vs DC {PUT_OUT_DC}"
+    roll = i18n.t("wildfire.d_int_vs_dc", nat=nat, mod_intelligence=unit.mod_intelligence, total=total, put_out_dc=PUT_OUT_DC)
     if nat != 20 and (nat == 1 or total < PUT_OUT_DC):
-        return [f"{unit.name} leads the work, but the fire is not out ({roll}). It can be tried again."]
+        return [i18n.t("wildfire.leads_work_but_fire_is", name=unit.name, roll=roll)]
     _remove(guild, guild.wildfire, focus)
-    return [f"{unit.name} leads the work and {focus.name} is out ({roll}). The clearing is saved."]
+    return [i18n.t("wildfire.leads_work_and_is_out", name=unit.name, other=focus.name, roll=roll)]
 
 
 def settle_fight(guild, node_id, won):
@@ -313,16 +308,15 @@ def settle_fight(guild, node_id, won):
         state.fortress, state.fortress_pos = None, None
         _vacate(guild, FORTRESS_ID)
         world.remove_node(FORTRESS_ID)
-        return ["The Ogre's fortress falls. The goblins scatter into the ash."]
+        return [i18n.t("wildfire.ogre_s_fortress_falls_goblins")]
     focus = state.focus(node_id)
     if focus is None:
         return []
     if focus.great:
         _remove(guild, state, focus)
-        return ["The Ogre is beaten, his fortress a ruin of half-raised walls. " + _done(guild)]
+        return [i18n.t("wildfire.ogre_is_beaten_his_fortress") + _done(guild)]
     focus.cleared, focus.hostile = True, False
-    return [(f"The goblins at {focus.name} are beaten. The fire still burns: put it out "
-             f"({PUT_OUT_HOURS} h, INT DC {PUT_OUT_DC}).")]
+    return [(i18n.t("wildfire.goblins_at_are_beaten_fire", name=focus.name, put_out_hours=PUT_OUT_HOURS, put_out_dc=PUT_OUT_DC))]
 
 
 def _done(guild):
@@ -333,7 +327,7 @@ def _done(guild):
     deeds = missions.settle_wildfire(guild, m)
     signer = next((u for u in guild.roster if u.uid == m.unit_uid), None)
     (signer or guild.roster[0]).give_to_pack(REWARD)
-    return " ".join([f"The Nature Coven sends a {REWARD}."] + [factions.deed_notice(d) for d in deeds])
+    return " ".join([i18n.t("wildfire.nature_coven_sends", reward=REWARD)] + [factions.deed_notice(d) for d in deeds])
 
 
 # --------------------------------------------------------------------------- #

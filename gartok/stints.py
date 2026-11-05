@@ -9,12 +9,12 @@ issues the order.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import economy, medic, orders
+from . import economy, i18n, medic, orders
 
 
 @dataclass(frozen=True)
 class Stint:
-    doing: str           # the band's chip on the map while the hours run
+    doing: str           # the catalog key of the band's chip on the map while the hours run
     settle: Callable     # (guild, group, order) -> the lines it says when the hours are up
 
 
@@ -33,7 +33,7 @@ def is_stint(order):
 
 
 def doing(order):
-    return STINTS[order.task].doing
+    return i18n.t(STINTS[order.task].doing)
 
 
 def settle(guild, group, order):
@@ -51,19 +51,19 @@ def _perform(guild, group, order):
 def _treat(guild, group, order):
     patients = _crew(guild, group, order)
     medic.treated(guild, patients)
-    return [f"The Medic is done: {', '.join(u.name for u in patients)} cured."] if patients else []
+    return [i18n.t("stint.treat.done", names=", ".join(u.name for u in patients))] if patients else []
 
 
 def _scout(guild, group, order):
     guild.wilds_claim_scout()
-    return ["the land is scouted -- ready to clear."]
+    return [i18n.t("stint.scout.done")]
 
 
 def _fences(guild, group, order):
     if guild.wilds_claim_fence_lumber < economy.WILDS_CLAIM_FENCE_LUMBER:
-        return ["the fences wait: the Lumber banked for them is short."]
+        return [i18n.t("stint.fences.short")]
     guild.wilds_claim_build_fences()
-    return ["the fences go up -- time to sweep the region."]
+    return [i18n.t("stint.fences.done")]
 
 
 def _oven(guild, group, order):
@@ -91,11 +91,11 @@ def _repair(guild, group, order):
 
 
 STINTS = {
-    "perform": Stint("performing", _perform),
-    "treat": Stint("at the Medic", _treat),
-    "claim_scout": Stint("scouting the claim", _scout),
-    "claim_fences": Stint("raising fences", _fences),
-    "claim_oven": Stint("building the oven", _oven),
-    "claim_fire": Stint("lighting a fire", _fire),
-    "repair": Stint("mending a wagon", _repair),
+    "perform": Stint("stint.perform.doing", _perform),
+    "treat": Stint("stint.treat.doing", _treat),
+    "claim_scout": Stint("stint.claim_scout.doing", _scout),
+    "claim_fences": Stint("stint.claim_fences.doing", _fences),
+    "claim_oven": Stint("stint.claim_oven.doing", _oven),
+    "claim_fire": Stint("stint.claim_fire.doing", _fire),
+    "repair": Stint("stint.repair.doing", _repair),
 }

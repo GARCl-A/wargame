@@ -8,7 +8,7 @@ immediately; progress is 1d20+INT an hour. `web/craft_tab.py` draws `Bench`.
 
 from collections import Counter
 
-from . import items, solo, world
+from . import i18n, items, solo, world
 from .unit_loadout import pooled_unlocked
 
 WAIT_HOURS = (1, 4, 8)          # a solo task the whole group waits out
@@ -34,11 +34,11 @@ def blocker(guild, group, recipe):
     or the node has no station for it -- or None. The tab's own rules, for a routine's `Craft`."""
     data = items.get_recipe(recipe)
     if data is None:
-        return f"unknown recipe {recipe}"
+        return i18n.t("workbench.unknown_recipe", recipe=recipe)
     if not any(recipe.split(":")[0] in u.known_recipes for u in group.members):
-        return f"nobody in the group knows {data.target}"
+        return i18n.t("workbench.nobody_in_group_knows", target=data.target)
     if data.station not in stations_at(guild, group):
-        return f"no {data.station} station here"
+        return i18n.t("workbench.no_station_here", station=data.station)
     return None
 
 
@@ -56,8 +56,8 @@ class Bench:
 
     def hub_cards(self):
         known = {r for u in self.crafters for r in u.known_recipes if self._for_station(r)}
-        return [{"label": "crafters", "value": f"{len(self.crafters)} of {len(self.group.members)}"},
-                {"label": "recipes known", "value": str(len(known))}]
+        return [{"label": "crafters", "value": i18n.t("workbench.of", crafters=len(self.crafters), members=len(self.group.members))},
+                {"label": i18n.t("workbench.recipes_known"), "value": str(len(known))}]
 
     def _for_station(self, recipe):
         """Is `recipe` worked at this bench's station (any station when it has none)?"""
@@ -91,9 +91,9 @@ class Bench:
     def alone_blocker(self, m, recipe_id):
         """Why `m` cannot go off alone to craft `recipe_id`, or None when they can."""
         if len(self.group.members) > 1 and not self.guild.free_slots:
-            return "no free group slot"
+            return i18n.t("workbench.no_free_group_slot")
         if self.guild.craft_blocker(m, recipe_id, self._packs) is not None:
-            return "not in the group's stock"
+            return i18n.t("workbench.not_in_group_s_stock")
         return None
 
     def _recipes(self, m):
@@ -114,11 +114,11 @@ class Bench:
         """The picked crafter puts `hours` into `recipe` while the group waits on a `solo` order,
         every pack feeding the craft: -> `(ok, lines)`."""
         if hours not in WAIT_HOURS:
-            raise ValueError(f"no {hours} h stint")
+            raise ValueError(i18n.t("workbench.no_h_stint", hours=hours))
         return solo.craft(self.guild, self.group, self.selected_crafter, recipe, hours, alone=False)
 
     def _alone(self, recipe, hours):
         """The picked crafter splits off on a solo task for `hours`: -> `(ok, lines)`."""
         if hours not in ALONE_HOURS:
-            raise ValueError(f"no {hours} h stint alone")
+            raise ValueError(i18n.t("workbench.no_h_stint_alone", hours=hours))
         return solo.craft(self.guild, self.group, self.selected_crafter, recipe, hours)

@@ -5,7 +5,7 @@ for the band and what the packs already carry toward each goal.
 The reads, labels and verbs are the giver's `job_board.Board`, which pygame's board reads too.
 """
 
-from .. import item_icon, missions
+from .. import i18n, item_icon, missions
 from ..job_board import BOARDS, TAG_TONE
 from .shop_tab import _portrait
 
@@ -27,23 +27,23 @@ class JobsTab:
     def _template(self, tid):
         t = missions.TEMPLATES.get(tid)
         if t is None or t not in self.b.get_templates():
-            raise ValueError(f"no job {tid!r} on this board")
+            raise ValueError(i18n.t("jobs_tab.no_job_on_this_board", tid=repr(tid)))
         return t
 
     def accept(self, tid):
         if not self.b.accept(self._template(tid)):
-            self.b.notice = "that job is not on offer to this band"
+            self.b.notice = i18n.t("jobs_tab.that_job_is_not_on")
 
     def turn_in(self, tid):
         t = self._template(tid)
         if not self.b.turn_in(t):
-            self.b.notice = (f"{t.name}: not ready to hand over" if self.b._mission_of(t)
-                             else f"{t.name}: this band does not hold the job")
+            self.b.notice = (i18n.t("jobs_tab.not_ready_to_hand_over", name=t.name) if self.b._mission_of(t)
+                             else i18n.t("jobs_tab.this_band_does_not_hold", name=t.name))
 
     def sell_egg(self):
         if self.b.footer_action() is None:
-            raise ValueError("nothing to sell here")
-        self.b.notice = self.b.run_footer_action() or "the egg is the Cult's job here, not a sale"
+            raise ValueError(i18n.t("jobs_tab.nothing_to_sell_here"))
+        self.b.notice = self.b.run_footer_action() or i18n.t("jobs_tab.egg_is_cult_s_job")
 
     def _job(self, t):
         b = self.b
@@ -89,7 +89,7 @@ class JobsTab:
         return {"cards": b.hub_cards(), "line": b.subtitle_text.strip('"'),
                 "jobs": [self._job(t) for t in templates],
                 "signer": {"name": leader.name, "portrait": _portrait(leader),
-                           "sub": f"{leader.race['name']} · leads the band"},
+                           "sub": i18n.t("jobs_tab.leads_band", race=leader.race['name'])},
                 "carried": self._carried(templates),
                 "egg": None if extra is None else {"label": extra[0], "on": extra[1]},
                 "notice": notice}

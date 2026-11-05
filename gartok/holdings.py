@@ -11,10 +11,10 @@ squatting. Money and the guard stay with the caller (`Guild`, `campaign`).
 
 import math
 
-from . import animals, economy, stints
-from .wagon import REPAIR_HOURS
+from . import animals, economy, i18n, stints
 from .constants import fmt_money
-from .stash import Stash  # noqa: F401 -- re-exported
+from .stash import Stash
+from .wagon import REPAIR_HOURS
 
 
 class Garage:
@@ -150,11 +150,11 @@ class GarageDesk:
         kind, _, arg = key.partition(":")
         if kind == "bay":
             if self.wealth < economy.GARAGE_PRICE:
-                self.notice = f"a bay costs {fmt_money(economy.GARAGE_PRICE)} -- the party has {fmt_money(self.wealth)}."
+                self.notice = i18n.t("holdings.bay_costs_party_has", cost=fmt_money(economy.GARAGE_PRICE), wealth=fmt_money(self.wealth))
                 return
             economy.charge_richest_first((*g.members, *getattr(g, "stores", ())), economy.GARAGE_PRICE)
             guild.buy_garage_tier()
-            self.notice = "a new bay: room for one more wagon and one more animal."
+            self.notice = i18n.t("holdings.new_bay_room_for_one")
         elif kind in ("repair_garaged", "repair_group"):
             wagon = (garage.wagons if kind == "repair_garaged" else g.wagons)[int(arg)]
             short = guild.repair_short(g.members, wagon)
@@ -166,23 +166,23 @@ class GarageDesk:
         elif kind == "park_wagon":
             wagon = g.wagons[int(arg)]
             if guild.park_wagon(g, wagon, garage):
-                self.notice = f"the {wagon.kind.lower()} is parked in the garage."
+                self.notice = i18n.t("holdings.is_parked_in_garage", lower=wagon.kind.lower())
             else:
-                self.notice = "every bay already holds a wagon."
+                self.notice = i18n.t("holdings.every_bay_already_holds_wagon")
         elif kind == "take_wagon":
             wagon = garage.wagons[int(arg)]
             if guild.take_wagon(g, wagon, garage):
-                self.notice = f"the {wagon.kind.lower()} rejoins the group."
+                self.notice = i18n.t("holdings.rejoins_group", lower=wagon.kind.lower())
         elif kind == "park_animal":
             animal = g.herd[int(arg)]
             if guild.park_animal(g, animal, garage):
-                self.notice = f"the {animal.species} is stabled in the garage."
+                self.notice = i18n.t("holdings.is_stabled_in_garage", species=animal.species)
             else:
-                self.notice = "every bay already holds an animal."
+                self.notice = i18n.t("holdings.every_bay_already_holds_animal")
         elif kind == "take_animal":
             animal = garage.herd[int(arg)]
             if guild.take_animal(g, animal, garage):
-                self.notice = f"the {animal.species} rejoins the group."
+                self.notice = i18n.t("holdings.rejoins_group_2", species=animal.species)
             else:
                 keeper = g.leader or g.members[0]
-                self.notice = f"{keeper.name} can control a herd of {g.herd_capacity} at most."
+                self.notice = i18n.t("holdings.can_control_herd_of_at", name=keeper.name, herd_capacity=g.herd_capacity)

@@ -15,6 +15,7 @@ from .. import (
     economy,
     forced,
     gather,
+    i18n,
     missions,
     node_functions,
     orders,
@@ -37,7 +38,7 @@ from .swift import Look
 
 LOG_TAIL = 200                  # lines of the log the map carries; the search reads the whole of it
 
-REST_ROWS = (("rest:1", "1 h"), ("rest:8", "8 h"), ("rest:full", "Until full"))
+REST_ROWS = (("rest:1", "map_session.rest.hour_1"), ("rest:8", "map_session.rest.hours_8"), ("rest:full", "map_session.rest.full"))
 
 
 def _icon(slug):
@@ -55,7 +56,8 @@ def _when(guild, hours):
 
 
 def _plural(n, word):
-    return f"{n} {word}{'s' * (n != 1)}"
+    """`n` of a counted thing (`count.<word>.one` / `.other` in the catalog)."""
+    return i18n.count(word.replace(" ", "_"), n)
 
 
 class MapSession(MapView, Session):
@@ -133,7 +135,7 @@ class MapSession(MapView, Session):
     def _group(self, gid):
         g = next((g for g in self.guild.groups if g.gid == gid), None)
         if g is None:
-            raise ValueError("no such band")
+            raise ValueError(i18n.t("map_session.no_such_band"))
         self.seen = g.gid
         return g
 
@@ -147,9 +149,9 @@ class MapSession(MapView, Session):
         """The band, when it may take an order now."""
         g = self._group(gid)
         if g.fight_due:
-            raise ValueError(f"{g.display_name} has a fight to face first")
+            raise ValueError(i18n.t("map_session.has_fight_to_face_first", display_name=g.display_name))
         if g.busy:
-            raise ValueError(f"{g.display_name} is busy")
+            raise ValueError(i18n.t("map_session.is_busy", display_name=g.display_name))
         return g
 
     # ------------------------------------------------------------------ #
@@ -182,7 +184,7 @@ class MapSession(MapView, Session):
         if group is None:
             return None
         live = [g for g in self.guild.groups if not g.empty]
-        return {"band": f"Band {live.index(group) + 1} of {len(live)} · its turn", "name": group.display_name,
+        return {"band": i18n.t("map_session.band_of_its_turn", index=live.index(group) + 1, total=len(live)), "name": group.display_name,
                 "node": world.node(group.node).name, "action": t["action"], "danger": t["danger"],
                 "members": [u.name for u in group.members]}
 
@@ -200,7 +202,7 @@ class MapSession(MapView, Session):
         """GO ON on the hand-over card: on to the screen the band's order was waiting to open."""
         t, self.turn = self.turn, None
         if t is None:
-            raise ValueError("no band is waiting")
+            raise ValueError(i18n.t("map_session.no_band_is_waiting"))
         if t["go"] is not None:
             return t["go"]()
         return {"screen": self.screen, **self.state()}
@@ -212,7 +214,7 @@ class MapSession(MapView, Session):
         if order.kind in forced.EVENTS:
             return forced.EVENTS[order.kind].label or order.kind.upper()
         if order.kind == "arena":
-            return "ENTER THE ARENA"
+            return i18n.t("map_session.enter_arena")
         return next((f.label for f in node_functions.FUNCTIONS.values()
                      if f.order_kind == order.kind and f.label), order.kind.replace("_", " ").upper())
 
@@ -224,10 +226,10 @@ class MapSession(MapView, Session):
         voc = vocations.VOCATIONS.get(g.vocation)
         bands = len([gr for gr in g.groups if not gr.empty])
         pending = sum(1 for u in g.roster if u.pending_picks)
-        return {"world": self.world_id, "name": g.name or "The Guild", "day": c.day,
+        return {"world": self.world_id, "name": g.name or i18n.t("map_session.guild"), "day": c.day,
                 "time": f"{h:02d}:{c.minute_of_hour:02d}", "daylight": c.is_daylight, "hour": h + c.minute_of_hour / 60,
-                "part": part, "turn": f"{'light' if c.is_daylight else 'dark'} till {turn:02d}:00",
-                "subtitle": f"{voc.name if voc else 'A guild'} · {_plural(len(g), 'member')} in {_plural(bands, 'band')}",
+                "part": part, "turn": i18n.t("map_session.till_light" if c.is_daylight else "map_session.till_dark", turn=turn),
+                "subtitle": i18n.t("map_session.in", who=voc.name if voc else i18n.t("map_session.a_guild"), members=_plural(len(g), 'member'), bands=_plural(bands, 'band')),
                 "banner": list(g.banner_color) if g.banner_color else None,
                 "emblem": _icon(next(((c, s) for c, s, _ in art_files.BANNER_ICONS if s == g.banner_icon), None)),
                 "level_ups": pending, "slots_free": g.free_slots}
@@ -238,12 +240,11 @@ class MapSession(MapView, Session):
         if food:
             out.append({"title": food[2], "text": food[1], "icon": "action/eating", "tone": "bad"})
         if arena.defense_due(self.guild):
-            out.append({"title": "Title defense", "icon": "body/sword-tie", "tone": "bad",
-                        "text": f"{arena.champion_of(self.guild).name} must defend the Champion of the Pit "
-                                f"by day {arena.defense_deadline(self.guild)}"})
+            out.append({"title": i18n.t("map_session.title_defense"), "icon": "body/sword-tie", "tone": "bad",
+                        "text": i18n.t("map_session.must_defend_champion_of_pit", name=arena.champion_of(self.guild).name, defense_deadline=arena.defense_deadline(self.guild))})
         hungry = self.guild.hungry
         if hungry and not food:
-            out.append({"title": f"{len(hungry)} hungry", "icon": "action/eating", "tone": "warn",
+            out.append({"title": i18n.t("map_session.hungry", len=len(hungry)), "icon": "action/eating", "tone": "warn",
                         "text": ", ".join(u.name for u in hungry)})
         return out
 
@@ -258,10 +259,10 @@ class MapSession(MapView, Session):
 
     def _chip(self, g):
         if g.fight_due:
-            return "Ambushed" if g.pending.kind in ("ambush", "fortress_ambush") else "Fight due", "bad"
+            return i18n.t("map_session.ambushed") if g.pending.kind in ("ambush", "fortress_ambush") else i18n.t("map_session.fight_due"), "bad"
         o = g.order
         if o is None or o.kind == "idle":
-            return ("Routine stopped", "bad") if g.routine is not None and g.routine.paused else ("No orders", "idle")
+            return (i18n.t("map_session.routine_stopped"), "bad") if g.routine is not None and g.routine.paused else (i18n.t("map_session.no_orders"), "idle")
         label = (stints.doing(o) if stints.is_stint(o) else "gather" if o.kind == "work" and o.gather
                  else "search" if o.task in campaign.SEARCHES else o.task if o.kind == "solo"
                  else "travelling" if o.kind == "travel" else o.kind)
@@ -281,11 +282,11 @@ class MapSession(MapView, Session):
             "pace": world.hours(1, g.speed) * self._pace(g),
             "members": [self._member(u, g) for u in g.members],
             "trip": self._trip(g),
-            "split": [{"uid": u.uid, "name": u.name, "sub": f"{u.race['name']} · {u.hp} / {u.hp_max} HP",
+            "split": [{"uid": u.uid, "name": u.name, "sub": i18n.t("map_session.hp", race=u.race['name'], hp=u.hp, hp_max=u.hp_max),
                        "portrait": _portrait(u)} for u in g.members]
                      + [{"uid": w.uid, "name": w.kind, "sub": "wagon"} for w in g.wagons]
                      + [{"uid": a.uid, "name": a.species, "sub": "animal"} for a in g.herd],
-            "can_split": "" if self.guild.free_slots else "no free band slot",
+            "can_split": "" if self.guild.free_slots else i18n.t("map_session.no_free_band_slot"),
             "mates": [{"gid": gid, "name": name} for gid, name in self._mates_for(g)],
             "inspector": self._inspector(g),
         }
@@ -294,7 +295,7 @@ class MapSession(MapView, Session):
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "lead": u is g.leader,
                 "hp": u.hp, "hp_max": u.hp_max, "hungry": u.hunger_level > 0, "sick": bool(u.sick),
                 "poisoned": bool(u.poisoned),
-                "sub": f"{u.race['name']} · lvl {u.racial_level}"}
+                "sub": i18n.t("map_session.lvl", race=u.race['name'], racial_level=u.racial_level)}
 
     def _pace(self, g):
         return vocations.travel_mult(self.guild, g)
@@ -342,7 +343,7 @@ class MapSession(MapView, Session):
             what = forced.EVENTS[g.pending.kind].label or g.pending.kind
             blocks = [{"t": "note", "tone": "bad", "text": what.capitalize() + "!"},
                       {"t": "note", "tone": "faint",
-                       "text": f"{_plural(n, 'foe')} stand in the way. There is no going on until it is faced."}]
+                       "text": i18n.t("map_session.stand_in_way_there_is", foes=_plural(n, 'foe'))}]
             return {"place": place, "blocks": blocks, "camp": None}
         blocks = [self._block(b) for b in self._inspector_content(g, here)
                   if b["type"] != "stats" and not (b["type"] == "text" and b["text"].startswith("Busy: "))]
@@ -359,9 +360,9 @@ class MapSession(MapView, Session):
         out = [{"value": fmt_money(day), "label": "A 16 h shift"}]
         if gather.can_gather(here.id):
             held = self.guild.has_licence(here.id)
-            out.append({"value": "held" if held else "no licence", "label": "Gathering", "no": not held})
+            out.append({"value": i18n.t("map_session.licence_held") if held else i18n.t("map_session.no_licence"), "label": i18n.t("map_session.gathering"), "no": not held})
             hands = len(gather.gatherers(g.members, here.id))
-            out.append({"value": f"{hands}/{len(g.members)}", "label": f"Own {gather.tool(here.id)}",
+            out.append({"value": f"{hands}/{len(g.members)}", "label": i18n.t("map_session.own", tool=gather.tool(here.id)),
                         "no": hands < len(g.members)})
         out.append({"value": str(len(g.members)), "label": "Workers"})
         return out
@@ -369,7 +370,7 @@ class MapSession(MapView, Session):
     def _camp(self, g):
         now = self.guild.clock.seconds
         if g.has_campfire(now):
-            fire = {"label": "Campfire", "sub": f"burning, {g.campfire_hours_left(now):g} h left", "enabled": True}
+            fire = {"label": "Campfire", "sub": i18n.t("map_session.burning_h_left", campfire_hours_left=g.campfire_hours_left(now)), "enabled": True}
         else:
             missing = []
             if not any(u.has_item(economy.FIELD_CAMPFIRE_TOOL) for u in (*g.members, *g.stores)):
@@ -379,30 +380,30 @@ class MapSession(MapView, Session):
             if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in g.members) < 1:
                 missing.append("1 Coal")
             fire = {"label": "Campfire", "enabled": not missing,
-                    "sub": f"needs {', '.join(missing)}" if missing else "light it and cook · burns 4 h"}
+                    "sub": i18n.t("map_session.needs", join=', '.join(missing)) if missing else i18n.t("map_session.light_it_and_cook_burns")}
         hurt = [u for u in g.members if u.hp < u.hp_max or u.sick or u.poisoned]
         urgent = self._rest_urgent(g)
         rows = []
         for (key, label), (_, _, plan) in zip(REST_ROWS, self._rest_plans(g)):
             if not plan.available:
-                rows.append({"key": key, "label": label, "sub": plan.reason, "enabled": False})
+                rows.append({"key": key, "label": i18n.t(label), "sub": plan.reason, "enabled": False})
                 continue
             meals = plan.meals * len(g.members)
-            sub = "no meal" if meals == 0 else _plural(meals, "meal")
+            sub = i18n.t("map_session.no_meal") if meals == 0 else _plural(meals, "meal")
             if key == "rest:full":
                 sub = f"{rest.format_hours(plan.hours)} · {sub}"
-            rows.append({"key": key, "label": "To the floor" if plan.capped else label, "sub": sub,
+            rows.append({"key": key, "label": i18n.t("map_session.to_floor") if plan.capped else i18n.t(label), "sub": sub,
                          "enabled": True, "rec": key == "rest:full" and urgent,
-                         "tip": (f"rations run out {_plural(plan.short_days, 'day')} short of full health"
+                         "tip": (i18n.t("map_session.rations_run_out_short_of", days=_plural(plan.short_days, 'day'))
                                  if plan.capped else None)})
         return {
             "fire": fire,
-            "stance": [{"key": key, "label": key.capitalize(), "tip": STANCE_NOTES[key], "on": g.stance == key}
+            "stance": [{"key": key, "label": i18n.t(f"map_session.stance.{key}"), "tip": i18n.t(STANCE_NOTES[key]), "on": g.stance == key}
                        for key in ((NORMAL), (CAUTIOUS))],
             "rest": rows,
             "starving": g.rations == 0,
-            "hurt": ([f"{hurt[0].name} is hurt."] if len(hurt) == 1 else
-                     [f"{len(hurt)} are hurt, sick or poisoned."] if hurt else []),
+            "hurt": ([i18n.t("map_session.is_hurt", name=hurt[0].name)] if len(hurt) == 1 else
+                     [i18n.t("map_session.are_hurt_sick_or_poisoned", len=len(hurt))] if hurt else []),
         }
 
     # ------------------------------------------------------------------ #
@@ -416,13 +417,13 @@ class MapSession(MapView, Session):
             if g.empty or o is None or o.kind in ("idle", "garrison"):
                 continue
             t = o.remaining + o.owed
-            what = (f"{g.display_name} reaches {world.node(o.dest).name}" if o.kind == "travel"
-                    else f"{g.display_name}: {self._order_status(g).split(' (')[0]} ends")
+            what = (i18n.t("map_session.reaches", display_name=g.display_name, name=world.node(o.dest).name) if o.kind == "travel"
+                    else i18n.t("map_session.ends", display_name=g.display_name, split=self._order_status(g).split(' (')[0]))
             rows.append((t, what))
         c = self.guild.clock
         now = c.hour_of_day + c.minute_of_hour / 60
         turn = clock.NIGHT_START if c.is_daylight else clock.DAY_START
-        rows.append(((turn - now) % 24, "Dark falls" if c.is_daylight else "Dawn"))
+        rows.append(((turn - now) % 24, i18n.t("map_session.dark_falls") if c.is_daylight else i18n.t("map_session.dawn")))
         rows.sort()
         out = [{"at": _when(self.guild, 0)[1], "day": c.day, "text": self._now_line(), "now": True}]
         for t, text in rows[:4]:
@@ -453,22 +454,22 @@ class MapSession(MapView, Session):
             log.discard_oldest()
         elif choice == "raise":
             if settings.next_choice("log_lines") is None:
-                raise ValueError("the log is already at its largest")
+                raise ValueError(i18n.t("map_session.log_is_already_at_its"))
             settings.step_up("log_lines")
         elif choice == "later":
             log.muted = True
         else:
-            raise ValueError(f"no such answer: {choice}")
+            raise ValueError(i18n.t("map_session.no_such_answer", choice=choice))
         self._save()
         return self.state()
 
     def _now_line(self):
         idle = [g for g in self.guild.groups if self._is_idle(g)]
         if self._pending_event:
-            return f"{self._pending_event[0].display_name} must face a fight"
+            return i18n.t("map_session.must_face_fight", display_name=self._pending_event[0].display_name)
         if idle:
-            return f"{idle[0].display_name} waits for orders" if len(idle) == 1 else f"{len(idle)} bands wait for orders"
-        return "Every band is about its work"
+            return i18n.t("map_session.waits_for_orders", display_name=idle[0].display_name) if len(idle) == 1 else i18n.t("map_session.bands_wait_for_orders", len=len(idle))
+        return i18n.t("map_session.every_band_is_about_its")
 
     def _swift_look(self, group, order):
         node = world.node(group.node)
@@ -479,18 +480,18 @@ class MapSession(MapView, Session):
     def _cta(self):
         due = self._pending_event
         if due is not None:
-            return {"key": "resolve_event", "label": "Fight", "sub": f"{len(due[1].pack)} foes", "danger": True,
+            return {"key": "resolve_event", "label": "Fight", "sub": i18n.t("map_session.foes", len=len(due[1].pack)), "danger": True,
                     "enabled": True, "gid": due[0].gid, "swift": self._swift_look(*due),
-                    "text": f"{due[0].display_name} is stopped. Nothing moves on until it is faced."}
+                    "text": i18n.t("map_session.is_stopped_nothing_moves_on", display_name=due[0].display_name)}
         idle = [g for g in self.guild.groups if self._is_idle(g)]
         if not idle and self._everyone_garrisoned():
-            return {"key": "advance_world", "label": f"Advance {ADVANCE_HOURS} h", "sub": "whole world",
-                    "danger": False, "enabled": True, "text": "Every band holds a post. Let the day run."}
-        return {"key": "cycle_idle", "label": "Next band", "danger": False, "enabled": len(idle) > 1,
-                "sub": f"{len(idle)} waiting" if len(idle) > 1 else "none idle", "idle": [g.gid for g in idle],
-                "text": (f"The clock waits on {idle[0].display_name}."
-                         if len(idle) == 1 else f"{len(idle)} bands wait. The seal steps to the next one."
-                         if idle else "The clock runs.")}
+            return {"key": "advance_world", "label": i18n.t("map_session.advance_h", advance_hours=ADVANCE_HOURS), "sub": i18n.t("map_session.whole_world"),
+                    "danger": False, "enabled": True, "text": i18n.t("map_session.every_band_holds_post_let")}
+        return {"key": "cycle_idle", "label": i18n.t("map_session.next_band"), "danger": False, "enabled": len(idle) > 1,
+                "sub": i18n.t("map_session.waiting", len=len(idle)) if len(idle) > 1 else i18n.t("map_session.none_idle"), "idle": [g.gid for g in idle],
+                "text": (i18n.t("map_session.clock_waits_on", display_name=idle[0].display_name)
+                         if len(idle) == 1 else i18n.t("map_session.bands_wait_seal_steps_to", len=len(idle))
+                         if idle else i18n.t("map_session.clock_runs"))}
 
     # ------------------------------------------------------------------ #
     # what the person does                                                #
@@ -501,20 +502,20 @@ class MapSession(MapView, Session):
         n = world.node(node_id)
         out = {"node": node_id, "name": n.name, "blurb": n.blurb, "path": [], "hours": 0.0}
         if node_id == g.node:
-            out["why"] = f"{g.display_name} stands here"
+            out["why"] = i18n.t("map_session.stands_here", display_name=g.display_name)
             return out
         path, dist = world.route(g.node, node_id)
         if dist == float("inf"):
-            out["why"] = "no road leads there"
+            out["why"] = i18n.t("map_session.no_road_leads_there")
             return out
         hours = sum(self._legs(g, path))
         day, at = _when(self.guild, hours)
         out.update(path=path, via=[world.node(p).name for p in path[1:-1]], hours=round(hours, 1),
                    day=day, at=at, food=self._food_for(g, day - self.guild.clock.day))
         if g.fight_due:
-            out["why"] = "a fight must be faced first"
+            out["why"] = i18n.t("map_session.fight_must_be_faced_first")
         elif g.busy:
-            out["why"] = f"{g.display_name} is busy"
+            out["why"] = i18n.t("map_session.is_busy", display_name=g.display_name)
         elif any(w.broken for w in g.wagons):
             out["leave"] = self._left_behind(g)
         return out
@@ -537,15 +538,15 @@ class MapSession(MapView, Session):
     def travel(self, gid, node_id, leave=False):
         g = self._free(gid)
         if node_id == g.node:
-            raise ValueError(f"{g.display_name} is already there")
+            raise ValueError(i18n.t("map_session.is_already_there", display_name=g.display_name))
         if world.route(g.node, node_id)[1] == float("inf"):
-            raise ValueError(f"no road leads to {world.node(node_id).name}")
+            raise ValueError(i18n.t("map_session.no_road_leads_to", name=world.node(node_id).name))
         broken = [w for w in g.wagons if w.broken]
         if broken and not leave:
-            raise ValueError("a broken wagon cannot move: mend it, or leave it behind")
+            raise ValueError(i18n.t("map_session.broken_wagon_cannot_move_mend"))
         for w in broken:
             self.guild.abandon_wagon(g, w)
-            self.say(f"{g.display_name} leaves its broken {w.kind.lower()} behind.", "travel", g)
+            self.say(i18n.t("map_session.leaves_its_broken_behind", display_name=g.display_name, lower=w.kind.lower()), "travel", g)
         g.order = orders.travel(g, node_id, self._pace(g))
         self.focus = g.gid
         return self._after_order()
@@ -554,16 +555,16 @@ class MapSession(MapView, Session):
         g = self._group(gid)
         if key == "resolve_event":
             if not g.fight_due:
-                raise ValueError(f"{g.display_name} has no fight to face")
+                raise ValueError(i18n.t("map_session.has_no_fight_to_face", display_name=g.display_name))
             from .campaign_fight import forced_fight
             from .dialogue_session import forced_talk
             return self._talk(forced_talk(self, g)) or forced_fight(self, g, g.pending)
         if key == "swift_win":
             if not g.fight_due:
-                raise ValueError(f"{g.display_name} has no fight to face")
+                raise ValueError(i18n.t("map_session.has_no_fight_to_face", display_name=g.display_name))
             self._swift_look(g, g.pending)
             if self.look.result is None:
-                raise ValueError("this fight is not a clean stomp")
+                raise ValueError(i18n.t("map_session.this_fight_is_not_clean"))
             from .campaign_fight import forced_fight
             result = self.look.result
             self.look.clear()
@@ -571,7 +572,7 @@ class MapSession(MapView, Session):
         if key == "guild":
             return self._sheet("members", g.gid)
         if g.fight_due:
-            raise ValueError(f"{g.display_name} has a fight to face first")
+            raise ValueError(i18n.t("map_session.has_fight_to_face_first", display_name=g.display_name))
         if key in ("stop_rest", "recall_garrison"):
             g.order = orders.idle()
         elif key == "cancel_trip":
@@ -583,10 +584,10 @@ class MapSession(MapView, Session):
         elif key == "visit_claim":
             return self._enter(g, orders.interactive("claim", hours=0))
         elif g.busy:
-            raise ValueError(f"{g.display_name} is busy")
+            raise ValueError(i18n.t("map_session.is_busy", display_name=g.display_name))
         elif key == "continue_routine":
             if g.routine is None or not g.routine.paused:
-                raise ValueError(f"{g.display_name} has no stopped routine")
+                raise ValueError(i18n.t("map_session.has_no_stopped_routine", display_name=g.display_name))
             self.say(routines.resume(self.guild, g), "guild", g)
         elif key.startswith("rest:"):
             which = key.split(":")[1]
@@ -608,8 +609,8 @@ class MapSession(MapView, Session):
             now = self.guild.clock.seconds
             if not g.has_campfire(now):
                 if not g.light_campfire(now):
-                    raise ValueError("the band cannot light a campfire")
-                self.say(f"{g.display_name}: campfire lit. Burns for 4 hours.", "rest", g)
+                    raise ValueError(i18n.t("map_session.band_cannot_light_campfire"))
+                self.say(i18n.t("map_session.campfire_lit_burns_for_hours", display_name=g.display_name), "rest", g)
                 self._save()
             from .hub_session import HubSession
             self.game.open(HubSession(self, g, orders.Order("campfire")))
@@ -617,14 +618,14 @@ class MapSession(MapView, Session):
         elif key in orders.INTERACTIVE_KINDS:
             return self._enter(g, orders.interactive(key, hours=0))
         else:
-            raise ValueError(f"no such order: {key}")
+            raise ValueError(i18n.t("map_session.no_such_order", what=key))
         self.focus = g.gid
         return self._after_order()
 
     def split(self, gid, uids):
         g = self._group(gid)
         if g.fight_due:
-            raise ValueError(f"{g.display_name} has a fight to face first")
+            raise ValueError(i18n.t("map_session.has_fight_to_face_first", display_name=g.display_name))
         picks = set(uids)
         new = self.guild.split_group(g, [u for u in g.members if u.uid in picks],
                                      wagons=[w for w in g.wagons if w.uid in picks],
@@ -636,7 +637,7 @@ class MapSession(MapView, Session):
     def merge(self, gid, other):
         a, b = self._group(gid), self._group(other)
         if a.fight_due or b.fight_due:
-            raise ValueError("a band with a fight to face cannot merge")
+            raise ValueError(i18n.t("map_session.band_with_fight_to_face"))
         self.guild.merge_groups(a, b)
         self.focus = a.gid
         self._save()
@@ -644,9 +645,9 @@ class MapSession(MapView, Session):
 
     def advance_world(self):
         if self._pending_event is not None:
-            raise ValueError("a fight must be faced first")
+            raise ValueError(i18n.t("map_session.fight_must_be_faced_first"))
         if not self._everyone_garrisoned():
-            raise ValueError("only when every band holds a post")
+            raise ValueError(i18n.t("map_session.only_when_every_band_holds"))
         self._advance(ADVANCE_HOURS)
         return self._land()
 
@@ -666,7 +667,7 @@ class MapSession(MapView, Session):
             busy_before = {g.gid for g in self.guild.groups if g.busy}
             result = campaign.advance(self.guild, dt=dt)
             self.notices += result.events
-            self.notices += [f"{u.name} died." for u in result.casualties]
+            self.notices += [i18n.t("map_session.died", name=u.name) for u in result.casualties]
             dead += result.casualties
             self.level_ups += result.level_ups
             if result.wiped:
@@ -735,7 +736,7 @@ class MapSession(MapView, Session):
         band = next((g for g in self.guild.groups if g.gid == self.focus), None)
         if band is not None and self.turn is None:
             ambushed = due is not None and due[0] is band
-            self._hand_over(band, "Ambushed: fight when ready" if ambushed else "Awaits orders", danger=ambushed)
+            self._hand_over(band, i18n.t("map_session.ambushed_fight_when_ready") if ambushed else i18n.t("map_session.awaits_orders"), danger=ambushed)
         self._save()
         return {"screen": self.screen, **self.state()}
 
@@ -765,7 +766,7 @@ class MapSession(MapView, Session):
             from .campaign_fight import errand
             return errand(self, group, order.kind)
         if order.kind not in HUB_KINDS:
-            raise ValueError(f"no screen plays {order.kind}")
+            raise ValueError(i18n.t("map_session.no_screen_plays", kind=order.kind))
         self.game.open(HubSession(self, group, order))
         return {"screen": HubSession.screen}
 
@@ -785,15 +786,15 @@ class MapSession(MapView, Session):
         """To the title screen, the world saved first (pygame's pause menu, MAIN MENU)."""
         from .title_session import TitleSession
         self._save()
-        notice = "The guild was wiped out. Load an earlier save to try again." if self.wiped else None
+        notice = i18n.t("map_session.guild_was_wiped_out_load") if self.wiped else None
         self.game.open(TitleSession(notice))
         return {"screen": "title"}
 
     def save_as(self, name):
         """A named snapshot on the guild's saves (pygame's pause menu, SAVE AS)."""
         if self.world_id is None or self.wiped:
-            raise ValueError("there is nothing to save")
-        name = str(name).strip()[:persist.MAX_SAVE_NAME] or "Manual save"
+            raise ValueError(i18n.t("map_session.there_is_nothing_to_save"))
+        name = str(name).strip()[:persist.MAX_SAVE_NAME] or i18n.t("map_session.manual_save")
         persist.save_game(self.world_id, self.guild, kind="manual", label=name)
         return {"saved": name}
 
@@ -801,8 +802,8 @@ class MapSession(MapView, Session):
         """The wiki or the settings from the menu; back comes to the map as it was."""
         from .settings_session import SettingsSession
         from .wiki_session import WikiSession
-        session = (WikiSession(self.back, "Back to the map") if which == "wiki"
-                   else SettingsSession(self.back, "Back to the map", self.guild, self._save))
+        session = (WikiSession(self.back, i18n.t("map_session.back_to_map")) if which == "wiki"
+                   else SettingsSession(self.back, i18n.t("map_session.back_to_map"), self.guild, self._save))
         self.game.open(session)
         return {"screen": session.screen}
 

@@ -8,7 +8,7 @@ The desk's panels are data (`panels`), drawn by pygame's `LedgerScreen` and the 
 (`web/ledger_tab.py`).
 """
 
-from . import data, economy, orders
+from . import data, economy, i18n, orders
 from .constants import fmt_money
 
 
@@ -28,15 +28,14 @@ class LedgerDesk:
             if carrier is not None:
                 carrier.remove_named(data.MISSION_CHEST_ITEM)
                 carrier.give_to_pack(data.LETTER_ITEM)
-                self.notice = (f"{carrier.name} hands over the sealed chest -- the "
-                               "outpost gives a letter of receipt in return.")
+                self.notice = (i18n.t("ledger.hands_over_sealed_chest_outpost", name=carrier.name))
         elif key == "accept_mentorship":
             from . import missions
             recruit = missions.make_treefolk_recruit()
             self.guild.add_member(recruit, self.group)
             signer = self.group.leader or self.group.members[0]
             missions.accept_treefolk_mentorship(self.guild, signer, recruit)
-            self.notice = f"{recruit.name} (Treefolk) joins your group for mentorship."
+            self.notice = i18n.t("ledger.treefolk_joins_your_group_for", name=recruit.name)
         elif key == "deliver_recruit":
             from . import missions
             m_tree = next((m for m in self.guild.missions if m.template_id == "ledger_treefolk"), None)
@@ -44,7 +43,7 @@ class LedgerDesk:
                 recruit = next((u for u in self.guild.roster if u.uid == m_tree.recruit_uid), None)
                 if recruit is not None:
                     missions.deliver_treefolk_recruit(self.guild, self.group, m_tree, recruit)
-                    self.notice = f"{recruit.name} steps into the garrison. $230 reward received!"
+                    self.notice = i18n.t("ledger.steps_into_garrison_reward_received", name=recruit.name)
         elif key == "supply_run":
             try:
                 self.group.order = orders.supply_run(self.guild, self.group)
@@ -53,11 +52,11 @@ class LedgerDesk:
                 self.notice = str(err)
 
     def hub_cards(self):
-        cards = [{"label": "party purse", "value": fmt_money(sum(u.money for u in self.group.members)),
+        cards = [{"label": i18n.t("ledger.party_purse"), "value": fmt_money(sum(u.money for u in self.group.members)),
                   "tone": "money"}]
         if "bankers_trust" in self.guild.deeds_done:
             done = "ledger_hold_supply_run" in self.guild.deeds_done
-            cards.insert(0, {"label": "supply runs", "value": f"{self.guild.supply_runs_completed} / 10",
+            cards.insert(0, {"label": i18n.t("ledger.supply_runs"), "value": f"{self.guild.supply_runs_completed} / 10",
                              "tone": "good" if done else None})
         return cards
 
@@ -78,55 +77,54 @@ class LedgerDesk:
                 "button": button, "warn": warn}
 
     def _chest(self):
-        return self._panel("chest", "The Sealed Chest", "the Bankers' trust", rows=[
+        return self._panel("chest", i18n.t("ledger.sealed_chest"), i18n.t("ledger.bankers_trust"), rows=[
             ("Carrier", self._carrier().name, None),
-            ("In return", "a letter of receipt, to take back to the City", "muted")],
-            button=("exchange", "Hand over the chest", True))
+            (i18n.t("ledger.in_return"), i18n.t("ledger.letter_of_receipt_to_take"), "muted")],
+            button=("exchange", i18n.t("ledger.hand_over_chest"), True))
 
     def _mentorship(self):
         from . import missions
         m_tree = next((m for m in self.guild.missions if m.template_id == "ledger_treefolk"), None)
         button = None
         if m_tree is None:
-            rows = [("Offer", "a green Treefolk recruit (racial level 0) joins the group", None),
-                    ("Task", "train them to racial level 2, then bring them back", "muted")]
-            button = ("accept_mentorship", "Accept the recruit", True)
+            rows = [("Offer", i18n.t("ledger.green_treefolk_recruit_racial_level"), None),
+                    ("Task", i18n.t("ledger.train_them_to_racial_level"), "muted")]
+            button = ("accept_mentorship", i18n.t("ledger.accept_recruit"), True)
         elif m_tree.state == "active":
             recruit = next((u for u in self.guild.roster if u.uid == m_tree.recruit_uid), None)
             if recruit is None:
                 m_tree.state = "failed"
-                rows = [("Status", "the Treefolk recruit fell in battle: the mentorship has failed", "bad")]
+                rows = [("Status", i18n.t("ledger.treefolk_recruit_fell_in_battle"), "bad")]
             elif recruit in self.group.members:
                 lvl = recruit.racial_level
                 ready = lvl >= 2
                 rows = [("Recruit", recruit.name, None),
-                        ("Training", f"racial level {lvl} / 2", "good" if ready else "muted"),
-                        ("Reward", f"{fmt_money(missions.LEDGER_TREEFOLK.reward)}  ·  the recruit leaves the guild",
+                        ("Training", i18n.t("ledger.racial_level", lvl=lvl), "good" if ready else "muted"),
+                        ("Reward", i18n.t("ledger.recruit_leaves_guild", fmt_money=fmt_money(missions.LEDGER_TREEFOLK.reward)),
                          "money")]
-                button = ("deliver_recruit", "Deliver the recruit", ready)
+                button = ("deliver_recruit", i18n.t("ledger.deliver_recruit"), ready)
             else:
-                rows = [("Recruit", f"{recruit.name} is in another group: bring them here to hand over", "muted")]
+                rows = [("Recruit", i18n.t("ledger.is_in_another_group_bring", name=recruit.name), "muted")]
         else:
-            rows = [("Status", "the Treefolk soldier serves with honour", "good"),
-                    ("Gates", "Ledger Hold stands open to the guild", "muted")]
-        return self._panel("mentorship", "Garrison Mentorship", "Commander Varkas", rows=rows, button=button)
+            rows = [("Status", i18n.t("ledger.treefolk_soldier_serves_with_honour"), "good"),
+                    ("Gates", i18n.t("ledger.ledger_hold_stands_open_to"), "muted")]
+        return self._panel("mentorship", i18n.t("ledger.garrison_mentorship"), i18n.t("ledger.commander_varkas"), rows=rows, button=button)
 
     def _supply_run(self):
         trip = orders.supply_hours(self.guild, self.group)
         cargo = self.group.free_cargo_capacity
         need = economy.SUPPLY_RUN_CARGO_KG
         can_run = cargo >= need
-        return self._panel("supply_run", "Frontier Supply Run", "to the Frontier Outpost and back", rows=[
-            ("Trip", f"{trip:.1f} hours, walking {need:.0f} kg of supplies", None),
-            ("Pay", f"{fmt_money(economy.SUPPLY_RUN_PAY)} each  ·  work level {economy.SUPPLY_RUN_LEVEL}", "money"),
-            ("Cargo", f"{cargo:.1f} / {need:.0f} kg free" if can_run
-             else f"{cargo:.1f} / {need:.0f} kg free: bring pack animals or lighten the load",
+        return self._panel("supply_run", i18n.t("ledger.frontier_supply_run"), i18n.t("ledger.to_frontier_outpost_and_back"), rows=[
+            ("Trip", i18n.t("ledger.hours_walking_kg_of_supplies", trip=trip, need=need), None),
+            ("Pay", i18n.t("ledger.each_work_level", fmt_money=fmt_money(economy.SUPPLY_RUN_PAY), supply_run_level=economy.SUPPLY_RUN_LEVEL), "money"),
+            ("Cargo", i18n.t("ledger.kg_free", cargo=cargo, need=need) if can_run
+             else i18n.t("ledger.kg_free_bring_pack_animals", cargo=cargo, need=need),
              "good" if can_run else "bad")],
-            button=("supply_run", "Depart with the caravan", can_run),
-            warn="Enemy soldiers may ambush each leg.")
+            button=("supply_run", i18n.t("ledger.depart_with_caravan"), can_run),
+            warn=i18n.t("ledger.enemy_soldiers_may_ambush_each"))
 
     def _gate(self):
-        return self._panel("gate", "The Gatehouse", lines=(
-            "The sentries look the band over from the gatehouse.",
-            ("Commander Varkas only receives couriers bearing the counting-house seal, "
-             "or bands the Bankers vouch for.")))
+        return self._panel("gate", i18n.t("ledger.gatehouse"), lines=(
+            i18n.t("ledger.sentries_look_band_over_from"),
+            (i18n.t("ledger.commander_varkas_only_receives_couriers"))))

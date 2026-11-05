@@ -74,7 +74,7 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 `justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
-from . import cohesion, intel, orders
+from . import cohesion, i18n, intel, orders
 from .clock import Clock
 from .group import BASE_SLOTS, FAME_PER_SLOT, Group
 from .guild_claim import (
@@ -249,11 +249,11 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         `Group`'s leader, this costs the run's one free swap
         (`leader_swaps_used`); once spent, only death reshuffles it."""
         if unit not in self.roster:
-            raise ValueError("guild leader must be a roster member")
+            raise ValueError(i18n.t("guild_rules.guild_leader_must_be_roster"))
         if unit is self.leader:
             return
         if self.leader_swaps_used >= 1:
-            raise ValueError("no free guild leader change left")
+            raise ValueError(i18n.t("guild_rules.no_free_guild_leader_change"))
         self.leader = unit
         self.leader_swaps_used += 1
 
@@ -351,16 +351,15 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         its wagon came too."""
         peel = [u for u in group.members if u in set(members)]
         if not peel or len(peel) == len(group.members):
-            raise ValueError("split needs a non-empty, proper subset of the group")
+            raise ValueError(i18n.t("guild_rules.split_needs_non_empty_proper"))
         if group.locked:
-            raise ValueError("can't split a group with an order in flight")
+            raise ValueError(i18n.t("guild_rules.can_t_split_group_with"))
         if not self.free_slots:
-            raise ValueError("no free group slot -- the guild is not famous enough to run another")
+            raise ValueError(i18n.t("guild_rules.no_free_group_slot_guild"))
         new_group = Group(peel, node=group.node, name=name)
         moved_herd = [a for a in group.herd if a in herd]
         if sum(a.herd_weight for a in moved_herd) > new_group.herd_capacity:
-            raise ValueError(f"the herd would outgrow what {new_group.leader.name} can control "
-                             f"({new_group.herd_capacity})")
+            raise ValueError(i18n.t("guild_rules.herd_would_outgrow_what_can", name=new_group.leader.name, herd_capacity=new_group.herd_capacity))
         group.members = [u for u in group.members if u not in peel]
         for wagon in [w for w in group.wagons if w in wagons]:
             group.wagons.remove(wagon)
@@ -383,11 +382,11 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         `"garrison"` order on either side is not a blocker (`Group.locked`) --
         only an order that actually moves or occupies someone is."""
         if a.node != b.node:
-            raise ValueError("can only merge groups standing on the same node")
+            raise ValueError(i18n.t("guild_rules.can_only_merge_groups_standing"))
         if a.locked or b.locked:
-            raise ValueError("can't merge a group with an order in flight")
+            raise ValueError(i18n.t("guild_rules.can_t_merge_group_with"))
         if a.herd_load + b.herd_load > a.herd_capacity:
-            raise ValueError(f"the herd would outgrow what {a.leader.name} can control ({a.herd_capacity})")
+            raise ValueError(i18n.t("guild_rules.herd_would_outgrow_what_can", name=a.leader.name, herd_capacity=a.herd_capacity))
         for wagon in list(b.wagons):
             b.remove_wagon(wagon)
             a.add_wagon(wagon)

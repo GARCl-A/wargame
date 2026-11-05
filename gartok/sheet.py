@@ -1,7 +1,7 @@
 """A character's sheet as a plain dict (`unit_to_ch`), with no pygame: what the web's sheets and
 cards read, and what `ui/sheet_card.py` paints for the Editor and the battle."""
 
-from . import data, magic, weapon_traits
+from . import data, i18n, magic, weapon_traits
 
 
 def _to_hit(u):
@@ -16,16 +16,16 @@ def _weapon_line(u):
     if not u.armed:
         return u.weapon.name, f"{n}d{faces} {u.mod_strength:+} (STR)", "melee"
     if u.improvised:
-        return (f"{u.weapon_name} (no arrow -> improvised)",
+        return (i18n.t("sheet.no_arrow_improvised", weapon_name=u.weapon_name),
                 f"{n}d{faces} {u.mod_strength:+} (STR)", "melee")
     bonus = u.mod_strength if not u.ranged else 0
     dmg = f"{n}d{faces}" + (f" {bonus:+} (STR)" if bonus else "")
     hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
     size_str = f"{u.weapon.get('size')} · " if u.weapon.get("size") and u.weapon.get("size") != "Medium" else ""
     if u.ranged:
-        reach = f"{size_str}range {u.weapon['range']}  ·  {u.ammo} arrows  ·  {hands}"
+        reach = i18n.t("sheet.range_arrows", size_str=size_str, weapon=u.weapon['range'], ammo=u.ammo, hands=hands)
     else:
-        thrown = f"  ·  thrown {u.weapon['thrown']}" if u.weapon["thrown"] else ""
+        thrown = i18n.t("sheet.thrown", weapon=u.weapon['thrown']) if u.weapon["thrown"] else ""
         reach = f"{size_str}melee  ·  {hands}{thrown}"
     return u.weapon_name, dmg, reach
 
@@ -41,7 +41,7 @@ def unit_to_ch(u):
     `Combatant` proxies the same attributes it doesn't override."""
     status = []
     if u.dying:
-        status.append(f"dying {u.death_clock}/{data.DYING_TURNS}")
+        status.append(i18n.t("sheet.dying", death_clock=u.death_clock, dying_turns=data.DYING_TURNS))
     elif u.stable:
         status.append("stable")
     elif u.broken:
@@ -71,7 +71,7 @@ def unit_to_ch(u):
                                   "torch" if u.torch_hand else "",
                                   "lantern" if u.lantern_hand else "") if p) or "empty"
     a = u.armor
-    armor = (f"{u.armor_name}  ·  +{a['ac']} AC") if a else None
+    armor = (i18n.t("sheet.ac", armor_name=u.armor_name, a=a['ac'])) if a else None
     pack = list(u.inventory)
 
     pen = u.hunger_attribute_penalty

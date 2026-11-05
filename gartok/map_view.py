@@ -8,6 +8,7 @@ from . import (
     campaign,
     economy,
     gather,
+    i18n,
     lair,
     missions,
     node_functions,
@@ -24,8 +25,8 @@ from .group import CAUTIOUS, NORMAL
 
 ADVANCE_HOURS = 24                      # the world-wide wait, once every group is garrisoned
 
-STANCE_NOTES = {NORMAL: "no change to the ambush chance",
-                CAUTIOUS: "fewer ambushes only with the Wilds vocation or a Woodland Scout"}
+STANCE_NOTES = {NORMAL: "map_view.stance_note.normal",
+                CAUTIOUS: "map_view.stance_note.cautious"}
 
 NODE_ICON = {
     "city": ("map", "city"), "lumber_yard": ("action", "stick-splitting"), "carpenter": ("action", "crafting"), "mine": ("action", "mining"),
@@ -65,17 +66,17 @@ class MapView:
         """One-line status for a group's ROSTER card / INSPECTOR header."""
         if self._group_blocked(group):
             n = len(self._pending_event[1].pack)
-            return f"ambushed -- {n} enem{'y' if n == 1 else 'ies'} block the path"
+            return i18n.plural("map_view.ambushed_enem_block_path", n)
         o = group.order
         if o is None or o.kind == "idle":
             routine = group.routine
-            return f"routine stopped -- {routine.paused}" if routine is not None and routine.paused else "idle"
+            return i18n.t("map_view.routine_stopped", paused=routine.paused) if routine is not None and routine.paused else "idle"
         if o.kind == "travel" and o.task == "supply_run":
-            return f"supply run → {world.node(o.dest).name} ({o.remaining + o.owed:.1f} h)"
+            return i18n.t("map_view.supply_run_h", name=world.node(o.dest).name, value=o.remaining + o.owed)
         if o.kind == "travel":
             dest_name = world.node(o.final_dest).name
             if o.path:                            # more waypoints still to come
-                return f"→ {dest_name} via {world.node(o.dest).name} ({o.remaining:g} h)"
+                return i18n.t("map_view.via_h", dest_name=dest_name, name=world.node(o.dest).name, remaining=o.remaining)
             return f"→ {dest_name} ({o.remaining:g} h)"
         if stints.is_stint(o):
             return f"{stints.doing(o)} ({o.remaining:g} h left)"
@@ -83,13 +84,13 @@ class MapView:
             doing = "gathering" if o.gather else "searching" if o.task in campaign.SEARCHES else "working"
             return f"{doing} ({o.remaining:g} h left)"
         if o.kind == "rest":
-            return f"resting ({rest.format_hours(o.remaining)} left)"
+            return i18n.t("map_view.resting_left", format_hours=rest.format_hours(o.remaining))
         if o.kind == "hunting":
             return f"hunting ({o.remaining:g} h left)"
         if o.kind == "solo":
-            doing = "in the hospital" if o.task == "hospital" else f"crafting {o.recipe}"
+            doing = i18n.t("map_view.in_hospital") if o.task == "hospital" else i18n.t("map_view.crafting", recipe=o.recipe)
             return f"{doing} ({o.remaining:g} h left)"
-        return f"heading to {o.kind} ({o.remaining:g} h)"
+        return i18n.t("map_view.heading_to_h", kind=o.kind, remaining=o.remaining)
 
     def _mates_for(self, g):
         """Other idle bands standing right there -- MERGE candidates, offered
@@ -102,7 +103,7 @@ class MapView:
         """`[(key, label, plan)]` for the REST rows of group `g`."""
         return [("rest:1", "1 h", rest.fixed(self.guild, 1)),
                 ("rest:8", "8 h", rest.fixed(self.guild, 8)),
-                ("rest:full", "UNTIL FULL", rest.until_full(self.guild, g))]
+                ("rest:full", i18n.t("map_view.until_full"), rest.until_full(self.guild, g))]
 
     def _wildfire_blocks(self, g, focus):
         """The inspector's rows at a wildfire focus: how long it has, the talk chain (one button a
@@ -111,41 +112,40 @@ class MapView:
         day = self.guild.clock.day
         if focus.great:
             left = state.start_day + wildfire.DAYS - day
-            line = f"the fortress stands in {left} day(s) unless the Ogre is stopped"
+            line = i18n.t("map_view.fortress_stands_in_day_s", left=left)
         else:
             left = focus.spawn_day + wildfire.BURN_DAYS - day
-            line = f"burns through in {left} day(s), and spreads"
+            line = i18n.t("map_view.burns_through_in_day_s", left=left)
         blocks = [{"type": "text", "text": line, "tone": "bad"}]
         if focus.cleared:
-            blocks += [{"type": "section", "label": "the fire"},
+            blocks += [{"type": "section", "label": i18n.t("map_view.fire")},
                        {"type": "button", "key": "wf_put_out", "primary": True,
-                        "label": f"PUT OUT THE FIRE ({wildfire.PUT_OUT_HOURS} h)"},
+                        "label": i18n.t("map_view.put_out_fire_h", put_out_hours=wildfire.PUT_OUT_HOURS)},
                        {"type": "wrapped_text", "tone": "faint",
-                        "text": f"the best mind of the group rolls INT vs DC {wildfire.PUT_OUT_DC} at the end  ·  "
-                                "a miss can be tried again"}]
+                        "text": i18n.t("map_view.best_mind_of_group_rolls", put_out_dc=wildfire.PUT_OUT_DC)}]
             return blocks
         if focus.hostile:
-            blocks.append({"type": "text", "text": "They are coming for you.", "tone": "bad"})
+            blocks.append({"type": "text", "text": i18n.t("map_view.they_are_coming_for_you"), "tone": "bad"})
             return blocks
         if wildfire.can_talk(focus):
             attr = wildfire.next_check(focus)
-            who = "the Ogre" if focus.great else "the foreman"
+            who = i18n.t("map_view.ogre") if focus.great else i18n.t("map_view.foreman")
             dc = wildfire.talk_dc(self.guild, focus)
-            step = "get a hearing" if focus.talk == 0 else "show them how it is done"
-            blocks.append({"type": "section", "label": f"talk to {who}"})
+            step = "get a hearing" if focus.talk == 0 else i18n.t("map_view.show_them_how_it_is")
+            blocks.append({"type": "section", "label": i18n.t("map_view.talk_to", who=who)})
             blocks.append({"type": "wrapped_text", "tone": "faint",
-                           "text": f"{step}: {attr[:3].upper()} vs DC {dc}  ·  a miss and they fight"})
+                           "text": i18n.t("map_view.vs_dc_miss_and_they", step=step, upper=attr[:3].upper(), dc=dc)})
             blocks.append({"type": "button", "key": "wf_talk",
-                           "label": f"TALK TO {who.upper()}"})
+                           "label": i18n.t("map_view.talk_to_2", upper=who.upper())})
         return blocks
 
     def _work_line(self, g, here):
         """A work node's one line on the map: what a day's shift pays the group and whether the
         guild may gather here; the shifts themselves are the hub's WORK and GATHERING tabs."""
         day = sum(economy.work_pay(here.id, 16, economy.work_level(u, here.id)) for u in g.members)
-        parts = [f"a 16 h shift pays the group {fmt_money(day)}"]
+        parts = [i18n.t("map_view.h_shift_pays_group", fmt_money=fmt_money(day))]
         if gather.can_gather(here.id):
-            parts.append("gathering licence held" if self.guild.has_licence(here.id) else "no gathering licence")
+            parts.append(i18n.t("map_view.gathering_licence_held") if self.guild.has_licence(here.id) else i18n.t("map_view.no_gathering_licence"))
         return {"type": "text", "tone": "faint", "text": "  ·  ".join(parts)}
 
     def _has_property_business(self):
@@ -160,31 +160,30 @@ class MapView:
             if not guild.bank.open:
                 return []
             return [{"type": "text", "tone": "faint",
-                     "text": f"strongbox: {guild.bank.load:g} / {guild.bank.capacity} kg"}]
+                     "text": i18n.t("map_view.strongbox_kg", load=guild.bank.load, capacity=guild.bank.capacity)}]
         if fn.id == "property":
             if guild.house.repossession_due:
-                note, col = "the Bankers want the house back, or the tax paid", "bad"
+                note, col = i18n.t("map_view.bankers_want_house_back_or"), "bad"
             elif guild.house.squatting:
-                note, col = "squatting -- the guard can still come to clear it out", "warn"
+                note, col = i18n.t("map_view.squatting_guard_can_still_come"), "warn"
             elif guild.house.owned:
-                note = (f"house: {guild.house.stash.load:g} / "
-                        f"{economy.CITY_PROPERTY_CAPACITY} kg")
+                note = (i18n.t("map_view.house_kg", load=guild.house.stash.load, city_property_capacity=economy.CITY_PROPERTY_CAPACITY))
                 col = "faint"
             else:
-                note, col = f"owes the Bankers {fmt_money(guild.bankers_debt)}", "bad"
+                note, col = i18n.t("map_view.owes_bankers", fmt_money=fmt_money(guild.bankers_debt)), "bad"
             return [{"type": "text", "text": note, "tone": col}]
         if fn.id == "claim":
             stage = guild.wilds_claim_stage
             if stage == "ESTABLISHED" and guild.wilds_claim_owner == "seized":
-                note, col = "SEIZED -- send a group to retake it", "bad"
+                note, col = i18n.t("map_view.seized_send_group_to_retake"), "bad"
             elif stage == "ESTABLISHED":
-                note, col = "established -- the guild's own ground", "good"
+                note, col = i18n.t("map_view.established_guild_s_own_ground"), "good"
             elif stage == "SUSTAINING":
-                note, col = f"sustaining: {guild.wilds_claim_sustain_days_left} day(s) left", "warn"
+                note, col = i18n.t("map_view.sustaining_day_s_left", wilds_claim_sustain_days_left=guild.wilds_claim_sustain_days_left), "warn"
             elif stage == "NONE":
-                note, col = "unclaimed -- scout it to begin", "faint"
+                note, col = i18n.t("map_view.unclaimed_scout_it_to_begin"), "faint"
             else:
-                note, col = f"stage: {stage.title()}", "faint"
+                note, col = i18n.t("map_view.stage", title=stage.title()), "faint"
             return [{"type": "text", "text": note, "tone": col}]
         if fn.note:
             return [{"type": "text", "text": fn.note, "tone": "faint"}]
@@ -193,42 +192,41 @@ class MapView:
     def _inspector_content(self, g, here):
         if self._group_blocked(g):
             n = len(self._pending_event[1].pack)
-            blocks = [{"type": "text", "text": "Ambushed on the road!", "tone": "bad"},
+            blocks = [{"type": "text", "text": i18n.t("map_view.ambushed_on_road"), "tone": "bad"},
                       {"type": "text",
-                      "text": f"{n} enem{'y' if n == 1 else 'ies'} block the path -- "
-                              "there is no escaping this fight.",
+                      "text": i18n.plural("map_view.enem_block_path_there_is", n),
                       "tone": "faint"}]
             return blocks
         if g.busy:
-            blocks = [{"type": "text", "text": f"Busy: {self._order_status(g)}", "tone": "warn"}]
+            blocks = [{"type": "text", "text": i18n.t("map_view.busy", order_status=self._order_status(g)), "tone": "warn"}]
             if g.order is not None and g.order.kind == "rest":
-                blocks.append({"type": "button", "key": "stop_rest", "label": "STOP RESTING",
+                blocks.append({"type": "button", "key": "stop_rest", "label": i18n.t("map_view.stop_resting"),
                                "danger": True})
             if g.order is not None and g.order.kind == "travel" and g.order.path and not g.order.task:
                 blocks.append({"type": "button", "key": "cancel_trip",
-                               "label": f"STOP AT {world.node(g.order.dest).name.upper()}",
+                               "label": i18n.t("map_view.stop_at", upper=world.node(g.order.dest).name.upper()),
                                "danger": True})
             if g.order is not None and g.order.kind == "garrison":
                 if here.has("recruit"):
-                    blocks.append({"type": "button", "key": "visit_tavern", "label": "ENTER THE TAVERN", "primary": True})
+                    blocks.append({"type": "button", "key": "visit_tavern", "label": i18n.t("map_view.enter_tavern"), "primary": True})
                 if here.has("claim"):
-                    blocks.append({"type": "button", "key": "visit_claim", "label": "THE WILDS CLAIM", "primary": True})
-                blocks.append({"type": "button", "key": "recall_garrison", "label": "RECALL FROM GARRISON", "danger": True})
+                    blocks.append({"type": "button", "key": "visit_claim", "label": i18n.t("map_view.wilds_claim"), "primary": True})
+                blocks.append({"type": "button", "key": "recall_garrison", "label": i18n.t("map_view.recall_from_garrison"), "danger": True})
             return blocks
 
         blocks = []
         routine = g.routine
         if routine is not None and routine.paused:
-            blocks += [{"type": "text", "text": f"Routine stopped: {routine.paused}", "tone": "warn"},
-                       {"type": "button", "key": "continue_routine", "label": "CONTINUE ROUTINE", "primary": True}]
+            blocks += [{"type": "text", "text": i18n.t("map_view.routine_stopped_2", paused=routine.paused), "tone": "warn"},
+                       {"type": "button", "key": "continue_routine", "label": i18n.t("map_view.continue_routine"), "primary": True}]
         if here.is_battle:
             defense = here.arena and arena.defense_due(self.guild)
-            label = ("DEFEND YOUR TITLE" if defense else
-                    "BET AT THE ARENA" if here.arena else "ATTACK")
+            label = (i18n.t("map_view.defend_your_title") if defense else
+                    i18n.t("map_view.bet_at_arena") if here.arena else "ATTACK")
             blocks.append({"type": "button", "key": "arena", "label": label, "primary": True})
-            note = ("1v1 for the Champion of the Pit -- no stake, no backup" if defense
-                   else "non-lethal · stake money, win the purse" if here.arena
-                   else "lethal combat · loot the bodies")
+            note = (i18n.t("map_view.v_for_champion_of_pit") if defense
+                   else i18n.t("map_view.non_lethal_stake_money_win") if here.arena
+                   else i18n.t("map_view.lethal_combat_loot_bodies"))
             blocks.append({"type": "text", "text": note, "tone": "warn" if defense else "faint"})
         focus = wildfire.focus_at(self.guild, here.id)
         if focus is not None:
@@ -244,16 +242,15 @@ class MapView:
                    and (f.id != "ancient_ruins" or not ruins_empty)]
         if trail_cold:
             blocks.append({"type": "text", "tone": "faint",
-                           "text": "The trail is cold. Only the tanner's job brings you back here."})
+                           "text": i18n.t("map_view.trail_is_cold_only_tanner")})
         elif ruins_empty:
             blocks.append({"type": "text", "tone": "faint",
-                           "text": "The ruins lie silent. Nothing is left down there."})
+                           "text": i18n.t("map_view.ruins_lie_silent_nothing_is")})
         elif front_quiet:
             blocks.append({"type": "text", "tone": "faint",
-                           "text": "The line holds without you. Only the Faith Order's errand "
-                                   "puts you in the trench."})
+                           "text": i18n.t("map_view.line_holds_without_you_only")})
         elif not (here.is_battle or here.has("work") or offered or focus is not None):
-            blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
+            blocks.append({"type": "text", "text": i18n.t("map_view.nothing_happens_here_safe_stop"),
                           "tone": "faint"})
         for fn in offered:
             btn = {"type": "button", "key": fn.order_kind,
@@ -268,34 +265,34 @@ class MapView:
         job_offers = missions.offers_at(self.guild, here.id)
         if job_offers:
             count = len(job_offers)
-            label = "New mission on offer" if count == 1 else f"{count} new missions on offer"
+            label = i18n.t("map_view.new_mission_on_offer") if count == 1 else i18n.t("map_view.new_missions_on_offer", count=count)
             names = ", ".join(t.name for t in job_offers)
             blocks.append({"type": "text", "tone": "warn",
                            "text": f"! {label}: {names}"})
 
         if here.id == "road" and not self.guild.is_node_revealed("ancient_ruins"):
-            blocks.append({"type": "button", "key": "scout_ruins", "label": f"EXPLORE THE AREA ({campaign.SCOUT_RUINS_HOURS} h)"})
-            blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
+            blocks.append({"type": "button", "key": "scout_ruins", "label": i18n.t("map_view.explore_area_h", scout_ruins_hours=campaign.SCOUT_RUINS_HOURS)})
+            blocks.append({"type": "text", "text": i18n.t("map_view.scout_surroundings_for_hidden_paths"),
                           "tone": "faint"})
 
         if (here.id == "lumber_yard" and missions.pending_snake(self.guild) is not None
                 and not self.guild.is_node_revealed(serpent_nest.NODE)):
             blocks.append({"type": "button", "key": "search_nest",
-                           "label": f"SEARCH FOR THE NEST ({serpent_nest.SEARCH_HOURS} h)"})
-            blocks.append({"type": "text", "text": "Follow the shed skins to the Snake Dragon's den (WIS check)",
+                           "label": i18n.t("map_view.search_for_nest_h", search_hours=serpent_nest.SEARCH_HOURS)})
+            blocks.append({"type": "text", "text": i18n.t("map_view.follow_shed_skins_to_snake"),
                            "tone": "faint"})
 
         if (here.id == "mine" and missions.pending_clutch(self.guild) is not None
                 and not self.guild.is_node_revealed(lair.NODE)):
             blocks.append({"type": "button", "key": "search_lair",
-                           "label": f"SEARCH THE DEEP GALLERIES ({lair.SEARCH_HOURS} h)"})
-            blocks.append({"type": "text", "text": "Follow the warm air past where the miners stopped (WIS check)",
+                           "label": i18n.t("map_view.search_deep_galleries_h", search_hours=lair.SEARCH_HOURS)})
+            blocks.append({"type": "text", "text": i18n.t("map_view.follow_warm_air_past_where"),
                            "tone": "faint"})
 
         if here.id == "country_roads" and not self.guild.is_node_revealed("ox_fields"):
             blocks.append({"type": "button", "key": "scout_fields",
-                           "label": f"SEARCH THE LANES ({ox.SCOUT_HOURS} h)"})
-            blocks.append({"type": "text", "text": "Look for where the land opens out (WIS check)",
+                           "label": i18n.t("map_view.search_lanes_h", scout_hours=ox.SCOUT_HOURS)})
+            blocks.append({"type": "text", "text": i18n.t("map_view.look_for_where_land_opens"),
                            "tone": "faint"})
 
         return blocks

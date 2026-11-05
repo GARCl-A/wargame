@@ -8,7 +8,7 @@ Three talks open it: a forced fight's (the guard, the ambushes: `forced_talk`), 
 import re
 from typing import ClassVar
 
-from .. import dialogue, encounters, forced, orders, recorder, wildfire, world
+from .. import dialogue, encounters, forced, i18n, orders, recorder, wildfire, world
 from ..constants import fmt_money
 from .map_session import _portrait, _when
 from .session import Session
@@ -35,18 +35,18 @@ def _opening(op):
         return []
     rows = []
     if op.surprised == "player":
-        rows.append(("action/run", "Caught off guard", "Your band loses its first turn: they act before anyone of yours."))
+        rows.append(("action/run", i18n.t("dialogue_session.caught_off_guard"), i18n.t("dialogue_session.your_band_loses_its_first")))
     if op.surprised == "enemy":
-        rows.append(("item/broadsword", "They are caught off guard", "The foes lose their first turn."))
+        rows.append(("item/broadsword", i18n.t("dialogue_session.they_are_caught_off_guard"), i18n.t("dialogue_session.foes_lose_their_first_turn")))
     if op.demoralized == "enemy":
-        rows.append(("action/shouting", "They come on shaken", "The foes start the fight demoralized."))
+        rows.append(("action/shouting", i18n.t("dialogue_session.they_come_on_shaken"), i18n.t("dialogue_session.foes_start_fight_demoralized")))
     for team, bonus in op.initiative.items():
         if bonus:
-            who = "the foes'" if team == "enemy" else "your band's"
-            rows.append(("item/broadsword", "They get the jump" if team == "enemy" else "You get the jump",
-                         f"{bonus:+d} to {who} initiative."))
+            who = i18n.t("dialogue_session.foes") if team == "enemy" else i18n.t("dialogue_session.your_band_s")
+            rows.append(("item/broadsword", i18n.t("dialogue_session.they_get_jump") if team == "enemy" else i18n.t("dialogue_session.you_get_jump"),
+                         i18n.t("dialogue_session.to_initiative", bonus=bonus, who=who)))
     return [{"icon": i, "title": t, "line": s} for i, t, s in rows] or [
-        {"icon": "item/broadsword", "title": "An even start", "line": "Initiative as it falls."}]
+        {"icon": "item/broadsword", "title": i18n.t("dialogue_session.even_start"), "line": i18n.t("dialogue_session.initiative_as_it_falls")}]
 
 
 class DialogueSession(Session):
@@ -202,7 +202,7 @@ def wildfire_talk(map_session, group):
     guild = map_session.guild
     focus = wildfire.focus_at(guild, group.node)
     if focus is None or not wildfire.can_talk(focus):
-        raise ValueError("nobody here will talk")
+        raise ValueError(i18n.t("dialogue_session.nobody_here_will_talk"))
     great = focus.great
     enc = dialogue.WildfireTalk(guild, focus, wildfire.talker(focus, encounters.squad_level(group.members)))
 

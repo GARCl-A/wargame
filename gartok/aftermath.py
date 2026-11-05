@@ -6,7 +6,7 @@ field); `web/report_session.py` reads it."""
 
 from dataclasses import dataclass, field
 
-from . import poisons
+from . import i18n, poisons
 
 
 @dataclass
@@ -31,26 +31,26 @@ def memorial(unit, *, day, cause, place=None, killer=None, line=None):
                     unit.joined_day, day, cause, place, killer, line)
 
 
-def card(m, tag="IN MEMORIAM", button="CONTINUE"):
+def card(m, tag=None, button=None):
     days = m.days_lived
     return {"name": m.name, "race": m.race, "portrait_id": m.portrait_id,
-            "cause": m.cause, "days": f"{days} day{'s' if days != 1 else ''} with the guild",
-            "span": f"DAY {m.joined_day} TO DAY {m.day}", "place": m.place, "killer": m.killer,
-            "line": m.line, "tag": tag, "button": button}
+            "cause": m.cause, "days": i18n.plural("aftermath.day_with_guild", days),
+            "span": i18n.t("aftermath.day_to_day", joined_day=m.joined_day, day=m.day), "place": m.place, "killer": m.killer,
+            "line": m.line, "tag": tag or i18n.t("aftermath.in_memoriam"), "button": button or i18n.t("aftermath.continue")}
 
 
 def starved(unit, *, day, place=None):
     days = unit.unfed_days
-    return memorial(unit, day=day, cause="Starved to death", place=place,
-                    line=f"{days} day{'s' if days != 1 else ''} without a meal.")
+    return memorial(unit, day=day, cause=i18n.t("aftermath.starved_to_death"), place=place,
+                    line=i18n.plural("aftermath.day_without_meal", days))
 
 
 def collapsed(unit, attribute, *, day, place=None):
     """A physical score eaten down to nothing: named for the worst poison on that score, else a wasting."""
     eating = [poisons.get(pid) for pid in unit.poisons if poisons.get(pid).attribute == attribute]
     worst = max(eating, key=lambda p: unit.poisons[p.id]["level"] * p.per_stack, default=None)
-    return memorial(unit, day=day, cause=f"Died of {worst.name}" if worst else "Wasted away", place=place,
-                    line=f"{attribute.capitalize()} fell to {getattr(unit, attribute)}.")
+    return memorial(unit, day=day, cause=i18n.t("aftermath.died_of", name=worst.name) if worst else i18n.t("aftermath.wasted_away"), place=place,
+                    line=i18n.t("aftermath.fell_to", capitalize=attribute.capitalize(), getattr=getattr(unit, attribute)))
 
 
 @dataclass
@@ -62,7 +62,7 @@ class LevelUp:
     @property
     def gains(self):
         """`[(label, before, after)]` for every number that moved, in reading order."""
-        return [(label, self.before.get(k, 0), self.after.get(k, 0)) for k, label in LEVEL_FIELDS
+        return [(i18n.t(label), self.before.get(k, 0), self.after.get(k, 0)) for k, label in LEVEL_FIELDS
                 if self.after.get(k, 0) != self.before.get(k, 0)]
 
     @property
@@ -75,8 +75,7 @@ class LevelUp:
         return "MAGIC", self.after["magic"]
 
 
-LEVEL_FIELDS = (("combat", "Combat level"), ("work", "Work level"), ("magic", "Magic level"),
-                ("racial", "Racial level"), ("hit_dice", "Hit dice"), ("hp_max", "Max HP"))
+LEVEL_FIELDS = tuple((k, f"aftermath.level_field.{k}") for k in ("combat", "work", "magic", "racial", "hit_dice", "hp_max"))
 
 
 def level_snapshot(unit):

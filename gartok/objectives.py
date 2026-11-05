@@ -8,6 +8,8 @@ are marked by the screen where they happen (`complete`).
 
 from dataclasses import dataclass
 
+from . import i18n
+
 AXE = "Axe"
 
 
@@ -63,12 +65,12 @@ def _owns_axe(guild):
 
 def _work_chain_blurb(guild):
     if any(u.work_level >= 2 for u in guild.roster):
-        return "Work Lv 2 reached."
+        return i18n.t("objectives.work_lv_reached")
     if _owns_axe(guild):
-        return "Step 2/3: reach Work Lv 2 at the Lumber Yard, with your own Axe."
+        return i18n.t("objectives.step_reach_work_lv_at")
     if any(u.work_level >= 1 for u in guild.roster):
-        return "Step 1/3: buy an Axe at the Smithy."
-    return "Step 0/3: work shifts at the Lumber Yard to reach Work Lv 1."
+        return i18n.t("objectives.step_buy_axe_at_smithy")
+    return i18n.t("objectives.step_work_shifts_at_lumber")
 
 
 def _initiated(unit):
@@ -127,8 +129,8 @@ def card_data(guild) -> dict:
         deeds.append((obj.name, blurb, 0, "done" if done else "open"))
     done_count = sum(1 for _, _, _, state in deeds if state == "done")
     return {
-        "name": "Guild Objectives",
-        "blurb": "Small tasks that show what the guild can do, in any order. No coins or fame -- just a guide.",
+        "name": i18n.t("objectives.guild_objectives"),
+        "blurb": i18n.t("objectives.small_tasks_that_show_what"),
         "rep": f"{done_count}/{len(deeds)}",
         "rep_label": "done",
         "section_title": "Objectives",

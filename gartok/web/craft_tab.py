@@ -9,17 +9,17 @@ clock lives on `HubSession`, which holds the map.
 
 from collections import Counter
 
-from .. import item_icon, progression
+from .. import i18n, item_icon, progression
 from ..unit_loadout import pooled_unlocked
 from ..workbench import ALONE_HOURS, WAIT_HOURS, Bench
 from .shop_tab import _portrait
 
 # a node's function -> the station it works at and what is made there
-STATIONS = {"forge": ("forge", "forge weapons and armour"),
-            "carpenter": ("carpenter", "craft wooden bows, crossbows and tools"),
-            "apothecary": ("apothecary", "brew potions and draughts"),
-            "library": ("scriptorium", "write dictionaries and translate texts"),
-            "kitchen": ("cooking", "cook what the pack carries")}
+STATIONS = {"forge": ("forge", "craft_tab.what.forge"),
+            "carpenter": ("carpenter", "craft_tab.what.carpenter"),
+            "apothecary": ("apothecary", "craft_tab.what.apothecary"),
+            "library": ("scriptorium", "craft_tab.what.library"),
+            "kitchen": ("cooking", "craft_tab.what.kitchen")}
 CRAFT_TABS = {"craft", "forge", "carpenter", "kitchen"}
 
 
@@ -44,13 +44,13 @@ class CraftTab:
         self.s.refresh()
         u = next((u for u in self.s.crafters if u.uid == uid), None)
         if u is None:
-            raise ValueError("nobody by that id works here")
+            raise ValueError(i18n.t("craft_tab.nobody_by_that_id_works"))
         self.s.selected_crafter = u
 
     def recipe(self, recipe_id):
         self.s.refresh()
         if self.crafter is None or all(r != recipe_id for r, _, _ in self.s._recipes(self.crafter)):
-            raise ValueError(f"no recipe {recipe_id!r} for this crafter here")
+            raise ValueError(i18n.t("craft_tab.no_recipe_for_this_crafter", recipe_id=repr(recipe_id)))
         return recipe_id
 
     def _recipe(self, m, recipe_id, r, active):
@@ -75,10 +75,10 @@ class CraftTab:
             n = len(s._recipes(u))
             mod = u.mod_intelligence + u.craft_bonus(self.station)
             crafters.append({"uid": u.uid, "name": u.name, "portrait": _portrait(u), "picked": u is m,
-                             "sub": f"d20{mod:+d} · {n} recipe{'s' if n != 1 else ''}",
-                             "note": f"working on {u.crafting_target.split(':')[0]}" if u.crafting_target else None})
+                             "sub": i18n.plural("craft_tab.d_recipe", n, mod=mod),
+                             "note": i18n.t("craft_tab.working_on", split=u.crafting_target.split(':')[0]) if u.crafting_target else None})
         notice, self.notice = self.notice, None
-        return {"cards": s.hub_cards(), "what": self.what, "crafters": crafters,
+        return {"cards": s.hub_cards(), "what": i18n.t(self.what), "crafters": crafters,
                 "who": m.name if m else None,
                 "recipes": [self._recipe(m, rid, r, a) for rid, r, a in s._recipes(m)] if m else [],
                 "wait_hours": list(WAIT_HOURS), "alone_hours": list(ALONE_HOURS),

@@ -5,7 +5,7 @@ The rules are `work_desk`'s (`WorkDesk`, `GatherDesk`), which pygame's tabs read
 the clock live on `HubSession`, which holds the map.
 """
 
-from .. import economy, gather, item_icon
+from .. import economy, gather, i18n, item_icon
 from ..work_desk import SHIFTS, GatherDesk, WorkDesk
 from .shop_tab import _portrait
 
@@ -19,7 +19,7 @@ class WorkTab(WorkDesk):
             own = level >= economy.LUMBER_LEVEL_OWN_AXE
             note = self._crew_note(u, tool)
             crew.append({"name": u.name, "portrait": _portrait(u), "own": own,
-                         "sub": f"own {tool.lower()}" if own else f"the foreman's {tool.lower()}",
+                         "sub": i18n.t("work_tab.own", lower=tool.lower()) if own else i18n.t("work_tab.foreman_s", lower=tool.lower()),
                          "pay": economy.work_pay(self.node.id, SHIFTS[-1], level),
                          "note": note[0] if note else None})
         return {"cards": self.hub_cards(), "tool": tool, "glyph": item_icon.glyph(tool), "day": SHIFTS[-1],
@@ -53,7 +53,7 @@ class GatherTab(GatherDesk):
         notice, self.notice = self.notice, None
         return {"cards": self.hub_cards(), "held": self.guild.has_licence(node), "price": price,
                 "short": self.guild.licence_shortfall(node, self.group) if price else 0,
-                "rolls": f"{gather.rolls(gather.DAY_HOURS):.1f} rolls a worker in {gather.DAY_HOURS} h",
+                "rolls": i18n.t("work_tab.rolls_worker_in_h", rolls=gather.rolls(gather.DAY_HOURS), day_hours=gather.DAY_HOURS),
                 "drops": [{"name": n, "glyph": item_icon.glyph(n), "pct": pct, "sell": economy.sell_price(n)}
                           for n, pct in gather.drops(node)],
                 "glyph": item_icon.glyph(main), "shifts": shifts, "crew": crew, "day": gather.DAY_HOURS,

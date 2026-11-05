@@ -139,7 +139,7 @@ function saves() {
 // ---------------------------------------------------------------- the whole screen
 function render(state) {
   T = state;
-  $("quote").innerHTML = esc(T.quote).replace("the risk pays.", "<b>the risk pays.</b>");
+  $("quote").innerHTML = esc(T.quote).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
   $("notice").hidden = !T.notice;
   $("notice").textContent = T.notice || "";
   menu();

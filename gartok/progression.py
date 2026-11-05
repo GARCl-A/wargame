@@ -1,3 +1,5 @@
+from . import i18n
+
 """Leveling curves and the combat-XP rule  (designed for the wargame).
 
 The generator left Level 0 / XP 1000 with no meaning (RULES.md §9).
@@ -37,7 +39,7 @@ class Curve:
 
     def __getitem__(self, i):
         if i < 0:
-            raise IndexError("a curve has no last level")
+            raise IndexError(i18n.t("progression.curve_has_no_last_level"))
         return self.fn(i + 1)
 
     def level(self, xp):
@@ -132,33 +134,33 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
     activities = []
     for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
         if worker_level == 0:
-            activities.append(f"{place} (bare-handed or {tool})")
+            activities.append(i18n.t("progression.bare_handed_or", place=place, tool=tool))
         elif worker_level == 1:
             if unit is not None:
                 from . import economy
                 if economy.work_level(unit, node_id) >= 1:
-                    activities.append(f"{place} (with your {tool})")
+                    activities.append(i18n.t("progression.with_your", place=place, tool=tool))
                 else:
-                    activities.append(f"{place} (requires owning {'an' if tool[0] in 'AEIOU' else 'a'} {tool})")
+                    activities.append(i18n.t("progression.requires_owning", place=place, tool=i18n.t("article.an" if tool[0] in "AEIOU" else "article.a", name=tool)))
             else:
-                activities.append(f"{place} (requires {tool})")
+                activities.append(i18n.t("progression.requires", place=place, tool=tool))
 
     from . import gather
     for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
         if worker_level <= gather.LEVEL[node_id]:
-            activities.append(f"{place} gathering (Lv {gather.LEVEL[node_id]}: the licence and your own {tool})")
+            activities.append(i18n.t("progression.gathering_lv_licence_and_your", place=place, level=gather.LEVEL[node_id], tool=tool))
 
     # Tavern stage
     if worker_level <= 1:
-        activities.append("Tavern stage (with a Musical Instrument)")
+        activities.append(i18n.t("progression.tavern_stage_with_musical_instrument"))
 
     # Hunting in the Wilds
     if worker_level <= 3:
-        activities.append("Hunting (Lv 3 in Wilds)")
+        activities.append(i18n.t("progression.hunting_lv_in_wilds"))
 
     # Frontier Supply Run at Ledger Hold
     if worker_level <= 5:
-        activities.append("Frontier Supply Run (Lv 5 at Ledger Hold)")
+        activities.append(i18n.t("progression.frontier_supply_run_lv_at"))
 
     # Crafting (dynamically generated from registered recipes)
     from . import craft_level, items
@@ -182,10 +184,10 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
                 else:
                     summary_names.append(n)
             if dict_count:
-                summary_names.append(f"{dict_count} Dictionaries" if summary_names else "Dictionaries")
+                summary_names.append(i18n.t("progression.dictionaries", dict_count=dict_count) if summary_names else "Dictionaries")
             label = ", ".join(summary_names[:4])
             if len(summary_names) > 4:
                 label += ", ..."
-            activities.append(f"Crafting (Lv {lvl}: {label})")
+            activities.append(i18n.t("progression.crafting_lv", lvl=lvl, label=label))
 
     return activities

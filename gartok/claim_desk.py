@@ -4,7 +4,7 @@ SWEEP) are the front-end's to play (`guild_claim` says what they are). pygame's 
 `web/claim_tab.py` are the windows over `ClaimDesk`.
 """
 
-from . import economy, orders, stints
+from . import economy, i18n, orders, stints
 
 
 class ClaimDesk:
@@ -28,9 +28,9 @@ class ClaimDesk:
                 m._derive_combat()
         if total:
             self.guild.wilds_claim_deposit_lumber(total)
-            self.notice = f"deposited {total} Lumber toward the fences."
+            self.notice = i18n.t("claim_desk.deposited_lumber_toward_fences", total=total)
         else:
-            self.notice = "nobody here is carrying Lumber."
+            self.notice = i18n.t("claim_desk.nobody_here_is_carrying_lumber")
 
     # the claim's work with hours to it: each returns its stint for the band, or None (the notice says why)
     def _scout(self):
@@ -43,7 +43,7 @@ class ClaimDesk:
 
     def _light_campfire(self):
         if not self.guild.claim_fire_fuel(self._carriers()):
-            self.notice = f"nobody has {economy.CAMPFIRE_FUEL} to burn."
+            self.notice = i18n.t("claim_desk.nobody_has_to_burn", campfire_fuel=economy.CAMPFIRE_FUEL)
             return None
         self._lightened()
         return stints.order("claim_fire", economy.CAMPFIRE_HOURS, self.group.members)
@@ -68,4 +68,4 @@ class ClaimDesk:
     def _leave_garrison(self):
         if self.group.order is not None and self.group.order.kind == "garrison":
             self.group.order = orders.idle()
-        self.notice = "the garrison stands down -- sustaining the claim starts over."
+        self.notice = i18n.t("claim_desk.garrison_stands_down_sustaining_claim")

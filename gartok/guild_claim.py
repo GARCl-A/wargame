@@ -6,7 +6,7 @@ Mixed into `guild.Guild`; see `economy.WILDS_CLAIM_*` and
 
 import random
 
-from . import data, economy, orders, recorder, wagon_watch, world
+from . import data, economy, i18n, orders, recorder, wagon_watch, world
 
 # The Wilds claim's own stage machine (see economy.WILDS_CLAIM_*).
 WILDS_CLAIM_STAGES = ("NONE", "SCOUTED", "CLEARED", "FENCED", "SWEPT", "SUSTAINING", "ESTABLISHED")
@@ -54,10 +54,10 @@ class WildsClaimMixin:
     def claim_oven_short(self, crew):
         """Why `crew` cannot build the claim's oven now, or None."""
         if self.claim_oven:
-            return "the claim already has an oven."
+            return i18n.t("guild_claim.claim_already_has_oven")
         have = sum(u.count_of(economy.CLAIM_OVEN_BRICK) for u in crew)
         if have < economy.CLAIM_OVEN_BRICKS:
-            return f"the oven needs {economy.CLAIM_OVEN_BRICKS} {economy.CLAIM_OVEN_BRICK}; the group carries {have}."
+            return i18n.t("guild_claim.oven_needs_group_carries", claim_oven_bricks=economy.CLAIM_OVEN_BRICKS, claim_oven_brick=economy.CLAIM_OVEN_BRICK, have=have)
         return None
 
     def claim_oven_bricks(self, crew):
@@ -69,7 +69,7 @@ class WildsClaimMixin:
     def claim_oven_built(self):
         self.claim_oven = True
         recorder.emit("asset", what="claim_oven")
-        return ["the oven is built -- the claim can cook, fire or no fire."]
+        return [i18n.t("guild_claim.oven_is_built_claim_can")]
 
     def wilds_claim_light_campfire(self, crew):
         """Build a fire at the claim: one unit of fuel from someone's pack, an hour
@@ -77,7 +77,7 @@ class WildsClaimMixin:
         whether or not the fire catches. The headless shortcut of a `claim_fire` stint.
         Returns `(lit, events, casualties)`."""
         if not self.claim_fire_fuel(crew):
-            return False, [f"nobody has {economy.CAMPFIRE_FUEL} to burn."], []
+            return False, [i18n.t("guild_claim.nobody_has_to_burn", campfire_fuel=economy.CAMPFIRE_FUEL)], []
         events, casualties = self.tick(economy.CAMPFIRE_HOURS, busy=crew)
         lit, lines = self.claim_fire_catch(crew)
         return lit, lines + events, casualties
@@ -96,8 +96,8 @@ class WildsClaimMixin:
         best = max(crew, key=lambda u: u.mod_wisdom)
         if data.roll(1, 20) + best.mod_wisdom >= economy.CAMPFIRE_DC:
             self.wilds_claim_campfire = True
-            return True, ["the fire catches -- the claim has a hearth now."]
-        return False, ["the wood won't catch -- the fuel is wasted."]
+            return True, [i18n.t("guild_claim.fire_catches_claim_has_hearth")]
+        return False, [i18n.t("guild_claim.wood_won_t_catch_fuel")]
 
     def claim_garrison(self):
         """The living group parked, garrisoning, at the claim node right now, or None."""
@@ -155,12 +155,12 @@ class WildsClaimMixin:
         if self.claim_garrison() is None:
             if self.wilds_claim_sustain_days_left != economy.WILDS_CLAIM_SUSTAIN_DAYS:
                 self.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
-                return ["The Wilds claim sits unguarded -- sustaining it starts over."]
+                return [i18n.t("guild_claim.wilds_claim_sits_unguarded_sustaining")]
             return []
         self.wilds_claim_sustain_days_left -= 1
         if self.wilds_claim_sustain_days_left <= 0:
             self.wilds_claim_stage = "ESTABLISHED"
             self.wilds_claim_sustain_days_left = None
             self.wilds_claim_owner = "guild"   # Sistema 4: what a seizure/retake actually flips
-            return ["The Wilds claim is ESTABLISHED -- the land is the guild's."]
+            return [i18n.t("guild_claim.wilds_claim_is_established_land")]
         return []

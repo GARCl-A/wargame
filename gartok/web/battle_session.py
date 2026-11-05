@@ -542,7 +542,7 @@ class BattleSession(Session):
             for team in ("player", "enemy"):
                 if b.flag_carrier[team] is None and b.flags[team] in here:
                     side = "ally" if team == self.team else "foe"
-                    out.append({"name": f"{'Your' if side == 'ally' else 'Their'} flag", "glyph": None,
+                    out.append({"name": i18n.t("battle_session.flag.ally" if side == "ally" else "battle_session.flag.foe"), "glyph": None,
                                 "pos": _cell(b.flags[team]), "flag": side})
         return out
 

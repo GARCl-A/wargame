@@ -12,13 +12,13 @@ A pick is `("stock", name)` for a shelf row, or `(owner, loc)` with `loc` a pack
 
 import random
 
-from . import data, economy, factions, items, recorder
+from . import data, economy, factions, i18n, items, recorder
 from .constants import fmt_money
 
 SLOTS = ("hand", "offhand", "tongue", "artifact", "armor")
 
 # how far the voice's alignment sits from the vendor's (`data.alignment_distance`)
-BENT_WORDS = {0: "same bent", 1: "close bent", 2: "different bent", 3: "far bent", 4: "opposite bent"}
+BENT_WORDS = {n: f"trade.bent.{n}" for n in range(5)}
 
 
 def collect(picks, take):
@@ -129,33 +129,33 @@ class Counter(economy.PartyPurse):
             rng = f"  ·  {w.range * 3 // 2}m" if w.range else ""
             return f"{n}d{faces}  ·  {hands}{rng}"
         if w.type == items.ItemType.ARMOR:
-            cap = "no dex cap" if w.max_dex is None else f"dex cap {w.max_dex}"
-            spd = f"  ·  -{w.speed_penalty} spd" if w.speed_penalty else ""
-            return f"+{w.ac} AC  ·  {cap}{spd}"
+            cap = i18n.t("trade.no_dex_cap") if w.max_dex is None else i18n.t("trade.dex_cap", max_dex=w.max_dex)
+            spd = i18n.t("trade.spd", speed_penalty=w.speed_penalty) if w.speed_penalty else ""
+            return i18n.t("trade.ac", ac=w.ac, cap=cap, spd=spd)
         return ""
 
     def _deal_card(self):
         """How the party's haggling moved the prices: a headline, its tone and the reasons."""
         lang = getattr(self.node, "language", None)
         alignment = getattr(self.node, "alignment", None)
-        sell = f"you sell at {int(economy.SELL_FACTOR * 100)}% of the price"
+        sell = i18n.t("trade.you_sell_at_of_price", int=int(economy.SELL_FACTOR * 100))
         if not lang or not alignment:
-            return {"headline": "fixed prices", "tone": "none", "why": [sell]}
+            return {"headline": i18n.t("trade.fixed_prices"), "tone": "none", "why": [sell]}
         voice, dist = economy.haggle_voice(self.shoppers, lang, alignment,
                                            self.group.leader if self.group else None)
         if voice is None:
             tongues = " or ".join(economy.vendor_tongues(lang))
-            return {"headline": "no haggling", "tone": "none", "why": [f"no one speaks {tongues}", sell]}
+            return {"headline": i18n.t("trade.no_haggling"), "tone": "none", "why": [i18n.t("trade.no_one_speaks", tongues=tongues), sell]}
         general = economy.deal_value(self.deal, None, "buy")
         food = economy.deal_value(self.deal, next(iter(items.food_items())), "buy")
         pct = round(general * 100)
-        headline = f"{pct}% off" if pct > 0 else f"{-pct}% markup" if pct < 0 else "list price"
+        headline = i18n.t("trade.pct_off", pct=pct) if pct > 0 else i18n.t("trade.pct_markup", pct=-pct) if pct < 0 else i18n.t("trade.list_price")
         tone = "good" if pct > 0 else "bad" if pct < 0 else "none"
         cha = voice.haggle_charisma_mod
-        why = [f"{voice.name} speaks for the group",
-               f"Charisma {cha:+d}  ·  {BENT_WORDS[dist]}"]
+        why = [i18n.t("trade.speaks_for_group", name=voice.name),
+               i18n.t("trade.charisma", cha=cha, bent_words=i18n.t(BENT_WORDS[dist]))]
         if round(food, 3) != round(general, 3):
-            why.append(f"food {round(food * 100)}% off")
+            why.append(i18n.t("trade.food_off", round=round(food * 100)))
         return {"headline": headline, "tone": tone, "why": why}
 
     # ------------------------------------------------------------------ #
@@ -274,7 +274,7 @@ class Counter(economy.PartyPurse):
     def _sell_marked(self, names=None):
         picks, qty = self._marked_stock(names)
         if not picks:
-            self.notice = "nothing marked for auto-sell in the packs." if names is None else "nothing to sell."
+            self.notice = i18n.t("trade.nothing_marked_for_auto_sell") if names is None else i18n.t("trade.nothing_to_sell")
             return
         self.selected, self._sel_qty = picks, qty
         self._sell()
@@ -294,14 +294,14 @@ class Counter(economy.PartyPurse):
     def _toggle_marked(self, name):
         marked = self.guild.autosell
         marked.symmetric_difference_update({name})
-        self.notice = (f"{name}: will be sold with SELL MARKED." if name in marked
-                       else f"{name}: no longer marked.")
+        self.notice = (i18n.t("trade.will_be_sold_with_sell", name=name) if name in marked
+                       else i18n.t("trade.no_longer_marked", name=name))
 
     def _distribute_load(self):
         from . import unit as unit_module
         unit_module.distribute_load(self.shoppers, share_coins=True, creatures=self.stores)
         self.selected = []
-        self.notice = "redistributed packs by carrying capacity."
+        self.notice = i18n.t("trade.redistributed_packs_by_carrying_capacity")
 
     # ------------------------------------------------------------------ #
     # trades                                                              #
@@ -325,7 +325,7 @@ class Counter(economy.PartyPurse):
 
         add = sum(items.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
         if zone == "pack" and member.load + add > member.carry_max:
-            self.notice = f"won't fit {member.name}'s load."
+            self.notice = i18n.t("trade.won_t_fit_s_load", name=member.name)
             self.selected = picks
             return
 
@@ -333,7 +333,7 @@ class Counter(economy.PartyPurse):
             fit = next((p for p in picks if self._fits_slot(member, zone, self._name_of(p))), None)
             if fit is None:
                 self.selected = picks
-                self.notice = f"doesn't fit in {zone}."
+                self.notice = i18n.t("trade.doesn_t_fit_in", zone=zone)
                 return
             picks = [fit]
 
@@ -353,7 +353,7 @@ class Counter(economy.PartyPurse):
 
         if zone == "pack":
             moved = sum(qty for _, qty in collected)
-            self.notice = f"{moved} item(s) -> {member.name}."
+            self.notice = i18n.t("trade.item_s", moved=moved, name=member.name)
         else:
             self.notice = f"{collected[0][0]} -> {member.name}'s {zone}."
 
@@ -376,15 +376,15 @@ class Counter(economy.PartyPurse):
         if zone in SLOTS:
             name = names[0]
             if not self._fits_slot(member, zone, name):
-                self.notice = f"{name} won't fit {member.name}'s {zone}."
+                self.notice = i18n.t("trade.won_t_fit_s", name=name, owner=member.name, zone=zone)
                 return
             stock = self._stock_of(name)
             if stock is not None and stock <= 0:
-                self.notice = f"no {name} in stock."
+                self.notice = i18n.t("trade.no_in_stock", name=name)
                 return
             price = economy.buy_price(name, self.deal)
             if self.purse < price:
-                self.notice = "out of money."
+                self.notice = i18n.t("trade.out_of_money")
                 return
             self.purse -= price
             self._till(price)
@@ -395,7 +395,7 @@ class Counter(economy.PartyPurse):
             member._derive_combat()
             self.qty.pop(name, None)
             recorder.emit("buy", node=self._node_id(), item=name, qty=1, price=price, zone=zone)
-            self.notice = f"{member.name} bought & equipped {name}."
+            self.notice = i18n.t("trade.bought_equipped", name=member.name, item=name)
             self._opening_goals(name)
             self._settle_market()
             return
@@ -412,13 +412,13 @@ class Counter(economy.PartyPurse):
         member._derive_combat()
         self._bought(paid, names, zone)
         bought = sum(paid.values())
-        what = names[0] if len(names) == 1 else "items"
+        what = names[0] if len(names) == 1 else i18n.t("trade.items")
         if bought and stopped:
-            self.notice = f"{member.name} bought {bought} of {wanted}  ·  {stopped}."
+            self.notice = i18n.t("trade.bought_of", name=member.name, bought=bought, wanted=wanted, stopped=stopped)
         elif bought:
-            self.notice = f"{member.name} bought {bought}× {what}."
+            self.notice = i18n.t("trade.bought", name=member.name, bought=bought, what=what)
         elif stopped:
-            self.notice = f"{stopped[0].upper()}{stopped[1:]}."
+            self.notice = i18n.t("trade.stopped", reason=i18n.sentence(stopped))
 
     def _opening_goals(self, name):
         from . import objectives
@@ -431,12 +431,12 @@ class Counter(economy.PartyPurse):
         """Buy one `name` into `member`'s pack; the reason it can't, or None."""
         stock = self._stock_of(name)
         if stock is not None and stock <= 0:
-            return f"no {name} in stock"
+            return i18n.t("trade.no_in_stock_2", name=name)
         price = economy.buy_price(name, self.deal)
         if self.purse < price:
-            return "out of money"
+            return i18n.t("trade.out_of_money_2")
         if not self._fits(member, name):
-            return f"{name} won't fit {member.name}'s load"
+            return i18n.t("trade.won_t_fit_s_load_2", name=name, owner=member.name)
         self.purse -= price
         self._till(price)
         self.guild.total_spent += price
@@ -466,7 +466,7 @@ class Counter(economy.PartyPurse):
             for _ in range(self._buy_qty(name)):
                 room = [m for m in buyers if self._fits(m, name)]
                 if not room:
-                    stopped = f"no one has room for {name}"
+                    stopped = i18n.t("trade.no_one_has_room_for", name=name)
                     break
                 member = max(room, key=lambda m: m.carry_max - m.load)
                 stopped = self._buy_one(member, name)
@@ -483,17 +483,17 @@ class Counter(economy.PartyPurse):
         bought = sum(paid.values())
         if bought == wanted:
             self.selected = []
-            self.notice = f"bought {bought} item{'s' if bought != 1 else ''}, shared out by room."
+            self.notice = i18n.plural("trade.bought_shared", bought)
         elif bought:
-            self.notice = f"bought {bought} of {wanted}  ·  {stopped}."
+            self.notice = i18n.t("trade.bought_of_2", bought=bought, wanted=wanted, stopped=stopped)
         else:
-            self.notice = f"{stopped[0].upper()}{stopped[1:]}."
+            self.notice = i18n.t("trade.stopped", reason=i18n.sentence(stopped))
 
     def _sell(self):
         picks = self._goods(self.selected)
         cash = self._cash()
         if picks and cash is not None and self._sell_total() > cash:
-            self.notice = f"the market only has {fmt_money(cash)} to pay with  ·  sell less."
+            self.notice = i18n.t("trade.market_only_has_to_pay", fmt_money=fmt_money(cash))
             return
         self.selected = []
         if not picks:
@@ -523,9 +523,9 @@ class Counter(economy.PartyPurse):
             owner._derive_combat()
         self._sel_qty = {}
         self._till(-total)
-        parts = [f"sold {sold} item(s) for {total}"] if sold else []
+        parts = [i18n.t("trade.sold_item_s_for", sold=sold, total=total)] if sold else []
         if binned:
-            parts.append(f"the keeper threw away {binned} worthless item(s)")
+            parts.append(i18n.t("trade.keeper_threw_away_worthless_item", binned=binned))
         self.notice = "  ·  ".join(parts) + "."
         self._settle_market()
 
