@@ -37,7 +37,7 @@ function drawFrame() {
   $("place").textContent = H.place;
   $("sub").innerHTML = `<b>${esc(H.band)}</b> · ${esc(H.sub)}`;
   $("tabs").innerHTML = H.tabs.map(t =>
-    `<span class="${t.key === H.tab ? "on" : ""} ${t.live ? "" : "away"}" data-tab="${t.key}"${t.live ? "" : tip("Not in the browser yet")}>${esc(t.label)}</span>`).join("");
+    `<span class="${t.key === H.tab ? "on" : ""} ${t.live ? "" : "away"}" data-tab="${t.key}"${t.live ? "" : tip(tr("hub.not_yet"))}>${esc(t.label)}</span>`).join("");
   const k = H.keeper;
   $("kmed").innerHTML = k.portrait ? `<img src="${k.portrait}" draggable="false">` : `<div class="ico">${ico(H.icon, "ico")}</div>`;
   $("kname").textContent = k.name || H.place;
@@ -54,11 +54,11 @@ function drawAway() {
 function drawRepossession() {
   const R = H.repossession;
   $("cards").innerHTML = "";
-  $("body").innerHTML = `<div class="paper awaytab repo"><div class="kicker">Tax default notice</div>
-    <h2>The Bankers want the house back</h2>
-    <p>${R.missed} tax cycles missed: ${money(R.owed)} behind. The Bankers want the house back, or the debt paid.</p>
-    <div class="repo-opt" data-choice="return"><b>Return the property</b><span>Hand it back. The guild owes ${money(R.owed)}, and the Bankers deal with it no more until that is paid.</span></div>
-    <div class="repo-opt bad" data-choice="squat"><b>Refuse, and squat</b><span>Keep the house without paying. The City Guard will come to clear it out.</span></div></div>`;
+  $("body").innerHTML = `<div class="paper awaytab repo"><div class="kicker">${tr("hub.repo_kicker")}</div>
+    <h2>${tr("hub.repo_title")}</h2>
+    <p>${trn("hub.repo_line", R.missed, {owed: money(R.owed)})}</p>
+    <div class="repo-opt" data-choice="return"><b>${tr("hub.return")}</b><span>${tr("hub.return_note", {owed: money(R.owed)})}</span></div>
+    <div class="repo-opt bad" data-choice="squat"><b>${tr("hub.squat")}</b><span>${tr("hub.squat_note")}</span></div></div>`;
 }
 
 function draw() {

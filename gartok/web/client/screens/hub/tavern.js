@@ -23,7 +23,7 @@ const Tavern = (() => {
 
   function signed(s) {
     return `<div class="signed"><div class="medal">${face(s.portrait, s.name)}</div>
-      <div><div class="lbl">Contract signed · joins ${esc(s.by)}'s roster</div>
+      <div><div class="lbl">${tr("tavern.signed_lbl", {by: esc(s.by)})}</div>
         <p class="line">${esc(s.name)}: “${esc(s.line)}”</p><p class="use">${esc(s.sub)}</p></div>
       <b class="mark">✕ ${esc(s.name)}</b></div>`;
   }
@@ -31,8 +31,7 @@ const Tavern = (() => {
   function last(l) {
     if (!l) return "";
     if (!l.ours) return `<p class="lastpitch bad">${esc(l.by)}: ${esc(l.line)}</p>`;
-    return `<p class="lastpitch ${l.ok ? "good" : "bad"}">${esc(l.by)}'s pitch in ${esc(l.lang)}: ${esc(l.ours)} = <b>${l.ours_total}</b>
-      against ${esc(l.theirs)} = <b>${l.theirs_total}</b> · ${l.ok ? "signed" : "turned down"}</p>`;
+    return `<p class="lastpitch ${l.ok ? "good" : "bad"}">${tr(l.ok ? "tavern.pitch_signed" : "tavern.pitch_down", {by: esc(l.by), lang: esc(l.lang), ours: esc(l.ours), ours_total: l.ours_total, theirs: esc(l.theirs), theirs_total: l.theirs_total})}</p>`;
   }
 
   function dossier(d) {
@@ -40,7 +39,7 @@ const Tavern = (() => {
     const kit = d.kit.map(i => `<span class="ico mask"${tip(i.name)} style="--icon:url(/assets/icons/${i.glyph}.svg)"></span>`).join("");
     const pitchers = d.pitchers.map(m => `<div class="pitcher ${m.picked ? "on" : ""} ${m.signed ? "signed" : ""}" data-pitcher="${esc(m.uid)}">
         <div class="medal">${face(m.portrait, m.name)}</div>
-        <div><div class="nm">${esc(m.name)}${m.signed ? " · signed" : ""}</div><div class="use">${esc(m.sub)}</div></div>
+        <div><div class="nm">${esc(m.name)}${m.signed ? ` · ${tr("tavern.signed")}` : ""}</div><div class="use">${esc(m.sub)}</div></div>
         ${status(m.status)}</div>`).join("");
     return `<div class="dossier"><div class="medal">${face(d.portrait, d.name)}</div>
         <div><div class="jhead"><span class="nm">${esc(d.name)}</span></div><p class="use">${esc(d.sub)}</p>
@@ -48,14 +47,14 @@ const Tavern = (() => {
           <div class="chips">${d.chips.map(c => `<span class="tag ${c.tone}"${tip(c.tip)}>${esc(c.label)}</span>`).join("")}</div>
           <p class="ability"><b>${esc(d.ability.name)}</b> ${esc(d.ability.effect)}</p></div></div>
       ${d.bail ? `<div class="offer ${d.bail.ok ? "" : "bad"}"><div class="line">
-          <span class="was">Bail <b>${esc(d.bail.base)}</b></span><span class="dot">·</span><span class="lbl">Offering</span>
-          <div class="btn ${d.bail.less ? "" : "off"}" id="bail_less"${tip("Halve the offer")}>÷2</div>
+          <span class="was">${tr("tavern.bail")} <b>${esc(d.bail.base)}</b></span><span class="dot">·</span><span class="lbl">${tr("tavern.offering")}</span>
+          <div class="btn ${d.bail.less ? "" : "off"}" id="bail_less"${tip(tr("tavern.halve"))}>÷2</div>
           <b class="sum">${esc(d.bail.cost)}</b>
-          <div class="btn ${d.bail.more ? "" : "off"}" id="bail_more"${tip("Double the offer")}>×2</div>
-          <span class="lbl">for</span><b class="plus">+${d.bail.bonus}</b><span class="lbl">on the pitch</span></div>
-        <p class="note">Paid only if the pitch works · the band holds ${esc(d.bail.held)}</p></div>` : ""}
+          <div class="btn ${d.bail.more ? "" : "off"}" id="bail_more"${tip(tr("tavern.double"))}>×2</div>
+          <span class="lbl">${tr("tavern.for")}</span><b class="plus">+${d.bail.bonus}</b><span class="lbl">${tr("tavern.on_pitch")}</span></div>
+        <p class="note">${tr("tavern.bail_note", {held: esc(d.bail.held)})}</p></div>` : ""}
       ${last(d.last)}
-      <div class="sec dark"><span class="lbl">Who makes the pitch</span></div>
+      <div class="sec dark"><span class="lbl">${tr("tavern.who_pitches")}</span></div>
       <div class="pitchers">${pitchers}</div>
       <div class="pterms">${d.terms.map(t => `<div class="fact"><span class="lbl">${esc(t.label)}</span><b class="${t.tone}">${esc(t.value)}</b><span class="use">${esc(t.note)}</span></div>`).join("")}</div>
       ${d.hint ? `<p class="aside ${d.hint.tone}">${esc(d.hint.text.charAt(0).toUpperCase() + d.hint.text.slice(1))}</p>` : ""}
@@ -65,11 +64,11 @@ const Tavern = (() => {
   function recruits(R) {
     const list = R.strangers.length ? R.strangers.map(stranger).join("") : `<p class="hint">${esc(R.empty)}</p>`;
     const body = R.dossier ? dossier(R.dossier)
-      : `<p class="aside">${R.signed ? "" : "Pick a stranger on the left to read their dossier and make a pitch."}</p>`;
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${R.prison ? "Prisoners in the cells" : "Strangers in the tavern"}</div>
-        <p class="hint">Charisma against Charisma, in a tongue both speak; a tie goes to the ${R.prison ? "prisoner" : "stranger"}.</p>
+      : `<p class="aside">${R.signed ? "" : tr("tavern.pick_stranger")}</p>`;
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${R.prison ? tr("tavern.prisoners") : tr("tavern.strangers")}</div>
+        <p class="hint">${tr(R.prison ? "tavern.tie_prisoner" : "tavern.tie_stranger")}</p>
         <div class="crew">${list}</div></div>
-      <div class="paper ledger recruit"><div class="kicker">Dossier <em>who they are and who could talk them into the guild</em></div>
+      <div class="paper ledger recruit"><div class="kicker">${tr("tavern.dossier")} <em>${tr("tavern.dossier_note")}</em></div>
         <div class="rbody">${R.signed ? signed(R.signed) : ""}${body}</div>
         <div class="ledgerfoot"><p>${esc(R.foot)}</p></div></div>`;
     const fresh = $("body").querySelector(".pitcher.signed");
@@ -80,17 +79,17 @@ const Tavern = (() => {
     const t = m.target;
     const target = t
       ? `<div><div class="nm good">${esc(t.name)}</div><div class="prog"><div class="bar"><i style="width:${Math.min(100, 100 * t.progress / Math.max(1, t.needed))}%"></i></div>
-           <span>${t.progress} / ${t.needed} pts</span></div></div>`
-      : `<div><div class="use">No study target</div><div class="use faint">idle in the study hours, no progress</div></div>`;
-    const btns = (t ? `<div class="btn" data-stop="${esc(m.uid)}">Stop</div>` : "")
-      + `<div class="btn" data-pick="${esc(m.uid)}">${t ? "Change" : "Set target"}</div>`;
+           <span>${tr("tavern.pts", {have: t.progress, need: t.needed})}</span></div></div>`
+      : `<div><div class="use">${tr("tavern.no_target")}</div><div class="use faint">${tr("tavern.idle")}</div></div>`;
+    const btns = (t ? `<div class="btn" data-stop="${esc(m.uid)}">${tr("tavern.stop")}</div>` : "")
+      + `<div class="btn" data-pick="${esc(m.uid)}">${t ? tr("tavern.change") : tr("tavern.set_target")}</div>`;
     let opts = "";
     if (picking === m.uid) {
       opts = m.options.length
         ? m.options.map(o => `<div class="opt"><div><div class="nm">${esc(o.name)}</div><div class="use">${esc(o.desc)}</div></div>
-            <div class="btn" data-uid="${esc(m.uid)}" data-target="${esc(o.id)}">Select</div></div>`).join("")
-        : `<div class="opt none"><p class="use">${m.affinity ? "No scroll or dictionary the band carries fits." : `${esc(m.name)} has no magical affinity and the band carries no dictionary they lack.`}
-            A scroll needs a matching affinity; a dictionary teaches a foreign language. Write one at the Library with paper and ink, or find scrolls in the ruins.</p></div>`;
+            <div class="btn" data-uid="${esc(m.uid)}" data-target="${esc(o.id)}">${tr("tavern.select")}</div></div>`).join("")
+        : `<div class="opt none"><p class="use">${m.affinity ? tr("tavern.no_fit") : tr("tavern.no_affinity", {name: esc(m.name)})}
+            ${tr("tavern.opts_note")}</p></div>`;
       opts = `<div class="opts">${opts}</div>`;
     }
     return `<div class="student ${picking === m.uid ? "open" : ""}"><div class="medal">${face(m.portrait, m.name)}</div>
@@ -99,39 +98,39 @@ const Tavern = (() => {
 
   function rooms(S) {
     const act = S.studying
-      ? `<div class="fact"><span class="lbl">Now</span><b class="good">the band studies here daily</b></div>
-         <div class="brass-btn wide" id="cancel_study"><div><b>Cancel the study order</b></div></div>`
-      : `<div class="brass-btn wide ${S.studiers ? "" : "off"}" id="rent_study"><div><b>Rent rooms</b></div></div>
-         ${S.studiers ? "" : `<p class="hint">Set a study target for someone before renting rooms.</p>`}`;
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">Study rooms</div>
-        <p class="hint">A quiet room for the day: anyone with a study target makes progress.</p>
-        <div class="fact"><span class="lbl">Rent</span><b>${money(S.cost)} a day for each member who studies</b></div>
-        <div class="fact"><span class="lbl">Today</span><b>${money(S.today)} for ${S.studiers} studying</b></div>
-        <div class="fact"><span class="lbl">Progress</span><b>a daily roll on Intelligence toward the target's points</b></div>
+      ? `<div class="fact"><span class="lbl">${tr("tavern.now")}</span><b class="good">${tr("tavern.studies_daily")}</b></div>
+         <div class="brass-btn wide" id="cancel_study"><div><b>${tr("tavern.cancel_study")}</b></div></div>`
+      : `<div class="brass-btn wide ${S.studiers ? "" : "off"}" id="rent_study"><div><b>${tr("tavern.rent_rooms")}</b></div></div>
+         ${S.studiers ? "" : `<p class="hint">${tr("tavern.set_target_first")}</p>`}`;
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${tr("tavern.study_rooms")}</div>
+        <p class="hint">${tr("tavern.rooms_hint")}</p>
+        <div class="fact"><span class="lbl">${tr("tavern.rent")}</span><b>${tr("tavern.rent_val", {cost: money(S.cost)})}</b></div>
+        <div class="fact"><span class="lbl">${tr("tavern.today")}</span><b>${tr("tavern.today_val", {cost: money(S.today), n: S.studiers})}</b></div>
+        <div class="fact"><span class="lbl">${tr("tavern.progress")}</span><b>${tr("tavern.progress_val")}</b></div>
         ${act}</div>
-      <div class="paper ledger"><div class="kicker">Who studies <em>a scroll or a dictionary the band carries, one target each</em></div>
+      <div class="paper ledger"><div class="kicker">${tr("tavern.who_studies")} <em>${tr("tavern.who_studies_note")}</em></div>
         <div class="students">${S.students.map(student).join("")}</div>
-        <div class="ledgerfoot"><p>Renting the rooms puts the band on a post here: the days pass on the map, each one paid and rolled, until it is recalled.</p></div></div>`;
+        <div class="ledgerfoot"><p>${tr("tavern.rooms_foot")}</p></div></div>`;
   }
 
   function perform(P) {
     const players = P.players.map(m => `<div class="worker ${m.has ? "patient" : "out"} ${m.on ? "on" : ""}" ${m.has ? `data-seat="${esc(m.uid)}"` : ""}>
         <div class="medal">${face(m.portrait, m.name)}</div>
         <div class="who"><h3>${esc(m.name)}</h3><div class="race">${esc(m.sub)}</div></div>
-        <div class="pay ${m.on && m.tips ? "good" : ""}">${m.on ? `<b>~${money(m.tips)}</b><span class="lbl">on average</span>`
-          : `<span class="tstat faint">${m.has ? "sitting out" : `no ${esc(P.item.toLowerCase())}`}</span>`}</div></div>`).join("");
-    const lengths = P.lengths.map(h => `<div class="btn ${h === P.hours ? "on" : ""}" data-show="${h}">${h} h</div>`).join("");
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">Performers</div>
-        <p class="hint">Click to seat or stand down; only who carries a ${esc(P.item)} can play.</p>
+        <div class="pay ${m.on && m.tips ? "good" : ""}">${m.on ? `<b>~${money(m.tips)}</b><span class="lbl">${tr("tavern.on_average")}</span>`
+          : `<span class="tstat faint">${m.has ? tr("tavern.sitting_out") : tr("tavern.no_item", {item: esc(P.item.toLowerCase())})}</span>`}</div></div>`).join("");
+    const lengths = P.lengths.map(h => `<div class="btn ${h === P.hours ? "on" : ""}" data-show="${h}">${tr("unit.h", {n: h})}</div>`).join("");
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${tr("tavern.performers")}</div>
+        <p class="hint">${tr("tavern.perform_hint", {item: esc(P.item)})}</p>
         <div class="crew">${players}</div></div>
-      <div class="paper ledger"><div class="kicker">The stage <em>every hour on stage is a Charisma test the crowd tips on</em></div>
-        <div class="terms stage"><span><b>Test</b> d20 + Charisma each hour: beat ${P.base} and the crowd tips</span>
-          <span><b>Tips</b> one more coin for every ${P.step} points over ${P.base}</span>
-          <span><b>Needs</b> a ${esc(P.item)} in the pack</span></div>
-        <div class="hrow show"><span class="lbl">Show length</span>${lengths}</div>
-        <div class="brass-btn wide ${P.can ? "" : "off"}" id="perform"><div><b>${P.can ? `Play ${P.hours} h` : "Nobody seated can play"}</b></div></div>
-        ${report("The last show", P.report)}
-        <div class="ledgerfoot"><p>The clock runs while the band plays: the whole band waits out the show, and eats as it goes.</p></div></div>`;
+      <div class="paper ledger"><div class="kicker">${tr("tavern.stage")} <em>${tr("tavern.stage_note")}</em></div>
+        <div class="terms stage"><span><b>${tr("tavern.test")}</b> ${tr("tavern.test_val", {base: P.base})}</span>
+          <span><b>${tr("tavern.tips")}</b> ${tr("tavern.tips_val", {step: P.step, base: P.base})}</span>
+          <span><b>${tr("tavern.needs")}</b> ${tr("tavern.needs_val", {item: esc(P.item)})}</span></div>
+        <div class="hrow show"><span class="lbl">${tr("tavern.show_length")}</span>${lengths}</div>
+        <div class="brass-btn wide ${P.can ? "" : "off"}" id="perform"><div><b>${P.can ? tr("tavern.play", {n: P.hours}) : tr("tavern.nobody_plays")}</b></div></div>
+        ${report(tr("tavern.last_show"), P.report)}
+        <div class="ledgerfoot"><p>${tr("tavern.perform_foot")}</p></div></div>`;
   }
 
   function draw(T, tab) {

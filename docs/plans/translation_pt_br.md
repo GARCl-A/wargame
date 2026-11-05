@@ -66,8 +66,9 @@ Menus, tabs, buttons, tooltips, settings, errors, the 31 HTML screens' fixed lab
 Client text moves to keys served by `/api/locale` (the `ui.*` group, `en` filling gaps) and the client reads
 them with `tr` / `trn` / `data-t`. Tutorial cards and credits get their `pt-br` text here too.
 
-Done (2026-11-04): the mechanism, `shell.js`, `kit.js`, the member sheet, settings and title. Left: the other
-screens' scripts and pages, one commit per screen group (`i18n_audit.py` does not see JS: count with
+Done (2026-11-04): the mechanism, `shell.js`, `kit.js`, the member sheet, settings, title, the hub (every
+tab) and the guild (members, charter, reputations, bands, routines). Left: draft, battle, map, talk, report,
+talents, arena, hunt, watch, wiki, one commit per screen group (`i18n_audit.py` does not see JS: count with
 `grep -c` on each file's literals).
 
 ### 3. Messages and combat log

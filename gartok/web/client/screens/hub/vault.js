@@ -35,8 +35,8 @@ const Vault = (() => {
       ? Kit.stepper(q) : "<span></span>";
     return `<div class="row ${picked(CHEST, r.loc) ? "picked" : ""}" data-owner="${CHEST}" data-loc="${r.loc}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
-      <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${esc(kg(r.qty, r.kg))} in all${r.note ? ` · ${esc(r.note)}` : ""}</div></div>
-      <div class="wt r">${r.kg.toFixed(r.kg < 0.1 ? 3 : 1)} <small>kg</small></div>
+      <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${tr("vault.in_all", {weight: esc(kg(r.qty, r.kg))})}${r.note ? ` · ${esc(r.note)}` : ""}</div></div>
+      <div class="wt r">${r.kg.toFixed(r.kg < 0.1 ? 3 : 1)} <small>${tr("kit.kg")}</small></div>
       <div class="stk c">×${r.qty}</div><span></span>${step}</div>`;
   }
 
@@ -48,12 +48,12 @@ const Vault = (() => {
         <p class="vaultnote">${esc(c.closed_line)}</p></div>`;
     const pct = Math.min(100, c.load / c.capacity * 100).toFixed(1);
     const add = picks ? weight(picks.filter(p => p.from !== CHEST)) : 0;
-    const rows = c.rows.length ? c.rows.map(chestLine).join("") : `<p class="vaultnote">${esc(c.title)} is empty. Drag what the band can spare onto it.</p>`;
-    return `<div class="paper" id="shelf"><div class="kicker">${esc(c.title)} <em>${c.rows.length} stacks · ${esc(c.where)}</em></div>
+    const rows = c.rows.length ? c.rows.map(chestLine).join("") : `<p class="vaultnote">${tr("vault.empty", {title: esc(c.title)})}</p>`;
+    return `<div class="paper" id="shelf"><div class="kicker">${esc(c.title)} <em>${trn("unit.stack", c.rows.length)} · ${esc(c.where)}</em></div>
       <div class="shelfhead"><h3>${c.load.toFixed(1)} / ${c.capacity} kg</h3><div class="chestbar"><i style="width:${pct}%"></i>${add ? `<i class="add ${c.load + add > c.capacity ? "over" : ""}" style="width:${Math.min(100 - pct, add / c.capacity * 100).toFixed(1)}%"></i>` : ""}</div></div>
-      <div class="cols"><span></span><span>Stack</span><span class="r">Each</span><span class="c">Held</span><span></span><span class="r">Take</span></div>
+      <div class="cols"><span></span><span>${tr("vault.stack")}</span><span class="r">${tr("vault.each")}</span><span class="c">${tr("vault.held")}</span><span></span><span class="r">${tr("vault.take")}</span></div>
       <div id="rows">${rows}</div>
-      <div class="shelffoot"><b>Drag</b> an item here to stow it · out of it onto a pack or a worn slot${V.gold ? " · <b>right-click</b> a coin stack to mint or melt gold" : ""}</div></div>`;
+      <div class="shelffoot">${tr(V.gold ? "vault.foot_gold" : "vault.foot")}</div></div>`;
   }
 
   // ---------------------------------------------------------------- the packs
@@ -61,12 +61,12 @@ const Vault = (() => {
 
   function foot(p) {
     const mine = picks ? picks.filter(x => x.from === p.id) : [];
-    if (mine.length) return `${mine.length === 1 ? esc(mine[0].name) : mine.length + " items"} picked · drag onto ${esc(V.chest.label)} or another pack`;
+    if (mine.length) return mine.length === 1 ? tr("vault.picked_one", {name: esc(mine[0].name), chest: esc(V.chest.label)}) : tr("vault.picked_many", {items: trn("unit.item", mine.length), chest: esc(V.chest.label)});
     if (picks) {
       const after = p.kg + weight(picks);
-      return `Click here to hand the pick to ${esc(short(p.name))}${after > p.max ? " · <b>won't fit</b>" : ""}`;
+      return tr(after > p.max ? "vault.hand_full" : "vault.hand", {name: esc(short(p.name))});
     }
-    if (p.kg > p.normal) return `Burdened: <b>${(p.kg - p.normal).toFixed(1)} kg</b> past the easy load`;
+    if (p.kg > p.normal) return tr("vault.burdened", {kg: (p.kg - p.normal).toFixed(1)});
     return "";
   }
 
@@ -77,13 +77,13 @@ const Vault = (() => {
     const g = V.gold;
     if (!V.services.length && !g)
       return `<div class="leather" id="sell">${ico("item/locked-chest")}<div><h4>${esc(V.chest.title)}</h4>
-        <p>Nothing owed and nothing to buy: what is stowed here stays in the City for any band that comes by.</p></div></div>`;
+        <p>${tr("vault.nothing_owed")}</p></div></div>`;
     if (!V.services.length)
-      return `<div class="leather" id="sell">${ico("item/two-coins")}<div><h4>The exchange</h4>
-        <p>Right-click a coin stack to mint gold (<b>$${g.price}</b> a coin) or melt it (<b>$${g.payout}</b> back): the Bankers keep $${g.fee} a coin each way.</p></div></div>`;
+      return `<div class="leather" id="sell">${ico("item/two-coins")}<div><h4>${tr("vault.exchange")}</h4>
+        <p>${tr("vault.exchange_line", {price: "$" + g.price, payout: "$" + g.payout, fee: "$" + g.fee})}</p></div></div>`;
     return `<div class="leather svcs" id="sell"><div class="svclist">${V.services.map(s =>
       `<div class="svc ${s.on ? "" : "off"}" data-svc="${s.key}"><div><h4>${esc(s.label.toLowerCase())}</h4><p>${esc(s.sub)}</p></div>
-        <div class="ghost-btn">${s.on ? "Agree" : "Not yet"}</div></div>`).join("")}</div></div>`;
+        <div class="ghost-btn">${s.on ? tr("vault.agree") : tr("vault.not_yet")}</div></div>`).join("")}</div></div>`;
   }
 
   const purse = () => Kit.purse({sum: V.purse, packs: V.packs, spread: V.distribute && V.packs.length > 1});
@@ -156,7 +156,7 @@ const Vault = (() => {
 
   function ghost(it) {
     const list = picks && picks.some(p => same(p, it)) ? picks : [it];
-    const name = list.length > 1 ? `${list.length} items` : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name;
+    const name = list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name;
     $("ghost").innerHTML = `${ico(list[0].glyph)}<div><b>${esc(name)}</b><span>${esc(kg(1, weight(list)))}</span></div>`;
   }
 
@@ -170,12 +170,12 @@ const Vault = (() => {
     const add = (html, fn) => { rows.push(html); acts.push(fn); };
     const gold = (n, melt) => () => act("vault_gold", {from: it.from, n, melt});
     if (row && row.mint) {
-      add(`Mint 1 gold coin <b>−${money(V.gold.price)}</b>`, gold(1, false));
-      if (row.mint > 1) add(`Mint ${row.mint} gold coins <b>−${money(V.gold.price * row.mint)}</b>`, gold(row.mint, false));
+      add(tr("vault.mint_one", {price: money(V.gold.price)}), gold(1, false));
+      if (row.mint > 1) add(tr("vault.mint_many", {n: row.mint, price: money(V.gold.price * row.mint)}), gold(row.mint, false));
     }
     if (row && row.melt) {
-      add(`Melt 1 gold coin <b>+${money(V.gold.payout)}</b>`, gold(1, true));
-      if (row.melt > 1) add(`Melt ${row.melt} gold coins <b>+${money(V.gold.payout * row.melt)}</b>`, gold(row.melt, true));
+      add(tr("vault.melt_one", {price: money(V.gold.payout)}), gold(1, true));
+      if (row.melt > 1) add(tr("vault.melt_many", {n: row.melt, price: money(V.gold.payout * row.melt)}), gold(row.melt, true));
     }
     let html = rows.map((r, i) => `<div data-i="${i}">${r}</div>`).join("");
     if (rows.length) html += "<hr>";
@@ -184,7 +184,7 @@ const Vault = (() => {
       ...V.packs.filter(p => p.id !== it.from || typeof it.loc === "string")];
     html += dests.map(o => {
       const all = acts.push(send(o.id)) - 1, one = it.qty > 1 ? acts.push(send(o.id, 1)) - 1 : null;
-      return `<div class="give"><span>To ${esc(o.id === CHEST ? o.name : short(o.name))}</span>${one === null ? "" : `<em data-i="${one}">1</em>`}<em data-i="${all}">${it.qty > 1 ? "all" : "give"}</em></div>`;
+      return `<div class="give"><span>${tr("kit.to", {name: esc(o.id === CHEST ? o.name : short(o.name))})}</span>${one === null ? "" : `<em data-i="${one}">1</em>`}<em data-i="${all}">${it.qty > 1 ? tr("kit.all") : tr("kit.give")}</em></div>`;
     }).join("");
     m.innerHTML = html;
     m.onclick = ev => {

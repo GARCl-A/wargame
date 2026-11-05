@@ -5,8 +5,8 @@
 
 const Ledger = (() => {
   function member(u) {
-    const chips = [u.chest && `<span class="chip money">the sealed chest</span>`,
-                   u.letter && `<span class="chip">a letter of receipt</span>`].filter(Boolean).join("");
+    const chips = [u.chest && `<span class="chip money">${tr("ledger.chest")}</span>`,
+                   u.letter && `<span class="chip">${tr("ledger.letter")}</span>`].filter(Boolean).join("");
     return `<div class="worker slim">
       <div class="medal">${face(u.portrait, u.name)}</div>
       <div class="who"><h3>${esc(u.name)}</h3><div class="race">${esc(u.sub)}</div>
@@ -26,12 +26,12 @@ const Ledger = (() => {
 
   function draw(L) {
     cards(L.cards);
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">Here · ${L.members.length} member${L.members.length === 1 ? "" : "s"}</div>
-        <p class="hint">The Bankers' chest is handed over by whoever carries it.</p>
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${tr("ledger.here", {members: trn("unit.member", L.members.length)})}</div>
+        <p class="hint">${tr("ledger.hint")}</p>
         <div class="crew">${L.members.map(member).join("")}</div></div>
-      <div class="paper ledger"><div class="kicker">The Desk <em>Ledger Hold</em></div>
+      <div class="paper ledger"><div class="kicker">${tr("ledger.desk")} <em>${tr("ledger.place")}</em></div>
         <div class="desks">${L.panels.map(panel).join("")}</div>
-        <div class="ledgerfoot"><p>The Bankers' outpost: their sealed chest is traded here for a letter of receipt, and the guild they vouch for may train a soldier and carry the front's supplies.</p></div></div>`;
+        <div class="ledgerfoot"><p>${tr("ledger.foot")}</p></div></div>`;
     toast(L.notice);
   }
 

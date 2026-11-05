@@ -19,19 +19,18 @@ const Claim = (() => {
     if (C.lumber) {
       const L = C.lumber, pct = Math.min(100, 100 * L.have / L.need);
       return `<div class="prog cprog"><div class="bar"><i style="width:${pct}%"></i></div>
-        <span>${L.have} / ${L.need} Lumber banked · ${L.carried} carried here</span></div>`;
+        <span>${tr("claim.lumber", {have: L.have, need: L.need, carried: L.carried})}</span></div>`;
     }
     if (C.days_left != null) {
-      const cls = C.garrison ? "money" : "bad";
-      const who = C.garrison ? `${esc(C.garrison)} holds it` : "nobody holds it: the count is not moving";
-      return `<p class="aside ${cls}">${plural(C.days_left, "day")} left · ${who}.</p>`;
+      const cls = C.garrison ? "money" : "bad", days = plural(C.days_left, "day");
+      return `<p class="aside ${cls}">${C.garrison ? tr("claim.left_held", {days, who: esc(C.garrison)}) : tr("claim.left_none", {days})}</p>`;
     }
     return "";
   }
 
   function job(C) {
     if (!C.here) return "";
-    return `<p class="aside">This band garrisons the claim: it holds and rests. The Gathering tab puts it to work without leaving its post.</p>`;
+    return `<p class="aside">${tr("claim.garrisons")}</p>`;
   }
 
   const action = a => `<div class="brass-btn ${a.can ? "" : "off"}" data-claim="${a.verb}"${tip(a.why || "")}><div><b>${esc(a.label)}</b></div></div>`;
@@ -40,37 +39,36 @@ const Claim = (() => {
     const h = C.hearth;
     if (!h) return "";
     if (h.can_cook) {
-      const by = [h.oven && "an oven", h.lit && "a fire"].filter(Boolean).join(" and ");
-      return `<div class="sec dark"><span class="lbl">The hearth</span></div>
-        <p class="aside">The claim has ${by}: the band cooks in the Kitchen tab.${h.oven ? "" : " The fire stays lit while a garrison is here."}</p>`;
+      return `<div class="sec dark"><span class="lbl">${tr("claim.hearth")}</span></div>
+        <p class="aside">${tr(h.oven && h.lit ? "claim.cook_both" : h.oven ? "claim.cook_oven" : "claim.cook_fire")}</p>`;
     }
     const row = (verb, glyph, name, use, why, can) => `<div class="shift offer ${can ? "" : "off"}">
       <div class="medal store">${ico(glyph)}</div>
       <div><div class="nm">${name}</div><div class="use">${use}</div>${can ? "" : `<div class="why">${why}</div>`}</div>
       <div class="price"></div>
-      <div class="btn ${can ? "" : "off"}" data-claim="${verb}">Build</div></div>`;
-    return `<div class="sec dark"><span class="lbl">The hearth</span></div><div class="shifts">
-      ${row("campfire", "item/log", "A campfire", `burns 1 ${esc(h.fuel)}, ${h.fire_hours} h, a WIS check (DC ${h.dc}); it stays lit while a garrison is here`,
-            `the band carries no ${esc(h.fuel)}`, h.can_fire)}
-      ${row("oven", "item/brick-pile", "An oven", `${h.bricks_need} ${esc(h.brick)} and ${h.oven_hours} h; it never goes out`,
-            `the band carries ${h.bricks_have} / ${h.bricks_need} ${esc(h.brick)}`, h.can_oven)}</div>`;
+      <div class="btn ${can ? "" : "off"}" data-claim="${verb}">${tr("claim.build")}</div></div>`;
+    return `<div class="sec dark"><span class="lbl">${tr("claim.hearth")}</span></div><div class="shifts">
+      ${row("campfire", "item/log", tr("claim.campfire"), tr("claim.campfire_use", {fuel: esc(h.fuel), hours: h.fire_hours, dc: h.dc}),
+            tr("claim.campfire_why", {fuel: esc(h.fuel)}), h.can_fire)}
+      ${row("oven", "item/brick-pile", tr("claim.oven"), tr("claim.oven_use", {need: h.bricks_need, brick: esc(h.brick), hours: h.oven_hours}),
+            tr("claim.oven_why", {have: h.bricks_have, need: h.bricks_need, brick: esc(h.brick)}), h.can_oven)}</div>`;
   }
 
   function draw(C) {
     cards(C.cards);
     const report = C.report.length
-      ? `<div class="report"><div class="kicker">The claim</div>${C.report.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
-    const foot = C.watch ? `<p class="warn">Nobody is garrisoned and the garage holds something: each day the animals may bolt and take it all (${C.watch} a day).</p>` : "";
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">Here · ${plural(C.members.length, "member")}</div>
-        <p class="hint">The Lumber and the Stone Brick the band carries count toward the fences and the oven.</p>
+      ? `<div class="report"><div class="kicker">${tr("claim.report")}</div>${C.report.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
+    const foot = C.watch ? `<p class="warn">${tr("claim.bolt", {watch: C.watch})}</p>` : "";
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${tr("claim.here", {members: plural(C.members.length, "member")})}</div>
+        <p class="hint">${tr("claim.fences")}</p>
         <div class="crew">${C.members.map(member).join("")}</div></div>
-      <div class="paper ledger"><div class="kicker">The Wilds Claim <em>${C.seized ? "seized" : esc(C.stage.toLowerCase())}</em></div>
+      <div class="paper ledger"><div class="kicker">${tr("claim.title")} <em>${C.seized ? tr("claim.seized") : esc(C.stage.toLowerCase())}</em></div>
         ${track(C)}
         <div class="cstage ${C.seized ? "bad" : ""}">${C.lines.map(l => `<p>${esc(l)}</p>`).join("")}</div>
         ${progress(C)}${job(C)}
         <div class="cacts">${C.actions.map(action).join("")}</div>
         ${hearth(C)}${report}
-        <div class="ledgerfoot">${foot}<p>Six stages: scout, clear, fence, sweep, then a garrison that holds it ten whole days. A lost raid or a garrison pulled out early starts the count over.</p></div></div>`;
+        <div class="ledgerfoot">${foot}<p>${tr("claim.foot")}</p></div></div>`;
   }
 
   $("body").addEventListener("click", async e => {

@@ -5,7 +5,7 @@
 
 const Initiation = (() => {
   function member(u) {
-    const chip = u.initiated ? `<span class="chip good">initiated</span>`
+    const chip = u.initiated ? `<span class="chip good">${tr("rite.initiated")}</span>`
       : u.started ? `<span class="chip money">${esc(u.stage)} ${u.done} / ${u.total}</span>` : "";
     const note = u.note && !u.initiated ? `<p>${esc(u.note)}</p>` : "";
     return `<div class="worker patient ${u.picked ? "on" : ""} ${u.on ? "" : "out"}" data-uid="${esc(u.uid)}">
@@ -16,7 +16,7 @@ const Initiation = (() => {
 
   function standing(I) {
     const u = I.members.find(m => m.picked);
-    if (!u) return `<p class="aside">Pick who stays to board on the left.</p>`;
+    if (!u) return `<p class="aside">${tr("rite.pick_left")}</p>`;
     return `<div class="rstand"><div class="nm">${esc(u.name)}</div>
         <div class="prog"><div class="bar"><i style="width:${Math.min(100, 100 * u.done / Math.max(1, u.total))}%"></i></div>
         <span>${esc(u.stage)}</span></div>
@@ -29,13 +29,13 @@ const Initiation = (() => {
     const terms = I.terms.map(t =>
       `<div class="billrow rterm"><span class="lbl">${esc(t.label)}</span><span class="${t.ok ? "" : "bad"}">${esc(t.value)}</span></div>`).join("");
     const report = I.report.length
-      ? `<div class="report"><div class="kicker">The sanctuary</div>${I.report.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">Who stays</div>
-        <p class="hint">Click a member to leave them boarding for the rite.</p>
+      ? `<div class="report"><div class="kicker">${tr("rite.report")}</div>${I.report.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${tr("rite.who_stays")}</div>
+        <p class="hint">${tr("rite.hint")}</p>
         <div class="crew">${I.members.map(member).join("")}</div></div>
-      <div class="paper ledger"><div class="kicker">The ${esc(I.school)} rite <em>${esc(I.faction)}</em></div>
+      <div class="paper ledger"><div class="kicker">${tr("rite.title", {school: esc(I.school)})} <em>${esc(I.faction)}</em></div>
         <div class="bill">${terms}</div>${standing(I)}${report}
-        <div class="ledgerfoot"><p>Reputation is the door, not the price: it is never spent. Leave the rite and the points are kept.</p></div></div>`;
+        <div class="ledgerfoot"><p>${tr("rite.foot")}</p></div></div>`;
     toast(I.notice);
   }
 

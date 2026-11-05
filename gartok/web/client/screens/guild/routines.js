@@ -9,13 +9,12 @@
 const Book = (() => {
   let R = null, P = null, menu = null, refOpen = null, drag = null, sure = false, mode = "book", AT = null, STOP = null, BAND = null, keepTop = 0;
   const OPS = ["<", "<=", ">", ">="], OPL = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"};
-  const DOING = {gather: "gathering", work: "working", craft: "crafting", rest: "resting", travel: "travelling"};
+  const DOING = ["gather", "work", "craft", "rest", "travel"];
+  const doing = k => DOING.includes(k) ? tr(`routine.doing.${k}`) : k;
   const SIGN = {Wait: "⏳", Take: "⤓", HandOver: "⇄", Repeat: "↻", Trade: "¤", Travel: "➜", Gather: "⛏", Work: "⚒", Craft: "✎", Study: "✧", Repair: "🔧", Store: "⤒", Fetch: "⤓", Rest: "☾"};
-  const KINDS = [
-    ["Move and work", [["Travel", "Travel", "to a place"], ["Gather", "Gather", "for N hours"], ["Work", "Work", "for N hours"],
-      ["Craft", "Craft", "a recipe"], ["Study", "Study", "a spell or a language"], ["Repair", "Mend a wagon", "one hour, Lumber paid"], ["Rest", "Rest", "for N hours"]]],
-    ["Goods", [["Take", "Take", "from a group here"], ["HandOver", "Hand over", "to a group here"], ["Store", "Store", "in the house, bank or garage"], ["Fetch", "Fetch", "from the house, bank or garage"], ["Trade", "Trade", "sell, buy, food"]]],
-    ["Flow", [["Wait", "Wait until", "a number holds"], ["Repeat", "Repeat", "while / until"]]]];
+  const GROUPS = [["move", ["Travel", "Gather", "Work", "Craft", "Study", "Repair", "Rest"]],
+    ["goods", ["Take", "HandOver", "Store", "Fetch", "Trade"]], ["flow", ["Wait", "Repeat"]]];
+  const kind = k => k.toLowerCase();
 
   const ref = (how, arg = null) => ({_: "Ref", how, arg});
   const cond = (metric, r, op, value, item = null) => ({_: "Cond", metric, ref: r, item, op, value});
@@ -44,7 +43,7 @@ const Book = (() => {
     for (const i of p.split(",").map(Number)) { b = list[i]; list = b.body; }
     return b;
   };
-  const refName = r => r.how === "own" ? "this group" : r.how === "named" ? r.arg : r.how === "doing" ? `a group here ${DOING[r.arg] || r.arg}` : "any other group here";
+  const refName = r => r.how === "own" ? tr("routine.this_group") : r.how === "named" ? r.arg : r.how === "doing" ? tr("routine.group_doing", {doing: doing(r.arg)}) : tr("routine.any_other");
 
   const select = (opts, val, f) => `<select class="fld" data-f="${f}">${opts.map(o => {
     const [v, l] = Array.isArray(o) ? o : [o, o];
@@ -53,73 +52,73 @@ const Book = (() => {
   const itemSelect = (val, f) => `<select class="fld" data-f="${f}">${R.vocab.items.map(([kind, names]) =>
     `<optgroup label="${esc(kind)}">${names.map(n => `<option${n === val ? " selected" : ""}>${esc(n)}</option>`).join("")}</optgroup>`).join("")}</select>`;
   const wagonSelect = val => select([...new Set([...R.vocab.wagons, val])], val, "wagon");
-  const PLACES = [["house", "the house"], ["bank", "the strongbox"], ["garage", "the garage's wagons"]];
+  const places = () => [["house", tr("routine.place_house")], ["bank", tr("routine.place_bank")], ["garage", tr("routine.place_garage")]];
   const num = (val, f, ph = "") => `<input class="fld num" data-f="${f}" value="${val ?? ""}" placeholder="${ph}" size="2" inputmode="decimal">`;
 
   function refField(r, key, ownOk) {
     const open = refOpen === key, cur = (how, arg) => r.how === how && (arg === undefined || r.arg === arg) ? " cur" : "";
     const pop = !open ? "" : `<div class="refpop">
-      ${ownOk ? `<div class="o${cur("own")}" data-set="${key}" data-how="own">This group<small>the one running the routine</small></div><hr>` : ""}
-      <h6>By name</h6>${R.vocab.groups.map(g => `<div class="o${cur("named", g)}" data-set="${key}" data-how="named" data-arg="${esc(g)}">${esc(g)}</div>`).join("")}
-      <div class="note">Follows the name: if the group is renamed, the block stops finding it.</div><hr>
-      <h6>A group here, doing…</h6>${Object.entries(DOING).slice(0, 4).map(([k, l]) => `<div class="o${cur("doing", k)}" data-set="${key}" data-how="doing" data-arg="${k}">a group here ${l}</div>`).join("")}
-      <div class="note">Follows whoever is doing it: swap the group and the routine still works.</div><hr>
-      <div class="o${cur("here")}" data-set="${key}" data-how="here">Any other group here<small>the first one found at this place</small></div></div>`;
+      ${ownOk ? `<div class="o${cur("own")}" data-set="${key}" data-how="own">${tr("routine.this_group_o")}<small>${tr("routine.this_group_note")}</small></div><hr>` : ""}
+      <h6>${tr("routine.by_name")}</h6>${R.vocab.groups.map(g => `<div class="o${cur("named", g)}" data-set="${key}" data-how="named" data-arg="${esc(g)}">${esc(g)}</div>`).join("")}
+      <div class="note">${tr("routine.follows_name")}</div><hr>
+      <h6>${tr("routine.doing_h")}</h6>${DOING.slice(0, 4).map(k => `<div class="o${cur("doing", k)}" data-set="${key}" data-how="doing" data-arg="${k}">${tr("routine.group_doing", {doing: doing(k)})}</div>`).join("")}
+      <div class="note">${tr("routine.follows_doing")}</div><hr>
+      <div class="o${cur("here")}" data-set="${key}" data-how="here">${tr("routine.any_other_o")}<small>${tr("routine.any_other_note")}</small></div></div>`;
     return `<span class="refw${open ? " open" : ""}"><button class="ref" data-ref="${key}">${esc(refName(r))}</button>${pop}</span>`;
   }
 
   const whatOf = c => c.metric === "items" ? "i:" + c.item : c.metric;
   function condText(c, p) {
-    const whats = [...R.vocab.items.flatMap(([, names]) => names).map(n => ["i:" + n, n]), ["coins", "coins"], ["hp", "lowest HP %"], ["food_days", "food days"]];
+    const whats = [...R.vocab.items.flatMap(([, names]) => names).map(n => ["i:" + n, n]), ["coins", tr("routine.coins")], ["hp", tr("routine.lowest_hp")], ["food_days", tr("routine.food_days")]];
     const held = c.metric === "items" || c.metric === "coins";
-    return `${select(whats, whatOf(c), "cond.what")} ${held ? "held by" : "of"} ${refField(c.ref, p + "|cond.ref", true)}
-      ${select(OPS.map(o => [o, OPL[o]]), c.op, "cond.op")} ${num(c.value, "cond.value")}`;
+    return tr(held ? "routine.cond_held" : "routine.cond_of", {what: select(whats, whatOf(c), "cond.what"), ref: refField(c.ref, p + "|cond.ref", true),
+      op: select(OPS.map(o => [o, OPL[o]]), c.op, "cond.op"), value: num(c.value, "cond.value")});
   }
 
   const chips = (list, f, pairs) => list.map((x, i) => `<span class="chip">${pairs ? num(x[1], `${f}.${i}.1`) + " " + esc(x[0]) : esc(x)}<i data-x="${f}.${i}">×</i></span>`).join("")
-    + `<select class="fld" data-add="${f}"><option value="">+ item</option>${R.vocab.items.map(([kind, names]) =>
+    + `<select class="fld" data-add="${f}"><option value="">${tr("routine.add_item")}</option>${R.vocab.items.map(([kind, names]) =>
       `<optgroup label="${esc(kind)}">${names.map(n => `<option>${esc(n)}</option>`).join("")}</optgroup>`).join("")}</select>`;
 
   const takeMode = b => b.until_days != null ? "food" : b.count != null ? "n" : "all";
   function sentence(b, p) {
     switch (b._) {
-      case "Travel": return `Travel to ${select(R.vocab.nodes, b.node, "node")}`;
-      case "Gather": return `Gather for ${num(b.hours, "hours")} hours`;
-      case "Work": return `Work for ${num(b.hours, "hours")} hours`;
-      case "Rest": return `Rest for ${num(b.hours, "hours")} hours`;
-      case "Craft": return `Craft ${select(R.vocab.recipes, b.recipe, "recipe")} for ${num(b.hours, "hours")} hours`;
-      case "Study": return `Study ${select(R.vocab.studies, b.target, "target")} for ${num(b.days, "days")} days`;
-      case "Repair": return `Mend the wagon ${wagonSelect(b.wagon)}`;
+      case "Travel": return tr("routine.travel", {node: select(R.vocab.nodes, b.node, "node")});
+      case "Gather": return tr("routine.gather", {hours: num(b.hours, "hours")});
+      case "Work": return tr("routine.work", {hours: num(b.hours, "hours")});
+      case "Rest": return tr("routine.rest", {hours: num(b.hours, "hours")});
+      case "Craft": return tr("routine.craft", {recipe: select(R.vocab.recipes, b.recipe, "recipe"), hours: num(b.hours, "hours")});
+      case "Study": return tr("routine.study", {target: select(R.vocab.studies, b.target, "target"), days: num(b.days, "days")});
+      case "Repair": return tr("routine.repair", {wagon: wagonSelect(b.wagon)});
       case "Store": case "Fetch": {
         const m = b.count != null ? "n" : "all";
-        return `${b._ === "Store" ? "Store" : "Fetch"} ${select([["all", "all"], ["n", "a number"]], m, "mode")}${m === "n" ? " " + num(b.count, "count") : ""}
-          ${itemSelect(b.item, "item")} ${b._ === "Store" ? "in" : "from"} ${select(PLACES, b.place, "place")}`;
+        return tr(b._ === "Store" ? "routine.store" : "routine.fetch", {mode: select([["all", tr("routine.all")], ["n", tr("routine.number")]], m, "mode") + (m === "n" ? " " + num(b.count, "count") : ""),
+          item: itemSelect(b.item, "item"), place: select(places(), b.place, "place")});
       }
-      case "Wait": return `Wait until ${condText(b.cond, p)}`;
+      case "Wait": return tr("routine.wait", {cond: condText(b.cond, p)});
       case "Take": {
-        const m = takeMode(b);
-        return `Take ${select([["all", "all"], ["n", "a number"], ["food", "enough for"]], m, "mode")}${m === "n" ? " " + num(b.count, "count") : ""}${m === "food" ? " " + num(b.until_days, "until_days") + " days of" : ""}
-          ${itemSelect(b.item, "item")} from ${refField(b.source, p + "|source", false)}`;
+        const m = takeMode(b), mode = select([["all", tr("routine.all")], ["n", tr("routine.number")], ["food", tr("routine.enough")]], m, "mode");
+        return tr("routine.take", {mode: m === "n" ? mode + " " + num(b.count, "count") : m === "food" ? tr("routine.food_mode", {mode, n: num(b.until_days, "until_days")}) : mode,
+          item: itemSelect(b.item, "item"), source: refField(b.source, p + "|source", false)});
       }
       case "HandOver": {
         const m = b.count != null ? "n" : "all";
-        return `<span class="row">Hand over ${select([["all", "all"], ["n", "a number"]], m, "mode")}${m === "n" ? " " + num(b.count, "count") : ""}
-          ${itemSelect(b.item, "item")} to ${refField(b.to, p + "|to", false)}</span>
-          <span class="row"><span class="tog" data-tog="fallback"${tip("Off: the routine stops at once when the group is not here")}><span class="sw${b.fallback ? " on" : ""}"></span>If it is not here, wait 1 day, then stop the routine</span></span>`;
+        return `<span class="row">${tr("routine.handover", {mode: select([["all", tr("routine.all")], ["n", tr("routine.number")]], m, "mode") + (m === "n" ? " " + num(b.count, "count") : ""),
+          item: itemSelect(b.item, "item"), to: refField(b.to, p + "|to", false)})}</span>
+          <span class="row"><span class="tog" data-tog="fallback"${tip(tr("routine.fallback_tip"))}><span class="sw${b.fallback ? " on" : ""}"></span>${tr("routine.fallback")}</span></span>`;
       }
-      case "Trade": return `<span class="row">Trade here: <span class="plain">sell all</span> ${chips(b.sell, "sell")}</span>
-        <span class="row"><span class="plain">buy</span> ${chips(b.buy, "buy", true)}</span>
-        <span class="row"><span class="plain">and food for</span> ${num(b.food_days, "food_days", "—")} days · <span class="plain">spend at most</span> ${num(b.max_spend, "max_spend", "no limit")} coins</span>`;
-      case "Repeat": return `Repeat ${select([["while", "while"], ["until", "until"]], b.until ? "until" : "while", "until")} ${condText(b.cond, p)}`;
+      case "Trade": return `<span class="row">${tr("routine.trade_here")} <span class="plain">${tr("routine.sell_all")}</span> ${chips(b.sell, "sell")}</span>
+        <span class="row"><span class="plain">${tr("routine.buy")}</span> ${chips(b.buy, "buy", true)}</span>
+        <span class="row"><span class="plain">${tr("routine.food_for")}</span> ${num(b.food_days, "food_days", "—")} ${tr("routine.days")} · <span class="plain">${tr("routine.spend")}</span> ${num(b.max_spend, "max_spend", tr("routine.no_limit"))} ${tr("routine.spend_coins")}</span>`;
+      case "Repeat": return tr("routine.repeat", {until: select([["while", tr("routine.while")], ["until", tr("routine.until")]], b.until ? "until" : "while", "until"), cond: condText(b.cond, p)});
     }
     return "";
   }
 
   function gap(list, i) {
     const id = `${list}|${i}`, open = menu === id;
-    const m = !open ? "" : `<div class="menu">${KINDS.map(([g, l]) => `<h6>${g}</h6>` + l.map(([k, n, h]) =>
-      `<div class="o" data-new="${k}" data-list="${list}" data-i="${i}"><span class="g">${SIGN[k]}</span>${n}<small>${h}</small></div>`).join("")).join("")}</div>`;
-    return `<div class="gap${open ? " open" : ""}" data-list="${list}" data-i="${i}"><span class="plus" data-plus="${id}"${tip("Add a block here")}>+</span>${m}</div>`;
+    const m = !open ? "" : `<div class="menu">${GROUPS.map(([g, l]) => `<h6>${tr(`routine.group.${g}`)}</h6>` + l.map(k =>
+      `<div class="o" data-new="${k}" data-list="${list}" data-i="${i}"><span class="g">${SIGN[k]}</span>${tr(`routine.kind.${kind(k)}`)}<small>${tr(`routine.hint.${kind(k)}`)}</small></div>`).join("")).join("")}</div>`;
+    return `<div class="gap${open ? " open" : ""}" data-list="${list}" data-i="${i}"><span class="plus" data-plus="${id}"${tip(tr("routine.add_block"))}>+</span>${m}</div>`;
   }
 
   function stack(blocks, list) {
@@ -127,8 +126,8 @@ const Book = (() => {
     blocks.forEach((b, i) => {
       const p = list === "" ? "" + i : `${list},${i}`;
       const now = AT === p ? (STOP ? " stop" : " now") : "";
-      h += `<div class="blk${now}" data-p="${p}"><span class="grip" draggable="true" data-move="${p}"${tip("Drag to move this line")}>⠿</span><span class="glyph">${SIGN[b._]}</span>
-        <div class="sent">${sentence(b, p)}${AT === p && STOP ? `<p class="why">Stopped: ${esc(STOP)}. Fix it by hand, then press Continue.</p>` : ""}</div><span class="del" data-del="${p}"${tip("Remove this block")}>×</span>${now ? `<span class="where">${STOP ? "Stopped" : "Here"}</span>` : ""}</div>`;
+      h += `<div class="blk${now}" data-p="${p}"><span class="grip" draggable="true" data-move="${p}"${tip(tr("routine.drag_line"))}>⠿</span><span class="glyph">${SIGN[b._]}</span>
+        <div class="sent">${sentence(b, p)}${AT === p && STOP ? `<p class="why">${tr("routine.stopped_why", {why: esc(STOP)})}</p>` : ""}</div><span class="del" data-del="${p}"${tip(tr("routine.remove"))}>×</span>${now ? `<span class="where">${STOP ? tr("routine.stopped") : tr("routine.here")}</span>` : ""}</div>`;
       if (b._ === "Repeat") h += `<div class="body">${stack(b.body, p)}</div>`;
       h += gap(list, i + 1);
     });
@@ -139,24 +138,24 @@ const Book = (() => {
   function seats() {
     const [used, slots] = R.seats;
     const pips = Array.from({length: slots}, (_, i) => `<span class="pip${i < used ? " used" : ""}"></span>`).join("");
-    const nxt = `<span class="next">next seat in <b>${R.next}</b> reputation</span>`;
-    return `<div class="leather" id="bseats"><div><div class="lbl">Book of routines</div><div class="sub">Groups you may leave on a routine at once</div></div>
-      <div class="pips">${pips}</div><div class="count"><b>${used}</b> of <b>${slots}</b> seats taken</div>${nxt}</div>`;
+    const nxt = `<span class="next">${tr("routine.next_seat", {n: R.next})}</span>`;
+    return `<div class="leather" id="bseats"><div><div class="lbl">${tr("routine.book")}</div><div class="sub">${tr("routine.book_note")}</div></div>
+      <div class="pips">${pips}</div><div class="count">${tr("routine.seats_taken", {used, slots})}</div>${nxt}</div>`;
   }
 
   function list() {
     const cards = R.pages.map((p, i) => `<div class="rcard${i === R.pick ? " on" : ""}" data-pick="${i}"><b>${esc(p.name)}</b>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>`).join("");
-    return `<div class="leather" id="blist"><div class="lbl" style="padding:0 20px 14px">Written routines</div>${cards}
-      <div class="ghost-btn" id="bnew">+ New routine</div>
-      <div class="note-l">A routine is written here. A band is given one from its own screen, where its fields can be adjusted.</div></div>`;
+    return `<div class="leather" id="blist"><div class="lbl" style="padding:0 20px 14px">${tr("routine.written")}</div>${cards}
+      <div class="ghost-btn" id="bnew">${tr("routine.new")}</div>
+      <div class="note-l">${tr("routine.written_note")}</div></div>`;
   }
 
   function page() {
-    if (!P) return `<div class="paper" id="bpage"><div class="kicker">Routine</div><div class="desc" style="margin-top:24px">Nothing is written yet. Press NEW ROUTINE to start one.</div></div>`;
-    return `<div class="paper" id="bpage"><div class="kicker">Routine</div>
-      <div class="bhead"><input class="title" id="bname" maxlength="32" value="${esc(P.name)}" placeholder="A name">
-        <div class="ghost-btn${sure ? " warn" : ""}" id="btear">${sure ? "Press again to tear it out" : "Tear out"}</div></div>
-      <input class="desc" id="bnote" maxlength="120" value="${esc(P.note)}" placeholder="A line to remember what it is for">
+    if (!P) return `<div class="paper" id="bpage"><div class="kicker">${tr("routine.kicker")}</div><div class="desc" style="margin-top:24px">${tr("routine.nothing")}</div></div>`;
+    return `<div class="paper" id="bpage"><div class="kicker">${tr("routine.kicker")}</div>
+      <div class="bhead"><input class="title" id="bname" maxlength="32" value="${esc(P.name)}" placeholder="${tr("routine.name_ph")}">
+        <div class="ghost-btn${sure ? " warn" : ""}" id="btear">${sure ? tr("routine.tear_sure") : tr("routine.tear")}</div></div>
+      <input class="desc" id="bnote" maxlength="120" value="${esc(P.note)}" placeholder="${tr("routine.note_ph")}">
       <div class="stack">${stack(P.blocks, "")}</div></div>`;
   }
 
@@ -194,22 +193,20 @@ const Book = (() => {
       P = null;
       const [used, slots] = st.equip.seats, pages = st.equip.pages;
       const cards = pages.map(([i, n]) => `<div class="rcard" data-equip="${i}"><b>${esc(n)}</b></div>`).join("");
-      return `<div class="paper" id="bpage" style="left:32px;top:196px;width:1856px;height:852px"><div class="kicker">This band has no routine</div>
-        <div class="desc" style="margin-top:20px">${!pages.length ? "Nothing is written yet. The Routines tab is where the Book is filled."
-          : used >= slots ? "Every seat is taken. Take a routine off another band, or earn reputation for a new seat."
-          : "Pick a routine from the Book: the band gets a copy, and what it changes there stays on this band."}</div>
+      return `<div class="paper" id="bpage" style="left:32px;top:196px;width:1856px;height:852px"><div class="kicker">${tr("routine.no_routine")}</div>
+        <div class="desc" style="margin-top:20px">${!pages.length ? tr("routine.nothing_book") : used >= slots ? tr("routine.seats_full") : tr("routine.pick_one")}</div>
         <div class="pages">${cards}</div></div>`;
     }
     P = JSON.parse(JSON.stringify(st.routine));
     AT = P.at;
     STOP = P.paused;
-    const state = STOP ? `<div class="ghost-btn go" id="bcont">Continue</div>` : `<span class="mark good">Running</span>`;
-    return `<div class="leather" id="gbar"><span class="lbl">Equipped</span>
-        <div class="eq"><b>${esc(P.name || "A routine")}</b><i>a copy, edits stay on this band</i></div>
-        <div class="ghost-btn" id="bback"${tip("Write this copy into the Book as a page of its own")}>Save back to Book</div>
+    const state = STOP ? `<div class="ghost-btn go" id="bcont">${tr("routine.continue")}</div>` : `<span class="mark good">${tr("routine.running")}</span>`;
+    return `<div class="leather" id="gbar"><span class="lbl">${tr("routine.equipped")}</span>
+        <div class="eq"><b>${esc(P.name || tr("routine.a_routine"))}</b><i>${tr("routine.copy")}</i></div>
+        <div class="ghost-btn" id="bback"${tip(tr("routine.save_back_tip"))}>${tr("routine.save_back")}</div>
         <span class="sp"></span>${state}
-        <div class="ghost-btn${sure ? " warn" : ""}" id="btake">${sure ? "Press again to take it off" : "Take off routine"}</div></div>
-      <div class="paper" id="bpage" style="left:32px;top:276px;width:1856px;height:772px"><div class="kicker">The routine on this band</div>
+        <div class="ghost-btn${sure ? " warn" : ""}" id="btake">${sure ? tr("routine.take_sure") : tr("routine.take_off")}</div></div>
+      <div class="paper" id="bpage" style="left:32px;top:276px;width:1856px;height:772px"><div class="kicker">${tr("routine.on_band")}</div>
       ${P.note ? `<div class="desc ro">${esc(P.note)}</div>` : ""}
       <div class="stack">${stack(P.blocks, "")}</div></div>`;
   }

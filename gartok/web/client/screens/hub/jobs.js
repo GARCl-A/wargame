@@ -18,7 +18,7 @@ const Jobs = (() => {
   }
 
   function carried(c) {
-    const who = c.who.length ? c.who.join(", ") : "nobody carries any";
+    const who = c.who.length ? c.who.join(", ") : tr("jobs.nobody_carries");
     return `<div class="it carry"><span class="ico mask" style="--icon:url(/assets/icons/${c.glyph}.svg)"></span>
       <span class="nm">${esc(c.item)}<small>${esc(who)}</small></span>
       <b class="${c.have >= c.goal ? "good" : ""}">${c.have} / ${c.goal}</b></div>`;
@@ -29,17 +29,17 @@ const Jobs = (() => {
     const s = J.signer;
     const egg = J.egg
       ? `<div class="brass-btn wide ${J.egg.on ? "" : "off"}" id="egg"><div><b>${esc(J.egg.label)}</b></div></div>` : "";
-    const packs = J.carried.length ? `<div class="carrying"><div class="lbl">In the packs</div>
-        <p class="hint">What the band already carries toward each job on the board.</p>${J.carried.map(carried).join("")}</div>` : "";
-    const board = J.jobs.length ? J.jobs.map(job).join("") : `<p class="aside">Nothing on offer here right now.</p>`;
-    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">Who signs</div>
+    const packs = J.carried.length ? `<div class="carrying"><div class="lbl">${tr("jobs.in_packs")}</div>
+        <p class="hint">${tr("jobs.in_packs_hint")}</p>${J.carried.map(carried).join("")}</div>` : "";
+    const board = J.jobs.length ? J.jobs.map(job).join("") : `<p class="aside">${tr("jobs.nothing")}</p>`;
+    $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${tr("jobs.who_signs")}</div>
         <div class="crew"><div class="worker"><div class="medal">${face(s.portrait, s.name)}</div>
           <div class="who"><h3>${esc(s.name)}</h3><div class="race">${esc(s.sub)}</div></div></div></div>
-        <p class="hint">The leader signs, and the job travels with them: whichever band they walk with hands it over.</p>
+        <p class="hint">${tr("jobs.signs_hint")}</p>
         ${packs}${egg}</div>
-      <div class="paper ledger"><div class="kicker">The board <em>${esc(J.line)}</em></div>
+      <div class="paper ledger"><div class="kicker">${tr("jobs.board")} <em>${esc(J.line)}</em></div>
         <div class="jobs">${board}</div>
-        <div class="ledgerfoot"><p>A job is taken once. The pay is split across the band that hands it over; past its deadline it fails.</p></div></div>`;
+        <div class="ledgerfoot"><p>${tr("jobs.foot")}</p></div></div>`;
     toast(J.notice);
   }
 

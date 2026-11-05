@@ -26,7 +26,7 @@ const Bands = (() => {
     const on = c.gid === B.gid;
     const name = on && naming
       ? `<input id="rename" maxlength="24" value="${esc(B.custom)}" placeholder="${esc(B.name)}">`
-      : `<b${tip(c.name)}><em class="bn">${esc(c.name)}</em>${on ? `<i class="pen" id="pen" data-tip="Rename the band">✎</i>` : ""}</b>`;
+      : `<b${tip(c.name)}><em class="bn">${esc(c.name)}</em>${on ? `<i class="pen" id="pen" data-tip="${tr("bands.rename")}">✎</i>` : ""}</b>`;
     return `<div class="bchip ${on ? "on" : ""} ${c.locked ? "fight" : ""}" data-band="${c.gid}">
       <div class="medals">${c.faces.map(f => `<div class="medal">${face(f, c.name)}</div>`).join("")}</div>
       <div>${name}<span>${esc(c.where)} · ${esc(c.task)} · ${c.size} of ${c.capacity}</span></div>${c.mark ? `<em class="mark ${c.mark[1]}">${esc(c.mark[0])}</em>` : ""}</div>`;
@@ -34,71 +34,71 @@ const Bands = (() => {
 
   function bar() {
     const [l, n] = B.load, tight = l > n * .9;
-    const views = [["packs", "Packs"], ["routine", "Routine"]].map(([k, l]) => `<span class="${B.view === k ? "on" : ""}" data-view="${k}">${l}</span>`).join("");
+    const views = [["packs", tr("bands.view_packs")], ["routine", tr("bands.view_routine")]].map(([k, l]) => `<span class="${B.view === k ? "on" : ""}" data-view="${k}">${l}</span>`).join("");
     const acts = B.view === "routine" ? "" : B.actions.map(a => `<div class="ghost-btn ${a.on && !B.locked ? "" : "off"}" data-btn="${a.key}"${tip(a.tip)}>${ico(a.glyph)}${esc(a.label)}</div>`).join("");
     return `<div class="leather" id="bar"><div class="chips2">${B.chips.map(chip).join("")}</div><div class="vline"></div>
-      <div class="metric ${l > n ? "bad" : tight ? "tight" : ""}"><span class="lbl">Band load</span><b>${l} <small>/ ${n} kg</small></b></div>
-      <div class="metric ${B.rations ? "" : "bad"}"><span class="lbl">Rations</span><b>${B.rotten ? `${B.rotten} (all rotten)` : plural(B.rations, "day")}</b></div>
-      <div class="metric"><span class="lbl">Pace</span><b>${esc(B.speed)}</b></div>
-      ${B.over ? `<div class="metric bad"${tip(`Past the leader's hold: −${B.over} mental defense`)}><span class="lbl">Over its hold</span><b>${B.over}</b></div>` : ""}
+      <div class="metric ${l > n ? "bad" : tight ? "tight" : ""}"><span class="lbl">${tr("bands.load")}</span><b>${l} <small>/ ${n} ${tr("kit.kg")}</small></b></div>
+      <div class="metric ${B.rations ? "" : "bad"}"><span class="lbl">${tr("bands.rations")}</span><b>${B.rotten ? tr("bands.rotten", {n: B.rotten}) : plural(B.rations, "day")}</b></div>
+      <div class="metric"><span class="lbl">${tr("bands.pace")}</span><b>${esc(B.speed)}</b></div>
+      ${B.over ? `<div class="metric bad"${tip(tr("bands.over_tip", {n: B.over}))}><span class="lbl">${tr("bands.over")}</span><b>${B.over}</b></div>` : ""}
       <div class="vtog">${views}</div><div class="acts">${acts}</div></div>`;
   }
 
   // ---------------------------------------------------------------- the columns
-  const row = (p, it, loc, slot) => Kit.item(p.id, it, loc, slot, {sel: picked(p.id, loc), tags: it ? Kit.tag(it.locked, "locked") : ""});
+  const row = (p, it, loc, slot) => Kit.item(p.id, it, loc, slot, {sel: picked(p.id, loc), tags: it ? Kit.tag(it.locked, tr("kit.locked")) : ""});
 
   function foot(p) {
     const mine = picks ? picks.filter(x => x.from === p.id) : [];
-    if (mine.length) return `${mine.length === 1 ? esc(mine[0].name) : mine.length + " items"} picked · drag or click another pack`;
+    if (mine.length) return mine.length === 1 ? tr("bands.picked_one", {name: esc(mine[0].name)}) : tr("bands.picked_many", {items: trn("unit.item", mine.length)});
     if (picks) {
       const add = picks.reduce((a, x) => a + x.kg * x.qty, 0);
-      return `Hand the pick to ${esc(p.name.split(" ")[0])} · <b>+${add.toFixed(1)} kg</b>`;
+      return tr("bands.hand", {name: esc(p.name.split(" ")[0]), kg: add.toFixed(1)});
     }
-    if (p.kg > p.normal) return `<span class="bad">Past a normal load by <b>${(p.kg - p.normal).toFixed(1)} kg</b> · slows the band</span>`;
-    if (p.hungry) return p.beast ? `Unfed <b>${plural(p.unfed, "day")}</b>` : "No food reaches them · <b>hungry</b>";
+    if (p.kg > p.normal) return tr("bands.past", {kg: (p.kg - p.normal).toFixed(1)});
+    if (p.hungry) return p.beast ? tr("bands.unfed", {days: plural(p.unfed, "day")}) : tr("bands.hungry");
     return "";
   }
 
   function column(p) {
     const tight = p.kg > p.normal * .85, overload = p.kg > p.normal;
-    const med = `<div class="medal ${p.beast ? "beastmed" : ""} ${p.hurt ? "hurt" : ""}" ${p.beast ? `data-owner="${p.id}" data-loc="hitch"` : `data-sheet="${p.id}"${tip(`Open ${p.name}'s sheet`)}`}>${face(p.portrait, p.name)}</div>`;
-    const worn = p.worn.length ? `<div class="csec lbl">${p.beast ? "Tack" : "Worn"}</div>` + p.worn.map(w => row(p, w.name ? w : null, w.zone, w)).join("") : "";
+    const med = `<div class="medal ${p.beast ? "beastmed" : ""} ${p.hurt ? "hurt" : ""}" ${p.beast ? `data-owner="${p.id}" data-loc="hitch"` : `data-sheet="${p.id}"${tip(tr("kit.open_sheet", {name: p.name}))}`}>${face(p.portrait, p.name)}</div>`;
+    const worn = p.worn.length ? `<div class="csec lbl">${p.beast ? tr("bands.tack") : tr("kit.worn")}</div>` + p.worn.map(w => row(p, w.name ? w : null, w.zone, w)).join("") : "";
     const rows = p.pack.length ? p.pack.map(r => row(p, r, r.loc, null)).join("")
-      : `<div class="it empty"><span></span><div class="n">nothing carried</div><span></span><span></span></div>`;
+      : `<div class="it empty"><span></span><div class="n">${tr("kit.nothing")}</div><span></span><span></span></div>`;
     const btns = [p.ride && `<div class="ghost-btn ${p.ride.on ? "" : "off"}" data-btn="ride:${p.id}"${tip(p.ride.tip)}>${esc(p.ride.label)}</div>`,
-      p.hitch && `<div class="ghost-btn" data-btn="hitch:${p.id}" data-tip="Hitch it to the next wagon">${esc(p.hitch.label)}</div>`].filter(Boolean).join("");
+      p.hitch && `<div class="ghost-btn" data-btn="hitch:${p.id}" data-tip="${tr("bands.hitch_tip")}">${esc(p.hitch.label)}</div>`].filter(Boolean).join("");
     const f = foot(p);
     return `<div class="col" data-owner="${p.id}">
-      <div class="colh">${med}<div style="min-width:0"><h3${tip(p.name)}>${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${p.lead ? `<span class="voice">Leads the band</span>` : ""}</div></div>
-      <div class="cst"><div class="money"><i class="coindot"></i>${p.money}</div><div class="load ${overload ? "over" : tight ? "tight" : ""}"><b>${p.kg.toFixed(1)}</b> / ${p.normal} kg</div></div>
+      <div class="colh">${med}<div style="min-width:0"><h3${tip(p.name)}>${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${p.lead ? `<span class="voice">${tr("bands.leads")}</span>` : ""}</div></div>
+      <div class="cst"><div class="money"><i class="coindot"></i>${p.money}</div><div class="load ${overload ? "over" : tight ? "tight" : ""}"><b>${p.kg.toFixed(1)}</b> / ${p.normal} ${tr("kit.kg")}</div></div>
       <div class="cbar"><i class="${overload ? "over" : tight ? "tight" : ""}" style="width:${Math.min(100, p.kg / Math.max(p.normal, .1) * 100)}%"></i></div>
       ${btns ? `<div class="cbtn">${btns}</div>` : ""}
-      ${worn}<div class="csec lbl">Pack</div><div class="packlist">${rows}</div>
+      ${worn}<div class="csec lbl">${tr("kit.pack")}</div><div class="packlist">${rows}</div>
       ${f ? `<div class="cfoot">${f}</div>` : ""}</div>`;
   }
 
   function wagon(w) {
-    const drawn = w.drawn.length ? w.drawn.map(a => `<div class="beast"><div class="medal">${face(a.portrait, a.name)}</div><div><b>${esc(a.name)}</b> <span class="mark" style="font-size:8px">${esc((a.tack || "no tack").toLowerCase())}</span>
-        <p class="${a.unfed ? "bad" : ""}">${a.unfed ? `unfed ${plural(a.unfed, "day")}` : "fed"}</p></div></div>`).join("")
-      : `<div class="empty-note">Nothing pulls it. Drag a harnessed animal's portrait here.</div>`;
-    const rows = w.pack.length ? w.pack.map(r => row(w, r, r.loc, null)).join("") : `<div class="empty-note">No cargo.</div>`;
-    const repair = w.repair ? `<div class="cbtn"><div class="ghost-btn ${w.repair.on ? "" : "off"}" data-btn="repair:${w.id}"${tip(`${w.repair.cost} ${w.repair.item} and ${w.repair.hours} h, then an INT check`)}>Repair · ${w.repair.cost} ${esc(w.repair.item)}</div></div>` : "";
+    const drawn = w.drawn.length ? w.drawn.map(a => `<div class="beast"><div class="medal">${face(a.portrait, a.name)}</div><div><b>${esc(a.name)}</b> <span class="mark" style="font-size:8px">${esc((a.tack || tr("bands.no_tack")).toLowerCase())}</span>
+        <p class="${a.unfed ? "bad" : ""}">${a.unfed ? tr("bands.unfed_days", {days: plural(a.unfed, "day")}) : tr("bands.fed")}</p></div></div>`).join("")
+      : `<div class="empty-note">${tr("bands.no_pull")}</div>`;
+    const rows = w.pack.length ? w.pack.map(r => row(w, r, r.loc, null)).join("") : `<div class="empty-note">${tr("bands.no_cargo")}</div>`;
+    const repair = w.repair ? `<div class="cbtn"><div class="ghost-btn ${w.repair.on ? "" : "off"}" data-btn="repair:${w.id}"${tip(tr("bands.repair_tip", {cost: w.repair.cost, item: w.repair.item, hours: w.repair.hours}))}>${tr("bands.repair", {cost: w.repair.cost, item: esc(w.repair.item)})}</div></div>` : "";
     return `<div class="col wag" data-owner="${w.id}" data-hitch="${w.id}">
-      <div class="colh"><div class="medal beastmed">${ico(w.glyph)}</div><div style="min-width:0">${namingWagon === w.id ? `<input id="wrename" maxlength="24" value="${esc(w.name === w.kind ? "" : w.name)}" placeholder="${esc(w.kind)}">` : `<h3>${esc(w.name)}<i class="pen" data-pen="${w.id}" data-tip="Name the wagon">✎</i></h3>`}<div class="race">${w.drawn.length ? "pulled by the " + esc(w.drawn.map(a => a.name.toLowerCase()).join(" and ")) : "nothing hitched"}</div></div></div>
+      <div class="colh"><div class="medal beastmed">${ico(w.glyph)}</div><div style="min-width:0">${namingWagon === w.id ? `<input id="wrename" maxlength="24" value="${esc(w.name === w.kind ? "" : w.name)}" placeholder="${esc(w.kind)}">` : `<h3>${esc(w.name)}<i class="pen" data-pen="${w.id}" data-tip="${tr("bands.name_wagon")}">✎</i></h3>`}<div class="race">${w.drawn.length ? tr("bands.pulled_by", {names: esc(w.drawn.map(a => a.name.toLowerCase()).join(tr("kit.and")))}) : tr("bands.no_hitch")}</div></div></div>
       <div class="whp">${Array.from({length: w.hp[1]}, (_, i) => `<i class="${i < w.hp[0] ? "" : "off"}"></i>`).join("")}</div>
-      <div class="wnote ${w.broken ? "bad" : ""}">${w.hp[0]} of ${w.hp[1]} hull${w.broken ? " · broken" : " · the road wears it"}${w.riders.length ? ` · riding: ${esc(w.riders.join(", "))}` : ""}</div>
-      ${repair}<div class="csec lbl">Hitched</div>${drawn}
-      <div class="csec lbl">Cargo <em style="font-style:normal;letter-spacing:0;margin-left:auto">${w.kg} / ${w.budget} kg</em></div><div class="packlist">${rows}</div></div>`;
+      <div class="wnote ${w.broken ? "bad" : ""}">${tr("bands.hull", {a: w.hp[0], b: w.hp[1]})} · ${w.broken ? tr("bands.broken") : tr("bands.wears")}${w.riders.length ? ` · ${tr("bands.riding", {names: esc(w.riders.join(", "))})}` : ""}</div>
+      ${repair}<div class="csec lbl">${tr("bands.hitched")}</div>${drawn}
+      <div class="csec lbl">${tr("bands.cargo")} <em style="font-style:normal;letter-spacing:0;margin-left:auto">${w.kg} / ${w.budget} ${tr("kit.kg")}</em></div><div class="packlist">${rows}</div></div>`;
   }
 
   function side() {
-    const jobs = B.jobs.length ? B.jobs.map(j => `<div class="job"><b>${esc(j.name)}</b><p>held by ${esc(j.by)}${j.days !== null && j.days !== undefined ? ` · ${plural(j.days, "day")} left` : ""}${j.progress ? ` · ${j.progress[0]} / ${j.progress[1]} ${esc(j.progress[2])}` : ""}</p></div>`).join("")
-      : `<div class="empty-note">No job taken by anyone in this band. A giver's board lists what is on offer.</div>`;
-    const caps = B.captives.length ? B.captives.map(c => `<div class="job"><b>${esc(c.name)}</b><p>${esc(c.race)} · dies in ${plural(c.days, "day")}</p><div class="ghost-btn" data-btn="release:${c.uid}">Release</div></div>`).join("")
-      : `<div class="empty-note">Nobody bound. A captive walks with the band, counts on the herd and dies seven days after the fight.</div>`;
+    const jobs = B.jobs.length ? B.jobs.map(j => `<div class="job"><b>${esc(j.name)}</b><p>${tr("bands.held_by", {by: esc(j.by)})}${j.days !== null && j.days !== undefined ? ` · ${tr("bands.days_left", {days: plural(j.days, "day")})}` : ""}${j.progress ? ` · ${j.progress[0]} / ${j.progress[1]} ${esc(j.progress[2])}` : ""}</p></div>`).join("")
+      : `<div class="empty-note">${tr("bands.no_jobs")}</div>`;
+    const caps = B.captives.length ? B.captives.map(c => `<div class="job"><b>${esc(c.name)}</b><p>${tr("bands.dies_in", {race: esc(c.race), days: plural(c.days, "day")})}</p><div class="ghost-btn" data-btn="release:${c.uid}">${tr("bands.release")}</div></div>`).join("")
+      : `<div class="empty-note">${tr("bands.no_captives")}</div>`;
     return B.wagons.map(wagon).join("") + `<div class="col" style="flex:1 0 auto">
-      <div class="csec lbl" style="margin-top:2px">Jobs in hand</div>${jobs}
-      <div class="csec lbl">Captives</div>${caps}</div>`;
+      <div class="csec lbl" style="margin-top:2px">${tr("bands.jobs")}</div>${jobs}
+      <div class="csec lbl">${tr("bands.captives")}</div>${caps}</div>`;
   }
 
   // ---------------------------------------------------------------- drawing
@@ -208,7 +208,7 @@ const Bands = (() => {
   function ghost(src) {
     const list = picks && picks.some(p => same(p, src)) ? picks : [src];
     const it = list[0];
-    $("ghost").innerHTML = `${ico(it.glyph)}<div><b>${esc(list.length > 1 ? list.length + " items" : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name)}</b><span>${src.loc === "hitch" ? "onto a wagon to pull it" : kg(it.qty, it.kg)}</span></div>`;
+    $("ghost").innerHTML = `${ico(it.glyph)}<div><b>${esc(list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name)}</b><span>${src.loc === "hitch" ? tr("bands.onto_wagon") : kg(it.qty, it.kg)}</span></div>`;
   }
 
   function target(el) {
@@ -224,10 +224,10 @@ const Bands = (() => {
     const m = $("menu"), p = owner(it.from);
     const run = r => act("menu_run", {pick: {from: it.from, loc: it.loc}, row: r});
     const rows = M.rows.filter(r => r.kind !== "member").map(r => `<div class="o" data-row="${r.row}">${esc(r.label)}</div>`);
-    if (M.held > 1) rows.push(`<div class="o" data-split="1">Split the stack…</div>`);
-    if (M.lockable) rows.push(`<div class="o" data-lock="1">${M.locked ? "Unlock it" : "Lock it in this pack"}</div>`);
+    if (M.held > 1) rows.push(`<div class="o" data-split="1">${tr("bands.split_stack")}</div>`);
+    if (M.lockable) rows.push(`<div class="o" data-lock="1">${M.locked ? tr("bands.unlock") : tr("bands.lock")}</div>`);
     const to = M.rows.filter(r => r.kind === "member").map(r =>
-      `<div class="o" data-row="${r.row}">${esc(r.label)}<small class="${r.free < 0 ? "bad" : ""}">${r.free < 0 ? "already over" : r.free.toFixed(1) + " kg free"}</small></div>`);
+      `<div class="o" data-row="${r.row}">${esc(r.label)}<small class="${r.free < 0 ? "bad" : ""}">${r.free < 0 ? tr("bands.already_over") : tr("bands.kg_free", {kg: r.free.toFixed(1)})}</small></div>`);
     m.innerHTML = `<div class="mh">${esc(it.name)}${it.qty > 1 ? " ×" + it.qty : ""} · ${esc(p.name)}</div>${rows.join("")}${to.length ? "<hr>" + to.join("") : ""}`;
     m.onclick = ev => {
       const d = ev.target.closest(".o");
@@ -244,9 +244,9 @@ const Bands = (() => {
     const m = $("menu");
     let n = Math.max(1, held >> 1);
     const paint = () => {
-      m.innerHTML = `<div class="mh">Split ${esc(it.name)} ×${held}</div>
-        <div class="qty"><span data-q="-1">−</span><b>${n}</b><span data-q="1">+</span><em data-go="1">Split</em></div>
-        <div class="o" style="cursor:default;font-size:14px;color:#6b5233">${n} into a stack of their own, ${held - n} stay</div>`;
+      m.innerHTML = `<div class="mh">${tr("bands.split_title", {name: esc(it.name), held})}</div>
+        <div class="qty"><span data-q="-1">−</span><b>${n}</b><span data-q="1">+</span><em data-go="1">${tr("bands.split")}</em></div>
+        <div class="o" style="cursor:default;font-size:14px;color:#6b5233">${tr("bands.split_line", {n, rest: held - n})}</div>`;
     };
     paint();
     m.onclick = ev => {

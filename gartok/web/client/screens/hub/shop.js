@@ -26,14 +26,14 @@ const Shop = (() => {
   function cards() {
     const d = S.deal, v = d.voice;
     const who = v ? `<div class="vm">${face(v.portrait, v.name)}</div>` : "";
-    const line = v ? `<p><b>${esc(v.name)}</b> speaks for the band</p>` : `<p>${esc(d.headline.charAt(0).toUpperCase() + d.headline.slice(1))}</p>`;
+    const line = v ? `<p>${tr("shop.speaks", {name: esc(v.name)})}</p>` : `<p>${esc(d.headline.charAt(0).toUpperCase() + d.headline.slice(1))}</p>`;
     const marks = d.marks.map(m => `<span class="mark ${m.good ? "good" : "bad"}">${esc(m.text)}</span>`).join("");
     const till = S.till === null ? "" : `<div class="vsep"></div><div class="till">
       <div class="stack"><i style="top:29px"></i><i style="top:21px"></i><i style="top:13px"></i><i style="top:5px"></i></div>
-      <div><div class="lbl">In the till</div><b>${money(S.till)}</b><small>refills at dawn; a sale above it is refused</small></div></div>`;
-    $("cards").innerHTML = `<div class="vsep"></div><div class="deal">${who}<div><div class="lbl">The deal</div>${line}<div class="marks">${marks}</div></div></div>
-      <div class="rate"><b>${d.pay}%</b><span class="lbl">You pay</span></div>
-      <div class="rate"><b>${d.get}%</b><span class="lbl">They pay</span></div>${till}`;
+      <div><div class="lbl">${tr("shop.till")}</div><b>${money(S.till)}</b><small>${tr("shop.till_note")}</small></div></div>`;
+    $("cards").innerHTML = `<div class="vsep"></div><div class="deal">${who}<div><div class="lbl">${tr("shop.deal")}</div>${line}<div class="marks">${marks}</div></div></div>
+      <div class="rate"><b>${d.pay}%</b><span class="lbl">${tr("shop.you_pay")}</span></div>
+      <div class="rate"><b>${d.get}%</b><span class="lbl">${tr("shop.they_pay")}</span></div>${till}`;
   }
 
   // ---------------------------------------------------------------- the shelf
@@ -44,12 +44,12 @@ const Shop = (() => {
       ? `<div class="pips">${Array.from({length: r.target}, (_, k) => `<i class="${k < r.stock ? "" : "off"}"></i>`).join("")}</div>` : "";
     const stock = r.stock === null ? "—" : `${r.stock}${r.target ? ` <small>/ ${r.target}</small>` : ""}`;
     const tone = r.price < r.list ? "off" : r.price > r.list ? "up" : "";
-    const buy = out ? `<div class="soldout">Sold out</div>`
+    const buy = out ? `<div class="soldout">${tr("shop.sold_out")}</div>`
       : Kit.stepper(q);
     return `<div class="row ${out ? "out" : ""} ${sel ? "picked" : ""}" data-ware="${esc(r.name)}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
       <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="use">${esc(r.use)}</div></div>
-      <div class="wt r">${r.weight.toFixed(1)} <small>kg</small></div>
+      <div class="wt r">${r.weight.toFixed(1)} <small>${tr("kit.kg")}</small></div>
       <div class="stk c">${stock}${pips}</div>
       <div class="price r ${tone}">${r.price}</div>${buy}</div>`;
   }
@@ -58,36 +58,36 @@ const Shop = (() => {
     const c = S.shelf.find(x => x.key === cat) || S.shelf[0];
     const tabs = S.shelf.length > 1
       ? `<div class="cats">${S.shelf.map(x => `<span class="${x.key === c.key ? "on" : ""}" data-cat="${x.key}">${esc(x.label)}</span>`).join("")}</div>` : "";
-    return `<div class="paper" id="shelf"><div class="kicker">The shelf <em>${allRows().length} wares · restocked each day</em></div>
-      <div class="shelfhead"><h3>${esc(c ? c.label : "Nothing for sale")}</h3>${tabs}</div>
-      <div class="cols"><span></span><span>Ware</span><span class="r">Weight</span><span class="c">Stock</span><span class="r">Price</span><span class="r">Buy</span></div>
+    return `<div class="paper" id="shelf"><div class="kicker">${tr("shop.shelf")} <em>${trn("shop.wares", allRows().length)}</em></div>
+      <div class="shelfhead"><h3>${esc(c ? c.label : tr("shop.nothing"))}</h3>${tabs}</div>
+      <div class="cols"><span></span><span>${tr("shop.ware")}</span><span class="r">${tr("shop.weight")}</span><span class="c">${tr("shop.stock")}</span><span class="r">${tr("shop.price")}</span><span class="r">${tr("shop.buy")}</span></div>
       <div id="rows">${c ? c.rows.map(wareRow).join("") : ""}</div>
-      <div class="shelffoot"><b>Drag</b> a ware onto a shopper to buy it · onto the <b>purse</b> to share it out by room · <b>Shift</b> picks several</div></div>`;
+      <div class="shelffoot">${tr("shop.foot")}</div></div>`;
   }
 
   // ---------------------------------------------------------------- the packs
   function itemRow(p, it, loc, slot) {
-    const tags = it && Kit.tag(it.locked, "locked") + Kit.tag(it.marked, "auto-sell", "auto");
+    const tags = it && Kit.tag(it.locked, tr("shop.locked")) + Kit.tag(it.marked, tr("shop.auto_sell"), "auto");
     return Kit.item(p.id, it, loc, slot, {sel: picked(p.id, loc), tags});
   }
 
   function foot(p) {
     if (picks && picks.ware) {
       const r = ware(picks.ware), q = qty[r.name] || 1, after = p.kg + r.weight * q;
-      const tail = after > p.max ? ` · <b>won't fit</b>` : after > p.normal ? ` · burdened past ${p.normal} kg` : "";
-      return `Buy ${q > 1 ? q + " " : ""}${esc(r.name)} here · <b>${money(r.price * q)}</b> from the purse, <b>${(r.weight * q).toFixed(1)} kg</b>${tail}`;
+      const tail = after > p.max ? tr("shop.tail_full") : after > p.normal ? tr("shop.tail_burdened", {kg: p.normal}) : "";
+      return tr("shop.buy_here", {what: (q > 1 ? q + " " : "") + esc(r.name), price: money(r.price * q), kg: (r.weight * q).toFixed(1), tail});
     }
     const mine = picks && picks.items ? picks.items.filter(x => x.from === p.id) : [];
-    if (mine.length) return `${mine.length === 1 ? esc(mine[0].name) : mine.length + " items"} picked · drag to another pack or onto <b>Sell</b>`;
-    if (picks && picks.items) return `Click here to hand the pick to ${esc(short(p.name))}`;
-    if (p.kg > p.normal) return `Burdened: <b>${(p.kg - p.normal).toFixed(1)} kg</b> past the easy load`;
-    if (p.max - p.kg < 2) return `Near the limit: <b>${(p.max - p.kg).toFixed(1)} kg</b> left`;
+    if (mine.length) return mine.length === 1 ? tr("shop.picked_one", {name: esc(mine[0].name)}) : tr("shop.picked_many", {items: trn("unit.item", mine.length)});
+    if (picks && picks.items) return tr("shop.hand", {name: esc(short(p.name))});
+    if (p.kg > p.normal) return tr("shop.burdened", {kg: (p.kg - p.normal).toFixed(1)});
+    if (p.max - p.kg < 2) return tr("shop.near", {kg: (p.max - p.kg).toFixed(1)});
     return "";
   }
 
   function column(p) {
     const add = picks && picks.ware ? ware(picks.ware).weight * (qty[picks.ware] || 1) : 0;
-    return Kit.column(p, {add, foot: foot(p), voice: p.voice ? "Speaks for the band" : "", row: itemRow});
+    return Kit.column(p, {add, foot: foot(p), voice: p.voice ? tr("shop.voice") : "", row: itemRow});
   }
 
   // ---------------------------------------------------------------- the bottom
@@ -95,19 +95,18 @@ const Shop = (() => {
     const goods = picks && picks.items ? picks.items.filter(p => p.sell != null) : [];
     let line, ready = false;
     if (goods.length) {
-      const what = goods.length === 1 ? `${goods[0].qty > 1 ? goods[0].qty + " " : ""}${goods[0].name}` : `${goods.length} stacks`;
+      const what = goods.length === 1 ? `${goods[0].qty > 1 ? goods[0].qty + " " : ""}${goods[0].name}` : trn("unit.stack", goods.length);
       const t = sellTotal(goods);
-      line = t ? `Sell ${esc(what)} for <b>${money(t)}</b>: click here, or drop them here.`
-        : `${esc(what)} is worthless: click here and the keeper throws it away.`;
+      line = t ? tr("shop.sell_line", {what: esc(what), price: money(t)}) : tr("shop.worthless", {what: esc(what)});
       ready = true;
     } else if (S.marked.length) {
-      const names = S.marked.length > 4 ? `${S.marked.slice(0, 4).join(", ")} and ${S.marked.length - 4} more` : S.marked.join(", ");
-      line = `Auto-sell: ${esc(names)}. ${S.marked_total ? `Click to sell them all for <b>${money(S.marked_total)}</b>.` : S.marked_held ? "Click and the keeper throws them away." : "None in the packs."}`;
+      const names = S.marked.length > 4 ? tr("shop.more", {names: S.marked.slice(0, 4).join(", "), n: S.marked.length - 4}) : S.marked.join(", ");
+      line = tr("shop.auto_line", {names: esc(names), rest: S.marked_total ? tr("shop.auto_all", {price: money(S.marked_total)}) : S.marked_held ? tr("shop.auto_throw") : tr("shop.auto_none")});
       ready = S.marked_held;
     } else {
-      line = `Drop an item from any pack here. ${esc(H.keeper.name || "The shop")} pays ${S.deal.get}% of the price.`;
+      line = tr("shop.drop_line", {keeper: esc(H.keeper.name || tr("shop.the_shop")), pct: S.deal.get});
     }
-    return `<div class="leather ${ready ? "ready" : ""}" id="sell">${ico("action/trade")}<div><h4>Sell</h4><p>${line}</p></div></div>`;
+    return `<div class="leather ${ready ? "ready" : ""}" id="sell">${ico("action/trade")}<div><h4>${tr("shop.sell")}</h4><p>${line}</p></div></div>`;
   }
 
   function purse() {
@@ -163,7 +162,7 @@ const Shop = (() => {
     const list = picks && picks.items && picks.items.some(p => same(p, src.item)) ? picks.items : [src.item];
     if (el.closest("#sell") || el.closest("#shelf")) {
       if (list.some(p => p.sell != null)) act("sell", {picks: list.map(({from, loc, qty: q}) => ({from, loc, qty: q}))});
-      else toast("the shop does not buy coin");
+      else toast(tr("shop.no_coin"));
       return;
     }
     const col = el.closest(".col");
@@ -222,7 +221,7 @@ const Shop = (() => {
     } else {
       const list = picks && picks.items && picks.items.some(p => same(p, src.item)) ? picks.items : [src.item];
       const it = list[0], t = sellTotal(list);
-      [glyph, name, line] = [it.glyph, list.length > 1 ? `${list.length} items` : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name, kg(it.qty, it.kg)];
+      [glyph, name, line] = [it.glyph, list.length > 1 ? trn("unit.item", list.length) : it.qty > 1 ? `${it.name} ×${it.qty}` : it.name, kg(it.qty, it.kg)];
       tag = t ? "+" + money(t) : "";
       gain = true;
     }
@@ -240,14 +239,14 @@ const Shop = (() => {
     const m = $("menu"), others = S.packs.filter(p => p.id !== it.from);
     const p = pack(it.from), row = typeof it.loc === "number" ? p.pack.find(r => r.loc === it.loc) : null;
     const rows = [];
-    if (it.sell === 0) rows.push([`Throw away${it.qty > 1 ? " all ×" + it.qty : ""} <b>(worthless)</b>`, () => act("sell", {picks: [{from: it.from, loc: it.loc}]})]);
+    if (it.sell === 0) rows.push([it.qty > 1 ? tr("shop.throw_all", {n: it.qty}) : tr("shop.throw"), () => act("sell", {picks: [{from: it.from, loc: it.loc}]})]);
     else if (it.sell) {
-      if (it.qty > 1) rows.push([`Sell 1 <b>+${money(it.sell)}</b>`, () => act("sell", {picks: [{from: it.from, loc: it.loc, qty: 1}]})]);
-      rows.push([`Sell ${it.qty > 1 ? "all ×" + it.qty : ""} <b>+${money(it.sell * it.qty)}</b>`, () => act("sell", {picks: [{from: it.from, loc: it.loc}]})]);
+      if (it.qty > 1) rows.push([tr("shop.sell_one", {price: money(it.sell)}), () => act("sell", {picks: [{from: it.from, loc: it.loc, qty: 1}]})]);
+      rows.push([it.qty > 1 ? tr("shop.sell_all", {n: it.qty, price: money(it.sell * it.qty)}) : tr("shop.sell_menu", {price: money(it.sell)}), () => act("sell", {picks: [{from: it.from, loc: it.loc}]})]);
     }
     if (row) {
-      rows.push([row.locked ? "Unlock" : "Lock (never sold or shared out)", () => act("lock", {owner: it.from, name: it.name})]);
-      if (!row.coin) rows.push([row.marked ? "Unmark auto-sell" : "Mark to auto-sell", () => act("mark", {name: it.name})]);
+      rows.push([row.locked ? tr("shop.unlock") : tr("shop.lock"), () => act("lock", {owner: it.from, name: it.name})]);
+      if (!row.coin) rows.push([row.marked ? tr("shop.unmark") : tr("shop.mark"), () => act("mark", {name: it.name})]);
     }
     if (rows.length && others.length) rows.push(null);
     const give = (o, q) => () => act("move", {picks: [{from: it.from, loc: it.loc, ...(q ? {qty: q} : {})}], to: o.id});
@@ -255,7 +254,7 @@ const Shop = (() => {
     const acts = rows.map(r => r && r[1]);
     html += others.map(o => {
       const all = acts.push(give(o)) - 1, one = it.qty > 1 ? acts.push(give(o, 1)) - 1 : null;
-      return `<div class="give"><span>To ${esc(short(o.name))}</span>${one === null ? "" : `<em data-i="${one}">1</em>`}<em data-i="${all}">${it.qty > 1 ? "all" : "give"}</em></div>`;
+      return `<div class="give"><span>${tr("kit.to", {name: esc(short(o.name))})}</span>${one === null ? "" : `<em data-i="${one}">1</em>`}<em data-i="${all}">${it.qty > 1 ? tr("kit.all") : tr("kit.give")}</em></div>`;
     }).join("");
     m.innerHTML = html;
     m.onclick = ev => {
