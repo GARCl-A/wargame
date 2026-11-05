@@ -276,5 +276,10 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   talent... is `i18n.name(kind, id)` from `name.<kind>.<id>`, with `.gender` when an article depends on it).
   The `pt-br` text goes in `locales/pt-br.json` under the same key and the same placeholders (a test checks).
   The language is the `language` setting, applied at boot and on the settings screen. Converted so far:
-  `tutorial.*`, `arena_talk.*`, `credits.*`; `python scripts/i18n_audit.py` counts the literal sentences left
-  (plan: `docs/plans/translation_pt_br.md`).
+  `tutorial.*`, `arena_talk.*`, `credits.*`, and the web client's `ui.*`; `python scripts/i18n_audit.py` counts
+  the literal sentences left (plan: `docs/plans/translation_pt_br.md`).
+- **Text in the web client**: a key under `ui.` in `locales/en.json`; a script reads it with `tr("group.key",
+  {name: value})`, a count with `trn("unit.day", n)` (`unit.day.one` / `.other`), a page's fixed label is
+  `data-t="group.key"` (`data-t-tip` for a tooltip). The shell fetches `/api/locale` before it draws a screen,
+  and a language change reloads the page. `tests/test_web_locale.py` fails on a key the client reads and the
+  catalog lacks.

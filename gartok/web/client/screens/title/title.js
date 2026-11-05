@@ -80,24 +80,24 @@ function charter() {
   el.className = "paper charter";
   if (!C) {
     el.classList.add("invite");
-    el.innerHTML = `<div class="kicker">No guild yet</div>
-      <div class="head"><div><h2>Found a guild</h2><div class="motto">Draft three of the nine who answer the call, give them a name and a banner, and send them out.</div></div></div>
+    el.innerHTML = `<div class="kicker">${tr("title.no_guild")}</div>
+      <div class="head"><div><h2>${tr("title.found")}</h2><div class="motto">${tr("title.found_note")}</div></div></div>
       <div class="roster">${T.invite.map(f => `<div class="face"><div class="medal">${face(f.portrait, f.name)}</div><b>${esc(f.name)}</b></div>`).join("")}</div>
-      <p>Most of them will not come back. That is how a guild in Gartok begins.</p>`;
+      <p>${tr("title.found_end")}</p>`;
     return;
   }
   banner($("title"), C);
   if (!T.map) el.classList.add("alone");
   el.classList.toggle("clickable", !C.broken);
-  const where = C.where ? `<div class="where"><b>At ${esc(C.where.place)}</b>${C.where.rest ? ` · ${esc(C.where.rest)}` : ""}</div>` : "";
-  el.innerHTML = `<div class="kicker">Last guild <em>saved ${esc(C.saved)}</em></div>
+  const where = C.where ? `<div class="where"><b>${tr("title.at", {place: esc(C.where.place)})}</b>${C.where.rest ? ` · ${esc(C.where.rest)}` : ""}</div>` : "";
+  el.innerHTML = `<div class="kicker">${tr("title.last_guild")} <em>${tr("title.saved", {when: esc(C.saved)})}</em></div>
     <div class="head">${crest(C)}<div><h2>${esc(C.name)}</h2>${C.vocation ? `<div class="voc">${esc(C.vocation)}</div>` : ""}
       ${C.motto ? `<div class="motto">${esc(C.motto)}</div>` : ""}</div></div>
     <div class="ledger">${C.ledger.map(([v, k]) => `<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("")}</div>
     <div class="roster">${C.faces.map(f => `<div class="face"><div class="medal ${f.hurt ? "hurt" : ""}">${face(f.portrait, f.name)}</div>
-      <b>${esc(f.name)}</b><small>${esc(f.what)}</small></div>`).join("")}${C.more ? `<div class="face more"><div class="medal"><div class="initial">+${C.more}</div></div><b>more</b></div>` : ""}</div>
+      <b>${esc(f.name)}</b><small>${esc(f.what)}</small></div>`).join("")}${C.more ? `<div class="face more"><div class="medal"><div class="initial">+${C.more}</div></div><b>${tr("title.more")}</b></div>` : ""}</div>
     ${where}${C.broken ? `<div class="broken">${esc(C.broken)}</div>` : ""}
-    ${C.broken ? "" : `<div class="ribbon"></div><div class="seal" id="seal"><div>${ico("map/fort")}<b>Continue</b><small>ENTER</small></div></div>`}`;
+    ${C.broken ? "" : `<div class="ribbon"></div><div class="seal" id="seal"><div>${ico("map/fort")}<b>${tr("title.continue")}</b><small>${tr("title.enter")}</small></div></div>`}`;
 }
 
 // ---------------------------------------------------------------- the guilds kept, one guild's saves
@@ -106,17 +106,17 @@ function guilds() {
     const ask = asking === "w:" + w.world;
     return `<div class="row" data-world="${esc(w.world)}" style="--banner:${shade(w.color, 1)};--banner-hi:${shade(w.color, 1.25)};--banner-lo:${shade(w.color, .55)}">
       ${crest(w)}
-      <div class="txt"><b>${esc(w.name)}</b><span>${w.vocation ? esc(w.vocation) + " · " : ""}day ${w.day} · ${w.members} member${w.members === 1 ? "" : "s"} · ${w.wins} win${w.wins === 1 ? "" : "s"}</span>
-        <small>last played ${esc(w.saved)} · ${w.saves} save${w.saves === 1 ? "" : "s"}</small></div>
+      <div class="txt"><b>${esc(w.name)}</b><span>${w.vocation ? esc(w.vocation) + " · " : ""}${tr("title.day", {n: w.day})} · ${trn("unit.member", w.members)} · ${trn("unit.win", w.wins)}</span>
+        <small>${tr("title.last_played", {when: esc(w.saved)})} · ${trn("unit.save", w.saves)}</small></div>
       <div class="mini">${w.faces.map(f => `<div class="medal">${face(f.portrait, f.name)}</div>`).join("")}</div>
       <div class="acts">${ask
-        ? `<span class="ask">Delete this guild and every save?</span><div class="pbtn danger" data-do="delete_world">Delete</div><div class="pbtn" data-do="cancel">Keep</div>`
-        : `<div class="pbtn go" data-do="load">Continue</div><div class="pbtn" data-do="saves">Saves</div><div class="pbtn danger" data-do="ask_world">Delete</div>`}</div></div>`;
+        ? `<span class="ask">${tr("title.ask_world")}</span><div class="pbtn danger" data-do="delete_world">${tr("title.delete")}</div><div class="pbtn" data-do="cancel">${tr("title.keep")}</div>`
+        : `<div class="pbtn go" data-do="load">${tr("title.continue")}</div><div class="pbtn" data-do="saves">${tr("title.saves")}</div><div class="pbtn danger" data-do="ask_world">${tr("title.delete")}</div>`}</div></div>`;
   }).join("");
-  $("page").innerHTML = `<div class="kicker">The guilds kept</div><h2>Load a guild</h2>
-    <div class="lead">Newest first. Continue picks up its live state; Saves goes back to an earlier moment.</div>
-    <div class="rows">${rows || `<div class="empty">No guild has been founded yet.</div>`}</div>
-    <div class="pagefoot"><div class="pbtn" data-do="home">Back</div></div>`;
+  $("page").innerHTML = `<div class="kicker">${tr("title.kept")}</div><h2>${tr("title.load")}</h2>
+    <div class="lead">${tr("title.load_note")}</div>
+    <div class="rows">${rows || `<div class="empty">${tr("title.none")}</div>`}</div>
+    <div class="pagefoot"><div class="pbtn" data-do="home">${tr("title.back")}</div></div>`;
 }
 
 function saves() {
@@ -125,15 +125,15 @@ function saves() {
     const ask = asking === "s:" + s.id;
     return `<div class="row" data-save="${esc(s.id)}"><div class="tag ${s.kind}">${esc(s.kind_label)}</div>
       <div class="txt"><b>${esc(s.saved)}</b><span>${esc(s.label)}</span>
-        <small>${s.day != null ? `day ${s.day} · ` : ""}${s.members} member${s.members === 1 ? "" : "s"} · ${s.wins} win${s.wins === 1 ? "" : "s"}</small></div>
+        <small>${s.day != null ? `${tr("title.day", {n: s.day})} · ` : ""}${trn("unit.member", s.members)} · ${trn("unit.win", s.wins)}</small></div>
       <div class="acts">${ask
-        ? `<span class="ask">Delete this save?</span><div class="pbtn danger" data-do="delete_save">Delete</div><div class="pbtn" data-do="cancel">Keep</div>`
-        : `<div class="pbtn go" data-do="load_save">Load</div>${s.kind === "current" ? "" : `<div class="pbtn danger" data-do="ask_save">Delete</div>`}`}</div></div>`;
+        ? `<span class="ask">${tr("title.ask_save")}</span><div class="pbtn danger" data-do="delete_save">${tr("title.delete")}</div><div class="pbtn" data-do="cancel">${tr("title.keep")}</div>`
+        : `<div class="pbtn go" data-do="load_save">${tr("title.load_btn")}</div>${s.kind === "current" ? "" : `<div class="pbtn danger" data-do="ask_save">${tr("title.delete")}</div>`}`}</div></div>`;
   }).join("");
-  $("page").innerHTML = `<div class="kicker">The saves of</div><h2>${esc(S.name)}</h2>
-    <div class="lead">Pick a moment to go back to. Loading it makes it the live state; every other save stays on the list.</div>
+  $("page").innerHTML = `<div class="kicker">${tr("title.saves_of")}</div><h2>${esc(S.name)}</h2>
+    <div class="lead">${tr("title.saves_note")}</div>
     <div class="rows">${rows}</div>
-    <div class="pagefoot"><div class="pbtn" data-do="guilds">Back to the guilds</div></div>`;
+    <div class="pagefoot"><div class="pbtn" data-do="guilds">${tr("title.back_guilds")}</div></div>`;
 }
 
 // ---------------------------------------------------------------- the whole screen

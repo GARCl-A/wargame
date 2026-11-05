@@ -19,7 +19,16 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from .. import combat_lab, persist, playtest_export, recorder, settings, sound, tutorial
+from .. import (
+    combat_lab,
+    i18n,
+    persist,
+    playtest_export,
+    recorder,
+    settings,
+    sound,
+    tutorial,
+)
 from ..combat_log import CombatLog
 from .battle_session import BattleSession
 from .guild_session import GuildSession
@@ -206,6 +215,8 @@ def make_handler(game):
             if parts == ["screen"] and not post:
                 return self._json({"screen": s.screen, "lab": game.lab is not None,
                                    "volume": settings.get("volume")})
+            if parts == ["locale"] and not post:
+                return self._json({"lang": i18n.language(), "text": i18n.group("ui")})
             if parts == ["sounds"] and not post:
                 return self._json({"cues": {cue: [f"/assets/sounds/{f}" for f in files]
                                             for cue, files in sound.CUES.items()},

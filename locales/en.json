@@ -352,5 +352,185 @@
       "heading": "Sounds",
       "intro": "The sound effects are by Kenney (www.kenney.nl), released under Creative Commons Zero (CC0). Credit is optional, and gladly given."
     }
+  },
+  "ui": {
+    "app": {
+      "title": "GARTOK Tactical"
+    },
+    "unit": {
+      "day": {
+        "one": "{n} day",
+        "other": "{n} days"
+      },
+      "pick": {
+        "one": "{n} pick",
+        "other": "{n} picks"
+      },
+      "member": {
+        "one": "{n} member",
+        "other": "{n} members"
+      },
+      "fight": {
+        "one": "{n} fight",
+        "other": "{n} fights"
+      },
+      "ration": {
+        "one": "{n} ration",
+        "other": "{n} rations"
+      },
+      "soul": {
+        "one": "{n} soul",
+        "other": "{n} souls"
+      },
+      "slot": {
+        "one": "{n} slot",
+        "other": "{n} slots"
+      },
+      "talent": {
+        "one": "{n} talent",
+        "other": "{n} talents"
+      },
+      "stack": {
+        "one": "{n} stack",
+        "other": "{n} stacks"
+      },
+      "win": {
+        "one": "{n} win",
+        "other": "{n} wins"
+      },
+      "save": {
+        "one": "{n} save",
+        "other": "{n} saves"
+      }
+    },
+    "tutorial": {
+      "notes": "The guild's notes",
+      "badge": "How this screen works"
+    },
+    "tip": {
+      "total": "Total"
+    },
+    "kit": {
+      "empty": "empty",
+      "open_sheet": "Open {name}'s sheet",
+      "worn": "Worn",
+      "nothing": "nothing carried",
+      "pack": "Pack",
+      "spread": "Distribute load",
+      "spread_tip": "Share the load out by what each can carry",
+      "purse": "Common purse",
+      "done": "Done"
+    },
+    "swift": {
+      "reading": "Reading the odds…",
+      "auto": "Auto-win · no XP",
+      "stomp": "Clean stomp {pct}%",
+      "tip_reading": "Fighting it headless to see whether it is a clean stomp",
+      "tip_auto": "All {runs} simulated fights were a clean stomp: settle this one at once, with no combat XP",
+      "tip_stomp": "{pct}% of {runs} simulated fights were a clean stomp: play this one"
+    },
+    "sheet": {
+      "close": "Close",
+      "rides": "Rides with {band}<br>at the {where}, {task}",
+      "kept_by": "Kept by {band}<br>at the {where}",
+      "age_align": "{age} years · {align}",
+      "attributes": "Attributes",
+      "hungry": "hungry: they count lower",
+      "in_fight": "In a fight",
+      "hp": "HIT POINTS",
+      "action": "ACTION",
+      "kit": "Kit",
+      "of_race": "Of the {race}",
+      "speaks": "Speaks",
+      "career": "Career",
+      "racial_level": "racial level {n}",
+      "talents": "Talents",
+      "talents_taken": "{n} taken",
+      "no_talents": "None taken yet.",
+      "record": "Record",
+      "body": "Body",
+      "spd": "SPD",
+      "nature": "Its nature",
+      "at_work": "At work"
+    },
+    "settings": {
+      "kicker": "Preferences · shared by every guild",
+      "title": "Settings",
+      "playtest": "Playtest",
+      "export": "Export playtest data",
+      "export_note": "One zip with the saves, the combat logs and the build, to send to the author.",
+      "export_btn": "Export",
+      "tutorial_of": "The tutorial of {guild}",
+      "this_guild": "this guild",
+      "cards": "Tutorial cards",
+      "cards_note": "The card each screen opens with the first time, kept with the guild's save.",
+      "on": "On",
+      "off": "Off",
+      "again": "Show them again",
+      "again_note": "Every card comes back, as if each screen were new.",
+      "again_btn": "Reset the cards",
+      "again_done": "Shown again",
+      "row": {
+        "chord_ms": {
+          "label": "Arrow chord",
+          "note": "How long the battle waits for a second arrow key to read a diagonal (pygame's keyboard)."
+        },
+        "record_play": {
+          "label": "Play recorder",
+          "note": "A day-by-day log of the play beside the saves; it starts with the next guild opened."
+        },
+        "volume": {
+          "label": "Volume",
+          "note": "The sounds of the fights, the buttons and the coins."
+        },
+        "log_lines": {
+          "label": "Log lines",
+          "note": ""
+        },
+        "language": {
+          "label": "Language",
+          "note": "The language of the game's text; changing it reloads the screen."
+        }
+      },
+      "value": {
+        "off": "Off",
+        "on": "On"
+      },
+      "unknown": "no setting called {name}",
+      "cannot_be": "{label} cannot be {value}",
+      "no_guild_tutorial": "the tutorials belong to a guild; open one first"
+    },
+    "title": {
+      "tagline": "A squad wargame · a sandbox guild",
+      "subtitle": "Tactical",
+      "foot_name": "Gartok Tactical",
+      "foot": "the lost RPG, rebuilt from its character generator",
+      "no_guild": "No guild yet",
+      "found": "Found a guild",
+      "found_note": "Draft three of the nine who answer the call, give them a name and a banner, and send them out.",
+      "found_end": "Most of them will not come back. That is how a guild in Gartok begins.",
+      "at": "At {place}",
+      "last_guild": "Last guild",
+      "saved": "saved {when}",
+      "more": "more",
+      "continue": "Continue",
+      "enter": "ENTER",
+      "day": "day {n}",
+      "last_played": "last played {when}",
+      "saves": "Saves",
+      "delete": "Delete",
+      "keep": "Keep",
+      "ask_world": "Delete this guild and every save?",
+      "ask_save": "Delete this save?",
+      "kept": "The guilds kept",
+      "load": "Load a guild",
+      "load_note": "Newest first. Continue picks up its live state; Saves goes back to an earlier moment.",
+      "none": "No guild has been founded yet.",
+      "back": "Back",
+      "load_btn": "Load",
+      "saves_of": "The saves of",
+      "saves_note": "Pick a moment to go back to. Loading it makes it the live state; every other save stays on the list.",
+      "back_guilds": "Back to the guilds"
+    }
   }
 }

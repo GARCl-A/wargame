@@ -39,6 +39,8 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   marked drop target, and an answer that is not ok plays the error cue. So a clickable element needs its
   cursor, `data-silent` keeps one quiet, and a screen plays only the cue its answer picks (`coins` when the
   purse moved, `level_up`), never `click`.
+- **Client text is a key:** a sentence a screen's script or HTML shows is `tr("ui.…")` / `data-t` (recipe in
+  `README.md`), never a literal; the sentences a session sends are keys of their own (phase 3 of the translation plan).
 - **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.
 - **What happened goes in the guild's log** (`Guild.log`, `guild_log.py`, shown in the map's right column): a
   rule or a screen that makes a line the player would want to reread (a meal, a haul, a fight, a deed) writes

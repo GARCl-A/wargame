@@ -3,8 +3,8 @@
 "use strict";
 
 const ico = (path, cls = "ico") => path ? `<span class="${cls} mask" style="--icon:url(/assets/icons/${path}.svg)"></span>` : "";
-const money = n => "$" + Number(n).toLocaleString("en-US");
-const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const money = n => "$" + Number(n).toLocaleString(Locale.lang);
+const plural = (n, w) => trn(`unit.${w}`, n);
 const sign = n => n >= 0 ? "+" + n : "−" + (-n);
 const kg = (q, w) => { const t = q * w; return t < 0.05 ? "—" : t.toFixed(1) + " kg"; };
 
@@ -45,7 +45,7 @@ const Kit = {
   // an empty worn slot when `it` has no name
   item(owner, it, loc, slot, {sel = false, tags = ""} = {}) {
     if (!it || !it.name)
-      return `<div class="it empty" data-owner="${owner}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(slot.label)}</span>empty</div><span></span><span></span></div>`;
+      return `<div class="it empty" data-owner="${owner}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(slot.label)}</span>${tr("kit.empty")}</div><span></span><span></span></div>`;
     const q = it.qty || 1;
     return `<div class="it ${it.coin ? "coin" : ""} ${sel ? "sel" : ""}" data-owner="${owner}" data-loc="${loc}" ${slot ? `data-zone="${slot.zone}"` : ""}${tip(it.tip, "item")}>
       ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(slot.label)}</span>` : ""}${esc(it.name)}${Kit.note(it)}${tags}</div>
@@ -59,18 +59,18 @@ const Kit = {
   // `row(p, it, loc, slot)` draws each item
   column(p, {add = 0, foot = "", voice = "", row}) {
     const head = p.store ? `<div class="med store">${ico(p.glyph)}</div>`
-      : `<div class="med ${p.hurt ? "hurt" : ""}" data-sheet="${p.id}"${tip(`Open ${p.name}'s sheet`)}>${face(p.portrait, p.name)}</div>`;
+      : `<div class="med ${p.hurt ? "hurt" : ""}" data-sheet="${p.id}"${tip(tr("kit.open_sheet", {name: p.name}))}>${face(p.portrait, p.name)}</div>`;
     const tight = p.kg > p.normal, over = p.kg + add > p.max;
     const pct = x => Math.min(100, x / p.max * 100).toFixed(1);
-    const worn = p.worn.length ? `<div class="psec lbl">Worn</div>` + p.worn.map(w => row(p, w.name ? w : null, w.zone, w)).join("") : "";
+    const worn = p.worn.length ? `<div class="psec lbl">${tr("kit.worn")}</div>` + p.worn.map(w => row(p, w.name ? w : null, w.zone, w)).join("") : "";
     const rows = p.pack.length ? p.pack.map(r => row(p, r, r.loc, null)).join("")
-      : `<div class="it empty"><span></span><div class="n">nothing carried</div><span></span><span></span></div>`;
+      : `<div class="it empty"><span></span><div class="n">${tr("kit.nothing")}</div><span></span><span></span></div>`;
     return `<div class="col pack" data-owner="${p.id}">
       <div class="chead">${head}<div style="min-width:0"><h3${tip(p.name)}>${esc(p.name)}</h3><div class="race">${esc(p.sub)}</div>${voice ? `<span class="voice">${esc(voice)}</span>` : ""}</div></div>
       <div class="cstat"><div class="money"><i class="coindot"></i>${p.money}</div>
         <div class="load ${over ? "over" : tight ? "tight" : ""}"><b>${(p.kg + add).toFixed(1)}</b> / ${p.max} kg</div></div>
       <div class="bar"><i class="${tight ? "tight" : ""}" style="width:${pct(p.kg)}%"></i>${add ? `<i class="add" style="width:${pct(add)}%"></i>` : ""}<em style="left:${pct(p.normal)}%"></em></div>
-      ${worn}<div class="psec lbl">Pack</div><div class="packlist">${rows}</div>
+      ${worn}<div class="psec lbl">${tr("kit.pack")}</div><div class="packlist">${rows}</div>
       ${foot ? `<div class="cfoot">${foot}</div>` : ""}</div>`;
   },
 
@@ -82,25 +82,24 @@ const Kit = {
     el.hidden = !sw;
     if (!sw) return;
     el.classList.toggle("off", !sw.eligible);
-    el.innerHTML = sw.computing ? "Reading the odds…" : sw.eligible ? "Auto-win · no XP" : `Clean stomp ${sw.pct}%`;
-    el.dataset.tip = sw.computing ? "Fighting it headless to see whether it is a clean stomp"
-      : sw.eligible ? `All ${sw.runs} simulated fights were a clean stomp: settle this one at once, with no combat XP`
-      : `${sw.pct}% of ${sw.runs} simulated fights were a clean stomp: play this one`;
+    el.innerHTML = sw.computing ? tr("swift.reading") : sw.eligible ? tr("swift.auto") : tr("swift.stomp", {pct: sw.pct});
+    el.dataset.tip = sw.computing ? tr("swift.tip_reading")
+      : sw.eligible ? tr("swift.tip_auto", {runs: sw.runs}) : tr("swift.tip_stomp", {pct: sw.pct, runs: sw.runs});
     if (sw.computing) Kit.swiftTimer = setTimeout(again, sw.poll);
   },
 
   // the button that shares a band's load out by what each can carry; the screen answers `#spread`
-  distribute: (cls = "ghost-btn") => `<div class="${cls}" id="spread"${tip("Share the load out by what each can carry")}>Distribute load</div>`,
+  distribute: (cls = "ghost-btn") => `<div class="${cls}" id="spread"${tip(tr("kit.spread_tip"))}>${tr("kit.spread")}</div>`,
 
   // the common purse across the bottom of a shop or a stash: the sum (and what it would be after `after`),
   // each holder's share, the Distribute button when `spread`, and Done
   purse({sum, after = null, bad = false, packs, spread = false}) {
     const shares = packs.filter(p => !p.store || p.money).map(p =>
       `<div class="share"><span>${esc(p.name.split(" ")[0])}</span><b>${p.money}</b></div>`).join("");
-    return `<div class="leather" id="purse"><div><div class="lbl">Common purse</div>
+    return `<div class="leather" id="purse"><div><div class="lbl">${tr("kit.purse")}</div>
       <div class="sum"><b>${money(sum)}</b>${after === null ? "" : `<s class="${bad ? "bad" : ""}">${money(after)}</s>`}</div></div>
       <div class="split">${shares}</div>${spread ? `<div class="tools">${Kit.distribute()}</div>` : ""}
-      <div class="brass-btn" id="done"><div>${ico("gui/exit-door")}<b>Done</b></div></div></div>`;
+      <div class="brass-btn" id="done"><div>${ico("gui/exit-door")}<b>${tr("kit.done")}</b></div></div></div>`;
   },
 };
 
@@ -123,7 +122,7 @@ const Tip = (() => {
     if (d.tipSum !== undefined) {
       const [head, ...rest] = d.tipSum.split("\n");
       return `<h4>${esc(head)}</h4><div class="sum">${rest.map(l => {
-        if (l.startsWith("= ")) return `<div class="tot"><span>Total</span><b>${esc(l.slice(2))}</b></div>`;
+        if (l.startsWith("= ")) return `<div class="tot"><span>${tr("tip.total")}</span><b>${esc(l.slice(2))}</b></div>`;
         const i = l.lastIndexOf(": ");
         return i < 0 ? `<div class="note">${esc(l)}</div>` : `<div><span>${esc(l.slice(0, i))}</span><b>${esc(l.slice(i + 2))}</b></div>`;
       }).join("")}</div>`;

@@ -16,7 +16,7 @@ async function post(verb, body = {}) {
   busy = true;
   try {
     const r = await api(`/api/settings/${verb}`, body);
-    if (r.screen && r.screen !== "settings") { location.reload(); return; }
+    if (r.screen && r.screen !== "settings" || body.key === "language") { location.reload(); return; }
     render(r);
   } catch (e) {
     toast(e.message);
@@ -35,15 +35,15 @@ function render(state) {
   $("rows").innerHTML = S.rows.map(r => `<div class="row" data-key="${r.key}"><div class="txt"><b>${esc(r.label)}</b><span>${esc(r.note)}</span></div>
     ${opts(r.choices, r.value, "data-value")}</div>`).join("");
   $("ver").textContent = S.version;
-  $("export").innerHTML = `<div class="kicker">Playtest</div>
-    <div class="row"><div class="txt"><b>Export playtest data</b><span>One zip with the saves, the combat logs and the build, to send to the author.</span></div>
-      <a class="pbtn" id="export-btn" href="/api/settings/export" download>Export</a></div>`;
+  $("export").innerHTML = `<div class="kicker">${tr("settings.playtest")}</div>
+    <div class="row"><div class="txt"><b>${tr("settings.export")}</b><span>${tr("settings.export_note")}</span></div>
+      <a class="pbtn" id="export-btn" href="/api/settings/export" download>${tr("settings.export_btn")}</a></div>`;
   const T = S.tutorial;
-  $("tut").innerHTML = T ? `<div class="kicker">The tutorial of ${esc(S.guild || "this guild")}</div>
-    <div class="row"><div class="txt"><b>Tutorial cards</b><span>The card each screen opens with the first time, kept with the guild's save.</span></div>
-      ${opts([{value: "on", label: "On"}, {value: "off", label: "Off"}], T.enabled ? "on" : "off", "data-tut")}</div>
-    <div class="row"><div class="txt"><b>Show them again</b><span>Every card comes back, as if each screen were new.</span></div>
-      <div class="pbtn ${T.reset ? "done" : ""}" id="reset">${T.reset ? "Shown again" : "Reset the cards"}</div></div>` : "";
+  $("tut").innerHTML = T ? `<div class="kicker">${tr("settings.tutorial_of", {guild: esc(S.guild || tr("settings.this_guild"))})}</div>
+    <div class="row"><div class="txt"><b>${tr("settings.cards")}</b><span>${tr("settings.cards_note")}</span></div>
+      ${opts([{value: "on", label: tr("settings.on")}, {value: "off", label: tr("settings.off")}], T.enabled ? "on" : "off", "data-tut")}</div>
+    <div class="row"><div class="txt"><b>${tr("settings.again")}</b><span>${tr("settings.again_note")}</span></div>
+      <div class="pbtn ${T.reset ? "done" : ""}" id="reset">${T.reset ? tr("settings.again_done") : tr("settings.again_btn")}</div></div>` : "";
 }
 
 document.addEventListener("click", e => {

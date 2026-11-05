@@ -8,21 +8,15 @@ from .. import i18n, settings
 from ..version import GAME_VERSION, build_hash
 from .session import Session
 
-NOTES = {
-    "chord_ms": "How long the battle waits for a second arrow key to read a diagonal (pygame's keyboard).",
-    "record_play": "A day-by-day log of the play beside the saves; it starts with the next guild opened.",
-    "volume": "The sounds of the fights, the buttons and the coins.",
-}
-
 
 def _shown(key, value):
     if key.endswith("_ms"):
         return f"{value} ms"
     if key == "volume":
-        return f"{value}%" if value else "Off"
+        return f"{value}%" if value else i18n.t("ui.settings.value.off")
     if key == "language":
         return i18n.LANGUAGES[value]
-    return str(value).title()
+    return i18n.t(f"ui.settings.value.{str(value).lower()}")
 
 
 class SettingsSession(Session):
@@ -44,10 +38,10 @@ class SettingsSession(Session):
 
     def set(self, key, value):
         if key not in settings.SPEC:
-            raise ValueError(f"no setting called {key}")
+            raise ValueError(i18n.t("ui.settings.unknown", name=key))
         choices = settings.SPEC[key][1]
         if value not in choices:
-            raise ValueError(f"{settings.SPEC[key][0].title()} cannot be {value}")
+            raise ValueError(i18n.t("ui.settings.cannot_be", label=i18n.t(f"ui.settings.row.{key}.label"), value=value))
         while settings.get(key) != value:
             settings.cycle(key)
         if key == "language":
@@ -56,7 +50,7 @@ class SettingsSession(Session):
 
     def _tutorial(self):
         if self.guild is None:
-            raise ValueError("the tutorials belong to a guild; open one first")
+            raise ValueError(i18n.t("ui.settings.no_guild_tutorial"))
         return self.guild.tutorial
 
     def toggle_tutorial(self):
@@ -72,9 +66,10 @@ class SettingsSession(Session):
         return self.state()
 
     def state(self):
-        rows = [{"key": k, "label": name.title(), "note": NOTES.get(k, ""), "value": settings.get(k),
+        rows = [{"key": k, "label": i18n.t(f"ui.settings.row.{k}.label"),
+                 "note": i18n.t(f"ui.settings.row.{k}.note"), "value": settings.get(k),
                  "choices": [{"value": v, "label": _shown(k, v)} for v in choices]}
-                for k, (name, choices, _) in settings.SPEC.items()]
+                for k, (_, choices, _) in settings.SPEC.items()]
         tut = None
         if self.guild is not None:
             tut = {"enabled": self.guild.tutorial.enabled, "reset": self.reset_note}

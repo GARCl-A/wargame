@@ -117,6 +117,16 @@ def placeholders(text):
     return {f for line in lines for _, f, _, _ in string.Formatter().parse(line) if f}
 
 
+def group(prefix):
+    """Every string under `prefix.` in the current language, `en` filling the gaps, keyed without the
+    prefix: the text the browser client asks for once, before it draws a screen."""
+    cut = len(prefix) + 1
+    out = {}
+    for lang in dict.fromkeys((DEFAULT_LANG, _lang)):
+        out.update({k[cut:]: v for k, v in _catalog(lang).items() if k.startswith(prefix + ".")})
+    return out
+
+
 def catalog(lang):
     """The flattened catalog of `lang` (a copy), for the parity tests and the audit."""
     return dict(_catalog(lang))
