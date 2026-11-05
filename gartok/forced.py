@@ -122,7 +122,7 @@ def road_ambush_catch(guild, group, prev_node, resume_path):
 
 
 def fortress_ambush_catch(guild, group, prev_node, resume_path):
-    """The trust mission's one-off ambush at Ledger Hold (`missions.pending_fortress_ambush`):
+    """The trust mission's one-off ambush at Field Command (`missions.pending_fortress_ambush`):
     bandits after the sealed chest. Marked done the moment it fires, win or lose, so it never
     springs twice on the same shipment."""
     if not world.node(group.node).has("ledger"):
@@ -340,8 +340,8 @@ def resolve_gather_ambush(guild, group, order, outcome):
 
 
 def resolve_supply_ambush(guild, group, order, outcome):
-    """A win walks the caravan on from where it stopped (the pay waits for Ledger Hold); a loss or
-    a flight leaves the group where the leg began -- Ledger Hold on the way out, the Outpost on the
+    """A win walks the caravan on from where it stopped (the pay waits for Field Command); a loss or
+    a flight leaves the group where the leg began -- Field Command on the way out, the Outpost on the
     way back -- with the cargo lost."""
     group.pending = None
     if group.empty:

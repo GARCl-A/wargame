@@ -1,4 +1,4 @@
-"""Ledger Hold's THE DESK in the browser: on leather the band here (who carries the Bankers' sealed chest),
+"""Field Command's THE DESK in the browser: on leather the band here (who carries the Bankers' sealed chest),
 on paper the desk's panels as `ledger.LedgerDesk.panels` lays them out: the chest to hand over, Commander
 Varkas's mentorship, the frontier supply run, or the gatehouse that turns the band away.
 

@@ -6,7 +6,7 @@ armies (`actions.RaiseDeadAction`, `actions.InvisibilityAction`). Nobody sees hi
 player reads where the dead rise from (the log names the cell, the ground stirs there) and
 finds him with a bump, an Investigate or a wound.
 
-Three sides on one big field at night: the guild and Ledger Hold's soldiers (`player`), the
+Three sides on one big field at night: the guild and Field Command's soldiers (`player`), the
 frontier warband (`enemy`, more than the soldiers) and the necromancer with his dead
 (`undead`, hostile to both). A few dead from the days before lie in no man's land
 (`fallen`, a side that never acts) so he has bodies from round one.
@@ -35,7 +35,7 @@ WARBAND = 8
 ZOMBIES = 4
 CORPSES = 6
 MIDFIELD = 6                           # the undead start this many columns either side of the centre
-WARBAND_ARMOR = "Studded Leather"      # the raiders come better armoured than Ledger Hold's line
+WARBAND_ARMOR = "Studded Leather"      # the raiders come better armoured than Field Command's line
 
 
 def build_zombies(level, rng=random):

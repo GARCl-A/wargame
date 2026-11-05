@@ -1,4 +1,4 @@
-// Ledger Hold's desk: the band here on leather (who carries the Bankers' chest or the letter), on paper the
+// Field Command's desk: the band here on leather (who carries the Bankers' chest or the letter), on paper the
 // desk's panels side by side: the chest to hand over, Commander Varkas's mentorship, the frontier supply run,
 // or the gatehouse. The supply run leaves for the map; the rest is done here and the tab stays up.
 "use strict";

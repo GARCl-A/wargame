@@ -244,7 +244,7 @@ NODES = [
          unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE, floor="earth"),
     Node("wilds", "The Wilds", "wilds", (0.91, 0.37),
          ErmosScenario, functions=("hunt",)),
-    Node("ledger_hold", "Ledger Hold", "town", (0.76, 0.73),
+    Node("ledger_hold", "Field Command", "town", (0.76, 0.73),
          fortress_scenario, functions=("ledger",),
          vendors={"ledger": Vendor("Commander Varkas", "Hobgoblin", "officer", "ledger_hold_officer.png")}),
     Node("frontier_outpost", "Frontier Outpost", "town", (0.90, 0.64)),

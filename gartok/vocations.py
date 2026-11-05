@@ -20,10 +20,10 @@ WARBAND, DELVERS, WILDS, SCHOLARS, CARAVAN, MARSH = (
 COHESION_BONUS = 1          # Warband: added to Mental Defense in the daily cohesion roll only
 GATHER_BONUS = 0.15         # Delvers: extra yield from gathering work
 NIGHT_PROWLER_AMBUSH = 0.8    # Catfolk Night Prowler: x on the ambush chance at night, while Cautious
-CAUTIOUS_AMBUSH = 0.8       # Wilds: x on the ambush chance while the group is Cautious
+CAUTIOUS_AMBUSH = 0.8       # Wanderers: x on the ambush chance while the group is Cautious
 TRAVEL_FACTOR = 0.85        # Caravan: x on travel hours, after wagon and animal speed
 PATHFINDER_FACTOR = 0.90    # a Pathfinder in the group: x on travel hours, stacks with Caravan
-FOOD_PAUSE_EVERY = 10       # Marsh: on every 10th day of the guild's clock no food ages
+FOOD_PAUSE_EVERY = 10       # Survivors: on every 10th day of the guild's clock no food ages
 INFO_BONUS = 2              # Scholars: bonus on the INT roll that reveals enemy info (the opening read and Assess)
 
 POOL_SIZE = 9
@@ -106,7 +106,7 @@ def night_mult(stance, prowler):
 
 def ambush_mult(guild, stance, scout=False, prowler=False):
     """The factor on a rolled ambush chance. *Normal* changes nothing; *Cautious*
-    is 1 on its own, x0.8 with the Wilds perk, x0.9 with a Woodland Scout and x0.8 at night
+    is 1 on its own, x0.8 with the Wanderers perk, x0.9 with a Woodland Scout and x0.8 at night
     with a Night Prowler, and they multiply."""
     if stance != CAUTIOUS:
         return 1.0

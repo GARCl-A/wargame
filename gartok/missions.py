@@ -100,7 +100,7 @@ TANNER_BIWOLF = MissionTemplate(
 
 # The Bankers' trust mission: accepting hands over a sealed chest
 # (`starting_item`) instead of asking the guild to gather anything; the
-# "goal" delivered back here is the letter Ledger Hold trades for it intact
+# "goal" delivered back here is the letter Field Command trades for it intact
 # (`ledger.py`) -- `turn_in`'s ordinary goal_item/goal_qty count works
 # unchanged, it just counts a letter instead of hides. No copper reward: the
 # point is the trust, not the pay (see factions.py's `bankers_trust` deed).
@@ -650,7 +650,7 @@ def mission_from_dict(d):
 
 
 def make_treefolk_recruit():
-    """Create the designated level 0 Treefolk recruit for the Ledger Hold mentorship quest."""
+    """Create the designated level 0 Treefolk recruit for the Field Command mentorship quest."""
     from . import names
     from .unit import Unit
     race_row = next(r for r in data.RACES if r[1] == "Treefolk")

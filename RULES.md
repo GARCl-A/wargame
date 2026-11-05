@@ -56,7 +56,7 @@ The generator's exact order:
 A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
 - The guild picks one **vocation** (`vocations.py`), once and for good: six races and one fixed perk that **the whole guild** has, whatever a member's race (the catalog is `REFERENCE.md` § Vocations). The draft pool of the chosen vocation always holds at least one candidate of each of its six races, the other three come from the natural race table (all 18 races); a commission replaces a card from that same natural table. What the catalog line leaves out: the Warband's +1 counts in the daily cohesion roll only, an overextended group's defence penalty is unchanged; the Delvers' +15% covers work-shift pay (the odd fraction of a coin is paid by chance) and the food of a hunt or forage, never a creature's drop (a wolf's hide); the Caravan's cut comes after wagon and animal speed; the Marsh counts the guild's own clock (`day % 10 == 0`).
 
-- **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers every ambush the player walks into: the Old Road leg (`forced.road_ambush_catch`), the hunt's hourly roll (`hunt.hunt_stretch`), a gathering shift (`Guild.gather_risk_mult`) and each leg of a supply run (`Guild.supply_leg`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wilds perk makes it x0.8 and the Elf's *Woodland Scout* x0.9 and the Catfolk's *Night Prowler* x0.8 (at night only: the clock when the roll is made), and they multiply (road 0.2 -> 0.144 with Wilds and Scout). The night is read off the clock at the roll: a hunt hour by hour (a long stretch can cross dusk), the road leg on arrival, a gathering shift when it ends, a supply leg when it sets out. *Cautious* costs nothing but the XP and loot of the fights it avoids.
+- **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers every ambush the player walks into: the Old Road leg (`forced.road_ambush_catch`), the hunt's hourly roll (`hunt.hunt_stretch`), a gathering shift (`Guild.gather_risk_mult`) and each leg of a supply run (`Guild.supply_leg`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wanderers perk makes it x0.8 and the Elf's *Woodland Scout* x0.9 and the Catfolk's *Night Prowler* x0.8 (at night only: the clock when the roll is made), and they multiply (road 0.2 -> 0.144 with Wanderers and Scout). The night is read off the clock at the roll: a hunt hour by hour (a long stretch can cross dusk), the road leg on arrival, a gathering shift when it ends, a supply leg when it sets out. *Cautious* costs nothing but the XP and loot of the fights it avoids.
 - The draft offers a **pool of 9 candidates**; the player keeps 3 of them as the starting squad (click to pick, click again to put one back, scroll to see all nine).
 - To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
 - Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) in the pool: the commission names the archetypes, then the player clicks the candidate it replaces with a fresh one that has them (a replaced pick leaves the squad; tokens are spent only when the replacement happens). The nine tags and their thresholds are `REFERENCE.md` § Squad archetypes. TOUGH is HP (8+, the hit die counts) and HEALTHY is CON +2 (it sets the HP a rest gives back, `guild_upkeep.rest_heal`): they are two tags on purpose. **RISKY** is the warning tag (CON 8 or less, the six attributes adding up to 56 or less, or a carry too low for the starting kit); a card says which reason it has, and it can be commissioned like the rest for a player who wants a hard start. The pick step's tutorial card lists every tag from the catalog.
@@ -1091,7 +1091,7 @@ this attacker still come?*
 | Ambushed at work | a lumber yard or Mine shift (`gather_shift`) | a pack off the site's table | talk or fight | opportunist |
 | The caravan is attacked | a supply run's leg (`supply_leg`) | frontier raiders | talk or fight | opportunist |
 | Ambush in the Wilds | an hour of a hunt (`hunt_stretch`) | a Wilds pack (the Ogre's goblins while his fortress stands) | fight | opportunist |
-| Ambushed at Ledger Hold | the trust mission, arriving with the sealed chest | bandits after the chest | talk or fight | determined |
+| Ambushed at Field Command | the trust mission, arriving with the sealed chest | bandits after the chest | talk or fight | determined |
 | The Biwolf | a hunt after dark with the tanner's job out and the meat in the pack | the Biwolf and his escort | fight | determined |
 | Stopped by the guard | a jurisdiction node, members carrying crime | the City guard | surrender, bluff, bribe, run back, fight | determined |
 | Raid on the house | arriving at a squatted property | the City guard | fight | determined |
@@ -1651,7 +1651,7 @@ when a non-arena faction grows a deed that needs it.
 becomes known once the guild enters one of its nodes (`Faction.nodes`; `Guild.meet_factions_at`, called
 on every arrival and by `settle`; saved as `met_factions`), and the arrival reports "You have found ...".
 A faction the guild already has standing with counts as known. The Library, Tanners, Apothecary and
-Ledger Hold own their own node; the Blood Cult, Nature Coven and Faith Order own their sanctuary.
+Field Command own their own node; the Blood Cult, Nature Coven and Faith Order own their sanctuary.
 
 > **A faction is an organisation, not a place.** It can hold ground across
 > several nodes. Reputation with it **only rises by completing *deeds*** — there
@@ -1680,18 +1680,18 @@ away is everyone's target.
 **Faction #2 — The Bankers (`bankers`).** The coin-keepers of the City; their deeds are in
 `REFERENCE.md`, and the last, **Earned Trust**, is the `bankers_trust_chest` mission (see *Missions*).
 
-**Ledger Hold** also has deeds: *Treefolk Mentorship* (train a Treefolk recruit to racial level 2 and
+**Field Command** also has deeds: *Treefolk Mentorship* (train a Treefolk recruit to racial level 2 and
 bring them) and *Frontier Supply Run*, the military deed: **10** completed supply runs. A run
 (`orders.supply_run`) needs 20 kg of free cargo capacity and is a **walk**: the group carries the
-supplies out to the Frontier Outpost and back to Ledger Hold, at its own pace (5 distance each way,
+supplies out to the Frontier Outpost and back to Field Command, at its own pace (5 distance each way,
 10 h for a walker), its pawn moving on the map. The pay is fixed per run, **$30** an escort (`economy.SUPPLY_RUN_PAY = 30`) and work
-XP of level 5 (as 10 h of work), banked on the return to Ledger Hold, so a faster group earns more an
+XP of level 5 (as 10 h of work), banked on the return to Field Command, so a faster group earns more an
 hour. **Each leg** (out, back) rolls a **35%** ambush (`economy.SUPPLY_RUN_AMBUSH_CHANCE = 0.35`, cut by the
-Wilds vocation and Woodland Scout like a road's): enemy soldiers stop the caravan part-way along the
+Wanderers vocation and Woodland Scout like a road's): enemy soldiers stop the caravan part-way along the
 road (a forced `supply_ambush`, talk first). They are **4-10** humanoids of level **3-8**, drawn from a
 bell leaning low (`encounters.level_weights`: headcount peak 6, level peak 4, spread 2), so about one
 soldier in eight is level 7-8. A win, a bribe or a bluff walks the caravan on from where it stopped;
-a loss routs it with the cargo lost, and the escort falls back to where the leg began (Ledger Hold on
+a loss routs it with the cargo lost, and the escort falls back to where the leg began (Field Command on
 the way out, the Outpost on the way back). Every completed run counts toward
 `Guild.supply_runs_completed`; the deed fires on the tenth.
 
@@ -1799,9 +1799,9 @@ instance of a given template can be active guild-wide at a time
 - **The Apothecary** (`job_board.ApothecaryBoard`, at the Apothecary node): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
 - **The Bankers' trust mission** (`job_board.TrustBoard` at the City,
-  `ledger.py` at Ledger Hold): hands the signer a sealed chest
+  `ledger.py` at Field Command): hands the signer a sealed chest
   (`data.MISSION_CHEST_ITEM`) instead of asking for a gathered item; the
-  "goal" is a letter of receipt, traded for the chest at Ledger Hold and
+  "goal" is a letter of receipt, traded for the chest at Field Command and
   carried back. Opening the sealed chest early — mistaking it for an
   ordinary locked one, see Crime below — fails the mission and marks the
   opener a criminal instead of paying out.
@@ -1902,9 +1902,9 @@ Taken alive, it is delivered from the group's captives (`MissionTemplate.goal_ca
 **Mercy at the Front** (`battlefield.py`, the Faith Order's errand). The Faith Cathedral sends its
 medicine to the border war: on accepting, the signer gets **6 Minor Healing Potions** (the first time
 only; a retry brings none). The group has **7 days** to reach **The Battlefield** (a public node past the
-**Frontier Outpost**, beyond Ledger Hold; the outpost does nothing yet) and **JOIN THE SKIRMISH**, which
+**Frontier Outpost**, beyond Field Command; the outpost does nothing yet) and **JOIN THE SKIRMISH**, which
 only the group carrying the errand sees. The field is two trenches (a parapet wall with gaps) and open
-ground between. Beside the squad, in its trench, stand **4 Ledger Hold soldiers** (`battlefield.SOLDIERS = 4`; Lawful and Good, a
+ground between. Beside the squad, in its trench, stand **4 Field Command soldiers** (`battlefield.SOLDIERS = 4`; Lawful and Good, a
 leather jerkin, **two levels under** the squad's mean, at least 0) who fight on the player's side but are
 played by the AI (green tokens); across the field, a **warband of 6** (`battlefield.WARBAND = 6`) mixed humanoids **one level over**.
 Lethal. Won with **every soldier alive**, the errand is done: +1 reputation with the Faith Order, and the

@@ -142,7 +142,7 @@ SUPPLY_START, SUPPLY_TURN ="ledger_hold", "frontier_outpost"
 
 
 def supply_route():
-    """The waypoints of a supply run after Ledger Hold: out to the Frontier Outpost and back."""
+    """The waypoints of a supply run after Field Command: out to the Frontier Outpost and back."""
     out, _ = world.route(SUPPLY_START, SUPPLY_TURN)
     back, _ = world.route(SUPPLY_TURN, SUPPLY_START)
     return out[1:] + back[1:]
@@ -156,8 +156,8 @@ def supply_hours(guild, group):
 
 
 def supply_run(guild, group):
-    """Order `group` to walk a Ledger Hold supply caravan to the Frontier Outpost and back
-    (`Guild.supply_leg` per leg). Needs Ledger Hold and `SUPPLY_RUN_CARGO_KG` of free cargo."""
+    """Order `group` to walk a Field Command supply caravan to the Frontier Outpost and back
+    (`Guild.supply_leg` per leg). Needs Field Command and `SUPPLY_RUN_CARGO_KG` of free cargo."""
     if group.node != SUPPLY_START:
         raise ValueError(i18n.t("orders.supply_runs_can_only_be", supply_start=SUPPLY_START, node=repr(group.node)))
     if group.free_cargo_capacity < economy.SUPPLY_RUN_CARGO_KG:

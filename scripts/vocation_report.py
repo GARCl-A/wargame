@@ -9,7 +9,7 @@ The wage `w` is the copper a member earns per day, at two points: early (the yar
 7 days of `w` (the weekly recruit pool is the time to replace it); a desertion adds what the
 unit's alignment lets it carry out (`cohesion.depart`), taken here as `--kit` copper.
 
-Not priced: the Wilds perk, because the travel stance makes it a choice and not a flow, and
+Not priced: the Wanderers perk, because the travel stance makes it a choice and not a flow, and
 Scholars, whose +2 on the read (`intel.py`) needs a fight-level measure, not copper a day. Shares the sim does not count yet (how much of a day is
 gathering or travelling, how much food rots) are arguments with a stated default.
 
@@ -55,7 +55,7 @@ def perks(w, a):
         "Warband": ("+1 MD in the cohesion roll", a.overextended * MD_STEP * walk),
         "Delvers": (f"+{a.delvers:.0%} gathering yield", a.delvers * a.size * w * a.gather),
         "Caravan": (f"-{a.caravan:.0%} travel time", a.caravan * a.size * w * a.travel),
-        "Marsh": (f"{a.marsh:.0%} of food rot avoided",
+        "Survivors": (f"{a.marsh:.0%} of food rot avoided",
                   a.marsh * a.size * eg.cheapest_food_price() * a.rot_share),
     }
 
@@ -84,7 +84,7 @@ def main():
                     help="share of the food the guild buys that rots before it is eaten")
     ap.add_argument("--delvers", type=float, default=vocations.GATHER_BONUS, help="Delvers' extra gathering yield")
     ap.add_argument("--caravan", type=float, default=1 - vocations.TRAVEL_FACTOR, help="Caravan's travel time saved")
-    ap.add_argument("--marsh", type=float, default=1 / vocations.FOOD_PAUSE_EVERY, help="Marsh's share of rot avoided")
+    ap.add_argument("--marsh", type=float, default=1 / vocations.FOOD_PAUSE_EVERY, help="Survivors' share of rot avoided")
     a = ap.parse_args()
 
     report("EARLY (yard wage)", yard_wage(), a)

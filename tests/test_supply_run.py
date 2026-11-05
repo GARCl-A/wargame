@@ -1,6 +1,6 @@
-"""The Ledger Hold supply run is a walk: out to the Frontier Outpost and back at the group's pace,
+"""The Field Command supply run is a walk: out to the Frontier Outpost and back at the group's pace,
 one ambush roll a leg, a fight stopping the caravan part-way along the road, the fixed pay on the
-return to Ledger Hold."""
+return to Field Command."""
 
 import random
 from types import SimpleNamespace
@@ -148,7 +148,7 @@ def test_routed_on_the_way_out_the_escort_is_back_at_ledger_hold():
     campaign.advance(g)
     events = forced.resolve_supply_ambush(g, grp, grp.pending, _lost())
     assert grp.node == "ledger_hold" and grp.order.kind == "idle"
-    assert "Ledger Hold" in events[0] and g.supply_runs_completed == 0
+    assert "Field Command" in events[0] and g.supply_runs_completed == 0
     assert [u.money for u in units] == before
 
 

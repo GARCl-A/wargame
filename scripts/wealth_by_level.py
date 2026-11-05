@@ -6,7 +6,7 @@ them climbs past racial level 1 in 200 days. So this follows one *career* over l
 activity rows (`economy_activities.build_tables`, real fights at each level) and three rows of
 its own that layer 1 has not got:
 
-  - the supply run (Ledger Hold -> Frontier Outpost and back): `SUPPLY_RUN_PAY`, work XP up to
+  - the supply run (Field Command -> Frontier Outpost and back): `SUPPLY_RUN_PAY`, work XP up to
     `SUPPLY_RUN_LEVEL`, an ambush roll per leg against real fights with
     `encounters.roll_supply_ambush`; a lost fight loses the cargo and the pay. The talk before
     the fight is not played: every ambush is fought.

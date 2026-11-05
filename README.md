@@ -108,7 +108,7 @@ gartok/
                     worker's tool and wage) and GATHERING (`GatherDesk`: the licence, what a shift is worth)
   stables.py        the Farm's stables and the Carpenter's wagon yard (`Stables`, `WagonYard`:
                     the purse, the herd limit, the tack, the resale)
-  ledger.py         Ledger Hold's desk (`LedgerDesk`: the chest, the mentorship, the supply run);
+  ledger.py         Field Command's desk (`LedgerDesk`: the chest, the mentorship, the supply run);
   job_board.py      each giver's jobs board (`Board`, `TannerBoard`, `ShrineBoard`, ...: the offers,
                     the signing, the turn-in and its notice)
   claim_desk.py     the Wilds Claim's work (`ClaimDesk`: scouting, the fences, the garrison, the hearth);
@@ -160,7 +160,7 @@ gartok/
   sources.py        where each base material comes from (derived base materials, a source each)
   gather.py         gathering at the Lumber Yard and the Mine: licence, drop tables, haul, ambush
   serpent_nest.py   the Snake Dragon job: the nest search off the Lumber Yard and its dark dungeon
-  battlefield.py    the Faith Order's errand: the border skirmish beside Ledger Hold's AI-played soldiers
+  battlefield.py    the Faith Order's errand: the border skirmish beside Field Command's AI-played soldiers
   necromancer.py    the Faith Order's second errand: three sides at the front and an invisible necromancer raising the dead
   wildfire.py       the Nature Coven's errand: the Ogre's wildfires, ethereal nodes that burn and spread
   fortress_scenario.py  the Ogre's half-raised fortress: walls, a spreading bonfire, won when he falls

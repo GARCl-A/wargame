@@ -121,7 +121,7 @@ GEM_ITEM = items.GEM_ITEM                   # what a chest holds; sellable, not 
 # The Bankers' trust mission (missions.py): a sealed chest that is NOT
 # data.BOX_OF_GEMS_ITEM on purpose -- opening this one early (chest.py's same roll)
 # fails the mission and marks the opener a criminal instead of quietly paying
-# out. LETTER_ITEM is what Ledger Hold hands back once it's exchanged intact.
+# out. LETTER_ITEM is what Field Command hands back once it's exchanged intact.
 MISSION_CHEST_ITEM = items.MISSION_CHEST_ITEM
 LETTER_ITEM = items.LETTER_ITEM
 CODEX_ITEM = items.CODEX_ITEM

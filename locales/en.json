@@ -207,12 +207,12 @@
     "trust": {
       "title": "A test of trust",
       "body": [
-        "The Bankers hand over a sealed chest to carry to Ledger Hold. Don't lose it, and don't open it.",
-        "At Ledger Hold you swap it for a letter of receipt; bring the letter back here to finish the job."
+        "The Bankers hand over a sealed chest to carry to Field Command. Don't lose it, and don't open it.",
+        "At Field Command you swap it for a letter of receipt; bring the letter back here to finish the job."
       ]
     },
     "ledger": {
-      "title": "Ledger Hold",
+      "title": "Field Command",
       "body": [
         "Whoever carries the Bankers' sealed chest hands it over here for a letter of receipt. Take the letter back to the Bankers in the City to finish the job."
       ]
@@ -579,7 +579,7 @@
       "here": "Here · {members}",
       "hint": "The Bankers' chest is handed over by whoever carries it.",
       "desk": "The Desk",
-      "place": "Ledger Hold",
+      "place": "Field Command",
       "foot": "The Bankers' outpost: their sealed chest is traded here for a letter of receipt, and the guild they vouch for may train a soldier and carry the front's supplies."
     },
     "medic": {
@@ -2863,7 +2863,7 @@
       "fortress": "STORM THE FORTRESS"
     },
     "lead": {
-      "battlefield": "Four Ledger Hold soldiers hold the trenches against a warband. If one of them dies, the errand fails.",
+      "battlefield": "Four Field Command soldiers hold the trenches against a warband. If one of them dies, the errand fails.",
       "necromancer": "The Battlefield at night: a warband, the dead of days before, and the necromancer unseen among them.",
       "camp": "The Ogre's goblins feed the fire from their camp.",
       "fortress": "The Ogre's half-raised fortress, its bonfire spreading, and the Ogre inside."
@@ -3175,7 +3175,7 @@
       "library": "The Library",
       "tanners": "The Tanners",
       "apothecary": "The Apothecary",
-      "ledger_hold": "Ledger Hold",
+      "ledger_hold": "Field Command",
       "blood_cult": "The Blood Cult",
       "nature_coven": "The Nature Coven",
       "faith_order": "The Faith Order"
@@ -3213,10 +3213,10 @@
     "vocation": {
       "warband": "Warband",
       "delvers": "Delvers",
-      "wilds": "Wilds",
+      "wilds": "Wanderers",
       "scholars": "Scholars",
       "caravan": "Caravan",
-      "marsh": "Marsh"
+      "marsh": "Survivors"
     },
     "item": {
       "Dagger": "Dagger",
@@ -3413,7 +3413,7 @@
       "prison": "Prison",
       "road": "Old Road",
       "wilds": "The Wilds",
-      "ledger_hold": "Ledger Hold",
+      "ledger_hold": "Field Command",
       "frontier_outpost": "Frontier Outpost",
       "battlefield": "The Battlefield",
       "wilds_territory": "The Claim",
@@ -3568,7 +3568,7 @@
     "keeper_weighs_egg_in_both": "the keeper weighs the egg in both hands and pays {name} ${SHRINE_EGG_PRICE}.",
     "carry_bring_back_deadline_days": "carry: {starting_item}  ·  bring back: {goal_item}  ·  deadline: {deadline_days} days",
     "in_hand_day_s_left": "{goal_item} in hand  ·  {days_left} day(s) left",
-    "carrying_sealed_chest_to_ledger": "carrying the sealed chest to Ledger Hold  ·  {days_left} day(s) left",
+    "carrying_sealed_chest_to_ledger": "carrying the sealed chest to Field Command  ·  {days_left} day(s) left",
     "turn_in_letter": "TURN IN THE LETTER",
     "not_back_yet": "NOT BACK YET",
     "retry_in": {
@@ -3770,7 +3770,7 @@
     "deliver_recruit": "Deliver the recruit",
     "is_in_another_group_bring": "{name} is in another group: bring them here to hand over",
     "treefolk_soldier_serves_with_honour": "the Treefolk soldier serves with honour",
-    "ledger_hold_stands_open_to": "Ledger Hold stands open to the guild",
+    "ledger_hold_stands_open_to": "Field Command stands open to the guild",
     "garrison_mentorship": "Garrison Mentorship",
     "commander_varkas": "Commander Varkas",
     "frontier_supply_run": "Frontier Supply Run",
@@ -4860,7 +4860,7 @@
     "pack_finds_at_work": "{name}: a pack finds {display_name} at work.",
     "had_no_stood_guard_no": "{join} had no {tool}: stood guard, no haul and no work XP.",
     "gathered_h": "{name}: gathered {hours} h ({join}).",
-    "ledger_hold_completed_frontier_supply": "Ledger Hold: {names} completed the frontier supply run ({wage}).",
+    "ledger_hold_completed_frontier_supply": "Field Command: {names} completed the frontier supply run ({wage}).",
     "nobody_here_has_instrument_to": "Nobody here has an instrument to play.",
     "tavern_stage_played_h": "Tavern stage: played {hours} h ({tips}).",
     "unknown_recipe": "Unknown recipe {recipe}.",
@@ -5115,7 +5115,7 @@
     "gathering_lv_licence_and_your": "{place} gathering (Lv {level}: the licence and your own {tool})",
     "tavern_stage_with_musical_instrument": "Tavern stage (with a Musical Instrument)",
     "hunting_lv_in_wilds": "Hunting (Lv 3 in Wilds)",
-    "frontier_supply_run_lv_at": "Frontier Supply Run (Lv 5 at Ledger Hold)",
+    "frontier_supply_run_lv_at": "Frontier Supply Run (Lv 5 at Field Command)",
     "dictionaries": "{dict_count} Dictionaries",
     "crafting_lv": "Crafting (Lv {lvl}: {label})"
   },
@@ -5512,7 +5512,7 @@
       "ox_hunt": "read the ground by daylight, one Wisdom check an hour  ·  a found trail is a lethal fight",
       "shrine": "a hidden seat of one of the three magic schools",
       "ancient_ruins": "Delve into the sunken library chambers (Lethal tactical battle)",
-      "skirmish": "fight beside Ledger Hold's soldiers, played by the AI  ·  lethal",
+      "skirmish": "fight beside Field Command's soldiers, played by the AI  ·  lethal",
       "camp_fight": "a goblin crew and its Hobgoblin foreman, by the fire  ·  lethal",
       "ogre_fight": "the Ogre and his goblins among the walls, the bonfire spreading  ·  lethal",
       "serpents_nest": "five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal",
@@ -5522,7 +5522,7 @@
       "tanner_hides": "The tanner wants 15 sqm of hide off anything with fur. The Wilds is thick with it, if you can bring down what's wearing it.",
       "tanner_biwolf": "The tanner has heard of a wolf the size of a cart that hunts the Wilds by night. It follows the smell of meat -- hunt after dark with fifteen portions in your packs and it will find you, and its pack with it. Bring me its leather.",
       "tanner_ox": "The tanner tells of Aurochs, an ox that has outlived every hunter sent after it, grazing the fertile fields south of the farm. Its hide is the finest there is. Bring it to me and I will teach you what the horn is good for.",
-      "bankers_trust_chest": "The Bankers want proof the guild can be trusted with something precious before they'll vouch for it: carry a sealed chest to their outpost at Ledger Hold, safe, and bring back their letter of receipt. Don't peek.",
+      "bankers_trust_chest": "The Bankers want proof the guild can be trusted with something precious before they'll vouch for it: carry a sealed chest to their outpost at Field Command, safe, and bring back their letter of receipt. Don't peek.",
       "apothecary_mushrooms": "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
       "library_dictionary": "The library wants a dictionary to expand its archives. Dictionaries currently in our shop catalog will not be accepted: write one on the WRITE tab, in a tongue someone in your group speaks, with Paper and Ink.",
       "library_ancient_codex": "Legends speak of an ancient subterranean library buried off the Old Road. Delve into the forgotten ruins and retrieve the Ancient Codex.",
@@ -5531,11 +5531,11 @@
       "faith_codex": "The cathedral asks for the Ancient Codex. There is only one: entrust it to us, and the other schools will never read it.",
       "blood_snake": "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. Bring us its body: the blood is read in the flesh, and the cult would read it.",
       "nature_snake": "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. Something has twisted it, a curse perhaps. Bring it to us alive, bound with rope or chain, and the grove will tend it.",
-      "faith_battlefield": "The cathedral sends its medicine where the dying are -- the first time it asks, six potions go with you. Go to the Battlefield past Ledger Hold's frontier outpost and fight beside the soldiers there. Win the skirmish, and bring every one of them through alive.",
+      "faith_battlefield": "The cathedral sends its medicine where the dying are -- the first time it asks, six potions go with you. Go to the Battlefield past Field Command's frontier outpost and fight beside the soldiers there. Win the skirmish, and bring every one of them through alive.",
       "faith_necromancer": "The soldiers who fell at the Battlefield do not stay dead: days later they get up and walk. Someone out there is raising them, and nobody has seen who. Go to the front, find whoever wakes the dead, and put them down.",
       "nature_wildfire": "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn the forest to do it -- badly. Every fire they set runs wild. Teach them, or stop them, and put the fires out before they spread. The Ogre is at the heart of it.",
       "blood_clutch": "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on its clutch. Search the deep galleries, go down, and bring us one of its eggs -- the bloodline itself, unhatched. Whatever else you carry out of there is yours.",
-      "ledger_treefolk": "Commander Varkas of Ledger Hold entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison."
+      "ledger_treefolk": "Commander Varkas of Field Command entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison."
     },
     "faction": {
       "arena": "The staked bouts in the cellars under the city. Win, and be known.",
@@ -5559,14 +5559,14 @@
       "bankers_good_for_business": "Complete an economic job in the City.",
       "bankers_steady_customer": "Spend 1000 copper at the market.",
       "bankers_diverse_portfolio": "Sell 5 different kinds of goods to the market.",
-      "bankers_trust": "Carry the Bankers' trust all the way to Ledger Hold and back.",
+      "bankers_trust": "Carry the Bankers' trust all the way to Field Command and back.",
       "tanners_hides": "Bring the tanner fifteen hides.",
       "tanners_biwolf": "Bring the tanner the leather of the Biwolf.",
       "tanners_ox": "Bring the tanner the hide of Aurochs, the immortal ox.",
       "library_initiate": "Complete a task for the library.",
       "library_trusted": "Complete a second task for the library.",
       "apothecary_mushrooms": "Bring the apothecary fifteen red mushrooms.",
-      "ledger_hold_mentoring": "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.",
+      "ledger_hold_mentoring": "Train a designated Treefolk recruit to racial level 2 and deliver them to Field Command.",
       "blood_codex": "Bring the Ancient Codex to the Blood Sanctuary.",
       "nature_codex": "Bring the Ancient Codex to the Nature Grove.",
       "faith_codex": "Bring the Ancient Codex to the Faith Cathedral.",
@@ -5593,15 +5593,15 @@
       "road": "A dirt track cutting across the open country to the east.",
       "wilds": "Open ground under the sky, outside the walls. Hunt it for meat -- and risk what else hunts here.",
       "ledger_hold": "A fortified counting-house the Bankers keep well outside the walls -- armed, and used to precious cargo.",
-      "frontier_outpost": "A palisade at the edge of the march, where Ledger Hold's caravans end and its soldiers take over. Nothing for hire here -- the war is one road further.",
-      "battlefield": "Two lines of trenches and churned ground between them, where the border war is fought. Ledger Hold holds the near trench.",
+      "frontier_outpost": "A palisade at the edge of the march, where Field Command's caravans end and its soldiers take over. Nothing for hire here -- the war is one road further.",
+      "battlefield": "Two lines of trenches and churned ground between them, where the border war is fought. Field Command holds the near trench.",
       "wilds_territory": "A stretch of the Wilds the guild means to make its own -- if it can clear it, fence it, and hold it.",
       "library": "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
       "farm": "A farmstead beyond the walls. It sells what the fields give and keeps the stables: the animals that carry and pull, and their tack.",
       "ancient_ruins": "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
       "blood_sanctuary": "A sunken chapel under the ruins' spires, its floor stained dark. The blood mages keep it.",
       "nature_grove": "A ring of old trees deep in the Wilds where no path leads. The nature mages keep it.",
-      "faith_cathedral": "A white-stone cathedral in the hills behind Ledger Hold. The faith mages keep it.",
+      "faith_cathedral": "A white-stone cathedral in the hills behind Field Command. The faith mages keep it.",
       "serpents_nest": "A split in the rock below the Lumber Yard, hung with shed skins. Snakes den here, and something older than snakes.",
       "dragon_lair": "Past where the miners stopped, the galleries run hot and smell of sulphur and old gold. Kobolds walk the dark here, and something vast sleeps below.",
       "country_roads": "Dirt lanes between the farmsteads south of the city. Quiet, and wide open.",

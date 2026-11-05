@@ -158,7 +158,7 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
     if worker_level <= 3:
         activities.append(i18n.t("progression.hunting_lv_in_wilds"))
 
-    # Frontier Supply Run at Ledger Hold
+    # Frontier Supply Run at Field Command
     if worker_level <= 5:
         activities.append(i18n.t("progression.frontier_supply_run_lv_at"))
 

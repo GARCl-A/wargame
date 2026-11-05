@@ -2,7 +2,7 @@
 // (shop.js), and so do a work node's shifts (labor.js), the Medic (medic.js), a jobs board (jobs.js), a
 // workbench (craft.js), the stables, wagon yard and the house's garage (stables.js), the Tavern (tavern.js),
 // a sanctuary's initiation (initiation.js), the Bank's strongbox and the house's stash (vault.js), the
-// Wilds Claim's stages (claim.js), Ledger Hold's desk (ledger.js); the Bankers' repossession notice stands in
+// Wilds Claim's stages (claim.js), Field Command's desk (ledger.js); the Bankers' repossession notice stands in
 // for the house's tabs. A tab the browser does not draw yet is a note on paper. Every verb answers the whole hub.
 "use strict";
 

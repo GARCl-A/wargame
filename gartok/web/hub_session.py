@@ -5,7 +5,7 @@ recipes (`craft_tab`), the Farm its stables and the Carpenter its wagon yard (`s
 recruits, study rooms and stage (`tavern_tab`), the City Prison its cells (`tavern_tab` with a bail), a
 sanctuary its initiation (`initiation_tab`), the Bank its strongbox (`vault_tab`) beside the Bankers' jobs, the
 City house its stash (`vault_tab` again), its kitchen (`craft_tab`) and its garage (`garage_tab`), the Wilds
-Claim its stages (`claim_tab`) with the same kitchen and garage, Ledger Hold its desk (`ledger_tab`), and a
+Claim its stages (`claim_tab`) with the same kitchen and garage, Field Command its desk (`ledger_tab`), and a
 band's campfire in the field the same kitchen; a tab the browser does not draw says so inside the frame.
 """
 
@@ -395,7 +395,7 @@ class HubSession(Session):
         return self._tab("ledger", "_ledger", LedgerTab)
 
     def ledger_act(self, key):
-        """A button on Ledger Hold's desk: the supply run sends the band off on its order, back to the map where
+        """A button on Field Command's desk: the supply run sends the band off on its order, back to the map where
         the clock runs; the rest is done here and the tab stays up."""
         self.desk.act(key)
         m = self.map

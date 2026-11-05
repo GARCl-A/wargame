@@ -420,7 +420,7 @@
 .cacts .brass-btn b{margin:0}
 .cacts+.sec.dark{margin-top:30px}
 
-/* ---------- Ledger Hold's desk: its panels side by side on paper ---------- */
+/* ---------- Field Command's desk: its panels side by side on paper ---------- */
 .desks{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:30px;margin-top:22px;padding-top:4px;border-top:1px solid rgba(90,60,30,.45)}
 .desk{display:flex;flex-direction:column;padding-top:16px}
 .desk h3{font:700 21px/1 Cinzel,serif;color:#24170c;letter-spacing:.04em}

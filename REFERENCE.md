@@ -121,10 +121,10 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 |---|---|---|
 | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll: fewer walk-outs from an overextended group. |
 | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering: work shifts, and the meat, mushrooms and fruit of a hunt or forage. |
-| Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | Ambushes are 20% less likely while a group travels Cautious: on the Old Road and on a hunt. |
+| Wanderers | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | Ambushes are 20% less likely while a group travels Cautious: on the Old Road and on a hunt. |
 | Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information: the opening read and Assess. |
 | Caravan | Human, Halfling, Dwarf, Catfolk, Automaton, Centaur | Travel takes 15% fewer hours. |
-| Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | On every 10th day no food in the guild ages. |
+| Survivors | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | On every 10th day no food in the guild ages. |
 
 ## Weapons
 
@@ -558,7 +558,7 @@ The coin-keepers of the city. They rent strongboxes and trade in property.
 | Good for Business | Complete an economic job in the City. | +1 | -- |
 | Steady Customer | Spend 1000 copper at the market. | +1 | -- |
 | Diverse Portfolio | Sell 5 different kinds of goods to the market. | +1 | -- |
-| Earned Trust | Carry the Bankers' trust all the way to Ledger Hold and back. | +1 | -- |
+| Earned Trust | Carry the Bankers' trust all the way to Field Command and back. | +1 | -- |
 
 ### The Library
 
@@ -587,13 +587,13 @@ Herbalists and alchemists of the city. They brew remedies and trade in rare reag
 |---|---|---|---|
 | Fifteen Red Mushrooms | Bring the apothecary fifteen red mushrooms. | +1 | -- |
 
-### Ledger Hold
+### Field Command
 
 The fortified garrison of the march. They train soldiers and hold the border.
 
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|
-| Treefolk Mentorship | Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold. | +1 | -- |
+| Treefolk Mentorship | Train a designated Treefolk recruit to racial level 2 and deliver them to Field Command. | +1 | -- |
 | Frontier Supply Run | Successfully complete 10 military supply caravan runs to the frontier outpost. | +1 | -- |
 
 ### The Blood Cult

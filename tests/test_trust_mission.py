@@ -1,5 +1,5 @@
 """The Bankers' trust mission (Sistema 4): accept hands over the sealed chest,
-Ledger Hold's fortress ambush fires exactly once for that shipment, the
+Field Command's fortress ambush fires exactly once for that shipment, the
 exchange trades chest for letter, and turning the letter in at the City
 closes the arc's 4th deed once the three economic ones are already banked."""
 
@@ -45,7 +45,7 @@ def test_the_fortress_ambush_never_fires_before_ledger_hold():
     """Regression: the ambush check used to skip the node entirely and could
     fire the moment the mission was active and the chest was in hand --
     including at the very node it was accepted at, or at any waypoint along
-    the way. It must only ever hit at Ledger Hold itself. 'road' is also
+    the way. It must only ever hit at Field Command itself. 'road' is also
     `unsafe` on its own (Sistema 2) -- zeroed out here so only the fortress
     check (or lack of it) is under test."""
     orig_chance, world.ROAD_AMBUSH_CHANCE = world.ROAD_AMBUSH_CHANCE, 0.0

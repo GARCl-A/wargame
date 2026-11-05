@@ -55,7 +55,7 @@ the rest.
   `REJECTED_LABEL`) even though the bar is per recruiter (`recruit.bar`). Show the label only when nobody
   in the group can try, and name who can. Test: two recruiters, one barred.
 
-- **Bug: the Ledger Hold training errand has no "!" and sits in the wrong tab (playtest 2026-11-02).**
+- **Bug: the Field Command training errand has no "!" and sits in the wrong tab (playtest 2026-11-02).**
   "Train a designated Treefolk recruit..." (`factions.py`) does not raise the exclamation mark on the map
   and is listed with the supply run under *Work*; it belongs to *Jobs*. Test: the mark and the tab.
 
@@ -356,7 +356,7 @@ needs a fight rebuilt.
 ## 2026-11-01
 
 - **Vocations: difficulty or build? (author 2026-11-01).** Vocations stay and get more investment (author
-  2026-11-04). Is playing Marsh objectively worse than Caravan? Either flag it to the player ("risky" and
+  2026-11-04). Is playing Survivors objectively worse than Caravan? Either flag it to the player ("risky" and
   the like), or balance them to be equally desirable. Either way the game needs a way to test the vocations' balance (`balance_sim.py`,
   `economy_sim.py`; see *Vocations are far apart* under 2026-10-31).
 - **The AI over-uses two things.** It stabilises allies (it loses turns and fights) and it pushes then
@@ -396,7 +396,7 @@ items it touches. Raw feedback, not yet sized:
   strongest race; the author says Orc and Goliath are, and the game does not show it. Show what a race gives
   in plain words at the pick, and see the vocation balance below.
 - **Vocations are far apart** (author): Delvers and Caravan ahead; Warband fine for Orc / Goliath; Scholars
-  for the races that cast early; Wilds and Marsh weak. Rework or balance with the vocation probation in
+  for the races that cast early; Wanderers and Survivors weak. Rework or balance with the vocation probation in
   *Loyalty, the oath...*; each perk should act on a daily loop. **Not validated** (author 2026-10-31: these
   are impressions, not measured). Check them first with `balance_sim.py` / `economy_sim.py` /
   `scripts/economy_report.py`: vocation ranking, and whether Orc (does not fall) and Goliath (carries
@@ -455,9 +455,9 @@ has one "Enter" button and its functions are tabs inside.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 - **The Battlefield beyond the Faith mission.** For now its only use is the Faith Order's errands, and it
-  stays that way (author 2026-10-17). Later it becomes one more place of Ledger Hold work and missions: what
+  stays that way (author 2026-10-17). Later it becomes one more place of Field Command work and missions: what
   an open skirmish pays, how often the front has a fight. The supply run's walked order with an ambush
-  part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse. Ledger Hold would then have two jobs,
+  part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse. Field Command would then have two jobs,
   the supply run and the front itself (author 2026-10-30): the player enlists as reinforcement, is paid to
   arrive and to fight in the skirmish already under way, and the job is to win it. That is not a walked
   order with an ambush: the battle is the job, so it needs its own order kind.
@@ -603,7 +603,7 @@ has one "Enter" button and its functions are tabs inside.
   Decided: cooking is an ordinary craft; a premium dish gives a 24 h buff that moves one number (HP, an
   attribute, advantage on a named kind of action...), and only the most recent meal's buff is active.
   Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
-  the one price of a meal). Marsh's slower rot is priced low until this lands.
+  the one price of a meal). Survivors's slower rot is priced low until this lands.
   - **A use for Rotten Food (author 2026-11-01).** Today it is worthless (`price=0`) and a keeper bins
     it. Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the
     farm patch comes up.

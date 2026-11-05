@@ -307,7 +307,7 @@ class ShrineBoard(Board):
 
 class TrustBoard(Board):
     """The Bankers' test of trust: accepting hands the signer a sealed chest
-    (`missions.TRUST_CHEST.starting_item`); the goal is the letter of receipt Ledger Hold
+    (`missions.TRUST_CHEST.starting_item`); the goal is the letter of receipt Field Command
     (`ledger.py`) trades for it once the band gets there safely."""
     TEMPLATE = missions.TRUST_CHEST
     accept_label = "job_board.accept_trust"

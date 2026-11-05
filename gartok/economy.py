@@ -49,7 +49,7 @@ PERFORM_LEVEL = 1                       # activity level: work-XP stops once you
 PERFORM_TIP_BASE = 16
 PERFORM_TIP_STEP = 2
 
-# Ledger Hold military frontier supply runs
+# Field Command military frontier supply runs
 SUPPLY_RUN_HOURS = 10                   # the work XP a run banks, as hours (the walk at a person's pace)
 SUPPLY_RUN_PAY = 30                     # copper per member a run, however fast the group walks it
 SUPPLY_RUN_LEVEL = 5                    # work activity level 5 (grants work XP up to level 5)

@@ -216,7 +216,7 @@ _DEEDS = [
     Deed("apothecary_mushrooms", "apothecary", rep=1,
          check=lambda g, e: e.kind == "mission" and ("apothecary" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "apothecary")),
 
-    # Ledger Hold deeds
+    # Field Command deeds
     Deed("ledger_hold_mentoring", "ledger_hold", rep=1,
          check=lambda g, e: e.kind == "mission" and ("ledger_hold" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "ledger_hold")),
     # One Codex exists, so it goes to one school; one Snake Dragon, dead or alive.

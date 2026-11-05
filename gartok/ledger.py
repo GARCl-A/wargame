@@ -1,4 +1,4 @@
-"""Ledger Hold's desk, with no window: the Bankers' fortified outpost where the trust mission's sealed chest
+"""Field Command's desk, with no window: the Bankers' fortified outpost where the trust mission's sealed chest
 (`data.MISSION_CHEST_ITEM`) is traded, intact, for a letter of receipt (`data.LETTER_ITEM`) -- the thing
 `missions.turn_in` actually counts back at the City (`trust_screen.py`). No progress bar, no goal_qty --
 either someone in the group is carrying the chest, or there is nothing to hand over. Once the Bankers vouch

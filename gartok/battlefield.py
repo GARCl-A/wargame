@@ -1,4 +1,4 @@
-"""The Battlefield: the border war past Ledger Hold's frontier outpost.
+"""The Battlefield: the border war past Field Command's frontier outpost.
 
 A known node from the start, but for now its only fight is the Faith Order's errand
 (`missions.FAITH_BATTLEFIELD`): the group joins a skirmish beside a squad of Ledger
@@ -35,7 +35,7 @@ GAP_EVERY = 6                          # a two-cell gap in the parapet every thi
 
 
 def build_soldiers(level, rng=random):
-    """Ledger Hold's line: `SOLDIERS` humanoids `SOLDIER_GAP` levels under `level`, lawful
+    """Field Command's line: `SOLDIERS` humanoids `SOLDIER_GAP` levels under `level`, lawful
     and good, in a leather jerkin where it fits."""
     out = []
     for _ in range(SOLDIERS):

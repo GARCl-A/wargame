@@ -627,7 +627,7 @@ def test_eligible_work_activities():
     assert any("Crafting" in j for j in jobs_4)
     assert any("Signal Horn" in j for j in jobs_4)
 
-    # Level 5: Frontier Supply Run at Ledger Hold
+    # Level 5: Frontier Supply Run at Field Command
     jobs_5 = progression.eligible_work_activities(5, u)
     assert any("Frontier Supply Run" in j for j in jobs_5)
 
