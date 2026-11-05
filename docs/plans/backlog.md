@@ -31,7 +31,7 @@ combat presentation and the hub kit are done. Left:
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
 - **Translation to pt-br** (Large). The game is all English and the friends' playtest is in Portuguese: do it
-  before the build goes out. Plan, phases and open decisions: [translation_pt_br.md](translation_pt_br.md).
+  before the build goes out. Plan, phases and open decisions: [translation_pt_br.md](translation_pt_br.md); the term list: [glossary_pt_br.md](glossary_pt_br.md).
   The translation must be COMPLETE before the next playtest (author 2026-11-04): every phase, not a slice.
 - **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
 - The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02

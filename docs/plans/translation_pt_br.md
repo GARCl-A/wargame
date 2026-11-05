@@ -1,7 +1,7 @@
 # Plan — Brazilian Portuguese translation (`pt-br`)
 
 Goal: the whole game playable in `pt-br`, chosen in Settings, with English still the default and the
-fallback. Status: **phases 1-5 done** (2026-11-05; each phase's deliberate limits are listed under it); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
+fallback. Status: **phases 1-5 done** (2026-11-05; each phase's deliberate limits are listed under it), **phase 6 started** (the `ui` group is in `pt-br.json`); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
 all six phases (see [backlog.md](backlog.md)).
 
 Sizes below come from greps (2026-11-04), not from reading each module: re-count at the start of each phase.
@@ -141,10 +141,26 @@ decided talk that is reloaded reads in the language it was rolled in); an ambush
 ### 6. Translate and review
 
 Fill `pt-br.json`. The text is written in Portuguese sentence by sentence, with the game's context and an
-author-approved glossary of its terms (Takedown, Grab, Brutal...) first; never machine translation, and no
+author-approved glossary of its terms ([glossary_pt_br.md](glossary_pt_br.md): Takedown, Grab, Brutal...) first; never machine translation, and no
 translation service runs in the game. Then the author reads it in play, as with the tutorial cards.
-Check: overflow on long strings (Portuguese runs ~20–30% longer: the overflow items in the backlog apply),
+Check: overflow on long strings (Portuguese runs ~20-30% longer: the overflow items in the backlog apply),
 accents and the font's glyph coverage (ç, ã, õ, é…), sort order, number and money formats.
+
+Started (2026-11-05): the whole `ui` group (1,373 keys) is translated; the author has not read it in play yet, so its tone is
+unconfirmed. The rest falls back to English, so every screen still shows English where its group is missing (the title quote and
+menu, "Back to title", ...). Left, 3,203 keys by size (re-count with a key diff of `en.json` against `pt-br.json`):
+`name` 531 and `desc` 331 (catalog: items, talents, races, nodes, vocations, missions...), `log` 278 and `action` 224 (combat), then the
+session groups (`guild_sheet`, `map_session`, `dialogue`, `map_view`, `job_board`, `hunt_session`, `report_session`, `guild_session`,
+`campaign`, `trade`, `tavern`, `hub_session`...), the `tutorial` cards (96) and the credits.
+How to continue: write a flat `{"dotted.key": "texto"}` chunk per group and fold it in with `python scripts/i18n_merge.py chunk.json`
+(it refuses a key with no `en` twin, another shape or other `{placeholders}`); `tests/test_i18n.py` still passes while the build is partial.
+Decisions made with the author: the glossary (pt names of the actions, attributes FOR/DES/CAR, Charter = Estatuto, Band = Grupo, vocations
+Bando de Guerra / Exploradores / Andarilhos / Eruditos / Caravaneiros / Sobreviventes), and the English names `Ledger Hold` -> `Field
+Command`, `Wilds` -> `Wanderers`, `Marsh` -> `Survivors` (vocations; ids unchanged).
+Still open, for the `name` / `desc` groups: the display-name layer for NPC and boss unit names (the author wants "A Dragobra", "Aranha do
+Santuário" translated, which needs `arena.py` and the roster to stop reading a unit's name as an id first); `gender` on item, race and wagon
+names so that articles agree ("{name} está quebrada" assumes a feminine noun today); the composed names ("Large Dagger", "Scroll of X");
+the settings screen's "Linhas do registro" note and any text longer than its box once the author reads the screens.
 
 ## Rules while the work is open
 
