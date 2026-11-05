@@ -1997,5 +1997,236 @@
         "rule": "Flies until the end of its next turn."
       }
     }
+  },
+  "fx": {
+    "vs_ac": "{total} vs AC {shown}",
+    "crit_miss": "Crit Miss!",
+    "grappled": "grappled",
+    "prone": "prone",
+    "up": "up",
+    "free": "free",
+    "miss": "miss"
+  },
+  "log": {
+    "roll": {
+      "flank": " [Flank -{n}]",
+      "phalanx": " [Phalanx]",
+      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> critical miss.",
+      "spared": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> the blow is pulled; the fallen is spared.",
+      "on_fallen": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> a blow on the fallen.",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> CRITICAL HIT!",
+      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> hit.",
+      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> misses."
+    },
+    "brutal": "  {why}: Brutal {n}!",
+    "brutal_savage": "Savage Attacks",
+    "thrown_lands": "  {weapon} lands at {cell}; {actor} is disarmed.",
+    "con_save": "CON d20({nat}) {mod:+} = {total} vs DC {dc}",
+    "poison_shaken": "  {target} shakes off the {poison} ({roll}).",
+    "poisoned": "  {target} is poisoned: {poison} {level} (-{loss} {attribute}) ({roll}).",
+    "bleeding": "  {target} is bleeding ({label}).",
+    "gruesome_takedown": "  Gruesome Takedown! {attacker} roars at {victim}:",
+    "stone_endurance": "  {target} takes the blow like stone: -{cut} damage [Stone's Endurance].",
+    "thornskin": "  {attacker} is pricked by {target}'s thorns.",
+    "gore_charge": "  {attacker} gores {target} and throws them to {cell}!",
+    "attack": {
+      "head": "{actor} -> {target}",
+      "head_via": "{actor} -> {target} ({how})",
+      "head_tongue": "{actor} -> {target} (tongue)"
+    },
+    "feint": "{actor} uses {ability} to distract.",
+    "luck_attack": {
+      "hit": "  Halfling Luck! {actor} rerolls attack: d20({nat}) = {total} -> hit.",
+      "miss": "  Halfling Luck! {actor} rerolls attack: d20({nat}) = {total} -> misses again."
+    },
+    "luck_throw": {
+      "hit": "  Halfling Luck! {actor} rerolls throw: d20({nat}) = {total} -> hit.",
+      "miss": "  Halfling Luck! {actor} rerolls throw: d20({nat}) = {total} -> misses again."
+    },
+    "shoot_bolt": {
+      "one": "{actor} shoots ({n} bolt in the quiver).",
+      "other": "{actor} shoots ({n} bolts in the quiver)."
+    },
+    "shoot_arrow": {
+      "one": "{actor} shoots ({n} arrow left in the quiver).",
+      "other": "{actor} shoots ({n} arrows left in the quiver)."
+    },
+    "tongue_reel": "  The tongue reels {target} in to {cell}.",
+    "tongue_stuck": "  {target} is stuck to the tongue: grappled!",
+    "reload": {
+      "one": "{actor} reloads the weapon ({n} bolt left).",
+      "other": "{actor} reloads the weapon ({n} bolts left)."
+    },
+    "defend_again": "{actor} is already defending (circumstance bonus doesn't stack).",
+    "defend": "{actor} defends: +1 AC [circumstance] until next turn.",
+    "defend_iron": "{actor} defends: +1 AC [circumstance], +{iron} Mental Defense [Iron Stance] until next turn.",
+    "throw": {
+      "head": "{actor} throws {weapon} at {target}"
+    },
+    "mimic": "{actor} mimics {target}'s voice to provoke them.",
+    "demoralize": {
+      "head": "{actor} tries to demoralize {target}",
+      "head_free": "  {actor} intimidates {target}",
+      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> critical miss.",
+      "none": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> no effect.",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> CRITICAL HIT! {target} is demoralized (-1 status until the end of their turn).",
+      "lands": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> lands. {target} is demoralized (-1 status until the end of their turn)."
+    },
+    "inspiring_shout": "  Inspiring Shout! {ally} gains +{n} initiative.",
+    "mod_champion": "Champion of the Pit",
+    "flee": "{actor} flees the fight off the map edge.",
+    "flee_drag": "  {actor} drags {ally} out of the fight.",
+    "push": {
+      "talent": " {n:+}(push talent)",
+      "head_shove": "{actor} shoves {target}: d20({nat}) {str:+}(STR){talent} = {total} vs {dc}",
+      "head_heave": "{actor} heaves {target}: d20({nat}) {str:+}(STR){talent} = {total} vs {dc}",
+      "holds": "{head}  -> holds their ground.",
+      "no_room": "{head}  -> no room to shove.",
+      "blocked": "{head}  -> {target} is shoved against something and can't move.",
+      "thrown": "{head}  -> {target} is thrown to {cell}.",
+      "slammed": "{head}  -> {target} is slammed where they stand.",
+      "crash_wall": "  {target} crashes into a wall!",
+      "crash_unit": "  {target} crashes into {other}!"
+    },
+    "breath": {
+      "head": "{actor} breathes fire! d20({nat}) {con:+}(CON){pulled} = {total}",
+      "pulled": " -{n}(non-lethal)",
+      "sputters": "  -> the breath sputters out.",
+      "miss": "  {target} (AC {shown}) -> misses.",
+      "crit": "  {target} (AC {shown}) -> CRITICAL HIT!",
+      "hit": "  {target} (AC {shown}) -> hit."
+    },
+    "grab": {
+      "hit": "{actor} grabs {target}: d20({nat}) {bonus:+}(STR) = {total} vs DC {dc} -> {target} is grappled!",
+      "miss": "{actor} grabs {target}: d20({nat}) {bonus:+}(STR) = {total} vs DC {dc} -> failed."
+    },
+    "takedown": {
+      "hit": "{actor} tries to take down {target}: d20({mine}) {str:+}(STR) = {total} vs d20({theirs}) {dex:+}(DEX) = {resist} -> {target} is on the ground!",
+      "miss": "{actor} tries to take down {target}: d20({mine}) {str:+}(STR) = {total} vs d20({theirs}) {dex:+}(DEX) = {resist} -> failed."
+    },
+    "stand_up": "{actor} gets back on their feet.",
+    "escape": {
+      "hit": "{actor} attempts to break free: d20({nat}) {bonus:+} = {total} vs DC {dc} -> Escaped!",
+      "miss": "{actor} attempts to break free: d20({nat}) {bonus:+} = {total} vs DC {dc} -> failed."
+    },
+    "bite": {
+      "head": "{actor} Bite -> {target}",
+      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {ac} -> miss.",
+      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {ac} -> HIT for {dmg} damage!",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {ac} -> CRIT for {dmg} damage!"
+    },
+    "mod_bite": "Bite Grappled Foe",
+    "nonlethal_on": "{actor} pulls their blows (non-lethal).",
+    "nonlethal_off": "{actor} fights to kill again.",
+    "tail_sweep": {
+      "head": "{actor} Tail Sweep -> {foe}"
+    }
+  },
+  "action": {
+    "attack": {
+      "name": "Attack",
+      "desc": "Melee or Ranged attack based on your equipped weapon."
+    },
+    "attack_tongue": {
+      "name": "Lash",
+      "desc": "Lash an enemy with your tongue.",
+      "reason": "Not a Grippli with Tongue.",
+      "label_off": "Lash with the tongue (1 pt)",
+      "label": "Lash {weapon} (1 pt, reach {reach})"
+    },
+    "reload": {
+      "name": "Reload",
+      "desc": "Reload your crossbow.",
+      "reason_none": "Not holding a weapon.",
+      "reason_no_need": "Weapon does not need reloading.",
+      "label": {
+        "one": "Reload the weapon (1 pt, {n} bolt left)",
+        "other": "Reload the weapon (1 pt, {n} bolts left)"
+      }
+    },
+    "defend": {
+      "name": "Defend",
+      "desc": "+1 AC until your next turn.",
+      "label": "Defend (1 pt, +1 AC)"
+    },
+    "throw": {
+      "name": "Throw",
+      "desc": "Throw your equipped weapon at a target in range.",
+      "label_off": "Throw weapon (1 pt)",
+      "label": "Throw {weapon} (1 pt)"
+    },
+    "demoralize": {
+      "name": "Demoralize",
+      "desc": "Cha vs MD. Target is demoralized (cannot move, lower defenses).",
+      "label": "Demoralize (1 pt, CHA vs Mental Defense)"
+    },
+    "flee": {
+      "name": "Flee",
+      "desc": "Flee the battle from the map edge.",
+      "reason_ap": "need 1 AP",
+      "reason_grappled": "grappled",
+      "reason_prone": "on the ground",
+      "reason_edge": "reach map edge",
+      "reason_beside": "enemy right beside you",
+      "reason_beside_heard": "enemy sounds right beside you",
+      "reason_close": "pursuers too close",
+      "reason_close_heard": "sounds of pursuers nearby",
+      "label_blocked": "Flee ({reason})",
+      "label_plain": "Flee",
+      "label": "Flee (1 pt, ends the turn)"
+    },
+    "push": {
+      "name": "Push",
+      "desc": "Push an adjacent unit.",
+      "label_mighty": "Mighty Shove (1 pt, STR vs 10 + target CON, {n} sq, 1d6)",
+      "label": "Push (1 pt, STR vs 10 + target CON)"
+    },
+    "dragon_breath": {
+      "name": "Dragon Breath",
+      "desc": "2 points: a cone 3 squares deep; one attack roll against everyone in it, allies too.",
+      "reason": "Needs the Dragon Breath talent."
+    },
+    "grab": {
+      "name": "Grab",
+      "desc": "Grab an adjacent foe to hold them in place (0 speed, -2 AC).",
+      "label": "Grab (1 pt, STR vs 10 + target STR/DEX)",
+      "label_bonus": "Grab (1 pt, STR{bonus:+} vs 10 + target STR/DEX)"
+    },
+    "takedown": {
+      "name": "Takedown",
+      "desc": "Throw an adjacent foe to the ground (STR vs DEX): prone, it cannot move and strikes at -2.",
+      "label": "Takedown (1 pt, STR vs DEX)"
+    },
+    "stand_up": {
+      "name": "Stand Up",
+      "desc": "Get up from the ground (ends Prone).",
+      "reason": "not prone",
+      "label": "Stand Up (1 pt)"
+    },
+    "escape_grapple": {
+      "name": "Escape Grapple",
+      "desc": "Break free from a grapple (STR or DEX vs 10 + grappler STR).",
+      "reason": "not grappled",
+      "label": "Escape Grapple (1 pt, STR/DEX)"
+    },
+    "zombie_bite": {
+      "name": "Bite",
+      "desc": "Sink teeth into a grappled foe (+2 to hit, 1d8 + STR damage).",
+      "reason": "requires Zombie Bite talent",
+      "label": "Zombie Bite (1 pt, +2 to hit, 1d8+STR)"
+    },
+    "nonlethal": {
+      "name": "Non-lethal",
+      "desc": "Free: pull your blows (-1 to hit); a foe you drop is knocked out, not dying.",
+      "reason": "the fight is non-lethal already.",
+      "label_on": "Non-lethal: ON",
+      "label_off": "Non-lethal: OFF"
+    },
+    "tail_sweep": {
+      "name": "Tail Sweep",
+      "desc": "2 points: an unarmed tail strike and a Push on two adjacent foes.",
+      "reason": "Missing 'tail_sweep' talent.",
+      "label": "Tail Sweep (2 pts, strike and shove 2 adjacent foes)"
+    }
   }
 }

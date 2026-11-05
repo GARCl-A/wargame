@@ -2,10 +2,11 @@
 the Non-lethal toggle."""
 
 
-from .. import intel, natural_weapons
+from .. import i18n, intel, natural_weapons
 from ..board import cells, cells_in_radius, cone_cells
 from ..conditions import Defending, Demoralized, Grappled, Prone
 from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll
+from ..i18n import Msg, Ref, plural_key
 from .base import (
     Action,
     _attackable_target,
@@ -18,6 +19,7 @@ from .base import (
     _shared_language,
     _shovable_target,
     _sign,
+    item_ref,
     nonlethal_penalty,
 )
 
@@ -37,13 +39,13 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
     ab = actor.ability
     if ab.feint and actor.spend_once("feint"):
         mods += ab.feint(actor, target)
-        battle.log(f"{actor.name} uses {ab.name} to distract.")
+        battle.log("log.feint", actor=actor.name, ability=Ref("ability", ab.id, ab.name))
 
     bonus, applied = resolve_bonus(mods)
     detail = " ".join(f"{v:+}({r})" for v, r in applied)
     nat = d20()
     result = _resolve_hit(battle, actor, target, nat, bonus, detail,
-                          prefix or f"{actor.name} -> {target.name}", weapon=weapon)
+                          prefix or Msg("log.attack.head", actor=actor.name, target=target.name), weapon=weapon)
 
     if result == "miss" and nat != 1 and ab.on_attack_miss \
             and actor.spend_once("on_attack_miss"):
@@ -53,8 +55,7 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
         nat2 = d20()
         total2 = nat2 + bonus - nonlethal_penalty(actor)
         hits = nat2 == 20 or total2 >= target.ac_vs(actor)
-        battle.log(f"  Halfling Luck! {actor.name} rerolls attack: d20({nat2}) = {total2} -> "
-                   + ("hit." if hits else "misses again."))
+        battle.log("log.luck_attack.hit" if hits else "log.luck_attack.miss", actor=actor.name, nat=nat2, total=total2)
         if hits:
             target.take_damage(actor.damage_roll(crit=nat2 == 20, weapon=weapon), battle.log,
                                knockout=actor.nonlethal_blows)
@@ -63,8 +64,7 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
 
 
 class Attack(Action):
-    id, name, cost, target, aimed = "attack", "Attack", 1, "enemy", True
-    desc = "Melee or Ranged attack based on your equipped weapon."
+    id, cost, target, aimed = "attack", 1, "enemy", True
     announce = False
 
     def flies(self, actor):
@@ -105,13 +105,13 @@ class Attack(Action):
         if actor.ranged:
             if actor.weapon.get("reload"):
                 actor.crossbow_loaded = False               # spent -- needs a Reload before the next shot
-                battle.log(f"{actor.name} shoots ({actor.ammo} bolt(s) in the quiver).")
+                battle.log(plural_key("log.shoot_bolt", actor.ammo), actor=actor.name, n=actor.ammo)
             else:
                 actor.ammo -= 1                             # a bow draws from the quiver on every shot
-                battle.log(f"{actor.name} shoots ({actor.ammo} arrow(s) left in the quiver).")
+                battle.log(plural_key("log.shoot_arrow", actor.ammo), actor=actor.name, n=actor.ammo)
         natural = actor.weapon.name if actor.natural else None
-        _strike(battle, actor, target,
-                prefix=f"{actor.name} -> {target.name} ({natural.lower()})" if natural else None)
+        _strike(battle, actor, target, prefix=Msg(
+            "log.attack.head_via", actor=actor.name, target=target.name, how=item_ref(natural, lower=True)) if natural else None)
 
 
 class AttackTongue(Action):
@@ -119,13 +119,12 @@ class AttackTongue(Action):
     the Tongue slot, swung at +1 square of reach. A separate action so a Grippli
     can choose it or the hand weapon each turn (a reach poke vs. a 2-handed blow)."""
 
-    id, name, cost, target, aimed = "attack_tongue", "Lash", 1, "enemy", True
-    desc = "Lash an enemy with your tongue."
+    id, cost, target, aimed = "attack_tongue", 1, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.has_tongue_weapon:
-            return False, "Not a Grippli with Tongue."
+            return False, i18n.t("action.attack_tongue.reason")
         return True, ""
 
     def available(self, battle, actor):
@@ -144,8 +143,8 @@ class AttackTongue(Action):
 
     def label(self, battle, actor):
         if not self.available(battle, actor):
-            return "Lash with the tongue (1 pt)"
-        return f"Lash {actor.tongue_weapon_name} (1 pt, reach {actor.tongue_reach})"
+            return i18n.t("action.attack_tongue.label_off")
+        return i18n.t("action.attack_tongue.label", weapon=item_ref(actor.tongue_weapon_name), reach=actor.tongue_reach)
 
     def highlight_cells(self, battle, actor):
         return [p for c in cells(actor.pos, actor.footprint)
@@ -161,7 +160,7 @@ class AttackTongue(Action):
         actor.ap -= 1
         actor.walking = False
         result = _strike(battle, actor, target, weapon=actor.tongue_weapon,
-                         prefix=f"{actor.name} -> {target.name} (tongue)")
+                         prefix=Msg("log.attack.head_tongue", actor=actor.name, target=target.name))
         if result != "miss" and actor.char.talent_bonus("sticky_tongue"):
             self.reel(battle, actor, target)
 
@@ -176,10 +175,10 @@ class AttackTongue(Action):
             dest = (target.pos[0] - dx, target.pos[1] - dy)
             if Push._stopper(battle, target, dest, False) is None:
                 Push.throw(battle, actor, target, [dest])
-                battle.log(f"  The tongue reels {target.name} in to {dest}.")
+                battle.log("log.tongue_reel", target=target.name, cell=str(dest))
         if target.alive and battle.units_distance(actor, target) <= 1:
             target.add_condition(Grappled(grappler=actor))
-            battle.log(f"  {target.name} is stuck to the tongue: grappled!")
+            battle.log("log.tongue_stuck", target=target.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -191,15 +190,14 @@ class Reload(Action):
     A crossbow fires only while loaded and each shot empties it, so a crossbowman
     gets one bolt away per turn (Reload + Attack = the whole turn)."""
 
-    id, name, cost, target = "reload", "Reload", 1, "none"
-    desc = "Reload your crossbow."
+    id, cost, target = "reload", 1, "none"
 
     @classmethod
     def applicable(cls, battle, actor):
         if not hasattr(actor, "weapon") or not actor.weapon:
-            return False, "Not holding a weapon."
+            return False, i18n.t("action.reload.reason_none")
         if not actor.weapon.get("reload"):
-            return False, "Weapon does not need reloading."
+            return False, i18n.t("action.reload.reason_no_need")
         return True, ""
 
     def available(self, battle, actor):
@@ -209,7 +207,7 @@ class Reload(Action):
         return self.available(battle, actor)
 
     def label(self, battle, actor):
-        return f"Reload the weapon (1 pt, {actor.ammo} bolts left)"
+        return i18n.plural("action.reload.label", actor.ammo)
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -218,7 +216,7 @@ class Reload(Action):
         actor.walking = False
         actor.ammo -= 1
         actor.crossbow_loaded = True
-        battle.log(f"{actor.name} reloads the weapon ({actor.ammo} bolt(s) left).")
+        battle.log(plural_key("log.reload", actor.ammo), actor=actor.name, n=actor.ammo)
 
 
 # --------------------------------------------------------------------------- #
@@ -226,14 +224,13 @@ class Reload(Action):
 # --------------------------------------------------------------------------- #
 
 class Defend(Action):
-    id, name, cost, target = "defend", "Defend", 1, "none"
-    desc = "+1 AC until your next turn."
+    id, cost, target = "defend", 1, "none"
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and not actor.defending
 
     def label(self, battle, actor):
-        return "Defend (1 pt, +1 AC)"
+        return i18n.t("action.defend.label")
 
     def execute(self, battle, actor, target=None):
         if actor.ap < self.cost:
@@ -241,12 +238,14 @@ class Defend(Action):
         actor.ap -= 1
         actor.walking = False
         if actor.defending:
-            battle.log(f"{actor.name} is already defending (circumstance bonus doesn't stack).")
+            battle.log("log.defend_again", actor=actor.name)
         else:
             actor.add_condition(Defending())
             iron = getattr(actor.char, "talent_bonus", lambda _: 0)("defend_mental_defense") if hasattr(actor, "char") else 0
-            iron_txt = f", +{iron} Mental Defense [Iron Stance]" if iron else ""
-            battle.log(f"{actor.name} defends: +1 AC [circumstance]{iron_txt} until next turn.")
+            if iron:
+                battle.log("log.defend_iron", actor=actor.name, iron=iron)
+            else:
+                battle.log("log.defend", actor=actor.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -254,9 +253,8 @@ class Defend(Action):
 # --------------------------------------------------------------------------- #
 
 class Throw(Action):
-    id, name, cost, target, aimed = "throw", "Throw", 1, "enemy", True
+    id, cost, target, aimed = "throw", 1, "enemy", True
     missile = True
-    desc = "Throw your equipped weapon at a target in range."
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and actor.can_throw
@@ -272,8 +270,8 @@ class Throw(Action):
 
     def label(self, battle, actor):
         if not self.available(battle, actor):
-            return "Throw weapon (1 pt)"
-        return f"Throw {actor.weapon_name} (1 pt)"
+            return i18n.t("action.throw.label_off")
+        return i18n.t("action.throw.label", weapon=item_ref(actor.weapon_name))
 
     def highlight_cells(self, battle, actor):
         return [p for c in cells(actor.pos, actor.footprint)
@@ -292,15 +290,14 @@ class Throw(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} throws {weapon_name} at {target.name}"
+        prefix = Msg("log.throw.head", actor=actor.name, weapon=item_ref(weapon_name), target=target.name)
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, thrown=True)
         if res == "miss" and actor.can_use_luck(getattr(battle, "clock_day", 1)):
             actor.use_luck(getattr(battle, "clock_day", 1))
             nat2 = d20()
             total2 = nat2 + bonus - nonlethal_penalty(actor)
             hits = nat2 == 20 or total2 >= target.ac_vs(actor)
-            battle.log(f"  Halfling Luck! {actor.name} rerolls throw: d20({nat2}) = {total2} -> "
-                       + ("hit." if hits else "misses again."))
+            battle.log("log.luck_throw.hit" if hits else "log.luck_throw.miss", actor=actor.name, nat=nat2, total=total2)
             if hits:
                 target.take_damage(actor.damage_roll(crit=nat2 == 20, thrown=True), battle.log,
                                    knockout=actor.nonlethal_blows)
@@ -313,8 +310,7 @@ class Throw(Action):
 # --------------------------------------------------------------------------- #
 
 class Demoralize(Action):
-    id, name, cost, target, aimed = "demoralize", "Demoralize", 1, "enemy", True
-    desc = "Cha vs MD. Target is demoralized (cannot move, lower defenses)."
+    id, cost, target, aimed = "demoralize", 1, "enemy", True
 
     def _can_provoke(self, battle, actor, target):
         return (actor.ability.demoralize_ignores_language
@@ -331,7 +327,7 @@ class Demoralize(Action):
         return self._can_provoke(battle, actor, target)
 
     def label(self, battle, actor):
-        return "Demoralize (1 pt, CHA vs Mental Defense)"
+        return i18n.t("action.demoralize.label")
 
     def highlight_cells(self, battle, actor):
         return [p for c in cells(actor.pos, actor.footprint)
@@ -356,7 +352,7 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
     mods = [(base_mod, None, "STR" if using_str else "CHA")]
     titled = battle.arena and getattr(actor, "arena_title", False)
     if titled and _shared_language(actor, target):
-        mods.append((1, "circumstance", "Champion of the Pit"))
+        mods.append((1, "circumstance", i18n.t("log.mod_champion")))
     browbeat = actor.ability.demoralize_vs_weaker
     if browbeat and actor.mod_strength > target.mod_strength:
         mods.append((browbeat, "circumstance", "Browbeat"))
@@ -368,7 +364,7 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
 
     if (actor.ability.demoralize_ignores_language or ignore_language) and not _shared_language(actor, target):
         if not free:
-            battle.log(f"{actor.name} mimics {target.name}'s voice to provoke them.")
+            battle.log("log.mimic", actor=actor.name, target=target.name)
 
     nat = d20()
     total = nat + bonus
@@ -376,15 +372,14 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
     if battle.arena and getattr(target, "arena_title", False):
         md += 1                                # the champion is hard to rattle in their own pit
     crit = nat == 20
-    prefix = f"{actor.name} tries to demoralize {target.name}" if not free else f"  {actor.name} intimidates {target.name}"
-    desc = (f"{prefix}: "
-            f"d20({nat}) {detail} = {total} vs MD {intel.shown(battle, target, 'md', md)}")
+    head = Msg("log.demoralize.head_free" if free else "log.demoralize.head", actor=actor.name, target=target.name)
+    roll_line = {"head": head, "nat": nat, "detail": detail, "total": total, "md": intel.shown(battle, target, "md", md),
+                 "target": target.name}
     if nat == 1:
-        battle.log(desc + "  -> critical miss.")
+        battle.log("log.demoralize.crit_miss", **roll_line)
     elif crit or total >= md:
         target.add_condition(Demoralized())
-        battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> lands.")
-                   + f" {target.name} is demoralized (-1 status until the end of their turn).")
+        battle.log("log.demoralize.crit" if crit else "log.demoralize.lands", **roll_line)
         init_boost = getattr(actor.char, "talent_bonus", lambda x: 0)("demoralize_ally_initiative") if hasattr(actor, "char") else 0
         if init_boost and hasattr(battle, "order") and hasattr(battle, "raise_initiative"):
             allies = [u for u in battle.order if u.alive and u.team == actor.team and u is not actor]
@@ -393,9 +388,9 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
                 after = [u for u in battle.order[idx + 1:] if u in allies]
                 target_ally = after[0] if after else allies[0]
                 battle.raise_initiative([target_ally], init_boost)
-                battle.log(f"  Inspiring Shout! {target_ally.name} gains +{init_boost} initiative.")
+                battle.log("log.inspiring_shout", ally=target_ally.name, n=init_boost)
     else:
-        battle.log(desc + "  -> no effect.")
+        battle.log("log.demoralize.none", **roll_line)
 
 
 # --------------------------------------------------------------------------- #
@@ -408,8 +403,7 @@ class Flee(Action):
     ahead that the chase fizzles. Deterministic -- the button lights up exactly
     when the escape would work. Ends your turn; downed allies are left behind."""
 
-    id, name, cost, target = "flee", "Flee", 1, "none"
-    desc = "Flee the battle from the map edge."
+    id, cost, target = "flee", 1, "none"
 
     @staticmethod
     def _at_edge(battle, actor):
@@ -438,13 +432,13 @@ class Flee(Action):
 
     def blocked_reason(self, battle, actor):
         if actor.ap < self.cost:
-            return "need 1 AP"
+            return i18n.t("action.flee.reason_ap")
         if actor.has_condition("grappled"):
-            return "grappled"
+            return i18n.t("action.flee.reason_grappled")
         if actor.has_condition("prone"):
-            return "on the ground"
+            return i18n.t("action.flee.reason_prone")
         if not self._at_edge(battle, actor):
-            return "reach map edge"
+            return i18n.t("action.flee.reason_edge")
         pursuers = self._pursuers(battle, actor)
         if not pursuers:
             return ""
@@ -454,15 +448,15 @@ class Flee(Action):
             close = [p for p in pursuers if battle.units_distance(actor, p) == nearest]
             seen = any(battle.can_see_unit(actor, p) for p in close)
             if nearest <= 1:
-                return "enemy right beside you" if seen else "enemy sounds right beside you"
-            return "pursuers too close" if seen else "sounds of pursuers nearby"
+                return i18n.t("action.flee.reason_beside" if seen else "action.flee.reason_beside_heard")
+            return i18n.t("action.flee.reason_close" if seen else "action.flee.reason_close_heard")
         return ""
 
     def label(self, battle, actor):
         if not self.available(battle, actor):
             reason = self.blocked_reason(battle, actor)
-            return f"Flee ({reason})" if reason else "Flee"
-        return "Flee (1 pt, ends the turn)"
+            return i18n.t("action.flee.label_blocked", reason=reason) if reason else i18n.t("action.flee.label_plain")
+        return i18n.t("action.flee.label")
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -470,13 +464,13 @@ class Flee(Action):
         actor.ap = 0
         actor.walking = False
         actor.status = "fled"
-        battle.log(f"{actor.name} flees the fight off the map edge.")
+        battle.log("log.flee", actor=actor.name)
         # drag out any downed ally you are standing next to -- the rest are left
         for ally in battle.units:
             if (ally is not actor and ally.team == actor.team and ally.downed
                     and battle.units_distance(actor, ally) <= 1):
                 ally.status = "fled"
-                battle.log(f"  {actor.name} drags {ally.name} out of the fight.")
+                battle.log("log.flee_drag", actor=actor.name, ally=ally.name)
         battle._check_winner()
 
 
@@ -492,8 +486,7 @@ class Push(Action):
     for 1d6, and whatever stops them on the way -- a wall, or a body, which takes
     the blow too -- deals 1d6 more."""
 
-    id, name, cost, target, aimed = "push", "Push", 1, "unit", True
-    desc = "Push an adjacent unit."
+    id, cost, target, aimed = "push", 1, "unit", True
     MIGHTY_SQUARES = 3
     MIGHTY_DIE = (1, 6)
 
@@ -515,8 +508,8 @@ class Push(Action):
 
     def label(self, battle, actor):
         if actor.char.talent_bonus("mighty_shove"):
-            return f"Mighty Shove (1 pt, STR vs 10 + target CON, {self.MIGHTY_SQUARES} sq, 1d6)"
-        return "Push (1 pt, STR vs 10 + target CON)"
+            return i18n.t("action.push.label_mighty", n=self.MIGHTY_SQUARES)
+        return i18n.t("action.push.label")
 
     def highlight_targets(self, battle, actor):
         return self._targets(battle, actor)
@@ -573,29 +566,33 @@ class Push(Action):
         push_b = getattr(actor.char, "talent_bonus", lambda x: 0)("push_bonus") if hasattr(actor, "char") else 0
         total = nat + actor.mod_strength + push_b
         mighty = bool(actor.char.talent_bonus("mighty_shove"))
-        b_txt = f" {push_b:+}(push talent)" if push_b else ""
-        desc = (f"{actor.name} {'heaves' if mighty else 'shoves'} {target.name}: d20({nat}) "
-                f"{actor.mod_strength:+}(STR){b_txt} = {total} vs {dc}")
+        head = Msg("log.push.head_heave" if mighty else "log.push.head_shove", actor=actor.name, target=target.name,
+                   nat=nat, str=actor.mod_strength, total=total, dc=dc,
+                   talent=Msg("log.push.talent", n=push_b) if push_b else "")
         if nat != 20 and (nat == 1 or total < dc):
-            battle.log(desc + "  -> holds their ground.")
+            battle.log("log.push.holds", head=head)
             return
         if cls.direction(actor, target) == (0, 0):
-            battle.log(desc + "  -> no room to shove.")
+            battle.log("log.push.no_room", head=head)
             return
         path, stopper = cls.landing(battle, actor, target)
         if not path and not mighty:
-            battle.log(desc + f"  -> {target.name} is shoved against something and can't move.")
+            battle.log("log.push.blocked", head=head, target=target.name)
             return
 
         was_up = target.alive
-        battle.log(desc + (f"  -> {target.name} is thrown to {path[-1]}." if path
-                           else f"  -> {target.name} is slammed where they stand."))
+        if path:
+            battle.log("log.push.thrown", head=head, target=target.name, cell=str(path[-1]))
+        else:
+            battle.log("log.push.slammed", head=head, target=target.name)
 
         if mighty:
             target.take_damage(roll(*cls.MIGHTY_DIE), battle.log)
             if stopper is not None:
-                what = "a wall" if stopper == "wall" else stopper.name
-                battle.log(f"  {target.name} crashes into {what}!")
+                if stopper == "wall":
+                    battle.log("log.push.crash_wall", target=target.name)
+                else:
+                    battle.log("log.push.crash_unit", target=target.name, other=stopper.name)
                 target.take_damage(roll(*cls.MIGHTY_DIE), battle.log)
                 if stopper != "wall":
                     body_up = stopper.alive
@@ -644,15 +641,14 @@ class DragonBreath(Action):
     """A cone of breath from the Dragon Breath magic talent: one Constitution attack roll
     against every standing unit in it, allies included. Aimed by clicking a cell beside the
     breather, which sets the direction."""
-    id, name, cost, target, aimed = "dragon_breath", "Dragon Breath", 2, "cell", True
-    desc = "2 points: a cone 3 squares deep; one attack roll against everyone in it, allies too."
+    id, cost, target, aimed = "dragon_breath", 2, "cell", True
     DEPTH = 3
     DICE = (2, 6)
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.char.talent_bonus("dragon_breath"):
-            return False, "Needs the Dragon Breath talent."
+            return False, i18n.t("action.dragon_breath.reason")
         return True, ""
 
     @staticmethod
@@ -703,24 +699,24 @@ class DragonBreath(Action):
         nat = d20()
         pulled = nonlethal_penalty(actor)
         total = nat + actor.mod_constitution - pulled
-        battle.log(f"{actor.name} breathes fire! d20({nat}) {actor.mod_constitution:+}(CON)"
-                   + (f" -{pulled}(non-lethal)" if pulled else "") + f" = {total}")
+        battle.log("log.breath.head", actor=actor.name, nat=nat, con=actor.mod_constitution, total=total,
+                   pulled=Msg("log.breath.pulled", n=pulled) if pulled else "")
         if nat == 1:
-            battle.log("  -> the breath sputters out.")
+            battle.log("log.breath.sputters")
             return
         for u in victims:
             ac = u.ac_vs(actor)
             shown = intel.shown(battle, u, "ac", ac)
             if nat != 20 and total < ac:
-                battle.log(f"  {u.name} (AC {shown}) -> misses.")
-                battle.fx(u.pos, f"{total} vs AC {shown}", "faint")
+                battle.log("log.breath.miss", target=u.name, shown=shown)
+                battle.fx(u.pos, i18n.t("fx.vs_ac", total=total, shown=shown), "faint")
                 battle.cue("miss", u.pos)
                 continue
-            battle.fx(u.pos, f"{total} vs AC {shown}", "crit" if nat == 20 else "ok")
+            battle.fx(u.pos, i18n.t("fx.vs_ac", total=total, shown=shown), "crit" if nat == 20 else "ok")
             if nat == 20:
                 battle.cue("crit", u.pos)
             dice = self.DICE[0] * (2 if nat == 20 else 1)
-            battle.log(f"  {u.name} (AC {shown}) -> " + ("CRITICAL HIT!" if nat == 20 else "hit."))
+            battle.log("log.breath.crit" if nat == 20 else "log.breath.hit", target=u.name, shown=shown)
             was_up = u.alive
             u.take_damage(roll(dice, self.DICE[1]), battle.log, knockout=bool(pulled))
             if was_up and u.team != actor.team:
@@ -738,8 +734,7 @@ class Grab(Action):
     """Grab an adjacent enemy: 1 AP, Strength vs 10 + target's higher of STR/DEX.
     On success, the target is Grappled (speed 0, -2 AC) until they break free
     or the grappler is downed or moves away."""
-    id, name, cost, target, aimed = "grab", "Grab", 1, "enemy", True
-    desc = "Grab an adjacent foe to hold them in place (0 speed, -2 AC)."
+    id, cost, target, aimed = "grab", 1, "enemy", True
 
     def _targets(self, battle, actor):
         return [u for u in battle.units
@@ -763,8 +758,8 @@ class Grab(Action):
         char = getattr(actor, "char", actor)
         bonus = getattr(char, "talent_bonus", lambda _: 0)("grab_bonus")
         if bonus:
-            return f"Grab (1 pt, STR{bonus:+} vs 10 + target STR/DEX)"
-        return "Grab (1 pt, STR vs 10 + target STR/DEX)"
+            return i18n.t("action.grab.label_bonus", bonus=bonus)
+        return i18n.t("action.grab.label")
 
     def highlight_targets(self, battle, actor):
         return self._targets(battle, actor)
@@ -779,14 +774,13 @@ class Grab(Action):
         char = getattr(actor, "char", actor)
         bonus = actor.mod_strength + getattr(char, "talent_bonus", lambda _: 0)("grab_bonus")
         total = nat + bonus
-        desc = (f"{actor.name} grabs {target.name}: d20({nat}) "
-                f"{bonus:+}(STR) = {total} vs DC {dc}")
+        roll_line = {"actor": actor.name, "target": target.name, "nat": nat, "bonus": bonus, "total": total, "dc": dc}
         if nat == 20 or total >= dc:
             target.add_condition(Grappled(grappler=actor))
-            battle.log(desc + f" -> {target.name} is grappled!")
-            battle.fx(target.pos, "grappled", "ok")
+            battle.log("log.grab.hit", **roll_line)
+            battle.fx(target.pos, i18n.t("fx.grappled"), "ok")
         else:
-            battle.log(desc + " -> failed.")
+            battle.log("log.grab.miss", **roll_line)
 
 
 # --------------------------------------------------------------------------- #
@@ -796,8 +790,7 @@ class Grab(Action):
 class Takedown(Action):
     """Knock an adjacent foe to the ground: 1 AP, d20 + STR against the foe's d20 + DEX; matching it
     is enough, and a natural 20 always lands. The foe is Prone. A flier cannot be brought down."""
-    id, name, cost, target, aimed = "takedown", "Takedown", 1, "enemy", True
-    desc = "Throw an adjacent foe to the ground (STR vs DEX): prone, it cannot move and strikes at -2."
+    id, cost, target, aimed = "takedown", 1, "enemy", True
 
     def _targets(self, battle, actor):
         return [u for u in battle.units
@@ -818,7 +811,7 @@ class Takedown(Action):
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
     def label(self, battle, actor):
-        return "Takedown (1 pt, STR vs DEX)"
+        return i18n.t("action.takedown.label")
 
     def highlight_targets(self, battle, actor):
         return self._targets(battle, actor)
@@ -831,32 +824,31 @@ class Takedown(Action):
         mine, theirs = d20(), d20()
         total = mine + actor.mod_strength
         resist = theirs + target.mod_dexterity
-        desc = (f"{actor.name} tries to take down {target.name}: d20({mine}) {actor.mod_strength:+}(STR) = {total}"
-                f" vs d20({theirs}) {target.mod_dexterity:+}(DEX) = {resist}")
+        roll_line = {"actor": actor.name, "target": target.name, "mine": mine, "str": actor.mod_strength, "total": total,
+                     "theirs": theirs, "dex": target.mod_dexterity, "resist": resist}
         if mine == 20 or total >= resist:
             target.add_condition(Prone())
-            battle.log(desc + f" -> {target.name} is on the ground!")
-            battle.fx(target.pos, "prone", "ok")
+            battle.log("log.takedown.hit", **roll_line)
+            battle.fx(target.pos, i18n.t("fx.prone"), "ok")
         else:
-            battle.log(desc + " -> failed.")
+            battle.log("log.takedown.miss", **roll_line)
 
 
 class StandUp(Action):
     """Get back on your feet: 1 AP, only while Prone."""
-    id, name, cost, target = "stand_up", "Stand Up", 1, "none"
-    desc = "Get up from the ground (ends Prone)."
+    id, cost, target = "stand_up", 1, "none"
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.has_condition("prone"):
-            return False, "not prone"
+            return False, i18n.t("action.stand_up.reason")
         return True, ""
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and actor.has_condition("prone")
 
     def label(self, battle, actor):
-        return "Stand Up (1 pt)"
+        return i18n.t("action.stand_up.label")
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -864,8 +856,8 @@ class StandUp(Action):
         actor.ap -= 1
         actor.walking = False
         actor.conditions.remove(actor.condition("prone"))
-        battle.log(f"{actor.name} gets back on their feet.")
-        battle.fx(actor.pos, "up", "ok")
+        battle.log("log.stand_up", actor=actor.name)
+        battle.fx(actor.pos, i18n.t("fx.up"), "ok")
 
 
 # --------------------------------------------------------------------------- #
@@ -874,20 +866,19 @@ class StandUp(Action):
 
 class EscapeGrapple(Action):
     """Attempt to break free from a grapple (1 AP: Strength or Dexterity vs 10 + grappler Strength)."""
-    id, name, cost, target = "escape_grapple", "Escape Grapple", 1, "none"
-    desc = "Break free from a grapple (STR or DEX vs 10 + grappler STR)."
+    id, cost, target = "escape_grapple", 1, "none"
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.has_condition("grappled"):
-            return False, "not grappled"
+            return False, i18n.t("action.escape_grapple.reason")
         return True, ""
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and actor.has_condition("grappled")
 
     def label(self, battle, actor):
-        return "Escape Grapple (1 pt, STR/DEX)"
+        return i18n.t("action.escape_grapple.label")
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -902,15 +893,14 @@ class EscapeGrapple(Action):
         nat = d20()
         esc_bonus = max(actor.mod_strength, actor.mod_dexterity)
         total = nat + esc_bonus
-        desc = (f"{actor.name} attempts to break free: d20({nat}) "
-                f"{esc_bonus:+} = {total} vs DC {dc}")
+        roll_line = {"actor": actor.name, "nat": nat, "bonus": esc_bonus, "total": total, "dc": dc}
         if nat == 20 or total >= dc:
             if cond in actor.conditions:
                 actor.conditions.remove(cond)
-            battle.log(desc + " -> Escaped!")
-            battle.fx(actor.pos, "free", "ok")
+            battle.log("log.escape.hit", **roll_line)
+            battle.fx(actor.pos, i18n.t("fx.free"), "ok")
         else:
-            battle.log(desc + " -> failed.")
+            battle.log("log.escape.miss", **roll_line)
 
 
 # --------------------------------------------------------------------------- #
@@ -919,14 +909,13 @@ class EscapeGrapple(Action):
 
 class ZombieBite(Action):
     """Zombie Bite: a savage bite targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage."""
-    id, name, cost, target, aimed = "zombie_bite", "Bite", 1, "enemy", True
-    desc = "Sink teeth into a grappled foe (+2 to hit, 1d8 + STR damage)."
+    id, cost, target, aimed = "zombie_bite", 1, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         char = getattr(actor, "char", actor)
         if not getattr(char, "has_talent", lambda _: False)("zombie_bite"):
-            return False, "requires Zombie Bite talent"
+            return False, i18n.t("action.zombie_bite.reason")
         return True, ""
 
     def _targets(self, battle, actor):
@@ -953,7 +942,7 @@ class ZombieBite(Action):
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
     def label(self, battle, actor):
-        return "Zombie Bite (1 pt, +2 to hit, 1d8+STR)"
+        return i18n.t("action.zombie_bite.label")
 
     def highlight_targets(self, battle, actor):
         return self._targets(battle, actor)
@@ -964,18 +953,18 @@ class ZombieBite(Action):
         actor.ap -= 1
         actor.walking = False
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
-        mods.append((2, "circumstance", "Bite Grappled Foe"))
+        mods.append((2, "circumstance", i18n.t("log.mod_bite")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Bite -> {target.name}"
+        head = Msg("log.bite.head", actor=actor.name, target=target.name)
         total = nat + bonus
         ac = target.ac_vs(actor)
         crit = nat == 20 or (nat != 1 and total >= ac + 10)
         hit = nat != 1 and (nat == 20 or total >= ac)
         if not hit:
-            battle.log(f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac} -> miss.")
-            battle.fx(target.pos, "miss", "miss")
+            battle.log("log.bite.miss", head=head, nat=nat, detail=detail, total=total, ac=ac)
+            battle.fx(target.pos, i18n.t("fx.miss"), "miss")
             battle.cue("miss", target.pos)
             return
         res = "crit" if crit else "hit"
@@ -984,7 +973,7 @@ class ZombieBite(Action):
         dice = roll(2, 8) if crit else roll(1, 8)
         char = getattr(actor, "char", actor)
         dmg = max(1, dice + actor.mod_strength + getattr(char, "talent_bonus", lambda _: 0)("melee_damage"))
-        battle.log(f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac} -> {res.upper()} for {dmg} damage!")
+        battle.log("log.bite.crit" if crit else "log.bite.hit", head=head, nat=nat, detail=detail, total=total, ac=ac, dmg=dmg)
         battle.fx(target.pos, f"-{dmg}", res)
         target.take_damage(dmg, battle.log, knockout=actor.nonlethal_blows)
         if not target.alive and target.team != actor.team:
@@ -1000,25 +989,23 @@ class NonLethal(Action):
     """Pull your blows, or stop pulling them: a free switch, kept for the rest of the
     fight. Pulled blows are -1 to hit; a foe they drop is knocked out (`stable`) instead of
     dying, and a blow on a dying body spares it."""
-    id, name, cost, target, aimed = "nonlethal", "Non-lethal", 0, "none", False
-    desc = "Free: pull your blows (-1 to hit); a foe you drop is knocked out, not dying."
+    id, cost, target, aimed = "nonlethal", 0, "none", False
     toggle = True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not battle.lethal:
-            return False, "the fight is non-lethal already."
+            return False, i18n.t("action.nonlethal.reason")
         return True, ""
 
     def label(self, battle, actor):
-        return "Non-lethal: ON" if actor.nonlethal_blows else "Non-lethal: OFF"
+        return i18n.t("action.nonlethal.label_on" if actor.nonlethal_blows else "action.nonlethal.label_off")
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
             return
         actor.nonlethal_blows = not actor.nonlethal_blows
-        battle.log(f"{actor.name} " + ("pulls their blows (non-lethal)." if actor.nonlethal_blows
-                                       else "fights to kill again."))
+        battle.log("log.nonlethal_on" if actor.nonlethal_blows else "log.nonlethal_off", actor=actor.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -1028,13 +1015,12 @@ class NonLethal(Action):
 class TailSweep(Action):
     """Lizardfolk Tail Sweep: 2 points, the tail sweeps two adjacent foes -- an unarmed strike
     and a shove (`Push.shove`, its own roll) on each. With one foe beside you it sweeps that one."""
-    id, name, cost, target, aimed = "tail_sweep", "Tail Sweep", 2, "enemy", True
-    desc = "2 points: an unarmed tail strike and a Push on two adjacent foes."
+    id, cost, target, aimed = "tail_sweep", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.char.talent_bonus("tail_sweep"):
-            return False, "Missing 'tail_sweep' talent."
+            return False, i18n.t("action.tail_sweep.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -1043,7 +1029,7 @@ class TailSweep(Action):
         return battle.units_distance(actor, target) <= 1 and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Tail Sweep (2 pts, strike and shove 2 adjacent foes)"
+        return i18n.t("action.tail_sweep.label")
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units if self.can(battle, actor, u)]
@@ -1071,7 +1057,7 @@ class TailSweep(Action):
         tail = self.tail(actor)
         for foe in swept:
             if foe.alive:
-                _strike(battle, actor, foe, weapon=tail, prefix=f"{actor.name} Tail Sweep -> {foe.name}")
+                _strike(battle, actor, foe, weapon=tail, prefix=Msg("log.tail_sweep.head", actor=actor.name, foe=foe.name))
         for foe in swept:
             if foe.alive and battle.units_distance(actor, foe) <= 1:
                 Push.shove(battle, actor, foe)

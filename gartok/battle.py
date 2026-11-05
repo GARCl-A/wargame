@@ -11,7 +11,7 @@ roster and a rematch could reuse the same picks.
 
 import random
 
-from . import captives, data, intel, names, outfit, vision
+from . import captives, data, i18n, intel, names, outfit, vision
 from .board import (
     COLS,
     ROWS,
@@ -28,6 +28,11 @@ from .ground import GroundObject
 from .scenario import ArenaScenario, own_half
 
 __all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
+
+
+class LogLine(str):
+    """A line of the battle log that remembers the `i18n.Msg` it was rendered from (`msg`)."""
+    msg = None
 
 FLAG_RUNNERS = 1        # a person sends one runner for the flag and keeps the rest home
 
@@ -79,7 +84,14 @@ class Battle:
         self.sink = sink
         sink.start(self)
 
-    def log(self, msg):
+    def log(self, msg, **params):
+        """A line of the fight's text. `msg` is a catalog key (with its `{params}`, which may be `i18n.Ref`s
+        or `Msg`s): the line shows in the language of the moment and the combat log keeps key and parameters
+        so it reads in any language later. A string that is no key is a literal not converted yet."""
+        if i18n.has(msg):
+            m = i18n.Msg(msg, **params)
+            msg = LogLine(str(m))
+            msg.msg = m
         self.log_total += 1
         self.log_lines.append(msg)
         del self.log_lines[:-200]

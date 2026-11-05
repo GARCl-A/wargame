@@ -336,3 +336,16 @@ def test_a_threshold_set_for_the_player_s_side_holds_only_on_its_turns():
     finally:
         ai.take_turn = real
     assert seen == [("player", 0.05), ("enemy", flee_hp)] and flee.FLEE_HP == flee_hp
+
+
+def test_a_converted_line_is_stored_as_key_and_params_and_reads_in_any_language(tmp_path):
+    from gartok import i18n
+    battle, log = _recorded(tmp_path)
+    _play(battle)
+    log.end(battle)
+    rows = combat_log.load(str(tmp_path / "fight.jsonl"))
+    lines = [ln for r in rows if r["e"] == "act" for ln in r["log"]]
+    keyed = [ln for ln in lines if isinstance(ln, dict)]
+    assert keyed and all(set(ln) == {"k", "p"} for ln in keyed)
+    assert any(isinstance(ln, str) for ln in lines), "a literal not converted yet stays a string"
+    assert all(isinstance(i18n.from_json(ln), str) and ln["k"] not in i18n.from_json(ln) for ln in keyed)

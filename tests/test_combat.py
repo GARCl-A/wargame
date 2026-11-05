@@ -394,7 +394,7 @@ def test_ranged_attack_log_differentiates_bolts_and_arrows():
     a.ap = 2
     batt.log_lines.clear()
     actions.ATTACK.execute(batt, a, d)
-    assert any("shoots (5 bolt(s) in the quiver)" in line for line in batt.log_lines)
+    assert any("shoots (5 bolts in the quiver)" in line for line in batt.log_lines)
 
     # Shortbow uses arrows
     a.equip_weapon("Shortbow")
@@ -403,7 +403,7 @@ def test_ranged_attack_log_differentiates_bolts_and_arrows():
     a.ap = 2
     batt.log_lines.clear()
     actions.ATTACK.execute(batt, a, d)
-    assert any("shoots (3 arrow(s) left in the quiver)" in line for line in batt.log_lines)
+    assert any("shoots (3 arrows left in the quiver)" in line for line in batt.log_lines)
 
 
 
@@ -679,8 +679,7 @@ def _browbeat_duel(att_str, def_str):
     a.torch_hand = True
     a.ap = 2
     a.mod_strength, d.mod_strength = att_str, def_str
-    logs = []
-    batt.log = logs.append
+    logs = batt.log_lines
     with fixed_d20(10):
         actions.DEMORALIZE.execute(batt, a, d)
     return " ".join(logs)
@@ -721,8 +720,7 @@ def test_adjacent_foe_in_darkness_is_sensed_and_attackable_with_obscured_penalty
     assert d in actions.ATTACK.highlight_targets(batt, a)
 
     # Obscured penalty applies in combat roll
-    logs = []
-    batt.log = logs.append
+    logs = batt.log_lines
     with fixed_d20(15):
         actions.ATTACK.execute(batt, a, d)
     assert "-4(obscured)" in " ".join(logs)

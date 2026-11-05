@@ -75,3 +75,34 @@ def test_every_catalog_key_has_its_en_twin_with_the_same_placeholders():
         if STRICT:
             gaps = sorted(set(en) - set(cat))
             assert not gaps, f"{lang} lacks: {gaps}"
+
+
+def test_a_battle_log_line_keeps_its_key_and_reads_again_in_another_language(catalogs):
+    from gartok.battle import Battle
+    from tests.helpers import _melee_battle
+    batt = _melee_battle()[0]
+    assert isinstance(batt, Battle)
+    batt.log("a.hello", who=i18n.Ref("item", "sword", "Sword"))
+    line = batt.log_lines[-1]
+    assert line == "Hello Long Sword" and line.msg.to_json() == {"k": "a.hello", "p": {"who": {"ref": ["item", "sword", "Sword", False]}}}
+    i18n.set_language("pt-br")
+    assert i18n.from_json(line.msg.to_json()) == "Olá, Espada Longa", "the stored row reads in the language of the moment"
+    batt.log("a plain literal that is no key")
+    assert getattr(batt.log_lines[-1], "msg", None) is None
+
+
+def test_every_key_the_code_asks_of_the_catalog_exists():
+    import ast
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parents[1] / "gartok"
+    en = i18n.catalog("en")
+    prefixes = ("log.", "fx.", "action.")
+    missing = []
+    for path in root.rglob("*.py"):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith(prefixes) \
+                    and " " not in node.value and "{" not in node.value:
+                key = node.value
+                if key not in en and f"{key}.one" not in en and not any(k.startswith(key + ".") for k in en):
+                    missing.append(f"{path.name}: {key}")
+    assert not missing, f"keys with no en text: {sorted(set(missing))}"

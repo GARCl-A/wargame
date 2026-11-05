@@ -2,11 +2,19 @@
 
 import random
 
-from .. import combat_log, intel, poisons
+from .. import combat_log, i18n, intel, items, poisons
 from ..board import cells
 from ..conditions import BLEEDING_CLAWS_TURNS, Bleeding
 from ..data import roll
 from ..ground import GroundObject
+
+
+def item_ref(name, lower=False):
+    """The catalog reference of an item by its shown name (the name itself when it is no catalog item)."""
+    item = items.get(name)
+    if item:
+        return i18n.Ref("item", item.id, name, lower)
+    return name.lower() if lower else name
 
 
 def _sign(v):
@@ -60,9 +68,9 @@ def _announced(execute):
 
 class Action:
     id = ""
-    name = ""
+    name = i18n.Text("action", "name")          # the catalog's `action.<id>.name` / `.desc`, in the current language
     cost = 1
-    desc = ""
+    desc = i18n.Text("action", "desc")
     target = "none"        # "none" | "enemy" | "cell"
     aimed = False          # True: needs the target picked by clicking the screen
     announce = True        # False: too plain to name on the board (a step, a swing)
@@ -213,7 +221,7 @@ def _land_thrown(battle, actor, target, weapon_name):
     landing = _drop_cell(battle, target)
     battle.ground.append(GroundObject.weapon(landing, weapon_name))
     actor.let_go = {"at": target.name}
-    battle.log(f"  {weapon_name} lands at {landing}; {actor.name} is disarmed.")
+    battle.log("log.thrown_lands", weapon=item_ref(weapon_name), cell=str(landing), actor=actor.name)
 
 
 def _pickable(unit, obj):
@@ -235,13 +243,14 @@ def _envenom(battle, attacker, target):
     poison = poisons.get(pid)
     dc = poisons.save_dc(poison, attacker.char)
     ok, nat, total = target.char.poison_save(dc)
-    roll = f"CON d20({nat}) {target.char.mod_constitution:+} = {total} vs DC {dc}"
+    save = i18n.Msg("log.con_save", nat=nat, mod=target.char.mod_constitution, total=total, dc=dc)
+    pref = i18n.Ref("poison", pid, poison.name)
     if ok:
-        battle.log(f"  {target.name} shakes off the {poison.name} ({roll}).")
+        battle.log("log.poison_shaken", target=target.name, poison=pref, roll=save)
         return
     level = target.char.add_poison(pid, dc)
-    battle.log(f"  {target.name} is poisoned: {poison.name} {level} "
-               f"(-{level * poison.per_stack} {poison.attribute.capitalize()}) ({roll}).")
+    battle.log("log.poisoned", target=target.name, poison=pref, level=level, loss=level * poison.per_stack,
+               attribute=i18n.Ref("attribute", poison.attribute, poison.attribute.capitalize()), roll=save)
     target.check_collapse(battle.log)
 
 
@@ -251,7 +260,7 @@ def _claw(battle, attacker, target, dmg, weapon):
     if not n or weapon is not None or attacker.armed or dmg <= target.dr or target.hp <= 0:
         return
     target.add_condition(Bleeding(int(n), BLEEDING_CLAWS_TURNS))
-    battle.log(f"  {target.name} is bleeding ({target.condition('bleeding').label}).")
+    battle.log("log.bleeding", target=target.name, label=target.condition("bleeding").label)
 
 
 NONLETHAL_PENALTY = 1      # to hit, while a character pulls its blows (the Non-lethal toggle)
@@ -295,7 +304,7 @@ def _check_gruesome_takedown(battle, attacker, downed_target):
         return
     foes.sort(key=lambda u: battle.units_distance(attacker, u))
     victim = foes[0]
-    battle.log(f"  Gruesome Takedown! {attacker.name} roars at {victim.name}:")
+    battle.log("log.gruesome_takedown", attacker=attacker.name, victim=victim.name)
     execute_demoralize(battle, attacker, victim, free=True, ignore_language=True)
 
 
@@ -305,7 +314,7 @@ def _stone_endurance(battle, target, dmg):
     if not die or dmg <= target.dr or not target.spend_once("stone_endurance"):
         return dmg
     cut = max(0, roll(1, die) + target.mod_constitution)
-    battle.log(f"  {target.name} takes the blow like stone: -{cut} damage [Stone's Endurance].")
+    battle.log("log.stone_endurance", target=target.name, cut=cut)
     return max(0, dmg - cut)
 
 
@@ -313,7 +322,7 @@ def _thornskin(battle, attacker, target):
     """Treefolk Thornskin: a melee blow that lands pricks the one who struck it."""
     thorns = int(target.char.talent_bonus("thornskin"))
     if thorns and attacker.alive and attacker.team != target.team:
-        battle.log(f"  {attacker.name} is pricked by {target.name}'s thorns.")
+        battle.log("log.thornskin", attacker=attacker.name, target=target.name)
         attacker.take_damage(thorns, battle.log)
 
 
@@ -331,7 +340,7 @@ def _gore_charge(battle, attacker, target):
         return
     path, _ = Push.landing(battle, attacker, target, squares=squares)
     if path:
-        battle.log(f"  {attacker.name} gores {target.name} and throws them to {path[-1]}!")
+        battle.log("log.gore_charge", attacker=attacker.name, target=target.name, cell=str(path[-1]))
         Push.throw(battle, attacker, target, path)
 
 
@@ -367,13 +376,13 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         crit_range = max(2, crit_range - crit_relief)
     crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
-    flank_tag = f" [Flank -{flank_pen}]" if flank_pen else ""
-    phalanx_tag = " [Phalanx]" if phalanx and shown != "?" else ""
-    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {shown}{flank_tag}{phalanx_tag}"
-    fx_text = f"{total} vs AC {shown}"
+    roll_line = {"head": prefix, "nat": nat, "detail": detail, "total": total, "shown": shown,
+                 "flank": i18n.Msg("log.roll.flank", n=flank_pen) if flank_pen else "",
+                 "phalanx": i18n.Msg("log.roll.phalanx") if phalanx and shown != "?" else ""}
+    fx_text = i18n.t("fx.vs_ac", total=total, shown=shown)
     if nat == 1:
-        battle.log(desc + "  -> critical miss.")
-        battle.fx(target.pos, "Crit Miss!", "faint")
+        battle.log("log.roll.crit_miss", **roll_line)
+        battle.fx(target.pos, i18n.t("fx.crit_miss"), "faint")
         battle.cue("miss", target.pos)
         return "miss"
     if crit or total >= ac:
@@ -382,12 +391,12 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             battle.cue("crit", target.pos)
         if target.dying:
             if pulled:
-                battle.log(desc + "  -> the blow is pulled; the fallen is spared.")
+                battle.log("log.roll.spared", **roll_line)
                 return "crit" if crit else "hit"
-            battle.log(desc + "  -> a blow on the fallen.")
+            battle.log("log.roll.on_fallen", **roll_line)
             battle.tick_dying(target)       # the hit counts as one more turn on the clock
             return "crit" if crit else "hit"
-        battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> hit."))
+        battle.log("log.roll.crit" if crit else "log.roll.hit", **roll_line)
         was_up = target.alive
         cull = 0
         if getattr(target, "demoralized", False) and hasattr(attacker, "char"):
@@ -398,7 +407,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         frenzy = attacker.char.talent_bonus("blood_frenzy") if melee and target.hp < target.hp_max / 2 else 0
         brutal_total = brutal + (attacker.crit_brutal() if crit else 0)
         if brutal_total:
-            battle.log(f"  {brutal_why if brutal else 'Savage Attacks'}: Brutal {brutal_total}!")
+            battle.log("log.brutal", why=brutal_why if brutal else i18n.Msg("log.brutal_savage"), n=brutal_total)
         dmg = attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon, crit_mult=crit_mult,
                                    bonus_damage=bonus_damage + cull + flank_finesse + frenzy, brutal=brutal)
         dmg = _stone_endurance(battle, target, dmg)
@@ -419,7 +428,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             _envenom(battle, attacker, target)
             _claw(battle, attacker, target, dmg, weapon)
         return "crit" if crit else "hit"
-    battle.log(desc + "  -> misses.")
+    battle.log("log.roll.miss", **roll_line)
     battle.fx(target.pos, fx_text, "faint")
     battle.cue("miss", target.pos)
     return "miss"

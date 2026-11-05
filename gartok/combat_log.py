@@ -14,7 +14,8 @@ Rows (all carry `e`):
          `action` (an Action id, "end_turn", "plant_flag", "plant_trap", "skip_traps"), `target`
          ({"unit": i} | {"cell": [x, y]}), `kw`, `ap`, `options` (what was legal), `ai`
          (what `ai/` would have done in the same state, human rows only), `state` after it,
-         the `log` lines it produced, and `winner` once the fight is decided. `new_units` adds
+         the `log` lines it produced (a string, or `{"k": key, "p": params}` -- `i18n.from_json` renders
+         it in the language of the moment; format 1 had strings only), and `winner` once the fight is decided. `new_units` adds
          the static data of anyone who joined mid-fight (reinforcements).
   end    the result: `winner`, `rounds`, `survivors`, `seconds`.
 
@@ -31,7 +32,7 @@ import os
 import random
 import time
 
-FORMAT = 1
+FORMAT = 2
 UNIT_FIELDS = ("x", "y", "z", "hp", "ap", "status", "conditions", "mounted_on", "delayed", "ammo")
 
 
@@ -126,7 +127,9 @@ class CombatLog:
     def _new_log(self, battle):
         fresh = battle.log_total - self._log_seen
         self._log_seen = battle.log_total
-        return list(battle.log_lines[-fresh:]) if fresh > 0 else []
+        if fresh <= 0:
+            return []
+        return [ln.msg.to_json() if getattr(ln, "msg", None) else str(ln) for ln in battle.log_lines[-fresh:]]
 
     def _state(self, battle, first=False):
         units = battle.units

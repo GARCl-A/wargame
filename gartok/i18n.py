@@ -86,6 +86,11 @@ def plural(key, n, **fmt):
     return t(f"{key}.{'one' if n == 1 else 'other'}", n=n, **fmt)
 
 
+def plural_key(key, n):
+    """The key of the form `n` takes: for a log line, whose text is made by `battle.log(key, **params)`."""
+    return f"{key}.{'one' if n == 1 else 'other'}"
+
+
 def _lookup(key):
     value = _catalog(_lang).get(key)
     if value is None and _lang != DEFAULT_LANG:
@@ -130,3 +135,68 @@ def group(prefix):
 def catalog(lang):
     """The flattened catalog of `lang` (a copy), for the parity tests and the audit."""
     return dict(_catalog(lang))
+
+
+class Ref:
+    """A catalog thing named inside a message (`Ref("ability", "halfling_luck", "Halfling Luck")`): it is
+    stored by kind and id and shown at render time with `name()`, so the same line reads in any
+    language; `default` (the registry's own name) shows when no one wrote a catalog name yet."""
+
+    def __init__(self, kind, ident, default=None, lower=False):
+        self.kind, self.ident, self.default, self.lower = kind, ident, default, lower
+
+    def __str__(self):
+        shown = name(self.kind, self.ident)
+        shown = self.default if shown == self.ident and self.default else shown
+        return shown.lower() if self.lower else shown
+
+    def article(self):
+        return gender(self.kind, self.ident)
+
+
+class Msg:
+    """A message kept as its key and parameters instead of its text: the combat log stores these so a
+    fight reads in any language. A parameter may be a `Ref` or another `Msg`."""
+
+    def __init__(self, key, **params):
+        self.key, self.params = key, params
+
+    def __str__(self):
+        return t(self.key, **{k: str(v) if isinstance(v, (Msg, Ref)) else v for k, v in self.params.items()})
+
+    def to_json(self):
+        return {"k": self.key, "p": {k: _param_json(v) for k, v in self.params.items()}}
+
+
+def _param_json(v):
+    if isinstance(v, Msg):
+        return v.to_json()
+    if isinstance(v, Ref):
+        return {"ref": [v.kind, v.ident, v.default, v.lower]}
+    return v
+
+
+def from_json(data):
+    """The text of a stored `Msg.to_json()` (or a plain string) in the current language."""
+    if isinstance(data, str):
+        return data
+
+    def param(v):
+        if isinstance(v, dict) and "k" in v:
+            return from_json(v)
+        if isinstance(v, dict) and "ref" in v:
+            return str(Ref(*v["ref"]))
+        return v
+    return t(data["k"], **{k: param(v) for k, v in data.get("p", {}).items()})
+
+
+class Text:
+    """A class attribute whose value is the catalog string `<prefix>.<owner.id>.<field>` in the current
+    language, read on every access (`""` when the owner has none)."""
+
+    def __init__(self, prefix, field):
+        self.key = (prefix, field)
+
+    def __get__(self, obj, owner):
+        key = f"{self.key[0]}.{owner.id}.{self.key[1]}"
+        return t(key) if has(key) else ""

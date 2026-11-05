@@ -75,6 +75,13 @@ Action messages, end-of-turn, traps/flags, results, AI-visible text excluded (th
 prose). Convert module by module (`actions/`, `combat_log.py`, `campaign_fight.py`, `hunt`, `craft`,
 `trade`, `work_desk`, `vault`, `job_board`, …), highest-traffic first. Replace manual plurals as they are met.
 
+Mechanism (done): `battle.log(key, **params)` keeps an `i18n.Msg`; the combat log (format 2) stores `{k, p}`
+for a converted line and a plain string for one not converted yet; `i18n.Ref` names a catalog thing and resolves at
+render time; `i18n.Text` makes an action's name/description a catalog read. Done: `actions/base.py` (the roll
+resolution) and `actions/combat.py`. Left: the other `actions/` modules, then the rest of the list. Roll modifier
+labels (`+2(Flank [circumstance])`) and `unit_*` messages that take `battle.log` as a callback are still literal;
+`campaign._death_note` still finds the death by text and must read the key once those lines are converted.
+
 ### 4. Catalog
 
 Item, talent, condition, racial ability, weapon trait, race, node, faction, skill and material names and
