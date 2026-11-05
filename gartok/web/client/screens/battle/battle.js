@@ -160,7 +160,7 @@ function renderTokens() {
       : u.dying ? `<div class="badge">${esc(u.dying)}</div>` : u.defending ? `<div class="badge">◈</div>` : "";
     const nameplate = (u.active && S.my_turn) || ui.armed === u.id || ui.inspect === u.id
       ? `<div class="nameplate ${u.side}">${esc(u.name)}</div>` : "";
-    const carried = u.carries ? `<div class="flagbadge ${u.carries}"${tip(u.carries === "ally" ? "Carries your flag" : "Carries their flag")}>⚑</div>` : "";
+    const carried = u.carries ? `<div class="flagbadge ${u.carries}"${tip(tr(u.carries === "ally" ? "battle.flag_ally" : "battle.flag_foe"))}>⚑</div>` : "";
     const html = face(u.portrait, u.name) + arc(d, u.hp_frac, col) + (u.seat === "player" ? `<div class="pennant"></div>` : "") + badge + carried + nameplate;
     if (el._html !== html) { el.innerHTML = html; el._html = html; }
   }
@@ -191,16 +191,16 @@ function renderTokens() {
 }
 
 function renderTop() {
-  $("place").textContent = S.meta.name || "Battle";
-  $("sub").innerHTML = S.campaign ? esc(S.meta.sub) : `Level ${esc(S.meta.level)} · squad of ${esc(S.meta.squad)} · seed ${esc(S.meta.seed)}`;
+  $("place").textContent = S.meta.name || tr("battle.title");
+  $("sub").innerHTML = S.campaign ? esc(S.meta.sub) : tr("battle.sub_lab", {level: esc(S.meta.level), squad: esc(S.meta.squad), seed: esc(S.meta.seed)});
   const coins = S.initiative.map(c => {
     if (!c.id) return `<div class="coin unknown">?</div>`;
     const hp = c.hp_frac == null ? "" : `<div class="hp" style="--c:${c.hp_frac > .5 ? "#7fa557" : "#d0493a"}"><i style="width:${c.hp_frac * 100}%"></i></div>`;
     const mark = {dying: c.dying, stable: "♥", dead: "✝"}[c.state];
-    const what = {dying: `dying, ${c.dying}`, stable: "down and stable", dead: "dead"}[c.state];
-    return `<div class="coin seat-${c.seat}${c.active ? " now" : ""}${c.state && c.state !== "up" ? " is-" + c.state : ""}"${tip(what ? `${c.name} · ${what}` : c.name)}>${face(c.portrait, c.name)}${c.state === "dead" ? "" : hp}${mark ? `<div class="mk">${esc(mark)}</div>` : ""}</div>`;
+    const what = {dying: tr("battle.dying", {n: c.dying}), stable: tr("battle.down_stable"), dead: tr("battle.dead")}[c.state];
+    return `<div class="coin seat-${c.seat}${c.active ? " now" : ""}${c.state && c.state !== "up" ? " is-" + c.state : ""}"${tip(what ? tr("battle.coin_tip", {name: c.name, what}) : c.name)}>${face(c.portrait, c.name)}${c.state === "dead" ? "" : hp}${mark ? `<div class="mk">${esc(mark)}</div>` : ""}</div>`;
   }).join("");
-  $("init").innerHTML = `<div class="round"><div><small>Round</small><span>${ROMAN(S.round)}</span></div></div><div class="chain">${coins}</div>`;
+  $("init").innerHTML = `<div class="round"><div><small>${tr("battle.round")}</small><span>${ROMAN(S.round)}</span></div></div><div class="chain">${coins}</div>`;
 }
 
 const tier = (label, facts) => `<section class="tier"><span>${esc(label)}</span><div class="facts">${facts}</div></section>`;
@@ -208,7 +208,7 @@ const weaponFacts = w => `<span><b>${esc(w.name)}</b>${w.damage ? " " + esc(w.da
 const foeHead = (t, chips, extra) => `<div class="foehead"><div class="med" style="--side:${SEAT[t.seat] || "var(--blood)"}">${face(t.portrait, t.name)}</div>
   <div><h2>${esc(t.name)}</h2>${chips}${extra || ""}</div></div>`;
 const lootIcon = t => t.glyph ? ico(t.glyph) : `<i class="flagico ${t.flag}">⚑</i>`;
-const groundTier = t => t.loot && t.loot.length ? tier("On the ground", t.loot.map(l => `<span class="lootrow">${lootIcon(l)}<b>${esc(l.name)}</b></span>`).join("")) : "";
+const groundTier = t => t.loot && t.loot.length ? tier(tr("battle.on_ground"), t.loot.map(l => `<span class="lootrow">${lootIcon(l)}<b>${esc(l.name)}</b></span>`).join("")) : "";
 const chipRow = (names, cls = "chip") => `<div class="chips">${names.filter(Boolean).map(c => `<span class="${cls}">${esc(c)}</span>`).join("")}</div>`;
 
 function renderInspect() {
@@ -216,23 +216,23 @@ function renderInspect() {
   const card = (kicker, head, sections, foot = "") =>
     box.innerHTML = `<div class="kicker">${kicker}</div><div class="bscroll">${head}<div class="known">${sections}</div>${foot}</div>`;
   if (!t) {
-    box.innerHTML = `<div class="kicker">Bestiary</div><div class="empty">Click a foe to read what your squad knows of it. Click it again to strike.</div>`;
+    box.innerHTML = `<div class="kicker">${tr("battle.bestiary")}</div><div class="empty">${tr("battle.empty")}</div>`;
     return;
   }
   if (t.kind === "ally") {
-    card("Your squad",
+    card(tr("battle.your_squad"),
       foeHead(t, `<div class="race">${esc(t.race)} · · ${esc(t.alignment)}</div>${chipRow(t.conditions || [], "chip muted")}`),
-      tier("Vitals", `<span>HP <b>${t.hp}/${t.hp_max}</b></span><span>AC <b>${t.ac}</b></span><span>MD <b>${t.md}</b></span><span>Speed <b>${t.speed}</b></span>`)
-        + (t.weapon ? tier("Weapon", weaponFacts(t.weapon)) : "") + groundTier(t),
-      S.active && S.active.id === t.id && t.loot.length ? `<div class="assess">Pick up lifts what your hands can hold.</div>` : "");
+      tier(tr("battle.vitals"), `<span>${tr("battle.hp")} <b>${t.hp}/${t.hp_max}</b></span><span>${tr("battle.ac")} <b>${t.ac}</b></span><span>${tr("battle.md")} <b>${t.md}</b></span><span>${tr("battle.speed")} <b>${t.speed}</b></span>`)
+        + (t.weapon ? tier(tr("battle.weapon"), weaponFacts(t.weapon)) : "") + groundTier(t),
+      S.active && S.active.id === t.id && t.loot.length ? `<div class="assess">${tr("battle.pick_up_note")}</div>` : "");
     return;
   }
   const bars = Array.from({length: t.steps_max}, (_, i) => `<i class="${i < t.steps ? "on" : ""}"></i>`).join("");
   const bands = t.bands.map(b => tier(b.label, b.rows.map(r => r.value == null ? `<span class="q">${esc(r.label)}</span>` : `<span>${esc(r.label)} <b>${esc(r.value)}</b></span>`).join(""))).join("");
-  card(`Bestiary · ${ui.armed === t.id ? "target" : "foe"}`,
+  card(tr(ui.armed === t.id ? "battle.bestiary_target" : "battle.bestiary_foe"),
     foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.alignment)}</div>${chipRow([t.size, ...(t.conditions || [])])}`, `<div class="health">${bars}</div>`),
-    tier("Arms", weaponFacts({...t.weapon, damage: ""}) + t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")) + groundTier(t) + bands,
-    `<div class="assess">${esc(t.read)} — Assess to read more.</div>`);
+    tier(tr("battle.arms"), weaponFacts({...t.weapon, damage: ""}) + t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")) + groundTier(t) + bands,
+    `<div class="assess">${tr("battle.assess", {read: esc(t.read)})}</div>`);
 }
 
 function renderLog() {
@@ -240,7 +240,7 @@ function renderLog() {
   const box = $("log"), pinned = box.scrollHeight - box.scrollTop - box.clientHeight < 24;
   const lines = S.log.map(line => {
     const m = /^-+\s*Round\s+(\d+)\s*-+$/i.exec(line.trim());
-    if (m) return `<div class="rnd">Round ${ROMAN(+m[1])}</div>`;
+    if (m) return `<div class="rnd">${tr("battle.round")} ${ROMAN(+m[1])}</div>`;
     let html = esc(line);
     for (const [n, side] of [...names].sort((a, b) => b[0].length - a[0].length))
       html = html.split(esc(n)).join(`<span class="${side === "ally" ? "a" : "f"}">${esc(n)}</span>`);
@@ -252,21 +252,21 @@ function renderLog() {
 
 function renderUnit() {
   const a = S.active, box = $("unit");
-  if (!a) { box.innerHTML = `<div class="waiting">The fight goes on out of sight…</div>`; return; }
+  if (!a) { box.innerHTML = `<div class="waiting">${tr("battle.out_of_sight")}</div>`; return; }
   const own = a.side === "ally" && a.hp != null;
   const hp = own
     ? (a.hp_max <= 10 ? `<div class="drops">${Array.from({length: a.hp_max}, (_, i) => `<i class="${i < a.hp ? "" : "off"}"></i>`).join("")}</div>`
        : `<div class="hpbar"><i style="width:${a.hp_frac * 100}%"></i></div>`)
     : `<div class="hpbar"><i style="width:${a.hp_frac * 100}%"></i></div>`;
   const w = a.weapon;
-  const lvl = a.level == null ? "" : `<div class="lvl"${tip(`Racial level ${a.level} (hit dice) · combat ${a.tracks.combat} · work ${a.tracks.work} · magic ${a.tracks.magic}`)}><small>LV</small>${a.level}</div>`;
+  const lvl = a.level == null ? "" : `<div class="lvl"${tip(tr("battle.level_tip", {level: a.level, combat: a.tracks.combat, work: a.tracks.work, magic: a.tracks.magic}))}><small>${tr("battle.lv")}</small>${a.level}</div>`;
   box.innerHTML = `<div class="med" style="--side:${SEAT[a.seat]}">${face(a.portrait, a.name)}</div>${lvl}
     <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · · ${esc(a.alignment)}</div>
-    ${S.my_turn ? `<div class="stats"><div class="stat hp"><span>Hit points${own ? ` · ${a.hp}/${a.hp_max}` : ""}</span>${hp}</div>
-      <div class="stat"><span>AC</span><b>${a.ac ?? "?"}</b></div><div class="stat"><span>MD</span><b>${a.md ?? "?"}</b></div><div class="stat"><span>Speed</span><b>${a.speed}</b></div></div>
-      ${w ? `<div class="weapon"><b>${esc(w.name)}</b>${esc(w.damage || "")}${w.thrown ? ` · thrown ${w.thrown}` : ""}${w.range ? ` · range ${w.range}` : ""}${w.action ? `<em>${esc(w.action)}</em>` : ""}</div>` : `<div class="weapon">Unarmed</div>`}`
-      : `<div class="race" style="margin-top:22px;font-size:20px">${S.setup ? "waits for the fight to begin" : a.side === "ally" ? "fights on its own" : "is taking its turn…"}</div>`}</div>
-    ${S.my_turn ? `<div class="ap"><span>Action</span><div class="coins">${Array.from({length: a.ap_max}, (_, i) => `<i class="${i < a.ap_max - a.ap ? "spent" : ""}"></i>`).join("")}</div></div>` : ""}`;
+    ${S.my_turn ? `<div class="stats"><div class="stat hp"><span>${tr("battle.hit_points")}${own ? ` · ${a.hp}/${a.hp_max}` : ""}</span>${hp}</div>
+      <div class="stat"><span>${tr("battle.ac")}</span><b>${a.ac ?? "?"}</b></div><div class="stat"><span>${tr("battle.md")}</span><b>${a.md ?? "?"}</b></div><div class="stat"><span>${tr("battle.speed")}</span><b>${a.speed}</b></div></div>
+      ${w ? `<div class="weapon"><b>${esc(w.name)}</b>${esc(w.damage || "")}${w.thrown ? ` · ${tr("battle.thrown", {n: w.thrown})}` : ""}${w.range ? ` · ${tr("battle.range", {n: w.range})}` : ""}${w.action ? `<em>${esc(w.action)}</em>` : ""}</div>` : `<div class="weapon">${tr("battle.unarmed")}</div>`}`
+      : `<div class="race" style="margin-top:22px;font-size:20px">${tr(S.setup ? "battle.waits_begin" : a.side === "ally" ? "battle.fights_alone" : "battle.taking_turn")}</div>`}</div>
+    ${S.my_turn ? `<div class="ap"><span>${tr("battle.action")}</span><div class="coins">${Array.from({length: a.ap_max}, (_, i) => `<i class="${i < a.ap_max - a.ap ? "spent" : ""}"></i>`).join("")}</div></div>` : ""}`;
 }
 
 function plate(a, {id = a.id, name = a.toggle ? a.label : a.name, sel = ui.aim && ui.aim.id === a.id, sub = ""} = {}) {
@@ -283,14 +283,14 @@ function renderPlates() {
   const list = (S.actions[ui.tab] || []).filter(a => a.id !== "end" && a.id !== "delay" && !a.id.startsWith("spell:"));
   document.querySelectorAll("#tabs span").forEach(t => t.classList.toggle("on", t.dataset.tab === ui.tab));
   const aimingSpell = ui.aim && ui.aim.id.startsWith("spell:");
-  const book = spells.length ? plate({label: "Cast a spell", cost: 0, enabled: spells.some(a => a.enabled)},
-                                     {id: "spells", name: "Spells", sel: ui.spellbook || aimingSpell}) : "";
+  const book = spells.length ? plate({label: tr("battle.cast_spell"), cost: 0, enabled: spells.some(a => a.enabled)},
+                                     {id: "spells", name: tr("battle.spells"), sel: ui.spellbook || aimingSpell}) : "";
   $("plates").innerHTML = book + list.map(a => plate(a)).join("");
   const delay = all.find(a => a.id === "delay");
-  $("fixed").innerHTML = delay ? plate(delay, {sub: "others first"}) : "";
+  $("fixed").innerHTML = delay ? plate(delay, {sub: tr("battle.others_first")}) : "";
   const open = ui.spellbook && spells.length && S.my_turn;
   $("spellbook").hidden = !open;
-  if (open) $("spellbook").innerHTML = `<div class="kicker">Spells</div>` + spells.map(a =>
+  if (open) $("spellbook").innerHTML = `<div class="kicker">${tr("battle.spells")}</div>` + spells.map(a =>
     `<div class="row ${a.enabled ? "" : "off"} ${ui.aim && ui.aim.id === a.id ? "sel" : ""}" data-action="${esc(a.id)}">
       <div class="ico mask" style="--icon:${iconOf(a.id)};width:22px;height:22px;color:#5a2116"></div>${esc(a.name)}
       <div class="cost">${"<i></i>".repeat(a.cost)}</div></div>`).join("");
@@ -313,17 +313,17 @@ function nudges() {
 function renderHint() {
   let h;
   if (ui.error) h = ui.error;
-  else if (S.winner) h = "The fight is over.";
-  else if (S.setup && S.setup.kind === "flag") h = "Plant your flag: click a marked cell on your half.";
-  else if (S.setup) h = `${S.setup.name} sets a trap: click a marked cell, or Skip traps.`;
-  else if (S.talk) h = "A patrol challenges the squad.";
-  else if (!S.my_turn) h = "The other side is moving…";
-  else if (ui.aim) h = `${ui.aim.name}: ${ui.aim.cellTarget ? "click a marked cell" : "click a marked target"} — Esc to cancel.`;
-  else if (S.flags.mopping_up) h = "Enemies down — stabilize the downed, or Space to let the counter run.";
-  else if (S.flags.binding) h = "Enemies down — Capture a fallen foe, or Space to let the round run out.";
-  else if (S.flags.ctf) h = "Carry their flag home to win, and guard your own.";
-  else if (S.flags.can_flee) h = "At the edge of the field: you can Flee.";
-  else h = "Click a marked cell to move · a foe twice to strike · Space: defend and end the turn · 9: Delay, let the others go first · wheel zooms, drag pans.";
+  else if (S.winner) h = tr("battle.hint_over");
+  else if (S.setup && S.setup.kind === "flag") h = tr("battle.hint_flag");
+  else if (S.setup) h = tr("battle.hint_trap", {name: S.setup.name});
+  else if (S.talk) h = tr("battle.hint_talk");
+  else if (!S.my_turn) h = tr("battle.hint_other");
+  else if (ui.aim) h = tr(ui.aim.cellTarget ? "battle.hint_aim_cell" : "battle.hint_aim_target", {name: ui.aim.name});
+  else if (S.flags.mopping_up) h = tr("battle.hint_mopping");
+  else if (S.flags.binding) h = tr("battle.hint_binding");
+  else if (S.flags.ctf) h = tr("battle.hint_ctf");
+  else if (S.flags.can_flee) h = tr("battle.hint_flee");
+  else h = tr("battle.hint_default");
   $("hint").textContent = h;
 }
 
@@ -343,14 +343,14 @@ function renderDialog() {
   if (ui.picking) return;
   d.classList.toggle("opaque", !!S.handoff);
   if (S.handoff) {
-    d.innerHTML = `<div class="paper ask" style="text-align:center"><div class="kicker">Hand over</div>
-      <h2 style="margin-top:16px">${S.handoff === "player" ? "First" : "Second"} player's turn</h2>
-      <p class="line">The other player looks away. Take the seat when you are ready.</p>
-      <div class="row" style="justify-content:center"><div class="btn" data-seat>I have the seat</div></div></div>`;
+    d.innerHTML = `<div class="paper ask" style="text-align:center"><div class="kicker">${tr("battle.hand_over")}</div>
+      <h2 style="margin-top:16px">${tr(S.handoff === "player" ? "battle.turn_first" : "battle.turn_second")}</h2>
+      <p class="line">${tr("battle.hand_line")}</p>
+      <div class="row" style="justify-content:center"><div class="btn" data-seat>${tr("battle.seat")}</div></div></div>`;
   } else if (S.talk) {
     const t = S.talk, lead = t.leader;
     const body = t.result
-      ? `<div class="result ${esc(t.result.kind)}">${esc(t.result.text)}</div><div class="row"><div class="btn" data-goon>Go on</div></div>`
+      ? `<div class="result ${esc(t.result.kind)}">${esc(t.result.text)}</div><div class="row"><div class="btn" data-goon>${tr("battle.go_on")}</div></div>`
       : `<div class="cols"><div>${t.speakers.map(s => `<div class="who ${s.selected ? "sel" : ""}" data-speaker="${s.id}"><b>${esc(s.name)}</b><small>${esc(s.caption)}</small></div>`).join("")}</div>
          <div>${t.options.map(o => `<div class="opt ${o.block ? "off" : ""}" data-verb="${esc(o.id)}"><span class="check">${esc(o.check)}${o.odds != null ? ` · ${Math.round(o.odds * 100)}%` : ""}</span>
            <b>${esc(o.label)}</b><small>${esc(o.block || o.note)}</small></div>`).join("")}</div></div>`;
@@ -369,7 +369,7 @@ function pick(title, options) {
   d.classList.remove("opaque");
   d.innerHTML = `<div class="paper ask" style="width:560px"><div class="kicker">${esc(title)}</div>
     <div class="heights" style="margin-top:18px">${options.map(([v, label]) => `<div class="opt" data-pick="${v}"><b>${esc(label)}</b></div>`).join("")}</div>
-    <div class="row"><div class="ghost-btn" data-pick="">Cancel</div></div></div>`;
+    <div class="row"><div class="ghost-btn" data-pick="">${tr("battle.cancel")}</div></div></div>`;
   d.hidden = false;
   return new Promise(done => {
     d.onclick = e => {
@@ -399,11 +399,11 @@ function playEvents(ev) {
   }, i * 90));
   for (const c of ev.cues) {
     const [x, y] = center(c.pos);
-    add(c.kind === "crit" ? "Critical!" : "Miss", `float ${c.kind === "crit" ? "crit" : "faint"}`, [x, y - Board.layout.cell * .7], 1300);
+    add(tr(c.kind === "crit" ? "battle.critical" : "battle.miss"), `float ${c.kind === "crit" ? "crit" : "faint"}`, [x, y - Board.layout.cell * .7], 1300);
   }
   if (ev.cues.some(c => c.kind === "crit")) {
     const b = $("banner");
-    b.textContent = "Critical hit";
+    b.textContent = tr("battle.crit_banner");
     b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
   }
   for (const a of ev.acts) {
@@ -434,12 +434,12 @@ async function showEnd(picker = false) {
   const m = $("modal");
   const fights = Shell.lab ? await api("/api/lab/fights") : null;
   const won = S.result === "VICTORY";
-  m.innerHTML = `<div class="paper endcard">${picker ? `<h1 style="font-size:40px">New fight</h1>` : `<h1 class="${won ? "" : "lost"}">${esc(S.result)}</h1>`}
-    <p>${picker ? "Pick a fight from the combat lab." : won ? "The field is yours." : S.result === "FLED" ? "You live to fight again." : "Your squad has fallen."}</p>
+  m.innerHTML = `<div class="paper endcard">${picker ? `<h1 style="font-size:40px">${tr("battle.new_fight_h")}</h1>` : `<h1 class="${won ? "" : "lost"}">${tr("result." + S.result)}</h1>`}
+    <p>${tr(picker ? "battle.pick_lab" : won ? "battle.won" : S.result === "FLED" ? "battle.fled" : "battle.lost")}</p>
     ${fights ? `<div class="row"><select id="fightsel">${fights.map(f => `<option value="${f.id}" ${f.id === S.meta.fight ? "selected" : ""}>${esc(f.name)}</option>`).join("")}</select>
-    <select id="playersel"><option value="1">One player</option><option value="2" ${S.meta.players === 2 ? "selected" : ""}>Two players</option></select>
-    <div class="btn" id="again">Fight</div>${picker ? `<div class="ghost-btn" id="cancel">Cancel</div>` : ""}</div>` : ""}
-    ${S.campaign ? `<div class="row"><div class="btn" id="goon">Go on</div></div>` : ""}</div>`;
+    <select id="playersel"><option value="1">${tr("battle.one_player")}</option><option value="2" ${S.meta.players === 2 ? "selected" : ""}>${tr("battle.two_players")}</option></select>
+    <div class="btn" id="again">${tr("battle.fight")}</div>${picker ? `<div class="ghost-btn" id="cancel">${tr("battle.cancel")}</div>` : ""}</div>` : ""}
+    ${S.campaign ? `<div class="row"><div class="btn" id="goon">${tr("battle.go_on")}</div></div>` : ""}</div>`;
   m.hidden = false;
   if (S.campaign) $("goon").onclick = async () => { await api("/api/battle/done", {}); location.reload(); };
   if (!fights) return;
@@ -491,8 +491,8 @@ async function selectAction(id) {
 function pileRows(cell) {
   return unitsAt(cell).map(u => {
     const legal = ui.aim ? ui.aim.targets.includes(u.id) : !!u.attackable;
-    const state = u.state === "dying" ? `dying · ${u.dying}` : u.state === "stable" ? "down · stable" : u.state === "broken" ? "broken" : "standing";
-    const why = legal ? (ui.aim ? ui.aim.name : "strike") : u.side === "ally" ? "ally" : u.downed ? "not a target" : "not downed";
+    const state = u.state === "dying" ? tr("battle.st_dying", {n: u.dying}) : tr(u.state === "stable" ? "battle.st_stable" : u.state === "broken" ? "battle.st_broken" : "battle.st_standing");
+    const why = legal ? (ui.aim ? ui.aim.name : tr("battle.strike")) : u.side === "ally" ? tr("battle.why_ally") : tr(u.downed ? "battle.why_not_target" : "battle.why_not_downed");
     return {u, legal, state, why};
   });
 }
@@ -512,7 +512,7 @@ function renderPile() {
   const left = Board.cx(cell[0]) + L.cell + 10, flip = left + 330 > 1384;
   box.style.left = `${flip ? Board.cx(cell[0]) - 340 : left}px`;
   box.style.top = `${Math.min(Math.max(Board.cy(cell[1]) - 20, 4), 780 - 60 - rows.length * 58)}px`;
-  box.innerHTML = `<h3>${esc(ui.aim ? ui.aim.name : "Strike")} — who</h3>` + rows.map((r, i) =>
+  box.innerHTML = `<h3>${tr("battle.pile_who", {name: esc(ui.aim ? ui.aim.name : tr("battle.strike"))})}</h3>` + rows.map((r, i) =>
     `<div class="prow ${r.legal ? "" : "off"} ${i === sel ? "sel" : ""}" data-i="${i}"><div class="pface seat-${r.u.seat}">${face(r.u.portrait, r.u.name)}</div>
       <div><b>${esc(r.u.name)}</b><span>${esc(r.state)}</span></div><em>${esc(r.why)}</em></div>`).join("");
   box.hidden = false;
@@ -551,7 +551,7 @@ function where(p) {
   const u = S.units.find(t => S.active && t.id === S.active.id);
   if (!u) return "";
   const dx = p[0] < u.pos[0] ? -1 : p[0] >= u.pos[0] + u.fp ? 1 : 0, dy = p[1] < u.pos[1] ? -1 : p[1] >= u.pos[1] + u.fp ? 1 : 0;
-  return !dx && !dy ? "underfoot" : ({"-1,-1": "NW", "0,-1": "N", "1,-1": "NE", "-1,0": "W", "1,0": "E", "-1,1": "SW", "0,1": "S", "1,1": "SE"})[`${dx},${dy}`];
+  return tr("battle.dir." + (!dx && !dy ? "here" : ({"-1,-1": "NW", "0,-1": "N", "1,-1": "NE", "-1,0": "W", "1,0": "E", "-1,1": "SW", "0,1": "S", "1,1": "SE"})[`${dx},${dy}`]));
 }
 
 function openLoot(cell, mode = "hover") {
@@ -568,7 +568,7 @@ function renderLoot() {
   box.style.left = `${flip ? Board.cx(l.cell[0]) - 260 : left}px`;
   box.style.top = `${Math.min(Math.max(Board.cy(l.cell[1]) - 20, 4), 780 - 60 - rows.length * 44)}px`;
   box.style.pointerEvents = pick ? "auto" : "none";
-  box.innerHTML = `<h3>${pick ? "Pick up — which" : "On the ground"}</h3>` + rows.map((r, i) =>
+  box.innerHTML = `<h3>${tr(pick ? "battle.pick_which" : "battle.on_ground")}</h3>` + rows.map((r, i) =>
     `<div class="lrow ${pick ? "pick" : ""} ${pick && i === l.sel ? "sel" : ""}" data-i="${i}">${lootIcon(r)}<b>${esc(r.name)}</b>${r.hint ? `<em>${esc(r.hint)}</em>` : ""}</div>`).join("");
   box.hidden = false;
 }
@@ -626,7 +626,7 @@ $("overlay").addEventListener("click", async e => {
     if (ui.aim.cellTarget && marked(ui.aim.cells)) {
       const heights = ui.aim.heights && ui.aim.heights[cell.join(",")];
       if (!heights) return act({action: ui.aim.id, cell});
-      const z = await pick(`${ui.aim.name}: how high`, heights);
+      const z = await pick(tr("battle.how_high", {name: ui.aim.name}), heights);
       return z == null ? undefined : act({action: ui.aim.id, cell, elevation: z});
     }
     ui.aim = null; renderAll(); return;

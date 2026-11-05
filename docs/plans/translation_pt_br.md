@@ -67,9 +67,7 @@ Client text moves to keys served by `/api/locale` (the `ui.*` group, `en` fillin
 them with `tr` / `trn` / `data-t`. Tutorial cards and credits get their `pt-br` text here too.
 
 Done (2026-11-04): the mechanism, `shell.js`, `kit.js`, the member sheet, settings, title, the hub (every
-tab), the guild (members, charter, reputations, bands, routines), the draft, the talk, the talents, the arena, the hunt, the watch and the wiki. Left:
-battle, map and report, one commit per screen group (`i18n_audit.py` does not see JS: count with
-`grep -c` on each file's literals).
+tab), the guild (members, charter, reputations, bands, routines), the draft, the talk, the talents, the arena, the hunt, the watch, the wiki, the report, the map and the battle. `i18n_audit.py` does not see JS: count with `grep -c` on each file's literals.
 
 ### 3. Messages and combat log
 

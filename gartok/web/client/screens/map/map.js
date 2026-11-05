@@ -34,7 +34,7 @@ function drawTop() {
   $("dial").innerHTML = dial(t.hour);
   $("alerts").innerHTML = M.alerts.map(a => `<div class="alert ${a.tone === "warn" ? "warn" : ""}"${tip(a.text)}>${ico(a.icon)}<b>${esc(a.title)}</b></div>`).join("");
   $("ledger").innerHTML = M.ledger.map(([k, v]) => `<div><b>${esc(v)}</b><span class="lbl">${esc(k)}</span></div>`).join("");
-  $("guildlbl").textContent = t.level_ups ? `Guild · ${t.level_ups} level up` : "Guild";
+  $("guildlbl").textContent = t.level_ups ? trn("map.guild_up", t.level_ups) : tr("map.guild");
   $("guildbtn").classList.toggle("lit", !!t.level_ups);
 }
 
@@ -68,11 +68,11 @@ function tripBar(t) {
 }
 
 function doing(b) {
-  if (b.blocked) return `<b>${esc(b.chip)}</b> at ${esc(node(b.node).name)}`;
-  if (b.idle) return `Waiting at <b>${esc(node(b.node).name)}</b>`;
+  if (b.blocked) return tr("map.at_place", {chip: esc(b.chip), place: esc(node(b.node).name)});
+  if (b.idle) return tr("map.waiting", {place: esc(node(b.node).name)});
   if (b.trip) {
     const last = b.trip.stops[b.trip.stops.length - 1], via = b.trip.stops.slice(0, -1).map(s => s.name);
-    return `→ <b>${esc(last.name)}</b>${via.length ? " by " + esc(via.join(", ")) : ""}`;
+    return via.length ? tr("map.trip_via", {to: esc(last.name), via: esc(via.join(", "))}) : tr("map.trip", {to: esc(last.name)});
   }
   return esc(b.detail.charAt(0).toUpperCase() + b.detail.slice(1));
 }
@@ -81,8 +81,8 @@ function bandCard(b) {
   const isSel = b.gid === sel, cls = ["band", isSel ? "sel" : "", b.blocked ? "bad" : ""].join(" ");
   if (splitting === b.gid) return splitCard(b, cls);
 
-  const foot = `<div class="bfoot"><span class="${b.rations ? "" : "bad"}">${ico("action/eating")}${!b.rations && b.rotten ? `${b.rotten} (all rotten)` : plural(b.rations, "ration")}</span>
-    <span>${ico("gui/wallet")}${esc(b.money)}</span><span class="tail">${b.trip ? `${b.trip.stops[0].hours} h to the next stop` : isSel ? "picked" : ""}</span></div>`;
+  const foot = `<div class="bfoot"><span class="${b.rations ? "" : "bad"}">${ico("action/eating")}${!b.rations && b.rotten ? tr("map.all_rotten", {n: b.rotten}) : plural(b.rations, "ration")}</span>
+    <span>${ico("gui/wallet")}${esc(b.money)}</span><span class="tail">${b.trip ? tr("map.next_stop", {n: b.trip.stops[0].hours}) : isSel ? tr("map.picked") : ""}</span></div>`;
 
   let actions = "";
 
@@ -94,12 +94,12 @@ function bandCard(b) {
     return `<div class="mem">
           ${medal(m)}
           <div class="who">
-            <b><span class="nm">${esc(m.name)}</span>${m.lead ? "<em>Leads</em>" : ""}${m.sick ? '<em class="ill">Sick</em>' : ""}${m.poisoned ? '<em class="ill">Poisoned</em>' : ""}</b>
+            <b><span class="nm">${esc(m.name)}</span>${m.lead ? `<em>${tr("map.leads")}</em>` : ""}${m.sick ? `<em class="ill">${tr("map.sick")}</em>` : ""}${m.poisoned ? `<em class="ill">${tr("map.poisoned")}</em>` : ""}</b>
             <small>${esc(m.sub)}</small>
           </div>
           <div class="hp">
             <div class="bar"><i class="${low}" style="width:${f * 100}%"></i></div>
-            <span class="${low === "low" ? "low" : ""}">${m.hp} / ${m.hp_max} HP</span>
+            <span class="${low === "low" ? "low" : ""}">${tr("map.hp", {a: m.hp, b: m.hp_max})}</span>
           </div>
         </div>`;
   }).join('')}
@@ -108,22 +108,22 @@ function bandCard(b) {
 
   if (isSel && !b.blocked && (!b.busy || b.chip === "garrison")) {
     const canSplit = b.members.length > 1 && !b.can_split;
-    actions = `${b.mates.length ? '<div class="lk sub">Merge <em>a band standing here</em></div>' : ""}
+    actions = `${b.mates.length ? `<div class="lk sub">${tr("map.merge")} <em>${tr("map.merge_em")}</em></div>` : ""}
       ${b.mates.map(m => {
       const o = band(m.gid); return `<div class="mate">${o ? medal(o.members.find(x => x.lead) || o.members[0]) : ""}
-        <div><b>${esc(m.name)}</b><small>${o ? plural(o.members.length, "soul") + " · " + esc(o.chip.toLowerCase()) : ""} · here</small></div>
-        <div class="brass-btn" data-merge="${m.gid}">Fold in</div></div>`;
+        <div><b>${esc(m.name)}</b><small>${o ? tr("map.mate_sub", {souls: plural(o.members.length, "soul"), chip: esc(o.chip.toLowerCase())}) : ""}</small></div>
+        <div class="brass-btn" data-merge="${m.gid}">${tr("map.fold")}</div></div>`;
     }).join("")}
-      <div class="bactions"><div class="ghost-btn ${canSplit ? "" : "off"}" data-split="${b.gid}"${tip(b.can_split || (b.members.length > 1 ? "" : "one soul cannot split"))}>${ico("body/split-body")}Split</div>
-      ${b.mates.length ? "" : `<div class="ghost-btn off">${ico("body/three-friends")}Merge · none here</div>`}</div>`;
+      <div class="bactions"><div class="ghost-btn ${canSplit ? "" : "off"}" data-split="${b.gid}"${tip(b.can_split || (b.members.length > 1 ? "" : tr("map.split_tip")))}>${ico("body/split-body")}${tr("map.split")}</div>
+      ${b.mates.length ? "" : `<div class="ghost-btn off">${ico("body/three-friends")}${tr("map.merge_none")}</div>`}</div>`;
   }
 
   return `<div class="${cls}" data-band="${b.gid}">
     <div class="row1"><h3>${esc(b.name)}</h3><span class="chip ${b.tone}">${esc(b.chip)}</span></div>
-    <div class="led">led by ${esc(b.lead)} · ${esc(b.kit)}</div>
+    <div class="led">${tr("map.led", {lead: esc(b.lead), kit: esc(b.kit)})}</div>
     <div class="doing">${doing(b)}</div>
     ${b.trip ? tripBar(b.trip) : ""}
-    <div class="crew" data-crew="${b.gid}"${tip(open ? "Hide the crew details" : "Show the crew details")}>
+    <div class="crew" data-crew="${b.gid}"${tip(tr(open ? "map.crew_hide" : "map.crew_show"))}>
       ${open ? `<span class="crew-h">${plural(b.members.length, "soul")}</span>` : `<div class="faces">${b.members.map(medal).join("")}</div>`}<span class="chev${open ? " open" : ""}"></span></div>
     ${renderBandMembers(b.members)}
     ${foot}${actions}</div>`;
@@ -132,34 +132,34 @@ function bandCard(b) {
 function splitCard(b, cls) {
   const goes = b.split.filter(x => picks.has(x.uid)), stays = b.members.length - goes.filter(x => b.members.some(m => m.uid === x.uid)).length;
   const lead = goes.find(x => b.members.some(m => m.uid === x.uid));
-  const sum = !goes.length ? "Pick who walks off as a band of their own."
-    : stays === 0 ? "Someone must stay."
-      : !lead ? "A new band needs at least one soul."
-        : `<b>${goes.length} leave${goes.length === 1 ? "s" : ""}</b> → a new band at ${esc(node(b.node).name)}, led by ${esc(lead.name)}. It takes 1 of ${M.meta.slots_free} free slots; no time passes.`;
+  const sum = !goes.length ? tr("map.pick_who")
+    : stays === 0 ? tr("map.must_stay")
+      : !lead ? tr("map.need_soul")
+        : trn("map.split_sum", goes.length, {place: esc(node(b.node).name), lead: esc(lead.name), free: M.meta.slots_free});
   const ok = goes.length && stays > 0 && lead;
   return `<div class="${cls}" data-band="${b.gid}">
-    <div class="row1"><h3>${esc(b.name)}</h3><span class="chip split">Splitting</span></div>
-    <div class="led">pick who walks off as a band of their own</div>
+    <div class="row1"><h3>${esc(b.name)}</h3><span class="chip split">${tr("map.splitting")}</span></div>
+    <div class="led">${tr("map.pick_who_lc")}</div>
     <div class="pick">${b.split.map(x => {
     const on = picks.has(x.uid), m = b.members.find(m => m.uid === x.uid);
     return `<div class="pk${on ? " on" : ""}" data-pick="${x.uid}"><div class="box">${on ? "✓" : ""}</div>${m ? medal(m) : `<div class="fm">${ico(x.sub === "wagon" ? "action/journey" : "action/wolf-howl")}</div>`}
-        <div><b>${esc(x.name)}</b><small>${esc(x.sub)}</small></div><span class="goes">${on ? "Leaves" : "Stays"}</span></div>`;
+        <div><b>${esc(x.name)}</b><small>${esc(x.sub)}</small></div><span class="goes">${tr(on ? "map.leaves" : "map.stays")}</span></div>`;
   }).join("")}</div>
     <div class="sumline">${sum}</div>
-    <div class="bactions"><div class="ghost-btn" data-cancel-split>Cancel</div><div class="brass-btn ${ok ? "" : "off"}" data-confirm-split ${ok ? "" : 'style="opacity:.5"'}>${ico("body/split-body")}Split off ${goes.length || ""}</div></div></div>`;
+    <div class="bactions"><div class="ghost-btn" data-cancel-split>${tr("map.cancel")}</div><div class="brass-btn ${ok ? "" : "off"}" data-confirm-split ${ok ? "" : 'style="opacity:.5"'}>${ico("body/split-body")}${tr("map.split_off", {n: goes.length || ""})}</div></div></div>`;
 }
 
 function drawBands() {
   const idle = M.groups.filter(b => b.idle).length;
-  const waits = idle === 0 ? "none waits for" : idle === 1 ? "1 awaits" : `${idle} await`;
-  $("bandsnote").textContent = `${waits} orders · ${plural(M.meta.slots_free, "slot")} free`;
+  const slots = plural(M.meta.slots_free, "slot");
+  $("bandsnote").textContent = idle === 0 ? tr("map.idle_none", {slots}) : trn("map.idle", idle, {slots});
   $("bandlist").innerHTML = M.groups.map(bandCard).join("");
   document.querySelector(".band.sel")?.scrollIntoView({ block: "nearest" });
 }
 
 // ---------------------------------------------------------------- the log
-const num = n => n.toLocaleString("en-US");
-const KIND_NAME = { food: "Food", work: "Work", craft: "Craft", travel: "Travel", rest: "Rest", fight: "Fight", talk: "Talk", guild: "Guild", day: "Day" };
+const num = n => n.toLocaleString(Locale.lang);
+const kindName = k => tr("map.kind." + k);
 
 // `text` with every case-blind hit of `q` marked
 function marked(text, q) {
@@ -174,7 +174,7 @@ function marked(text, q) {
 }
 
 function logLine(r, q) {
-  return `<div class="ln ${r.tone}"><b>${r.at}</b><span class="dot k-${r.kind}"${tip(KIND_NAME[r.kind] || "")}></span>`
+  return `<div class="ln ${r.tone}"><b>${r.at}</b><span class="dot k-${r.kind}"${tip(kindName(r.kind))}></span>`
     + `<span>${r.band ? `<span class="bn">${esc(r.band)}</span>` : ""}${marked(r.text, q)}</span></div>`;
 }
 
@@ -182,7 +182,7 @@ function logLine(r, q) {
 function logLines(rows, q) {
   let day = null, html = "";
   for (const r of rows) {
-    if (r.day !== day) { day = r.day; html += `<div class="dsep">Day ${day}</div>`; }
+    if (r.day !== day) { day = r.day; html += `<div class="dsep">${tr("map.day_sep", {n: day})}</div>`; }
     html += logLine(r, q);
   }
   return html;
@@ -193,10 +193,10 @@ function drawLog() {
   const stay = body.dataset.drawn && body.scrollHeight - body.scrollTop - body.clientHeight > 40;
   const was = body.scrollTop;
   $("logcount").textContent = `${num(L.total)} / ${num(L.limit)}`;
-  $("logwarn").textContent = L.full ? "Full" : L.near ? "Nearly full" : "";
-  let html = L.rows.length ? logLines(L.rows) : `<div class="ln quiet"><span></span><span></span><span>Nothing has happened yet.</span></div>`;
-  html += `<div class="nowmark">Now · ${esc(L.now.at)}</div>`;
-  html += L.ahead.map(h => `<div class="ln ahead"><b>${esc(h.at)}</b><span class="dot"></span><span>${esc(h.text)}${h.day !== L.now.day ? ` · day ${h.day}` : ""}</span></div>`).join("");
+  $("logwarn").textContent = L.full ? tr("map.full") : L.near ? tr("map.near_full") : "";
+  let html = L.rows.length ? logLines(L.rows) : `<div class="ln quiet"><span></span><span></span><span>${tr("map.nothing_yet")}</span></div>`;
+  html += `<div class="nowmark">${tr("map.now", {at: esc(L.now.at)})}</div>`;
+  html += L.ahead.map(h => `<div class="ln ahead"><b>${esc(h.at)}</b><span class="dot"></span><span>${h.day !== L.now.day ? tr("map.ahead", {text: esc(h.text), day: h.day}) : esc(h.text)}</span></div>`).join("");
   body.innerHTML = html;
   body.dataset.drawn = "1";
   body.scrollTop = stay ? was : body.scrollHeight;     // a player reading up is not pulled back down
@@ -209,8 +209,8 @@ function logChips(el, label, all, items, current) {
     `<span class="lchip ${value === current ? "on" : ""}" data-v="${esc(value)}">${kind ? `<span class="dot k-${kind}"></span>` : ""}${esc(name)}</span>`).join("");
 }
 function drawLogChips() {
-  logChips($("logkinds"), "What", ["", "All"], M.log.kinds.map(k => [k, KIND_NAME[k] || k, k]), logKind);
-  logChips($("logbands"), "Who", ["", "Everyone"], [...M.log.bands.map(b => [b, b]), ["-", "The guild"]], logBand);
+  logChips($("logkinds"), tr("map.what"), ["", tr("map.all")], M.log.kinds.map(k => [k, kindName(k), k]), logKind);
+  logChips($("logbands"), tr("map.who"), ["", tr("map.everyone")], [...M.log.bands.map(b => [b, b]), ["-", tr("map.the_guild")]], logBand);
 }
 async function runLogSearch() {
   const seq = ++logSeq, q = $("logq").value.trim();
@@ -218,8 +218,8 @@ async function runLogSearch() {
   try { r = await api(`/api/map/log?q=${encodeURIComponent(q)}&kind=${encodeURIComponent(logKind)}&band=${encodeURIComponent(logBand)}`); }
   catch (e) { news([e.message], true); return; }
   if (seq !== logSeq) return;
-  $("logresults").innerHTML = r.rows.length ? logLines(r.rows, q) : `<p class="ln quiet">Nothing in the log matches.</p>`;
-  $("logfound").textContent = r.found > r.rows.length ? `the last ${num(r.rows.length)} of ${num(r.found)} matching lines` : `${num(r.found)} of ${num(r.total)} lines`;
+  $("logresults").innerHTML = r.rows.length ? logLines(r.rows, q) : `<p class="ln quiet">${tr("map.no_match")}</p>`;
+  $("logfound").textContent = r.found > r.rows.length ? tr("map.found_last", {shown: num(r.rows.length), found: num(r.found)}) : tr("map.found", {found: num(r.found), total: num(r.total)});
   $("logresults").scrollTop = $("logresults").scrollHeight;
 }
 function openLogSearch() {
@@ -242,9 +242,9 @@ $("logsearch").addEventListener("click", e => { if (e.target === $("logsearch") 
 function askLog() {
   const L = M.log;
   if (!L.prompt || !$("logfull").hidden || !$("turn").hidden) return;
-  $("logfulltext").innerHTML = `It keeps <b>${num(L.limit)} lines</b>. Until you choose, each new line pushes the oldest one out. Nothing stops meanwhile.`;
+  $("logfulltext").innerHTML = tr("map.log_keeps", {n: num(L.limit)});
   $("lograise").hidden = !L.next_limit;
-  $("lograisenote").textContent = L.next_limit ? `raise the limit to ${num(L.next_limit)} lines` : "";
+  $("lograisenote").textContent = L.next_limit ? tr("map.log_raise", {n: num(L.next_limit)}) : "";
   $("logfull").hidden = false;
 }
 $("logfull").addEventListener("click", async e => {
@@ -294,13 +294,13 @@ function drawSlip() {
   if (!p) body = `<p>${esc(n.blurb)}</p>`;
   else if (!p.path.length) body = `<p>${esc(n.blurb)}</p><div class="click no">${esc(p.why || "")}</div>`;
   else {
-    const via = p.via.length ? ` by ${esc(p.via.join(", "))}` : "";
     const f = p.food, food = f && f.need
-      ? `<p class="${f.short ? "bad" : ""}">${plural(f.need, "ration")} to eat on the way (${f.days} dawn${f.days > 1 ? "s" : ""}); the band holds ${f.have}${f.short ? ", and will go hungry" : ""}.</p>` : "";
-    body = `<p>Walk ${esc(b.name)} there: <b>${p.hours} h</b>${via}, in by <b>${esc(p.at)}</b>${p.day !== M.meta.day ? ` on day ${p.day}` : ""}. ${esc(n.blurb)}</p>${food}
+      ? `<p class="${f.short ? "bad" : ""}">${tr(f.short ? "map.food_short" : "map.food", {rations: plural(f.need, "ration"), dawns: trn("map.dawns", f.days), have: f.have})}</p>` : "";
+    const walk = "map.walk" + (p.via.length ? "_via" : "") + (p.day !== M.meta.day ? "_day" : "");
+    body = `<p>${tr(walk, {band: esc(b.name), hours: p.hours, via: esc(p.via.join(", ")), at: esc(p.at), day: p.day, blurb: esc(n.blurb)})}</p>${food}
       ${p.why ? `<div class="click no">${esc(p.why)}</div>`
-        : p.leave ? `<div class="click no">Click<span>the broken ${esc(p.leave.wagons.map(w => w.name.toLowerCase()).join(" and "))} cannot come</span></div>`
-          : `<div class="click">Click<span>to give the order</span></div>`}`;
+        : p.leave ? `<div class="click no">${tr("map.click_no_wagon", {wagons: esc(p.leave.wagons.map(w => w.name.toLowerCase()).join(tr("kit.and")))})}</div>`
+          : `<div class="click">${tr("map.click_go")}</div>`}`;
   }
   slip.innerHTML = `<h4>${esc(n.name)}</h4>${body}`;
   slip.hidden = false;
@@ -349,21 +349,21 @@ function drawInspector() {
 
   const c = ins.camp;
   if (!c) {
-    $("camp").innerHTML = `<div class="lk">Camp <em>${b.blocked ? "no going on" : "on the way"}</em></div>
-      <div class="busy">${b.blocked ? "Face the fight first; the seal below opens it." : esc(b.detail.charAt(0).toUpperCase() + b.detail.slice(1)) + ". Its camp waits until it stops."}</div>`;
+    $("camp").innerHTML = `<div class="lk">${tr("map.camp")} <em>${tr(b.blocked ? "map.no_going_on" : "map.on_the_way")}</em></div>
+      <div class="busy">${b.blocked ? tr("map.face_fight") : tr("map.camp_waits", {what: esc(b.detail.charAt(0).toUpperCase() + b.detail.slice(1))})}</div>`;
   } else {
-    $("camp").innerHTML = `<div class="lk">Camp</div>
+    $("camp").innerHTML = `<div class="lk">${tr("map.camp")}</div>
   <div class="duo">
     <div class="tile" data-act="manage_group">
-      <div class="t">${ico("gui/checklist")}Gear &amp; quests</div>
+      <div class="t">${ico("gui/checklist")}${esc(tr("map.gear"))}</div>
     </div>
     <div class="tile ${c.fire.enabled ? "" : "off"} ${/burning/.test(c.fire.sub) ? "lit" : ""}" ${c.fire.enabled ? 'data-act="campfire_cook"' : ""} ${tip(c.fire.sub)}>
-      <div class="t">${ico("body/fire-silhouette")}${/burning/.test(c.fire.sub) ? "Cook" : "Make Fire"}</div>
+      <div class="t">${ico("body/fire-silhouette")}${/burning/.test(c.fire.sub) ? tr("map.cook") : tr("map.make_fire")}</div>
     </div>
   </div>
-  <div class="lk sub">Travel</div>
+  <div class="lk sub">${tr("map.travel")}</div>
   <div class="seg">${c.stance.map(s => `<div class="${s.on ? "on" : ""}" data-act="${s.key}"${tip(s.tip)}><b>${esc(s.label)}</b><small>${esc(s.sub)}</small></div>`).join("")}</div>
-  <div class="lk sub">Rest</div>
+  <div class="lk sub">${tr("map.rest")}</div>
   <div class="seg ${c.starving ? "starving" : ""}">${c.rest.map(r => `<div class="${r.rec ? "rec" : ""} ${r.enabled ? "" : "off"}" ${r.enabled ? `data-act="${r.key}"` : ""}${tip(r.tip || r.sub || "")}><b>${esc(r.label)}</b><small>${esc(r.sub || "")}</small></div>`).join("")}</div>`;
   }
 
@@ -380,7 +380,7 @@ function drawInspector() {
 function news(lines, bad = false) {
   if (!lines.length) return;
   const n = $("news");
-  n.innerHTML = `<div class="kicker">${bad ? "Not so" : "Said"}</div>${lines.slice(-12).map(l => `<p class="${bad ? "bad" : ""}">${esc(l)}</p>`).join("")}<div class="click">click to put it away</div>`;
+  n.innerHTML = `<div class="kicker">${tr(bad ? "map.not_so" : "map.said")}</div>${lines.slice(-12).map(l => `<p class="${bad ? "bad" : ""}">${esc(l)}</p>`).join("")}<div class="click">${tr("map.put_away")}</div>`;
   n.hidden = false;
 }
 $("news").onclick = () => { $("news").hidden = true; };
@@ -478,7 +478,7 @@ function drawTurn() {
   $("turn").classList.toggle("danger", t.danger);
   $("turnband").textContent = t.band;
   $("turnname").textContent = t.name;
-  $("turnnode").textContent = `at ${t.node}`;
+  $("turnnode").textContent = tr("map.turn_at", {node: t.node});
   $("turnact").textContent = t.action;
   $("turncrew").textContent = t.members.join(", ");
 }
@@ -546,13 +546,13 @@ async function setOut(gid, id) {
   const p = previews.get(key);
   if (!p.leave || p.why) { post("travel", { gid, node: id }); return; }
   leaving = { gid, node: id };
-  const b = band(gid), plural = p.leave.wagons.length > 1;
-  const wagons = p.leave.wagons.map(w => `<p><b>The ${esc(w.name.toLowerCase())} is broken</b> and cannot move. ${w.items
-    ? `It still holds ${w.items} item${w.items > 1 ? "s" : ""}, ${w.kg} kg, and they stay with it unless you move them into the packs first.</p><p class="cargo">${esc(w.cargo.join(", "))}</p>`
-    : "It carries nothing.</p>"}`).join("");
+  const b = band(gid);
+  const wagons = p.leave.wagons.map(w => w.items
+    ? `<p>${trn("map.broken_items", w.items, {name: esc(w.name.toLowerCase()), kg: w.kg})}</p><p class="cargo">${esc(w.cargo.join(", "))}</p>`
+    : `<p>${tr("map.broken_empty", {name: esc(w.name.toLowerCase())})}</p>`).join("");
   const animals = p.leave.animals.length
-    ? `<p>${esc(p.leave.animals.join(", "))} walk${p.leave.animals.length > 1 ? "" : "s"} on with ${esc(b.name)}.</p>` : "";
-  $("leavebody").innerHTML = `${wagons}${animals}<p>${esc(b.name)} sets out for <b>${esc(p.name)}</b> (${p.hours} h) and ${plural ? "the wagons are" : "the wagon is"} lost for good.</p>`;
+    ? `<p>${trn("map.animals", p.leave.animals.length, {names: esc(p.leave.animals.join(", ")), band: esc(b.name)})}</p>` : "";
+  $("leavebody").innerHTML = `${wagons}${animals}<p>${trn("map.sets_out", p.leave.wagons.length, {band: esc(b.name), place: esc(p.name), hours: p.hours})}</p>`;
   $("leave").querySelector('[data-leave="cargo"]').hidden = !p.leave.wagons.some(w => w.items);
   $("leave").hidden = false;
 }
@@ -588,7 +588,7 @@ async function saveAs() {
     const r = await api("/api/map/save_as", { name: $("savename").value });
     $("saveform").hidden = true;
     $("savename").value = "";
-    $("savednote").textContent = `saved: ${r.saved}`;
+    $("savednote").textContent = tr("pause.saved", {name: r.saved});
   } catch (e) { news([e.message], true); }
 }
 $("titlebtn").onclick = () => pause(true);
@@ -603,6 +603,8 @@ $("pause").addEventListener("click", e => {
   else post(d, {});
 });
 $("savego").onclick = saveAs;
+$("logq").placeholder = tr("map.log_ph");
+$("savename").placeholder = tr("pause.name_ph");
 $("saveform").addEventListener("submit", e => { e.preventDefault(); saveAs(); });
 $("turngo").onclick = () => post("go_on", {});
 $("swift").onclick = () => {

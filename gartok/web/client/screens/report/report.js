@@ -5,10 +5,8 @@
 let R = null, busy = false, pick = null, drag = null;
 const qty = {};
 const g = glyph => glyph ? ico(glyph) : "";
-const kilos = v => (Math.round(v * 10) / 10).toString().replace(/\.0$/, "") + " kg";
-const names = list => list.map(n => `<b>${esc(n)}</b>`).join(list.length > 2 ? ", " : " and ");
-const STATUS = {standing: "Standing", stable: "Down, stable", fallen: "Fallen", fled: "Fled", bound: "Bound"};
-const FOE_STATUS = {standing: "Standing", stable: "Down, stable", fallen: "Dead", fled: "Fled", bound: "Bound"};
+const kilos = v => (Math.round(v * 10) / 10).toString().replace(/\.0$/, "") + " " + tr("kit.kg");
+const names = list => list.map(n => `<b>${esc(n)}</b>`).join(list.length > 2 ? ", " : tr("kit.and"));
 const SEALS = {memorial: ["head/dead-head", "black"], report: ["action/rally-the-troops", ""], level: ["gui/progression", ""],
   loot: ["item/knapsack", ""], purse: ["item/two-coins", ""], map: ["map/signpost", ""]};
 
@@ -43,7 +41,7 @@ function chain() {
 }
 
 function where() {
-  return `<b>${esc(R.place)}</b>${R.what ? ` · ${esc(R.what)}` : ""} · day ${R.day}, ${R.at}`;
+  return tr("report.where", {place: esc(R.place), what: R.what ? ` · ${esc(R.what)}` : "", day: R.day, at: R.at});
 }
 
 function header(title, sub, right = "") {
@@ -59,25 +57,25 @@ function header(title, sub, right = "") {
 // ---------------------------------------------------------------- the fallen
 function memorial() {
   const M = R.memorial;
-  header("The fallen", `${where()} · <b>${M.length}</b> of the band did not get up`);
+  header(tr("report.fallen_title"), tr("report.fallen_sub", {where: where(), n: M.length}));
   let h = `<div id="graves" class="${M.length > 2 ? "many" : ""}">`;
   for (const m of M) {
     const k = m.killer;
-    h += `<div class="grave"><div class="tag">In memoriam</div>
+    h += `<div class="grave"><div class="tag">${tr("report.memoriam")}</div>
       <div class="oval">${face(m.portrait, m.name)}</div>
-      <h2>${esc(m.name)}</h2><div class="cap">${esc(m.race)}${m.founder ? " · one of the founders" : ""}</div>
-      <div class="days">${m.days_n}<small>${m.days_n === 1 ? "day" : "days"} with the guild</small></div>
-      <div class="span">day ${m.joined} to day ${m.died}</div>
+      <h2>${esc(m.name)}</h2><div class="cap">${esc(m.race)}${m.founder ? ` · ${tr("report.founder")}` : ""}</div>
+      <div class="days">${m.days_n}<small>${trn("report.days_with", m.days_n)}</small></div>
+      <div class="span">${tr("report.span", {from: m.joined, to: m.died})}</div>
       <div class="rule"></div>
       <div class="cause">${esc(m.cause)}${m.place ? ` · ${esc(m.place)}` : ""}</div>
-      ${k ? `<div class="killer"><div class="medal ${k.foe ? "foe" : ""}">${face(k.portrait, k.name)}</div><div><b>${esc(k.name)}</b><span>put them down${k.caption ? ` · ${esc(k.caption)}` : ""}</span></div></div>` : ""}
+      ${k ? `<div class="killer"><div class="medal ${k.foe ? "foe" : ""}">${face(k.portrait, k.name)}</div><div><b>${esc(k.name)}</b><span>${tr("report.put_down")}${k.caption ? ` · ${esc(k.caption)}` : ""}</span></div></div>` : ""}
       ${m.line ? `<div class="line">${esc(m.line)}</div>` : ""}
-      <div class="left"><b>What they carried</b>lies on the field with the foes' gear: the band can take it up after the report.</div>
+      <div class="left"><b>${tr("report.carried_lbl")}</b>${tr("report.carried")}</div>
     </div>`;
   }
   const last = R.chain[R.chain.findIndex(c => c.id === "memorial") + 1];
-  h += `</div><div id="memfoot"><i>The fallen lie together: one page for every death of the fight.</i>
-    <div class="bigbtn" data-go="next">${last && last.id !== "map" ? `To ${esc(last.label.toLowerCase())}` : "Go on"}</div></div>`;
+  h += `</div><div id="memfoot"><i>${tr("report.fallen_foot")}</i>
+    <div class="bigbtn" data-go="next">${last && last.id !== "map" ? tr("kit.to", {name: esc(last.label.toLowerCase())}) : tr("report.go_on")}</div></div>`;
   $("body").innerHTML = h;
 }
 
@@ -86,13 +84,11 @@ function verdict(P) {
   const fallen = P.rows.filter(r => r.status === "fallen").map(r => r.name);
   const stable = P.rows.filter(r => r.status === "stable").length;
   const place = `<b>${esc(R.place)}</b>`;
-  let s = R.result === "VICTORY" ? `The pack is broken on the ${place} after ${R.rounds} rounds.`
-    : R.result === "FLED" ? `The band runs from the ${place} after ${R.rounds} rounds.`
-    : `The band is beaten on the ${place} after ${R.rounds} rounds.`;
-  if (fallen.length) s += ` ${names(fallen)} did not get up;`;
-  if (stable) s += ` ${fallen.length ? stable : plural(stable, "member")} ${fallen.length ? "more " : ""}${stable === 1 ? "lies" : "lie"} down, stable, and walk${stable === 1 ? "s" : ""} on hurt.`;
-  else if (fallen.length) s = s.replace(/;$/, ".");
-  else s += " Everyone walks away.";
+  const key = R.result === "VICTORY" ? "won" : R.result === "FLED" ? "fled" : "lost";
+  let s = tr("report." + key, {place, n: R.rounds});
+  if (fallen.length) s += " " + tr(stable ? "report.did_not_get_up_semi" : "report.did_not_get_up", {names: names(fallen)});
+  if (stable) s += " " + trn(fallen.length ? "report.stable_more" : "report.stable_after", stable);
+  else if (!fallen.length) s += " " + tr("report.all_well");
   return s;
 }
 
@@ -101,33 +97,33 @@ function report() {
   const back = P.rows.filter(r => r.status !== "fallen");
   const dead = P.foes.filter(f => f.status === "fallen").length, down = P.foes.filter(f => f.status === "stable").length;
   const xp = P.rows.reduce((a, r) => a + r.xp_gain, 0);
-  header("After the fight", `${where()} · <b>${R.rounds}</b> rounds`,
-    `<div class="stat"><b>${back.length} / ${P.rows.length}</b><span>came back</span></div>
-     <div class="stat"><b>${dead} + ${down}</b><span>foes dead + down</span></div>
-     <div class="stat"><b>+${xp}</b><span>combat XP</span></div>`);
+  header(tr("report.after_title"), tr("report.after_sub", {where: where(), n: R.rounds}),
+    `<div class="stat"><b>${back.length} / ${P.rows.length}</b><span>${tr("report.came_back")}</span></div>
+     <div class="stat"><b>${dead} + ${down}</b><span>${tr("report.foes_dead_down")}</span></div>
+     <div class="stat"><b>+${xp}</b><span>${tr("report.combat_xp_gain")}</span></div>`);
   const rowH = Math.max(72, Math.min(104, Math.floor(620 / Math.max(P.rows.length, P.foes.length, 1))));
   const lv = [...new Set(P.foes.map(f => f.level))].sort((a, b) => a - b);
   let h = `<div class="paper" id="roll">
-    <div class="verdict"><div class="stamp ${R.result}">${esc(R.result)}</div><p>${verdict(P)}</p></div>
-    <div class="sides"><div><div class="kicker">The band<em>${P.rows.length} went in</em></div>`;
+    <div class="verdict"><div class="stamp ${R.result}">${tr("result." + R.result)}</div><p>${verdict(P)}</p></div>
+    <div class="sides"><div><div class="kicker">${tr("report.the_band")}<em>${tr("report.went_in", {n: P.rows.length})}</em></div>`;
   for (const r of P.rows) {
     const gone = r.status === "fallen", up = r.level > r.level_before;
     const was = up ? 0 : r.bar_before * 100;
-    const downs = r.downed.length ? `${r.downed.length} put down` : "";
+    const downs = r.downed.length ? tr("report.downs", {n: r.downed.length}) : "";
     h += `<div class="sq ${gone ? "gone" : ""}" data-n="${esc(r.name)}" style="height:${rowH}px">
-      <div class="nm"><b>${esc(r.name)}</b><span>${esc(r.race)}</span><div class="st ${r.status}">${STATUS[r.status]}</div></div>
-      <div class="bars"><div class="barlbl"><span>Combat XP · level ${r.level}</span><b class="${r.xp_gain ? "up" : ""}">${r.xp_gain ? `+${r.xp_gain} · ` : ""}${r.into} / ${r.span}</b></div>
+      <div class="nm"><b>${esc(r.name)}</b><span>${esc(r.race)}</span><div class="st ${r.status}">${tr("report.st." + r.status)}</div></div>
+      <div class="bars"><div class="barlbl"><span>${tr("report.xp_lbl", {level: r.level})}</span><b class="${r.xp_gain ? "up" : ""}">${r.xp_gain ? `+${r.xp_gain} · ` : ""}${r.into} / ${r.span}</b></div>
         <div class="bar xp"><i class="gain" data-w="${r.bar * 100}" style="width:${was}%"></i><i class="was" style="width:${was}%"></i></div>
-        <div class="downs">${gone ? "what they earned dies with them" : downs}${r.magic_gain ? ` · +${r.magic_gain} magic` : ""}${up ? `<span class="lvmark">level ${r.level}</span>` : ""}</div></div>
+        <div class="downs">${gone ? tr("report.dies_with") : downs}${r.magic_gain ? ` · ${tr("report.magic_gain", {n: r.magic_gain})}` : ""}${up ? `<span class="lvmark">${tr("report.lvmark", {n: r.level})}</span>` : ""}</div></div>
       <div class="medal ${gone ? "dead" : ""}" style="width:${rowH * .6}px;height:${rowH * .6}px">${face(r.portrait, r.name)}</div></div>`;
   }
-  h += `</div><div></div><div><div class="kicker">The pack<em>${P.foes.length}${lv.length ? `, racial level ${lv.length > 1 ? `${lv[0]}–${lv[lv.length - 1]}` : lv[0]}` : ""}</em></div>`;
+  h += `</div><div></div><div><div class="kicker">${tr("report.the_pack")}<em>${lv.length ? tr("report.pack_lv", {n: P.foes.length, lv: lv.length > 1 ? `${lv[0]}–${lv[lv.length - 1]}` : lv[0]}) : tr("report.pack_n", {n: P.foes.length})}</em></div>`;
   for (const f of P.foes) {
     h += `<div class="fo" data-n="${esc(f.name)}" style="height:${rowH}px"><div class="medal foe ${f.status === "fallen" ? "dead" : ""}" style="width:${rowH * .54}px;height:${rowH * .54}px">${face(f.portrait, f.name)}</div>
-      <div style="min-width:0"><b>${esc(f.name)}</b><span>${esc(f.race)}</span><div class="st ${f.status}">${FOE_STATUS[f.status]}</div></div></div>`;
+      <div style="min-width:0"><b>${esc(f.name)}</b><span>${esc(f.race)}</span><div class="st ${f.status}">${tr("report.foe_st." + f.status)}</div></div></div>`;
   }
   h += `</div><svg id="blows"></svg></div>
-    <div class="legend"><span style="font-style:normal" class="lbl">Who put down whom</span><span><i style="border-color:var(--blueink)"></i>the band's blows</span><span><i style="border-color:var(--redink);border-top-style:dashed"></i>the pack's blows</span></div>
+    <div class="legend"><span style="font-style:normal" class="lbl">${tr("report.who_put_down")}</span><span><i style="border-color:var(--blueink)"></i>${tr("report.band_blows")}</span><span><i style="border-color:var(--redink);border-top-style:dashed"></i>${tr("report.pack_blows")}</span></div>
     <div class="rollfoot">${rollfoot(P, down)}</div></div>`;
   h += nextPanel(P);
   $("body").innerHTML = h;
@@ -138,10 +134,10 @@ function report() {
 }
 
 function rollfoot(P, down) {
-  const parts = [`<span><b>Deeds</b>${P.deeds.length ? P.deeds.map(d => `${esc(d.name)} · +${d.rep} with ${esc(d.faction)}`).join("; ") : "none this fight"}</span>`];
-  if (P.captives.length) parts.push(`<span><b>Bound</b>${P.captives.map(esc).join(" ")}</span>`);
-  else if (down) parts.push(`<span><b>Down, not dead</b>${down} of the pack lie stable: they could have been bound and led away (Capture), and are left.</span>`);
-  if (P.title_note) parts.push(`<span><b>The title</b>${esc(P.title_note)}</span>`);
+  const parts = [`<span><b>${tr("report.deeds")}</b>${P.deeds.length ? P.deeds.map(d => tr("report.deed_row", {name: esc(d.name), rep: d.rep, faction: esc(d.faction)})).join("; ") : tr("report.no_deeds")}</span>`];
+  if (P.captives.length) parts.push(`<span><b>${tr("report.bound")}</b>${P.captives.map(esc).join(" ")}</span>`);
+  else if (down) parts.push(`<span><b>${tr("report.down_not_dead")}</b>${trn("report.left_down", down)}</span>`);
+  if (P.title_note) parts.push(`<span><b>${tr("report.the_title")}</b>${esc(P.title_note)}</span>`);
   return parts.join("");
 }
 
@@ -149,25 +145,26 @@ const STEP_ICON = {memorial: "head/dead-head", report: "action/rally-the-troops"
   loot: "item/knapsack", purse: "item/two-coins", map: "map/signpost"};
 
 function nextPanel(P) {
-  let h = `<div class="leather" id="next"><div class="kicker">What follows<em>in this order</em></div>`;
+  let h = `<div class="leather" id="next"><div class="kicker">${tr("report.follows")}<em>${tr("report.in_order")}</em></div>`;
   R.steps.forEach((s, i) => {
     h += `<div class="step ${s.at}"><div class="n">${s.at === "done" ? "✓" : i + 1}</div><div class="d">${ico(STEP_ICON[s.id])}</div>
       <div class="tx"><b>${esc(s.title)}</b><span>${esc(s.line)}</span></div>
       ${s.faces.length ? `<div class="faces">${s.faces.map(f => `<div class="medal">${face(f, "")}</div>`).join("")}</div>` : ""}</div>`;
   });
   if (P.hp.length) {
-    h += `<div class="cond"><div class="kicker">How they walk away<em>hit points after the fight</em></div>`;
+    h += `<div class="cond"><div class="kicker">${tr("report.walk_away")}<em>${tr("report.hp_after")}</em></div>`;
     for (const u of P.hp) {
       const low = u.hp * 3 < u.hp_max;
       h += `<div class="row"><div class="medal">${face(u.portrait, u.name)}</div><b>${esc(u.name)}</b>
         <div class="bar hp ${low ? "low" : ""}"><i style="width:${u.hp / u.hp_max * 100}%"></i></div>
-        <em class="${low ? "red" : ""}">${u.hp} / ${u.hp_max}${u.stable ? " · stable" : ""}</em></div>`;
+        <em class="${low ? "red" : ""}">${u.hp} / ${u.hp_max}${u.stable ? ` · ${tr("report.stable_tag")}` : ""}</em></div>`;
     }
     h += `</div>`;
   }
   const hurt = P.hp.filter(u => u.hp * 3 < u.hp_max).length;
-  const hint = hurt ? `Rest or the Medic before the next road: ${hurt === P.hp.length ? (hurt === 1 ? "the one" : `all ${hurt}`) : `${hurt} of ${P.hp.length}`} walk on badly hurt.` : "";
-  return h + `<div class="nextfoot"><i>${hint}</i><div class="bigbtn" data-go="next">Continue</div></div></div>`;
+  const hint = !hurt ? "" : hurt === P.hp.length ? (hurt === 1 ? tr("report.hint_one") : tr("report.hint_all", {n: hurt}))
+    : tr("report.hint_some", {n: hurt, total: P.hp.length});
+  return h + `<div class="nextfoot"><i>${hint}</i><div class="bigbtn" data-go="next">${tr("report.continue")}</div></div></div>`;
 }
 
 // the blows, drawn once the rows are laid out: blue from the band, dashed red from the pack
@@ -194,32 +191,32 @@ function blows(P) {
 }
 
 // ---------------------------------------------------------------- the level-up
-const WHY = {"Combat level": "from the fight's XP", "Work level": "from the work done", "Magic level": "from the spells cast",
-  "Racial level": "one level of each track is one of the race's", "Hit dice": "one more die of hit points", "Max HP": "the new die, rolled"};
-const ROLE = {COMBAT: "fighter", WORK: "worker", MAGIC: "caster"};
+const GAIN = {"Combat level": "combat", "Work level": "work", "Magic level": "magic", "Racial level": "racial", "Hit dice": "dice", "Max HP": "hp"};
+const gainLbl = l => GAIN[l] ? tr(`report.gain.${GAIN[l]}.l`) : l;
+const gainWhy = l => GAIN[l] ? tr(`report.gain.${GAIN[l]}.why`) : "";
 
 function level() {
   const L = R.level;
-  header("Level up", `<b>${esc(L.name)}</b> · after ${esc(L.after)}`);
+  header(tr("report.level_title"), tr("report.level_sub", {name: esc(L.name), after: esc(L.after)}));
   const head = L.gains.find(([l]) => l.toUpperCase().startsWith(L.track)) || L.gains[0];
-  const delta = (l, a, b) => l === "Max HP" ? `+${b - a} HP` : `+${b - a}`;
-  const next = L.next ? `<div class="tonext"><div class="barlbl"><span>Toward level ${L.level + 1}</span><b>${L.next[0]} / ${L.next[1]} XP</b></div>
+  const delta = (l, a, b) => l === "Max HP" ? tr("report.delta_hp", {n: b - a}) : `+${b - a}`;
+  const next = L.next ? `<div class="tonext"><div class="barlbl"><span>${tr("report.toward", {n: L.level + 1})}</span><b>${tr("report.xp_of", {a: L.next[0], b: L.next[1]})}</b></div>
       <div class="bar xp"><i class="gain" style="width:${L.next[0] / L.next[1] * 100}%"></i></div></div>` : "";
-  const picks = L.picks ? `<div class="picks"><div class="d">${ico("gui/family-tree")}</div><div class="tx"><b>${plural(L.picks, "talent")} to pick</b>
-      <span>The pick waits on the sheet if you go on: it is spent from the talent tree whenever you open it.</span></div>
-      <div class="bigbtn small" data-go="talents">Pick talents</div></div>` : "";
+  const picks = L.picks ? `<div class="picks"><div class="d">${ico("gui/family-tree")}</div><div class="tx"><b>${trn("report.picks", L.picks)}</b>
+      <span>${tr("report.picks_wait")}</span></div>
+      <div class="bigbtn small" data-go="talents">${tr("report.pick_talents")}</div></div>` : "";
   $("body").innerHTML = `<div class="paper" id="sheet">
     <div class="plate"><div class="tag">${esc(L.tag)}</div><div class="big">${face(L.portrait, L.name)}</div>
       <div class="wax"><b>${L.level}</b><span>${esc(L.track)}</span></div>
       <h2>${esc(L.name)}</h2><div class="cap">${esc(L.race)}</div></div>
-    <div class="gains"><div class="kicker">${esc(L.track.toLowerCase())} level ${head ? `${head[1]} to ${head[2]}` : L.level}<em>what rose</em></div>
-      <h3>${esc(L.name)} is now a level ${L.level} ${ROLE[L.track]}${L.track === "COMBAT" && L.xp_gain
-        ? `<small>${L.xp_gain} XP from the ${esc(R.place)} carried them over the line.</small>` : ""}</h3>
-      <div class="ledger">${L.gains.map(([l, a, b]) => `<div class="row"><div class="l">${esc(l)}<small>${WHY[l] || ""}</small></div>
+    <div class="gains"><div class="kicker">${head ? tr("report.gain_kicker", {track: tr("report.track." + L.track), from: head[1], to: head[2]}) : tr("report.gain_kicker_one", {track: tr("report.track." + L.track), n: L.level})}<em>${tr("report.what_rose")}</em></div>
+      <h3>${tr("report.is_now", {name: esc(L.name), n: L.level, role: tr("report.role." + L.track)})}${L.track === "COMBAT" && L.xp_gain
+        ? `<small>${tr("report.carried_over", {xp: L.xp_gain, place: esc(R.place)})}</small>` : ""}</h3>
+      <div class="ledger">${L.gains.map(([l, a, b]) => `<div class="row"><div class="l">${esc(gainLbl(l))}<small>${gainWhy(l)}</small></div>
         <div class="a">${a}</div><div class="ar">→</div><div class="b">${b}</div><div class="dl">${delta(l, a, b)}</div></div>`).join("")}</div>
       ${next}${picks}</div>
-    <div class="lvfoot"><i>${L.gains.some(([l]) => l === "Max HP") ? `${L.hp[0]} / ${L.hp[1]} HP now: the new die raised the cap, not the wounds.` : ""}</i>
-      <div class="bigbtn" data-go="next">Continue</div></div></div>`;
+    <div class="lvfoot"><i>${L.gains.some(([l]) => l === "Max HP") ? tr("report.hp_now", {a: L.hp[0], b: L.hp[1]}) : ""}</i>
+      <div class="bigbtn" data-go="next">${tr("report.continue")}</div></div></div>`;
 }
 
 // ---------------------------------------------------------------- the field
@@ -236,27 +233,27 @@ function ware(w) {
 function column(p, refused) {
   const row = (q, it, loc, slot) => {
     const got = it && it.name ? (it.new || 0) : 0;
-    const html = Kit.item(q.id, it, loc, slot, {sel: isPicked(q.id, loc), tags: got ? Kit.tag(true, "new") : ""});
+    const html = Kit.item(q.id, it, loc, slot, {sel: isPicked(q.id, loc), tags: got ? Kit.tag(true, tr("report.new")) : ""});
     return got ? html.replace('class="it ', 'class="it new ') : html;
   };
-  const html = Kit.column(p, {row, foot: refused ? `<b>Won't fit</b>${esc(refused.why)}` : ""});
+  const html = Kit.column(p, {row, foot: refused ? `<b>${tr("report.wont_fit")}</b>${esc(refused.why)}` : ""});
   return refused ? html.replace('class="col pack"', 'class="col pack refuse"').replace('class="cfoot"', 'class="cfoot why"') : html;
 }
 
 function loot() {
   const L = R.loot;
-  header("The field", `${where()} · what the dead and the fallen left`);
-  let h = `<div class="paper" id="field" data-col="field"><div class="kicker">Left on the field<em>drag to a pack, or click, then click where</em></div>
-    <div class="fhead"><b>${plural(L.stacks, "stack")}</b><span>${L.things} things · ${kilos(L.kg)}<br>the pack's kit and your own dead's</span></div><div class="wares">`;
-  if (!L.cats.length) h += `<div class="empty-field">Nothing is left on the field.</div>`;
+  header(tr("report.field_title"), tr("report.field_sub", {where: where()}));
+  let h = `<div class="paper" id="field" data-col="field"><div class="kicker">${tr("report.left_on_field")}<em>${tr("report.drag_hint")}</em></div>
+    <div class="fhead"><b>${plural(L.stacks, "stack")}</b><span>${tr("report.things", {things: L.things, kg: kilos(L.kg)})}<br>${tr("report.field_kit")}</span></div><div class="wares">`;
+  if (!L.cats.length) h += `<div class="empty-field">${tr("report.field_empty")}</div>`;
   for (const c of L.cats) h += `<div class="cat">${esc(c.label)}</div>` + c.rows.map(ware).join("");
-  h += `</div><div class="fieldfoot"><p>Whatever is still here when the band goes on is left behind for good.</p></div></div><div id="packs">`;
+  h += `</div><div class="fieldfoot"><p>${tr("report.field_foot")}</p></div></div><div id="packs">`;
   for (const p of L.packs) h += column(p, L.refused && L.refused.uid === p.uid ? L.refused : null);
-  const took = L.taken.map(t => `${t.items.map(([n, q]) => `${q > 1 ? q + " " : "the "}${esc(n)}`).join(", ")} to <b>${esc(t.name)}</b>`).join(" · ");
-  h += `</div><div class="leather" id="lootfoot"><div class="bigbtn ghost small" data-go="auto">${ico("item/knapsack")}Take what fits</div>
-    ${L.can_distribute ? `<div class="bigbtn ghost small" data-go="distribute"${tip("Share the load out by what each can carry")}>${ico("action/rally-the-troops")}Distribute load</div>` : ""}
-    <i>${took ? `${took} · ` : ""}${L.stacks ? `${plural(L.stacks, "stack")} still on the field` : "the field is bare"}</i>
-    <div class="bigbtn" data-go="next">${L.stacks ? "Leave the rest · go on" : "Go on"}</div></div>`;
+  const took = L.taken.map(t => tr("report.took", {items: t.items.map(([n, q]) => tr(q > 1 ? "report.took_n" : "report.took_the", {q, name: esc(n)})).join(", "), who: esc(t.name)})).join(" · ");
+  h += `</div><div class="leather" id="lootfoot"><div class="bigbtn ghost small" data-go="auto">${ico("item/knapsack")}${tr("report.take_fits")}</div>
+    ${L.can_distribute ? `<div class="bigbtn ghost small" data-go="distribute"${tip(tr("kit.spread_tip"))}>${ico("action/rally-the-troops")}${tr("kit.spread")}</div>` : ""}
+    <i>${took ? `${took} · ` : ""}${L.stacks ? trn("report.still", L.stacks) : tr("report.bare")}</i>
+    <div class="bigbtn" data-go="next">${tr(L.stacks ? "report.leave_rest" : "report.go_on")}</div></div>`;
   $("body").innerHTML = h;
 }
 
@@ -318,7 +315,7 @@ function slip(src) {
   const it = itemOf(src.from, src.loc);
   if (!it) return;
   const s = $("slip");
-  s.innerHTML = `<span class="g">${g(it.glyph)}</span><div><b>${esc(it.name)}</b><br><span>${src.from === "field" ? "from the field" : "from a pack"}</span></div>`;
+  s.innerHTML = `<span class="g">${g(it.glyph)}</span><div><b>${esc(it.name)}</b><br><span>${tr(src.from === "field" ? "report.from_field" : "report.from_pack")}</span></div>`;
   s.hidden = false;
 }
 
@@ -358,23 +355,23 @@ addEventListener("pointerup", e => {
 // ---------------------------------------------------------------- the purse
 function purse() {
   const P = R.purse, stake = P.entry * P.fighters, net = P.amount - stake;
-  header("The arena pays", `<b>${esc(P.bout || R.place)}</b> · the Pit, after the bout · day ${R.day}`,
-    `<div class="stat"><b>${money(P.amount)}</b><span>the purse</span></div><div class="stat"><b>${money(net)}</b><span>over the stake</span></div>`);
-  const deeds = P.deeds.map(d => `<div class="deedline">Deed · <b>${esc(d.name)}</b>: ${esc(d.blurb)} +${d.rep} with ${esc(d.faction)}</div>`).join("");
-  let h = `<div class="paper" id="pit"><div class="pile"><div><b>${money(P.amount)}</b><span>in copper</span></div></div>
-    <div><h2>${P.paid_to ? "The purse is pocketed" : "Who pockets the purse?"}</h2><p>The purse lands whole on one fighter: the guild has no treasury. Hand coin on from the band's sheet afterwards, as any item.</p>
-    <div class="sums"><div>Staked<b>${money(stake)}</b></div><div>${P.fighters} fighters × ${money(P.entry)}</div><div>Won<b class="good">${money(P.amount)}</b></div>
-      <div>Net<b class="${net >= 0 ? "good" : "bad"}">${net >= 0 ? "+" : "−"}${money(Math.abs(net))}</b></div></div>${deeds}
+  header(tr("report.purse_title"), tr("report.purse_sub", {bout: esc(P.bout || R.place), day: R.day}),
+    `<div class="stat"><b>${money(P.amount)}</b><span>${tr("report.the_purse")}</span></div><div class="stat"><b>${money(net)}</b><span>${tr("report.over_stake")}</span></div>`);
+  const deeds = P.deeds.map(d => `<div class="deedline">${tr("report.deed_line", {name: esc(d.name), blurb: esc(d.blurb), rep: d.rep, faction: esc(d.faction)})}</div>`).join("");
+  let h = `<div class="paper" id="pit"><div class="pile"><div><b>${money(P.amount)}</b><span>${tr("report.in_copper")}</span></div></div>
+    <div><h2>${tr(P.paid_to ? "report.pocketed" : "report.who_pockets")}</h2><p>${tr("report.purse_lands")}</p>
+    <div class="sums"><div>${tr("report.staked")}<b>${money(stake)}</b></div><div>${trn("report.fighters_x", P.fighters, {entry: money(P.entry)})}</div><div>${tr("report.won_lbl")}<b class="good">${money(P.amount)}</b></div>
+      <div>${tr("report.net")}<b class="${net >= 0 ? "good" : "bad"}">${net >= 0 ? "+" : "−"}${money(Math.abs(net))}</b></div></div>${deeds}
       ${P.note ? `<div class="deedline" style="color:#7d5c37">${esc(P.note)}</div>` : ""}</div></div><div id="hands">`;
   for (const m of P.members) {
     const paid = P.paid_to === m.uid;
     h += `<div class="leather hand ${paid ? "paid" : P.paid_to ? "spent" : ""}" data-uid="${m.uid}"><div class="medal">${face(m.portrait, m.name)}</div>
       <b>${esc(m.name)}</b><span>${esc(m.sub)}</span>
-      <div class="was">Carries<b class="${paid ? "after" : ""}">${money(m.money)}</b></div>
-      ${P.paid_to ? "" : `<div class="give"><div class="bigbtn ghost small" data-give="${m.uid}">${ico("item/two-coins")}Give ${money(P.amount)}</div></div>`}</div>`;
+      <div class="was">${tr("report.carries")}<b class="${paid ? "after" : ""}">${money(m.money)}</b></div>
+      ${P.paid_to ? "" : `<div class="give"><div class="bigbtn ghost small" data-give="${m.uid}">${ico("item/two-coins")}${tr("report.give", {amount: money(P.amount)})}</div></div>`}</div>`;
   }
-  h += `</div><div id="pursefoot"><i>${P.paid_to ? "The purse is spoken for." : "Continue opens once someone holds the purse."}</i>
-    <div class="bigbtn ${P.paid_to ? "" : "ghost off"}" data-go="next">Continue</div></div>`;
+  h += `</div><div id="pursefoot"><i>${tr(P.paid_to ? "report.spoken" : "report.opens")}</i>
+    <div class="bigbtn ${P.paid_to ? "" : "ghost off"}" data-go="next">${tr("report.continue")}</div></div>`;
   $("body").innerHTML = h;
 }
 

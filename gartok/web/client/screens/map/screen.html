@@ -13,7 +13,7 @@
     <div class="clock">
       <svg class="dial" viewBox="0 0 86 46" id="dial"></svg>
       <div>
-        <div class="day"><span>DAY</span><em id="day"></em></div>
+        <div class="day"><span data-t="map.day"></span><em id="day"></em></div>
         <div class="hour"><b id="time"></b><i id="part"></i></div>
       </div>
     </div>
@@ -21,13 +21,13 @@
     <div class="ledger" id="ledger"></div>
     <div class="topbtns">
       <div class="ghost-btn" id="guildbtn"><span class="ico mask"
-          style="--icon:url(/assets/icons/gui/bookmark.svg)"></span><span id="guildlbl">Guild</span></div>
-      <div class="ghost-btn" id="titlebtn" data-tip="The menu (Esc)">Menu</div>
+          style="--icon:url(/assets/icons/gui/bookmark.svg)"></span><span id="guildlbl" data-t="map.guild"></span></div>
+      <div class="ghost-btn" id="titlebtn" data-t-tip="map.menu_tip" data-t="map.menu"></div>
     </div>
   </div>
 
   <div id="bands" class="leather">
-    <div class="lk">Bands <em id="bandsnote"></em></div>
+    <div class="lk"><span data-t="map.bands"></span> <em id="bandsnote"></em></div>
     <div id="bandlist"></div>
   </div>
 
@@ -37,9 +37,9 @@
     <div id="slip" class="tip" hidden></div>
     <div id="news" hidden></div>
     <div class="zoom">
-      <div id="zin" data-tip="Zoom in (+)">+</div>
-      <div id="zout" data-tip="Zoom out (−)">−</div>
-      <div class="fit" id="zfit" data-tip="Fit the known world (F)">FIT</div>
+      <div id="zin" data-t-tip="map.zoom_in">+</div>
+      <div id="zout" data-t-tip="map.zoom_out">−</div>
+      <div class="fit" id="zfit" data-t-tip="map.fit_tip" data-t="map.fit"></div>
     </div>
   </div>
 
@@ -49,8 +49,8 @@
       <div class="camp leather" id="camp"></div>
     </div>
     <div id="log">
-      <div id="loghead" data-tip="Search the log">
-        <span class="kicker">The log</span>
+      <div id="loghead" data-t-tip="map.log_tip">
+        <span class="kicker" data-t="map.log"></span>
         <span class="warn" id="logwarn"></span>
         <span class="count" id="logcount"></span>
         <span class="lens"><svg viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8" /><line x1="10" y1="10" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="2" /></svg></span>
@@ -68,9 +68,9 @@
 
   <div id="wiped" hidden>
     <div class="paper">
-      <div class="kicker">The guild is gone</div>
-      <p>No one is left to carry the banner. The world keeps its last save; load an earlier one to try again.</p>
-      <div class="ghost-btn" id="wipedbtn">To the title</div>
+      <div class="kicker" data-t="map.wiped_h"></div>
+      <p data-t="map.wiped"></p>
+      <div class="ghost-btn" id="wipedbtn" data-t="map.to_title"></div>
     </div>
   </div>
   <div id="turn" hidden>
@@ -81,62 +81,62 @@
       <div class="act" id="turnact"></div>
       <p id="turncrew"></p>
       <div class="lbtns">
-        <div class="brass-btn" id="turngo">Go on</div>
+        <div class="brass-btn" id="turngo" data-t="map.go_on"></div>
       </div>
     </div>
   </div>
   <div id="logsearch" hidden>
     <div class="paper">
       <div class="x" data-logclose>✕</div>
-      <div class="kicker">The log · search</div>
-      <h2>What happened?</h2>
-      <div class="sbox"><input id="logq" placeholder="A word, a name, an item…" autocomplete="off" spellcheck="false"></div>
-      <div class="chips" id="logkinds"><span class="lbl">What</span></div>
-      <div class="chips" id="logbands"><span class="lbl">Who</span></div>
+      <div class="kicker" data-t="map.log_search"></div>
+      <h2 data-t="map.what_happened"></h2>
+      <div class="sbox"><input id="logq" autocomplete="off" spellcheck="false"></div>
+      <div class="chips" id="logkinds"><span class="lbl" data-t="map.what"></span></div>
+      <div class="chips" id="logbands"><span class="lbl" data-t="map.who"></span></div>
       <div class="results" id="logresults"></div>
-      <div class="rcount"><span id="logfound"></span><span>Esc closes</span></div>
+      <div class="rcount"><span id="logfound"></span><span data-t="map.esc_closes"></span></div>
     </div>
   </div>
   <div id="logfull" hidden>
     <div class="paper">
-      <div class="kicker">The log</div>
-      <h2>The log is full</h2>
+      <div class="kicker" data-t="map.log"></div>
+      <h2 data-t="map.log_full"></h2>
       <p id="logfulltext"></p>
       <div class="opts">
-        <div class="opt" data-logfull="export"><b>Export and clear</b><span>the oldest half goes to <code>log-export</code></span></div>
-        <div class="opt" data-logfull="discard"><b>Drop the oldest</b><span>forget the oldest half</span></div>
-        <div class="opt" data-logfull="raise" id="lograise"><b>Keep more</b><span id="lograisenote"></span></div>
+        <div class="opt" data-logfull="export"><b data-t="map.export"></b><span data-t="map.export_sub"></span></div>
+        <div class="opt" data-logfull="discard"><b data-t="map.drop"></b><span data-t="map.drop_sub"></span></div>
+        <div class="opt" data-logfull="raise" id="lograise"><b data-t="map.keep_more"></b><span id="lograisenote"></span></div>
       </div>
-      <div class="later" data-logfull="later">Later: ask me again next session</div>
+      <div class="later" data-logfull="later" data-t="map.later"></div>
     </div>
   </div>
   <div id="leave" hidden>
     <div class="paper">
-      <div class="kicker">Leave the wagon behind?</div>
+      <div class="kicker" data-t="map.leave_h"></div>
       <div id="leavebody"></div>
       <div class="lbtns">
-        <div class="ghost-btn" data-leave="stay">Stay</div>
-        <div class="ghost-btn" data-leave="cargo">Manage cargo</div>
-        <div class="brass-btn" data-leave="go">Leave it and go</div>
+        <div class="ghost-btn" data-leave="stay" data-t="map.stay"></div>
+        <div class="ghost-btn" data-leave="cargo" data-t="map.manage_cargo"></div>
+        <div class="brass-btn" data-leave="go" data-t="map.leave_go"></div>
       </div>
     </div>
   </div>
   <div id="pause" hidden>
     <div class="leather">
-      <div class="tagline">The game waits</div>
+      <div class="tagline" data-t="pause.waits"></div>
       <h3 id="pausename"></h3>
-      <div class="pm" data-pause="resume"><span class="num">I</span>Resume<span class="hint">Esc</span></div>
-      <div class="pm" data-pause="save"><span class="num">II</span>Save as…<span class="hint" id="savednote"></span>
+      <div class="pm" data-pause="resume"><span class="num">I</span><span data-t="pause.resume"></span><span class="hint">Esc</span></div>
+      <div class="pm" data-pause="save"><span class="num">II</span><span data-t="pause.save"></span><span class="hint" id="savednote"></span>
       </div>
-      <form id="saveform" hidden><input id="savename" maxlength="40" placeholder="Name this save" spellcheck="false"
+      <form id="saveform" hidden><input id="savename" maxlength="40" spellcheck="false"
           autocomplete="off">
-        <div class="ghost-btn" id="savego">Save</div>
+        <div class="ghost-btn" id="savego" data-t="pause.save_btn"></div>
       </form>
-      <div class="pm" data-pause="settings"><span class="num">III</span>Settings</div>
-      <div class="pm" data-pause="wiki"><span class="num">IV</span>Wiki &amp; compendium</div>
+      <div class="pm" data-pause="settings"><span class="num">III</span><span data-t="pause.settings"></span></div>
+      <div class="pm" data-pause="wiki"><span class="num">IV</span><span data-t="pause.wiki"></span></div>
       <div class="gap"></div>
-      <div class="pm" data-pause="title"><span class="num">V</span>Main menu<span class="hint">saved first</span></div>
-      <div class="pm quiet" data-pause="quit"><span class="num">VI</span>Quit<span class="hint">saved first</span></div>
+      <div class="pm" data-pause="title"><span class="num">V</span><span data-t="pause.main"></span><span class="hint" data-t="pause.saved_first"></span></div>
+      <div class="pm quiet" data-pause="quit"><span class="num">VI</span><span data-t="pause.quit"></span><span class="hint" data-t="pause.saved_first"></span></div>
     </div>
   </div>
 </div>
