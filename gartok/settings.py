@@ -13,12 +13,14 @@ from . import i18n, persist
 PATH = os.path.join(os.path.dirname(persist.SAVE_DIR), "settings.json")
 
 SPEC = {
-    "chord_ms": ("settings.name.chord_ms", (0, 20, 40, 70, 100), 40),
     "record_play": ("settings.name.record_play", ("OFF", "ON"), "OFF"),
     "volume": ("settings.name.volume", (0, 25, 50, 75, 100), 75),
     "log_lines": ("settings.name.log_lines", (500, 1000, 2000, 5000), 2000),
     "language": ("settings.name.language", tuple(i18n.LANGUAGES), i18n.DEFAULT_LANG),
 }
+
+# A value the player types, within bounds; the choices of such an entry are the steps the map's "raise the limit" climbs.
+RANGES = {"log_lines": (200, 50000)}
 
 _values = None
 
@@ -33,8 +35,13 @@ def _load():
         return
     if isinstance(saved, dict):
         for k, (_, choices, _) in SPEC.items():
-            if saved.get(k) in choices:
+            if saved.get(k) in choices or in_range(k, saved.get(k)):
                 _values[k] = saved[k]
+
+
+def in_range(key, value):
+    lo, hi = RANGES.get(key, (1, 0))
+    return isinstance(value, int) and not isinstance(value, bool) and lo <= value <= hi
 
 
 def get(key):
@@ -43,22 +50,32 @@ def get(key):
     return _values[key]
 
 
-def cycle(key):
-    """Step `key` to its next allowed value, wrapping, and save it."""
-    choices = SPEC[key][1]
-    nxt = choices[(choices.index(get(key)) + 1) % len(choices)]
-    _values[key] = nxt
+def put(key, value):
+    """Keep `value` for `key` (one of its choices, or inside its range) and save it."""
+    if value not in SPEC[key][1] and not in_range(key, value):
+        raise ValueError(f"{key} cannot be {value}")
+    if _values is None:
+        _load()
+    _values[key] = value
     try:
         with open(PATH, "w", encoding="utf-8") as f:
             json.dump(_values, f, indent=2)
     except OSError:
         pass
-    return nxt
+    return value
+
+
+def cycle(key):
+    """Step `key` to its next allowed value, wrapping, and save it."""
+    choices = SPEC[key][1]
+    return put(key, next_choice(key) or choices[0])
 
 
 def next_choice(key):
     """The next larger allowed value of `key`, or None when it is on the last."""
     choices = SPEC[key][1]
+    if key in RANGES:
+        return next((c for c in choices if c > get(key)), None)
     at = choices.index(get(key))
     return choices[at + 1] if at + 1 < len(choices) else None
 
@@ -73,8 +90,6 @@ def step_up(key):
 def label(key):
     name = i18n.t(SPEC[key][0])
     value = get(key)
-    if key.endswith("_ms"):
-        return i18n.t("settings.ms", name=name, value=value)
     if key == "volume":
         return f"{name}: {value}%" if value else i18n.t("settings.off", name=name)
     return f"{name}: {value}"

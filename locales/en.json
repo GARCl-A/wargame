@@ -498,10 +498,6 @@
       "again_btn": "Reset the cards",
       "again_done": "Shown again",
       "row": {
-        "chord_ms": {
-          "label": "Arrow chord",
-          "note": "How long the battle waits for a second arrow key to read a diagonal (pygame's keyboard)."
-        },
         "record_play": {
           "label": "Play recorder",
           "note": "A day-by-day log of the play beside the saves; it starts with the next guild opened."
@@ -512,7 +508,7 @@
         },
         "log_lines": {
           "label": "Log lines",
-          "note": ""
+          "note": "How many lines the map's log keeps before it asks what to do with the oldest. From 200 to 50000."
         },
         "language": {
           "label": "Language",
@@ -5193,10 +5189,8 @@
     "ac": "{armor_name}  ·  +{a} AC"
   },
   "settings": {
-    "ms": "{name}: {value} MS",
     "off": "{name}: OFF",
     "name": {
-      "chord_ms": "ARROW CHORD",
       "record_play": "PLAY RECORDER",
       "volume": "VOLUME",
       "log_lines": "LOG LINES",

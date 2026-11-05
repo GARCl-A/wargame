@@ -20,6 +20,7 @@ async function post(verb, body = {}) {
     render(r);
   } catch (e) {
     toast(e.message);
+    if (S) render(S);
   } finally {
     busy = false;
   }
@@ -33,7 +34,8 @@ function render(state) {
   Sound.volume = S.volume;
   $("back").textContent = S.back;
   $("rows").innerHTML = S.rows.map(r => `<div class="row" data-key="${r.key}"><div class="txt"><b>${esc(r.label)}</b><span>${esc(r.note)}</span></div>
-    ${opts(r.choices, r.value, "data-value")}</div>`).join("");
+    ${r.number ? `<input class="num" type="number" inputmode="numeric" min="${r.number.min}" max="${r.number.max}" value="${r.value}">`
+      : opts(r.choices, r.value, "data-value")}</div>`).join("");
   $("ver").textContent = S.version;
   $("export").innerHTML = `<div class="kicker">${tr("settings.playtest")}</div>
     <div class="row"><div class="txt"><b>${tr("settings.export")}</b><span>${tr("settings.export_note")}</span></div>
@@ -60,6 +62,11 @@ document.addEventListener("click", e => {
   if (e.target.closest("#reset") && !S.tutorial.reset) post("reset_tutorial");
   else if (e.target.closest("#back")) post("back");
 });
+document.addEventListener("change", e => {
+  const n = e.target.closest(".num");
+  if (n) post("set", {key: n.closest("[data-key]").dataset.key, value: n.value});
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".num")) e.target.blur(); });
 addEventListener("keydown", e => { if (e.key === "Escape") post("back"); });
 
 api("/api/settings/state").then(render).catch(e => toast(e.message));

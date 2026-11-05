@@ -74,7 +74,13 @@ def test_a_setting_keeps_the_choice_pressed_and_saves_it(saves):
     rows = {r["key"]: r for r in s.state()["rows"]}
     assert set(rows) == set(settings.SPEC)
     assert [c["value"] for c in rows["volume"]["choices"]] == list(settings.SPEC["volume"][1])
-    assert rows["volume"]["choices"][0]["label"] == "Off" and rows["chord_ms"]["choices"][1]["label"] == "20 ms"
+    assert rows["volume"]["choices"][0]["label"] == "Off"
+    assert "choices" not in rows["log_lines"] and rows["log_lines"]["number"] == {"min": 200, "max": 50000}
+    st = s.set("log_lines", " 3000 ")
+    assert next(r for r in st["rows"] if r["key"] == "log_lines")["value"] == 3000
+    for bad in (50, "many", 99999):
+        with pytest.raises(ValueError, match="cannot be"):
+            s.set("log_lines", bad)
     st = s.set("volume", 25)
     assert st["volume"] == 25 and next(r for r in st["rows"] if r["key"] == "volume")["value"] == 25
     s.set("record_play", "ON")

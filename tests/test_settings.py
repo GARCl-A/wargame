@@ -14,24 +14,34 @@ def _tmp_settings(tmp_path, monkeypatch):
 
 
 def test_defaults_when_there_is_no_file():
-    assert settings.get("chord_ms") == 40
+    assert settings.get("volume") == 75
 
 
 def test_cycle_wraps_and_persists():
-    choices = settings.SPEC["chord_ms"][1]
-    seen = [settings.cycle("chord_ms") for _ in choices]
-    assert seen[-1] == settings.get("chord_ms") == 40 and set(seen) == set(choices)
-    settings.cycle("chord_ms")
-    stored = settings.get("chord_ms")
+    choices = settings.SPEC["volume"][1]
+    seen = [settings.cycle("volume") for _ in choices]
+    assert seen[-1] == settings.get("volume") == 75 and set(seen) == set(choices)
+    settings.cycle("volume")
+    stored = settings.get("volume")
     settings.reload()
-    assert settings.get("chord_ms") == stored
+    assert settings.get("volume") == stored
+
+
+def test_the_log_limit_takes_any_number_inside_its_range_and_steps_up_from_there():
+    settings.put("log_lines", 3000)
+    settings.reload()
+    assert settings.get("log_lines") == 3000 and settings.next_choice("log_lines") == 5000
+    with pytest.raises(ValueError):
+        settings.put("log_lines", 10)
+    settings.put("log_lines", 9000)
+    assert settings.next_choice("log_lines") is None and settings.step_up("log_lines") == 9000
 
 
 def test_a_corrupt_or_foreign_value_falls_back_to_the_default():
     with open(settings.PATH, "w", encoding="utf-8") as f:
-        f.write('{"chord_ms": 12345}')
-    assert settings.get("chord_ms") == 40
+        f.write('{"volume": 12345}')
+    assert settings.get("volume") == 75
     with open(settings.PATH, "w", encoding="utf-8") as f:
         f.write("not json")
     settings.reload()
-    assert settings.get("chord_ms") == 40
+    assert settings.get("volume") == 75

@@ -9,9 +9,24 @@ from ..version import GAME_VERSION, build_hash
 from .session import Session
 
 
+def _whole(value):
+    try:
+        return int(str(value).strip())
+    except ValueError:
+        return value
+
+
+def _row(k, choices):
+    row = {"key": k, "label": i18n.t(f"ui.settings.row.{k}.label"),
+           "note": i18n.t(f"ui.settings.row.{k}.note"), "value": settings.get(k)}
+    if k in settings.RANGES:
+        row["number"] = dict(zip(("min", "max"), settings.RANGES[k]))
+    else:
+        row["choices"] = [{"value": v, "label": _shown(k, v)} for v in choices]
+    return row
+
+
 def _shown(key, value):
-    if key.endswith("_ms"):
-        return f"{value} ms"
     if key == "volume":
         return f"{value}%" if value else i18n.t("ui.settings.value.off")
     if key == "language":
@@ -39,11 +54,11 @@ class SettingsSession(Session):
     def set(self, key, value):
         if key not in settings.SPEC:
             raise ValueError(i18n.t("ui.settings.unknown", name=key))
-        choices = settings.SPEC[key][1]
-        if value not in choices:
+        if key in settings.RANGES:
+            value = _whole(value)
+        if value not in settings.SPEC[key][1] and not settings.in_range(key, value):
             raise ValueError(i18n.t("ui.settings.cannot_be", label=i18n.t(f"ui.settings.row.{key}.label"), value=value))
-        while settings.get(key) != value:
-            settings.cycle(key)
+        settings.put(key, value)
         if key == "language":
             settings.apply_language()
         return self.state()
@@ -66,10 +81,7 @@ class SettingsSession(Session):
         return self.state()
 
     def state(self):
-        rows = [{"key": k, "label": i18n.t(f"ui.settings.row.{k}.label"),
-                 "note": i18n.t(f"ui.settings.row.{k}.note"), "value": settings.get(k),
-                 "choices": [{"value": v, "label": _shown(k, v)} for v in choices]}
-                for k, (_, choices, _) in settings.SPEC.items()]
+        rows = [_row(k, choices) for k, (_, choices, _) in settings.SPEC.items()]
         tut = None
         if self.guild is not None:
             tut = {"enabled": self.guild.tutorial.enabled, "reset": self.reset_note}
