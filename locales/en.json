@@ -2005,7 +2005,21 @@
     "prone": "prone",
     "up": "up",
     "free": "free",
-    "miss": "miss"
+    "miss": "miss",
+    "got": "Got {item}!",
+    "chest_opened": "Chest Opened!",
+    "vs": "{total} vs {dc}",
+    "stabilize_ok": "d20({nat}) Success",
+    "stabilize_fail": "d20({nat}) Fail",
+    "heal": "+{heal} HP",
+    "web": "Web!",
+    "signal_horn": "Signal Horn!",
+    "vs_dc": "{total} vs DC {dc}",
+    "secret_opened": "Secret Opened!",
+    "found": "Found!",
+    "web_cleared": "Web Cleared!",
+    "trap_disarmed": "Trap Disarmed!",
+    "captured": "Captured"
   },
   "log": {
     "roll": {
@@ -2032,7 +2046,8 @@
     "attack": {
       "head": "{actor} -> {target}",
       "head_via": "{actor} -> {target} ({how})",
-      "head_tongue": "{actor} -> {target} (tongue)"
+      "head_tongue": "{actor} -> {target} (tongue)",
+      "head_via_indented": "  {actor} -> {target} ({how})"
     },
     "feint": "{actor} uses {ability} to distract.",
     "luck_attack": {
@@ -2120,7 +2135,123 @@
     "nonlethal_off": "{actor} fights to kill again.",
     "tail_sweep": {
       "head": "{actor} Tail Sweep -> {foe}"
-    }
+    },
+    "sneak_attack": {
+      "head": "{actor} Sneak Attack -> {target}",
+      "brutal": "Sneak Attack strikes a vulnerable spot"
+    },
+    "precise_thrust": {
+      "head": "{actor} Precise Thrust -> {target}",
+      "brutal": "The thrust finds the gap"
+    },
+    "repel_strike": {
+      "head": "{actor} Repel Strike -> {target}",
+      "brutal": "{target} is slammed against what stands behind",
+      "holds": "  Repel check: d20({nat}) + {str}(STR) + 2(Staff) = {total} vs DC {dc} -> holds ground.",
+      "pushed": "  Repel check: d20({nat}) + {str}(STR) + 2(Staff) = {total} vs DC {dc} -> pushed back to {cell}!",
+      "blocked": "  Repel check: d20({nat}) + {str}(STR) + 2(Staff) = {total} vs DC {dc} -> blocked by terrain/body."
+    },
+    "maiming_strike": {
+      "head": "{actor} Maiming Strike -> {target}",
+      "brutal": "{target} cannot get out of the way"
+    },
+    "armor_pierce": {
+      "head": "{actor} Armor Pierce -> {target}",
+      "brutal": "The point punches through the armour"
+    },
+    "power_shot": {
+      "head": "{actor} Power Shot -> {target}",
+      "brutal": "A full draw at long range",
+      "drawn": "  Drawn with great power (+{n} STR damage)!"
+    },
+    "extreme_shot": {
+      "head": "{actor} Extreme Shot -> {target}"
+    },
+    "hook_shield": {
+      "head": "{actor} Hook Shield -> {target}",
+      "brutal": "The hook bites behind the shield",
+      "hooked": "  {actor} hooks {target}'s shield and wrenches it aside (loses shield AC)!"
+    },
+    "javelin_charge": {
+      "head": "{actor} Javelin Charge -> {target}",
+      "impact": "  The running throw impacts with brutal force (+{n} damage)!"
+    },
+    "parry_strike": {
+      "head": "{actor} Parry & Strike -> {target}",
+      "brutal": "Parry and riposte",
+      "stance": "  {actor} falls back into a parrying stance (+1 AC until next turn)!"
+    },
+    "long_thrust": {
+      "head": "{actor} Long Thrust -> {target}"
+    },
+    "cleave": {
+      "head": "{actor} Cleave -> {target}",
+      "head_claws": "{actor} Sweeping Claws -> {target}",
+      "head_sweeps": "  Cleave sweeps into -> {target}",
+      "head_claws_sweeps": "  Sweeping Claws sweeps into -> {target}"
+    },
+    "maimed": "  {target} is maimed (movement halved until next round).",
+    "wrest": {
+      "keeps": "{actor} Wrest -> {target}: d20({nat}) + {dex}(DEX) = {total} vs DC {dc} -> {target} keeps the {weapon}.",
+      "tears": "{actor} Wrest -> {target}: d20({nat}) + {dex}(DEX) = {total} vs DC {dc} -> {actor} tears the {weapon} away!"
+    },
+    "drops_torch": "  {actor} drops the torch at {cell}.",
+    "drops": "  {actor} drops {item} at {cell}.",
+    "picks_torch": "{actor} picks up a torch (lights {n} squares).",
+    "retrieves": "{actor} retrieves the {item}!",
+    "chest_money": "{actor} finds {money} in the chest!",
+    "chest_item": "{actor} recovers {item} from the chest!",
+    "picks_up": "{actor} picks up {item} from the ground.",
+    "repair": {
+      "ok": "{actor} tries to repair {target}: d20({nat}) {int:+}(INT) = {total} vs {dc} -> repaired.",
+      "fail": "{actor} tries to repair {target}: d20({nat}) {int:+}(INT) = {total} vs {dc} -> fails."
+    },
+    "stabilize": {
+      "ok": "{actor} tries to stabilize {target}: d20({nat}) -> success.",
+      "fail": "{actor} tries to stabilize {target}: d20({nat}) -> fails."
+    },
+    "first_aid": {
+      "ok": {
+        "one": "{actor} uses the kit on {target}: d20({nat}) {wis:+}(WIS) = {total} vs {dc} -> success.  ({n} charge)",
+        "other": "{actor} uses the kit on {target}: d20({nat}) {wis:+}(WIS) = {total} vs {dc} -> success.  ({n} charges)"
+      },
+      "fail": {
+        "one": "{actor} uses the kit on {target}: d20({nat}) {wis:+}(WIS) = {total} vs {dc} -> fails.  ({n} charge)",
+        "other": "{actor} uses the kit on {target}: d20({nat}) {wis:+}(WIS) = {total} vs {dc} -> fails.  ({n} charges)"
+      }
+    },
+    "cured": "  {target} is cured of their sickness!",
+    "potion": {
+      "drinks": "{actor} drinks a {potion}, recovering {heal} HP.",
+      "drinks_up": "{actor} drinks a {potion}, recovering {heal} HP -- back on their feet.",
+      "feeds": "{actor} feeds {target} a {potion}, recovering {heal} HP.",
+      "feeds_up": "{actor} feeds {target} a {potion}, recovering {heal} HP -- back on their feet."
+    },
+    "eat_corpse": "{actor} devours {target}'s corpse (hunger reset to 0).",
+    "feast": "  Terrifying feast: d20({nat}) {bonus:+} = {total} (AoE Demoralize)",
+    "feast_terrified": "    {target} (MD {md}) is terrified -> DEMORALIZED.",
+    "feast_resists": "    {target} (MD {md}) resists the horror.",
+    "spin_web": "{actor} spins a {n}x{n} web.",
+    "mounts": "{actor} mounts {target}.",
+    "lift_fallen": "{actor} hauls the fallen {target} onto their back.",
+    "lift": "{actor} swings {target} onto their back.",
+    "pixie_dust": "{actor} showers {target} in pixie dust: they take wing.",
+    "dismounts": "{actor} dismounts to {cell}.",
+    "wake_up": "{actor} shakes {target} awake!",
+    "signal_horn": "{actor} blows the Signal Horn! {allies} gain +{n} initiative.",
+    "assess": "{actor} studies {target}: d20 + INT + {bonus} = {total} vs DC {dc}  -> {learned}.",
+    "assess_nothing": "nothing new",
+    "secret_door": "{actor} inspects the wall and triggers a hidden lever! A secret door slides open at {cell}.",
+    "finds_hiding": "{actor} searches and finds {target} hiding at {cell}!",
+    "finds_nothing": "{actor} searches the dark around them and finds nothing.",
+    "disarm": {
+      "ok": "{actor} attempts to disarm {trap}: d20({nat}) {dex:+}(DEX) = {total} vs DC {dc} -> success!",
+      "fail": "{actor} attempts to disarm {trap}: d20({nat}) {dex:+}(DEX) = {total} vs DC {dc} -> failed.",
+      "web": "  {actor} tears the web down.",
+      "recovered": "  {actor} disarms the {trap} and recovers a {item}!",
+      "fumble": "  Critical fumble! {actor} accidentally triggers the trap!"
+    },
+    "capture": "{actor} binds {target} with {tool}: captured."
   },
   "action": {
     "attack": {
@@ -2227,6 +2358,184 @@
       "desc": "2 points: an unarmed tail strike and a Push on two adjacent foes.",
       "reason": "Missing 'tail_sweep' talent.",
       "label": "Tail Sweep (2 pts, strike and shove 2 adjacent foes)"
+    },
+    "sneak_attack": {
+      "name": "Sneak Attack",
+      "desc": "2 AP: Only against a flanked foe: the blow is Brutal 1, +1d4.",
+      "reason": "requires dagger",
+      "label": "Sneak Attack (2 pts, Brutal 1 +1d4 vs flanked)"
+    },
+    "precise_thrust": {
+      "name": "Precise Thrust",
+      "desc": "2 AP: Only against a flanked foe: +2 to hit, the blow is Brutal 1.",
+      "reason": "requires rapier",
+      "label": "Precise Thrust (2 pts, +2 to hit & Brutal 1 vs flanked)"
+    },
+    "cleave": {
+      "name": "Cleave",
+      "desc": "2 AP: Strikes two adjacent foes in a single wide swing.",
+      "reason": "requires axe",
+      "label": "Cleave (2 pts, strike 2 adjacent foes at +2)",
+      "label_claws": "Sweeping Claws (2 pts, strike 2 adjacent foes at +2)"
+    },
+    "repel_strike": {
+      "name": "Repel Strike",
+      "desc": "2 AP: Attacks and shoves target back with a +2 bonus to the push check.",
+      "reason": "requires quarterstaff",
+      "label": "Repel Strike (2 pts, attack & push +2; Brutal 1 +1d4 vs a foe against a wall)"
+    },
+    "maiming_strike": {
+      "name": "Maiming Strike",
+      "desc": "2 AP: Attacks and halves the target's movement speed until next round.",
+      "reason": "requires bludgeon",
+      "label": "Maiming Strike (2 pts, halves speed; +2 & Brutal 1 vs a foe that cannot dodge)"
+    },
+    "armor_pierce": {
+      "name": "Armor Pierce",
+      "desc": "2 AP: Attack ignores worn armor AC bonus.",
+      "reason": "requires pick",
+      "label": "Armor Pierce (2 pts, ignores armor AC; Brutal 1 vs an armoured foe)"
+    },
+    "power_shot": {
+      "name": "Power Shot",
+      "desc": "2 AP: Adds positive Strength modifier to arrow damage.",
+      "reason": "requires a bow",
+      "label": "Power Shot (2 pts, +STR to damage; Brutal 1 at half range or farther)"
+    },
+    "extreme_shot": {
+      "name": "Extreme Shot",
+      "desc": "2 AP: Doubles attack range to 36 squares.",
+      "reason": "requires crossbow",
+      "label": "Extreme Shot (2 pts, 36 sq range)"
+    },
+    "hook_shield": {
+      "name": "Hook Shield",
+      "desc": "2 AP: Attacks and nullifies target's shield AC bonus until next round.",
+      "reason": "requires hatchet",
+      "label": "Hook Shield (2 pts, strip shield AC; Brutal 1 vs a shield)"
+    },
+    "javelin_charge": {
+      "name": "Javelin Charge",
+      "desc": "1 AP: Throws the spear after moving this turn for +1d4 bonus damage.",
+      "reason": "requires shortspear",
+      "label": "Javelin Charge (1 pt, throw after a move, +1d4 dmg)"
+    },
+    "parry_strike": {
+      "name": "Parry & Strike",
+      "desc": "2 AP: Attacks and assumes a Defending guard (+1 AC until next turn).",
+      "reason": "requires a sword",
+      "label": "Parry & Strike (2 pts, attack & Defend; Brutal 1 with 2+ foes in reach)"
+    },
+    "long_thrust": {
+      "name": "Long Thrust",
+      "desc": "2 AP: One strike one square past the weapon's reach, +1 to hit.",
+      "reason": "requires a glaive",
+      "label": "Long Thrust (2 pts, reach {reach}, +{n} to hit)"
+    },
+    "wrest": {
+      "name": "Wrest",
+      "desc": "2 AP: Seize the weapon of an armed foe; if you win, strike with it at once.",
+      "reason": "requires bare hands",
+      "label": "Wrest (2 pts, DEX vs 15 + STR: take the foe's weapon and strike with it)"
+    },
+    "pick_up": {
+      "name": "Pick up",
+      "desc": "Pick up a dropped item or torch in your cell.",
+      "label": "Pick up / swap object (1 pt)"
+    },
+    "stabilize": {
+      "name": "Stabilize",
+      "desc": "50% chance to stabilize an adjacent dying ally.",
+      "label": "Stabilize a downed ally (1 pt: 50%, or repair automaton INT vs {dc})"
+    },
+    "first_aid": {
+      "name": "First Aid",
+      "desc": "Use a medkit: 100% chance to stabilize, or cure sickness.",
+      "label": {
+        "one": "First Aid (1 pt, WIS vs {dc}, {n} charge)",
+        "other": "First Aid (1 pt, WIS vs {dc}, {n} charges)"
+      }
+    },
+    "drink_potion": {
+      "name": "Drink Potion",
+      "desc": "Drink a Minor Healing Potion or feed it to an adjacent ally (heals 1d6 HP).",
+      "reason": "No {potion}.",
+      "label": "Drink Potion (1 pt, {n} in pack)"
+    },
+    "eat_corpse": {
+      "name": "Eat Corpse",
+      "desc": "Devour a corpse to reset hunger and terrify foes.",
+      "reason": "Missing 'corpse_eater' talent."
+    },
+    "spin_web": {
+      "name": "Spin Web",
+      "desc": "Spin a web trap beside you, as wide as your own body.",
+      "reason": "Missing 'spin_web' talent."
+    },
+    "mount": {
+      "name": "Mount",
+      "desc": "Mount an allied centaur.",
+      "reason_mounted": "Already mounted.",
+      "reason_large": "Too large to ride a mount.",
+      "reason_none": "No mount in squad."
+    },
+    "lift_rider": {
+      "name": "Lift Rider",
+      "desc": "Put an adjacent Small or Medium ally, awake or fallen, on your back.",
+      "reason": "Missing 'lift_rider' talent."
+    },
+    "pixie_dust": {
+      "name": "Pixie Dust",
+      "desc": "An adjacent ally takes wing through the end of their next turn.",
+      "reason": "Missing 'pixie_dust' talent."
+    },
+    "dismount": {
+      "name": "Dismount",
+      "desc": "Dismount from your current mount.",
+      "reason": "Not currently mounted."
+    },
+    "wake_up": {
+      "name": "Wake Up",
+      "desc": "Wake up an adjacent sleeping ally.",
+      "reason": "No sleeping allies.",
+      "label": "Wake Up (1 pt, wake a sleeping ally)"
+    },
+    "end": {
+      "name": "End Turn",
+      "desc": "End your turn."
+    },
+    "delay": {
+      "name": "Delay",
+      "desc": "Drop to the end of the initiative order, once per round. Only before you spend any points.",
+      "label": "Delay: let the others act first (once a round, before you spend a point)"
+    },
+    "signal_horn": {
+      "name": "Signal Horn",
+      "desc": "Blow the horn, once per battle: allies within {radius} squares gain +{bonus} initiative, which can reorder the turns.",
+      "reason_none": "No Signal Horn equipped.",
+      "reason_used": "Already blown this battle.",
+      "label": "Signal Horn ({cost} pts, allies within {radius} +{bonus} initiative)"
+    },
+    "assess": {
+      "name": "Assess",
+      "desc": "INT +{bonus} against the foe's DC: learn more of its stats. One foe in sight, once per foe each round.",
+      "label": "Assess (1 pt, INT vs the foe)"
+    },
+    "investigate": {
+      "name": "Investigate",
+      "desc": "Inspect nearby walls for secret doors, and look and listen for something unseen.",
+      "label_secret": "Investigate secret (1 pt)",
+      "label": "Investigate ({n} squares, WIS)"
+    },
+    "disarm": {
+      "name": "Disarm Trap",
+      "desc": "Disarm an adjacent trap (d20 + DEX vs DC 12).",
+      "label": "Disarm trap (1 pt, DEX vs DC 12)"
+    },
+    "capture": {
+      "name": "Capture",
+      "desc": "Bind an adjacent fallen foe with a Rope or Chains; it leaves the fight as your captive.",
+      "reason": "Needs a Rope or Chains."
     }
   }
 }

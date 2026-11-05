@@ -194,9 +194,9 @@ class Text:
     """A class attribute whose value is the catalog string `<prefix>.<owner.id>.<field>` in the current
     language, read on every access (`""` when the owner has none)."""
 
-    def __init__(self, prefix, field):
-        self.key = (prefix, field)
+    def __init__(self, prefix, field, **fmt):
+        self.key, self.fmt = (prefix, field), fmt
 
     def __get__(self, obj, owner):
         key = f"{self.key[0]}.{owner.id}.{self.key[1]}"
-        return t(key) if has(key) else ""
+        return t(key, **self.fmt) if has(key) else ""

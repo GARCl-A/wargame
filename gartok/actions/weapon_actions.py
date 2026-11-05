@@ -18,18 +18,20 @@ edge, and beats the two attacks for any weapon or modifier:
 - Bare hands (`Unarmed`): Wrest (seize the weapon of an armed foe and strike with it)
 """
 
-from .. import items
+from .. import i18n, items
 from ..conditions import Defending, Maimed, ShieldHooked
 from ..data import d20, resolve_bonus, roll
+from ..i18n import Msg
 from .base import (
     Action,
     _cell_free,
-    _land_thrown,
     _flanked,
     _hostile_target,
+    _land_thrown,
     _pack_flank,
     _resolve_hit,
     _sign,
+    item_ref,
 )
 from .combat import PUSH_DC_BASE, _strike
 
@@ -42,14 +44,13 @@ BRUTAL = 1      # every Brutal of a favoured strike; the keyword's value, see ke
 # --------------------------------------------------------------------------- #
 
 class SneakAttack(Action):
-    id, name, cost, target, aimed = "sneak_attack", "Sneak Attack", 2, "enemy", True
-    desc = "2 AP: Only against a flanked foe: the blow is Brutal 1, +1d4."
+    id, cost, target, aimed = "sneak_attack", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("sneak_attack"):
-            return False, "requires dagger"
+            return False, i18n.t("action.sneak_attack.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -58,7 +59,7 @@ class SneakAttack(Action):
         return _flanked(battle, actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Sneak Attack (2 pts, Brutal 1 +1d4 vs flanked)"
+        return i18n.t("action.sneak_attack.label")
 
     def favoured(self, battle, actor, target):
         return _flanked(battle, actor, target)
@@ -75,9 +76,9 @@ class SneakAttack(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Sneak Attack -> {target.name}"
+        prefix = Msg("log.sneak_attack.head", actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=bonus_dmg,
-                     brutal=BRUTAL, brutal_why="Sneak Attack strikes a vulnerable spot")
+                     brutal=BRUTAL, brutal_why=Msg("log.sneak_attack.brutal"))
 
 
 # --------------------------------------------------------------------------- #
@@ -85,14 +86,13 @@ class SneakAttack(Action):
 # --------------------------------------------------------------------------- #
 
 class PreciseThrust(Action):
-    id, name, cost, target, aimed = "precise_thrust", "Precise Thrust", 2, "enemy", True
-    desc = "2 AP: Only against a flanked foe: +2 to hit, the blow is Brutal 1."
+    id, cost, target, aimed = "precise_thrust", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("precise_thrust"):
-            return False, "requires rapier"
+            return False, i18n.t("action.precise_thrust.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -101,7 +101,7 @@ class PreciseThrust(Action):
         return _flanked(battle, actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Precise Thrust (2 pts, +2 to hit & Brutal 1 vs flanked)"
+        return i18n.t("action.precise_thrust.label")
 
     def favoured(self, battle, actor, target):
         return _flanked(battle, actor, target)
@@ -118,9 +118,9 @@ class PreciseThrust(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Precise Thrust -> {target.name}"
+        prefix = Msg("log.precise_thrust.head", actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                     brutal=BRUTAL, brutal_why="The thrust finds the gap")
+                     brutal=BRUTAL, brutal_why=Msg("log.precise_thrust.brutal"))
 
 
 # --------------------------------------------------------------------------- #
@@ -128,13 +128,12 @@ class PreciseThrust(Action):
 # --------------------------------------------------------------------------- #
 
 class Cleave(Action):
-    id, name, cost, target, aimed = "cleave", "Cleave", 2, "enemy", True
-    desc = "2 AP: Strikes two adjacent foes in a single wide swing."
+    id, cost, target, aimed = "cleave", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.weapon.has_trait("cleave"):
-            return False, "requires axe"
+            return False, i18n.t("action.cleave.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -145,11 +144,7 @@ class Cleave(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return f"{self._title(actor)} (2 pts, strike 2 adjacent foes at +2)"
-
-    @staticmethod
-    def _title(actor):
-        return "Cleave" if actor.armed else "Sweeping Claws"
+        return i18n.t("action.cleave.label" if actor.armed else "action.cleave.label_claws")
 
     @staticmethod
     def second(battle, actor, target):
@@ -180,8 +175,8 @@ class Cleave(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix_name = self._title(actor)
-        prefix = f"{actor.name} {prefix_name} -> {target.name}"
+        head_key = "log.cleave.head" if actor.armed else "log.cleave.head_claws"
+        prefix = Msg(head_key, actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
 
         # 2. Secondary strike on adjacent foe
@@ -191,7 +186,7 @@ class Cleave(Action):
             bonus2, applied2 = resolve_bonus(mods2)
             detail2 = " ".join(f"{v:+}({r})" for v, r in applied2)
             nat2 = d20()
-            prefix2 = f"  {prefix_name} sweeps into -> {sec.name}"
+            prefix2 = Msg(head_key + "_sweeps", target=sec.name)
             _resolve_hit(battle, actor, sec, nat2, bonus2, detail2, prefix2)
 
 
@@ -200,14 +195,13 @@ class Cleave(Action):
 # --------------------------------------------------------------------------- #
 
 class RepelStrike(Action):
-    id, name, cost, target, aimed = "repel_strike", "Repel Strike", 2, "enemy", True
-    desc = "2 AP: Attacks and shoves target back with a +2 bonus to the push check."
+    id, cost, target, aimed = "repel_strike", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("repel_strike"):
-            return False, "requires quarterstaff"
+            return False, i18n.t("action.repel_strike.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -218,7 +212,7 @@ class RepelStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Repel Strike (2 pts, attack & push +2; Brutal 1 +1d4 vs a foe against a wall)"
+        return i18n.t("action.repel_strike.label")
 
     @staticmethod
     def behind(actor, target):
@@ -244,19 +238,18 @@ class RepelStrike(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Repel Strike -> {target.name}"
+        prefix = Msg("log.repel_strike.head", actor=actor.name, target=target.name)
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
                            bonus_damage=roll(1, 4) if pinned else 0, brutal=BRUTAL * pinned,
-                           brutal_why=f"{target.name} is slammed against what stands behind")
+                           brutal_why=Msg("log.repel_strike.brutal", target=target.name))
 
         if res in ("hit", "crit") and not pinned:
             dc = PUSH_DC_BASE + target.mod_constitution
             shove_nat = d20()
             shove_total = shove_nat + actor.mod_strength + 2
-            desc = (f"  Repel check: d20({shove_nat}) + {actor.mod_strength}(STR) + 2(Staff) "
-                    f"= {shove_total} vs DC {dc}")
+            check = {"nat": shove_nat, "str": actor.mod_strength, "total": shove_total, "dc": dc}
             if shove_nat != 20 and (shove_nat == 1 or shove_total < dc):
-                battle.log(desc + " -> holds ground.")
+                battle.log("log.repel_strike.holds", **check)
                 return
 
             ax, ay = actor.pos
@@ -267,10 +260,10 @@ class RepelStrike(Action):
             dest = (tx + dx, ty + dy)
             if (not battle.board.diagonal_corner_blocked(target.pos, dest)
                     and _cell_free(battle, actor, dest, target.footprint)):
-                battle.log(desc + f" -> pushed back to {dest}!")
+                battle.log("log.repel_strike.pushed", cell=str(dest), **check)
                 target.pos = dest
             else:
-                battle.log(desc + " -> blocked by terrain/body.")
+                battle.log("log.repel_strike.blocked", **check)
 
 
 # --------------------------------------------------------------------------- #
@@ -278,14 +271,13 @@ class RepelStrike(Action):
 # --------------------------------------------------------------------------- #
 
 class MaimingStrike(Action):
-    id, name, cost, target, aimed = "maiming_strike", "Maiming Strike", 2, "enemy", True
-    desc = "2 AP: Attacks and halves the target's movement speed until next round."
+    id, cost, target, aimed = "maiming_strike", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("maiming_strike"):
-            return False, "requires bludgeon"
+            return False, i18n.t("action.maiming_strike.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -296,7 +288,7 @@ class MaimingStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Maiming Strike (2 pts, halves speed; +2 & Brutal 1 vs a foe that cannot dodge)"
+        return i18n.t("action.maiming_strike.label")
 
     def favoured(self, battle, actor, target):
         """Caught, asleep, surprised or shaken: it cannot get its legs out of the way."""
@@ -315,13 +307,13 @@ class MaimingStrike(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Maiming Strike -> {target.name}"
+        prefix = Msg("log.maiming_strike.head", actor=actor.name, target=target.name)
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * unguarded,
-                           brutal_why=f"{target.name} cannot get out of the way")
+                           brutal_why=Msg("log.maiming_strike.brutal", target=target.name))
 
         if res in ("hit", "crit"):
             target.add_condition(Maimed())
-            battle.log(f"  {target.name} is maimed (movement halved until next round).")
+            battle.log("log.maimed", target=target.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -329,14 +321,13 @@ class MaimingStrike(Action):
 # --------------------------------------------------------------------------- #
 
 class ArmorPierce(Action):
-    id, name, cost, target, aimed = "armor_pierce", "Armor Pierce", 2, "enemy", True
-    desc = "2 AP: Attack ignores worn armor AC bonus."
+    id, cost, target, aimed = "armor_pierce", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("armor_pierce"):
-            return False, "requires pick"
+            return False, i18n.t("action.armor_pierce.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -347,7 +338,7 @@ class ArmorPierce(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Armor Pierce (2 pts, ignores armor AC; Brutal 1 vs an armoured foe)"
+        return i18n.t("action.armor_pierce.label")
 
     def favoured(self, battle, actor, target):
         return target.armor is not None and target.armor.ac > 0
@@ -363,9 +354,9 @@ class ArmorPierce(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Armor Pierce -> {target.name}"
+        prefix = Msg("log.armor_pierce.head", actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, armor_pierce=True,
-                     brutal=BRUTAL * armoured, brutal_why="The point punches through the armour")
+                     brutal=BRUTAL * armoured, brutal_why=Msg("log.armor_pierce.brutal"))
 
 
 # --------------------------------------------------------------------------- #
@@ -373,15 +364,14 @@ class ArmorPierce(Action):
 # --------------------------------------------------------------------------- #
 
 class PowerShot(Action):
-    id, name, cost, target, aimed = "power_shot", "Power Shot", 2, "enemy", True
+    id, cost, target, aimed = "power_shot", 2, "enemy", True
     missile = True
-    desc = "2 AP: Adds positive Strength modifier to arrow damage."
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("power_shot"):
-            return False, "requires a bow"
+            return False, i18n.t("action.power_shot.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -394,7 +384,7 @@ class PowerShot(Action):
         return battle.can_see_unit(actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Power Shot (2 pts, +STR to damage; Brutal 1 at half range or farther)"
+        return i18n.t("action.power_shot.label")
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
@@ -416,13 +406,13 @@ class PowerShot(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Power Shot -> {target.name}"
+        prefix = Msg("log.power_shot.head", actor=actor.name, target=target.name)
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=str_bonus,
-                           brutal=BRUTAL * far, brutal_why="A full draw at long range")
+                           brutal=BRUTAL * far, brutal_why=Msg("log.power_shot.brutal"))
 
         actor.ammo = max(0, actor.ammo - 1)
         if res in ("hit", "crit") and str_bonus > 0:
-            battle.log(f"  Drawn with great power (+{str_bonus} STR damage)!")
+            battle.log("log.power_shot.drawn", n=str_bonus)
 
 
 # --------------------------------------------------------------------------- #
@@ -430,15 +420,14 @@ class PowerShot(Action):
 # --------------------------------------------------------------------------- #
 
 class ExtremeShot(Action):
-    id, name, cost, target, aimed = "extreme_shot", "Extreme Shot", 2, "enemy", True
+    id, cost, target, aimed = "extreme_shot", 2, "enemy", True
     missile = True
-    desc = "2 AP: Doubles attack range to 36 squares."
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("extreme_shot"):
-            return False, "requires crossbow"
+            return False, i18n.t("action.extreme_shot.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -450,7 +439,7 @@ class ExtremeShot(Action):
         return battle.can_see_unit(actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Extreme Shot (2 pts, 36 sq range)"
+        return i18n.t("action.extreme_shot.label")
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
@@ -465,7 +454,7 @@ class ExtremeShot(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Extreme Shot -> {target.name}"
+        prefix = Msg("log.extreme_shot.head", actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
 
         actor.crossbow_loaded = False
@@ -477,14 +466,13 @@ class ExtremeShot(Action):
 # --------------------------------------------------------------------------- #
 
 class HookShield(Action):
-    id, name, cost, target, aimed = "hook_shield", "Hook Shield", 2, "enemy", True
-    desc = "2 AP: Attacks and nullifies target's shield AC bonus until next round."
+    id, cost, target, aimed = "hook_shield", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("hook_shield"):
-            return False, "requires hatchet"
+            return False, i18n.t("action.hook_shield.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -495,7 +483,7 @@ class HookShield(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Hook Shield (2 pts, strip shield AC; Brutal 1 vs a shield)"
+        return i18n.t("action.hook_shield.label")
 
     def favoured(self, battle, actor, target):
         hand = target.equipped_offhand
@@ -510,14 +498,14 @@ class HookShield(Action):
         shielded = self.favoured(battle, actor, target)
         if shielded:
             target.add_condition(ShieldHooked())
-            battle.log(f"  {actor.name} hooks {target.name}'s shield and wrenches it aside (loses shield AC)!")
+            battle.log("log.hook_shield.hooked", actor=actor.name, target=target.name)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Hook Shield -> {target.name}"
+        prefix = Msg("log.hook_shield.head", actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * shielded,
-                     brutal_why="The hook bites behind the shield")
+                     brutal_why=Msg("log.hook_shield.brutal"))
 
 
 # --------------------------------------------------------------------------- #
@@ -525,15 +513,14 @@ class HookShield(Action):
 # --------------------------------------------------------------------------- #
 
 class JavelinCharge(Action):
-    id, name, cost, target, aimed = "javelin_charge", "Javelin Charge", 1, "enemy", True
+    id, cost, target, aimed = "javelin_charge", 1, "enemy", True
     missile = True
-    desc = "1 AP: Throws the spear after moving this turn for +1d4 bonus damage."
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("javelin_charge"):
-            return False, "requires shortspear"
+            return False, i18n.t("action.javelin_charge.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -548,7 +535,7 @@ class JavelinCharge(Action):
         return battle.can_see_unit(actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Javelin Charge (1 pt, throw after a move, +1d4 dmg)"
+        return i18n.t("action.javelin_charge.label")
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
@@ -565,10 +552,10 @@ class JavelinCharge(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Javelin Charge -> {target.name}"
+        prefix = Msg("log.javelin_charge.head", actor=actor.name, target=target.name)
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, thrown=True, bonus_damage=bonus_dmg)
         if res in ("hit", "crit"):
-            battle.log(f"  The running throw impacts with brutal force (+{bonus_dmg} damage)!")
+            battle.log("log.javelin_charge.impact", n=bonus_dmg)
 
         _land_thrown(battle, actor, target, weapon_name)
 
@@ -578,14 +565,13 @@ class JavelinCharge(Action):
 # --------------------------------------------------------------------------- #
 
 class ParryStrike(Action):
-    id, name, cost, target, aimed = "parry_strike", "Parry & Strike", 2, "enemy", True
-    desc = "2 AP: Attacks and assumes a Defending guard (+1 AC until next turn)."
+    id, cost, target, aimed = "parry_strike", 2, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("parry_strike"):
-            return False, "requires a sword"
+            return False, i18n.t("action.parry_strike.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -596,7 +582,7 @@ class ParryStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Parry & Strike (2 pts, attack & Defend; Brutal 1 with 2+ foes in reach)"
+        return i18n.t("action.parry_strike.label")
 
     def favoured(self, battle, actor, target):
         """Pressed by two or more: every parry opens a riposte."""
@@ -615,12 +601,12 @@ class ParryStrike(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Parry & Strike -> {target.name}"
+        prefix = Msg("log.parry_strike.head", actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * pressed,
-                     brutal_why="Parry and riposte")
+                     brutal_why=Msg("log.parry_strike.brutal"))
 
         actor.add_condition(Defending())
-        battle.log(f"  {actor.name} falls back into a parrying stance (+1 AC until next turn)!")
+        battle.log("log.parry_strike.stance", actor=actor.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -628,8 +614,7 @@ class ParryStrike(Action):
 # --------------------------------------------------------------------------- #
 
 class LongThrust(Action):
-    id, name, cost, target, aimed = "long_thrust", "Long Thrust", 2, "enemy", True
-    desc = "2 AP: One strike one square past the weapon's reach, +1 to hit."
+    id, cost, target, aimed = "long_thrust", 2, "enemy", True
     EXTRA_REACH = 1
     TO_HIT = 1
 
@@ -637,7 +622,7 @@ class LongThrust(Action):
     def applicable(cls, battle, actor):
         w = actor.weapon
         if not w.has_trait("long_thrust"):
-            return False, "requires a glaive"
+            return False, i18n.t("action.long_thrust.reason")
         return True, ""
 
     @classmethod
@@ -654,7 +639,7 @@ class LongThrust(Action):
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
     def label(self, battle, actor):
-        return f"Long Thrust (2 pts, reach {self.reach(actor)}, +{self.TO_HIT} to hit)"
+        return i18n.t("action.long_thrust.label", reach=self.reach(actor), n=self.TO_HIT)
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
@@ -672,7 +657,7 @@ class LongThrust(Action):
         mods.append((self.TO_HIT, "circumstance", "Long Thrust"))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
-        prefix = f"{actor.name} Long Thrust -> {target.name}"
+        prefix = Msg("log.long_thrust.head", actor=actor.name, target=target.name)
         _resolve_hit(battle, actor, target, d20(), bonus, detail, prefix)
 
 
@@ -681,14 +666,13 @@ class LongThrust(Action):
 # --------------------------------------------------------------------------- #
 
 class Wrest(Action):
-    id, name, cost, target, aimed = "wrest", "Wrest", 2, "enemy", True
-    desc = "2 AP: Seize the weapon of an armed foe; if you win, strike with it at once."
+    id, cost, target, aimed = "wrest", 2, "enemy", True
     BASE_DC = 15
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.weapon.has_trait("wrest"):
-            return False, "requires bare hands"
+            return False, i18n.t("action.wrest.reason")
         return True, ""
 
     def can(self, battle, actor, target=None):
@@ -703,7 +687,7 @@ class Wrest(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Wrest (2 pts, DEX vs 15 + STR: take the foe's weapon and strike with it)"
+        return i18n.t("action.wrest.label")
 
     @classmethod
     def dc(cls, target):
@@ -719,13 +703,15 @@ class Wrest(Action):
         dc = self.dc(target)
         nat = d20()
         total = nat + actor.mod_dexterity
-        desc = f"{actor.name} Wrest -> {target.name}: d20({nat}) + {actor.mod_dexterity}(DEX) = {total} vs DC {dc}"
+        roll_line = {"actor": actor.name, "target": target.name, "nat": nat, "dex": actor.mod_dexterity,
+                     "total": total, "dc": dc, "weapon": item_ref(name)}
         if nat != 20 and (nat == 1 or total < dc):
-            battle.log(desc + f" -> {target.name} keeps the {name}.")
+            battle.log("log.wrest.keeps", **roll_line)
             return
 
-        battle.log(desc + f" -> {actor.name} tears the {name} away!")
+        battle.log("log.wrest.tears", **roll_line)
         target.drop_weapon()
         actor.equip_weapon(name)
-        _strike(battle, actor, target, prefix=f"  {actor.name} -> {target.name} ({name.lower()})")
+        _strike(battle, actor, target, prefix=Msg(
+            "log.attack.head_via_indented", actor=actor.name, target=target.name, how=item_ref(name, lower=True)))
 

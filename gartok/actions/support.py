@@ -2,29 +2,29 @@
 
 import random
 
-from .. import data, intel, items
+from .. import data, i18n, intel, items
 from ..board import cells, chebyshev
 from ..captives import capture_tool
 from ..conditions import Demoralized, PixieFlight
 from ..constants import fmt_money
 from ..data import d20
 from ..ground import GroundObject
-from .base import Action, _cell_free, _pickable
+from ..i18n import Msg, Ref, plural_key
+from .base import Action, _cell_free, _pickable, item_ref
 
 # --------------------------------------------------------------------------- #
 # Pick up object                                                               #
 # --------------------------------------------------------------------------- #
 
 class PickUp(Action):
-    id, name, cost, target = "pick_up", "Pick up", 1, "none"
-    desc = "Pick up a dropped item or torch in your cell."
+    id, cost, target = "pick_up", 1, "none"
 
     def available(self, battle, actor):
         return (actor.ap >= self.cost
                 and any(_pickable(actor, o) for o in battle.ground_in_reach(actor)))
 
     def label(self, battle, actor):
-        return "Pick up / swap object (1 pt)"
+        return i18n.t("action.pick_up.label")
 
     def options(self, battle, actor):
         """What the actor can lift now, the order the AI takes it in: `execute` takes any one of these."""
@@ -49,7 +49,10 @@ class PickUp(Action):
                     dest = p
                     break
         battle.ground.append(GroundObject(kind, dest, weapon_name))
-        battle.log(f"  {actor.name} drops {'the torch' if kind == GroundObject.TORCH else weapon_name} at {dest}.")
+        if kind == GroundObject.TORCH:
+            battle.log("log.drops_torch", actor=actor.name, cell=str(dest))
+        else:
+            battle.log("log.drops", actor=actor.name, item=item_ref(weapon_name), cell=str(dest))
 
     def execute(self, battle, actor, target=None):
         if actor.ap < self.cost:
@@ -64,7 +67,7 @@ class PickUp(Action):
 
         if obj.is_torch:
             dropped = actor.equip_torch()
-            battle.log(f"{actor.name} picks up a torch (lights {data.TORCH_RADIUS} squares).")
+            battle.log("log.picks_torch", actor=actor.name, n=data.TORCH_RADIUS)
             for kind, weapon_name in dropped:
                 self._drop_on_ground(battle, actor, kind, weapon_name)
         elif getattr(obj, "is_relic", False):
@@ -73,8 +76,8 @@ class PickUp(Action):
             if not hasattr(actor, "picked_up_items"):
                 actor.picked_up_items = []
             actor.picked_up_items.append(item_name)
-            battle.log(f"{actor.name} retrieves the {item_name}!")
-            battle.fx(actor.pos, f"Got {item_name}!", "crit")
+            battle.log("log.retrieves", actor=actor.name, item=item_ref(item_name))
+            battle.fx(actor.pos, i18n.t("fx.got", item=item_ref(item_name)), "crit")
         elif getattr(obj, "is_chest", False):
             from .. import loot
             contents = getattr(obj, "contents", [])
@@ -82,17 +85,17 @@ class PickUp(Action):
                 amt = loot.parse_currency(it)
                 if amt:
                     actor.char.money += amt
-                    battle.log(f"{actor.name} finds {fmt_money(amt)} in the chest!")
+                    battle.log("log.chest_money", actor=actor.name, money=fmt_money(amt))
                 else:
                     actor.inventory.append(it)
                     if not hasattr(actor, "picked_up_items"):
                         actor.picked_up_items = []
                     actor.picked_up_items.append(it)
-                    battle.log(f"{actor.name} recovers {it} from the chest!")
-            battle.fx(actor.pos, "Chest Opened!", "ok")
+                    battle.log("log.chest_item", actor=actor.name, item=item_ref(it))
+            battle.fx(actor.pos, i18n.t("fx.chest_opened"), "ok")
         else:
             dropped = actor.equip_weapon(obj.weapon_name)
-            battle.log(f"{actor.name} picks up {obj.weapon_name} from the ground.")
+            battle.log("log.picks_up", actor=actor.name, item=item_ref(obj.weapon_name))
             for kind, weapon_name in dropped:
                 self._drop_on_ground(battle, actor, kind, weapon_name)
         battle.scenario.on_pick_up(battle, actor, obj)
@@ -103,8 +106,7 @@ class PickUp(Action):
 # --------------------------------------------------------------------------- #
 
 class Stabilize(Action):
-    id, name, cost, target, aimed = "stabilize", "Stabilize", 1, "ally", True
-    desc = "50% chance to stabilize an adjacent dying ally."
+    id, cost, target, aimed = "stabilize", 1, "ally", True
 
     def _downed_allies(self, battle, actor):
         """Adjacent allied bodies this action can work on: dying units, or broken
@@ -121,8 +123,7 @@ class Stabilize(Action):
                 and target in self._downed_allies(battle, actor))
 
     def label(self, battle, actor):
-        return (f"Stabilize a downed ally (1 pt: 50%, or repair automaton "
-                f"INT vs {data.AUTOMATON_REPAIR_DC})")
+        return i18n.t("action.stabilize.label", dc=data.AUTOMATON_REPAIR_DC)
 
     def highlight_targets(self, battle, actor):
         return self._downed_allies(battle, actor)
@@ -134,19 +135,16 @@ class Stabilize(Action):
             nat = d20()
             total = nat + actor.mod_intelligence
             ok = total >= data.AUTOMATON_REPAIR_DC
-            battle.log(f"{actor.name} tries to repair {target.name}: "
-                       f"d20({nat}) {actor.mod_intelligence:+}(INT) = {total} vs "
-                       f"{data.AUTOMATON_REPAIR_DC} -> "
-                       + ("repaired." if ok else "fails."))
-            battle.fx(target.pos, f"{total} vs {data.AUTOMATON_REPAIR_DC}", "ok" if ok else "faint")
+            battle.log("log.repair.ok" if ok else "log.repair.fail", actor=actor.name, target=target.name, nat=nat,
+                       int=actor.mod_intelligence, total=total, dc=data.AUTOMATON_REPAIR_DC)
+            battle.fx(target.pos, i18n.t("fx.vs", total=total, dc=data.AUTOMATON_REPAIR_DC), "ok" if ok else "faint")
             if ok:
                 battle.repair(target)
             return ok
         nat = d20()
         ok = nat >= data.DEATH_SAVE_MIN
-        battle.log(f"{actor.name} tries to stabilize {target.name}: d20({nat}) -> "
-                   + ("success." if ok else "fails."))
-        battle.fx(target.pos, f"d20({nat}) " + ("Success" if ok else "Fail"), "ok" if ok else "faint")
+        battle.log("log.stabilize.ok" if ok else "log.stabilize.fail", actor=actor.name, target=target.name, nat=nat)
+        battle.fx(target.pos, i18n.t("fx.stabilize_ok" if ok else "fx.stabilize_fail", nat=nat), "ok" if ok else "faint")
         if ok:
             battle.stabilize(target)
         return ok
@@ -160,8 +158,7 @@ class Stabilize(Action):
 
 
 class FirstAid(Stabilize):
-    id, name, cost, target, aimed = "first_aid", "First Aid", 1, "ally", True
-    desc = "Use a medkit: 100% chance to stabilize, or cure sickness."
+    id, cost, target, aimed = "first_aid", 1, "ally", True
 
     def _downed_allies(self, battle, actor):
         # a med kit is for the dying and the sick; a broken automaton needs the plain Stabilize
@@ -176,8 +173,7 @@ class FirstAid(Stabilize):
         return actor.first_aid_charges > 0 and super().can(battle, actor, target)
 
     def label(self, battle, actor):
-        return (f"First Aid (1 pt, WIS vs {data.FIRST_AID_DC}, "
-                f"{actor.first_aid_charges} charges)")
+        return i18n.plural("action.first_aid.label", actor.first_aid_charges, dc=data.FIRST_AID_DC)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -191,24 +187,22 @@ class FirstAid(Stabilize):
         target_sick = getattr(target.char, "sick", False)
         target_dying = target.dying
 
-        battle.log(f"{actor.name} uses the kit on {target.name}: "
-                   f"d20({nat}) {actor.mod_wisdom:+}(WIS) = {total} vs {data.FIRST_AID_DC} -> "
-                   + ("success." if ok else "fails.")
-                   + f"  ({actor.first_aid_charges} charge(s))")
+        battle.log(plural_key("log.first_aid.ok" if ok else "log.first_aid.fail", actor.first_aid_charges),
+                   actor=actor.name, target=target.name, nat=nat, wis=actor.mod_wisdom, total=total,
+                   dc=data.FIRST_AID_DC, n=actor.first_aid_charges)
         if ok:
             if target_dying:
                 battle.stabilize(target)
             if target_sick:
                 target.char.sick = False
-                battle.log(f"  {target.name} is cured of their sickness!")
+                battle.log("log.cured", target=target.name)
                 target.char._derive_combat()
                 target.hp_max = target.char.hp_max
                 target.hp = min(target.hp, target.hp_max)
 
 
 class DrinkPotion(Action):
-    id, name, cost, target, aimed = "drink_potion", "Drink Potion", 1, "ally", True
-    desc = "Drink a Minor Healing Potion or feed it to an adjacent ally (heals 1d6 HP)."
+    id, cost, target, aimed = "drink_potion", 1, "ally", True
 
     def _targets(self, battle, actor):
         # Can target self or adjacent ally, if missing HP.
@@ -225,7 +219,7 @@ class DrinkPotion(Action):
     def applicable(cls, battle, actor):
         has = (hasattr(actor, "inventory") and "Minor Healing Potion" in actor.inventory) or actor.has_item("Minor Healing Potion")
         if not has:
-            return False, "No Minor Healing Potion."
+            return False, i18n.t("action.drink_potion.reason", potion=item_ref("Minor Healing Potion"))
         return True, ""
 
     def available(self, battle, actor):
@@ -237,7 +231,7 @@ class DrinkPotion(Action):
 
     def label(self, battle, actor):
         n = actor.inventory.count("Minor Healing Potion") if hasattr(actor, "inventory") else actor.count_of("Minor Healing Potion")
-        return f"Drink Potion (1 pt, {n} in pack)"
+        return i18n.t("action.drink_potion.label", n=n)
 
     def highlight_targets(self, battle, actor):
         return self._targets(battle, actor)
@@ -257,10 +251,13 @@ class DrinkPotion(Action):
         if revived:
             target.status, target.death_clock = "up", 0
 
-        verb = "drinks" if actor == target else f"feeds {target.name}"
-        battle.log(f"{actor.name} {verb} a Minor Healing Potion, recovering {heal} HP"
-                   + (" -- back on their feet." if revived else "."))
-        battle.fx(target.pos, f"+{heal} HP", "ok")
+        if actor == target:
+            key = "log.potion.drinks_up" if revived else "log.potion.drinks"
+        else:
+            key = "log.potion.feeds_up" if revived else "log.potion.feeds"
+        battle.log(key, actor=actor.name, target=target.name,
+                   potion=item_ref("Minor Healing Potion"), heal=heal)
+        battle.fx(target.pos, i18n.t("fx.heal", heal=heal), "ok")
 
 
 # --------------------------------------------------------------------------- #
@@ -268,13 +265,12 @@ class DrinkPotion(Action):
 # --------------------------------------------------------------------------- #
 
 class EatCorpse(Action):
-    id, name, cost, target, aimed = "eat_corpse", "Eat Corpse", 1, "enemy", True
-    desc = "Devour a corpse to reset hunger and terrify foes."
+    id, cost, target, aimed = "eat_corpse", 1, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.char.has_talent("corpse_eater"):
-            return False, "Missing 'corpse_eater' talent."
+            return False, i18n.t("action.eat_corpse.reason")
         return True, ""
 
     def available(self, battle, actor):
@@ -303,31 +299,30 @@ class EatCorpse(Action):
         actor.walking = False
         target.eaten = True
         actor.char.unfed_days = 0
-        battle.log(f"{actor.name} devours {target.name}'s corpse (hunger reset to 0).")
+        battle.log("log.eat_corpse", actor=actor.name, target=target.name)
         
         nat = d20()
         bonus = max(actor.mod_strength, actor.mod_charisma)
         total = nat + bonus
-        battle.log(f"  Terrifying feast: d20({nat}) {bonus:+} = {total} (AoE Demoralize)")
+        battle.log("log.feast", nat=nat, bonus=bonus, total=total)
         
         for u in battle.units:
             if u.team != actor.team and u.alive and battle.can_see_unit(u, actor):
                 md = u.mental_defense
                 if total >= md:
                     u.add_condition(Demoralized())
-                    battle.log(f"    {u.name} (MD {intel.shown(battle, u, 'md', md)}) is terrified -> DEMORALIZED.")
+                    battle.log("log.feast_terrified", target=u.name, md=intel.shown(battle, u, "md", md))
                 else:
-                    battle.log(f"    {u.name} (MD {intel.shown(battle, u, 'md', md)}) resists the horror.")
+                    battle.log("log.feast_resists", target=u.name, md=intel.shown(battle, u, "md", md))
 
 
 class SpinWeb(Action):
-    id, name, cost, target, aimed = "spin_web", "Spin Web", 1, "cell", True
-    desc = "Spin a web trap beside you, as wide as your own body."
+    id, cost, target, aimed = "spin_web", 1, "cell", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.char.has_talent("spin_web"):
-            return False, "Missing 'spin_web' talent."
+            return False, i18n.t("action.spin_web.reason")
         return True, ""
 
     def _legal(self, battle, actor, anchor):
@@ -371,23 +366,22 @@ class SpinWeb(Action):
         actor.walking = False
         battle.plant_web(actor, target)
         n = actor.footprint
-        battle.log(f"{actor.name} spins a {n}x{n} web.")
-        battle.fx(target, "Web!", "ok")
+        battle.log("log.spin_web", actor=actor.name, n=n)
+        battle.fx(target, i18n.t("fx.web"), "ok")
 
 
 class Mount(Action):
-    id, name, cost, target, aimed = "mount", "Mount", 1, "ally", True
-    desc = "Mount an allied centaur."
+    id, cost, target, aimed = "mount", 1, "ally", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if getattr(actor, "mounted_on", None) is not None:
-            return False, "Already mounted."
+            return False, i18n.t("action.mount.reason_mounted")
         if actor.size not in ("Small", "Medium"):
-            return False, "Too large to ride a mount."
+            return False, i18n.t("action.mount.reason_large")
         has_mount = any(u.alive and u.team == actor.team and u is not actor and u.char.has_talent("centaur_mount") for u in battle.units)
         if not has_mount:
-            return False, "No mount in squad."
+            return False, i18n.t("action.mount.reason_none")
         return True, ""
 
     def available(self, battle, actor):
@@ -417,19 +411,18 @@ class Mount(Action):
         actor.mounted_on = target
         target.rider = actor
         actor.pos = target.pos
-        battle.log(f"{actor.name} mounts {target.name}.")
+        battle.log("log.mounts", actor=actor.name, target=target.name)
 
 
 class LiftRider(Action):
     """Centaur Lift Rider: the centaur swings an adjacent ally onto its back, standing or
     fallen -- the way a body is carried off. A rider who is up climbs down with Dismount."""
-    id, name, cost, target, aimed = "lift_rider", "Lift Rider", 1, "ally", True
-    desc = "Put an adjacent Small or Medium ally, awake or fallen, on your back."
+    id, cost, target, aimed = "lift_rider", 1, "ally", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.char.talent_bonus("lift_rider"):
-            return False, "Missing 'lift_rider' talent."
+            return False, i18n.t("action.lift_rider.reason")
         return True, ""
 
     def available(self, battle, actor):
@@ -457,20 +450,18 @@ class LiftRider(Action):
         actor.rider = target
         target.pos = actor.pos
         target.z = actor.z
-        how = "hauls the fallen" if target.downed else "swings"
-        battle.log(f"{actor.name} {how} {target.name} onto their back.")
+        battle.log("log.lift_fallen" if target.downed else "log.lift", actor=actor.name, target=target.name)
 
 
 class PixieDust(Action):
     """Sprite Pixie Dust: an adjacent ally flies through the end of their next turn -- over pits
     and deep water, with no fall."""
-    id, name, cost, target, aimed = "pixie_dust", "Pixie Dust", 1, "ally", True
-    desc = "An adjacent ally takes wing through the end of their next turn."
+    id, cost, target, aimed = "pixie_dust", 1, "ally", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if not actor.char.talent_bonus("pixie_dust"):
-            return False, "Missing 'pixie_dust' talent."
+            return False, i18n.t("action.pixie_dust.reason")
         return True, ""
 
     def available(self, battle, actor):
@@ -491,17 +482,16 @@ class PixieDust(Action):
         actor.ap -= self.cost
         actor.walking = False
         target.add_condition(PixieFlight())
-        battle.log(f"{actor.name} showers {target.name} in pixie dust: they take wing.")
+        battle.log("log.pixie_dust", actor=actor.name, target=target.name)
 
 
 class Dismount(Action):
-    id, name, cost, target, aimed = "dismount", "Dismount", 1, "cell", True
-    desc = "Dismount from your current mount."
+    id, cost, target, aimed = "dismount", 1, "cell", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if getattr(actor, "mounted_on", None) is None:
-            return False, "Not currently mounted."
+            return False, i18n.t("action.dismount.reason")
         return True, ""
 
     def available(self, battle, actor):
@@ -532,17 +522,16 @@ class Dismount(Action):
         actor.mounted_on = None
         mount.rider = None
         actor.pos = target
-        battle.log(f"{actor.name} dismounts to {target}.")
+        battle.log("log.dismounts", actor=actor.name, cell=str(target))
 
 class WakeUp(Action):
-    id, name, cost, target, aimed = "wake_up", "Wake Up", 1, "ally", True
-    desc = "Wake up an adjacent sleeping ally."
+    id, cost, target, aimed = "wake_up", 1, "ally", True
 
     @classmethod
     def applicable(cls, battle, actor):
         has_sleeping = any(u.alive and u.team == actor.team and u.has_condition("sleeping") for u in battle.units)
         if not has_sleeping:
-            return False, "No sleeping allies."
+            return False, i18n.t("action.wake_up.reason")
         return True, ""
 
     def _sleeping_allies(self, battle, actor):
@@ -559,7 +548,7 @@ class WakeUp(Action):
                 and target in self._sleeping_allies(battle, actor))
 
     def label(self, battle, actor):
-        return "Wake Up (1 pt, wake a sleeping ally)"
+        return i18n.t("action.wake_up.label")
 
     def highlight_targets(self, battle, actor):
         return self._sleeping_allies(battle, actor)
@@ -574,7 +563,7 @@ class WakeUp(Action):
         if sleeping_cond:
             target.conditions.remove(sleeping_cond)
         
-        battle.log(f"{actor.name} shakes {target.name} awake!")
+        battle.log("log.wake_up", actor=actor.name, target=target.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -582,9 +571,8 @@ class WakeUp(Action):
 # --------------------------------------------------------------------------- #
 
 class EndTurn(Action):
-    id, name, cost, target = "end", "End Turn", 0, "none"
+    id, cost, target = "end", 0, "none"
     announce = False
-    desc = "End your turn."
 
     def available(self, battle, actor):
         return battle.winner is None
@@ -594,9 +582,8 @@ class EndTurn(Action):
 
 
 class Delay(Action):
-    id, name, cost, target = "delay", "Delay", 0, "none"
+    id, cost, target = "delay", 0, "none"
     announce = False
-    desc = "Drop to the end of the initiative order, once per round. Only before you spend any points."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -608,22 +595,21 @@ class Delay(Action):
             battle.delay_turn(actor)
 
     def label(self, battle, actor):
-        return "Delay: let the others act first (once a round, before you spend a point)"
+        return i18n.t("action.delay.label")
 
 
 class SignalHorn(Action):
-    id, name, cost, target = "signal_horn", "Signal Horn", 2, "none"
+    id, cost, target = "signal_horn", 2, "none"
     RADIUS = 10
     BONUS = 2
-    desc = (f"Blow the horn, once per battle: allies within {RADIUS} squares gain +{BONUS} "
-            "initiative, which can reorder the turns.")
+    desc = i18n.Text("action", "desc", radius=RADIUS, bonus=BONUS)
 
     @classmethod
     def applicable(cls, battle, actor):
         if actor.artifact_name != items.SIGNAL_HORN_ITEM:
-            return False, "No Signal Horn equipped."
+            return False, i18n.t("action.signal_horn.reason_none")
         if "signal_horn" in actor.used_abilities:
-            return False, "Already blown this battle."
+            return False, i18n.t("action.signal_horn.reason_used")
         return True, ""
 
     def allies_in_range(self, battle, actor):
@@ -635,7 +621,7 @@ class SignalHorn(Action):
         return super().available(battle, actor) and bool(self.allies_in_range(battle, actor))
 
     def label(self, battle, actor):
-        return f"Signal Horn ({self.cost} pts, allies within {self.RADIUS} +{self.BONUS} initiative)"
+        return i18n.t("action.signal_horn.label", cost=self.cost, radius=self.RADIUS, bonus=self.BONUS)
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -645,21 +631,19 @@ class SignalHorn(Action):
         actor.spend_once("signal_horn")
         allies = self.allies_in_range(battle, actor)
         battle.raise_initiative(allies, self.BONUS)
-        battle.fx(actor.pos, "Signal Horn!", "crit")
-        battle.log(f"{actor.name} blows the Signal Horn! "
-                   + ", ".join(a.name for a in allies) + f" gain +{self.BONUS} initiative.")
+        battle.fx(actor.pos, i18n.t("fx.signal_horn"), "crit")
+        battle.log("log.signal_horn", actor=actor.name, allies=", ".join(a.name for a in allies), n=self.BONUS)
 
 
 class Assess(Action):
-    id, name, cost, target, aimed = "assess", "Assess", 1, "enemy", True
-    desc = (f"INT +{intel.ASSESS_BONUS} against the foe's DC: learn more of its stats. "
-            "One foe in sight, once per foe each round.")
+    id, cost, target, aimed = "assess", 1, "enemy", True
+    desc = i18n.Text("action", "desc", bonus=intel.ASSESS_BONUS)
 
     def can(self, battle, actor, target=None):
         return actor.ap >= self.cost and not intel.assess_block(battle, actor, target)
 
     def label(self, battle, actor):
-        return "Assess (1 pt, INT vs the foe)"
+        return i18n.t("action.assess.label")
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -668,17 +652,16 @@ class Assess(Action):
         actor.walking = False
         total, _margin, opened = intel.assess(battle, actor, target)
         need = intel.dc(battle, actor.team, target)
-        learned = ", ".join(intel.LABELS[f] for f in opened) or "nothing new"
-        battle.log(f"{actor.name} studies {target.name}: d20 + INT + {intel.ASSESS_BONUS} = {total} "
-                   f"vs DC {need}  -> {learned}.")
-        battle.fx(target.pos, f"{total} vs DC {need}", "ok" if opened else "faint")
+        learned = ", ".join(intel.LABELS[f] for f in opened) or Msg("log.assess_nothing")
+        battle.log("log.assess", actor=actor.name, target=target.name, bonus=intel.ASSESS_BONUS, total=total,
+                   dc=need, learned=learned)
+        battle.fx(target.pos, i18n.t("fx.vs_dc", total=total, dc=need), "ok" if opened else "faint")
 
 
 class Investigate(Action):
     """Look around: an adjacent secret wall opens, and a foe nobody can see within `RADIUS` is
     found on d20 + WIS against 10 + its INT (its side then sees it until it slips away)."""
-    id, name, cost, target = "investigate", "Investigate", 1, "none"
-    desc = "Inspect nearby walls for secret doors, and look and listen for something unseen."
+    id, cost, target = "investigate", 1, "none"
     RADIUS = 3
 
     def _adjacent_secrets(self, battle, actor):
@@ -695,8 +678,8 @@ class Investigate(Action):
 
     def label(self, battle, actor):
         if self._adjacent_secrets(battle, actor):
-            return "Investigate secret (1 pt)"
-        return f"Investigate ({self.RADIUS} squares, WIS)"
+            return i18n.t("action.investigate.label_secret")
+        return i18n.t("action.investigate.label", n=self.RADIUS)
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -707,8 +690,8 @@ class Investigate(Action):
         for p in secrets:
             battle.board.walls.discard(p)
             battle.secret_walls.discard(p)
-            battle.log(f"{actor.name} inspects the wall and triggers a hidden lever! A secret door slides open at {p}.")
-            battle.fx(p, "Secret Opened!", "crit")
+            battle.log("log.secret_door", actor=actor.name, cell=str(p))
+            battle.fx(p, i18n.t("fx.secret_opened"), "crit")
         lurkers = self._lurkers(battle, actor)
         if not lurkers:
             return
@@ -717,15 +700,14 @@ class Investigate(Action):
             if battle.units_distance(actor, u) <= self.RADIUS and d20() + actor.mod_wisdom >= 10 + u.mod_intelligence:
                 u.reveal_to(actor.team)
                 found = True
-                battle.log(f"{actor.name} searches and finds {u.name} hiding at {u.pos}!")
-                battle.fx(u.pos, "Found!", "crit")
+                battle.log("log.finds_hiding", actor=actor.name, target=u.name, cell=str(u.pos))
+                battle.fx(u.pos, i18n.t("fx.found"), "crit")
         if not found and not secrets:
-            battle.log(f"{actor.name} searches the dark around them and finds nothing.")
+            battle.log("log.finds_nothing", actor=actor.name)
 
 
 class Disarm(Action):
-    id, name, cost, target = "disarm", "Disarm Trap", 1, "none"
-    desc = "Disarm an adjacent trap (d20 + DEX vs DC 12)."
+    id, cost, target = "disarm", 1, "none"
 
     def _adjacent_traps(self, battle, actor):
         return [o for o in battle.ground if o.is_trap and chebyshev(actor.pos, o.pos) <= 1]
@@ -734,7 +716,7 @@ class Disarm(Action):
         return actor.ap >= self.cost and bool(self._adjacent_traps(battle, actor))
 
     def label(self, battle, actor):
-        return "Disarm trap (1 pt, DEX vs DC 12)"
+        return i18n.t("action.disarm.label")
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -750,12 +732,13 @@ class Disarm(Action):
         total = nat + bonus
         dc = 12
         ok = total >= dc
-        battle.log(f"{actor.name} attempts to disarm {trap.trap_type}: d20({nat}) {bonus:+}(DEX) = {total} vs DC {dc} -> "
-                   + ("success!" if ok else "failed."))
+        kind = Ref("trap", trap.trap_type, trap.trap_type)
+        battle.log("log.disarm.ok" if ok else "log.disarm.fail", actor=actor.name, trap=kind, nat=nat, dex=bonus,
+                   total=total, dc=dc)
         if ok and trap.trap_type == "web":
             battle.remove_web(trap)
-            battle.log(f"  {actor.name} tears the web down.")
-            battle.fx(trap.pos, "Web Cleared!", "ok")
+            battle.log("log.disarm.web", actor=actor.name)
+            battle.fx(trap.pos, i18n.t("fx.web_cleared"), "ok")
         elif ok:
             battle.ground.remove(trap)
             trap_name = "Bear Trap" if "bear" in trap.trap_type.lower() else "Alarm Trap"
@@ -763,10 +746,10 @@ class Disarm(Action):
             if not hasattr(actor, "picked_up_items"):
                 actor.picked_up_items = []
             actor.picked_up_items.append(trap_name)
-            battle.log(f"  {actor.name} disarms the {trap.trap_type} and recovers a {trap_name}!")
-            battle.fx(trap.pos, "Trap Disarmed!", "ok")
+            battle.log("log.disarm.recovered", actor=actor.name, trap=kind, item=item_ref(trap_name))
+            battle.fx(trap.pos, i18n.t("fx.trap_disarmed"), "ok")
         elif nat == 1 or total <= dc - 5:
-            battle.log(f"  Critical fumble! {actor.name} accidentally triggers the trap!")
+            battle.log("log.disarm.fumble", actor=actor.name)
             battle.trigger_trap(actor, trap)
 
 
@@ -778,13 +761,12 @@ class Capture(Action):
     """Bind an adjacent fallen foe (dying or knocked out) with a Rope or Chains, used up. The
     captive is out of the fight for good: no coup de grace, no death save; after a won battle
     it joins the group as a captured unit (`captives.py`)."""
-    id, name, cost, target, aimed = "capture", "Capture", 1, "enemy", True
-    desc = "Bind an adjacent fallen foe with a Rope or Chains; it leaves the fight as your captive."
+    id, cost, target, aimed = "capture", 1, "enemy", True
 
     @classmethod
     def applicable(cls, battle, actor):
         if capture_tool(actor) is None:
-            return False, "Needs a Rope or Chains."
+            return False, i18n.t("action.capture.reason")
         return True, ""
 
     def _bodies(self, battle, actor):
@@ -811,5 +793,5 @@ class Capture(Action):
         target.captured = True
         if target.status == "dying":
             target.status = "stable"
-        battle.log(f"{actor.name} binds {target.name} with {tool}: captured.")
-        battle.fx(target.pos, "Captured", "ok")
+        battle.log("log.capture", actor=actor.name, target=target.name, tool=item_ref(tool))
+        battle.fx(target.pos, i18n.t("fx.captured"), "ok")
