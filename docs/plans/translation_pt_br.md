@@ -1,7 +1,7 @@
 # Plan — Brazilian Portuguese translation (`pt-br`)
 
 Goal: the whole game playable in `pt-br`, chosen in Settings, with English still the default and the
-fallback. Status: **not started**. The translation must be COMPLETE before the next playtest (author 2026-11-04),
+fallback. Status: **phase 1 done** (2026-11-04); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
 all six phases (see [backlog.md](backlog.md)).
 
 Sizes below come from greps (2026-11-04), not from reading each module: re-count at the start of each phase.
@@ -85,7 +85,9 @@ on JSON text.
 
 ### 6. Translate and review
 
-Fill `pt-br.json` (draft with a model, then the author reads it in play, as with the tutorial cards).
+Fill `pt-br.json`. The text is written in Portuguese sentence by sentence, with the game's context and an
+author-approved glossary of its terms (Takedown, Grab, Brutal...) first; never machine translation, and no
+translation service runs in the game. Then the author reads it in play, as with the tutorial cards.
 Check: overflow on long strings (Portuguese runs ~20–30% longer: the overflow items in the backlog apply),
 accents and the font's glyph coverage (ç, ã, õ, é…), sort order, number and money formats.
 

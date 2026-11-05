@@ -27,6 +27,10 @@ developing, run the files of the area you change. Open work on the suite is in
   roll starts from it and sets what it tests on top. A rolled `Unit(...)` makes a test pass by the
   order it runs in (a Miner who already owns the Pick, a Treefolk who eats no ration, a caster with 1
   max HP); a file whose tests are edited moves its rolls to `standard_unit`.
+- **English by default.** An autouse fixture in `tests/conftest.py` sets `i18n` to `en` before and after each
+  test, so a text assertion never meets the saved language. A test of another language sets it itself.
+  `test_i18n.py` also fails when a `pt-br` key has no `en` twin or other placeholders (strict about gaps
+  once the translation's last phase lands: `STRICT`).
 - **`encumbered` is a derived flag.** A pack change does not refresh it; the caller runs
   `_derive_combat()` (as `outfit.py` does after each potion). A test that reads it after
   `give_to_pack` or `money =` must derive first.

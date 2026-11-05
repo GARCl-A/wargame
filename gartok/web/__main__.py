@@ -17,7 +17,7 @@ import threading
 import time
 import webbrowser
 
-from .. import combat_lab
+from .. import combat_lab, settings
 from .server import SCREENS, Game, serve
 
 _BROWSERS = (
@@ -61,6 +61,7 @@ def main():
     p.add_argument("--port", type=int, default=0)
     p.add_argument("--no-window", action="store_true")
     args = p.parse_args()
+    settings.apply_language()
     if args.save:
         game = Game.from_save(args.save, args.screen)
     elif args.fight is None:

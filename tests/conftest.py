@@ -3,7 +3,7 @@ import zlib
 
 import pytest
 
-from gartok import world
+from gartok import i18n, world
 
 
 @pytest.fixture(autouse=True)
@@ -18,6 +18,14 @@ def _no_ethereal_nodes_leak():
     """An event's nodes (`world.add_node`) live in the world module: take them off after each test."""
     yield
     world.clear_runtime()
+
+
+@pytest.fixture(autouse=True)
+def _english_text():
+    """The text assertions are English: a test that picks a language puts it back."""
+    i18n.set_language("en")
+    yield
+    i18n.set_language("en")
 
 
 def pytest_configure(config):

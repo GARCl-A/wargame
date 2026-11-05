@@ -4,7 +4,7 @@ the map's menu; BACK returns there."""
 
 from typing import ClassVar
 
-from .. import settings
+from .. import i18n, settings
 from ..version import GAME_VERSION, build_hash
 from .session import Session
 
@@ -20,6 +20,8 @@ def _shown(key, value):
         return f"{value} ms"
     if key == "volume":
         return f"{value}%" if value else "Off"
+    if key == "language":
+        return i18n.LANGUAGES[value]
     return str(value).title()
 
 
@@ -48,6 +50,8 @@ class SettingsSession(Session):
             raise ValueError(f"{settings.SPEC[key][0].title()} cannot be {value}")
         while settings.get(key) != value:
             settings.cycle(key)
+        if key == "language":
+            settings.apply_language()
         return self.state()
 
     def _tutorial(self):

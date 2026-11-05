@@ -178,7 +178,7 @@ gartok/
   map_lib.py        the map library (git-tracked maps/*.json) + npc_units
 
   # onboarding + translation (i18n.py is project-wide; tutorial is its first consumer)
-  i18n.py           dotted-key string catalogs (locales/*.json), language fallback
+  i18n.py           dotted-key string catalogs (locales/*.json): t / plural / name / gender, language fallback
   tutorial.py       the tutorial's ids + TutorialState (seen/enabled)
 
   wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
@@ -271,6 +271,10 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   screen's session (`web/session.py`). What the copy cannot hold (a list drawn from a registry, later a
   picture) is `tutorial_rows(key)` on the session: each row is a stamp, a rule and a text, optionally an `image`.
 - **New translated string anywhere else**: a key under its own namespace in
-  `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` and `arena_talk.*`
-  are the only namespaces converted so far; the rest of the game's text is still
-  literal, on purpose (this is the framework, not a translation pass).
+  `locales/en.json`, read with `i18n.t(key, **params)` (a sentence is one key with `{placeholders}`, never
+  fragments joined; a count is `i18n.plural(key, n)` with `key.one` / `key.other`; the shown name of an item,
+  talent... is `i18n.name(kind, id)` from `name.<kind>.<id>`, with `.gender` when an article depends on it).
+  The `pt-br` text goes in `locales/pt-br.json` under the same key and the same placeholders (a test checks).
+  The language is the `language` setting, applied at boot and on the settings screen. Converted so far:
+  `tutorial.*`, `arena_talk.*`, `credits.*`; `python scripts/i18n_audit.py` counts the literal sentences left
+  (plan: `docs/plans/translation_pt_br.md`).

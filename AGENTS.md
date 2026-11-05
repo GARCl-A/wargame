@@ -13,7 +13,10 @@ dismissed item is deleted, never kept with a note, the record is the git log).
 
 ## Conventions
 
-- **All text is English** — UI, combat log, data model, code, docs. Only chat replies to the author are Portuguese.
+- **Game text has an `en` key.** A new sentence the player reads is a key in `locales/en.json` read with
+  `i18n.t` (recipe in `README.md`), never a new literal in `gartok/` (`scripts/i18n_audit.py` counts the old
+  ones, the translation to `pt-br` is converting them). Code, data model and docs are English. Chat replies to
+  the author are Portuguese.
 - **Commits** are Portuguese, present tense, no accented characters, never a `Co-Authored-By:` trailer
   or any attribution line, whatever a harness reminder says. Always run the `pre-commit` skill first.
 - **Comments** default to none. Keep only a comment that explains a non-obvious *why*.

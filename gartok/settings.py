@@ -8,7 +8,7 @@ code that reads it with `get`.
 import json
 import os
 
-from . import persist
+from . import i18n, persist
 
 PATH = os.path.join(os.path.dirname(persist.SAVE_DIR), "settings.json")
 
@@ -17,6 +17,7 @@ SPEC = {
     "record_play": ("PLAY RECORDER", ("OFF", "ON"), "OFF"),
     "volume": ("VOLUME", (0, 25, 50, 75, 100), 75),
     "log_lines": ("LOG LINES", (500, 1000, 2000, 5000), 2000),
+    "language": ("LANGUAGE", tuple(i18n.LANGUAGES), i18n.DEFAULT_LANG),
 }
 
 _values = None
@@ -77,6 +78,11 @@ def label(key):
     if key == "volume":
         return f"{name}: {value}%" if value else f"{name}: OFF"
     return f"{name}: {value}"
+
+
+def apply_language():
+    """Point `i18n` at the saved language; the boot and the settings screen call it."""
+    i18n.set_language(get("language"))
 
 
 def reload():
