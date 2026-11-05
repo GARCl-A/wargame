@@ -28,14 +28,14 @@ def store_dict(group, store, selected, carried):
                        for idx, (name, qty) in enumerate(store._base_inventory)]}
     if isinstance(store, Animal):
         pulled = group.pulling(store)
-        job = (i18n.t("store_column.pulls", lower=pulled.kind.lower()) if pulled else i18n.t("animals.unhitched") if store.role == "draft"
+        job = (i18n.t("store_column.pulls", lower=pulled.ref(lower=True)) if pulled else i18n.t("animals.unhitched") if store.role == "draft"
                else store.role or i18n.t("store_column.no_tack"))
         member["name"] = f"{store.species}  ·  {job}"
         member["tack"] = {"name": store.tack, "note": store.role,
                           "sel": "tack" in selected,
                           "accepts": any(store.can_wear(n) for n in carried)}
         if store.role == "draft" and group.wagons:
-            member["action"] = {"label": i18n.t("store_column.pulls_next", upper=pulled.kind.upper()) if pulled else "UNHITCHED  ·  HITCH",
+            member["action"] = {"label": i18n.t("store_column.pulls_next", upper=pulled.name.upper()) if pulled else "UNHITCHED  ·  HITCH",
                                 "enabled": True}
     else:
         drawn_by = " + ".join(a.species for a in store.draft) or i18n.t("store_column.no_animals")

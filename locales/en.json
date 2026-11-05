@@ -1992,6 +1992,137 @@
         "name": "Flying",
         "rule": "Flies until the end of its next turn."
       }
+    },
+    "lab": {
+      "armor": "Armor",
+      "consumables & kit": "Consumables & Kit",
+      "supplies": "Supplies",
+      "weapons": "Weapons",
+      "crafters": "crafters",
+      "herd": "herd",
+      "wagons": "wagons",
+      "rations": "rations",
+      "stage": "stage",
+      "squatting": "squatting",
+      "bays": "bays",
+      "a 16 h shift": "A 16 h shift",
+      "workers": "Workers",
+      "hand": "Hand",
+      "tongue": "Tongue",
+      "armour": "Armour",
+      "artifact": "Artifact",
+      "tack": "Tack",
+      "rides": "Rides",
+      "walks": "Walks",
+      "distribute": "Distribute",
+      "talents": "Talents",
+      "fight": "Fight",
+      "campfire": "Campfire",
+      "members": "Members",
+      "purse": "Purse",
+      "reputation": "Reputation",
+      "hands": "Hands",
+      "body": "Body",
+      "load": "Load",
+      "ac": "AC",
+      "md": "MD",
+      "spd": "SPD",
+      "init": "INIT",
+      "hp": "HP",
+      "speed": "Speed",
+      "attack": "Attack",
+      "load limit": "Load limit",
+      "none": "None",
+      "crowd": "Crowd",
+      "group": "Group",
+      "camp": "Camp",
+      "speed (squares)": "Speed (squares)",
+      "initiative": "Initiative",
+      "damage": "Damage",
+      "reach": "Reach",
+      "ammo": "Ammo",
+      "role": "Role",
+      "feed": "Feed",
+      "value": "Value",
+      "fed": "fed",
+      "hungry": "Hungry",
+      "sick": "Sick",
+      "cha": "cha",
+      "half level": "half level",
+      "base": "base",
+      "leader": "leader",
+      "strong": "strong",
+      "tough": "tough",
+      "healthy": "healthy",
+      "nimble": "nimble",
+      "genius": "genius",
+      "wise": "wise",
+      "risky": "risky",
+      "str": "str",
+      "dex": "dex",
+      "wis": "wis",
+      "con": "con",
+      "int": "int",
+      "shield": "shield",
+      "natural armor": "natural armor",
+      "minimum": "minimum",
+      "group overextended": "group overextended",
+      "dex (armor cap)": "dex (armor cap)",
+      "natural": "natural",
+      "drag": "drag",
+      "flight (wings)": "flight (wings)",
+      "overloaded": "overloaded",
+      "damage die": "damage die",
+      "level": "level",
+      "racial ability": "racial ability",
+      "to hit": "to hit",
+      "damage bonus": "damage bonus",
+      "mental defense": "mental defense",
+      "attributes": "attributes",
+      "hit points": "hit points",
+      "spells": "spells",
+      "artefact": "artefact",
+      "asleep": "asleep",
+      "shield hooked": "shield hooked",
+      "flying": "flying",
+      "stable": "stable",
+      "broken": "broken",
+      "poisoned": "poisoned",
+      "lumber yard": "Lumber Yard",
+      "mine": "Mine",
+      "potion": "potion",
+      "material": "material",
+      "container": "container",
+      "tool": "tool",
+      "gem": "gem",
+      "weapon": "weapon",
+      "currency": "currency",
+      "food": "food",
+      "quest": "quest",
+      "trap": "trap",
+      "scroll": "scroll",
+      "dictionary": "dictionary",
+      "light": "light",
+      "common": "common",
+      "uncommon": "uncommon",
+      "rare": "rare",
+      "unique": "unique",
+      "scriptorium": "Scriptorium",
+      "apothecary": "Apothecary",
+      "forge": "Forge",
+      "carpenter": "Carpenter",
+      "cooking": "Cooking",
+      "items": "Items",
+      "recipes": "Recipes",
+      "actions": "Actions",
+      "keywords": "Keywords",
+      "races": "Races",
+      "beasts": "Beasts",
+      "rules": "Rules",
+      "race": "Race",
+      "a root": "a root",
+      "nothing": "nothing",
+      "beast": "beast"
     }
   },
   "fx": {
@@ -2971,7 +3102,12 @@
   "name": {
     "claim_stage": {
       "CLEARED": "Cleared",
-      "SWEPT": "Swept"
+      "SWEPT": "Swept",
+      "SCOUTED": "Scouted",
+      "FENCED": "Fenced",
+      "SUSTAINING": "Sustaining",
+      "ESTABLISHED": "Established",
+      "NONE": "None"
     },
     "talent": {
       "strong": "Strong",
@@ -3544,6 +3680,31 @@
       "Orcish": "Orcish",
       "Sylvan": "Sylvan",
       "Verdant": "Verdant"
+    },
+    "attribute": {
+      "strength": "Strength",
+      "dexterity": "Dexterity",
+      "constitution": "Constitution",
+      "intelligence": "Intelligence",
+      "wisdom": "Wisdom",
+      "charisma": "Charisma"
+    },
+    "trap": {
+      "bear trap": "bear trap",
+      "alarm trap": "alarm trap",
+      "web": "web"
+    },
+    "vehicle": {
+      "Cart": "Cart",
+      "Carriage": "Carriage"
+    },
+    "vendor": {
+      "commander_varkas": "Commander Varkas",
+      "captain_caelen": "Captain Caelen",
+      "brother_quillon": "Brother Quillon"
+    },
+    "keyword": {
+      "brutal": "Brutal"
     }
   },
   "job_board": {
@@ -3984,7 +4145,8 @@
       "SWEPT": "Sweep",
       "SUSTAINING": "Garrison",
       "ESTABLISHED": "Established"
-    }
+    },
+    "seized": "Seized"
   },
   "map_session": {
     "no_such_band": "no such band",
@@ -4220,7 +4382,8 @@
       "guild": "The Guild",
       "reputations": "Reputations",
       "routines": "Routines"
-    }
+    },
+    "campfire_h": "Campfire ({hours:g} h)"
   },
   "report_session": {
     "someone_must_pocket_purse_first": "someone must pocket the purse first",
@@ -4538,7 +4701,9 @@
     "speed_m": "Speed {b:g} m",
     "drops": "Drops: {value}",
     "no_chapter_called": "no chapter called {tab}",
-    "no_entry_called": "no entry called {ref}"
+    "no_entry_called": "no entry called {ref}",
+    "batch_h": "{h} h a batch",
+    "two_handed": "Two-handed"
   },
   "credits_session": {
     "license_cc_by": "License: CC BY 3.0",
@@ -5050,7 +5215,8 @@
     "stance_note": {
       "normal": "no change to the ambush chance",
       "cautious": "fewer ambushes only with the Wilds vocation or a Woodland Scout"
-    }
+    },
+    "idle": "idle"
   },
   "band_kit": {
     "has_no_animal_hitched_to": "the {lower} has no animal hitched to pull it.",
@@ -5628,6 +5794,9 @@
       "ssareth_coldvein": "Your blood speaks before you do. Let us hear what it says.",
       "thorne_mossmane": "Guests of the Wilds leave footprints. Thieves leave stumps.",
       "brother_quillon": "Light a candle for whoever you left behind. Then go and bring the rest home."
+    },
+    "keyword": {
+      "brutal": "Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2."
     }
   },
   "item": {
@@ -5886,5 +6055,109 @@
       "tavern": "BUY FOOD AND DRINK",
       "farm": "BROWSE THE FARM"
     }
+  },
+  "wiki_rules": {
+    "turns": {
+      "title": "Turns & Action Points",
+      "1": "Every combatant has {ap} action points a turn. Attack, Walk and Defend cost 1 each, in any mix: walk + attack, attack + attack, attack + defend...",
+      "2": "Walk: up to your speed in cells. Diagonals cost 1, then 2, then 1 again within one walk.",
+      "3": "You can cross an ally's cell but not stop on it. An enemy's cell blocks you completely.",
+      "4": "Defend: +1 AC (circumstance) until the start of your next turn.",
+      "5": "Delay (0 points): drop to the end of the initiative order for good, once a round, before you spend anything.",
+      "6": "Flee (1 point, ends the turn): only from the map edge, and only when you are faster than the fastest pursuer or already out of its reach.",
+      "7": "Bonuses of the same type do not stack: Defend and another circumstance bonus to AC, only the larger counts."
+    },
+    "flanking": {
+      "title": "Flanking",
+      "1": "A foe is flanked when you and an ally are both next to it, on opposite sides. It loses 2 AC against you (1 with Peripheral Vision); the log shows [Flank -2].",
+      "2": "An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some races and beasts have.",
+      "3": "Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on a flanked foe: the blow is Brutal 1, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."
+    },
+    "weapon": {
+      "title": "Weapon Actions (2 Points)",
+      "1": "One strike for the price of two attacks. Out of its case it is the worse buy; in its case the blow is Brutal 1 and beats the two attacks.",
+      "2": "Cleave (Axe): a second foe beside both, each swing +2 to hit.",
+      "3": "Repel Strike (Quarterstaff): shoves the foe 1 cell; against a wall or a body, +1d4 instead.",
+      "4": "Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, Sleeping, Surprised, Demoralized) takes it at +2 to hit.",
+      "5": "Armor Pierce (Picks): ignores worn armour. Power Shot (Bows): +STR, best at long range.",
+      "6": "Hook Shield (Hatchet): the foe's shield gives no AC until next round. Parry & Strike (Swords): while Defending, with two or more foes in reach.",
+      "7": "Long Thrust (Glaive): one strike a cell past the Glaive's reach of {reach}, +{hit} to hit."
+    },
+    "talk": {
+      "title": "Talking Before A Fight",
+      "1": "Persuade, Bluff and Intimidate roll d20 + Charisma against {dc} + the foes' leader's Wisdom modifier. Natural 1 and 20 are just numbers.",
+      "2": "In an ambush every check reads the squad's look: up to {cap} easier when your hit points outweigh the pack's, up to {cap} harder when theirs outweigh yours.",
+      "3": "Persuade: {shift} easier with a good leader, {shift} harder with an evil one. A miss is a plain fight.",
+      "4": "Bluff: a miss and they strike first (your side is Surprised and loses its first turn).",
+      "5": "Intimidate: they start Demoralized; beat it by {margin}+ and they run. A miss gives them +{edge} initiative.",
+      "6": "Bribe: ${bribe} a foe per (its level + 1), paid by the richest first.",
+      "7": "Every answer that talks needs a language the speaker shares with their leader."
+    },
+    "recruiting": {
+      "title": "Recruiting",
+      "1": "A pitch is d20 + Charisma (yours) against d20 + Charisma (theirs); a tie goes to the stranger. You need a language in common.",
+      "2": "Crowd penalty: -{pen} for every member of the whole guild past {free}, counted across every group, not the group making the pitch.",
+      "3": "Alignment: -{align} per step between the recruiter's alignment and the stranger's.",
+      "4": "Each member can sponsor {base} + their Charisma modifier recruits; the guild leader adds their racial level.",
+      "5": "A failed pitch bars that recruiter from that stranger until the pool turns over. Someone else may still try.",
+      "6": "The Tavern keeps {tavern} strangers and the Prison {prison} prisoners; both re-roll every {days} days. Bail adds +2 to the pitch, and each doubling of the offer +1 more; it is taken only if the pitch wins."
+    },
+    "groups": {
+      "title": "Groups, Leaders & Fame",
+      "1": "The guild may run {base} groups, plus one more for every {fame} reputation summed across all factions.",
+      "2": "A group holds {cap} + {terms} members, and {herd} + the leader's Wisdom modifier animals and captives.",
+      "3": "An overextended group rolls each day against its weakest member's Mental Defense (the leaders are exempt). That member splits off into a group of their own, or with no slot free gives {days} days' notice and then leaves the guild.",
+      "4": "Who leaves takes by alignment: Lawful only what they wear, Neutral the pack too, Chaotic everything."
+    },
+    "captives": {
+      "title": "Captives",
+      "1": "Capture (1 point): bind an adjacent fallen foe with a {tools}, which is used up. When the last foe falls the fight runs one more round to bind the fallen.",
+      "2": "A captive walks with the group, takes {weight} of its animal limit, never fights or eats, and dies {days} days after its capture.",
+      "3": "The group screen lists the captives with their days left and a RELEASE button. A job that wants one alive takes it straight from the group."
+    },
+    "wagons": {
+      "title": "Wagons & Animals",
+      "1": "The road wears a wagon 1 HP every {dist} distance; at 0 HP it is broken until repaired with Lumber.",
+      "2": "Cargo on a wagon or on an animal's back counts for the group: food, shop sales and job deliveries read it.",
+      "3": "Where a wagon cannot go in, anyone left outside guards it. Left alone it may be lost, cargo and animals with it."
+    },
+    "money": {
+      "title": "Money, Food & Death",
+      "1": "There is no guild treasury: money is Copper ($1) and Gold ($100) coins in the packs. They weigh, split and move like any item.",
+      "2": "Paying spends copper first, then breaks gold and returns change. Gold only comes from the bank exchange.",
+      "3": "Everyone eats every day. Hunger lowers the attributes and brings sickness.",
+      "4": "Death is permanent. The run ends only when the whole guild is gone."
+    },
+    "stomp": {
+      "title": "Clean Stomp & Auto-Win",
+      "1": "Before an ambush the game fights it many times headless, both sides on the AI, and shows how many of those fights were a clean stomp: everyone standing, no potion, no first aid, no ammunition spent. It is not the odds of winning.",
+      "2": "AUTO-WIN is offered only when every one of them was a clean stomp. It settles the fight at once and awards no combat XP."
+    },
+    "or": " or ",
+    "term": {
+      "cha": "the leader's Charisma modifier",
+      "half_level": "half the leader's racial level"
+    }
+  },
+  "intel": {
+    "not_a_foe": "not a foe",
+    "not_in_sight": "not in sight",
+    "already_assessed": "already assessed this round",
+    "artifact": {
+      "biwolf_leather": "+1 AC against anything that is not a humanoid.",
+      "signal_horn": "Blown once per battle: allies near it gain +2 initiative."
+    },
+    "worn_bonus": "+{n} {attr} while worn.",
+    "no_effect": "No effect anyone has found.",
+    "dying": "dying {n}"
+  },
+  "wiki_terms": {
+    "weapon_action": "Weapon action · 2 AP",
+    "weapon_trait": "Weapon trait",
+    "combat": "Combat",
+    "utility": "Utility",
+    "kind_cost": "{kind} · {ap} AP",
+    "keyword": "Keyword",
+    "thrown_sq": "Thrown {n} sq"
   }
 }

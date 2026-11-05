@@ -263,13 +263,13 @@ class GuildSession(Session):
             if (zone == "offhand" and w and w.hands >= 2) or (zone == "tongue" and not u.has_tongue):
                 continue
             name = gear._item_at(u, zone)
-            worn.append({"zone": zone, "label": label, "name": name,
+            worn.append({"zone": zone, "label": i18n.lab(label), "name": name,
                          "glyph": item_icon.glyph(name) if name else None,
                          "kg": items.item_weight(name) if name else 0, "tip": _tip(name) if name else ""})
         ride = None
         if g.wagons:
             riding = u in g.riders
-            ride = {"label": "Rides" if riding else "Walks", "on": riding or u.afoot,
+            ride = {"label": i18n.lab("Rides" if riding else "Walks"), "on": riding or u.afoot,
                     "tip": i18n.t("guild_session.make_them_walk") if riding else i18n.t("guild_session.let_them_ride") if u.afoot else i18n.t("guild_session.no_room_on_wagons")}
         hunger = u.hunger_level > 0
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,
@@ -281,15 +281,15 @@ class GuildSession(Session):
     def _animal_column(self, a):
         g = self.group
         pulled = g.pulling(a)
-        job = i18n.t("guild_session.pulls", lower=pulled.kind.lower()) if pulled else i18n.t("animals.unhitched") if a.role == "draft" else a.role or i18n.t("guild_session.no_tack")
+        job = i18n.t("guild_session.pulls", lower=pulled.ref(lower=True)) if pulled else i18n.t("animals.unhitched") if a.role == "draft" else a.role or i18n.t("guild_session.no_tack")
         return {"id": a.uid, "name": a.species, "portrait": _face(a.species, a.uid), "store": True, "beast": True,
                 "sub": job, "hungry": bool(a.unfed_days), "unfed": a.unfed_days,
                 "money": a.money, "kg": round(a.load, 2), "normal": a.carry_normal, "max": a.carry_max,
-                "worn": [{"zone": "tack", "label": "Tack", "name": a.tack,
+                "worn": [{"zone": "tack", "label": i18n.lab("Tack"), "name": a.tack,
                           "glyph": item_icon.glyph(a.tack) if a.tack else None,
                           "kg": items.item_weight(a.tack) if a.tack else 0, "tip": _tip(a.tack) if a.tack else ""}],
                 "pack": self._pack(a),
-                "hitch": ({"label": i18n.t("guild_session.pulls_2", lower=pulled.kind.lower()) if pulled else i18n.t("guild_session.hitch_it"), "on": True}
+                "hitch": ({"label": i18n.t("guild_session.pulls_2", lower=pulled.ref(lower=True)) if pulled else i18n.t("guild_session.hitch_it"), "on": True}
                           if a.role == "draft" and g.wagons else None)}
 
     def _wagon(self, w):
@@ -319,7 +319,7 @@ class GuildSession(Session):
 
     def _actions(self):
         g, gear, now = self.group, self.gear, self.guild.clock.seconds
-        out = [{"key": "distribute", "label": "Distribute", "glyph": "action/rally-the-troops",
+        out = [{"key": "distribute", "label": i18n.lab("Distribute"), "glyph": "action/rally-the-troops",
                 "on": len(g.members) > 1, "tip": i18n.t("guild_session.share_unlocked_pack_items_out")}]
         if gear._can_treat_sickness():
             out.append({"key": "treat_sickness", "label": i18n.t("guild_session.treat_sickness"), "glyph": "body/arm-bandage", "on": True,
@@ -328,7 +328,7 @@ class GuildSession(Session):
             out.append({"key": "treat_poison", "label": i18n.t("guild_session.use_antidote"), "glyph": "action/drinking", "on": True,
                         "tip": i18n.t("guild_session.bandmate_s_antidote_for_poisoned")})
         lit = g.has_campfire(now)
-        out.append({"key": "campfire_cook", "label": f"Campfire ({g.campfire_hours_left(now):g} h)" if lit else "Campfire",
+        out.append({"key": "campfire_cook", "label": i18n.t("guild_session.campfire_h", hours=g.campfire_hours_left(now)) if lit else i18n.lab("Campfire"),
                     "glyph": "action/kindle", "on": lit or g.can_light_campfire(),
                     "tip": i18n.t("guild_session.cook_at_band_s_fire") if lit
                     else i18n.t("guild_session.light_fire_to_cook_flint") if g.can_light_campfire()

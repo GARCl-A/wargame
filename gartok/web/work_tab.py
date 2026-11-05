@@ -19,7 +19,7 @@ class WorkTab(WorkDesk):
             own = level >= economy.LUMBER_LEVEL_OWN_AXE
             note = self._crew_note(u, tool)
             crew.append({"name": u.name, "portrait": _portrait(u), "own": own,
-                         "sub": i18n.t("work_tab.own", lower=tool.lower()) if own else i18n.t("work_tab.foreman_s", lower=tool.lower()),
+                         "sub": i18n.t("work_tab.own", lower=i18n.Ref("item", tool, lower=True)) if own else i18n.t("work_tab.foreman_s", lower=i18n.Ref("item", tool, lower=True)),
                          "pay": economy.work_pay(self.node.id, SHIFTS[-1], level),
                          "note": note[0] if note else None})
         return {"cards": self.hub_cards(), "tool": tool, "glyph": item_icon.glyph(tool), "day": SHIFTS[-1],

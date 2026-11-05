@@ -7,7 +7,7 @@
 "use strict";
 
 let H = null;
-const card = c => `<div class="hcard"><div class="lbl">${esc(c.label)}</div><b class="${c.tone || ""}">${esc(c.value)}</b></div>`;
+const card = c => `<div class="hcard"><div class="lbl">${esc(lab(c.label))}</div><b class="${c.tone || ""}">${esc(c.value)}</b></div>`;
 const cards = list => { $("cards").innerHTML = `<div class="vsep"></div>` + list.map(card).join(`<div class="vsep"></div>`); };
 
 let toastTimer = null;

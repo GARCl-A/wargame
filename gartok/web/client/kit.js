@@ -45,10 +45,10 @@ const Kit = {
   // an empty worn slot when `it` has no name
   item(owner, it, loc, slot, {sel = false, tags = ""} = {}) {
     if (!it || !it.name)
-      return `<div class="it empty" data-owner="${owner}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(slot.label)}</span>${tr("kit.empty")}</div><span></span><span></span></div>`;
+      return `<div class="it empty" data-owner="${owner}" data-zone="${slot.zone}">${ico("item/knapsack")}<div class="n"><span class="slotname">${esc(lab(slot.label))}</span>${tr("kit.empty")}</div><span></span><span></span></div>`;
     const q = it.qty || 1;
     return `<div class="it ${it.coin ? "coin" : ""} ${sel ? "sel" : ""}" data-owner="${owner}" data-loc="${loc}" ${slot ? `data-zone="${slot.zone}"` : ""}${tip(it.tip, "item")}>
-      ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(slot.label)}</span>` : ""}${esc(nm("item", it.name))}${Kit.note(it)}${tags}</div>
+      ${ico(it.glyph)}<div class="n">${slot ? `<span class="slotname">${esc(lab(slot.label))}</span>` : ""}${esc(nm("item", it.name))}${Kit.note(it)}${tags}</div>
       <span class="q">${q > 1 ? "×" + q : ""}</span><span class="kg">${kg(q, it.kg)}</span></div>`;
   },
   note: it => it.note ? `<span class="tag ${it.urgent ? "auto" : ""}">${esc(it.note)}</span>` : "",

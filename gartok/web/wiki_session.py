@@ -48,17 +48,17 @@ def _item(it):
     if it.range:
         tags.append(i18n.t("wiki_session.range_sq", range=it.range))
     if it.hands == 2:
-        tags.append("Two-handed")
-    return _entry(it.name, it.type.value, [i18n.t("wiki_session.kg", weight=it.weight), f"${it.price}", it.rarity.value], tags=tags,
+        tags.append(i18n.t("wiki_session.two_handed"))
+    return _entry(it.name, i18n.lab(it.type.value), [i18n.t("wiki_session.kg", weight=it.weight), f"${it.price}", i18n.lab(it.rarity.value)], tags=tags,
                   glyph=item_icon.glyph(it.name), links=links, find=[x["label"] for x in links],
                   label=i18n.name("item", it.name))
 
 
 def _recipe(target, rec):
-    station = rec.station.value.title()
+    station = i18n.lab(rec.station.value.title())
     shown = i18n.name("item", target)
     return _entry(f"{target} ×{rec.yield_qty}" if rec.yield_qty > 1 else target, station,
-                  [f"{rec.batch_hours:.1f} h a batch", i18n.t("wiki_session.level", level=rec.level)],
+                  [i18n.t("wiki_session.batch_h", h=f"{rec.batch_hours:.1f}"), i18n.t("wiki_session.level", level=rec.level)],
                   [" + ".join(i18n.name("item", m) for m in rec.materials)]
                   + ([i18n.t("wiki_session.tools", join=', '.join(i18n.name("item", t) for t in rec.tools))] if rec.tools else []),
                   glyph=item_icon.glyph(target), find=[" ".join(rec.materials)],
@@ -85,14 +85,14 @@ def _talents():
         need = talents.get(t.requires) if t.requires else None
         races = (t.race,) if isinstance(t.race, str) else tuple(t.race or ())
         out.append(_entry(t.name, i18n.t("wiki_session.tier", track=track, tier=t.tier),
-                          [i18n.t("wiki_session.needs", value=need.name if need else t.requires) if t.requires else "a root",
+                          [i18n.t("wiki_session.needs", value=need.name if need else t.requires) if t.requires else i18n.lab("a root"),
                            i18n.t("wiki_session.only", join=', '.join(races)) if races else None],
                           [t.effect], glyph=t.icon, find=[t.effect, *races]))
     return out
 
 
 def _races():
-    return [_entry(e["name"], "Race", [e["meta"]], e["abilities"], tags=e["mods"].split("  "),
+    return [_entry(e["name"], i18n.lab("Race"), [e["meta"]], e["abilities"], tags=e["mods"].split("  "),
                    glyph=f"head/{art_files.RACE_ICON[e['name']]}" if e["name"] in art_files.RACE_ICON else None,
                    find=[e["meta"], *e["abilities"], *e["talents"]], label=i18n.name("race", e["name"]))
             | {"track": e["talents"]} for e in wiki_races.entries()]
@@ -104,15 +104,15 @@ def _beasts():
         ab = b.get("ability") or ()
         ab = ab if isinstance(ab, (tuple, list)) else (ab,)
         traits = [t.name for a in ab if (t := abilities.get(a))]
-        drops = ([f"{b['drop_item']} ({round(b.get('drop_chance', 0) * 100)}%)"] if b.get("drop_item") else []) + \
-                [f"{it} ×{qty} ({round(ch * 100)}%)" for it, ch, qty in b.get("also_drops", ())]
-        out.append(_entry(b["name"], b.get("kind", "beast"), [i18n.t("wiki_session.hit_die_d", b=b['hd']), b["size"], i18n.t("wiki_session.speed_m", b=b['speed'])],
-                          [i18n.t("wiki_session.drops", value=', '.join(drops) or 'nothing')], tags=traits, find=traits, label=i18n.name("race", b["name"])))
+        drops = ([f"{i18n.name('item', b['drop_item'])} ({round(b.get('drop_chance', 0) * 100)}%)"] if b.get("drop_item") else []) + \
+                [f"{i18n.name('item', it)} ×{qty} ({round(ch * 100)}%)" for it, ch, qty in b.get("also_drops", ())]
+        out.append(_entry(b["name"], i18n.lab(b.get("kind", "beast")), [i18n.t("wiki_session.hit_die_d", b=b['hd']), i18n.name("size", b["size"]), i18n.t("wiki_session.speed_m", b=b['speed'])],
+                          [i18n.t("wiki_session.drops", value=', '.join(drops) or i18n.lab('nothing'))], tags=traits, find=traits, label=i18n.name("race", b["name"])))
     return out
 
 
 def _rules():
-    return [_entry(title.title(), body=lines, find=lines) for title, lines in wiki_rules.sections()]
+    return [_entry(title, body=lines, find=lines) for title, lines in wiki_rules.sections()]
 
 
 BUILD = {"items": lambda: [_item(i) for i in sorted(items.all_items().values(), key=lambda i: i18n.name("item", i.name))],
@@ -165,6 +165,6 @@ class WikiSession(Session):
         rows = BUILD[self.tab]()
         q = self.query.strip()
         shown = [{k: v for k, v in e.items() if k != "_find"} for e in rows if not q or q in e["_find"]]
-        return {"chapters": [{"id": c, "label": label} for c, label in CHAPTERS], "chapter": self.tab,
+        return {"chapters": [{"id": c, "label": i18n.lab(label)} for c, label in CHAPTERS], "chapter": self.tab,
                 "query": self.query, "entries": shown, "total": len(rows), "back": self.back_label,
                 "focus": self.focus}

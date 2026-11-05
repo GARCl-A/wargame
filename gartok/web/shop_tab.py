@@ -85,7 +85,7 @@ class ShopTab:
             if key == "weapons":       # a Large weapon is a row of its own beside its Medium one
                 names = [n for b in names for n in (b, i18n.t("shop_tab.large", b=b))
                          if items.get(n) and (n == b or (shop and n in shop.stock))]
-            cats.append({"key": key, "label": label.title().replace(" And ", " & "),
+            cats.append({"key": key, "label": i18n.lab(label.title().replace(" And ", " & ")),
                          "rows": [self._ware(n, key, targets) for n in names]})
         return cats
 
@@ -122,7 +122,7 @@ class ShopTab:
             if zone == "tongue" and not u.has_tongue:
                 continue
             name = self.m._item_at(u, zone)
-            worn.append({"zone": zone, "label": label, "name": name,
+            worn.append({"zone": zone, "label": i18n.lab(label), "name": name,
                          "glyph": item_icon.glyph(name) if name else None,
                          "kg": items.item_weight(name) if name else 0,
                          "sell": economy.sell_price(name, self.m.deal) if name else None,
@@ -139,7 +139,7 @@ class ShopTab:
                 "glyph": "item/saddle" if d.get("tack") is not None else "item/locked-chest",
                 "sub": d.get("status", {}).get("text", ""), "voice": False, "hurt": False,
                 "money": s.money, "kg": round(d["kg"], 2), "normal": d["normal"], "max": d["max"],
-                "worn": ([{"zone": "tack", "label": "Tack", "name": d["tack"]["name"], "fixed": True,
+                "worn": ([{"zone": "tack", "label": i18n.lab("Tack"), "name": d["tack"]["name"], "fixed": True,
                            "glyph": item_icon.glyph(d["tack"]["name"]) if d["tack"]["name"] else None,
                            "kg": items.item_weight(d["tack"]["name"]) if d["tack"]["name"] else 0}]
                          if d.get("tack") is not None else []),

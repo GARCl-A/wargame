@@ -175,6 +175,19 @@ def name(kind, ident):
     return ident
 
 
+def lab(text):
+    """A short label the server writes in English as a word ("Purse", "rations", "AC") in the current language
+    (`ui.lab.<lowercase>`), cased as `text` is; `text` itself when the language has none or is `en`."""
+    if _lang == DEFAULT_LANG:
+        return text
+    shown = _catalog(_lang).get(f"ui.lab.{text.lower()}")
+    if shown is None:
+        return text
+    if len(text) > 1 and text.isupper():
+        return shown.upper()
+    return shown[:1].lower() + shown[1:] if text[:1].islower() else shown
+
+
 def epithet(ident, gender="m"):
     """A beast epithet in the gender of its species: `name.epithet.<id>`, or `name.epithet_f.<id>` for a feminine noun."""
     if gender == "f":
@@ -248,10 +261,11 @@ class Ref:
 
     def __format__(self, spec):
         """`{item}` is the name; `{item:o}` / `{item:do}` / `{item:no}` / `{item:um}` put the article of its
-        gender before it ("a espada", "do machado"). A language with no articles never writes a spec."""
+        gender before it ("a espada", "do machado"); a capital (`{item:O}`) opens a sentence ("A espada"). A language with no articles never writes a spec."""
         if not spec:
             return str(self)
-        return f"{ARTICLES[self.article()][spec]} {self}"
+        article = ARTICLES[self.article()][spec.lower()]
+        return f"{sentence(article) if spec[0].isupper() else article} {self}"
 
 
 class Msg:
@@ -285,7 +299,7 @@ def from_json(data):
         if isinstance(v, dict) and "k" in v:
             return from_json(v)
         if isinstance(v, dict) and "ref" in v:
-            return str(Ref(*v["ref"]))
+            return Ref(*v["ref"])
         return v
     return t(data["k"], **{k: param(v) for k, v in data.get("p", {}).items()})
 

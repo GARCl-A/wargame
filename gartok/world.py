@@ -95,6 +95,11 @@ class Vendor:
     def key(self):
         return self.name.lower().replace(" ", "_")
 
+    @property
+    def shown(self):
+        shown = i18n.name("vendor", self.key)
+        return self.name if shown == self.key else shown
+
     def said(self):
         return i18n.desc("vendor", self.key) or self.line
 
@@ -104,7 +109,7 @@ class Vendor:
 
     @property
     def card(self):
-        return {"name": self.name, "caption": self.caption, "portrait": self.portrait, "line": self.said()}
+        return {"name": self.shown, "caption": self.caption, "portrait": self.portrait, "line": self.said()}
 
 
 class Node:

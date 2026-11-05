@@ -68,7 +68,7 @@ class VaultTab:
             if (zone == "offhand" and w and w.hands >= 2) or (zone == "tongue" and not u.has_tongue):
                 continue
             name = self.s._item_at(u, zone)
-            worn.append({"zone": zone, "label": label, "name": name,
+            worn.append({"zone": zone, "label": i18n.lab(label), "name": name,
                          "glyph": item_icon.glyph(name) if name else None,
                          "kg": items.item_weight(name) if name else 0, "tip": _tip(name) if name else ""})
         return {"id": u.uid, "name": u.name, "portrait": _portrait(u), "store": False,

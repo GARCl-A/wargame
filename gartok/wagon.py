@@ -23,7 +23,7 @@ import math
 from dataclasses import dataclass
 from uuid import uuid4
 
-from . import items
+from . import i18n, items
 from .creature import Creature
 
 WAGON_DIE = 8              # every vehicle is an object with d8 Hit Dice
@@ -72,13 +72,16 @@ class Wagon(Creature):
 
     @property
     def name(self):
-        return self.kind
+        return i18n.name("vehicle", self.kind)
+
+    def ref(self, lower=False):
+        return i18n.Ref("vehicle", self.kind, lower=lower)
 
     full_name = name
 
     @property
     def label(self):
-        return self.nickname or self.kind
+        return self.nickname or self.name
 
     @property
     def price(self):

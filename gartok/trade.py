@@ -395,7 +395,7 @@ class Counter(economy.PartyPurse):
             member._derive_combat()
             self.qty.pop(name, None)
             recorder.emit("buy", node=self._node_id(), item=name, qty=1, price=price, zone=zone)
-            self.notice = i18n.t("trade.bought_equipped", name=member.name, item=i18n.name("item", name))
+            self.notice = i18n.t("trade.bought_equipped", name=member.name, item=i18n.Ref("item", name))
             self._opening_goals(name)
             self._settle_market()
             return

@@ -165,8 +165,8 @@ class MapSession(MapView, Session):
         return {
             "meta": self._meta(),
             "alerts": self._alerts(),
-            "ledger": [("Members", str(len(g))), ("Rations", str(g.rations)),
-                       ("Purse", fmt_money(g.money)), ("Reputation", str(g.arena_reputation))],
+            "ledger": [(i18n.lab("Members"), str(len(g))), (i18n.lab("Rations"), str(g.rations)),
+                       (i18n.lab("Purse"), fmt_money(g.money)), (i18n.lab("Reputation"), str(g.arena_reputation))],
             "nodes": [self._node(n) for n in world.NODES if n.id in known],
             "edges": [[a, b, d] for a, b, d in world.EDGES if a in known and b in known],
             "groups": [self._band(gr) for gr in g.groups if not gr.empty],
@@ -357,20 +357,20 @@ class MapSession(MapView, Session):
         if not here.has("work"):
             return []
         day = sum(economy.work_pay(here.id, 16, economy.work_level(u, here.id)) for u in g.members)
-        out = [{"value": fmt_money(day), "label": "A 16 h shift"}]
+        out = [{"value": fmt_money(day), "label": i18n.lab("A 16 h shift")}]
         if gather.can_gather(here.id):
             held = self.guild.has_licence(here.id)
             out.append({"value": i18n.t("map_session.licence_held") if held else i18n.t("map_session.no_licence"), "label": i18n.t("map_session.gathering"), "no": not held})
             hands = len(gather.gatherers(g.members, here.id))
             out.append({"value": f"{hands}/{len(g.members)}", "label": i18n.t("map_session.own", tool=i18n.name("item", gather.tool(here.id))),
                         "no": hands < len(g.members)})
-        out.append({"value": str(len(g.members)), "label": "Workers"})
+        out.append({"value": str(len(g.members)), "label": i18n.lab("Workers")})
         return out
 
     def _camp(self, g):
         now = self.guild.clock.seconds
         if g.has_campfire(now):
-            fire = {"label": "Campfire", "sub": i18n.t("map_session.burning_h_left", campfire_hours_left=g.campfire_hours_left(now)), "enabled": True}
+            fire = {"label": i18n.lab("Campfire"), "sub": i18n.t("map_session.burning_h_left", campfire_hours_left=g.campfire_hours_left(now)), "enabled": True}
         else:
             missing = []
             if not any(u.has_item(economy.FIELD_CAMPFIRE_TOOL) for u in (*g.members, *g.stores)):
@@ -379,7 +379,7 @@ class MapSession(MapView, Session):
                 missing.append("1 Lumber")
             if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in g.members) < 1:
                 missing.append("1 Coal")
-            fire = {"label": "Campfire", "enabled": not missing,
+            fire = {"label": i18n.lab("Campfire"), "enabled": not missing,
                     "sub": i18n.t("map_session.needs", join=', '.join(missing)) if missing else i18n.t("map_session.light_it_and_cook_burns")}
         hurt = [u for u in g.members if u.hp < u.hp_max or u.sick or u.poisoned]
         urgent = self._rest_urgent(g)
@@ -480,7 +480,7 @@ class MapSession(MapView, Session):
     def _cta(self):
         due = self._pending_event
         if due is not None:
-            return {"key": "resolve_event", "label": "Fight", "sub": i18n.t("map_session.foes", len=len(due[1].pack)), "danger": True,
+            return {"key": "resolve_event", "label": i18n.lab("Fight"), "sub": i18n.t("map_session.foes", len=len(due[1].pack)), "danger": True,
                     "enabled": True, "gid": due[0].gid, "swift": self._swift_look(*due),
                     "text": i18n.t("map_session.is_stopped_nothing_moves_on", display_name=due[0].display_name)}
         idle = [g for g in self.guild.groups if self._is_idle(g)]
@@ -546,7 +546,7 @@ class MapSession(MapView, Session):
             raise ValueError(i18n.t("map_session.broken_wagon_cannot_move_mend"))
         for w in broken:
             self.guild.abandon_wagon(g, w)
-            self.say(i18n.t("map_session.leaves_its_broken_behind", display_name=g.display_name, lower=w.kind.lower()), "travel", g)
+            self.say(i18n.t("map_session.leaves_its_broken_behind", display_name=g.display_name, lower=w.ref(lower=True)), "travel", g)
         g.order = orders.travel(g, node_id, self._pace(g))
         self.focus = g.gid
         return self._after_order()

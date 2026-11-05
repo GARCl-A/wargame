@@ -1638,6 +1638,137 @@
   },
   "tip": {
    "total": "Total"
+  },
+  "lab": {
+   "armor": "Armadura",
+   "consumables & kit": "Consumíveis e Equipamento",
+   "supplies": "Suprimentos",
+   "weapons": "Armas",
+   "crafters": "artesãos",
+   "herd": "rebanho",
+   "wagons": "carroças",
+   "rations": "rações",
+   "stage": "estágio",
+   "squatting": "ocupação",
+   "bays": "vagas",
+   "a 16 h shift": "Um turno de 16 h",
+   "workers": "Trabalhadores",
+   "hand": "Mão",
+   "tongue": "Língua",
+   "armour": "Armadura",
+   "artifact": "Artefato",
+   "tack": "Arreios",
+   "rides": "Cavalga",
+   "walks": "Anda",
+   "distribute": "Distribuir",
+   "talents": "Talentos",
+   "fight": "Lutar",
+   "campfire": "Fogueira",
+   "members": "Membros",
+   "purse": "Bolsa",
+   "reputation": "Reputação",
+   "hands": "Mãos",
+   "body": "Corpo",
+   "load": "Carga",
+   "ac": "CA",
+   "md": "DM",
+   "spd": "VEL",
+   "init": "INIC",
+   "hp": "PV",
+   "speed": "Velocidade",
+   "attack": "Ataque",
+   "load limit": "Limite de carga",
+   "none": "Nenhum",
+   "crowd": "Lotação",
+   "group": "Grupo",
+   "camp": "Acampamento",
+   "speed (squares)": "Velocidade (casas)",
+   "initiative": "Iniciativa",
+   "damage": "Dano",
+   "reach": "Alcance",
+   "ammo": "Munição",
+   "role": "Função",
+   "feed": "Comida",
+   "value": "Valor",
+   "fed": "alimentado",
+   "hungry": "Com fome",
+   "sick": "Doente",
+   "cha": "car",
+   "half level": "metade do nível",
+   "base": "base",
+   "leader": "líder",
+   "strong": "forte",
+   "tough": "resistente",
+   "healthy": "saudável",
+   "nimble": "ágil",
+   "genius": "gênio",
+   "wise": "sábio",
+   "risky": "arriscado",
+   "str": "FOR",
+   "dex": "DES",
+   "wis": "SAB",
+   "con": "CON",
+   "int": "INT",
+   "shield": "escudo",
+   "natural armor": "armadura natural",
+   "minimum": "mínimo",
+   "group overextended": "grupo sobrecarregado",
+   "dex (armor cap)": "DES (limite da armadura)",
+   "natural": "natural",
+   "drag": "peso",
+   "flight (wings)": "voo (asas)",
+   "overloaded": "sobrecarregado",
+   "damage die": "dado de dano",
+   "level": "nível",
+   "racial ability": "habilidade racial",
+   "to hit": "para acertar",
+   "damage bonus": "bônus de dano",
+   "mental defense": "defesa mental",
+   "attributes": "atributos",
+   "hit points": "pontos de vida",
+   "spells": "magias",
+   "artefact": "artefato",
+   "asleep": "dormindo",
+   "shield hooked": "escudo preso",
+   "flying": "voando",
+   "stable": "estável",
+   "broken": "quebrado",
+   "poisoned": "envenenado",
+   "lumber yard": "Serraria",
+   "mine": "Mina",
+   "potion": "poção",
+   "material": "material",
+   "container": "recipiente",
+   "tool": "ferramenta",
+   "gem": "gema",
+   "weapon": "arma",
+   "currency": "moeda",
+   "food": "comida",
+   "quest": "missão",
+   "trap": "armadilha",
+   "scroll": "pergaminho",
+   "dictionary": "dicionário",
+   "light": "luz",
+   "common": "comum",
+   "uncommon": "incomum",
+   "rare": "raro",
+   "unique": "único",
+   "scriptorium": "Escrivaninha",
+   "apothecary": "Boticário",
+   "forge": "Forja",
+   "carpenter": "Carpintaria",
+   "cooking": "Cozinha",
+   "items": "Itens",
+   "recipes": "Receitas",
+   "actions": "Ações",
+   "keywords": "Palavras-chave",
+   "races": "Raças",
+   "beasts": "Feras",
+   "rules": "Regras",
+   "race": "Raça",
+   "a root": "sem pré-requisito",
+   "nothing": "nada",
+   "beast": "fera"
   }
  },
  "action": {
@@ -1650,7 +1781,7 @@
    "desc": "Chicoteia um inimigo com a língua.",
    "reason": "Não é um Grippli com Língua.",
    "label_off": "Chicotear com a língua (1 pt)",
-   "label": "Chicotear {weapon} (1 pt, alcance {reach})"
+   "label": "Chicotear {weapon:o} (1 pt, alcance {reach})"
   },
   "reload": {
    "name": "Recarregar",
@@ -1671,7 +1802,7 @@
    "name": "Arremessar",
    "desc": "Arremessa a arma equipada contra um alvo ao alcance.",
    "label_off": "Arremessar a arma (1 pt)",
-   "label": "Arremessar {weapon} (1 pt)"
+   "label": "Arremessar {weapon:o} (1 pt)"
   },
   "demoralize": {
    "name": "Desmoralizar",
@@ -2015,9 +2146,9 @@
   },
   "brutal": "  {why}: Brutal {n}!",
   "brutal_savage": "Ataques Selvagens",
-  "thrown_lands": "  {weapon} cai em {cell}; {actor} fica desarmado.",
+  "thrown_lands": "  {weapon:O} cai em {cell}; {actor} fica desarmado.",
   "con_save": "CON d20({nat}) {mod:+} = {total} contra CD {dc}",
-  "poison_shaken": "  {target} resiste ao veneno {poison} ({roll}).",
+  "poison_shaken": "  {target} resiste {poison:ao} ({roll}).",
   "poisoned": "  {target} está envenenado: {poison} {level} (-{loss} {attribute}) ({roll}).",
   "bleeding": "  {target} está sangrando ({label}).",
   "gruesome_takedown": "  Derrubada Macabra! {attacker} ruge para {victim}:",
@@ -2057,7 +2188,7 @@
   "defend": "{actor} se defende: +1 CA [circunstância] até o próximo turno.",
   "defend_iron": "{actor} se defende: +1 CA [circunstância], +{iron} de Defesa Mental [Postura de Ferro] até o próximo turno.",
   "throw": {
-   "head": "{actor} arremessa {weapon} em {target}"
+   "head": "{actor} arremessa {weapon:o} em {target}"
   },
   "mimic": "{actor} imita a voz de {target} para provocá-lo.",
   "demoralize": {
@@ -2173,16 +2304,16 @@
   },
   "maimed": "  {target} é mutilado (movimento pela metade até a próxima rodada).",
   "wrest": {
-   "keeps": "{actor} Arrancar -> {target}: d20({nat}) + {dex}(DES) = {total} contra CD {dc} -> {target} mantém {weapon}.",
-   "tears": "{actor} Arrancar -> {target}: d20({nat}) + {dex}(DES) = {total} contra CD {dc} -> {actor} arranca {weapon} das mãos dele!"
+   "keeps": "{actor} Arrancar -> {target}: d20({nat}) + {dex}(DES) = {total} contra CD {dc} -> {target} mantém {weapon:o}.",
+   "tears": "{actor} Arrancar -> {target}: d20({nat}) + {dex}(DES) = {total} contra CD {dc} -> {actor} arranca {weapon:o} das mãos dele!"
   },
   "drops_torch": "  {actor} larga a tocha em {cell}.",
-  "drops": "  {actor} larga {item} em {cell}.",
+  "drops": "  {actor} larga {item:o} em {cell}.",
   "picks_torch": "{actor} pega uma tocha (ilumina {n} casas).",
-  "retrieves": "{actor} recupera {item}!",
+  "retrieves": "{actor} recupera {item:o}!",
   "chest_money": "{actor} encontra {money} no baú!",
-  "chest_item": "{actor} recupera {item} do baú!",
-  "picks_up": "{actor} pega {item} do chão.",
+  "chest_item": "{actor} recupera {item:o} do baú!",
+  "picks_up": "{actor} pega {item:o} do chão.",
   "repair": {
    "ok": "{actor} tenta reparar {target}: d20({nat}) {int:+}(INT) = {total} contra {dc} -> reparado.",
    "fail": "{actor} tenta reparar {target}: d20({nat}) {int:+}(INT) = {total} contra {dc} -> falha."
@@ -2226,13 +2357,13 @@
   "finds_hiding": "{actor} procura e encontra {target} escondido em {cell}!",
   "finds_nothing": "{actor} vasculha a escuridão ao redor e não encontra nada.",
   "disarm": {
-   "ok": "{actor} tenta desarmar {trap}: d20({nat}) {dex:+}(DES) = {total} contra CD {dc} -> sucesso!",
-   "fail": "{actor} tenta desarmar {trap}: d20({nat}) {dex:+}(DES) = {total} contra CD {dc} -> falha.",
+   "ok": "{actor} tenta desarmar {trap:o}: d20({nat}) {dex:+}(DES) = {total} contra CD {dc} -> sucesso!",
+   "fail": "{actor} tenta desarmar {trap:o}: d20({nat}) {dex:+}(DES) = {total} contra CD {dc} -> falha.",
    "web": "  {actor} rasga a teia.",
-   "recovered": "  {actor} desarma {trap} e recupera {item}!",
+   "recovered": "  {actor} desarma {trap:o} e recupera {item:o}!",
    "fumble": "  Falha crítica! {actor} dispara a armadilha sem querer!"
   },
-  "capture": "{actor} amarra {target} com {tool}: capturado.",
+  "capture": "{actor} amarra {target} com {tool:o}: capturado.",
   "spell": {
    "casts": "{actor} conjura {spell} em {target}!",
    "crit_miss": " Erro crítico!",
@@ -2309,7 +2440,7 @@
    "hurt": "{unit} cai {n} níveis -> {dmg} de dano ({dice}d6)."
   },
   "trap": {
-   "steps": "{unit} pisa em {trap}!",
+   "steps": "{unit} pisa {trap:no}!",
    "snap": "  *CLAC* {unit} sofre {dmg} de dano e fica preso.",
    "web": "  *TUF* {unit} fica preso na teia!",
    "alarm": "  *DRIM DRIM DRIM* Um alarme alto soa! Todas as atenções se voltam para {unit}."
@@ -2457,7 +2588,10 @@
   "is_already_there": "{display_name} já está lá",
   "no_road_leads_to": "nenhuma estrada leva a {name}",
   "broken_wagon_cannot_move_mend": "uma carroça quebrada não anda: conserte-a ou deixe-a para trás",
-  "leaves_its_broken_behind": "{display_name} deixa para trás {lower} quebrado.",
+  "leaves_its_broken_behind": {
+   "name": "{display_name} deixa para trás {lower:o} quebrado.",
+   "f": "{display_name} deixa para trás {lower:o} quebrada."
+  },
   "has_no_fight_to_face": "{display_name} não tem luta para enfrentar",
   "this_fight_is_not_clean": "esta luta não é uma vitória esmagadora",
   "has_no_stopped_routine": "{display_name} não tem rotina parada",
@@ -2497,10 +2631,10 @@
   "guild_leader": "LÍDER DA GUILDA",
   "group_leader": "LÍDER DO GRUPO",
   "lv_c_w": "{race} · Nv {racial_level}  (C{combat_level} T{work_level})",
-  "pulls": "puxa {lower}",
+  "pulls": "puxa {lower:o}",
   "no_tack": "sem arreios",
   "carries_up_to_kg_on": "carrega até {capacity:g} kg nas costas",
-  "hitched_to": " -- atrelado a {lower}",
+  "hitched_to": " -- atrelado {lower:ao}",
   "not_hitched": " -- não atrelado",
   "pulls_up_to_kg": "puxa até {pull:g} kg{hitched}",
   "idle_pack_saddle_lets_it": "ocioso: uma Sela de Carga o deixa carregar {back_load:g} kg, um Arnês o deixa puxar {draw:g} kg",
@@ -2684,7 +2818,8 @@
   "stance_note": {
    "normal": "sem mudança na chance de emboscada",
    "cautious": "menos emboscadas só com a vocação Andarilhos ou um Batedor da Mata"
-  }
+  },
+  "idle": "parado"
  },
  "dialogue": {
   "verb": {
@@ -2990,7 +3125,7 @@
  "tavern": {
   "party_purse": "bolsa do grupo",
   "guild_size": "tamanho da guilda",
-  "crowd_penalty": "penalidade de multidão",
+  "crowd_penalty": "penalidade de lotação",
   "extra_bail": "fiança extra",
   "can_pitch": "{name} pode convencer",
   "cannot_pitch": "não pode convencer",
@@ -3056,7 +3191,7 @@
   "won_t_fit_s": "{name} não cabe em {zone} de {owner}.",
   "no_in_stock": "sem {name} em estoque.",
   "out_of_money": "sem dinheiro.",
-  "bought_equipped": "{name} comprou e equipou {item}.",
+  "bought_equipped": "{name} comprou e equipou {item:o}.",
   "bought_of": "{name} comprou {bought} de {wanted}  ·  {stopped}.",
   "bought": "{name} comprou {bought}× {what}.",
   "no_in_stock_2": "sem {name} em estoque",
@@ -3153,9 +3288,9 @@
   "make_them_walk": "Fazer andar",
   "let_them_ride": "Deixar cavalgar",
   "no_room_on_wagons": "Sem espaço nas carroças",
-  "pulls": "puxa {lower}",
+  "pulls": "puxa {lower:o}",
   "no_tack": "sem arreios",
-  "pulls_2": "Puxa {lower}",
+  "pulls_2": "Puxa {lower:o}",
   "hitch_it": "Atrelar",
   "share_unlocked_pack_items_out": "Reparte os itens destrancados da mochila conforme o que cada um carrega",
   "treat_sickness": "Tratar doença",
@@ -3194,7 +3329,8 @@
    "guild": "A Guilda",
    "reputations": "Reputações",
    "routines": "Rotinas"
-  }
+  },
+  "campfire_h": "Fogueira ({hours:g} h)"
  },
  "report_session": {
   "someone_must_pocket_purse_first": "alguém precisa embolsar a bolsa primeiro",
@@ -3209,7 +3345,7 @@
   "no_such_slot": "espaço inexistente: {zone}",
   "nothing_picked": "nada escolhido",
   "that_is_on_field_already": "isso já está no campo",
-  "cannot_take_in_that_slot": "{name} não pode levar {item} nesse espaço.",
+  "cannot_take_in_that_slot": "{name} não pode levar {item:o} nesse espaço.",
   "s": "{kg} de {name}",
   "these": "estes {kg}",
   "already_carries_of_limit_would": "{name} já carrega {load} de um limite de {limit}; {what} o levaria a {total}.",
@@ -3276,7 +3412,7 @@
   "up": "de pé",
   "free": "livre",
   "miss": "erra",
-  "got": "Pegou {item}!",
+  "got": "Pegou {item:o}!",
   "chest_opened": "Baú Aberto!",
   "vs": "{total} contra {dc}",
   "stabilize_ok": "d20({nat}) Sucesso",
@@ -3297,14 +3433,14 @@
  },
  "unit": {
   "poison": {
-   "eases": "{poison} de {unit} diminui para {n}.",
-   "wears_off": "{poison} de {unit} passa."
+   "eases": "{poison:O} de {unit} diminui para {n}.",
+   "wears_off": "{poison:O} de {unit} passa."
   },
   "antidote": {
    "roll": "CON d20({nat}) {con:+} = {total} contra CD {dc}",
    "fails": "O Antídoto não pega em {unit} ({roll}).",
-   "clears": "O Antídoto remove {poison} de {unit} ({roll}).",
-   "eases": "O Antídoto reduz {poison} em {unit} para {n} ({roll})."
+   "clears": "O Antídoto remove {poison:o} de {unit} ({roll}).",
+   "eases": "O Antídoto reduz {poison:o} em {unit} para {n} ({roll})."
   },
   "work": {
    "below": "{unit}: sem XP de trabalho -- este serviço está abaixo do nível de trabalho {n}.",
@@ -3358,7 +3494,7 @@
   },
   "ox": "{who} passou {hours} h no rastro do boi.",
   "meat": "{who} trazem {kg} kg de carne ({hours} h de caça).",
-  "skin": "{name} tira {item} da caça.",
+  "skin": "{name} tira {item:o} da caça.",
   "empty_hunt": "{who} voltam de mãos vazias ({hours} h de caça -- pouco para abater algo).",
   "found": {
    "mushroom": "{n} {item}(s)",
@@ -3545,13 +3681,25 @@
   "all_rotten": "{rotten_rations} (todas podres)",
   "wage_for_h": "salário por {shifts} h",
   "party_purse": "bolsa do grupo",
-  "has_outgrown_this_job_even": "superou este serviço mesmo com {tool} próprio: sem mais XP de trabalho aqui",
-  "past_this_job_bare_handed": "superou este serviço de mãos nuas: {tool} próprio paga mais e mantém o XP de trabalho",
+  "has_outgrown_this_job_even": {
+   "name": "superou este serviço mesmo com {tool:o} próprio: sem mais XP de trabalho aqui",
+   "f": "superou este serviço mesmo com {tool:o} própria: sem mais XP de trabalho aqui"
+  },
+  "past_this_job_bare_handed": {
+   "name": "superou este serviço de mãos nuas: {tool:o} próprio paga mais e mantém o XP de trabalho",
+   "f": "superou este serviço de mãos nuas: {tool:o} própria paga mais e mantém o XP de trabalho"
+  },
   "gathering_licence_is_guild_s": "{name}: a licença de coleta é da guilda.",
   "not_enough_coin_for_licence": "moedas insuficientes para a licença",
   "no_stands_guard_no_haul": "sem {tool}: faz guarda, sem coleta e sem XP de trabalho",
-  "own_gathers_but_has_outgrown": "{tool} próprio: coleta, mas já o superou (nível de trabalho {work_level}): sem XP de trabalho",
-  "own_gathers_work_xp_x": "{tool} próprio: coleta, XP de trabalho x{value} por hora",
+  "own_gathers_but_has_outgrown": {
+   "name": "{tool} próprio: coleta, mas já o superou (nível de trabalho {work_level}): sem XP de trabalho",
+   "f": "{tool} própria: coleta, mas já o superou (nível de trabalho {work_level}): sem XP de trabalho"
+  },
+  "own_gathers_work_xp_x": {
+   "name": "{tool} próprio: coleta, XP de trabalho x{value} por hora",
+   "f": "{tool} própria: coleta, XP de trabalho x{value} por hora"
+  },
   "h_for_this_group_haul": "{day_hours} h para este grupo: coleta de ~{fmt_money} vendida, {value:.0f}% de emboscada",
   "licence_pays_for_itself_in": " · a licença se paga em ~{value:.0f} dias de coleta",
   "licence": "licença",
@@ -3598,10 +3746,10 @@
   "no_such_animal_in_herd": "esse animal não está no rebanho",
   "no_for_sale": "sem {species} à venda",
   "no_tack": "sem arreios {tack}",
-  "already_wears": "{species} já usa {tack}",
+  "already_wears": "{species:o} já usa {tack:um}",
   "carries_kg_draws_kg_speed": "carrega {back_load:g} kg · puxa {draw:g} kg · velocidade {speed:g} m",
   "herd_is_full": "o rebanho está cheio",
-  "pulls": "puxa {lower}",
+  "pulls": "puxa {lower:o}",
   "carries_cargo": "leva carga",
   "no_tack_2": "sem arreios",
   "speed_m_hp": "velocidade {speed:g} m · PV {hp} / {hp_max}",
@@ -3630,7 +3778,10 @@
   "no_tack": "sem arreios"
  },
  "work_tab": {
-  "own": "{lower} próprio",
+  "own": {
+   "name": "{lower} próprio",
+   "f": "{lower} própria"
+  },
   "foreman_s": "{lower} do capataz",
   "rolls_worker_in_h": "{rolls:.1f} testes por trabalhador em {day_hours} h"
  },
@@ -3680,7 +3831,8 @@
    "SWEPT": "Varrer",
    "SUSTAINING": "Guarnecer",
    "ESTABLISHED": "Estabelecida"
-  }
+  },
+  "seized": "Confiscado"
  },
  "count": {
   "member": {
@@ -3919,7 +4071,9 @@
   "speed_m": "Velocidade {b:g} m",
   "drops": "Solta: {value}",
   "no_chapter_called": "nenhum capítulo chamado {tab}",
-  "no_entry_called": "nenhuma entrada chamada {ref}"
+  "no_entry_called": "nenhuma entrada chamada {ref}",
+  "batch_h": "{h} h por lote",
+  "two_handed": "Duas mãos"
  },
  "credits_session": {
   "license_cc_by": "Licença: CC BY 3.0",
@@ -4157,10 +4311,10 @@
  },
  "guild_holdings": {
   "starved_to_death": "{name} morreu de fome.",
-  "needs_no_repair": "{name} não precisa de conserto.",
-  "it_takes_to_mend": "são necessários {cost} {repair_item} para consertar {name}.",
-  "fails_to_mend_vs_dc": "{name} não consegue consertar {item} ({total} contra CD {repair_dc}) -- {repair_item} desperdiçado.",
-  "mends_hp": "{name} conserta {item}: +{gained} PV ({hp}/{hp_max}).",
+  "needs_no_repair": "{name:o} não precisa de conserto.",
+  "it_takes_to_mend": "são necessários {cost} {repair_item} para consertar {name:o}.",
+  "fails_to_mend_vs_dc": "{name} não consegue consertar {item:o} ({total} contra CD {repair_dc}) -- gasta {repair_item} à toa.",
+  "mends_hp": "{name} conserta {item:o}: +{gained} PV ({hp}/{hp_max}).",
   "studies_are_over_rooms_released": "{name}: os estudos acabaram -- quartos liberados.",
   "no_one_can_pay_for": "{name}: ninguém pode pagar mais uma noite -- quartos liberados.",
   "bankers_collect_in_property_tax": "Os Banqueiros cobram {fmt_money} de imposto predial.",
@@ -4239,17 +4393,23 @@
   "section": "Objetivos"
  },
  "band_kit": {
-  "has_no_animal_hitched_to": "{lower} não tem animal atrelado para puxá-lo.",
-  "wears_no_pack_saddle": "{species} não usa sela de carga.",
+  "has_no_animal_hitched_to": {
+   "name": "{lower:o} não tem animal atrelado para puxá-lo.",
+   "f": "{lower:o} não tem animal atrelado para puxá-la."
+  },
+  "wears_no_pack_saddle": "{species:o} não usa sela de carga.",
   "won_t_fit_kg_free": "não cabe -- {free:g} kg livres em {lower}.",
-  "already_pulls": "{species} já puxa {lower}.",
-  "now_pulls": "{species} agora puxa {lower}.",
-  "needs_harness_to_pull_anything": "{species} precisa de um Arnês para puxar qualquer coisa.",
-  "now_wears": "{species} agora usa {name}.",
+  "already_pulls": "{species:o} já puxa {lower:o}.",
+  "now_pulls": "{species:o} agora puxa {lower:o}.",
+  "needs_harness_to_pull_anything": "{species:o} precisa de um Arnês para puxar qualquer coisa.",
+  "now_wears": "{species:o} agora usa {name:um}.",
   "walks_beside_wagon": "{name} anda ao lado da carroça.",
   "rides_when_there_is_room": "{name} cavalga quando há espaço.",
-  "pulls": "{species} puxa {lower}.",
-  "is_unhitched": "{species} foi desatrelado.",
+  "pulls": "{species:o} puxa {lower:o}.",
+  "is_unhitched": {
+   "name": "{species:o} foi desatrelado.",
+   "f": "{species:o} foi desatrelada."
+  },
   "is_busy_repair_waits_until": "{display_name} está ocupado: o conserto espera até parar.",
   "redistributed_packs_by_carrying_capacity": "Mochilas redistribuídas conforme a capacidade de carga.",
   "campfire_lit_burns_for_hours": "Fogueira acesa! Queima por 4 horas.",
@@ -4300,10 +4460,16 @@
  "progression": {
   "curve_has_no_last_level": "uma curva não tem último nível",
   "bare_handed_or": "{place} (de mãos nuas ou com {tool})",
-  "with_your": "{place} (com {tool} próprio)",
+  "with_your": {
+   "name": "{place} (com {tool:o} próprio)",
+   "f": "{place} (com {tool:o} própria)"
+  },
   "requires_owning": "{place} (exige possuir {tool})",
   "requires": "{place} (exige {tool})",
-  "gathering_lv_licence_and_your": "Coleta em {place} (Nv {level}: a licença e {tool} próprio)",
+  "gathering_lv_licence_and_your": {
+   "name": "Coleta em {place} (Nv {level}: a licença e {tool:o} próprio)",
+   "f": "Coleta em {place} (Nv {level}: a licença e {tool:o} própria)"
+  },
   "tavern_stage_with_musical_instrument": "Palco da taverna (com um Instrumento Musical)",
   "hunting_lv_in_wilds": "Caça (Nv 3 nos Ermos)",
   "frontier_supply_run_lv_at": "Viagem de Suprimentos à Fronteira (Nv 5 no Posto de Comando)",
@@ -4335,30 +4501,45 @@
   "can_t_stand_crowd_and": "{name} não suporta a multidão e se separa de {display_name}.",
   "can_t_stand_crowd_and_2": "{name} não suporta a multidão e dá aviso prévio: {notice_days} dias para abrir espaço, ou sai da guilda.",
   "slips_its_bonds_cannot_watch": "{name} se solta das amarras: {display_name} não consegue vigiar tantos.",
-  "strays_off_cannot_control_that": "{species} se desgarra: {display_name} não controla um rebanho tão grande.",
+  "strays_off_cannot_control_that": "{species:O} se desgarra: {display_name} não controla um rebanho tão grande.",
   "has_more_animals_than_it": "{display_name} tem mais animais do que consegue controlar: {notice_days} dias até um se desgarrar."
  },
  "stables": {
   "party_purse": "bolsa do grupo",
   "costs_party_has": "{what} custa {cost} -- o grupo tem {wealth}.",
   "can_control_herd_of_at": "{name} controla um rebanho de, no máximo, {herd_capacity}.",
-  "joins_group": "{species} se junta ao grupo.",
-  "now_wears": "{species} agora usa {tack}.",
-  "unload_first": "descarregue {species} primeiro.",
-  "sold": "{species} vendido.",
-  "is_yours_harness_animal_to": "{lower} é seu -- atrele um animal para puxá-lo.",
-  "unload_first_2": "descarregue {lower} primeiro.",
-  "sold_2": "{lower} vendido."
+  "joins_group": "{species:um} se junta ao grupo.",
+  "now_wears": "{species:o} agora usa {tack:um}.",
+  "unload_first": "descarregue {species:o} primeiro.",
+  "sold": {
+   "name": "{species:o} foi vendido.",
+   "f": "{species:o} foi vendida."
+  },
+  "is_yours_harness_animal_to": {
+   "name": "{lower:o} é seu -- atrele um animal para puxá-lo.",
+   "f": "{lower:o} é sua -- atrele um animal para puxá-la."
+  },
+  "unload_first_2": "descarregue {lower:o} primeiro.",
+  "sold_2": {
+   "name": "{lower:o} foi vendido.",
+   "f": "{lower:o} foi vendida."
+  }
  },
  "holdings": {
   "bay_costs_party_has": "uma baia custa {cost} -- o grupo tem {wealth}.",
   "new_bay_room_for_one": "uma nova baia: espaço para mais uma carroça e mais um animal.",
-  "is_parked_in_garage": "{lower} está estacionado na garagem.",
+  "is_parked_in_garage": {
+   "name": "{lower:o} está estacionado na garagem.",
+   "f": "{lower:o} está estacionada na garagem."
+  },
   "every_bay_already_holds_wagon": "todas as baias já têm uma carroça.",
-  "rejoins_group": "{lower} volta ao grupo.",
-  "is_stabled_in_garage": "{species} está abrigado na garagem.",
+  "rejoins_group": "{lower:o} volta ao grupo.",
+  "is_stabled_in_garage": {
+   "name": "{species:o} está abrigado na garagem.",
+   "f": "{species:o} está abrigada na garagem."
+  },
   "every_bay_already_holds_animal": "todas as baias já têm um animal.",
-  "rejoins_group_2": "{species} volta ao grupo.",
+  "rejoins_group_2": "{species:o} volta ao grupo.",
   "can_control_herd_of_at": "{name} controla um rebanho de, no máximo, {herd_capacity}."
  },
  "workbench": {
@@ -4373,8 +4554,8 @@
   "no_h_stint_alone": "sem turno de {hours} h sozinho"
  },
  "article": {
-  "a": "{name}",
-  "an": "{name}"
+  "a": "{name:um}",
+  "an": "{name:um}"
  },
  "sheet": {
   "no_arrow_improvised": "{weapon_name} (sem flecha -> improvisada)",
@@ -4417,7 +4598,7 @@
   "level": "nível {racial_level:+d}"
  },
  "store_column": {
-  "pulls": "puxa {lower}",
+  "pulls": "puxa {lower:o}",
   "no_tack": "sem arreios",
   "pulls_next": "PUXA {upper}  ·  PRÓXIMO",
   "no_animals": "sem animais",
@@ -4434,7 +4615,7 @@
   "not_interactive_kind": "não é um tipo interativo: {kind}"
  },
  "group_msg": {
-  "of_breaks_down_on_road": "{lower} de {display_name} quebra na estrada.",
+  "of_breaks_down_on_road": "{lower:o} de {display_name} quebra na estrada.",
   "leader_must_be_member_of": "o líder deve ser membro do grupo",
   "can_t_change_leaders_with": "não dá para trocar de líder com uma luta prestes a começar"
  },
@@ -4447,8 +4628,8 @@
   "nobody_to_share_load_with": "ninguém para dividir a carga"
  },
  "animals": {
-  "starved_to_death": "{species} morreu de fome.",
-  "went_hungry": "{species} passou fome.",
+  "starved_to_death": "{species:O} morreu de fome.",
+  "went_hungry": "{species:O} passou fome.",
   "unhitched": "desatrelado"
  },
  "battle_session": {
@@ -4744,7 +4925,12 @@
   },
   "claim_stage": {
    "CLEARED": "Liberado",
-   "SWEPT": "Vasculhado"
+   "SWEPT": "Vasculhado",
+   "SCOUTED": "Reconhecido",
+   "FENCED": "Cercado",
+   "SUSTAINING": "Sustentado",
+   "ESTABLISHED": "Estabelecido",
+   "NONE": "Nenhum"
   },
   "trait": {
    "finesse": "Acuidade",
@@ -5460,6 +5646,64 @@
     "f": "Guardiã da Catedral"
    },
    "chieftain": "Chefe"
+  },
+  "attribute": {
+   "strength": {
+    "name": "Força",
+    "gender": "f"
+   },
+   "dexterity": {
+    "name": "Destreza",
+    "gender": "f"
+   },
+   "constitution": {
+    "name": "Constituição",
+    "gender": "f"
+   },
+   "intelligence": {
+    "name": "Inteligência",
+    "gender": "f"
+   },
+   "wisdom": {
+    "name": "Sabedoria",
+    "gender": "f"
+   },
+   "charisma": {
+    "name": "Carisma",
+    "gender": "m"
+   }
+  },
+  "trap": {
+   "bear trap": {
+    "name": "Armadilha de Urso",
+    "gender": "f"
+   },
+   "alarm trap": {
+    "name": "Armadilha de Alarme",
+    "gender": "f"
+   },
+   "web": {
+    "name": "Teia",
+    "gender": "f"
+   }
+  },
+  "vehicle": {
+   "Cart": {
+    "name": "Carroça",
+    "gender": "f"
+   },
+   "Carriage": {
+    "name": "Carruagem",
+    "gender": "f"
+   }
+  },
+  "vendor": {
+   "commander_varkas": "Comandante Varkas",
+   "captain_caelen": "Capitão Caelen",
+   "brother_quillon": "Irmão Quillon"
+  },
+  "keyword": {
+   "brutal": "Brutal"
   }
  },
  "desc": {
@@ -5834,6 +6078,9 @@
    "blessed_hands": "+1 PV restaurado com magias de cura.",
    "focused_will": "+1 de Defesa Mental.",
    "far_cast": "+1 casa de alcance com magias que não são corpo a corpo."
+  },
+  "keyword": {
+   "brutal": "Brutal N: o golpe rola o dano da arma N vezes a mais, modificadores incluídos, e soma tudo. Ainda é um só golpe com uma só rolagem de acerto. Brutal de várias fontes se soma: Brutal 1 e Brutal 1 dão Brutal 2."
   }
  },
  "tutorial": {
@@ -6183,5 +6430,109 @@
    "heading": "Sons",
    "intro": "Os efeitos sonoros são de Kenney (www.kenney.nl), liberados sob Creative Commons Zero (CC0). A atribuição é opcional, e dada de bom grado."
   }
+ },
+ "wiki_rules": {
+  "turns": {
+   "title": "Turnos e Pontos de Ação",
+   "1": "Todo combatente tem {ap} pontos de ação por turno. Atacar, Mover e Defender custam 1 cada, em qualquer combinação: mover + atacar, atacar + atacar, atacar + defender...",
+   "2": "Mover: até a sua velocidade em casas. Diagonais custam 1, depois 2, depois 1 de novo dentro de um mesmo movimento.",
+   "3": "Você pode atravessar a casa de um aliado, mas não parar nela. A casa de um inimigo bloqueia você por completo.",
+   "4": "Defender: +1 CA (circunstância) até o início do seu próximo turno.",
+   "5": "Adiar (0 pontos): vai para o fim da ordem de iniciativa de vez, uma vez por rodada, antes de gastar qualquer coisa.",
+   "6": "Fugir (1 ponto, encerra o turno): só pela borda do mapa, e só quando você é mais rápido que o perseguidor mais veloz ou já está fora do alcance dele.",
+   "7": "Bônus do mesmo tipo não se acumulam: Defender e outro bônus de circunstância na CA, só vale o maior."
+  },
+  "flanking": {
+   "title": "Flanqueio",
+   "1": "Um inimigo está flanqueado quando você e um aliado estão ao lado dele, em lados opostos. Ele perde 2 de CA contra você (1 com Visão Periférica); o registro mostra [Flanco -2].",
+   "2": "Um aliado apenas ao lado do inimigo não forma um flanco. Ele só alimenta a Tática de Matilha, que algumas raças e feras têm.",
+   "3": "Ataque Furtivo (Adaga) e Estocada Precisa (Rapieira) só funcionam contra um inimigo flanqueado: o golpe é Brutal 1, mais +1d4 (Ataque Furtivo) ou +2 para acertar (Estocada Precisa)."
+  },
+  "weapon": {
+   "title": "Ações de Arma (2 Pontos)",
+   "1": "Um golpe pelo preço de dois ataques. Fora do seu caso, é a compra pior; dentro dele, o golpe é Brutal 1 e supera os dois ataques.",
+   "2": "Ceifar (Machado): um segundo inimigo ao lado de ambos, cada golpe com +2 para acertar.",
+   "3": "Rechaçar (Bordão): empurra o inimigo 1 casa; contra uma parede ou um corpo, +1d4 no lugar.",
+   "4": "Golpe Mutilante (Clava, Martelos): corta a velocidade do inimigo pela metade; um inimigo que não pode se esquivar (Enredado, Dormindo, Surpreso, Desmoralizado) o sofre com +2 para acertar.",
+   "5": "Perfurar Armadura (Picaretas): ignora a armadura vestida. Tiro Poderoso (Arcos): +FOR, melhor a longa distância.",
+   "6": "Prender Escudo (Machadinha): o escudo do inimigo não dá CA até a próxima rodada. Aparar e Golpear (Espadas): enquanto Defende, com dois ou mais inimigos ao alcance.",
+   "7": "Estocada Longa (Glaive): um golpe uma casa além do alcance de {reach} da Glaive, +{hit} para acertar."
+  },
+  "talk": {
+   "title": "Conversar Antes da Luta",
+   "1": "Persuadir, Blefar e Intimidar rolam d20 + Carisma contra {dc} + o modificador de Sabedoria do líder dos inimigos. 1 e 20 naturais são só números.",
+   "2": "Numa emboscada, toda checagem lê o aspecto do grupo: até {cap} mais fácil quando seus pontos de vida superam os da matilha, até {cap} mais difícil quando os deles superam os seus.",
+   "3": "Persuadir: {shift} mais fácil com um líder bom, {shift} mais difícil com um mau. Falhar é uma luta comum.",
+   "4": "Blefar: se falhar, eles atacam primeiro (o seu lado fica Surpreso e perde o primeiro turno).",
+   "5": "Intimidar: eles começam Desmoralizados; vença por {margin}+ e eles fogem. Se falhar, ganham +{edge} de iniciativa.",
+   "6": "Subornar: ${bribe} por inimigo a cada (nível dele + 1), pagos primeiro pelo mais rico.",
+   "7": "Toda resposta que fala exige uma língua que quem fala divida com o líder deles."
+  },
+  "recruiting": {
+   "title": "Recrutamento",
+   "1": "Uma proposta é d20 + Carisma (o seu) contra d20 + Carisma (o deles); o empate vai para o estranho. É preciso ter uma língua em comum.",
+   "2": "Penalidade de lotação: -{pen} para cada membro da guilda inteira além de {free}, contados em todos os grupos, não só no grupo que faz a proposta.",
+   "3": "Alinhamento: -{align} por passo entre o alinhamento de quem recruta e o do estranho.",
+   "4": "Cada membro pode apadrinhar {base} + o seu modificador de Carisma recrutas; o líder da guilda soma o próprio nível racial.",
+   "5": "Uma proposta que falha impede aquele recrutador de tentar com aquele estranho até o grupo de candidatos se renovar. Outra pessoa ainda pode tentar.",
+   "6": "A Taverna mantém {tavern} estranhos e a Prisão {prison} prisioneiros; ambos são sorteados de novo a cada {days} dias. A fiança soma +2 à proposta, e cada vez que a oferta dobra, +1; ela só é cobrada se a proposta vencer."
+  },
+  "groups": {
+   "title": "Grupos, Líderes e Fama",
+   "1": "A guilda pode manter {base} grupos, mais um para cada {fame} de reputação somada em todas as facções.",
+   "2": "Um grupo comporta {cap} + {terms} membros, e {herd} + o modificador de Sabedoria do líder em animais e cativos.",
+   "3": "Um grupo sobrecarregado rola todo dia contra a Defesa Mental do seu membro mais fraco (os líderes são isentos). Esse membro se separa num grupo só dele ou, sem vaga livre, dá aviso prévio de {days} dias e depois deixa a guilda.",
+   "4": "Quem sai leva conforme o alinhamento: o Leal só o que veste, o Neutro a mochila também, o Caótico tudo."
+  },
+  "captives": {
+   "title": "Cativos",
+   "1": "Capturar (1 ponto): amarra um inimigo caído adjacente com {tools}, que é consumida. Quando o último inimigo cai, a luta dura mais uma rodada para amarrar os caídos.",
+   "2": "Um cativo anda com o grupo, ocupa {weight} do limite de animais, nunca luta nem come, e morre {days} dias depois da captura.",
+   "3": "A tela do grupo lista os cativos com os dias que restam e um botão SOLTAR. Um serviço que quer um vivo o tira direto do grupo."
+  },
+  "wagons": {
+   "title": "Carroças e Animais",
+   "1": "A estrada desgasta uma carroça em 1 PV a cada {dist} de distância; com 0 PV ela quebra até ser consertada com Madeira.",
+   "2": "A carga numa carroça ou nas costas de um animal conta para o grupo: comida, vendas na loja e entregas de serviço a leem.",
+   "3": "Onde a carroça não pode entrar, quem ficar do lado de fora a guarda. Sozinha, ela pode se perder, com a carga e os animais."
+  },
+  "money": {
+   "title": "Dinheiro, Comida e Morte",
+   "1": "Não existe tesouro da guilda: o dinheiro são moedas de Cobre ($1) e de Ouro ($100) nas mochilas. Elas pesam, se dividem e se movem como qualquer item.",
+   "2": "Pagar gasta o cobre primeiro, depois quebra o ouro e devolve o troco. O ouro só vem da casa de câmbio do banco.",
+   "3": "Todo mundo come todo dia. A fome reduz os atributos e traz doença.",
+   "4": "A morte é permanente. A campanha só termina quando a guilda inteira se foi."
+  },
+  "stomp": {
+   "title": "Atropelo Limpo e Vitória Automática",
+   "1": "Antes de uma emboscada, o jogo luta contra ela muitas vezes sem tela, com os dois lados na IA, e mostra quantas dessas lutas foram um atropelo limpo: todos de pé, sem poção, sem primeiros socorros, sem munição gasta. Não é a chance de vencer.",
+   "2": "A VITÓRIA AUTOMÁTICA só é oferecida quando todas elas foram um atropelo limpo. Ela resolve a luta de imediato e não dá XP de combate."
+  },
+  "or": " ou ",
+  "term": {
+   "cha": "o modificador de Carisma do líder",
+   "half_level": "metade do nível racial do líder"
+  }
+ },
+ "intel": {
+  "not_a_foe": "não é um inimigo",
+  "not_in_sight": "fora de vista",
+  "already_assessed": "já avaliado nesta rodada",
+  "artifact": {
+   "biwolf_leather": "+1 CA contra qualquer coisa que não seja humanoide.",
+   "signal_horn": "Soprada uma vez por batalha: aliados próximos ganham +2 de iniciativa."
+  },
+  "worn_bonus": "+{n} {attr} enquanto vestido.",
+  "no_effect": "Nenhum efeito que alguém tenha descoberto.",
+  "dying": "morrendo {n}"
+ },
+ "wiki_terms": {
+  "weapon_action": "Ação de arma · 2 pts",
+  "weapon_trait": "Traço de arma",
+  "combat": "Combate",
+  "utility": "Utilidade",
+  "kind_cost": "{kind} · {ap} pts",
+  "keyword": "Palavra-chave",
+  "thrown_sq": "Arremesso {n} casas"
  }
 }

@@ -278,6 +278,9 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   (the article of its gender), and a line whose adjective agrees has a `key.f` twin the first feminine `Ref` picks; a size variant,
   a scroll and a dictionary are not written one by one: `items._composed_names` builds them from `name.compose.*` + the plain
   weapon, `name.spell.<id>` and `name.language.<id>`, so a new spell or weapon needs only its own entry).
+  A short label the server writes in English as a word ("Purse", "CHA", an archetype) goes through `i18n.lab(text)` (`ui.lab.<lowercase>`,
+  cased as the input is; the client has the same `lab()`), never a literal shown raw. `python scripts/i18n_leaks.py` opens the map, guild
+  screen and hub tabs in `pt-br` and lists the strings that still read as English.
   The `pt-br` text goes in `locales/pt-br.json` under the same key and the same placeholders (a test checks).
 - **A catalog thing's name and description** (a talent, racial ability, weapon trait, faction, spell, poison,
   vocation, archetype): its registry entry carries no text, only the `id`; `name` / `desc` (`effect`, `perk`) are

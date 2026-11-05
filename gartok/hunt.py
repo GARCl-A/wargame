@@ -236,7 +236,7 @@ def grant_haul(state):
             lines.append(i18n.t("hunt.meat", who=who, kg=meat, hours=state.hours_hunted))
             if any(u.has_talent("skinner") for u in hunters):
                 hunters[0].give_to_pack("1sqm Hide")
-                lines.append(i18n.t("hunt.skin", name=hunters[0].name, item=i18n.name("item", "1sqm Hide")))
+                lines.append(i18n.t("hunt.skin", name=hunters[0].name, item=i18n.Ref("item", "1sqm Hide")))
         else:
             lines.append(i18n.t("hunt.empty_hunt", who=who, hours=state.hours_hunted))
     else:

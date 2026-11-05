@@ -652,7 +652,7 @@ class Assess(Action):
         actor.walking = False
         total, _margin, opened = intel.assess(battle, actor, target)
         need = intel.dc(battle, actor.team, target)
-        learned = ", ".join(intel.LABELS[f] for f in opened) or Msg("log.assess_nothing")
+        learned = ", ".join(intel.label(f) for f in opened) or Msg("log.assess_nothing")
         battle.log("log.assess", actor=actor.name, target=target.name, bonus=intel.ASSESS_BONUS, total=total,
                    dc=need, learned=learned)
         battle.fx(target.pos, i18n.t("fx.vs_dc", total=total, dc=need), "ok" if opened else "faint")

@@ -5,7 +5,7 @@ them, and any screen that names one shows the entry on hover."""
 
 import re
 
-from . import actions, items, keywords, weapon_traits
+from . import actions, i18n, items, keywords, weapon_traits
 
 # what an item brings to the board besides its traits
 ITEM_ACTIONS = {
@@ -20,14 +20,14 @@ def terms() -> dict[str, dict]:
     that is a weapon action is that action's entry."""
     out = {}
     for tr in weapon_traits.all_traits():
-        out.setdefault(tr.id, {"name": tr.name, "kind": "Weapon action · 2 AP" if tr.action_id else "Weapon trait",
+        out.setdefault(tr.id, {"name": tr.name, "kind": i18n.t("wiki_terms.weapon_action") if tr.action_id else i18n.t("wiki_terms.weapon_trait"),
                                "text": tr.desc, "chapter": "actions"})
     for a in actions.PANEL_ACTIONS:
-        kind = "Combat" if a in actions.COMBAT_ACTIONS else "Utility"
-        out.setdefault(a.id, {"name": a.name, "kind": f"{kind} · {a.cost} AP", "text": getattr(a, "desc", "") or "",
+        kind = i18n.t("wiki_terms.combat" if a in actions.COMBAT_ACTIONS else "wiki_terms.utility")
+        out.setdefault(a.id, {"name": a.name, "kind": i18n.t("wiki_terms.kind_cost", kind=kind, ap=a.cost), "text": getattr(a, "desc", "") or "",
                               "chapter": "actions"})
     for k in keywords.all_keywords():
-        out.setdefault(k.id, {"name": k.name, "kind": "Keyword", "text": k.text, "chapter": "keywords"})
+        out.setdefault(k.id, {"name": k.name, "kind": i18n.t("wiki_terms.keyword"), "text": k.text, "chapter": "keywords"})
     return out
 
 
@@ -53,7 +53,7 @@ def of_item(it) -> list[tuple[str, str]]:
     if it.thrown:
         ids += [t for t in ("thrown", "throw") if t not in ids]
     ids += [a for a in ITEM_ACTIONS.get(it.name, ()) if a not in ids]
-    return [(tid, f"Thrown {it.thrown} sq" if tid == "thrown" else known[tid]["name"]) for tid in ids]
+    return [(tid, i18n.t("wiki_terms.thrown_sq", n=it.thrown) if tid == "thrown" else known[tid]["name"]) for tid in ids]
 
 
 def action_tip(name: str | None) -> str:

@@ -128,7 +128,7 @@ def test_the_wiki_opens_on_items_and_every_chapter_reads_the_catalogs(saves):
         assert w.chapter(c["id"])["entries"], c["id"]
     assert w.chapter("talents")["total"] == sum(len(t) for t in talents.TREE.values())
     rules = w.chapter("rules")
-    assert [e["name"].upper() for e in rules["entries"]] == [t for t, _ in wiki_rules.sections()]
+    assert [e["name"] for e in rules["entries"]] == [t for t, _ in wiki_rules.sections()]
     with pytest.raises(ValueError, match="no chapter"):
         w.chapter("spells")
 

@@ -37,9 +37,9 @@ def feed_herd(herd, packs_for):
         animal.unfed_days += 1
         if animal.unfed_days >= STARVE_DAYS:
             herd.remove(animal)
-            events.append(i18n.t("animals.starved_to_death", species=animal.species))
+            events.append(i18n.t("animals.starved_to_death", species=animal.ref()))
         else:
-            events.append(i18n.t("animals.went_hungry", species=animal.species))
+            events.append(i18n.t("animals.went_hungry", species=animal.ref()))
     return events
 
 
@@ -80,6 +80,9 @@ class Animal(Creature):
         return self.species
 
     full_name = name
+
+    def ref(self):
+        return i18n.Ref("race", self.species)
 
     @property
     def strength(self):

@@ -21,7 +21,7 @@ import math
 import random
 from dataclasses import dataclass, field
 
-from . import items, magic, talents, weapon_traits
+from . import i18n, items, magic, talents, weapon_traits
 
 STEPS = 5                 # a foe's health shows in this many steps
 BASE_DC = 8
@@ -43,9 +43,13 @@ LABELS = {
 _ATTRS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
           ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma"))
 _ARTIFACT_EFFECTS = {
-    items.BIWOLF_LEATHER_ITEM: "+1 AC against anything that is not a humanoid.",
-    "Signal Horn": "Blown once per battle: allies near it gain +2 initiative.",
+    items.BIWOLF_LEATHER_ITEM: "biwolf_leather",
+    "Signal Horn": "signal_horn",
 }
+
+
+def label(field):
+    return i18n.lab(LABELS[field])
 
 
 class Bestiary:
@@ -188,11 +192,11 @@ def visible_foes(battle, unit):
 def assess_block(battle, actor, target):
     """Why `actor` cannot assess `target` now, or "" when it can: a foe in sight, once a round."""
     if target is None or not target.alive or target.team == actor.team:
-        return "not a foe"
+        return i18n.t("intel.not_a_foe")
     if not battle.can_see_unit(actor, target):
-        return "not in sight"
+        return i18n.t("intel.not_in_sight")
     if battle.intel.assessed.get((actor.team, target)) == battle.round_no:
-        return "already assessed this round"
+        return i18n.t("intel.already_assessed")
     return ""
 
 
@@ -241,9 +245,9 @@ def _damage_bonus(u):
 def _artifact_effect(u):
     name = u.equipped_artifact
     if name in _ARTIFACT_EFFECTS:
-        return _ARTIFACT_EFFECTS[name]
+        return i18n.t(f"intel.artifact.{_ARTIFACT_EFFECTS[name]}")
     attr = items.ARTIFACT_ATTRIBUTES.get(name)
-    return f"+{attr[1]} {attr[0].capitalize()} while worn." if attr else "No effect anyone has found."
+    return i18n.t("intel.worn_bonus", n=attr[1], attr=i18n.name("attribute", attr[0])) if attr else i18n.t("intel.no_effect")
 
 
 def _value(name, u):
@@ -280,14 +284,14 @@ CONDITION_LABELS = {"sleeping": "asleep", "shield_hooked": "shield hooked", "pix
 def _conditions(u):
     out = []
     if u.dying:
-        out.append(f"dying {u.death_clock}")
+        out.append(i18n.t("intel.dying", n=u.death_clock))
     elif u.stable:
-        out.append("stable")
+        out.append(i18n.lab("stable"))
     elif u.broken:
-        out.append("broken")
-    out += [getattr(c, "label", None) or CONDITION_LABELS.get(c.id, c.id) for c in u.conditions]
+        out.append(i18n.lab("broken"))
+    out += [getattr(c, "label", None) or i18n.lab(CONDITION_LABELS.get(c.id, c.id)) for c in u.conditions]
     if u.poisoned:
-        out.append("poisoned")
+        out.append(i18n.lab("poisoned"))
     if u.hunger_level:
         out.append(u.hunger_label)
     return out

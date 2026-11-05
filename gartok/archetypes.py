@@ -35,11 +35,14 @@ def risks(u: Unit) -> list[str]:
 @dataclass(frozen=True)
 class Archetype:
     key: str
-    label: str
     rule: str                  # the threshold in a few characters, for the card and the tutorial
     predicate: Callable[[Unit], bool]
     style: str = "brass"
     why: Callable[[Unit], list[str]] | None = None      # reasons shown with the tag, when it needs them
+
+    @property
+    def label(self) -> str:
+        return i18n.lab(self.key)
 
     @property
     def desc(self) -> str:
@@ -54,56 +57,48 @@ class Archetype:
 ARCHETYPES = {
     "LEADER": Archetype(
         key="LEADER",
-        label="LEADER",
         rule="CHA +2",
         style="brass",
         predicate=lambda u: u.mod_charisma >= 2,
     ),
     "STRONG": Archetype(
         key="STRONG",
-        label="STRONG",
         rule="STR +2",
         style="green",
         predicate=lambda u: u.mod_strength >= 2,
     ),
     "TOUGH": Archetype(
         key="TOUGH",
-        label="TOUGH",
         rule="8+ HP",
         style="green",
         predicate=lambda u: u.hp_max >= 8,
     ),
     "HEALTHY": Archetype(
         key="HEALTHY",
-        label="HEALTHY",
         rule="CON +2",
         style="green",
         predicate=lambda u: u.mod_constitution >= 2,
     ),
     "NIMBLE": Archetype(
         key="NIMBLE",
-        label="NIMBLE",
         rule="DEX +2",
         style="green",
         predicate=lambda u: u.mod_dexterity >= 2,
     ),
     "GENIUS": Archetype(
         key="GENIUS",
-        label="GENIUS",
         rule="INT +2",
         style="green",
         predicate=lambda u: u.mod_intelligence >= 2,
     ),
     "WISE": Archetype(
         key="WISE",
-        label="WISE",
         rule="WIS +2",
         style="green",
         predicate=lambda u: u.mod_wisdom >= 2,
     ),
     "RISKY": Archetype(
         key="RISKY",
-        label="RISKY",
         rule=f"CON ≤ {RISKY_CON} · total ≤ {RISKY_TOTAL} · can barely carry gear",
         style="warn",
         predicate=lambda u: bool(risks(u)),

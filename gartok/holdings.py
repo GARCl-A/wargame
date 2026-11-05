@@ -166,23 +166,23 @@ class GarageDesk:
         elif kind == "park_wagon":
             wagon = g.wagons[int(arg)]
             if guild.park_wagon(g, wagon, garage):
-                self.notice = i18n.t("holdings.is_parked_in_garage", lower=wagon.kind.lower())
+                self.notice = i18n.t("holdings.is_parked_in_garage", lower=wagon.ref(lower=True))
             else:
                 self.notice = i18n.t("holdings.every_bay_already_holds_wagon")
         elif kind == "take_wagon":
             wagon = garage.wagons[int(arg)]
             if guild.take_wagon(g, wagon, garage):
-                self.notice = i18n.t("holdings.rejoins_group", lower=wagon.kind.lower())
+                self.notice = i18n.t("holdings.rejoins_group", lower=wagon.ref(lower=True))
         elif kind == "park_animal":
             animal = g.herd[int(arg)]
             if guild.park_animal(g, animal, garage):
-                self.notice = i18n.t("holdings.is_stabled_in_garage", species=animal.species)
+                self.notice = i18n.t("holdings.is_stabled_in_garage", species=animal.ref())
             else:
                 self.notice = i18n.t("holdings.every_bay_already_holds_animal")
         elif kind == "take_animal":
             animal = garage.herd[int(arg)]
             if guild.take_animal(g, animal, garage):
-                self.notice = i18n.t("holdings.rejoins_group_2", species=animal.species)
+                self.notice = i18n.t("holdings.rejoins_group_2", species=animal.ref())
             else:
                 keeper = g.leader or g.members[0]
                 self.notice = i18n.t("holdings.can_control_herd_of_at", name=keeper.name, herd_capacity=g.herd_capacity)

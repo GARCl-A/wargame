@@ -299,7 +299,7 @@ class HouseVault(Vault):
         g, house = self.guild, self.guild.house
         cards = super().hub_cards()
         if house.squatting:
-            cards.insert(0, {"label": "squatting", "value": i18n.t("vault.no_tax"), "sub": i18n.t("vault.guard_raids_this_place"),
+            cards.insert(0, {"label": i18n.lab("squatting"), "value": i18n.t("vault.no_tax"), "sub": i18n.t("vault.guard_raids_this_place"),
                              "tone": "bad"})
         elif house.owned:
             left = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT - house.missed_payments

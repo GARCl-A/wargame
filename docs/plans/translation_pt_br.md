@@ -175,6 +175,13 @@ words for the 20 `en` ones: `en` gets two new epithets (a "Lithe" for Esguio, a 
 Deliberate limit: the combat log stores a unit's name as the string of the moment (as every `unit=` param does), so a recording
 keeps the language it was fought in; a `Ref` for authored NPCs would fix it later.
 
+Sentences name things with articles now (`{item:o}`, `{wagon:o}`, `.f` variants) and the labels the server writes as words go through
+`i18n.lab` / the client's `lab()` (2026-11-05); the wiki RULES tab reads `wiki_rules.*`; archetype labels read `ui.lab.*`.
+`scripts/i18n_leaks.py` renders the map, guild screen and hub tabs in `pt-br`; its remaining hits are ids the client translates (modes,
+zones, verbs). It now also scans the wiki chapters and one battle state. Not scanned yet: report, draft, talk, hunt, arena and talents screens, and the other battle fights. What the audit still counts is mostly the generated `reference.py`, the dev `combat_lab`, the Editor-only help in `data.py`, and `sources.py` (read only by `reference.py`).
+The `ui.lab.*` words, the attribute, trap, vehicle, claim-stage and archetype names were approved by the author (2026-11-05, in the glossary);
+the `wiki_rules.*` sentences are still unread.
+
 Still open: the settings screen's "Linhas do registro" note and any text longer than its box once the author reads the screens.
 
 ## Rules while the work is open

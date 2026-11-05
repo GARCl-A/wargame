@@ -56,7 +56,7 @@ class Bench:
 
     def hub_cards(self):
         known = {r for u in self.crafters for r in u.known_recipes if self._for_station(r)}
-        return [{"label": "crafters", "value": i18n.t("workbench.of", crafters=len(self.crafters), members=len(self.group.members))},
+        return [{"label": i18n.lab("crafters"), "value": i18n.t("workbench.of", crafters=len(self.crafters), members=len(self.group.members))},
                 {"label": i18n.t("workbench.recipes_known"), "value": str(len(known))}]
 
     def _for_station(self, recipe):

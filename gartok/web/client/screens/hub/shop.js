@@ -57,9 +57,9 @@ const Shop = (() => {
   function shelf() {
     const c = S.shelf.find(x => x.key === cat) || S.shelf[0];
     const tabs = S.shelf.length > 1
-      ? `<div class="cats">${S.shelf.map(x => `<span class="${x.key === c.key ? "on" : ""}" data-cat="${x.key}">${esc(x.label)}</span>`).join("")}</div>` : "";
+      ? `<div class="cats">${S.shelf.map(x => `<span class="${x.key === c.key ? "on" : ""}" data-cat="${x.key}">${esc(lab(x.label))}</span>`).join("")}</div>` : "";
     return `<div class="paper" id="shelf"><div class="kicker">${tr("shop.shelf")} <em>${trn("shop.wares", allRows().length)}</em></div>
-      <div class="shelfhead"><h3>${esc(c ? c.label : tr("shop.nothing"))}</h3>${tabs}</div>
+      <div class="shelfhead"><h3>${esc(c ? lab(c.label) : tr("shop.nothing"))}</h3>${tabs}</div>
       <div class="cols"><span></span><span>${tr("shop.ware")}</span><span class="r">${tr("shop.weight")}</span><span class="c">${tr("shop.stock")}</span><span class="r">${tr("shop.price")}</span><span class="r">${tr("shop.buy")}</span></div>
       <div id="rows">${c ? c.rows.map(wareRow).join("") : ""}</div>
       <div class="shelffoot">${tr("shop.foot")}</div></div>`;

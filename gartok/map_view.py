@@ -70,7 +70,7 @@ class MapView:
         o = group.order
         if o is None or o.kind == "idle":
             routine = group.routine
-            return i18n.t("map_view.routine_stopped", paused=routine.paused) if routine is not None and routine.paused else "idle"
+            return i18n.t("map_view.routine_stopped", paused=routine.paused) if routine is not None and routine.paused else i18n.t("map_view.idle")
         if o.kind == "travel" and o.task == "supply_run":
             return i18n.t("map_view.supply_run_h", name=world.node(o.dest).name, value=o.remaining + o.owed)
         if o.kind == "travel":

@@ -111,7 +111,7 @@ class Group:
                 for animal in self.herd:
                     if animal.hitch == wagon.uid:
                         animal.hitch = None
-                events.append(i18n.t("group_msg.of_breaks_down_on_road", lower=wagon.kind.lower(), display_name=self.display_name))
+                events.append(i18n.t("group_msg.of_breaks_down_on_road", lower=wagon.ref(lower=True), display_name=self.display_name))
         return events
 
     def hitch(self, animal, wagon, *, swap=False):

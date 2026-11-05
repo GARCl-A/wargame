@@ -120,7 +120,7 @@ class ReportSession(Session):
         for c in self._chain():
             chain.append({**c, "at": "done"} if c["id"] == "level" else c)
             if c["id"] == "level":
-                chain.append({"id": "talents", "label": "Talents", "at": "now"})
+                chain.append({"id": "talents", "label": i18n.lab("Talents"), "at": "now"})
         self.map.game.open(TalentSession(self.map, unit, self.outcome.survivors, self._resume,
                                          back_label=i18n.t("report_session.back_to_level_up"), chain=chain))
         return {"screen": TalentSession.screen}
@@ -190,7 +190,7 @@ class ReportSession(Session):
     def _why(self, dst, zone, moving):
         name = moving[0][0]
         if zone != "pack":
-            return {"uid": dst.uid, "item": name, "why": i18n.t("report_session.cannot_take_in_that_slot", name=dst.name, item=i18n.name("item", name))}
+            return {"uid": dst.uid, "item": name, "why": i18n.t("report_session.cannot_take_in_that_slot", name=dst.name, item=i18n.Ref("item", name))}
         add = sum(items.item_weight(n) * q for n, q, owner in moving if owner == "pool")
         what = i18n.t("report_session.s", name=name, kg=_kg(add)) if len(moving) == 1 else i18n.t("report_session.these", kg=_kg(add))
         return {"uid": dst.uid, "item": name,
@@ -400,7 +400,7 @@ class ReportSession(Session):
             if zone == "tongue" and not u.has_tongue:
                 continue
             name = ls._item_at(u, zone)
-            worn.append({"zone": zone, "label": label, "name": name, "glyph": item_icon.glyph(name) if name else None,
+            worn.append({"zone": zone, "label": i18n.lab(label), "name": name, "glyph": item_icon.glyph(name) if name else None,
                          "tip": _tip(name) if name else "", "new": int(bool(name and got.get(name))),
                          "kg": items.item_weight(name) if name else 0})
         pack = [{"loc": idx, "name": items.stack_name(e), "qty": e[1], "glyph": item_icon.glyph(items.stack_name(e)),

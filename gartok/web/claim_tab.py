@@ -133,7 +133,7 @@ class ClaimTab:
 
     def hub_cards(self):
         g, stage = self.guild, self.stage
-        cards = [{"label": "stage", "value": "Seized" if self.seized else stage.title(),
+        cards = [{"label": i18n.lab("stage"), "value": i18n.t("claim_tab.seized") if self.seized else i18n.name("claim_stage", stage),
                   "tone": "bad" if self.seized else "good" if stage == "ESTABLISHED" else None}]
         if stage == "CLEARED":
             cards.append({"label": i18n.t("claim_tab.lumber_banked_2"), "value": f"{g.wilds_claim_fence_lumber} / {economy.WILDS_CLAIM_FENCE_LUMBER}"})

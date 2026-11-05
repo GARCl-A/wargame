@@ -91,9 +91,9 @@ class GuildSheet:
         if unit.pending_picks:
             badges.append((i18n.t("guild_sheet.level_up"), "warn"))
         if unit.hunger_level >= 1:
-            badges.append(("HUNGRY", "bad"))
+            badges.append((i18n.lab("HUNGRY"), "bad"))
         if unit.sick:
-            badges.append(("SICK", "bad"))
+            badges.append((i18n.lab("SICK"), "bad"))
         if unit is self.guild.leader:
             badges.append((i18n.t("guild_sheet.guild_leader"), ""))
         elif self._is_group_leader(unit):
@@ -107,10 +107,10 @@ class GuildSheet:
     @staticmethod
     def _animal_data(animal, grp, selected):
         pulled = grp.pulling(animal)
-        job = i18n.t("guild_sheet.pulls", lower=pulled.kind.lower()) if pulled else animal.role or i18n.t("guild_sheet.no_tack")
+        job = i18n.t("guild_sheet.pulls", lower=pulled.ref(lower=True)) if pulled else animal.role or i18n.t("guild_sheet.no_tack")
         return {
             "key": animal.uid, "name": animal.species, "selected": selected,
-            "badges": [("HUNGRY", "bad")] if animal.unfed_days else [],
+            "badges": [(i18n.lab("HUNGRY"), "bad")] if animal.unfed_days else [],
             "sub": f"{animal.species} · {job}", "hp": (max(0, animal.hp), animal.hp_max),
         }
 
@@ -147,15 +147,15 @@ class GuildSheet:
         if animal.role == "pack":
             role = i18n.t("guild_sheet.carries_up_to_kg_on", capacity=animal.capacity)
         elif animal.role == "draft":
-            hitched = i18n.t("guild_sheet.hitched_to", lower=pulled.kind.lower()) if pulled else i18n.t("guild_sheet.not_hitched")
+            hitched = i18n.t("guild_sheet.hitched_to", lower=pulled.ref(lower=True)) if pulled else i18n.t("guild_sheet.not_hitched")
             role = i18n.t("guild_sheet.pulls_up_to_kg", pull=animal.pull, hitched=hitched)
         else:
             role = (i18n.t("guild_sheet.idle_pack_saddle_lets_it", back_load=animal.back_load, draw=animal.draw))
         fed = ((i18n.t("guild_sheet.hungry_day_s_starves_at", unfed_days=animal.unfed_days, starve_days=STARVE_DAYS), "bad") if animal.unfed_days
-               else ("fed", "good"))
+               else (i18n.lab("fed"), "good"))
         load = i18n.t("guild_sheet.kg", load=round(animal.load, 1), most=round(animal.carry_max, 1))
-        return [("TACK", animal.tack or "none", ""), ("ROLE", role, ""), ("LOAD", load, ""),
-                ("FEED", *fed), ("VALUE", fmt_money(animal.price), "")]
+        return [(i18n.lab("TACK"), i18n.name("item", animal.tack) if animal.tack else i18n.lab("none"), ""), (i18n.lab("ROLE"), role, ""),
+                (i18n.lab("LOAD"), load, ""), (i18n.lab("FEED"), *fed), (i18n.lab("VALUE"), fmt_money(animal.price), "")]
 
     @staticmethod
     def _weapon_data(unit, c, ch):
@@ -182,8 +182,8 @@ class GuildSheet:
                 "Lantern" if getattr(c, "lantern_hand", False) else None)
         weapon = c.weapon.name
         return {
-            "hands": f"{weapon} + {offhand}" if offhand and offhand != "None" else weapon,
-            "armor": unit.armor_name if unit.armor else "None",
+            "hands": f"{i18n.name('item', weapon)} + {i18n.name('item', offhand)}" if offhand and offhand != "None" else i18n.name("item", weapon),
+            "armor": i18n.name("item", unit.armor_name) if unit.armor else i18n.lab("None"),
             "armor_note": (i18n.t("guild_sheet.ac", armor=unit.armor['ac']) + (i18n.t("guild_sheet.spd", speed_penalty=unit.armor.speed_penalty)
                                                        if unit.armor.speed_penalty else "")) if unit.armor else "",
             "coins": unit.money,
@@ -235,7 +235,7 @@ class GuildSheet:
         rows.append({"key": "distribute", "title": i18n.t("guild_sheet.pack_load"), "current": False,
                      "sub": (i18n.t("guild_sheet.even_out_pack_items_across", size=size) if size > 1
                              else i18n.t("guild_sheet.needs_two_or_more_members")),
-                     "action": ("DISTRIBUTE", size > 1 and not fight_due),
+                     "action": (i18n.lab("DISTRIBUTE"), size > 1 and not fight_due),
                      "tip": i18n.t(FIGHT_DUE_TIP) if fight_due else i18n.t("guild_sheet.rebalances_unlocked_pack_items_by")})
         return rows
 

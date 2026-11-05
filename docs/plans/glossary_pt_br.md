@@ -59,5 +59,11 @@ Gold Coin = Moeda de Ouro. Talent = talento. Racial ability = habilidade racial.
 The Pits = As Fossas. The Bankers = Os Banqueiros. The Library = A Biblioteca. The Apothecary = O Boticário.
 Ledger Hold, renamed Field Command in English (2026-11-05) = Posto de Comando. The Nature Coven = O Clã da Natureza. The Faith Order = A Ordem da Fé.
 
+Approved 2026-11-05 (labels the server writes as words, `ui.lab.*`): Cart = Carroça. Carriage = Carruagem. Tack = Arreios. Rides / Walks = Cavalga / Anda.
+Squatting = ocupação. Bays = vagas. Herd = rebanho. Feed = Comida. Purse = Bolsa. Load = Carga. MD = DM. SPD / INIT / HP / AC = VEL / INIC / PV / CA.
+Crowd (recruiting penalty) = Lotação. Hungry / Sick / fed = Com fome / Doente / alimentado. Tongue (the Grippli's limb, not a language) = Língua.
+Claim stages: Scouted = Reconhecido, Swept = Vasculhado, Cleared = Liberado, Fenced = Cercado, Sustaining = Sustentado, Established = Estabelecido.
+Traps: Bear trap = Armadilha de Urso, Alarm trap = Armadilha de Alarme, Web = Teia. Archetypes: LÍDER, FORTE, RESISTENTE, SAUDÁVEL, ÁGIL, GÊNIO, SÁBIO, ARRISCADO.
+
 Grammar: addressed to the player as "você"; imperative for buttons ("Atacar"), noun for tabs ("Guilda"). Gender of a noun that changes an article
 goes in its catalog entry (`gender`).

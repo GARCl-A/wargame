@@ -74,8 +74,8 @@ class BandKit(LoadoutMoveMixin):
     @staticmethod
     def _no_room_note(store):
         if store.stash.capacity <= 0:
-            return (i18n.t("band_kit.has_no_animal_hitched_to", lower=store.kind.lower()) if isinstance(store, Wagon)
-                    else i18n.t("band_kit.wears_no_pack_saddle", species=store.species))
+            return (i18n.t("band_kit.has_no_animal_hitched_to", lower=store.ref(lower=True)) if isinstance(store, Wagon)
+                    else i18n.t("band_kit.wears_no_pack_saddle", species=store.ref()))
         return i18n.t("band_kit.won_t_fit_kg_free", free=store.stash.free, lower=store.name.lower())
 
     def _hitch_picked(self, wagon):
@@ -85,11 +85,11 @@ class BandKit(LoadoutMoveMixin):
         if animal is None:
             return
         if self.group.pulling(animal) is wagon:
-            self.notice = i18n.t("band_kit.already_pulls", species=animal.species, lower=wagon.kind.lower())
+            self.notice = i18n.t("band_kit.already_pulls", species=animal.ref(), lower=wagon.ref(lower=True))
         elif self.group.hitch(animal, wagon, swap=True):
-            self.notice = i18n.t("band_kit.now_pulls", species=animal.species, lower=wagon.kind.lower())
+            self.notice = i18n.t("band_kit.now_pulls", species=animal.ref(), lower=wagon.ref(lower=True))
         else:
-            self.notice = i18n.t("band_kit.needs_harness_to_pull_anything", species=animal.species)
+            self.notice = i18n.t("band_kit.needs_harness_to_pull_anything", species=animal.ref())
 
     def _fit_tack(self, animal):
         """Put the first picked saddle or harness on `animal`; whatever it wore
@@ -107,7 +107,7 @@ class BandKit(LoadoutMoveMixin):
         if old:
             src.give_to_pack(old)
         self.selected = [p for p in self.selected if p != pick]
-        self.notice = i18n.t("band_kit.now_wears", species=animal.species, name=name)
+        self.notice = i18n.t("band_kit.now_wears", species=animal.ref(), name=i18n.Ref("item", name))
 
     # ------------------------------------------------------------------ #
     # the band's buttons                                                  #
@@ -126,8 +126,8 @@ class BandKit(LoadoutMoveMixin):
             return
         self.group.next_hitch(animal)
         pulled = self.group.pulling(animal)
-        self.notice = (i18n.t("band_kit.pulls", species=animal.species, lower=pulled.kind.lower()) if pulled
-                       else i18n.t("band_kit.is_unhitched", species=animal.species))
+        self.notice = (i18n.t("band_kit.pulls", species=animal.ref(), lower=pulled.ref(lower=True)) if pulled
+                       else i18n.t("band_kit.is_unhitched", species=animal.ref()))
 
     def _repair_wagon(self, uid):
         """-> the repair's stint for the band, or None when it cannot start (the notice says why)."""

@@ -1,29 +1,29 @@
 """Keywords: a reserved word of the rules that always means one thing, wherever it is written.
 
 A description, a combat log line or a tooltip that uses the rule says only the word; the full text
-lives here, once, and the wiki's KEYWORDS chapter shows it (`wiki_terms.terms()`). A condition is not
-a keyword: it has its own registry (`conditions.py`).
+lives in the catalog (`name.keyword.<id>`, `desc.keyword.<id>`), once, and the wiki's KEYWORDS chapter shows it
+(`wiki_terms.terms()`). A condition is not a keyword: it has its own registry (`conditions.py`).
 """
 
 from dataclasses import dataclass
+
+from . import i18n
 
 
 @dataclass(frozen=True)
 class Keyword:
     id: str
-    name: str
-    text: str
+
+    @property
+    def name(self) -> str:
+        return i18n.name("keyword", self.id)
+
+    @property
+    def text(self) -> str:
+        return i18n.desc("keyword", self.id)
 
 
-_KEYWORDS = [
-    Keyword(
-        id="brutal",
-        name="Brutal",
-        text="Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds "
-             "them. It is still one blow with one hit roll. Brutal from several sources adds up: "
-             "Brutal 1 and Brutal 1 make Brutal 2.",
-    ),
-]
+_KEYWORDS = [Keyword(id="brutal")]
 
 KEYWORDS = {k.id: k for k in _KEYWORDS}
 

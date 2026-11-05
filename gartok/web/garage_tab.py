@@ -85,7 +85,7 @@ class GarageTab:
         garage = self.garage
         cards = [{"label": i18n.t("garage_tab.party_purse"), "value": f"${self.s.wealth}", "tone": "money"}]
         if garage.open and not self.claim:
-            cards.insert(0, {"label": "bays", "value": f"{garage.tier}"})
+            cards.insert(0, {"label": i18n.lab("bays"), "value": f"{garage.tier}"})
         return cards
 
     def state(self):

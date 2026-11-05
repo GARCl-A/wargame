@@ -126,6 +126,31 @@ def test_a_ref_writes_its_article_by_gender_and_a_sentence_can_agree(monkeypatch
     assert i18n.t("m.broke", item=sword) == "Long Sword broke"
 
 
+def test_a_capital_article_opens_a_sentence_and_a_replayed_log_keeps_its_article(monkeypatch):
+    monkeypatch.setattr(i18n, "_cache", {
+        "en": {"name.item.sword": "Long Sword", "m.lands": "{weapon} lands"},
+        "pt-br": {"name.item.sword": "Espada Longa", "name.item.sword.gender": "f", "m.lands": "{weapon:O} cai"}})
+    line = i18n.Msg("m.lands", weapon=i18n.Ref("item", "sword")).to_json()
+    i18n.set_language("pt-br")
+    assert i18n.from_json(line) == "A Espada Longa cai"
+    i18n.set_language("en")
+    assert i18n.from_json(line) == "Long Sword lands"
+
+
+def test_every_article_spec_in_pt_br_is_one_the_loader_knows():
+    import string
+    known = set(i18n.ARTICLES["m"])
+    bad = []
+    for key, text in i18n.catalog("pt-br").items():
+        for line in text if isinstance(text, list) else [text]:
+            for _, field, spec, _ in string.Formatter().parse(line):
+                if field and spec and spec.lower() in known:
+                    continue
+                if field and spec and spec[0].isalpha() and spec not in ("g", "f", "d", "s", "x", "e"):
+                    bad.append(f"{key}: {{{field}:{spec}}}")
+    assert not bad, bad
+
+
 def test_built_names_follow_the_language_word_order(monkeypatch):
     from gartok import items
     monkeypatch.setattr(i18n, "_cache", {})

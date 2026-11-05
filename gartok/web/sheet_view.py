@@ -13,8 +13,19 @@ from .map_session import _portrait
 from .stable_tab import _face
 
 
+def _term(label):
+    """A breakdown term written in English ("DEX", "Plate (drag)", "Elf base") in the current language."""
+    for suffix, kind in ((" (natural)", None), (" (drag)", "item"), (" base", "race")):
+        if label.endswith(suffix):
+            head = label[:-len(suffix)]
+            shown = i18n.name(kind, head) if kind else head
+            word = i18n.lab(suffix.strip(" ()"))
+            return f"{shown} {word}" if suffix == " base" else f"{shown} ({word})"
+    return i18n.lab(label)
+
+
 def _breakdown(title, terms, total):
-    lines = [title] + [f"{label}: {v}" if i == 0 else f"{label}: {v:+}" for i, (label, v) in enumerate(terms)]
+    lines = [title] + [f"{_term(label)}: {v}" if i == 0 else f"{_term(label)}: {v:+}" for i, (label, v) in enumerate(terms)]
     return "\n".join([*lines, f"= {total}"])
 
 
@@ -77,15 +88,15 @@ def member_sheet(u, guild=None, task=None):
         "uid": u.uid, "name": u.name, "portrait": _portrait(u), "race": u.race_label,
         "age": u.age, "align": i18n.name("alignment", u.alignment),
         "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
-        "where": node_label(grp.node) if grp else i18n.t("sheet_view.not_yet_sworn_in") if guild is None else "Camp",
+        "where": node_label(grp.node) if grp else i18n.t("sheet_view.not_yet_sworn_in") if guild is None else i18n.lab("Camp"),
         "task": task or (GuildSheet._group_task(grp).lower() if grp else i18n.t("sheet_view.no_orders")),
         "stamps": stamps, "status": ch["status"], "hungry": u.hunger_level > 0,
         "attrs": [{"k": k, "v": v, "mod": mod, "low": low} for k, v, mod, low in ch["attrs"]],
         "hp": list(ch["hp"]), "hp_tip": _hp_tip(u),
         "stats": [{"k": "AC", "v": ch["ac"], "tip": _breakdown(i18n.t("sheet_view.armour_class"), u.ac_breakdown(), c.ac)},
                   {"k": "MD", "v": ch["md"], "tip": _breakdown(i18n.t("sheet_view.mental_defense"), u.md_breakdown(), c.mental_defense)},
-                  {"k": "SPD", "v": ch["spd"], "tip": _breakdown("Speed (squares)", u.speed_breakdown(), c.speed)},
-                  {"k": "INIT", "v": ch["init"], "tip": _breakdown("Initiative", u.initiative_breakdown(), ch["init"])}],
+                  {"k": "SPD", "v": ch["spd"], "tip": _breakdown(i18n.lab("Speed (squares)"), u.speed_breakdown(), c.speed)},
+                  {"k": "INIT", "v": ch["init"], "tip": _breakdown(i18n.lab("Initiative"), u.initiative_breakdown(), ch["init"])}],
         "weapon": {"name": weapon["name"], "tags": weapon["tags"], "crit": w["crit"], "action": w["action"],
                    "action_tip": wiki_terms.action_tip(w["action"]),
                    "glyph": item_icon.glyph(u.equipped_weapon) if u.equipped_weapon else "item/knapsack",
@@ -93,7 +104,7 @@ def member_sheet(u, guild=None, task=None):
         "kit": [{"k": "Hands", "v": gear["hands"], "note": ""},
                 {"k": "Body", "v": gear["armor"], "note": gear["armor_note"]},
                 {"k": "Purse", "v": fmt_money(gear["coins"]), "note": ""},
-                {"k": "Rations", "v": i18n.t("sheet_view.feeds_on_light") if autotroph else str(rations or "None"),
+                {"k": "Rations", "v": i18n.t("sheet_view.feeds_on_light") if autotroph else str(rations or i18n.lab("None")),
                  "note": "" if autotroph else i18n.t("sheet_view.days_of_food") if rations else i18n.t("sheet_view.nothing_to_eat_in_pack"),
                  "bad": not autotroph and not rations},
                 {"k": "Load", "v": i18n.t("sheet_view.kg", load=load[0]),
@@ -110,9 +121,9 @@ def animal_sheet(a, guild):
     grp = s._group_of(a)
     pulled = grp.pulling(a) if grp else None
     return {
-        "uid": a.uid, "beast": True, "name": a.species, "portrait": _face(a.species, a.uid),
-        "sub": i18n.t("sheet_view.animal", size=a.size), "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
-        "where": node_label(grp.node) if grp else "Camp",
+        "uid": a.uid, "beast": True, "name": i18n.name("race", a.species), "portrait": _face(a.species, a.uid),
+        "sub": i18n.t("sheet_view.animal", size=i18n.name("size", a.size)), "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
+        "where": node_label(grp.node) if grp else i18n.lab("Camp"),
         "hp": [max(0, a.hp), a.hp_max],
         "attrs": [{"k": k, "v": a.attributes[n], "mod": data.mod(a.attributes[n]), "low": False}
                   for k, n in ATTRIBUTE_LABELS],

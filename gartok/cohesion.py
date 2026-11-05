@@ -120,7 +120,7 @@ def stray(group):
         keeper.give_to_pack(animal.take_tack())
     for name, qty in animal.stash.items:
         keeper.give_to_pack(name, qty)
-    return i18n.t("cohesion.strays_off_cannot_control_that", species=animal.species, display_name=group.display_name)
+    return i18n.t("cohesion.strays_off_cannot_control_that", species=animal.ref(), display_name=group.display_name)
 
 
 def herd_notices(guild):

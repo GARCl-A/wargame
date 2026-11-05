@@ -4,117 +4,53 @@
 so the page moves with them. RULES.md stays the designer's full prose.
 """
 
-from . import actions, captives, cohesion, dialogue, group, items, recruit, wagon
+from . import actions, captives, cohesion, dialogue, group, i18n, items, recruit, wagon
 from .combatant import AP_PER_TURN
 
 
+def _lines(section, n, **fmt):
+    return [i18n.t(f"wiki_rules.{section}.{i}", **fmt) for i in range(1, n + 1)]
+
+
 def sections():
+    reach, hit = 1 + items.get("Glaive").reach, actions.LongThrust.TO_HIT
+    terms = " + ".join(i18n.t(f"wiki_rules.term.{label.lower().replace(' ', '_')}") for _, label, _ in group.CAPACITY_TERMS)
+    tools = i18n.t("wiki_rules.or").join(i18n.name("item", t) for t in captives.CAPTURE_TOOLS)
     return [
-        ("TURNS & ACTION POINTS", [
-            (f"Every combatant has {AP_PER_TURN} action points a turn. Attack, Walk and Defend cost 1 each, "
-            "in any mix: walk + attack, attack + attack, attack + defend..."),
-            "Walk: up to your speed in cells. Diagonals cost 1, then 2, then 1 again within one walk.",
-            "You can cross an ally's cell but not stop on it. An enemy's cell blocks you completely.",
-            "Defend: +1 AC (circumstance) until the start of your next turn.",
-            ("Delay (0 points): drop to the end of the initiative order for good, once a round, before "
-            "you spend anything."),
-            ("Flee (1 point, ends the turn): only from the map edge, and only when you are faster than "
-            "the fastest pursuer or already out of its reach."),
-            ("Bonuses of the same type do not stack: Defend and another circumstance bonus to AC, "
-            "only the larger counts."),
+        (i18n.t("wiki_rules.turns.title"), _lines("turns", 7, ap=AP_PER_TURN)),
+        (i18n.t("wiki_rules.flanking.title"), _lines("flanking", 3)),
+        (i18n.t("wiki_rules.weapon.title"), [*_lines("weapon", 6), i18n.t("wiki_rules.weapon.7", reach=reach, hit=hit)]),
+        (i18n.t("wiki_rules.talk.title"), [
+            i18n.t("wiki_rules.talk.1", dc=dialogue.BASE_DC),
+            i18n.t("wiki_rules.talk.2", cap=dialogue.OUTMATCH_CAP),
+            i18n.t("wiki_rules.talk.3", shift=dialogue.ALIGN_SHIFT),
+            i18n.t("wiki_rules.talk.4"),
+            i18n.t("wiki_rules.talk.5", margin=dialogue.ROUT_MARGIN, edge=dialogue.INITIATIVE_EDGE),
+            i18n.t("wiki_rules.talk.6", bribe=dialogue.BRIBE_PER_FOE),
+            i18n.t("wiki_rules.talk.7"),
         ]),
-        ("FLANKING", [
-            ("A foe is flanked when you and an ally are both next to it, on opposite sides. It loses "
-            "2 AC against you (1 with Peripheral Vision); the log shows [Flank -2]."),
-            ("An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some "
-            "races and beasts have."),
-            ("Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on a flanked foe: the blow "
-            "is Brutal 1, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."),
+        (i18n.t("wiki_rules.recruiting.title"), [
+            i18n.t("wiki_rules.recruiting.1"),
+            i18n.t("wiki_rules.recruiting.2", pen=recruit.SIZE_PENALTY, free=recruit.FREE_SLOTS),
+            i18n.t("wiki_rules.recruiting.3", align=recruit.ALIGNMENT_PENALTY),
+            i18n.t("wiki_rules.recruiting.4", base=recruit.BASE_RECRUIT_CAPACITY),
+            i18n.t("wiki_rules.recruiting.5"),
+            i18n.t("wiki_rules.recruiting.6", tavern=recruit.TAVERNA_SIZE, prison=recruit.PRISON_SIZE, days=recruit.REFRESH_DAYS),
         ]),
-        ("WEAPON ACTIONS (2 POINTS)", [
-            ("One strike for the price of two attacks. Out of its case it is the worse buy; in its case "
-            "the blow is Brutal 1 and beats the two attacks."),
-            "Cleave (Axe): a second foe beside both, each swing +2 to hit.",
-            "Repel Strike (Quarterstaff): shoves the foe 1 cell; against a wall or a body, +1d4 instead.",
-            ("Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, "
-            "Sleeping, Surprised, Demoralized) takes it at +2 to hit."),
-            "Armor Pierce (Picks): ignores worn armour. Power Shot (Bows): +STR, best at long range.",
-            ("Hook Shield (Hatchet): the foe's shield gives no AC until next round. Parry & Strike "
-            "(Swords): while Defending, with two or more foes in reach."),
-            (f"Long Thrust (Glaive): one strike a cell past the Glaive's reach of {1 + items.get('Glaive').reach}, "
-             f"+{actions.LongThrust.TO_HIT} to hit."),
+        (i18n.t("wiki_rules.groups.title"), [
+            i18n.t("wiki_rules.groups.1", base=group.BASE_SLOTS, fame=group.FAME_PER_SLOT),
+            i18n.t("wiki_rules.groups.2", cap=group.BASE_CAPACITY, terms=terms, herd=group.HERD_BASE),
+            i18n.t("wiki_rules.groups.3", days=cohesion.NOTICE_DAYS),
+            i18n.t("wiki_rules.groups.4"),
         ]),
-        ("TALKING BEFORE A FIGHT", [
-            (f"Persuade, Bluff and Intimidate roll d20 + Charisma against {dialogue.BASE_DC} + the foes' "
-            "leader's Wisdom modifier. Natural 1 and 20 are just numbers."),
-            (f"In an ambush every check reads the squad's look: up to {dialogue.OUTMATCH_CAP} easier when "
-            f"your hit points outweigh the pack's, up to {dialogue.OUTMATCH_CAP} harder when theirs outweigh "
-            "yours."),
-            (f"Persuade: {dialogue.ALIGN_SHIFT} easier with a good leader, {dialogue.ALIGN_SHIFT} harder "
-            "with an evil one. A miss is a plain fight."),
-            "Bluff: a miss and they strike first (your side is Surprised and loses its first turn).",
-            (f"Intimidate: they start Demoralized; beat it by {dialogue.ROUT_MARGIN}+ and they run. A miss "
-            f"gives them +{dialogue.INITIATIVE_EDGE} initiative."),
-            f"Bribe: ${dialogue.BRIBE_PER_FOE} a foe per (its level + 1), paid by the richest first.",
-            "Every answer that talks needs a language the speaker shares with their leader.",
+        (i18n.t("wiki_rules.captives.title"), [
+            i18n.t("wiki_rules.captives.1", tools=tools),
+            i18n.t("wiki_rules.captives.2", weight=captives.HERD_WEIGHT, days=captives.CAPTIVE_DAYS),
+            i18n.t("wiki_rules.captives.3"),
         ]),
-        ("RECRUITING", [
-            ("A pitch is d20 + Charisma (yours) against d20 + Charisma (theirs); a tie goes to the "
-            "stranger. You need a language in common."),
-            (f"Crowd penalty: -{recruit.SIZE_PENALTY} for every member of the whole guild past "
-            f"{recruit.FREE_SLOTS}, counted across every group, not the group making the pitch."),
-            (f"Alignment: -{recruit.ALIGNMENT_PENALTY} per step between the recruiter's alignment and the "
-            "stranger's."),
-            (f"Each member can sponsor {recruit.BASE_RECRUIT_CAPACITY} + their Charisma modifier recruits; "
-            "the guild leader adds their racial level."),
-            ("A failed pitch bars that recruiter from that stranger until the pool turns over. Someone "
-            "else may still try."),
-            (f"The Tavern keeps {recruit.TAVERNA_SIZE} strangers and the Prison {recruit.PRISON_SIZE} "
-            f"prisoners; both re-roll every {recruit.REFRESH_DAYS} days. Bail adds +2 to the pitch, "
-            "and each doubling of the offer +1 more; it is taken only if the pitch wins."),
-        ]),
-        ("GROUPS, LEADERS & FAME", [
-            (f"The guild may run {group.BASE_SLOTS} groups, plus one more for every "
-            f"{group.FAME_PER_SLOT} reputation summed across all factions."),
-            (f"A group holds {group.BASE_CAPACITY} + {' + '.join(t for t, _, _ in group.CAPACITY_TERMS)} "
-            f"members, and {group.HERD_BASE} + the leader's Wisdom modifier animals and captives."),
-            ("An overextended group rolls each day against its weakest member's Mental Defense "
-            "(the leaders are exempt). That member splits off into a group of their own, or with no "
-            f"slot free gives {cohesion.NOTICE_DAYS} days' notice and then leaves the guild."),
-            ("Who leaves takes by alignment: Lawful only what they wear, Neutral the pack too, Chaotic "
-            "everything."),
-        ]),
-        ("CAPTIVES", [
-            (f"Capture (1 point): bind an adjacent fallen foe with a {' or '.join(captives.CAPTURE_TOOLS)}, "
-            "which is used up. When the last foe falls the fight runs one more round to bind the fallen."),
-            (f"A captive walks with the group, takes {captives.HERD_WEIGHT} of its animal limit, never fights "
-            f"or eats, and dies {captives.CAPTIVE_DAYS} days after its capture."),
-            ("The group screen lists the captives with their days left and a RELEASE button. A job that "
-            "wants one alive takes it straight from the group."),
-        ]),
-        ("WAGONS & ANIMALS", [
-            (f"The road wears a wagon 1 HP every {wagon.WEAR_DISTANCE} distance; at 0 HP it is broken until "
-            "repaired with Lumber."),
-            ("Cargo on a wagon or on an animal's back counts for the group: food, shop sales and job "
-            "deliveries read it."),
-            ("Where a wagon cannot go in, anyone left outside guards it. Left alone it may be lost, cargo "
-            "and animals with it."),
-        ]),
-        ("MONEY, FOOD & DEATH", [
-            ("There is no guild treasury: money is Copper ($1) and Gold ($100) coins in the packs. They "
-            "weigh, split and move like any item."),
-            ("Paying spends copper first, then breaks gold and returns change. Gold only comes from the "
-            "bank exchange."),
-            "Everyone eats every day. Hunger lowers the attributes and brings sickness.",
-            "Death is permanent. The run ends only when the whole guild is gone.",
-        ]),
-        ("CLEAN STOMP & AUTO-WIN", [
-            ("Before an ambush the game fights it many times headless, both sides on the AI, and "
-            "shows how many of those fights were a clean stomp: everyone standing, no potion, no first "
-            "aid, no ammunition spent. It is not the odds of winning."),
-            ("AUTO-WIN is offered only when every one of them was a clean stomp. It settles the fight "
-            "at once and awards no combat XP."),
-        ]),
+        (i18n.t("wiki_rules.wagons.title"), [i18n.t("wiki_rules.wagons.1", dist=wagon.WEAR_DISTANCE), *_lines("wagons", 3)[1:]]),
+        (i18n.t("wiki_rules.money.title"), _lines("money", 4)),
+        (i18n.t("wiki_rules.stomp.title"), _lines("stomp", 2)),
     ]
 
 

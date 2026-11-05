@@ -13,6 +13,12 @@ const fill = (text, p) => p ? text.replace(/\{(\w+)\}/g, (m, k) => k in p ? p[k]
 const tr = (key, p) => fill(Locale.text[key] ?? key, p);
 // the shown name of a catalog thing (`name.<kind>.<id>`): the id itself when no one wrote one
 const nm = (kind, id) => Locale.names[`${kind}.${id}`] ?? Locale.names[`${kind}.${id}.name`] ?? id;
+// a label the server writes in English as an id ("Purse", "rations"): `ui.lab.<lowercase>`, itself when none
+const lab = s => {
+  const t = Locale.text[`lab.${String(s).toLowerCase()}`];
+  if (t === undefined || Locale.lang === "en") return s;
+  return s.length > 1 && s === s.toUpperCase() ? t.toUpperCase() : /^[a-z]/.test(s) ? t[0].toLowerCase() + t.slice(1) : t;
+};
 const trn = (key, n, p = {}) => tr(`${key}.${n === 1 ? "one" : "other"}`, {n, ...p});
 function translate(root) {
   for (const el of root.querySelectorAll("[data-t]")) el.textContent = tr(el.dataset.t);
@@ -155,12 +161,12 @@ const Sheet = (() => {
       <div class="sec2"><div class="kicker">${tr("sheet.in_fight")}${u.status.length ? `<em>${esc(u.status.join(", "))}</em>` : ""}</div>
       <div class="boxes vitals">
         <div class="box"${tip(u.hp_tip, "sum")}><div class="k">${tr("sheet.hp")}</div><div class="hp"><span class="v">${u.hp[0]}</span><small>/ ${u.hp[1]}</small></div><div class="hpline"><i class="${hpcls(...u.hp)}" style="width:${u.hp[0] / u.hp[1] * 100}%"></i></div></div>
-        ${u.stats.map(s => `<div class="box"${tip(s.tip, "sum")}><div class="k">${s.k}</div><div class="v">${esc(String(s.v).replace("-", "−"))}</div></div>`).join("")}
+        ${u.stats.map(s => `<div class="box"${tip(s.tip, "sum")}><div class="k">${lab(s.k)}</div><div class="v">${esc(String(s.v).replace("-", "−"))}</div></div>`).join("")}
       </div>
       <div class="weapon">${ico(u.weapon.glyph)}<div><h3>${esc(nm("item", u.weapon.name))}</h3><div class="tags">${esc(u.weapon.tags.replace(/ {2}· {2}/g, " · "))} · ${esc(u.weapon.crit)}</div></div></div>
-      <div class="chips">${u.weapon.chips.map(c => `<div class="chip"${tip(c.tip)}><span>${c.k}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"${tip(u.weapon.action_tip, "item")}><span>${tr("sheet.action")}</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
+      <div class="chips">${u.weapon.chips.map(c => `<div class="chip"${tip(c.tip)}><span>${lab(c.k)}</span><b>${esc(c.v)}</b></div>`).join("")}${u.weapon.action ? `<div class="chip act"${tip(u.weapon.action_tip, "item")}><span>${tr("sheet.action")}</span><b>${esc(u.weapon.action)}</b></div>` : ""}</div></div>
       <div class="sec2"><div class="kicker">${tr("sheet.kit")}</div><div class="kit">
-        ${u.kit.map(r => `<div class="r"><span>${r.k}</span><b>${r.k === "Purse" ? `<i class="coindot"></i> ` : ""}${esc(r.v)}</b><em class="${r.bad ? "bad" : ""}">${esc(r.note)}</em></div>`).join("")}
+        ${u.kit.map(r => `<div class="r"><span>${lab(r.k)}</span><b>${r.k === "Purse" ? `<i class="coindot"></i> ` : ""}${esc(r.v)}</b><em class="${r.bad ? "bad" : ""}">${esc(r.note)}</em></div>`).join("")}
       </div></div>
       <div class="sec2"><div class="kicker">${tr("sheet.of_race", {race: esc(u.race)})}</div>
         <div class="ab"><b>${esc(u.ability[0])}</b>: <i>${esc(u.ability[1])}</i></div>

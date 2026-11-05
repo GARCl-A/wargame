@@ -45,7 +45,7 @@ def foe_card(known):
                 continue
             value = known.fields[name]
             shown, tip = (None, None) if value is None else _format(name, value)
-            rows.append(_row(intel.LABELS[name], shown, tip))
+            rows.append(_row(intel.label(name), shown, tip))
         bands.append({"label": label, "open": any(r["value"] is not None for r in rows), "rows": rows})
     read = (i18n.t("foe_card.not_read_yet") if known.margin is None
             else i18n.t("foe_card.int_read_on_dc", margin=known.margin, dc=known.dc))

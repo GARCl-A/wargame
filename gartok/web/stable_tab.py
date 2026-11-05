@@ -38,7 +38,7 @@ class StableTab(Stables):
             raise ValueError(i18n.t("stable_tab.no_tack", tack=repr(tack)))
         a = self._animal(uid)
         if a.tack:
-            raise ValueError(i18n.t("stable_tab.already_wears", species=a.species, tack=i18n.name("item", a.tack)))
+            raise ValueError(i18n.t("stable_tab.already_wears", species=a.ref(), tack=i18n.Ref("item", a.tack)))
         self._fit(a, tack)
 
     def sell(self, uid):
@@ -53,7 +53,7 @@ class StableTab(Stables):
 
     def _kept(self, a):
         pulled = self.group.pulling(a)
-        job = (i18n.t("stable_tab.pulls", lower=pulled.kind.lower()) if pulled else i18n.t("animals.unhitched") if a.role == "draft"
+        job = (i18n.t("stable_tab.pulls", lower=pulled.ref(lower=True)) if pulled else i18n.t("animals.unhitched") if a.role == "draft"
                else i18n.t("stable_tab.carries_cargo") if a.role == "pack" else i18n.t("stable_tab.no_tack_2"))
         price = {t: items.get(t).price for t in (animals.HARNESS, animals.PACK_SADDLE)}
         return {"uid": a.uid, "name": a.species, "portrait": _face(a.species, a.uid), "tack": a.tack, "job": job,

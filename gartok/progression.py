@@ -132,23 +132,23 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
     """Return human-readable descriptions of work activities that grant work-XP
     to a worker of `worker_level`."""
     activities = []
-    for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
+    for place, node_id, tool in ((i18n.lab("Lumber Yard"), "lumber_yard", "Axe"), (i18n.lab("Mine"), "mine", "Pick")):
         if worker_level == 0:
-            activities.append(i18n.t("progression.bare_handed_or", place=place, tool=i18n.name("item", tool)))
+            activities.append(i18n.t("progression.bare_handed_or", place=place, tool=i18n.Ref("item", tool)))
         elif worker_level == 1:
             if unit is not None:
                 from . import economy
                 if economy.work_level(unit, node_id) >= 1:
-                    activities.append(i18n.t("progression.with_your", place=place, tool=i18n.name("item", tool)))
+                    activities.append(i18n.t("progression.with_your", place=place, tool=i18n.Ref("item", tool)))
                 else:
-                    activities.append(i18n.t("progression.requires_owning", place=place, tool=i18n.t("article.an" if tool[0] in "AEIOU" else "article.a", name=i18n.name("item", tool))))
+                    activities.append(i18n.t("progression.requires_owning", place=place, tool=i18n.t("article.an" if tool[0] in "AEIOU" else "article.a", name=i18n.Ref("item", tool))))
             else:
-                activities.append(i18n.t("progression.requires", place=place, tool=i18n.name("item", tool)))
+                activities.append(i18n.t("progression.requires", place=place, tool=i18n.Ref("item", tool)))
 
     from . import gather
-    for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
+    for place, node_id, tool in ((i18n.lab("Lumber Yard"), "lumber_yard", "Axe"), (i18n.lab("Mine"), "mine", "Pick")):
         if worker_level <= gather.LEVEL[node_id]:
-            activities.append(i18n.t("progression.gathering_lv_licence_and_your", place=place, level=gather.LEVEL[node_id], tool=i18n.name("item", tool)))
+            activities.append(i18n.t("progression.gathering_lv_licence_and_your", place=place, level=gather.LEVEL[node_id], tool=i18n.Ref("item", tool)))
 
     # Tavern stage
     if worker_level <= 1:

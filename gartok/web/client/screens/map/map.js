@@ -33,7 +33,7 @@ function drawTop() {
   $("part").textContent = `${t.part} · ${t.turn}`;
   $("dial").innerHTML = dial(t.hour);
   $("alerts").innerHTML = M.alerts.map(a => `<div class="alert ${a.tone === "warn" ? "warn" : ""}"${tip(a.text)}>${ico(a.icon)}<b>${esc(a.title)}</b></div>`).join("");
-  $("ledger").innerHTML = M.ledger.map(([k, v]) => `<div><b>${esc(v)}</b><span class="lbl">${esc(k)}</span></div>`).join("");
+  $("ledger").innerHTML = M.ledger.map(([k, v]) => `<div><b>${esc(v)}</b><span class="lbl">${esc(lab(k))}</span></div>`).join("");
   $("guildlbl").textContent = t.level_ups ? trn("map.guild_up", t.level_ups) : tr("map.guild");
   $("guildbtn").classList.toggle("lit", !!t.level_ups);
 }

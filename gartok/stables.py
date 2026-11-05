@@ -25,7 +25,7 @@ class Stables:
 
     def hub_cards(self):
         g = self.group
-        return [{"label": "herd", "value": f"{len(g.herd)} / {g.herd_capacity}"},
+        return [{"label": i18n.lab("herd"), "value": f"{len(g.herd)} / {g.herd_capacity}"},
                 {"label": i18n.t("stables.party_purse"), "value": fmt_money(self.wealth), "tone": "money"}]
 
     @property
@@ -53,48 +53,48 @@ class Stables:
         elif self._pay(animal.price, f"a {species}"):
             self.group.herd.append(animal)
             recorder.emit("animal", what="buy", species=species, price=animal.price)
-            self.notice = i18n.t("stables.joins_group", species=species)
+            self.notice = i18n.t("stables.joins_group", species=animal.ref())
 
     def _fit(self, animal, tack):
         if animal.tack is None and self._pay(tack_price(tack), f"a {tack}"):
             animal.give_to_tack(tack)
             self.group.hitch_idle()
-            self.notice = i18n.t("stables.now_wears", species=animal.species, tack=i18n.name("item", tack))
+            self.notice = i18n.t("stables.now_wears", species=animal.ref(), tack=i18n.Ref("item", tack))
 
     def _sell_animal(self, animal):
         if animal.stash.items:
-            self.notice = i18n.t("stables.unload_first", species=animal.species)
+            self.notice = i18n.t("stables.unload_first", species=animal.ref())
             return
         if animal.tack:
             self._keeper.give_to_pack(animal.take_tack())
         self.group.herd.remove(animal)
         self._receive(resale(animal.price))
         recorder.emit("animal", what="sell", species=animal.species, price=resale(animal.price))
-        self.notice = i18n.t("stables.sold", species=animal.species)
+        self.notice = i18n.t("stables.sold", species=animal.ref())
 
 
 class WagonYard(Stables):
     """The Carpenter's WAGONS: buy a cart or a carriage, sell an empty one back."""
 
     def hub_cards(self):
-        return [{"label": "wagons", "value": str(len(self.group.wagons))},
+        return [{"label": i18n.lab("wagons"), "value": str(len(self.group.wagons))},
                 {"label": i18n.t("stables.party_purse"), "value": fmt_money(self.wealth), "tone": "money"}]
 
     def _buy_wagon(self, kind):
         if self._pay(wagon.VEHICLES[kind].price, f"a {kind.lower()}"):
             self.group.add_wagon(wagon.Wagon(kind))
             self.group.hitch_idle()
-            self.notice = i18n.t("stables.is_yours_harness_animal_to", lower=kind.lower())
+            self.notice = i18n.t("stables.is_yours_harness_animal_to", lower=i18n.Ref("vehicle", kind, lower=True))
 
     def _sell_wagon(self, sold):
         if sold.stash.items:
-            self.notice = i18n.t("stables.unload_first_2", lower=sold.kind.lower())
+            self.notice = i18n.t("stables.unload_first_2", lower=sold.ref(lower=True))
             return
         self.group.remove_wagon(sold)
         self._receive(resale(sold.price))
-        self.notice = i18n.t("stables.sold_2", lower=sold.kind.lower())
+        self.notice = i18n.t("stables.sold_2", lower=sold.ref(lower=True))
 
     def _wagon_label(self, w):
         """"Cart" alone, "Cart 2" when the group keeps several."""
         same = [x for x in self.group.wagons if x.kind == w.kind]
-        return w.kind if len(same) == 1 else f"{w.kind} {same.index(w) + 1}"
+        return w.name if len(same) == 1 else f"{w.name} {same.index(w) + 1}"

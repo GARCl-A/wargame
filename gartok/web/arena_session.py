@@ -194,7 +194,7 @@ class ArenaSession(Session):
         v = world.vendor(n.id, "arena")
         out = {"place": n.name, "band": g.display_name, "day": day, "at": at,
                "keeper": None if v is None else {
-                   "name": v.name, "caption": v.caption, "line": v.said(),
+                   "name": v.shown, "caption": v.caption, "line": v.said(),
                    "portrait": asset_url(art_files.portrait_path(None, v.portrait)) if v.portrait else None}}
         if self.offered is not None:
             return {**out, "recruit": self._recruit()}
