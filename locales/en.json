@@ -1402,6 +1402,97 @@
       "no_pick": "No pick to spend",
       "tier": "{track} · tier {tier}",
       "still": "Still to spend: <b>{list}</b>. Pick that track on the left."
+    },
+    "arena": {
+      "tag": {
+        "champion": "the title",
+        "boss": "the Games' capstone",
+        "brawl": "the Games",
+        "ctf": "the Games"
+      },
+      "where": "<b>{band}</b> · day {day}, {at}",
+      "purses": "the band's purses",
+      "purse": "the purse",
+      "bouts": "The bouts",
+      "on_board": "{n} on the board today",
+      "a_head": "a head",
+      "purse_lbl": "purse",
+      "foe": {
+        "one": "foe",
+        "other": "foes"
+      },
+      "unfit": "unfit",
+      "fights": "fights",
+      "add": "click to add",
+      "champion": "Champion of the Pit",
+      "who_fights": "Who fights",
+      "one_per_foe": "one fighter for each foe they field",
+      "of_cap": "of {n}",
+      "stake": "the stake",
+      "stake_line": {
+        "one": "{entry} a head × {n} fighter, paid from the whole band's purses ({held}). Win and one fighter pockets {purse}.",
+        "other": "{entry} a head × {n} fighters, paid from the whole band's purses ({held}). Win and one fighter pockets {purse}."
+      },
+      "back": "Back to the map",
+      "stake_btn": "Stake",
+      "and_fight": "and fight"
+    },
+    "hunt": {
+      "where": "<b>{band}</b> · {place} · day {day}, {at}",
+      "away": "While you were out",
+      "who_minds": "Who minds the wagon?",
+      "wagon_lead": "The wagon cannot go in. Click a member on the right to keep them outside with it; one guard is enough, and guards stay in the band.",
+      "guarded": "Guarded: it is safe while the party is away.",
+      "alone": "Left alone: {risk}% chance of losing it, cargo and animals with it.",
+      "the_place": "the place",
+      "bolt": "the animals bolt",
+      "look_for": "What to look for",
+      "how_long_track": "How long to read the ground",
+      "how_long": "How long",
+      "goes_on": "The hunt goes on",
+      "level_up": "Level up ({n})",
+      "of_kg": "of {n} kg",
+      "rations": "rations",
+      "work": "Work {n}",
+      "wis": "WIS {n}",
+      "goes_in": "goes in",
+      "minds": "minds the wagon",
+      "back": "Back to the map",
+      "go_in": "Go in",
+      "going": "{n} going",
+      "track": "Track",
+      "set_out": "Set out",
+      "head_back": "Head back",
+      "hunt_on": "Hunt on",
+      "hours_left": "{n} h left",
+      "fight": "Fight",
+      "the_ox": "the ox",
+      "foes": {
+        "one": "{n} foe",
+        "other": "{n} foes"
+      },
+      "go_on": "Go on",
+      "to_map": "to the map",
+      "who_goes": "Who goes in",
+      "party": "The party",
+      "in_out": "{in} in, {out} outside",
+      "minding": "{names} minding the wagon",
+      "out_in": "{n} out in the {where}",
+      "fields": "fields",
+      "wilds": "wilds"
+    },
+    "watch": {
+      "where": "<b>{band}</b> · day {day}, {at}",
+      "inside": "What waits inside"
+    },
+    "wiki": {
+      "racial": "Racial track:",
+      "of_total": "{n} of {total} · “{q}”",
+      "entries": "{n} entries",
+      "none": "Nothing in {chapter} reads “{q}”.",
+      "title": "Compendium",
+      "sub": "the rules, the goods and the creatures, read off the game itself",
+      "filter": "Filter this chapter"
     }
   }
 }

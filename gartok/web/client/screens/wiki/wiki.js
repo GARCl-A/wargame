@@ -37,7 +37,7 @@ function lit(text) {
 function entry(e) {
   const list = W.chapter === "rules" || e.body.length > 1;
   const body = list ? `<ul>${e.body.map(l => `<li>${lit(l)}</li>`).join("")}</ul>` : e.body.map(l => `<p>${lit(l)}</p>`).join("");
-  const track = e.track && e.track.length ? `<p><i>Racial track:</i> ${e.track.map(lit).join(", ")}</p>` : "";
+  const track = e.track && e.track.length ? `<p><i>${tr("wiki.racial")}</i> ${e.track.map(lit).join(", ")}</p>` : "";
   const tags = e.tags.map(t => `<span>${esc(t)}</span>`).join("")
     + e.links.map(l => `<span class="ref" data-ref="${esc(l.ref)}"${tip(l.tip, "item")}>${lit(l.label)}</span>`).join("");
   return `<div class="e ${e.id === W.focus ? "focus" : ""}" data-id="${esc(e.id)}"><div class="hd">${ico(e.glyph, "gl")}<div><b>${lit(e.name)}</b>${e.kind ? `<span class="k">${esc(e.kind)}</span>` : ""}</div></div>
@@ -52,13 +52,13 @@ function render(state) {
     `<div class="ch ${c.id === W.chapter ? "on" : ""}" data-ch="${c.id}"><span class="n">${ROMAN[i]}</span>${esc(c.label)}</div>`).join("");
   const label = W.chapters.find(c => c.id === W.chapter).label;
   $("chapter").textContent = label;
-  $("count").textContent = W.query.trim() ? `${W.entries.length} of ${W.total} · “${W.query.trim()}”` : `${W.total} entries`;
+  $("count").textContent = W.query.trim() ? tr("wiki.of_total", {n: W.entries.length, total: W.total, q: W.query.trim()}) : tr("wiki.entries", {n: W.total});
   if (document.activeElement !== $("q")) $("q").value = W.query;
   else if ($("q").value.toLowerCase() !== W.query) find();
   const el = $("entries");
   el.className = W.chapter === "rules" ? "rules" : "";
   el.innerHTML = W.entries.length ? `<div class="cols">${W.entries.map(entry).join("")}</div>`
-    : `<div class="none">Nothing in ${esc(label.toLowerCase())} reads “${esc(W.query.trim())}”.</div>`;
+    : `<div class="none">${tr("wiki.none", {chapter: esc(label.toLowerCase()), q: esc(W.query.trim())})}</div>`;
   const at = W.focus && [...el.querySelectorAll(".e")].find(x => x.dataset.id === W.focus);
   if (at) at.scrollIntoView({block: "center"});
 }
@@ -76,6 +76,7 @@ function find() {
   clearTimeout(typed);
   typed = setTimeout(() => { $("entries").scrollTop = 0; post("find", {q: $("q").value}); }, 120);
 }
+$("q").placeholder = tr("wiki.filter");
 $("q").addEventListener("input", find);
 $("back").onclick = () => post("back");
 addEventListener("keydown", e => {
