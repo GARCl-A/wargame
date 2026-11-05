@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Condition marks mockup, round 2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;color:#eadcbc;font-family:Georgia,serif;
+  background:radial-gradient(ellipse 70% 60% at 38% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+h1{position:absolute;left:40px;top:20px;font:700 24px/1 Georgia,serif;letter-spacing:.14em;color:#f0d79e}
+h1 small{display:block;margin-top:8px;font:16px/1.3 Georgia,serif;letter-spacing:0;color:#b9a27c}
+.panel{position:absolute;overflow:hidden;border:1px solid #7d5c28;border-radius:4px;background:#16110c}
+.panel .tag{position:absolute;left:0;top:0;z-index:300;padding:7px 12px;font:700 13px/1 Georgia,serif;letter-spacing:.12em;color:#16110c;background:#c9a35e}
+.zoom{position:absolute;left:0;top:0;transform-origin:0 0}
+.board{position:relative;background:url(/gartok/web/client/img/grass.jpg) 0 0/216px;overflow:visible}
+.cap{position:absolute;font:15px/1.4 Georgia,serif;color:#cdbb97}
+.cap b{color:#f0d79e}.cap i{color:#7fa557;font-style:normal}.cap u{color:#d0493a;text-decoration:none}
+.real{position:absolute;border:1px solid #7d5c28;overflow:hidden;background:#16110c}
+.real small{position:absolute;right:6px;bottom:4px;z-index:300;font:11px/1 Georgia,serif;color:#e8d9b8;text-shadow:0 1px 2px #000}
+
+.tok{position:absolute;border-radius:50%;--side:#c9473a;
+  box-shadow:0 0 0 2px #1a120a,0 0 0 4px var(--side),0 0 0 5.5px #1a120a,0 6px 8px rgba(30,18,8,.55)}
+.tok .face{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+.tok img{width:100%;height:100%;display:block}
+.p{--side:#2e5f8e}.a{--side:#4f7d5a}.e{--side:#9a2f22}
+.tok.down img{filter:grayscale(.85) brightness(.7)}
+.tok.down{--side:#c9a35e}
+.ico{display:inline-block;width:var(--d,14px);height:var(--d,14px);background:currentColor;
+  -webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat}
+.c-ctl{--c:#a680d6}.c-hurt{--c:#e0584a}.c-mind{--c:#6aa3da}.c-boon{--c:#7fa557}
+.pip{position:absolute;z-index:80;border-radius:50%;display:grid;place-items:center;
+  background:#120d08;border:1.5px solid var(--c);color:#f3e6c6;box-shadow:0 1px 3px rgba(0,0,0,.7)}
+.pip em{position:absolute;right:-6px;bottom:-5px;min-width:13px;height:13px;border-radius:7px;display:grid;place-items:center;
+  font:700 9px/1 Georgia,serif;font-style:normal;background:#c9a35e;color:#16110c;border:1px solid #16110c}
+.chip{position:absolute;z-index:120;white-space:nowrap;padding:3px 7px 4px;border-radius:3px;background:#120d08;border:1px solid var(--c);
+  font:700 9px/1 Georgia,serif;letter-spacing:.04em;color:#f3e6c6;box-shadow:0 2px 5px rgba(0,0,0,.7)}
+.chip i{font-style:normal;font-weight:400;color:#b9a27c}
+.cloth{position:absolute;z-index:80;width:19px;background:linear-gradient(#2c2016,#1a120a);border:1px solid var(--c);border-top:0;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 6px),50% 100%,0 calc(100% - 6px));display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:3px;color:#f3e6c6}
+.staff{position:absolute;z-index:81;height:2px;background:#c9a35e;border-radius:1px;box-shadow:0 1px 1px #000}
+
+/* things on the floor under the stack */
+.gi{position:absolute;color:#f0d79e;filter:drop-shadow(0 1px 1px rgba(0,0,0,.9)) drop-shadow(0 0 2px rgba(240,215,158,.35))}
+.tab{position:absolute;z-index:40;display:flex;align-items:center;gap:5px;padding:2px 7px 3px;border-radius:0 0 11px 11px;
+  background:rgba(18,13,8,.94);border:1px solid #c9a35e;border-top:0;color:#f0d79e;font:700 10px/1 Georgia,serif;box-shadow:0 2px 4px rgba(0,0,0,.6)}
+.tab b{display:inline-flex;align-items:center;gap:2px;font-weight:700}
+.tiny{position:absolute;z-index:60;min-width:15px;height:15px;padding:0 3px;border-radius:8px;display:grid;place-items:center;
+  font:700 9px/1 Georgia,serif;color:#f0d79e;background:#120d08;border:1px solid #c9a35e}
+.ground{position:absolute;z-index:23;border-radius:50%;border:1.5px dashed rgba(240,215,158,.75);box-shadow:0 0 8px rgba(240,215,158,.25)}
+.spark{position:absolute;z-index:26;width:6px;height:6px;background:#f0d79e;transform:rotate(45deg);box-shadow:0 0 5px 1px rgba(240,215,158,.7)}
+
+/* the strip (E) and the icon sheet */
+.coin{position:absolute;width:56px;height:56px;border-radius:50%;background:#2a2017;--side:#c9473a;box-shadow:0 0 0 3px var(--side)}
+.coin.p{--side:#5b8fc0}.coin.a{--side:#70ba96}
+.coin img{width:100%;height:100%;border-radius:50%;display:block}
+.coin .hp{position:absolute;left:6px;right:6px;bottom:-9px;height:4px;border-radius:2px;background:#120d08}
+.coin .hp i{display:block;height:100%;border-radius:2px;background:#7fa557}
+.sheet{position:absolute;display:grid;grid-template-columns:repeat(3,1fr);gap:8px 18px;width:1850px}
+.srow{display:flex;align-items:center;gap:12px;padding:7px 10px;border:1px solid #4a3522;border-radius:3px;background:#16110c}
+.srow .main{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#120d08;border:2px solid var(--c);color:#f3e6c6;flex:none}
+.srow .alt{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#120d08;border:1px solid #4a3522;color:#b9a27c;flex:none}
+.srow b{display:block;font:700 15px/1.1 Georgia,serif;color:#f0d79e}
+.srow span.n{font:12px/1.2 Georgia,serif;color:#b9a27c}
+.srow.bad{border-color:#9a2f22}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+const IC = "/gartok/assets/icons/", PORT = "/gartok/assets/portraits/", CELL = 72, B = "ffffff/transparent/1x1/";
+const CONDS = {
+  entangled:  {icon: "trap/" + B + "lorc/spider-web", cls: "ctl", name: "Entangled", rule: "no walking, 1 turn"},
+  bleeding:   {icon: "blood/" + B + "lorc/bleeding-wound", cls: "hurt", name: "Bleeding", rule: "loses health each turn"},
+  demoralized:{icon: "state/" + B + "lorc/despair", cls: "mind", name: "Demoralized", rule: "cannot attack, 2 turns"},
+  defending:  {icon: "item/round-shield", cls: "boon", name: "Defending", rule: "+AC, 1 turn"},
+};
+const MINE = ["entangled", "bleeding", "demoralized", "defending"];
+const $ = (t, c, p, s) => { const e = document.createElement(t); if (c) e.className = c; if (s) e.style.cssText = s; if (p) p.appendChild(e); return e; };
+const urls = new Set(["/gartok/web/client/img/grass.jpg"]), BLOB = {}, R = u => (window.DATA && DATA[u]) || BLOB[u] || u;
+const ico = (path, d) => (urls.add(IC + path + ".svg"), `<span class="ico" style="--icon:url(${R(IC + path + ".svg")});${d ? "--d:" + d + "px" : ""}"></span>`);
+const at = (e, x, y) => { e.style.left = x + "px"; e.style.top = y + "px"; return e; };
+const rad = a => a * Math.PI / 180;
+
+function tok(parent, who, side, d, x, y, z, extra = "") {
+  urls.add(PORT + who + ".png");
+  const e = $("div", "tok " + side + " " + extra, parent, `width:${d}px;height:${d}px;left:${x}px;top:${y}px;z-index:${z}`);
+  $("div", "face", e).innerHTML = `<img src="${R(PORT + who + ".png")}">`;
+  return e;
+}
+
+/* ---- condition marks on a token centred at (cx,cy) with radius r (the face) ---- */
+const circle = (b, cx, cy, d, id, count, cls = "") => {
+  const c = CONDS[id], p = $("div", "pip c-" + c.cls + " " + cls, b, `width:${d}px;height:${d}px`);
+  p.innerHTML = ico(c.icon, Math.round(d * .62)) + (count > 1 ? `<em>${count}</em>` : "");
+  return at(p, cx - d / 2, cy - d / 2);
+};
+const dockRest = (b, cx, cy, r, cs) => { if (!cs.length) return;
+  const a = rad(-138), R = r + 3; circle(b, cx + R * Math.cos(a), cy + R * Math.sin(a), 19, cs[0], cs.length); };
+const dockOpen = (b, cx, cy, r, cs) => { if (!cs.length) return;
+  cs.forEach((id, i) => { const a = rad(-170 + i * (150 / Math.max(1, cs.length - 1)) * (cs.length > 1 ? 1 : 0)), R = r + 10;
+    circle(b, cx + R * Math.cos(a), cy + R * Math.sin(a), 19, id, 1); });
+  const c = CONDS[cs[0]], t = $("div", "chip c-" + c.cls, b); t.innerHTML = `${c.name} <i>· ${c.rule}</i>`; at(t, cx - r - 62, cy - r - 24); };
+const rimGems = (b, cx, cy, r, cs) => { cs.slice(0, 5).forEach((id, i) => { const a = rad(-172 + i * 24), R = r + 1.5;
+    circle(b, cx + R * Math.cos(a), cy + R * Math.sin(a), 15, id, 1); });
+  if (cs.length > 5) { const t = $("div", "tiny", b); t.textContent = "+" + (cs.length - 5); at(t, cx + 20, cy - r - 4); } };
+const pennant = (b, cx, cy, r, cs) => { if (!cs.length) return; const worst = CONDS[cs[0]], x = cx - r - 9, y = cy - r + 4, n = Math.min(cs.length, 4);
+  $("div", "staff", b, `left:${x - 2}px;top:${y - 1}px;width:23px`);
+  const c = $("div", "cloth c-" + worst.cls, b, `left:${x}px;top:${y + 1}px;height:${7 + 17 * n + 6}px`);
+  cs.slice(0, n).forEach(id => { const k = CONDS[id]; c.insertAdjacentHTML("beforeend", `<span style="color:${({ctl:"#c9a8f0",hurt:"#f08a7e",mind:"#9cc6ee",boon:"#a9cf8a"})[k.cls]}">${ico(k.icon, 14)}</span>`); }); };
+
+/* ---- what lies under the stack ---- */
+function itemsScatter(b, ox, oy) {                      // loose things on the ground, half hidden by the bodies
+  [["item/rope-coil", 14, 56, -22], ["item/battle-axe", 33, 60, 14], ["item/two-coins", 50, 56, -8]].forEach(([p, x, y, rot], i) => {
+    const g = $("div", "gi", b, `z-index:${24 + i};transform:rotate(${rot}deg)`); g.innerHTML = ico(p, 17); at(g, ox + x, oy + y); });
+  const t = $("div", "tiny", b); t.textContent = "+1"; at(t, ox + 56, oy + 57);
+}
+function itemsTab(b, ox, oy, bodies, items) {           // one slim tab tucked under the stack: what is below me
+  const t = $("div", "tab", b); at(t, ox + 36 - 25, oy + 60);
+  t.innerHTML = `<b>${ico("state/" + B + "delapouite/dead-head", 11)}${bodies}</b><b>${ico("item/two-coins", 11)}${items}</b>`; t.style.minWidth = "50px";
+}
+function itemsGlint(b, ox, oy, items) {                 // a brass ground ring and sparks on it; no number
+  $("div", "ground", b, `left:${ox + 5}px;top:${oy + 32}px;width:62px;height:34px`);
+  [[16, 58], [30, 66], [47, 64], [60, 55]].slice(0, items).forEach(([x, y]) => at($("div", "spark", b), ox + x - 3, oy + y - 3));
+}
+
+/* ---- the board: a polluted cell (living on 2 bodies and 4 items) in a ring of 8, or the common case ---- */
+function board(cols, rows, bx, by, o) {
+  const b = $("div", "board", null, `width:${cols * CELL}px;height:${rows * CELL}px;background-image:url(${R("/gartok/web/client/img/grass.jpg")})`);
+  const ring = [["giant_spider/0", "e", ["entangled"]], ["human/0", "p", []], ["giant_spider/1", "e", []], ["lizardfolk/0", "a", []],
+                ["ogre/0", "e", ["defending"]], ["dwarf/0", "p", []], ["gnoll/0", "e", ["bleeding", "demoralized"]], ["giant_spider/2", "e", []]];
+  let k = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    if (!dx && !dy) continue;
+    const [who, s, cs] = ring[k++];
+    if (o.neighbours === 0 && !(dx === -1 && dy === 0) && !(dx === 1 && dy === 1)) continue;
+    tok(b, who, s, 60, (bx + dx) * CELL + 6, (by + dy) * CELL + 6, 10);
+    o.cond(b, (bx + dx) * CELL + 36, (by + dy) * CELL + 36, 30, cs);
+  }
+  const ox = bx * CELL, oy = by * CELL, bodies = o.bodies;
+  if (bodies > 0) tok(b, "gnoll/3", "e", 50, ox + 36 - 25 - 9.4, oy + 36 - 25 + 9.4, 21, "down");
+  if (bodies > 1) tok(b, "goblin/2", "e", 50, ox + 36 - 25 + 10, oy + 36 - 25 + 9.4, 22, "down");
+  const d = bodies ? (bodies > 1 ? 56 : 58) : 60, up = bodies ? 7.2 : 0;
+  const live = tok(b, "lizardfolk/5", "p", d, ox + 36 - d / 2 + (bodies === 1 ? 3 : 0), oy + 36 - d / 2 - up, 30, "active");
+  live.style.boxShadow = "0 0 0 2px #1a120a,0 0 0 5px #f0d79e,0 0 0 6.5px #1a120a,0 0 18px 4px rgba(255,214,140,.5)";
+  o.items(b, ox, oy, bodies, o.nitems);
+  o.cond(b, ox + 36, oy + 36 - up, d / 2, o.conds || MINE, true);
+  return b;
+}
+
+const stage = document.getElementById("stage");
+const page = new URLSearchParams(location.search).get("p") || "1";
+function build() {
+stage.innerHTML = "";
+const title = $("h1", "", stage);
+function panel(tag, x, y, w, h, bd, scale) {
+  const p = $("div", "panel", stage, `left:${x}px;top:${y}px;width:${w}px;height:${h}px`);
+  $("div", "tag", p).textContent = tag;
+  const z = $("div", "zoom", p, `transform:scale(${scale})`); z.appendChild(bd); return p;
+}
+function real(bd, x, y, w, h, note) {
+  const r = $("div", "real", stage, `left:${x}px;top:${y}px;width:${w}px;height:${h}px`);
+  r.appendChild(bd); $("small", "", r).textContent = note || "1:1"; }
+function cap(x, y, w, html) { const c = $("div", "cap", stage, `left:${x}px;top:${y}px;width:${w}px`); c.innerHTML = html; }
+const slimItems = (b, ox, oy, bodies, n) => itemsTab(b, ox, oy, bodies, n);
+
+if (page === "1") {
+  title.innerHTML = `ROUND 2 · page 1 of 3 · condition marks on the token (the strip, E, carries the full list in every one)<small>The same polluted cell as before; the floor mark is already the slim tab so the token's own marks can be judged. Zoomed 2.2x, then 1:1.</small>`;
+  const Z = 2.15, W = 464, H = 464, Y = 96, xs = [16, 492, 968, 1444];
+  const variants = [
+    ["F · LEAD + COUNT (at rest)", (b, x, y, r, cs, live) => dockRest(b, x, y, r, cs)],
+    ["G · SAME, HOVER OPENS IT", (b, x, y, r, cs, live) => live ? dockOpen(b, x, y, r, cs) : dockRest(b, x, y, r, cs)],
+    ["H · GEMS SET IN THE RIM", (b, x, y, r, cs) => rimGems(b, x, y, r, cs)],
+    ["I · A PENNANT HANGING OFF IT", (b, x, y, r, cs) => pennant(b, x, y, r, cs)],
+  ];
+  variants.forEach(([tag, cond], i) => {
+    panel(tag, xs[i], Y, W, H, board(3, 3, 1, 1, {cond, bodies: 2, nitems: 4, items: slimItems}), Z);
+    real(board(3, 3, 1, 1, {cond, bodies: 2, nitems: 4, items: slimItems}), xs[i], Y + H + 14, 216, 216, "polluted, 1:1");
+    real(board(3, 2, 1, 0, {cond, bodies: 1, nitems: 1, items: slimItems, neighbours: 0, conds: ["entangled", "bleeding"]}), xs[i] + 226, Y + H + 14, 216, 144, "common case, 1:1");
+  });
+  const cy = Y + H + 14 + 224;
+  cap(20, cy, 450, `<b>Icon of the worst condition + how many.</b> Smaller than before (19px), at the one corner that is free. <i>+ never crowds; neighbours with 1 condition show just the icon.</i> <u>– you only see the worst one without hovering.</u>`);
+  cap(500, cy, 450, `<b>F, and when the cursor is on the token (or it is the active one) the rest unfold in an arc</b> with the name and the rule of the first. <i>+ the A idea only where it is being looked at, so the crowd never sees it.</i> <u>– the arc covers the neighbours for as long as the cursor stays.</u>`);
+  cap(980, cy, 450, `<b>The icons sit in the token's own rim like set stones</b>, up to 5. <i>+ adds no space of its own; the ring is already there; the most "part of the token" of the four.</i> <u>– 15px icons are the hardest to read at 1:1.</u>`);
+  cap(1460, cy, 450, `<b>A small banner hangs from the rim</b>, one icon per condition, as long as the count. <i>+ it reads as an object, the colour of its edge says the worst kind.</i> <u>– it grows over the neighbours with 4+.</u>`);
+} else if (page === "2") {
+  title.innerHTML = `ROUND 2 · page 2 of 3 · what lies under a token, taking much less room<small>Today's pill is a 40px ring on the token's corner plus a separate badge. Here the same facts (2 bodies, 4 items) in a smaller, closer shape. Zoomed 2.8x, then 1:1.</small>`;
+  const Z = 2.8, W = 616, H = 616, Y = 96, xs = [20, 652, 1284];
+  const condRest = (b, x, y, r, cs) => dockRest(b, x, y, r, cs);
+  const variants = [
+    ["J · LOOSE ON THE GROUND", (b, ox, oy) => itemsScatter(b, ox, oy)],
+    ["K · ONE TAB UNDER THE STACK", (b, ox, oy, bodies, n) => itemsTab(b, ox, oy, bodies, n)],
+    ["L · A RING OF GLINTS", (b, ox, oy, bodies, n) => itemsGlint(b, ox, oy, n)],
+  ];
+  variants.forEach(([tag, items], i) => {
+    panel(tag, xs[i], Y, W, H, board(3, 3, 1, 1, {cond: condRest, bodies: 2, nitems: 4, items}), Z);
+    real(board(3, 3, 1, 1, {cond: condRest, bodies: 2, nitems: 4, items}), xs[i], Y + H + 14, 216, 216, "polluted, 1:1");
+    real(board(3, 2, 1, 0, {cond: condRest, bodies: 1, nitems: 1, items, neighbours: 0, conds: []}), xs[i] + 226, Y + H + 14, 216, 144, "common case, 1:1");
+  });
+  const cy = Y + H + 14;
+  cap(250 + 220 - 220 + 220, cy + 150, 0, "");
+  cap(20, cy + 224, 600, `<b>The items are drawn lying on the floor</b>, tucked half under the bodies, three at most and a "+" for the rest. No number, no pill: you count them by looking. <i>+ the most organic, it IS the loot.</i> <u>– a precise count (and the click target) is small; the pile slip still opens on click.</u>`);
+  cap(652, cy + 224, 600, `<b>One slim tab hangs off the bottom of the stack</b> with two counters: bodies and items. It is also the click target for the slip. <i>+ exact, tiny, replaces both the loot pill and the pile badge.</i> <u>– it is a UI object, not a thing in the world.</u>`);
+  cap(1284, cy + 224, 600, `<b>A brass dashed ring on the ground under the stack, with a spark per item.</b> No counters at all: the ring says "something here", the sparks say how much, up to 4. <i>+ nothing covers the neighbours.</i> <u>– it can be mistaken for a trap or spell zone; exact number only in the slip.</u>`);
+} else {
+  title.innerHTML = `ROUND 2 · page 3 of 3 · the icons, one per condition<small>Big circle = my pick; the small ones are alternatives from the folders you added. Red outline = no good one yet.</small>`;
+  const g = (p) => p;
+  const ROWS = [
+    ["entangled", "ctl", "trap/" + B + "lorc/spider-web", ["trap/" + B + "lorc/web-spit", "trap/" + B + "lorc/fishing-net"], ""],
+    ["grappled", "ctl", "action/grab", ["trap/" + B + "lorc/manacles", "trap/" + B + "lorc/handcuffs"], ""],
+    ["prone", "ctl", "body/falling", ["trap/" + B + "lorc/foot-trip"], ""],
+    ["sleeping", "ctl", "state/" + B + "lorc/sleepy", ["head/sleepy", "action/night-sleep", "state/" + B + "lorc/coma"], ""],
+    ["surprised", "ctl", "state/" + B + "lorc/surprised", ["state/" + B + "lorc/surprised-skull", "state/" + B + "lorc/worried-eyes"], ""],
+    ["rooted", "ctl", "state/" + B + "skoll/cement-shoes", ["trap/" + B + "delapouite/tentacles-barrier", "trap/" + B + "caro-asercion/venus-flytrap"], ""],
+    ["bleeding", "hurt", "blood/" + B + "lorc/bleeding-wound", ["blood/" + B + "lorc/spatter", "blood/" + B + "skoll/blood"], ""],
+    ["maimed", "hurt", "trap/" + B + "skoll/amputation", ["action/amputation", "blood/" + B + "lorc/cut-palm"], ""],
+    ["poisoned", "hurt", "poison/" + B + "sbed/poison", ["poison/" + B + "lorc/poison-bottle", "poison/" + B + "lorc/snake-bite", "poison/" + B + "lorc/poison-gas"], ""],
+    ["demoralized", "mind", "state/" + B + "lorc/despair", ["state/" + B + "cathelineau/dread", "state/" + B + "lorc/terror"], ""],
+    ["hexed", "mind", "state/" + B + "lorc/paranoia", ["state/" + B + "lorc/oppression", "state/" + B + "lorc/mirror-mirror", "poison/" + B + "starseeker/potion-of-madness"], "bad|none says 'curse'"],
+    ["shield hooked", "hurt", "trap/" + B + "lorc/fishing-hook", ["body/bell-shield", "item/round-shield"], ""],
+    ["defending", "boon", "item/round-shield", ["body/shield-bash"], ""],
+    ["invisible", "boon", "body/invisible", ["state/" + B + "lorc/hidden", "head/invisible-face"], ""],
+    ["flying (pixie)", "boon", "wing/" + B + "delapouite/fairy-wings", ["wing/" + B + "delapouite/fairy", "wing/" + B + "delapouite/icarus"], ""],
+    ["hungry", "hurt", "meat/" + B + "lorc/meat", ["state/" + B + "lorc/gluttony", "state/" + B + "lorc/mouth-watering"], ""],
+  ];
+  const sh = $("div", "sheet", stage, "left:40px;top:100px");
+  ROWS.forEach(([name, cls, main, alts, bad]) => {
+    const r = $("div", "srow c-" + cls + (bad ? " bad" : ""), sh);
+    r.innerHTML = `<div class="main">${ico(main, 30)}</div><div style="min-width:130px"><b>${name}</b><span class="n">${bad ? bad.split("|")[1] : cls}</span></div>` +
+      alts.map(a => `<div class="alt">${ico(a, 22)}</div>`).join("");
+  });
+}
+}
+(async () => {
+  build();
+  stage.dataset.urls = JSON.stringify([...urls]);
+  if (window.DATA) { build(); return; }
+  await Promise.all([...urls].map(u => fetch(u).then(r => r.blob()).then(bl => { BLOB[u] = URL.createObjectURL(bl); })));
+  build();
+  document.title = "ready";
+})();
+</script>
+</body>
+</html>

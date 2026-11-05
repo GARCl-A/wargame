@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Condition marks mockup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0806;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;color:#eadcbc;font-family:Georgia,serif;
+  background:radial-gradient(ellipse 70% 60% at 38% 45%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
+h1{position:absolute;left:40px;top:20px;font:700 24px/1 Georgia,serif;letter-spacing:.14em;color:#f0d79e}
+h1 small{display:block;margin-top:8px;font:16px/1.3 Georgia,serif;letter-spacing:0;color:#b9a27c}
+.panel{position:absolute;overflow:hidden;border:1px solid #7d5c28;border-radius:4px;background:#16110c}
+.panel .tag{position:absolute;left:0;top:0;z-index:300;padding:7px 12px;font:700 14px/1 Georgia,serif;letter-spacing:.14em;color:#16110c;background:#c9a35e}
+.zoom{position:absolute;left:0;top:0;transform-origin:0 0}
+.board{position:relative;background:url(/gartok/web/client/img/grass.jpg) 0 0/216px;overflow:visible}
+.cap{position:absolute;font:15px/1.4 Georgia,serif;color:#cdbb97}
+.cap b{color:#f0d79e}.cap i{color:#7fa557;font-style:normal}.cap u{color:#d0493a;text-decoration:none}
+.real{position:absolute;border:1px solid #7d5c28;overflow:hidden;background:#16110c}
+.real small{position:absolute;right:6px;bottom:4px;z-index:300;font:11px/1 Georgia,serif;color:#b9a27c}
+
+/* the game's own token look (battle.css) */
+.tok{position:absolute;border-radius:50%;--side:#c9473a;
+  box-shadow:0 0 0 2px #1a120a,0 0 0 4px var(--side),0 0 0 5.5px #1a120a,0 6px 8px rgba(30,18,8,.55)}
+.tok .face{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+.tok img{width:100%;height:100%;display:block}
+.p{--side:#2e5f8e}.a{--side:#4f7d5a}.e{--side:#9a2f22}
+.tok.down img{filter:grayscale(.85) brightness(.7)}
+.tok.down{--side:#c9a35e}
+.ico{display:inline-block;width:var(--d,14px);height:var(--d,14px);background:currentColor;
+  -webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat}
+.badge{position:absolute;min-width:20px;height:20px;padding:0 4px;border-radius:10px;display:grid;place-items:center;
+  font:700 11px/1 Georgia,serif;color:#f0d79e;background:#120d08;border:1px solid #c9a35e;z-index:60}
+.lootmark{position:absolute;z-index:60;display:flex;align-items:center;gap:2px;padding:3px 5px;border-radius:999px;
+  background:rgba(18,13,8,.92);border:1px solid #c9a35e;box-shadow:0 2px 5px rgba(0,0,0,.6);color:#f0d79e;font:700 13px/1 Georgia,serif}
+
+/* condition classes */
+.c-ctl{--c:#a680d6}.c-hurt{--c:#e0584a}.c-mind{--c:#6aa3da}.c-boon{--c:#7fa557}
+.pip{position:absolute;z-index:80;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;
+  background:#120d08;border:1.5px solid var(--c);color:#f3e6c6;box-shadow:0 1px 3px rgba(0,0,0,.7)}
+.pip .ico{--d:12px}
+.more{position:absolute;z-index:80;min-width:20px;height:20px;padding:0 4px;border-radius:10px;display:grid;place-items:center;
+  font:700 11px/1 Georgia,serif;background:#120d08;border:1.5px solid #b9a27c;color:#f3e6c6}
+
+/* B: on the face */
+.web{position:absolute;inset:-6%;background:#fff;opacity:.5;-webkit-mask:url(/gartok/assets/icons/trap/ffffff/transparent/1x1/lorc/spider-web.svg) center/contain no-repeat;
+  mask:url(/gartok/assets/icons/trap/ffffff/transparent/1x1/lorc/spider-web.svg) center/contain no-repeat}
+.drip{position:absolute;top:-2px;width:4px;border-radius:0 0 3px 3px;background:#b8281c}
+.sad{filter:saturate(.3) brightness(.82) contrast(1.05)}
+.sadveil{position:absolute;inset:0;background:rgba(60,88,140,.38)}
+.guard{position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 3px #c9a35e,inset 0 0 0 4.5px #1a120a}
+.medal{position:absolute;z-index:80;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  background:#120d08;border:1.5px solid var(--c);color:#f3e6c6;box-shadow:0 1px 3px rgba(0,0,0,.7)}
+.medal .ico{--d:13px}
+.medal em{position:absolute;right:-7px;bottom:-6px;min-width:15px;height:15px;border-radius:8px;display:grid;place-items:center;
+  font:700 10px/1 Georgia,serif;font-style:normal;background:#c9a35e;color:#16110c;border:1px solid #16110c}
+
+/* D / E UI */
+.slip{position:absolute;z-index:200;width:300px;background:#eadcbc;color:#24180e;border:1px solid #7d5c28;border-radius:3px;padding:10px 12px 8px;box-shadow:0 8px 22px rgba(0,0,0,.6)}
+.slip h3{font:700 12px/1 Georgia,serif;letter-spacing:.18em;color:#7d5c28;margin-bottom:8px}
+.crow{display:flex;gap:9px;align-items:flex-start;padding:5px 4px;border-top:1px solid rgba(125,92,40,.35)}
+.crow:first-of-type{border-top:0}
+.crow .ic{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#120d08;border:2px solid var(--c);color:#f3e6c6}
+.crow .ic .ico{--d:15px}
+.crow b{display:block;font:700 15px/1.1 Georgia,serif}
+.crow .txt span{display:block;font-size:13px;line-height:1.25;color:#4a3522}
+.crow em{margin-left:auto;font:700 12px/1 Georgia,serif;font-style:normal;color:#9a2f22;white-space:nowrap}
+.coin{position:absolute;width:56px;height:56px;border-radius:50%;background:#2a2017;--side:#c9473a;box-shadow:0 0 0 3px var(--side)}
+.coin.p{--side:#5b8fc0}.coin.a{--side:#70ba96}
+.coin img{width:100%;height:100%;border-radius:50%;display:block}
+.coin .hp{position:absolute;left:6px;right:6px;bottom:-9px;height:4px;border-radius:2px;background:#120d08}
+.coin .hp i{display:block;height:100%;border-radius:2px;background:#7fa557}
+.coin.now{box-shadow:0 0 0 2px #120d08,0 0 0 4px #f0d79e,0 0 0 6px #120d08,0 0 22px rgba(240,215,158,.45)}
+.cpips{position:absolute;left:50%;top:70px;transform:translateX(-50%);display:flex;gap:2px}
+.cpips .pip{position:static;width:17px;height:17px;border-width:1.5px}
+.cpips .pip .ico{--d:10px}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+const IC = "/gartok/assets/icons/", PORT = "/gartok/assets/portraits/", CELL = 72;
+const CONDS = {
+  entangled:  {icon: "trap/ffffff/transparent/1x1/lorc/spider-web", cls: "ctl",  name: "Entangled",   rule: "No walking until the end of its next turn. -2 AC.", left: "1 turn"},
+  bleeding:   {icon: "blood/ffffff/transparent/1x1/lorc/bleeding-wound", cls: "hurt", name: "Bleeding", rule: "Loses health at the end of each turn.", left: "until bound"},
+  demoralized:{icon: "body/despair", cls: "mind", name: "Demoralized", rule: "Cannot attack; may only flee or defend.", left: "2 turns"},
+  defending:  {icon: "item/round-shield", cls: "boon", name: "Defending", rule: "+AC until its next turn.", left: "1 turn"},
+};
+const MINE = ["entangled", "bleeding", "demoralized", "defending"];   // already in priority order
+const $ = (t, c, p, s) => { const e = document.createElement(t); if (c) e.className = c; if (s) e.style.cssText = s; if (p) p.appendChild(e); return e; };
+const ico = (path, d) => `<span class="ico" style="--icon:url(${IC}${path}.svg);${d ? "--d:" + d + "px" : ""}"></span>`;
+const at = (e, x, y) => { e.style.left = x + "px"; e.style.top = y + "px"; return e; };
+
+function tok(parent, who, side, d, x, y, z, extra = "") {
+  const e = $("div", "tok " + side + " " + extra, parent, `width:${d}px;height:${d}px;left:${x}px;top:${y}px;z-index:${z}`);
+  const f = $("div", "face", e); f.innerHTML = `<img src="${PORT}${who}.png">`;
+  return e;
+}
+// the board: cols x rows of 72px cells, a polluted block of cells at (bx,by): 8 neighbours around one stack
+function board(cols, rows, bx, by, kind) {
+  const b = $("div", "board", null, `width:${cols * CELL}px;height:${rows * CELL}px;background-size:216px`);
+  const ring = [["giant_spider/0", "e"], ["human/0", "p"], ["giant_spider/1", "e"], ["lizardfolk/0", "a"],
+                ["ogre/0", "e"], ["dwarf/0", "p"], ["gnoll/0", "e"], ["giant_spider/2", "e"]];
+  let k = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    if (!dx && !dy) continue;
+    const [who, s] = ring[k++];
+    tok(b, who, s, 60, (bx + dx) * CELL + 6, (by + dy) * CELL + 6, 10);
+  }
+  const ox = bx * CELL, oy = by * CELL;
+  // two bodies under the living one (STACK for n=3: .78 up, .7 down-left, .7 down-right)
+  tok(b, "gnoll/3", "e", 50, ox + 36 - 25 - 9.4, oy + 36 - 25 + 9.4, 21, "down");
+  tok(b, "goblin/2", "e", 50, ox + 36 - 25 + 10, oy + 36 - 25 + 9.4, 22, "down");
+  const live = tok(b, "lizardfolk/5", "p", 56, ox + 36 - 28, oy + 36 - 28 - 7.2, 30, "active");
+  live.style.boxShadow = "0 0 0 2px #1a120a,0 0 0 5px #f0d79e,0 0 0 6.5px #1a120a,0 0 18px 4px rgba(255,214,140,.5)";
+  const pile = $("div", "badge", b); pile.textContent = "3"; at(pile, ox + 56, oy + 54);
+  const loot = $("div", "lootmark", b); loot.innerHTML = ico("item/rope-coil", 19) + "+"; at(loot, ox + 47, oy + 4);
+  const cx = ox + 36, cy = oy + 36 - 7.2;
+  kind(b, live, cx, cy);
+  return b;
+}
+
+/* A: a crown of pips on the arc above the token */
+function crownA(b, live, cx, cy) {
+  const n = MINE.length, r = 36;
+  MINE.forEach((id, i) => {
+    const ang = (-135 + i * (90 / (n - 1))) * Math.PI / 180, c = CONDS[id];
+    const p = $("div", "pip c-" + c.cls, b); p.innerHTML = ico(c.icon);
+    at(p, cx + r * Math.cos(ang) - 10, cy + r * Math.sin(ang) - 10);
+  });
+}
+/* B: the condition is drawn ON the face; one medallion for the worst, with the count */
+function faceB(b, live, cx, cy) {
+  const f = live.querySelector(".face"), img = f.querySelector("img");
+  img.classList.add("sad");
+  $("div", "sadveil", f);
+  $("div", "web", f);
+  [[14, 12], [27, 19], [38, 10]].forEach(([x, h]) => { const d = $("div", "drip", f); d.style.left = x + "px"; d.style.height = h + "px"; });
+  $("div", "guard", f);
+  const c = CONDS[MINE[0]], m = $("div", "medal c-" + c.cls, b); m.innerHTML = ico(c.icon) + `<em>${MINE.length}</em>`;
+  at(m, cx - 28 - 8, cy - 28 - 8);
+}
+/* C: the rim itself is split in arcs, one colour per kind, plus the worst one on top */
+function ringC(b, live, cx, cy) {
+  const n = MINE.length, R = 36, w = 5, gap = 5;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", 2 * R + 2 * w); svg.setAttribute("height", 2 * R + 2 * w);
+  svg.style.cssText = `position:absolute;left:${cx - R - w}px;top:${cy - R - w}px;z-index:70;overflow:visible`;
+  const col = {ctl: "#a680d6", hurt: "#e0584a", mind: "#6aa3da", boon: "#7fa557"}, circ = 2 * Math.PI * R, seg = circ / n;
+  MINE.forEach((id, i) => {
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c.setAttribute("cx", R + w); c.setAttribute("cy", R + w); c.setAttribute("r", R);
+    c.setAttribute("fill", "none"); c.setAttribute("stroke", col[CONDS[id].cls]); c.setAttribute("stroke-width", w);
+    c.setAttribute("stroke-dasharray", `${seg - gap} ${circ}`);
+    c.setAttribute("transform", `rotate(${-90 + 360 / n * i + gap / 2 / circ * 360} ${R + w} ${R + w})`);
+    svg.appendChild(c);
+  });
+  b.appendChild(svg);
+  const c = CONDS[MINE[0]], m = $("div", "medal c-" + c.cls, b); m.innerHTML = ico(c.icon); at(m, cx - 11, cy - 28 - 20);
+}
+/* D: at rest one count badge; the ledger opens on hover/click */
+function badgeD(b, live, cx, cy) {
+  const c = CONDS[MINE[0]], m = $("div", "medal c-" + c.cls, b); m.innerHTML = ico(c.icon) + `<em>${MINE.length}</em>`;
+  at(m, cx - 28 - 8, cy - 28 - 8);
+}
+function ledger(parent, x, y, scale) {
+  const s = $("div", "slip", parent); at(s, x, y); s.style.transform = `scale(${scale})`; s.style.transformOrigin = "0 0";
+  s.innerHTML = `<h3>IREKDRALOB · CONDITIONS</h3>` + MINE.map(id => { const c = CONDS[id];
+    return `<div class="crow c-${c.cls}"><div class="ic">${ico(c.icon)}</div><div class="txt"><b>${c.name}</b><span>${c.rule}</span></div><em>${c.left}</em></div>`; }).join("");
+}
+
+const stage = document.getElementById("stage");
+const page = new URLSearchParams(location.search).get("p") || "1";
+const title = $("h1", "", stage);
+
+function panel(tag, x, y, w, h, bd, scale) {
+  const p = $("div", "panel", stage, `left:${x}px;top:${y}px;width:${w}px;height:${h}px`);
+  $("div", "tag", p).textContent = tag;
+  const z = $("div", "zoom", p, `transform:scale(${scale})`); z.appendChild(bd);
+  return p;
+}
+function real(bd, x, y, w, h) {
+  const r = $("div", "real", stage, `left:${x}px;top:${y}px;width:${w}px;height:${h}px`);
+  r.appendChild(bd); $("small", "", r).textContent = "1:1 (real size)";
+}
+function cap(x, y, w, html) { const c = $("div", "cap", stage, `left:${x}px;top:${y}px;width:${w}px`); c.innerHTML = html; }
+
+if (page === "1") {
+  title.innerHTML = `CONDITION MARKS · page 1 of 2 · the polluted case<small>One living fighter (4 conditions) on top of 2 bodies and 4 items, boxed in by 8 others. Zoomed 2.8x; the small box is the real size.</small>`;
+  const Z = 2.8, W = 616, H = 616, Y = 96;
+  panel("A · CROWN OF PIPS", 20, Y, W, H, board(3, 3, 1, 1, crownA), Z);
+  panel("B · DRAWN ON THE FACE", 652, Y, W, H, board(3, 3, 1, 1, faceB), Z);
+  panel("C · SPLIT RIM", 1284, Y, W, H, board(3, 3, 1, 1, ringC), Z);
+  const Yc = Y + H + 14;
+  real(board(3, 3, 1, 1, crownA), 20, Yc, 216, 216);
+  real(board(3, 3, 1, 1, faceB), 652, Yc, 216, 216);
+  real(board(3, 3, 1, 1, ringC), 1284, Yc, 216, 216);
+  cap(250, Yc - 2, 386, `<b>Every condition has its own icon</b>, read at a glance, in priority order left to right. <i>+ the icon already is the name; hover gives the rule.</i> <u>– spills onto the cell above and fights the loot pill on the right; the 5th condition needs a "+N".</u>`);
+  cap(882, Yc - 2, 386, `<b>The state is the picture</b>: web over the portrait, drips, a grey-blue veil, a brass guard ring. One medallion carries the worst condition and the count. <i>+ costs no board space, feels like the world.</i> <u>– only 4 conditions have a good picture, the rest still need an icon; the portrait gets harder to read.</u>`);
+  cap(1514, Yc - 2, 386, `<b>One coloured arc per condition</b> (violet holds, red hurts, blue is the mind, green protects) and the worst icon on top. <i>+ the smallest footprint of the three.</i> <u>– you must learn four colours; two conditions of the same kind look the same; the 6th arc is too thin.</u>`);
+} else {
+  title.innerHTML = `CONDITION MARKS · page 2 of 2 · the two that leave the board alone<small>Zoomed 1.7x. Same polluted cell, now at the size where the ledger and the initiative strip are real UI.</small>`;
+  const Z = 1.7, bd = board(5, 4, 2, 2, badgeD);
+  const p = panel("D · COUNT BADGE + LEDGER", 20, 96, 940, 560, bd, Z);
+  ledger(p, 505, 150, 1.3);
+  cap(20, 668, 940, `<b>On the board: one badge</b> (the worst condition + how many). <b>On hover or click: a ledger</b> like the pile slip, with every condition, its rule and its duration. <i>+ the board stays clean in any crowd; the rule text is where "why can't he move" gets answered.</i> <u>– you cannot read the other conditions without hovering; the ledger hides the neighbours.</u>`);
+  // E: the initiative strip carries them
+  const strip = $("div", "panel", stage, "left:980px;top:96px;width:920px;height:560px");
+  $("div", "tag", strip).textContent = "E · IN THE INITIATIVE STRIP";
+  const units = [["lizardfolk/5", "p", MINE, 1], ["giant_spider/0", "e", ["entangled"], 0], ["human/0", "p", [], 0], ["giant_spider/1", "e", ["demoralized", "bleeding"], 0],
+                 ["ogre/0", "e", [], 0], ["dwarf/0", "p", ["defending"], 0], ["gnoll/0", "e", [], 0], ["lizardfolk/0", "a", ["bleeding"], 0]];
+  const row = $("div", "", strip, "position:absolute;left:30px;top:140px;transform:scale(1.35);transform-origin:0 0;width:640px;height:150px");
+  units.forEach(([who, s, cs, now], i) => {
+    const c = $("div", "coin " + s + (now ? " now" : ""), row, `left:${i * 76}px;top:0`);
+    c.innerHTML = `<img src="${PORT}${who}.png"><div class="hp"><i style="width:${now ? 60 : 85}%"></i></div>`;
+    const cp = $("div", "cpips", c);
+    cs.slice(0, 3).forEach(id => { const k = CONDS[id], pip = $("div", "pip c-" + k.cls, cp); pip.innerHTML = ico(k.icon); });
+    if (cs.length > 3) { const m = $("div", "more", cp, "position:static;min-width:17px;height:17px;font-size:10px"); m.textContent = "+" + (cs.length - 3); }
+  });
+  const sm = $("div", "", strip, "position:absolute;left:30px;top:340px;width:860px;font:15px/1.4 Georgia,serif;color:#cdbb97");
+  sm.innerHTML = `The strip already lists <b style="color:#f0d79e">every unit, seen or not</b>, in turn order, and nothing can cover it. Each coin gets its pips below it (3 and a "+N"). The board token gets nothing but the ring, so a fight in a crowd stays readable; hovering a coin lights the token. <b style="color:#7fa557">+ the one place that never overlaps anything, and it answers "who is hurt in this fight?" at once.</b> <b style="color:#d0493a">– your eyes leave the board to read it; a unit far from the strip's coin is harder to match.</b>`;
+}
+</script>
+</body>
+</html>
