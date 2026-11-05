@@ -331,7 +331,10 @@ def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
     if voice is None:
         return 0.0
     cha = max(0, voice.haggle_charisma_mod) * CHA_DEAL_STEP
-    return round(max(DEAL_MIN, min(DEAL_MAX, cha + _ALIGN_DEAL[dist])), 3)
+    align = _ALIGN_DEAL[dist]
+    if voice.talent_bonus("open_market"):
+        align = max(0, align)
+    return round(max(DEAL_MIN, min(DEAL_MAX, cha + align)), 3)
 
 
 def market_deal(party, vendor_language, vendor_alignment, leader=None):

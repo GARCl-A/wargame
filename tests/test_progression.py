@@ -458,7 +458,7 @@ def test_tier2_talent_effect_survives_a_save():
 
 def _work_ready(*picks):
     """A fresh Unit at enough work level with the given work talents spent."""
-    u = Unit("player")
+    u = standard_unit()
     u.money = 0
     u._base_inventory = []
     marks = 12 if len(picks) == 3 else 20 if len(picks) >= 4 else 6

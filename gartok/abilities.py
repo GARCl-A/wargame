@@ -52,6 +52,7 @@ class Ability:
     sleep_immunity: bool = False      # the Sleep spell (magic.py) never affects this unit
     venom: str | None = None          # poison id (poisons.py): a bite that hurts forces a Constitution save
     finesse: bool = False             # every melee attack hits with the better of Strength and Dexterity
+    fall_free: int = 0                # levels of a fall that cost nothing (the first level is always free)
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -142,6 +143,10 @@ _LIST = [
             "speaks a second random language: can Demoralize enemies that share "
             "either of the two.",
             extra_languages=1),
+    Ability("catfall", "Catfall",
+            "always lands on their feet: 3 more levels of a fall cost nothing (a drop of up "
+            "to 4 levels does no damage).",
+            fall_free=3),
     Ability("mimic_sounds", "Mimic Sounds",
             "can Demoralize with no shared language (mimics the target's voice) "
             "-- offence only; being demoralized still needs a common tongue.",
@@ -182,7 +187,7 @@ ABILITIES = {a.id: a for a in _LIST}
 _NONE = Ability("none", "No ability", "no effect.")
 
 
-_SUMMED = ("hp_max", "speed", "ac_natural", "damage_reduction", "initiative",
+_SUMMED = ("hp_max", "speed", "fall_free", "ac_natural", "damage_reduction", "initiative",
            "melee_damage", "melee_reach", "extra_languages", "demoralize_vs_weaker")
 _WIDEST = ("darkvision", "auto_climb_dc")
 

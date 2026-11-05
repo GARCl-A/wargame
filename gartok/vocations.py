@@ -19,6 +19,7 @@ WARBAND, DELVERS, WILDS, SCHOLARS, CARAVAN, MARSH = (
 
 COHESION_BONUS = 1          # Warband: added to Mental Defense in the daily cohesion roll only
 GATHER_BONUS = 0.15         # Delvers: extra yield from gathering work
+NIGHT_PROWLER_AMBUSH = 0.8    # Catfolk Night Prowler: x on the ambush chance at night, while Cautious
 CAUTIOUS_AMBUSH = 0.8       # Wilds: x on the ambush chance while the group is Cautious
 TRAVEL_FACTOR = 0.85        # Caravan: x on travel hours, after wagon and animal speed
 PATHFINDER_FACTOR = 0.90    # a Pathfinder in the group: x on travel hours, stacks with Caravan
@@ -60,7 +61,7 @@ VOCATIONS = {v.id: v for v in (
              "and Assess.",
              motto="Know the beast before you meet it."),
     Vocation(CARAVAN, "Caravan",
-             ("Human", "Halfling", "Dwarf", "Kenku", "Automaton", "Centaur"),
+             ("Human", "Halfling", "Dwarf", "Catfolk", "Automaton", "Centaur"),
              "Travel takes 15% fewer hours.",
              motto="A coin that sits still is a coin half spent."),
     Vocation(MARSH, "Marsh",
@@ -110,10 +111,15 @@ def travel_mult(guild, group=None):
     return mult
 
 
-def ambush_mult(guild, stance, scout=False):
+def night_mult(stance, prowler):
+    """The factor a Night Prowler puts on the ambush chance of an hour after dark: Cautious only."""
+    return NIGHT_PROWLER_AMBUSH if prowler and stance == CAUTIOUS else 1.0
+
+
+def ambush_mult(guild, stance, scout=False, prowler=False):
     """The factor on a rolled ambush chance. *Normal* changes nothing; *Cautious*
-    is 1 on its own, x0.8 with the Wilds perk and x0.9 with a Woodland Scout, and
-    they multiply."""
+    is 1 on its own, x0.8 with the Wilds perk, x0.9 with a Woodland Scout and x0.8 at night
+    with a Night Prowler, and they multiply."""
     if stance != CAUTIOUS:
         return 1.0
     mult = 1.0
@@ -121,6 +127,8 @@ def ambush_mult(guild, stance, scout=False):
         mult *= CAUTIOUS_AMBUSH
     if scout:
         mult *= 0.9
+    if not guild.clock.is_daylight:
+        mult *= night_mult(stance, prowler)
     return mult
 
 

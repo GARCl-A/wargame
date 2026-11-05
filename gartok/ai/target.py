@@ -3,13 +3,14 @@
 from .. import actions, intel
 from ..board import cells, grid_distance
 from .common import _avg_die, _hand_die
-from .reckon import _jet_avg
+from .reckon import _bleed_tick, _jet_avg
 
 
 def _focus_key(battle, unit, foe):
     """How a unit ranks the foes it may hit: nearest first, then the lowest health it can tell
-    (the exact hit points once read, the health step before that)."""
-    exact = foe.hp if intel.knows(battle, unit.team, foe, "hp") else 99
+    (the exact hit points once read, less what its wounds take before it acts again, the health step
+    before that)."""
+    exact = foe.hp - _bleed_tick(foe) if intel.knows(battle, unit.team, foe, "hp") else 99
     return (battle.units_distance(unit, foe), intel.health_steps(foe), exact)
 
 

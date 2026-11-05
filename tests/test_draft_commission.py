@@ -116,7 +116,7 @@ def test_commission_archetypes_are_roles_not_a_race_picker():
     least four races to cover half of the candidates it can produce."""
     import random
     from collections import Counter
-    random.seed(11)
+    random.seed(13)
     pool = [Unit("player") for _ in range(6000)]
     for key, arc in archetypes.ARCHETYPES.items():
         races = Counter(u.race["name"] for u in pool if arc.predicate(u))

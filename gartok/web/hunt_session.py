@@ -363,15 +363,18 @@ class HuntSession(Session):
             shroom, fruit = hunt.forage_chances(s)
             line = f"Forage an hour: {shroom:.0%} mushroom, {fruit:.0%} fruit"
         out = {"line": line, "ambush_mult": None}
-        if s.ambush_mult != 1.0:
+        if s.ambush_mult != 1.0 or s.night_mult != 1.0:
             why = "the Ogre's goblins range the Wilds" if wildfire.hold_standing(self.guild) else "cautious"
             out["ambush_mult"] = f"Ambush chance x{s.ambush_mult:.2f} ({why})"
+            if s.night_mult != 1.0:
+                out["ambush_mult"] += f", x{s.night_mult:.2f} after dark"
         return out
 
     def _setup(self):
         s = self.state_
         crew = hunt.party_yield(len(s.party)) * s.yield_mult * s.meat_mult
         odds = round(hunt.AMBUSH_CHANCE_PER_HOUR * s.ambush_mult * 100)
+        night = round(hunt.AMBUSH_CHANCE_PER_HOUR * s.ambush_mult * s.night_mult * 100)
         return {"targets": [{"id": "meat", "name": "Hunt for meat", "sub": "1 kg for every 2 hours of a crew of three",
                              "on": s.target == "meat"},
                             {"id": "shrooms", "name": "Forage the Wilds", "sub": "Red Mushrooms and fresh fruit",
@@ -379,8 +382,8 @@ class HuntSession(Session):
                 "shifts": [{"hours": h, "on": h == self.hours,
                             "sub": f"about {int(h * crew // hunt.HUNT_MEAT_HOURS)} kg of meat" if s.target == "meat"
                             else "mushrooms and fruit"} for h in self.shifts],
-                "note": f"{odds}% chance each hour that a pack finds you first: a scaled fight, lethal, "
-                        "but the bodies are worth looting.",
+                "note": f"{odds}% chance each hour{f' ({night}% after dark)' if night != odds else ''} "
+                        "that a pack finds you first: a scaled fight, lethal, but the bodies are worth looting.",
                 "why": None}
 
     def _track_setup(self):

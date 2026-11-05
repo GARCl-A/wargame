@@ -758,8 +758,12 @@ class Battle:
         if self.board.is_deep_water(unit.pos):
             log(f"{unit.name} plunges into deep water -- the water breaks the fall.")
             return
-        dmg = data.roll(drop - 1, 6)
-        log(f"{unit.name} falls {drop} levels -> {dmg} damage ({drop - 1}d6).")
+        dice = drop - 1 - unit.ability.fall_free
+        if dice <= 0:
+            log(f"{unit.name} falls {drop} levels and lands on their feet.")
+            return
+        dmg = data.roll(dice, 6)
+        log(f"{unit.name} falls {drop} levels -> {dmg} damage ({dice}d6).")
         unit.take_damage(dmg, log)
 
     def plant_web(self, spider, anchor):

@@ -299,3 +299,17 @@ def test_a_hunt_ambush_that_is_not_a_clean_stomp_must_be_played(saves):
         s.fight(swift=True)
     assert s.phase == "ambush"
 
+
+def test_the_setup_note_gives_the_odds_after_dark_to_a_cautious_night_prowler():
+    from gartok.group import CAUTIOUS
+    guild, g = _guild()
+    cat = g.members[0]
+    cat.set_race("Catfolk")
+    cat.set_track_level("racial", 15)
+    assert cat.choose_talent("racial", "night_prowler")
+    _, s = _hunt(guild, g)
+    assert "after dark" not in s.state()["setup"]["note"]
+    g.stance = CAUTIOUS
+    _, s = _hunt(guild, g)
+    assert "12% after dark" in s.state()["setup"]["note"]
+    assert "x0.80 after dark" in s.state()["yields"]["ambush_mult"]

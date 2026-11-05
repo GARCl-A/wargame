@@ -285,7 +285,7 @@ def _conditions(u):
         out.append("stable")
     elif u.broken:
         out.append("broken")
-    out += [CONDITION_LABELS.get(c.id, c.id) for c in u.conditions]
+    out += [getattr(c, "label", None) or CONDITION_LABELS.get(c.id, c.id) for c in u.conditions]
     if u.poisoned:
         out.append("poisoned")
     if u.hunger_level:

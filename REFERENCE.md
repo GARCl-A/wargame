@@ -11,20 +11,21 @@ The playable races. `d100` is the roll that picks one; the modifiers are added t
 
 | Race | d100 | STR DEX CON INT WIS CHA | Hit Die | Size | Language | Age | Ability |
 |---|---|---|---|---|---|---|---|
-| Dwarf | 1-15 | +1 +0 +2 +0 -1 -2 | d10 | Medium | Dwarvish | 5x | Darkvision |
-| Automaton | 16-17 | +1 +1 +0 +0 -1 -1 | d8 | Medium | Ankarin | 1x | Inorganic Body |
-| Centaur | 18-19 | +1 -2 +0 +0 +2 -1 | d10 | Large | Elvish | 2.5x | Gallop |
-| Elf | 20-34 | -2 +2 -1 +1 +0 +0 | d8 | Medium | Elvish | 8.75x | Sleep Immunity |
-| Gnoll | 35 | +0 +0 +2 -1 +0 -1 | d8 | Medium | Orcish | 0.625x | Strong Stomach |
-| Gnome | 36 | -2 +1 -1 +0 +1 +1 | d8 | Small | Gnomish | 6.25x | Nature Magic |
-| Goblin | 37-51 | -1 +2 +1 -1 +0 -1 | d6 | Small | Goblin | 0.625x | Pack Tactics |
-| Goliath | 52-54 | +2 +1 +0 -1 -1 -1 | d10 | Medium | Jotun | 1x | Strong Body |
-| Grippli | 55-57 | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
-| Halfling | 58-60 | -2 +2 -2 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Innocent Face |
-| Hobgoblin | 61-64 | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Browbeat |
-| Lizardfolk | 65-74 | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
-| Human | 75-89 | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
-| Kenku | 90-92 | -3 +1 -1 +0 +1 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
+| Dwarf | 1-14 | +1 +0 +2 +0 -1 -2 | d10 | Medium | Dwarvish | 5x | Darkvision |
+| Automaton | 15-16 | +1 +1 +0 +0 -1 -1 | d8 | Medium | Ankarin | 1x | Inorganic Body |
+| Centaur | 17-18 | +1 -2 +0 +0 +2 -1 | d10 | Large | Elvish | 2.5x | Gallop |
+| Elf | 19-32 | -2 +2 -1 +1 +0 +0 | d8 | Medium | Elvish | 8.75x | Sleep Immunity |
+| Gnoll | 33 | +0 +0 +2 -1 +0 -1 | d8 | Medium | Orcish | 0.625x | Strong Stomach |
+| Gnome | 34 | -2 +1 -1 +0 +1 +1 | d8 | Small | Gnomish | 6.25x | Nature Magic |
+| Goblin | 35-48 | -1 +2 +1 -1 +0 -1 | d6 | Small | Goblin | 0.625x | Pack Tactics |
+| Goliath | 49-51 | +2 +1 +0 -1 -1 -1 | d10 | Medium | Jotun | 1x | Strong Body |
+| Grippli | 52-54 | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
+| Halfling | 55-57 | -2 +2 -2 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Innocent Face |
+| Hobgoblin | 58-61 | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Browbeat |
+| Lizardfolk | 62-71 | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
+| Human | 72-86 | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
+| Kenku | 87-89 | -3 +1 -1 +0 +1 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
+| Catfolk | 90-92 | -1 +1 +0 -1 +0 +1 | d6 | Medium | Sylvan | 1x | Catfall |
 | Kobold | 93-95 | -2 +1 +0 +1 -1 +1 | d6 | Small | Draconic | 2.5x | Blood Magic |
 | Treefolk | 96 | -1 +0 +1 -1 +1 +0 | d6 | Medium | Verdant | 1x | Autotroph |
 | Orc | 97-99 | +2 +1 +1 -1 +0 -3 | d10 | Medium | Orcish | 0.625x | Ferocity |
@@ -67,6 +68,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Innocent Face | Halfling | an unassuming face that guards tend to ignore: crime rating naturally decays by 1 every 7 days. |
 | Climber | Lizardfolk, Giant Spider | climbs any surface of DC 25 or lower with no check (still costs the action). |
 | Extra Language | Human | speaks a second random language: can Demoralize enemies that share either of the two. |
+| Catfall | Catfolk | always lands on their feet: 3 more levels of a fall cost nothing (a drop of up to 4 levels does no damage). |
 | Mimic Sounds | Kenku | can Demoralize with no shared language (mimics the target's voice) -- offence only; being demoralized still needs a common tongue. |
 | Blood Magic | Kobold | ancestral blood magic: starts initiated in blood magic, +2 to spell study rolls. |
 | Autotroph | Treefolk | photosynthesises: never needs to eat, immune to the hunger rules. |
@@ -121,7 +123,7 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering: work shifts, and the meat, mushrooms and fruit of a hunt or forage. |
 | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | Ambushes are 20% less likely while a group travels Cautious: on the Old Road and on a hunt. |
 | Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information: the opening read and Assess. |
-| Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | Travel takes 15% fewer hours. |
+| Caravan | Human, Halfling, Dwarf, Catfolk, Automaton, Centaur | Travel takes 15% fewer hours. |
 | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | On every 10th day no food in the guild ages. |
 
 ## Weapons
@@ -441,6 +443,9 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Automaton | 1 | Iron Plating | +1 AC. | -- |
 | Automaton | 1 | Self-Repair | your works mend themselves: heal 1 HP after every fight you survive. | -- |
 | Automaton | 1 | Tireless Worker | machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- |
+| Catfolk | 1 | Night Prowler | the night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night. | -- |
+| Catfolk | 1 | Open Market | a stranger's coin is as good as any: no price penalty for a vendor of a different tendency when you haggle. | -- |
+| Catfolk | 1 | Razor Claws | bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer. | -- |
 | Centaur | 1 | Lift Rider | 1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move. | -- |
 | Centaur | 1 | Mount | your strong back: allow a Medium or Small ally to ride you. | -- |
 | Centaur | 2 | Cavalry Charge | your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved. | Mount |

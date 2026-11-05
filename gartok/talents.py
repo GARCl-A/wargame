@@ -58,6 +58,9 @@ exactly one consumer that reads it back:
     spell_range       actions.SpellAction              --
     obscured_penalty_relief actions.base.obscured_penalty --
     flank_defense     actions.base._flank_penalty      --
+    bleeding_claws    actions.base._claw               --
+    night_prowler     vocations.ambush_mult            --
+    open_market       economy.haggle_voice             --
     demoralize_bonus  actions.combat.Demoralize        --
     gruesome_takedown actions.base._resolve_hit        --
     demoralized_target_damage actions.base._resolve_hit --
@@ -562,6 +565,18 @@ _LIST = [
     Talent("mimic_voices", "racial", 1, "Mimic Voices",
            "+1 on performance rolls when playing on the tavern stage.", race="Kenku",
            effects=(Effect("tavern_perform_bonus", 1),), icon="action/sing"),
+    Talent("razor_claws", "racial", 1, "Razor Claws",
+           "bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: "
+           "the damages add up and the duration becomes the longer.", race="Catfolk",
+           effects=(Effect("bleeding_claws", 1),), icon="action/tearing"),
+    Talent("night_prowler", "racial", 1, "Night Prowler",
+           "the night is yours: while the group travels Cautious, the chance of an ambush is "
+           "x0.8 at night.", race="Catfolk",
+           effects=(Effect("night_prowler", 1),), icon="body/shadow-follower"),
+    Talent("open_market", "racial", 1, "Open Market",
+           "a stranger's coin is as good as any: no price penalty for a vendor of a different "
+           "tendency when you haggle.", race="Catfolk",
+           effects=(Effect("open_market", 1),), icon="action/trade"),
     Talent("trap_master", "racial", 2, "Trap Master",
            "plant your traps up to 3 squares away when a fight begins.",
            requires="kobold_trapper", race="Kobold",

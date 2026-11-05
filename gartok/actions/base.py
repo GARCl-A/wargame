@@ -4,6 +4,7 @@ import random
 
 from .. import combat_log, intel, poisons
 from ..board import cells
+from ..conditions import BLEEDING_CLAWS_TURNS, Bleeding
 from ..data import roll
 from ..ground import GroundObject
 
@@ -244,6 +245,15 @@ def _envenom(battle, attacker, target):
     target.check_collapse(battle.log)
 
 
+def _claw(battle, attacker, target, dmg, weapon):
+    """A bare-handed blow of a clawed attacker that cut a standing target: it bleeds."""
+    n = attacker.char.talent_bonus("bleeding_claws")
+    if not n or weapon is not None or attacker.armed or dmg <= target.dr or target.hp <= 0:
+        return
+    target.add_condition(Bleeding(int(n), BLEEDING_CLAWS_TURNS))
+    battle.log(f"  {target.name} is bleeding ({target.condition('bleeding').label}).")
+
+
 NONLETHAL_PENALTY = 1      # to hit, while a character pulls its blows (the Non-lethal toggle)
 
 
@@ -407,6 +417,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
                 _check_gruesome_takedown(battle, attacker, target)
         if not thrown and target.team != attacker.team:
             _envenom(battle, attacker, target)
+            _claw(battle, attacker, target, dmg, weapon)
         return "crit" if crit else "hit"
     battle.log(desc + "  -> misses.")
     battle.fx(target.pos, fx_text, "faint")

@@ -105,7 +105,8 @@ def road_ambush_catch(guild, group, prev_node, resume_path):
     if not node.unsafe:
         return None
     chance = world.ROAD_AMBUSH_CHANCE * vocations.ambush_mult(
-        guild, group.stance, scout=group.has_talent("woodland_scout"))
+        guild, group.stance, scout=group.has_talent("woodland_scout"),
+        prowler=group.has_talent("night_prowler"))
     if random.random() >= chance:
         return None
     pack = encounters.roll_encounter(node.encounter_table)

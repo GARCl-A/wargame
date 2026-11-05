@@ -2,6 +2,7 @@
 
 from .. import actions, data, intel, items
 from ..board import cells
+from ..conditions import BLEEDING_CLAWS_TURNS
 from .common import _avg_die, _hand_die, _runs_flag
 
 
@@ -108,7 +109,20 @@ def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
     cull = 0
     if getattr(target, "demoralized", False) and hasattr(unit, "char"):
         cull = getattr(unit.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
-    return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage + cull)
+    bleed = _bleed_worth(unit, target) if not kw.get("thrown") else 0
+    return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage + cull + bleed)
+
+
+def _bleed_tick(foe):
+    """What the foe's open wounds take from it at the end of its next turn."""
+    bleed = foe.condition("bleeding")
+    return bleed.damage if bleed else 0
+
+
+def _bleed_worth(unit, target):
+    """What the Catfolk's Razor Claws add to a landed bare-handed blow: the new wound's whole bleed."""
+    n = unit.char.talent_bonus("bleeding_claws")
+    return n * BLEEDING_CLAWS_TURNS if n and not unit.armed else 0
 
 
 def _two_points(battle, unit, target):
@@ -141,7 +155,8 @@ def _fall_worth(battle, foe, dest):
     drop = battle.elevation(foe) - battle.elevation_at(dest, foe)
     if drop <= 1 or foe.flies or battle.board.is_deep_water(dest):
         return 0.0
-    return _avg_die((drop - 1, 6))
+    dice = drop - 1 - foe.ability.fall_free
+    return _avg_die((dice, 6)) if dice > 0 else 0.0
 
 
 def _cell_damage(battle, foe, dest):

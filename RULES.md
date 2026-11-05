@@ -56,7 +56,7 @@ The generator's exact order:
 A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
 - The guild picks one **vocation** (`vocations.py`), once and for good: six races and one fixed perk that **the whole guild** has, whatever a member's race (the catalog is `REFERENCE.md` § Vocations). The draft pool of the chosen vocation always holds at least one candidate of each of its six races, the other three come from the natural race table (all 18 races); a commission replaces a card from that same natural table. What the catalog line leaves out: the Warband's +1 counts in the daily cohesion roll only, an overextended group's defence penalty is unchanged; the Delvers' +15% covers work-shift pay (the odd fraction of a coin is paid by chance) and the food of a hunt or forage, never a creature's drop (a wolf's hide); the Caravan's cut comes after wagon and animal speed; the Marsh counts the guild's own clock (`day % 10 == 0`).
 
-- **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers every ambush the player walks into: the Old Road leg (`forced.road_ambush_catch`), the hunt's hourly roll (`hunt.hunt_stretch`), a gathering shift (`Guild.gather_risk_mult`) and each leg of a supply run (`Guild.supply_leg`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wilds perk makes it x0.8 and the Elf's *Woodland Scout* x0.9, and they multiply (road 0.2 -> 0.144 with both). *Cautious* costs nothing but the XP and loot of the fights it avoids.
+- **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers every ambush the player walks into: the Old Road leg (`forced.road_ambush_catch`), the hunt's hourly roll (`hunt.hunt_stretch`), a gathering shift (`Guild.gather_risk_mult`) and each leg of a supply run (`Guild.supply_leg`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wilds perk makes it x0.8 and the Elf's *Woodland Scout* x0.9 and the Catfolk's *Night Prowler* x0.8 (at night only: the clock when the roll is made), and they multiply (road 0.2 -> 0.144 with Wilds and Scout). The night is read off the clock at the roll: a hunt hour by hour (a long stretch can cross dusk), the road leg on arrival, a gathering shift when it ends, a supply leg when it sets out. *Cautious* costs nothing but the XP and loot of the fights it avoids.
 - The draft offers a **pool of 9 candidates**; the player keeps 3 of them as the starting squad (click to pick, click again to put one back, scroll to see all nine).
 - To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
 - Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) in the pool: the commission names the archetypes, then the player clicks the candidate it replaces with a fresh one that has them (a replaced pick leaves the squad; tokens are spent only when the replacement happens). The nine tags and their thresholds are `REFERENCE.md` § Squad archetypes. TOUGH is HP (8+, the hit die counts) and HEALTHY is CON +2 (it sets the HP a rest gives back, `guild_upkeep.rest_heal`): they are two tags on purpose. **RISKY** is the warning tag (CON 8 or less, the six attributes adding up to 56 or less, or a carry too low for the starting kit); a card says which reason it has, and it can be commissioned like the rest for a player who wants a hard start. The pick step's tutorial card lists every tag from the catalog.
@@ -155,7 +155,7 @@ What an effect line cannot hold:
 
 - **Ferocity** (Orc): a second fatal hit before the end of its turn drops it at once.
 - Most abilities meet a rule further down rather than a number: Flight and Climber the Z axis,
-  Amphibious the water, Autotroph hunger, Extra Language and Mimic Sounds Demoralize and haggling,
+  Amphibious the water, Catfall the fall rule, Autotroph hunger, Extra Language and Mimic Sounds Demoralize and haggling,
   Inorganic Body the death rules.
 - Some 🟡 effects are still first guesses and carry a stand-in combat bonus so the ability is never
   inert; `abilities.py` calls them out.
@@ -476,6 +476,11 @@ Where each part lives is the code map of `README.md`.
   **Entangled** — −2 AC and no walking for the rest of that turn and all of its
   next one. The spider's own side walks through it freely; Disarm clears a web
   (no item to recover). The AI spins one when its prey is still a few steps off.
+- **Bleeding** (condition, `conditions.Bleeding`; the Catfolk's *Razor Claws* put it on a foe
+  that a bare-handed blow cut) = a pair *(damage, duration)*. At the end of the bleeding unit's own
+  turn it loses `damage` HP (armor does not stop it) and the duration drops by 1; at 0 it ends.
+  A new wound **stacks**: the damages add up and the duration becomes the longer, so (1,2) hit again
+  is (2,2), and (3,2) plus a (3,5) is (6,5). A unit that goes down stops bleeding; everyone bleeds.
 - **Mount / Dismount** (1 point) = a Small or Medium character rides on the back
   of an adjacent allied Centaur (unlocked via the Centaur's `Mount` talent),
   sharing the mount's positioning and speed (a rider does not walk: Move does nothing while
@@ -730,8 +735,8 @@ triples.
   anyone who **flies** (or, in future, has a climb speed) moves in three
   dimensions as normal movement and a pit does not stop them.
 - **Fall damage.** Descending `h` levels at once costs `max(0, h−1)d6` — the
-  first level is free, each level beyond it is 1d6. Fliers take no fall damage.
-  In `battle.apply_fall`.
+  first level is free, each level beyond it is 1d6. Fliers take no fall damage, and the
+  Catfolk's *Catfall* frees three more levels (`Ability.fall_free`). In `battle.apply_fall`.
 - **Climb** (1-point action, target = an adjacent cell of different elevation):
   a **Strength** check `d20 + STR mod` vs the **surface DC** — bare stone **15**,
   with a **rope 10** (`board.surface_dc`; the rope is an editor marker on a pit
@@ -1558,7 +1563,8 @@ Neutral**).
     "Extra Language"; the Kenku's "Mimic Sounds" does **not** help here.)
   - **Charisma:** `+0.04` of `deal` per positive modifier point.
   - **Alignment:** the distance between the negotiator's alignment and the
-    vendor's (0–4): `0 → +0.10 · 1 → +0.05 · 2 → 0 · 3 → −0.05 · 4 → −0.10`.
+    vendor's (0–4): `0 → +0.10 · 1 → +0.05 · 2 → 0 · 3 → −0.05 · 4 → −0.10`. The Catfolk's *Open
+    Market* keeps the breaks and drops the two penalties (they become 0).
   - `deal` is clamped to **[−0.15, +0.25]**.
 - Applied: `buy = base × (1 − deal)`, `sell = base × (0.5 + 0.4 × deal)`. The
   `deal` cap keeps sell **below** buy, so you cannot make money buying and

@@ -545,14 +545,10 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
-- **Catfolk as a 19th playable race (a friend's request, decided 2026-11-04).** Medium, d6, +1 DEX, +1 CHA,
-  -1 STR, -1 INT (sums to 0 like the other 18), as rare as the Kenku (3 of 100). Racial ability *Catfall*: the
-  first 3 levels of a fall do no damage (`battle.apply_fall`: the first level is already free, so a drop of up
-  to 4 levels costs nothing; it overlaps no ability). The Catfolk takes the Kenku's place in Caravan (the
-  Kenku keeps Scholars and Marsh). The d100 table gives it 3 positions, one taken from each of Dwarf, Elf
-  and Goblin (15 -> 14). Left for the next round: the language, the portraits, `art_files.RACE_ICON`, the
-  racial talents (every playable race holds at least three, one for each pick through racial 15), the
-  registry entries and `REFERENCE.md`. Do it with the vocation balance work (*Vocations: difficulty or build?*).
+- **Catfolk portraits.** The race is in (slots, Catfall, Sylvan, the three talents, Caravan); it has no
+  `assets/portraits/catfolk/` yet, so a Catfolk shows its glyph (`sly`) where the others show a face. The head
+  glyph is a stand-in too: the icon set has no feline head. Its numbers (the +1 DEX/+1 CHA body, the three talents)
+  wait for the vocation balance work (*Vocations: difficulty or build?*).
 
 - **Playtest with every routine open (author 2026-11-04).** Every block and place is open to a routine today.
   The playtest decides *Routine unlocks* (in *Large*), whether the editor needs validation marks (today a routine

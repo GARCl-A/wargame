@@ -104,7 +104,8 @@ class LaborMixin:
     def gather_risk_mult(self, group, node_id):
         """The factor on `node_id`'s ambush odds for `group`: its stance, a Woodland Scout and,
         at the Mine, the best Deep Miner."""
-        mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"))
+        mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"),
+                                     prowler=group.has_talent("night_prowler"))
         if node_id == "mine":
             mult *= 1 - max((u.talent_bonus("deep_miner") for u in group.members), default=0)
         return mult
@@ -149,7 +150,8 @@ class LaborMixin:
         the rest of the leg in `owed` for after the fight."""
         order = orders.next_leg(src, path, group.speed, vocations.travel_mult(self, group))
         order.task = "supply_run"
-        mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"))
+        mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"),
+                                     prowler=group.has_talent("night_prowler"))
         if rng.random() < economy.SUPPLY_RUN_AMBUSH_CHANCE * mult:
             order.owed = order.eta * rng.uniform(0.2, 0.8)
             order.remaining = order.eta - order.owed

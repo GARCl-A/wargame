@@ -67,6 +67,7 @@ class HuntState:
     biwolf: bool = False           # the ambush in progress is his
     yield_mult: float = 1.0        # the guild's gathering bonus (vocations.gather_mult)
     ambush_mult: float = 1.0       # the group's stance and the party's scouts (vocations.ambush_mult)
+    night_mult: float = 1.0        # x on the ambush chance of an hour after dark (a Night Prowler, Cautious)
     meat_mult: float = 1.0         # what the wildfires left of the Wilds' game (wildfire.meat_mult)
     guards: list = field(default_factory=list)  # units left outside minding the wagon
     pack: list = field(default_factory=list)    # the pack the stretch ended on, when `hunt_stretch` was given `roll_pack`
@@ -79,7 +80,7 @@ class HuntState:
 
 
 _SCALARS = ("hours_left", "hours_hunted", "yield_hours", "fights", "target", "shrooms_found",
-            "fruit_found", "biwolf", "yield_mult", "ambush_mult", "meat_mult")
+            "fruit_found", "biwolf", "yield_mult", "ambush_mult", "meat_mult", "night_mult")
 
 
 def to_dict(state):
@@ -91,9 +92,10 @@ def to_dict(state):
 def from_dict(d, units, node):
     """The `HuntState` `to_dict` wrote, its people looked up in `units` (anyone gone is left out)."""
     by_uid = {u.uid: u for u in units}
+    scalars = {k: d[k] for k in _SCALARS if k != "night_mult"}
+    scalars["night_mult"] = d.get("night_mult", 1.0)     # saved before Night Prowler existed
     return HuntState([by_uid[i] for i in d["party"] if i in by_uid], node,
-                     guards=[by_uid[i] for i in d["guards"] if i in by_uid],
-                     **{k: d[k] for k in _SCALARS})
+                     guards=[by_uid[i] for i in d["guards"] if i in by_uid], **scalars)
 
 
 def begin(guild, party, node, stance, hours_left=0, target="meat", guards=()):
@@ -106,6 +108,7 @@ def begin(guild, party, node, stance, hours_left=0, target="meat", guards=()):
                      ambush_mult=vocations.ambush_mult(guild, stance, scout=scouts)
                      * (wildfire.ambush_mult(guild) if wilds else 1.0),
                      meat_mult=wildfire.meat_mult(guild) if wilds else 1.0,
+                     night_mult=vocations.night_mult(stance, any(u.has_talent("night_prowler") for u in party)),
                      guards=list(guards or ()))
 
 
@@ -176,10 +179,11 @@ def hunt_stretch(state, rng=random, hour=None, lure=False, roll_pack=None):
                 state.shrooms_found += 1
             if rng.random() < FORAGE_FRUIT * yield_now:
                 state.fruit_found += 1
-        if lure and hour is not None and not clock.daylight_at(hour + elapsed - 1):
+        dark = hour is not None and not clock.daylight_at(hour + elapsed - 1)
+        if lure and dark:
             state.biwolf = True
             return elapsed, True
-        if rng.random() < chance:
+        if rng.random() < (chance * state.night_mult if dark else chance):
             if roll_pack is None:
                 return elapsed, True
             pack = roll_pack()

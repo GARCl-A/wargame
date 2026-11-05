@@ -28,6 +28,7 @@ RACE_ICON = {
     "Lizardfolk": "lizardman",
     "Human":      "caesar",
     "Kenku":      "kenku-head",
+    "Catfolk":    "sly",
     "Kobold":     "horned-reptile",
     "Leshy":      "sprout",
     "Treefolk":   "sprout",

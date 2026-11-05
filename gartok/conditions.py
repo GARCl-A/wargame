@@ -9,6 +9,9 @@ here + whoever applies it calls `unit.add_condition(...)`.
 """
 
 
+BLEEDING_CLAWS_TURNS = 2     # the Catfolk's Claws: each wound bleeds this many turns
+
+
 class Condition:
     id = ""
 
@@ -134,6 +137,38 @@ class Sleeping(Condition):
                 log(f"{unit.name} stirs and wakes up.")
                 return True
         return False
+
+
+class Bleeding(Condition):
+    """Open wounds: `damage` is lost at the end of the victim's own turn, for `duration` more
+    turns. A new wound stacks onto it: the damages add up, the duration becomes the longer.
+    Armor does not stop it; a unit that is down stops bleeding."""
+    id = "bleeding"
+
+    def __init__(self, damage, duration):
+        self.damage = damage
+        self.duration = duration
+
+    @property
+    def label(self):
+        return f"bleeding {self.damage} for {self.duration}"
+
+    def stack(self, other):
+        self.damage += other.damage
+        self.duration = max(self.duration, other.duration)
+
+    def on_turn_end(self, unit, log):
+        if unit.hp <= 0:
+            return True
+        log(f"{unit.name} bleeds.")
+        unit.take_damage(self.damage, log, ignore_dr=True)
+        self.duration -= 1
+        if unit.hp <= 0:
+            return True
+        if self.duration > 0:
+            return False
+        log(f"{unit.name} stops bleeding.")
+        return True
 
 
 class Maimed(Condition):

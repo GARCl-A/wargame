@@ -253,8 +253,11 @@ class Combatant:
         return any(c.id == cid for c in self.conditions)
 
     def add_condition(self, cond):
-        if not self.has_condition(cond.id):
+        held = self.condition(cond.id)
+        if held is None:
             self.conditions.append(cond)
+        elif hasattr(held, "stack"):
+            held.stack(cond)
 
     def condition(self, cid):
         return next((c for c in self.conditions if c.id == cid), None)
@@ -686,8 +689,9 @@ class Combatant:
             total *= max(1, crit_mult or w.get("crit_mult", 2))
         return max(1, total)
 
-    def take_damage(self, amount, log, knockout=False):
-        amount = max(0, amount - self.dr)
+    def take_damage(self, amount, log, knockout=False, ignore_dr=False):
+        if not ignore_dr:
+            amount = max(0, amount - self.dr)
         
         # Wakes up if sleeping
         sleeping_cond = next((c for c in self.conditions if c.id == "sleeping"), None)
