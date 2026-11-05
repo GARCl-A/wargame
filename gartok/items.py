@@ -86,6 +86,7 @@ class ItemDef:
     language: str | None = None
     max_charges: int | None = None
     light_radius: int = 0
+    base: str | None = None        # a size variant's plain weapon ("Dagger" for "Large Dagger"): its shown name is built from it
 
     def has_trait(self, trait_id: str) -> bool:
         return trait_id in self.traits
@@ -313,14 +314,14 @@ for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits
         id=large_slug, name=large_name, type=ItemType.WEAPON, rarity=rarity,
         weight=round(weight * 2, 1), price=price * 2, size=WeaponSize.LARGE,
         damage=step_damage_die(dmg), range=rng, reach=reach, finesse=fin, thrown=thr,
-        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult,
+        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult, base=name,
     ))
     # Huge variant: an Ogre's, or a Large body with Giant's Grip
     _register(ItemDef(
         id=f"huge_{slug}", name=f"Huge {name}", type=ItemType.WEAPON, rarity=rarity,
         weight=round(weight * 4, 1), price=price * 4, size=WeaponSize.HUGE,
         damage=step_damage_die(step_damage_die(dmg)), range=rng, reach=reach, finesse=fin, thrown=thr,
-        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult,
+        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult, base=name,
     ))
 
 # Armor
@@ -430,6 +431,36 @@ def get(key: str) -> ItemDef | None:
     if item is not None:
         return item
     return _LOOKUP.get(key.lower())
+
+
+def _composed_names(cat):
+    """The shown names of the items that are built from parts, not written one by one: a size variant is its
+    plain weapon + a size word, a scroll its spell, a dictionary its language (`name.compose.*` hold each
+    language's word order). A new spell or weapon needs only its own entry. `cat` is one language's catalog;
+    a part that language has not written yet leaves the item to the `en` name."""
+    out = {}
+
+    def put(item_name, text, gender):
+        out[f"name.item.{item_name}"] = text
+        if gender:
+            out[f"name.item.{item_name}.gender"] = gender
+
+    for item in _REGISTRY.values():
+        if item.base and "name.compose.size" in cat:
+            base, size = cat.get(f"name.item.{item.base}"), cat.get(f"name.size.{item.size.value}")
+            if base and size:
+                put(item.name, cat["name.compose.size"].format(base=base, size=size),
+                    cat.get(f"name.item.{item.base}.gender"))
+        elif item.spell_id and "name.compose.scroll" in cat and cat.get(f"name.spell.{item.spell_id}"):
+            put(item.name, cat["name.compose.scroll"].format(spell=cat[f"name.spell.{item.spell_id}"]), "m")
+        elif item.language and "name.compose.dictionary" in cat and cat.get(f"name.language.{item.language}"):
+            put(item.name, cat["name.compose.dictionary"].format(language=cat[f"name.language.{item.language}"]), "m")
+    if "name.compose.any" in cat and cat.get("name.item.Dictionary"):
+        put("Any Dictionary", cat["name.compose.any"].format(base=cat["name.item.Dictionary"]), "m")
+    return out
+
+
+i18n.register_composer(_composed_names)
 
 
 def all_items() -> dict[str, ItemDef]:

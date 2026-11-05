@@ -52,6 +52,7 @@ def random_name(rng=_rng):
 EPITHETS = [
     "Scarred", "Pale", "Gaunt", "Old", "Young", "Black", "Grey", "Sleek", "Lean", "Hulking",
     "Wary", "Restless", "Sullen", "Twitchy", "Hungry", "Starved", "Feral", "Battered", "Bold", "Cunning",
+    "Lithe", "Grim",
 ]
 
 

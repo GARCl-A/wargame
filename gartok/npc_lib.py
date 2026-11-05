@@ -35,7 +35,7 @@ def save_npc(unit, slug=None):
     """Write `unit` to `npcs/<slug>.json` (slug defaults to the name). Returns the
     slug actually used. Atomic: never leaves a half-written file."""
     os.makedirs(NPC_DIR, exist_ok=True)
-    slug = slug or slugify(unit.name)
+    slug = slug or slugify(unit._name)
     payload = unit_to_dict(unit)
     payload["npc_slug"] = slug
     tmp = npc_path(slug) + ".tmp"

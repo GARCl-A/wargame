@@ -23,8 +23,23 @@ the translator's pick and wait for the author's read. A string that needs a term
 | Weapon trait | traço da arma |
 | The Tanners | Os Coureiros |
 | The Blood Cult | O Culto do Sangue |
+| Aurochs | Auroque |
+| Ruin Sentry | Sentinela das Ruínas |
+| The Ancient Archivist | O Arquivista Ancestral |
+| Kharzuul the Ember-Old | Kharzuul, a Brasanciã |
+| Oskar Vell, the Gravecaller | Oskar Vell, o Levanta-Corpos |
+| Grumbold the Builder | Grumbold, o Konstrutor (misspelt on purpose) |
+| Dwarf (race) | Anão (adjective: enânico / enânica) |
+| Large / Huge (size) | Grande / Enorme |
+| Any Dictionary | Qualquer Dicionário |
+| Biwolf | Grão-Lobo |
+| Adelio Small-Knife | Adelio Facadinha |
+| Beast epithets (m / f) | Marcado/a, Pálido/a, Descarnado/a, Velho/a, Jovem, Negro/a, Cinzento/a, Ligeiro/a, Esguio/a, Magro/a, Troncudo/a, Arisco/a, Inquieto/a, Carrancudo/a, Soturno/a, Nervoso/a, Faminto/a, Definhado/a, Selvagem, Surrado/a, Audaz, Astuto/a |
 
 ## Proposed
+
+Languages (dictionary names): Draconic = Dracônico, Dwarvish = Enânico, Elvish = Élfico, Gnomish = Gnômico, Halfling = Halfling (the race may stay untranslated, undecided), Orcish = Orc,
+Sylvan = Silvestre, Verdant = Verdejante; Ankarin, Goblin, Halfling and Jotun stay. Sizes: Tiny/Small/Medium = Minúsculo/Pequeno/Médio.
 
 Attributes and rules: CON / INT / WIS = CON / INT / SAB. AC = CA (classe de armadura). HP = PV. DC = CD. pt / pts (action points) = pt / pts.
 Mental Defense = Defesa Mental. Initiative = iniciativa. Round = rodada. Turn = turno. Reach = alcance. Range = distância. Square / sq = casa.
@@ -39,7 +54,7 @@ Wake Up = Acordar. End Turn = Encerrar Turno. Delay = Adiar. Assess = Avaliar. I
 Disarm Trap = Desarmar Armadilha. Capture = Capturar. Move = Mover. Climb = Escalar. Jump = Saltar. Swim = Nadar.
 
 World (vocations read as "we are ..."): Warband = Bando de Guerra. Delvers = Exploradores. Wilds (renamed Wanderers in English) = Andarilhos. Scholars = Eruditos. Caravan = Caravaneiros. Marsh (renamed Survivors in English) = Sobreviventes.
-Faction = facção. Reputation = reputação. Deed = feito. Mission = missão. Node = local. Pack = mochila. Copper Coin = Moeda de Cobre.
+Wilds (the place) = Ermos (os Ermos). Faction = facção. Reputation = reputação. Deed = feito. Mission = missão. Node = local. Pack = mochila. Copper Coin = Moeda de Cobre.
 Gold Coin = Moeda de Ouro. Talent = talento. Racial ability = habilidade racial.
 The Pits = As Fossas. The Bankers = Os Banqueiros. The Library = A Biblioteca. The Apothecary = O Boticário.
 Ledger Hold, renamed Field Command in English (2026-11-05) = Posto de Comando. The Nature Coven = O Clã da Natureza. The Faith Order = A Ordem da Fé.

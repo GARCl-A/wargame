@@ -146,20 +146,36 @@ translation service runs in the game. Then the author reads it in play, as with 
 Check: overflow on long strings (Portuguese runs ~20-30% longer: the overflow items in the backlog apply),
 accents and the font's glyph coverage (ç, ã, õ, é…), sort order, number and money formats.
 
-Started (2026-11-05): the whole `ui` group (1,373 keys), the `action` group (224), the `log` group (278) and every session/rule group are translated; the author has not read it in play yet, so its tone is
-unconfirmed. The rest falls back to English, so every screen still shows English where its group is missing (the title quote and
-menu, "Back to title", ...). Left, 965 keys (re-count with a key diff of `en.json` against `pt-br.json`):
-`name` 531 and `desc` 331 (catalog: items, talents, races, nodes, vocations, missions...), the `tutorial` cards (96) and the credits (7). Every other group is
-translated; the catalog groups wait on the open decisions below (gender, display names), so a `{item}` in a sentence is written without an article for now.
+Written (2026-11-05): every group is in `pt-br.json`, the catalog groups included (items, races, nodes, talents, abilities, missions, deeds, objectives, vendor lines, NPC bios, the tutorial cards, the credits, the keepers' roles with a feminine `.f` form picked by `Vendor.female`). The author has not read any of it in play yet, so its tone is unconfirmed. Items and races the sentences name still read without an article until each sentence moves to `{item:o}`.
 How to continue: write a flat `{"dotted.key": "texto"}` chunk per group and fold it in with `python scripts/i18n_merge.py chunk.json`
 (it refuses a key with no `en` twin, another shape or other `{placeholders}`); `tests/test_i18n.py` still passes while the build is partial.
 Decisions made with the author: the glossary (pt names of the actions, attributes FOR/DES/CAR, Charter = Estatuto, Band = Grupo, vocations
 Bando de Guerra / Exploradores / Andarilhos / Eruditos / Caravaneiros / Sobreviventes), and the English names `Ledger Hold` -> `Field
 Command`, `Wilds` -> `Wanderers`, `Marsh` -> `Survivors` (vocations; ids unchanged).
-Still open, for the `name` / `desc` groups: the display-name layer for NPC and boss unit names (the author wants "A Dragobra", "Aranha do
-Santuário" translated, which needs `arena.py` and the roster to stop reading a unit's name as an id first); `gender` on item, race and wagon
-names so that articles agree ("{name} está quebrada" assumes a feminine noun today); the composed names ("Large Dagger", "Scroll of X");
-the settings screen's "Linhas do registro" note and any text longer than its box once the author reads the screens.
+Decided with the author (2026-11-05) for the `name` / `desc` groups:
+- **NPC and boss unit names** (display layer done 2026-11-05: `Unit.name` is a property, `_name` is the raw value the save, the NPC file
+  and the rules read; `name.npc.<slug>` in `en` comes from the NPC file like `desc.npc`; the arena and the cameo checks read `bio_slug`.
+  The entries in `pt-br` are still to be written): translated by hand, one key per NPC (`name.npc.<slug>`, with `gender`): the proper name stays or is
+  rewritten as the author wants ("Adelio Facadinha", "Kharzuul, a Brasanciã", "Oskar Vell, o Levanta-Corpos", "Grumbold, o Konstrutor" on
+  purpose, "Biwolf" -> "Grão-Lobo"; "Bufo", "Peep" and "Ribit" stay). First step: `arena.py` (`startswith("Adelio")`, `slug.title()`) and the
+  roster stop reading a unit's name as an id.
+- **Articles and composed names: done 2026-11-05** (`Ref.__format__`, `key.f` variants, `items._composed_names`, `name.compose.*`,
+  `name.language.*`; the `pt-br` templates and the language names are written, the item names they build on are not). A catalog name carries `gender`; `Ref.__format__` takes a spec (`{item:o}`, `{item:do}`, `{item:no}`, `{item:um}`) and `en` keeps
+  the plain `{item}`; an adjective that agrees ("quebrada") is a `.f` variant of the key, like `.one`/`.other` for plurals.
+- **Composed names are rules, not entries:** `Large X` / `Huge X` = base + size (`size.large` Grande, `size.huge` Enorme, template
+  `name.compose.size`, base gender inherited); `Scroll of X` = `name.compose.scroll` + `name.spell.<id>` (found through `spell_id`);
+  `Dictionary of X` = `name.compose.dictionary` + `name.language.<id>`; "Any Dictionary" = "Qualquer Dicionário". A new spell needs
+  only its `name.spell.<id>`. Race items (Dwarf Armor/Shield) are written out, with gender, as "enânica/enânico".
+- **Beast packs** (done 2026-11-05: `Unit.epithet`, an optional saved field; `name.compose.beast`, `name.epithet.<id>` and
+  `name.epithet_f.<id>`; `pt-br` race entries need `gender`): store epithet and species apart and build the name at render time; `names.EPITHETS`
+  get a masculine and a feminine form in `pt-br` (list in the glossary; "Lustroso" and "Taciturno" were rejected). The `pt-br` list has 22
+words for the 20 `en` ones: `en` gets two new epithets (a "Lithe" for Esguio, a "Grim" for Soturno) so each Portuguese word has an `en` twin.
+- An item list is item + quantity (UI): no plural of item names anywhere.
+
+Deliberate limit: the combat log stores a unit's name as the string of the moment (as every `unit=` param does), so a recording
+keeps the language it was fought in; a `Ref` for authored NPCs would fix it later.
+
+Still open: the settings screen's "Linhas do registro" note and any text longer than its box once the author reads the screens.
 
 ## Rules while the work is open
 

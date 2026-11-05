@@ -29,7 +29,13 @@ def _flatten(node, prefix=""):
     out = {}
     for k, v in node.items():
         key = f"{prefix}.{k}" if prefix else k
-        if isinstance(v, dict):
+        if isinstance(v, dict) and "name" in v and set(v) <= {"name", "gender", "f"}:
+            out[key] = v["name"]
+            if "f" in v:
+                out[f"{key}.f"] = v["f"]
+            if "gender" in v:
+                out[f"{key}.gender"] = v["gender"]
+        elif isinstance(v, dict):
             out.update(_flatten(v, key))
         else:
             out[key] = v
@@ -37,17 +43,30 @@ def _flatten(node, prefix=""):
 
 
 def _npc_bios():
-    """`desc.npc.<slug>` for each authored NPC: the English backstory lives in the NPC's own file (the Editor
-    writes it there), so it is the one English source and the other languages translate it."""
+    """`name.npc.<slug>` and `desc.npc.<slug>` for each authored NPC: the English name and backstory live in the
+    NPC's own file (the Editor writes it there), so it is the one English source and the other languages
+    translate it."""
     folder = os.path.join(os.path.dirname(LOCALES_DIR), "npcs")
     out = {}
     for fn in sorted(os.listdir(folder)) if os.path.isdir(folder) else ():
         if fn.endswith(".json"):
             with open(os.path.join(folder, fn), encoding="utf-8") as fh:
-                bio = json.load(fh).get("bio")
-            if bio:
-                out[f"desc.npc.{fn[:-5]}"] = bio
+                data = json.load(fh)
+            if data.get("name"):
+                out[f"name.npc.{fn[:-5]}"] = data["name"]
+            if data.get("bio"):
+                out[f"desc.npc.{fn[:-5]}"] = data["bio"]
     return out
+
+
+_composers = []      # functions (one language's catalog -> {key: str}) that add the names built from parts
+
+
+def register_composer(fn):
+    """A module that builds shown names from parts (`items`) hands over its function; the catalogs already
+    loaded are dropped so they are rebuilt with it."""
+    _composers.append(fn)
+    _cache.clear()
 
 
 def _catalog(lang):
@@ -60,6 +79,9 @@ def _catalog(lang):
             _cache[lang] = {}
         if lang == DEFAULT_LANG:
             _cache[lang].update(_npc_bios())
+        for compose in _composers:
+            for key, value in compose(_cache[lang]).items():
+                _cache[lang].setdefault(key, value)
     return _cache[lang]
 
 
@@ -86,6 +108,7 @@ def t(key, **fmt):
     """A string, or a list of strings (paragraphs) for keys authored as a JSON
     array -- callers that expect prose (e.g. `primitives.wrap`) already take a
     list of lines, so a multi-paragraph value needs no special-casing."""
+    key = _agreeing(key, fmt)
     value = _catalog(_lang).get(key)
     if value is None and _lang != DEFAULT_LANG:
         value = _catalog(DEFAULT_LANG).get(key)
@@ -94,6 +117,21 @@ def t(key, **fmt):
     if isinstance(value, list):
         return [v.format(**fmt) if fmt else v for v in value]
     return value.format(**fmt) if fmt else value
+
+
+def _agreeing(key, fmt):
+    """`key.f` when the sentence is about a feminine thing (its first `Ref` parameter is) and the catalog wrote that
+    variant: the few lines with an adjective or participle that agrees ("quebrado" / "quebrada")."""
+    ref = next((v for v in fmt.values() if isinstance(v, Ref)), None)
+    if ref is not None and ref.article() in ("f", "fp") and has(f"{key}.f"):
+        return f"{key}.f"
+    return key
+
+
+ARTICLES = {"m": {"o": "o", "do": "do", "no": "no", "um": "um", "ao": "ao", "pelo": "pelo"},
+            "f": {"o": "a", "do": "da", "no": "na", "um": "uma", "ao": "à", "pelo": "pela"},
+            "mp": {"o": "os", "do": "dos", "no": "nos", "um": "uns", "ao": "aos", "pelo": "pelos"},
+            "fp": {"o": "as", "do": "das", "no": "nas", "um": "umas", "ao": "às", "pelo": "pelas"}}
 
 
 def sentence(text):
@@ -127,14 +165,37 @@ def _lookup(key):
 def name(kind, ident):
     """The shown name of a catalog thing (`name.<kind>.<id>`), or `ident` itself when no one wrote it. An
     entry is a string, or `{"name": ..., "gender": "m" | "f"}` when an article depends on it (the loader
-    flattens that into `...<id>.name` and `...<id>.gender`)."""
+    flattens that into `...<id>` and `...<id>.gender`)."""
     key = f"name.{kind}.{ident}"
     for lang in dict.fromkeys((_lang, DEFAULT_LANG)):
         cat = _catalog(lang)
-        value = cat.get(key, cat.get(f"{key}.name"))
+        value = cat.get(key)
         if value is not None:
             return value
     return ident
+
+
+def epithet(ident, gender="m"):
+    """A beast epithet in the gender of its species: `name.epithet.<id>`, or `name.epithet_f.<id>` for a feminine noun."""
+    if gender == "f":
+        feminine = _lookup(f"name.epithet_f.{ident}")
+        if feminine:
+            return feminine
+    return name("epithet", ident)
+
+
+def role(ident, female=False):
+    """A keeper's role, in its feminine form (`name.role.<id>.f`) for a woman when the language has one."""
+    if female:
+        feminine = _lookup(f"name.role.{ident}.f")
+        if feminine:
+            return feminine
+    return name("role", ident)
+
+
+def en_name(kind, ident):
+    """The `en` name of a catalog thing, `None` when it has none: what a stored name is compared with to know it was never changed."""
+    return _catalog(DEFAULT_LANG).get(f"name.{kind}.{ident}")
 
 
 def desc(kind, ident, **fmt):
@@ -144,7 +205,7 @@ def desc(kind, ident, **fmt):
 
 
 def gender(kind, ident):
-    """`"m"` or `"f"` of a catalog name (`"m"` when the entry carries none)."""
+    """`"m"`, `"f"` (or `"mp"` / `"fp"` for a plural name such as "Terras Selvagens") of a catalog name (`"m"` when the entry carries none)."""
     return _lookup(f"name.{kind}.{ident}.gender") or "m"
 
 
@@ -185,6 +246,13 @@ class Ref:
     def article(self):
         return gender(self.kind, self.ident)
 
+    def __format__(self, spec):
+        """`{item}` is the name; `{item:o}` / `{item:do}` / `{item:no}` / `{item:um}` put the article of its
+        gender before it ("a espada", "do machado"). A language with no articles never writes a spec."""
+        if not spec:
+            return str(self)
+        return f"{ARTICLES[self.article()][spec]} {self}"
+
 
 class Msg:
     """A message kept as its key and parameters instead of its text: the combat log stores these so a
@@ -194,7 +262,7 @@ class Msg:
         self.key, self.params = key, params
 
     def __str__(self):
-        return t(self.key, **{k: str(v) if isinstance(v, (Msg, Ref)) else v for k, v in self.params.items()})
+        return t(self.key, **{k: str(v) if isinstance(v, Msg) else v for k, v in self.params.items()})
 
     def to_json(self):
         return {"k": self.key, "p": {k: _param_json(v) for k, v in self.params.items()}}

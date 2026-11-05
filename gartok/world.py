@@ -89,6 +89,7 @@ class Vendor:
     role: str
     portrait: str
     line: str = ""          # what they say when the guild walks in, for a vendor made in play; else `desc.vendor.<id>`
+    female: bool = False    # picks the feminine form of the role where the language has one
 
     @property
     def key(self):
@@ -99,7 +100,7 @@ class Vendor:
 
     @property
     def caption(self):
-        return i18n.t("world.vendor_caption", race=i18n.name("race", self.race), role=i18n.name("role", self.role))
+        return i18n.t("world.vendor_caption", race=i18n.name("race", self.race), role=i18n.role(self.role, self.female))
 
     @property
     def card(self):
@@ -197,8 +198,8 @@ class Bout:
 # in app.py (using the scrapper/champion bouts before The Games).
 
 
-_ELYSIA = Vendor("Elysia", "Sprite", "banker", "banker.png")
-_ROWAN = Vendor("Rowan", "Treefolk", "carpenter", "carpenter.png")
+_ELYSIA = Vendor("Elysia", "Sprite", "banker", "banker.png", female=True)
+_ROWAN = Vendor("Rowan", "Treefolk", "carpenter", "carpenter.png", female=True)
 _THALASHGROK = Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png")
 _DUNGORM = Vendor("Dungorm", "Gnoll", "tanner", "tanner.png")
 
@@ -236,7 +237,7 @@ NODES = [
     Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          jurisdiction="ankareth", garrison_job="study",
          language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop"),
-         vendors={"shop": Vendor("Tobbin Hearthcup", "Halfling", "innkeeper", "innkeeper.png")}),
+         vendors={"shop": Vendor("Tobbin Hearthcup", "Halfling", "innkeeper", "innkeeper.png", female=True)}),
     Node("prison", "Prison", "prison", (0.22, 0.36),
          jurisdiction="ankareth", functions=("prison",),
          vendors={"prison": Vendor("Captain Caelen", "Elf", "warden", "prison_guard.png")}),
@@ -254,7 +255,7 @@ NODES = [
          garrison_job="hold", functions=("claim",)),
     Node("library", "The Library", "town", (0.12, 0.32),
          jurisdiction="ankareth", language="Draconic", alignment="Lawful and Evil", functions=("library", "shop"),
-         vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png")}),
+         vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png", female=True)}),
     Node("farm", "The Farm", "town", (0.30, 0.84),
          language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop"),
          vendors={"shop": Vendor("Edric Ashvale", "Human", "farmer", "farmer.png")}),
@@ -262,7 +263,7 @@ NODES = [
          functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE, hidden=True),
     Node("blood_sanctuary", "Blood Sanctuary", "town", (0.66, 0.10),
          alignment="Chaotic and Evil", functions=("shrine",), garrison_job="rite", hidden=True,
-         vendors={"shrine": Vendor("Ssareth Coldvein", "Lizardfolk", "blood keeper", "blood_keeper.png")}),
+         vendors={"shrine": Vendor("Ssareth Coldvein", "Lizardfolk", "blood keeper", "blood_keeper.png", female=True)}),
     Node("nature_grove", "Nature Grove", "town", (0.95, 0.20),
          alignment="Neutral and Good", functions=("shrine",), garrison_job="rite", hidden=True,
          vendors={"shrine": Vendor("Thorne Mossmane", "Centaur", "grove keeper", "grove_keeper.png")}),

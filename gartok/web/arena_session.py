@@ -57,7 +57,7 @@ def _bout(map_session, group, squad, battle, node, offer, nature):
     def after(outcome):
         from .dialogue_session import _to_map
         recruit = None
-        if outcome.won and offer.champion and not any(u.name.startswith("Adelio") for u in guild.roster):
+        if outcome.won and offer.champion and not any(u.bio_slug == arena.CHAMPION_SLUG for u in guild.roster):
             recruit = "adelio"
         elif outcome.won and offer.boss:
             recruit = "ribbits"

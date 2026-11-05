@@ -74,11 +74,12 @@ class Battle:
     @staticmethod
     def _tell_beasts_apart(units):
         """Beasts carry their species as a name; a pack of the same one gets an adjective each: "Scarred Wolf", "Gaunt Wolf"."""
-        for species in {u.name for u in units if u.race["kind"] == "beast" and u.name == u.race["name"]}:
-            pack = [u for u in units if u.name == species and u.race["kind"] == "beast"]
+        plain = [u for u in units if u.race["kind"] == "beast" and u.char._name == u.race["name"] and not u.char.epithet]
+        for species in {u.char._name for u in plain}:
+            pack = [u for u in plain if u.char._name == species]
             if len(pack) > 1:
                 for u, epithet in zip(pack, names.epithets(len(pack))):
-                    u.name = f"{epithet} {species}"
+                    u.char.epithet = epithet
 
     def record_to(self, sink):
         """Write this fight's decisions to `sink` (a `combat_log.CombatLog`) from now on."""

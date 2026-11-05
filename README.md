@@ -273,7 +273,11 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
 - **New translated string anywhere else**: a key under its own namespace in
   `locales/en.json`, read with `i18n.t(key, **params)` (a sentence is one key with `{placeholders}`, never
   fragments joined; a count is `i18n.plural(key, n)` with `key.one` / `key.other`; the shown name of an item,
-  talent... is `i18n.name(kind, id)` from `name.<kind>.<id>`, with `.gender` when an article depends on it).
+  talent... is `i18n.name(kind, id)` from `name.<kind>.<id>`, with `.gender` when an article depends on it; a sentence
+  that names a thing takes an `i18n.Ref` and writes `{item}` in `en`, `{item:o}` / `{item:do}` / `{item:no}` / `{item:um}` in `pt-br`
+  (the article of its gender), and a line whose adjective agrees has a `key.f` twin the first feminine `Ref` picks; a size variant,
+  a scroll and a dictionary are not written one by one: `items._composed_names` builds them from `name.compose.*` + the plain
+  weapon, `name.spell.<id>` and `name.language.<id>`, so a new spell or weapon needs only its own entry).
   The `pt-br` text goes in `locales/pt-br.json` under the same key and the same placeholders (a test checks).
 - **A catalog thing's name and description** (a talent, racial ability, weapon trait, faction, spell, poison,
   vocation, archetype): its registry entry carries no text, only the `id`; `name` / `desc` (`effect`, `perk`) are

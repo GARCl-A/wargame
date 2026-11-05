@@ -230,7 +230,7 @@ def load_champion():
 def cameo_enemy(guild=None, rng=random):
     """The dethroned Adelio, `ADELIO_CAMEO_CHANCE` of the time, else None.
     Never cameos if already recruited into the guild roster."""
-    if guild and any(u.name.startswith("Adelio") for u in guild.roster):
+    if guild and any(u.bio_slug == CHAMPION_SLUG for u in guild.roster):
         return None
     if rng.random() >= ADELIO_CAMEO_CHANCE:
         return None
@@ -282,8 +282,8 @@ def ribbit_cameo_enemy(guild=None, rng=random):
     Only chooses among brothers not currently present in the guild roster."""
     if rng.random() >= RIBBIT_CAMEO_CHANCE:
         return None
-    roster_names = {u.name for u in guild.roster} if guild else set()
-    unrecruited = [slug for slug in RIBBIT_SLUGS if slug.title() not in roster_names]
+    recruited = {u.bio_slug for u in guild.roster} if guild else set()
+    unrecruited = [slug for slug in RIBBIT_SLUGS if slug not in recruited]
     if not unrecruited:
         return None
     chosen_slug = rng.choice(unrecruited)

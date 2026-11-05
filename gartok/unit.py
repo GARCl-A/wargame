@@ -45,7 +45,7 @@ SAVE_DEFAULTS = {
     "crime": 0, "unfed_days": 0, "full_belly": False, "sick": False, "medicine_attempted_today": False,
     "treated": False, "consecutive_rest_hours": 0, "unbroken_rest_hours": 0, "non_lethal_damage": 0,
     "last_daily_luck_day": 0,
-    "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "bio_slug": None, "arena_title": False,
+    "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "bio_slug": None, "epithet": None, "arena_title": False,
     "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": {},
     "magic_blood": None, "blood_tested": False, "blood_test_days": 0, "rite_school": None, "rite_progress": {},
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
@@ -103,6 +103,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
         self.bio = ""                                  # free-text backstory (authored NPCs; editable in the creator)
         self.bio_slug = None                           # the authored NPC whose catalog backstory (`desc.npc.<slug>`) shows instead
+        self.epithet = None                            # a beast told from its pack by an adjective (`names.EPITHETS`); the name is built from it
         self.arena_title = False                       # holds the arena's "Champion of the Pit" (see arena.py)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
@@ -120,7 +121,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.awareness_radius = 8
 
         self._auto_name = name is None
-        self.name = name or (self.race["name"] if self.race["kind"] == "beast" else names.random_name())
+        self._name = name or (self.race["name"] if self.race["kind"] == "beast" else names.random_name())
         self.token = self.race["token"]
         self.portrait_id = int(self.uid[:8], 16)
         self.portrait_file = None
@@ -181,6 +182,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.work_hours = d["work_hours"]
         u.bio = d["bio"]
         u.bio_slug = d["bio_slug"]
+        u.epithet = d["epithet"]
         u.arena_title = d["arena_title"]
 
         u.magic_sources = list(d["magic_sources"])
@@ -199,7 +201,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.craft_bonuses = dict(d["craft_bonuses"])
 
         u._auto_name = d["auto_name"]
-        u.name = d["name"]
+        u._name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.token = u.race["token"]
         u.portrait_file = d.get("portrait_file") or (d.get("portrait") if isinstance(d.get("portrait"), str) else None)
@@ -315,6 +317,24 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         if getattr(self, "arena_title", False):
             return "Champion of the Pit"
         return ""
+
+    @property
+    def name(self):
+        """The name on screen. An authored NPC still called what its file calls it shows its catalog name
+        (`name.npc.<slug>`); a renamed one, or a rolled character, shows what was typed. `_name` is the
+        raw value: what the save, the NPC file and every rule that matches a name read."""
+        slug = getattr(self, "bio_slug", None)
+        if slug and self._name == i18n.en_name("npc", slug):
+            return i18n.name("npc", slug)
+        if getattr(self, "epithet", None):
+            species = self.race["name"]
+            return i18n.t("name.compose.beast", species=i18n.name("race", species),
+                          epithet=i18n.epithet(self.epithet, i18n.gender("race", species)))
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
     @property
     def full_name(self):

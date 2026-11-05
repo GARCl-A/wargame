@@ -82,7 +82,7 @@ def unit_to_dict(u):
         "uid": u.uid,                            # stable identity (recruiter binding references it)
         "recruited_by": u.recruited_by,          # uid of the member who recruited this one, or None
         "joined_day": u.joined_day,
-        "name": u.name,
+        "name": u._name,
         "auto_name": u._auto_name,
         "portrait_id": u.portrait_id,
         "portrait_file": getattr(u, "portrait_file", None),
@@ -105,6 +105,7 @@ def unit_to_dict(u):
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
         "bio": u.bio,                            # free-text backstory (blank for a rolled character)
         "bio_slug": u.bio_slug,                  # an authored NPC's catalog backstory outlives the recruit
+        "epithet": u.epithet,                    # the adjective that tells a pack beast apart (the name is built from it)
         "arena_title": u.arena_title,            # holds the "Champion of the Pit" title (arena.py)
         "recipes": list(u.recipes),
         "crafting_target": u.crafting_target,

@@ -7,7 +7,7 @@ from gartok.web.settings_session import SettingsSession
 
 # Phases 2-6 of docs/plans/translation_pt_br.md fill pt-br.json; while they are open an `en` key may lack its
 # twin. Flip to True when the last phase lands.
-STRICT = False
+STRICT = True
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def catalogs(monkeypatch):
                "a.lines": ["one {x}", "two"], "name.item.sword": "Long Sword",
                "name.item.cloak": "Cloak"},
         "pt-br": {"a.hello": "Olá, {who}", "a.day.one": "{n} dia", "a.day.other": "{n} dias",
-                  "name.item.sword.name": "Espada Longa", "name.item.sword.gender": "f"}})
+                  "name.item.sword": "Espada Longa", "name.item.sword.gender": "f"}})
 
 
 def test_t_fills_placeholders_and_falls_back_to_en_then_the_key(catalogs):
@@ -68,7 +68,7 @@ def test_every_catalog_key_has_its_en_twin_with_the_same_placeholders():
         if lang == "en":
             continue
         cat = i18n.catalog(lang)
-        orphans = sorted(set(cat) - set(en))
+        orphans = sorted(k for k in set(cat) - set(en) if not (k.endswith(".gender") and k[:-7] in en) and not (k.endswith(".f") and k[:-2] in en))
         assert not orphans, f"{lang} keys with no en twin: {orphans}"
         wrong = sorted(k for k, v in cat.items() if k in en and i18n.placeholders(v) != i18n.placeholders(en[k]))
         assert not wrong, f"{lang} keys whose placeholders differ from en: {wrong}"
@@ -107,3 +107,41 @@ def test_every_key_the_code_asks_of_the_catalog_exists():
                 if key not in en and f"{key}.one" not in en and not any(k.startswith(key + ".") for k in en):
                     missing.append(f"{path.name}: {key}")
     assert not missing, f"keys with no en text: {sorted(set(missing))}"
+
+
+def test_a_ref_writes_its_article_by_gender_and_a_sentence_can_agree(monkeypatch):
+    monkeypatch.setattr(i18n, "_cache", {
+        "en": {"name.item.sword": "Long Sword", "name.item.axe": "Axe", "m.broke": "{item} broke"},
+        "pt-br": {"name.item.sword": "Espada Longa", "name.item.sword.gender": "f", "name.item.axe": "Machado",
+                  "m.broke": "{item:o} quebrou", "m.broken": "{item:o} está quebrado",
+                  "m.broken.f": "{item:o} está quebrada"}})
+    sword, axe = i18n.Ref("item", "sword"), i18n.Ref("item", "axe")
+    assert f"{sword}" == "Long Sword"
+    i18n.set_language("pt-br")
+    assert f"{sword:do}" == "da Espada Longa" and f"{axe:no}" == "no Machado" and f"{sword:um}" == "uma Espada Longa"
+    assert i18n.t("m.broken", item=sword) == "a Espada Longa está quebrada"
+    assert i18n.t("m.broken", item=axe) == "o Machado está quebrado"
+    assert str(i18n.Msg("m.broke", item=sword)) == "a Espada Longa quebrou"
+    i18n.set_language("en")
+    assert i18n.t("m.broke", item=sword) == "Long Sword broke"
+
+
+def test_built_names_follow_the_language_word_order(monkeypatch):
+    from gartok import items
+    monkeypatch.setattr(i18n, "_cache", {})
+    base = {"name.item.Dagger": "Adaga", "name.item.Dagger.gender": "f", "name.item.Dictionary": "Dicionário",
+            "name.size.Large": "Grande", "name.spell.hex": "Maldição", "name.language.Elvish": "Élfico",
+            "name.compose.size": "{base} {size}", "name.compose.scroll": "Pergaminho de {spell}",
+            "name.compose.dictionary": "Dicionário de {language}", "name.compose.any": "Qualquer {base}"}
+    built = items._composed_names(base)
+    assert built["name.item.Large Dagger"] == "Adaga Grande" and built["name.item.Large Dagger.gender"] == "f"
+    assert built["name.item.Scroll of Hex"] == "Pergaminho de Maldição"
+    assert built["name.item.Dictionary of Elvish"] == "Dicionário de Élfico"
+    assert built["name.item.Any Dictionary"] == "Qualquer Dicionário"
+    assert "name.item.Huge Dagger" not in built, "a size the language has no word for yet shows the en name"
+
+
+def test_the_en_built_names_are_the_old_english_names():
+    assert i18n.name("item", "Large Dagger") == "Large Dagger" and i18n.name("item", "Scroll of Hex") == "Scroll of Hex"
+    assert i18n.name("item", "Dictionary of Elvish") == "Dictionary of Elvish"
+    assert i18n.name("item", "Any Dictionary") == "Any Dictionary"

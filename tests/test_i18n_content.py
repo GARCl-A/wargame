@@ -84,3 +84,75 @@ def test_a_recruited_npc_keeps_the_catalog_backstory_through_a_save(monkeypatch)
     assert back.bio_slug == "adelio-small-knife"
     _in_language(monkeypatch, {"desc.npc.adelio-small-knife": "Um batedor de carteiras."})
     assert sheet_view.bio(back) == "Um batedor de carteiras."
+
+
+def test_an_npc_name_follows_the_language_but_the_save_keeps_the_file_name(monkeypatch):
+    adelio = npc_lib.load_npc("adelio-small-knife")
+    _in_language(monkeypatch, {"name.npc.adelio-small-knife": "Adelio Facadinha"})
+    assert adelio.name == "Adelio Facadinha"
+    saved = persist.unit_to_dict(adelio)
+    assert saved["name"] == "Adelio Small-Knife", "the save holds the file's name, not the shown one"
+    monkeypatch.setattr(i18n, "_lang", "en")
+    assert Unit.from_save(saved).name == "Adelio Small-Knife"
+
+
+def test_a_renamed_npc_shows_the_typed_name(monkeypatch):
+    adelio = npc_lib.load_npc("adelio-small-knife")
+    adelio.name = "Bob"
+    _in_language(monkeypatch, {"name.npc.adelio-small-knife": "Adelio Facadinha"})
+    assert adelio.name == "Bob"
+
+
+def test_every_authored_npc_has_its_english_name_in_the_catalog():
+    en = i18n.catalog("en")
+    for path in glob.glob(os.path.join(npc_lib.NPC_DIR, "*.json")):
+        slug = os.path.basename(path)[:-5]
+        assert en.get(f"name.npc.{slug}"), slug
+
+
+class _FirstPick:
+    def random(self):
+        return 0
+
+    def choice(self, options):
+        return options[0]
+
+
+def test_the_recruit_checks_read_the_npc_not_the_shown_name(monkeypatch):
+    from gartok import arena
+    from tests.helpers import standard_unit
+    adelio = npc_lib.load_npc(arena.CHAMPION_SLUG)
+    guild = type("G", (), {"roster": [adelio]})()
+    _in_language(monkeypatch, {"name.npc.adelio-small-knife": "Adelio Facadinha"})
+    assert arena.cameo_enemy(guild) is None
+    guild.roster = [standard_unit()]
+    assert arena.ribbit_cameo_enemy(guild, rng=_FirstPick()) is not None
+
+
+def test_a_pack_beast_is_named_from_its_epithet_in_the_language_of_the_moment(monkeypatch):
+    from gartok import data, encounters, names
+    from gartok.battle import Battle
+    from tests.helpers import standard_unit
+    spider = next(r for r in data.BEAST_POOL if r["name"] == "Wolf")
+    pack = [encounters.build_enemy(1, race_pool=[spider]) for _ in range(2)]
+    battle = Battle([standard_unit()], pack)
+    first = battle.enemy_units[0].char
+    assert first.epithet in names.EPITHETS and first.name == f"{first.epithet} Wolf"
+    _in_language(monkeypatch, {"name.race.Wolf": "Loba", "name.race.Wolf.gender": "f",
+                               f"name.epithet.{first.epithet}": "Velho", f"name.epithet_f.{first.epithet}": "Velha",
+                               "name.compose.beast": "{species} {epithet}"})
+    assert first.name == "Loba Velha"
+    saved = persist.unit_to_dict(first)
+    assert saved["name"] == "Wolf" and saved["epithet"] == first.epithet
+    monkeypatch.setattr(i18n, "_lang", "en")
+    assert Unit.from_save(saved).name == f"{first.epithet} Wolf"
+
+
+def test_the_pt_br_npc_names_show_and_a_feminine_one_carries_its_gender():
+    i18n.set_language("pt-br")
+    try:
+        assert npc_lib.load_npc("adelio-small-knife").name == "Adelio Facadinha"
+        assert npc_lib.load_npc("snake_dragon").name == "A Dragobra"
+        assert i18n.gender("npc", "snake_dragon") == "f" and i18n.gender("npc", "ogre") == "m"
+    finally:
+        i18n.set_language("en")
