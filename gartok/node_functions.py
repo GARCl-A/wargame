@@ -17,51 +17,49 @@ picker, `trust` is reached through the Bankers' hub).
 
 from dataclasses import dataclass
 
+from . import i18n
+
 
 @dataclass(frozen=True)
 class NodeFunction:
     id: str
     order_kind: str | None = None
-    label: str | None = None
-    note: str | None = None
     absorbs: tuple = ()
+
+    @property
+    def label(self):
+        return i18n.name("node_function", self.id) if i18n.has(f"name.node_function.{self.id}") else None
+
+    @property
+    def note(self):
+        return i18n.desc("node_function", self.id) or None
 
 
 FUNCTIONS = {f.id: f for f in (
-    NodeFunction("shop", "market", "ENTER THE SHOP"),
-    NodeFunction("recruit", "recruit", "ENTER THE TAVERN", absorbs=("shop",)),
-    NodeFunction("prison", "prison", "VISIT THE PRISON"),
+    NodeFunction("shop", "market"),
+    NodeFunction("recruit", "recruit", absorbs=("shop",)),
+    NodeFunction("prison", "prison"),
     NodeFunction("work"),
-    NodeFunction("hunt", "hunt", "GO HUNTING",
-                 note="spend the day hunting or foraging  ·  a pack may find you first"),
-    NodeFunction("bank", "bank", "VISIT THE BANK"),
+    NodeFunction("hunt", "hunt"),
+    NodeFunction("bank", "bank"),
     NodeFunction("trust", "trust"),
-    NodeFunction("tanner", "tanner", "VISIT THE TANNER", absorbs=("shop",)),
-    NodeFunction("forge", "forge", "VISIT THE FORGE", absorbs=("shop",)),
-    NodeFunction("carpenter", "carpenter", "VISIT THE CARPENTER", absorbs=("shop",)),
-    NodeFunction("apothecary", "apothecary", "VISIT THE APOTHECARY", absorbs=("shop",)),
-    NodeFunction("stable", "stable", "ENTER THE FARM", absorbs=("shop",)),
-    NodeFunction("library", "library", "VISIT THE LIBRARY", absorbs=("shop",)),
-    NodeFunction("property", "property", "VISIT THE PROPERTY"),
-    NodeFunction("claim", "claim", "THE WILDS CLAIM"),
-    NodeFunction("ledger", "ledger", "VISIT THE OUTPOST",
-                 note="hand over what you're carrying, if anything's owed"),
-    NodeFunction("ox_hunt", "ox_hunt", "TRACK THE OX",
-                 note="read the ground by daylight, one Wisdom check an hour  ·  a found trail is a lethal fight"),
-    NodeFunction("shrine", "shrine", "ENTER THE SANCTUARY",
-                 note="a hidden seat of one of the three magic schools"),
-    NodeFunction("ancient_ruins", "ancient_ruins", "ENTER THE ANCIENT RUINS",
-                 note="Delve into the sunken library chambers (Lethal tactical battle)"),
-    NodeFunction("skirmish", "skirmish", "JOIN THE SKIRMISH",
-                 note="fight beside Ledger Hold's soldiers, played by the AI  ·  lethal"),
-    NodeFunction("camp_fight", "camp_fight", "ATTACK THE CAMP",
-                 note="a goblin crew and its Hobgoblin foreman, by the fire  ·  lethal"),
-    NodeFunction("ogre_fight", "ogre_fight", "STORM THE FORTRESS",
-                 note="the Ogre and his goblins among the walls, the bonfire spreading  ·  lethal"),
-    NodeFunction("serpents_nest", "serpents_nest", "ENTER THE NEST",
-                 note="five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal"),
-    NodeFunction("dragon_lair", "dragon_lair", "ENTER THE LAIR",
-                 note="kobold patrols, a hoard, the clutch, and the dragon asleep beside it  ·  lethal"),
+    NodeFunction("tanner", "tanner", absorbs=("shop",)),
+    NodeFunction("forge", "forge", absorbs=("shop",)),
+    NodeFunction("carpenter", "carpenter", absorbs=("shop",)),
+    NodeFunction("apothecary", "apothecary", absorbs=("shop",)),
+    NodeFunction("stable", "stable", absorbs=("shop",)),
+    NodeFunction("library", "library", absorbs=("shop",)),
+    NodeFunction("property", "property"),
+    NodeFunction("claim", "claim"),
+    NodeFunction("ledger", "ledger"),
+    NodeFunction("ox_hunt", "ox_hunt"),
+    NodeFunction("shrine", "shrine"),
+    NodeFunction("ancient_ruins", "ancient_ruins"),
+    NodeFunction("skirmish", "skirmish"),
+    NodeFunction("camp_fight", "camp_fight"),
+    NodeFunction("ogre_fight", "ogre_fight"),
+    NodeFunction("serpents_nest", "serpents_nest"),
+    NodeFunction("dragon_lair", "dragon_lair"),
 )}
 
 

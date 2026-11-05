@@ -45,7 +45,7 @@ SAVE_DEFAULTS = {
     "crime": 0, "unfed_days": 0, "full_belly": False, "sick": False, "medicine_attempted_today": False,
     "treated": False, "consecutive_rest_hours": 0, "unbroken_rest_hours": 0, "non_lethal_damage": 0,
     "last_daily_luck_day": 0,
-    "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
+    "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "bio_slug": None, "arena_title": False,
     "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": {},
     "magic_blood": None, "blood_tested": False, "blood_test_days": 0, "rite_school": None, "rite_progress": {},
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
@@ -102,6 +102,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.magic_xp = 0                              # magic kills and spells studied (progression.py)
         self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
         self.bio = ""                                  # free-text backstory (authored NPCs; editable in the creator)
+        self.bio_slug = None                           # the authored NPC whose catalog backstory (`desc.npc.<slug>`) shows instead
         self.arena_title = False                       # holds the arena's "Champion of the Pit" (see arena.py)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
@@ -179,6 +180,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.magic_xp = d["magic_xp"]
         u.work_hours = d["work_hours"]
         u.bio = d["bio"]
+        u.bio_slug = d["bio_slug"]
         u.arena_title = d["arena_title"]
 
         u.magic_sources = list(d["magic_sources"])

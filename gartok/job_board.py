@@ -24,7 +24,7 @@ class Board:
         held = sum(1 for m in self.guild.missions if m.template_id in ids and m.state == "active")
         purse = sum(u.money for u in self.group.members)
         return [{"label": i18n.t("job_board.jobs_on_board"), "value": str(len(templates))},
-                {"label": "taken", "value": str(held)},
+                {"label": i18n.t("job_board.taken"), "value": str(held)},
                 {"label": i18n.t("job_board.party_purse"), "value": fmt_money(purse), "tone": "money"}]
 
     @property
@@ -156,7 +156,9 @@ class TannerBoard(Board):
     """The tanner: the group's **leader** signs (same "who speaks for the group" convention as market
     haggling), and the job then travels with that unit, not this group (see `missions.py`)."""
     GIVER = "tanner"
-    subtitle_text = '"Bring me hide and I\'ll pay well for it."'
+    @property
+    def subtitle_text(self):
+        return i18n.t("job_board.subtitle.tanner")
 
     def get_template(self):
         """The job to show: the one out right now, else the first still on offer, else
@@ -188,7 +190,9 @@ class TannerBoard(Board):
 
 class ApothecaryBoard(Board):
     GIVER = "apothecary"
-    subtitle_text = '"Need someone to fetch rare reagents from the wilds."'
+    @property
+    def subtitle_text(self):
+        return i18n.t("job_board.subtitle.apothecary")
 
     def get_template(self):
         return next((t for t in missions.TEMPLATES.values()
@@ -203,7 +207,9 @@ class ApothecaryBoard(Board):
 
 class LibraryBoard(Board):
     GIVER = "library"
-    subtitle_text = '"We need to expand our archives. Translations are well paid."'
+    @property
+    def subtitle_text(self):
+        return i18n.t("job_board.subtitle.library")
 
     def get_template(self):
         return next(iter(self.get_templates()), None)
@@ -221,11 +227,6 @@ class LibraryBoard(Board):
         return i18n.t("job_board.day_s_left_3", progress=progress, goal_qty=t.goal_qty, item_label=item_label, days_left=days_left)
 
 
-KEEPER_LINE = {
-    "blood": '"Blood remembers. What runs in the veins can be read."',
-    "nature": '"The grove is patient. What was twisted can be tended."',
-    "faith": '"The faithful are tested, not hurried. Bring us what the ruins kept."',
-}
 
 
 class ShrineBoard(Board):
@@ -239,7 +240,8 @@ class ShrineBoard(Board):
 
     @property
     def subtitle_text(self):
-        return KEEPER_LINE.get(self._giver, "")
+        key = f"job_board.keeper.{self._giver}"
+        return i18n.t(key) if i18n.has(key) else ""
 
     def get_template(self):
         return next(iter(self.get_templates()), None)
@@ -309,7 +311,9 @@ class TrustBoard(Board):
     (`ledger.py`) trades for it once the band gets there safely."""
     TEMPLATE = missions.TRUST_CHEST
     accept_label = "job_board.accept_trust"
-    subtitle_text = '"Prove the guild can be trusted with something precious."'
+    @property
+    def subtitle_text(self):
+        return i18n.t("job_board.subtitle.trust")
 
     def get_template(self):
         return self.TEMPLATE

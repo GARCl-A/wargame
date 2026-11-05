@@ -37,13 +37,16 @@ from .constants import fmt_money
 @dataclass(frozen=True)
 class Faction:
     id: str
-    blurb: str
     hidden: bool = False                      # unknown to the guild until it enters one of `nodes`
     nodes: tuple[str, ...] = ()               # the nodes that belong to it
 
     @property
     def name(self):
         return i18n.name("faction", self.id)
+
+    @property
+    def blurb(self):
+        return i18n.desc("faction", self.id)
 
 
 @dataclass(frozen=True)
@@ -82,12 +85,18 @@ class Event:
 class Deed:
     id: str
     faction: str
-    name: str
-    blurb: str
     rep: int                                  # reputation banked on completion
     check: Callable                           # (guild, event) -> bool
     requires: str | None = None            # deed id that must be done first
     exclusive: str | None = None           # a set only one deed of which can ever be done
+
+    @property
+    def name(self):
+        return i18n.name("deed", self.id)
+
+    @property
+    def blurb(self):
+        return i18n.desc("deed", self.id)
 
 
 def _arena_win(event):
@@ -104,15 +113,15 @@ def _arena_tier(event):
 
 
 _FACTIONS = [
-    Faction("arena", "The staked bouts in the cellars under the city. Win, and be known."),
-    Faction("bankers", "The coin-keepers of the city. They rent strongboxes and trade in property."),
-    Faction("library", "Scholars and linguists. They trade in knowledge.", hidden=True, nodes=("library",)),
-    Faction("tanners", "The leatherworkers of the city. They pay for what the Wilds sheds.", hidden=True, nodes=("tanner",)),
-    Faction("apothecary", "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents.", hidden=True, nodes=("apothecary",)),
-    Faction("ledger_hold", "The fortified garrison of the march. They train soldiers and hold the border.", hidden=True, nodes=("ledger_hold",)),
-    Faction("blood_cult", "Mages born to it, hidden under the ruins: the magic runs in their line, from a dragon, an angel or a demon somewhere back. They study the blood that carries it.", hidden=True, nodes=("blood_sanctuary",)),
-    Faction("nature_coven", "Mages of the green, hidden deep in the Wilds. They keep to themselves.", hidden=True, nodes=("nature_grove",)),
-    Faction("faith_order", "Mages of faith, hidden in a cathedral in the hills. They answer to a higher call.", hidden=True, nodes=("faith_cathedral",)),
+    Faction("arena"),
+    Faction("bankers"),
+    Faction("library", hidden=True, nodes=("library",)),
+    Faction("tanners", hidden=True, nodes=("tanner",)),
+    Faction("apothecary", hidden=True, nodes=("apothecary",)),
+    Faction("ledger_hold", hidden=True, nodes=("ledger_hold",)),
+    Faction("blood_cult", hidden=True, nodes=("blood_sanctuary",)),
+    Faction("nature_coven", hidden=True, nodes=("nature_grove",)),
+    Faction("faith_order", hidden=True, nodes=("faith_cathedral",)),
 ]
 
 def _delivered(thing, school):
@@ -123,44 +132,37 @@ def _delivered(thing, school):
 
 
 _DEEDS = [
-    Deed("arena_first_blood", "arena", "First Blood",
-         "Win a staked bout in the pits.", rep=1,
+    Deed("arena_first_blood", "arena", rep=1,
          check=lambda g, e: _arena_win(e)),
 
-    Deed("arena_lone_wolf", "arena", "Lone Wolf",
-         "Win in the entry pit with a single fighter.", rep=1,
+    Deed("arena_lone_wolf", "arena", rep=1,
          check=lambda g, e: (
              _arena_win(e) and e.outcome.squad_size == 1
              and _arena_tier(e) is not None and _arena_tier(e).rep == 0)),
 
-    Deed("arena_dethrone", "arena", "Dethrone the Champions",
-         "Beat the pit's champion team.", rep=1,
+    Deed("arena_dethrone", "arena", rep=1,
          check=lambda g, e: (
              _arena_win(e) and _arena_tier(e) is not None and getattr(_arena_tier(e), "champion", False))),
 
     # The Games -- the arena's second stage. Locked behind the champion bout; the
     # bouts that satisfy these only appear once `arena_dethrone` is banked.
-    Deed("arena_bloodsport", "arena", "Bloodsport",
-         "Win a bout in the Games -- the arena's second stage.", rep=1,
+    Deed("arena_bloodsport", "arena", rep=1,
          requires="arena_dethrone",
          check=lambda g, e: (
              _arena_tier(e) is not None and _arena_tier(e).stage2)),
 
-    Deed("arena_flag_runner", "arena", "Flag Runner",
-         "Capture the enemy flag in the Games.", rep=1,
+    Deed("arena_flag_runner", "arena", rep=1,
          requires="arena_dethrone",
          check=lambda g, e: (
              _arena_tier(e) is not None and _arena_tier(e).ctf)),
 
-    Deed("arena_untouchable", "arena", "Untouchable",
-         "Capture the flag without knocking anyone out.", rep=1,
+    Deed("arena_untouchable", "arena", rep=1,
          requires="arena_dethrone",
          check=lambda g, e: (
              _arena_tier(e) is not None and _arena_tier(e).ctf
              and e.outcome.player_kos == 0)),
 
-    Deed("arena_ribbit_brothers", "arena", "The Ribbit Brothers",
-         "Beat the three Grippli in the Games.", rep=1,
+    Deed("arena_ribbit_brothers", "arena", rep=1,
          requires="arena_dethrone",
          check=lambda g, e: (
              _arena_tier(e) is not None and _arena_tier(e).boss)),
@@ -170,16 +172,13 @@ _DEEDS = [
     # how it moves money through the city. A fourth deed, gated on all three
     # of these being done rather than a single `requires`, is meant to follow
     # once there is something to spend that trust on (buying property).
-    Deed("bankers_good_for_business", "bankers", "Good for Business",
-         "Complete an economic job in the City.", rep=1,
+    Deed("bankers_good_for_business", "bankers", rep=1,
          check=lambda g, e: e.kind == "mission" and ("economic" in e.tags or e.tag == "economic")),
 
-    Deed("bankers_steady_customer", "bankers", "Steady Customer",
-         "Spend 1000 copper at the market.", rep=1,
+    Deed("bankers_steady_customer", "bankers", rep=1,
          check=lambda g, e: e.kind == "market" and g.total_spent >= 1000),
 
-    Deed("bankers_diverse_portfolio", "bankers", "Diverse Portfolio",
-         "Sell 5 different kinds of goods to the market.", rep=1,
+    Deed("bankers_diverse_portfolio", "bankers", rep=1,
          check=lambda g, e: (
              e.kind == "market" and len(g.items_sold_kinds) >= 5)),
 
@@ -188,76 +187,58 @@ _DEEDS = [
     # `guild.deeds_done` directly instead. It reads the finished trust mission
     # rather than the turn-in event: the chest can come home before the three
     # deeds are done, and the one-shot event would be gone by then.
-    Deed("bankers_trust", "bankers", "Earned Trust",
-         "Carry the Bankers' trust all the way to Ledger Hold and back.", rep=1,
+    Deed("bankers_trust", "bankers", rep=1,
          check=lambda g, e: (
              any(m.template_id == "bankers_trust_chest" and m.state == "done"
                  for m in g.missions)
              and {"bankers_good_for_business", "bankers_steady_customer",
                   "bankers_diverse_portfolio"} <= set(g.deeds_done))),
     
-    Deed("tanners_hides", "tanners", "Fifteen Hides",
-         "Bring the tanner fifteen hides.", rep=1,
+    Deed("tanners_hides", "tanners", rep=1,
          check=lambda g, e: e.kind == "mission" and "hides" in e.tags),
 
-    Deed("tanners_biwolf", "tanners", "The Biwolf's Hide",
-         "Bring the tanner the leather of the Biwolf.", rep=1,
+    Deed("tanners_biwolf", "tanners", rep=1,
          check=lambda g, e: e.kind == "mission" and "biwolf" in e.tags),
 
-    Deed("tanners_ox", "tanners", "The Immortal Ox",
-         "Bring the tanner the hide of Aurochs, the immortal ox.", rep=1,
+    Deed("tanners_ox", "tanners", rep=1,
          requires="tanners_biwolf",
          check=lambda g, e: e.kind == "mission" and "ox" in e.tags),
 
     # Library deeds
-    Deed("library_initiate", "library", "Library Initiate",
-         "Complete a task for the library.", rep=1,
+    Deed("library_initiate", "library", rep=1,
          check=lambda g, e: e.kind == "mission" and ("library" in e.tags or e.tag == "library")),
-    Deed("library_trusted", "library", "Trusted Scholar",
-         "Complete a second task for the library.", rep=1,
+    Deed("library_trusted", "library", rep=1,
          requires="library_initiate",
          check=lambda g, e: e.kind == "mission" and ("library" in e.tags or e.tag == "library") and
              sum(1 for m in g.missions if m.state == "done" and ("library" in getattr(__import__('gartok.missions', fromlist=['']).template_of(m), "tags", ()) or __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library")) >= 2),
 
     # Apothecary deeds
-    Deed("apothecary_mushrooms", "apothecary", "Fifteen Red Mushrooms",
-         "Bring the apothecary fifteen red mushrooms.", rep=1,
+    Deed("apothecary_mushrooms", "apothecary", rep=1,
          check=lambda g, e: e.kind == "mission" and ("apothecary" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "apothecary")),
 
     # Ledger Hold deeds
-    Deed("ledger_hold_mentoring", "ledger_hold", "Treefolk Mentorship",
-         "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.", rep=1,
+    Deed("ledger_hold_mentoring", "ledger_hold", rep=1,
          check=lambda g, e: e.kind == "mission" and ("ledger_hold" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "ledger_hold")),
     # One Codex exists, so it goes to one school; one Snake Dragon, dead or alive.
-    Deed("blood_codex", "blood_cult", "The Codex Delivered",
-         "Bring the Ancient Codex to the Blood Sanctuary.", rep=1,
+    Deed("blood_codex", "blood_cult", rep=1,
          check=_delivered("codex", "blood"), exclusive="codex"),
-    Deed("nature_codex", "nature_coven", "The Codex Delivered",
-         "Bring the Ancient Codex to the Nature Grove.", rep=1,
+    Deed("nature_codex", "nature_coven", rep=1,
          check=_delivered("codex", "nature"), exclusive="codex"),
-    Deed("faith_codex", "faith_order", "The Codex Delivered",
-         "Bring the Ancient Codex to the Faith Cathedral.", rep=1,
+    Deed("faith_codex", "faith_order", rep=1,
          check=_delivered("codex", "faith"), exclusive="codex"),
-    Deed("blood_snake", "blood_cult", "The Dragon's Blood",
-         "Bring the Snake Dragon's body to the Blood Sanctuary.", rep=1,
+    Deed("blood_snake", "blood_cult", rep=1,
          check=_delivered("snake_dragon", "blood"), exclusive="snake_dragon"),
-    Deed("nature_snake", "nature_coven", "The Snake Saved",
-         "Bring the Snake Dragon alive to the Nature Grove.", rep=1,
+    Deed("nature_snake", "nature_coven", rep=1,
          check=_delivered("snake_dragon", "nature"), exclusive="snake_dragon"),
-    Deed("faith_battlefield", "faith_order", "Mercy at the Front",
-         "Win the Battlefield's skirmish without losing one of the soldiers.", rep=1,
+    Deed("faith_battlefield", "faith_order", rep=1,
          check=lambda g, e: e.kind == "mission" and "battlefield" in e.tags and "faith" in e.tags),
-    Deed("faith_necromancer", "faith_order", "The Necromancer at the Front",
-         "Put down the necromancer raising the dead at the Battlefield.", rep=1,
+    Deed("faith_necromancer", "faith_order", rep=1,
          check=lambda g, e: e.kind == "mission" and "necromancer" in e.tags and "faith" in e.tags),
-    Deed("nature_wildfire", "nature_coven", "The Ogre's Wildfire",
-         "Talk the Ogre round, or beat him, before his fires take the Wilds.", rep=1,
+    Deed("nature_wildfire", "nature_coven", rep=1,
          check=lambda g, e: e.kind == "mission" and "wildfire" in e.tags and "nature" in e.tags),
-    Deed("blood_clutch", "blood_cult", "The Dragon's Clutch",
-         "Bring one of the dragon's eggs from under the Mine to the Blood Sanctuary.", rep=1,
+    Deed("blood_clutch", "blood_cult", rep=1,
          check=_delivered("dragon_clutch", "blood")),
-    Deed("ledger_hold_supply_run", "ledger_hold", "Frontier Supply Run",
-         "Successfully complete 10 military supply caravan runs to the frontier outpost.", rep=1,
+    Deed("ledger_hold_supply_run", "ledger_hold", rep=1,
          check=lambda g, e: e.kind == "supply_run" and g.supply_runs_completed >= 10),
 ]
 
@@ -280,15 +261,24 @@ def deed_notice(d):
     """The one line every caller shows for a just-earned deed (`campaign.py`'s
     travel/battle events, the tanner's turn-in, the market's buy/sell) -- kept
     here so the wording only has one place to drift out of sync."""
-    return f"DEED · {d.name}  +{d.rep} reputation with {faction(d.faction).name}"
+    return i18n.t("factions.deed_notice", deed=d.name, rep=d.rep, faction=faction(d.faction).name)
 
 
 @dataclass(frozen=True)
 class Unlock:
     faction: str
     rep_required: int
-    title: str
-    description: str
+    id: str
+
+    @property
+    def title(self):
+        return i18n.t(f"factions.unlock.{self.id}.title")
+
+    @property
+    def description(self):
+        from . import economy
+        return i18n.t(f"factions.unlock.{self.id}.desc", price=fmt_money(economy.CITY_PROPERTY_PRICE),
+                      kg=economy.CITY_PROPERTY_CAPACITY)
 
 
 def get_unlocks(faction_id: str):
@@ -300,8 +290,7 @@ def get_unlocks(faction_id: str):
             Unlock(
                 "bankers",
                 economy.CITY_PROPERTY_REP_GATE,
-                "City Property",
-                f"Buy a house in the City ({fmt_money(economy.CITY_PROPERTY_PRICE)}, {economy.CITY_PROPERTY_CAPACITY} kg storage)",
+                "city_property",
             )
         )
     elif faction_id == "arena":
@@ -309,8 +298,7 @@ def get_unlocks(faction_id: str):
             Unlock(
                 "arena",
                 2,
-                "The Games (Stage 2)",
-                "Brawl, Capture the Flag, and The Ribbit Brothers bouts",
+                "games",
             )
         )
     elif faction_id == "library":
@@ -318,16 +306,14 @@ def get_unlocks(faction_id: str):
             Unlock(
                 "library",
                 1,
-                "Expanded Catalog",
-                "More language dictionaries become available to buy."
+                "catalog",
             )
         )
         unlocks.append(
             Unlock(
                 "library",
                 2,
-                "Rare Manuscripts",
-                "The library unlocks rare language dictionaries and deeper archives."
+                "manuscripts",
             )
         )
     elif faction_id == "ledger_hold":
@@ -335,8 +321,7 @@ def get_unlocks(faction_id: str):
             Unlock(
                 "ledger_hold",
                 1,
-                "Military Supply Network",
-                "Recognised caravan runner for the military frontier outpost."
+                "supply",
             )
         )
     return unlocks

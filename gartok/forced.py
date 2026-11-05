@@ -37,6 +37,7 @@ from . import (
     encounters,
     factions,
     fight_nature,
+    i18n,
     justice,
     missions,
     orders,
@@ -61,7 +62,12 @@ class ForcedEvent:
     resolve: Callable               # (guild, group, order, outcome) -> events
     arrival: tuple = ()             # catch(guild, group, prev_node, resume_path) -> Order | None
     daily: Callable | None = None   # (guild, days) -> (events, [(group, Order)])
-    label: str = ""                 # the group hand-over card's headline
+
+    @property
+    def label(self):
+        """The group hand-over card's headline."""
+        key = f"forced.label.{self.kind}"
+        return i18n.t(key) if i18n.has(key) else ""
 
 
 # --------------------------------------------------------------------------- #
@@ -70,7 +76,7 @@ class ForcedEvent:
 def arrival_notices(guild, node_id):
     """What arriving at `node_id` tells the player: a faction met for the first time, then
     the deeds the arrival completed."""
-    events = [f"You have found {f.name}." for f in guild.meet_factions_at(node_id)]
+    events = [i18n.t("forced.found_faction", faction=f.name) for f in guild.meet_factions_at(node_id)]
     events += [factions.deed_notice(d)
                for d in factions.settle(guild, factions.Event("travel", node=world.node(node_id)))]
     return events
@@ -222,7 +228,7 @@ def wilds_claim_seizure_check(guild, days):
         if not claim_attack_rolls(days):
             return [], []
         guild.wilds_claim_seize()
-        return ["The Wilds claim sits unguarded -- it's seized without a fight."], []
+        return [i18n.t("forced.claim.unguarded")], []
     return [], _claim_attack(guild, days, "wilds_seizure", crew)
 
 
@@ -275,7 +281,7 @@ def resolve_guard_prison(guild, group, order):
     for u in list(group.members):
         if u.uid in order.caught:
             days = justice.jail(guild, u)
-            events.append(f"{u.name} accepts arrest -- {days} day(s) in the City's cells.")
+            events.append(i18n.plural("forced.arrest", days, who=u.name))
     events += resume_arrival(guild, group, order)
     return events
 
@@ -290,8 +296,8 @@ def resolve_guard_flee(guild, group, order):
     if order.prev_node is None:
         return [], None
     caught = [u for u in group.members if u.uid in order.caught]
-    names = ", ".join(u.name for u in caught) if caught else "The group"
-    events = [f"{names} fall back toward {world.node(order.prev_node).name}."]
+    names = ", ".join(u.name for u in caught) if caught else i18n.t("forced.the_group")
+    events = [i18n.t("forced.fall_back", who=names, place=world.node(order.prev_node).name)]
     group.node = order.prev_node
     pause = arrival_pause(guild, group, None, ())
     if pause is not None:
@@ -309,7 +315,7 @@ def resolve_guard_fight_aftermath(guild, group, order, outcome):
     for u in outcome.survivors:
         if u.uid in order.caught:
             justice.resolve_fight_crime(u, outcome)
-            events.append(f"{u.name} lives to fight another day -- crime now {u.crime}.")
+            events.append(i18n.t("forced.guard_survivor", who=u.name, crime=u.crime))
     events += resume_arrival(guild, group, order)
     return events
 
@@ -326,11 +332,11 @@ def resolve_gather_ambush(guild, group, order, outcome):
         return []
     group.order = orders.idle()
     if not outcome.won:
-        return ["The crew is driven off the work site and comes away with nothing."]
+        return [i18n.t("forced.gather.lost")]
     if order.job is not None:
         group.order = orders.garrison(order.job)
     survivors = [u for u in group.members if u in outcome.survivors]
-    return ["The crew drives the pack off."] + guild.bank_haul(survivors, order.hours, group.node)
+    return [i18n.t("forced.gather.won")] + guild.bank_haul(survivors, order.hours, group.node)
 
 
 def resolve_supply_ambush(guild, group, order, outcome):
@@ -342,11 +348,10 @@ def resolve_supply_ambush(guild, group, order, outcome):
         return []
     if not outcome.won:
         group.order = orders.idle()
-        return [f"The supply caravan is routed -- the cargo is lost; the escort falls back to "
-                f"{world.node(group.node).name}."]
+        return [i18n.t("forced.supply.lost", place=world.node(group.node).name)]
     group.order = orders.Order("travel", eta=order.eta, remaining=order.owed, dest=order.dest,
                                path=order.resume_path, task="supply_run")
-    return ["The caravan guards drive the soldiers off and the caravan rolls on."]
+    return [i18n.t("forced.supply.won")]
 
 
 def resolve_property_raid(guild, group, order, outcome):
@@ -354,11 +359,10 @@ def resolve_property_raid(guild, group, order, outcome):
     the next roll."""
     events = resume_arrival(guild, group, order)
     if outcome.won:
-        events.insert(0, "The guild's fighters drive off the guard patrol -- the "
-                      "property stays, for now.")
+        events.insert(0, i18n.t("forced.raid.won"))
     else:
         guild.house.abandon()
-        events.insert(0, "The City guard finally clears the squatted property -- it's gone for good.")
+        events.insert(0, i18n.t("forced.raid.lost"))
     return events
 
 
@@ -377,18 +381,18 @@ def resolve_wilds_raid(guild, group, order, outcome):
     the survivors idle."""
     _stand_down_crew(guild, group, order, outcome.won)
     if outcome.won:
-        return ["The crew drives off the raiders and the claim keeps sustaining."]
+        return [i18n.t("forced.claim.raid_won")]
     guild.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
-    return ["The crew is scattered -- sustaining the claim starts over."]
+    return [i18n.t("forced.claim.raid_lost")]
 
 
 def resolve_wilds_seizure(guild, group, order, outcome):
     """Winning sends every band back to its work; losing hands the claim to the occupiers until a retake."""
     _stand_down_crew(guild, group, order, outcome.won)
     if outcome.won:
-        return ["The crew drives off the raiders and holds the claim."]
+        return [i18n.t("forced.claim.seizure_won")]
     guild.wilds_claim_seize()
-    return ["The crew falls -- the Wilds claim is seized."]
+    return [i18n.t("forced.claim.seizure_lost")]
 
 
 def resolve_wilds_aid(guild, group, order, outcome):
@@ -402,9 +406,9 @@ def resolve_wilds_claim_retake(guild, group, order, outcome):
     events = resume_arrival(guild, group, order)
     if outcome.won:
         guild.wilds_claim_owner = "guild"
-        events.insert(0, "The Wilds claim is retaken -- the occupiers are driven out.")
+        events.insert(0, i18n.t("forced.claim.retaken"))
     else:
-        events.insert(0, "The attempt to retake the claim fails -- it stays lost.")
+        events.insert(0, i18n.t("forced.claim.retake_failed"))
     return events
 
 
@@ -412,9 +416,6 @@ def resolve_wilds_claim_retake(guild, group, order, outcome):
 # the talk before the fight                                                   #
 # --------------------------------------------------------------------------- #
 TALKS = {"guard", "ambush", "fortress_ambush", "gather_ambush", "supply_ambush"}
-_TITLES = {"ambush": "AMBUSHED ON THE ROAD", "fortress_ambush": "AMBUSHED AT LEDGER HOLD",
-           "gather_ambush": "AMBUSHED AT WORK",
-           "supply_ambush": "THE CARAVAN IS STOPPED"}
 
 
 def encounter(guild, group, order):
@@ -431,7 +432,7 @@ def encounter(guild, group, order):
         return dialogue.Patrol(order.pack, caught, can_run=order.prev_node is not None)
     if not dialogue.can_talk(order.pack):
         return None
-    enc = dialogue.Ambush(order.pack, title=_TITLES[order.kind])
+    enc = dialogue.Ambush(order.pack, title=i18n.t(f"forced.title.{order.kind}"))
     enc.set_odds(group.members)
     return enc
 
@@ -447,21 +448,15 @@ def settle_talk(guild, group, order):
 
 
 EVENTS = {e.kind: e for e in (
-    ForcedEvent("guard", "talk", DETERMINED, resolve_guard_fight_aftermath, arrival=(guard_catch,),
-                label="STOPPED BY THE GUARD"),
-    ForcedEvent("ambush", "map", OPPORTUNIST, resolve_road_ambush, arrival=(road_ambush_catch,),
-                label="AMBUSHED ON THE ROAD"),
-    ForcedEvent("fortress_ambush", "map", DETERMINED, resolve_road_ambush, arrival=(fortress_ambush_catch,),
-                label="AMBUSHED AT LEDGER HOLD"),
-    ForcedEvent("eviction", "battle", DETERMINED, resolve_property_raid, arrival=(property_raid_catch,),
-                label="RAID ON THE HOUSE"),
+    ForcedEvent("guard", "talk", DETERMINED, resolve_guard_fight_aftermath, arrival=(guard_catch,)),
+    ForcedEvent("ambush", "map", OPPORTUNIST, resolve_road_ambush, arrival=(road_ambush_catch,)),
+    ForcedEvent("fortress_ambush", "map", DETERMINED, resolve_road_ambush, arrival=(fortress_ambush_catch,)),
+    ForcedEvent("eviction", "battle", DETERMINED, resolve_property_raid, arrival=(property_raid_catch,)),
     ForcedEvent("wilds_retake", "battle", SOUGHT, resolve_wilds_claim_retake,
-                arrival=(wilds_claim_retake_catch,), label="RETAKE THE CLAIM"),
-    ForcedEvent("wilds_raid", "battle", OPPORTUNIST, resolve_wilds_raid, daily=wilds_claim_raid_check,
-                label="RAID ON THE CLAIM"),
-    ForcedEvent("wilds_seizure", "battle", OPPORTUNIST, resolve_wilds_seizure, daily=wilds_claim_seizure_check,
-                label="THE CLAIM IS SEIZED"),
-    ForcedEvent("wilds_aid", "battle", OPPORTUNIST, resolve_wilds_aid, label="CALLED TO DEFEND THE CLAIM"),
-    ForcedEvent("gather_ambush", "talk", OPPORTUNIST, resolve_gather_ambush, label="AMBUSHED AT WORK"),
-    ForcedEvent("supply_ambush", "talk", OPPORTUNIST, resolve_supply_ambush, label="THE CARAVAN IS ATTACKED"),
+                arrival=(wilds_claim_retake_catch,)),
+    ForcedEvent("wilds_raid", "battle", OPPORTUNIST, resolve_wilds_raid, daily=wilds_claim_raid_check),
+    ForcedEvent("wilds_seizure", "battle", OPPORTUNIST, resolve_wilds_seizure, daily=wilds_claim_seizure_check),
+    ForcedEvent("wilds_aid", "battle", OPPORTUNIST, resolve_wilds_aid),
+    ForcedEvent("gather_ambush", "talk", OPPORTUNIST, resolve_gather_ambush),
+    ForcedEvent("supply_ambush", "talk", OPPORTUNIST, resolve_supply_ambush),
 )}

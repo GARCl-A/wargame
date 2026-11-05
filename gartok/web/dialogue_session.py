@@ -152,7 +152,7 @@ class DialogueSession(Session):
         roll, text = _roll(r.text)
         won = roll["total"] >= roll["dc"] if roll else r.kind != "fight"
         return {"kind": r.kind, "text": text, "full": r.text, "roll": roll, "played": self.played, "won": won,
-                "button": dialogue.BUTTON_LABEL[r.kind], "paid": r.paid,
+                "button": dialogue.button_label(r.kind), "paid": r.paid,
                 "opening": _opening(r.opening) if r.kind == "fight" and self.enc.kind != "boss" else []}
 
 

@@ -208,8 +208,8 @@ class HubSession(Session):
         bent = ""
         if node.alignment:
             bent = i18n.name("alignment_bent", node.alignment)
-        return {"place": node.name, "name": vendor.name, "caption": f"{vendor.race} {vendor.role}",
-                "bent": bent, "line": vendor.line, "portrait": vendor.portrait}
+        return {"place": node.name, "name": vendor.name, "caption": vendor.caption,
+                "bent": bent, "line": vendor.said(), "portrait": vendor.portrait}
 
     def __init__(self, map_session, group, order, candidates=None):
         self.map = map_session

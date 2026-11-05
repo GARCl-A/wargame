@@ -19,7 +19,7 @@ is what a place wants, authored, not rolled.
 
 from dataclasses import dataclass
 
-from . import chest, data, factions, items, recorder, talents, world
+from . import chest, data, factions, i18n, items, recorder, talents, world
 
 
 @dataclass(frozen=True)
@@ -27,8 +27,6 @@ class MissionTemplate:
     id: str
     giver: str            # who offers it, e.g. "tanner"
     node: str              # world node id where it's offered and turned in
-    name: str
-    blurb: str
     goal_item: str
     goal_qty: int
     reward: int             # copper, split evenly across the current group
@@ -47,6 +45,14 @@ class MissionTemplate:
     starting_once: bool = False        # the starting items come with the first run only, not a retry
     fight_at: str | None = None        # the goal is a fight won at this node, not a turn-in
     reward_item: str | None = None     # handed to the first member of the delivering group at the turn-in
+
+    @property
+    def name(self):
+        return i18n.name("mission", self.id)
+
+    @property
+    def blurb(self):
+        return i18n.desc("mission", self.id)
 
     def __post_init__(self):
         tags_val = self.tags
@@ -77,9 +83,7 @@ class Mission:
 
 
 TANNER_HIDES = MissionTemplate(
-    "tanner_hides", "tanner", "tanner", "Fifteen Hides",
-    "The tanner wants 15 sqm of hide off anything with fur. The Wilds is "
-    "thick with it, if you can bring down what's wearing it.",
+    "tanner_hides", "tanner", "tanner",
     goal_item="1sqm Hide", goal_qty=15, reward=200, deadline_days=5,
     tags=("economic", "tanner", "hides"), retry_days=7,
 )
@@ -89,11 +93,7 @@ TANNER_HIDES = MissionTemplate(
 # deadline, it is open until delivered -- or failed for good the moment the
 # leather is lost (`fail_if_leather_lost`).
 TANNER_BIWOLF = MissionTemplate(
-    "tanner_biwolf", "tanner", "tanner", "The Biwolf's Hide",
-    "The tanner has heard of a wolf the size of a cart that hunts the Wilds by "
-    "night. It follows the smell of meat -- hunt after dark with fifteen "
-    "portions in your packs and it will find you, and its pack with it. Bring "
-    "me its leather.",
+    "tanner_biwolf", "tanner", "tanner",
     goal_item=items.BIWOLF_LEATHER_ITEM, goal_qty=1, reward=0, deadline_days=None,
     tags=("economic", "tanner", "biwolf"), requires="tanner_hides",
 )
@@ -109,85 +109,63 @@ TANNER_BIWOLF = MissionTemplate(
 # Same rule as the Biwolf's leather: lose the hide after the kill and it fails
 # for good (`fail_if_hide_lost`). The pay is double the hides', plus the recipe.
 TANNER_OX = MissionTemplate(
-    "tanner_ox", "tanner", "tanner", "The Immortal Ox",
-    "The tanner tells of Aurochs, an ox that has outlived every hunter sent after it, "
-    "grazing the fertile fields south of the farm. Its hide is the finest there is. "
-    "Bring it to me and I will teach you what the horn is good for.",
+    "tanner_ox", "tanner", "tanner",
     goal_item=items.THUNDERHIDE_ITEM, goal_qty=1, reward=2 * TANNER_HIDES.reward, deadline_days=None,
     tags=("economic", "tanner", "ox"), requires="tanner_biwolf",
     reward_recipe="Signal Horn",
 )
 
 TRUST_CHEST = MissionTemplate(
-    "bankers_trust_chest", "bankers", "city", "A Test of Trust",
-    "The Bankers want proof the guild can be trusted with something precious "
-    "before they'll vouch for it: carry a sealed chest to their outpost at "
-    "Ledger Hold, safe, and bring back their letter of receipt. Don't peek.",
+    "bankers_trust_chest", "bankers", "city",
     goal_item=data.LETTER_ITEM, goal_qty=1, reward=0, deadline_days=7,
     tags=("trust", "bankers"), starting_item=data.MISSION_CHEST_ITEM,
 )
 
 APOTHECARY_MUSHROOMS = MissionTemplate(
-    "apothecary_mushrooms", "apothecary", "apothecary", "Fifteen Red Mushrooms",
-    "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
+    "apothecary_mushrooms", "apothecary", "apothecary",
     goal_item="Red Mushroom", goal_qty=15, reward=150, deadline_days=10,
     tags=("economic", "apothecary"),
 )
 
 LIBRARY_DICTIONARY = MissionTemplate(
-    "library_dictionary", "library", "library", "A New Translation",
-    "The library wants a dictionary to expand its archives. Dictionaries currently in our shop catalog will not be accepted: "
-    "write one on the WRITE tab, in a tongue someone in your group speaks, with Paper and Ink.",
+    "library_dictionary", "library", "library",
     goal_item="Any Dictionary", goal_qty=1, reward=250, deadline_days=15,
     tags=("library", "scholarly"),
 )
 
 LIBRARY_ANCIENT_CODEX = MissionTemplate(
-    "library_ancient_codex", "library", "library", "The Lost Codex",
-    "Legends speak of an ancient subterranean library buried off the Old Road. "
-    "Delve into the forgotten ruins and retrieve the Ancient Codex.",
+    "library_ancient_codex", "library", "library",
     goal_item=data.CODEX_ITEM, goal_qty=1, reward=500, deadline_days=20,
     tags=("library", "ruins"),
     reveals=("blood_sanctuary", "nature_grove", "faith_cathedral"), returns_goal=True,
 )
 
 
-def _codex_delivery(school, node, name, blurb):
+def _codex_delivery(school, node):
     return MissionTemplate(
-        f"{school}_codex", school, node, name, blurb,
+        f"{school}_codex", school, node,
         goal_item=data.CODEX_ITEM, goal_qty=1, reward=0, deadline_days=None,
         tags=("magic", school, "codex"), requires=LIBRARY_ANCIENT_CODEX.id, exclusive="codex",
     )
 
 
 CODEX_BLOOD = _codex_delivery(
-    "blood", "blood_sanctuary", "The Codex for the Blood",
-    "The blood mages have waited for the Ancient Codex. There is only one: give it to us, "
-    "and the other schools will never read it.")
+    "blood", "blood_sanctuary")
 CODEX_NATURE = _codex_delivery(
-    "nature", "nature_grove", "The Codex for the Green",
-    "The grove asks for the Ancient Codex. There is only one: leave it with us, "
-    "and the other schools will never read it.")
+    "nature", "nature_grove")
 CODEX_FAITH = _codex_delivery(
-    "faith", "faith_cathedral", "The Codex for the Faith",
-    "The cathedral asks for the Ancient Codex. There is only one: entrust it to us, "
-    "and the other schools will never read it.")
+    "faith", "faith_cathedral")
 CODEX_DELIVERIES = (CODEX_BLOOD, CODEX_NATURE, CODEX_FAITH)
 
 # The Snake Dragon (`serpent_nest.py`): one beast, wanted dead by one school and alive by another.
 SNAKE_SLUG = "snake_dragon"
 BLOOD_SNAKE = MissionTemplate(
-    "blood_snake", "blood", "blood_sanctuary", "The Dragon's Blood",
-    "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. "
-    "Bring us its body: the blood is read in the flesh, and the cult would read it.",
+    "blood_snake", "blood", "blood_sanctuary",
     goal_item=items.SNAKE_DRAGON_CORPSE_ITEM, goal_qty=1, reward=0, deadline_days=None,
     tags=("magic", "blood", SNAKE_SLUG), exclusive=SNAKE_SLUG, requires=LIBRARY_ANCIENT_CODEX.id,
 )
 NATURE_SNAKE = MissionTemplate(
-    "nature_snake", "nature", "nature_grove", "The Snake Saved",
-    "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. "
-    "Something has twisted it, a curse perhaps. Bring it to us alive, bound with rope or chain, "
-    "and the grove will tend it.",
+    "nature_snake", "nature", "nature_grove",
     goal_item="Snake Dragon", goal_qty=1, reward=0, deadline_days=None,
     tags=("magic", "nature", SNAKE_SLUG), exclusive=SNAKE_SLUG, goal_captive=SNAKE_SLUG,
     requires=LIBRARY_ANCIENT_CODEX.id,
@@ -199,10 +177,7 @@ SNAKE_HUNTS = (BLOOD_SNAKE, NATURE_SNAKE)
 # a lost fight or a missed week fails it, and the Order asks again two weeks later -- with no
 # fresh potions.
 FAITH_BATTLEFIELD = MissionTemplate(
-    "faith_battlefield", "faith", "faith_cathedral", "Mercy at the Front",
-    "The cathedral sends its medicine where the dying are -- the first time it asks, six potions "
-    "go with you. Go to the Battlefield past Ledger Hold's frontier outpost and fight beside the "
-    "soldiers there. Win the skirmish, and bring every one of them through alive.",
+    "faith_battlefield", "faith", "faith_cathedral",
     goal_item="Minor Healing Potion", goal_qty=1,       # goal_item: only the board's icon here
     reward=0, deadline_days=7,
     tags=("magic", "faith", "battlefield"), requires=LIBRARY_ANCIENT_CODEX.id,
@@ -214,10 +189,7 @@ FAITH_BATTLEFIELD = MissionTemplate(
 # moment the necromancer falls, whatever happens after; the soldiers do not matter this time. A lost
 # fight or a missed deadline fails it, and the Order asks again two weeks later.
 FAITH_NECROMANCER = MissionTemplate(
-    "faith_necromancer", "faith", "faith_cathedral", "The Necromancer at the Front",
-    "The soldiers who fell at the Battlefield do not stay dead: days later they get up and walk. "
-    "Someone out there is raising them, and nobody has seen who. Go to the front, find whoever "
-    "wakes the dead, and put them down.",
+    "faith_necromancer", "faith", "faith_cathedral",
     goal_item="Holy Symbol", goal_qty=1,                  # goal_item: only the board's icon here
     reward=0, deadline_days=14,
     tags=("magic", "faith", "necromancer"), requires=FAITH_BATTLEFIELD.id,
@@ -229,10 +201,7 @@ FAITH_NECROMANCER = MissionTemplate(
 # and fails on the event's last day with the Ogre still unbeaten.
 WILDFIRE_DAYS = 14
 NATURE_WILDFIRE = MissionTemplate(
-    "nature_wildfire", "nature", "nature_grove", "The Ogre's Wildfire",
-    "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn "
-    "the forest to do it -- badly. Every fire they set runs wild. Teach them, or stop them, and put "
-    "the fires out before they spread. The Ogre is at the heart of it.",
+    "nature_wildfire", "nature", "nature_grove",
     goal_item="Scroll of Water Jet", goal_qty=1,          # goal_item: only the board's icon here
     reward=0, deadline_days=WILDFIRE_DAYS,
     tags=("magic", "nature", "wildfire"), requires=LIBRARY_ANCIENT_CODEX.id, fight_at="wilds",
@@ -241,19 +210,14 @@ NATURE_WILDFIRE = MissionTemplate(
 # The Blood Cult's third (`lair.py`): a dragon sleeps under the Mine, and the Cult wants its eggs.
 # Open to all; done when one egg is handed over, the rest are the guild's to sell.
 BLOOD_CLUTCH = MissionTemplate(
-    "blood_clutch", "blood", "blood_sanctuary", "The Dragon's Clutch",
-    "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on "
-    "its clutch. Search the deep galleries, go down, and bring us one of its eggs -- the bloodline "
-    "itself, unhatched. Whatever else you carry out of there is yours.",
+    "blood_clutch", "blood", "blood_sanctuary",
     goal_item=items.DRAGON_EGG_ITEM, goal_qty=1, reward=0, deadline_days=None,
     tags=("magic", "blood", "dragon_clutch"), requires=LIBRARY_ANCIENT_CODEX.id,
     reward_item="Scroll of Dragonfire",
 )
 
 LEDGER_TREEFOLK = MissionTemplate(
-    "ledger_treefolk", "ledger_hold", "ledger_hold", "Treefolk Mentorship",
-    "Commander Varkas of Ledger Hold entrusts your guild with a green Treefolk recruit. "
-    "Train them on the road until they master their racial roots (racial level 2) and return them to the garrison.",
+    "ledger_treefolk", "ledger_hold", "ledger_hold",
     goal_item="Treefolk Recruit", goal_qty=1, reward=230, deadline_days=None,
     tags=("guards", "ledger_hold", "mentorship"),
 )
@@ -412,7 +376,7 @@ def turn_in(guild, mission):
     bankers-style "economic job done" event just banked, for the caller to
     show alongside the payout."""
     if not can_turn_in(guild, mission):
-        raise ValueError("mission goal not met")
+        raise ValueError(i18n.t("missions.goal_not_met"))
     t = template_of(mission)
     group = _current_group(guild, mission)
     if t.id == "ledger_treefolk":
@@ -545,15 +509,14 @@ def settle_battlefield(guild, mission, won, lost):
         t = template_of(mission)
         deeds = factions.settle(guild, factions.Event(
             "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
-        return "Every soldier came through. The Faith Order hears of it.", deeds
+        return i18n.t("missions.front.won"), deeds
     mission.state, mission.failed_day = "failed", guild.clock.day
     if lost:
         names = ", ".join(c.name for c in lost)
-        why = f"{names} did not come home"
+        why = i18n.t("missions.front.lost_men", names=names)
     else:
-        why = "the line broke"
-    return (f"Mercy at the Front failed: {why}. The Order will ask again in "
-            f"{template_of(mission).retry_days} days."), []
+        why = i18n.t("missions.front.line_broke")
+    return i18n.t("missions.front.failed", why=why, days=template_of(mission).retry_days), []
 
 
 def _held_by(guild, template, group):
@@ -582,10 +545,9 @@ def settle_necromancer(guild, mission, fallen):
         t = template_of(mission)
         deeds = factions.settle(guild, factions.Event(
             "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
-        return "The necromancer is dead, and the dead at the front lie still. The Faith Order hears of it.", deeds
+        return i18n.t("missions.necromancer.won"), deeds
     mission.state, mission.failed_day = "failed", guild.clock.day
-    return (f"The necromancer still walks the front. The Order will ask again in "
-            f"{template_of(mission).retry_days} days."), []
+    return i18n.t("missions.necromancer.failed", days=template_of(mission).retry_days), []
 
 
 def settle_wildfire(guild, mission):

@@ -36,6 +36,20 @@ def _flatten(node, prefix=""):
     return out
 
 
+def _npc_bios():
+    """`desc.npc.<slug>` for each authored NPC: the English backstory lives in the NPC's own file (the Editor
+    writes it there), so it is the one English source and the other languages translate it."""
+    folder = os.path.join(os.path.dirname(LOCALES_DIR), "npcs")
+    out = {}
+    for fn in sorted(os.listdir(folder)) if os.path.isdir(folder) else ():
+        if fn.endswith(".json"):
+            with open(os.path.join(folder, fn), encoding="utf-8") as fh:
+                bio = json.load(fh).get("bio")
+            if bio:
+                out[f"desc.npc.{fn[:-5]}"] = bio
+    return out
+
+
 def _catalog(lang):
     if lang not in _cache:
         path = os.path.join(LOCALES_DIR, f"{lang}.json")
@@ -44,6 +58,8 @@ def _catalog(lang):
                 _cache[lang] = _flatten(json.load(fh))
         except FileNotFoundError:
             _cache[lang] = {}
+        if lang == DEFAULT_LANG:
+            _cache[lang].update(_npc_bios())
     return _cache[lang]
 
 

@@ -6,7 +6,7 @@ from tests.helpers import Unit
 
 
 def test_hidden_node_not_in_known_by_default():
-    hidden_node = world.Node("secret_cave", "Secret Cave", "town", (0.5, 0.5), "A hidden cave.", hidden=True)
+    hidden_node = world.Node("secret_cave", "Secret Cave", "town", (0.5, 0.5), hidden=True)
     orig_nodes = list(world.NODES)
     try:
         world.NODES.append(hidden_node)

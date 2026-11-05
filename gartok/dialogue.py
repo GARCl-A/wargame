@@ -21,7 +21,7 @@ what the words did. `ai_choice` is the squad's side when nobody plays it.
 import random
 from dataclasses import dataclass, field
 
-from . import economy, recruit
+from . import economy, i18n, recruit
 
 BASE_DC = 15                  # an ordinary speaker (CHA +1) talks an even pack down 35% of the time
 BRIBE_PER_FOE = 3             # copper a foe asks per (its level + 1)
@@ -36,22 +36,25 @@ BLUFF_STEP = 2                # a Challenge: each bluff already told raises the 
 @dataclass(frozen=True)
 class Verb:
     id: str
-    label: str
     attr: str | None          # the speaker's attribute it rolls; None = no check
     spoken: bool              # needs a language shared with the leader
+
+    @property
+    def label(self):
+        return i18n.t(f"dialogue.verb.{self.id}")
 
 
 PARLEY_VERBS = ("persuade", "bluff", "intimidate")   # the Human's Parley talent adds to these
 
 VERBS = {v.id: v for v in (
-    Verb("persuade", "Persuade", "charisma", True),
-    Verb("teach", "Teach", "intelligence", True),
-    Verb("bluff", "Bluff", "charisma", True),
-    Verb("intimidate", "Intimidate", "charisma", True),
-    Verb("bribe", "Bribe", None, False),
-    Verb("surrender", "Surrender", None, False),
-    Verb("leave", "Run", None, False),
-    Verb("attack", "Attack", None, False),
+    Verb("persuade", "charisma", True),
+    Verb("teach", "intelligence", True),
+    Verb("bluff", "charisma", True),
+    Verb("intimidate", "charisma", True),
+    Verb("bribe", None, False),
+    Verb("surrender", None, False),
+    Verb("leave", None, False),
+    Verb("attack", None, False),
 )}
 
 
@@ -106,6 +109,11 @@ class Option:
         return not self.block
 
 
+def _note(kind, verb, **params):
+    key = f"dialogue.note.{kind}.{verb}"
+    return i18n.t(key, **params) if i18n.has(key) else ""
+
+
 def leader_of(foes):
     """The foe who talks for the rest: the most experienced one with a language, or None."""
     speakers = [u for u in foes if u.languages]
@@ -131,7 +139,7 @@ def roll(mod, dc, rng=random):
     """-> (passed, margin, line)."""
     nat = rng.randint(1, 20)
     total = nat + mod
-    return total >= dc, total - dc, f"d20({nat}) {mod:+} = {total} vs DC {dc}"
+    return total >= dc, total - dc, i18n.t("dialogue.roll", nat=nat, mod=mod, total=total, dc=dc)
 
 
 def _purse(members):
@@ -196,16 +204,16 @@ class Encounter:
             opt = Option(verb, v.label, self.note(verb))
             if v.attr is not None:
                 mod, dc = self.mod(verb, speaker), self.dc(verb)
-                opt.check = f"{v.attr[:3].upper()} {mod:+d} vs DC {dc}"
+                opt.check = i18n.t("dialogue.check", attr=v.attr[:3].upper(), mod=mod, dc=dc)
                 opt.odds = odds(mod, dc)
             if verb == "bribe":
                 opt.check = f"${self.price()}"
                 if _purse(members) < self.price():
-                    opt.block = "not enough coin"
+                    opt.block = i18n.t("dialogue.block.coin")
             opt.block = self.refusal(verb) or opt.block
             if (v.spoken or verb in self.worded) and not self.shared(speaker):
-                opt.block = (f"needs {', '.join(self.leader.languages)}" if self.leader is not None
-                             else "nobody there talks")
+                opt.block = (i18n.t("dialogue.block.language", languages=", ".join(self.leader.languages))
+                             if self.leader is not None else i18n.t("dialogue.block.nobody"))
             out.append(opt)
         return out
 
@@ -216,11 +224,13 @@ class Encounter:
     def choose(self, verb, speaker, members, rng=random):
         opt = self.option(verb, speaker, members)
         if opt is None or not opt.open:
-            raise ValueError(f"{verb!r} is not open: {opt.block if opt else 'not offered'}")
+            raise ValueError(i18n.t("dialogue.error.not_open", verb=VERBS[verb].label,
+                                    why=opt.block if opt else i18n.t("dialogue.error.not_offered")))
         if verb == "bribe":
             price = self.price()
             economy.charge_richest_first(members, price)
-            result = Result("peace", f"{speaker.name} counts out ${price}. {self._bribed()}", paid=price)
+            result = Result("peace", i18n.t("dialogue.bribe_paid", who=speaker.name, price=price, outcome=self._bribed()),
+                            paid=price)
         elif VERBS[verb].attr is None:
             result = self._plain(verb, speaker)
         else:
@@ -231,10 +241,10 @@ class Encounter:
         return result
 
     def _bribed(self):
-        return "They take it and let you go."
+        return i18n.t("dialogue.bribed.ambush")
 
     def _plain(self, verb, speaker):
-        return Result("fight", "Steel it is.", Opening())
+        return Result("fight", i18n.t("dialogue.steel"), Opening())
 
     def _checked(self, verb, speaker, passed, margin, line):
         raise NotImplementedError
@@ -245,9 +255,10 @@ class Ambush(Encounter):
     kind = "ambush"
     verbs = ("persuade", "bluff", "intimidate", "bribe", "attack")
 
-    def __init__(self, foes, title="AMBUSHED", line=None):
+    def __init__(self, foes, title=None, line=None):
         n = len(foes)
-        super().__init__(foes, title, line or f'"Your purse or your blood." {n} of them block the way.')
+        super().__init__(foes, title or i18n.t("dialogue.title.ambush"),
+                         line or i18n.t("dialogue.line.ambush", n=n))
         self.edge = 0
 
     def set_odds(self, squad):
@@ -266,29 +277,25 @@ class Ambush(Encounter):
         return dc - self.edge
 
     def note(self, verb):
-        return {"persuade": "talk them out of it: no fight · a miss and it is a fight",
-                "bluff": "send them off on a lie · a miss and they strike first",
-                "intimidate": "shake them: they start demoralized, or run · a miss gives them the jump",
-                "bribe": "pay them off: no fight",
-                "attack": "roll initiative"}.get(verb, "")
+        return _note("ambush", verb)
 
     def _checked(self, verb, speaker, passed, margin, line):
-        who = self.leader.name if self.leader is not None else "They"
+        who = self.leader.name if self.leader is not None else i18n.t("dialogue.they")
         if verb == "persuade":
             if passed:
-                return Result("peace", f"{speaker.name} talks {who} down ({line}). They let you by.")
-            return Result("fight", f"{who} will not hear it ({line}).", Opening())
+                return Result("peace", i18n.t("dialogue.ambush.persuade_win", speaker=speaker.name, who=who, line=line))
+            return Result("fight", i18n.t("dialogue.ambush.persuade_miss", who=who, line=line), Opening())
         if verb == "bluff":
             if passed:
-                return Result("peace", f"{speaker.name}'s story holds ({line}). They go looking elsewhere.")
-            return Result("fight", f"{who} sees through it ({line}) and strikes first!",
+                return Result("peace", i18n.t("dialogue.ambush.bluff_win", speaker=speaker.name, line=line))
+            return Result("fight", i18n.t("dialogue.ambush.bluff_miss", who=who, line=line),
                           Opening(surprised="player"))
         if passed and margin >= ROUT_MARGIN:
-            return Result("peace", f"{speaker.name} stares {who} down ({line}). They break and run.")
+            return Result("peace", i18n.t("dialogue.ambush.rout", speaker=speaker.name, who=who, line=line))
         if passed:
-            return Result("fight", f"{speaker.name} shakes them ({line}). They come on, but unsure.",
+            return Result("fight", i18n.t("dialogue.ambush.shaken", speaker=speaker.name, line=line),
                           Opening(demoralized="enemy"))
-        return Result("fight", f"{who} laughs it off ({line}) and gets the jump on you.",
+        return Result("fight", i18n.t("dialogue.ambush.laughs", who=who, line=line),
                       Opening(initiative={"enemy": INITIATIVE_EDGE}))
 
 
@@ -298,7 +305,7 @@ class Patrol(Encounter):
 
     def __init__(self, foes, caught, can_run):
         names = ", ".join(u.name for u in caught)
-        super().__init__(foes, "THE GUARD", f'"{names}, in the name of the City -- you will come with us."')
+        super().__init__(foes, i18n.t("dialogue.title.guard"), i18n.t("dialogue.line.guard", names=names))
         self.caught = list(caught)
         self.can_run = can_run
 
@@ -309,26 +316,22 @@ class Patrol(Encounter):
         return GUARD_BRIBE_PER_CRIME * max(1, sum(u.crime for u in self.caught))
 
     def note(self, verb):
-        return {"surrender": "crime clears to 0: time served in the City's cells",
-                "bluff": "the wrong man: they let you go, the crime stays · a miss and they strike first",
-                "bribe": "they look away: the crime stays",
-                "attack": "lethal; living through it adds to the rap sheet",
-                "leave": "fall back the way the group came"}.get(verb, "")
+        return _note("guard", verb)
 
     def _bribed(self):
-        return "The patrol finds somewhere else to be. The rap sheet stays."
+        return i18n.t("dialogue.bribed.guard")
 
     def _plain(self, verb, speaker):
         if verb == "surrender":
-            return Result("surrender", "The group lays down its arms.")
+            return Result("surrender", i18n.t("dialogue.guard.surrender"))
         if verb == "leave":
-            return Result("leave", "The group turns and runs.")
-        return Result("fight", "The group draws on the City guard.", Opening())
+            return Result("leave", i18n.t("dialogue.guard.leave"))
+        return Result("fight", i18n.t("dialogue.guard.attack"), Opening())
 
     def _checked(self, verb, speaker, passed, margin, line):
         if passed:
-            return Result("peace", f"{speaker.name} swears it is a mistake ({line}). The patrol moves on.")
-        return Result("fight", f"Nobody believes it ({line}). The patrol draws steel!",
+            return Result("peace", i18n.t("dialogue.guard.bluff_win", speaker=speaker.name, line=line))
+        return Result("fight", i18n.t("dialogue.guard.bluff_miss", line=line),
                       Opening(surprised="player"))
 
 
@@ -341,7 +344,7 @@ class Challenge(Encounter):
     worded = frozenset({"bribe"})
 
     def __init__(self, foes, bluffs=0):
-        super().__init__(foes, "CHALLENGED", "\"Who walks in the master's halls?\" The patrol raises its torch.")
+        super().__init__(foes, i18n.t("dialogue.title.challenge"), i18n.t("dialogue.line.challenge"))
         self.bluffs = bluffs
         self.bluffs_told = 0
 
@@ -349,21 +352,19 @@ class Challenge(Encounter):
         return super().dc(verb) + (BLUFF_STEP * self.bluffs if verb == "bluff" else 0)
 
     def note(self, verb):
-        return {"bluff": "the new shift, or tribute for the master · a miss rings the alarm",
-                "bribe": "kobolds love what shines: they let you be",
-                "attack": "silence them before their next turn, or they call out"}.get(verb, "")
+        return _note("challenge", verb)
 
     def _bribed(self):
-        return "The coins vanish into the patrol's pouches. They walk on."
+        return i18n.t("dialogue.bribed.challenge")
 
     def _plain(self, verb, speaker):
-        return Result("fight", f"{speaker.name} strikes before they can call out!", Opening())
+        return Result("fight", i18n.t("dialogue.challenge.attack", speaker=speaker.name), Opening())
 
     def _checked(self, verb, speaker, passed, margin, line):
         self.bluffs_told += 1
         if passed:
-            return Result("peace", f"{speaker.name}'s Draconic holds ({line}). The patrol walks on.")
-        return Result("fight", f"The kobolds hiss at the lie ({line}) and strike first!",
+            return Result("peace", i18n.t("dialogue.challenge.bluff_win", speaker=speaker.name, line=line))
+        return Result("fight", i18n.t("dialogue.challenge.bluff_miss", line=line),
                       Opening(surprised="player"))
 
 
@@ -375,9 +376,8 @@ class WildfireTalk(Encounter):
     def __init__(self, guild, focus, leader):
         from . import wildfire
         self.guild, self.focus, self.wildfire = guild, focus, wildfire
-        who = "the Ogre" if focus.great else "the foreman"
-        line = ('"Fire clears ground. Everybody knows that." The Ogre does not look up.' if focus.great
-                else '"More wood! Green wood burns longest!" The foreman waves the crew on.')
+        who = i18n.t("dialogue.wildfire.who_great" if focus.great else "dialogue.wildfire.who")
+        line = i18n.t("dialogue.line.wildfire_great" if focus.great else "dialogue.line.wildfire")
         super().__init__([leader], focus.name.upper(), line)
         self.who = who
 
@@ -389,15 +389,13 @@ class WildfireTalk(Encounter):
         return self.wildfire.talk_dc(self.guild, self.focus)
 
     def note(self, verb):
-        return {"persuade": f"get a hearing from {self.who} · a miss and they fight",
-                "teach": "show them how to burn a clearing right · a miss and they fight",
-                "attack": "take the camp by force"}.get(verb, "")
+        return _note("wildfire", verb, who=self.who)
 
     def refusal(self, verb):
-        return "they want to learn, not be paid" if verb == "bribe" else ""
+        return i18n.t("dialogue.wildfire.refusal") if verb == "bribe" else ""
 
     def _plain(self, verb, speaker):
-        return Result("fight", f"The squad goes for {self.who}.", Opening())
+        return Result("fight", i18n.t("dialogue.wildfire.attack", who=self.who), Opening())
 
     def choose(self, verb, speaker, members, rng=random):
         if VERBS[verb].attr is None:
@@ -432,8 +430,8 @@ class BossTalk(Encounter):
 
     def current(self):
         if self.step < len(self.lines) - 1:
-            return Result("next", f"{self.lines[self.step + 1][0].name} steps up.")
-        return Result("fight", "The crowd roars. The bout begins.", Opening())
+            return Result("next", i18n.t("dialogue.boss.next", who=self.lines[self.step + 1][0].name))
+        return Result("fight", i18n.t("dialogue.boss.fight"), Opening())
 
     def advance(self):
         self.step += 1
@@ -444,7 +442,8 @@ class BossTalk(Encounter):
 # --------------------------------------------------------------------------- #
 # one talk being played by a person                                           #
 # --------------------------------------------------------------------------- #
-BUTTON_LABEL = {"peace": "GO ON", "fight": "FIGHT", "leave": "RUN", "surrender": "GO WITH THEM", "next": "GO ON"}
+def button_label(kind):
+    return i18n.t(f"dialogue.button.{kind}")
 
 
 class Talk:
@@ -463,18 +462,18 @@ class Talk:
 
     def pick(self, unit):
         if self.result is not None:
-            raise ValueError("the die is cast")
+            raise ValueError(i18n.t("dialogue.error.cast"))
         if not self.encounter.offered():
-            raise ValueError("nobody answers here")
+            raise ValueError(i18n.t("dialogue.error.silent"))
         if unit not in self.members:
-            raise ValueError("no such member")
+            raise ValueError(i18n.t("dialogue.error.member"))
         self.speaker = unit
 
     def choose(self, verb):
         if self.result is not None:
-            raise ValueError("the die is cast")
+            raise ValueError(i18n.t("dialogue.error.cast"))
         if self.speaker is None:
-            raise ValueError("nobody to speak")
+            raise ValueError(i18n.t("dialogue.error.speaker"))
         self.result = self.encounter.choose(verb, self.speaker, self.members)
         if self.result.over and self.on_decided is not None:
             self.on_decided(self.result)
@@ -483,7 +482,7 @@ class Talk:
     def go_on(self):
         """The result's button: the end handed to `on_done` (its answer returned), or the next step."""
         if self.result is None:
-            raise ValueError("nothing has been said yet")
+            raise ValueError(i18n.t("dialogue.error.unsaid"))
         if self.result.over:
             return self.on_done(self.result)
         self.result = self.encounter.advance()

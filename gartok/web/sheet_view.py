@@ -35,14 +35,22 @@ def _talents(u):
             for track in talents.TRACKS for tid in u.talents.get(track, []) for t in (talents.get(tid),)]
 
 
+def bio(u):
+    """The backstory of `u`: an authored NPC's is the catalog's `desc.npc.<slug>` (its English is the NPC
+    file's own `bio`, see `i18n._npc_bios`), else the unit's own text."""
+    slug = getattr(u, "bio_slug", None)
+    return (i18n.desc("npc", slug) if slug else "") or getattr(u, "bio", "")
+
+
 def _record(s, u):
     who = s._recruited_by(u)
     out = [i18n.t("sheet_view.recruited_by", who=who) if who else i18n.t("sheet_view.founding_member_of_guild"),
            s._sponsor_line(u).replace(" -- ", ": ") + "."]
     if getattr(u, "arena_title", False):
         out.append(i18n.t("sheet_view.holds_title_champion_of_pit"))
-    if getattr(u, "bio", ""):
-        out.append(u.bio)
+    text = bio(u)
+    if text:
+        out.append(text)
     return out
 
 
@@ -93,7 +101,7 @@ def member_sheet(u, guild=None, task=None):
         "ability": list(ch["ability"]), "langs": ch["langs"], "racial": u.racial_level,
         "tracks": [{k: t[k] for k in ("label", "value", "frac", "text", "tip")} for t in GuildSheet._tracks(u)],
         "talents": _talents(u),
-        "record": _record(s, u) if s is not None else [u.bio] if getattr(u, "bio", "") else [],
+        "record": _record(s, u) if s is not None else [text] if (text := bio(u)) else [],
     }
 
 

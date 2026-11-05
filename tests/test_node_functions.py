@@ -26,7 +26,7 @@ def test_a_function_that_hosts_another_hides_its_button():
 
 
 def test_a_node_with_independent_functions_gets_both_buttons():
-    node = world.Node("t", "T", "town", (0, 0), "x", functions=("prison", "hunt"))
+    node = world.Node("t", "T", "town", (0, 0), functions=("prison", "hunt"))
     assert [f.id for f in node_functions.offered(node)] == ["prison", "hunt"]
 
 

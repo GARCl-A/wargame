@@ -1,7 +1,7 @@
 # Plan — Brazilian Portuguese translation (`pt-br`)
 
 Goal: the whole game playable in `pt-br`, chosen in Settings, with English still the default and the
-fallback. Status: **phases 1-4 done** (2026-11-05; each phase's deliberate limits are listed under it); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
+fallback. Status: **phases 1-5 done** (2026-11-05; each phase's deliberate limits are listed under it); the audit counts what is left. The translation must be COMPLETE before the next playtest (author 2026-11-04),
 all six phases (see [backlog.md](backlog.md)).
 
 Sizes below come from greps (2026-11-04), not from reading each module: re-count at the start of each phase.
@@ -117,8 +117,26 @@ is phase 5.
 
 ### 5. Content and dialogue
 
-NPC names/lines, map names, job and event text, forced events, the arena talk. Needs the decision above
-on JSON text.
+NPC names/lines, map names, job and event text, forced events, the arena talk.
+
+Done (2026-11-05), the JSON-text decision taken as "the catalog": a record with an `id` has no text in the code, `name` /
+`blurb` are properties reading `name.<kind>.<id>` / `desc.<kind>.<id>`: `mission` (all 17 templates), `deed`, `faction`
+blurbs, `objective`, `node_function` (map button label and note), `vendor` (a keeper's line, by the slug of their name),
+`role` (a keeper's trade, shown with their race: `world.vendor_caption`), `npc` (an authored NPC's backstory: the NPC file's
+`bio` is the one English source, `i18n` exposes it as `desc.npc.<slug>` in `en` and `pt-br` translates it; `sheet_view.bio` reads the catalog). A static
+node's blurb is `desc.node.<id>` (`Node(..., blurb=)` is now a keyword, for a node made in play) and its shop button
+`world.shop_label.<id>`. The dialogue (`dialogue.*`: verbs, the check line, every ambush/guard/challenge/wildfire/boss line and
+note, the buttons), the forced events (`forced.*`: notices, titles, labels), the faction unlocks (`factions.unlock.*`), the
+mission notices (`missions.*`), the jobs board lines (`job_board.subtitle.*`, `job_board.keeper.*`) and the arena blurbs and
+recruit cards (`arena_session.*`, `arena.caption.*`) are keys. An authored NPC's backstory follows the unit through a save
+(`Unit.bio_slug`, optional, no version bump). Map names (`maps/*.json`) are shown only in the Editor and stay as written.
+**NPC unit names are NOT translated** ("The Snake Dragon", "Sanctum Spider", "The Ancient Archivist", the epithets of the
+bosses): a unit's name is read as an id (`arena.py` matches `u.name.startswith("Adelio")`, the roster by `slug.title()`), so
+they need a display-name layer first; decided for phase 6 together with the glossary.
+Deliberate limits, for phase 6: `Result.text` of a dialogue and the guard notices are stored as already-translated strings (a
+decided talk that is reloaded reads in the language it was rolled in); an ambush title is chosen when the talk opens; the goal items of a mission ("Any Dictionary",
+"Treefolk Recruit") are shown as item ids until their `pt-br` names exist; the audit's remaining count is dev text
+(`reference`, `wiki_rules`, `combat_lab`) and stat labels (`data`, `intel`, `unit_derive`, `sources`, `wiki_terms`).
 
 ### 6. Translate and review
 

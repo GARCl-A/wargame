@@ -16,46 +16,35 @@ AXE = "Axe"
 @dataclass(frozen=True)
 class Objective:
     id: str
-    name: str
-    blurb: str
+
+    @property
+    def name(self):
+        return i18n.name("objective", self.id)
+
+    @property
+    def blurb(self):
+        return i18n.desc("objective", self.id)
 
 
-OBJECTIVES = (
-    Objective("obj_buy_food", "Buy Food",
-              "Everyone eats one food a day. Potatoes and Meat are sold at the Farm."),
-    Objective("obj_work_shift", "Earn a Wage",
-              "Work a shift at the Lumber Yard or the Mine: little pay, no risk."),
-    Objective("obj_buy_torch", "Carry a Light",
-              "Buy a Torch or a Lantern at the Market: the dark hides foes, at night and underground."),
-    Objective("obj_arena_bout", "Arena Bout",
-              "Fight a bout at the Arena: you stake money, and nobody dies."),
-    Objective("obj_combat_lv1", "Combat Level 1",
-              "Down foes at or above your level until someone reaches Combat Level 1."),
-    Objective("obj_medic", "See the Medic",
-              "Have the Medic at the Apothecary treat someone wounded, sick or poisoned."),
-    Objective("obj_recruit_tavern", "Tavern Recruit",
-              "Recruit a new companion at the Tavern."),
-    Objective("obj_recruit_prison", "Bail a Prisoner",
-              "Pay a prisoner's bail at the City Prison and recruit them."),
-    Objective("obj_work_chain", "Woodcutter's Climb",
-              "Reach Work Lv 1, buy an Axe at the Smithy, reach Work Lv 2."),
-    Objective("obj_licence", "Gather for Yourself",
-              "Buy a gathering licence at the Lumber Yard or the Mine and keep what the crew finds."),
-    Objective("obj_mission", "Take a Paid Job",
-              "Accept a job from a giver's board; a node with work on offer says so on the map."),
-    Objective("obj_two_groups", "Split the Guild",
-              "Run two groups at once (the gear icon on a group's card splits it)."),
-    Objective("obj_strongbox", "Rent the Strongbox",
-              "Rent the Bankers' chest in the City to keep what nobody carries."),
-    Objective("obj_pack_animal", "A Beast of Burden",
-              "Buy an animal at the Farm's stables and give it a Pack Saddle, or a Harness to pull a wagon."),
-    Objective("obj_wagon", "Take to the Road",
-              "Buy a wagon at the Carpenter and hitch an animal in a Harness to it."),
-    Objective("obj_deed", "A Faction's Deed",
-              "Pull off any faction's deed; reputation opens new places, shops and jobs."),
-    Objective("obj_initiation", "Into Magic",
-              "Initiate someone into a magic school at its sanctuary."),
-)
+OBJECTIVES = tuple(Objective(i) for i in (
+    "obj_buy_food",
+    "obj_work_shift",
+    "obj_buy_torch",
+    "obj_arena_bout",
+    "obj_combat_lv1",
+    "obj_medic",
+    "obj_recruit_tavern",
+    "obj_recruit_prison",
+    "obj_work_chain",
+    "obj_licence",
+    "obj_mission",
+    "obj_two_groups",
+    "obj_strongbox",
+    "obj_pack_animal",
+    "obj_wagon",
+    "obj_deed",
+    "obj_initiation",
+))
 
 
 def _owns_axe(guild):
@@ -132,8 +121,8 @@ def card_data(guild) -> dict:
         "name": i18n.t("objectives.guild_objectives"),
         "blurb": i18n.t("objectives.small_tasks_that_show_what"),
         "rep": f"{done_count}/{len(deeds)}",
-        "rep_label": "done",
-        "section_title": "Objectives",
+        "rep_label": i18n.t("objectives.done"),
+        "section_title": i18n.t("objectives.section"),
         "deeds": deeds,
         "unlocks": [],
     }

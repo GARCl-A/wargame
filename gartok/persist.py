@@ -104,6 +104,7 @@ def unit_to_dict(u):
         "magic_xp": u.magic_xp,
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
         "bio": u.bio,                            # free-text backstory (blank for a rolled character)
+        "bio_slug": u.bio_slug,                  # an authored NPC's catalog backstory outlives the recruit
         "arena_title": u.arena_title,            # holds the "Champion of the Pit" title (arena.py)
         "recipes": list(u.recipes),
         "crafting_target": u.crafting_target,

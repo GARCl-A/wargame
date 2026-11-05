@@ -3426,7 +3426,119 @@
       "serpents_nest": "Serpent's Nest",
       "dragon_lair": "The Dragon's Lair",
       "country_roads": "Country Roads",
-      "ox_fields": "Legendary Ox Fields"
+      "ox_fields": "Legendary Ox Fields",
+      "ogre_fortress": "The Ogre's Fortress"
+    },
+    "objective": {
+      "obj_buy_food": "Buy Food",
+      "obj_work_shift": "Earn a Wage",
+      "obj_buy_torch": "Carry a Light",
+      "obj_arena_bout": "Arena Bout",
+      "obj_combat_lv1": "Combat Level 1",
+      "obj_medic": "See the Medic",
+      "obj_recruit_tavern": "Tavern Recruit",
+      "obj_recruit_prison": "Bail a Prisoner",
+      "obj_work_chain": "Woodcutter's Climb",
+      "obj_licence": "Gather for Yourself",
+      "obj_mission": "Take a Paid Job",
+      "obj_two_groups": "Split the Guild",
+      "obj_strongbox": "Rent the Strongbox",
+      "obj_pack_animal": "A Beast of Burden",
+      "obj_wagon": "Take to the Road",
+      "obj_deed": "A Faction's Deed",
+      "obj_initiation": "Into Magic"
+    },
+    "node_function": {
+      "shop": "ENTER THE SHOP",
+      "recruit": "ENTER THE TAVERN",
+      "prison": "VISIT THE PRISON",
+      "hunt": "GO HUNTING",
+      "bank": "VISIT THE BANK",
+      "tanner": "VISIT THE TANNER",
+      "forge": "VISIT THE FORGE",
+      "carpenter": "VISIT THE CARPENTER",
+      "apothecary": "VISIT THE APOTHECARY",
+      "stable": "ENTER THE FARM",
+      "library": "VISIT THE LIBRARY",
+      "property": "VISIT THE PROPERTY",
+      "claim": "THE WILDS CLAIM",
+      "ledger": "VISIT THE OUTPOST",
+      "ox_hunt": "TRACK THE OX",
+      "shrine": "ENTER THE SANCTUARY",
+      "ancient_ruins": "ENTER THE ANCIENT RUINS",
+      "skirmish": "JOIN THE SKIRMISH",
+      "camp_fight": "ATTACK THE CAMP",
+      "ogre_fight": "STORM THE FORTRESS",
+      "serpents_nest": "ENTER THE NEST",
+      "dragon_lair": "ENTER THE LAIR"
+    },
+    "mission": {
+      "tanner_hides": "Fifteen Hides",
+      "tanner_biwolf": "The Biwolf's Hide",
+      "tanner_ox": "The Immortal Ox",
+      "bankers_trust_chest": "A Test of Trust",
+      "apothecary_mushrooms": "Fifteen Red Mushrooms",
+      "library_dictionary": "A New Translation",
+      "library_ancient_codex": "The Lost Codex",
+      "blood_codex": "The Codex for the Blood",
+      "nature_codex": "The Codex for the Green",
+      "faith_codex": "The Codex for the Faith",
+      "blood_snake": "The Dragon's Blood",
+      "nature_snake": "The Snake Saved",
+      "faith_battlefield": "Mercy at the Front",
+      "faith_necromancer": "The Necromancer at the Front",
+      "nature_wildfire": "The Ogre's Wildfire",
+      "blood_clutch": "The Dragon's Clutch",
+      "ledger_treefolk": "Treefolk Mentorship"
+    },
+    "deed": {
+      "arena_first_blood": "First Blood",
+      "arena_lone_wolf": "Lone Wolf",
+      "arena_dethrone": "Dethrone the Champions",
+      "arena_bloodsport": "Bloodsport",
+      "arena_flag_runner": "Flag Runner",
+      "arena_untouchable": "Untouchable",
+      "arena_ribbit_brothers": "The Ribbit Brothers",
+      "bankers_good_for_business": "Good for Business",
+      "bankers_steady_customer": "Steady Customer",
+      "bankers_diverse_portfolio": "Diverse Portfolio",
+      "bankers_trust": "Earned Trust",
+      "tanners_hides": "Fifteen Hides",
+      "tanners_biwolf": "The Biwolf's Hide",
+      "tanners_ox": "The Immortal Ox",
+      "library_initiate": "Library Initiate",
+      "library_trusted": "Trusted Scholar",
+      "apothecary_mushrooms": "Fifteen Red Mushrooms",
+      "ledger_hold_mentoring": "Treefolk Mentorship",
+      "blood_codex": "The Codex Delivered",
+      "nature_codex": "The Codex Delivered",
+      "faith_codex": "The Codex Delivered",
+      "blood_snake": "The Dragon's Blood",
+      "nature_snake": "The Snake Saved",
+      "faith_battlefield": "Mercy at the Front",
+      "faith_necromancer": "The Necromancer at the Front",
+      "nature_wildfire": "The Ogre's Wildfire",
+      "blood_clutch": "The Dragon's Clutch",
+      "ledger_hold_supply_run": "Frontier Supply Run"
+    },
+    "role": {
+      "banker": "banker",
+      "foreman": "foreman",
+      "carpenter": "carpenter",
+      "pit master": "pit master",
+      "merchant": "merchant",
+      "blacksmith": "blacksmith",
+      "tanner": "tanner",
+      "apothecary": "apothecary",
+      "innkeeper": "innkeeper",
+      "warden": "warden",
+      "officer": "officer",
+      "librarian": "librarian",
+      "farmer": "farmer",
+      "blood keeper": "blood keeper",
+      "grove keeper": "grove keeper",
+      "cathedral keeper": "cathedral keeper",
+      "chieftain": "chieftain"
     }
   },
   "job_board": {
@@ -3480,7 +3592,19 @@
     "bankers_accept_letter_your_trust": "the Bankers accept the letter -- your trust is earned.",
     "accept_job": "ACCEPT THE JOB",
     "take_task": "TAKE ON THE TASK",
-    "accept_trust": "ACCEPT THE TEST OF TRUST"
+    "accept_trust": "ACCEPT THE TEST OF TRUST",
+    "taken": "taken",
+    "subtitle": {
+      "tanner": "\"Bring me hide and I'll pay well for it.\"",
+      "apothecary": "\"Need someone to fetch rare reagents from the wilds.\"",
+      "library": "\"We need to expand our archives. Translations are well paid.\"",
+      "trust": "\"Prove the guild can be trusted with something precious.\""
+    },
+    "keeper": {
+      "blood": "\"Blood remembers. What runs in the veins can be read.\"",
+      "nature": "\"The grove is patient. What was twisted can be tended.\"",
+      "faith": "\"The faithful are tested, not hurried. Bring us what the ruins kept.\""
+    }
   },
   "tavern": {
     "party_purse": "party purse",
@@ -4174,7 +4298,36 @@
     "collapsed_from_hunger": "Collapsed from hunger",
     "hunger": "Hunger: {hunger_label}",
     "no_combat_xp_foes_stop": "No combat XP: the foes stop at level {bout_max_combat_level}",
-    "talent_pick_ready": "Talent pick ready"
+    "talent_pick_ready": "Talent pick ready",
+    "blurb": {
+      "pit": "The Pit's opening fight: scrappers off the street, one for each of yours.",
+      "champion": "Adelio Small-Knife and two hired nobodies, on the Pit's own sand. Whoever puts him down takes his title, and there is no rematch.",
+      "brawl": "The Games' straight fight: three a side, opponents of any level from 1 to 6.",
+      "ctf": "Three a side again, but it ends when a fighter carries their flag home, not when a side falls.",
+      "boss": "The three Ribbit brothers and three lackeys, capture the flag on their own field, six a side."
+    },
+    "recruit": {
+      "adelio": {
+        "title": "The Fallen Champion",
+        "button": "Talk to Adelio",
+        "leave": "Leave him",
+        "lines": [
+          "Adelio Small-Knife lies defeated on the sands of the Pit.",
+          "His title is lost, but his blade is still sharp.",
+          "Do you want to convince him to join your guild?"
+        ]
+      },
+      "ribbits": {
+        "title": "The Fallen Brothers",
+        "button": "Talk to the brothers",
+        "leave": "Leave them",
+        "lines": [
+          "The Ribbit Brothers croak in defeat on the field.",
+          "They are tough, cunning and know how to fight together.",
+          "Do you want to convince them to join your guild?"
+        ]
+      }
+    }
   },
   "draft_session": {
     "not_on_step": "not on the {join} step",
@@ -4728,7 +4881,13 @@
     "lv_lackeys_lv": "Lv {value} + Lackeys (Lv 0)",
     "lv": "Lv {value}",
     "bosses_lackeys_lv": "Bosses + Lackeys (Lv {level})",
-    "lv_2": "Lv {level}"
+    "lv_2": "Lv {level}",
+    "caption": {
+      "champion": "champion of the pit",
+      "eldest": "the eldest brother",
+      "big": "the big brother",
+      "runt": "the runt"
+    }
   },
   "guild_holdings": {
     "starved_to_death": "{name} starved to death.",
@@ -4809,7 +4968,9 @@
     "step_buy_axe_at_smithy": "Step 1/3: buy an Axe at the Smithy.",
     "step_work_shifts_at_lumber": "Step 0/3: work shifts at the Lumber Yard to reach Work Lv 1.",
     "guild_objectives": "Guild Objectives",
-    "small_tasks_that_show_what": "Small tasks that show what the guild can do, in any order. No coins or fame -- just a guide."
+    "small_tasks_that_show_what": "Small tasks that show what the guild can do, in any order. No coins or fame -- just a guide.",
+    "done": "done",
+    "section": "Objectives"
   },
   "map_view": {
     "ambushed_enem_block_path": {
@@ -5325,6 +5486,145 @@
       "scholars": "Know the beast before you meet it.",
       "caravan": "A coin that sits still is a coin half spent.",
       "marsh": "The bog keeps what it is given."
+    },
+    "objective": {
+      "obj_buy_food": "Everyone eats one food a day. Potatoes and Meat are sold at the Farm.",
+      "obj_work_shift": "Work a shift at the Lumber Yard or the Mine: little pay, no risk.",
+      "obj_buy_torch": "Buy a Torch or a Lantern at the Market: the dark hides foes, at night and underground.",
+      "obj_arena_bout": "Fight a bout at the Arena: you stake money, and nobody dies.",
+      "obj_combat_lv1": "Down foes at or above your level until someone reaches Combat Level 1.",
+      "obj_medic": "Have the Medic at the Apothecary treat someone wounded, sick or poisoned.",
+      "obj_recruit_tavern": "Recruit a new companion at the Tavern.",
+      "obj_recruit_prison": "Pay a prisoner's bail at the City Prison and recruit them.",
+      "obj_work_chain": "Reach Work Lv 1, buy an Axe at the Smithy, reach Work Lv 2.",
+      "obj_licence": "Buy a gathering licence at the Lumber Yard or the Mine and keep what the crew finds.",
+      "obj_mission": "Accept a job from a giver's board; a node with work on offer says so on the map.",
+      "obj_two_groups": "Run two groups at once (the gear icon on a group's card splits it).",
+      "obj_strongbox": "Rent the Bankers' chest in the City to keep what nobody carries.",
+      "obj_pack_animal": "Buy an animal at the Farm's stables and give it a Pack Saddle, or a Harness to pull a wagon.",
+      "obj_wagon": "Buy a wagon at the Carpenter and hitch an animal in a Harness to it.",
+      "obj_deed": "Pull off any faction's deed; reputation opens new places, shops and jobs.",
+      "obj_initiation": "Initiate someone into a magic school at its sanctuary."
+    },
+    "node_function": {
+      "hunt": "spend the day hunting or foraging  ·  a pack may find you first",
+      "ledger": "hand over what you're carrying, if anything's owed",
+      "ox_hunt": "read the ground by daylight, one Wisdom check an hour  ·  a found trail is a lethal fight",
+      "shrine": "a hidden seat of one of the three magic schools",
+      "ancient_ruins": "Delve into the sunken library chambers (Lethal tactical battle)",
+      "skirmish": "fight beside Ledger Hold's soldiers, played by the AI  ·  lethal",
+      "camp_fight": "a goblin crew and its Hobgoblin foreman, by the fire  ·  lethal",
+      "ogre_fight": "the Ogre and his goblins among the walls, the bonfire spreading  ·  lethal",
+      "serpents_nest": "five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal",
+      "dragon_lair": "kobold patrols, a hoard, the clutch, and the dragon asleep beside it  ·  lethal"
+    },
+    "mission": {
+      "tanner_hides": "The tanner wants 15 sqm of hide off anything with fur. The Wilds is thick with it, if you can bring down what's wearing it.",
+      "tanner_biwolf": "The tanner has heard of a wolf the size of a cart that hunts the Wilds by night. It follows the smell of meat -- hunt after dark with fifteen portions in your packs and it will find you, and its pack with it. Bring me its leather.",
+      "tanner_ox": "The tanner tells of Aurochs, an ox that has outlived every hunter sent after it, grazing the fertile fields south of the farm. Its hide is the finest there is. Bring it to me and I will teach you what the horn is good for.",
+      "bankers_trust_chest": "The Bankers want proof the guild can be trusted with something precious before they'll vouch for it: carry a sealed chest to their outpost at Ledger Hold, safe, and bring back their letter of receipt. Don't peek.",
+      "apothecary_mushrooms": "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
+      "library_dictionary": "The library wants a dictionary to expand its archives. Dictionaries currently in our shop catalog will not be accepted: write one on the WRITE tab, in a tongue someone in your group speaks, with Paper and Ink.",
+      "library_ancient_codex": "Legends speak of an ancient subterranean library buried off the Old Road. Delve into the forgotten ruins and retrieve the Ancient Codex.",
+      "blood_codex": "The blood mages have waited for the Ancient Codex. There is only one: give it to us, and the other schools will never read it.",
+      "nature_codex": "The grove asks for the Ancient Codex. There is only one: leave it with us, and the other schools will never read it.",
+      "faith_codex": "The cathedral asks for the Ancient Codex. There is only one: entrust it to us, and the other schools will never read it.",
+      "blood_snake": "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. Bring us its body: the blood is read in the flesh, and the cult would read it.",
+      "nature_snake": "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. Something has twisted it, a curse perhaps. Bring it to us alive, bound with rope or chain, and the grove will tend it.",
+      "faith_battlefield": "The cathedral sends its medicine where the dying are -- the first time it asks, six potions go with you. Go to the Battlefield past Ledger Hold's frontier outpost and fight beside the soldiers there. Win the skirmish, and bring every one of them through alive.",
+      "faith_necromancer": "The soldiers who fell at the Battlefield do not stay dead: days later they get up and walk. Someone out there is raising them, and nobody has seen who. Go to the front, find whoever wakes the dead, and put them down.",
+      "nature_wildfire": "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn the forest to do it -- badly. Every fire they set runs wild. Teach them, or stop them, and put the fires out before they spread. The Ogre is at the heart of it.",
+      "blood_clutch": "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on its clutch. Search the deep galleries, go down, and bring us one of its eggs -- the bloodline itself, unhatched. Whatever else you carry out of there is yours.",
+      "ledger_treefolk": "Commander Varkas of Ledger Hold entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison."
+    },
+    "faction": {
+      "arena": "The staked bouts in the cellars under the city. Win, and be known.",
+      "bankers": "The coin-keepers of the city. They rent strongboxes and trade in property.",
+      "library": "Scholars and linguists. They trade in knowledge.",
+      "tanners": "The leatherworkers of the city. They pay for what the Wilds sheds.",
+      "apothecary": "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents.",
+      "ledger_hold": "The fortified garrison of the march. They train soldiers and hold the border.",
+      "blood_cult": "Mages born to it, hidden under the ruins: the magic runs in their line, from a dragon, an angel or a demon somewhere back. They study the blood that carries it.",
+      "nature_coven": "Mages of the green, hidden deep in the Wilds. They keep to themselves.",
+      "faith_order": "Mages of faith, hidden in a cathedral in the hills. They answer to a higher call."
+    },
+    "deed": {
+      "arena_first_blood": "Win a staked bout in the pits.",
+      "arena_lone_wolf": "Win in the entry pit with a single fighter.",
+      "arena_dethrone": "Beat the pit's champion team.",
+      "arena_bloodsport": "Win a bout in the Games -- the arena's second stage.",
+      "arena_flag_runner": "Capture the enemy flag in the Games.",
+      "arena_untouchable": "Capture the flag without knocking anyone out.",
+      "arena_ribbit_brothers": "Beat the three Grippli in the Games.",
+      "bankers_good_for_business": "Complete an economic job in the City.",
+      "bankers_steady_customer": "Spend 1000 copper at the market.",
+      "bankers_diverse_portfolio": "Sell 5 different kinds of goods to the market.",
+      "bankers_trust": "Carry the Bankers' trust all the way to Ledger Hold and back.",
+      "tanners_hides": "Bring the tanner fifteen hides.",
+      "tanners_biwolf": "Bring the tanner the leather of the Biwolf.",
+      "tanners_ox": "Bring the tanner the hide of Aurochs, the immortal ox.",
+      "library_initiate": "Complete a task for the library.",
+      "library_trusted": "Complete a second task for the library.",
+      "apothecary_mushrooms": "Bring the apothecary fifteen red mushrooms.",
+      "ledger_hold_mentoring": "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.",
+      "blood_codex": "Bring the Ancient Codex to the Blood Sanctuary.",
+      "nature_codex": "Bring the Ancient Codex to the Nature Grove.",
+      "faith_codex": "Bring the Ancient Codex to the Faith Cathedral.",
+      "blood_snake": "Bring the Snake Dragon's body to the Blood Sanctuary.",
+      "nature_snake": "Bring the Snake Dragon alive to the Nature Grove.",
+      "faith_battlefield": "Win the Battlefield's skirmish without losing one of the soldiers.",
+      "faith_necromancer": "Put down the necromancer raising the dead at the Battlefield.",
+      "nature_wildfire": "Talk the Ogre round, or beat him, before his fires take the Wilds.",
+      "blood_clutch": "Bring one of the dragon's eggs from under the Mine to the Blood Sanctuary.",
+      "ledger_hold_supply_run": "Successfully complete 10 military supply caravan runs to the frontier outpost."
+    },
+    "node": {
+      "city": "The Bankers' counting-house in Ankareth. Where the guild sets out from -- and where the Bankers keep their strongboxes.",
+      "lumber_yard": "A sawmill just outside the walls. The foreman lends the axe -- you fell a tree that isn't yours and take only the wage for the hours. The yard buys what it yields and sells its lumber and fruit.",
+      "carpenter": "A fragrant workshop of cedar shavings and drying timber between the city walls and the sawmill. Bows, crossbows, carts, carriages and timber crafting are offered here, and the treefolk keeper bends living wood to shape.",
+      "mine": "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal for sale are sold here.",
+      "arena": "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
+      "market": "Buy and sell gear for copper. The traders speak Ankarin.",
+      "smith": "A forge on the road out of the walls, loud enough to hear from the gate. Weapons, metal armour and iron bars are sold here, and the smith lends the anvil.",
+      "tanner": "Racks of hide downwind of the lumber yard. Leather armour, cloaks, quivers and bows, and a tanner with work for anyone who hunts.",
+      "apothecary": "A herbalist's shop past the arena, smelling of vinegar and smoke. Potions, vials and first aid kits, brewed to order.",
+      "tavern": "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
+      "prison": "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
+      "road": "A dirt track cutting across the open country to the east.",
+      "wilds": "Open ground under the sky, outside the walls. Hunt it for meat -- and risk what else hunts here.",
+      "ledger_hold": "A fortified counting-house the Bankers keep well outside the walls -- armed, and used to precious cargo.",
+      "frontier_outpost": "A palisade at the edge of the march, where Ledger Hold's caravans end and its soldiers take over. Nothing for hire here -- the war is one road further.",
+      "battlefield": "Two lines of trenches and churned ground between them, where the border war is fought. Ledger Hold holds the near trench.",
+      "wilds_territory": "A stretch of the Wilds the guild means to make its own -- if it can clear it, fence it, and hold it.",
+      "library": "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
+      "farm": "A farmstead beyond the walls. It sells what the fields give and keeps the stables: the animals that carry and pull, and their tack.",
+      "ancient_ruins": "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
+      "blood_sanctuary": "A sunken chapel under the ruins' spires, its floor stained dark. The blood mages keep it.",
+      "nature_grove": "A ring of old trees deep in the Wilds where no path leads. The nature mages keep it.",
+      "faith_cathedral": "A white-stone cathedral in the hills behind Ledger Hold. The faith mages keep it.",
+      "serpents_nest": "A split in the rock below the Lumber Yard, hung with shed skins. Snakes den here, and something older than snakes.",
+      "dragon_lair": "Past where the miners stopped, the galleries run hot and smell of sulphur and old gold. Kobolds walk the dark here, and something vast sleeps below.",
+      "country_roads": "Dirt lanes between the farmsteads south of the city. Quiet, and wide open.",
+      "ox_fields": "Fertile grazing land where something very old and very large has outlived every hunter sent after it."
+    },
+    "vendor": {
+      "elysia": "Small hands, long memory. I never forget a debt, or a depositor.",
+      "grashnak": "Sixteen hours, one axe, one wage. Don't bleed on the logs.",
+      "rowan": "A wheel is a tree that learned to travel. Treat it kindly.",
+      "nikkit": "Down there it's dark, deep and mine. You just rent the dark.",
+      "gorrum_sandfist": "The sand doesn't care who you were. Step in and show it who you are.",
+      "surmanyx": "Price recorded. Weight recorded. Haggling permitted within tolerance.",
+      "thalashgrok": "Good steel costs. Cheap steel costs more, later, in blood.",
+      "dungorm": "Bring me hides. Fresh. I can smell when they're not.",
+      "pimbletwig": "Tell me where it hurts. Then tell me what you ate.",
+      "tobbin_hearthcup": "Everyone who walks in here is hungry for something. Food I can sell.",
+      "captain_caelen": "Every cell here was empty once. Help me keep one of them that way.",
+      "commander_varkas": "The front eats supplies and soldiers. Bring me the first kind.",
+      "thalfel": "We keep what the world forgets. Some of it, it forgot on purpose.",
+      "edric_ashvale": "My children ask about every guild that buys here. Come back, so I've something to tell them.",
+      "ssareth_coldvein": "Your blood speaks before you do. Let us hear what it says.",
+      "thorne_mossmane": "Guests of the Wilds leave footprints. Thieves leave stumps.",
+      "brother_quillon": "Light a candle for whoever you left behind. Then go and bring the rest home."
     }
   },
   "item": {
@@ -5373,6 +5673,215 @@
       "con": "CON {con}: heals slowly and little",
       "total": "attributes add up to {total} (average 63)",
       "carry": "carries only {carry} kg: the {kit} kg starting kit overloads them"
+    }
+  },
+  "dialogue": {
+    "verb": {
+      "persuade": "Persuade",
+      "teach": "Teach",
+      "bluff": "Bluff",
+      "intimidate": "Intimidate",
+      "bribe": "Bribe",
+      "surrender": "Surrender",
+      "leave": "Run",
+      "attack": "Attack"
+    },
+    "roll": "d20({nat}) {mod:+} = {total} vs DC {dc}",
+    "check": "{attr} {mod:+d} vs DC {dc}",
+    "they": "They",
+    "steel": "Steel it is.",
+    "bribe_paid": "{who} counts out ${price}. {outcome}",
+    "block": {
+      "coin": "not enough coin",
+      "language": "needs {languages}",
+      "nobody": "nobody there talks"
+    },
+    "error": {
+      "not_open": "{verb} is not open: {why}",
+      "not_offered": "not offered",
+      "cast": "the die is cast",
+      "silent": "nobody answers here",
+      "member": "no such member",
+      "speaker": "nobody to speak",
+      "unsaid": "nothing has been said yet"
+    },
+    "title": {
+      "ambush": "AMBUSHED",
+      "guard": "THE GUARD",
+      "challenge": "CHALLENGED"
+    },
+    "line": {
+      "ambush": "\"Your purse or your blood.\" {n} of them block the way.",
+      "guard": "\"{names}, in the name of the City -- you will come with us.\"",
+      "challenge": "\"Who walks in the master's halls?\" The patrol raises its torch.",
+      "wildfire_great": "\"Fire clears ground. Everybody knows that.\" The Ogre does not look up.",
+      "wildfire": "\"More wood! Green wood burns longest!\" The foreman waves the crew on."
+    },
+    "bribed": {
+      "ambush": "They take it and let you go.",
+      "guard": "The patrol finds somewhere else to be. The rap sheet stays.",
+      "challenge": "The coins vanish into the patrol's pouches. They walk on."
+    },
+    "note": {
+      "ambush": {
+        "persuade": "talk them out of it: no fight · a miss and it is a fight",
+        "bluff": "send them off on a lie · a miss and they strike first",
+        "intimidate": "shake them: they start demoralized, or run · a miss gives them the jump",
+        "bribe": "pay them off: no fight",
+        "attack": "roll initiative"
+      },
+      "guard": {
+        "surrender": "crime clears to 0: time served in the City's cells",
+        "bluff": "the wrong man: they let you go, the crime stays · a miss and they strike first",
+        "bribe": "they look away: the crime stays",
+        "attack": "lethal; living through it adds to the rap sheet",
+        "leave": "fall back the way the group came"
+      },
+      "challenge": {
+        "bluff": "the new shift, or tribute for the master · a miss rings the alarm",
+        "bribe": "kobolds love what shines: they let you be",
+        "attack": "silence them before their next turn, or they call out"
+      },
+      "wildfire": {
+        "persuade": "get a hearing from {who} · a miss and they fight",
+        "teach": "show them how to burn a clearing right · a miss and they fight",
+        "attack": "take the camp by force"
+      }
+    },
+    "ambush": {
+      "persuade_win": "{speaker} talks {who} down ({line}). They let you by.",
+      "persuade_miss": "{who} will not hear it ({line}).",
+      "bluff_win": "{speaker}'s story holds ({line}). They go looking elsewhere.",
+      "bluff_miss": "{who} sees through it ({line}) and strikes first!",
+      "rout": "{speaker} stares {who} down ({line}). They break and run.",
+      "shaken": "{speaker} shakes them ({line}). They come on, but unsure.",
+      "laughs": "{who} laughs it off ({line}) and gets the jump on you."
+    },
+    "guard": {
+      "surrender": "The group lays down its arms.",
+      "leave": "The group turns and runs.",
+      "attack": "The group draws on the City guard.",
+      "bluff_win": "{speaker} swears it is a mistake ({line}). The patrol moves on.",
+      "bluff_miss": "Nobody believes it ({line}). The patrol draws steel!"
+    },
+    "challenge": {
+      "attack": "{speaker} strikes before they can call out!",
+      "bluff_win": "{speaker}'s Draconic holds ({line}). The patrol walks on.",
+      "bluff_miss": "The kobolds hiss at the lie ({line}) and strike first!"
+    },
+    "wildfire": {
+      "who_great": "the Ogre",
+      "who": "the foreman",
+      "refusal": "they want to learn, not be paid",
+      "attack": "The squad goes for {who}."
+    },
+    "boss": {
+      "next": "{who} steps up.",
+      "fight": "The crowd roars. The bout begins."
+    },
+    "button": {
+      "peace": "GO ON",
+      "fight": "FIGHT",
+      "leave": "RUN",
+      "surrender": "GO WITH THEM",
+      "next": "GO ON"
+    }
+  },
+  "forced": {
+    "found_faction": "You have found {faction}.",
+    "the_group": "The group",
+    "arrest": {
+      "one": "{who} accepts arrest -- {n} day in the City's cells.",
+      "other": "{who} accepts arrest -- {n} days in the City's cells."
+    },
+    "fall_back": "{who} fall back toward {place}.",
+    "guard_survivor": "{who} lives to fight another day -- crime now {crime}.",
+    "gather": {
+      "lost": "The crew is driven off the work site and comes away with nothing.",
+      "won": "The crew drives the pack off."
+    },
+    "supply": {
+      "lost": "The supply caravan is routed -- the cargo is lost; the escort falls back to {place}.",
+      "won": "The caravan guards drive the soldiers off and the caravan rolls on."
+    },
+    "raid": {
+      "won": "The guild's fighters drive off the guard patrol -- the property stays, for now.",
+      "lost": "The City guard finally clears the squatted property -- it's gone for good."
+    },
+    "claim": {
+      "unguarded": "The Wilds claim sits unguarded -- it's seized without a fight.",
+      "raid_won": "The crew drives off the raiders and the claim keeps sustaining.",
+      "raid_lost": "The crew is scattered -- sustaining the claim starts over.",
+      "seizure_won": "The crew drives off the raiders and holds the claim.",
+      "seizure_lost": "The crew falls -- the Wilds claim is seized.",
+      "retaken": "The Wilds claim is retaken -- the occupiers are driven out.",
+      "retake_failed": "The attempt to retake the claim fails -- it stays lost."
+    },
+    "title": {
+      "ambush": "AMBUSHED ON THE ROAD",
+      "fortress_ambush": "AMBUSHED AT LEDGER HOLD",
+      "gather_ambush": "AMBUSHED AT WORK",
+      "supply_ambush": "THE CARAVAN IS STOPPED"
+    },
+    "label": {
+      "guard": "STOPPED BY THE GUARD",
+      "ambush": "AMBUSHED ON THE ROAD",
+      "fortress_ambush": "AMBUSHED AT LEDGER HOLD",
+      "eviction": "RAID ON THE HOUSE",
+      "wilds_retake": "RETAKE THE CLAIM",
+      "wilds_raid": "RAID ON THE CLAIM",
+      "wilds_seizure": "THE CLAIM IS SEIZED",
+      "wilds_aid": "CALLED TO DEFEND THE CLAIM",
+      "gather_ambush": "AMBUSHED AT WORK",
+      "supply_ambush": "THE CARAVAN IS ATTACKED"
+    }
+  },
+  "missions": {
+    "goal_not_met": "mission goal not met",
+    "front": {
+      "won": "Every soldier came through. The Faith Order hears of it.",
+      "lost_men": "{names} did not come home",
+      "line_broke": "the line broke",
+      "failed": "Mercy at the Front failed: {why}. The Order will ask again in {days} days."
+    },
+    "necromancer": {
+      "won": "The necromancer is dead, and the dead at the front lie still. The Faith Order hears of it.",
+      "failed": "The necromancer still walks the front. The Order will ask again in {days} days."
+    }
+  },
+  "factions": {
+    "deed_notice": "DEED · {deed}  +{rep} reputation with {faction}",
+    "unlock": {
+      "city_property": {
+        "title": "City Property",
+        "desc": "Buy a house in the City ({price}, {kg} kg storage)"
+      },
+      "games": {
+        "title": "The Games (Stage 2)",
+        "desc": "Brawl, Capture the Flag, and The Ribbit Brothers bouts"
+      },
+      "catalog": {
+        "title": "Expanded Catalog",
+        "desc": "More language dictionaries become available to buy."
+      },
+      "manuscripts": {
+        "title": "Rare Manuscripts",
+        "desc": "The library unlocks rare language dictionaries and deeper archives."
+      },
+      "supply": {
+        "title": "Military Supply Network",
+        "desc": "Recognised caravan runner for the military frontier outpost."
+      }
+    }
+  },
+  "world": {
+    "vendor_caption": "{race} {role}",
+    "shop_label": {
+      "lumber_yard": "ENTER THE YARD",
+      "mine": "ENTER THE MINE",
+      "market": "ENTER THE MARKET",
+      "tavern": "BUY FOOD AND DRINK",
+      "farm": "BROWSE THE FARM"
     }
   }
 }

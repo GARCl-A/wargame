@@ -21,8 +21,8 @@ def _shoppers(*tongues, alignment="Lawful and Neutral"):
 
 def test_every_keeper_has_a_line_of_their_own():
     keepers = {v.name: v for n in world.NODES for v in n.vendors.values()}
-    assert all(v.line for v in keepers.values()), [n for n, v in keepers.items() if not v.line]
-    assert len({v.line for v in keepers.values()}) == len(keepers)
+    assert all(v.said() for v in keepers.values()), [n for n, v in keepers.items() if not v.said()]
+    assert len({v.said() for v in keepers.values()}) == len(keepers)
 
 
 def test_every_shop_keeper_haggles_in_a_tongue_with_a_bent():

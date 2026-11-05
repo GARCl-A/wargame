@@ -49,7 +49,7 @@ def load_npc(slug):
     """-> Unit rebuilt from `npcs/<slug>.json` (raises if the file is gone)."""
     with open(npc_path(slug), encoding="utf-8") as fh:
         unit = Unit.from_save(json.load(fh))
-    unit.npc_slug = slug
+    unit.npc_slug = unit.bio_slug = slug
     return unit
 
 

@@ -92,22 +92,22 @@ class Wildfire:
 def _node(focus):
     if focus.great:
         return world.Node(focus.id, focus.name, "town", focus.pos,
-                          i18n.t("wildfire.felled_trees_ring_of_half"),
+                          blurb=i18n.t("wildfire.felled_trees_ring_of_half"),
                           functions=("ogre_fight",))
     return world.Node(focus.id, focus.name, "town", focus.pos,
-                      i18n.t("wildfire.clearing_on_fire_goblins_feed"),
+                      blurb=i18n.t("wildfire.clearing_on_fire_goblins_feed"),
                       functions=("camp_fight",))
 
 
 def _fortress_node(state):
     if state.fortress == "friendly":
         return world.Node(FORTRESS_ID, "The Ogre's Fortress", "town", state.fortress_pos,
-                          i18n.t("wildfire.stone_walls_in_clearing_that"),
+                          blurb=i18n.t("wildfire.stone_walls_in_clearing_that"),
                           language="Jotun", alignment="Chaotic and Neutral", functions=("shop",),
                           vendors={"shop": world.Vendor("Grumbold the Builder", "Ogre", "chieftain", "ogre.png",
                                                         line=i18n.t("wildfire.big_walls_big_axes_little"))})
     return world.Node(FORTRESS_ID, "The Ogre's Fortress", "town", state.fortress_pos,
-                      i18n.t("wildfire.black_stumps_for_mile_round"), functions=("ogre_fight",))
+                      blurb=i18n.t("wildfire.black_stumps_for_mile_round"), functions=("ogre_fight",))
 
 
 def sync_world(guild):

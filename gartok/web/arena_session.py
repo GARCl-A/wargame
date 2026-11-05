@@ -15,24 +15,10 @@ from .campaign_fight import _enter
 from .map_session import _portrait, _when
 from .session import Session, asset_url
 
-BLURBS = {
-    "pit": "The Pit's opening fight: scrappers off the street, one for each of yours.",
-    "champion": "Adelio Small-Knife and two hired nobodies, on the Pit's own sand. Whoever puts him down "
-                "takes his title, and there is no rematch.",
-    "brawl": "The Games' straight fight: three a side, opponents of any level from 1 to 6.",
-    "ctf": "Three a side again, but it ends when a fighter carries their flag home, not when a side falls.",
-    "boss": "The three Ribbit brothers and three lackeys, capture the flag on their own field, six a side.",
-}
-RECRUITS = {
-    "adelio": {"title": "The Fallen Champion", "button": "Talk to Adelio", "leave": "Leave him",
-               "lines": ["Adelio Small-Knife lies defeated on the sands of the Pit.",
-                         "His title is lost, but his blade is still sharp.",
-                         "Do you want to convince him to join your guild?"]},
-    "ribbits": {"title": "The Fallen Brothers", "button": "Talk to the brothers", "leave": "Leave them",
-                "lines": ["The Ribbit Brothers croak in defeat on the field.",
-                          "They are tough, cunning and know how to fight together.",
-                          "Do you want to convince them to join your guild?"]},
-}
+
+def _recruit_card(who):
+    return {"title": i18n.t(f"arena_session.recruit.{who}.title"), "button": i18n.t(f"arena_session.recruit.{who}.button"),
+            "leave": i18n.t(f"arena_session.recruit.{who}.leave"), "lines": i18n.t(f"arena_session.recruit.{who}.lines")}
 
 
 def _kind(b):
@@ -208,7 +194,7 @@ class ArenaSession(Session):
         v = world.vendor(n.id, "arena")
         out = {"place": n.name, "band": g.display_name, "day": day, "at": at,
                "keeper": None if v is None else {
-                   "name": v.name, "caption": f"{v.race} {v.role}", "line": v.line,
+                   "name": v.name, "caption": v.caption, "line": v.said(),
                    "portrait": asset_url(art_files.portrait_path(None, v.portrait)) if v.portrait else None}}
         if self.offered is not None:
             return {**out, "recruit": self._recruit()}
@@ -224,7 +210,7 @@ class ArenaSession(Session):
                     "line": i18n.t("arena_session.must_come_to_pit_to", name=champ.name, defense_deadline=arena.defense_deadline(self.guild))}}
 
     def _bout(self, i, b):
-        return {"i": i, "name": b.name, "kind": _kind(b), "blurb": BLURBS[_kind(b)],
+        return {"i": i, "name": b.name, "kind": _kind(b), "blurb": i18n.t(f"arena_session.blurb.{_kind(b)}"),
                 "entry": b.entry, "entry_text": fmt_money(b.entry), "purse": b.purse, "purse_text": fmt_money(b.purse),
                 "foes": b.enemies + (len(arena.RIBBIT_SLUGS) if b.boss else 0), "cap": b.player_cap,
                 "levels": arena.bout_level_range(b, self.picked), "max_level": arena.bout_max_combat_level(b),
@@ -252,7 +238,7 @@ class ArenaSession(Session):
                 "title": bool(getattr(u, "arena_title", False))}
 
     def _recruit(self):
-        r = RECRUITS[self.offered]
+        r = _recruit_card(self.offered)
         if self.offered == "adelio":
             faces = [arena.load_champion()]
         else:

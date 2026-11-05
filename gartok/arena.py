@@ -70,11 +70,11 @@ BOSS_MAP = "capture-the-flag-the-gamers"
 RIBBIT_SLUGS = ("bufo", "ribit", "peep")
 RIBBIT_CAMEO_CHANCE = 0.05    # chance an arena bout fields an unrecruited Ribbit brother
 
-# Who speaks before the guild's first bout against each boss, in order: (npc slug, caption).
+# Who speaks before the guild's first bout against each boss, in order: (npc slug, caption key `arena.caption.<key>`).
 # The lines are `arena_talk.<slug>` in locales/en.json.
 BOSS_TALKS = {
-    "champion": ((CHAMPION_SLUG, "champion of the pit"),),
-    "boss": (("ribit", "the eldest brother"), ("bufo", "the big brother"), ("peep", "the runt")),
+    "champion": ((CHAMPION_SLUG, "champion"),),
+    "boss": (("ribit", "eldest"), ("bufo", "big"), ("peep", "runt")),
 }
 
 
@@ -259,7 +259,7 @@ def boss_talk(guild, offer):
             npc = npc_lib.load_npc(slug)
         except OSError:
             continue
-        lines.append((npc, caption, i18n.t(f"arena_talk.{slug}")))
+        lines.append((npc, i18n.t(f"arena.caption.{caption}"), i18n.t(f"arena_talk.{slug}")))
     return BossTalk(offer.name.upper(), lines) if lines else None
 
 

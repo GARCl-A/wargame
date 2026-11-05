@@ -15,6 +15,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "gartok"
 SKIP_MODULES = {"i18n.py"}
+ID_STRINGS = {"Any Dictionary", "Dictionary of ", "Snake Dragon", "Treefolk Recruit"}    # a mission's goal: an item or beast id
+# positional args that are catalog ids, not shown text: a node's default name (`name.node.<id>` wins), a keeper's race and role
+ID_ARGS = {"Node": (1,), "Vendor": (1, 2)}
 WORDS = re.compile(r"[A-Za-z]{2,}[:,.]?\s+[A-Za-z]{2,}|[A-Za-z]{2,}[:,.]?\s+\{|\}[:,.]?\s+[A-Za-z]{2,}")
 
 
@@ -38,6 +41,12 @@ def _docstrings(tree):
     return ids
 
 
+def _callee(call):
+    """The name a call is made under: `Node` for `Node(...)` and `world.Node(...)`."""
+    f = call.func
+    return f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else None
+
+
 def _excluded(tree):
     """ids of constants that are not shown text: dict keys, comparison operands, subscripts, `assert` messages."""
     ids = set()
@@ -53,6 +62,9 @@ def _excluded(tree):
             ids.add(id(node.slice))
         elif isinstance(node, ast.Assert) and node.msg is not None:
             ids.update(id(n) for n in ast.walk(node.msg))
+        elif isinstance(node, ast.Call) and _callee(node) in ID_ARGS:
+            ids.update(id(node.args[i]) for i in ID_ARGS[_callee(node)] if i < len(node.args)
+                       and isinstance(node.args[i], ast.Constant))
     return ids
 
 
@@ -69,7 +81,7 @@ def sentences(path):
                 out.append((node.lineno, text))
     for node in ast.walk(tree):
         if (isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skip
-                and id(node) not in inside and node.value not in _ids() and WORDS.search(node.value)):
+                and id(node) not in inside and node.value not in _ids() | ID_STRINGS and WORDS.search(node.value)):
             out.append((node.lineno, node.value))
     return sorted(out)
 

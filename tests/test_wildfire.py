@@ -47,7 +47,7 @@ def _small(state):
 
 def test_an_ethereal_node_joins_the_map_and_leaves_it_whole():
     v = world.VERSION
-    world.add_node(world.Node("ghost", "Ghost", "town", (0.5, 0.5), "x"), [("wilds", 1)])
+    world.add_node(world.Node("ghost", "Ghost", "town", (0.5, 0.5)), [("wilds", 1)])
     assert world.exists("ghost") and world.is_ethereal("ghost") and world.VERSION > v
     assert world.route("road", "ghost") == (["road", "wilds", "ghost"], 7)
     world.remove_node("ghost")

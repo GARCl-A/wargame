@@ -158,7 +158,7 @@ def test_apothecary_and_tanner_both_satisfy_bankers_good_for_business():
 def test_mission_template_tags_and_tag_back_compat():
     # Passed tags tuple
     t1 = missions.MissionTemplate(
-        "t1", "giver", "city", "Test", "Blurb", "Item", 1, 10, 5,
+        "t1", "giver", "city", "Item", 1, 10, 5,
         tags=("economic", "tanner"),
     )
     assert t1.tags == ("economic", "tanner")
@@ -166,7 +166,7 @@ def test_mission_template_tags_and_tag_back_compat():
 
     # Passed single tag kwarg
     t2 = missions.MissionTemplate(
-        "t2", "giver", "city", "Test", "Blurb", "Item", 1, 10, 5,
+        "t2", "giver", "city", "Item", 1, 10, 5,
         tag="economic",
     )
     assert t2.tags == ("economic",)
@@ -174,7 +174,7 @@ def test_mission_template_tags_and_tag_back_compat():
 
     # Passed positional string for tag/tags
     t3 = missions.MissionTemplate(
-        "t3", "giver", "city", "Test", "Blurb", "Item", 1, 10, 5,
+        "t3", "giver", "city", "Item", 1, 10, 5,
         "economic",
     )
     assert t3.tags == ("economic",)
