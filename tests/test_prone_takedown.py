@@ -83,6 +83,16 @@ def test_prone_cannot_move_and_attacks_at_minus_two():
     assert actions.FLEE.blocked_reason(battle, b) == "on the ground"
 
 
+def test_a_held_fighter_cannot_jump_out():
+    from gartok.conditions import Entangled, Grappled
+    for held in (Entangled(), Grappled()):
+        battle, _, b = _fight()
+        assert actions.JUMP.available(battle, b)
+        b.add_condition(held)
+        assert not actions.JUMP.available(battle, b)
+        assert not actions.JUMP.can(battle, b, (1, 5))
+
+
 def test_stand_up_costs_one_point_and_only_works_while_prone():
     battle, a, b = _fight()
     assert not actions.STAND_UP.available(battle, b)

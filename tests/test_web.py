@@ -9,6 +9,7 @@ import threading
 import urllib.error
 import urllib.request
 from itertools import pairwise
+from pathlib import Path
 
 import pytest
 
@@ -130,6 +131,51 @@ def test_a_body_and_its_chain_coin_carry_their_state():
     assert coins[s.uid(dead)]["state"] == "dead"
     assert [c["state"] for c in st["initiative"] if c["id"]][-1] == "dead"
     json.dumps(st)
+
+
+def test_a_token_and_its_coin_wear_a_mark_per_condition_heaviest_first():
+    from gartok.conditions import Bleeding, Defending, Demoralized, Entangled
+    from gartok.web import condition_marks
+    s = _session()
+    _to_my_turn(s)
+    b = s.battle
+    me = b.active
+    for c in (Defending(), Demoralized(), Bleeding(2, 3), Entangled()):
+        me.add_condition(c)
+    st = s.state()
+    token = next(u for u in st["units"] if u["id"] == s.uid(me))
+    assert [m["id"] for m in token["marks"]] == ["entangled", "bleeding", "demoralized", "defending"]
+    assert [m["cls"] for m in token["marks"]] == ["ctl", "hurt", "mind", "boon"]
+    assert token["marks"][1]["args"] == {"damage": 2, "turns": 3}
+    coin = next(c for c in st["initiative"] if c["id"] == s.uid(me))
+    assert coin["marks"] == token["marks"]
+    assert all(m["icon"] for m in token["marks"])
+    json.dumps(st)
+    assert set(condition_marks.MARKS) >= {c.id for c in me.conditions}
+
+
+def test_every_mark_has_a_name_and_a_rule_in_the_catalog_and_an_icon_on_disk():
+    from gartok import i18n
+    from gartok.web import condition_marks, server
+    ui = i18n.group("ui")
+    for cid, (icon, cls) in condition_marks.MARKS.items():
+        assert f"cond.{cid}.name" in ui and f"cond.{cid}.rule" in ui, cid
+        assert (Path(server.__file__).parent.parent / "assets" / "icons" / f"{icon}.svg").exists(), icon
+        assert cls in ("ctl", "hurt", "mind", "boon")
+
+
+def test_a_foe_out_of_sight_shows_no_marks_on_the_chain():
+    from gartok.conditions import Entangled
+    s = _session()
+    _to_my_turn(s)
+    b = s.battle
+    obs = vision.observers(b, False, "player")
+    hidden = next(u for u in b.units if u.alive and u.team != "player" and not vision.enemy_visible(b, obs, u)
+                  and not actions.ATTACK.can(b, b.active, u))
+    hidden.add_condition(Entangled())
+    st = s.state()
+    assert s.uid(hidden) not in {u["id"] for u in st["units"]}
+    assert all(c["marks"] == [] for c in st["initiative"] if c["id"] is None)
 
 
 def test_what_lies_under_a_token_is_named_with_its_icon_only_where_the_side_sees():

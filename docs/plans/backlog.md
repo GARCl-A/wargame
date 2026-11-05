@@ -59,86 +59,16 @@ the rest.
   "Train a designated Treefolk recruit..." (`factions.py`) does not raise the exclamation mark on the map
   and is listed with the supply run under *Work*; it belongs to *Jobs*. Test: the mark and the tab.
 
-- **Bug: a fighter cannot move and the action bar does not say why (playtest 2026-11-02).** Ancient Ruins, in-game day 75,
-  against the spiders, round XIV: Irekdralob could not move and nothing in the action bar said why.
-  Rebuild the fight from its combat-log JSONL (`CombatLog`; the author has it as a local recording of
-  2026-10-30 on another machine; it is not in the repo, so ask for it), find the
-  condition or rule that blocked the move (web, a spider's web, a stuck state, no free cell, AP), then fix
-  it and make the action bar always name the blocker of a disabled Move. Mock both ways first (author
+- **A disabled Move must say why (playtest 2026-11-02).** The cause was a spider's web (`Entangled` blocks walking, and
+  now Jump too); the condition gems on the token now show it, but the action bar still gives no reason for a
+  disabled Move. Make it always name the blocker (condition, no free cell, AP). Mock both ways first (author
   2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
-  today's and pick. Test: the repro as a fixed board, and a disabled Move always carries a reason.
-
-- **Bug: Ribit's sheet is inconsistent (playtest 2026-11-02).** He has Work level 4 but only two work
-  talents (`npcs/ribit.json` lists `carrier` and `brisk_hands`; decided 2026-11-04: the file is wrong).
-  Give him two more work talents (the author expected *Brawny*). Then a test over every `npcs/*.json`
-  that fails when an authored NPC holds fewer talents than its level's talent points give, or breaks a
-  talent's prerequisites.
-
-- **An archer with no arrows shows no warning in the action bar (playtest 2026-11-02).** Name the missing
-  ammunition on the bar when a bow is swung as a melee. Test: bow with only empty quivers.
-
-- **Overflows and unclear counters (playtest 2026-11-02).** (1) Loot screen: the text of what went to each
-  inventory overflows. (2) Post-fight screen: with many foes (the Snake Dragon dungeon) the enemy list
-  overflows. (3) Wilds garrison: when holding for 10 days, the time left is not clear, and the *advance 24 h*
-  button runs past it; show days left and stop the advance at the end. (3b) The death screen: its texts overlap (playtest 2026-11-02). (4) *Gear & Quests* and *Campfire*
-  buttons need no descriptive text, an icon alone with a tooltip is enough.
-
-- **The floor items of a dungeon do not look interactive (playtest 2026-11-02).** In the dragon's lair a
-  chest on the floor cannot be told from decor. Make interactive ground objects explicit (a marker or
-  highlight) and say what they are on hover or click.
-
-- **Complete the icons' author list (decided 2026-11-01).** The Credits screen (title menu) reads its
-  authors off `gartok/assets/icons/LICENSE.txt`, which is partial. Before shipping, complete that list from
-  game-icons.net for the icons actually used (one author per icon on the site); the screen picks the
-  new names up with no code change.
-
-- **Bring the author's own skills into the repo (decided 2026-11-01).** Only the author can do it: the
-  skills on their machine (`~/.claude/skills/`) are out of an agent's reach. For each one the repo needs,
-  copy it into `.claude/skills/<name>/SKILL.md`, then check it against the owner list in
-  `AGENTS.md`: no rule an owner doc already holds, no pointer to a file that is
-  gone, one line in `AGENTS.md` only if an agent would break something without it. Nothing in the repo
-  depends on them being there.
-
-- **Tidy the built package's folders (decided 2026-11-04).** The exe creates its folders next to itself
-  (`saves`, and soon `log-export` for the guild log's export). One data folder beside the exe:
-  `GartokData/Saves`, `GartokData/Exports` (the guild log's export) and `GartokData/OldLogs`. Move the
-  game's writes there and update `build_exe.bat`.
-
-## Medium
-
-- **The Claim gets an inventory.** A stash like the house's; a routine's `Store` / `Fetch` (`place`) can name
-  it (`routines._stashes` knows only the house, the bank and the garage today). End-to-end: the Claim's
-  tab, the routine editor's place list, tests.
-
-- **Review the races' balance (author 2026-11-04).** Every race's six modifiers sum to 0, but the sum does not
-  make them equal: some attributes are worth more than others, and the Hit Die is outside the sum. Weigh the
-  attributes (the headless fights and the economy sim show which ones carry), then count the Hit Die and the
-  racial ability, and retune the outliers. Do it with *Vocations: difficulty or build?*.
-
-- **Talent prerequisites become a list; trees grow to T4 and T5 (author 2026-11-04).** `Talent.requires` is a
-  single id (`talents.py`, read by `reference.py`, `missions.py`, `wiki_session.py` and `talents.js`); make it
-  a tuple that may name talents of other trees (the second requirement is drawn as a red dotted line, see
-  *Notes to remember*), and allow tiers 4 and 5 (the trees stop at 3 today and will keep growing). Then the
-  talents of *Needs more information -> Talent ideas* can be built.
-
-- **Tactical analysis of every action (author 2026-11-01).** Takedown went in weak on purpose: it trades
-  the point it costs for the point the foe spends standing, and headless fights (mirrored squads, the AI
-  standing up first) show a squad that takes down an ordinary foe loses a little (about 3 to 5 points of
-  win rate), so the AI uses it only on a runner or flag carrier. Go through every action of the bar the same
-  way: what role each plays against the others (Grab holds a foe for the allies' -2 AC and the Zombie Bite,
-  Takedown pins a runner or frees the attacker to move), which one is dominated, and which need a bonus to
-  earn a use (one candidate for Takedown: melee attacks against a Prone foe at +2). Measure with
-  `scripts/combat_pairs.py` and mirrored headless squads, then retune. **Weapons too (playtest
-  2026-11-02):** the Pickaxe (35 gold) looks by far the best weapon, because its condition (the target
-  wears armour) holds for every human foe from level 2 up, so it is a damage machine; rank the weapons
-  the same way, by what their favoured case costs to meet (*Weapon actions: tune* in *Large* waits on
-  this).
+  today's and pick. Test: a disabled Move always carries a reason.
 
 - **Combat teaches itself: the tutorial and the conditions (playtest 2026-11-02, Johann 2026-10-31).**
   (1) The combat tutorial explains the actions: today the cards are text and did not help, so show the
-  control (a highlight on the bar) and cover each action of the bar. (2) The conditions on a combatant read
-  better: show each one with its icon, its rounds left and its effect on hover. Web only
-  (`screens/battle/`), with the card's key in `locales/en.json`.
+  control (a highlight on the bar) and cover each action of the bar. Web only (`screens/battle/`), with the
+  card's key in `locales/en.json`.
 
 - **Ambush on the way in, at every dangerous node (author, note outside playtests).** The Wilds, the
   Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road

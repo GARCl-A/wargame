@@ -1,4 +1,4 @@
-The SVGs under action/, body/, gui/, hat/, head/ and item/ come from game-icons.net and are used
+The SVGs under action/, blood/, body/, gui/, hat/, head/, item/, meat/, poison/, state/, symbol/, trap/ and wing/ come from game-icons.net and are used
 under Creative Commons Attribution 3.0 (CC BY 3.0), a few under CC0.
 
     License:  https://creativecommons.org/licenses/by/3.0/

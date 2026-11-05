@@ -4,7 +4,9 @@
 assets/
   icons/       SVG silhouettes, white on transparent: action/ body/ gui/ hat/ head/ item/ flattened to
                <category>/<name>.svg (game-icons.net, no per-author dir), and map/, drawn for this game
-               (the map nodes game-icons.net lacks). LICENSE.txt covers all but map/.
+               (the map nodes game-icons.net lacks). LICENSE.txt covers all but map/. blood/ meat/ poison/
+               state/ symbol/ trap/ wing/ keep the download's own nesting (ffffff/transparent/1x1/<author>/
+               <name>.svg): the condition marks of the battle board read them (`web/condition_marks.py`).
   portraits/   engraved medallion portraits, one folder per race, creature or `npc`, numbered PNGs.
   sounds/      Kenney sound effects (OGG, CC0, LICENSE.txt); `gartok/sound.py` names each cue's files.
 ```

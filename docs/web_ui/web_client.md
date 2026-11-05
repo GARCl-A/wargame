@@ -95,6 +95,16 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   lower value band than the tokens (cream tokens vanished on a cream floor). Files go in
   `gartok/web/client/img/`.
 
+### Marks on the board
+
+- **A condition is a gem on the token's rim** (the table in web/condition_marks.py: icon + class ctl/hurt/mind/boon, control
+  first; up to four, the last slot counts the rest) and a pip on its initiative coin. Things lying on a cell and
+  bodies stacked under a fighter are two brass medallions with a count. **Hover opens only from a gem or a
+  medallion, never from the token** (attacking always hovers the target): a gem opens the ledger (what each
+  condition is and does), the items medallion the list, the bodies medallion the same list read-only. A click
+  pins the ledger or the items list; a click on the bodies medallion opens the pile card, where the player picks
+  who to stabilize or attack, and Pick up keeps its own pick list.
+
 ### Layouts that hold
 
 - **A hub tab:** the hub's cards from the tab's `hub_cards()`; the people or the thing you act on on leather

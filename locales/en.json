@@ -1922,12 +1922,80 @@
         "SW": "SW",
         "S": "S",
         "SE": "SE"
-      }
+      },
+      "medal_bodies": "Fallen here"
     },
     "result": {
       "VICTORY": "VICTORY",
       "FLED": "FLED",
       "DEFEAT": "DEFEAT"
+    },
+    "cond": {
+      "entangled": {
+        "name": "Entangled",
+        "rule": "No walking until the end of its next whole turn. -2 AC."
+      },
+      "grappled": {
+        "name": "Grappled",
+        "rule": "Held fast: speed 0, cannot walk or flee. -2 AC."
+      },
+      "prone": {
+        "name": "Prone",
+        "rule": "On the ground: cannot walk until it stands up (1 AP). Attacks at -2."
+      },
+      "sleeping": {
+        "name": "Asleep",
+        "rule": "-2 AC while it sleeps.",
+        "rule_turns": "-2 AC. Wakes in {turns} more turns."
+      },
+      "surprised": {
+        "name": "Surprised",
+        "rule": "Caught off guard: loses its first turn."
+      },
+      "rooted": {
+        "name": "Rooted",
+        "rule": "Walks 1 cell at most until the end of its next whole turn."
+      },
+      "bleeding": {
+        "name": "Bleeding",
+        "rule": "Loses {damage} health at the end of each of its turns, for {turns} more."
+      },
+      "maimed": {
+        "name": "Maimed",
+        "rule": "Speed halved until the end of its next whole turn."
+      },
+      "poisoned": {
+        "name": "Poisoned",
+        "rule": "Poison is working in the blood."
+      },
+      "shield_hooked": {
+        "name": "Shield hooked",
+        "rule": "Its shield gives no AC until the end of its next whole turn."
+      },
+      "hexed": {
+        "name": "Hexed",
+        "rule": "-1 on each attribute score until the end of its next whole turn."
+      },
+      "demoralized": {
+        "name": "Demoralized",
+        "rule": "-1 to attack, AC and mental defense until the end of its turn."
+      },
+      "hungry": {
+        "name": "Hungry",
+        "rule": "{label}"
+      },
+      "defending": {
+        "name": "Defending",
+        "rule": "+1 AC until the start of its next turn."
+      },
+      "invisible": {
+        "name": "Invisible",
+        "rule": "Unseen by every other side until it deals damage."
+      },
+      "pixie_flight": {
+        "name": "Flying",
+        "rule": "Flies until the end of its next turn."
+      }
     }
   }
 }

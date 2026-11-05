@@ -155,7 +155,7 @@ class Jump(Action):
         return max(0, min(total // JUMP_DIVISOR, actor.speed)) + int(actor.char.talent_bonus("jump_reach"))
 
     def _max_reach(self, battle, actor):
-        if actor.has_condition("prone"):
+        if any(actor.has_condition(c) for c in ("prone", "entangled", "grappled")):
             return 0
         return self._reach(actor, 20 + actor.mod_strength)
 

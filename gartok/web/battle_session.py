@@ -26,6 +26,7 @@ from ..combatant import AP_PER_TURN
 from ..foe_card import foe_card
 from ..fog import FogMemory
 from ..scenario import own_half, wall_kind
+from . import condition_marks
 from .session import Session, asset_url
 
 LOG_LINES = 120
@@ -620,6 +621,7 @@ class BattleSession(Session):
             "downed": u.downed, "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
             "state": self._state(u),
             "ai_ally": u.ai_ally,
+            "marks": condition_marks.marks(u),
             "carries": self._carries(u),
             "attackable": bool(my_turn and u.team != self.team and (u.alive or u.downed)
                                and (actions.ATTACK.can(b, b.active, u) or actions.ATTACK_TONGUE.can(b, b.active, u))),
@@ -644,6 +646,7 @@ class BattleSession(Session):
                         "hp_frac": self._health(u)["hp_frac"] if known else None,
                         "state": self._state(u) if known else None,
                         "dying": f"{u.death_clock}/{data.DYING_TURNS}" if known and u.dying else None,
+                        "marks": condition_marks.marks(u) if known else [],
                         "active": u is b.active})
         return out
 
