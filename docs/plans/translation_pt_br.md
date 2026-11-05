@@ -146,12 +146,11 @@ translation service runs in the game. Then the author reads it in play, as with 
 Check: overflow on long strings (Portuguese runs ~20-30% longer: the overflow items in the backlog apply),
 accents and the font's glyph coverage (ç, ã, õ, é…), sort order, number and money formats.
 
-Started (2026-11-05): the whole `ui` group (1,373 keys) is translated; the author has not read it in play yet, so its tone is
+Started (2026-11-05): the whole `ui` group (1,373 keys), the `action` group (224), the `log` group (278) and every session/rule group are translated; the author has not read it in play yet, so its tone is
 unconfirmed. The rest falls back to English, so every screen still shows English where its group is missing (the title quote and
-menu, "Back to title", ...). Left, 3,203 keys by size (re-count with a key diff of `en.json` against `pt-br.json`):
-`name` 531 and `desc` 331 (catalog: items, talents, races, nodes, vocations, missions...), `log` 278 and `action` 224 (combat), then the
-session groups (`guild_sheet`, `map_session`, `dialogue`, `map_view`, `job_board`, `hunt_session`, `report_session`, `guild_session`,
-`campaign`, `trade`, `tavern`, `hub_session`...), the `tutorial` cards (96) and the credits.
+menu, "Back to title", ...). Left, 965 keys (re-count with a key diff of `en.json` against `pt-br.json`):
+`name` 531 and `desc` 331 (catalog: items, talents, races, nodes, vocations, missions...), the `tutorial` cards (96) and the credits (7). Every other group is
+translated; the catalog groups wait on the open decisions below (gender, display names), so a `{item}` in a sentence is written without an article for now.
 How to continue: write a flat `{"dotted.key": "texto"}` chunk per group and fold it in with `python scripts/i18n_merge.py chunk.json`
 (it refuses a key with no `en` twin, another shape or other `{placeholders}`); `tests/test_i18n.py` still passes while the build is partial.
 Decisions made with the author: the glossary (pt names of the actions, attributes FOR/DES/CAR, Charter = Estatuto, Band = Grupo, vocations
