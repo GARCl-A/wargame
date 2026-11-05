@@ -62,42 +62,42 @@ function side() {
   let body = "";
   if (D.step === "vocation") {
     body = V ? `<div class="chosen"><div class="em">${ico(V.icon)}</div><div><b>${esc(V.name)}</b><small>${esc(V.motto)}</small></div></div>
-      <div class="clause"><div class="lbl">The guild's perk</div><p>${esc(V.perk)}</p></div>
-      <div class="note">The draft brings one of each of <b>${V.races.map(r => esc(r.race)).join(", ")}</b>; three more come from anywhere.</div>
-      <div class="note">Chosen once. It cannot be changed later.</div>`
-      : `<div class="note idle">The trade your guild is founded on. Its perk belongs to every member, and the draft brings one of each of its races.</div>`;
-    sealHtml("Continue", V ? "to the draft" : "pick a vocation", "gui/contract", !V);
+      <div class="clause"><div class="lbl">${tr("draft.perk_label")}</div><p>${esc(V.perk)}</p></div>
+      <div class="note">${tr("draft.races_note", {races: V.races.map(r => esc(r.race)).join(", ")})}</div>
+      <div class="note">${tr("draft.once")}</div>`
+      : `<div class="note idle">${tr("draft.idle")}</div>`;
+    sealHtml(tr("draft.continue"), V ? tr("draft.to_draft") : tr("draft.pick_voc"), "gui/contract", !V);
   } else if (D.step === "pick") {
     const slots = [0, 1, 2].map(k => {
       const i = D.squad[k];
-      if (i === undefined) return `<div class="slot empty">pick a ${["first", "second", "third"][k]} from the pool</div>`;
+      if (i === undefined) return `<div class="slot empty">${tr(`draft.slot_${k + 1}`)}</div>`;
       const c = D.pool[i];
       return `<div class="slot" data-pick="${i}"><span class="num">${k + 1}</span>${medal(c.portrait, c.name, 60, "var(--enamel-hi)")}
         <div><b>${esc(c.name)}</b><small>${esc(c.race)} ·</small><div class="mini">${c.attrs.map(a => `<span>${a.k}<i>${a.v}</i></span>`).join("")}</div></div></div>`;
     }).join("");
     const coins = Array.from({length: D.tokens_max}, (_, k) => `<div class="coin ${k < D.tokens ? "" : "spent"}"></div>`).join("");
-    body = `<div class="lbl">The squad · ${D.squad.length} of ${D.team}</div>${slots}
-      <div class="tokens"><div class="lbl">Commission tokens · ${D.tokens} of ${D.tokens_max}</div><div class="coins">${coins}</div>
-      <p>${D.tokens ? `${D.tokens} token${D.tokens === 1 ? "" : "s"}: replace a card by one with the tags you pick, a token per tag.` : "Every token is spent; the squad is what the pool gives."}</p>
-      <span class="ghost-btn ${D.tokens && !D.pending.length ? "" : "off"}" id="commission">${D.tokens ? "Commission" : "No tokens left"}</span></div>`;
+    body = `<div class="lbl">${tr("draft.squad", {a: D.squad.length, b: D.team})}</div>${slots}
+      <div class="tokens"><div class="lbl">${tr("draft.tokens_h", {a: D.tokens, b: D.tokens_max})}</div><div class="coins">${coins}</div>
+      <p>${D.tokens ? trn("draft.token_line", D.tokens) : tr("draft.tokens_spent")}</p>
+      <span class="ghost-btn ${D.tokens && !D.pending.length ? "" : "off"}" id="commission">${D.tokens ? tr("draft.commission") : tr("draft.no_tokens")}</span></div>`;
     const full = D.squad.length === D.team;
-    sealHtml("Continue", full ? "to the charter" : `${D.squad.length} of ${D.team} picked`, "gui/contract", !full);
+    sealHtml(tr("draft.continue"), full ? tr("draft.to_charter") : tr("draft.picked", {a: D.squad.length, b: D.team}), "gui/contract", !full);
   } else {
     const C = D.charter;
-    body = `<div class="lbl">Who leads the guild</div>
-      <div class="note" style="margin-top:6px">The leader haggles for the guild and sponsors its recruits.</div>
-      ${C.founders.map((f, i) => `<div class="lead ${f.leader ? "on" : ""}" data-lead="${i}">${f.leader ? `<span class="tag">Leader</span>` : ""}
+    body = `<div class="lbl">${tr("draft.leads")}</div>
+      <div class="note" style="margin-top:6px">${tr("draft.leader_note")}</div>
+      ${C.founders.map((f, i) => `<div class="lead ${f.leader ? "on" : ""}" data-lead="${i}">${f.leader ? `<span class="tag">${tr("draft.leader")}</span>` : ""}
         ${medal(f.portrait, f.name, 52, f.leader ? "var(--brass)" : "var(--enamel-hi)")}
         <div><div class="nm">${renaming === i
           ? `<input id="rename" maxlength="${C.max_founder}" value="${esc(f.name)}">`
-          : `${esc(f.name)}<span class="pen" data-rename="${i}" data-tip="Rename">${ico("gui/pencil")}</span>`}</div>
+          : `${esc(f.name)}<span class="pen" data-rename="${i}" data-tip="${tr("draft.rename")}">${ico("gui/pencil")}</span>`}</div>
           <small>${esc(f.race)} · · ${esc(f.align)}</small>
-          <div class="rec">Can recruit ${f.recruits}<i>${esc(f.recruits_why)}</i></div></div>
+          <div class="rec">${tr("draft.recruit", {n: f.recruits})}<i>${esc(f.recruits_why)}</i></div></div>
         <div class="mods">${f.attrs.map(a => `<div><span>${a.k}</span><b class="${modCls(a.mod)}">${sign(a.mod)}</b></div>`).join("")}</div></div>`).join("")}`;
-    sealHtml("Found", C.can_found ? "the guild" : "pick a leader", "map/city", !C.can_found);
+    sealHtml(tr("draft.found"), C.can_found ? tr("draft.the_guild") : tr("draft.pick_leader"), "map/city", !C.can_found);
   }
   $("body").innerHTML = body;
-  const back = {vocation: "", pick: "Vocation", charter: "The squad"}[D.step];
+  const back = {vocation: "", pick: tr("draft.back_voc"), charter: tr("draft.back_squad")}[D.step];
   $("back").hidden = !back;
   $("back").textContent = back ? "◂ " + back : "";
   if (renaming !== null) {
@@ -109,57 +109,57 @@ function side() {
 
 // ---------------------------------------------------------------- the right side
 function vocations() {
-  return `<div id="head"><h2>Choose a Vocation</h2><span>the trade your guild is founded on</span><span class="right">${D.vocations.length} trades</span></div>`
+  return `<div id="head"><h2>${tr("draft.choose_voc")}</h2><span>${tr("draft.choose_note")}</span><span class="right">${trn("draft.trades", D.vocations.length)}</span></div>`
     + D.vocations.map((v, i) => `<div class="paper voc ${v.chosen ? "on" : ""} ${v.open ? "" : "closed"}" data-voc="${v.id}"
       style="left:${530 + (i % 3) * 452}px;top:${170 + Math.floor(i / 3) * 412}px">
-      ${v.chosen ? `<div class="chip"><div class="seal"><div>${ico(v.icon)}<b>Chosen</b></div></div></div>` : ""}
+      ${v.chosen ? `<div class="chip"><div class="seal"><div>${ico(v.icon)}<b>${tr("draft.chosen")}</b></div></div></div>` : ""}
       <div class="top"><div class="em">${ico(v.icon)}</div><div><h3>${esc(v.name)}</h3><div class="motto">${esc(v.motto)}</div></div></div>
-      <div class="kicker rlabel">Its races</div>
+      <div class="kicker rlabel">${tr("draft.its_races")}</div>
       <div class="races">${v.races.map(r => `<div class="race">${medal(r.portrait, r.race, 58)}<span>${esc(r.race)}</span></div>`).join("")}</div>
-      <div class="perk"><div class="k">${v.open ? "Guild perk" : "Not open yet"}</div><p>${esc(v.perk)}</p></div></div>`).join("");
+      <div class="perk"><div class="k">${v.open ? tr("draft.guild_perk") : tr("draft.not_open")}</div><p>${esc(v.perk)}</p></div></div>`).join("");
 }
 
 function dossier(c, i) {
   const k = D.squad.indexOf(i), w = c.weapon;
   const stamps = c.tags.map(t => `<span class="stamp ${t.commissioned ? "star" : t.style}"${tip(t.desc)}>${t.commissioned ? "★ " : ""}${esc(t.label)}</span>`).join("");
   return `<div class="paper dos ${k >= 0 ? "picked" : ""}" data-pick="${i}" style="left:${530 + (i % 3) * 452}px;top:${108 + Math.floor(i / 3) * 314}px">
-    ${k >= 0 ? `<div class="ribbon">${k + 1}</div>` : c.commissioned ? `<span class="newmark">commissioned</span>` : ""}
-    <div class="top"><div data-sheet="${c.uid}"${tip(`Open ${c.name}'s whole sheet`)}>${medal(c.portrait, c.name, 68)}</div>
+    ${k >= 0 ? `<div class="ribbon">${k + 1}</div>` : c.commissioned ? `<span class="newmark">${tr("draft.commissioned")}</span>` : ""}
+    <div class="top"><div data-sheet="${c.uid}"${tip(tr("draft.open_sheet", {name: c.name}))}>${medal(c.portrait, c.name, 68)}</div>
       <div class="who"><h4>${esc(c.name)}</h4><div class="ro">${esc(c.race)} ·</div>
-        <div class="al">${esc(c.align)} · ${esc(c.size)} · age ${c.age}</div><div class="stamps">${stamps}</div></div></div>
-    <div class="vit"><div><span>HP</span><b>${c.hp}</b></div><div><span>AC</span><b>${c.ac}</b></div><div><span>MD</span><b>${c.md}</b></div><div><span>SPD</span><b>${c.spd}</b></div><div><span>INIT</span><b>${esc(c.init)}</b></div></div>
+        <div class="al">${tr("draft.age", {align: esc(c.align), size: esc(c.size), age: c.age})}</div><div class="stamps">${stamps}</div></div></div>
+    <div class="vit"><div><span>${tr("stat.hp")}</span><b>${c.hp}</b></div><div><span>${tr("stat.ac")}</span><b>${c.ac}</b></div><div><span>${tr("stat.md")}</span><b>${c.md}</b></div><div><span>${tr("stat.spd")}</span><b>${c.spd}</b></div><div><span>${tr("stat.init")}</span><b>${esc(c.init)}</b></div></div>
     <div class="att">${c.attrs.map(a => `<div><span>${a.k}</span><b>${a.v}</b><i class="${modCls(a.mod)}">${sign(a.mod)}</i></div>`).join("")}</div>
     <div class="wpn"><b>${esc(w.name)}</b><span>${esc(w.hit)} · ${esc(w.dmg)} · ${esc(w.tags)}</span>${w.action ? `<em>${esc(w.action)}</em>` : ""}</div>
-    <div class="ab"${tip(c.ability.text)}><b>${esc(c.ability.name)}</b> · ${c.langs.map(esc).join(", ") || "no languages"}</div>
-    <div class="xstamp">Replace</div></div>`;
+    <div class="ab"${tip(c.ability.text)}><b>${esc(c.ability.name)}</b> · ${c.langs.map(esc).join(", ") || tr("draft.no_langs")}</div>
+    <div class="xstamp">${tr("draft.replace")}</div></div>`;
 }
 
 function slipHtml() {
   const sel = slip, room = D.tokens;
   return `<div id="veil"></div><div class="paper slip" id="slip">
-    <div class="kicker">Commission<em>${room} token${room === 1 ? "" : "s"} left</em></div>
-    <h3>Call for what the pool lacks</h3>
-    <div class="why">Tick the tags you want in one candidate, a token each. Then click the card they replace; a picked card leaves the squad.</div>
+    <div class="kicker">${tr("draft.slip_kicker")}<em>${trn("draft.tokens_left", room)}</em></div>
+    <h3>${tr("draft.slip_title")}</h3>
+    <div class="why">${tr("draft.slip_why")}</div>
     <div class="arcs">${D.archetypes.map(a => {
       const on = sel.includes(a.key), full = !on && sel.length >= room;
       return `<div class="arc ${on ? "on" : full ? "off" : ""}" data-arc="${a.key}"><span class="box">${on ? "✓" : ""}</span>
         <span class="stamp ${on ? "star" : a.style}">${esc(a.label)}</span><p><b>${esc(a.rule)}.</b> ${esc(a.desc)}</p></div>`;
     }).join("")}</div>
-    <div class="slipfoot"><span class="cost">Costs <b>${sel.length}</b> of ${room}</span>
+    <div class="slipfoot"><span class="cost">${tr("draft.costs", {a: sel.length, b: room})}</span>
       <div class="coins">${Array.from({length: room}, (_, k) => `<div class="coin ${k < sel.length ? "use" : ""}"></div>`).join("")}</div>
-      <span class="sp"></span><span class="ghost-btn ink" data-slip="cancel">Cancel</span><span class="btn ${sel.length ? "" : "off"}" data-slip="call">Call them</span></div></div>`;
+      <span class="sp"></span><span class="ghost-btn ink" data-slip="cancel">${tr("draft.cancel")}</span><span class="btn ${sel.length ? "" : "off"}" data-slip="call">${tr("draft.call")}</span></div></div>`;
 }
 
 function tokensChip() {
   const coins = Array.from({length: D.tokens_max}, (_, k) => `<i class="${k < D.tokens ? "" : "spent"}"></i>`).join("");
-  return `<span class="tk"${tip("Commission tokens: replace a card by one with the tags you pick")}>${coins}<b>${D.tokens}</b> of ${D.tokens_max} commission tokens</span>`;
+  return `<span class="tk"${tip(tr("draft.chip_tip"))}>${coins}${tr("draft.chip", {n: D.tokens, max: D.tokens_max})}</span>`;
 }
 
 function pool() {
   const head = D.pending.length
-    ? `<div class="targetbar"><b>Pick the one to replace</b><span>for ${D.pending.map(esc).join(" + ")} · ${D.pending.length} token${D.pending.length === 1 ? "" : "s"}</span><span class="ghost-btn" data-cancel>Cancel</span></div>`
-    : `<div id="head"><h2>The Pool</h2><span>pick ${D.team} of ${D.pool.length} · a click picks, a second click lets go</span>
-       <span class="right">${esc(D.vocation.name)} · one of each of its races</span>${tokensChip()}</div>`;
+    ? `<div class="targetbar"><b>${tr("draft.replace_which")}</b><span>${tr("draft.for_tags", {tags: D.pending.map(esc).join(" + "), tokens: trn("unit.token", D.pending.length)})}</span><span class="ghost-btn" data-cancel>${tr("draft.cancel")}</span></div>`
+    : `<div id="head"><h2>${tr("draft.pool")}</h2><span>${tr("draft.pool_note", {team: D.team, pool: D.pool.length})}</span>
+       <span class="right">${tr("draft.pool_races", {vocation: esc(D.vocation.name)})}</span>${tokensChip()}</div>`;
   return head + `<div id="cards" class="${D.pending.length ? "targeting" : ""}">${D.pool.map(dossier).join("")}</div>` + (slip ? slipHtml() : "");
 }
 
@@ -169,25 +169,25 @@ function charter() {
   const emb = C.emblems.find(e => e.on);
   const order = [...C.founders.keys()].sort((a, b) => C.founders[b].leader - C.founders[a].leader);
   return `<div class="paper" id="charter">
-    <div class="kicker">Charter of the guild<em>drawn up at Ankareth, on the first day</em></div>
-    <div class="bek">Be it known that the undersigned found the guild of</div>
-    <div class="gname"><input id="gname" maxlength="${C.max_name}" placeholder="The Guild" value="${esc(C.name)}" spellcheck="false">${ico("item/quill-ink").replace("ico", "ico pen")}</div>
-    <div class="trade">in the trade of <b>${esc(V.name)}</b>, under the word <i>“${esc(V.motto)}”</i></div>
-    <div class="trade" style="margin-top:6px"><b>Perk</b> &nbsp;${esc(V.perk)} <i>(every member)</i></div>
-    <div class="sec"><div class="kicker">Its arms</div>
+    <div class="kicker">${tr("draft.charter")}<em>${tr("draft.charter_note")}</em></div>
+    <div class="bek">${tr("draft.bek")}</div>
+    <div class="gname"><input id="gname" maxlength="${C.max_name}" placeholder="${tr("draft.the_guild_ph")}" value="${esc(C.name)}" spellcheck="false">${ico("item/quill-ink").replace("ico", "ico pen")}</div>
+    <div class="trade">${tr("draft.trade", {name: esc(V.name), motto: esc(V.motto)})}</div>
+    <div class="trade" style="margin-top:6px">${tr("draft.perk_line", {perk: esc(V.perk)})}</div>
+    <div class="sec"><div class="kicker">${tr("draft.arms")}</div>
       <div class="arms"><div class="shield"><div class="rim"></div><div class="body"></div>${ico(emb.icon)}</div>
-        <div class="picks"><div class="lbl">Colour</div>
+        <div class="picks"><div class="lbl">${tr("draft.colour")}</div>
           <div class="swatches">${C.colors.map((k, i) => `<div class="sw ${k.on ? "on" : ""}" data-color="${i}"><div style="background:rgb(${k.rgb.join(",")})"></div><span>${esc(k.name)}</span></div>`).join("")}</div>
-          <div class="lbl">Emblem</div>
+          <div class="lbl">${tr("draft.emblem")}</div>
           <div class="emblems">${C.emblems.map(e => `<div class="emb ${e.on ? "on" : ""}" data-emblem="${e.slug}"${tip(e.label)}>${ico(e.icon)}</div>`).join("")}</div>
           <div class="embname">${esc(emb.label)}</div></div></div></div>
-    <div class="sec"><div class="kicker">Signed</div>
+    <div class="sec"><div class="kicker">${tr("draft.signed")}</div>
       <div class="sigs">${order.map(i => { const f = C.founders[i];
         return `<div class="sig ${f.leader ? "first" : ""}">${f.leader ? `<span class="master"></span>` : ""}
-          <div class="hand">${esc(f.name)}</div><div class="line"></div><b>${f.leader ? "Master of the guild" : "Founder"}</b><small>${esc(f.race)} ·</small></div>`; }).join("")}</div></div>
+          <div class="hand">${esc(f.name)}</div><div class="line"></div><b>${f.leader ? tr("draft.master") : tr("draft.founder")}</b><small>${esc(f.race)} ·</small></div>`; }).join("")}</div></div>
   </div>
-  <div id="banner"><div class="cloth"></div><div class="trim"></div><div class="rod"></div>${ico(emb.icon)}<div class="motto" id="bannername">${esc(C.name || "The Guild")}</div></div>
-  <div class="bannercap">The banner flies over the squad's tokens on the board and its pennants on the map.</div>`;
+  <div id="banner"><div class="cloth"></div><div class="trim"></div><div class="rod"></div>${ico(emb.icon)}<div class="motto" id="bannername">${esc(C.name || tr("draft.the_guild_ph"))}</div></div>
+  <div class="bannercap">${tr("draft.banner_note")}</div>`;
 }
 
 // ---------------------------------------------------------------- the whole screen
@@ -263,7 +263,7 @@ $("right").addEventListener("click", e => {
 });
 
 $("right").addEventListener("input", e => {
-  if (e.target.id === "gname") $("bannername").textContent = e.target.value.trim() || "The Guild";
+  if (e.target.id === "gname") $("bannername").textContent = e.target.value.trim() || tr("draft.the_guild_ph");
 });
 $("right").addEventListener("change", e => {
   if (e.target.id === "gname") post("name", {name: e.target.value}, true);

@@ -10,13 +10,8 @@ try { view = localStorage.getItem("talents.view") === "branch" ? "branch" : "map
 
 const mod = v => { const m = Math.floor((v - 10) / 2); return (m >= 0 ? "+" : "−") + Math.abs(m); };
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
-const ATTR = {STR: "Strength", DEX: "Dexterity", CON: "Constitution", INT: "Intelligence", WIS: "Wisdom", CHA: "Charisma"};
-const HEADS = {
-  combat: "Each level won in a fight gives one pick. A deeper talent needs the one above it, and nothing is closed for good: given the levels, every talent here can be held.",
-  work: "Each level of work gives one pick: what a shift pays, how fast it ends, what the body bears on the road.",
-  racial: "The race's own gifts. The racial track earns nothing by itself: it climbs with every level in the other three, a hit die each, and every fifth racial level gives a pick.",
-  magic: "The caster's tree. Magic XP comes from a foe put down by a spell and from a spell studied to the end; both need a school.",
-};
+const ATTR = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+const attrName = k => ATTR.includes(k) ? tr(`talents.attr.${k.toLowerCase()}`) : null;
 const chk = `<svg class="chk" viewBox="0 0 20 16"><path d="M3 8l5 5 9-11" fill="none" stroke="#fff3dc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ring = `<svg class="ring" viewBox="0 0 126 104"><path d="M63 6c34 0 58 18 57 44s-26 48-60 47S5 76 6 50 32 4 70 8" fill="none" stroke="#8e2a1e" stroke-width="2.6" stroke-linecap="round" opacity=".85"/></svg>`;
 const stroke = s => s === "taken" ? 'stroke="#2b1d10" stroke-width="3"' :
@@ -54,8 +49,8 @@ const depthOf = (n, B) => n.requires && B[n.requires] ? 1 + depthOf(B[n.requires
 // ---------------------------------------------------------------- the top
 function heading() {
   const u = T.unit;
-  $("title").textContent = `${u.name}'s talents`;
-  $("subtitle").innerHTML = `<b>${esc(u.race)}</b> · ${esc(T.guild)} · day ${T.day}`;
+  $("title").textContent = tr("talents.title", {name: u.name});
+  $("subtitle").innerHTML = tr("talents.sub", {race: esc(u.race), guild: esc(T.guild), day: T.day});
   $("topright").innerHTML = T.chain ? `<div class="chain">${T.chain.map(c =>
     `<span class="${c.at === "later" ? "" : c.at}">${esc(c.label)}</span>`).join("<i>›</i>")}</div>` : "";
 }
@@ -63,16 +58,16 @@ function heading() {
 // ---------------------------------------------------------------- left: who, the tracks, the band
 function trackCard(t) {
   let note, bar = "";
-  if (t.track === "racial") note = t.picks ? "a racial pick to spend" : `next racial pick at racial level ${t.next_racial} · every level anywhere adds a hit die`;
-  else if (t.track === "magic" && !T.unit.schools.length) note = "no school yet · a school opens at its sanctuary";
+  if (t.track === "racial") note = t.picks ? tr("talents.racial_pick") : tr("talents.racial_next", {n: t.next_racial});
+  else if (t.track === "magic" && !T.unit.schools.length) note = tr("talents.no_school");
   else if (t.span) {
-    note = `${t.into} / ${t.span} XP to level ${t.level + 1}`;
+    note = tr("talents.xp", {into: t.into, span: t.span, level: t.level + 1});
     bar = `<div class="tbar"><i style="width:${100 * t.into / t.span}%"></i></div>`;
-  } else note = "the last level";
+  } else note = tr("talents.last_level");
   return `<div class="track ${t.track === T.track ? "on" : ""}" data-track="${t.track}">
-    ${t.picks ? `<div class="pick">${t.picks} pick${t.picks > 1 ? "s" : ""}</div>` : ""}
-    <div class="row"><span class="nm">${t.label}</span><span class="lv">LEVEL<b>${t.level}</b></span></div>
-    ${bar}<div class="note">${note} · ${t.held} held</div></div>`;
+    ${t.picks ? `<div class="pick">${trn("talents.picks", t.picks)}</div>` : ""}
+    <div class="row"><span class="nm">${t.label}</span><span class="lv">${tr("talents.level")}<b>${t.level}</b></span></div>
+    ${bar}<div class="note">${tr("talents.note_held", {note, n: t.held})}</div></div>`;
 }
 
 function who() {
@@ -81,15 +76,15 @@ function who() {
   const label = Object.fromEntries(T.tracks.map(t => [t.track, t.label]));
   $("who").innerHTML = `
     <div class="plate"><div class="medal">${face(u.portrait, u.name)}</div>
-      <div><b>${esc(u.name)}</b><span>${esc(u.race)}</span><small>racial level ${u.racial_level} · HP ${u.hp}/${u.hp_max}</small></div></div>
+      <div><b>${esc(u.name)}</b><span>${esc(u.race)}</span><small>${tr("talents.racial_level", {level: u.racial_level, hp: u.hp, max: u.hp_max})}</small></div></div>
     <div class="attrs">${u.attrs.map(a => `<div class="attr ${hot.has(a.k) ? "hot" : ""}"><span>${a.k}</span><b>${a.v}</b><i>${mod(a.v)}</i></div>`).join("")}</div>
-    <div class="kicker">The four tracks<em>a level, a pick</em></div>
+    <div class="kicker">${tr("talents.four")}<em>${tr("talents.four_note")}</em></div>
     ${T.tracks.map(trackCard).join("")}
-    <div class="kicker">Can take now<em>${T.can_take.length} open</em></div>
+    <div class="kicker">${tr("talents.can")}<em>${tr("talents.can_n", {n: T.can_take.length})}</em></div>
     <div class="canlist">${T.can_take.length ? T.can_take.map(c => `<div class="crow ${c.id === T.hand?.id ? "on" : ""}" data-track="${c.track}" data-id="${c.id}">
-      <i></i><span>${esc(c.name)}</span><em>${label[c.track].toLowerCase()} · tier ${ROMAN[c.tier - 1] || c.tier}</em></div>`).join("")
-      : `<div class="none">No pick to spend: the next level in a track brings one.</div>`}</div>
-    ${T.band.length > 1 ? `<div class="kicker">The band<em>picks waiting</em></div>
+      <i></i><span>${esc(c.name)}</span><em>${tr("talents.can_row", {track: label[c.track].toLowerCase(), tier: ROMAN[c.tier - 1] || c.tier})}</em></div>`).join("")
+      : `<div class="none">${tr("talents.none")}</div>`}</div>
+    ${T.band.length > 1 ? `<div class="kicker">${tr("talents.band")}<em>${tr("talents.band_note")}</em></div>
     <div class="band ${T.band.length > 6 ? "many" : ""}">${T.band.map(m => `<div class="mate ${m.uid === u.uid ? "on" : m.picks ? "" : "dim"}" data-uid="${m.uid}">
       <div class="medal">${face(m.portrait, m.name)}</div>${m.picks ? `<em>${m.picks}</em>` : ""}<span>${esc(m.name.split(" ")[0])}</span></div>`).join("")}</div>` : ""}
     <div class="foot"><div class="bigbtn ghost small" id="back">${esc(T.back)}</div></div>`;
@@ -115,16 +110,16 @@ function sheet() {
   const empty = !T.nodes.length;
   const school = t.track === "magic" && !u.schools.length;
   $("sheet").innerHTML = `
-    <div class="head"><div><div class="kicker">${esc(u.race)} · ${t.label} level ${t.level}<em>${t.track === "racial" ? `gifts of the ${esc(u.race.toLowerCase())}` : "one tree per track"}</em></div>
-        <h1>${t.label}</h1><p>${HEADS[t.track]}</p></div>
+    <div class="head"><div><div class="kicker">${tr("talents.kicker", {race: esc(u.race), track: t.label, level: t.level})}<em>${t.track === "racial" ? tr("talents.gifts", {race: esc(u.race.toLowerCase())}) : tr("talents.one_tree")}</em></div>
+        <h1>${t.label}</h1><p>${tr(`talents.head.${t.track}`)}</p></div>
       <div class="seals">
-        <div><div class="wax ${t.picks ? "" : "black"}"><b>${t.picks}</b></div><small>pick${t.picks === 1 ? "" : "s"} to spend</small></div>
-        <div class="held"><b>${t.held}<span> of ${t.total}</span></b><small>held</small></div>
+        <div><div class="wax ${t.picks ? "" : "black"}"><b>${t.picks}</b></div><small>${tr(t.picks === 1 ? "talents.to_spend.one" : "talents.to_spend.other")}</small></div>
+        <div class="held">${tr("talents.held_of", {held: t.held, total: t.total})}<small>${tr("talents.held")}</small></div>
       </div></div>
-    <div id="tree">${empty ? "" : `<div class="mode"><span data-mode="map" class="${view === "map" ? "on" : ""}">The map</span><span data-mode="branch" class="${view === "branch" ? "on" : ""}">The branch</span></div>`}</div>`;
+    <div id="tree">${empty ? "" : `<div class="mode"><span data-mode="map" class="${view === "map" ? "on" : ""}">${tr("talents.map")}</span><span data-mode="branch" class="${view === "branch" ? "on" : ""}">${tr("talents.branch")}</span></div>`}</div>`;
   const tree = $("tree");
   if (empty) {
-    tree.insertAdjacentHTML("beforeend", `<div class="pencil">— no gifts written for the ${esc(u.race.toLowerCase())} yet —</div>`);
+    tree.insertAdjacentHTML("beforeend", `<div class="pencil">${tr("talents.no_gifts", {race: esc(u.race.toLowerCase())})}</div>`);
     return;
   }
   tree.querySelectorAll(".mode span").forEach(b => b.onclick = () => {
@@ -133,7 +128,7 @@ function sheet() {
     sheet();
   });
   if (view === "branch") branch(tree); else map(tree);
-  if (school) tree.insertAdjacentHTML("beforeend", `<div class="pencil">— waits for a school —<small>a school opens with initiation at its sanctuary</small></div>`);
+  if (school) tree.insertAdjacentHTML("beforeend", `<div class="pencil">${tr("talents.waits_school")}</div>`);
   tree.querySelectorAll("[data-id]").forEach(el => el.addEventListener("click", () => {
     if (!cam || !cam.dragged) post("look", {id: el.dataset.id});
   }));
@@ -170,8 +165,8 @@ function map(tree) {
   const R = 190 + deepest * 150, RX = R * AX + 90, RY = R * AY + 90;
   tree.insertAdjacentHTML("beforeend", `<div class="view"><div class="world">${hub}
       <svg style="left:${-RX}px;top:${-RY}px;width:${2 * RX}px;height:${2 * RY}px" viewBox="${-RX} ${-RY} ${2 * RX} ${2 * RY}">${lines}</svg>${html}</div></div>
-    <div class="cam"><span class="cb" data-z="out">−</span><span class="cb" data-z="in">+</span><span class="cb" data-z="fit">FIT</span><b class="scale"></b></div>
-    <div class="legend"><span><i class="lg taken"></i>held</span><span><i class="lg open"></i>can take</span><span><i class="lg waiting"></i>needs a pick</span><span><i class="lg locked"></i>not yet</span></div>`);
+    <div class="cam"><span class="cb" data-z="out">−</span><span class="cb" data-z="in">+</span><span class="cb" data-z="fit">${tr("talents.fit")}</span><b class="scale"></b></div>
+    <div class="legend"><span><i class="lg taken"></i>${tr("talents.lg_held")}</span><span><i class="lg open"></i>${tr("talents.lg_open")}</span><span><i class="lg waiting"></i>${tr("talents.lg_waiting")}</span><span><i class="lg locked"></i>${tr("talents.lg_locked")}</span></div>`);
   camera(tree, RX, RY);
 }
 
@@ -244,7 +239,7 @@ function branch(tree) {
     const expanded = line.has(n.id);
     rows += `<div class="orow ${n.state} ${n === sel ? "on" : ""}" data-id="${n.id}" style="padding-left:${10 + d * 16}px">
       <i class="tw">${cs.length ? (expanded ? "▾" : "▸") : ""}</i><i class="dot"></i><span>${esc(n.name)}</span>
-      ${cs.length && !expanded ? `<em>${held}/${sub.length}${op ? ` · <b>${op} open</b>` : ""}</em>` : ""}</div>`;
+      ${cs.length && !expanded ? `<em>${held}/${sub.length}${op ? ` · ${tr("talents.n_open", {n: op})}` : ""}</em>` : ""}</div>`;
     if (expanded) cs.forEach(k => row(k, d + 1));
   };
   T.nodes.filter(n => !n.requires || !B[n.requires]).forEach(r => row(r, 0));
@@ -271,8 +266,8 @@ function branch(tree) {
     }
     html += nodeHtml(n, ...XY[id], near.has(id) ? "" : "sib");
   }
-  tree.insertAdjacentHTML("beforeend", `<div class="outline"><div class="kicker">All ${T.nodes.length}<em>open along this branch</em></div><div class="orows">${rows}</div></div>
-    <div class="hood"><div class="kicker">Around ${esc(sel.name)}<em>needs above · opens below</em></div>
+  tree.insertAdjacentHTML("beforeend", `<div class="outline"><div class="kicker">${tr("talents.all_n", {n: T.nodes.length})}<em>${tr("talents.all_note")}</em></div><div class="orows">${rows}</div></div>
+    <div class="hood"><div class="kicker">${tr("talents.around", {name: esc(sel.name)})}<em>${tr("talents.around_note")}</em></div>
       <div class="hoodbox"><svg>${lines}</svg>${html}</div></div>`);
   tree.querySelector(".orow.on")?.scrollIntoView({block: "nearest"});
 }
@@ -280,44 +275,44 @@ function branch(tree) {
 // ---------------------------------------------------------------- right: the talent in hand
 function hand() {
   const h = T.hand, t = track(), u = T.unit;
-  if (!h) { $("hand").innerHTML = `<div class="kicker">The talent in hand</div>`; return; }
+  if (!h) { $("hand").innerHTML = `<div class="kicker">${tr("talents.in_hand")}</div>`; return; }
   const n = byId()[h.id];
   let ledger = "";
   if (h.delta && h.delta.length) {
-    ledger = `<div class="k">What it changes</div><div class="led">${h.delta.map(([k, a, b]) => {
-      const isA = ATTR[k], mv = isA && mod(a) !== mod(b);
-      return `<span>${ATTR[k] || esc(k)}</span><s>${a}</s><b>${b}</b><i class="${isA && !mv ? "flat" : ""}">${isA ? (mv ? `mod ${mod(a)} → ${mod(b)}` : `mod ${mod(b)}`) : ""}</i>`;
+    ledger = `<div class="k">${tr("talents.changes")}</div><div class="led">${h.delta.map(([k, a, b]) => {
+      const isA = attrName(k), mv = isA && mod(a) !== mod(b);
+      return `<span>${attrName(k) || esc(k)}</span><s>${a}</s><b>${b}</b><i class="${isA && !mv ? "flat" : ""}">${isA ? (mv ? tr("talents.mod_move", {a: mod(a), b: mod(b)}) : tr("talents.mod_flat", {b: mod(b)})) : ""}</i>`;
     }).join("")}</div>`;
-    const a = h.delta.find(d => ATTR[d[0]]);
-    if (a && mod(a[1]) === mod(a[2])) ledger += `<div class="gloss">The score rises but the modifier holds at ${mod(a[2])}; it moves at ${a[2] + 1}.</div>`;
+    const a = h.delta.find(d => attrName(d[0]));
+    if (a && mod(a[1]) === mod(a[2])) ledger += `<div class="gloss">${tr("talents.gloss_flat", {mod: mod(a[2]), next: a[2] + 1})}</div>`;
   } else if (h.delta) {
-    ledger = `<div class="k">What it changes</div><div class="gloss">No number on the sheet moves: it counts in play, each time it applies.</div>`;
+    ledger = `<div class="k">${tr("talents.changes")}</div><div class="gloss">${tr("talents.gloss_none")}</div>`;
   }
-  const said = c => c.id === h.id ? "this one" : c.state === "taken" ? "held" : c.state === "open" ? "can take now" : "not yet";
-  const steps = h.branch.length > 1 || h.opens.length ? `<div class="k">The branch</div>
+  const said = c => c.id === h.id ? tr("talents.this_one") : c.state === "taken" ? tr("talents.said_held") : c.state === "open" ? tr("talents.said_open") : tr("talents.said_locked");
+  const steps = h.branch.length > 1 || h.opens.length ? `<div class="k">${tr("talents.branch")}</div>
     ${h.branch.map(c => `<div class="step ${c.state}" data-id="${c.id}">${disc(c)}<b>${esc(c.name)}</b><em>${said(c)}</em></div>`).join("")}
-    ${h.opens.map(c => `<div class="step ${c.state}" data-id="${c.id}">${disc(c)}<b>${esc(c.name)}</b><em>opens after</em></div>`).join("")}` : "";
+    ${h.opens.map(c => `<div class="step ${c.state}" data-id="${c.id}">${disc(c)}<b>${esc(c.name)}</b><em>${tr("talents.opens_after")}</em></div>`).join("")}` : "";
   let act;
   if (n.state === "open") {
-    act = `<p>A pick is kept for good.${t.picks === 1 ? ` It is the last ${t.label.toLowerCase()} pick until the next level.` : ""}</p>
-      <div class="bigbtn" id="take">${ico(n.icon)}Take ${esc(n.name)}</div>`;
+    act = `<p>${tr("talents.kept")}${t.picks === 1 ? ` ${tr("talents.last_pick", {track: t.label.toLowerCase()})}` : ""}</p>
+      <div class="bigbtn" id="take">${ico(n.icon)}${tr("talents.take", {name: esc(n.name)})}</div>`;
   } else if (n.state === "locked") {
     const next = h.branch.find(c => c.state === "open");
-    act = `<p>${next ? `Take ${esc(next.name)} first; this one follows along the branch.` : ""}</p><div class="bigbtn off">Needs ${esc(h.branch[h.branch.length - 2]?.name || "another")}</div>`;
+    act = `<p>${next ? tr("talents.take_first", {name: esc(next.name)}) : ""}</p><div class="bigbtn off">${tr("talents.needs", {name: esc(h.branch[h.branch.length - 2]?.name || tr("talents.another"))})}</div>`;
   } else if (n.state === "taken") {
-    act = `<div class="bigbtn off">${esc(u.name)} holds it</div>`;
+    act = `<div class="bigbtn off">${tr("talents.holds", {name: esc(u.name)})}</div>`;
   } else {
-    act = `<div class="bigbtn off">No pick to spend</div>`;
+    act = `<div class="bigbtn off">${tr("talents.no_pick")}</div>`;
   }
   const others = T.tracks.filter(x => x.picks && x.track !== T.track);
   $("hand").innerHTML = `
-    <div class="kicker">The talent in hand<em>click a talent to read it</em></div>
+    <div class="kicker">${tr("talents.in_hand")}<em>${tr("talents.in_hand_note")}</em></div>
     <div class="slip"><div class="big"><div class="${n.state}">${disc(n, true)}</div>
-        <div><h2>${esc(n.name)}</h2><div class="tt">${t.label} · tier ${ROMAN[n.tier - 1] || n.tier}</div></div></div>
+        <div><h2>${esc(n.name)}</h2><div class="tt">${tr("talents.tier", {track: t.label, tier: ROMAN[n.tier - 1] || n.tier})}</div></div></div>
       <div class="eff">${esc(n.effect)}</div>
       <div class="status ${n.state}">${esc(h.status)}</div>
       ${ledger}${steps}</div>
-    ${others.length ? `<div class="after">Still to spend: <b>${others.map(x => `${x.picks} ${x.label}`).join(", ")}</b>. Pick that track on the left.</div>` : ""}
+    ${others.length ? `<div class="after">${tr("talents.still", {list: others.map(x => `${x.picks} ${x.label}`).join(", ")})}</div>` : ""}
     <div class="act">${act}</div>`;
   $("hand").querySelectorAll(".step").forEach(el => el.onclick = () => post("look", {id: el.dataset.id}));
   const take = $("take");
