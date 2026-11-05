@@ -545,9 +545,8 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
-- **Catfolk portraits.** The race is in (slots, Catfall, Sylvan, the three talents, Caravan); it has no
-  `assets/portraits/catfolk/` yet, so a Catfolk shows its glyph (`sly`) where the others show a face. The head
-  glyph is a stand-in too: the icon set has no feline head. Its numbers (the +1 DEX/+1 CHA body, the three talents)
+- **Catfolk balance and glyph.** The race is in (slots, Catfall, Sylvan, the three talents, Caravan, 11
+  portraits). The head glyph (`sly`) is a stand-in: the icon set has no feline head. Its numbers (the +1 DEX/+1 CHA body, the three talents)
   wait for the vocation balance work (*Vocations: difficulty or build?*).
 
 - **Playtest with every routine open (author 2026-11-04).** Every block and place is open to a routine today.
