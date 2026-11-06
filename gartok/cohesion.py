@@ -4,9 +4,10 @@ A group past its leader's capacity (`Group.overextension`) is tested once a
 day (`daily`, called from `Guild._daily_upkeep`): the world rolls 1d20 against
 the Mental Defense of the group's weakest member -- group leader and guild
 leader exempt -- and a roll at or above it means they walk. With a free group
-slot (`Guild.free_slots`) they just split off alone; without one they give
-notice (`Guild.leaving`, uid -> the day it lapses) and, if nothing changes,
-leave the guild taking what their alignment lets them. See RULES.md, "Fame and
+slot (`Guild.free_slots`) they just split off alone; without one, or while the
+group is locked on an order, they give notice (`Guild.leaving`, uid -> the day
+it lapses) and, if nothing changes, leave the guild taking what their
+alignment lets them. See RULES.md, "Fame and
 group slots".
 
 A herd past its leader's control (`Group.herd_load` over `herd_capacity`) works
@@ -92,12 +93,12 @@ def _roll_groups(guild, d20):
     events = []
     noticed = {guild.group_of(u) for u in guild.roster if u.uid in guild.leaving}
     for group in list(guild.groups):
-        if not group.overextension or group.locked or group in noticed:
+        if not group.overextension or group in noticed:
             continue
         unit = weakest(guild, group)
         if unit is None or d20() < unit.mental_defense + vocations.cohesion_bonus(guild) + quartermaster(group):
             continue
-        if guild.free_slots:
+        if guild.free_slots and not group.locked:
             guild.split_group(group, [unit])
             events.append(i18n.t("cohesion.can_t_stand_crowd_and", name=unit.name, display_name=group.display_name))
         else:

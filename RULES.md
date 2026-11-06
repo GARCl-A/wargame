@@ -1256,9 +1256,11 @@ the guild only has so many of them (`Guild.group_slots`).
 past its capacity is overextended (the Mental Defense penalty stays as the
 visible warning), and each day the world rolls **1d20 against the Mental
 Defense of its weakest member** — group leader and guild leader exempt. A roll
-at or above it and that member walks:
+at or above it and that member walks. The roll is made whatever the group is doing; only the
+split waits for a group that is on an order:
 
-- a free slot: they leave the group and become a solo group on the spot;
+- a free slot: they leave the group and become a solo group on the spot (a group on an order
+  gives notice instead, and splits the day the order ends);
 - no free slot: they give **notice** (`NOTICE_DAYS`, 7). The notice is cancelled
   the moment it stops making sense (the group is no longer overextended, or
   they were made a leader) and resolved as a split the moment a slot opens.

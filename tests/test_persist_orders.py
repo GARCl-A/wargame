@@ -186,7 +186,7 @@ def test_the_cohesion_sweep_does_not_peel_anyone_off_an_ambushed_group():
     assert g.overextension > 0
     g.pending = orders.Order("ambush", pack=(encounters.build_enemy(1),))
 
-    assert cohesion.daily(guild, lambda: 20) == []
+    cohesion.daily(guild, lambda: 20)
     assert len(g.members) == len(members) and len(guild.groups) == 1
 
 

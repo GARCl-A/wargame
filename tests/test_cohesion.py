@@ -123,11 +123,22 @@ def test_a_group_with_nobody_testable_is_skipped():
     assert cohesion.daily(guild, ALWAYS_FAILS) == []
 
 
-def test_a_group_on_an_order_waits_until_it_can_split():
-    guild, group, _ = _crowded()
+def test_a_group_on_an_order_is_still_rolled_and_the_member_waits_to_split():
+    guild, group, m = _crowded(extra=2, wis=[12, 6, 12, 12])
     group.order = orders.travel(group, "market")
-    assert cohesion.daily(guild, ALWAYS_FAILS) == []
-    assert len(guild.groups) == 1
+    assert "notice" in cohesion.daily(guild, ALWAYS_FAILS)[0]
+    assert len(guild.groups) == 1 and m[2].uid in guild.leaving
+    group.order = None
+    assert cohesion.daily(guild, NEVER_FAILS)
+    assert len(guild.groups) == 2 and not guild.leaving
+
+
+def test_a_group_on_an_order_rolls_against_the_warband_bonus_too():
+    guild, group, m = _crowded(extra=2, wis=[12, 6, 12, 12])
+    group.order = orders.travel(group, "market")
+    md = m[2].mental_defense
+    assert cohesion.daily(guild, lambda: md - 1) == []
+    assert cohesion.daily(guild, lambda: md)
 
 
 # --------------------------------------------------------------------------- #
