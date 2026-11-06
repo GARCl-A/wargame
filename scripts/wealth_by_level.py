@@ -121,19 +121,24 @@ def starting_wealth(samples=500):
     return statistics.mean(kit_value(u) for u in units) - statistics.mean(coins), statistics.mean(coins)
 
 
+def _supply_trial(job):
+    size, level, base, i = job
+    with act.isolated("supply", size, level, base, i):
+        squad = act.make_squad(size, level)
+        b = act.play(squad, encounters.roll_supply_ambush(), ErmosScenario(), lethal=True)
+        fallen = [c for c in b.player_units if not c.alive]
+        won = b.winner == "player"
+        return (won, act.loot_value(loot.field_loot(b, fallen)) if won else 0,
+                len(fallen) / size, statistics.mean(c.combat_xp_earned for c in b.player_units))
+
+
 def supply_row(size, level, trials, skill):
     """A run to the Frontier Outpost and back with the wagon, each leg ambushed at
     `SUPPLY_RUN_AMBUSH_CHANCE`, the caravan on the road day and night: won at `skill` (never
     below the AI's own rate, which a big group beats), loot, XP and casualties drawn from the fights the AI played, split by outcome
     (casualties in a win scaled by `relief`, as layer 1's hunt does)."""
-    fights = []
-    for _ in range(trials):
-        squad = act.make_squad(size, level)
-        b = act.play(squad, encounters.roll_supply_ambush(), ErmosScenario(), lethal=True)
-        fallen = [c for c in b.player_units if not c.alive]
-        won = b.winner == "player"
-        fights.append((won, act.loot_value(loot.field_loot(b, fallen)) if won else 0,
-                       len(fallen) / size, statistics.mean(c.combat_xp_earned for c in b.player_units)))
+    base = random.getrandbits(64)
+    fights = act.pool_map(_supply_trial, [(size, level, base, i) for i in range(trials)])
     ai_rate = sum(f[0] for f in fights) / trials
     skill = max(skill, ai_rate)
     won = [f for f in fights if f[0]] or [(True, 0, 0.0, 0.0)]
@@ -426,10 +431,12 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--extras", action="store_true",
                     help="also print what the supply run, crafting and study pay and teach per level")
+    act.add_workers_arg(ap)
     args = ap.parse_args()
     random.seed(args.seed)
     kit, coins = starting_wealth()
-    rows = measure(args.max_level, args.cha, args.trials, args.skill)
+    with act.worker_pool(args.workers):
+        rows = measure(args.max_level, args.cha, args.trials, args.skill)
     marks, stalled, career = climb(rows, coins, args.max_level, args.risk)
     print(report(marks, stalled, kit, coins, args.skill, args.cha))
     print("\n" + ledger_report(marks, career))

@@ -76,17 +76,25 @@ def _layer1(settings, level):
     return "\n\n".join(text), checks
 
 
-def _layer2(settings, level, policies, library=None, **extra):
-    library = library or guild_sim.FightLibrary(settings.library_samples)
-    marks = tuple(d for d in (7, settings.days) if d <= settings.days)
-    results = {}
-    for name in policies:
-        results[name] = [guild_sim.run_guild(name, days=settings.days, seed=settings.seed + i,
-                                             level=level, skill=settings.skill, library=library,
-                                             marks=marks, **extra)
-                         for i in range(settings.guilds)]
-    table = {name: guild_sim.summarize(runs, marks) for name, runs in results.items()}
-    return results, table, marks
+def _marks(settings):
+    return tuple(d for d in (7, settings.days) if d <= settings.days)
+
+
+def _guild_jobs(settings, level, policies, **extra):
+    marks = _marks(settings)
+    return [(name, dict(days=settings.days, seed=settings.seed + i, level=level, skill=settings.skill,
+                        marks=marks, **extra))
+            for name in policies for i in range(settings.guilds)]
+
+
+def _by_policy(settings, policies, runs):
+    n = settings.guilds
+    return {name: runs[k * n:(k + 1) * n] for k, name in enumerate(policies)}
+
+
+def _table(settings, policies, runs):
+    results = _by_policy(settings, policies, runs)
+    return results, {name: guild_sim.summarize(r, _marks(settings)) for name, r in results.items()}
 
 
 def build(settings):
@@ -99,17 +107,38 @@ def build(settings):
     for text, ok in floor_checks + wilds_checks:
         verdicts.append((("floor" if text.startswith("Lumber") else "wilds"), ok, text))
 
-    # layer 2: the guild, its milestone and its curve
+    # layer 2: the guild, its milestone and its curve. Every guild is its own job, so they all go
+    # to the pool in one batch and are sliced back in the order they were listed.
     library = guild_sim.FightLibrary(settings.library_samples)
-    _, table, marks = _layer2(settings, 0, SUSTAIN_POLICIES, library)
-    _, medic_table, _ = _layer2(settings, 0, MEDIC_POLICIES, library, medic=True)
-    _, late_table, _ = _layer2(settings, LATE_LEVEL, LATE_POLICIES, library, capital=LATE_CAPITAL)
-    gathering = [guild_sim.gather_payback(node, guilds=max(1, settings.guilds // 2), seed=settings.seed,
-                                          library=library, skill=settings.skill, level=guild_sim.GATHER_LEVEL,
-                                          size=size)
-                 for size in guild_sim.GATHER_CREWS for node in guild_sim.GATHER_PAIRS]
-    _, late_medic, _ = _layer2(settings, LATE_LEVEL, LATE_POLICIES, library, capital=LATE_CAPITAL,
-                               medic=True)
+    marks = _marks(settings)
+    ranking_settings = Settings(**{**settings.__dict__, "guilds": settings.ranking_guilds})
+    gather_guilds = max(1, settings.guilds // 2)
+    sections = [
+        ("sustain", _guild_jobs(settings, 0, SUSTAIN_POLICIES)),
+        ("medic", _guild_jobs(settings, 0, MEDIC_POLICIES, medic=True)),
+        ("late", _guild_jobs(settings, LATE_LEVEL, LATE_POLICIES, capital=LATE_CAPITAL)),
+        ("late_medic", _guild_jobs(settings, LATE_LEVEL, LATE_POLICIES, capital=LATE_CAPITAL, medic=True)),
+        ("ranking", _guild_jobs(ranking_settings, 0, ("lumber",))),
+    ]
+    pairs = [(node, size) for size in guild_sim.GATHER_CREWS for node in guild_sim.GATHER_PAIRS]
+    for node, size in pairs:
+        sections.append((("gather", node, size), guild_sim.gather_jobs(
+            node, guilds=gather_guilds, seed=settings.seed, skill=settings.skill,
+            level=guild_sim.GATHER_LEVEL, size=size)))
+    done = guild_sim.run_guilds([job for _, jobs in sections for job in jobs], library)
+    runs, at = {}, 0
+    for key, jobs in sections:
+        runs[key] = done[at:at + len(jobs)]
+        at += len(jobs)
+
+    _, table = _table(settings, SUSTAIN_POLICIES, runs["sustain"])
+    _, medic_table = _table(settings, MEDIC_POLICIES, runs["medic"])
+    _, late_table = _table(settings, LATE_POLICIES, runs["late"])
+    _, late_medic = _table(settings, LATE_POLICIES, runs["late_medic"])
+    ranking_results = _by_policy(ranking_settings, ("lumber",), runs["ranking"])
+    gathering = [guild_sim.gather_result(node, runs[("gather", node, size)], guilds=gather_guilds,
+                                         level=guild_sim.GATHER_LEVEL, size=size)
+                 for node, size in pairs]
     share = table[MILESTONE_POLICY]["milestone"]
     start_cost = guild_sim.milestone_cost(guild_sim.Sim(guild_sim.Lumber(), seed=settings.seed))
     verdicts.append(("day-30 milestone", share >= MILESTONE_SHARE,
@@ -130,9 +159,6 @@ def build(settings):
                      "no activity beats another on copper and XP at no more risk" if not clash
                      else "; ".join(f.subject for f in clash)))
 
-    ranking_results, _, _ = _layer2(
-        Settings(**{**settings.__dict__, "guilds": settings.ranking_guilds}), 0, ("lumber",))
-
     stamp = f"{datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC"
     out = [(f"Economy report  {stamp}  "
             f"(a player wins {settings.skill * 100:.0f}% of the fights the AI loses; seed {settings.seed})")]
@@ -144,7 +170,7 @@ def build(settings):
     out.append(_section("3. THE TAVERN", act.tavern_table()))
     out.append(_section("3. WORK TALENTS", work_talents.report()))
     out.append(_section("3. GATHERING", guild_sim.gather_report(
-        gathering, (f"{max(1, settings.guilds // 2)} guilds a row, level {guild_sim.GATHER_LEVEL}, "
+        gathering, (f"{gather_guilds} guilds a row, level {guild_sim.GATHER_LEVEL}, "
                     f"a player wins {settings.skill * 100:.0f}% of the AI's losses"))))
     label = f"{settings.guilds} guilds of 3, level 0, a player wins {settings.skill * 100:.0f}% of the AI's losses"
     out.append(_section("4. SUSTAIN", guild_sim.report(table, marks, label)
@@ -176,9 +202,11 @@ def main():
     ap.add_argument("--skill", type=float, default=act.SKILL)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out-dir", default="sim_results")
+    act.add_workers_arg(ap)
     args = ap.parse_args()
     base = QUICK if args.quick else Settings()
-    text, failed = build(Settings(**{**base.__dict__, "skill": args.skill, "seed": args.seed}))
+    with guild_sim.guild_pool(args.workers):
+        text, failed = build(Settings(**{**base.__dict__, "skill": args.skill, "seed": args.seed}))
     print(text)
     os.makedirs(args.out_dir, exist_ok=True)
     path = os.path.join(args.out_dir, f"economy-report-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}.txt")

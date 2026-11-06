@@ -34,6 +34,8 @@ import os
 import random
 import statistics
 import sys
+from concurrent.futures import ProcessPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -48,6 +50,7 @@ from gartok import (
     items,
     loot,
     matchup,
+    names,
     orders,
     progression,
     world,
@@ -198,6 +201,65 @@ def trip_hours(size, level, node_id, samples=12):
     distance = world.route("city", node_id)[1]
     return statistics.mean(world.hours(distance, speed) for speed in speeds)
 
+_POOL = None
+
+
+def default_workers():
+    return max(1, (os.cpu_count() or 4) - 2)
+
+
+def add_workers_arg(ap, default=None):
+    ap.add_argument("--workers", type=int, default=default or default_workers(),
+                    help="processes for the independent trials and guilds; 1 runs serially in-process "
+                         "(the same numbers either way)")
+
+
+@contextmanager
+def worker_pool(workers, initializer=None, initargs=()):
+    """One pool for every `pool_map` inside the block; `workers <= 1` keeps them in-process."""
+    global _POOL
+    if workers <= 1:
+        yield
+        return
+    with ProcessPoolExecutor(max_workers=workers, initializer=initializer, initargs=initargs) as ex:
+        _POOL = (ex, workers)
+        try:
+            yield
+        finally:
+            _POOL = None
+
+
+def pool_active():
+    return _POOL is not None
+
+
+def pool_map(fn, jobs):
+    """`[fn(job) for job in jobs]`, on the pool when one is open; the order is the jobs' order."""
+    jobs = list(jobs)
+    if _POOL is None:
+        return [fn(job) for job in jobs]
+    ex, workers = _POOL
+    return list(ex.map(fn, jobs, chunksize=max(1, len(jobs) // (workers * 4))))
+
+
+@contextmanager
+def isolated(*seed_parts):
+    """Run with the global and the name generator's random state seeded from `seed_parts`, and put
+    both back after, so a job gives the same numbers on any process and leaves the caller's stream alone."""
+    state = random.getstate(), names._rng.getstate()
+    key = ":".join(str(p) for p in seed_parts)
+    random.seed(key)
+    names._rng.seed(key)
+    try:
+        yield
+    finally:
+        random.setstate(state[0])
+        names._rng.setstate(state[1])
+
+
+def _base_seed(seed):
+    return random.getrandbits(64) if seed is None else seed
+
 
 def play(squad, enemies, scenario, lethal):
     """One headless battle. Returns the Battle."""
@@ -300,22 +362,28 @@ def tavern_table(shift=WORK_DAY_HOURS):
     return "\n".join(lines)
 
 
-def arena_row(size, level, trials, bout=None, skill=None, samples=None, medic=False):
+def _arena_trial(job):
+    size, level, bout, base, i = job
+    with isolated("arena", bout.name, size, level, base, i):
+        squad = make_squad(size, level)
+        foes, scenario = matchup.build(world.node("arena"), bout, squad_size=size,
+                                       guild=Guild(squad, node="city"))
+        b = play(squad, foes, scenario, lethal=False)
+        dmg = statistics.mean(max(0, u.hp_max - c.hp) for c, u in zip(b.player_units, squad))
+        xp = statistics.mean(c.combat_xp_earned for c in b.player_units)
+        return (b.winner == "player", b.round_no, dmg, xp)
+
+
+def arena_row(size, level, trials, bout=None, skill=None, samples=None, medic=False, seed=None):
     """A staked arena bout (the Pit's Scrapper, the champion, the Games). Non-lethal, so the
     cost of losing is the stake and the HP. `skill` lifts the AI's measured win rate to a
     player's (`player_odds`). With a `medic` the bouts a day are not capped by healing: each
-    member's damage is paid for in potions instead."""
+    member's damage is paid for in potions instead. Each trial is seeded on its own (`seed`, or
+    one draw of the global stream), so the row is the same on any number of workers."""
     bout = bout or arena.scrapper_bout()
     if samples is None:
-        samples = []
-        for _ in range(trials):
-            squad = make_squad(size, level)
-            foes, scenario = matchup.build(world.node("arena"), bout, squad_size=size,
-                                           guild=Guild(squad, node="city"))
-            b = play(squad, foes, scenario, lethal=False)
-            dmg = statistics.mean(max(0, u.hp_max - c.hp) for c, u in zip(b.player_units, squad))
-            xp = statistics.mean(c.combat_xp_earned for c in b.player_units)
-            samples.append((b.winner == "player", b.round_no, dmg, xp))
+        base = _base_seed(seed)
+        samples = pool_map(_arena_trial, [(size, level, bout, base, i) for i in range(trials)])
     won = [x for x in samples if x[0]] or samples
     lost = [x for x in samples if not x[0]] or samples
     ai_rate = sum(x[0] for x in samples) / len(samples)
@@ -342,7 +410,7 @@ def arena_row(size, level, trials, bout=None, skill=None, samples=None, medic=Fa
                      f"at {break_even * 100:.0f}% wins (AI wins {ai_rate * 100:.0f}%); bouts/day are {cap}"))
 
 
-def arena_rows(size, level, trials, skills, medic=False, keys=None):
+def arena_rows(size, level, trials, skills, medic=False, keys=None, seed=None):
     """Every bout the Pit and the Games offer (or just `keys`): `{key: {None: AI row, skill: row,
     ...}}`. The boss (six a side) is played by a squad of six, whatever `size` is."""
     out = {}
@@ -350,7 +418,7 @@ def arena_rows(size, level, trials, skills, medic=False, keys=None):
         if keys is not None and key not in keys:
             continue
         n = arena.BOSS_SQUAD if key == "boss" else size
-        ai_row = arena_row(n, level, trials, bout=make(), medic=medic)
+        ai_row = arena_row(n, level, trials, bout=make(), medic=medic, seed=seed)
         out[key] = {None: ai_row}
         for skill in skills:
             out[key][skill] = arena_row(n, level, trials, bout=make(), skill=skill,
@@ -358,12 +426,10 @@ def arena_rows(size, level, trials, skills, medic=False, keys=None):
     return out
 
 
-def _hunt_live(size, level, trials, shift):
-    """Hunts played out with real battles on the AI's side. Returns the per-fight samples
-    `(won, loot_value, dead_fraction, xp_per_living_member)`, the meat and the hours spent."""
-    fights = []
-    meat = hours_used = 0
-    for _ in range(trials):
+def _hunt_live_trial(job):
+    size, level, shift, base, i = job
+    with isolated("hunt", size, level, shift, base, i):
+        fights = []
         squad = make_squad(size, level)
         state = hunt.HuntState(party=squad, node=None, hours_left=shift)
         alive = list(squad)
@@ -382,21 +448,26 @@ def _hunt_live(size, level, trials, shift):
             state.party = alive
             if not won:
                 break
-        hours_used += shift - state.hours_left
-        meat += state.meat
+        return fights, state.meat, shift - state.hours_left
+
+
+def _hunt_live(size, level, trials, shift, base):
+    """Hunts played out with real battles on the AI's side. Returns the per-fight samples
+    `(won, loot_value, dead_fraction, xp_per_living_member)`, the meat and the hours spent."""
+    fights = []
+    meat = hours_used = 0
+    for f, m, h in pool_map(_hunt_live_trial, [(size, level, shift, base, i) for i in range(trials)]):
+        fights += f
+        meat += m
+        hours_used += h
     return fights, meat, hours_used
 
 
-def _hunt_skilled(size, level, trials, shift, skill, fights, rng):
-    """The same hunt with each ambush won at a player's odds (`player_odds`); loot, XP and
-    casualties are drawn from the fights the AI actually played, split by outcome. A better
-    player also loses fewer members in the fights they win (`relief`, an assumption)."""
-    won_pool = [f for f in fights if f[0]] or [(True, 0, 0.0, 0.0)]
-    lost_pool = [f for f in fights if not f[0]] or [(False, 0, 1.0, 0.0)]
-    ai_rate = sum(f[0] for f in fights) / len(fights) if fights else 0.0
-    p, spared = player_odds(ai_rate, skill), relief(ai_rate, skill)
-    meat = hours_used = loot_total = dead_total = xp_total = 0
-    for _ in range(trials):
+def _hunt_skilled_trial(job):
+    size, level, shift, p, spared, won_pool, lost_pool, base, i = job
+    with isolated("hunt-skilled", size, level, shift, base, i):
+        rng = random.Random(f"{base}:{i}")
+        loot_total = dead_total = xp_total = 0
         state = hunt.HuntState(party=make_squad(size, level), node=None, hours_left=shift)
         while state.hours_left > 0 and state.party:
             _, ambushed = hunt.hunt_stretch(state, rng, roll_pack=lambda: hunt.wilds_pack(rng))
@@ -411,16 +482,31 @@ def _hunt_skilled(size, level, trials, shift, skill, fights, rng):
             dead_total += dead
             if not won:
                 break
-        hours_used += shift - state.hours_left
-        meat += state.meat
-    return meat, hours_used, loot_total, dead_total, xp_total
+        return state.meat, shift - state.hours_left, loot_total, dead_total, xp_total
 
 
-def hunt_row(size, level, trials, shift=WORK_DAY_HOURS, skill=None, samples=None):
+def _hunt_skilled(size, level, trials, shift, skill, fights, base):
+    """The same hunt with each ambush won at a player's odds (`player_odds`); loot, XP and
+    casualties are drawn from the fights the AI actually played, split by outcome. A better
+    player also loses fewer members in the fights they win (`relief`, an assumption)."""
+    won_pool = [f for f in fights if f[0]] or [(True, 0, 0.0, 0.0)]
+    lost_pool = [f for f in fights if not f[0]] or [(False, 0, 1.0, 0.0)]
+    ai_rate = sum(f[0] for f in fights) / len(fights) if fights else 0.0
+    p, spared = player_odds(ai_rate, skill), relief(ai_rate, skill)
+    jobs = [(size, level, shift, p, spared, won_pool, lost_pool, base, i) for i in range(trials)]
+    totals = [0, 0, 0, 0, 0]
+    for trial in pool_map(_hunt_skilled_trial, jobs):
+        for k, v in enumerate(trial):
+            totals[k] += v
+    return tuple(totals)
+
+
+def hunt_row(size, level, trials, shift=WORK_DAY_HOURS, skill=None, samples=None, seed=None):
     """A full-day hunt: meat by the hour, an ambush every ~7 h, loot off the winners."""
     trip = trip_hours(size, level, "wilds")
+    base = _base_seed(seed)
     if skill is None:
-        fights, meat, hours_used = _hunt_live(size, level, trials, shift)
+        fights, meat, hours_used = _hunt_live(size, level, trials, shift, base)
         loot_total = sum(f[1] for f in fights)
         dead_total = sum(f[2] * size for f in fights)
         xp_total = sum(f[3] * size for f in fights)
@@ -429,7 +515,7 @@ def hunt_row(size, level, trials, shift=WORK_DAY_HOURS, skill=None, samples=None
     else:
         fights = samples
         meat, hours_used, loot_total, dead_total, xp_total = _hunt_skilled(
-            size, level, trials, shift, skill, fights, random.Random(trials))
+            size, level, trials, shift, skill, fights, base)
         ai_rate = sum(f[0] for f in fights) / len(fights) if fights else 0
         win = player_odds(ai_rate, skill)
         note = f"meat is food, not copper; the AI wins {ai_rate * 100:.0f}% of these ambushes"
@@ -531,13 +617,15 @@ def main():
                     help="bouts are healed by the Medic, paid in potions, not by resting")
     ap.add_argument("--medic-factor", type=float, default=None, metavar="F",
                     help=f"the Medic's price as a share of the potions ({MEDIC_PRICE_FACTOR})")
+    add_workers_arg(ap)
     args = ap.parse_args()
     random.seed(args.seed)
     if args.medic_factor is not None:
         globals()["MEDIC_PRICE_FACTOR"] = args.medic_factor
 
-    meal, tables = build_tables(args.level, args.squad, args.trials,
-                                [float(x) for x in args.skills.split(",")], medic=args.medic)
+    with worker_pool(args.workers):
+        meal, tables = build_tables(args.level, args.squad, args.trials,
+                                    [float(x) for x in args.skills.split(",")], medic=args.medic)
     verdict = True
     for skill, label, rows in tables:
         text, ok = report(rows, meal, args.squad, args.level, label)

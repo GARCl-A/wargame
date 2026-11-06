@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import random
 import sys
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -85,10 +86,15 @@ def main():
     ap.add_argument("--delvers", type=float, default=vocations.GATHER_BONUS, help="Delvers' extra gathering yield")
     ap.add_argument("--caravan", type=float, default=1 - vocations.TRAVEL_FACTOR, help="Caravan's travel time saved")
     ap.add_argument("--marsh", type=float, default=1 / vocations.FOOD_PAUSE_EVERY, help="Survivors' share of rot avoided")
+    ap.add_argument("--seed", type=int, default=0)
+    act.add_workers_arg(ap, default=1)
     a = ap.parse_args()
+    random.seed(a.seed)
 
+    with act.worker_pool(a.workers):
+        late = late_wage(a.level, 3, a.trials)
     report("EARLY (yard wage)", yard_wage(), a)
-    report(f"LATE (Wilds hunt, level {a.level})", late_wage(a.level, 3, a.trials), a)
+    report(f"LATE (Wilds hunt, level {a.level})", late, a)
     print("\nAssumed, not measured: gather, travel, rot-share, kit, overextended.")
 
 

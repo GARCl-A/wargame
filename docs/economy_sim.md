@@ -25,6 +25,14 @@ and `python -m pytest tests/ -n auto -m balance` (`AGENTS.md` carries the rule).
 | `scripts/economy_offers.py` | what is on offer to a guild today, each priced in copper and days (the input of a future planner) | `[--size 4 --money 400]` |
 | `tests/test_economy_sim.py`, `test_economy_exploits.py`, `test_economy_offers.py`, `test_craft_level.py` | pytest on seeded short runs; the detector tests break the rules on purpose to prove each scan can fail; the ones that judge a design number off a sim are marked `balance` | `python -m pytest tests/` (`-m balance` for those) |
 
+Every script above that runs many independent trials or guilds (`economy_report`, `economy_activities`,
+`economy_guild`, `economy_exploits`, `vocation_report`, `wealth_by_level`) takes `--workers N`, default
+`cpu_count - 2` (`vocation_report` defaults to 1: its run is shorter than starting the pool). A battle trial or a guild is a job seeded on its own (`economy_activities.isolated`), so the
+numbers are the same for any N; `--workers 1` runs in-process with no pool, for a debugger. The guild
+workers share the fight library on disk (`economy_guild.SharedLibrary`), each pool played once. An
+unseeded call (`arena_row` and `hunt_row` with no `seed`) draws its base seed from the global `random`, so
+a script seeds it first (`--seed`).
+
 ## Roles: each activity has a job
 
 Judge an activity against its own job, at the levels it is meant for, not against one money bar.

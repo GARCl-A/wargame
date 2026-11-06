@@ -29,10 +29,16 @@ licence against its wage for the report's GATHERING section (`gather_payback`).
 from __future__ import annotations
 
 import argparse
+import contextlib
+import hashlib
 import os
+import pickle
 import random
+import shutil
 import statistics
 import sys
+import tempfile
+import time
 from collections import Counter
 from dataclasses import dataclass, field
 from types import SimpleNamespace
@@ -171,15 +177,19 @@ class FightLibrary:
     def pool(self, kind, level, size, kit=NAKED):
         key = (kind, as_levels(level), size) + ((kit,) if kit != NAKED else ())
         if key not in self.cache:
-            state, names_state = random.getstate(), names._rng.getstate()
-            random.seed(repr(key))      # the same fights for a key whatever ran first
-            names._rng.seed(repr(key))  # names seed the foes' intel read (intel.py), so they change the fight
-            try:
-                self.cache[key] = [self._play(kind, key[1], size, kit) for _ in range(self.samples)]
-            finally:
-                random.setstate(state)
-                names._rng.setstate(names_state)
+            self.cache[key] = self._build(key)
         return self.cache[key]
+
+    def _build(self, key):
+        kind, level, size, kit = key[0], key[1], key[2], (key[3] if len(key) > 3 else NAKED)
+        state, names_state = random.getstate(), names._rng.getstate()
+        random.seed(repr(key))      # the same fights for a key whatever ran first
+        names._rng.seed(repr(key))  # names seed the foes' intel read (intel.py), so they change the fight
+        try:
+            return [self._play(kind, level, size, kit) for _ in range(self.samples)]
+        finally:
+            random.setstate(state)
+            names._rng.setstate(names_state)
 
     @staticmethod
     def _play(kind, level, size, kit=NAKED):
@@ -246,6 +256,45 @@ class FightLibrary:
         value = statistics.mean(act.loot_value(s.loot) for s in wins) if wins else 0.0
         deaths = statistics.mean(sum(m[1] for m in s.members) for s in pool)
         return p, value, deaths
+
+
+class SharedLibrary(FightLibrary):
+    """A library whose workers share one directory: the first to need a pool plays it and the
+    others read the file, so across the whole pool each pool is played once (it holds the same
+    fights as a private one, since a pool is a function of its key)."""
+    WAIT_SECONDS = 900
+
+    def __init__(self, samples, shared_dir):
+        super().__init__(samples)
+        self.shared_dir = shared_dir
+
+    def _build(self, key):
+        stem = os.path.join(self.shared_dir, hashlib.md5(repr(key).encode()).hexdigest())
+        done, lock = stem + ".pkl", stem + ".lock"
+        if not os.path.exists(done):
+            try:
+                os.close(os.open(lock, os.O_CREAT | os.O_EXCL))
+            except FileExistsError:
+                deadline = time.time() + self.WAIT_SECONDS
+                while not os.path.exists(done) and time.time() < deadline:
+                    time.sleep(0.05)
+            else:
+                pool = super()._build(key)
+                with open(stem + ".tmp", "wb") as fh:
+                    pickle.dump((key, pool), fh)
+                os.replace(stem + ".tmp", done)
+                return pool
+        for _ in range(100):
+            try:
+                with open(done, "rb") as fh:
+                    stored, pool = pickle.load(fh)
+            except (OSError, EOFError, pickle.UnpicklingError):
+                time.sleep(0.05)       # Windows: the file was just renamed into place and is still locked
+            else:
+                if stored == key:
+                    return pool
+                break
+        return super()._build(key)
 
 
 # --------------------------------------------------------------------------- #
@@ -1657,6 +1706,59 @@ def run_guild(policy_name, *, days=30, seed=0, size=3, level=0, skill=None, libr
     return res
 
 
+_LIBRARIES = {}
+_SHARED_DIR = None
+
+
+def _worker_init(sets, prices, shared_dir):
+    global _SHARED_DIR
+    _SHARED_DIR = shared_dir
+    apply_overrides(sets, prices)
+
+
+def _worker_library(samples):
+    if samples not in _LIBRARIES:
+        _LIBRARIES[samples] = SharedLibrary(samples, _SHARED_DIR)
+    return _LIBRARIES[samples]
+
+
+@contextlib.contextmanager
+def guild_pool(workers, sets=(), prices=()):
+    """`act.worker_pool` for guild runs: the workers get the what-if overrides and share the fights
+    they play (`SharedLibrary`)."""
+    if workers <= 1:
+        yield
+        return
+    shared = tempfile.mkdtemp(prefix="gartok-library-")
+    try:
+        with act.worker_pool(workers, _worker_init, (list(sets), list(prices), shared)):
+            yield
+    finally:
+        shutil.rmtree(shared, ignore_errors=True)
+
+
+def _run_job(job, library):
+    policy, kwargs = job
+    with act.isolated("guild", policy, kwargs.get("seed", 0)):
+        return run_guild(policy, library=library, **kwargs)
+
+
+def _pool_job(job):
+    policy, kwargs, samples = job
+    return _run_job((policy, kwargs), _worker_library(samples))
+
+
+def run_guilds(jobs, library):
+    """`[run_guild(policy, library=library, **kwargs) for policy, kwargs in jobs]`, spread over the
+    open worker pool (`act.worker_pool`). Each job is seeded on its own and leaves the caller's
+    random streams as it found them, so the results do not depend on the worker count. A worker
+    builds its own `FightLibrary` of the same size: a pool is keyed, so it holds the same fights."""
+    jobs = list(jobs)
+    if act.pool_active():
+        return act.pool_map(_pool_job, [(p, kw, library.samples) for p, kw in jobs])
+    return [_run_job(job, library) for job in jobs]
+
+
 def summarize(results, marks=(7, 30)):
     """One policy's guilds -> the numbers the report prints."""
     n = len(results)
@@ -1821,20 +1923,32 @@ GATHER_LEVEL = 3                     # the licence is bought once a squad has cl
 GATHER_SPARE = 150                   # copper on top of the licence: food and tools for both sides
 
 
+def gather_jobs(node, *, guilds, seed, skill, level=0, size=3, days=GATHER_DAYS):
+    """The `run_guilds` jobs of one `gather_payback`: `guilds` per side, gathering first."""
+    capital = gather.licence_price(node) + GATHER_SPARE * size // 3
+    return [(policy, {"days": days, "seed": seed + i, "capital": capital, "skill": skill,
+                      "level": level, "size": size, "marks": (days,)})
+            for policy in GATHER_PAIRS[node] for i in range(guilds)]
+
+
 def gather_payback(node, *, guilds, seed, library, skill, level=0, size=3, days=GATHER_DAYS):
     """The same guilds gathering at `node` (the licence bought on day one) and working its wage.
     -> dict: the copper edge a day gathering adds over the wage, the days that edge takes to pay
     the licence, the share of each side wiped, and what the table alone promises."""
+    jobs = gather_jobs(node, guilds=guilds, seed=seed, skill=skill, level=level, size=size, days=days)
+    return gather_result(node, run_guilds(jobs, library), guilds=guilds, level=level, size=size, days=days)
+
+
+def gather_result(node, runs, *, guilds, level=0, size=3, days=GATHER_DAYS):
+    """The `gather_payback` row out of the results of its `gather_jobs`, in order."""
     price = gather.licence_price(node)
-    capital = price + GATHER_SPARE * size // 3
     out = {}
-    for side, policy in zip(("gather", "wage"), GATHER_PAIRS[node]):
-        runs = [run_guild(policy, days=days, seed=seed + i, capital=capital, library=library,
-                          skill=skill, level=level, size=size, marks=(days,)) for i in range(guilds)]
-        alive = [r for r in runs if not r.wiped] or runs
-        out[side] = {"gain": statistics.mean(r.money[days] - r.start_money for r in runs),
+    for k, side in enumerate(("gather", "wage")):
+        side_runs = runs[k * guilds:(k + 1) * guilds]
+        alive = [r for r in side_runs if not r.wiped] or side_runs
+        out[side] = {"gain": statistics.mean(r.money[days] - r.start_money for r in side_runs),
                      "alive_gain": statistics.mean(r.money[days] - r.start_money for r in alive),
-                     "wiped": sum(r.wiped for r in runs) / len(runs)}
+                     "wiped": sum(r.wiped for r in side_runs) / len(side_runs)}
     edge = (out["gather"]["gain"] + price - out["wage"]["gain"]) / days
     alive_edge = (out["gather"]["alive_gain"] + price - out["wage"]["alive_gain"]) / days
     promise = size * (gather.expected_value(node, gather.DAY_HOURS)
@@ -1897,6 +2011,7 @@ def main():
                     help="what-if: override a gartok constant, e.g. economy.LUMBER_WAGE=2")
     ap.add_argument("--price", action="append", default=[], metavar="ITEM=VALUE",
                     help="what-if: override an item's price, e.g. \"Studded Leather=40\"")
+    act.add_workers_arg(ap)
     args = ap.parse_args()
     apply_overrides(args.set, args.price)
     if args.medic_factor is not None:
@@ -1907,13 +2022,16 @@ def main():
     restock = Restock.parse(args.restock) if args.restock else None
     library = FightLibrary()
     table, ranked = {}, []
-    for name in args.policies.split(","):
-        results = [run_guild(name, days=args.days, seed=args.seed + i, size=args.size,
-                             level=args.level, skill=args.skill, library=library,
-                             restock=restock, recipes=recipes, marks=marks, capital=args.capital,
-                             assets=assets, medic=args.medic, mixed=args.mixed,
-                             vocation=args.vocation)
-                   for i in range(args.guilds)]
+    names_ = args.policies.split(",")
+    jobs = [(name, {"days": args.days, "seed": args.seed + i, "size": args.size, "level": args.level,
+                    "skill": args.skill, "restock": restock, "recipes": recipes, "marks": marks,
+                    "capital": args.capital, "assets": assets, "medic": args.medic, "mixed": args.mixed,
+                    "vocation": args.vocation})
+            for name in names_ for i in range(args.guilds)]
+    with guild_pool(args.workers, args.set, args.price):
+        done = run_guilds(jobs, library)
+    for k, name in enumerate(names_):
+        results = done[k * args.guilds:(k + 1) * args.guilds]
         table[name] = summarize(results, marks)
         if args.ranking:
             ranked.append(ranking_report(rank_traits(results, marks[-1]),
