@@ -15,7 +15,7 @@ import random
 from gartok import actions, ai, data, magic, orders, persist
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Battle, Unit, _melee_battle, fixed_d20
+from tests.helpers import Battle, Unit, _melee_battle, _recruit, fixed_d20
 
 
 def _caster(a, spell_ids):
@@ -203,11 +203,30 @@ def test_ai_uses_share_magic_for_needy_ally():
 # AI                                                                           #
 # --------------------------------------------------------------------------- #
 
-def test_ai_prioritizes_sleep_over_a_hand_attack():
+def test_ai_prioritizes_sleep_over_a_hand_attack_while_another_foe_stands():
     batt, a, d = _melee_battle()
+    other = _recruit(batt, "enemy")
+    other.pos = (6, 6)
     _caster(a, ["sleep"])
     pick = ai._pick_attack(batt, a, d)
     assert isinstance(pick, actions.SpellAction) and pick.spell.id == "sleep"
+
+
+def test_ai_does_not_sleep_the_only_foe():
+    batt, a, d = _melee_battle()
+    _caster(a, ["sleep"])
+    assert not isinstance(ai._pick_attack(batt, a, d), actions.SpellAction)
+
+
+def test_ai_turns_from_a_sleeper_to_the_foe_that_is_awake():
+    from gartok.conditions import Sleeping
+    batt, a, d = _melee_battle()
+    other = _recruit(batt, "enemy")
+    other.pos = (9, 5)
+    d.add_condition(Sleeping())
+    assert ai._target(batt, a) is other
+    other.go_down(batt.log)
+    assert ai._target(batt, a) is d             # only the sleeper is left
 
 
 def test_ai_does_not_re_sleep_an_already_sleeping_target():
@@ -219,12 +238,21 @@ def test_ai_does_not_re_sleep_an_already_sleeping_target():
     assert not (isinstance(pick, actions.SpellAction) and pick.spell.id == "sleep")
 
 
-def test_ai_prefers_magic_missile_over_a_weak_hand_attack():
+def test_ai_prefers_magic_missile_when_it_does_more_than_the_fists():
     batt, a, d = _melee_battle()
     _caster(a, ["magic_missile"])
-    a.disarm()                         # unarmed: a weak hand die well under 2.5 avg
+    a.disarm()
+    a.mod_intelligence = 5
     pick = ai._pick_attack(batt, a, d)
     assert isinstance(pick, actions.SpellAction) and pick.spell.id == "magic_missile"
+
+
+def test_ai_swings_when_a_weak_caster_would_miss_with_the_spell():
+    batt, a, d = _melee_battle()
+    _caster(a, ["magic_missile"])
+    a.disarm()
+    a.mod_intelligence = -2             # the spell lands too seldom to beat the fists
+    assert ai._pick_attack(batt, a, d) is actions.ATTACK
 
 
 # --------------------------------------------------------------------------- #

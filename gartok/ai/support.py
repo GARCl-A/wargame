@@ -105,19 +105,29 @@ def _try_share_magic(battle, unit):
     return True
 
 
+URGENT_CLOCK = 3            # a dying ally this far on its death clock is saved even with a foe in reach
+
+
 def _ally_to_help(battle, unit):
-    """A downed ally this unit wants to stabilize -- only if it is of good
-    bent (it will spend the action to save a friend before fighting)."""
+    """A downed ally this unit wants to stabilize -- only if it is of good bent (it will spend the
+    action to save a friend). With a foe in reach of a blow it fights on, unless the ally is a turn
+    from its death save: the others have time to be stable by the time the foe is dealt with."""
     if _axes(unit)[1] <= 0:
         return None
-    # Prefer an adjacent one if possible
+    pressed = any(actions.ATTACK.can(battle, unit, f) for f in battle.units if f.alive and f.team != unit.team)
+
+    def worth_leaving_the_fight(ally):
+        return not pressed or (ally.dying and ally.death_clock >= URGENT_CLOCK)
+
     adj = next((a for a in battle.units
-                if actions.FIRST_AID.can(battle, unit, a) or actions.STABILIZE.can(battle, unit, a)
-                or any(_spell_can(battle, unit, sid, a) for sid in ("healing_touch", "spare_the_dying"))), None)
+                if (actions.FIRST_AID.can(battle, unit, a) or actions.STABILIZE.can(battle, unit, a)
+                    or any(_spell_can(battle, unit, sid, a) for sid in ("healing_touch", "spare_the_dying")))
+                and worth_leaving_the_fight(a)), None)
     if adj:
         return adj
     # Else nearest ally still savable -- a stable one is already saved, and
     # walking to it would leave a good unit idling beside it instead of fighting
-    bodies = sorted((u for u in battle.units if u.team == unit.team and (u.dying or u.broken)),
+    bodies = sorted((u for u in battle.units if u.team == unit.team and (u.dying or u.broken)
+                     and worth_leaving_the_fight(u)),
                     key=lambda u: battle.units_distance(unit, u))
     return bodies[0] if bodies else None

@@ -58,6 +58,32 @@ def _roots_worth(battle, unit, target):
     return _spell_odds(battle, unit, target, actions.CastSpellAction("grasping_roots")) * held
 
 
+def _demoralize_worth(battle, unit, target):
+    """The hit points a Demoralize on `target` is expected to be worth through its next turn: the odds
+    the CHA roll beats its Mental Defense (a bare 10 until read) times the -1 on every blow and
+    defence. Each striker of the unit's side that can reach the foe lands its blows 5% more often
+    (and for its own Menacing cull), the foe's own two blows land 5% less."""
+    char = unit.char
+    mod = unit.mod_charisma
+    if char.has_talent("intimidating_presence"):
+        mod = max(mod, unit.mod_strength)
+    mod += char.talent_bonus("demoralize_bonus")
+    if unit.ability.demoralize_vs_weaker and unit.mod_strength > target.mod_strength:
+        mod += unit.ability.demoralize_vs_weaker
+    md = target.mental_defense if intel.knows(battle, unit.team, target, "md") else 10
+    odds = max(0.05, min(0.95, (21 - md + mod) / 20))
+    worth = 0.0
+    for a in battle.units:
+        if not (a.alive and a.team == unit.team) or battle.units_distance(a, target) > a.attack_range + a.speed:
+            continue
+        blows = max(unit.ap - 1, 0) if a is unit else 2
+        cull = a.char.talent_bonus("demoralized_target_damage")
+        worth += blows * (D20_STEP * _blow(a) + _hit_odds(battle, a, target) * cull)
+    if battle.units_distance(unit, target) <= target.attack_range + target.speed:
+        worth += 2 * D20_STEP * _blow(target)
+    return odds * worth
+
+
 def _point_worth(battle, unit, target):
     """What one point is worth as a plain strike on `target`: a swing or shot it can make now or
     after a walk this turn, else a Magic Missile, else nothing."""
@@ -232,6 +258,31 @@ def _weapon_action_worth(battle, unit, act, target):
         guard = 0 if unit.has_condition("defending") else DEFEND_SWING_ODDS * _incoming(battle, unit)
         return _strike_worth(battle, unit, target, bonus_damage=twice) + guard
     return 0.0
+
+
+DAMAGE_SPELLS = ("magic_missile", "water_jet", "dragonfire")
+
+
+def _spell_blow(unit, spell_id):
+    """Average damage of one landed cast of a damage spell."""
+    bonus = unit.talent_bonus("spell_damage")
+    if spell_id == "magic_missile":
+        return _avg_die(actions.MagicMissileAction.DICE) + bonus
+    if spell_id == "water_jet":
+        return max(1.0, _jet_avg(unit))
+    return _avg_die(actions.DragonfireAction.DICE) + bonus
+
+
+def _spell_strike_worth(battle, unit, spell_id, target):
+    """What one cast of a damage spell is expected to do to `target`: the odds `d20 + INT` beats its
+    AC (as the unit reckons it) times the damage, and for the jet what the throw does to it."""
+    spell = actions.CastSpellAction(spell_id)
+    worth = _spell_blow(unit, spell_id)
+    if spell_id == "water_jet":
+        dest = spell.landing(battle, unit, target)
+        if dest is not None:
+            worth += _cell_damage(battle, target, dest)
+    return _spell_odds(battle, unit, target, spell) * worth
 
 
 def _jet_avg(unit):

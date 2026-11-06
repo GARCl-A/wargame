@@ -121,6 +121,9 @@ def _squad(combo, team, size, build):
             u.set_track_level("racial", racial)
         spend_picks(u)
         give_gear(u, gear)
+        if u.equipped_weapon and items.get(u.equipped_weapon).range and not u.has_item(items.AMMO_ITEM):
+            u.give_to_pack(items.AMMO_ITEM)
+            u._derive_combat()
         squad.append(u)
     return squad
 

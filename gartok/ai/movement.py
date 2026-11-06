@@ -153,6 +153,48 @@ def _try_secret(battle, unit):
     return True
 
 
+def _assess_target(battle, unit):
+    """The foe in sight to Assess now, or None. Assess is a point that wins nothing by itself: it
+    pays only while the side lacks a full read (`intel.has_full_intel`) that someone on it uses, a
+    Hex or Roots caster (they need the attributes) or an Exploit Weakness / Anatomist build. The read
+    is the side's, so the best reader among those still to act takes it."""
+    team = [a for a in battle.units if a.alive and a.team == unit.team]
+    users = [a for a in team if any(s in getattr(a, "spells_known", []) for s in ("hex", "grasping_roots"))
+             or a.char.talent_bonus("full_intel_to_hit") or a.char.talent_bonus("full_intel_crit_range")]
+    if not users or not actions.ASSESS.available(battle, unit):
+        return None
+    foes = [f for f in intel.visible_foes(battle, unit)
+            if battle.can_see_unit(unit, f) and not intel.has_full_intel(battle, unit.team, f)
+            and actions.ASSESS.can(battle, unit, f)]
+    if not foes:
+        return None
+    later = battle.order[battle.turn_idx + 1:]
+    readers = [a for a in team if a is unit or a in later]
+
+    def skill(a):
+        return a.mod_intelligence + a.char.talent_bonus("assess_bonus") + a.char.talent_bonus("assess_active_bonus")
+
+    if skill(unit) < max(skill(a) for a in readers):
+        return None
+    return min(foes, key=lambda f: battle.intel.margin[unit.team].get(f, -99))
+
+
+def _light_globe(battle, unit, target):
+    """In the dark, a Light Globe on a free cell beside `target`, unless a torch already burns there."""
+    if battle.ambient_light or "light_globe" not in getattr(unit, "spells_known", []):
+        return False
+    globe = actions.CastSpellAction("light_globe")
+    if not globe.available(battle, unit) or any(
+            o.is_torch for o in battle.ground if grid_distance(o.pos, target.pos) <= 3):
+        return False
+    cell = min((c for c in globe.highlight_cells(battle, unit) if grid_distance(c, target.pos) <= 2),
+               key=lambda c: grid_distance(c, target.pos), default=None)
+    if cell is None:
+        return False
+    globe.execute(battle, unit, cell)
+    return True
+
+
 def _try_assess(battle, unit):
     """With nothing better to spend a point on, read the foe in sight it knows least about."""
     if not actions.ASSESS.available(battle, unit):

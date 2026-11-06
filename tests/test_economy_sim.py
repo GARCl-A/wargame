@@ -805,7 +805,7 @@ def test_a_warband_sim_keeps_the_member_a_plain_guild_loses_to_the_crowd(monkeyp
 
 
 def test_a_scholars_sim_reads_its_foes_better_and_fights_differently():
-    plain = sim_mod.FightLibrary(samples=8)
+    plain = sim_mod.FightLibrary(samples=16)
     sim = _sim("balanced", vocation="scholars", library=plain)
     assert sim.library.info_bonus == vocations.INFO_BONUS and plain.info_bonus == 0
     assert sim.library.cache is plain.cache

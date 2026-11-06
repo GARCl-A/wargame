@@ -8,6 +8,7 @@ from gartok.ground import GroundObject
 from tests.helpers import (
     Battle,
     Unit,
+    _melee_battle,
     _recruit,
     abilities,
     actions,
@@ -389,3 +390,78 @@ def test_a_favoured_strike_is_brutal_1():
     finally:
         combatant.Combatant.damage_roll = orig
     assert rolls == [1] and any("Brutal 1!" in ln for ln in batt.log_lines)
+
+
+# --------------------------------------------------------------------------- #
+# Demoralize, Assess, Light Globe and archers: what a point is worth          #
+# --------------------------------------------------------------------------- #
+
+def test_ai_swings_instead_of_demoralizing_a_foe_in_reach():
+    from gartok.ai import attack
+    batt, a, d = _melee_battle()
+    assert not attack._demoralize_pays(batt, a, d)
+
+
+def test_ai_demoralizes_rather_than_walk_up_to_a_foe_it_cannot_yet_hit():
+    from gartok.ai import attack
+    batt, a, d = _melee_battle()
+    a.pos, d.pos, a.ap = (4, 5), (8, 5), 1
+    a.languages = d.languages = ["Ankarin"]
+    assert actions.DEMORALIZE.can(batt, a, d)
+    assert attack._demoralize_pays(batt, a, d)
+
+
+def test_ai_does_not_demoralize_a_foe_already_rattled():
+    from gartok.ai import attack
+    from gartok.conditions import Demoralized
+    batt, a, d = _melee_battle()
+    a.pos, d.pos, a.ap = (4, 5), (8, 5), 1
+    a.languages = d.languages = ["Ankarin"]
+    d.add_condition(Demoralized())
+    assert not attack._demoralize_pays(batt, a, d)
+
+
+def test_ai_assesses_only_when_the_side_has_a_use_for_the_read():
+    from gartok.ai import movement
+    batt, a, d = _melee_battle()
+    assert movement._assess_target(batt, a) is None
+    a.spells_known = ["hex"]
+    assert movement._assess_target(batt, a) is d
+
+
+def test_ai_stops_assessing_a_foe_it_has_fully_read():
+    from gartok import intel
+    from gartok.ai import movement
+    batt, a, d = _melee_battle()
+    a.spells_known = ["hex"]
+    batt.intel.margin[a.team][d] = intel.HARD
+    assert movement._assess_target(batt, a) is None
+
+
+def test_ai_casts_the_light_globe_on_a_free_cell_beside_the_foe_in_the_dark():
+    from gartok.ai import movement
+    batt, a, d = _melee_battle()
+    batt.ambient_light = False
+    batt.ground = []
+    a.spells_known = ["light_globe"]
+    a.ap = 2
+    assert movement._light_globe(batt, a, d)
+    assert len(batt.ground) == 1 and batt.ground[0].pos != d.pos
+    assert not movement._light_globe(batt, a, d)       # one burns beside it already
+
+
+def test_an_archer_stops_at_the_range_of_its_bow_instead_of_closing_to_melee():
+    from gartok.ai import target
+    batt, a, d = _melee_battle()
+    a.equip_weapon("Longbow")
+    a.ammo = 10
+    assert a.ranged and target._approach_reach(a) == a.attack_range > 1
+
+
+def test_the_balance_sim_gives_a_bowman_a_quiver():
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts"))
+    import balance_sim
+    squad = balance_sim._squad(("Human", "Longbow"), "player", 2, balance_sim.Build())
+    assert all(u.has_item("Quiver") for u in squad)

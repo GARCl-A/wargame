@@ -99,13 +99,34 @@ def test_good_ai_stabilizes_a_downed_ally_first():
     batt, a, d = _melee_battle()
     mate = _recruit(batt, "enemy")
     d.alignment = "Lawful and Good"
-    d.pos, mate.pos = (6, 5), (7, 5)
+    a.pos, d.pos, mate.pos = (12, 9), (6, 5), (7, 5)    # no foe within a blow
     mate.go_down(batt.log)
     d.ap = 2
     batt.turn_idx = batt.order.index(d)
     with fixed_d20(20):                              # the stabilize lands
         ai.take_turn(batt, d)
     assert mate.stable
+
+
+def _ally_down_beside_a_foe(clock):
+    from gartok import ai
+    batt, a, d = _melee_battle()
+    mate = _recruit(batt, "enemy")
+    d.alignment = "Lawful and Good"
+    d.pos, mate.pos = (6, 5), (7, 5)                    # the foe `a` stands at (5, 5), a blow away
+    mate.go_down(batt.log)
+    mate.death_clock = clock
+    return ai._ally_to_help(batt, d), mate
+
+
+def test_good_ai_fights_on_while_a_foe_is_in_reach_and_the_ally_has_time():
+    helped, _ = _ally_down_beside_a_foe(0)
+    assert helped is None
+
+
+def test_good_ai_still_saves_an_ally_a_turn_from_its_death_save():
+    helped, mate = _ally_down_beside_a_foe(3)
+    assert helped is mate
 
 
 def test_ai_never_flees_a_non_lethal_bout():

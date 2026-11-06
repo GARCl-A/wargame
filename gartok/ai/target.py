@@ -38,7 +38,7 @@ def _flank_cell(battle, unit, target):
 
 def _approach_reach(unit):
     """How close the unit needs to get to a foe to strike -- so the path stops
-    there instead of always closing to adjacent. 1 normally; the Tongue's longer
+    there instead of always closing to adjacent. The hand weapon's reach normally; the Tongue's longer
     reach only when the lash is the attack it would actually pick (no hand weapon,
     or the tongue's die is at least as big) -- otherwise it keeps closing for the
     hand weapon and still lashes if the walk falls short."""
@@ -53,7 +53,7 @@ def _approach_reach(unit):
     if ("dragonfire" in getattr(unit, "spells_known", [])
             and _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE) + spell_dmg):
         return actions.DragonfireAction.reach(unit)
-    return 1 if unit.ranged else unit.attack_range
+    return unit.attack_range
 
 
 SEARCH_STEP = 4           # spacing of the waypoints an attacker sweeps
@@ -84,6 +84,8 @@ def _target(battle, unit):
             return None
     # no role (the arena): advance toward the nearest one anyway
     pool = visible or enemies
+    awake = [e for e in pool if not e.has_condition("sleeping")]
+    pool = awake or pool                   # a sleeper stays asleep while there is a foe to fight
     if battle.is_ctf:
         # someone is running off with OUR flag -- stopping them beats whatever
         # else this unit would otherwise pick a fight over

@@ -4,6 +4,7 @@ from .. import actions
 from ..board import grid_distance
 from .attack import (
     _breath_spot,
+    _demoralize_pays,
     _eat_corpse,
     _finish_off,
     _pick_attack,
@@ -14,7 +15,7 @@ from .attack import (
     _try_shove,
     _try_throw,
 )
-from .common import _hand_die, _spell_can, _wants_alive
+from .common import _spell_can, _wants_alive
 from .flee import (
     _is_skittish,
     _leave_fire,
@@ -28,6 +29,8 @@ from .flee import (
     _try_vanish,
 )
 from .movement import (
+    _assess_target,
+    _light_globe,
     _recover_torch,
     _recover_weapon,
     _sight_cell,
@@ -250,12 +253,13 @@ def take_turn(battle, unit):
         if riding == "hold":
             break
             
-        if "light_globe" in getattr(unit, "spells_known", []):
-            lg = actions.CastSpellAction("light_globe")
-            if lg.available(battle, unit) and lg.can(battle, unit, target.pos):
-                if not any(o.is_torch for o in battle.ground if grid_distance(o.pos, target.pos) <= 3):
-                    lg.execute(battle, unit, target.pos)
-                    continue
+        foe = _assess_target(battle, unit)
+        if foe is not None:
+            actions.ASSESS.execute(battle, unit, foe)
+            continue
+
+        if _light_globe(battle, unit, target):
+            continue
 
         if _try_breath(battle, unit):
             continue
@@ -294,14 +298,8 @@ def take_turn(battle, unit):
                             atk.execute(battle, unit, shoved_foe)
             continue
 
-        # Compound [Demoralize, Attack] evaluation when 2 AP available
-        if (unit.ap >= 2 and not target.demoralized and actions.DEMORALIZE.can(battle, unit, target)
-                and target.hp > _hand_die(unit)):
+        if _demoralize_pays(battle, unit, target):
             actions.DEMORALIZE.execute(battle, unit, target)
-            if unit.ap > 0 and unit.alive:
-                atk = _pick_attack(battle, unit, target)
-                if atk is not None:
-                    atk.execute(battle, unit, target)
             continue
 
         atk = _pick_attack(battle, unit, target)

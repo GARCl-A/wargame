@@ -7,13 +7,14 @@ from .common import _avg_die, _axes, _hand_die, _runs_flag, _wants_alive
 from .reckon import (
     _bleed_tick,
     _blow,
+    _demoralize_worth,
     _hex_worth,
     _hit_odds,
-    _jet_avg,
-    _jet_burns,
     _point_worth,
     _roots_worth,
     _shove_worth,
+    _spell_strike_worth,
+    _strike_worth,
     _two_points,
     _weapon_action_worth,
 )
@@ -24,10 +25,11 @@ def _pick_attack(battle, unit, target):
     2-AP weapon actions when AP is available, Grippli Tongue reach lash, and basic
     attacks."""
     if "sleep" in getattr(unit, "spells_known", []):
-        if not _sleep_immune(battle, unit, target) and not target.has_condition("sleeping"):
+        if (not _sleep_immune(battle, unit, target) and not target.has_condition("sleeping")
+                and _another_awake_foe(battle, unit, target)):
             sleep_spell = actions.CastSpellAction("sleep")
             if sleep_spell.can(battle, unit, target):
-                return sleep_spell  # always prioritize putting them to sleep first
+                return sleep_spell     # a sleeper only frees the unit to fight someone else
 
     hold = _hex_or_roots(battle, unit, target)
     if hold is not None:
@@ -52,44 +54,33 @@ def _pick_attack(battle, unit, target):
     opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
             if a.can(battle, unit, target)]
 
-    if "water_jet" in getattr(unit, "spells_known", []):
-        jet = actions.CastSpellAction("water_jet")
-        if jet.can(battle, unit, target) and (not opts or _hand_die(unit) < _jet_avg(unit)
-                                              or _jet_burns(battle, jet, unit, target)):
-            return jet
+    known = getattr(unit, "spells_known", [])
+    casts = [(_spell_strike_worth(battle, unit, sid, target), actions.CastSpellAction(sid))
+             for sid in reckon.DAMAGE_SPELLS
+             if sid in known and actions.CastSpellAction(sid).can(battle, unit, target)]
+    best_cast = max(casts, key=lambda c: c[0], default=None)
 
-    spell_dmg = unit.talent_bonus("spell_damage")
-    if "dragonfire" in getattr(unit, "spells_known", []):
-        fire = actions.CastSpellAction("dragonfire")
-        if (fire.can(battle, unit, target)
-                and (not opts or _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE) + spell_dmg)):
-            return fire
+    if opts:
+        weapon = _pick_weapon_attack(unit, opts)
+        if best_cast is None or _weapon_strike_worth(battle, unit, weapon, target) >= best_cast[0]:
+            return weapon
+    if best_cast is not None:
+        return best_cast[1]
+    return None
 
-    mm = None
-    if "magic_missile" in getattr(unit, "spells_known", []):
-        mm = actions.CastSpellAction("magic_missile")
-        if mm.can(battle, unit, target):
-            opts.append(mm)
 
-    if not opts:
-        return None
-    if len(opts) == 1:
-        return opts[0]
-        
-    if mm in opts:
-        if actions.ATTACK not in opts and actions.ATTACK_TONGUE not in opts:
-            return mm
-        if _hand_die(unit) < 2.5 + spell_dmg:  # Magic Missile is 1d4 (avg 2.5)
-            return mm
-            
+def _weapon_strike_worth(battle, unit, weapon, target):
+    if weapon is actions.ATTACK_TONGUE:
+        return _hit_odds(battle, unit, target) * (_avg_die(unit.tongue_weapon["damage"]) + unit.mod_strength)
+    return _strike_worth(battle, unit, target)
+
+
+def _pick_weapon_attack(unit, opts):
+    """The hand weapon, or the Grippli's tongue when its die is the bigger."""
     if actions.ATTACK in opts and actions.ATTACK_TONGUE in opts and unit.tongue_weapon:
         return (actions.ATTACK if _hand_die(unit) >= _avg_die(unit.tongue_weapon["damage"])
                 else actions.ATTACK_TONGUE)
-    if actions.ATTACK in opts:
-        return actions.ATTACK
-    if actions.ATTACK_TONGUE in opts:
-        return actions.ATTACK_TONGUE
-    return opts[0]
+    return actions.ATTACK if actions.ATTACK in opts else opts[0]
 
 
 HOLDING_SPELLS = (("hex", "hexed", _hex_worth), ("grasping_roots", "rooted", _roots_worth))
@@ -110,6 +101,12 @@ def _hex_or_roots(battle, unit, target):
         if worth is not None and worth > best_worth:
             best, best_worth = spell, worth
     return best
+
+
+def _demoralize_pays(battle, unit, target):
+    """Demoralize `target` instead of the strike the point would buy, when it is expected to be worth more."""
+    return (not target.demoralized and actions.DEMORALIZE.can(battle, unit, target)
+            and _demoralize_worth(battle, unit, target) > _point_worth(battle, unit, target))
 
 
 def _weapon_action(battle, unit, target):
@@ -158,6 +155,12 @@ def _should_takedown(battle, unit, target):
     foe on the contest's odds loses more, not less)."""
     return (actions.TAKEDOWN.can(battle, unit, target)
             and (_runs_flag(battle, target) or getattr(target, "fleeing", False)))
+
+
+def _another_awake_foe(battle, unit, target):
+    """A foe other than `target` the unit's side knows of that stands up and is awake."""
+    return any(f is not target and f.alive and not f.downed and not f.has_condition("sleeping")
+               for f in intel.visible_foes(battle, unit))
 
 
 def _sleep_immune(battle, unit, target):
