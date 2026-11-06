@@ -15,7 +15,7 @@ sys.path.insert(0, SCRIPTS)
 import economy_activities as act
 import economy_guild as sim_mod
 
-from gartok import arena, dialogue, economy, forced, gather, items, world
+from gartok import arena, dialogue, economy, forced, gather, items, vocations, world
 from gartok.guild import Guild
 from gartok.unit import Unit
 
@@ -740,12 +740,77 @@ def test_a_delvers_sim_hunt_gathers_more_and_a_normal_stance_does_not_dodge():
 
     hunt.hunt_stretch = spy
     try:
-        _sim("balanced", vocation="wilds", library=_WON).hunt(hours=4)
-        assert seen["ambush"] == 1.0                      # Wilds perk needs Cautious
+        _sim("balanced", library=_WON).hunt(hours=4)
+        assert seen["ambush"] == 1.0                      # a Normal stance does not dodge
         _sim("balanced", vocation="delvers", library=_WON).hunt(hours=4)
         assert seen["yield"] == 1.15
     finally:
         hunt.hunt_stretch = orig
+
+
+def test_a_wanderers_sim_travels_cautious_and_its_crew_too():
+    from gartok.group import CAUTIOUS, NORMAL
+    plain, wilds = _sim("balanced", library=_WON, size=5), _sim("balanced", vocation="wilds", library=_WON, size=5)
+    assert (plain.main.stance, wilds.main.stance) == (NORMAL, CAUTIOUS)
+    wilds.seat_extras(3)
+    assert wilds.crew.stance == CAUTIOUS
+
+
+def test_a_wanderers_sim_hunts_with_fewer_ambushes():
+    from gartok import hunt
+    chances = {}
+    orig = hunt.hunt_stretch
+
+    def spy(state, rng=random, **kw):
+        chances[len(chances)] = state.ambush_mult
+        state.hours_left = 0
+        return 0, False
+
+    hunt.hunt_stretch = spy
+    try:
+        _sim("balanced", library=_WON).hunt(hours=4)
+        _sim("balanced", vocation="wilds", library=_WON).hunt(hours=4)
+    finally:
+        hunt.hunt_stretch = orig
+    assert chances == {0: 1.0, 1: 0.8}
+
+
+def test_a_survivors_sim_loses_less_food_to_rot():
+    from gartok import items
+    kept = {}
+    for vid in (None, "marsh"):
+        sim = _sim("lumber", vocation=vid, library=_WON)
+        stack = items.create_instance("Potato", qty=20)
+        stack.days_old = stack.defn.lifespan - 1
+        sim.members[0]._base_inventory.append(stack)
+        sim.guild.clock.seconds = 8 * 86400 + 1           # two days that cross the 10th
+        for _ in range(2):
+            sim.pass_hours(24)
+        kept[vid] = sum(i.qty for i in sim.members[0]._base_inventory if i.name == "Potato")
+    assert kept[None] == 0 < kept["marsh"]
+
+
+def test_a_warband_sim_keeps_the_member_a_plain_guild_loses_to_the_crowd(monkeypatch):
+    from gartok import cohesion
+    real = cohesion.daily
+    left = {}
+    for vid in (None, "warband"):
+        sim = _sim("lumber", size=6, vocation=vid, library=_WON)
+        assert sim.main.overextension
+        monkeypatch.setattr(cohesion, "daily", lambda guild: real(
+            guild, d20=lambda: cohesion.weakest(guild, guild.groups[0]).mental_defense))
+        sim.pass_hours(24)
+        left[vid] = bool(sim.guild.leaving) or len(sim.guild.groups) > 1
+    assert left == {None: True, "warband": False}
+
+
+def test_a_scholars_sim_reads_its_foes_better_and_fights_differently():
+    plain = sim_mod.FightLibrary(samples=8)
+    sim = _sim("balanced", vocation="scholars", library=plain)
+    assert sim.library.info_bonus == vocations.INFO_BONUS and plain.info_bonus == 0
+    assert sim.library.cache is plain.cache
+    assert sim.library.pool("wilds", 2, 3) != plain.pool("wilds", 2, 3)
+    assert _sim("balanced", vocation="warband", library=plain).library is plain
 
 
 def test_the_caravan_sim_walks_faster():

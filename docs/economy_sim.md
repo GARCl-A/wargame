@@ -99,6 +99,25 @@ The report prints today's number next to each; the exit code is 1 if one fails.
   TARGET:PER_DAY` (finite shelves), `--medic` / `--medic-factor`, `--mixed` (the hurt work while
   they mend), `--vocation`, `--set economy.LUMBER_WAGE=2` and `--price "Studded Leather=40"`
   (what-ifs), `--curve`, `--ranking`.
+- **Vocations (`--vocation`)** pass the id to the real `Guild`, so every perk runs through
+  `gartok/vocations.py`; the script adds no rule. Delvers: the hunt's and the gathering shifts'
+  yield. Caravan: `vocations.travel_mult` on every walk. Survivors: the real daily upkeep skips
+  the rot on every 10th day (it shows only where food is held long enough to spoil, such as the
+  `balanced` guild's trip stock; the `lumber` guild buys day to day and loses nothing either way).
+  Wanderers: the guild travels *Cautious* (`Sim.main.stance`, the crew's too), which the rules
+  make free, so the perk's x0.8 reaches the hunt hour, the Old Road leg and the gathering shift.
+  Scholars: the library's fights are played with `battle.intel.bind("player", None,
+  vocations.info_bonus(guild))` (`FightLibrary.with_info_bonus`; same seeds and cache as the plain
+  library, only the bonus differs), so the squad reads its foes at +2 and the AI acts on more.
+  Warband: the real cohesion roll adds its +1 Mental Defense, and the roll is made for any group
+  that is overextended, whatever it is doing. **Still not exercised by any policy:** the sim's
+  groups never pass their leader's capacity (the policies cap the squad at 4), so the roll never
+  fires and Warband gives the same result as no vocation (`test_a_warband_sim_keeps_the_member_...`
+  proves the wiring with an overextended group). Missing sim behaviour: a guild that grows past
+  its leader's capacity. Also unexercised: the Scholars' Assess action and the
+  bestiary's race discount (the library has no persistent bestiary, so only the opening read
+  is bonused), the Night Prowler and Woodland Scout (talents, not vocations), and a Cautious
+  guild's lost XP and loot beyond the fewer fights it draws.
 - **The Medic** is a switch (`--medic`) over the game's own `medic.quote` / `medic.cure`
   (potions at `MEDIC_PRICE_FACTOR` 0.7x); off by default so the other numbers keep their baseline.
   As built it is a late-game luxury (about $16 an HP against $1.3 an HP for a rest): a hurt guild

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import copy
 import hashlib
 import os
 import pickle
@@ -78,7 +79,7 @@ from gartok import (
     world,
 )
 from gartok.clock import SECONDS_PER_DAY
-from gartok.group import NORMAL
+from gartok.group import CAUTIOUS, NORMAL
 from gartok.guild import Guild
 from gartok.scenario import ErmosScenario, Scenario
 from gartok.tavern import BAIL_BONUS
@@ -170,15 +171,30 @@ class FightLibrary:
     bouts (`arena` the Scrapper, `champion`, `brawl`, `ctf`; non-lethal), `wilds` (a hunt's
     ambush), `road` (the Old Road), `gather:<node>` (a pack finding a crew gathering), and the Claim's `claim_clear`, `claim_sweep` and `raid`."""
 
-    def __init__(self, samples=40):
+    def __init__(self, samples=40, info_bonus=0):
         self.samples = samples
+        self.info_bonus = info_bonus    # the squad's vocation bonus on reading its foes (Scholars)
         self.cache = {}
+
+    def with_info_bonus(self, bonus):
+        """This library for a guild whose vocation gives `bonus` on the read: the same cache, so the
+        fights nobody's read touches are played once, and the seeds are the plain library's, so the
+        two differ only by what the bonus changes."""
+        if bonus == self.info_bonus:
+            return self
+        sibling = copy.copy(self)
+        sibling.info_bonus = bonus
+        return sibling
 
     def pool(self, kind, level, size, kit=NAKED):
         key = (kind, as_levels(level), size) + ((kit,) if kit != NAKED else ())
-        if key not in self.cache:
-            self.cache[key] = self._build(key)
-        return self.cache[key]
+        cache_key = self._cache_key(key)
+        if cache_key not in self.cache:
+            self.cache[cache_key] = self._build(key)
+        return self.cache[cache_key]
+
+    def _cache_key(self, key):
+        return key + (("info", self.info_bonus),) if self.info_bonus else key
 
     def _build(self, key):
         kind, level, size, kit = key[0], key[1], key[2], (key[3] if len(key) > 3 else NAKED)
@@ -186,13 +202,13 @@ class FightLibrary:
         random.seed(repr(key))      # the same fights for a key whatever ran first
         names._rng.seed(repr(key))  # names seed the foes' intel read (intel.py), so they change the fight
         try:
-            return [self._play(kind, level, size, kit) for _ in range(self.samples)]
+            return [self._play(kind, level, size, kit, self.info_bonus) for _ in range(self.samples)]
         finally:
             random.setstate(state)
             names._rng.setstate(names_state)
 
     @staticmethod
-    def _play(kind, level, size, kit=NAKED):
+    def _play(kind, level, size, kit=NAKED, info_bonus=0):
         squad = act.make_squad(size, level)
         armor, weapon = kit
         for u in squad:
@@ -206,12 +222,12 @@ class FightLibrary:
         if kind in act.BOUTS:
             node, bout = world.node("arena"), act.BOUTS[kind]()
             foes, scenario = matchup.build(node, bout, squad_size=size, guild=guild)
-            battle = act.play(squad, foes, scenario, lethal=False)
+            battle = act.play(squad, foes, scenario, lethal=False, info_bonus=info_bonus)
             outcome = campaign.absorb_battle(guild, squad, battle, node=node, arena_offer=bout)
         elif kind in CLAIM_FIGHTS:
             node, (foe_level, count) = world.node(CLAIM_NODE), CLAIM_FIGHTS[kind]
             foes = [encounters.build_enemy(foe_level) for _ in range(count)]
-            battle = act.play(squad, foes, node.scenario(), lethal=True)
+            battle = act.play(squad, foes, node.scenario(), lethal=True, info_bonus=info_bonus)
             outcome = campaign.absorb_battle(guild, squad, battle, node=node)
         else:
             if kind.startswith("gather:"):
@@ -223,7 +239,7 @@ class FightLibrary:
                 node = world.node("road")
                 foes = encounters.roll_encounter(node.encounter_table)
                 scenario = ErmosScenario()
-            battle = act.play(squad, foes, scenario, lethal=True)
+            battle = act.play(squad, foes, scenario, lethal=True, info_bonus=info_bonus)
             outcome = campaign.absorb_battle(guild, squad, battle, node=node)
         members = []
         for u, (hp, xp) in zip(squad, before):
@@ -269,7 +285,8 @@ class SharedLibrary(FightLibrary):
         self.shared_dir = shared_dir
 
     def _build(self, key):
-        stem = os.path.join(self.shared_dir, hashlib.md5(repr(key).encode()).hexdigest())
+        full = self._cache_key(key)
+        stem = os.path.join(self.shared_dir, hashlib.md5(repr(full).encode()).hexdigest())
         done, lock = stem + ".pkl", stem + ".lock"
         if not os.path.exists(done):
             try:
@@ -281,7 +298,7 @@ class SharedLibrary(FightLibrary):
             else:
                 pool = super()._build(key)
                 with open(stem + ".tmp", "wb") as fh:
-                    pickle.dump((key, pool), fh)
+                    pickle.dump((full, pool), fh)
                 os.replace(stem + ".tmp", done)
                 return pool
         for _ in range(100):
@@ -291,7 +308,7 @@ class SharedLibrary(FightLibrary):
             except (OSError, EOFError, pickle.UnpicklingError):
                 time.sleep(0.05)       # Windows: the file was just renamed into place and is still locked
             else:
-                if stored == key:
+                if stored == full:
                     return pool
                 break
         return super()._build(key)
@@ -342,7 +359,8 @@ class Sim:
             squad[0].give_to_pack(items.COIN_ITEM, capital)
         self.guild = Guild(squad, node="city", vocation=vocation, leader=squad[0])
         self.main = self.guild.groups[0]
-        self.main.stance = policy.stance
+        # Cautious costs a guild nothing in the rules; only the Wanderers perk gives it a use
+        self.main.stance = CAUTIOUS if vocation == vocations.WILDS else policy.stance
         self.crew = None                      # the group that works the yard while the squad is out
         self.recruited = 0                    # strangers who signed on
         self.pitches = 0                      # pitches made
@@ -351,7 +369,7 @@ class Sim:
             self.own(asset)
         self.policy = policy
         self.skill = skill
-        self.library = library or FightLibrary()
+        self.library = (library or FightLibrary()).with_info_bonus(vocations.info_bonus(self.guild))
         self.restock = restock
         self.medic = medic
         self.mixed = mixed
@@ -606,6 +624,7 @@ class Sim:
             except ValueError:
                 return
             self.crew.order = None
+            self.crew.stance = self.main.stance
         else:
             for u in extras:
                 self.main.members.remove(u)
@@ -1995,7 +2014,7 @@ def main():
     ap.add_argument("--medic", action="store_true",
                     help="a Medic at the City heals for potions at a discount, in an hour")
     ap.add_argument("--vocation", default=None, choices=sorted(vocations.VOCATIONS),
-                    help="the guild's founding trade (its perk is live in the sim)")
+                    help="the guild's founding trade (docs/economy_sim.md says which perks the sim exercises)")
     ap.add_argument("--mixed", action="store_true",
                     help="hurt members work the yard while they heal (1 HP a night) instead of resting")
     ap.add_argument("--medic-factor", type=float, default=None, metavar="F",

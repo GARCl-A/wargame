@@ -261,9 +261,12 @@ def _base_seed(seed):
     return random.getrandbits(64) if seed is None else seed
 
 
-def play(squad, enemies, scenario, lethal):
-    """One headless battle. Returns the Battle."""
+def play(squad, enemies, scenario, lethal, info_bonus=0):
+    """One headless battle. Returns the Battle. `info_bonus` is the guild's vocation bonus on the
+    squad's reads of its foes (`vocations.info_bonus`), bound as the web client binds it."""
     battle = Battle(list(squad), list(enemies), scenario=scenario, daylight=True, lethal=lethal)
+    if info_bonus:
+        battle.intel.bind("player", None, info_bonus)
     guard = 0
     while battle.winner is None and guard < TURN_GUARD:
         guard += 1
