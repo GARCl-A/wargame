@@ -1,50 +1,51 @@
 # As builds do estudo, uma a uma
 
-Todas valem para qualquer raça. Equipamento e talentos de combate/magia são fixos por build; só os talentos de **trabalho** e a rolagem 3d6 variam.
+Todas valem para qualquer raça. Equipamento e talentos de combate/magia são fixos por build; só os talentos de trabalho depois das raízes e a rolagem 3d6 variam.
 
 ## Como um personagem 'de nível 5' é montado
 
 Nível 5 = **nível racial 5**; os outros três trilhos somam 10 níveis (1 talento por nível em cada trilho).
 
 | | racial | combate | trabalho | magia | dados de vida | talentos raciais |
-|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|
 | corpo a corpo / arqueiro | 5 | 5 | 5 | 0 | 6 | 1 |
 | conjurador | 5 | 3 | 4 | 3 | 6 | 1 |
 
 - Corpo a corpo: **5 talentos de combate, 5 de trabalho, 0 de magia**. Conjurador: **3 de combate, 4 de trabalho, 3 de magia**.
 - Racial: 1 talento (1 por 5 níveis raciais), sempre o primeiro da árvore da raça. O nível 0 não tem nenhum.
-- Combate e magia seguem a lista da build (respeitando pré-requisitos; sobra de pick é sorteada entre os legais). Trabalho é sorteado.
+- Combate e magia seguem a lista da build (respeitando pré-requisitos; sobra de pick é sorteada entre os legais). Trabalho: as raízes de atributo da coluna 'trabalho' primeiro (3 ou 4, conforme a build); o resto sorteado entre os legais.
 - Nível 0: sem talentos; só equipamento e as magias de nível 0 do conjurador.
 - Todo mundo leva uma tocha quando tem a mão livre; atributos 3d6; 5% recebem 'sangue mágico' do próprio jogo (sem efeito nas não-conjuradoras).
 - **Kit aleatório ('random')**: 25% conjurador (escola e 2–4 magias sorteadas); arma, armadura e escudo sorteados; talentos sorteados.
-- No campo (`fd`) cada lado sorteia uma das 22 builds + o kit aleatório (23 opções): **12 corpo a corpo, 3 arqueiros, 7 conjuradores, 1 aleatória**.
+- No campo (`fd`) cada lado sorteia uma das 23 builds + o kit aleatório (24 opções): **13 corpo a corpo, 3 arqueiros, 7 conjuradores, 1 aleatória**.
 
-## As 22 builds
+## As 23 builds
 
-| build | descrição | arma / armadura / mão livre (L5) | talentos de combate | talentos de magia | magias conhecidas L5 |
-|---|---|---|---|---|---|
-| sword_board | Sword, shield, chainmail: strong and tough | Sword / Chainmail / Dwarf Shield | strong, tough, hardy, bulwark, sure_strike | — | — |
-| axe_bruiser | Axe, brigandine: heavy hitter | Axe / Brigandine / None | strong, heavy_hand, sure_strike, tough, hardy | — | — |
-| greatsword | Broadsword, chainmail: two-handed | Broadsword / Chainmail / None | strong, heavy_hand, sure_strike, blind_strike, tough | — | — |
-| glaive_reach | Glaive, studded leather: reach | Glaive / Studded Leather / None | strong, agile, long_reach, sure_strike, tough | — | — |
-| fortress | Hammer, shield, plate: the wall | Hammer / Plate Armor / Dwarf Shield | tough, bulwark, armor_bearer, hardy, strong | — | — |
-| rapier_duelist | Rapier, leather: agile finesse | Rapier / Leather Jerkin / None | agile, deadeye, nimble_skirmisher, long_reach, tough | — | — |
-| dagger_skirmisher | Dagger, studded leather: fast skirmisher | Dagger / Studded Leather / None | agile, deadeye, fleet, nimble_skirmisher, tough | — | — |
-| spear_line | Shortspear, shield, studded leather: the line | Shortspear / Studded Leather / Dwarf Shield | strong, agile, tough, sure_strike, bulwark | — | — |
-| longbow | Longbow and quiver: the archer | Longbow / Studded Leather / None + aljava | agile, deadeye, long_reach, fleet, nimble_skirmisher | — | — |
-| shortbow | Shortbow and quiver: the light archer | Shortbow / Leather Jerkin / None + aljava | agile, deadeye, fleet, tough, nimble_skirmisher | — | — |
-| crossbow | Light crossbow and quiver: the heavy shot | Light Crossbow / Brigandine / None + aljava | agile, deadeye, strong, tough, hardy | — | — |
-| intimidator | Sword, chainmail: Demoralize and cull | Sword / Chainmail / None | imposing, menacing, cull_the_broken, strong, tough | — | — |
-| commander | Hatchet, shield: shouts the line on | Hatchet / Studded Leather / Dwarf Shield | imposing, gruesome_takedown, inspiring_shout, tough, strong | — | — |
-| analyst | Rapier, studded leather: reads the foe | Rapier / Studded Leather / None | tactical_mind, sharp_analysis, combat_analysis, exploit_weakness, anatomist | — | — |
-| sentinel | Sword, shield, chainmail: alert and iron-willed | Sword / Chainmail / Dwarf Shield | alert, iron_will, iron_stance, tough, hardy | — | — |
-| nature_striker | Nature: Magic Missile, Water Jet, Sleep | Quarterstaff / Leather Jerkin / None | tough, hardy, agile | arcane_mind, spell_focus, destructive_casting | magic_missile, water_jet, sleep, grasping_roots |
-| nature_control | Nature: Roots, Sleep, Magic Missile | Quarterstaff / Leather Jerkin / None | tough, hardy, agile | arcane_mind, spell_focus, destructive_casting | grasping_roots, sleep, magic_missile, water_jet |
-| blood_striker | Blood: Dragonfire, Magic Missile, Hex | Dagger / Leather Jerkin / None | tough, hardy, agile | arcane_mind, spell_focus, destructive_casting | dragonfire, magic_missile, hex, sleep |
-| blood_hexer | Blood: Hex, Sleep, Magic Missile | Dagger / Leather Jerkin / None | tough, hardy, agile | arcane_mind, spell_focus, destructive_casting | hex, sleep, magic_missile, dragonfire |
-| faith_support | Faith: Healing Touch, Sleep, Magic Missile | Quarterstaff / Studded Leather / None | tough, hardy, agile | arcane_mind, spell_focus, destructive_casting | healing_touch, sleep, magic_missile, spare_the_dying |
-| faith_striker | Faith: Magic Missile, Sleep, Healing Touch | Hammer / Chainmail / None | tough, hardy, agile | arcane_mind, spell_focus, destructive_casting | magic_missile, sleep, healing_touch |
-| battlemage | Sword, chainmail, blood: Hex, Dragonfire, Magic Missile | Sword / Chainmail / None | strong, tough, agile | arcane_mind, spell_focus, destructive_casting | magic_missile, hex, dragonfire |
+| build | descrição | arma / armadura / mão livre (L5) | talentos de combate | talentos de trabalho (raízes de atributo, nesta ordem) | talentos de magia | magias conhecidas L5 |
+|---|---|---|---|---|---|---|
+| sword_board | Sword, shield, chainmail: strong and tough | Sword / Chainmail / Dwarf Shield | strong, tough, hardy, bulwark, sure_strike | brawny, sturdy, nimble_fingers | — | — |
+| axe_bruiser | Axe, brigandine: heavy hitter | Axe / Brigandine / None | strong, heavy_hand, sure_strike, tough, hardy | brawny, sturdy, nimble_fingers | — | — |
+| greatsword | Broadsword, chainmail: two-handed | Broadsword / Chainmail / None | strong, heavy_hand, sure_strike, blind_strike, tough | brawny, sturdy, nimble_fingers | — | — |
+| glaive_reach | Glaive, studded leather: reach | Glaive / Studded Leather / None | strong, agile, heavy_hand, sure_strike, tough | brawny, nimble_fingers, sturdy | — | — |
+| fortress | Hammer, shield, plate: the wall | Hammer / Plate Armor / Dwarf Shield | tough, bulwark, armor_bearer, hardy, strong | sturdy, brawny, nimble_fingers | — | — |
+| rapier_duelist | Rapier, leather: agile finesse | Rapier / Leather Jerkin / None | agile, deadeye, nimble_skirmisher, fleet, tough | nimble_fingers, sturdy, brawny | — | — |
+| dagger_skirmisher | Dagger, studded leather: fast skirmisher | Dagger / Studded Leather / None | agile, deadeye, fleet, nimble_skirmisher, tough | nimble_fingers, sturdy, brawny | — | — |
+| spear_line | Shortspear, shield, studded leather: the line | Shortspear / Studded Leather / Dwarf Shield | strong, agile, tough, sure_strike, bulwark | brawny, nimble_fingers, sturdy | — | — |
+| longbow | Longbow and quiver: the archer | Longbow / Studded Leather / None + aljava | agile, deadeye, long_reach, fleet, nimble_skirmisher | nimble_fingers, sturdy, brawny | — | — |
+| shortbow | Shortbow and quiver: the light archer | Shortbow / Leather Jerkin / None + aljava | agile, deadeye, fleet, tough, nimble_skirmisher | nimble_fingers, sturdy, brawny | — | — |
+| crossbow | Light crossbow and quiver: the heavy shot | Light Crossbow / Brigandine / None + aljava | agile, deadeye, strong, tough, hardy | nimble_fingers, sturdy, brawny | — | — |
+| intimidator | Sword, chainmail: Demoralize and cull | Sword / Chainmail / None | imposing, menacing, cull_the_broken, strong, tough | charismatic, brawny, sturdy | — | — |
+| commander | Hatchet, shield: shouts the line on | Hatchet / Studded Leather / Dwarf Shield | imposing, gruesome_takedown, inspiring_shout, tough, strong | charismatic, brawny, sturdy | — | — |
+| analyst | Rapier, studded leather: reads the foe | Rapier / Studded Leather / None | tactical_mind, sharp_analysis, combat_analysis, exploit_weakness, anatomist | clever, nimble_fingers, sturdy | — | — |
+| smart_miner | Pick, chainmail: Armor Pierce, reads the foe for crits | Pick / Chainmail / None | strong, sure_strike, tactical_mind, sharp_analysis, anatomist | clever, brawny, sturdy | — | — |
+| sentinel | Sword, shield, chainmail: alert and iron-willed | Sword / Chainmail / Dwarf Shield | alert, iron_will, iron_stance, tough, hardy | sturdy, brawny, observant | — | — |
+| nature_striker | Nature: Magic Missile, Water Jet, Sleep | Quarterstaff / Leather Jerkin / None | tough, hardy, agile | clever, sturdy, nimble_fingers | arcane_mind, spell_focus, destructive_casting | magic_missile, water_jet, sleep, grasping_roots |
+| nature_control | Nature: Roots, Sleep, Magic Missile | Quarterstaff / Leather Jerkin / None | tough, hardy, agile | clever, sturdy, nimble_fingers | arcane_mind, spell_focus, destructive_casting | grasping_roots, sleep, magic_missile, water_jet |
+| blood_striker | Blood: Dragonfire, Magic Missile, Hex | Dagger / Leather Jerkin / None | tough, hardy, agile | clever, sturdy, nimble_fingers | arcane_mind, spell_focus, destructive_casting | dragonfire, magic_missile, hex, sleep |
+| blood_hexer | Blood: Hex, Sleep, Magic Missile | Dagger / Leather Jerkin / None | tough, hardy, agile | clever, sturdy, nimble_fingers | arcane_mind, spell_focus, destructive_casting | hex, sleep, magic_missile, dragonfire |
+| faith_support | Faith: Healing Touch, Sleep, Magic Missile | Quarterstaff / Studded Leather / None | tough, hardy, agile | clever, sturdy, nimble_fingers | arcane_mind, spell_focus, destructive_casting | healing_touch, sleep, magic_missile, spare_the_dying |
+| faith_striker | Faith: Magic Missile, Sleep, Healing Touch | Hammer / Chainmail / None | tough, hardy, agile | clever, sturdy, nimble_fingers | arcane_mind, spell_focus, destructive_casting | magic_missile, sleep, healing_touch |
+| battlemage | Sword, chainmail, blood: Hex, Dragonfire, Magic Missile | Sword / Chainmail / None | strong, tough, agile | brawny, clever, sturdy, nimble_fingers | arcane_mind, spell_focus, destructive_casting | magic_missile, hex, dragonfire |
 
 ## Limites que isso impõe aos resultados
 
