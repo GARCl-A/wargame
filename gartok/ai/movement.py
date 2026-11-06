@@ -153,15 +153,20 @@ def _try_secret(battle, unit):
     return True
 
 
+def _reads_intel(team):
+    """Does someone on `team` use a full read of a foe (Hex, Roots, Exploit Weakness, Anatomist)?"""
+    return any(any(s in getattr(a, "spells_known", []) for s in ("hex", "grasping_roots"))
+               or a.char.talent_bonus("full_intel_to_hit") or a.char.talent_bonus("full_intel_crit_range")
+               for a in team)
+
+
 def _assess_target(battle, unit):
     """The foe in sight to Assess now, or None. Assess is a point that wins nothing by itself: it
     pays only while the side lacks a full read (`intel.has_full_intel`) that someone on it uses, a
     Hex or Roots caster (they need the attributes) or an Exploit Weakness / Anatomist build. The read
     is the side's, so the best reader among those still to act takes it."""
     team = [a for a in battle.units if a.alive and a.team == unit.team]
-    users = [a for a in team if any(s in getattr(a, "spells_known", []) for s in ("hex", "grasping_roots"))
-             or a.char.talent_bonus("full_intel_to_hit") or a.char.talent_bonus("full_intel_crit_range")]
-    if not users or not actions.ASSESS.available(battle, unit):
+    if not _reads_intel(team) or not actions.ASSESS.available(battle, unit):
         return None
     foes = [f for f in intel.visible_foes(battle, unit)
             if battle.can_see_unit(unit, f) and not intel.has_full_intel(battle, unit.team, f)
@@ -196,8 +201,9 @@ def _light_globe(battle, unit, target):
 
 
 def _try_assess(battle, unit):
-    """With nothing better to spend a point on, read the foe in sight it knows least about."""
-    if not actions.ASSESS.available(battle, unit):
+    """With nothing better to spend a point on, read the foe in sight it knows least about, if its side uses the read."""
+    team = [a for a in battle.units if a.alive and a.team == unit.team]
+    if not _reads_intel(team) or not actions.ASSESS.available(battle, unit):
         return False
     foes = [f for f in intel.visible_foes(battle, unit) if actions.ASSESS.can(battle, unit, f)]
     foes = [f for f in foes if battle.intel.margin[unit.team].get(f, -99) < intel.HARD]

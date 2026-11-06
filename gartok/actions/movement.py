@@ -236,7 +236,10 @@ class Swim(Action):
             return False
         if not self._at_water(battle, actor):
             return False
-        return grid_distance(actor.pos, target) <= self._max_reach(battle, actor)
+        if grid_distance(actor.pos, target) > self._max_reach(battle, actor):
+            return False
+        first = line_cells(actor.pos, target)[1]
+        return battle.board.is_deep_water(first) and _cell_free(battle, actor, first)
 
     def label(self, battle, actor):
         return i18n.t("action.swim.label")

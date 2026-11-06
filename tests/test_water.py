@@ -87,6 +87,12 @@ def test_swim_stops_at_the_water_edge():
     assert a.pos == (7, 5)                        # ends on the last water cell
 
 
+def test_swim_refuses_a_first_step_that_is_not_free_deep_water():
+    batt, a, _ = _water_battle(deep=[(6, 5), (8, 5)])
+    a.pos = (6, 5)
+    assert not actions.SWIM.can(batt, a, (8, 5))   # (7, 5) is dry land: the swim would move nothing
+
+
 def test_swim_hidden_unless_at_water():
     batt, a, _ = _water_battle(deep=[(6, 5)])
     a.pos = (2, 2)
