@@ -73,10 +73,11 @@ class JobsTab:
                 continue
             if not (self.b._is_offered(t) or self.b._mission_of(t)):
                 continue
-            who = [(u.name, missions._held(u, t.goal_item)) for u in self.group.members]
-            who += [(s.name, s.count_of(t.goal_item)) for s in self.group.stores]
+            names = t.goal_any or (t.goal_item,)
+            who = [(u.name, sum(missions._held(u, n) for n in names)) for u in self.group.members]
+            who += [(s.name, sum(s.count_of(n) for n in names)) for s in self.group.stores]
             who = [(n, q) for n, q in who if q]
-            out.append({"item": t.goal_item, "glyph": item_icon.glyph(t.goal_item), "goal": t.goal_qty,
+            out.append({"item": " / ".join(names), "glyph": item_icon.glyph(t.goal_item), "goal": t.goal_qty,
                         "have": sum(q for _, q in who), "who": [f"{n} {q}" for n, q in who]})
         return out
 

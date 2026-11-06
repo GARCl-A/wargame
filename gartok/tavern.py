@@ -252,7 +252,7 @@ class Tavern:
         return [*self.group.members, *self.group.wagons, *self.group.herd]
 
     def _available_study_options(self, student):
-        """Finds all scrolls and dictionaries carried by any member in the party/group
+        """Finds all scrolls, recipe papers and dictionaries carried by any member in the party/group
         that `student` can study."""
         options = []
         seen = set()
@@ -271,6 +271,17 @@ class Tavern:
                             "level": spell.level,
                             "desc": i18n.t("tavern.spell_lvl_pts_to_master", level=spell.level, sources=spell.sources, pts=pts, name=m.name)
                         })
+                recipe = magic.recipe_for_paper(item)
+                if recipe and recipe.recipe not in student.recipes and recipe.id not in seen:
+                    seen.add(recipe.id)
+                    options.append({
+                        "kind": "recipe",
+                        "id": recipe.id,
+                        "name": recipe.name,
+                        "holder": m.name,
+                        "level": recipe.level,
+                        "desc": i18n.t("tavern.recipe_pts_to_learn_carried", pts=magic.points_to_learn(recipe.level), name=m.name)
+                    })
                 lang = magic.language_for_dictionary(item)
                 if lang and lang.name not in student.languages:
                     if lang.name not in seen:

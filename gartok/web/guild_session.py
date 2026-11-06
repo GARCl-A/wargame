@@ -313,7 +313,7 @@ class GuildSession(Session):
                 continue
             t = missions.template_of(m)
             out.append({"name": t.name, "by": uids[m.unit_uid].name, "days": missions.days_left(self.guild, m),
-                        "progress": [missions.progress(self.guild, m), t.goal_qty, t.goal_item] if t.goal_qty > 0
+                        "progress": [missions.progress(self.guild, m), t.goal_qty, " / ".join(t.goal_any) or t.goal_item] if t.goal_qty > 0
                         else None})
         return out
 
@@ -608,6 +608,7 @@ class GuildSession(Session):
                 "items": [[kind, sorted(names)] for kind, names in sorted(by_type.items())],
                 "recipes": sorted(items.CRAFTING_RECIPES),
                 "studies": [*((sp.id, f"{sp.name} (spell)") for sp in magic.SPELLS.values()),
+                            *((r.id, i18n.t("guild_session.study_recipe", name=r.name)) for r in magic.recipe_papers()),
                             *((lang, f"{lang} (language)") for lang in data.LANGUAGES)],
                 "wagons": sorted({w.label for w in self._wagons_of_guild()}),
                 "groups": [g.display_name for g in self.guild.groups if not g.empty],

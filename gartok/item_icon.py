@@ -74,6 +74,7 @@ ICONS = {
     "Legendary Horn": ("horn", "bone", {"accent": TONES["gold"]}),
     "Scroll": ("scroll", "paper", {}),
     "Dictionary": ("book", "leather", {}),
+    "Recipe": ("scroll", "paper", {"accent": TONES["green"]}),
     "Torch": ("torch", "wood", {}),
     "Lantern": ("lantern", "iron", {}),
     "First Aid Kit": ("aid_kit", "salt", {}),
@@ -158,6 +159,8 @@ def _base(name):
         return "Scroll"
     if name.startswith("Dictionary of "):
         return "Dictionary"
+    if name.startswith("Recipe of "):
+        return "Recipe"
     return name
 
 

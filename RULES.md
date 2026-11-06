@@ -384,6 +384,24 @@ a target clears its entry.
   immediately counts for Demoralize, haggling and recruitment (all gated on
   `languages`, see §7 and Property/Economy below).
 
+### Learning a recipe 🟡
+
+Same process as learning a level-0 spell, with no `magic_sources` gate and no school: a recipe is
+read from a **recipe paper** (`Recipe of <Name>`, an item whose `ItemDef.recipe_id` names the
+crafting recipe it teaches and `ItemDef.recipe_level` the level it is studied at, 0 by default).
+`magic.recipe_for_paper` maps the paper to its study target `recipe:<Recipe name>`, so it cannot
+collide with a spell id or a language; `magic.progress_study`'s recipe branch does the work, on the
+same `Unit.study_target` / `study_progress` pair.
+
+- **Cost**: `magic.points_to_learn(level)` of the paper (105 points at level 0, a week of daily
+  `1d20 + INT mod` rolls at the Tavern's "study" garrison job); a harder recipe is a paper of a
+  higher level, scaled like a spell of that level. No Kobold or Gnome study bonus.
+- **The paper** stays in the pack when the recipe is learned, like a scroll, and is locked to the
+  student while studied. The same STUDY tab, the item menu's *study* row and a routine's `Study`
+  block all take it.
+- Mastering it appends the recipe to `Unit.recipes` (every variant of the recipe opens at once, the
+  Antidote's two glands included) and gives no XP.
+
 ---
 
 ## The wargame's combat 🟡
@@ -1500,7 +1518,8 @@ race itself has none). Both work the same way:
   wears off and the clock restarts; a fresh bite also resets it to 24 h. A 3-stack
   poison left alone lasts 72 h.
 - **Antidote** (Apothecary: *Venom Gland* + *Vial*; the gland drops from the Giant
-  Spider at **50 %**, and the recipe is learned like Minor Healing Potion). Used
+  Spider at **50 %**; the recipe is a talent's pick like the Minor Healing Potion's, or the paper the
+  Apothecary's venom job pays, studied at the Tavern). Used
   **outside combat** from the group screen (*use antidote*), by anyone's pack in the
   group: the poisoned character rolls another Constitution save vs the poison's DC.
   **Success** sheds one stack now (restarting the clock for the next), so a single
@@ -1523,7 +1542,9 @@ shop, potion brewing, the Medic and jobs.
 - **Foraging Reagents:** Reagents such as `Red Mushroom` can be foraged in the
   Wilds during expeditions or hunts, as well as purchased in limited stock at the
   market.
-- **Jobs:** Offers contracts to fetch rare reagents (`apothecary_mushrooms`).
+- **Jobs:** Offers contracts to fetch rare reagents (`apothecary_mushrooms`), then a second one
+  (`apothecary_venom`): three venom glands, spider or snake in any mix, within 60 days. It pays no coin:
+  the `Recipe of Antidote` paper, one ready Antidote and a point of standing with the Apothecary.
 
 ### The Wilds: hunting 🟡
 

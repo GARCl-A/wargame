@@ -84,6 +84,8 @@ class ItemDef:
     lifespan: int | None = None
     spell_id: str | None = None
     language: str | None = None
+    recipe_id: str | None = None   # a recipe paper: the crafting recipe it teaches when studied (`magic.recipe_for_paper`)
+    recipe_level: int = 0          # the level it is studied at, like a spell's
     max_charges: int | None = None
     light_radius: int = 0
     base: str | None = None        # a size variant's plain weapon ("Dagger" for "Large Dagger"): its shown name is built from it
@@ -362,6 +364,7 @@ _register(ItemDef(id="scroll_of_spare_the_dying", name="Scroll of Spare the Dyin
 _register(ItemDef(id="scroll_of_healing_touch", name="Scroll of Healing Touch", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="healing_touch"), "scroll_healing_touch")
 _register(ItemDef(id="scroll_of_invisibility", name="Scroll of Invisibility", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=750, spell_id="invisibility"), "scroll_invisibility")
 _register(ItemDef(id="scroll_of_raise_dead", name="Scroll of Raise Dead", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=750, spell_id="raise_dead"), "scroll_raise_dead")
+_register(ItemDef(id="recipe_of_antidote", name="Recipe of Antidote", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=150, recipe_id="Antidote"))
 
 # Dictionaries
 _register(ItemDef(id="dictionary", name="Dictionary", type=ItemType.DICTIONARY, rarity=ItemRarity.COMMON, weight=2.0, price=150))
@@ -435,7 +438,7 @@ def get(key: str) -> ItemDef | None:
 
 def _composed_names(cat):
     """The shown names of the items that are built from parts, not written one by one: a size variant is its
-    plain weapon + a size word, a scroll its spell, a dictionary its language (`name.compose.*` hold each
+    plain weapon + a size word, a scroll its spell, a recipe paper its recipe, a dictionary its language (`name.compose.*` hold each
     language's word order). A new spell or weapon needs only its own entry. `cat` is one language's catalog;
     a part that language has not written yet leaves the item to the `en` name."""
     out = {}
@@ -453,6 +456,8 @@ def _composed_names(cat):
                     cat.get(f"name.item.{item.base}.gender"))
         elif item.spell_id and "name.compose.scroll" in cat and cat.get(f"name.spell.{item.spell_id}"):
             put(item.name, cat["name.compose.scroll"].format(spell=cat[f"name.spell.{item.spell_id}"]), "m")
+        elif item.recipe_id and "name.compose.recipe" in cat and cat.get(f"name.item.{item.recipe_id}"):
+            put(item.name, cat["name.compose.recipe"].format(recipe=cat[f"name.item.{item.recipe_id}"]), "f")
         elif item.language and "name.compose.dictionary" in cat and cat.get(f"name.language.{item.language}"):
             put(item.name, cat["name.compose.dictionary"].format(language=cat[f"name.language.{item.language}"]), "m")
     if "name.compose.any" in cat and cat.get("name.item.Dictionary"):
@@ -1016,6 +1021,8 @@ AMMO_ITEM = "Quiver"
 FIRST_AID_ITEM = "First Aid Kit"
 ANTIDOTE_ITEM = "Antidote"
 VENOM_GLAND_ITEM = "Venom Gland"
+SNAKE_VENOM_GLAND_ITEM = "Snake Venom Gland"
+ANTIDOTE_RECIPE_ITEM = "Recipe of Antidote"
 BOX_OF_GEMS_ITEM = "Box of Gems"   # price 273 = the mean haul (3.5 gems x 60) x 1.3
 BOX_ITEM = "Empty Box"             # what opening a Box of Gems leaves behind
 GEM_ITEM = "Semi-precious Gemstone"

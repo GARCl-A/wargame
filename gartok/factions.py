@@ -215,6 +215,8 @@ _DEEDS = [
     # Apothecary deeds
     Deed("apothecary_mushrooms", "apothecary", rep=1,
          check=lambda g, e: e.kind == "mission" and ("apothecary" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "apothecary")),
+    Deed("apothecary_venom", "apothecary", rep=1,
+         check=lambda g, e: e.kind == "mission" and "venom" in e.tags and "apothecary" in e.tags),
 
     # Field Command deeds
     Deed("ledger_hold_mentoring", "ledger_hold", rep=1,

@@ -3568,6 +3568,7 @@
       "tanner_ox": "The Immortal Ox",
       "bankers_trust_chest": "A Test of Trust",
       "apothecary_mushrooms": "Fifteen Red Mushrooms",
+      "apothecary_venom": "Venom for the Cure",
       "library_dictionary": "A New Translation",
       "library_ancient_codex": "The Lost Codex",
       "blood_codex": "The Codex for the Blood",
@@ -3599,6 +3600,7 @@
       "library_initiate": "Library Initiate",
       "library_trusted": "Trusted Scholar",
       "apothecary_mushrooms": "Fifteen Red Mushrooms",
+      "apothecary_venom": "Venom Gathered",
       "ledger_hold_mentoring": "Treefolk Mentorship",
       "blood_codex": "The Codex Delivered",
       "nature_codex": "The Codex Delivered",
@@ -3683,6 +3685,7 @@
       "size": "{size} {base}",
       "scroll": "Scroll of {spell}",
       "dictionary": "Dictionary of {language}",
+      "recipe": "Recipe of {recipe}",
       "any": "Any {base}"
     },
     "language": {
@@ -3731,7 +3734,7 @@
     "turn_in": "TURN IN",
     "paid_out_split_across_group": "paid out {fmt_money}, split across the group.",
     "group_learns_to_craft": "  ·  the group learns to craft the {reward_recipe}",
-    "you_are_given": "  ·  you are given a {reward_item}",
+    "you_are_given": "  ·  you are given: {reward_item}",
     "failed_it_went_to_another": "Failed: it went to another school",
     "job_completed": "Job completed",
     "job_failed": "Job failed",
@@ -3742,7 +3745,7 @@
     "goal_find_and_put_down": "goal: find and put down whoever raises the dead at {name}  ·  {deadline_days} days",
     "win_skirmish_at_every_soldier": "win the skirmish at {name}, every soldier alive",
     "you_get_x": "  ·  you get {starting_qty}x {starting_item}",
-    "you_get": "  ·  you get a {reward_item}",
+    "you_get": "  ·  you get: {reward_item}",
     "fires_burn_round_wilds": "the fires burn round The Wilds{due}{burned}",
     "dead_rise_at_find_one": "the dead rise at {name}: find the one who wakes them{due}",
     "fight_at_lose_no_soldier": "fight at {name}, lose no soldier{due}",
@@ -3767,6 +3770,9 @@
     "tanner_takes_leather_and_puts": "the tanner takes the leather and puts your name about.",
     "goal_x_pay_deadline_days": "goal: {goal_qty}x {goal_item}  ·  pay: {fmt_money}  ·  deadline: {deadline_days} days",
     "day_s_left_2": "{progress} / {goal_qty} {goal_item}  ·  {days_left} day(s) left",
+    "goal_venom_paid_in_recipe": "goal: {goal_qty}x venom glands (spider or snake)  ·  pay: the Antidote recipe and an Antidote  ·  deadline: {deadline_days} days",
+    "venom_glands_progress": "{progress} / {goal_qty} venom glands  ·  {days_left} day(s) left",
+    "apothecary_shares_his_notes": "The apothecary takes the glands and hands over his notes: study the Antidote's recipe at the tavern.",
     "day_s_left_3": "{progress} / {goal_qty} {item_label}  ·  {days_left} day(s) left",
     "alive": "the {goal_item}, alive",
     "days": "{deadline_days} days",
@@ -3823,6 +3829,7 @@
     "spell_lvl_pts_to_master": "Spell Lvl {level} ({sources}) · {pts} pts to master · carried by {name}",
     "dictionary_of": "Dictionary of {name}",
     "language_pts_to_learn_carried": "Language · {pts} pts to learn · carried by {name}",
+    "recipe_pts_to_learn_carried": "Recipe · {pts} pts to learn · carried by {name}",
     "paid_bail": "paid bail",
     "rejected_this_week": "rejected this week",
     "walked_free_this_week": "walked free this week",
@@ -4342,6 +4349,7 @@
     }
   },
   "guild_session": {
+    "study_recipe": "{name} (recipe)",
     "guild": "The Guild",
     "no_such_tab": "no such tab: {what}",
     "no_such_member": "no such member",
@@ -5288,7 +5296,8 @@
   "magic": {
     "could_not_afford_rent_to": "{name} could not afford the rent to study.",
     "masters_spell_magic_xp": "{name} masters the spell {spell}! (+{study_xp} magic XP)",
-    "learns_to_speak": "{name} learns to speak {language}!"
+    "learns_to_speak": "{name} learns to speak {language}!",
+    "learns_recipe": "{name} learns the recipe for {recipe}!"
   },
   "progression": {
     "curve_has_no_last_level": "a curve has no last level",
@@ -5706,6 +5715,7 @@
       "tanner_ox": "The tanner tells of Aurochs, an ox that has outlived every hunter sent after it, grazing the fertile fields south of the farm. Its hide is the finest there is. Bring it to me and I will teach you what the horn is good for.",
       "bankers_trust_chest": "The Bankers want proof the guild can be trusted with something precious before they'll vouch for it: carry a sealed chest to their outpost at Field Command, safe, and bring back their letter of receipt. Don't peek.",
       "apothecary_mushrooms": "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
+      "apothecary_venom": "The apothecary wants three venom glands, from spiders or snakes, to work out a cure for poison. He pays in lore, not coin: the Antidote's recipe on paper and one ready dose. Study the paper at the tavern.",
       "library_dictionary": "The library wants a dictionary to expand its archives. Dictionaries currently in our shop catalog will not be accepted: write one on the WRITE tab, in a tongue someone in your group speaks, with Paper and Ink.",
       "library_ancient_codex": "Legends speak of an ancient subterranean library buried off the Old Road. Delve into the forgotten ruins and retrieve the Ancient Codex.",
       "blood_codex": "The blood mages have waited for the Ancient Codex. There is only one: give it to us, and the other schools will never read it.",
@@ -5748,6 +5758,7 @@
       "library_initiate": "Complete a task for the library.",
       "library_trusted": "Complete a second task for the library.",
       "apothecary_mushrooms": "Bring the apothecary fifteen red mushrooms.",
+      "apothecary_venom": "Bring the apothecary three venom glands.",
       "ledger_hold_mentoring": "Train a designated Treefolk recruit to racial level 2 and deliver them to Field Command.",
       "blood_codex": "Bring the Ancient Codex to the Blood Sanctuary.",
       "nature_codex": "Bring the Ancient Codex to the Nature Grove.",

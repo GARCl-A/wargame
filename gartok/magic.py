@@ -56,6 +56,24 @@ class Language:
     id: str
     name: str
 
+@dataclass(frozen=True)
+class Recipe:
+    """A recipe paper's lesson: `id` is the study target (`recipe:<Recipe name>`), `recipe` the crafting
+    recipe it unlocks and `paper` the item it is read from."""
+    id: str
+    recipe: str
+    level: int
+    paper: str
+
+    @property
+    def name(self):
+        return i18n.name("item", self.paper)
+
+
+RECIPE_PREFIX = "recipe:"
+_PAPERS = {d.recipe_id: d for d in items.all_items().values() if d.recipe_id}
+
+
 def _item_str(item):
     if item is None:
         return ""
@@ -75,6 +93,30 @@ def language_for_dictionary(item_name):
         return None
     lang_name = name[len("Dictionary of "):]
     return Language(lang_name, lang_name) if lang_name in data.LANGUAGES else None
+
+def recipe_for_paper(item_name):
+    """The Recipe a `Recipe of <Name>` paper teaches, or None (not a paper)."""
+    name = _item_str(item_name)
+    paper = next((d for d in _PAPERS.values() if d.name == name), None)
+    return None if paper is None else _recipe_of(paper)
+
+
+def recipe_papers():
+    """Every recipe paper's lesson, in registry order."""
+    return [_recipe_of(d) for d in _PAPERS.values()]
+
+
+def recipe_of(target_id):
+    """The Recipe a study target id (`recipe:<Name>`) names, or None."""
+    if not str(target_id).startswith(RECIPE_PREFIX):
+        return None
+    paper = _PAPERS.get(target_id[len(RECIPE_PREFIX):])
+    return None if paper is None else _recipe_of(paper)
+
+
+def _recipe_of(paper):
+    return Recipe(f"{RECIPE_PREFIX}{paper.recipe_id}", paper.recipe_id, paper.recipe_level, paper.name)
+
 
 def study_xp(spell):
     """Magic XP for studying `spell` to the end."""
@@ -96,21 +138,27 @@ def _has_study_item(unit, item_name, group=None):
         group is not None and any(m.has_item(item_name) for m in (*group.members, *group.wagons, *group.herd)))
 
 def can_study(unit, target_id, group=None):
-    """True if `unit` could study `target_id` (a spell id or a language name) now: it is not yet known
-    and its Scroll / Dictionary is carried by the unit or, with `group`, by anyone in it."""
+    """True if `unit` could study `target_id` (a spell id, a language name or `recipe:<Name>`) now: it is not yet
+    known and its Scroll / Dictionary / Recipe paper is carried by the unit or, with `group`, by anyone in it."""
     spell = SPELLS.get(target_id)
+    recipe = recipe_of(target_id)
     if spell is not None:
         learnable = can_study_spell(unit, spell)
+    elif recipe is not None:
+        learnable = recipe.recipe not in unit.recipes
     else:
         learnable = target_id in data.LANGUAGES and target_id not in unit.languages
     return learnable and _has_study_item(unit, study_item_name(target_id), group=group)
 
 
 def study_item_name(target_id):
-    """The pack item a study target is read from: a scroll for a spell id, a
-    dictionary for a language."""
+    """The pack item a study target is read from: a scroll for a spell id, a recipe paper for a
+    recipe, a dictionary for a language."""
     spell = SPELLS.get(target_id)
-    return spell.scroll_name if spell is not None else f"Dictionary of {target_id}"
+    if spell is not None:
+        return spell.scroll_name
+    recipe = recipe_of(target_id)
+    return recipe.paper if recipe is not None else f"Dictionary of {target_id}"
 
 
 def begin_study(unit, target_id, mates=()):
@@ -150,8 +198,8 @@ def end_study(unit):
 def progress_study(unit, group=None):
     """One day of `unit` studying at a tavern's "study" garrison job: charge
     the daily rent, then roll progress toward `study_target` -- a spell id
-    (needs a school in `magic_sources` and a `Scroll of <Spell>`) or a language name (needs
-    a `Dictionary of <Language>`), whichever `study_target` names. Returns an
+    (needs a school in `magic_sources` and a `Scroll of <Spell>`), a recipe (`recipe:<Name>`, needs its
+    paper) or a language name (needs a `Dictionary of <Language>`), whichever `study_target` names. Returns an
     event string worth telling the player about, or None for a quiet day (no
     target set, no matching item, not initiated -- rent still comes due)."""
     if not unit.study_target:
@@ -167,6 +215,9 @@ def progress_study(unit, group=None):
     spell = SPELLS.get(unit.study_target)
     if spell is not None:
         return _progress_spell(unit, spell, group=group)
+    recipe = recipe_of(unit.study_target)
+    if recipe is not None:
+        return _progress_recipe(unit, recipe, group=group)
     if unit.study_target in data.LANGUAGES:
         return _progress_language(unit, unit.study_target, group=group)
     return None
@@ -224,4 +275,16 @@ def _progress_language(unit, language, group=None):
         unit._sync_dictionary_recipes()
         end_study(unit)
         return i18n.t("magic.learns_to_speak", name=unit.name, language=language)
+    return None
+
+def _progress_recipe(unit, recipe, group=None):
+    if recipe.recipe in unit.recipes or not _has_study_item(unit, recipe.paper, group=group):
+        return None
+    points = unit.study_progress.get(recipe.id, 0) + max(0, data.roll(1, 20) + unit.mod_intelligence)
+    unit.study_progress[recipe.id] = points
+    if points >= points_to_learn(recipe.level):
+        unit.study_progress.pop(recipe.id)
+        unit.recipes.append(recipe.recipe)
+        end_study(unit)
+        return i18n.t("magic.learns_recipe", name=unit.name, recipe=i18n.name("item", recipe.recipe))
     return None

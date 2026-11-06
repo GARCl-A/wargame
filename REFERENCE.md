@@ -296,6 +296,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Potato | 1 kg | food, consumable | 3 |
 | Precious Gemstone | 0.1 kg | -- | 240 |
 | Quiver | 1.5 kg | -- | 25 |
+| Recipe of Antidote | 0.1 kg | -- | 150 |
 | Red Mushroom | 0.1 kg | material | 10 |
 | Roast Meat | 0.8 kg | food, consumable | 6 |
 | Rope | 2 kg | material | 4 |
@@ -586,6 +587,7 @@ Herbalists and alchemists of the city. They brew remedies and trade in rare reag
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|
 | Fifteen Red Mushrooms | Bring the apothecary fifteen red mushrooms. | +1 | -- |
+| Venom Gathered | Bring the apothecary three venom glands. | +1 | -- |
 
 ### Field Command
 

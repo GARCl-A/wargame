@@ -193,6 +193,8 @@ class TavernTab:
             if m.study_target in magic.SPELLS:
                 spell = magic.SPELLS[m.study_target]
                 name, needed = i18n.t("tavern_tab.scroll_of", name=spell.name), magic.points_to_learn(spell.level)
+            elif recipe := magic.recipe_of(m.study_target):
+                name, needed = recipe.name, magic.points_to_learn(recipe.level)
             else:
                 name, needed = i18n.t("tavern_tab.dictionary_of", study_target=m.study_target), magic.points_to_learn(0)
             target = {"name": name, "progress": m.study_progress.get(m.study_target, 0), "needed": needed}

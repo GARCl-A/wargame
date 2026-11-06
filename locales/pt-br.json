@@ -3080,7 +3080,7 @@
   "turn_in": "ENTREGAR",
   "paid_out_split_across_group": "pagou {fmt_money}, dividido entre o grupo.",
   "group_learns_to_craft": "  ·  o grupo aprende a fabricar {reward_recipe}",
-  "you_are_given": "  ·  você recebe {reward_item}",
+  "you_are_given": "  ·  você recebe: {reward_item}",
   "failed_it_went_to_another": "Fracassou: foi para outra escola",
   "job_completed": "Trabalho concluído",
   "job_failed": "Trabalho fracassado",
@@ -3091,7 +3091,7 @@
   "goal_find_and_put_down": "meta: encontrar e eliminar quem ergue os mortos em {name}  ·  {deadline_days} dias",
   "win_skirmish_at_every_soldier": "vença a escaramuça em {name}, com todos os soldados vivos",
   "you_get_x": "  ·  você recebe {starting_qty}x {starting_item}",
-  "you_get": "  ·  você recebe {reward_item}",
+  "you_get": "  ·  você recebe: {reward_item}",
   "fires_burn_round_wilds": "os fogos queimam em volta dos Ermos{due}{burned}",
   "dead_rise_at_find_one": "os mortos se erguem em {name}: encontre quem os desperta{due}",
   "fight_at_lose_no_soldier": "lute em {name}, sem perder nenhum soldado{due}",
@@ -3116,6 +3116,9 @@
   "tanner_takes_leather_and_puts": "o coureiro pega o couro e espalha o seu nome.",
   "goal_x_pay_deadline_days": "meta: {goal_qty}x {goal_item}  ·  pagamento: {fmt_money}  ·  prazo: {deadline_days} dias",
   "day_s_left_2": "{progress} / {goal_qty} {goal_item}  ·  restam {days_left} dia(s)",
+  "goal_venom_paid_in_recipe": "meta: {goal_qty}x glândulas de veneno (de aranha ou de cobra)  ·  pagamento: a receita do Antídoto e um Antídoto  ·  prazo: {deadline_days} dias",
+  "venom_glands_progress": "{progress} / {goal_qty} glândulas de veneno  ·  restam {days_left} dia(s)",
+  "apothecary_shares_his_notes": "O boticário recolhe as glândulas e entrega suas anotações: estude a receita do Antídoto na taverna.",
   "day_s_left_3": "{progress} / {goal_qty} {item_label}  ·  restam {days_left} dia(s)",
   "alive": "{goal_item}, vivo",
   "days": "{deadline_days} dias",
@@ -3172,6 +3175,7 @@
   "spell_lvl_pts_to_master": "Magia Nv {level} ({sources}) · {pts} pts para dominar · com {name}",
   "dictionary_of": "Dicionário de {name}",
   "language_pts_to_learn_carried": "Idioma · {pts} pts para aprender · com {name}",
+  "recipe_pts_to_learn_carried": "Receita · {pts} pts para aprender · com {name}",
   "paid_bail": "fiança paga",
   "rejected_this_week": "recusado esta semana",
   "walked_free_this_week": "solto esta semana",
@@ -3295,6 +3299,7 @@
   "cautious": "cauteloso"
  },
  "guild_session": {
+  "study_recipe": "{name} (receita)",
   "guild": "A Guilda",
   "no_such_tab": "aba inexistente: {what}",
   "no_such_member": "esse membro não existe",
@@ -4467,7 +4472,8 @@
  "magic": {
   "could_not_afford_rent_to": "{name} não pôde pagar o aluguel para estudar.",
   "masters_spell_magic_xp": "{name} domina a magia {spell}! (+{study_xp} XP de magia)",
-  "learns_to_speak": "{name} aprende a falar {language}!"
+  "learns_to_speak": "{name} aprende a falar {language}!",
+  "learns_recipe": "{name} aprende a receita de {recipe}!"
  },
  "progression": {
   "curve_has_no_last_level": "uma curva não tem último nível",
@@ -4876,6 +4882,7 @@
    "size": "{base} {size}",
    "scroll": "Pergaminho de {spell}",
    "dictionary": "Dicionário de {language}",
+   "recipe": "Receita de {recipe}",
    "any": "Qualquer {base}"
   },
   "race": {
@@ -5409,6 +5416,7 @@
    "tanner_ox": "O Boi Imortal",
    "bankers_trust_chest": "Um Teste de Confiança",
    "apothecary_mushrooms": "Quinze Cogumelos Vermelhos",
+   "apothecary_venom": "Veneno para a Cura",
    "library_dictionary": "Uma Nova Tradução",
    "library_ancient_codex": "O Códice Perdido",
    "blood_codex": "O Códice para o Sangue",
@@ -5440,6 +5448,7 @@
    "library_initiate": "Iniciado da Biblioteca",
    "library_trusted": "Erudito de Confiança",
    "apothecary_mushrooms": "Quinze Cogumelos Vermelhos",
+   "apothecary_venom": "Veneno Colhido",
    "ledger_hold_mentoring": "Mentoria do Povo-Árvore",
    "blood_codex": "O Códice Entregue",
    "nature_codex": "O Códice Entregue",
@@ -5887,6 +5896,7 @@
    "tanner_ox": "O curtidor fala de Auroque, um boi que sobreviveu a todo caçador mandado atrás dele, pastando nos campos férteis ao sul da fazenda. A pele dele é a melhor que existe. Traga-a para mim e eu ensino pra que serve o chifre.",
    "bankers_trust_chest": "Os Banqueiros querem uma prova de que a guilda merece confiança com algo precioso antes de darem seu aval: leve um baú lacrado até o posto deles no Posto de Comando, em segurança, e traga de volta a carta de recebimento. Não espie.",
    "apothecary_mushrooms": "O boticário precisa de 15 cogumelos vermelhos para preparar mais poções. Eles crescem nos Ermos.",
+   "apothecary_venom": "O boticário quer três glândulas de veneno, de aranha ou de cobra, para acertar a cura de um veneno. Paga em saber, não em moedas: a receita do Antídoto em papel e uma dose pronta. Estude o papel na taverna.",
    "library_dictionary": "A biblioteca quer um dicionário para ampliar seu acervo. Os dicionários que hoje estão no catálogo da loja não serão aceitos: escreva um na aba ESCREVER, numa língua que alguém do seu grupo fale, com Papel e Tinta.",
    "library_ancient_codex": "As lendas falam de uma antiga biblioteca subterrânea enterrada além da Estrada Velha. Mergulhe nas ruínas esquecidas e recupere o Códice Antigo.",
    "blood_codex": "Os magos de sangue esperam pelo Códice Antigo. Há só um: entregue-o a nós, e as outras escolas nunca o lerão.",
@@ -5918,6 +5928,7 @@
    "library_initiate": "Complete uma tarefa para a biblioteca.",
    "library_trusted": "Complete uma segunda tarefa para a biblioteca.",
    "apothecary_mushrooms": "Traga ao boticário quinze cogumelos vermelhos.",
+   "apothecary_venom": "Traga ao boticário três glândulas de veneno.",
    "ledger_hold_mentoring": "Treine um recruta designado do Povo-Árvore até o nível racial 2 e entregue-o ao Posto de Comando.",
    "blood_codex": "Leve o Códice Antigo ao Santuário de Sangue.",
    "nature_codex": "Leve o Códice Antigo ao Bosque da Natureza.",

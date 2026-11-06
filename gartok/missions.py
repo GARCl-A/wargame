@@ -44,7 +44,8 @@ class MissionTemplate:
     starting_qty: int = 1              # how many `starting_item`s are handed over
     starting_once: bool = False        # the starting items come with the first run only, not a retry
     fight_at: str | None = None        # the goal is a fight won at this node, not a turn-in
-    reward_item: str | None = None     # handed to the first member of the delivering group at the turn-in
+    reward_items: tuple[str, ...] = ()   # handed to the first member of the delivering group at the turn-in
+    goal_any: tuple[str, ...] = ()     # the goal is `goal_qty` of these items in any mix (`goal_item` is only the board's icon)
 
     @property
     def name(self):
@@ -125,6 +126,15 @@ APOTHECARY_MUSHROOMS = MissionTemplate(
     "apothecary_mushrooms", "apothecary", "apothecary",
     goal_item="Red Mushroom", goal_qty=15, reward=150, deadline_days=10,
     tags=("economic", "apothecary"),
+)
+
+# Pays no coin: the recipe paper is studied at the tavern like a level-0 spell (`magic.recipe_for_paper`).
+APOTHECARY_VENOM = MissionTemplate(
+    "apothecary_venom", "apothecary", "apothecary",
+    goal_item=items.VENOM_GLAND_ITEM, goal_qty=3, reward=0, deadline_days=60,
+    tags=("apothecary", "venom"), requires=APOTHECARY_MUSHROOMS.id,
+    goal_any=(items.VENOM_GLAND_ITEM, items.SNAKE_VENOM_GLAND_ITEM),
+    reward_items=(items.ANTIDOTE_RECIPE_ITEM, items.ANTIDOTE_ITEM),
 )
 
 LIBRARY_DICTIONARY = MissionTemplate(
@@ -213,7 +223,7 @@ BLOOD_CLUTCH = MissionTemplate(
     "blood_clutch", "blood", "blood_sanctuary",
     goal_item=items.DRAGON_EGG_ITEM, goal_qty=1, reward=0, deadline_days=None,
     tags=("magic", "blood", "dragon_clutch"), requires=LIBRARY_ANCIENT_CODEX.id,
-    reward_item="Scroll of Dragonfire",
+    reward_items=("Scroll of Dragonfire",),
 )
 
 LEDGER_TREEFOLK = MissionTemplate(
@@ -228,6 +238,7 @@ TEMPLATES = {
     TANNER_OX.id: TANNER_OX,
     TRUST_CHEST.id: TRUST_CHEST,
     APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
+    APOTHECARY_VENOM.id: APOTHECARY_VENOM,
     LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
     LIBRARY_ANCIENT_CODEX.id: LIBRARY_ANCIENT_CODEX,
     **{t.id: t for t in CODEX_DELIVERIES},
@@ -360,6 +371,9 @@ def progress(guild, mission):
         from .trade import library_stock_dictionaries
         stock = set(library_stock_dictionaries(guild))
         return sum(sum(qty for name, qty in u._base_inventory if name.startswith("Dictionary of ") and name not in stock) for u in group.members)
+    if t.goal_any:
+        return sum(_held(u, name) for u in group.members for name in t.goal_any) + sum(
+            s.count_of(name) for s in group.stores for name in t.goal_any)
     return (sum(_held(u, item) for u in group.members)
             + sum(s.count_of(item) for s in group.stores))
 
@@ -388,6 +402,7 @@ def turn_in(guild, mission):
         for cap in [c for c in group.captives if c.npc_slug == t.goal_captive][:left]:
             group.captives.remove(cap)
             left -= 1
+    names = t.goal_any or (t.goal_item,)
     for u in group.members:
         if left <= 0:
             break
@@ -398,15 +413,16 @@ def turn_in(guild, mission):
                 if name.startswith("Dictionary of ") and name not in stock and left > 0:
                     left -= u.remove_named(name, min(left, qty))
         else:
-            left -= u.remove_named(t.goal_item, left)
-            if left > 0 and u.equipped_artifact == t.goal_item:
-                u.take_from_artifact()
-                left -= 1
+            for name in names:
+                left -= u.remove_named(name, left)
+                if left > 0 and u.equipped_artifact == name:
+                    u.take_from_artifact()
+                    left -= 1
     if t.goal_item != "Any Dictionary":
         for store in group.stores:
-            if left <= 0:
-                break
-            left -= store.remove_named(t.goal_item, left)
+            for name in names:
+                if left > 0:
+                    left -= store.remove_named(name, left)
     if t.returns_goal:
         group.members[0].give_to_pack(t.goal_item, t.goal_qty)
     for node_id in t.reveals:
@@ -423,8 +439,8 @@ def turn_in(guild, mission):
         for u in group.members:
             if t.reward_recipe not in u.recipes:
                 u.recipes.append(t.reward_recipe)
-    if t.reward_item:
-        group.members[0].give_to_pack(t.reward_item)
+    for name in t.reward_items:
+        group.members[0].give_to_pack(name)
     recorder.emit("mission", what="turn_in", id=t.id, reward=t.reward)
     return factions.settle(guild, factions.Event(
         "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))

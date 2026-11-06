@@ -276,8 +276,8 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   talent... is `i18n.name(kind, id)` from `name.<kind>.<id>`, with `.gender` when an article depends on it; a sentence
   that names a thing takes an `i18n.Ref` and writes `{item}` in `en`, `{item:o}` / `{item:do}` / `{item:no}` / `{item:um}` in `pt-br`
   (the article of its gender), and a line whose adjective agrees has a `key.f` twin the first feminine `Ref` picks; a size variant,
-  a scroll and a dictionary are not written one by one: `items._composed_names` builds them from `name.compose.*` + the plain
-  weapon, `name.spell.<id>` and `name.language.<id>`, so a new spell or weapon needs only its own entry).
+  a scroll, a recipe paper and a dictionary are not written one by one: `items._composed_names` builds them from `name.compose.*` + the plain
+  weapon, `name.spell.<id>`, `name.item.<recipe>` and `name.language.<id>`, so a new spell, weapon or recipe paper needs only its own entry).
   A short label the server writes in English as a word ("Purse", "CHA", an archetype) goes through `i18n.lab(text)` (`ui.lab.<lowercase>`,
   cased as the input is; the client has the same `lab()`), never a literal shown raw. `python scripts/i18n_leaks.py` opens the map, guild
   screen and hub tabs in `pt-br` and lists the strings that still read as English.

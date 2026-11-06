@@ -267,9 +267,9 @@ class GuildSheet:
              "tip": i18n.t("guild_sheet.racial_xp_is_sum_of")},
         ]
         if unit.study_target:
-            spell = magic.SPELLS.get(unit.study_target)
-            name = spell.name if spell else unit.study_target
-            need = magic.points_to_learn(spell.level if spell else 0)
+            lesson = magic.SPELLS.get(unit.study_target) or magic.recipe_of(unit.study_target)
+            name = lesson.name if lesson else unit.study_target
+            need = magic.points_to_learn(lesson.level if lesson else 0)
             cur = min(unit.study_progress.get(unit.study_target, 0), need)
             tracks.append({"label": i18n.t("guild_sheet.academic_study"), "value": i18n.t("guild_sheet.pts", name=name, cur=cur, need=need),
                            "frac": cur / need if need else 0,

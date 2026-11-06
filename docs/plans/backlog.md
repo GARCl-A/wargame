@@ -73,11 +73,6 @@ the rest.
   mark a node that has one ("ambush on the way"). Check what `unsafe` covers today; the chance per node is
   tuned together with *How lethal the Wilds should be* (*Needs more information -> Economy numbers*).
 
-- **A quest at the Apothecary for venom glands (playtest 2026-11-02).** *Venom Gland* (Giant Spider) and
-  *Snake Venom Gland* (Snake) drop and have no use. Add an errand asking for them, declared like the other
-  factions' errands (`factions.py`), with a reward that does not beat the Wilds hunt (run
-  `scripts/economy_report.py`).
-
 - **One colour per name, then the map screen's pass on every screen (author, notes outside playtests).**
   Two steps, in this order. (1) *Tokens:* the CSS declares about 70 custom properties (23 in `shell.css`)
   against about 1600 literal colours in 17 files, so nobody can tell which colours are in use and a new
@@ -582,8 +577,11 @@ has one "Enter" button and its functions are tabs inside.
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
   Open: tier 2+ spells and any reputation penalty for rivalry.
 
-- **Recipes learned by owning the item or a teacher (author 2026-10-31).** Today a recipe comes only from
-  a race (Dwarf at level 5) or a crafting talent (Apothecary, Smith), and few exist. The intent: learn by
+- **Recipes learned by owning the item or a teacher (author 2026-10-31).** Built (2026-11-05): a recipe paper
+  (`Recipe of <Name>`, `ItemDef.recipe_id`) is studied like a level-0 spell, and the Apothecary's venom errand
+  pays the first one (Antidote); the others come one at a time as the game needs them. Open: where the papers
+  come from. Today a recipe comes from a race (Dwarf at level 5), a crafting talent (Apothecary, Smith) or that
+  paper, and few exist. The intent: learn by
   owning an item (take the axe to the smith and study it until you can make it) or by being taught. A
   first form: the Library makes dictionaries, so a leader who speaks only Draconic hires a Lizardfolk and
   writes the dictionary to learn the language. Some recipes come from missions, artefacts from quests;

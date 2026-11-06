@@ -90,7 +90,7 @@ def _check(guild, block):
         if isinstance(block, routines.Craft) and block.recipe not in items.CRAFTING_RECIPES:
             raise ValueError(i18n.t("routine_book.unknown_recipe", recipe=block.recipe))
     elif isinstance(block, routines.Study):
-        if block.target not in magic.SPELLS and block.target not in data.LANGUAGES:
+        if block.target not in magic.SPELLS and block.target not in data.LANGUAGES and not magic.recipe_of(block.target):
             raise ValueError(i18n.t("routine_book.unknown_thing_to_study", target=block.target))
         if not block.days > 0:
             raise ValueError(i18n.t("routine_book.days_are_more_than_zero"))

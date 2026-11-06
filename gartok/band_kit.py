@@ -248,6 +248,9 @@ class BandKit(LoadoutMoveMixin):
             spell = magic.spell_for_scroll(item) if item else None
             if spell and magic.can_study_spell(unit, spell):
                 rows.append(("study", self._study_label(unit, spell), spell))
+            recipe = magic.recipe_for_paper(item) if item else None
+            if recipe and magic.can_study(unit, recipe.id):
+                rows.append(("study", self._study_label(unit, recipe), recipe))
             lang = magic.language_for_dictionary(item) if item else None
             if lang and lang.name not in unit.languages:
                 rows.append(("study", self._study_label(unit, lang), lang))
