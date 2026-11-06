@@ -1,4 +1,4 @@
-"""The catalog text (docs/plans/translation_pt_br.md, phase 4): a registry's shown name and description are read from
+"""The catalog text (docs/glossary_pt_br.md): a registry's shown name and description are read from
 `name.<kind>.<id>` / `desc.<kind>.<id>` when asked, never cached, and no rule reads a shown name as an id."""
 
 import pytest

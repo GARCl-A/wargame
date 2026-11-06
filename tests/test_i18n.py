@@ -5,8 +5,7 @@ import pytest
 from gartok import i18n, settings
 from gartok.web.settings_session import SettingsSession
 
-# Phases 2-6 of docs/plans/translation_pt_br.md fill pt-br.json; while they are open an `en` key may lack its
-# twin. Flip to True when the last phase lands.
+# Every `en` key has a `pt-br` twin (the translation is complete). False tolerates a gap while a new group is being written.
 STRICT = True
 
 

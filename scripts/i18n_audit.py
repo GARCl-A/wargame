@@ -1,4 +1,4 @@
-"""Counts the literal English sentences left in `gartok/`: the number the translation (docs/plans/translation_pt_br.md)
+"""Counts the literal English sentences left in `gartok/`: the number the translation (docs/glossary_pt_br.md)
 drives to zero.
 
 A sentence is a string constant, or an f-string, with a space and a letter in it that is not a docstring, a dict key,

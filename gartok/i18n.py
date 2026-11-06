@@ -8,7 +8,7 @@ language -> `en` -> the key itself, so a missing string shows up on screen as
 its own key instead of crashing or rendering blank -- a gap is obvious the
 moment you look at the screen.
 
-Plan, phases and decisions: docs/plans/translation_pt_br.md. Beyond `t()` the
+Terms and voice of `pt-br`: docs/glossary_pt_br.md. Beyond `t()` the
 module offers `plural()` (a `one`/`other` pair) and `name()` (the shown name of a
 catalog thing, which falls back to its id, so the id never depends on the text).
 """

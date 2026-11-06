@@ -30,9 +30,9 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- **Translation to pt-br** (Large). The game is all English and the friends' playtest is in Portuguese: do it
-  before the build goes out. Plan, phases and open decisions: [translation_pt_br.md](translation_pt_br.md); the term list: [glossary_pt_br.md](glossary_pt_br.md).
-  The translation must be COMPLETE before the next playtest (author 2026-11-04): every phase, not a slice.
+- **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author
+  plays in `pt-br` and flags the tone, the text longer than its box (Portuguese runs 20-30% longer), accents the font lacks, sort order and
+  number and money formats. The terms: [../glossary_pt_br.md](../glossary_pt_br.md); the settings screen's "Linhas do registro" note is still open.
 - **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
 - The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
   ones), the overflows, the icons' authors, then the skills.
@@ -49,6 +49,12 @@ Order inside a size is the order to pick them up: first what blocks the friends'
 the rest.
 
 ## Small
+
+- **Translation leftovers.** The combat log keeps a unit's name as the string of the moment (a `Ref` for authored NPCs would fix it);
+  `routine.paused` reasons, the memorial `cause`, a dialogue's `Result.text` and the guard notices are stored already translated; an ambush
+  title is chosen when the talk opens; text built from ids with `.title()` / `.capitalize()` (school, stage, node ids) and the stat labels of
+  `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md`: turn the 78 literals of `reference.py`
+  into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
 
 - **Bug: the tavern says "REJECTED THIS WEEK" while another member can still try (playtest 2026-11-02).**
   Two members can recruit the same candidate, one fails, and the row keeps the label (`tavern.py`
