@@ -71,11 +71,15 @@ The report prints today's number next to each; the exit code is 1 if one fails.
   `progression.work_xp_hours`; the racial track is combat + work + magic, so all three feed it.
   Per activity the report gives XP per member per day and days to the next combat / work level.
 - **Player skill is a parameter.** The AI plays a squad worse than a person, so a win rate from
-  AI-vs-AI is a floor. `SKILL = 0.5` (`economy_activities.SKILL`) is the share of the AI's losses
-  a person turns into wins, measured from the author's campaign fights (the hunts 0.84, the arena
-  0.44, road ambushes ~0, `scripts/combat_pairs.py`). Decided 2026-10-21: keep 0.5. `--skills`
-  adds other rates; the casualties of a *won* fight shrink as skill rises (`relief`), an
-  assumption in both layers.
+  AI-vs-AI is a floor. `SKILL` (`economy_activities.SKILL`, 0.5 pooled) is the share of the AI's
+  losses a person turns into wins, measured by replaying the author's recorded fights with the AI
+  (`scripts/combat_pairs.py`, 229 fights, 2026-11-06, after the combat-AI fix: 93% to the AI's 85%).
+  It differs by kind of fight, so the default is `Measured`: `SKILL_BY_FIGHT` gives hunts 0.78 (122
+  fights), the Pit's Scrapper 0.13 (33), road and gather ambushes 0.10 (29), and any kind with too
+  few fights (the champion, the Games, the claims) keeps 0.5 (`skill_for`). An explicit `--skill N`
+  is a plain float and applies flat to every fight. `--skills` adds other rates; the casualties of
+  a *won* fight shrink as skill rises (`relief`), an assumption in both layers. Re-measure with
+  `combat_pairs.py combat_lab/campaign saves/<world>/combat_logs` after a `gartok/ai` change.
 - **Layer 1** (`economy_activities.py`): per level, $/run, win rate, deaths, XP/day, net per day
   after the meal. Fights are real `Battle`s; loot is valued at the market's sell price. Per-day
   figures include the walk (the Wilds are ~12 h from the City each way) but not the road ambush

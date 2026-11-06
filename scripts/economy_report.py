@@ -161,7 +161,7 @@ def build(settings):
 
     stamp = f"{datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC"
     out = [(f"Economy report  {stamp}  "
-            f"(a player wins {settings.skill * 100:.0f}% of the fights the AI loses; seed {settings.seed})")]
+            f"({act.wins_phrase(settings.skill)} of the fights the AI loses; seed {settings.seed})")]
     out.append(_section("1. VERDICTS", "\n".join(
         f"{'PASS' if ok else 'FAIL'}  {name}: {detail}" for name, ok, detail in verdicts)))
     out.append(_section("2. EXPLOITS", exploits.report(findings)))
@@ -171,13 +171,13 @@ def build(settings):
     out.append(_section("3. WORK TALENTS", work_talents.report()))
     out.append(_section("3. GATHERING", guild_sim.gather_report(
         gathering, (f"{gather_guilds} guilds a row, level {guild_sim.GATHER_LEVEL}, "
-                    f"a player wins {settings.skill * 100:.0f}% of the AI's losses"))))
-    label = f"{settings.guilds} guilds of 3, level 0, a player wins {settings.skill * 100:.0f}% of the AI's losses"
+                    f"{act.wins_phrase(settings.skill)} of the AI's losses"))))
+    label = f"{settings.guilds} guilds of 3, level 0, {act.wins_phrase(settings.skill)} of the AI's losses"
     out.append(_section("4. SUSTAIN", guild_sim.report(table, marks, label)
                         + "\n\n" + guild_sim.curve_report(table)
                         + "\n\n" + guild_sim.report(medic_table, marks, label + ", with a Medic")))
     late = (f"{settings.guilds} guilds of 3 at level {LATE_LEVEL} with ${LATE_CAPITAL} "
-            f"(a first week behind them), a player wins {settings.skill * 100:.0f}% of the AI's losses")
+            f"(a first week behind them), {act.wins_phrase(settings.skill)} of the AI's losses")
     out.append(_section(
         "4. PAST THE FIRST WEEK: the arena's ladder, the Claim, the Medic",
         guild_sim.report(late_table, marks, late) + "\n\n"

@@ -251,6 +251,7 @@ class FightLibrary:
         """One sample: the AI's own mix, or a won / lost one at a player's odds
         (`act.player_odds`: a squad the AI wins more with, the player does too)."""
         pool = self.pool(kind, level, size, kit)
+        skill = act.skill_for(kind, skill)
         if skill is None:
             return rng.choice(pool)
         wins = [s for s in pool if s.won]
@@ -262,13 +263,13 @@ class FightLibrary:
     def relief(self, kind, level, size, skill=None, kit=NAKED):
         """How much of the AI's casualties in won fights a better player still takes (`act.relief`)."""
         pool = self.pool(kind, level, size, kit)
-        return act.relief(sum(s.won for s in pool) / len(pool), skill)
+        return act.relief(sum(s.won for s in pool) / len(pool), act.skill_for(kind, skill))
 
     def stats(self, kind, level, size, skill=None, kit=NAKED):
         """(win chance, mean loot value, mean deaths) of a fight, for a policy to weigh."""
         pool = self.pool(kind, level, size, kit)
         wins = [s for s in pool if s.won]
-        p = act.player_odds(len(wins) / len(pool), skill)
+        p = act.player_odds(len(wins) / len(pool), act.skill_for(kind, skill))
         value = statistics.mean(act.loot_value(s.loot) for s in wins) if wins else 0.0
         deaths = statistics.mean(sum(m[1] for m in s.members) for s in pool)
         return p, value, deaths
@@ -2055,7 +2056,7 @@ def main():
         if args.ranking:
             ranked.append(ranking_report(rank_traits(results, marks[-1]),
                                          f"{name}, day {marks[-1]}"))
-    skill = "the AI plays" if args.skill is None else f"a player wins {args.skill * 100:.0f}% of the AI's losses"
+    skill = "the AI plays" if args.skill is None else f"{act.wins_phrase(args.skill)} of the AI's losses"
     print(report(table, marks, f"{args.guilds} guilds of {args.size}, level {args.level}, "
                                f"{skill}" + (f", shelves {args.restock}" if restock else "")))
     if args.curve:

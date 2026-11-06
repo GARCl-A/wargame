@@ -1005,3 +1005,12 @@ def test_once_the_milestone_is_met_the_long_game_starts():
     sim = _sim("balanced", library=_WON)
     sim.milestone_day = 10
     assert not sim.policy.sprinting(sim)
+
+
+def test_the_measured_skill_differs_by_kind_of_fight_and_an_explicit_one_is_flat():
+    act = sys.modules["economy_activities"]
+    assert act.skill_for("wilds", act.SKILL) > act.skill_for("arena", act.SKILL) > 0
+    assert act.skill_for("gather:forest", act.SKILL) == act.skill_for("road", act.SKILL)
+    assert act.skill_for("champion", act.SKILL) == act.SKILL            # too few fights to split
+    assert act.skill_for("wilds", 0.5) == act.skill_for("arena", 0.5) == 0.5
+    assert act.skill_for("wilds", None) is None

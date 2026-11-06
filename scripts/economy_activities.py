@@ -70,7 +70,36 @@ ROUND_SECONDS = 6
 MEDIC_POTION_HP = economy.MEDIC_POTION_HP
 MEDIC_PRICE_FACTOR = economy.MEDIC_PRICE_FACTOR      # --medic-factor overrides it
 
-SKILL = 0.5                  # share of the AI's losses the author turns into wins (92% to its 83%)
+
+class Measured(float):
+    """The pooled skill, standing for "the author's own, fight by fight" (`skill_for`). An explicit
+    `--skill` is a plain float and applies flat to every fight."""
+
+
+SKILL = Measured(0.5)        # the author's 229 fights against the AI replaying them: 93% to its 85%
+
+# the same measure by kind of fight (hunts 122 fights, the Pit's Scrapper 33, road ambushes 29);
+# a kind with fewer than ~15 fights (the champion, the Games, the claims) keeps the pooled SKILL
+SKILL_BY_FIGHT = {"wilds": 0.78, "arena": 0.13, "road": 0.10}
+
+
+def wins_phrase(skill):
+    """How a report words the skill: the pooled share and the kinds it is split into, or the flat one."""
+    if not isinstance(skill, Measured):
+        return f"the player wins {skill * 100:.0f}%"
+    kinds = ", ".join(f"{k} {v * 100:.0f}%" for k, v in SKILL_BY_FIGHT.items())
+    return f"the player wins {skill * 100:.0f}% pooled ({kinds})"
+
+
+def skill_for(kind, skill):
+    """The skill to play a fight of `kind` at: the author's for that kind when `skill` is the
+    measured `SKILL`, else `skill` as given (None stays the AI itself)."""
+    if not isinstance(skill, Measured):
+        return skill
+    if kind.startswith("gather:"):
+        kind = "road"
+    return SKILL_BY_FIGHT.get(kind, skill)
+
 
 # activity -> (role, lowest level, highest level) the squad is meant to do it at
 ROLES = {
@@ -424,7 +453,7 @@ def arena_rows(size, level, trials, skills, medic=False, keys=None, seed=None):
         ai_row = arena_row(n, level, trials, bout=make(), medic=medic, seed=seed)
         out[key] = {None: ai_row}
         for skill in skills:
-            out[key][skill] = arena_row(n, level, trials, bout=make(), skill=skill,
+            out[key][skill] = arena_row(n, level, trials, bout=make(), skill=skill_for(key, skill),
                                         samples=ai_row.samples, medic=medic)
     return out
 
@@ -508,6 +537,7 @@ def hunt_row(size, level, trials, shift=WORK_DAY_HOURS, skill=None, samples=None
     """A full-day hunt: meat by the hour, an ambush every ~7 h, loot off the winners."""
     trip = trip_hours(size, level, "wilds")
     base = _base_seed(seed)
+    skill = skill_for("wilds", skill)
     if skill is None:
         fights, meat, hours_used = _hunt_live(size, level, trials, shift, base)
         loot_total = sum(f[1] for f in fights)
@@ -600,7 +630,7 @@ def build_tables(level, size, trials, skills, medic=False):
     for skill in skills:
         fights = [b[skill] for b in bouts.values()]
         fights.append(hunt_row(size, level, trials, skill=skill, samples=hunt_ai.samples))
-        tables.append((skill, f"the player wins {skill * 100:.0f}% of the fights the AI loses" + suffix,
+        tables.append((skill, f"{wins_phrase(skill)} of the fights the AI loses" + suffix,
                        fixed + fights))
     return cheapest_meal(), tables
 
