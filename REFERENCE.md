@@ -20,16 +20,16 @@ The playable races. `d100` is the roll that picks one; the modifiers are added t
 | Goblin | 35-48 | -1 +2 +1 -1 +0 -1 | d6 | Small | Goblin | 0.625x | Pack Tactics |
 | Goliath | 49-51 | +2 +1 +0 -1 -1 -1 | d10 | Medium | Jotun | 1x | Strong Body |
 | Grippli | 52-54 | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
-| Halfling | 55-57 | -2 +2 -2 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Innocent Face |
+| Halfling | 55-57 | -2 +2 -1 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Innocent Face |
 | Hobgoblin | 58-61 | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Browbeat |
 | Lizardfolk | 62-71 | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
 | Human | 72-86 | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
-| Kenku | 87-89 | -3 +1 -1 +0 +1 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
+| Kenku | 87-89 | -2 +2 -1 +0 +2 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
 | Catfolk | 90-92 | -1 +1 +0 -1 +0 +1 | d6 | Medium | Sylvan | 1x | Catfall |
 | Kobold | 93-95 | -2 +1 +0 +1 -1 +1 | d6 | Small | Draconic | 2.5x | Blood Magic |
 | Treefolk | 96 | -1 +0 +1 -1 +1 +0 | d6 | Medium | Verdant | 1x | Autotroph |
-| Orc | 97-99 | +2 +1 +1 -1 +0 -3 | d10 | Medium | Orcish | 0.625x | Ferocity |
-| Sprite | 100 | -2 +0 -2 +0 +2 +2 | d6 | Tiny | Gnomish | 1.5x | Flight |
+| Orc | 97-99 | +2 +0 +1 -1 +0 -3 | d8 | Medium | Orcish | 0.625x | Ferocity |
+| Sprite | 100 | -2 +1 -1 +0 +2 +3 | d6 | Tiny | Gnomish | 1.5x | Flight |
 
 ## Creatures
 
