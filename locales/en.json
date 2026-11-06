@@ -1994,6 +1994,23 @@
       }
     },
     "lab": {
+      "steel": "steel",
+      "teal": "teal",
+      "forest": "forest",
+      "amber": "amber",
+      "crimson": "crimson",
+      "violet": "violet",
+      "rose": "rose",
+      "slate": "slate",
+      "bulwark": "bulwark",
+      "vigil": "vigil",
+      "blade": "blade",
+      "wolf cry": "wolf cry",
+      "wolf": "wolf",
+      "serpent": "serpent",
+      "flame": "flame",
+      "stars": "stars",
+      "storm": "storm",
       "armor": "Armor",
       "consumables & kit": "Consumables & Kit",
       "supplies": "Supplies",
@@ -3669,6 +3686,7 @@
       "any": "Any {base}"
     },
     "language": {
+      "Common": "Common",
       "Ankarin": "Ankarin",
       "Draconic": "Draconic",
       "Dwarvish": "Dwarvish",
@@ -4498,6 +4516,7 @@
     }
   },
   "draft_session": {
+    "vocation": "Vocation",
     "not_on_step": "not on the {join} step",
     "no_vocation_called": "no vocation called {vid}",
     "is_not_open_yet": "{name} is not open yet",

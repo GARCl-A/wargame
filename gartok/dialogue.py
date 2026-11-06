@@ -212,7 +212,7 @@ class Encounter:
                     opt.block = i18n.t("dialogue.block.coin")
             opt.block = self.refusal(verb) or opt.block
             if (v.spoken or verb in self.worded) and not self.shared(speaker):
-                opt.block = (i18n.t("dialogue.block.language", languages=", ".join(self.leader.languages))
+                opt.block = (i18n.t("dialogue.block.language", languages=", ".join(i18n.names("language", self.leader.languages)))
                              if self.leader is not None else i18n.t("dialogue.block.nobody"))
             out.append(opt)
         return out

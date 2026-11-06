@@ -69,7 +69,7 @@ class ShopTab:
             out["voice"] = {"uid": voice.uid, "name": voice.name, "portrait": _portrait(voice)}
             cha = voice.haggle_charisma_mod
             shared = [t for t in economy.vendor_tongues(lang) if t in voice.languages]
-            out["marks"] = [{"text": i18n.t("shop_tab.speaks", join=', '.join(shared)), "good": True},
+            out["marks"] = [{"text": i18n.t("shop_tab.speaks", join=', '.join(i18n.names("language", shared))), "good": True},
                             {"text": i18n.t("shop_tab.cha", cha=cha), "good": cha > 0},
                             {"text": trade.BENT_WORDS[dist].capitalize(), "good": dist <= 1}]
         elif lang:

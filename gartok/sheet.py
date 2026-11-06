@@ -92,7 +92,7 @@ def unit_to_ch(u):
         "tongue": tongue,
         "gear": {"hands": held, "armor": armor, "pack": pack,
                 "load": (u.load, u.carry_normal, u.carry_max), "copper": u.money},
-        "langs": list(u.languages),
+        "langs": i18n.names("language", u.languages),
         "recipes": list(getattr(u, "recipes", []) or []),
         "magic": (list(u.magic_sources), [magic.SPELLS[s].name for s in u.spells_known if s in magic.SPELLS]),
         "ability": (u.ability.name, u.ability.effect),

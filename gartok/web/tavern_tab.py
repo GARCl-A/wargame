@@ -66,7 +66,7 @@ class TavernTab:
         bail = s._bail(c)
         return {"uid": c.uid, "name": c.name, "portrait": _portrait(c),
                 "sub": i18n.t("tavern_tab.resists_cha", kind=_kind(c), mod_charisma=c.mod_charisma),
-                "note": i18n.t("tavern_tab.speaks", join=', '.join(c.languages)) + (i18n.t("tavern_tab.bail", fmt_money=fmt_money(bail)) if bail else ""),
+                "note": i18n.t("tavern_tab.speaks", join=', '.join(i18n.names("language", c.languages))) + (i18n.t("tavern_tab.bail", fmt_money=fmt_money(bail)) if bail else ""),
                 "chips": _chips(c, 3), "status": {"text": text, "tone": tone}, "picked": i == s.sel}
 
     def _last(self, c):
@@ -105,7 +105,7 @@ class TavernTab:
         for m in s.party:
             text, tone = s._pitch_condition(c, m)
             pitchers.append({"uid": m.uid, "name": m.name, "portrait": _portrait(m),
-                             "sub": i18n.t("tavern_tab.cha_speaks", mod_charisma=m.mod_charisma, join=', '.join(m.languages)),
+                             "sub": i18n.t("tavern_tab.cha_speaks", mod_charisma=m.mod_charisma, join=', '.join(i18n.names("language", m.languages))),
                              "status": {"text": text, "tone": tone}, "picked": m is who,
                              "signed": signed is not None and signed["unit"] is m})
         can = (who is not None and recruit.can_pitch(who, c) and not s._barred(c, who)

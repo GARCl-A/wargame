@@ -175,6 +175,11 @@ def name(kind, ident):
     return ident
 
 
+def names(kind, idents):
+    """`name(kind, i)` for each of `idents`, as a list."""
+    return [name(kind, i) for i in idents]
+
+
 def lab(text):
     """A short label the server writes in English as a word ("Purse", "rations", "AC") in the current language
     (`ui.lab.<lowercase>`), cased as `text` is; `text` itself when the language has none or is `en`."""

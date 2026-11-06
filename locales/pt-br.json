@@ -1768,7 +1768,24 @@
    "race": "Raça",
    "a root": "sem pré-requisito",
    "nothing": "nada",
-   "beast": "fera"
+   "beast": "fera",
+   "steel": "Aço",
+   "teal": "Turquesa",
+   "forest": "Floresta",
+   "amber": "Âmbar",
+   "crimson": "Carmesim",
+   "violet": "Violeta",
+   "rose": "Rosa",
+   "slate": "Ardósia",
+   "bulwark": "Baluarte",
+   "vigil": "Vigília",
+   "blade": "Lâmina",
+   "wolf cry": "Uivo do Lobo",
+   "wolf": "Lobo",
+   "serpent": "Serpente",
+   "flame": "Chama",
+   "stars": "Estrelas",
+   "storm": "Tempestade"
   }
  },
  "action": {
@@ -3941,7 +3958,8 @@
   "of_picked_from": "{len} de {team_size} escolhidos entre {pool_size}",
   "of": "{team_size} de {pool_size}",
   "charter": "O estatuto",
-  "its_name_its_arms_who": "Seu nome, seu brasão, quem lidera"
+  "its_name_its_arms_who": "Seu nome, seu brasão, quem lidera",
+  "vocation": "Vocação"
  },
  "title_session": {
   "back_to_title": "Voltar ao título",
@@ -4921,7 +4939,8 @@
    "Jotun": "Jotun",
    "Orcish": "Orc",
    "Sylvan": "Silvestre",
-   "Verdant": "Verdejante"
+   "Verdant": "Verdejante",
+   "Common": "Comum"
   },
   "claim_stage": {
    "CLEARED": "Liberado",

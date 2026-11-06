@@ -127,7 +127,7 @@ class DialogueSession(Session):
         if lead is None:
             return None
         return {"uid": lead.uid, "name": lead.name, "caption": self.enc.caption(lead), "portrait": _portrait(lead),
-                "languages": list(lead.languages), "alignment": i18n.name("alignment", lead.alignment) if lead.alignment else ""}
+                "languages": i18n.names("language", lead.languages), "alignment": i18n.name("alignment", lead.alignment) if lead.alignment else ""}
 
     def _foes(self):
         lead = self.enc.leader
@@ -138,7 +138,7 @@ class DialogueSession(Session):
         lead = self.enc.leader
         tongue = set(lead.languages) if lead is not None and self.enc.language_gate else set()
         return {"uid": u.uid, "name": u.name, "race": u.race_label,                 "portrait": _portrait(u), "cha": u.mod_charisma, "int": u.mod_intelligence,
-                "languages": [{"name": lang, "shared": lang in tongue} for lang in u.languages],
+                "languages": [{"name": i18n.name("language", lang), "shared": lang in tongue} for lang in u.languages],
                 "understood": self.enc.shared(u), "hp": [u.hp, u.hp_max], "money": u.money,
                 "crime": u.crime if u.uid in self.caught else None}
 

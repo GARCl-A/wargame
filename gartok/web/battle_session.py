@@ -364,7 +364,7 @@ class BattleSession(Session):
             "foes": [f"{u.name} · {u.race_label}" for u in enc.foes],
             "speakers": [{"id": i, "name": u.name, "selected": u is speaker,
                           "caption": i18n.t("battle.talk.caption", cha=u.mod_charisma, int=u.mod_intelligence,
-                                         languages=", ".join(u.languages) or i18n.t("battle.talk.no_language"))}
+                                         languages=", ".join(i18n.names("language", u.languages)) or i18n.t("battle.talk.no_language"))}
                          for i, u in enumerate(members)] if enc.offered() else [],
             "options": [] if speaker is None or result is not None else [
                 {"id": o.verb, "label": o.label, "note": o.note, "check": o.check, "odds": o.odds, "block": o.block}
@@ -671,7 +671,7 @@ class BattleSession(Session):
                 "action": (act := next((a.name for a in actions.WEAPON_ACTIONS if w.has_trait(a.id)), None)),
                 "action_tip": wiki_terms.action_tip(act),
             },
-            "conditions": [intel.CONDITION_LABELS.get(c.id, c.id) for c in u.conditions],
+            "conditions": [getattr(c, "label", None) or i18n.lab(intel.CONDITION_LABELS.get(c.id, c.id)) for c in u.conditions],
         }
 
     def _actions(self, my_turn):

@@ -233,7 +233,7 @@ class DraftSession(Session):
         voc = vocations.get(self.vocation)
         now = STEPS.index(self.step)
         squad = ", ".join(u.name for u in d.picks) if d else ""
-        rows = [("Vocation", voc.name if voc and now > 0 else i18n.t("draft_session.trade_it_is_founded_on")),
+        rows = [(i18n.t("draft_session.vocation"), voc.name if voc and now > 0 else i18n.t("draft_session.trade_it_is_founded_on")),
                 (i18n.t("draft_session.squad"), squad if now > 1 else i18n.t("draft_session.of_picked_from", len=len(d.picks), team_size=TEAM_SIZE, pool_size=POOL_SIZE)
                  if now == 1 else i18n.t("draft_session.of", team_size=TEAM_SIZE, pool_size=POOL_SIZE)),
                 (i18n.t("draft_session.charter"), i18n.t("draft_session.its_name_its_arms_who"))]
@@ -246,7 +246,7 @@ class DraftSession(Session):
             return None
         return {"id": v.id, "name": v.name, "motto": v.motto, "perk": v.perk, "open": v.active,
                 "icon": VOCATION_GLYPHS.get(v.id), "chosen": v.id == self.vocation,
-                "races": [{"race": r, "portrait": asset_url(art_files.portrait_path(r, 0))} for r in v.races]}
+                "races": [{"race": i18n.name("race", r), "portrait": asset_url(art_files.portrait_path(r, 0))} for r in v.races]}
 
     def _card(self, u):
         d = self.draft
@@ -275,7 +275,7 @@ class DraftSession(Session):
             founders.append(card)
         return {"name": d.guild_name, "max_name": MAX_GUILD_NAME, "max_founder": _UNIT_NAME,
                 "color": list(d.banner_color), "emblem": d.banner_icon,
-                "colors": [{"name": n, "rgb": list(c), "on": tuple(c) == tuple(d.banner_color)} for n, c in BANNER_COLORS],
-                "emblems": [{"slug": s, "label": lb, "icon": _icon((c, s)), "on": s == d.banner_icon}
+                "colors": [{"name": i18n.lab(n), "rgb": list(c), "on": tuple(c) == tuple(d.banner_color)} for n, c in BANNER_COLORS],
+                "emblems": [{"slug": s, "label": i18n.lab(lb), "icon": _icon((c, s)), "on": s == d.banner_icon}
                             for c, s, lb in art_files.BANNER_ICONS],
                 "founders": founders, "can_found": d.leader_pick is not None}
