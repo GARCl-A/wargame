@@ -43,6 +43,78 @@ def english(text, rewritten):
     return len(ENGLISH.findall(plain)) >= 2 and not PT_HINT.search(plain)
 
 
+def screens(scan):
+    """The report, talk, hunt, arena and talents screens, built the way their tests build them."""
+    import random
+    import tempfile
+
+    from gartok import campaign, persist, world
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    from gartok.web.arena_session import ArenaSession
+    from gartok.web.map_session import MapSession
+    from gartok.web.report_session import ReportSession
+    from gartok.web.server import Game
+    from tests import test_web_arena, test_web_hunt, test_web_talents, test_web_talk
+    from tests.helpers import Battle, _unit
+
+    persist.SAVE_DIR = tempfile.mkdtemp()
+    for death in (True, False):
+        squad = [_unit(seed=i) for i in range(2)]
+        foes = [_unit(team="enemy", seed=100 + i) for i in range(2)]
+        guild = Guild(squad, node="wilds")
+        guild.clock = Clock(24 * 9 * 3600)
+        battle = Battle(squad, foes, lethal=True)
+        hand = battle.player_units[0]
+        if death:
+            battle.player_units[-1].hp, battle.player_units[-1].status = 0, "dead"
+            battle.player_units[-1].downed_by = battle.enemy_units[0]
+            hand.combat_xp_earned = 50
+            battle.enemy_units[0].inventory.append("Axe")
+        for c in battle.enemy_units:
+            c.hp, c.status = 0, "dead"
+            hand.credit_kill(c)
+        battle.winner, battle.round_no = "player", 4
+        outcome = campaign.absorb_battle(guild, squad, battle, node=world.node("wilds"))
+        game = Game(MapSession(guild))
+        report = ReportSession(game.session, guild.groups[0], battle, outcome, place="wilds")
+        game.open(report)
+        while game.session is report and report.stage[0] != "map":
+            scan(f"report:{report.stage[0]}", report.state())
+            if report.stage[0] == "purse":
+                report.give(guild.groups[0].members[0].uid)
+            report.next()
+    for node in ("road", "wilds", "ancient_ruins"):
+        for verb in ("persuade", "bluff", "intimidate", "bribe", "attack"):
+            random.seed(len(node) * 7 + len(verb))
+            game, _guild, g = test_web_talk._ambushed("ambush", node, money=50)
+            game.session.act(g.gid, "resolve_event")
+            scan(f"talk:{node}", game.session.state())
+            try:
+                game.session.choose(verb)
+                scan(f"talk:{node}:{verb}", game.session.state())
+            except ValueError:
+                pass
+    for target in ("meat", "shrooms"):
+        guild, g = test_web_hunt._guild()
+        _game, hunt = test_web_hunt._hunt(guild, g)
+        hunt.set_target(target)
+        hunt.set_hours(hunt._offered()[-1])
+        scan(f"hunt:{target}", hunt.state())
+        hunt.start()
+        scan(f"hunt:{target}:started", hunt.state())
+    guild, g = test_web_arena._guild(money=500)
+    _game, arena = test_web_arena._arena(guild, g)
+    guild.deeds_done.append("arena_dethrone")
+    for i in range(4):
+        arena = ArenaSession(arena.map, g)
+        arena.pick_bout(i)
+        scan(f"arena:{i}", arena.state())
+    _game, tree, _units = test_web_talents._open()
+    for track in tree.state()["tracks"]:
+        scan(f"talents:{track['track']}", tree.state())
+
+
 def main(lang):
     from gartok import i18n, node_functions, orders, world
     from gartok.group import Group
@@ -93,9 +165,10 @@ def main(lang):
     wiki = WikiSession(lambda: {"screen": "title"})
     for chapter in [c["id"] for c in wiki.state()["chapters"]]:
         scan(f"wiki:{chapter}", wiki.chapter(chapter))
-    for fight in ("dungeon",):
+    for fight in combat_lab.FIGHTS:
         battle, meta = combat_lab.build(fight, 2, 4, seed=3)
         scan(f"battle:{fight}", BattleSession(battle, meta).state())
+    screens(scan)
     for text, where in sorted(seen.items(), key=lambda kv: kv[1]):
         print(f"{where}: {text[:140]!r}")
     print(f"{len(seen)} suspect strings")

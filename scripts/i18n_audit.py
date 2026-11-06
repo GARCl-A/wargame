@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "gartok"
 SKIP_MODULES = {"i18n.py"}
+EDITOR_ONLY = {"ATTRIBUTE_HELP", "DERIVED_HELP"}    # tables only the Editor reads (it is being redone, out of scope)
 ID_STRINGS = {"Any Dictionary", "Dictionary of ", "Snake Dragon", "Treefolk Recruit"}    # a mission's goal: an item or beast id
 # positional args that are catalog ids, not shown text: a node's default name (`name.node.<id>` wins), a keeper's race and role
 ID_ARGS = {"Node": (1,), "Vendor": (1, 2)}
@@ -60,6 +61,8 @@ def _excluded(tree):
                     ids.update(id(e) for e in n.elts)
         elif isinstance(node, ast.Subscript):
             ids.add(id(node.slice))
+        elif isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id in EDITOR_ONLY for t in node.targets):
+            ids.update(id(n) for n in ast.walk(node.value))
         elif isinstance(node, ast.Assert) and node.msg is not None:
             ids.update(id(n) for n in ast.walk(node.msg))
         elif isinstance(node, ast.Call) and _callee(node) in ID_ARGS:
