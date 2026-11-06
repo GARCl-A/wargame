@@ -715,7 +715,7 @@ def test_a_pitch_lost_bars_that_recruiter_from_the_stranger_until_the_crowd_chan
     assert d["last"]["ok"] is False and d["last"]["ours_total"] < d["last"]["theirs_total"]
     me = next(m for m in d["pitchers"] if m["uid"] == g.leader.uid)
     assert me["status"]["text"] == "already tried this week" and not d["button"]["on"]
-    assert t["strangers"][0]["status"]["tone"] == "bad"
+    assert t["strangers"][0]["status"] == {"text": f"{g.members[1].name} can pitch", "tone": "good"}
 
 
 def test_a_study_target_is_set_from_what_the_band_carries_and_the_rooms_rent_and_cancel(saves):
@@ -1254,12 +1254,11 @@ def _desk(deeds=(), strength=None):
 def test_ledger_hold_opens_on_its_desk_and_the_gate_turns_a_stranger_away():
     hub, _, _ = _desk()
     st = hub.state()
-    assert [(t["key"], t["live"]) for t in st["tabs"]] == [("ledger", True)] and st["tab"] == "ledger"
+    assert [(t["key"], t["live"]) for t in st["tabs"]] == [("ledger", True), ("jobs", True)] and st["tab"] == "ledger"
     assert st["keeper"]["name"] == "Commander Varkas"
     d = st["ledger"]
     assert [p["key"] for p in d["panels"]] == ["gate"] and d["panels"][0]["lines"] and not d["panels"][0]["button"]
-    with pytest.raises(ValueError):
-        hub.verb("ledger", True)(hub, {"key": "accept_mentorship"})
+    assert hub.pick_tab("jobs")["jobs"]["jobs"] == []
 
 
 def test_the_sealed_chest_is_handed_over_for_a_letter_of_receipt(saves):
@@ -1279,21 +1278,32 @@ def test_the_sealed_chest_is_handed_over_for_a_letter_of_receipt(saves):
 def test_varkas_mentors_a_treefolk_who_is_delivered_only_once_trained():
     hub, guild, g = _desk(deeds=["bankers_trust"])
     d = hub.state()["ledger"]
-    assert [p["key"] for p in d["panels"]] == ["mentorship", "supply_run"]
+    assert [p["key"] for p in d["panels"]] == ["supply_run"]
     assert next(c for c in d["cards"] if c["label"] == "supply runs")["value"] == "0 / 10"
-    st = hub.verb("ledger", True)(hub, {"key": "accept_mentorship"})
+    job = hub.pick_tab("jobs")["jobs"]["jobs"][0]
+    assert job["id"] == "ledger_treefolk" and job["button"]["on"]
+    st = hub.verb("accept", True)(hub, {"id": "ledger_treefolk"})
     recruit = g.members[-1]
     assert len(g.members) == 3 and recruit.race["name"] == "Treefolk"
-    mentor = next(p for p in st["ledger"]["panels"] if p["key"] == "mentorship")
-    assert mentor["button"] == {"key": "deliver_recruit", "label": "Deliver the recruit", "can": False}
-    with pytest.raises(ValueError):
-        hub.verb("ledger", True)(hub, {"key": "deliver_recruit"})
+    job = st["jobs"]["jobs"][0]
+    assert job["taken"] and job["button"] == {"verb": "turn_in", "label": "Deliver the recruit", "on": False}
+    assert "not ready" in hub.verb("turn_in", True)(hub, {"id": "ledger_treefolk"})["jobs"]["notice"]
+    assert recruit in guild.roster
     recruit.set_track_level("combat", 4)
-    st = hub.verb("ledger", True)(hub, {"key": "deliver_recruit"})
+    st = hub.verb("turn_in", True)(hub, {"id": "ledger_treefolk"})
     assert recruit not in guild.roster and "ledger_hold_mentoring" in guild.deeds_done
-    assert "$230" in st["ledger"]["notice"]
-    mentor = next(p for p in st["ledger"]["panels"] if p["key"] == "mentorship")
-    assert mentor["button"] is None and mentor["rows"][0]["tone"] == "good"
+    assert "$230" in st["jobs"]["notice"]
+    assert st["jobs"]["jobs"][0]["button"]["label"] == "Job completed"
+
+
+def test_the_mentorship_raises_the_maps_mark_and_sits_under_jobs_not_the_desk():
+    hub, guild, g = _desk(deeds=["bankers_trust"])
+    node = world.node("ledger_hold")
+    assert hub.map._node_alert(node)
+    assert "mentorship" not in [p["key"] for p in hub.state()["ledger"]["panels"]]
+    assert [t["key"] for t in hub.state()["tabs"]] == ["ledger", "jobs"]
+    hub.verb("accept", True)(hub, {"id": "ledger_treefolk"})
+    assert not hub.map._node_alert(node)
 
 
 def test_the_supply_run_needs_the_cargo_and_sends_the_band_off_on_the_map(monkeypatch):

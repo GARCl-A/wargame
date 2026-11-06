@@ -3782,7 +3782,8 @@
       "tanner": "\"Bring me hide and I'll pay well for it.\"",
       "apothecary": "\"Need someone to fetch rare reagents from the wilds.\"",
       "library": "\"We need to expand our archives. Translations are well paid.\"",
-      "trust": "\"Prove the guild can be trusted with something precious.\""
+      "trust": "\"Prove the guild can be trusted with something precious.\"",
+      "ledger": "\"The march needs steady hands. Train my recruit and I will remember it.\""
     },
     "keeper": {
       "blood": "\"Blood remembers. What runs in the veins can be read.\"",
@@ -3937,7 +3938,8 @@
   "ledger": {
     "hands_over_sealed_chest_outpost": "{name} hands over the sealed chest -- the outpost gives a letter of receipt in return.",
     "treefolk_joins_your_group_for": "{name} (Treefolk) joins your group for mentorship.",
-    "steps_into_garrison_reward_received": "{name} steps into the garrison. $230 reward received!",
+    "recruit_steps_into_garrison": "The recruit steps into the garrison. {fmt_money} reward received!",
+    "offer_req": "a green Treefolk recruit joins the group  ·  train them to racial level 2, then bring them back  ·  {fmt_money}, and the recruit leaves the guild",
     "party_purse": "party purse",
     "supply_runs": "supply runs",
     "sealed_chest": "The Sealed Chest",
@@ -3945,18 +3947,10 @@
     "in_return": "In return",
     "letter_of_receipt_to_take": "a letter of receipt, to take back to the City",
     "hand_over_chest": "Hand over the chest",
-    "green_treefolk_recruit_racial_level": "a green Treefolk recruit (racial level 0) joins the group",
-    "train_them_to_racial_level": "train them to racial level 2, then bring them back",
     "accept_recruit": "Accept the recruit",
     "treefolk_recruit_fell_in_battle": "the Treefolk recruit fell in battle: the mentorship has failed",
     "racial_level": "racial level {lvl} / 2",
-    "recruit_leaves_guild": "{fmt_money}  ·  the recruit leaves the guild",
     "deliver_recruit": "Deliver the recruit",
-    "is_in_another_group_bring": "{name} is in another group: bring them here to hand over",
-    "treefolk_soldier_serves_with_honour": "the Treefolk soldier serves with honour",
-    "ledger_hold_stands_open_to": "Field Command stands open to the guild",
-    "garrison_mentorship": "Garrison Mentorship",
-    "commander_varkas": "Commander Varkas",
     "frontier_supply_run": "Frontier Supply Run",
     "to_frontier_outpost_and_back": "to the Frontier Outpost and back",
     "hours_walking_kg_of_supplies": "{trip:.1f} hours, walking {need:.0f} kg of supplies",

@@ -46,7 +46,7 @@ HUBS = {
     "prison": (("prison", "The Cells"),),
     "bank": (("vault", "Vault"), ("jobs", "Jobs")),
     "trust": (("jobs", "Jobs"),),
-    "ledger": (("ledger", "The Desk"),),
+    "ledger": (("ledger", "The Desk"), ("jobs", "Jobs")),
     "campfire": (("kitchen", "Campfire"),),
     "pit_recruit": (("recruits", "Recruit"),),
 }

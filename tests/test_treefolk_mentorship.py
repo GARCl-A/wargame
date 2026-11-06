@@ -3,7 +3,7 @@ import pytest
 from gartok import data, factions, missions
 from gartok.group import Group
 from gartok.guild import Guild
-from gartok.ledger import LedgerDesk
+from gartok.job_board import LedgerBoard
 from gartok.unit import Unit
 
 
@@ -113,24 +113,24 @@ def test_treefolk_mentorship_turn_in_and_gear_return():
     assert guild.reputation.get("ledger_hold") == 1
 
 
-def test_ledger_desk_accepts_and_delivers_the_recruit():
+def test_the_ledger_board_accepts_and_delivers_the_recruit():
     guild, group, leader = _setup_guild_at_ledger()
 
-    scr = LedgerDesk(guild, group, lambda: None)
-    scr._act("accept_mentorship")
+    board = LedgerBoard(guild, group)
+    assert board.accept(missions.LEDGER_TREEFOLK)
 
     m = next((m for m in guild.missions if m.template_id == "ledger_treefolk"), None)
     assert m is not None and m.state == "active"
     recruit = next((u for u in guild.roster if u.uid == m.recruit_uid), None)
     assert recruit is not None
 
-    # Train recruit to racial level 2
+    assert not board.turn_in(missions.LEDGER_TREEFOLK)
     recruit.set_track_level("combat", 4)
     assert recruit.racial_level >= 2
 
-    scr._act("deliver_recruit")
+    assert board.turn_in(missions.LEDGER_TREEFOLK)
 
     assert m.state == "done"
     assert recruit not in guild.roster
     assert "ledger_hold_mentoring" in guild.deeds_done
-    assert scr.notice and "$230 reward" in scr.notice
+    assert board.notice and "$230 reward" in board.notice

@@ -3131,7 +3131,8 @@
    "tanner": "\"Traga-me couro e eu pago bem por ele.\"",
    "apothecary": "\"Preciso de alguém que busque reagentes raros nos ermos.\"",
    "library": "\"Precisamos ampliar nossos arquivos. Traduções são bem pagas.\"",
-   "trust": "\"Prove que a guilda merece confiança com algo precioso.\""
+   "trust": "\"Prove que a guilda merece confiança com algo precioso.\"",
+   "ledger": "\"A fronteira precisa de mãos firmes. Treine meu recruta e eu me lembro disso.\""
   },
   "keeper": {
    "blood": "\"O sangue lembra. O que corre nas veias pode ser lido.\"",
@@ -3658,7 +3659,8 @@
  "ledger": {
   "hands_over_sealed_chest_outpost": "{name} entrega o baú lacrado -- o posto dá uma carta de recibo em troca.",
   "treefolk_joins_your_group_for": "{name} (Treefolk) se junta ao seu grupo para a mentoria.",
-  "steps_into_garrison_reward_received": "{name} entra para a guarnição. Recompensa de $230 recebida!",
+  "recruit_steps_into_garrison": "O recruta entra para a guarnição. Recompensa de {fmt_money} recebida!",
+  "offer_req": "um recruta Treefolk inexperiente se junta ao grupo  ·  treine-o até o nível racial 2 e depois traga-o de volta  ·  {fmt_money}, e o recruta deixa a guilda",
   "party_purse": "bolsa do grupo",
   "supply_runs": "viagens de suprimentos",
   "sealed_chest": "O Baú Lacrado",
@@ -3666,18 +3668,10 @@
   "in_return": "Em troca",
   "letter_of_receipt_to_take": "uma carta de recibo, para levar de volta à Cidade",
   "hand_over_chest": "Entregar o baú",
-  "green_treefolk_recruit_racial_level": "um recruta Treefolk inexperiente (nível racial 0) se junta ao grupo",
-  "train_them_to_racial_level": "treine-o até o nível racial 2 e depois traga-o de volta",
   "accept_recruit": "Aceitar o recruta",
   "treefolk_recruit_fell_in_battle": "o recruta Treefolk caiu em batalha: a mentoria fracassou",
   "racial_level": "nível racial {lvl} / 2",
-  "recruit_leaves_guild": "{fmt_money}  ·  o recruta deixa a guilda",
   "deliver_recruit": "Entregar o recruta",
-  "is_in_another_group_bring": "{name} está em outro grupo: traga-o aqui para entregar",
-  "treefolk_soldier_serves_with_honour": "o soldado Treefolk serve com honra",
-  "ledger_hold_stands_open_to": "O Posto de Comando está aberto à guilda",
-  "garrison_mentorship": "Mentoria da Guarnição",
-  "commander_varkas": "Comandante Varkas",
   "frontier_supply_run": "Viagem de Suprimentos à Fronteira",
   "to_frontier_outpost_and_back": "até o Posto da Fronteira e de volta",
   "hours_walking_kg_of_supplies": "{trip:.1f} horas, a pé com {need:.0f} kg de suprimentos",

@@ -56,15 +56,6 @@ the rest.
   `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md`: turn the 78 literals of `reference.py`
   into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
 
-- **Bug: the tavern says "REJECTED THIS WEEK" while another member can still try (playtest 2026-11-02).**
-  Two members can recruit the same candidate, one fails, and the row keeps the label (`tavern.py`
-  `REJECTED_LABEL`) even though the bar is per recruiter (`recruit.bar`). Show the label only when nobody
-  in the group can try, and name who can. Test: two recruiters, one barred.
-
-- **Bug: the Field Command training errand has no "!" and sits in the wrong tab (playtest 2026-11-02).**
-  "Train a designated Treefolk recruit..." (`factions.py`) does not raise the exclamation mark on the map
-  and is listed with the supply run under *Work*; it belongs to *Jobs*. Test: the mark and the tab.
-
 - **A disabled Move must say why (playtest 2026-11-02).** The cause was a spider's web (`Entangled` blocks walking, and
   now Jump too); the condition gems on the token now show it, but the action bar still gives no reason for a
   disabled Move. Make it always name the blocker (condition, no free cell, AP). Mock both ways first (author
@@ -109,10 +100,6 @@ the rest.
   action bar) should link to its entry on hover; the assess card in the bestiary should link a racial
   ability and a weapon to their wiki entry on hover (playtest 2026-11-01); check the sheet's weapon-action
   chip shows the new text on hover.
-
-- **The tests the pygame campaign's cut lost (found 2026-10-28).** Rewrite them on the web screens:
-  everyone jailed, no save mid-battle, two due screens in turn, the REST row, a trip cancelled. The old
-  screens and their tests are in git before the cut.
 
 - **Review the cheapest item prices (author 2026-11-01).** Several sit at 1 or 2 copper with no logic:
   a Chisel at 1, a Scroll at 1 (below Paper at 10 and 1sqm Hide at 12), a Cloak and a Torch at 2. Price a

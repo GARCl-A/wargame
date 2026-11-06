@@ -1,6 +1,6 @@
 """A giver's jobs board with no window: which jobs it shows, which are on offer, the leader signing for one,
 the turn-in and its notice, each card's line and button. `Board` is what every giver shares; `TannerBoard`,
-`ApothecaryBoard`, `LibraryBoard`, `ShrineBoard` and `TrustBoard` say what each one asks for and pays.
+`ApothecaryBoard`, `LibraryBoard`, `ShrineBoard`, `TrustBoard` and `LedgerBoard` say what each one asks for and pays.
 `web/jobs_tab.py` draws them.
 """
 
@@ -333,6 +333,54 @@ class TrustBoard(Board):
         return i18n.t("job_board.bankers_accept_letter_your_trust")
 
 
+class LedgerBoard(Board):
+    """Field Command's one job, Commander Varkas's Treefolk mentorship: signing for it hands the band the
+    recruit, and the turn-in is the recruit trained to racial level 2 and standing in this band."""
+    GIVER = "ledger_hold"
+    accept_label = "ledger.accept_recruit"
+
+    @property
+    def subtitle_text(self):
+        return i18n.t("job_board.subtitle.ledger")
+
+    def get_templates(self):
+        for m in self.guild.missions:
+            if m.template_id == missions.LEDGER_TREEFOLK.id and m.state == "active" and self._recruit(m) is None:
+                m.state = "failed"
+        return missions.board(self.guild, self.GIVER, self.group.node)
+
+    def get_template(self):
+        return next(iter(self.get_templates()), None)
+
+    def _recruit(self, mission):
+        return next((u for u in self.guild.roster if u.uid == mission.recruit_uid), None)
+
+    def accept(self, t):
+        if not self._is_offered(t):
+            return False
+        recruit = missions.make_treefolk_recruit()
+        self.guild.add_member(recruit, self.group)
+        missions.accept_treefolk_mentorship(self.guild, self.group.leader, recruit)
+        self.notice = i18n.t("ledger.treefolk_joins_your_group_for", name=recruit.name)
+        return True
+
+    def get_req_str(self, t):
+        return i18n.t("ledger.offer_req", fmt_money=fmt_money(t.reward))
+
+    def get_status_str(self, t, progress, ready, days_left):
+        m = self._active_of(t)
+        recruit = None if m is None else self._recruit(m)
+        if recruit is None:
+            return i18n.t("ledger.treefolk_recruit_fell_in_battle")
+        return i18n.t("ledger.racial_level", lvl=recruit.racial_level)
+
+    def get_turn_in_label(self, t, progress, ready):
+        return i18n.t("ledger.deliver_recruit")
+
+    def get_success_notice(self, reward):
+        return i18n.t("ledger.recruit_steps_into_garrison", fmt_money=fmt_money(reward))
+
+
 # a node's function -> its giver's board, in the order a node's tabs list them
 BOARDS = (("tanner", TannerBoard), ("apothecary", ApothecaryBoard), ("library", LibraryBoard),
-          ("shrine", ShrineBoard), ("trust", TrustBoard))
+          ("shrine", ShrineBoard), ("trust", TrustBoard), ("ledger", LedgerBoard))

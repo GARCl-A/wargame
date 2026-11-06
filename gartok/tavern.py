@@ -120,7 +120,10 @@ class Tavern:
     def _cand_status(self, cand):
         if cand.uid in self.last:
             pitch, _who = self.last[cand.uid]
-            return ("enlisted", "good") if pitch.ok else (i18n.t(self.REJECTED_LABEL), "bad")
+            if pitch.ok:
+                return "enlisted", "good"
+            if self._best(cand) is None:
+                return i18n.t(self.REJECTED_LABEL), "bad"
         best = self._best(cand)
         if best is not None:
             return i18n.t("tavern.can_pitch", name=best[0].name), "good"

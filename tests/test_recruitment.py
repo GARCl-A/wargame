@@ -407,6 +407,23 @@ def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
     assert recruiter.money == 50 and seen["extra_mods"] == []
 
 
+def test_a_rejected_stranger_reads_rejected_only_when_nobody_can_still_pitch(monkeypatch):
+    from gartok.guild import Guild
+    from gartok.tavern import Tavern
+    first, second = standard_unit(), standard_unit()
+    for u in (first, second):
+        u.languages = ["Common"]
+    g = Guild([first, second])
+    cand = standard_unit()
+    cand.languages = ["Common"]
+    scr = Tavern(g, g.groups[0], candidates=[cand])
+    monkeypatch.setattr(recruit, "convince", lambda *a, **kw: recruit.Pitch(False, 5, 12, -7, 2, []))
+    scr._pitch(first)
+    assert scr._cand_status(cand) == (f"{second.name} can pitch", "good")
+    scr._pitch(second)
+    assert scr._cand_status(cand) == ("rejected this week", "bad")
+
+
 def _hint(guild, group, cand):
     """What the Tavern's dossier says under the pitch, with the first member picked to make it."""
     from gartok import world
