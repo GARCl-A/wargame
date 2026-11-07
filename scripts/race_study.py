@@ -28,7 +28,7 @@ from datetime import datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from gartok import ai, data, map_lib, outfit, talents
+from gartok import ai, data, economy, map_lib, outfit, talents
 from gartok.battle import Battle
 from gartok.scenario import CustomScenario, ErmosScenario
 from scripts import race_study_builds as rb
@@ -38,8 +38,15 @@ DATA = os.path.join(OUT, "data")
 GUARD = 600
 CHUNK = 200
 RACES = [r[1] for r in data.RACES]
-FIELD_BUILDS = list(rb.BUILD_IDS) + [rb.RANDOM_KIT]
-MELEE = [b for b in rb.BUILD_IDS if rb.BUILDS[b].role == "melee"]
+
+
+def field_builds(lv):
+    """The builds a level can field: those whose first weapon its budget pays for, and the random kit."""
+    return rb.builds_at(lv) + [rb.RANDOM_KIT]
+
+
+def melee_builds(lv):
+    return [b for b in rb.builds_at(lv) if rb.BUILDS[b].role == "melee"]
 
 
 class Counting:
@@ -150,6 +157,7 @@ COMBOS = (
 def wave_jobs(wave, lv, scale):
     rng = random.Random(_seed(wave, lv, 0))
     jobs, i = [], 0
+    field = field_builds(lv)
 
     def add(ra, ba, rb_, bb, **kw):
         nonlocal i
@@ -164,22 +172,18 @@ def wave_jobs(wave, lv, scale):
     elif wave in ("fd", "fx"):
         for ra in RACES:
             for _ in range(int((3000 if wave == "fd" else 1500) * scale)):
-                add(ra, rng.choice(FIELD_BUILDS), rng.choice(RACES), rng.choice(FIELD_BUILDS), fx=wave == "fx")
+                add(ra, rng.choice(field), rng.choice(RACES), rng.choice(field), fx=wave == "fx")
     elif wave == "mb":
         for ra in RACES:
-            for ba in rb.BUILD_IDS:
+            for ba in rb.builds_at(lv):
                 for _ in range(int(150 * scale)):
-                    add(ra, ba, rng.choice(RACES), rng.choice(FIELD_BUILDS))
-    elif wave in ("ab", "ab2"):
+                    add(ra, ba, rng.choice(RACES), rng.choice(field))
+    elif wave == "ab":
         if lv:
             for ra in RACES:
                 for _ in range(int(600 * scale)):
-                    ba = rng.choice(MELEE)
+                    ba = rng.choice(melee_builds(lv))
                     add(ra, ba, ra, ba, dr=True)
-    elif wave == "mr":
-        for _ in range(int(2000 * scale)):
-            ra, ba = rng.choice(RACES), rng.choice(FIELD_BUILDS)
-            add(ra, ba, ra, ba)
     elif wave == "tl":
         if lv:
             for t in [t.id for t in talents.TREE["combat"]]:
@@ -192,43 +196,41 @@ def wave_jobs(wave, lv, scale):
                     rr = rng.choice(RACES)
                     add(rr, "plain", rr, "plain", oa={**KITS[kit], "force": list(chain), "tag": name},
                         ob={**KITS[kit], "ban": list(chain), "tag": name})
-    elif wave == "ev":
-        for ra in ("Centaur", "Orc", "Human", "Elf", "Dwarf", "Sprite", "Goliath", "Halfling"):
-            for _ in range(int(1500 * scale)):
-                add(ra, rng.choice(FIELD_BUILDS), rng.choice(RACES), rng.choice(FIELD_BUILDS), map="ermos")
     elif wave == "ef":
         for ra in RACES:
             for _ in range(int(1500 * scale)):
-                add(ra, rng.choice(FIELD_BUILDS), rng.choice(RACES), rng.choice(FIELD_BUILDS), map="ermos")
+                add(ra, rng.choice(field), rng.choice(RACES), rng.choice(field), map="ermos")
     elif wave == "cg":
-        gear = {"weapon": "Hammer", "armor": "Chainmail", "shield": "none"}
+        gear = {"weapon": "Hammer", "armor": "Chainmail" if lv else "Leather Jerkin", "shield": "none"}
         ids = ("plain", "nature_striker", "nature_control", "blood_striker", "blood_hexer", "faith_support",
                "faith_striker", "battlemage")
         for x, ba in enumerate(ids):
             for bb in ids[x:]:
                 for _ in range(int(300 * scale)):
-                    rr = rng.choice([r for r in RACES if r != "Centaur"])
+                    rr = rng.choice(RACES)
                     add(rr, ba, rr, bb, oa=gear, ob=gear)
-    elif wave == "qv":
-        for wpn in ("Longbow", "Shortbow", "Light Crossbow"):
-            for ammo in (20, 40, 80):
-                for _ in range(int(250 * scale)):
-                    rr = rng.choice([r for r in RACES if r != "Centaur"])
-                    add(rr, "plain", rr, "plain", oa={"weapon": wpn, "ammo": ammo, "tag": f"{wpn} x{ammo}"}, ob={"weapon": "Sword"})
+    elif wave == "lw":
+        if lv:
+            for race in ("Centaur", "Goliath"):
+                for ba in melee_builds(lv):
+                    for _ in range(int(150 * scale)):
+                        add(race, ba, race, ba, oa={"large": True})
     elif wave == "gw":
-        for wpn in rb.CATALOG:
+        for wpn in [w for w in rb.CATALOG if rb.affordable(w, lv)]:
             for _ in range(int(250 * scale)):
                 rr = rng.choice(RACES)
                 add(rr, "plain", rr, "plain", oa={"weapon": wpn}, ob={"weapon": "Sword"})
     elif wave == "ga":
-        for arm in rb.ARMORS + ["none"]:
+        base = economy.buy_price("Sword")
+        for arm in [a for a in rb.ARMORS if base + economy.buy_price(a) <= outfit.budget(lv)] + ["none"]:
             for _ in range(int(250 * scale)):
                 rr = rng.choice(RACES)
                 add(rr, "plain", rr, "plain", oa={"armor": arm, "shield": "none"}, ob={"armor": "none", "shield": "none"})
     elif wave == "gs":
-        for _ in range(int(2000 * scale)):
-            rr = rng.choice(RACES)
-            add(rr, "plain", rr, "plain", oa={"shield": rb.SHIELD}, ob={"shield": "none"})
+        if economy.buy_price("Sword") + economy.buy_price(rb.SHIELD) <= outfit.budget(lv):
+            for _ in range(int(2000 * scale)):
+                rr = rng.choice(RACES)
+                add(rr, "plain", rr, "plain", oa={"shield": rb.SHIELD}, ob={"shield": "none"})
     elif wave == "sp":
         if lv:
             for bid in ("nature_striker", "nature_control", "blood_striker", "blood_hexer", "faith_support", "faith_striker"):
@@ -237,8 +239,8 @@ def wave_jobs(wave, lv, scale):
                         rr = rng.choice(RACES)
                         add(rr, bid, rr, bid, ob={"drop_spell": sid})
     elif wave == "rb":
-        for ba in rb.BUILD_IDS:
-            for bb in rb.BUILD_IDS:
+        for ba in rb.builds_at(lv):
+            for bb in rb.builds_at(lv):
                 for _ in range(int(60 * scale)):
                     add(rng.choice(RACES), ba, rng.choice(RACES), bb)
     else:
@@ -313,7 +315,7 @@ def cmd_run(args):
 def cmd_smoke(args):
     sys.setrecursionlimit(10000)
     for lv in (0, 5):
-        for wave in ("mx", "fd", "mb", "ab", "mr", "rb"):
+        for wave in ("mx", "fd", "mb", "ab", "lw", "rb"):
             jobs = wave_jobs(wave, lv, 0.02)[: args.n]
             if not jobs:
                 continue

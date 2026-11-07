@@ -60,12 +60,13 @@ def _hex_worth(battle, unit, target):
     damage = 0 if target.ranged else -drop["strength"]
     debuff += 2 * (to_hit * D20_STEP * _blow(target) + SHOVE_HIT_ODDS * damage)
     worth += debuff * span
-    weakest = min(base for _, base in scores.values()) - points
-    casters = sum(1 for a in battle.units if a.alive and a.team == unit.team and "hex" in getattr(a, "spells_known", []))
-    odds = _spell_odds(battle, unit, target, actions.CastSpellAction("hex"))
-    if weakest > 0 and casters * 2 * odds * step * conditions.HEX_TURNS >= weakest + points and target.hp > 0:
-        worth = max(worth, target.hp / math.ceil(weakest / step))
-    return odds * worth
+    base = min(base for _, base in scores.values())
+    hex_cast = actions.CastSpellAction("hex")
+    capacity = sum(2 * _spell_odds(battle, a, target, hex_cast) for a in battle.units
+                   if a.alive and a.team == unit.team and "hex" in getattr(a, "spells_known", []))
+    if base > points and capacity * step * conditions.HEX_TURNS >= base and target.hp > 0:
+        worth = max(worth, target.hp / math.ceil((base - points) / step))
+    return _spell_odds(battle, unit, target, hex_cast) * worth
 
 
 def _roots_worth(battle, unit, target):

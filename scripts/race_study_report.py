@@ -138,9 +138,9 @@ class Study:
         ra, rb_ = r["ra"], r["rb"]
         sw = r["sw"]
         self.bias[(wave, lv)].add(sb if sw else sa)
-        if wave in ("tl", "tc", "gw", "ga", "gs", "sp", "qv", "cg"):
+        if wave in ("tl", "tc", "gw", "ga", "gs", "sp", "cg", "lw"):
             oa, ob = r.get("oa") or {}, r.get("ob") or {}
-            key = {"tl": lambda: oa["force"][0], "tc": lambda: oa["tag"], "qv": lambda: oa["tag"], "cg": lambda: f'{r["ba"]} vs {r["bb"]}', "gw": lambda: oa["weapon"], "ga": lambda: oa["armor"],
+            key = {"tl": lambda: oa["force"][0], "tc": lambda: oa["tag"], "cg": lambda: f'{r["ba"]} vs {r["bb"]}', "gw": lambda: oa["weapon"], "lw": lambda: ra, "ga": lambda: oa["armor"],
                    "gs": lambda: "shield vs torch", "sp": lambda: f'{r["ba"]} without {ob["drop_spell"]}'}[wave]()
             self.single[(wave, lv, key)].add(sa)
             self.single_race[(wave, lv, ra)].add(sa)
@@ -152,14 +152,14 @@ class Study:
             self.pair[(lv, ra, rb_)].add(sa)
             if ra != rb_:
                 self.pair[(lv, rb_, ra)].add(sb)
-        if wave in ("fd", "fx", "mb", "rb", "mx", "ev", "ef"):
+        if wave in ("fd", "fx", "mb", "rb", "mx", "ef"):
             self.race[(wave, lv, ra)].add(sa)
             self.race[(wave, lv, rb_)].add(sb)
             self.race_a[(wave, lv, ra)].add(sa)
         if wave == "fx":
             self.fixed[(lv, ra)].add(sa)
             self.fixed[(lv, rb_)].add(sb)
-        if wave in ("fd", "mb", "rb", "mr"):
+        if wave in ("fd", "mb", "rb", "ef"):
             self.build[(wave, lv, r["ba"])].add(sa)
             self.build[(wave, lv, r["bb"])].add(sb)
         if wave == "mb":
@@ -168,7 +168,7 @@ class Study:
             self.build_pair[(lv, r["ba"], r["bb"])].add(sa)
             if r["ba"] != r["bb"]:
                 self.build_pair[(lv, r["bb"], r["ba"])].add(sb)
-        if wave in ("ab", "ab2"):
+        if wave == "ab":
             self.ab[(lv, ra)].add(sb)
         if wave in ("fd", "mb", "rb"):
             self._units(r, lv, wave, sa, sb)
@@ -254,6 +254,68 @@ def race_scores(st, lv):
     return {race: st.race[("fd", lv, race)] for race in RACES if ("fd", lv, race) in st.race}
 
 
+MAP_WEIGHT = {"fd": 0.5, "ef": 0.5}           # Ribbit Brothers (fd) and Ermos (ef), half each
+LEVEL_WEIGHT = {0: 1 / 3, 5: 2 / 3}           # level 5 shows the build better than level 0
+BUILD_WAVE = {"fd": "mb", "ef": "ef"}         # the wave each map's build score is read from
+
+
+def blend(parts):
+    """`(score x100, se x100)` of the weighted mean of `(weight, Acc)`; the weights are renormalised over the parts present
+    (a build with no level-0 version scores on level 5 alone)."""
+    parts = [(w, a) for w, a in parts if a is not None and a.n]
+    total = sum(w for w, _ in parts)
+    if not total:
+        return None
+    return (100 * sum(w * a.mean for w, a in parts) / total,
+            100 * math.sqrt(sum((w * a.se) ** 2 for w, a in parts)) / total)
+
+
+def score_parts(key):
+    """The four cells of a score: Ribbit (fd) and Ermos (ef) at each level; `key(wave, lv)` finds the Acc."""
+    return [(MAP_WEIGHT[wave] * LEVEL_WEIGHT[lv], key(wave, lv)) for wave in MAP_WEIGHT for lv in LEVEL_WEIGHT]
+
+
+def _pct(table, key):
+    return f"{100 * table[key].mean:.1f}" if key in table else "-"
+
+
+def score_blocks(st):
+    L = []
+    comp = {r: blend(score_parts(lambda w, lv, r=r: st.race.get((w, lv, r)))) for r in RACES}
+    comp = {r: v for r, v in comp.items() if v}
+    if comp:
+        rk = sorted(comp, key=lambda r: -comp[r][0])
+        L += ["## 0. Proposed combat score", "",
+              ("Race score = 100 x the weighted mean of the field win rate on two maps (Ribbit Brothers, Ermos: half each) at two "
+               "levels (L5 two thirds, L0 one third); 50 = an average race in this field. Vocation score = mean of its six races."), "",
+              md_table(["rank", "race", "Ribbit L0", "Ribbit L5", "Ermos L0", "Ermos L5", "score", "SE"],
+                       [[i, r] + [_pct(st.race, (w, lv, r)) for w in MAP_WEIGHT for lv in LEVEL_WEIGHT] + [f"{comp[r][0]:.1f}", f"{comp[r][1]:.1f}"]
+                        for i, r in enumerate(rk, 1)]), ""]
+        vrows = []
+        for v in vocations.VOCATIONS.values():
+            vals = [comp[r][0] for r in v.races if r in comp]
+            vrows.append([v.id, f"{sum(vals) / len(vals):.1f}", f"{min(vals):.1f}", f"{max(vals):.1f}",
+                          ", ".join(f"{r} {comp[r][0]:.0f}" for r in sorted(v.races, key=lambda r: -comp[r][0]) if r in comp)])
+        vrows.sort(key=lambda row: -float(row[1]))
+        L += [md_table(["vocation", "score", "weakest", "strongest", "races"], vrows), ""]
+        write_csv("proposed_score_races.csv", ["race", "score", "se"], [[r, comp[r][0] / 100, comp[r][1] / 100] for r in rk])
+        write_csv("proposed_score_vocations.csv", ["vocation", "score", "weakest", "strongest", "races"], vrows)
+
+    ids = sorted({k[2] for k in st.build if k[0] in BUILD_WAVE.values()})
+    bsc = {b: blend(score_parts(lambda w, lv, b=b: st.build.get((BUILD_WAVE[w], lv, b)))) for b in ids}
+    bsc = {b: v for b, v in bsc.items() if v}
+    if bsc:
+        bk = sorted(bsc, key=lambda b: -bsc[b][0])
+        L += ["## 0b. Proposed build score", "",
+              ("Same weights as the race score. Ribbit comes from the build wave (mb), Ermos from the field wave (ef). A build whose "
+               "first weapon the level-0 budget cannot pay for (the bows, the crossbow, the Rapier) has no level-0 cells and scores on level 5."), "",
+              md_table(["rank", "build", "Ribbit L0", "Ribbit L5", "Ermos L0", "Ermos L5", "score", "SE"],
+                       [[i, b] + [_pct(st.build, (BUILD_WAVE[w], lv, b)) for w in MAP_WEIGHT for lv in LEVEL_WEIGHT] + [f"{bsc[b][0]:.1f}", f"{bsc[b][1]:.1f}"]
+                        for i, b in enumerate(bk, 1)]), ""]
+        write_csv("proposed_score_builds.csv", ["build", "score", "se"], [[b, bsc[b][0] / 100, bsc[b][1] / 100] for b in bk])
+    return L
+
+
 def build_report(st):
     L = ["# Race study: tables", "", "Generated by `scripts/race_study_report.py`. Score = win rate, draws half.", ""]
     L += ["## 1. Data", ""]
@@ -315,10 +377,10 @@ def build_report(st):
                   "as one die step on average, so the two rows should be close.", "",
                   md_table(["term", "coefficient"], [[n, f"{c:+.4f}"] for n, c in zip(names, coef)]), ""]
 
-    titles = {"qv": "bow or crossbow with 20, 40 or 80 bolts vs Sword (same race, plain kit; races without Centaur)",
-              "cg": "caster builds in identical gear (Hammer, Chainmail), school against school; no Centaur",
+    titles = {"cg": "caster builds in identical gear (Hammer; Chainmail at L5, Leather Jerkin at L0), school against school",
               "tl": "combat talent forced vs banned (same race, plain sword/shield/chainmail kit)",
               "tc": "talent combination (all of its talents forced vs all banned; dex lines on a Rapier, bow lines on a Longbow)",
+              "lw": "Large weapons first (a Centaur's body, a Goliath's Giant's Grip) vs the same build with Medium ones, same race",
               "gw": "weapon vs Sword (same race, same kit otherwise)",
               "ga": "armour vs no armour and no shield (same race, Sword)",
               "gs": "Dwarf Shield (no torch) vs Torch (no shield)",
@@ -332,34 +394,7 @@ def build_report(st):
                       md_table(["factor", "score", "z"], [[k, fmt(a), f"{(a.mean - 0.5) / a.se:+.1f}" if a.se else "-"] for k, a in body]), ""]
                 write_csv(f"single_{wave}_L{lv}.csv", ["factor", "score", "se", "n"], [[k, a.mean, a.se, a.n] for k, a in body])
 
-    s0, s5 = race_scores(st, 0), race_scores(st, 5)
-    if s0 and s5:
-        comp = {r: 100 * (s0[r].mean + s5[r].mean) / 2 for r in RACES}
-        compse = {r: 100 * math.sqrt(s0[r].se ** 2 + s5[r].se ** 2) / 2 for r in RACES}
-        rk = sorted(RACES, key=lambda r: -comp[r])
-        L += ["## 0. Proposed combat score", "",
-              "Race score = 100 x (field win rate at L0 + field win rate at L5) / 2; 50 = an average race in this field. "
-              "Vocation score = mean of its six races.", "",
-              md_table(["rank", "race", "L0", "L5", "score", "SE"],
-                       [[i, r, f"{100 * s0[r].mean:.1f}", f"{100 * s5[r].mean:.1f}", f"{comp[r]:.1f}", f"{compse[r]:.1f}"]
-                        for i, r in enumerate(rk, 1)]), ""]
-        vrows = []
-        for v in vocations.VOCATIONS.values():
-            vals = [comp[r] for r in v.races]
-            vrows.append([v.id, f"{sum(vals) / 6:.1f}", f"{min(vals):.1f}", f"{max(vals):.1f}",
-                          ", ".join(f"{r} {comp[r]:.0f}" for r in sorted(v.races, key=lambda r: -comp[r]))])
-        vrows.sort(key=lambda row: -float(row[1]))
-        L += [md_table(["vocation", "score", "weakest", "strongest", "races"], vrows), ""]
-        write_csv("proposed_score_races.csv", ["race", "L0", "L5", "score", "se"],
-                  [[r, s0[r].mean, s5[r].mean, comp[r] / 100, compse[r] / 100] for r in rk])
-        write_csv("proposed_score_vocations.csv", ["vocation", "score", "weakest", "strongest", "races"], vrows)
-
-    ev = [r for r in RACES if ("ev", 5, r) in st.race or ("ev", 0, r) in st.race]
-    if ev:
-        L += ["## 2b. Open-country check (wave ev: Ermos, no walls; same field as fd)", "",
-              md_table(["race", "L0 Ribbit (fd)", "L0 Ermos", "L5 Ribbit (fd)", "L5 Ermos"],
-                       [[r] + [x for lv in (0, 5) for x in (fmt(st.race[("fd", lv, r)]) if ("fd", lv, r) in st.race else "-",
-                                                             fmt(st.race[("ev", lv, r)]) if ("ev", lv, r) in st.race else "-")] for r in ev]), ""]
+    L += score_blocks(st)
     for lv in (0, 5):
         ids = sorted({k[1] for k in st.cg if k[0] == lv})
         if ids:

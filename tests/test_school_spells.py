@@ -5,7 +5,9 @@ a scroll for every spell, and Invisibility as the AI's way out of a lethal fight
 import random
 
 from gartok import actions, ai, conditions, data, items, magic
+from gartok.ai import reckon
 from gartok.battle import Battle
+from gartok.combatant import Combatant
 from gartok.scenario import ErmosScenario
 from tests.helpers import Unit, _recruit, fixed_d20
 
@@ -261,6 +263,26 @@ def test_the_ai_stacks_another_hex_on_a_foe_already_hexed(monkeypatch):
     with fixed_d20(20):
         actions.CastSpellAction("hex").execute(b, me, foe)
     assert ai._hex_or_roots(b, me, foe).id == "cast_hex"
+
+
+def test_the_ai_counts_every_caster_s_hexes_when_it_reckons_a_kill_within_the_hex_s_three_turns():
+    b, me, foe = _duel("blood", "hex")
+    _scores(me, intelligence=20)
+    _scores(foe, strength=11, dexterity=11, constitution=11, intelligence=11, wisdom=11, charisma=11)
+    foe.hp = foe.hp_max = 1000
+    b.intel.margin[me.team][foe] = -10          # unread: every score reckoned as ten
+    worths = [reckon._hex_worth(b, me, foe)]
+    for row in (6, 7):
+        mate = Unit(me.team)
+        mate.add_magic_source("blood")
+        mate.set_spell_known("hex", True)
+        mate_c = Combatant(mate, me.team)
+        b.units.append(mate_c)
+        _scores(mate_c, intelligence=20)
+        mate_c.pos = (5, row)
+        worths.append(reckon._hex_worth(b, me, foe))
+    alone, pair, trio = worths
+    assert alone < 20 and pair < 20 < trio            # 2 casts a turn, three turns, at 70%: ten stacks need three casters
 
 
 def test_the_ai_swings_rather_than_hex_unless_an_even_constitution_finishes_the_foe():

@@ -144,6 +144,21 @@ def _catalog_weapons():
 
 CATALOG = _catalog_weapons()
 ARMORS = sorted(items.armor())
+EXTRA_QUIVERS = 2           # an archer buys a bow and one Quiver, then the armour, then up to this many more Quivers
+
+
+def affordable(name, level):
+    """Whether the level's budget pays for `name` at all (the rest of the kit is bought from what it leaves)."""
+    return economy.buy_price(name) <= outfit.budget(level)
+
+
+def exists(build_id, level):
+    """A build exists at a level when the budget pays for its first weapon: it is that weapon that makes the build."""
+    return build_id == RANDOM_KIT or affordable(lookup(build_id).weapons[0], level)
+
+
+def builds_at(level):
+    return [b for b in BUILD_IDS if exists(b, level)]
 LEVEL1_SPELLS = tuple(s.id for s in magic.SPELLS.values() if s.level == 1)
 LEVEL0_SPELLS = tuple(s.id for s in magic.SPELLS.values() if s.level == 0 and s.id not in ("light_globe", "floating_disk"))
 
@@ -202,31 +217,55 @@ AUTO = "auto"       # the armour the game's rule buys with what the weapon and t
 
 
 def _arm(unit, weapons, armor, shield, quiver, notes, level=0):
-    held = next((w for w in weapons if unit.can_wield(w)), None)
+    """Buy the kit with the level's budget, in this order: the weapon, the first Quiver of a bow, the armour the game's rule
+    picks from what is left, the archer's extra Quivers, the shield. Each later item takes what the earlier ones leave and
+    stops at the copper or the load."""
+    left = outfit.budget(level)
+    held = next((w for w in weapons if unit.can_wield(w) and economy.buy_price(w) <= left), None)
     if held is None:
         notes.append("no weapon")
         held = "Dagger"
     unit.equipped_weapon = None
     unit.give_to_hand(held)
-    if shield and items.get(held).hands == 1:
-        unit.give_to_offhand(shield)
+    left -= economy.buy_price(held)
     if quiver and not unit.has_item(items.AMMO_ITEM):
         unit.give_to_pack(items.AMMO_ITEM)
+        left -= economy.buy_price(items.AMMO_ITEM)
     unit._derive_combat()
     if armor == AUTO:
-        spent = sum(economy.buy_price(x) for x in (unit.equipped_weapon, unit.equipped_offhand) if x and x != items.TORCH_ITEM)
-        spent += economy.buy_price(items.AMMO_ITEM) if quiver else 0
         lit = unit.equipped_offhand is None and items.get(unit.equipped_weapon).hands == 1     # the light `light_squad` may hand it
         if lit:
             unit.equipped_offhand = items.TORCH_ITEM
-        outfit._armor(unit, outfit.budget(level) - spent)
+        outfit._armor(unit, left)
         if lit:
             unit.equipped_offhand = None
     elif armor:
         unit.give_to_armor(armor)
         if unit.equipped_armor != armor:
             notes.append("armour refused")
+    left -= economy.buy_price(unit.equipped_armor) if unit.equipped_armor else 0
     unit._derive_combat()
+    if quiver:
+        for _ in range(EXTRA_QUIVERS):
+            if economy.buy_price(items.AMMO_ITEM) > left:
+                break
+            unit.give_to_pack(items.AMMO_ITEM)
+            unit._derive_combat()
+            if unit.encumbered:
+                unit.remove_named(items.AMMO_ITEM)
+                unit._derive_combat()
+                break
+            left -= economy.buy_price(items.AMMO_ITEM)
+    if shield and items.get(held).hands == 1:
+        if economy.buy_price(shield) > left:
+            notes.append("no shield")
+        else:
+            unit.give_to_offhand(shield)
+            unit._derive_combat()
+            if unit.encumbered:
+                unit.equipped_offhand = None
+                unit._derive_combat()
+                notes.append("no shield")
 
 
 def _cast(unit, build, level):
@@ -240,8 +279,8 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
     """`(unit, notes)`: a level-`level` fighter of `race` built as `build_id` (or a random kit).
 
     `over` changes one factor of the build for the single-factor tests: `weapon`, `armor` ("none" strips it),
-    `shield` ("none" strips it), `force` / `ban` (a combat talent), `drop_spell`, `ammo` (bolts carried, in
-    quivers of 20)."""
+    `shield` ("none" strips it), `large` (try the Large variant of each weapon first), `force` / `ban` (a combat talent),
+    `drop_spell`."""
     over = over or {}
     unit = Unit(team)
     unit.set_race(race)
@@ -259,6 +298,8 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
         build = lookup(build_id)
         if "weapon" in over:
             build = build._replace(weapons=(over["weapon"],), quiver=bool(items.get(over["weapon"]).range))
+        if over.get("large"):
+            build = build._replace(weapons=tuple(w for x in build.weapons for w in (f"Large {x}", x)))
         build = build._replace(armor=AUTO if build.armor else None)
         if "armor" in over:
             build = build._replace(armor=None if over["armor"] == "none" else over["armor"])
@@ -275,11 +316,6 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
         _arm(unit, build.weapons, build.armor, build.shield, build.quiver, notes, level)
     if fixed:
         fix_body(unit)
-    if over.get("ammo"):
-        unit.give_to_pack(items.AMMO_ITEM)
-        for _ in range(over["ammo"] // 20 - 1):
-            unit.give_to_pack(items.AMMO_ITEM)
-        unit.quiver_charges = over["ammo"]
     unit.hp = unit.hp_max
     return unit, notes
 
@@ -303,7 +339,7 @@ def _random_kit(unit, level, rng, notes, drop_racial=False):
         pool = [s.id for s in magic.SPELLS.values() if magic.casts(unit, s) and s.level <= (1 if level else 0)
                 and s.id not in ("light_globe", "floating_disk")]
         unit.spells_known = rng.sample(pool, min(len(pool), rng.randint(2, 4)))
-    weapon = rng.choice([w for w in CATALOG if unit.can_wield(w)] or ["Dagger"])
+    weapon = rng.choice([w for w in CATALOG if unit.can_wield(w) and affordable(w, level)] or ["Dagger"])
     shield = SHIELD if items.get(weapon).hands == 1 and rng.random() < 0.5 else None
     quiver = bool(items.get(weapon).range)
     _arm(unit, (weapon,), AUTO, shield, quiver, notes, level)
@@ -316,6 +352,6 @@ def light_squad(squad):
         return
     free = [u for u in squad if u.equipped_offhand is None
             and (u.equipped_weapon is None or items.get(u.equipped_weapon).hands == 1)]
-    for u in sorted(free, key=lambda u: bool(u.talent_bonus("free_hand_damage")))[:1]:
+    for u in sorted(free, key=outfit._keeps_hand_free)[:1]:
         u.equipped_offhand = items.TORCH_ITEM
         u._derive_combat()
