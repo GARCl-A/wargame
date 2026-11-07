@@ -8,6 +8,8 @@ wield, armour too heavy) instead of faking it; the study logs it.
 
 from __future__ import annotations
 
+import functools
+import random
 from typing import NamedTuple
 
 from gartok import data, economy, items, magic, outfit, talents
@@ -21,113 +23,106 @@ L5_CASTER = {"combat": 3, "work": 4, "magic": 3}
 L5_RACIAL = 5
 
 
-# The work tree's roots are +1 to an attribute: each build takes the three that serve its fight, in order.
-WORK_ROOTS = {
-    "sword_board": ("brawny", "sturdy", "nimble_fingers"),
-    "axe_bruiser": ("brawny", "sturdy", "nimble_fingers"),
-    "greatsword": ("brawny", "sturdy", "nimble_fingers"),
-    "glaive_reach": ("brawny", "nimble_fingers", "sturdy"),
-    "fortress": ("sturdy", "brawny", "nimble_fingers"),
-    "rapier_duelist": ("nimble_fingers", "sturdy", "brawny"),
-    "dagger_skirmisher": ("nimble_fingers", "sturdy", "brawny"),
-    "spear_line": ("brawny", "nimble_fingers", "sturdy"),
-    "longbow": ("nimble_fingers", "sturdy", "brawny"),
-    "shortbow": ("nimble_fingers", "sturdy", "brawny"),
-    "crossbow": ("nimble_fingers", "sturdy", "brawny"),
-    "intimidator": ("charismatic", "brawny", "sturdy"),
-    "commander": ("charismatic", "brawny", "sturdy"),
-    "analyst": ("clever", "nimble_fingers", "sturdy"),
-    "smart_miner": ("clever", "brawny", "sturdy"),
-    "sentinel": ("sturdy", "brawny", "observant"),
-    "battlemage": ("brawny", "clever", "sturdy", "nimble_fingers"),
-}
-for _id in ("nature_striker", "nature_control", "blood_striker", "blood_hexer", "faith_support", "faith_striker"):
-    WORK_ROOTS[_id] = ("clever", "sturdy", "nimble_fingers")
+AUTO = "auto"       # the armour the game's rule buys with what the weapon and the rest leave of the level's budget
+SHIELD = "Dwarf Shield"
 
 
 class Build(NamedTuple):
     id: str
     label: str
-    weapons: tuple          # first one the body can wield
+    weapons: tuple          # first one the body can wield (the Large variant of each is tried first)
     armor: str | None
     shield: str | None
-    combat: tuple           # talent priority
+    combat: tuple           # talent priority, in prerequisite order; the picks it leaves are random
+    work: tuple = ()        # the work-track roots, then random
     sources: tuple = ()
     spells0: tuple = ()     # known at level 0
     spells5: tuple = ()     # known at level 5
     magic_talents: tuple = ()
     quiver: bool = False
     thrower: bool = False   # buys spares of its thrown weapon, as an archer buys Quivers
+    armor_first: bool = False   # buys the armour, then the shield, then the weapon with what is left
     role: str = "melee"
 
 
-SHIELD = "Dwarf Shield"
-CASTER_COMBAT = ("tough", "hardy", "agile", "alert", "tactical_mind")
-CASTER_MAGIC = ("arcane_mind", "spell_focus", "destructive_casting", "far_cast")
+FRONT = ("brawny", "sturdy", "nimble_fingers")
+HEAVY = ("strong", "sure_strike", "heavy_hand", "tough", "bulwark")
+CASTER_MAGIC = ("arcane_mind", "spell_focus", "destructive_casting")
+CASTER_WORK = ("nimble_fingers", "sturdy", "clever")
 
 BUILDS = {b.id: b for b in (
-    Build("sword_board", "Sword and shield: strong and tough", ("Sword",), "Chainmail", SHIELD,
-          ("strong", "tough", "hardy", "bulwark", "sure_strike")),
-    Build("axe_bruiser", "Axe: heavy hitter", ("Axe", "Hatchet"), "Brigandine", None,
-          ("strong", "heavy_hand", "sure_strike", "tough", "hardy")),
-    Build("greatsword", "Broadsword: two-handed", ("Broadsword", "Sword"), "Chainmail", None,
-          ("strong", "heavy_hand", "sure_strike", "blind_strike", "tough")),
-    Build("glaive_reach", "Glaive: reach", ("Glaive", "Shortspear"), "Studded Leather", None,
-          ("strong", "agile", "heavy_hand", "sure_strike", "tough")),
-    Build("fortress", "Hammer and shield: the wall", ("Hammer", "Club"), "Plate Armor", SHIELD,
-          ("tough", "bulwark", "armor_bearer", "hardy", "strong")),
-    Build("rapier_duelist", "Rapier: agile finesse", ("Rapier", "Dagger"), "Leather Jerkin", None,
-          ("agile", "deadeye", "nimble_skirmisher", "fleet", "tough")),
-    Build("dagger_skirmisher", "Dagger: fast skirmisher", ("Dagger",), "Studded Leather", None,
-          ("agile", "deadeye", "fleet", "nimble_skirmisher", "tough")),
-    Build("spear_line", "Shortspear and shield: the line", ("Shortspear",), "Studded Leather", SHIELD,
-          ("strong", "agile", "tough", "sure_strike", "bulwark")),
-    Build("longbow", "Longbow and quiver: the archer", ("Longbow",), "Studded Leather", None,
-          ("agile", "deadeye", "long_reach", "fleet", "nimble_skirmisher"), quiver=True, role="ranged"),
-    Build("shortbow", "Shortbow and quiver: the light archer", ("Shortbow",), "Leather Jerkin", None,
-          ("agile", "deadeye", "fleet", "tough", "nimble_skirmisher"), quiver=True, role="ranged"),
-    Build("crossbow", "Crossbow and quiver: the heavy shot", ("Crossbow",), "Brigandine", None,
-          ("agile", "deadeye", "strong", "tough", "hardy"), quiver=True, role="ranged"),
-    Build("javelin_thrower", "Shortspear thrown: spares in the pack", ("Shortspear",), "Studded Leather", None,
-          ("agile", "strong", "long_reach", "ready_hand", "deadeye"), thrower=True, role="ranged"),
-    Build("knife_thrower", "Daggers thrown: spares in the pack", ("Dagger",), "Studded Leather", None,
-          ("agile", "strong", "long_reach", "ready_hand", "deadeye"), thrower=True, role="ranged"),
-    Build("intimidator", "Sword: Demoralize and cull", ("Sword",), "Chainmail", None,
-          ("imposing", "menacing", "cull_the_broken", "strong", "tough")),
-    Build("commander", "Hatchet, shield: shouts the line on", ("Hatchet", "Axe"), "Studded Leather", SHIELD,
-          ("imposing", "gruesome_takedown", "inspiring_shout", "tough", "strong")),
-    Build("analyst", "Rapier: reads the foe", ("Rapier", "Dagger"), "Studded Leather", None,
-          ("tactical_mind", "sharp_analysis", "combat_analysis", "exploit_weakness", "anatomist")),
-    Build("smart_miner", "Pick: Armor Pierce, reads the foe for crits", ("Pick", "Axe"), "Chainmail", None,
-          ("strong", "sure_strike", "tactical_mind", "sharp_analysis", "anatomist")),
-    Build("sentinel", "Sword and shield: alert and iron-willed", ("Sword",), "Chainmail", SHIELD,
-          ("alert", "iron_will", "iron_stance", "tough", "hardy")),
-    Build("nature_striker", "Nature: Magic Missile, Water Jet, Sleep", ("Quarterstaff", "Dagger"), "Leather Jerkin", None,
-          CASTER_COMBAT, ("nature",), ("magic_missile", "grasping_roots"),
-          ("magic_missile", "water_jet", "sleep", "grasping_roots"), CASTER_MAGIC, role="caster"),
-    Build("nature_control", "Nature: Roots, Sleep, Magic Missile", ("Quarterstaff", "Dagger"), "Leather Jerkin", None,
-          CASTER_COMBAT, ("nature",), ("grasping_roots", "magic_missile"),
-          ("grasping_roots", "sleep", "magic_missile", "water_jet"), CASTER_MAGIC, role="caster"),
-    Build("blood_striker", "Blood: Dragonfire, Magic Missile, Hex", ("Dagger", "Quarterstaff"), "Leather Jerkin", None,
-          CASTER_COMBAT, ("blood",), ("magic_missile", "hex"),
-          ("dragonfire", "magic_missile", "hex", "sleep"), CASTER_MAGIC, role="caster"),
-    Build("blood_hexer", "Blood: Hex, Sleep, Magic Missile", ("Dagger", "Quarterstaff"), "Leather Jerkin", None,
-          CASTER_COMBAT, ("blood",), ("hex", "magic_missile"),
-          ("hex", "sleep", "magic_missile", "dragonfire"), CASTER_MAGIC, role="caster"),
-    Build("faith_support", "Faith: Healing Touch, Sleep, Magic Missile", ("Quarterstaff", "Hammer"), "Studded Leather", None,
-          CASTER_COMBAT, ("faith",), ("magic_missile", "spare_the_dying"),
-          ("healing_touch", "sleep", "magic_missile", "spare_the_dying"), CASTER_MAGIC, role="caster"),
-    Build("faith_striker", "Faith: Magic Missile, Sleep, Healing Touch", ("Hammer", "Quarterstaff"), "Chainmail", None,
-          CASTER_COMBAT, ("faith",), ("magic_missile", "spare_the_dying"),
-          ("magic_missile", "sleep", "healing_touch"), CASTER_MAGIC, role="caster"),
-    Build("battlemage", "Sword, blood: Hex, Dragonfire, Magic Missile", ("Sword",), "Chainmail", None,
-          ("strong", "tough", "agile", "hardy", "sure_strike"), ("blood",), ("magic_missile", "hex"),
-          ("magic_missile", "hex", "dragonfire"), CASTER_MAGIC, role="caster"),
+    Build("sword_board", "Sword and shield", ("Sword",), AUTO, SHIELD, HEAVY, FRONT),
+    Build("axe_board", "Axe and shield", ("Axe",), AUTO, SHIELD, HEAVY, FRONT),
+    Build("broadsword", "Broadsword: two-handed", ("Broadsword",), AUTO, None, HEAVY, FRONT),
+    Build("glaive", "Glaive: reach", ("Glaive",), AUTO, None, HEAVY, FRONT),
+    Build("fortress", "Armour, then shield, then the weapon", ("Hammer",), AUTO, SHIELD,
+          ("tough", "bulwark", "armor_bearer", "strong", "heavy_hand"), ("sturdy", "brawny"), armor_first=True),
+    Build("rapier_duelist", "Rapier, free hand", ("Rapier",), AUTO, None,
+          ("agile", "duelist", "deadeye", "nimble_skirmisher", "fleet"), ("brawny", "nimble_fingers", "sturdy")),
+    Build("dagger_skirmisher", "Dagger: flanks for the sneak attack", ("Dagger",), AUTO, None,
+          ("agile", "nimble_skirmisher", "deadeye", "fleet", "duelist"), ("brawny", "nimble_fingers", "sturdy")),
+    Build("sage_archer", "Longbow: initiative", ("Longbow",), AUTO, None,
+          ("agile", "long_reach", "deadeye", "alert", "quick_wits"), ("brawny", "nimble_fingers", "observant"),
+          quiver=True, role="ranged"),
+    Build("archer", "Longbow: two random talents", ("Longbow",), AUTO, None,
+          ("agile", "long_reach", "deadeye"), ("brawny", "nimble_fingers"), quiver=True, role="ranged"),
+    Build("intimidator", "Demoralize, then cull or take down", ("Sword",), AUTO, None,
+          ("imposing", "menacing", "cull_the_broken", "strong", "heavy_hand"), ("brawny", "charismatic", "sturdy", "nimble_fingers")),
+    Build("commander", "Shouts the line on", ("Hatchet",), AUTO, SHIELD,
+          ("imposing", "gruesome_takedown", "inspiring_shout", "alert", "quick_wits"),
+          ("brawny", "charismatic", "sturdy", "nimble_fingers", "observant")),
+    Build("analyst", "Assess: reads the foe", ("Rapier",), AUTO, None,
+          ("tactical_mind", "combat_analysis", "sharp_analysis", "anatomist", "exploit_weakness"),
+          ("brawny", "sturdy", "clever", "nimble_fingers")),
+    Build("smart_miner", "Pick: Armor Pierce, reads the foe for crits", ("Pick",), AUTO, None,
+          ("tactical_mind", "sharp_analysis", "anatomist", "strong", "heavy_hand"),
+          ("brawny", "sturdy", "clever", "nimble_fingers")),
+    Build("nature_caster", "Nature: Water Jet, Roots, Sleep", ("Quarterstaff",), AUTO, None,
+          ("tactical_mind", "combat_analysis", "sharp_analysis"), CASTER_WORK, ("nature",),
+          (), ("water_jet", "grasping_roots", "sleep"), CASTER_MAGIC, role="caster"),
+    Build("blood_caster", "Blood: Hex, Dragonfire, Magic Missile, Sleep", ("Dagger",), AUTO, None,
+          ("tactical_mind", "combat_analysis", "sharp_analysis"), CASTER_WORK, ("blood",),
+          (), ("hex", "dragonfire", "magic_missile", "sleep"), CASTER_MAGIC, role="caster"),
+    Build("faith_caster", "Faith: Healing Touch, Spare the Dying, Sleep, Magic Missile", ("Quarterstaff",), AUTO, None,
+          ("tough", "bulwark", "hardy"), CASTER_WORK, ("faith",),
+          (), ("healing_touch", "spare_the_dying", "sleep", "magic_missile"),
+          ("arcane_mind", "spell_focus", "blessed_hands"), role="caster"),
+    Build("thrower", "Shortspear thrown: spares in the pack", ("Shortspear",), AUTO, None,
+          ("agile", "strong", "long_reach", "ready_hand", "deadeye"), ("brawny", "nimble_fingers", "sturdy", "observant"),
+          thrower=True, role="ranged"),
+    Build("crossbow", "Crossbow and quiver", ("Crossbow",), AUTO, None,
+          ("agile", "long_reach", "heavy_bolts", "keen_bolts", "deadeye"), ("brawny", "nimble_fingers", "sturdy", "observant"),
+          quiver=True, role="ranged"),
 )}
+
+# The talent choices inside a build, each a full combat priority: fought as mirrors of the same build, not as builds.
+VARIANTS = {
+    **{b: {"bulwark": HEAVY, "hardy": HEAVY[:-1] + ("hardy",)}
+       for b in ("sword_board", "axe_board", "broadsword", "glaive")},
+    # Free Step needs Fleet, so a pair holding it holds both
+    "rapier_duelist": {f"{x} + {y}": ("agile", "duelist", "deadeye", x, y)
+                       for x, y in (("nimble_skirmisher", "fleet"), ("fleet", "free_step"))},
+    "dagger_skirmisher": {f"{x} + {y}": ("agile", "nimble_skirmisher", "deadeye", x, y)
+                          for x, y in (("fleet", "duelist"), ("fleet", "free_step"))},
+    "intimidator": {f"{k} + {h}": ("imposing", "menacing", k, "strong", h)
+                    for k in ("cull_the_broken", "gruesome_takedown") for h in ("heavy_hand", "sure_strike")},
+}
+COMBAT_IDS = frozenset(t.id for t in talents.TREE["combat"])
+# The builds whose weapon is a question, and the weapons it is asked over.
+SWEEP_BUILDS = ("fortress", "intimidator", "commander", "analyst", "smart_miner", "nature_caster", "blood_caster", "faith_caster")
 
 PLAIN = Build("plain", "Sword, shield, no talent line (the base of the single-factor tests)", ("Sword",),
               "Chainmail", SHIELD, ())
 BUILD_IDS = tuple(BUILDS)
+
+
+def sweep_weapons(build_id, level):
+    """The weapons a weapon sweep tries on `build_id`: the thrower's thrown ones, the melee ones for every other build, and the
+    bows and crossbows too for the Commander (whose archers the author expects to do well)."""
+    names = [w for w in CATALOG if affordable(w, level)]
+    if build_id == "thrower":
+        return [w for w in names if items.get(w).has_trait("thrown")]
+    return [w for w in names if build_id == "commander" or not items.get(w).range]
 
 
 def lookup(build_id):
@@ -135,8 +130,6 @@ def lookup(build_id):
 
 
 MELEE_REF = "sword_board"
-CASTER_REF = "nature_striker"
-RANGED_REF = "longbow"
 RANDOM_KIT = "random"
 
 TORCH = items.TORCH_ITEM
@@ -159,12 +152,14 @@ def affordable(name, level):
 
 
 def exists(build_id, level):
-    """A build exists at a level when the budget pays for its first weapon: it is that weapon that makes the build."""
+    """A build exists at a level when the budget pays for its first weapon: it is that weapon that makes the build. (One that buys
+    its weapon last, the Fortress, may still find the armour left nothing for it: it fights unarmed, and the study says so.)"""
     return build_id == RANDOM_KIT or affordable(lookup(build_id).weapons[0], level)
 
 
 def builds_at(level):
-    return [b for b in BUILD_IDS if exists(b, level)]
+    return [b for b in BUILD_IDS if exists(b, level) and any(fields(b, r[1], level) for r in data.RACES)]
+
 LEVEL1_SPELLS = tuple(s.id for s in magic.SPELLS.values() if s.level == 1)
 LEVEL0_SPELLS = tuple(s.id for s in magic.SPELLS.values() if s.level == 0 and s.id not in ("light_globe", "floating_disk"))
 
@@ -175,11 +170,17 @@ def level_plan(build_id, level):
     return L5_CASTER if build_id != RANDOM_KIT and lookup(build_id).role == "caster" else L5_MELEE
 
 
-def _pick(unit, track, priority, rng, ban=()):
-    """Spend every pick of `track`: the priority list first, then at random among the legal ones."""
-    for tid in priority:
-        if unit.picks_available(track) > 0 and tid not in ban:
-            unit.choose_talent(track, tid)
+def _pick(unit, track, priority, rng, ban=(), notes=None):
+    """Spend every pick of `track`: the priority list first (a talent whose prerequisite is not held yet waits for the
+    next pass), then at random among the legal ones. A listed talent still missing while picks remain is noted."""
+    progress = True
+    while progress:
+        progress = False
+        for tid in priority:
+            if unit.picks_available(track) > 0 and tid not in ban and tid not in unit.talents[track]:
+                progress = bool(unit.choose_talent(track, tid)) or progress
+    if notes is not None and unit.picks_available(track) > 0:
+        notes += [f"talent {tid} not legal" for tid in priority if tid not in ban and tid not in unit.talents[track]]
     tree = talents.TREE[track]
     while unit.picks_available(track) > 0:
         picked = unit.talents[track]
@@ -189,9 +190,17 @@ def _pick(unit, track, priority, rng, ban=()):
             break
 
 
-def _spend_racial_and_work(unit, rng, drop_racial=False, work=()):
-    """Work picks: the build's attribute roots first, then at random; racial picks in tree order (a race's nodes
-    are not a build choice)."""
+def racial_options(race):
+    """The racial talents a level-5 `race` can pick first."""
+    unit = Unit("player")
+    unit.set_race(race)
+    unit.set_track_level("racial", L5_RACIAL)
+    return [t.id for t in talents.racial_tree(race) if unit.offerable("racial", t) and t.for_race(race)]
+
+
+def _spend_racial_and_work(unit, rng, drop_racial=False, work=(), racial=None):
+    """Work picks: the build's attribute roots first, then at random; the racial pick is `racial` when the study forces one,
+    else a random legal one (a race's nodes are not a build choice)."""
     for tid in work:
         if unit.picks_available("work") > 0:
             unit.choose_talent("work", tid)
@@ -201,7 +210,7 @@ def _spend_racial_and_work(unit, rng, drop_racial=False, work=()):
             options = [t.id for t in tree if unit.offerable(track, t) and t.for_race(unit.race["name"])]
             if not options:
                 break
-            if not unit.choose_talent(track, options[0] if track == "racial" else rng.choice(options)):
+            if not unit.choose_talent(track, racial if track == "racial" and racial in options else rng.choice(options)):
                 break
     if drop_racial:
         for tid in list(unit.talents["racial"]):
@@ -219,27 +228,8 @@ def fix_body(unit):
     unit._derive_combat()
 
 
-AUTO = "auto"       # the armour the game's rule buys with what the weapon and the rest leave of the level's budget
-
-
-def _arm(unit, weapons, armor, shield, quiver, notes, level=0, spares=0):
-    """Buy the kit with the level's budget, in this order: the weapon, the first Quiver of a bow, the armour the game's rule
-    picks from what is left, the archer's extra Quivers, the shield. Each later item takes what the earlier ones leave and
-    stops at the copper or the load."""
-    left = outfit.budget(level)
-    held = next((w for w in weapons if unit.can_wield(w) and economy.buy_price(w) <= left), None)
-    if held is None:
-        notes.append("no weapon")
-        held = "Dagger"
-    unit.equipped_weapon = None
-    unit.give_to_hand(held)
-    left -= economy.buy_price(held)
-    if quiver and not unit.has_item(items.AMMO_ITEM):
-        unit.give_to_pack(items.AMMO_ITEM)
-        left -= economy.buy_price(items.AMMO_ITEM)
-    unit._derive_combat()
+def _buy_armor(unit, armor, left, notes, lit):
     if armor == AUTO:
-        lit = unit.equipped_offhand is None and items.get(unit.equipped_weapon).hands == 1     # the light `light_squad` may hand it
         if lit:
             unit.equipped_offhand = items.TORCH_ITEM
         outfit._armor(unit, left)
@@ -249,8 +239,71 @@ def _arm(unit, weapons, armor, shield, quiver, notes, level=0, spares=0):
         unit.give_to_armor(armor)
         if unit.equipped_armor != armor:
             notes.append("armour refused")
-    left -= economy.buy_price(unit.equipped_armor) if unit.equipped_armor else 0
     unit._derive_combat()
+    return left - (economy.buy_price(unit.equipped_armor) if unit.equipped_armor else 0)
+
+
+def _buy_shield(unit, shield, left, notes):
+    if economy.buy_price(shield) > left:
+        notes.append("no shield")
+        return left
+    unit.give_to_offhand(shield)
+    unit._derive_combat()
+    if unit.encumbered:
+        unit.equipped_offhand = None
+        unit._derive_combat()
+        notes.append("no shield")
+        return left
+    return left - economy.buy_price(shield)
+
+
+def _arm(unit, weapons, armor, shield, quiver, notes, level=0, spares=0, armor_first=False):
+    """Buy the kit with the level's budget, in this order: the weapon, the first Quiver of a bow, the armour the game's rule
+    picks from what is left, the archer's extra Quivers, the shield. Each later item takes what the earlier ones leave and
+    stops at the copper or the load. `armor_first` turns it round: the armour with the whole budget, the shield, and the weapon
+    from the rest (a two-handed one gives the shield back)."""
+    left = outfit.budget(level)
+    unit.equipped_weapon = None
+    if armor_first:
+        left = _buy_armor(unit, armor, left, notes, lit=False)
+        if shield:
+            left = _buy_shield(unit, shield, left, notes)
+    held = None
+    shielded = bool(armor_first and shield and unit.equipped_offhand == shield)
+    for w in weapons:
+        refund = economy.buy_price(shield) if shielded and items.get(w).hands > 1 else 0
+        if not unit.can_wield(w) or economy.buy_price(w) > left + refund:
+            continue
+        unit.equipped_weapon = None
+        unit.give_to_hand(w)
+        unit._derive_combat()
+        if armor_first and unit.encumbered:
+            unit.equipped_weapon = None
+            unit._derive_combat()
+            continue
+        held = w
+        break
+    if held is None:
+        unit.equipped_weapon = None
+        if any(unit.can_wield(w) for w in weapons):       # the budget bought the armour and left no weapon: fists
+            notes.append("unarmed")
+            unit._derive_combat()
+            return
+        notes.append("no weapon")
+        held = "Dagger"
+        unit.give_to_hand(held)
+    if shielded and unit.equipped_offhand != shield:        # a two-handed weapon frees the hand: the shield is sold back
+        unit.equipped_offhand = None
+        left += economy.buy_price(shield)
+        notes.append("shield given back")
+    left -= economy.buy_price(held)
+    if quiver and not unit.has_item(items.AMMO_ITEM):
+        unit.give_to_pack(items.AMMO_ITEM)
+        left -= economy.buy_price(items.AMMO_ITEM)
+    unit._derive_combat()
+    if not armor_first:
+        lit = unit.equipped_offhand is None and items.get(unit.equipped_weapon).hands == 1     # the light `light_squad` may hand it
+        left = _buy_armor(unit, armor, left, notes, lit)
     if quiver:
         for _ in range(EXTRA_QUIVERS):
             if economy.buy_price(items.AMMO_ITEM) > left:
@@ -272,31 +325,51 @@ def _arm(unit, weapons, armor, shield, quiver, notes, level=0, spares=0):
             unit._derive_combat()
             break
         left -= economy.buy_price(held)
-    if shield and items.get(held).hands == 1:
-        if economy.buy_price(shield) > left:
-            notes.append("no shield")
-        else:
-            unit.give_to_offhand(shield)
-            unit._derive_combat()
-            if unit.encumbered:
-                unit.equipped_offhand = None
-                unit._derive_combat()
-                notes.append("no shield")
+    if shield and not armor_first and items.get(held).hands == 1:
+        _buy_shield(unit, shield, left, notes)
 
 
-def _cast(unit, build, level):
+def _cast(unit, build, level, notes):
+    """The school and the spells. At level 0 nobody learns: only a race that starts with magic (the Gnome, nature) keeps what it
+    has, and any other caster is left out of the study there (`fields`)."""
+    if not level:
+        if build.role == "caster" and not unit.spells_known:
+            notes.append("no spell")
+        return
     for src in build.sources:
         unit.add_magic_source(src)
-    known = build.spells5 if level else build.spells0
-    unit.spells_known = [s for s in known if magic.casts(unit, magic.SPELLS[s])]
+    unit.spells_known = [s for s in build.spells5 if magic.casts(unit, magic.SPELLS[s])]
+
+
+def fields(build_id, race, level, weapon=None):
+    """Whether `race` can field `build_id` at `level` (with `weapon` in place of the build's own): a caster at level 0 only if the
+    race starts with its school's magic, and no build whose weapon the body cannot wield (the game would hand it a free Dagger)."""
+    if build_id == RANDOM_KIT:
+        return True
+    build = lookup(build_id)
+    if not level and build.role == "caster" and not (race == "Gnome" and "nature" in build.sources):
+        return False
+    return _wields(build_id, race, level, weapon)
+
+
+@functools.cache
+def _wields(build_id, race, level, weapon):
+    _unit, notes = make_unit("player", race, build_id, level, random.Random(0), over={"weapon": weapon} if weapon else None)
+    return "no weapon" not in notes
+
+
+def large_first(weapons):
+    """The Large variant of each weapon ahead of it: the study proved a body that can wield the bigger one is better off."""
+    have = items.weapons()
+    return tuple(w for x in weapons for w in (f"Large {x}", x) if w in have)
 
 
 def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=False, over=None):
     """`(unit, notes)`: a level-`level` fighter of `race` built as `build_id` (or a random kit).
 
     `over` changes one factor of the build for the single-factor tests: `weapon`, `armor` ("none" strips it),
-    `shield` ("none" strips it), `large` (try the Large variant of each weapon first), `force` / `ban` (a combat talent),
-    `drop_spell`."""
+    `shield` ("none" strips it), `combat` (a whole talent priority, the variants), `force` / `ban` (a combat talent),
+    `drop_spell`, `spares`."""
     over = over or {}
     unit = Unit(team)
     unit.set_race(race)
@@ -309,35 +382,35 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
                 unit.set_track_level(track, lv)
         unit.set_track_level("racial", L5_RACIAL)
     if build_id == RANDOM_KIT:
-        _random_kit(unit, level, rng, notes, drop_racial)
+        _random_kit(unit, level, rng, notes, drop_racial, fixed)
     else:
         build = lookup(build_id)
         if "weapon" in over:
             build = build._replace(weapons=(over["weapon"],), quiver=bool(items.get(over["weapon"]).range))
-        if over.get("large"):
-            build = build._replace(weapons=tuple(w for x in build.weapons for w in (f"Large {x}", x)))
-        build = build._replace(armor=AUTO if build.armor else None)
+        build = build._replace(weapons=large_first(build.weapons), armor=AUTO if build.armor else None)
+        if "combat" in over:
+            build = build._replace(combat=tuple(over["combat"]))
         if "armor" in over:
             build = build._replace(armor=None if over["armor"] == "none" else over["armor"])
         if "shield" in over:
             build = build._replace(shield=None if over["shield"] == "none" else over["shield"])
         if "drop_spell" in over:
-            build = build._replace(spells0=tuple(x for x in build.spells0 if x != over["drop_spell"]),
-                                   spells5=tuple(x for x in build.spells5 if x != over["drop_spell"]))
-        _pick(unit, "combat", tuple(over.get("force", ())) + tuple(build.combat), rng, ban=tuple(over.get("ban", ())))
+            build = build._replace(spells5=tuple(x for x in build.spells5 if x != over["drop_spell"]))
+        ban = tuple(over.get("ban", ()))
+        _pick(unit, "combat", tuple(over.get("force", ())) + build.combat, rng, ban, notes)
         if plan["magic"]:
-            _pick(unit, "magic", tuple(over.get("force", ())) + tuple(build.magic_talents), rng, ban=tuple(over.get("ban", ())))
-        _spend_racial_and_work(unit, rng, drop_racial, WORK_ROOTS.get(build.id, ()))
-        _cast(unit, build, level)
+            _pick(unit, "magic", tuple(over.get("force", ())) + build.magic_talents, rng, ban, notes)
+        _spend_racial_and_work(unit, rng, drop_racial or over.get("drop_racial", False), build.work, over.get("racial"))
+        _cast(unit, build, level, notes)
+        if fixed:
+            fix_body(unit)
         _arm(unit, build.weapons, build.armor, build.shield, build.quiver, notes, level,
-             over.get("spares", THROWN_SPARES if build.thrower else 0))
-    if fixed:
-        fix_body(unit)
+             over.get("spares", THROWN_SPARES if build.thrower else 0), build.armor_first)
     unit.hp = unit.hp_max
     return unit, notes
 
 
-def _random_kit(unit, level, rng, notes, drop_racial=False):
+def _random_kit(unit, level, rng, notes, drop_racial=False, fixed=False):
     caster = rng.random() < 0.25
     plan = L5_CASTER if (caster and level) else L5_MELEE
     if caster and level and unit.magic_level != plan["magic"]:
@@ -359,13 +432,20 @@ def _random_kit(unit, level, rng, notes, drop_racial=False):
     weapon = rng.choice([w for w in CATALOG if unit.can_wield(w) and affordable(w, level)] or ["Dagger"])
     shield = SHIELD if items.get(weapon).hands == 1 and rng.random() < 0.5 else None
     quiver = bool(items.get(weapon).range)
+    if fixed:
+        fix_body(unit)
     _arm(unit, (weapon,), AUTO, shield, quiver, notes, level)
 
 
+def sees_in_the_dark(unit):
+    return max(unit.ability.darkvision, int(unit.talent_bonus("twilight_sight"))) > 0
+
+
 def light_squad(squad):
-    """A Torch in the first free off hand, the same for both sides (the game only lights the enemy band)."""
-    held = [u for u in squad if u.equipped_offhand in (items.TORCH_ITEM, items.LANTERN_ITEM)]
-    if held:
+    """The band's torch-bearer, once the three are built (the game only lights the enemy band): nobody if the whole squad sees in
+    the dark or one already carries a light, else the first with a free off hand, a Duelist last: it pays for the torch with
+    its free-hand bonus, one of the build's weaknesses in a dark map."""
+    if all(sees_in_the_dark(u) for u in squad) or any(u.equipped_offhand in (items.TORCH_ITEM, items.LANTERN_ITEM) for u in squad):
         return
     free = [u for u in squad if u.equipped_offhand is None
             and (u.equipped_weapon is None or items.get(u.equipped_weapon).hands == 1)]

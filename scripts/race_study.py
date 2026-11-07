@@ -14,6 +14,7 @@ The seed of a job is a function of its wave, level and index alone, so a chunk w
 from __future__ import annotations
 
 import argparse
+import contextlib
 import ctypes
 import gzip
 import json
@@ -28,12 +29,13 @@ from datetime import datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from gartok import ai, data, economy, map_lib, outfit, talents
+from gartok import ai, data, economy, intel, map_lib, outfit, talents
+from gartok.actions.base import _flanked
 from gartok.battle import Battle
 from gartok.scenario import CustomScenario, ErmosScenario
 from scripts import race_study_builds as rb
 
-OUT = os.path.join(ROOT, "sim_results", "teste-completo-racas")
+OUT = os.path.join(ROOT, "sim_results", "teste-builds")
 DATA = os.path.join(OUT, "data")
 GUARD = 600
 CHUNK = 200
@@ -49,19 +51,75 @@ def melee_builds(lv):
     return [b for b in rb.builds_at(lv) if rb.BUILDS[b].role == "melee"]
 
 
+def _known(battle, team, foe):
+    """How many of the foe's fields `team` has read."""
+    return sum(v is not None for v in intel.known_fields(battle, team, foe).fields.values())
+
+
 class Counting:
-    """A combat-log sink that only counts what each unit did (the interface `Battle.record_to` wants)."""
+    """A combat-log sink that counts what each unit did (the interface `Battle.record_to` wants): the actions by name,
+    and, for the ones aimed at a foe, the context they happened in, as sparse counters read back by name:
+    `f.<action>` the foe was flanked, `d.<action>` it was demoralized, `hit.` / `miss.` / `crit.<action>` the rolls,
+    `dmg.<action>` / `critdmg.<action>` the hit points taken off it, `assess.new` / `assess.full` what an Assess opened."""
 
     def __init__(self):
         self.busy = False
         self.acts = {}
+        self.init = {}
+        self.intel0 = {}
 
     def start(self, battle):
         self.acts = {id(u): Counter() for u in battle.units}
+        self.init = {id(u): (rank, u.initiative_bonus()) for rank, u in enumerate(battle.order)}
+        self.intel0 = {}
+
+    def _first_read(self, battle, actor):
+        """What the actor's side has read of the foe at its first action: foes seen, and those read to the HARD band."""
+        if actor.team in self.intel0:
+            return
+        foes = [u for u in battle.units if u.team != actor.team]
+        self.intel0[actor.team] = {"foes": len(foes), "seen": len(battle.intel.margin[actor.team]),
+                                   "full": sum(intel.has_full_intel(battle, actor.team, f) for f in foes)}
 
     def record(self, battle, name, actor, target, kw, run):
-        self.acts.setdefault(id(actor), Counter())[name] += 1
-        return run()
+        c = self.acts.setdefault(id(actor), Counter())
+        c[name] += 1
+        foe = target if getattr(target, "team", actor.team) != actor.team and hasattr(target, "hp") else None
+        try:
+            self._first_read(battle, actor)
+            log0, hp0 = battle.log_total, (foe.hp if foe else 0)
+            if foe:
+                if _flanked(battle, actor, foe):
+                    c["f." + name] += 1
+                if any(cd.id == "demoralized" for cd in foe.conditions):
+                    c["d." + name] += 1
+                known0 = _known(battle, actor.team, foe)
+                full0 = intel.has_full_intel(battle, actor.team, foe)
+        except Exception:  # noqa: BLE001 -- a counter that cannot be read must not lose the fight
+            foe = None
+        out = run()
+        if foe:
+            with contextlib.suppress(Exception):   # a counter that cannot be read must not lose the fight
+                keys = [getattr(getattr(ln, "msg", None), "key", "") for ln in battle.log_lines[-(battle.log_total - log0):]]                     if battle.log_total > log0 else []
+                crit = "log.roll.crit" in keys
+                for tag, n in (("hit.", keys.count("log.roll.hit") + keys.count("log.roll.crit")),
+                               ("miss.", keys.count("log.roll.miss") + keys.count("log.roll.crit_miss"))):
+                    if n:
+                        c[tag + name] += n
+                if crit:
+                    c["crit." + name] += 1
+                lost = max(hp0 - foe.hp, 0)
+                if lost:
+                    c["dmg." + name] += lost
+                    if battle.round_no == 1:
+                        c["r1dmg"] += lost
+                    if crit:
+                        c["critdmg." + name] += lost
+                if name == "assess":
+                    c["assess.new"] += max(_known(battle, actor.team, foe) - known0, 0)
+                    c["assess.full"] += int(intel.has_full_intel(battle, actor.team, foe) and not full0)
+
+        return out
 
 
 def _scenario(name=None):
@@ -77,12 +135,12 @@ def _squad(team, race, build, level, rng, *, fixed, drop, over=None):
         squad.append(u)
         notes += n
     rb.light_squad(squad)
-    if level:
-        outfit.light_the_band(squad)
+    if level and not all(rb.sees_in_the_dark(u) for u in squad):
+        outfit.light_the_band(squad)     # a squad with no light: one of them gives a two-handed weapon up for a torch
     return squad, notes
 
 
-def _unit_row(side, u, acts):
+def _unit_row(side, u, acts, init=None):
     weapon = u.equipped_weapon
     return {
         "s": side, "race": u.race["name"], "hp_max": u.hp_max, "hp": max(u.hp, 0), "alive": u.hp > 0,
@@ -90,6 +148,7 @@ def _unit_row(side, u, acts):
         "tal": [t for tr in talents.TRACKS for t in u.talents[tr]],
         "spells": list(u.spells_known), "weapon": weapon, "armor": u.equipped_armor,
         "off": u.equipped_offhand, "ammo": getattr(u, "ammo", None), "ac": getattr(u, "ac", None), "acts": dict(acts),
+        "init": init,
     }
 
 
@@ -110,9 +169,10 @@ def play(job):
         ai.take_turn(battle, battle.active)
     a_team = "enemy" if job["sw"] else "player"
     win = "D" if battle.winner not in ("player", "enemy") else ("A" if battle.winner == a_team else "B")
-    units = [_unit_row("A" if u.team == a_team else "B", u, sink.acts.get(id(u), {})) for u in battle.units]
+    units = [_unit_row("A" if u.team == a_team else "B", u, sink.acts.get(id(u), {}), sink.init.get(id(u))) for u in battle.units]
+    read = {("A" if t == a_team else "B"): v for t, v in sink.intel0.items()}
     return {**job, "win": win, "rounds": battle.round_no, "capped": guard >= GUARD,
-            "notes": sorted(set(na + nb)), "units": units}
+            "notes": sorted(set(na + nb)), "units": units, "read0": read}
 
 
 # -- the waves -------------------------------------------------------------------------------------------------
@@ -154,6 +214,25 @@ COMBOS = (
 )
 
 
+def racing(build_id, lv, weapon=None):
+    """The races that can field `build_id` at `lv`."""
+    return [r for r in RACES if rb.fields(build_id, r, lv, weapon)]
+
+
+def own(rng, race, lv, field):
+    """A random build of the field that `race` can field at `lv`."""
+    return rng.choice([b for b in field if rb.fields(b, race, lv)])
+
+
+def opponent(rng, lv, field):
+    """A random (race, build) from the field."""
+    while True:
+        bb = rng.choice(field)
+        rr = rng.choice(RACES)
+        if rb.fields(bb, rr, lv):
+            return rr, bb
+
+
 def wave_jobs(wave, lv, scale):
     rng = random.Random(_seed(wave, lv, 0))
     jobs, i = [], 0
@@ -172,12 +251,15 @@ def wave_jobs(wave, lv, scale):
     elif wave in ("fd", "fx"):
         for ra in RACES:
             for _ in range(int((3000 if wave == "fd" else 1500) * scale)):
-                add(ra, rng.choice(field), rng.choice(RACES), rng.choice(field), fx=wave == "fx")
+                rb_, bb = opponent(rng, lv, field)
+                add(ra, own(rng, ra, lv, field), rb_, bb, fx=wave == "fx")
     elif wave == "mb":
         for ra in RACES:
             for ba in rb.builds_at(lv):
-                for _ in range(int(150 * scale)):
-                    add(ra, ba, rng.choice(RACES), rng.choice(field))
+                if rb.fields(ba, ra, lv):
+                    for _ in range(int(150 * scale)):
+                        rb_, bb = opponent(rng, lv, field)
+                        add(ra, ba, rb_, bb)
     elif wave == "ab":
         if lv:
             for ra in RACES:
@@ -198,12 +280,14 @@ def wave_jobs(wave, lv, scale):
                         ob={**KITS[kit], "ban": list(chain), "tag": name})
     elif wave == "ef":
         for ra in RACES:
-            for _ in range(int(1500 * scale)):
-                add(ra, rng.choice(field), rng.choice(RACES), rng.choice(field), map="ermos")
+            for ba in rb.builds_at(lv):
+                if rb.fields(ba, ra, lv):
+                    for _ in range(int(60 * scale)):
+                        rb_, bb = opponent(rng, lv, field)
+                        add(ra, ba, rb_, bb, map="ermos")
     elif wave == "cg":
         gear = {"weapon": "Hammer", "armor": "Chainmail" if lv else "Leather Jerkin", "shield": "none"}
-        ids = ("plain", "nature_striker", "nature_control", "blood_striker", "blood_hexer", "faith_support",
-               "faith_striker", "battlemage")
+        ids = ("plain", "nature_caster", "blood_caster", "faith_caster")
         for x, ba in enumerate(ids):
             for bb in ids[x:]:
                 for _ in range(int(300 * scale)):
@@ -217,8 +301,9 @@ def wave_jobs(wave, lv, scale):
                         add(race, ba, race, ba, oa={"large": True})
     elif wave == "gw":
         for wpn in [w for w in rb.CATALOG if rb.affordable(w, lv)]:
-            for _ in range(int(250 * scale)):
-                rr = rng.choice(RACES)
+            races = racing("plain", lv, wpn)
+            for _ in range(int(150 * scale) if races else 0):
+                rr = rng.choice(races)
                 add(rr, "plain", rr, "plain", oa={"weapon": wpn}, ob={"weapon": "Sword"})
     elif wave == "ga":
         base = economy.buy_price("Sword")
@@ -233,28 +318,54 @@ def wave_jobs(wave, lv, scale):
                 add(rr, "plain", rr, "plain", oa={"shield": rb.SHIELD}, ob={"shield": "none"})
     elif wave == "sp":
         if lv:
-            for bid in ("nature_striker", "nature_control", "blood_striker", "blood_hexer", "faith_support", "faith_striker"):
+            for bid in ("nature_caster", "blood_caster", "faith_caster"):
                 for sid in rb.BUILDS[bid].spells5:
                     for _ in range(int(150 * scale)):
-                        rr = rng.choice(RACES)
+                        rr = rng.choice(racing(bid, lv))
                         add(rr, bid, rr, bid, ob={"drop_spell": sid})
     elif wave == "rb":
-        for ba in rb.builds_at(lv):
-            for bb in rb.builds_at(lv):
-                for _ in range(int(60 * scale)):
-                    add(rng.choice(RACES), ba, rng.choice(RACES), bb)
+        ids = rb.builds_at(lv)
+        for x, ba in enumerate(ids):
+            for bb in ids[x:]:
+                for _ in range(int(150 * scale)):
+                    add(rng.choice(racing(ba, lv)), ba, rng.choice(racing(bb, lv)), bb)
+    elif wave == "rt":
+        if lv:
+            for race in RACES:
+                for tid in rb.racial_options(race):
+                    for _ in range(int(150 * scale)):
+                        ba = rng.choice([b for b in rb.builds_at(lv) if rb.fields(b, race, lv)])
+                        add(race, ba, race, ba, oa={"racial": tid, "rt": tid}, ob={"drop_racial": True})
+    elif wave == "vr":
+        if lv:
+            for bid, variants in rb.VARIANTS.items():
+                names = list(variants)
+                for x, va in enumerate(names):
+                    for vb in names[x + 1:]:
+                        for _ in range(int(200 * scale)):
+                            rr = rng.choice(racing(bid, lv))
+                            add(rr, bid, rr, bid, oa={"combat": variants[va], "var": va}, ob={"combat": variants[vb], "var": vb})
+    elif wave == "ws":
+        for bid in (*rb.SWEEP_BUILDS, "thrower"):
+            if not rb.exists(bid, lv) or (lv == 0 and rb.lookup(bid).role == "caster"):
+                continue
+            for weapon in rb.sweep_weapons(bid, lv):
+                races = [r for r in racing(bid, lv, weapon) if rb.fields(rb.MELEE_REF, r, lv)]
+                for _ in range(int(100 * scale) if races else 0):
+                    rr = rng.choice(races)
+                    add(rr, bid, rr, rb.MELEE_REF, oa={"weapon": weapon})
     else:
         raise SystemExit(f"unknown wave {wave}")
     return jobs
 
 
-def _chunk_path(wave, lv, c):
-    return os.path.join(DATA, f"{wave}_L{lv}_{c:05d}.jsonl.gz")
+def _chunk_path(data_dir, wave, lv, c):
+    return os.path.join(data_dir, f"{wave}_L{lv}_{c:05d}.jsonl.gz")
 
 
 def run_chunk(args):
-    wave, lv, c, jobs, deadline = args
-    path = _chunk_path(wave, lv, c)
+    wave, lv, c, jobs, deadline, data_dir = args
+    path = _chunk_path(data_dir, wave, lv, c)
     if os.path.exists(path):
         return wave, lv, c, 0, 0.0
     if deadline and time.time() > deadline:
@@ -286,7 +397,15 @@ def log(msg):
         f.write(line + "\n")
 
 
+def set_out(name):
+    """Point the study at `sim_results/<name>`: a new run never reuses the chunks of another."""
+    global OUT, DATA
+    OUT = os.path.join(ROOT, "sim_results", name)
+    DATA = os.path.join(OUT, "data")
+
+
 def cmd_run(args):
+    set_out(args.out)
     os.makedirs(DATA, exist_ok=True)
     keep_awake()
     deadline = datetime.fromisoformat(args.until).timestamp() if args.until else 0
@@ -296,7 +415,7 @@ def cmd_run(args):
             wave, _, sc = spec.partition(":")
             for lv in levels:
                 jobs = wave_jobs(wave, lv, float(sc) if sc else args.scale)
-                tasks = [(wave, lv, c, jobs[c * CHUNK:(c + 1) * CHUNK], deadline)
+                tasks = [(wave, lv, c, jobs[c * CHUNK:(c + 1) * CHUNK], deadline, DATA)
                          for c in range((len(jobs) + CHUNK - 1) // CHUNK)]
                 if not tasks:
                     continue
@@ -315,7 +434,7 @@ def cmd_run(args):
 def cmd_smoke(args):
     sys.setrecursionlimit(10000)
     for lv in (0, 5):
-        for wave in ("mx", "fd", "mb", "ab", "lw", "rb"):
+        for wave in ("mb", "ef", "rb", "vr", "ws"):
             jobs = wave_jobs(wave, lv, 0.02)[: args.n]
             if not jobs:
                 continue
@@ -337,7 +456,8 @@ def main():
     s = sub.add_parser("smoke")
     s.add_argument("-n", type=int, default=30)
     r = sub.add_parser("run")
-    r.add_argument("--waves", default="mr,mx,fd,mb,ab,fx,rb")
+    r.add_argument("--waves", default="mb,ef,rb,gw,sp,vr,ws,rt")
+    r.add_argument("--out", default="teste-builds")
     r.add_argument("--levels", default="0,5")
     r.add_argument("--scale", type=float, default=1.0)
     r.add_argument("--workers", type=int, default=15)
