@@ -237,7 +237,7 @@ def test_ai_zombie_combos_grab_and_bite():
 
 def test_ai_grappled_ranged_unit_escapes():
     archer = _make_unit("enemy", "Human", dexterity=16, strength=10)
-    archer.give_to_hand("Light Crossbow")
+    archer.give_to_hand("Crossbow")
     archer.give_to_pack("Quiver")
 
     grappler = _make_unit("player", "Human", strength=10)

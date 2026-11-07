@@ -94,6 +94,11 @@ class ItemDef:
         return trait_id in self.traits
 
     @property
+    def family(self) -> str:
+        """The plain weapon's id, whatever its size: "crossbow" for a Large or Huge one."""
+        return self.id.removeprefix("large_").removeprefix("huge_")
+
+    @property
     def is_finesse(self) -> bool:
         return self.finesse or self.has_trait("finesse")
 
@@ -293,7 +298,7 @@ _BASE_WEAPONS_DATA = [
     ("sword", "Sword", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("parry_strike",), 2),
     ("broadsword", "Broadsword", ItemRarity.COMMON, 4.0, 105, (1, 12), 0, False, 0, 2, False, ("parry_strike",), 2),
     ("glaive", "Glaive", ItemRarity.COMMON, 4.5, 137, (1, 10), 0, False, 0, 2, False, ("long_thrust",), 2),
-    ("light_crossbow", "Light Crossbow", ItemRarity.COMMON, 2.5, 80, (1, 10), 18, False, 0, 2, True, ("extreme_shot", "crit_3x"), 3),
+    ("crossbow", "Crossbow", ItemRarity.COMMON, 2.5, 80, (1, 10), 18, False, 0, 2, True, ("extreme_shot", "crit_3x"), 3),
     ("shortbow", "Shortbow", ItemRarity.COMMON, 1.0, 320, (1, 6), 14, False, 0, 2, False, ("power_shot",), 2),
     ("longbow", "Longbow", ItemRarity.COMMON, 1.5, 640, (1, 8), 21, False, 0, 2, False, ("power_shot",), 2),
     ("dwarf_axe", "Dwarf Axe", ItemRarity.UNCOMMON, 4.0, 75, (1, 10), 0, False, 0, 1, False, ("cleave",), 2),
@@ -902,9 +907,9 @@ CRAFTING_RECIPES: dict[str, list[CraftingRecipe]] = RecipeDict({
             station=CraftingStation.CARPENTER,
         ),
     ],
-    "Light Crossbow": [
+    "Crossbow": [
         CraftingRecipe(
-            target="Light Crossbow",
+            target="Crossbow",
             materials=["Lumber", "Lumber", "Iron Bar"],
             complexity=15,
             station=CraftingStation.CARPENTER,

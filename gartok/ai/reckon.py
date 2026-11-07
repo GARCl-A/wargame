@@ -155,7 +155,7 @@ def _blow(unit, thrown=False):
     if thrown:
         return _avg_die(unit.weapon["damage"]) + unit.mod_strength
     if unit.ranged:
-        return _hand_die(unit)
+        return _hand_die(unit) + (unit.char.talent_bonus("crossbow_damage") if unit.shoots_crossbow else 0)
     return _hand_die(unit) + unit.melee_damage_mod()
 
 

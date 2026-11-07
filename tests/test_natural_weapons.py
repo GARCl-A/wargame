@@ -87,7 +87,7 @@ def test_a_talent_grants_a_trait_to_the_body_weapon_only():
 
 def test_a_crossbow_swung_empty_hits_with_the_body_die():
     batt, _, fighter = _melee_battle()
-    fighter.equip_weapon("Light Crossbow")
+    fighter.equip_weapon("Crossbow")
     fighter.ammo = 0
     assert fighter.improvised
     assert fighter.hand_die == fighter.char.natural_weapon.damage

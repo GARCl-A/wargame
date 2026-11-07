@@ -169,9 +169,9 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Glaive | Medium | 1d10 | melee | -- | -- | 2 | 4.5 kg | 137 |
 | Large Glaive | Large | 1d12 | melee | -- | -- | 2 | 9 kg | 274 |
 | Huge Glaive | Huge | 2d8 | melee | -- | -- | 2 | 18 kg | 548 |
-| Light Crossbow | Medium | 1d10 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
-| Large Light Crossbow | Large | 1d12 | 18 sq | -- | -- | 2 | 5 kg | 160 |
-| Huge Light Crossbow | Huge | 2d8 | 18 sq | -- | -- | 2 | 10 kg | 320 |
+| Crossbow | Medium | 1d10 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
+| Large Crossbow | Large | 1d12 | 18 sq | -- | -- | 2 | 5 kg | 160 |
+| Huge Crossbow | Huge | 2d8 | 18 sq | -- | -- | 2 | 10 kg | 320 |
 | Shortbow | Medium | 1d6 | 14 sq | -- | -- | 2 | 1 kg | 320 |
 | Large Shortbow | Large | 1d8 | 14 sq | -- | -- | 2 | 2 kg | 640 |
 | Huge Shortbow | Huge | 1d10 | 14 sq | -- | -- | 2 | 4 kg | 1280 |
@@ -378,6 +378,8 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Wrestler | +1 to Push and Grab checks. | Heavy Hand |
 | 1 | Agile | +1 Dexterity. | -- |
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | Agile |
+| 3 | Heavy Bolts | +1 damage with a Crossbow. | Long Reach |
+| 3 | Keen Bolts | A Crossbow shot is a critical hit on a natural 19 or 20. | Long Reach |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | Agile |
 | 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
 | 3 | Fleet | +1 square of Speed. | Deadeye |

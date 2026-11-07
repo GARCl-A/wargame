@@ -59,7 +59,7 @@ def test_weapon_traits_catalog_and_properties():
     assert shortbow.has_trait("power_shot")
     assert shortbow.range == 14
 
-    l_xbow = items.get("light_crossbow")
+    l_xbow = items.get("crossbow")
     assert l_xbow.has_trait("extreme_shot")
     assert l_xbow.range == 18
 
@@ -223,7 +223,7 @@ def test_extreme_shot_reaches_double_range():
     d.hp = 20
     batt.board = Board(cols=40, rows=12)
     batt.ambient_light = True
-    a.equip_weapon("Light Crossbow")
+    a.equip_weapon("Crossbow")
     a.ammo = 10
     a.crossbow_loaded = True
     a.pos = (2, 2)

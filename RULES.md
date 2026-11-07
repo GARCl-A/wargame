@@ -707,7 +707,7 @@ for next turn's breath.
 
 ### Ammo and improvised weapon 🟡
 
-- The **Light Crossbow** needs **ammo** and holds **one bolt at a time**. The
+- The **Crossbow** needs **ammo** and holds **one bolt at a time**. The
   **Quiver** (the Crossbowman's item) carries **20 bolts**; bolts are **not
   recovered**.
 - Quivers track **persistent charges** across battles. An emptied quiver is

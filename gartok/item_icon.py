@@ -35,7 +35,7 @@ ICONS = {
     "Glaive": ("hafted", "wood", {"head": "glaive", "length": 92, "metal": TONES["iron"]}),
     "Light Pick": ("hafted", "wood", {"head": "pick", "length": 60, "size": .7, "metal": TONES["iron"]}),
     "Pick": ("hafted", "wood", {"head": "pick", "length": 74, "metal": TONES["iron"]}),
-    "Light Crossbow": ("crossbow", "wood", {}),
+    "Crossbow": ("crossbow", "wood", {}),
     "Shortbow": ("bow", "wood", {}),
     "Longbow": ("bow", "oak", {"draw": 1.3}),
     "Leather Jerkin": ("armor", "leather", {}),

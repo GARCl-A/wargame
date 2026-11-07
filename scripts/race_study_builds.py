@@ -85,7 +85,7 @@ BUILDS = {b.id: b for b in (
           ("agile", "deadeye", "long_reach", "fleet", "nimble_skirmisher"), quiver=True, role="ranged"),
     Build("shortbow", "Shortbow and quiver: the light archer", ("Shortbow",), "Leather Jerkin", None,
           ("agile", "deadeye", "fleet", "tough", "nimble_skirmisher"), quiver=True, role="ranged"),
-    Build("crossbow", "Light crossbow and quiver: the heavy shot", ("Light Crossbow",), "Brigandine", None,
+    Build("crossbow", "Crossbow and quiver: the heavy shot", ("Crossbow",), "Brigandine", None,
           ("agile", "deadeye", "strong", "tough", "hardy"), quiver=True, role="ranged"),
     Build("intimidator", "Sword: Demoralize and cull", ("Sword",), "Chainmail", None,
           ("imposing", "menacing", "cull_the_broken", "strong", "tough")),

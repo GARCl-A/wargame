@@ -372,6 +372,8 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     if hasattr(attacker, "char") and intel.has_full_intel(battle, attacker.team, target):
         crit_relief = getattr(attacker.char, "talent_bonus", lambda x: 0)("full_intel_crit_range")
         crit_range = max(2, crit_range - crit_relief)
+    if weapon is None and getattr(attacker, "shoots_crossbow", False):
+        crit_range -= attacker.char.talent_bonus("crossbow_crit_range")
     crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
     roll_line = {"head": prefix, "nat": nat, "detail": detail, "total": total, "shown": shown,

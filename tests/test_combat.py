@@ -73,10 +73,10 @@ def test_demoralize_requires_shared_language():
 
 def test_crossbow_takes_two_hands():
     u = _combatant()
-    u.equip_weapon("Light Crossbow")
+    u.equip_weapon("Crossbow")
     assert u.weapon["hands"] == 2 and u.free_hands == 0
     dropped = u.equip_torch()                         # only fits by dropping the crossbow
-    assert dropped == [("weapon", "Light Crossbow")] and u.has_torch and u.unarmed
+    assert dropped == [("weapon", "Crossbow")] and u.has_torch and u.unarmed
 
 
 def test_one_handed_weapon_and_torch_coexist():
@@ -132,7 +132,7 @@ def test_two_handed_weapon_bumps_lantern_to_pack_not_ground():
     u.equip_weapon("Dagger")
     u.lantern_hand = True
     n_lanterns = u.inventory.count(data.LANTERN_ITEM)
-    dropped = u.equip_weapon("Light Crossbow")           # two-handed: no off hand left
+    dropped = u.equip_weapon("Crossbow")           # two-handed: no off hand left
     assert dropped == [] and not u.lantern_hand
     assert u.inventory.count(data.LANTERN_ITEM) == n_lanterns + 1
 
@@ -331,9 +331,9 @@ def test_lethal_flag_defaults_true_and_permadeath_still_bites():
 
 def test_crossbowman_starts_with_ammo():
     u = _unit()
-    u.set_kit("Light Crossbow", data.AMMO_ITEM)
+    u.set_kit("Crossbow", data.AMMO_ITEM)
     assert u.quiver_charges == data.QUIVER_AMMO
-    assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Light Crossbow"
+    assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Crossbow"
 
 
 def test_giving_quiver_sets_quiver_charges():
@@ -346,7 +346,7 @@ def test_giving_quiver_sets_quiver_charges():
 
 def test_crossbow_starts_unloaded_and_must_reload_first():
     u = _unit()
-    u.set_kit("Light Crossbow", data.AMMO_ITEM)
+    u.set_kit("Crossbow", data.AMMO_ITEM)
     c = Combatant(u)
     assert not c.crossbow_loaded and not c.ranged and c.improvised   # can't shoot yet
     assert c.can_reload and c.attack_range == 1                       # swings it until reloaded
@@ -355,7 +355,7 @@ def test_crossbow_starts_unloaded_and_must_reload_first():
 def test_crossbow_reload_cycle():
     batt, a, d = _melee_battle()
     batt.board.walls = set()                          # clear lane between shooter and target
-    a.equip_weapon("Light Crossbow"); a.ammo = 3; a.crossbow_loaded = True
+    a.equip_weapon("Crossbow"); a.ammo = 3; a.crossbow_loaded = True
     a.pos, d.pos = (2, 5), (9, 5)
     a.torch_hand = False
     for u in batt.units:                              # light the lane so LOS+sight hold
@@ -387,7 +387,7 @@ def test_ranged_attack_log_differentiates_bolts_and_arrows():
         u._ability = abilities.get("none")
 
     # Crossbow uses bolts
-    a.equip_weapon("Light Crossbow")
+    a.equip_weapon("Crossbow")
     a.ammo = 5
     a.crossbow_loaded = True
     a.pos, d.pos = (2, 5), (6, 5)
@@ -450,7 +450,7 @@ def test_ai_lashes_with_the_tongue_when_the_hand_weapon_falls_short():
     assert u.attack_bonus == (3, "STR")
     u.give_to_hand("Dagger")                      # finesse -> DEX alone, not the better of the two
     assert u.attack_bonus == (-1, "DEX")
-    u.give_to_hand("Light Crossbow")              # ranged -> DEX
+    u.give_to_hand("Crossbow")              # ranged -> DEX
     assert u.attack_bonus == (-1, "DEX")
 
 
@@ -462,13 +462,13 @@ def test_attack_bonus_folds_in_the_to_hit_talent():
     u.give_to_hand("Axe")
     assert u.attack_bonus[0] == u.mod_strength + 1
     u.give_to_pack("Quiver")
-    u.give_to_hand("Light Crossbow")              # DEX attack -> Sure Strike doesn't apply
+    u.give_to_hand("Crossbow")              # DEX attack -> Sure Strike doesn't apply
     assert u.attack_bonus[0] == u.mod_dexterity
 
 
 def test_crossbow_without_ammo_is_improvised():
     u = _combatant()
-    u.equip_weapon("Light Crossbow"); u.ammo = 0
+    u.equip_weapon("Crossbow"); u.ammo = 0
     assert u.improvised and not u.ranged and u.attack_range == 1
     # to-hit uses Strength (melee), not Dexterity
     labels = {lbl for _, _, lbl in u.attack_mods(None)}

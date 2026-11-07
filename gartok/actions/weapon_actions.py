@@ -10,7 +10,7 @@ edge, and beats the two attacks for any weapon or modifier:
 - Club / Hammer / Light Hammer: Maiming Strike (halves foe speed; a foe that cannot dodge)
 - Pick / Light Pick: Armor Pierce (ignores worn armor AC; an armoured foe)
 - Shortbow / Longbow: Power Shot (+STR; a foe at half the bow's range or farther)
-- Light Crossbow: Extreme Shot (doubles range to 36 squares: the only shot past the normal one)
+- Crossbow: Extreme Shot (doubles range to 36 squares: the only shot past the normal one)
 - Hatchet: Hook Shield (nullifies foe shield AC until next round; a foe with a shield)
 - Shortspear: Javelin Charge (1 AP, thrown after moving this turn, +1d4)
 - Broadsword / Sword: Parry & Strike (gains Defending; two or more foes in reach)
@@ -416,7 +416,7 @@ class PowerShot(Action):
 
 
 # --------------------------------------------------------------------------- #
-# Light Crossbow: Extreme Shot                                                #
+# Crossbow: Extreme Shot                                                #
 # --------------------------------------------------------------------------- #
 
 class ExtremeShot(Action):

@@ -695,6 +695,10 @@ class Combatant:
                 mods.append((charge, None, i18n.t("log.mod.cavalry_charge")))
         return mods
 
+    @property
+    def shoots_crossbow(self):
+        return self.ranged and not self.improvised and getattr(self.weapon, "family", None) == "crossbow"
+
     def crit_brutal(self):
         """The Brutal a critical hit of this unit carries (Savage Attacks)."""
         return int(self.char.talent_bonus("savage_attacks"))
@@ -710,6 +714,8 @@ class Combatant:
             bonus += self.mod_strength              # thrown: add Strength to damage
         elif weapon is not None or not self.ranged:  # melee (includes unarmed and the Tongue)
             bonus += self.melee_damage_mod(w)
+        elif self.shoots_crossbow:
+            bonus += self.char.talent_bonus("crossbow_damage")
         if crit:
             brutal += self.crit_brutal()
         total = sum(roll(n, faces) + bonus for _ in range(1 + brutal)) + bonus_damage

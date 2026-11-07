@@ -52,7 +52,7 @@ def test_offhand_torch_lights_unless_a_two_handed_weapon_blocks_it():
     u = _unit()
     u.equipped_weapon, u.equipped_offhand = "Dagger", data.TORCH_ITEM
     assert Combatant(u).torch_hand                    # one-handed weapon: off hand free
-    u.equipped_weapon = "Light Crossbow"                  # two-handed: off hand occupied
+    u.equipped_weapon = "Crossbow"                  # two-handed: off hand occupied
     assert not Combatant(u).torch_hand
     assert u.equipped_offhand == data.TORCH_ITEM      # still assigned, just not lit
 
@@ -60,7 +60,7 @@ def test_offhand_torch_lights_unless_a_two_handed_weapon_blocks_it():
 def test_equipping_two_handed_weapon_bumps_offhand_torch_to_pack():
     u = _unit()
     u.equipped_weapon, u.equipped_offhand = "Dagger", data.TORCH_ITEM
-    u.give_to_hand("Light Crossbow")
+    u.give_to_hand("Crossbow")
     assert u.equipped_offhand is None and u.has_item(data.TORCH_ITEM)
 
 
@@ -69,7 +69,7 @@ def test_offhand_lantern_only_lights_while_equipped():
     u.equipped_weapon, u.equipped_offhand = "Dagger", data.LANTERN_ITEM
     c = Combatant(u)
     assert c.lantern_hand and c.light_radius == data.LIGHT_SOURCES[data.LANTERN_ITEM]
-    u.equipped_weapon = "Light Crossbow"                  # two-handed: off hand occupied
+    u.equipped_weapon = "Crossbow"                  # two-handed: off hand occupied
     assert not Combatant(u).lantern_hand and Combatant(u).light_radius == 0
     assert u.equipped_offhand == data.LANTERN_ITEM        # still assigned, just not lit
 
@@ -81,7 +81,7 @@ def test_offhand_lantern_only_lights_while_equipped():
 def test_equipping_two_handed_weapon_bumps_offhand_lantern_to_pack():
     u = _unit()
     u.equipped_weapon, u.equipped_offhand = "Dagger", data.LANTERN_ITEM
-    u.give_to_hand("Light Crossbow")
+    u.give_to_hand("Crossbow")
     assert u.equipped_offhand is None and u.has_item(data.LANTERN_ITEM)
 
 

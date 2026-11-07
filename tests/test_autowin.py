@@ -57,7 +57,7 @@ def test_autowin_disqualified_by_ammo_spent():
     archer.dexterity = 16
     archer.hp_max = 20
     archer.hp = 20
-    archer.equipped_weapon = "Light Crossbow"
+    archer.equipped_weapon = "Crossbow"
     archer.give_to_pack(data.AMMO_ITEM)
     archer.quiver_charges = 10
 

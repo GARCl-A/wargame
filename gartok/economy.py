@@ -182,7 +182,7 @@ SHELVES = {
     "mine": {"Stone Brick": (10, 3), "Iron Ore": (10, 2), "1kg Coal": (15, 4)},
     "library": {"Paper": (20, 5), "Ink": (10, 2)},
     "carpenter": {
-        "Shortbow": (2, 0.3), "Longbow": (1, 0.15), "Light Crossbow": (2, 0.3), "Quarterstaff": (4, 1),
+        "Shortbow": (2, 0.3), "Longbow": (1, 0.15), "Crossbow": (2, 0.3), "Quarterstaff": (4, 1),
     },
     # the friendly Ogre's fortress (wildfire.FORTRESS_ID): the only shelf of Large weapons
     "ogre_fortress": {

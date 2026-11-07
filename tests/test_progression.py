@@ -188,7 +188,7 @@ def test_talent_effects_resolve_by_channel_and_stat():
     u._derive_combat()
     u.equipped_weapon = None                         # unarmed -> a STR attack
     assert u.attack_bonus == (u.mod_strength, "STR")  # Deadeye (DEX-only) adds nothing
-    u.equipped_weapon = "Light Crossbow"             # ranged -> a DEX attack
+    u.equipped_weapon = "Crossbow"             # ranged -> a DEX attack
     assert u.attack_bonus == (u.mod_dexterity + 1, "DEX")
 
 
@@ -248,11 +248,11 @@ def test_sure_strike_and_deadeye_key_off_the_attack_attribute():
 
     # Sure Strike (under Strong): +1 on a Strength swing, nothing on a bolt
     assert to_hit("Axe", "strong", "sure_strike") == to_hit("Axe", "strong") + 1
-    assert to_hit("Light Crossbow", "strong", "sure_strike", ammo=True) \
-        == to_hit("Light Crossbow", "strong", ammo=True)
+    assert to_hit("Crossbow", "strong", "sure_strike", ammo=True) \
+        == to_hit("Crossbow", "strong", ammo=True)
     # Deadeye (under Agile): the mirror image
-    assert to_hit("Light Crossbow", "agile", "deadeye", ammo=True) \
-        == to_hit("Light Crossbow", "agile", ammo=True) + 1
+    assert to_hit("Crossbow", "agile", "deadeye", ammo=True) \
+        == to_hit("Crossbow", "agile", ammo=True) + 1
     assert to_hit("Axe", "agile", "deadeye") == to_hit("Axe", "agile")
 
 
@@ -277,10 +277,10 @@ def test_long_reach_extends_ranged_and_thrown_not_melee():
     assert u.choose_talent("combat", "long_reach")
     u.give_to_pack("Quiver")
 
-    u.give_to_hand("Light Crossbow")
+    u.give_to_hand("Crossbow")
     loaded = Combatant(u)
     loaded.crossbow_loaded = True
-    assert loaded.attack_range == data.WEAPONS["Light Crossbow"]["range"] + 1
+    assert loaded.attack_range == data.WEAPONS["Crossbow"]["range"] + 1
     u.give_to_hand("Dagger")
     assert Combatant(u).throw_range == data.WEAPONS["Dagger"]["thrown"] + 1
     u.give_to_hand("Axe")
@@ -679,3 +679,45 @@ def test_armor_bearer_requires_bulwark_and_reduces_armor_weight():
     u._derive_combat()
     u_no_armor = _unit(seed=1)
     assert u.load == u_no_armor.load
+
+
+def _bolt_shooter(*talents):
+    u = _unit(seed=1)
+    u.combat_xp = 40
+    for t in ("agile", "long_reach", *talents):
+        assert u.choose_talent("combat", t)
+    u.give_to_pack("Quiver")
+    u.give_to_hand("Crossbow")
+    shooter = Combatant(u)
+    shooter.crossbow_loaded = True
+    return shooter
+
+
+def test_the_bolt_talents_hang_from_long_reach():
+    u = _unit(seed=1)
+    u.combat_xp = 40
+    assert not u.choose_talent("combat", "heavy_bolts")
+    assert u.choose_talent("combat", "agile") and u.choose_talent("combat", "long_reach")
+    assert u.choose_talent("combat", "heavy_bolts") and u.choose_talent("combat", "keen_bolts")
+
+
+def test_heavy_bolts_add_a_point_to_a_crossbow_shot_and_nothing_else():
+    def top(shooter, **kw):
+        return max(shooter.damage_roll(**kw) for _ in range(300))
+    plain, heavy = _bolt_shooter(), _bolt_shooter("heavy_bolts")
+    assert top(heavy) == top(plain) + 1
+    heavy.char.give_to_hand("Dagger")
+    assert not Combatant(heavy.char).shoots_crossbow
+
+
+def test_keen_bolts_make_a_19_a_critical_hit_only_with_a_crossbow():
+    from gartok.actions import base
+    from tests.helpers import Battle, Unit, fixed_d20
+
+    def crits(shooter, nat):
+        batt = Battle([Unit("player")], [Unit("enemy")])
+        batt.units[0].pos, batt.units[1].pos = (5, 5), (8, 5)
+        with fixed_d20(nat):
+            return base._resolve_hit(batt, shooter, batt.units[1], nat, 99, "", "x") == "crit"
+    keen = _bolt_shooter("keen_bolts")
+    assert crits(keen, 19) and not crits(_bolt_shooter(), 19)

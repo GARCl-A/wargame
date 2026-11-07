@@ -155,10 +155,10 @@ def test_an_archer_who_cannot_pay_for_a_bow_fights_with_finesse_unless_it_holds_
     poor = _body(weapon="Club", dexterity=16)
     outfit.outfit(poor, 2, SHOOTS)
     assert items.get(poor.equipped_weapon).finesse
-    crossbowman = _body(weapon="Light Crossbow", dexterity=16)
+    crossbowman = _body(weapon="Crossbow", dexterity=16)
     crossbowman.give_to_pack(items.AMMO_ITEM)
     outfit.outfit(crossbowman, 2, SHOOTS)
-    assert crossbowman.equipped_weapon == "Light Crossbow"
+    assert crossbowman.equipped_weapon == "Crossbow"
 
 
 def test_the_old_weapon_is_not_left_in_the_pack():

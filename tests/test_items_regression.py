@@ -115,7 +115,7 @@ def test_combat_layer_weapon_stepping_and_finesse():
         assert base_item.size == WeaponSize.MEDIUM
 
     # Ranged weapons reload
-    crossbow = items.get("Light Crossbow")
+    crossbow = items.get("Crossbow")
     assert crossbow.reload is True
     bow = items.get("Shortbow")
     assert bow.reload is False

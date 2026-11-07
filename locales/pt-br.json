@@ -5110,7 +5110,7 @@
     "gender": "f"
    },
    "Glaive": "Glaive",
-   "Light Crossbow": {
+   "Crossbow": {
     "name": "Besta Leve",
     "gender": "f"
    },
@@ -5483,6 +5483,8 @@
    "wrestler": "Lutador",
    "agile": "Ágil",
    "long_reach": "Longo Alcance",
+   "heavy_bolts": "Virotes Pesados",
+   "keen_bolts": "Virotes Certeiros",
    "deadeye": "Pontaria",
    "fleet": "Veloz",
    "nimble_skirmisher": "Escaramuçador Ágil",
@@ -5980,6 +5982,8 @@
    "wrestler": "+1 nos testes de Empurrar e Agarrar.",
    "agile": "+1 de Destreza.",
    "long_reach": "+1 casa de alcance com armas à distância e de arremesso.",
+   "heavy_bolts": "+1 de dano com a Besta.",
+   "keen_bolts": "Um disparo de Besta é crítico com 19 ou 20 natural.",
    "deadeye": "+1 para acertar com ataques baseados em Destreza.",
    "fleet": "+1 casa de Velocidade.",
    "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos flanqueados.",

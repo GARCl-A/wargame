@@ -78,7 +78,7 @@ def test_armor_pierce_when_the_armour_is_most_of_the_ac(monkeypatch):
 
 
 def test_extreme_shot_only_past_the_crossbow_s_range():
-    batt, e, p = _duel("Light Crossbow")
+    batt, e, p = _duel("Crossbow")
     e.ammo, e.crossbow_loaded = 5, True
     p.pos = (15, 5)
     assert ai._pick_attack(batt, e, p) is actions.ATTACK

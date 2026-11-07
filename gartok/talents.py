@@ -21,6 +21,8 @@ exactly one consumer that reads it back:
     venom             actions.base._envenom            poison id
     swim_reach        actions.Swim (+squares per swim) --
     ranged_reach      Combatant.attack_range/throw     --
+    crossbow_damage   Combatant.damage_roll            --
+    crossbow_crit_range actions.base._resolve_hit      --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
     post_combat_heal  campaign._carry_forward          --
     ac                Unit._derive_ac                  --
@@ -210,6 +212,10 @@ _LIST = [
     Talent("agile", "combat", 1, effects=(Effect("attr", 1, "dexterity"),), icon="action/acrobatic"),
     Talent("long_reach", "combat", 2, requires="agile",
            effects=(Effect("ranged_reach", 1),), icon="action/bowman"),
+    Talent("heavy_bolts", "combat", 3, requires="long_reach",
+           effects=(Effect("crossbow_damage", 1),), icon="action/crush"),
+    Talent("keen_bolts", "combat", 3, requires="long_reach",
+           effects=(Effect("crossbow_crit_range", 1),), icon="action/targeting"),
     Talent("deadeye", "combat", 2, requires="agile",
            effects=(Effect("to_hit", 1, "dexterity"),), icon="action/ricochet"),
     Talent("duelist", "combat", 2, requires="agile",
