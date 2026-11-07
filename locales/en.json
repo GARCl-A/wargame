@@ -2139,7 +2139,11 @@
       "race": "Race",
       "a root": "a root",
       "nothing": "nothing",
-      "beast": "beast"
+      "beast": "beast",
+      "nature": "Nature",
+      "blood": "Blood",
+      "faith": "Faith",
+      "any school": "Any school"
     }
   },
   "fx": {
@@ -4733,7 +4737,10 @@
     "no_chapter_called": "no chapter called {tab}",
     "no_entry_called": "no entry called {ref}",
     "batch_h": "{h} h a batch",
-    "two_handed": "Two-handed"
+    "two_handed": "Two-handed",
+    "spell_level": "Spell · level {level}",
+    "spell_ap": "{ap} AP",
+    "spell_points": "{points} points to learn"
   },
   "credits_session": {
     "license_cc_by": "License: CC BY 3.0",

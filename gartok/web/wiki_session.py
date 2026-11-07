@@ -1,5 +1,5 @@
-"""The wiki and compendium, as pygame's `WikiScreen`: eight chapters (items, recipes, actions,
-keywords, talents, races, beasts, rules) read off the live catalogs, and a filter over the open one.
+"""The wiki and compendium, as pygame's `WikiScreen`: nine chapters (items, recipes, actions,
+spells, keywords, talents, races, beasts, rules) read off the live catalogs, and a filter over the open one.
 Opened from the title or the map's menu; BACK returns there."""
 
 from typing import ClassVar
@@ -11,6 +11,7 @@ from .. import (
     i18n,
     item_icon,
     items,
+    magic,
     talents,
     weapon_traits,
     wiki_races,
@@ -19,7 +20,7 @@ from .. import (
 )
 from .session import Session
 
-CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), ("keywords", "Keywords"),
+CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), ("spells", "Spells"), ("keywords", "Keywords"),
             ("talents", "Talents"),
             ("races", "Races"), ("beasts", "Beasts"), ("rules", "Rules"))
 MAX_QUERY = 24
@@ -111,6 +112,22 @@ def _beasts():
     return out
 
 
+def _spells():
+    from ..actions.spells import _SPELL_ACTIONS
+
+    out = []
+    for sp in sorted(magic.SPELLS.values(), key=lambda s: (s.level, s.name)):
+        action = _SPELL_ACTIONS[sp.id]
+        schools = [i18n.lab(s.title()) for s in sorted(sp.sources)] if len(sp.sources) < len(magic.SOURCES) \
+            else [i18n.lab("Any school")]
+        desc = str(action.desc)
+        out.append(_entry(sp.id, i18n.t("wiki_session.spell_level", level=sp.level),
+                          [i18n.t("wiki_session.spell_ap", ap=action.cost),
+                           i18n.t("wiki_session.spell_points", points=magic.points_to_learn(sp.level))],
+                          [desc], tags=schools, find=[desc, *schools], label=sp.name))
+    return out
+
+
 def _rules():
     return [_entry(title, body=lines, find=lines) for title, lines in wiki_rules.sections()]
 
@@ -120,7 +137,7 @@ BUILD = {"items": lambda: [_item(i) for i in sorted(items.all_items().values(), 
                                     for target, rl in items.CRAFTING_RECIPES.items()
                                     for rec in (rl if isinstance(rl, (list, tuple)) else [rl])),
                                    key=lambda e: e["name"]),
-         "actions": lambda: _terms("actions"), "keywords": lambda: _terms("keywords"),
+         "actions": lambda: _terms("actions"), "spells": _spells, "keywords": lambda: _terms("keywords"),
          "talents": _talents, "races": _races, "beasts": _beasts, "rules": _rules}
 
 

@@ -119,7 +119,7 @@ def test_from_the_map_the_settings_carry_the_guilds_tutorial_and_save_it(saves):
 def test_the_wiki_opens_on_items_and_every_chapter_reads_the_catalogs(saves):
     w = WikiSession(lambda: {"screen": "title"})
     st = w.state()
-    assert st["chapter"] == "items" and len(st["chapters"]) == 8
+    assert st["chapter"] == "items" and len(st["chapters"]) == 9
     assert st["total"] == len(items.all_items()) and len(st["entries"]) == st["total"]
     sword = next(e for e in st["entries"] if e["name"] == "Broadsword")
     assert "1d12" in sword["tags"] and "Two-handed" in sword["tags"] and sword["glyph"].startswith("item/")
@@ -130,7 +130,20 @@ def test_the_wiki_opens_on_items_and_every_chapter_reads_the_catalogs(saves):
     rules = w.chapter("rules")
     assert [e["name"] for e in rules["entries"]] == [t for t, _ in wiki_rules.sections()]
     with pytest.raises(ValueError, match="no chapter"):
-        w.chapter("spells")
+        w.chapter("nothing")
+
+
+def test_the_wiki_spells_chapter_lists_every_spell_with_level_cost_and_schools(saves):
+    from gartok import magic
+
+    w = WikiSession(lambda: {"screen": "title"})
+    st = w.chapter("spells")
+    assert st["total"] == len(magic.SPELLS)
+    hex_ = next(e for e in st["entries"] if e["id"] == "hex")
+    assert hex_["kind"] == "Spell · level 0" and hex_["tags"] == ["Blood"] and hex_["body"][0]
+    assert "1 AP" in hex_["meta"]
+    assert next(e for e in st["entries"] if e["id"] == "sleep")["tags"] == ["Any school"]
+    assert {"hex", "dragonfire"} <= {e["id"] for e in w.find("blood")["entries"]}
 
 
 def test_the_wiki_filter_reads_more_than_the_name_and_holds_across_chapters(saves):

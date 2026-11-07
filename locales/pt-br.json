@@ -1769,6 +1769,10 @@
    "a root": "sem pré-requisito",
    "nothing": "nada",
    "beast": "fera",
+   "nature": "Natureza",
+   "blood": "Sangue",
+   "faith": "Fé",
+   "any school": "Qualquer escola",
    "steel": "Aço",
    "teal": "Turquesa",
    "forest": "Floresta",
@@ -4097,7 +4101,10 @@
   "no_chapter_called": "nenhum capítulo chamado {tab}",
   "no_entry_called": "nenhuma entrada chamada {ref}",
   "batch_h": "{h} h por lote",
-  "two_handed": "Duas mãos"
+  "two_handed": "Duas mãos",
+  "spell_level": "Magia · nível {level}",
+  "spell_ap": "{ap} PA",
+  "spell_points": "{points} pontos para aprender"
  },
  "credits_session": {
   "license_cc_by": "Licença: CC BY 3.0",
