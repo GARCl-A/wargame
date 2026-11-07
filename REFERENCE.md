@@ -94,7 +94,7 @@ A spell is cast from a known `Scroll of <Spell>` studied to the end (price in It
 | 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 2d6 fire damage. Blood magic costs no hit points. | 224 |
 | 1 | Healing Touch | faith | 1 | Touch: an ally in reach, or the caster, heals 1d6, nothing added; a body on the ground (dying or stable) is back on its feet. | 224 |
 | 1 | Sleep | any | 1 | A foe within 6 squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for up to max(1, 10 - CON mod - WIS mod) rounds, ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected. | 224 |
-| 1 | Water Jet | nature | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d6 + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns). | 224 |
+| 1 | Water Jet | nature | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d8 + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns). | 224 |
 | 2 | Invisibility | any | 2 | The caster vanishes from every other side's sight until it hurts someone. | 357 |
 | 2 | Raise Dead | faith | 2 | A dead body (not dying, not stable) within 6 squares and in sight stands up on the caster's side with 1 HP, the same body with its gear, immune to Sleep. One that falls again is dead for good. | 357 |
 

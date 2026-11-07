@@ -266,7 +266,7 @@ def test_water_jet_is_natures_own_level_one_spell_with_a_scroll():
     assert actions.WaterJetAction.reach() == 6
 
 
-def test_water_jet_hits_for_d6_plus_int_and_throws_the_target_back():
+def test_water_jet_hits_for_d8_plus_int_and_throws_the_target_back():
     batt, p, e = _jet_battle()
     jet = actions.CastSpellAction("water_jet")
     assert jet.can(batt, p, e)

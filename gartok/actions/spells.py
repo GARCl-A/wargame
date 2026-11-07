@@ -134,12 +134,12 @@ class SleepAction(SpellAction):
 
 
 class WaterJetAction(SpellAction):
-    """Nature's own: a jet of water, INT to hit against AC, 1d6 + INT and a hit throws the
+    """Nature's own: a jet of water, INT to hit against AC, 1d8 + INT and a hit throws the
     target a square away from the caster. Reaches as far as a dagger is thrown."""
     spell_id = "water_jet"
     target, aimed = "enemy", True
     missile = True
-    DICE = (1, 6)
+    DICE = (1, 8)
     desc = i18n.Text("action", "desc", reach=_DAGGER_THROW, dice=_dice(DICE))
 
     @staticmethod
