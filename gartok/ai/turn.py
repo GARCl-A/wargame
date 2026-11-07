@@ -58,7 +58,7 @@ from .support import (
     _try_share_magic,
     _try_signal_horn,
 )
-from .target import _approach_reach, _flank_cell, _no_contact, _target
+from .target import _approach_reach, _flank_cell, _flank_step, _no_contact, _target
 
 
 def take_turn(battle, unit):
@@ -300,6 +300,15 @@ def take_turn(battle, unit):
 
         if _demoralize_pays(battle, unit, target):
             actions.DEMORALIZE.execute(battle, unit, target)
+            continue
+
+        step = _flank_step(battle, unit, target)
+        if step is not None:
+            if actions.FREE_STEP.can(battle, unit, step):
+                actions.FREE_STEP.execute(battle, unit, step)
+            else:
+                actions.MOVE.execute(battle, unit, step)
+                unit.walking = False
             continue
 
         atk = _pick_attack(battle, unit, target)

@@ -314,9 +314,8 @@ def light_squad(squad):
     held = [u for u in squad if u.equipped_offhand in (items.TORCH_ITEM, items.LANTERN_ITEM)]
     if held:
         return
-    for u in squad:
-        weapon = items.get(u.equipped_weapon) if u.equipped_weapon else None
-        if u.equipped_offhand is None and (weapon is None or weapon.hands == 1):
-            u.equipped_offhand = items.TORCH_ITEM
-            u._derive_combat()
-            return
+    free = [u for u in squad if u.equipped_offhand is None
+            and (u.equipped_weapon is None or items.get(u.equipped_weapon).hands == 1)]
+    for u in sorted(free, key=lambda u: bool(u.talent_bonus("free_hand_damage")))[:1]:
+        u.equipped_offhand = items.TORCH_ITEM
+        u._derive_combat()

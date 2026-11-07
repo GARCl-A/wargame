@@ -127,7 +127,7 @@ def _arm(unit, name, style):
         if not unit.has_item(items.AMMO_ITEM):
             unit.give_to_pack(items.AMMO_ITEM)
             cost = _price(items.AMMO_ITEM)
-    elif not unit.equipped_offhand and items.get(name).hands == 1:
+    elif not unit.equipped_offhand and items.get(name).hands == 1 and not _keeps_hand_free(unit):
         cost = _light(unit)
     unit._derive_combat()
     return cost
@@ -178,6 +178,15 @@ def _weapon(unit, cap, rng):
     return _arm(unit, rng.choice(fits), style)
 
 
+def _keeps_hand_free(unit):
+    """The Duelist pays for an empty off hand only with a finesse blow, so while it wields one a
+    light is left to the rest of the band."""
+    if not unit.talent_bonus("free_hand_damage"):
+        return False
+    held = items.get(unit.equipped_weapon) if unit.equipped_weapon else None
+    return bool(unit.ability.finesse or (held is not None and held.finesse))
+
+
 def _free_hand(unit):
     held = items.get(unit.equipped_weapon) if unit.equipped_weapon else None
     return not unit.equipped_offhand and (held is None or held.hands == 1)
@@ -192,7 +201,7 @@ def light_the_band(units):
     if not band or any(u.equipped_offhand in _LIGHTS for u in band):
         return
     for u in band:
-        if _free_hand(u):
+        if _free_hand(u) and not _keeps_hand_free(u):
             _light(u)
             u._derive_combat()
             return
@@ -203,6 +212,11 @@ def light_the_band(units):
         fits = _candidates(u, STRENGTH, _price(u.equipped_weapon))
         if fits:
             _arm(u, fits[0], STRENGTH)
+            return
+    for u in band:
+        if _free_hand(u):
+            _light(u)
+            u._derive_combat()
             return
 
 

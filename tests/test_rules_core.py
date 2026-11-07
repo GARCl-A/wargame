@@ -103,7 +103,7 @@ def test_pack_tactics_and_flank_do_not_stack():
     if actions._flanked(batt, a, e):
         mods.append((2, "circumstance", "Flank"))
     total, _ = resolve_bonus(mods)
-    assert total == 2 + max(0, a.mod_strength)        # +2 circ once, not +4
+    assert total == 2 + a.mod_dexterity               # +2 circ once, not +4
 
 # --------------------------------------------------------------------------- #
 # data.item_tooltip                                                            #

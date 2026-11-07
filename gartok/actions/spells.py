@@ -205,7 +205,7 @@ class DragonfireAction(SpellAction):
     spell_id = "dragonfire"
     target, aimed = "enemy", True
     missile = True
-    DICE = (2, 6)
+    DICE = (1, 6)
     desc = i18n.Text("action", "desc", reach=_DAGGER_THROW, dice=_dice(DICE))
 
     @staticmethod

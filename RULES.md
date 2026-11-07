@@ -577,8 +577,8 @@ to the fight, as before.
   Decreasing order, fixed for the battle except what a dialogue before the fight, Delay and the
   Signal Horn move.
 - **Attack**: `d20 + mods` vs the target's `AC`.
-  - base mod = `Strength mod` (melee), `Dexterity mod` (ranged / thrown), or the
-    **better of Strength and Dexterity** (a *finesse* weapon).
+  - base mod = `Strength mod` (melee), `Dexterity mod` (ranged / thrown), or `Dexterity mod` (a *finesse*
+    weapon, which also adds the Dexterity mod to the damage in place of Strength).
   - other mods are typed and pass through the accumulation rule above.
   - **natural 20** = automatic hit + crit: the blow's whole damage (dice, modifiers, bonuses, Brutal) is
     multiplied last, by 2 (3 for the `crit_3x` weapons).

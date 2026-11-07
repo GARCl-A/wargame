@@ -3,7 +3,7 @@
 from .. import actions, intel
 from ..board import cells, grid_distance
 from .common import _avg_die, _hand_die
-from .reckon import _bleed_tick, _jet_avg
+from .reckon import _bleed_tick, _flank_step_worth, _jet_avg, _two_points
 
 
 def _focus_key(battle, unit, foe):
@@ -34,6 +34,35 @@ def _flank_cell(battle, unit, target):
         if flanks and (best is None or cost < best[0]):
             best = (cost, pos)
     return best[1] if best else None
+
+
+def _flank_step(battle, unit, target):
+    """The cell a melee unit already beside `target` should step to for a flank, or None: the free step
+    (one square, no point spent) or a walk that costs one point, whichever leaves the most worth over
+    staying put and striking. The foes' own AC and the unit's talents are in `_strike_worth`."""
+    if unit.ranged or unit.ap < 1 or battle.units_distance(unit, target) > 1 or actions._flanked(battle, unit, target):
+        return None
+    if not any(a.alive and a.team == unit.team and a is not unit and battle.units_distance(a, target) <= 1
+               for a in battle.units):
+        return None
+    stay = _two_points(battle, unit, target) * unit.ap / 2
+    walk = {}                                  # cell -> whether the step is the free one
+    if unit.ap >= 2:
+        walk.update({c: False for c in battle.reachable(unit)})
+    if actions.FREE_STEP.available(battle, unit):
+        walk.update({c: True for c in actions.FREE_STEP._spots(battle, unit)})
+    home, best = unit.pos, (stay, None)
+    for pos, is_free in walk.items():
+        if pos == home or (battle.fire and any(c in battle.fire for c in cells(pos, unit.footprint))):
+            continue
+        unit.pos = pos
+        try:
+            worth = _flank_step_worth(battle, unit, target, free=is_free)
+        finally:
+            unit.pos = home
+        if worth is not None and worth > best[0]:
+            best = (worth, pos)
+    return best[1]
 
 
 def _approach_reach(unit):

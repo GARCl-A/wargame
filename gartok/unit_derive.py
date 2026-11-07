@@ -359,9 +359,7 @@ class DerivationMixin:
         if w.range > 0:
             base, stat, src = self.mod_dexterity, "dex", "DEX"
         elif w.is_finesse or self.ability.finesse:
-            base = max(self.mod_strength, self.mod_dexterity)
-            stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
-            src = "STR/DEX"
+            base, stat, src = self.mod_dexterity, "dex", "DEX"
         else:
             base, stat, src = self.mod_strength, "str", "STR"
         base += self.talent_bonus("to_hit", "dexterity" if stat == "dex" else "strength")

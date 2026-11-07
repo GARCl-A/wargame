@@ -44,6 +44,7 @@ def _fight(snake):
     batt.board.walls.clear()
     batt.ground[:] = [GroundObject.torch((5, 4))]
     sn.ap = 2
+    victim.hp = victim.hp_max = 40                   # a bite that hurts with Dexterity must not down the victim
     return batt, sn, victim
 
 
@@ -67,10 +68,10 @@ def test_the_snake_gland_has_a_source_in_the_snake():
 def test_every_attack_of_a_snake_is_a_finesse_attack():
     sn = _snake()
     assert sn.strength < sn.dexterity
-    assert sn.attack_bonus == (sn.mod_dexterity, "STR/DEX")
+    assert sn.attack_bonus == (sn.mod_dexterity, "DEX")
     batt, snake, victim = _fight(sn)
     mods = snake.attack_mods(victim)
-    assert (sn.mod_dexterity, None, "STR/DEX") in mods
+    assert (sn.mod_dexterity, None, "DEX") in mods
 
 
 def test_an_unarmed_beast_without_the_ability_still_hits_with_strength():

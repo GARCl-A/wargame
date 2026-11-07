@@ -2462,6 +2462,7 @@
     "victory": "*** Victory: {winner} ***",
     "fire": "{unit} is in the flames! ({dice})",
     "moves": "{unit} moves (1 action point).",
+    "free_step": "{unit} takes a free step.",
     "bumps": "{unit} bumps into something unseen -- {lurker} is there!",
     "ungrappled": "  {unit} is no longer grappled.",
     "mopup_stabilize": "Enemies down -- stabilize the downed allies before the fight ends.",
@@ -2907,6 +2908,11 @@
       "name": "Move",
       "desc": "Move up to your speed."
     },
+    "free_step": {
+      "name": "Free Step",
+      "desc": "Step 1 square once a turn without spending an action point.",
+      "label": "Free Step (0 pts, once a turn, 1 square)"
+    },
     "climb": {
       "name": "Climb",
       "desc": "Climb an obstacle.",
@@ -3138,6 +3144,8 @@
       "deadeye": "Deadeye",
       "fleet": "Fleet",
       "nimble_skirmisher": "Nimble Skirmisher",
+      "duelist": "Duelist",
+      "free_step": "Free Step",
       "tough": "Tough",
       "hardy": "Hardy",
       "recovery": "Recovery",
@@ -5472,6 +5480,8 @@
       "deadeye": "+1 to hit with Dexterity-based attacks.",
       "fleet": "+1 square of Speed.",
       "nimble_skirmisher": "+2 damage on Dexterity melee attacks against flanked targets.",
+      "duelist": "+1 damage with a finesse weapon while the off hand is empty (no shield, no light).",
+      "free_step": "Once per turn, step 1 square without spending an action point.",
       "tough": "+1 Constitution.",
       "hardy": "+1 max HP for every Hit Die you have.",
       "recovery": "heal 1 HP after every fight you survive.",
@@ -5587,7 +5597,7 @@
       "rending_bite": "jaws that tear: roll one extra die on your bite.",
       "elder_skeleton": "centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma.",
       "skeleton_faith_initiate": "a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell.",
-      "deft_bones": "light, quick bones: your bare hands hit with the better of Strength or Dexterity.",
+      "deft_bones": "light, quick bones: your bare hands hit and hurt with Dexterity.",
       "giant_growth": "you swell past your kin: your size goes up one step (Medium to Large, 2x2).",
       "titanic_growth": "a second growth spurt: your size goes up another step (Large to Huge, 3x3).",
       "spin_web": "spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn.",
@@ -5631,12 +5641,12 @@
       "ferocity": "once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there).",
       "flight": "flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage.",
       "spider_venom": "a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity.",
-      "serpentine": "a body that strikes before it is seen: every attack is a finesse attack (the better of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs.",
+      "serpentine": "a body that strikes before it is seen: every attack is a finesse attack (Dexterity to hit and to hurt), and the unarmed attack is a bite of Fangs.",
       "wolf_pack_tactics": "+1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first.",
       "reach": "long arms on a huge body: melee attacks reach 1 square farther."
     },
     "trait": {
-      "finesse": "Uses Dexterity for attack rolls if it is higher than Strength.",
+      "finesse": "Uses Dexterity instead of Strength for attack and damage rolls.",
       "thrown": "Can be thrown up to its thrown range. Adds Strength modifier to attack and damage.",
       "crit_3x": "Critical hits multiply the blow's damage by 3 instead of 2.",
       "sneak_attack": "2 AP: One strike; against a flanked foe the blow is Brutal 1, +1d4.",

@@ -1,4 +1,4 @@
-"""Movement actions: Move, and the Z axis (Climb, Drop in, Jump, Swim)."""
+"""Movement actions: Move, the Free Step, and the Z axis (Climb, Drop in, Jump, Swim)."""
 
 from .. import i18n
 from ..board import cells_in_radius, grid_distance, line_cells
@@ -40,6 +40,48 @@ class Move(Action):
         return []
 
 
+
+
+class FreeStep(Action):
+    """The Free Step talent: one square of walking once a turn that costs no action point, the step
+    taken to reach a flank. It rides on `Battle.move_unit` as a walk that is already under way, so the
+    fire, the traps and the hidden foes treat it like any other step; the walk it leaves behind is the
+    one the unit had."""
+    id, cost, target = "free_step", 0, "cell"
+    announce = False
+
+    def _spots(self, battle, actor):
+        if not actor.talent_bonus("free_step") or actor.free_step_used or getattr(actor, "mounted_on", None) is not None:
+            return []
+        walk = battle.reachable(actor, budget=1)
+        return [c for c, cost in walk.items() if c != actor.pos and cost <= 1]
+
+    def available(self, battle, actor):
+        return bool(self._spots(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        return isinstance(target, tuple) and target in self._spots(battle, actor)
+
+    def label(self, battle, actor):
+        return i18n.t("action.free_step.label")
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.free_step_used = True
+        kept = (actor.walking, actor.moved, actor.diag_steps)
+        actor.walking, actor.moved, actor.diag_steps = True, 0, 0
+        battle.log("log.free_step", unit=actor.name)
+        try:
+            battle.move_unit(actor, target)
+        finally:
+            actor.walking, actor.moved, actor.diag_steps = kept
+
+    def highlight_cells(self, battle, actor):
+        return self._spots(battle, actor)
+
+    def highlight_targets(self, battle, actor):
+        return []
 
 
 class _VerticalStep(Action):

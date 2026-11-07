@@ -335,10 +335,10 @@ def test_deft_bones_lets_unarmed_attacks_hit_with_dexterity():
     before = s.attack_bonus[0]
     s.choose_talent("racial", "deft_bones")
     after, src = s.attack_bonus
-    assert after > before and src == "STR/DEX" and after == s.mod_dexterity
+    assert after > before and src == "DEX" and after == s.mod_dexterity
     batt = Battle([Unit("player")], [s])
     mods = batt.enemy_units[0].attack_mods(batt.player_units[0])
-    assert (s.mod_dexterity, None, "STR/DEX") in mods
+    assert (s.mod_dexterity, None, "DEX") in mods
 
 
 def test_giant_spider_is_medium_and_grows_twice_to_a_3x3_body():

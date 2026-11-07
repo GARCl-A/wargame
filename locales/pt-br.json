@@ -2125,6 +2125,11 @@
    "name": "Mover",
    "desc": "Move-se até a sua velocidade."
   },
+  "free_step": {
+   "name": "Passo Livre",
+   "desc": "Dê 1 passo de 1 casa uma vez por turno sem gastar ponto de ação.",
+   "label": "Passo Livre (0 pts, uma vez por turno, 1 casa)"
+  },
   "climb": {
    "name": "Escalar",
    "desc": "Escala um obstáculo.",
@@ -2443,6 +2448,7 @@
   "victory": "*** Vitória: {winner} ***",
   "fire": "{unit} está nas chamas! ({dice})",
   "moves": "{unit} se move (1 ponto de ação).",
+  "free_step": "{unit} dá um passo livre.",
   "bumps": "{unit} esbarra em algo invisível -- {lurker} está ali!",
   "ungrappled": "  {unit} não está mais agarrado.",
   "mopup_stabilize": "Inimigos caídos -- estabilize os aliados caídos antes que a luta termine.",
@@ -5473,6 +5479,8 @@
    "deadeye": "Pontaria",
    "fleet": "Veloz",
    "nimble_skirmisher": "Escaramuçador Ágil",
+   "duelist": "Duelista",
+   "free_step": "Passo Livre",
    "tough": "Resistente",
    "hardy": "Robusto",
    "recovery": "Recuperação",
@@ -5731,7 +5739,7 @@
  },
  "desc": {
   "trait": {
-   "finesse": "Usa Destreza nas jogadas de ataque se for maior que Força.",
+   "finesse": "Usa Destreza no lugar de Força nas jogadas de ataque e de dano.",
    "thrown": "Pode ser arremessada até o alcance de arremesso. Soma o modificador de Força ao ataque e ao dano.",
    "crit_3x": "Um acerto crítico multiplica o dano do golpe por 3, em vez de 2.",
    "sneak_attack": "2 pts: um golpe; contra um inimigo flanqueado, o golpe é Brutal 1, +1d4.",
@@ -5808,7 +5816,7 @@
    "ferocity": "uma vez por batalha, quando abatido cai a 0 PV e morrendo, mas só tomba no fim do seu turno (o teste contra a morte corre normalmente a partir daí).",
    "flight": "voa: move-se livremente em três dimensões (sobe e desce poços sem teste, ignora o terreno) e nunca sofre dano de queda.",
    "spider_venom": "uma mordida que tira sangue força um teste de Constituição (CD 11 + o nível racial da aranha), ou a vítima é envenenada: Veneno de Aranha Gigante, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Destreza.",
-   "serpentine": "um corpo que ataca antes de ser visto: todo ataque é de acuidade (o melhor entre Força e Destreza para acertar), e o ataque desarmado é uma mordida de Presas.",
+   "serpentine": "um corpo que ataca antes de ser visto: todo ataque é de acuidade (Destreza para acertar e para o dano), e o ataque desarmado é uma mordida de Presas.",
    "wolf_pack_tactics": "+1 de dano [corpo a corpo] (uma mordida de verdade); +2 [circunstância] no ataque por aliado já no alvo, não só o primeiro.",
    "reach": "braços longos num corpo enorme: ataques corpo a corpo alcançam 1 casa a mais."
   },
@@ -5968,6 +5976,8 @@
    "deadeye": "+1 para acertar com ataques baseados em Destreza.",
    "fleet": "+1 casa de Velocidade.",
    "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos flanqueados.",
+   "duelist": "+1 de dano com uma arma de acuidade enquanto a outra mão está vazia (sem escudo, sem luz).",
+   "free_step": "Uma vez por turno, dê 1 passo de 1 casa sem gastar ponto de ação.",
    "tough": "+1 de Constituição.",
    "hardy": "+1 de PV máximo por cada Dado de Vida que você tem.",
    "recovery": "recupera 1 PV depois de cada luta em que sobreviver.",
@@ -6083,7 +6093,7 @@
    "rending_bite": "mandíbulas que rasgam: rola um dado extra na sua mordida.",
    "elder_skeleton": "séculos de morte-vida afiam a mente e a voz: +4 de Inteligência e +4 de Carisma.",
    "skeleton_faith_initiate": "um voto que sobreviveu à morte: você se torna iniciado na magia da fé. Se já for iniciado, ganha uma magia grátis.",
-   "deft_bones": "ossos leves e rápidos: suas mãos nuas acertam com o melhor entre Força e Destreza.",
+   "deft_bones": "ossos leves e rápidos: suas mãos nuas acertam e ferem com Destreza.",
    "giant_growth": "você incha além dos seus parentes: seu tamanho sobe um degrau (Médio para Grande, 2x2).",
    "titanic_growth": "um segundo estirão: seu tamanho sobe mais um degrau (Grande para Enorme, 3x3).",
    "spin_web": "tece uma armadilha de teia ao seu lado, tão larga quanto o seu corpo (1x1, 2x2 ou 3x3): o primeiro inimigo a tocá-la fica preso, sem poder andar no próximo turno.",

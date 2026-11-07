@@ -448,8 +448,8 @@ def test_ai_lashes_with_the_tongue_when_the_hand_weapon_falls_short():
     assert u.attack_bonus == (3, "STR")           # unarmed hits with Strength
     u.give_to_hand("Axe")                         # plain melee -> STR
     assert u.attack_bonus == (3, "STR")
-    u.give_to_hand("Dagger")                      # finesse -> better of STR/DEX
-    assert u.attack_bonus == (3, "STR/DEX")
+    u.give_to_hand("Dagger")                      # finesse -> DEX alone, not the better of the two
+    assert u.attack_bonus == (-1, "DEX")
     u.give_to_hand("Light Crossbow")              # ranged -> DEX
     assert u.attack_bonus == (-1, "DEX")
 

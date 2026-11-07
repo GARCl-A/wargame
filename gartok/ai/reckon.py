@@ -155,8 +155,7 @@ def _blow(unit, thrown=False):
         return _avg_die(unit.weapon["damage"]) + unit.mod_strength
     if unit.ranged:
         return _hand_die(unit)
-    return (_hand_die(unit) + unit.mod_strength + unit.ability.melee_damage
-            + unit.char.talent_bonus("melee_damage"))
+    return _hand_die(unit) + unit.melee_damage_mod()
 
 
 def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
@@ -365,3 +364,18 @@ def _unflank_worth(battle, unit, foe):
         return 0.0
     pair = [f for f in battle.units if f.alive and f.team == foe.team and battle.units_distance(f, unit) <= 1]
     return FLANK_ODDS * sum(2 * _blow(f) for f in pair)
+
+
+def _flank_step_worth(battle, unit, target, free):
+    """What stepping to a cell that flanks `target` is worth against staying: the blows the unit still
+    has, struck from the new cell (the flank's hit odds, and the Backstab damage of a Dexterity
+    fighter), plus the odds the flank gives each mate beside the foe. `unit.pos` is the cell tried."""
+    blows = unit.ap if free else unit.ap - 1
+    if blows < 1 or not actions._flanked(battle, unit, target):
+        return None
+    extra = unit.char.talent_bonus("flank_finesse_damage") if unit.is_dex_melee else 0
+    own = blows * _strike_worth(battle, unit, target, bonus_damage=extra)
+    mates = [m for m in battle.units if m.alive and m.team == unit.team and m is not unit
+             and battle.units_distance(m, target) <= 1 and not m.ranged]
+    return own + FLANK_ODDS * sum(2 * _blow(m) * m.ap for m in mates)
+

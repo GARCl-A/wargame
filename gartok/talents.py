@@ -70,6 +70,8 @@ exactly one consumer that reads it back:
     grab_bonus        actions.combat.Grab              --
     push_bonus        actions.combat.Push              --
     flank_finesse_damage actions.base._resolve_hit     --
+    free_hand_damage  Combatant.damage_roll            --
+    free_step         actions.FreeStep                 --
     defend_mental_defense Combatant.mental_defense     --
     demoralize_ally_initiative actions.combat.execute_demoralize --
     full_intel_crit_range actions.base._resolve_hit    --
@@ -210,8 +212,12 @@ _LIST = [
            effects=(Effect("ranged_reach", 1),), icon="action/bowman"),
     Talent("deadeye", "combat", 2, requires="agile",
            effects=(Effect("to_hit", 1, "dexterity"),), icon="action/ricochet"),
+    Talent("duelist", "combat", 2, requires="agile",
+           effects=(Effect("free_hand_damage", 1),), icon="action/riposte"),
     Talent("fleet", "combat", 3, requires="deadeye",
            effects=(Effect("speed", 1),), icon="action/leapfrog"),
+    Talent("free_step", "combat", 4, requires="fleet",
+           effects=(Effect("free_step", 1),), icon="action/slalom"),
     Talent("nimble_skirmisher", "combat", 3, requires="deadeye",
            effects=(Effect("flank_finesse_damage", 2),), icon="action/backstab"),
 

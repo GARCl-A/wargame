@@ -75,7 +75,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Ferocity | Orc | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | Sprite | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
 | Spider Venom | Giant Spider | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
-| Serpentine | Snake | a body that strikes before it is seen: every attack is a finesse attack (the better of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs. |
+| Serpentine | Snake | a body that strikes before it is seen: every attack is a finesse attack (Dexterity to hit and to hurt), and the unarmed attack is a bite of Fangs. |
 | Pack Tactics | Wolf | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 | Reach | Ogre | long arms on a huge body: melee attacks reach 1 square farther. |
 
@@ -87,11 +87,11 @@ A spell is cast from a known `Scroll of <Spell>` studied to the end (price in It
 |---|---|---|---|---|---|
 | 0 | Floating Disk | any | 1 | A magical platform on a free square within 6 squares, at a chosen height: units walking at that height cross pits and deep water over it. One unit per square. | 105 |
 | 0 | Grasping Roots | nature | 1 | A foe in sight within 6 squares, d20 + INT against touch AC (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it. | 105 |
-| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores for 10 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
+| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores for 3 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
 | 0 | Light Globe | any | 1 | Drops a light source on a free square within 6 squares. | 105 |
 | 0 | Magic Missile | any | 1 | A foe in sight within 6 squares, d20 + INT against AC: 1d4 damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect. | 105 |
 | 0 | Spare the Dying | faith | 1 | Touch: a dying ally in reach is stable, no check. | 105 |
-| 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 2d6 fire damage. Blood magic costs no hit points. | 224 |
+| 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d6 fire damage. Blood magic costs no hit points. | 224 |
 | 1 | Healing Touch | faith | 1 | Touch: an ally in reach, or the caster, heals 1d6, nothing added; a body on the ground (dying or stable) is back on its feet. | 224 |
 | 1 | Sleep | any | 1 | A foe within 6 squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for up to max(1, 10 - CON mod - WIS mod) rounds, ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected. | 224 |
 | 1 | Water Jet | nature | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d8 + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns). | 224 |
@@ -191,7 +191,7 @@ Properties and keywords carried by weapons.
 
 | Trait | Description |
 |---|---|
-| Finesse | Uses Dexterity for attack rolls if it is higher than Strength. |
+| Finesse | Uses Dexterity instead of Strength for attack and damage rolls. |
 | Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
 | Crit 3x | Critical hits multiply the blow's damage by 3 instead of 2. |
 | Sneak Attack | 2 AP: One strike; against a flanked foe the blow is Brutal 1, +1d4. |
@@ -379,7 +379,9 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 1 | Agile | +1 Dexterity. | -- |
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | Agile |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | Agile |
+| 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
 | 3 | Fleet | +1 square of Speed. | Deadeye |
+| 4 | Free Step | Once per turn, step 1 square without spending an action point. | Fleet |
 | 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against flanked targets. | Deadeye |
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | Tough |
@@ -504,7 +506,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Ox | 1 | Aurochs Might | a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- |
 | Ox | 1 | Gore Charge | after walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- |
 | Ox | 1 | Thick Hide | +1 AC. | -- |
-| Skeleton | 1 | Deft Bones | light, quick bones: your bare hands hit with the better of Strength or Dexterity. | -- |
+| Skeleton | 1 | Deft Bones | light, quick bones: your bare hands hit and hurt with Dexterity. | -- |
 | Skeleton | 1 | Elder Skeleton | centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- |
 | Skeleton | 1 | Faith Initiate | a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
 | Snake | 1 | Serpent Growth | you outgrow your coils: your size goes up one step (Small to Medium). | -- |

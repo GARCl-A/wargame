@@ -52,6 +52,7 @@ from .combat import (  # noqa: F401
 from .movement import (  # noqa: F401
     Climb,
     DropIn,
+    FreeStep,
     Jump,
     Move,
     Swim,
@@ -129,6 +130,7 @@ FIRST_AID = FirstAid()
 PUSH = Push()
 CLIMB = Climb()
 DROP = DropIn()
+FREE_STEP = FreeStep()
 JUMP = Jump()
 SWIM = Swim()
 FLEE = Flee()
@@ -224,6 +226,7 @@ UTILITY_ACTIONS = [
     CLIMB,
     DROP,
     SWIM,
+    FREE_STEP,
     SHARE_MAGIC,
     EAT_CORPSE,
     SPIN_WEB,
@@ -237,7 +240,7 @@ UTILITY_ACTIONS = [
 PANEL_ACTIONS = COMBAT_ACTIONS + UTILITY_ACTIONS
 
 FIXED_HOTKEYS = {"delay": 9, "end": 0}   # off the 1-8 count, so the rest never shift
-CONTEXTUAL = (CLIMB, DROP, SWIM)         # shown only while they can be taken
+CONTEXTUAL = (CLIMB, DROP, SWIM, FREE_STEP)        # shown only while they can be taken
 
 
 def aim_kind(action):
@@ -248,7 +251,7 @@ def aim_kind(action):
         return "demo"
     if action in (ATTACK, ATTACK_TONGUE, DRAGON_BREATH):
         return "attack"
-    if action in (CLIMB, DROP, JUMP, SWIM, DISMOUNT, PUSH):
+    if action in (CLIMB, DROP, JUMP, SWIM, DISMOUNT, PUSH, FREE_STEP):
         return "move"
     if getattr(action, "spell_id", None) is not None:
         return "spell"

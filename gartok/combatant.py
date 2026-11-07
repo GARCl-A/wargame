@@ -115,6 +115,7 @@ class Combatant:
         self.ap = AP_PER_TURN
         self.walking = False          # a walk is in progress (same Move action)
         self.moved = 0                # movement cost already spent in the current walk
+        self.free_step_used = False   # the Free Step talent's square, once a turn
         self.diag_steps = 0          # diagonals taken in the current walk (1,2,1,2… cost)
         self.path = []                # cells walked this turn: [start, ..., pos]
         self.last_path = []           # the previous turn's path (kept for future mechanics)
@@ -475,11 +476,27 @@ class Combatant:
         return 1 + self.char.talent_bonus("melee_reach") + (self.tongue_weapon.reach if self.tongue_weapon else 0)
 
     @property
+    def free_hand(self):
+        """The off hand holds nothing: no shield, no torch or lantern in it, and the weapon is one-handed."""
+        shield = bool(self.equipped_offhand) and items.is_shield(self.equipped_offhand)
+        return self.free_hands >= 1 and not shield
+
+    def melee_damage_mod(self, weapon=None):
+        """What a melee blow adds to the weapon's roll: Dexterity for a finesse weapon (and the
+        Duelist's point while the off hand is empty), Strength otherwise, plus the flat bonuses."""
+        w = weapon if weapon is not None else self.attack_weapon
+        finesse = (w.is_finesse if hasattr(w, "is_finesse") else bool(w.get("finesse", False))) or self.ability.finesse
+        bonus = self.mod_dexterity if finesse else self.mod_strength
+        bonus += self._ability.melee_damage + self.char.talent_bonus("melee_damage")
+        if finesse and self.free_hand:
+            bonus += self.char.talent_bonus("free_hand_damage")
+        return bonus
+
+    @property
     def is_dex_melee(self):
         if self.ranged:
             return False
-        return bool((self.attack_weapon.is_finesse or self.ability.finesse)
-                    and self.mod_dexterity >= self.mod_strength)
+        return bool(self.attack_weapon.is_finesse or self.ability.finesse)
 
     @property
     def can_throw(self):
@@ -628,21 +645,12 @@ class Combatant:
             return w.is_finesse if hasattr(w, "is_finesse") else bool(w.get("finesse", False))
 
         if weapon is not None:
-            if _is_fin(weapon) or self.ability.finesse:
-                mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
-                hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
-            else:
-                mods = [(self.mod_strength, None, "STR")]
-                hit_stat = "str"
-        elif thrown:
-            mods = [(self.mod_dexterity, None, "DEX")]       # a throw hits with Dexterity
-            hit_stat = "dex"
-        elif self.ranged:
+            dex = _is_fin(weapon) or self.ability.finesse
+        else:                                                # a throw or a shot hits with Dexterity
+            dex = thrown or self.ranged or _is_fin(self.attack_weapon) or self.ability.finesse
+        if dex:
             mods = [(self.mod_dexterity, None, "DEX")]
             hit_stat = "dex"
-        elif _is_fin(self.attack_weapon) or self.ability.finesse:
-            mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
-            hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
         else:
             mods = [(self.mod_strength, None, "STR")]
             hit_stat = "str"
@@ -701,8 +709,7 @@ class Combatant:
         if thrown:
             bonus += self.mod_strength              # thrown: add Strength to damage
         elif weapon is not None or not self.ranged:  # melee (includes unarmed and the Tongue)
-            bonus += (self.mod_strength + self._ability.melee_damage
-                      + self.char.talent_bonus("melee_damage"))
+            bonus += self.melee_damage_mod(w)
         if crit:
             brutal += self.crit_brutal()
         total = sum(roll(n, faces) + bonus for _ in range(1 + brutal)) + bonus_damage
@@ -739,6 +746,7 @@ class Combatant:
         self.ap = AP_PER_TURN
         self.walking = False
         self.moved = 0
+        self.free_step_used = False
         self.diag_steps = 0
         self.last_path = self.path
         self.path = [self.pos]
