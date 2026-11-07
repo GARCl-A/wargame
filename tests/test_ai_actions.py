@@ -425,7 +425,7 @@ def test_ai_assesses_only_when_the_side_has_a_use_for_the_read():
     from gartok.ai import movement
     batt, a, d = _melee_battle()
     assert movement._assess_target(batt, a) is None
-    a.spells_known = ["hex"]
+    a.char.talents["combat"].append("anatomist")
     assert movement._assess_target(batt, a) is d
 
 
@@ -433,7 +433,7 @@ def test_ai_stops_assessing_a_foe_it_has_fully_read():
     from gartok import intel
     from gartok.ai import movement
     batt, a, d = _melee_battle()
-    a.spells_known = ["hex"]
+    a.char.talents["combat"].append("anatomist")
     batt.intel.margin[a.team][d] = intel.HARD
     assert movement._assess_target(batt, a) is None
 

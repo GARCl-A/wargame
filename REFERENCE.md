@@ -86,8 +86,8 @@ A spell is cast from a known `Scroll of <Spell>` studied to the end (price in It
 | Level | Spell | Schools | AP | Effect | Learning points |
 |---|---|---|---|---|---|
 | 0 | Floating Disk | any | 1 | A magical platform on a free square within 6 squares, at a chosen height: units walking at that height cross pits and deep water over it. One unit per square. | 105 |
-| 0 | Grasping Roots | nature | 1 | A foe in sight within 6 squares, d20 + INT against AC: it walks 1 square at most until the end of its next turn. A recast refreshes it. | 105 |
-| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores until the end of its next turn, which bites only where a score is even. Never stacks; a recast refreshes it. | 105 |
+| 0 | Grasping Roots | nature | 1 | A foe in sight within 6 squares, d20 + INT against touch AC (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it. | 105 |
+| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores for 10 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
 | 0 | Light Globe | any | 1 | Drops a light source on a free square within 6 squares. | 105 |
 | 0 | Magic Missile | any | 1 | A foe in sight within 6 squares, d20 + INT against AC: 1d4 damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect. | 105 |
 | 0 | Spare the Dying | faith | 1 | Touch: a dying ally in reach is stable, no check. | 105 |
@@ -169,9 +169,9 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Glaive | Medium | 1d10 | melee | -- | -- | 2 | 4.5 kg | 137 |
 | Large Glaive | Large | 1d12 | melee | -- | -- | 2 | 9 kg | 274 |
 | Huge Glaive | Huge | 2d8 | melee | -- | -- | 2 | 18 kg | 548 |
-| Light Crossbow | Medium | 1d8 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
-| Large Light Crossbow | Large | 1d10 | 18 sq | -- | -- | 2 | 5 kg | 160 |
-| Huge Light Crossbow | Huge | 1d12 | 18 sq | -- | -- | 2 | 10 kg | 320 |
+| Light Crossbow | Medium | 1d10 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
+| Large Light Crossbow | Large | 1d12 | 18 sq | -- | -- | 2 | 5 kg | 160 |
+| Huge Light Crossbow | Huge | 2d8 | 18 sq | -- | -- | 2 | 10 kg | 320 |
 | Shortbow | Medium | 1d6 | 14 sq | -- | -- | 2 | 1 kg | 320 |
 | Large Shortbow | Large | 1d8 | 14 sq | -- | -- | 2 | 2 kg | 640 |
 | Huge Shortbow | Huge | 1d10 | 14 sq | -- | -- | 2 | 4 kg | 1280 |

@@ -1,43 +1,71 @@
 """What a blow, a spell or a shove is worth: the odds to hit and the damage the AI reckons."""
 
-from .. import actions, data, intel, items
+import math
+
+from .. import actions, conditions, data, intel, items
 from ..board import cells
 from ..conditions import BLEEDING_CLAWS_TURNS
 from .common import _avg_die, _hand_die, _runs_flag
-
 
 D20_STEP = 0.05            # one point on a d20 roll
 
 
 def _spell_odds(battle, unit, target, spell):
     """Chance a hostile spell lands on `target`: `d20 + INT` against the defence it reads, the AC as
-    `_reckoned_ac` has it, the Mental Defense once read (else a bare 10)."""
-    if getattr(spell, "against", "ac") == "ac":
+    `_reckoned_ac` has it (Roots: the touch AC, a bare 10 until read), the Mental Defense once read (else a bare 10)."""
+    against = getattr(spell, "against", "ac")
+    if against == "ac":
         defence = _reckoned_ac(battle, unit, target)
+    elif against == "touch":
+        defence = target.touch_ac if intel.knows(battle, unit.team, target, "ac") else 10
     else:
         defence = target.mental_defense if intel.knows(battle, unit.team, target, "md") else 10
     return max(0.05, min(0.95, (21 - defence + spell.spell_to_hit(unit)) / 20))
 
 
+
+def _hex_scores(battle, unit, target):
+    """`{attribute: (score the modifier is read off, score the Hex can zero)}` as the unit's side
+    reckons them: the real ones once read, else ten, the average roll."""
+    if intel.knows(battle, unit.team, target, "attrs"):
+        return {a: (target.char.attribute_score(a), getattr(target.char, a) + target.char.hunger_attribute_penalty)
+                for a in data.ATTRIBUTES}
+    return dict.fromkeys(data.ATTRIBUTES, (10, 10))
+
+
 def _hex_worth(battle, unit, target):
-    """The hit points a Hex on `target` is expected to be worth through the foe's next turn, or None
-    while the unit's side has not read its attributes (Assess first): what an even Constitution
-    takes (and the foe's next blows, when that downs it), the blows the unit's side lands more often
-    on the lower AC, and the foe's own two blows landing less often and for less."""
-    if not intel.knows(battle, unit.team, target, "attrs"):
-        return None
-    deltas = target.hex_deltas()
-    lost = target.hex_hp_cost(deltas)
+    """The hit points one more Hex on `target` is expected to be worth. The better of two paths: the debuff the new stack adds
+    (the HP an Constitution step takes, the blows the unit's side lands more often on the lower AC and
+    the foe's own two blows landing less often and for less, for as long as the stack lasts or the foe
+    is expected to), and the kill, the share of the foe's HP that one cast is of the casts left to bring
+    its weakest score to zero, if the side's Hexes can keep that many stacks up at once."""
+    scores = _hex_scores(battle, unit, target)
+    points, step = target.hex_points(), conditions.HEX_POINTS
+    drop = {a: data.mod(m - points - step) - data.mod(m - points) for a, (m, _) in scores.items()}
+    dice = 1 + target.char.racial_level
+    lost = -drop["constitution"] * dice
     worth = float(min(lost, max(target.hp, 0)))
     if lost >= target.hp > 0:
         worth += 2 * _blow(target)
     strikers = [a for a in battle.units if a.alive and a.team == unit.team
                 and battle.units_distance(a, target) <= a.attack_range + a.speed]
-    worth += -target.hex_ac_delta(deltas) * D20_STEP * sum(2 * _blow(a) for a in strikers)
-    to_hit = -(deltas["dexterity"] if target.ranged else deltas["strength"])
-    damage = 0 if target.ranged else -deltas["strength"]
-    worth += 2 * (to_hit * D20_STEP * _blow(target) + SHOVE_HIT_ODDS * damage)
-    return _spell_odds(battle, unit, target, actions.CastSpellAction("hex")) * worth
+    pace = sum(2 * _hit_odds(battle, a, target) * _blow(a) for a in strikers)
+    span = min(conditions.HEX_TURNS, max(1, math.ceil(max(target.hp, 1) / pace))) if pace else 1
+    cap = target.armor.max_dex if target.armor is not None else None
+    dex = scores["dexterity"][0]
+    ac_drop = ((min(data.mod(dex) + drop["dexterity"], cap) - min(data.mod(dex), cap)) if cap is not None
+               else drop["dexterity"])
+    debuff = -ac_drop * D20_STEP * sum(2 * _blow(a) for a in strikers)
+    to_hit = -(drop["dexterity"] if target.ranged else drop["strength"])
+    damage = 0 if target.ranged else -drop["strength"]
+    debuff += 2 * (to_hit * D20_STEP * _blow(target) + SHOVE_HIT_ODDS * damage)
+    worth += debuff * span
+    weakest = min(base for _, base in scores.values()) - points
+    casters = sum(1 for a in battle.units if a.alive and a.team == unit.team and "hex" in getattr(a, "spells_known", []))
+    odds = _spell_odds(battle, unit, target, actions.CastSpellAction("hex"))
+    if weakest > 0 and casters * 2 * odds * step * conditions.HEX_TURNS >= weakest + points and target.hp > 0:
+        worth = max(worth, target.hp / math.ceil(weakest / step))
+    return odds * worth
 
 
 def _roots_worth(battle, unit, target):

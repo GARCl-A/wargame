@@ -193,6 +193,7 @@ _RACES = [_race_dict(*row) for row in RACES]
 
 # Every language in the world = the racial languages (no description in the generator).
 ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
+MIN_ROLLED_SCORE = 4   # a 3d6 roll below this is raised to it, so a rolled score plus a race modifier of -3 is never zero
 LANGUAGES = sorted({r["language"] for r in _RACES})
 
 # --------------------------------------------------------------------------- #

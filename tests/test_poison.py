@@ -176,8 +176,8 @@ def test_the_ai_spider_poisons_the_party(monkeypatch):
 # --------------------------------------------------------------------------- #
 
 def test_a_unit_with_a_physical_attribute_at_zero_starts_the_battle_dying():
-    weak = _human(dex=3)
-    for _ in range(3):
+    weak = _human(dex=4)
+    for _ in range(4):
         weak.add_poison(VENOM, 11)
     assert weak.dexterity == 0 and weak.zeroed_attribute == "dexterity"
     batt = Battle([weak], [standard_unit("enemy")])

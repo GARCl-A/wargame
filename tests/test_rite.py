@@ -12,11 +12,12 @@ from gartok import data, items, magic, orders, persist, rite, world
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit
+from tests.helpers import standard_unit
 
 
 def _guild(node="faith_cathedral", members=2, rep=2):
     random.seed(5)
-    units = [Unit("player") for _ in range(members)]
+    units = [standard_unit("player") for _ in range(members)]
     for u in units:
         u.money = 100
         u.magic_sources = []

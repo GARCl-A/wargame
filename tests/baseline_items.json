@@ -158,7 +158,7 @@
     "price": 80,
     "damage": [
       1,
-      8
+      10
     ],
     "range": 18,
     "finesse": false,
@@ -368,7 +368,7 @@
     "price": 160,
     "damage": [
       1,
-      10
+      12
     ],
     "range": 18,
     "finesse": false,

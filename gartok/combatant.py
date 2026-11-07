@@ -15,7 +15,7 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import data, i18n, intel, items, natural_weapons, progression
+from . import conditions, data, i18n, intel, items, natural_weapons, progression
 from .conditions import Hexed
 from .data import resolve_bonus, roll
 from .i18n import Ref
@@ -238,10 +238,10 @@ class Combatant:
         log("log.down.dying", unit=self.name, turns=data.DYING_TURNS)
 
     def check_collapse(self, log):
-        """A physical attribute (Str / Dex / Con) at zero drops a standing unit to
-        the ground, dying -- checked when the battle starts and whenever poison
+        """An attribute at zero (poison, hunger and Hex counted) drops a standing unit to
+        the ground, dying -- checked when the battle starts and whenever poison or Hex
         takes another point."""
-        gone = self.char.zeroed_attribute
+        gone = self.char.zeroed_by(self.hex_points())
         if gone and self.alive:
             log("log.down.zeroed", unit=self.name, attribute=Ref("attribute", gone, gone.capitalize()))
             self.go_down(log)
@@ -538,6 +538,16 @@ class Combatant:
         return base
 
     @property
+    def touch_ac(self):
+        """AC against a spell that needs no blow past armour: 10 + Dexterity (the armour's cap
+        ignored) + the typed bonuses, never the armour, the shield or a Hex (already in Dexterity)."""
+        mods = [m for m in self._condition_mods("ac_mods") if m[1] != "hex"]
+        if self.ac_natural:
+            mods.append((self.ac_natural, "natural", "race"))
+        total, _ = resolve_bonus(mods)
+        return 10 + self.mod_dexterity + self.char.talent_bonus("ac") + total
+
+    @property
     def mental_defense(self):
         total, _ = resolve_bonus(self._condition_mods("mental_defense_mods"))
         bonus = 0
@@ -562,38 +572,49 @@ class Combatant:
     mod_charisma = _hexed_mod("charisma")
     del _hexed_mod
 
-    def hex_deltas(self):
-        """What a Hex does to each modifier: -1 where the score is even, 0 where it is odd."""
+    def hex_points(self):
+        hexed = self.condition("hexed")
+        return hexed.points if hexed is not None else 0
+
+    def hex_deltas(self, points=None):
+        """What `points` of Hex (the ones on this unit by default) do to each modifier: the modifier of
+        the score `points` lower, against the modifier of the score as it stands."""
         score = getattr(self.char, "attribute_score", None)
         if score is None:
             return dict.fromkeys(data.ATTRIBUTES, 0)
-        return {a: data.mod(score(a) - 1) - data.mod(score(a)) for a in data.ATTRIBUTES}
+        points = self.hex_points() if points is None else points
+        return {a: data.mod(score(a) - points) - data.mod(score(a)) for a in data.ATTRIBUTES}
 
     def hex_hp_cost(self, deltas):
-        """The max (and current) HP a Hex takes: one per hit die on an even Constitution."""
+        """The max (and current) HP a Hex takes: one per hit die for each step the Constitution modifier falls."""
         if not deltas["constitution"] or getattr(self.char, "_hp_override", None) is not None:
             return 0
-        return min(1 + len(getattr(self.char, "_level_hp_rolls", ())), self.hp_max - 1)
+        return -deltas["constitution"] * (1 + len(getattr(self.char, "_level_hp_rolls", ())))
 
     def hex_ac_delta(self, deltas):
         """What a Hex does to the AC: the Dexterity drop, as far as worn armour lets Dexterity count."""
         dex, cap = self.char.mod_dexterity, (self.armor.max_dex if self.armor is not None else None)
         return (min(dex + deltas["dexterity"], cap) - min(dex, cap)) if cap is not None else deltas["dexterity"]
 
+    def hex_sync(self, log):
+        """Bring the Hex's modifiers, AC and max HP in line with the stacks it holds now."""
+        hexed = self.condition("hexed")
+        deltas = self.hex_deltas(hexed.points)
+        wanted = min(self.hex_hp_cost(deltas), self.hp_max + hexed.hp_lost - 1)
+        diff = wanted - hexed.hp_lost
+        hexed.deltas, hexed.ac_delta, hexed.hp_lost = deltas, self.hex_ac_delta(deltas), wanted
+        self.hp_max -= diff
+        if diff > 0:
+            self.take_damage(diff, log)
+
     def hex(self, log):
-        """Lay a Hex on this unit; a recast on a hexed unit only renews its length. The AC follows
-        the Dexterity drop as far as worn armour lets Dexterity count; an even Constitution takes
-        `hex_hp_cost`, the max coming back when the hex wears off."""
-        old = self.condition("hexed")
-        if old is not None:
-            old.held = False
-            return
-        deltas = self.hex_deltas()
-        lost = self.hex_hp_cost(deltas)
-        self.add_condition(Hexed(deltas, self.hex_ac_delta(deltas), lost))
-        if lost:
-            self.hp_max -= lost
-            self.take_damage(lost, log)
+        """Lay one more stack of Hex on this unit."""
+        hexed = self.condition("hexed")
+        if hexed is None:
+            hexed = Hexed()
+            self.add_condition(hexed)
+        hexed.add_stack(conditions.HEX_POINTS, conditions.HEX_TURNS)
+        self.hex_sync(log)
 
     def initiative_bonus(self):
         return (self.mod_wisdom + self._ability.initiative

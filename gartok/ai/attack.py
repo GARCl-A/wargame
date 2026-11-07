@@ -83,16 +83,16 @@ def _pick_weapon_attack(unit, opts):
     return actions.ATTACK if actions.ATTACK in opts else opts[0]
 
 
-HOLDING_SPELLS = (("hex", "hexed", _hex_worth), ("grasping_roots", "rooted", _roots_worth))
+HOLDING_SPELLS = (("hex", None, _hex_worth), ("grasping_roots", "rooted", _roots_worth))
 
 
 def _hex_or_roots(battle, unit, target):
-    """Hex or Grasping Roots on `target`, whichever is expected to be worth more than the point
-    buys as a strike (`_point_worth`), or None."""
+    """Hex (another stack, however many it carries) or Grasping Roots (not on a foe already rooted),
+    whichever is expected to be worth more than the point buys as a strike (`_point_worth`), or None."""
     known = getattr(unit, "spells_known", [])
     best, best_worth = None, _point_worth(battle, unit, target)
     for spell_id, condition, worth_of in HOLDING_SPELLS:
-        if spell_id not in known or target.has_condition(condition):
+        if spell_id not in known or (condition and target.has_condition(condition)):
             continue
         spell = actions.CastSpellAction(spell_id)
         if not spell.can(battle, unit, target):

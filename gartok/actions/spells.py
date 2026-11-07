@@ -2,7 +2,7 @@
 
 import random
 
-from .. import data, i18n, intel, items, magic
+from .. import conditions, data, i18n, intel, items, magic
 from ..board import grid_distance
 from ..conditions import Invisible, Rooted, Sleeping
 from ..data import d20
@@ -68,7 +68,8 @@ class MagicMissileAction(SpellAction):
             return False
         if not _hostile_target(actor, target):
             return False
-        return battle.units_distance(actor, target) <= self.spell_range(actor, self.REACH)
+        return (battle.units_distance(actor, target) <= self.spell_range(actor, self.REACH)
+                and battle.los_between(actor, target))
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -266,9 +267,14 @@ class _HostileSpellAction(SpellAction):
         atk = d20()
         to_hit = self.spell_to_hit(actor)
         score = atk + to_hit
-        defence = target.ac_vs(actor) if self.against == "ac" else target.mental_defense
-        roll = Msg("log.spell.roll_ac" if self.against == "ac" else "log.spell.roll_md", atk=atk, bonus=to_hit,
-                   score=score, **{self.against: intel.shown(battle, target, self.against, defence)})
+        if self.against == "md":
+            defence = target.mental_defense
+            roll = Msg("log.spell.roll_md", atk=atk, bonus=to_hit, score=score,
+                       md=intel.shown(battle, target, "md", defence))
+        else:
+            defence = target.touch_ac if self.against == "touch" else target.ac_vs(actor)
+            roll = Msg("log.spell.roll_touch" if self.against == "touch" else "log.spell.roll_ac", atk=atk,
+                       bonus=to_hit, score=score, ac=intel.shown(battle, target, "ac", defence))
         if atk == 1:
             battle.log("log.spell.roll_crit_miss", roll=roll)
         elif atk == 20 or score >= defence:
@@ -281,6 +287,7 @@ class _HostileSpellAction(SpellAction):
 class GraspingRootsAction(_HostileSpellAction):
     """Nature's level 0: roots hold a foe to 1 cell of walking until the end of its next turn."""
     spell_id = "grasping_roots"
+    against = "touch"
     desc = i18n.Text("action", "desc", reach=_HostileSpellAction.REACH)
 
     def lands(self, battle, actor, target):
@@ -293,21 +300,19 @@ class GraspingRootsAction(_HostileSpellAction):
 
 
 class HexAction(_HostileSpellAction):
-    """Blood's level 0: -1 on each of the foe's six scores until the end of its next turn
-    (`Combatant.hex`), which bites only where a score is even."""
+    """Blood's level 0: one more stack of Hex on the foe, `HEX_POINTS` off each of its six attribute
+    scores for `HEX_TURNS` of its turns (`Combatant.hex`). An attribute that reaches zero drops it."""
     spell_id = "hex"
     against = "md"
-    desc = i18n.Text("action", "desc", reach=_HostileSpellAction.REACH)
+    desc = i18n.Text("action", "desc", reach=_HostileSpellAction.REACH, points=conditions.HEX_POINTS, turns=conditions.HEX_TURNS)
 
     def lands(self, battle, actor, target):
         was_up = target.alive
         target.hex(battle.log)
-        bit = [a[:3].upper() for a, d in target.condition("hexed").deltas.items() if d]
-        if bit:
-            battle.log("log.hex.bites", target=target.name, scores=", ".join(bit))
-        else:
-            battle.log("log.hex.nothing", target=target.name)
+        battle.log("log.hex.bites", target=target.name, points=conditions.HEX_POINTS, total=target.hex_points())
         battle.fx(target.pos, i18n.t("fx.hexed"), "faint")
+        if target.alive:
+            target.check_collapse(battle.log)
         if was_up and not target.alive and target.team != actor.team:
             actor.credit_kill(target, magic=True)
 

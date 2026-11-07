@@ -9,8 +9,6 @@ attribute loss itself is applied in `Unit._apply_attributes` via `poison_penalty
 from . import data, i18n, items, poisons
 from .i18n import Ref
 
-PHYSICAL = ("strength", "dexterity", "constitution")
-
 
 class PoisonMixin:
     # ------------------------------------------------------------------ #
@@ -34,10 +32,13 @@ class PoisonMixin:
 
     @property
     def zeroed_attribute(self):
-        """The first physical attribute (Str / Dex / Con) down at zero or below,
-        else None. A character with one falls to the ground, dying (see
+        return self.zeroed_by(0)
+
+    def zeroed_by(self, hex_points):
+        """The first attribute down at zero or below once hunger and `hex_points` of Hex are taken off
+        (the load is not), else None. A character with one falls to the ground, dying (see
         `Combatant.check_collapse`)."""
-        return next((a for a in PHYSICAL if getattr(self, a) <= 0), None)
+        return next((a for a in data.ATTRIBUTES if getattr(self, a) + self.hunger_attribute_penalty - hex_points <= 0), None)
 
     # ------------------------------------------------------------------ #
     # getting poisoned                                                   #

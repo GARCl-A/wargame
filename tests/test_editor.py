@@ -100,12 +100,12 @@ def test_map_library_round_trips_size_and_water():
         map_lib.MAP_DIR = old
 
 
-def test_sandbox_attribute_edits_clamp_to_a_3d6_score():
+def test_sandbox_attribute_edits_clamp_to_the_rolled_range():
     u = _unit(seed=3)
     u.set_base_attribute("strength", 25)
     assert u.base_attributes["strength"] == 18
     u.set_base_attribute("strength", 1)
-    assert u.base_attributes["strength"] == 3
+    assert u.base_attributes["strength"] == 4
     u.set_money(-5)
     assert u.money == 0
     u.set_language("Elvish", True)

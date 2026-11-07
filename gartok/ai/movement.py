@@ -154,16 +154,15 @@ def _try_secret(battle, unit):
 
 
 def _reads_intel(team):
-    """Does someone on `team` use a full read of a foe (Hex, Roots, Exploit Weakness, Anatomist)?"""
-    return any(any(s in getattr(a, "spells_known", []) for s in ("hex", "grasping_roots"))
-               or a.char.talent_bonus("full_intel_to_hit") or a.char.talent_bonus("full_intel_crit_range")
+    """Does someone on `team` use a full read of a foe (Exploit Weakness, Anatomist)?"""
+    return any(a.char.talent_bonus("full_intel_to_hit") or a.char.talent_bonus("full_intel_crit_range")
                for a in team)
 
 
 def _assess_target(battle, unit):
     """The foe in sight to Assess now, or None. Assess is a point that wins nothing by itself: it
-    pays only while the side lacks a full read (`intel.has_full_intel`) that someone on it uses, a
-    Hex or Roots caster (they need the attributes) or an Exploit Weakness / Anatomist build. The read
+    pays only while the side lacks a full read (`intel.has_full_intel`) that someone on it uses, an
+    Exploit Weakness / Anatomist build. The read
     is the side's, so the best reader among those still to act takes it."""
     team = [a for a in battle.units if a.alive and a.team == unit.team]
     if not _reads_intel(team) or not actions.ASSESS.available(battle, unit):

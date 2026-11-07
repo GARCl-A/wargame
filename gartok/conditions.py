@@ -9,6 +9,8 @@ here + whoever applies it calls `unit.add_condition(...)`.
 """
 
 
+HEX_POINTS = 1               # what one Hex takes off every attribute score
+HEX_TURNS = 10               # victim turns a Hex stack lasts
 BLEEDING_CLAWS_TURNS = 2     # the Catfolk's Claws: each wound bleeds this many turns
 
 
@@ -245,17 +247,24 @@ class Rooted(Condition):
 
 
 class Hexed(Condition):
-    """Hex: -1 on each of the six attribute scores through the victim's next whole turn.
-    `deltas` is what that does to each modifier (-1 on an even score, 0 on an odd one),
-    worked out by `Combatant.hex` when it lands; `hp_lost` is the max HP an even CON took,
-    given back to the max (not the current HP) when it wears off."""
+    """Hex: each cast is a stack that takes `points` off every attribute score for `turns` of the
+    victim's turns, counted from the first one that starts after the cast; stacks add up. `deltas`,
+    `ac_delta` and `hp_lost` are what the stacks do to the modifiers, the AC and the max HP, worked
+    out by `Combatant.hex_sync`; the max HP comes back when the hex ends."""
     id = "hexed"
 
-    def __init__(self, deltas, ac_delta=0, hp_lost=0):
-        self.deltas = dict(deltas)
-        self.ac_delta = ac_delta
-        self.hp_lost = hp_lost
-        self.held = False
+    def __init__(self):
+        self.stacks = []                  # [points, turns left, a victim's turn has started since]
+        self.deltas = dict.fromkeys(("strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"), 0)
+        self.ac_delta = 0
+        self.hp_lost = 0
+
+    @property
+    def points(self):
+        return sum(s[0] for s in self.stacks)
+
+    def add_stack(self, points, turns):
+        self.stacks.append([points, turns, False])
 
     def ac_mods(self):
         return [(self.ac_delta, "hex", "Hex")] if self.ac_delta else []
@@ -265,15 +274,25 @@ class Hexed(Condition):
         return [(wis, "hex", "Hex")] if wis else []
 
     def on_turn_start(self, unit, log):
-        self.held = True
+        for stack in self.stacks:
+            stack[2] = True
         return False
 
     def on_turn_end(self, unit, log):
-        if not self.held:
-            return False
-        unit.hp_max += self.hp_lost
-        log("log.cond.hexed_ends", unit=unit.name)
-        return True
+        before = len(self.stacks)
+        for stack in self.stacks:
+            if stack[2]:
+                stack[1] -= 1
+        self.stacks = [s for s in self.stacks if s[1] > 0]
+        if not self.stacks:
+            unit.hp_max += self.hp_lost
+            self.hp_lost = 0
+            log("log.cond.hexed_ends", unit=unit.name)
+            return True
+        if len(self.stacks) < before:
+            unit.hex_sync(log)
+            log("log.cond.hex_fades", unit=unit.name, left=self.points)
+        return False
 
 
 class PixieFlight(Condition):

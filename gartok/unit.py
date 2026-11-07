@@ -245,7 +245,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
     # ------------------------------------------------------------------ #
     def _roll_attributes(self):
         # keep the raw 3d6 roll so the draft can re-apply a different race
-        self.base_attributes = {a: roll(3, 6) for a in ATTRIBUTES}
+        self.base_attributes = {a: max(data.MIN_ROLLED_SCORE, roll(3, 6)) for a in ATTRIBUTES}
         for a in ATTRIBUTES:
             setattr(self, a, self.base_attributes[a])
         self._age_base = random.randint(1, 100)

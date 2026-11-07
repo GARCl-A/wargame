@@ -8,14 +8,14 @@ from gartok import campaign, dialogue, factions, hunt, missions, orders, wildfir
 from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.map_view import node_icon
-from tests.helpers import Unit, _FixedRNG
+from tests.helpers import Unit, _FixedRNG, standard_unit
 
 DAY = 24 * 3600
 
 
 def _guild(node="nature_grove", n=2):
     random.seed(7)
-    members = [Unit("player") for _ in range(n)]
+    members = [standard_unit("player") for _ in range(n)]
     for u in members:
         u.give_to_pack("Meat", 30)
     guild = Guild(members, node=node, clock=Clock(10 * 3600))

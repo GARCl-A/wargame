@@ -2089,10 +2089,10 @@
    "desc": "Um inimigo ao alcance de um arremesso de adaga ({reach} casas), d20 + INT contra CA: {dice} de dano de fogo. A magia de sangue não custa pontos de vida."
   },
   "cast_grasping_roots": {
-   "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra CA: ele anda no máximo 1 casa até o fim do seu próximo turno. Conjurar de novo renova o efeito."
+   "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra a CA de toque (10 + DES, sem armadura nem escudo): ele anda no máximo 1 casa até o fim do seu próximo turno. Conjurar de novo renova o efeito."
   },
   "cast_hex": {
-   "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra Defesa Mental: −1 em cada um dos seus seis atributos até o fim do seu próximo turno, o que só pesa onde o valor é par. Não acumula; conjurar de novo renova o efeito."
+   "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra Defesa Mental: −{points} em cada um dos seus seis atributos por {turns} dos seus turnos. Cada conjuração é um acúmulo próprio e os acúmulos se somam; um atributo em zero derruba o alvo."
   },
   "cast_spare_the_dying": {
    "desc": "Toque: um aliado moribundo ao alcance se estabiliza, sem teste."
@@ -2390,6 +2390,7 @@
    "miss": " Erra ({score} contra CA {ac}).",
    "roll_md": " d20({atk}) {bonus:+}(INT) = {score} contra DM {md}",
    "roll_ac": " d20({atk}) {bonus:+}(INT) = {score} contra CA {ac}",
+   "roll_touch": " d20({atk}) {bonus:+}(INT) = {score} contra CA de toque {ac}",
    "roll_crit_miss": "{roll} -> Erro crítico!",
    "roll_lands": "{roll} -> pega.",
    "roll_resisted": "{roll} -> resistido."
@@ -2409,8 +2410,7 @@
    "grip": "  Raízes agarram as pernas de {target}: uma casa de caminhada até o fim do próximo turno."
   },
   "hex": {
-   "bites": "  {target} está sob maldição: {scores} -1.",
-   "nothing": "  {target} está sob maldição: nada cede."
+   "bites": "  {target} está sob maldição: todo atributo -{points} (-{total} no total)."
   },
   "spare_the_dying": {
    "touch": "{actor} põe a mão em {target} e conjura {spell}."
@@ -2489,6 +2489,7 @@
    "shield_ends": "O escudo de {unit} não está mais preso.",
    "rooted_ends": "{unit} se solta das raízes.",
    "hexed_ends": "{unit} se livra da maldição.",
+   "hex_fades": "{unit} se livra de uma maldição: restam -{left} em todo atributo.",
    "pixie_ends": "O pó de fada de {unit} acaba."
   },
   "ferocity": "  Ferocidade! {unit} chega a 0 PV mas continua de pé até o fim do turno.",

@@ -2409,6 +2409,7 @@
       "miss": " Miss ({score} vs AC {ac}).",
       "roll_md": " d20({atk}) {bonus:+}(INT) = {score} vs MD {md}",
       "roll_ac": " d20({atk}) {bonus:+}(INT) = {score} vs AC {ac}",
+      "roll_touch": " d20({atk}) {bonus:+}(INT) = {score} vs touch AC {ac}",
       "roll_crit_miss": "{roll} -> Critical miss!",
       "roll_lands": "{roll} -> lands.",
       "roll_resisted": "{roll} -> resisted."
@@ -2428,8 +2429,7 @@
       "grip": "  Roots grip {target}'s legs: one cell of walking until its next turn is over."
     },
     "hex": {
-      "bites": "  {target} is hexed: {scores} -1.",
-      "nothing": "  {target} is hexed: nothing gives."
+      "bites": "  {target} is hexed: every score -{points} (-{total} in all)."
     },
     "spare_the_dying": {
       "touch": "{actor} lays a hand on {target} and casts {spell}."
@@ -2508,6 +2508,7 @@
       "shield_ends": "{unit}'s shield is no longer tangled.",
       "rooted_ends": "{unit} pulls free of the roots.",
       "hexed_ends": "{unit} shakes off the hex.",
+      "hex_fades": "{unit} shakes off a hex: -{left} left on every score.",
       "pixie_ends": "{unit}'s pixie dust wears off."
     },
     "ferocity": "  Ferocity! {unit} hits 0 HP but stays on their feet until the end of their turn.",
@@ -2870,10 +2871,10 @@
       "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against AC: {dice} fire damage. Blood magic costs no hit points."
     },
     "cast_grasping_roots": {
-      "desc": "A foe in sight within {reach} squares, d20 + INT against AC: it walks 1 square at most until the end of its next turn. A recast refreshes it."
+      "desc": "A foe in sight within {reach} squares, d20 + INT against touch AC (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it."
     },
     "cast_hex": {
-      "desc": "A foe in sight within {reach} squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores until the end of its next turn, which bites only where a score is even. Never stacks; a recast refreshes it."
+      "desc": "A foe in sight within {reach} squares, d20 + INT against Mental Defense: -{points} on each of its six attribute scores for {turns} of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it."
     },
     "cast_spare_the_dying": {
       "desc": "Touch: a dying ally in reach is stable, no check."

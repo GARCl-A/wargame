@@ -73,9 +73,9 @@ class EditMixin:
         self.bio = (text or "").strip()
 
     def set_base_attribute(self, attr, score):
-        """Set the raw (pre-racial) score for `attr`, clamped to the 3..18 a 3d6
-        roll can produce. Racial mods and talents still apply on top."""
-        self.base_attributes[attr] = max(3, min(18, int(score)))
+        """Set the raw (pre-racial) score for `attr`, clamped to the
+        data.MIN_ROLLED_SCORE..18 a roll can give. Racial mods and talents still apply on top."""
+        self.base_attributes[attr] = max(data.MIN_ROLLED_SCORE, min(18, int(score)))
         self._apply_attributes()
         self._derive_combat()
 

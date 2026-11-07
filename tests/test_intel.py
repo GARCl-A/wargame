@@ -288,7 +288,7 @@ def test_the_ai_spends_a_spare_point_to_assess_the_foe_it_knows_least():
     batt.turn_idx = batt.order.index(hero)
     hero.ap = 2
     assert not ai._try_assess(batt, hero)         # nobody on the side uses a full read
-    hero.spells_known = ["hex"]
+    hero.char.talents["combat"].append("anatomist")
     assert ai._try_assess(batt, hero)
     assert hero.ap == 1
     assert batt.intel.assessed[("player", foe)] == batt.round_no

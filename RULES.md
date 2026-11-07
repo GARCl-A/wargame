@@ -26,11 +26,11 @@ backticks stops existing, or a constant's value quoted next to its name drifts.
 
 ## 1. Attributes 🟢
 
-Six attributes, each rolled with **3d6** (values 3–18):
+Six attributes, each rolled with **3d6**, a roll under 4 raised to 4 (values 4–18):
 
 `Strength · Dexterity · Constitution · Intelligence · Wisdom · Charisma`
 
-**Modifier** = ⌊(score − 10) / 2⌋ — so 3 → −4, 10–11 → 0, 18 → +4.
+**Modifier** = ⌊(score − 10) / 2⌋ — so 4 → −3, 10–11 → 0, 18 → +4.
 
 After the roll, the **racial modifiers** are added (see `REFERENCE.md`).
 
@@ -314,12 +314,16 @@ level-0 and a level-1 spell of its own.
     break and run, or is down to a third and a foe it sees can reach it), and once invisible at half its HP
     or less it makes for the edge instead of striking. Grasping Roots is weighed in hit points against what
     the point buys as a strike (`ai.reckon._roots_worth`): a foe carrying a flag or a walk from one, or a
-    melee foe a walk from the AI's side held out of reach. Hex only on a foe whose attributes its side has
-    read (Assess), when its worth in hit points (`ai.reckon._hex_worth`) beats a strike. A good AI casts
+    melee foe a walk from the AI's side held out of reach. Hex when its worth in hit points
+    (`ai.reckon._hex_worth`) beats a strike: the better of the debuff the next stack adds and the kill, the
+    foe's HP over the casts left to bring its weakest score to zero, counted only if the side's Hexes can keep that
+    many stacks up. It needs no read of the foe: unread, it reckons each score as ten. A good AI casts
     Spare the Dying instead of Stabilize, and Healing Touch on the most hurt in reach at half health or less.
-  - **Hex** bites only where a score is even; an even Constitution also costs one max HP **and** one
-    current HP per hit die, and when the hex wears off the max comes back and the current HP does not, so
-    in practice it is damage equal to the level.
+  - **Hex** is a stack: every cast takes `HEX_POINTS` off each of the six attribute scores for `HEX_TURNS` of the
+    victim's turns (`conditions.Hexed`), each stack on its own clock, and there is no limit to how many pile up. The
+    modifiers fall where a score crosses an even number; each Constitution modifier step also costs one max HP
+    **and** one current HP per hit die, and when a stack wears off the max comes back and the current HP does not.
+    A score that reaches zero drops the victim (see *An attribute at zero*).
   - **Share Magic**, a Sprite Nature Initiate's own action, spends a point to teach a random ally one of
     its known spells for the rest of the battle.
 - **Initiation** (`rite.py`, the INITIATION tab of each hidden sanctuary, `rite.Initiation`). A
@@ -656,11 +660,10 @@ adjacent downed ally before anything else. Otherwise a body is not a target.
 The AI **pathfinds** to reach a downed ally (stopping adjacent to stabilize) or
 navigates toward the nearest map edge when it decides to flee.
 
-**A physical attribute at zero.** Whenever a character's Strength, Dexterity or
-Constitution score reaches **0** (poison, sickness, a harsh race mod on a low roll),
-they fall to the ground **dying** — checked when a battle starts and whenever poison
-takes another point (`Combatant.check_collapse`). Hunger and encumbrance penalties
-act on the modifiers and do not count. Off the field the same score is fatal outright:
+**An attribute at zero.** Whenever any of a character's six scores, with what poison, sickness and
+hunger take off it and the Hex stacks it carries, is **0 or less**, they fall to the ground **dying** — checked when
+a battle starts and whenever poison or Hex takes another point (`Combatant.check_collapse`). The load does not
+count. A score rolled under 4 is raised to 4 when the character is made. Off the field the same sum is fatal outright:
 `Guild.reap_collapsed` (run by `pass_time`, after the daily upkeep) removes anyone at zero, with a
 memorial naming the worst poison on that score ("Died of Gut Rot") or "Wasted away".
 
