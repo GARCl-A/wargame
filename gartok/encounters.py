@@ -99,7 +99,7 @@ def build_enemy(mean_level, rng=random, race_pool=None):
             picked = u.talents[track]
             options = [t.id for t in tree
                        if t.id not in picked
-                       and (t.requires is None or t.requires in picked)]
+                       and all(n in picked for n in t.needs)]
             if not options:
                 break
             u.choose_talent(track, rng.choice(options))

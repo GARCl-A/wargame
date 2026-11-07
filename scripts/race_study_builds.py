@@ -57,6 +57,7 @@ class Build(NamedTuple):
     spells5: tuple = ()     # known at level 5
     magic_talents: tuple = ()
     quiver: bool = False
+    thrower: bool = False   # buys spares of its thrown weapon, as an archer buys Quivers
     role: str = "melee"
 
 
@@ -87,6 +88,10 @@ BUILDS = {b.id: b for b in (
           ("agile", "deadeye", "fleet", "tough", "nimble_skirmisher"), quiver=True, role="ranged"),
     Build("crossbow", "Crossbow and quiver: the heavy shot", ("Crossbow",), "Brigandine", None,
           ("agile", "deadeye", "strong", "tough", "hardy"), quiver=True, role="ranged"),
+    Build("javelin_thrower", "Shortspear thrown: spares in the pack", ("Shortspear",), "Studded Leather", None,
+          ("agile", "strong", "long_reach", "ready_hand", "deadeye"), thrower=True, role="ranged"),
+    Build("knife_thrower", "Daggers thrown: spares in the pack", ("Dagger",), "Studded Leather", None,
+          ("agile", "strong", "long_reach", "ready_hand", "deadeye"), thrower=True, role="ranged"),
     Build("intimidator", "Sword: Demoralize and cull", ("Sword",), "Chainmail", None,
           ("imposing", "menacing", "cull_the_broken", "strong", "tough")),
     Build("commander", "Hatchet, shield: shouts the line on", ("Hatchet", "Axe"), "Studded Leather", SHIELD,
@@ -144,6 +149,7 @@ def _catalog_weapons():
 
 CATALOG = _catalog_weapons()
 ARMORS = sorted(items.armor())
+THROWN_SPARES = 8           # spares of the thrown weapon a thrower buys at most (the cap `tests/test_thrown_supply.py` measures)
 EXTRA_QUIVERS = 2           # an archer buys a bow and one Quiver, then the armour, then up to this many more Quivers
 
 
@@ -216,7 +222,7 @@ def fix_body(unit):
 AUTO = "auto"       # the armour the game's rule buys with what the weapon and the rest leave of the level's budget
 
 
-def _arm(unit, weapons, armor, shield, quiver, notes, level=0):
+def _arm(unit, weapons, armor, shield, quiver, notes, level=0, spares=0):
     """Buy the kit with the level's budget, in this order: the weapon, the first Quiver of a bow, the armour the game's rule
     picks from what is left, the archer's extra Quivers, the shield. Each later item takes what the earlier ones leave and
     stops at the copper or the load."""
@@ -256,6 +262,16 @@ def _arm(unit, weapons, armor, shield, quiver, notes, level=0):
                 unit._derive_combat()
                 break
             left -= economy.buy_price(items.AMMO_ITEM)
+    for _ in range(spares):
+        if economy.buy_price(held) > left:
+            break
+        unit.give_to_pack(held)
+        unit._derive_combat()
+        if unit.encumbered:
+            unit.remove_named(held)
+            unit._derive_combat()
+            break
+        left -= economy.buy_price(held)
     if shield and items.get(held).hands == 1:
         if economy.buy_price(shield) > left:
             notes.append("no shield")
@@ -313,7 +329,8 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
             _pick(unit, "magic", tuple(over.get("force", ())) + tuple(build.magic_talents), rng, ban=tuple(over.get("ban", ())))
         _spend_racial_and_work(unit, rng, drop_racial, WORK_ROOTS.get(build.id, ()))
         _cast(unit, build, level)
-        _arm(unit, build.weapons, build.armor, build.shield, build.quiver, notes, level)
+        _arm(unit, build.weapons, build.armor, build.shield, build.quiver, notes, level,
+             over.get("spares", THROWN_SPARES if build.thrower else 0))
     if fixed:
         fix_body(unit)
     unit.hp = unit.hp_max

@@ -785,3 +785,24 @@ def test_ctf_state_shows_the_flags_and_who_carries_one():
     st = s.state()
     assert {f["side"]: f["carrier"] for f in st["ctf"]}["foe"] == s.uid(mine)
     assert next(t for t in st["units"] if t["id"] == s.uid(mine))["carries"] == "foe"
+
+
+def test_the_web_draw_card_lists_the_pack_and_the_act_swaps_the_hand():
+    s = _session()
+    for _ in range(50):
+        if _settle(s):
+            continue
+        if s.my_turn():
+            break
+        s.advance()
+    actor = s.battle.active
+    actor.equip_weapon("Dagger")
+    actor.inventory = ["Axe"]
+    actor.ap = 2
+    rows = s.state()["draws"]
+    assert [r["id"] for r in rows if not r["stow"]] == ["Axe"]
+    assert any(r["stow"] for r in rows)
+    s.act("draw", item="Axe")
+    assert actor.weapon_name == "Axe" and actor.inventory == ["Dagger"]
+    with pytest.raises(ValueError):
+        s.act("draw", item="Sword of Nothing")

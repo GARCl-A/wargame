@@ -306,7 +306,7 @@ def _talent_trees():
         head = (("Race",) if racial else ()) + ("Tier", "Talent", "Effect", "Requires")
         rows = [((", ".join(t.races) or "any",) if racial else ())
                 + (t.tier, t.name, t.effect,
-                   "granted" if t.granted else talents.get(t.requires).name if t.requires else "--")
+                   "granted" if t.granted else " + ".join(talents.get(n).name for n in t.needs) or "--")
                 for t in nodes]
         out.append(f"### {track.capitalize()} track\n\n" + _table(head, rows))
     return "\n\n".join(out)

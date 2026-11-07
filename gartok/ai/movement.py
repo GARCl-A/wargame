@@ -1,6 +1,6 @@
 """Walking: the step toward a goal, terrain and traps in the way, picking things up."""
 
-from .. import actions, intel, vision
+from .. import actions, intel, items, vision
 from ..board import cells, grid_distance, line_cells
 from .common import _other_side
 from .target import _approach_reach
@@ -13,8 +13,24 @@ def _weapons_on_ground(battle):
     return [o for o in battle.ground if o.is_weapon]
 
 
+def _draw_weapon(battle, unit):
+    """Draw a weapon from the pack, the one just thrown first and a one-handed blade before a two-hander
+    so the off hand stays put."""
+    if not actions.DRAW.available(battle, unit):
+        return False
+    blades = [o.target for o in actions.DRAW.options(battle, unit)
+              if o.ok and not o.stow and items.is_weapon(o.target)]
+    if not blades:
+        return False
+    pick = min(blades, key=lambda n: (n != unit.weapon_name, items.get(n).hands >= 2))
+    actions.DRAW.execute(battle, unit, pick)
+    return True
+
+
 def _recover_weapon(battle, unit):
     """True if the unit spent the action going after / picking up a dropped weapon."""
+    if unit.unarmed and _draw_weapon(battle, unit):
+        return True
     weapons = _weapons_on_ground(battle)
     if not unit.unarmed or not weapons:
         return False

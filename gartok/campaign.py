@@ -32,10 +32,12 @@ from . import (
     arena,
     captives,
     data,
+    draw,
     economy,
     factions,
     forced,
     i18n,
+    items,
     lair,
     loot,
     objectives,
@@ -88,9 +90,11 @@ def _carry_forward(member, combatant):
         member.equipped_offhand = data.TORCH_ITEM
     elif combatant.lantern_hand:
         member.equipped_offhand = data.LANTERN_ITEM
-    else:
+    elif not (member.equipped_offhand and items.is_shield(member.equipped_offhand)):
         member.equipped_offhand = None
-        
+    if combatant.drew:
+        draw.carry_back(member, combatant)
+
     # combatant.inventory stays the flat, per-charge battle-time list (see
     # unit.flatten_pack); only the roster-side rebuild below deals in stacks.
     torch_spares = combatant.inventory.count(data.TORCH_ITEM)

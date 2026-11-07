@@ -2,7 +2,7 @@
 
 import random
 
-from .. import data, i18n, intel, items
+from .. import data, draw, i18n, intel, items
 from ..board import cells, chebyshev
 from ..captives import capture_tool
 from ..conditions import Demoralized, PixieFlight
@@ -99,6 +99,41 @@ class PickUp(Action):
             for kind, weapon_name in dropped:
                 self._drop_on_ground(battle, actor, kind, weapon_name)
         battle.scenario.on_pick_up(battle, actor, obj)
+
+
+class Draw(Action):
+    """Take an item from the pack into the hand it fits, or stow what a hand holds (`draw.py`)."""
+    id, cost, target = "draw", 1, "none"
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not draw.drawable(actor):
+            return False, i18n.t("action.draw.reason")
+        return True, ""
+
+    def label(self, battle, actor):
+        return i18n.t("action.draw.label")
+
+    def options(self, battle, actor):
+        """What the card offers: every drawable kind in the pack, blocked ones with their reason, then the stows."""
+        return draw.options(actor)
+
+    def can(self, battle, actor, target=None):
+        if not self.available(battle, actor):
+            return False
+        return target is None or any(o.target == target and o.ok for o in draw.options(actor))
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        target = target or draw.drawable(actor)[0].target
+        actor.ap -= self.cost
+        actor.walking = False
+        back = draw.apply(actor, target)
+        if not target.startswith(draw.STOW):
+            battle.log("log.draws", actor=actor.name, item=item_ref(target))
+        for name in back:
+            battle.log("log.stows", actor=actor.name, item=item_ref(name))
 
 
 # --------------------------------------------------------------------------- #

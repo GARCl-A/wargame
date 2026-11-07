@@ -248,7 +248,8 @@ def _try_throw(battle, unit, target, stalled):
         actions.JAVELIN_CHARGE.execute(battle, unit, target)
         return True
     throw = actions.THROW
-    if unit.ap != 1 or unit.ranged or not throw.can(battle, unit, target):
+    resupplied = unit.resupplies_throw
+    if unit.ap < 1 or (unit.ap != 1 and not resupplied) or unit.ranged or not throw.can(battle, unit, target):
         return False
     if actions.ATTACK.can(battle, unit, target):
         return False
@@ -256,7 +257,7 @@ def _try_throw(battle, unit, target, stalled):
     worth = _blow(unit, thrown=True)
     downs = hp is not None and worth >= hp or hp is None and intel.health_steps(target) <= 1
     runner = battle.is_ctf and target in battle.flag_carrier.values()
-    if not (stalled or downs or runner) or _hit_odds(battle, unit, target, thrown=True) < 0.3:
+    if not (stalled or downs or runner or resupplied) or (not resupplied and _hit_odds(battle, unit, target, thrown=True) < 0.3):
         return False
     throw.execute(battle, unit, target)
     return True

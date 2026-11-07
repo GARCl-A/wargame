@@ -120,6 +120,8 @@ def _point_worth(battle, unit, target):
     if actions.ATTACK.can(battle, unit, target) or (
             unit.ap >= 2 and distance <= unit.speed + unit.attack_range and not unit.ranged):
         return _strike_worth(battle, unit, target)
+    if unit.resupplies_throw and actions.THROW.can(battle, unit, target):
+        return _strike_worth(battle, unit, target, thrown=True)
     mm = actions.CastSpellAction("magic_missile")
     if "magic_missile" in getattr(unit, "spells_known", []) and mm.can(battle, unit, target):
         return _spell_odds(battle, unit, target, mm) * (2.5 + unit.talent_bonus("spell_damage"))

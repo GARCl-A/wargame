@@ -94,7 +94,7 @@ class LevelingMixin:
 
     def offerable(self, track, t):
         return (not t.granted and t.id not in self.talents[track]
-                and (not t.requires or self.holds_talent(track, t.requires)))
+                and all(self.holds_talent(track, n) for n in t.needs))
 
     def _has_offerable(self, track):
         """The `track` has at least one node this character could still take."""

@@ -103,7 +103,8 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   medallion, never from the token** (attacking always hovers the target): a gem opens the ledger (what each
   condition is and does), the items medallion the list, the bodies medallion the same list read-only. A click
   pins the ledger or the items list; a click on the bodies medallion opens the pile card, where the player picks
-  who to stabilize or attack, and Pick up keeps its own pick list.
+  who to stabilize or attack, and Pick up keeps its own pick list. Draw opens a card too (`#draw`): one row per drawable item in the
+  pack, the blocked ones with their reason, then the stows, each showing what the hands hold afterwards.
 
 ### Layouts that hold
 

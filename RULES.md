@@ -448,6 +448,9 @@ Where each part lives is the code map of `README.md`.
 - **Throw** (1 point) = throws the weapon in hand, if it is a **thrown weapon**
   (its range is the Thrown column of `REFERENCE.md` § Weapons). See below. The AI throws only with its last point and no foe in swing reach,
   when the throw may drop the foe, stops a flag runner, or it cannot get any nearer.
+  **Ready Hand** (Long Reach + Strong): after a throw, an identical weapon from the pack is drawn at no action;
+  such a thrower throws with any point while it has a spare. The race study's throwers buy up to eight
+  spares (`tests/test_thrown_supply.py` measures that nine fights in ten use no more).
 - **Weapon actions** (one per weapon kind; the list is `REFERENCE.md` § Weapon Traits). A 2-point action
   is **one strike** for the price of two plain attacks, so it is the worse buy out of its **favoured
   case**; in that case the strike is **Brutal 1** (the keyword in `gartok/keywords.py`: N more rolls of the weapon's damage) plus the
@@ -473,6 +476,14 @@ Where each part lives is the code map of `README.md`.
 - **Pick Up** (1 point) = picks up a `ground.GroundObject` in your cell or
   adjacent: a weapon only if you are **unarmed**; a torch for anyone (armed = a
   swap).
+- **Draw / Stow** (1 point) = takes a weapon, shield, torch or lantern from the
+  character's **own pack** into the hand it fits; what that hand held goes back
+  to the pack, never the ground. A two-handed weapon stows both hands in one
+  action; drawing a one-handed item over a two-hander stows it and leaves the
+  other hand empty for the next action. Stow rows empty one hand. It shows only
+  when the pack holds something drawable; a weapon the body cannot wield is
+  listed with the reason. A shield's AC follows the hand, and what the hands
+  hold at the end of the fight stays with the character.
 - **Demoralize** (1 point) = a verbal provocation up to **18 m (12 cells)**.
   See below.
 - **Stabilize** / **First Aid** (1 point) = try to bring a downed ally back to

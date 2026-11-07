@@ -380,6 +380,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | Agile |
 | 3 | Heavy Bolts | +1 damage with a Crossbow. | Long Reach |
 | 3 | Keen Bolts | A Crossbow shot is a critical hit on a natural 19 or 20. | Long Reach |
+| 3 | Ready Hand | After a throw, an identical weapon from the pack is in hand at no action cost. | Long Reach + Strong |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | Agile |
 | 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
 | 3 | Fleet | +1 square of Speed. | Deadeye |

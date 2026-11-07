@@ -83,10 +83,10 @@ def _talents():
                   key=lambda p: (p[0], p[1].tier, p[1].name))
     out = []
     for track, t in rows:
-        need = talents.get(t.requires) if t.requires else None
+        need = " + ".join(talents.get(n).name for n in t.needs)
         races = (t.race,) if isinstance(t.race, str) else tuple(t.race or ())
         out.append(_entry(t.name, i18n.t("wiki_session.tier", track=track, tier=t.tier),
-                          [i18n.t("wiki_session.needs", value=need.name if need else t.requires) if t.requires else i18n.lab("a root"),
+                          [i18n.t("wiki_session.needs", value=need) if t.needs else i18n.lab("a root"),
                            i18n.t("wiki_session.only", join=', '.join(races)) if races else None],
                           [t.effect], glyph=t.icon, find=[t.effect, *races]))
     return out

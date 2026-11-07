@@ -195,7 +195,7 @@ class EditMixin:
             grew = False
             for tid in picked:
                 t = talents.get(tid)
-                if t and t.requires in doomed and tid not in doomed:
+                if t and doomed.intersection(t.needs) and tid not in doomed:
                     doomed.add(tid)
                     grew = True
         self.talents[track] = [tid for tid in picked if tid not in doomed]

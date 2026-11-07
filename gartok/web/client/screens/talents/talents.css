@@ -173,6 +173,8 @@
 .orow.locked .dot,.orow.granted .dot{border:1.5px dashed rgba(80,52,24,.5)}
 .orow.locked span,.orow.granted span{color:#8a7154}
 .orow.on{background:rgba(142,42,30,.1);box-shadow:inset 3px 0 0 #8e2a1e}
+.orow.via span{font-style:italic}
+.orow .plus{font:13px/1 var(--read);color:#8a5d16}
 .orow em{margin-left:auto;font:13.5px/1 var(--read);color:#8a6c48}
 .orow em b{font-weight:400;color:#8a5d16}
 .hood{position:absolute;left:370px;right:0;top:0;bottom:0}

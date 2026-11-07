@@ -23,6 +23,7 @@ exactly one consumer that reads it back:
     ranged_reach      Combatant.attack_range/throw     --
     crossbow_damage   Combatant.damage_roll            --
     crossbow_crit_range actions.base._resolve_hit      --
+    throw_resupply    actions.Throw (draws the same weapon from the pack) --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
     post_combat_heal  campaign._carry_forward          --
     ac                Unit._derive_ac                  --
@@ -165,12 +166,18 @@ class Talent:
     id: str
     track: str                       # "combat" | "work" | "racial" | "magic"
     tier: int                        # 1 = a root; deeper nodes sit at higher tiers
-    requires: str | None = None      # id of a talent that must be taken first
+    requires: str | None = None      # id of a talent that must be taken first (the one the tree hangs it under)
+    also: str | None = None          # a second talent it needs: a hybrid of two branches
     race: str | tuple | None = None  # racial track: only offered to this race, or these (None = any)
     icon: str = ""                   # "<category>/<name>" under assets/icons/ (level screen)
     effects: tuple = ()              # Effect(...) contributions -- see the module docstring
     school: str | None = None        # magic track: the school this node belongs to
     granted: bool = False            # magic root: held while the school is held, never picked
+
+    @property
+    def needs(self):
+        """Every talent that must be held first."""
+        return tuple(x for x in (self.requires, self.also) if x)
 
     @property
     def name(self):
@@ -216,6 +223,8 @@ _LIST = [
            effects=(Effect("crossbow_damage", 1),), icon="action/crush"),
     Talent("keen_bolts", "combat", 3, requires="long_reach",
            effects=(Effect("crossbow_crit_range", 1),), icon="action/targeting"),
+    Talent("ready_hand", "combat", 3, requires="long_reach", also="strong",
+           effects=(Effect("throw_resupply", 1),), icon="action/switch-weapon"),
     Talent("deadeye", "combat", 2, requires="agile",
            effects=(Effect("to_hit", 1, "dexterity"),), icon="action/ricochet"),
     Talent("duelist", "combat", 2, requires="agile",

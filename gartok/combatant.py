@@ -94,6 +94,8 @@ class Combatant:
         self.artifact_name = c.equipped_artifact
         self.torch_hand = False
         self.lantern_hand = False
+        self.drew = False             # hands changed with Draw: the character carries them back (`draw.carry_back`)
+        self.shield_ac_delta = 0      # the AC a shield drawn or stowed in the fight adds to the character's own
         if c.equipped_offhand in (data.TORCH_ITEM, data.LANTERN_ITEM):
             weapon_hands = self.weapon.hands if self.weapon_hand else 0
             free_off_hand = weapon_hands < 2         # a 2-handed weapon leaves no off hand
@@ -531,7 +533,7 @@ class Combatant:
         if self.ac_natural:
             mods.append((self.ac_natural, "natural", "race"))
         total, _ = resolve_bonus(mods)
-        ac = self.ac_base + total
+        ac = self.ac_base + total + self.shield_ac_delta
         if self.has_condition("shield_hooked") and self.equipped_offhand and items.is_shield(self.equipped_offhand):
             shield = items.get(self.equipped_offhand)
             if shield:
@@ -694,6 +696,11 @@ class Combatant:
             if charge:
                 mods.append((charge, None, i18n.t("log.mod.cavalry_charge")))
         return mods
+
+    @property
+    def resupplies_throw(self):
+        """A thrown weapon is replaced by an identical one from the pack, at no action (Ready Hand)."""
+        return self.can_throw and self.char.talent_bonus("throw_resupply") > 0 and self.weapon_name in self.inventory
 
     @property
     def shoots_crossbow(self):

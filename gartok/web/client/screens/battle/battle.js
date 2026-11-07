@@ -18,7 +18,7 @@ const ICONS = {
   push: "action/push", defend: "body/bell-shield", nonlethal: "action/slap", reload: "gui/clockwise-rotation",
   attack_tongue: "action/swallow", flee: "action/run", delay: "gui/backward-time", end: "gui/halt",
   first_aid: "body/heart-inside", stabilize: "body/heart-organ", capture: "action/arrest",
-  drink_potion: "action/drinking", signal_horn: "action/shouting", pick_up: "action/snatch",
+  drink_potion: "action/drinking", signal_horn: "action/shouting", pick_up: "action/snatch", draw: "action/switch-weapon",
   disarm: "action/drop-weapon", investigate: "action/look-at", jump: "action/jump-across",
   climb: "action/mountain-climbing", drop: "action/stairs-goal", swim: "action/drowning",
   share_magic: "action/transfuse", eat_corpse: "action/eating", spin_web: "action/hive-mind",
@@ -38,7 +38,7 @@ async function act(body, path = "/api/battle/act") {
   ui.busy = true;
   try {
     const r = await api(path, {...body, inspect: ui.inspect});
-    ui.aim = null; ui.route = null; ui.armed = null; ui.error = null; ui.loot = null; ui.ledger = null;
+    ui.aim = null; ui.route = null; ui.armed = null; ui.error = null; ui.loot = null; ui.ledger = null; ui.draw = null;
     await playSteps(r.steps);
   } catch (e) {
     ui.error = e.message; renderHint();
@@ -288,7 +288,7 @@ function renderUnit() {
     <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · · ${esc(a.alignment)}</div>
     ${S.my_turn ? `<div class="stats"><div class="stat hp"><span>${tr("battle.hit_points")}${own ? ` · ${a.hp}/${a.hp_max}` : ""}</span>${hp}</div>
       <div class="stat"><span>${tr("battle.ac")}</span><b>${a.ac ?? "?"}</b></div><div class="stat"><span>${tr("battle.md")}</span><b>${a.md ?? "?"}</b></div><div class="stat"><span>${tr("battle.speed")}</span><b>${a.speed}</b></div></div>
-      ${w ? `<div class="weapon"><b>${esc(w.name)}</b>${esc(w.damage || "")}${w.thrown ? ` · ${tr("battle.thrown", {n: w.thrown})}` : ""}${w.range ? ` · ${tr("battle.range", {n: w.range})}` : ""}${w.action ? `<em>${esc(w.action)}</em>` : ""}</div>` : `<div class="weapon">${tr("battle.unarmed")}</div>`}`
+      ${w ? `<div class="weapon"><b>${esc(w.name)}</b>${esc(w.damage || "")}${w.thrown ? ` · ${tr("battle.thrown", {n: w.thrown})}` : ""}${w.range ? ` · ${tr("battle.range", {n: w.range})}` : ""}${w.action ? `<em>${esc(w.action)}</em>` : ""}${a.off_hand ? ` · ${tr("battle.off_hand", {name: esc(a.off_hand)})}` : ""}</div>` : `<div class="weapon">${tr("battle.unarmed")}${a.off_hand ? ` · ${tr("battle.off_hand", {name: esc(a.off_hand)})}` : ""}</div>`}`
       : `<div class="race" style="margin-top:22px;font-size:20px">${tr(S.setup ? "battle.waits_begin" : a.side === "ally" ? "battle.fights_alone" : "battle.taking_turn")}</div>`}</div>
     ${S.my_turn ? `<div class="ap"><span>${tr("battle.action")}</span><div class="coins">${Array.from({length: a.ap_max}, (_, i) => `<i class="${i < a.ap_max - a.ap ? "spent" : ""}"></i>`).join("")}</div></div>` : ""}`;
 }
@@ -357,6 +357,7 @@ function renderAll() {
   $("withdraw").hidden = !S.flags.can_withdraw;
   $("skiptraps").hidden = !(S.setup && S.setup.kind === "trap");
   renderLoot();
+  renderDraw();
   renderLedger();
   renderDialog();
   if (S.winner) showEnd();
@@ -497,6 +498,11 @@ async function selectAction(id) {
   const a = [...S.actions.combat, ...S.actions.utility].find(x => x.id === id);
   if (!a || !a.enabled) return;
   if (a.id === "end") return act({action: "end"});
+  if (a.id === "draw") {
+    ui.draw = ui.draw ? null : {sel: Math.max(0, S.draws.findIndex(r => r.ok && !r.stow))};
+    ui.aim = null; renderAll();
+    return;
+  }
   if (a.id === "pick_up" && S.pickups.length > 1) {
     const u = S.units.find(t => t.id === S.active.id);
     if (ui.loot && ui.loot.mode === "pick") return closeLoot();
@@ -607,6 +613,41 @@ function renderLoot() {
     `<div class="lrow ${pick ? "pick" : ""} ${pick && i === l.sel ? "sel" : ""}" data-i="${i}">${lootIcon(r)}<b>${esc(r.name)}</b>${r.hint ? `<em>${esc(r.hint)}</em>` : ""}</div>`).join("");
   box.hidden = false;
 }
+
+// Draw: what the pack offers the hands, hung beside the acting token, with what the hovered choice leaves in them
+function renderDraw() {
+  const box = $("draw"), rows = S && S.my_turn ? S.draws : [];
+  if (!ui.draw || !rows.length) { ui.draw = null; box.hidden = true; box.innerHTML = ""; return; }
+  const u = S.units.find(t => S.active && t.id === S.active.id), L = Board.layout;
+  const sel = Math.min(ui.draw.sel, rows.length - 1), r = rows[sel];
+  const left = Board.cx(u.pos[0] + u.fp - 1) + L.cell + 10, flip = left + 380 > 1384;
+  box.style.left = `${flip ? Board.cx(u.pos[0]) - 390 : left}px`;
+  box.style.top = `${Math.min(Math.max(Board.cy(u.pos[1]) - 30, 4), 780 - 120 - rows.length * 44)}px`;
+  const hand = h => tr(h === "weapon" ? "battle.hand_weapon" : "battle.hand_off");
+  const empty = `<i>${tr("battle.hand_empty")}</i>`;
+  box.innerHTML = `<h3>${tr("battle.draw_which")}</h3>` + rows.map((x, i) =>
+    `<div class="lrow dr ${x.ok ? "pick" : "off"} ${i === sel ? "sel" : ""}" data-i="${i}">${ico(x.glyph)}<b>${esc(x.name)}${x.qty > 1 ? `<small> ×${x.qty}</small>` : ""}</b><em>${esc(x.why)}</em></div>`).join("")
+    + `<div class="after"><div class="k">${tr("battle.draw_after")}</div>` + r.after.map(a =>
+      `<div class="hl"><span>${hand(a.hand)}</span><div><s>${a.was ? esc(a.was) : empty}</s> → <b>${a.now ? esc(a.now) : empty}</b></div></div>`).join("")
+    + (r.then ? `<div class="then">${esc(r.then)}</div>` : "") + `</div>`;
+  box.hidden = false;
+}
+
+function takeDraw(i) {
+  const r = S.draws[i];
+  if (!r || !r.ok) return;
+  ui.draw = null;
+  return act({action: "draw", item: r.id});
+}
+$("draw").addEventListener("click", e => {
+  const row = e.target.closest(".lrow.pick");
+  if (row) takeDraw(Number(row.dataset.i));
+});
+$("draw").addEventListener("mouseover", e => {
+  const row = e.target.closest(".lrow.dr");
+  if (!row || !ui.draw || ui.draw.sel === Number(row.dataset.i)) return;
+  ui.draw.sel = Number(row.dataset.i); renderDraw();
+});
 
 function takeLoot(i) {
   const r = ui.loot && ui.loot.mode === "pick" && S.pickups[i];
@@ -766,6 +807,15 @@ $("newfight").addEventListener("click", () => S && showEnd(true));
 
 document.addEventListener("keydown", e => {
   if (!S || !$("modal").hidden || !$("dialog").hidden) return;
+  if (ui.draw) {
+    const n = S.draws.length, step = d => { let i = ui.draw.sel; do i = (i + d + n) % n; while (!S.draws[i].ok && i !== ui.draw.sel); ui.draw.sel = i; renderDraw(); };
+    if (e.key === "Escape") { ui.draw = null; return renderDraw(); }
+    if (e.key === "Tab" || e.key === "ArrowDown") { e.preventDefault(); return step(1); }
+    if (e.key === "ArrowUp") { e.preventDefault(); return step(-1); }
+    if (e.key === "Enter") return takeDraw(ui.draw.sel);
+    if (/^[1-9]$/.test(e.key) && Number(e.key) <= n) return takeDraw(Number(e.key) - 1);
+    return;
+  }
   if (ui.loot && ui.loot.mode === "pick") {
     const n = S.pickups.length;
     if (e.key === "Escape") return closeLoot();

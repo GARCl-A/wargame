@@ -152,6 +152,7 @@ gartok/
   lair.py           the Dragon's Lair under the Mine: a heist past kobold patrols and a sleeping dragon
   dialogue.py       the talk before a fight: the verbs (persuade, bluff, intimidate, bribe...),
                     the checks, the encounters (ambush, patrol, Wildfire) and the squad's AI
+  draw.py           the Draw action's rules: what the two hands hold, what a draw or a stow puts back in the pack
   draft.py          a new guild's draft: the pool of nine, three picks, the commission tokens, the charter
   recruit.py        the recruitment contest, the weekly tavern pool, and the prison's
                     bail-and-pitch alternative

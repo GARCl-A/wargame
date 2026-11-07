@@ -2,7 +2,7 @@
 
 import random
 
-from .. import combat_log, i18n, intel, items, poisons
+from .. import combat_log, draw, i18n, intel, items, poisons
 from ..board import cells
 from ..conditions import BLEEDING_CLAWS_TURNS, Bleeding
 from ..data import roll
@@ -220,6 +220,9 @@ def _land_thrown(battle, actor, target, weapon_name):
     battle.ground.append(GroundObject.weapon(landing, weapon_name))
     actor.let_go = {"at": target.name}
     battle.log("log.thrown_lands", weapon=item_ref(weapon_name), cell=str(landing), actor=actor.name)
+    if actor.alive and weapon_name in actor.inventory and actor.char.talent_bonus("throw_resupply"):
+        draw.apply(actor, weapon_name)
+        battle.log("log.resupply", actor=actor.name, weapon=item_ref(weapon_name))
 
 
 def _pickable(unit, obj):

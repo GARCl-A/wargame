@@ -82,6 +82,7 @@ from .support import (
     Delay,
     Disarm,
     Dismount,
+    Draw,
     DrinkPotion,
     EatCorpse,
     EndTurn,
@@ -123,6 +124,7 @@ RELOAD = Reload()
 DEFEND = Defend()
 THROW = Throw()
 PICK_UP = PickUp()
+DRAW = Draw()
 DEMORALIZE = Demoralize()
 ASSESS = Assess()
 STABILIZE = Stabilize()
@@ -201,6 +203,7 @@ COMBAT_ACTIONS = [
     TAKEDOWN,
     STAND_UP,
     THROW,
+    DRAW,
     DEMORALIZE,
     ASSESS,
     PUSH,

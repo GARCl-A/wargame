@@ -322,6 +322,9 @@ def take_turn(battle, unit):
                     second_atk.execute(battle, unit, target)
             continue
 
+        if unit.resupplies_throw and _try_throw(battle, unit, target, stalled=False):
+            continue
+
         if _spin_web(battle, unit, target):
             continue
 

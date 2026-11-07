@@ -1,6 +1,6 @@
 // A member's talents: the tracks and the band on leather, one tree on paper as THE MAP (rings round the
 // portrait, a camera) or THE BRANCH (an outline and the talent's neighbourhood), the talent in hand on
-// the right. A click takes a talent in hand, TAKE spends the pick. The layout reads only `requires`.
+// the right. A click takes a talent in hand, TAKE spends the pick. The layout hangs a node under `requires`; a hybrid's `also` is a second line into it.
 "use strict";
 
 let T = null, busy = false, fresh = null;
@@ -44,7 +44,8 @@ async function post(verb, body = {}) {
 const track = () => T.tracks.find(t => t.track === T.track);
 const byId = () => Object.fromEntries(T.nodes.map(n => [n.id, n]));
 const kids = id => T.nodes.filter(n => n.requires === id);
-const depthOf = (n, B) => n.requires && B[n.requires] ? 1 + depthOf(B[n.requires], B) : 0;
+const needsOf = (n, B) => [n.requires, n.also].filter(x => x && B[x]);
+const depthOf = (n, B) => { const p = needsOf(n, B); return p.length ? 1 + Math.max(...p.map(x => depthOf(B[x], B))) : 0; };
 
 // ---------------------------------------------------------------- the top
 function heading() {
@@ -141,23 +142,48 @@ function map(tree) {
   const col = {}, depth = {};
   let leaf = 0;
   const place = n => {
-    const cs = kids(n.id);
+    const cs = kids(n.id).filter(k => !k.also);
     col[n.id] = cs.length ? cs.map(place).reduce((a, b) => a + b) / cs.length : leaf++;
     return col[n.id];
   };
   roots.forEach((r, i) => { if (i) leaf += 0.6; place(r); });
-  const VW = tree.clientWidth, VH = tree.clientHeight, AY = 0.8, AX = AY * VW / VH, XY = {};
-  for (const n of T.nodes) {
-    depth[n.id] = depthOf(n, B);
-    const a = (col[n.id] + 0.5) / Math.max(leaf, 1) * Math.PI * 2 - Math.PI / 2, r = 190 + depth[n.id] * 150;
-    XY[n.id] = [Math.cos(a) * r * AX, Math.sin(a) * r * AY];
+  const VW = tree.clientWidth, VH = tree.clientHeight, AY = 0.8, AX = AY * VW / VH, XY = {}, ang = {};
+  // a hybrid is not laid out under its first parent: it sits between its parents, on the ring after the
+  // deepest one, and steps outward while another node is in its place
+  const put = (n, a, r) => { ang[n.id] = a; XY[n.id] = [Math.cos(a) * r * AX, Math.sin(a) * r * AY]; };
+  for (const n of T.nodes) depth[n.id] = depthOf(n, B);
+  for (const n of T.nodes.filter(n => !n.also)) {
+    put(n, (col[n.id] + 0.5) / Math.max(leaf, 1) * Math.PI * 2 - Math.PI / 2, 190 + depth[n.id] * 150);
   }
-  const deepest = Math.max(...Object.values(depth));
+  let reach = Math.max(...Object.values(depth));
+  for (const n of T.nodes.filter(n => n.also).sort((a, b) => depth[a.id] - depth[b.id])) {
+    const ps = needsOf(n, B).filter(x => ang[x] !== undefined);
+    const a = ps.length ? Math.atan2(ps.reduce((t, x) => t + Math.sin(ang[x]), 0), ps.reduce((t, x) => t + Math.cos(ang[x]), 0)) : 0;
+    const r0 = 190 + depth[n.id] * 150, rmin = Math.max(...ps.map(x => Math.hypot(XY[x][0] / AX, XY[x][1] / AY))) + 60;
+    const free = ([x, y]) => !Object.keys(XY).some(id => id !== n.id && Math.abs(XY[id][0] - x) < 150 && Math.abs(XY[id][1] - y) < 95);
+    let best = null;
+    for (let r = rmin; r <= r0 + 210; r += 30) {
+      for (let da = -0.7; da <= 0.7; da += 0.04) {
+        const xy = [Math.cos(a + da) * r * AX, Math.sin(a + da) * r * AY];
+        if (!free(xy)) continue;
+        const cost = ps.reduce((t, x) => t + Math.hypot(xy[0] - XY[x][0], xy[1] - XY[x][1]), 0);
+        if (!best || cost < best.cost) best = {cost, r, a: a + da};
+      }
+    }
+    const r = best ? best.r : r0;
+    put(n, best ? best.a : a, r);
+    reach = Math.max(reach, (r - 190) / 150);
+  }
+  const deepest = Math.ceil(reach);
   let lines = "", html = "", hub = `<div class="hubface" style="left:0;top:0">${face(T.unit.portrait, T.unit.name)}</div>`;
   for (let d = 0; d <= deepest; d++) hub += `<div class="orbit" style="width:${2 * (190 + d * 150) * AX}px;height:${2 * (190 + d * 150) * AY}px"></div>`;
   for (const n of T.nodes) {
     if (n.requires && B[n.requires]) {
       const [px, py] = XY[n.requires], [qx, qy] = XY[n.id];
+      lines += `<path d="M${px} ${py} L${qx} ${qy}" fill="none" ${stroke(n.state)}/>`;
+    }
+    if (n.also && XY[n.also]) {
+      const [px, py] = XY[n.also], [qx, qy] = XY[n.id];
       lines += `<path d="M${px} ${py} L${qx} ${qy}" fill="none" ${stroke(n.state)}/>`;
     }
     html += nodeHtml(n, ...XY[n.id]);
@@ -232,15 +258,18 @@ function branch(tree) {
   const B = byId(), sel = T.hand ? B[T.hand.id] : T.nodes[0];
   const below = n => { const all = [n]; kids(n.id).forEach(k => all.push(...below(k))); return all; };
   const line = new Set();
-  for (let c = sel; c; c = B[c.requires]) line.add(c.id);
+  const climb = c => { if (c && !line.has(c.id)) { line.add(c.id); needsOf(c, B).forEach(x => climb(B[x])); } };
+  climb(sel);
   let rows = "";
-  const row = (n, d) => {
+  // a hybrid hangs under its first parent, and shows again, as a link, under the second
+  const hybrids = n => T.nodes.filter(m => m.also === n.id);
+  const row = (n, d, via = false) => {
     const cs = kids(n.id), sub = below(n), held = sub.filter(m => m.state === "taken").length, op = sub.filter(m => m.state === "open").length;
-    const expanded = line.has(n.id);
-    rows += `<div class="orow ${n.state} ${n === sel ? "on" : ""}" data-id="${n.id}" style="padding-left:${10 + d * 16}px">
-      <i class="tw">${cs.length ? (expanded ? "▾" : "▸") : ""}</i><i class="dot"></i><span>${esc(n.name)}</span>
-      ${cs.length && !expanded ? `<em>${held}/${sub.length}${op ? ` · ${tr("talents.n_open", {n: op})}` : ""}</em>` : ""}</div>`;
-    if (expanded) cs.forEach(k => row(k, d + 1));
+    const expanded = line.has(n.id) && !via;
+    rows += `<div class="orow ${n.state} ${n === sel ? "on" : ""} ${via ? "via" : ""}" data-id="${n.id}" style="padding-left:${10 + d * 16}px">
+      <i class="tw">${cs.length && !via ? (expanded ? "▾" : "▸") : ""}</i><i class="dot"></i><span>${esc(n.name)}</span>${n.also && B[n.also] ? `<small class="plus">${via ? `↳ ${esc(B[n.requires].name)}` : `+ ${esc(B[n.also].name)}`}</small>` : ""}
+      ${cs.length && !expanded && !via ? `<em>${held}/${sub.length}${op ? ` · ${tr("talents.n_open", {n: op})}` : ""}</em>` : ""}</div>`;
+    if (expanded) { cs.forEach(k => row(k, d + 1)); hybrids(n).forEach(k => row(k, d + 1, true)); }
   };
   T.nodes.filter(n => !n.requires || !B[n.requires]).forEach(r => row(r, 0));
 
@@ -255,15 +284,34 @@ function branch(tree) {
   const layers = [];
   for (let L = [root]; L.length; L = L.flatMap(n => kids(n.id)).filter(n => kin.has(n.id))) layers.push(L);
   const near = new Set([...line, ...below(sel).map(n => n.id)]);
+  // a hybrid's second prerequisite lives in another branch: bring it in beside the first one's layer, and
+  // bring in what the talent in hand is the second prerequisite of
+  const placed = id => layers.some(L => L.some(n => n.id === id));
+  const layerOf = id => layers.findIndex(L => L.some(n => n.id === id));
+  const si = layerOf(sel.id);
+  for (const m of hybrids(sel).filter(m => !placed(m.id))) {
+    if (si + 1 >= layers.length) layers.push([]);
+    layers[si + 1].push(m);
+    near.add(m.id);
+  }
+  for (const n of layers.flat().filter(n => n.also)) {
+    const i = layerOf(n.id);
+    for (const x of needsOf(n, B).filter(x => !placed(x))) {
+      layers[Math.max(i - 1, 0)].push(B[x]);
+      near.add(x);
+    }
+  }
   const W = 620, P = Math.min(120, 600 / layers.length), XY = {};
   layers.forEach((L, i) => L.forEach((n, j) => { XY[n.id] = [W / (L.length + 1) * (j + 1), 40 + P * i]; }));
   let lines = "", html = "";
+  const link = (from, n) => {
+    const [px, py] = XY[from], [qx, qy] = XY[n.id];
+    lines += `<path d="M${px} ${py + 32} C${px} ${(py + qy) / 2} ${qx} ${(py + qy) / 2} ${qx} ${qy - 32}" fill="none" ${stroke(n.state)}/>`;
+  };
   for (const id in XY) {
     const n = B[id];
-    if (n.requires && XY[n.requires]) {
-      const [px, py] = XY[n.requires], [qx, qy] = XY[id];
-      lines += `<path d="M${px} ${py + 32} C${px} ${(py + qy) / 2} ${qx} ${(py + qy) / 2} ${qx} ${qy - 32}" fill="none" ${stroke(n.state)}/>`;
-    }
+    if (n.requires && XY[n.requires]) link(n.requires, n);
+    if (n.also && XY[n.also]) link(n.also, n);
     html += nodeHtml(n, ...XY[id], near.has(id) ? "" : "sib");
   }
   tree.insertAdjacentHTML("beforeend", `<div class="outline"><div class="kicker">${tr("talents.all_n", {n: T.nodes.length})}<em>${tr("talents.all_note")}</em></div><div class="orows">${rows}</div></div>
@@ -289,8 +337,9 @@ function hand() {
     ledger = `<div class="k">${tr("talents.changes")}</div><div class="gloss">${tr("talents.gloss_none")}</div>`;
   }
   const said = c => c.id === h.id ? tr("talents.this_one") : c.state === "taken" ? tr("talents.said_held") : c.state === "open" ? tr("talents.said_open") : tr("talents.said_locked");
-  const steps = h.branch.length > 1 || h.opens.length ? `<div class="k">${tr("talents.branch")}</div>
+  const steps = h.branch.length > 1 || h.opens.length || h.also.length ? `<div class="k">${tr("talents.branch")}</div>
     ${h.branch.map(c => `<div class="step ${c.state}" data-id="${c.id}">${disc(c)}<b>${esc(c.name)}</b><em>${said(c)}</em></div>`).join("")}
+    ${h.also.map(c => `<div class="step ${c.state}" data-id="${c.id}">${disc(c)}<b>${esc(c.name)}</b><em>${tr("talents.also_needs")} · ${said(c)}</em></div>`).join("")}
     ${h.opens.map(c => `<div class="step ${c.state}" data-id="${c.id}">${disc(c)}<b>${esc(c.name)}</b><em>${tr("talents.opens_after")}</em></div>`).join("")}` : "";
   let act;
   if (n.state === "open") {
@@ -298,7 +347,8 @@ function hand() {
       <div class="bigbtn" id="take">${ico(n.icon)}${tr("talents.take", {name: esc(n.name)})}</div>`;
   } else if (n.state === "locked") {
     const next = h.branch.find(c => c.state === "open");
-    act = `<p>${next ? tr("talents.take_first", {name: esc(next.name)}) : ""}</p><div class="bigbtn off">${tr("talents.needs", {name: esc(h.branch[h.branch.length - 2]?.name || tr("talents.another"))})}</div>`;
+    const missing = [...h.branch.slice(0, -1), ...h.also].filter(c => c.state !== "taken").map(c => esc(c.name)).join(" + ");
+    act = `<p>${next ? tr("talents.take_first", {name: esc(next.name)}) : ""}</p><div class="bigbtn off">${tr("talents.needs", {name: missing || tr("talents.another")})}</div>`;
   } else if (n.state === "taken") {
     act = `<div class="bigbtn off">${tr("talents.holds", {name: esc(u.name)})}</div>`;
   } else {

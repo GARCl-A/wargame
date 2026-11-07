@@ -1,6 +1,6 @@
 """A member's talent trees in the browser: the four tracks, one tree at a time with every talent's
 state, the talent in hand with what it moves on the sheet, and the pick. The layout (the map, the
-branch) is the client's and reads only `requires`; a pick is `Unit.choose_talent`, as pygame's
+branch) is the client's and hangs a node under `requires` (a hybrid's `also` is a second line); a pick is `Unit.choose_talent`, as pygame's
 `LevelScreen` takes it, and the save is written on each one.
 
 Opened from a member's sheet (`GuildSession.talents`) and a level-up (`ReportSession.talents`);
@@ -157,7 +157,7 @@ class TalentSession(Session):
 
     @staticmethod
     def _node(u, track, t):
-        return {"id": t.id, "name": t.name, "tier": t.tier, "requires": t.requires, "icon": t.icon or None,
+        return {"id": t.id, "name": t.name, "tier": t.tier, "requires": t.requires, "also": t.also, "icon": t.icon or None,
                 "effect": t.effect, "state": node_state(u, track, t)}
 
     def _why(self, u, track, t, state):
@@ -166,7 +166,7 @@ class TalentSession(Session):
         if state == "granted":
             return i18n.t("talent_session.comes_with_initiation_into", name=t.name, capitalize=(t.school or 'a school').capitalize())
         if state == "locked":
-            return i18n.t("talent_session.needs_first", name=t.name, talent=talents.get(t.requires).name)
+            return i18n.t("talent_session.needs_first", name=t.name, talent=" + ".join(talents.get(n).name for n in t.needs if not u.holds_talent(track, n)))
         if track == "magic" and not u.magic_sources:
             return i18n.t("talent_session.has_no_school_yet_school", name=u.name)
         if track == "racial":
@@ -185,7 +185,9 @@ class TalentSession(Session):
                "branch": [{"id": c.id, "name": c.name, "icon": c.icon or None, "state": node_state(u, track, c)}
                           for c in chain],
                "opens": [{"id": c.id, "name": c.name, "icon": c.icon or None, "state": node_state(u, track, c)}
-                         for c in tree(u, track) if c.requires == t.id],
+                         for c in tree(u, track) if t.id in c.needs],
+               "also": [{"id": c.id, "name": c.name, "icon": c.icon or None, "state": node_state(u, track, c)}
+                        for c in map(talents.get, [t.also] if t.also else [])],
                "delta": None}
         if state == "open":
             out["delta"] = self._delta(u, track, t)

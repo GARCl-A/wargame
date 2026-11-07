@@ -15,9 +15,11 @@ from .. import (
     art_files,
     data,
     dialogue,
+    draw,
     i18n,
     intel,
     item_icon,
+    items,
     lighting,
     vision,
     wiki_terms,
@@ -292,6 +294,10 @@ class BattleSession(Session):
                 if unit is None or not action.can(b, actor, unit):
                     raise ValueError(i18n.t("battle.err.target", action=action.name))
                 action.execute(b, actor, unit)
+            elif action is actions.DRAW and item is not None:
+                if not action.can(b, actor, item):
+                    raise ValueError(i18n.t("battle.err.draw"))
+                action.execute(b, actor, item)
             elif action is actions.PICK_UP and item is not None:
                 obj = b.ground[item] if 0 <= item < len(b.ground) else None
                 if obj not in actions.PICK_UP.options(b, actor):
@@ -500,6 +506,7 @@ class BattleSession(Session):
                          for p in self.fog.remembered_props(self.team, visible)]),
             "units": units,
             "pickups": self._pickups(my_turn),
+            "draws": self._draws(my_turn),
             "under": self._under([u for u in b.units if self.uid(u) in self._shown]),
             "ctf": self._ctf(known),
             "initiative": self._initiative(obs),
@@ -552,6 +559,40 @@ class BattleSession(Session):
         if not my_turn or not actions.PICK_UP.available(b, b.active):
             return []
         return [self._thing(o) | {"id": b.ground.index(o)} for o in actions.PICK_UP.options(b, b.active)]
+
+    def _draws(self, my_turn):
+        """The rows of the Draw card: what the pack offers the active unit's hands and what each choice leaves in them."""
+        b = self.battle
+        if not my_turn or not actions.DRAW.available(b, b.active):
+            return []
+        actor = b.active
+        weapon, off = draw.hands(actor)
+        shown = lambda n: i18n.name("item", n) if n else None 
+        rows = []
+        for o in actions.DRAW.options(b, actor):
+            new_weapon, new_off = draw.result(actor, o.target)
+            back = draw.stowed(actor, o.target)
+            after = [{"hand": hand, "was": shown(was), "now": shown(now)}
+                     for hand, was, now, hit in (("weapon", weapon, new_weapon, weapon in back or new_weapon != weapon),
+                                                 ("off", off, new_off, off in back or new_off != off)) if hit]
+            held = weapon if o.target == draw.STOW + "weapon" else off
+            name = o.target if not o.stow else held
+            two_over = weapon is not None and items.get(weapon).hands >= 2 and not o.stow
+            then = ""
+            if two_over:
+                then = i18n.t("action.draw.then_off" if items.is_weapon(o.target) else "action.draw.then_weapon")
+            if o.stow:
+                why = ""
+            elif o.reason:
+                why = o.reason
+            elif back:
+                why = i18n.t("action.draw.to_pack", items=" + ".join(shown(n) for n in back))
+            else:
+                why = i18n.t("action.draw.fills_weapon" if items.is_weapon(o.target) else "action.draw.fills_off")
+            rows.append({"id": o.target, "name": i18n.t("action.draw.stow", item=shown(held)) if o.stow else shown(name),
+                         "qty": None if o.stow else o.qty, "ok": o.ok, "stow": o.stow, "why": why,
+                         "glyph": item_icon.glyph(name), "after": after, "then": then})
+        return rows
 
     def _loot(self, u):
         return self._things(self.battle.cells_of(u))
@@ -662,6 +703,7 @@ class BattleSession(Session):
             "race": u.race_label,
             "alignment": i18n.name("alignment", u.char.alignment),
             **self._health(u),
+            "off_hand": (lambda n: i18n.name("item", n) if n else None)(draw.hands(u)[1]) if u.team == self.team else None,
             "ac": u.ac if u.team == self.team else None,
             "md": u.mental_defense if u.team == self.team else None,
             "speed": u.speed, "ap": u.ap, "ap_max": AP_PER_TURN,

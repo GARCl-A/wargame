@@ -169,6 +169,8 @@ def _target(battle, target):
         return None
     if isinstance(target, tuple):
         return {"cell": _cell(target)}
+    if isinstance(target, str):
+        return {"item": target}
     if target in battle.units:
         return {"unit": battle.units.index(target)}
     if target in battle.ground:

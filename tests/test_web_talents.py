@@ -66,7 +66,15 @@ def test_the_talent_in_hand_shows_what_it_moves_on_the_sheet():
     st = s.look(tid="sure_strike")
     assert st["hand"]["delta"] is None and st["hand"]["status"] == "Sure Strike needs Strong first"
     assert [b["id"] for b in st["hand"]["branch"]] == ["strong", "sure_strike"]
-    assert [o["id"] for o in st["hand"]["opens"]] == [t.id for t in talents.TREE["combat"] if t.requires == "sure_strike"]
+    assert [o["id"] for o in st["hand"]["opens"]] == [t.id for t in talents.TREE["combat"] if "sure_strike" in t.needs]
+    assert "ready_hand" in [o["id"] for o in s.look(tid="strong")["hand"]["opens"]]
+
+
+def test_a_hybrid_talent_sends_its_second_prerequisite_to_the_client():
+    _game, s, _units = _open()
+    st = s.look(tid="ready_hand")
+    assert _node(st, "ready_hand")["also"] == "strong"
+    assert [a["id"] for a in st["hand"]["also"]] == ["strong"]
 
 
 def test_taking_a_talent_spends_the_pick_opens_what_hangs_from_it_and_saves(saves):
