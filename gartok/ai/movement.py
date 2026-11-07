@@ -5,6 +5,9 @@ from ..board import cells, grid_distance, line_cells
 from .common import _other_side
 from .target import _approach_reach
 
+CROWDED_CROSSING = 3      # steps a crossing with a mate at it counts farther
+CROSSING_RADIUS = 3       # how near a mate must stand to crowd a crossing
+
 
 def _weapons_on_ground(battle):
     return [o for o in battle.ground if o.is_weapon]
@@ -83,9 +86,48 @@ def _step_over_terrain(battle, unit, target):
             if s < now and act.can(battle, unit, c) and (best is None or s < best[0]):
                 best = (s, act, c)
     if best is None:
-        return False
+        return _walk_to_the_shore(battle, unit, target)
     _, act, c = best
     act.execute(battle, unit, c)
+    return True
+
+
+def _road_steps(battle, unit, goal):
+    """Steps from every anchor the body fits at to `goal` when deep water counts as open (a swim crosses it): the road
+    a body takes when no dry one exists. Only walls stop it."""
+    steps = {goal: 0}
+    queue = [goal]
+    for anchor in queue:
+        for nb in battle.board.neighbors(anchor):
+            if nb not in steps and battle.board.fits(nb, unit.footprint, battle.board.walls):
+                steps[nb] = steps[anchor] + 1
+                queue.append(nb)
+    return steps
+
+
+def _walk_to_the_shore(battle, unit, target):
+    """No dry road to `target`, and nothing the unit can do from where it stands brings it closer (it is not at the
+    water yet): walk to the dry anchor nearest the target by the road that swims. A crossing a mate already stands at
+    counts `CROWDED_CROSSING` steps farther per mate, so a band spreads over the crossings there are. Returns True if
+    it moved."""
+    if unit.flies or not battle.board.deep_water:
+        return False
+    steps = _road_steps(battle, unit, target.pos)
+    here = steps.get(unit.pos)
+    reach = battle.reachable(unit)
+    if here is None or not reach:
+        return False
+    mates = [m.pos for m in battle.units if m.alive and m.team == unit.team and m is not unit]
+
+    def cost(anchor):
+        crowd = sum(1 for m in mates if grid_distance(anchor, m) <= CROSSING_RADIUS)
+        return steps.get(anchor, here) + CROWDED_CROSSING * crowd
+
+    dest = min(reach, key=cost)
+    if steps.get(dest, here) >= here:
+        return False
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
     return True
 
 

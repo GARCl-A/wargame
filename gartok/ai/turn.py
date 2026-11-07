@@ -343,7 +343,10 @@ def take_turn(battle, unit):
             unit.walking = False
             continue
 
-        dest = _step_toward(battle, unit, target.pos, _approach_reach(unit))
+        reach = _approach_reach(unit)
+        cut_off = (battle.board.deep_water and not unit.flies
+                   and not battle.can_reach(unit, target.pos, reach))
+        dest = unit.pos if cut_off else _step_toward(battle, unit, target.pos, reach)
         if dest == unit.pos:
             sight = _sight_cell(battle, unit, target)
             if sight is not None:

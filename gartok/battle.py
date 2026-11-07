@@ -768,7 +768,7 @@ class Battle:
         into deep water is broken by the water."""
         if drop <= 1 or unit.flies:
             return
-        if self.board.is_deep_water(unit.pos):
+        if any(self.board.is_deep_water(c) for c in self.cells_of(unit)):
             log("log.fall.water", unit=unit.name)
             return
         dice = drop - 1 - unit.ability.fall_free

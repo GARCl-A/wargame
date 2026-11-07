@@ -1,7 +1,7 @@
 """Movement actions: Move, the Free Step, and the Z axis (Climb, Drop in, Jump, Swim)."""
 
 from .. import i18n
-from ..board import cells_in_radius, grid_distance, line_cells
+from ..board import cells, cells_in_radius, grid_distance, line_cells
 from ..data import d20
 from ..i18n import Msg
 from .base import Action, _cell_free
@@ -249,6 +249,17 @@ class Swim(Action):
 
     id, cost, target, aimed = "swim", 1, "cell", True
 
+    @staticmethod
+    def _touches(battle, actor, anchor):
+        """Some cell of the body would be in deep water at `anchor`."""
+        return any(battle.board.is_deep_water(c) for c in cells(anchor, actor.footprint))
+
+    @staticmethod
+    def _afloat(battle, actor, anchor):
+        """The whole body would be in deep water at `anchor`. A Large body is never half in and half out: the cell where
+        it only touches the water is passed through (it costs a square of the swim), never stopped on."""
+        return all(battle.board.is_deep_water(c) for c in cells(anchor, actor.footprint))
+
     def _at_water(self, battle, actor):
         """The actor is in deep water, or on a cell touching it (can push off)."""
         for c in battle.cells_of(actor):
@@ -280,8 +291,9 @@ class Swim(Action):
             return False
         if grid_distance(actor.pos, target) > self._max_reach(battle, actor):
             return False
-        first = line_cells(actor.pos, target)[1]
-        return battle.board.is_deep_water(first) and _cell_free(battle, actor, first)
+        line = line_cells(actor.pos, target)[1:self._max_reach(battle, actor) + 1]
+        return (self._touches(battle, actor, line[0]) and _cell_free(battle, actor, line[0])
+                and any(self._afloat(battle, actor, c) for c in line))
 
     def label(self, battle, actor):
         return i18n.t("action.swim.label")
@@ -290,7 +302,7 @@ class Swim(Action):
         r = self._max_reach(battle, actor)
         return [p for p in cells_in_radius(actor.pos, r)
                 if battle.board.in_bounds(p)
-                and (battle.board.is_deep_water(p) or grid_distance(actor.pos, p) == 1)]
+                and (self._afloat(battle, actor, p) or grid_distance(actor.pos, p) == 1)]
 
     def highlight_targets(self, battle, actor):
         return []
@@ -308,9 +320,10 @@ class Swim(Action):
             if step > dist or cell in battle.board.walls \
                     or not _cell_free(battle, actor, cell):
                 break
-            if not battle.board.is_deep_water(cell):
+            if self._afloat(battle, actor, cell):
+                landing = cell
+            elif not self._touches(battle, actor, cell):
                 break                        # left the water -- climb out from here
-            landing = cell
         z_from = battle.elevation(actor)
         z_to = battle.board.elevation_at(landing)
         actor.pos = landing

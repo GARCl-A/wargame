@@ -205,3 +205,89 @@ def test_ai_swims_farther_with_webbed_feet():
     with fixed_d20(20):
         assert ai._step_over_terrain(batt, a, d)
     assert a.pos == (9, 5)
+
+
+# --- a Large body --------------------------------------------------------- #
+
+def _river_battle(cols=range(8, 11)):
+    """A Centaur on the west bank, a foe on the east one and a river of deep water between them from edge to edge:
+    nobody walks across."""
+    random.seed(3)
+    centaur = Unit("player")
+    centaur.set_race("Centaur")
+    batt = Battle([centaur], [Unit("enemy")])
+    a, d = batt.units
+    a._ability = d._ability = abilities.get("none")
+    batt.board.walls = set()
+    deep = [(x, y) for x in cols for y in range(batt.board.rows)]
+    batt.board.elevation, batt.board.water = {c: -2 for c in deep}, set(deep)
+    batt.board.refresh_terrain()
+    a.pos, d.pos = (2, 5), (15, 5)
+    a.ap = d.ap = 2
+    return batt, a, d
+
+
+def test_a_large_body_swims_in_from_the_bank():
+    batt, a, _ = _river_battle()
+    assert a.footprint == 2
+    a.pos = (6, 5)                                # its far column stands on (7, 5), one short of the water
+    _set_stats(a, strength=18)
+    assert actions.SWIM.available(batt, a)
+    assert actions.SWIM.can(batt, a, (9, 5))
+    with fixed_d20(20):
+        actions.SWIM.execute(batt, a, (9, 5))
+    assert a.pos[0] > 6 and all(batt.board.is_deep_water(c) for c in batt.cells_of(a))
+
+
+def test_a_large_body_is_never_left_half_in_the_water():
+    batt, a, _ = _river_battle()
+    a.pos = (6, 5)
+    _set_stats(a, strength=10)
+    with fixed_d20(1):                            # a poor roll: one square, which is only the bank cell touching the river
+        actions.SWIM.execute(batt, a, (9, 5))
+    assert a.pos == (6, 5)
+
+
+def _centaur_and_foe(start, foe):
+    from gartok import map_lib
+    from gartok.scenario import CustomScenario
+    random.seed(3)
+    centaur = Unit("player")
+    centaur.set_race("Centaur")
+    batt = Battle([centaur], [Unit("enemy")], scenario=CustomScenario(map_lib.load_map("capture-the-flag-the-gamers")))
+    a, d = batt.units
+    a._ability = d._ability = abilities.get("none")
+    a.pos, d.pos = start, foe
+    return batt, a, d
+
+
+def test_the_ai_takes_a_large_body_across_the_river_when_no_dry_road_leads_to_the_foe():
+    from gartok import ai
+    batt, a, d = _centaur_and_foe((5, 0), (14, 0))     # a 2x2 body cannot pass the map's one-wide gaps: the river is its road
+    assert batt.path_step_toward(a, d.pos, a.speed) == a.pos
+    for _ in range(14):
+        a.ap, a.walking = 2, False
+        with fixed_d20(20):
+            if not ai._step_over_terrain(batt, a, d):
+                break
+    assert a.pos[0] >= 13
+
+
+def _walk_turns(batt, a, turns):
+    from gartok import ai
+    for _ in range(turns):
+        a.ap, a.walking = 2, False
+        with fixed_d20(20):
+            ai.take_turn(batt, a)
+
+
+def test_a_large_body_cut_off_by_the_river_does_not_pace_back_and_forth_on_the_bank():
+    batt, a, _ = _centaur_and_foe((1, 8), (19, 8))
+    _walk_turns(batt, a, 8)
+    assert a.pos[0] >= 13
+
+
+def test_a_large_body_crosses_by_the_channel_nearer_its_foe():
+    batt, a, _ = _centaur_and_foe((1, 13), (19, 13))
+    _walk_turns(batt, a, 8)
+    assert a.pos[0] >= 13 and a.pos[1] >= 9
