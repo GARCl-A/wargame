@@ -1,6 +1,6 @@
 """The condition marks the battle board draws: a gem on a token's rim, a pip under its initiative coin.
 
-One entry per condition id (plus poison and hunger, which are not `Condition`s): the icon, the class
+One entry per condition id (plus off-guard, poison and hunger, which are not `Condition`s): the icon, the class
 that colours it and its place in the order, the control that stops a fighter first. The words are
 `cond.<id>.name` / `cond.<id>.rule` in `locales/en.json`; `args` fills the rule's blanks.
 """
@@ -13,6 +13,7 @@ MARKS = {
     "prone": ("trap/" + B + "lorc/foot-trip", "ctl"),
     "sleeping": ("state/" + B + "lorc/sleepy", "ctl"),
     "surprised": ("state/" + B + "lorc/surprised", "ctl"),
+    "off_guard": ("state/" + B + "lorc/distraction", "ctl"),
     "rooted": ("trap/" + B + "delapouite/sticky-boot", "ctl"),
     "bleeding": ("blood/" + B + "lorc/bleeding-wound", "hurt"),
     "maimed": ("blood/" + B + "lorc/internal-injury", "hurt"),
@@ -24,6 +25,7 @@ MARKS = {
     "defending": ("item/round-shield", "boon"),
     "invisible": ("state/" + B + "lorc/hidden", "boon"),
     "pixie_flight": ("wing/" + B + "lorc/fairy", "boon"),
+    "routed": ("state/" + B + "lorc/terror", "mind"),
 }
 _ORDER = list(MARKS)
 
@@ -39,6 +41,8 @@ def _args(c):
 def marks(u):
     """Every mark `u` wears, control first, then wounds, then the mind, then boons."""
     out = [{"id": c.id, "args": _args(c)} for c in u.conditions if c.id in MARKS]
+    if u.alive and u.turns_taken == 0:
+        out.append({"id": "off_guard", "args": {}})
     if u.poisoned:
         out.append({"id": "poisoned", "args": {}})
     if u.hunger_level:

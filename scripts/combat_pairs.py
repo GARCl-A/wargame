@@ -13,7 +13,7 @@ player's runners (`battle.tag_flag_runners`).
 
     python scripts/combat_pairs.py combat_lab --trials 100
     python scripts/combat_pairs.py saves/<world>/combat_logs --fight hunt
-    python scripts/combat_pairs.py combat_lab/campaign --set FLEE_HP=0.34 --set FLEE_OUTNUMBERED=0
+    python scripts/combat_pairs.py combat_lab/campaign --set URGENT_CLOCK=2 --set SKITTISH_STAMINA=5
     python scripts/combat_pairs.py --fresh scrapper:0:3 --seeds 40
 """
 

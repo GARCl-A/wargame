@@ -16,7 +16,6 @@ from .wiki_session import WikiSession
 CHARTER_FACES = 4    # the charter's roster row; the rest are a count
 INVITE_RACES = ("Human", "Orc", "Elf", "Dwarf", "Goblin", "Grippli", "Centaur", "Kenku")
 MAX_FACES = 12
-QUOTE = "title_session.quote"
 KIND = {k: f"title_session.kind.{k}" for k in ("current", "auto", "manual")}
 
 
@@ -126,7 +125,7 @@ class TitleSession(Session):
     # the screen                                                         #
     # ------------------------------------------------------------------ #
     def state(self):
-        out = {"mode": self.mode, "quote": i18n.t(QUOTE), "notice": self.notice, "menu": self._menu()}
+        out = {"mode": self.mode, "notice": self.notice, "menu": self._menu()}
         if self.mode == "home":
             out["charter"] = self._charter() if self.latest else None
             out["map"] = self._map() if self._last else None

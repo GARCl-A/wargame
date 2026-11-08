@@ -11,25 +11,25 @@ The playable races. `d100` is the roll that picks one; the modifiers are added t
 
 | Race | d100 | STR DEX CON INT WIS CHA | Hit Die | Size | Language | Age | Ability |
 |---|---|---|---|---|---|---|---|
-| Dwarf | 1-14 | +1 +0 +2 +0 -1 -2 | d10 | Medium | Dwarvish | 5x | Darkvision |
+| Dwarf | 1-14 | +1 +0 +2 +0 -1 -2 | d8 | Medium | Dwarvish | 5x | Darkvision |
 | Automaton | 15-16 | +1 +1 +0 +0 -1 -1 | d8 | Medium | Ankarin | 1x | Inorganic Body |
-| Centaur | 17-18 | +1 -2 +0 +0 +2 -1 | d10 | Large | Elvish | 2.5x | Gallop |
+| Centaur | 17-18 | +1 -2 +0 +0 +2 -1 | d8 | Large | Elvish | 2.5x | Gallop |
 | Elf | 19-32 | -2 +2 -1 +1 +0 +0 | d8 | Medium | Elvish | 8.75x | Sleep Immunity |
 | Gnoll | 33 | +0 +0 +2 -1 +0 -1 | d8 | Medium | Orcish | 0.625x | Strong Stomach |
 | Gnome | 34 | -2 +1 -1 +0 +1 +1 | d8 | Small | Gnomish | 6.25x | Nature Magic |
-| Goblin | 35-48 | -1 +2 +1 -1 +0 -1 | d6 | Small | Goblin | 0.625x | Pack Tactics |
-| Goliath | 49-51 | +2 +1 +0 -1 -1 -1 | d10 | Medium | Jotun | 1x | Strong Body |
+| Goblin | 35-48 | -1 +2 +1 -1 +0 -1 | d8 | Small | Goblin | 0.625x | Pack Tactics |
+| Goliath | 49-51 | +2 +1 +0 -1 -1 -1 | d8 | Medium | Jotun | 1x | Strong Body |
 | Grippli | 52-54 | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
-| Halfling | 55-57 | -2 +2 -1 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Innocent Face |
+| Halfling | 55-57 | -2 +2 -1 +0 +1 +1 | d8 | Small | Halfling | 1.5x | Innocent Face |
 | Hobgoblin | 58-61 | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Browbeat |
-| Lizardfolk | 62-71 | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
+| Lizardfolk | 62-71 | +1 +1 +0 -1 +0 -1 | d8 | Medium | Draconic | 0.875x | Climber |
 | Human | 72-86 | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
-| Kenku | 87-89 | -2 +2 -1 +0 +2 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
-| Catfolk | 90-92 | -1 +1 +0 -1 +0 +1 | d6 | Medium | Sylvan | 1x | Catfall |
-| Kobold | 93-95 | -2 +1 +0 +1 -1 +1 | d6 | Small | Draconic | 2.5x | Blood Magic |
-| Treefolk | 96 | -1 +0 +1 -1 +1 +0 | d6 | Medium | Verdant | 1x | Autotroph |
+| Kenku | 87-89 | -2 +2 -1 +0 +2 +2 | d8 | Medium | Sylvan | 1x | Mimic Sounds |
+| Catfolk | 90-92 | -1 +1 +0 -1 +0 +1 | d8 | Medium | Sylvan | 1x | Catfall |
+| Kobold | 93-95 | -2 +1 +0 +1 -1 +1 | d8 | Small | Draconic | 2.5x | Blood Magic |
+| Treefolk | 96 | -1 +0 +1 -1 +1 +0 | d8 | Medium | Verdant | 1x | Autotroph |
 | Orc | 97-99 | +2 +0 +1 -1 +0 -3 | d8 | Medium | Orcish | 0.625x | Ferocity |
-| Sprite | 100 | -2 +1 -1 +0 +2 +3 | d6 | Tiny | Gnomish | 1.5x | Flight |
+| Sprite | 100 | -2 +1 -1 +0 +2 +3 | d8 | Tiny | Gnomish | 1.5x | Flight |
 
 ## Creatures
 
@@ -194,8 +194,8 @@ Properties and keywords carried by weapons.
 | Finesse | Uses Dexterity instead of Strength for attack and damage rolls. |
 | Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
 | Crit 3x | Critical hits multiply the blow's damage by 3 instead of 2. |
-| Sneak Attack | 2 AP: One strike; against a flanked foe the blow is Brutal 1, +1d4. |
-| Precise Thrust | 2 AP: One strike; against a flanked foe +2 to hit and the blow is Brutal 1. |
+| Sneak Attack | 2 AP: One strike; against an off-guard foe the blow is Brutal 1, +1d4. |
+| Precise Thrust | 2 AP: One strike; against an off-guard foe +2 to hit and the blow is Brutal 1. |
 | Cleave | 2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit. |
 | Repel Strike | 2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4. |
 | Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1. |
@@ -215,6 +215,8 @@ Reserved words of the rules: each always means the one thing written here.
 | Keyword | Meaning |
 |---|---|
 | Brutal | Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2. |
+| Morale | Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed. |
+| Routed | Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again. |
 
 ## Armor
 
@@ -385,7 +387,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
 | 3 | Fleet | +1 square of Speed. | Deadeye |
 | 4 | Free Step | Once per turn, step 1 square without spending an action point. | Fleet |
-| 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against flanked targets. | Deadeye |
+| 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against off-guard targets. | Deadeye |
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | Tough |
 | 3 | Recovery | heal 1 HP after every fight you survive. | Hardy |
@@ -393,17 +395,18 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Armor Bearer | reduces the carried weight of equipped armor by up to 6 kg. | Bulwark |
 | 1 | Alert | +1 Wisdom. | -- |
 | 2 | Quick Wits | +2 initiative. | Alert |
-| 3 | Peripheral Vision | when flanked, your AC is only reduced by 1 instead of 2. | Quick Wits |
+| 3 | Peripheral Vision | when off-guard, your AC is only reduced by 1 instead of 2. | Quick Wits |
 | 2 | Iron Will | +2 Mental Defense. | Alert |
 | 3 | Iron Stance | using Defend grants +2 Mental Defense in addition to AC until your next turn. | Iron Will |
 | 1 | Imposing | +1 Charisma. | -- |
-| 2 | Menacing | +1 to Demoralize checks. | Imposing |
+| 2 | Menacing | +2 to Demoralize checks. | Imposing |
 | 2 | Gruesome Takedown | upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language). | Imposing |
 | 3 | Cull the Broken | +2 damage on attacks against demoralized targets. | Menacing |
+| 3 | Wordless Menace | Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2. | Menacing |
 | 3 | Inspiring Shout | upon successfully demoralizing an enemy, grant +1 initiative to the next ally in turn order. | Gruesome Takedown |
 | 1 | Tactical Mind | +1 Intelligence. | -- |
-| 2 | Sharp Analysis | +1 on all Assess and enemy observation checks. | Tactical Mind |
-| 2 | Combat Analysis | +2 on active Assess checks made during battle. | Tactical Mind |
+| 2 | Sharp Analysis | +2 on all Assess and enemy observation checks. | Tactical Mind |
+| 2 | Combat Analysis | +4 on active Assess checks made during battle. | Tactical Mind |
 | 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | Combat Analysis |
 | 3 | Anatomist | your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Sharp Analysis |
 
@@ -493,13 +496,13 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Human | 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- |
 | Human | 1 | Parley | +1 when you Persuade, Bluff or Intimidate in the talk before a fight. | -- |
 | Human | 2 | Polyglot | +2 to progress rolls when studying a foreign language. | Cosmopolitan |
-| Kenku | 1 | Eye for Detail | +1 on all Assess and enemy observation checks. | -- |
+| Kenku | 1 | Eye for Detail | +2 on all Assess and enemy observation checks. | -- |
 | Kenku | 1 | Faith Initiate | divine calling: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
 | Kenku | 1 | Mimic Voices | +1 on performance rolls when playing on the tavern stage. | -- |
 | Kobold | 1 | Trap Salvage | after a won fight, your traps that never sprang go back into your pack. | -- |
 | Kobold | 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- |
 | Kobold | 2 | Trap Master | plant your traps up to 3 squares away when a fight begins. | Trapper |
-| Lizardfolk | 1 | Ambush Predator | +2 to hit a foe that has not yet had a turn this fight. | -- |
+| Lizardfolk | 1 | Ambush Predator | +2 to hit an off-guard foe. | -- |
 | Lizardfolk | 1 | Organic Harvester | scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- |
 | Lizardfolk | 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each. | -- |
 | Ogre | 1 | Mighty Shove | your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- |

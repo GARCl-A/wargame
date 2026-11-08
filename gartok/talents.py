@@ -60,11 +60,12 @@ exactly one consumer that reads it back:
     spell_heal        actions.SpellAction              --
     spell_range       actions.SpellAction              --
     obscured_penalty_relief actions.base.obscured_penalty --
-    flank_defense     actions.base._flank_penalty      --
+    off_guard_defense     actions.base._off_guard_penalty  --
     bleeding_claws    actions.base._claw               --
     night_prowler     vocations.ambush_mult            --
     open_market       economy.haggle_voice             --
     demoralize_bonus  actions.combat.Demoralize        --
+    demoralize_no_language actions.combat.Demoralize   --
     gruesome_takedown actions.base._resolve_hit        --
     demoralized_target_damage actions.base._resolve_hit --
     assess_bonus      intel._roll                      --
@@ -72,7 +73,7 @@ exactly one consumer that reads it back:
     full_intel_to_hit Combatant.attack_mods            --
     grab_bonus        actions.combat.Grab              --
     push_bonus        actions.combat.Push              --
-    flank_finesse_damage actions.base._resolve_hit     --
+    off_guard_finesse_damage actions.base._resolve_hit     --
     free_hand_damage  Combatant.damage_roll            --
     free_step         actions.FreeStep                 --
     defend_mental_defense Combatant.mental_defense     --
@@ -101,6 +102,7 @@ exactly one consumer that reads it back:
     parley            dialogue.Encounter.mod           --
     small_appetite    Unit.consume_daily_food          --
     bountiful_harvest guild_upkeep / rest (Bloom Fruit) --
+    morale            morale.start_value (the fight's starting morale; no talent feeds it yet) --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -234,7 +236,7 @@ _LIST = [
     Talent("free_step", "combat", 4, requires="fleet",
            effects=(Effect("free_step", 1),), icon="action/slalom"),
     Talent("nimble_skirmisher", "combat", 3, requires="deadeye",
-           effects=(Effect("flank_finesse_damage", 2),), icon="action/backstab"),
+           effects=(Effect("off_guard_finesse_damage", 2),), icon="action/backstab"),
 
     Talent("tough", "combat", 1, effects=(Effect("attr", 1, "constitution"),), icon="body/bell-shield"),
     Talent("hardy", "combat", 2, requires="tough",
@@ -250,7 +252,7 @@ _LIST = [
     Talent("quick_wits", "combat", 2, requires="alert",
            effects=(Effect("initiative", 2),), icon="head/quick-man"),
     Talent("peripheral_vision", "combat", 3, requires="quick_wits",
-           effects=(Effect("flank_defense", 1),), icon="head/one-eyed"),
+           effects=(Effect("off_guard_defense", 1),), icon="head/one-eyed"),
     Talent("iron_will", "combat", 2, requires="alert",
            effects=(Effect("mental_defense", 2),), icon="action/meditation"),
     Talent("iron_stance", "combat", 3, requires="iron_will",
@@ -258,19 +260,21 @@ _LIST = [
 
     Talent("imposing", "combat", 1, effects=(Effect("attr", 1, "charisma"),), icon="action/shouting"),
     Talent("menacing", "combat", 2, requires="imposing",
-           effects=(Effect("demoralize_bonus", 1),), icon="action/shouting"),
+           effects=(Effect("demoralize_bonus", 2),), icon="action/shouting"),
     Talent("gruesome_takedown", "combat", 2, requires="imposing",
            effects=(Effect("gruesome_takedown", 1),), icon="body/deadly-strike"),
     Talent("cull_the_broken", "combat", 3, requires="menacing",
            effects=(Effect("demoralized_target_damage", 2),), icon="action/boot-stomp"),
+    Talent("wordless_menace", "combat", 3, requires="menacing",
+           effects=(Effect("demoralize_no_language", 1),), icon="action/shouting"),
     Talent("inspiring_shout", "combat", 3, requires="gruesome_takedown",
            effects=(Effect("demoralize_ally_initiative", 1),), icon="action/shouting"),
 
     Talent("tactical_mind", "combat", 1, effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
     Talent("sharp_analysis", "combat", 2, requires="tactical_mind",
-           effects=(Effect("assess_bonus", 1),), icon="head/spectacles"),
+           effects=(Effect("assess_bonus", 2),), icon="head/spectacles"),
     Talent("combat_analysis", "combat", 2, requires="tactical_mind",
-           effects=(Effect("assess_active_bonus", 2),), icon="action/targeting"),
+           effects=(Effect("assess_active_bonus", 4),), icon="action/targeting"),
     Talent("exploit_weakness", "combat", 3, requires="combat_analysis",
            effects=(Effect("full_intel_to_hit", 2),), icon="gui/convergence-target"),
     Talent("anatomist", "combat", 3, requires="sharp_analysis",
@@ -447,7 +451,7 @@ _LIST = [
     Talent("parley", "racial", 1, race="Human",
            effects=(Effect("parley", 1),), icon="action/discussion"),
     Talent("eye_for_detail", "racial", 1, race="Kenku",
-           effects=(Effect("assess_bonus", 1),), icon="head/kenku-head"),
+           effects=(Effect("assess_bonus", 2),), icon="head/kenku-head"),
     Talent("mimic_voices", "racial", 1, race="Kenku",
            effects=(Effect("tavern_perform_bonus", 1),), icon="action/sing"),
     Talent("razor_claws", "racial", 1, race="Catfolk",

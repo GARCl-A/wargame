@@ -325,17 +325,17 @@ def test_the_pairs_script_gives_the_same_ai_rate_every_run(tmp_path):
 
 def test_a_threshold_set_for_the_player_s_side_holds_only_on_its_turns():
     seen = []
-    flee = ai.module_of("FLEE_HP")
-    real, flee_hp = ai.take_turn, flee.FLEE_HP
-    ai.take_turn = lambda battle, unit: seen.append((unit.team, flee.FLEE_HP))
+    support = ai.module_of("URGENT_CLOCK")
+    real, clock = ai.take_turn, support.URGENT_CLOCK
+    ai.take_turn = lambda battle, unit: seen.append((unit.team, support.URGENT_CLOCK))
     try:
-        turn = combat_pairs._turn({"FLEE_HP": 0.05})
+        turn = combat_pairs._turn({"URGENT_CLOCK": 2})
         battle, _ = combat_lab.build("scrapper", 0, 1, seed=5)
         turn(battle, battle.player_units[0])
         turn(battle, battle.enemy_units[0])
     finally:
         ai.take_turn = real
-    assert seen == [("player", 0.05), ("enemy", flee_hp)] and flee.FLEE_HP == flee_hp
+    assert seen == [("player", 2), ("enemy", clock)] and support.URGENT_CLOCK == clock
 
 
 def test_a_converted_line_is_stored_as_key_and_params_and_reads_in_any_language(tmp_path):

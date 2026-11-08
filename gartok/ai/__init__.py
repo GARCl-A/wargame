@@ -5,14 +5,13 @@ holding an empty crossbow, reload it; otherwise spend the points attacking the
 weakest target in range (or demoralize it if out of reach); otherwise advance.
 Sees through each unit's own eyes.
 
-**Tendency colours the edges** (§8 / "Fleeing" in RULES.md), on
-the morality axis mostly:
+**Tendency colours the edges** (§8 in RULES.md), on the morality axis; who runs is `morale.py`'s call
+("Morale and fleeing" in RULES.md):
 - **Evil** finishes downed enemies -- a coup de grace on an adjacent body, so the
   player cannot stabilize it. Only in a lethal fight (the arena knocks out anyway).
 - **Good** stabilizes an adjacent downed ally before doing anything else, and when
   it does run it drags the wounded out with it (that part is in `Flee.execute`).
-- **Chaotic** breaks and runs sooner; **Lawful** holds the line while any ally
-  still stands.
+- **Chaotic** / **Lawful** only move the starting morale.
 
 The package is cut by concern (README *Structure*): `turn` runs one turn over the others.
 """
@@ -36,7 +35,6 @@ from .attack import (
 )
 from .common import _wants_alive
 from .flee import (
-    FLEE_HP,
     SKITTISH_STAMINA,
     _leave_fire,
     _should_flee,

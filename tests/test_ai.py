@@ -11,6 +11,7 @@ from tests.helpers import (
     _recruit,
     abilities,
     fixed_d20,
+    standard_unit,
 )
 
 
@@ -41,21 +42,18 @@ def test_ai_reloads_an_empty_crossbow_rather_than_only_walking():
     assert d.ammo == 4                                 # a bolt left the quiver -> it reloaded
 
 
-def test_chaotic_ai_breaks_early_but_lawful_holds_the_line():
+def test_a_unit_runs_once_its_morale_is_spent_and_not_before():
     from gartok import ai
-    random.seed(0)
-    batt = Battle([Unit("player"), Unit("player")],
-                  [Unit("enemy"), Unit("enemy")], lethal=True)
-    a, b = batt.player_units
-    e, mate = batt.enemy_units
-    batt.ambient_light = True                          # daylight: it sees who it flees from
-    batt.board.walls = set()
-    a.pos, b.pos = (13, 2), (13, 9)                    # the players are far off
-    e.pos, mate.pos = (6, 5), (14, 5)                  # e a clean run from the edge
-    e.hp = 1                                           # badly hurt, outnumbered
-    e.alignment = "Chaotic and Neutral"
+    batt = Battle([standard_unit("player")], [standard_unit("enemy")], lethal=True)
+    e = batt.enemy_units[0]
+    e.morale = 1
+    batt.settle_morale()
+    assert not ai._should_flee(batt, e)
+    e.morale = 0
+    batt.settle_morale()
     assert ai._should_flee(batt, e)
-    e.alignment = "Lawful and Neutral"                 # a lawful unit stays while its mate stands
+    e.morale = 1                                       # one point back: the fight is its own again
+    batt.settle_morale()
     assert not ai._should_flee(batt, e)
 
 
@@ -135,6 +133,8 @@ def test_ai_never_flees_a_non_lethal_bout():
     batt = Battle([Unit("player"), Unit("player")], [Unit("enemy")], lethal=False)
     e = batt.enemy_units[0]
     e.pos, e.hp, e.alignment = (0, 5), 1, "Chaotic and Evil"
+    e.morale = 0
+    batt.settle_morale()
     assert ai._should_flee(batt, e) is False
 
 
@@ -190,8 +190,8 @@ def test_cornered_fleeing_enemy_attacks_instead_of_freezing():
     batt = Battle([Unit("player")], [Unit("enemy")], lethal=True)
     a = batt.player_units[0]
     e = batt.enemy_units[0]
-    e.alignment = "Chaotic and Neutral"
-    e.hp = 1
+    e.morale = 0
+    batt.settle_morale()
     e.pos = (0, 0)
     a.pos = (1, 0)
     a.hp = a.hp_max = 40
@@ -276,6 +276,7 @@ def _pincer():
     a, b = batt.player_units
     foe = batt.enemy_units[0]
     for u in (a, b, foe):
+        u.turns_taken = 1
         u.weapon_hand, u.torch_hand = True, False
         u.equipped_weapon = "Dagger"
         u.size = "Medium"
@@ -321,7 +322,7 @@ def test_the_ai_takes_the_flank_and_then_strikes():
     from gartok.conditions import Demoralized
     foe.add_condition(Demoralized())                          # so the spare point is not spent shouting
     ai.take_turn(batt, b)
-    assert any("Flank" in line for line in batt.log_lines)    # it walked round and struck with the +2
+    assert any("Off-guard" in line for line in batt.log_lines)    # it walked round and struck at the foe's -2 AC
 
 
 def _dark_pair():

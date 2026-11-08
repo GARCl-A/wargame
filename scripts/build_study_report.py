@@ -24,7 +24,7 @@ from scripts import race_study_builds as rb
 
 MIN_SQUADS = 40
 MAP_WEIGHT = {"ctf": 0.5, "ermos": 0.5}      # the dark map and the lit one, half each
-LEVEL_WEIGHT = {0: 1 / 3, 5: 2 / 3}          # level 5 shows a build better than level 0
+LEVEL_WEIGHT = {5: 1.0}          # level 0 has no build (no talents, no money): only level 5 scores
 VIABLE = 0.5                                 # a build is viable for a race above this blended win rate
 
 
@@ -153,6 +153,7 @@ class Study:
                 first = min(ranks) == 0
                 self.first[lv, build, first].add(x)
                 self.units[key]["init"]["fights"] += 1
+                self.units[key]["init"]["shouts"] += r.get("shouts", {}).get(side, 0)
                 self.units[key]["init"]["first"] += int(first)
                 self.units[key]["init"]["rank"] += sum(ranks) / len(ranks)
             if build == "archer":
@@ -237,7 +238,7 @@ def build_scores(st):
         parts = [(MAP_WEIGHT[m] * LEVEL_WEIGHT[lv], pooled[lv, m]) for m in MAP_WEIGHT for lv in LEVEL_WEIGHT]
         body.append((blend(parts), bid, *[pm(pooled[lv, m]) for m in MAP_WEIGHT for lv in LEVEL_WEIGHT]))
     body.sort(key=lambda t: -(t[0] if t[0] is not None else -1))
-    return table(["build", "score", "CTF L0", "CTF L5", "Ermos L0", "Ermos L5"], [(b, pct(sc), *rest) for sc, b, *rest in body])
+    return table(["build", "score", *[f"{name} L{lv}" for name in ("CTF", "Ermos") for lv in LEVEL_WEIGHT]], [(b, pct(sc), *rest) for sc, b, *rest in body])
 
 
 def race_scores(st):
@@ -273,7 +274,7 @@ def vocation_table(scores):
 def racial_table(st):
     body = []
     for race in sorted({r for (r, _t) in st.racial}):
-        mine = sorted(((100 * (a.p - 0.5), 196 * 100 * a.se, t, a.n) for (r, t), a in st.racial.items() if r == race), reverse=True)
+        mine = sorted(((100 * (a.p - 0.5), 196 * a.se, t, a.n) for (r, t), a in st.racial.items() if r == race), reverse=True)
         felt = [m for m in mine if abs(m[0]) > m[1]]
         quiet = [m[2] for m in mine if abs(m[0]) <= m[1]]
         top = felt[0] if felt else None
@@ -308,7 +309,7 @@ def attack_names(m):
 
 
 def share(m, prefix):
-    """Of the actions that rolled to hit, the share that had the context `prefix` (`f.` flanked foe, `d.` demoralized foe)."""
+    """Of the actions that rolled to hit, the share that had the context `prefix` (`f.` off-guard foe, `d.` demoralized foe)."""
     names = attack_names(m)
     total = sum(m["acts"][nm] for nm in names)
     return sum(m["acts"][prefix + nm] for nm in names) / total if total else float("nan")
@@ -331,7 +332,7 @@ def behaviour_section(st, lv):
             f"{per_unit(m, 'throw'):.2f}", f"{sum(casts.values()):.1f}",
             ", ".join(f"{k} {v:.1f}" for k, v in sorted(casts.items(), key=lambda t: -t[1])[:4]) or "-",
         ))
-    head = ["build", "units", "attacks/unit", "attacks on a flanked foe", "sneak attacks/unit", "demoralize/unit",
+    head = ["build", "units", "attacks/unit", "attacks on an off-guard foe", "sneak attacks/unit", "demoralize/unit",
             "attacks on a demoralized foe", "assess/unit", "foes read to HARD by an assess/unit",
             "foes at HARD at the first action (of 3)", "throws/unit", "casts/unit", "spells (per unit)"]
     return table(head, body)
@@ -406,9 +407,9 @@ def initiative_section(st, lv):
         yes, no = st.first.get((lv, bid, True)), st.first.get((lv, bid, False))
         body.append((bid, f"{i['rank'] / i['fights']:.2f}", f"{i['bonus'] / m['n']['units']:+.2f}",
                      f"{100 * i['first'] / i['fights']:.0f}%", yes or "-", no or "-",
-                     f"{m['acts']['inspiring_shout'] / m['n']['units']:.2f}"))
+                     f"{i['shouts'] / i['fights']:.2f}"))
     return table(["build", "mean rank of its squad (0 = first)", "initiative bonus", "squad had the first turn", "score when first",
-                  "score when not", "inspiring shouts/unit"], body)
+                  "score when not", "inspiring shouts/squad"], body)
 
 
 def first_turn_section(st, lv):
@@ -492,7 +493,7 @@ def main():
     md.append(weapon_table(st))
     md.append("### Spells\n\nThe full kit of the caster build against the same kit without that one spell; positive means the spell adds.\n")
     md.append(spell_table(st))
-    md.append("### Builds\n\nScore: the CTF map (dark) and the Ermos (lit) half each, level 5 two thirds and level 0 one third.\n")
+    md.append("### Builds\n\nScore: the CTF map (dark) and the Ermos (lit) half each, level 5 only (level 0 has no build).\n")
     md.append(build_scores(st))
     md.append("### Races\n\nScore: the same blend over every build the race fields. Flexibility: the builds above 50% over the builds the race fields.\n")
     md.append(race_table(scores))
@@ -500,8 +501,9 @@ def main():
     md.append(vocation_table(scores))
     md.append("### Racial talents\n\nEach first-pick racial talent of a race, level 5, against the same unit with no racial talent "
               "(a random build of the race, same on both sides). 'No impact': inside the 95% interval of zero.\n")
-    md.append(racial_table(st))
-    for lv in (0, 5):
+    if st.racial:
+        md.append(racial_table(st))
+    for lv in sorted({lv for (lv, _b) in st.rank}):
         md.append(f"\n## Level {lv}\n")
         ranked = sorted(((acc, b) for (l, b), acc in st.rank.items() if l == lv), key=lambda t: -t[0].p)
         md.append("### Ranking of the builds (each against a random squad of the field, every race)\n")
@@ -534,7 +536,7 @@ def main():
             md.append(crit_section(st, lv))
             md.append("### The random talents of the Archer\n")
             md.append(talent_section(st, lv, "archer"))
-        md.append("### Weapon sweeps (against the sword and shield with Bulwark, same race both sides)\n")
+        md.append("### Weapon sweeps (against the sword and shield with Hardy, same race both sides)\n")
         md.append(sweep_section(st, lv))
     with open(os.path.join(out, "BUILDS.md"), "w", encoding="utf-8") as f:
         f.write(builds_doc())

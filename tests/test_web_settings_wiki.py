@@ -154,7 +154,7 @@ def test_the_wiki_filter_reads_more_than_the_name_and_holds_across_chapters(save
     assert all("Iron Bar" in e["body"][0] or "iron bar" in e["name"].lower() for e in st["entries"])
     st = w.chapter("rules")
     assert st["query"] == "iron bar" and st["entries"] == []
-    assert w.find("flank")["entries"][0]["name"] == "Flanking"
+    assert w.find("flank")["entries"][0]["name"] == "Off-guard and flanking"
     w.find("nature")
     races = w.chapter("races")["entries"]
     assert "Gnome" in [e["name"] for e in races] and all("nature" in json.dumps(e).lower() for e in races)

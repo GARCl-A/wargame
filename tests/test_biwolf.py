@@ -155,6 +155,7 @@ def _wolf_attacks(wearing):
     batt = Battle([signer], pack[1:2])
     me, wolf = batt.player_units[0], batt.enemy_units[0]
     me.pos, wolf.pos = (5, 5), (6, 5)
+    me.turns_taken = wolf.turns_taken = 1
     wolf.ap = 2
     with fixed_d20(10):
         actions.Attack().execute(batt, wolf, me)

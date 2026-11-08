@@ -62,6 +62,12 @@ class Demoralized(Condition):
         return True
 
 
+class Routed(Condition):
+    """Morale spent: the unit runs for the exit and `ai/` plays it, a guild member included. It has no
+    timer: `morale.settle` puts it on when morale falls to 0 and lifts it when morale is above 0 again."""
+    id = "routed"
+
+
 class Surprised(Condition):
     """Caught off guard before the fight (`dialogue.py`): the unit loses its first turn
     (`Battle._advance_turn` skips it)."""

@@ -90,7 +90,7 @@ the rest.
 
 - **Rules as keywords, the next ones (playtest 2026-10-30).** `keywords.py` and the wiki's KEYWORDS chapter
   exist, with *Brutal N* the first (N more rolls of the weapon's damage; every Brutal of the game is 1;
-  the crit multiplies the whole blow last). Missing: look for the next repeated rules (Flanked, Prone...)
+  the crit multiplies the whole blow last). Missing: look for the next repeated rules (Off-guard, Prone...)
   and add each as a `Keyword`; a keyword written inside a description (tooltips of the sheet, of the
   action bar) should link to its entry on hover; the assess card in the bestiary should link a racial
   ability and a weapon to their wiki entry on hover (playtest 2026-11-01); check the sheet's weapon-action
@@ -140,7 +140,7 @@ the rest.
 - **The wiki and the tutorials read every number off the code (author 2026-11-01).** The group capacity
   went wrong because the text restated the rule by hand. Three parts: a test that no string literal in
   `wiki_rules.py` holds a digit, with the constant made where the code has none either (Defend's +1 AC
-  in `actions/combat.py`, the flank's -2 in `actions/base.py`, the coin values, Sneak Attack's +1d4);
+  in `actions/combat.py`, the off-guard -2 in `actions/base.py`, the coin values, Sneak Attack's +1d4);
   the `group.CAPACITY_TERMS` pattern (the sum is the rule, the text reads the same tuple) for the other
   formulas the wiki states (`recruit.capacity` / `leader_capacity`, `Group.herd_capacity` with Beast
   Whisperer); and the `locales/en.json` cards (the tavern's says "past the guild's second" and "$15 a
@@ -347,18 +347,11 @@ needs a fight rebuilt.
   2026-11-04). Is playing Survivors objectively worse than Caravan? Either flag it to the player ("risky" and
   the like), or balance them to be equally desirable. Either way the game needs a way to test the vocations' balance (`balance_sim.py`,
   `economy_sim.py`; see *Vocations are far apart* under 2026-10-31).
-- **The AI over-uses two things.** It stabilises allies (it loses turns and fights) and it pushes then
-  flees (day 17: a wolf pushed, ran off and came back; it may push only to cut the flank when it could just
-  walk away). Task, before any morale work because it touches much of `ai/`: review the priority of Stabilise
-  and of push-and-flee, in a headless fight set.
-  Playtest 2026-11-02: push only makes sense to flee if, after the push, fleeing is possible; and the Aurochs
-  (day 112) pushed a character and then used Defend.
 - **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the
   exit while it can, instead of ordering each one. Needs the flee rules read first (what blocks a flee,
   who is held) and the AI's flee path reused. End-to-end: web button, `ai/`, tests.
-- **Morale: flee or surrender (author 2026-11-01, future).** Enemies and the player's units enter a
-  "fleeing" mode or surrender. Think the design (a morale number, what breaks it, what a fleeing unit does,
-  prisoners) after the AI review above. It ties to *Prisoners*.
+- **Surrender and prisoners (author 2026-11-01, future).** Morale and the rout shipped; a fighter whose morale is
+  spent could give up instead of running. Think what a surrender does and tie it to *Prisoners*.
 
 ## 2026-10-31
 

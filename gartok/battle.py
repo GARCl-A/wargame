@@ -11,7 +11,7 @@ roster and a rematch could reuse the same picks.
 
 import random
 
-from . import captives, data, i18n, intel, names, outfit, vision
+from . import captives, data, i18n, intel, morale, names, outfit, vision
 from .board import (
     COLS,
     ROWS,
@@ -44,6 +44,11 @@ def tag_flag_runners(side, count=None):
     count = FLAG_RUNNERS if count is None else count
     for i, c in enumerate(sorted(side, key=lambda c: c.speed, reverse=True)):
         c.ctf_runner = i < count
+
+
+def _halved(axes):
+    """The longest axis whole, the other two at half (rounded down), the way a diagonal step costs."""
+    return axes[0], axes[1] // 2, axes[2] // 2
 
 
 class Battle:
@@ -159,6 +164,7 @@ class Battle:
         
         for u in self.units:
             u.check_collapse(self.log)
+        morale.baseline(self)                # a body laid out at the start is no fall to flinch at
         self._roll_initiative()
         self.log("log.round", n=1)
         self._announce_turn()
@@ -391,6 +397,17 @@ class Battle:
             return unit.z
         return self.board.elevation_at(target_pos)
 
+    def height(self, unit):
+        """Where the unit's body is: the floor it stands over plus the levels it hovers."""
+        return self.elevation(unit) + getattr(unit, "altitude", 0)
+
+    def note_grounded(self):
+        """Say so when a hold (grip, web, roots, a fall) has just pulled a flier out of the air."""
+        for u in self.units:
+            up = u._altitude
+            if up and not u.altitude:
+                self.log("log.fly_grounded", unit=u.name)
+
     def unit_at(self, pos, include_downed=False):
         """The unit standing at `pos` -- a live occupant always wins over a downed
         body sharing the same cell (a shove can land someone on a fallen ally)."""
@@ -437,7 +454,16 @@ class Battle:
         return allies, enemies
 
     def units_distance(self, a, b):
-        return cells_distance(self.cells_of(a), self.cells_of(b))
+        """Squares between two bodies, in three dimensions: the octagon of the floor plan with the height
+        between them as a third axis (each axis past the longest counts half, rounded down). A body is as
+        tall as it is wide, so a Large one spans two levels."""
+        ca, cb = self.cells_of(a), self.cells_of(b)
+        if not (self.board.elevation or a._altitude or b._altitude):
+            return cells_distance(ca, cb)
+        a_lo, b_lo = self.height(a), self.height(b)
+        up = max(0, b_lo - (a_lo + a.footprint - 1), a_lo - (b_lo + b.footprint - 1))
+        return min(sum(_halved(sorted((abs(p[0] - q[0]), abs(p[1] - q[1]), up), reverse=True)))
+                   for p in ca for q in cb)
 
     def los_between(self, a, b):
         """Clear LOS between some cell of `a` and some cell of `b`."""
@@ -619,20 +645,60 @@ class Battle:
                                            vertical=unit.can_move_vertically, field=field,
                                            reach=reach)
 
+    def begin_walk(self, unit):
+        """Start the Move action (1 point): a fresh walk with the whole speed to spend."""
+        if unit.ap < 1:
+            return False
+        unit.ap -= 1
+        unit.walking = True
+        unit.moved = 0
+        unit.diag_steps = 0                  # a fresh walk restarts the diagonal alternation
+        self.log("log.moves", unit=unit.name)
+        return True
+
+    def walk_left(self, unit):
+        """Squares of movement the unit can still spend: what is left of the walk under way, else a fresh speed."""
+        if unit.walking:
+            return unit.speed - unit.moved
+        return unit.speed if unit.ap >= 1 else 0
+
+    def can_spend_walk(self, unit, squares):
+        """A step of `squares` fits in what is left of the walk, or in a fresh walk the unit can pay for."""
+        return squares <= self.walk_left(unit) or (unit.ap >= 1 and squares <= unit.speed)
+
+    def spend_walk(self, unit, squares):
+        """Pay `squares` of movement out of the walk, starting a new one (1 point) when none is under
+        way or what is left of it falls short."""
+        if not self.can_spend_walk(unit, squares):
+            return False
+        if squares > self.walk_left(unit):
+            unit.walking = False             # the scraps of the old walk are let go
+        if not unit.walking:
+            self.begin_walk(unit)
+        unit.moved += squares
+        if unit.moved >= unit.speed:
+            unit.walking = False
+        return True
+
+    def land_fliers(self):
+        """A flier that is no longer flying -- the dust wore off -- falls from where it hovered; one that
+        is downed or dead floats down unhurt."""
+        for u in self.units:
+            if not u.altitude or (u.alive and not u.downed and u.flies):
+                continue
+            drop, u.altitude = u.altitude, 0
+            if u.alive and not u.downed:
+                self.log("log.fly_falls", unit=u.name)
+                self.apply_fall(u, drop, self.log)
+
     def move_unit(self, unit, dest):
         reach = self.reachable(unit)
         if dest not in reach:
             return False
         segment = self._walk_path(unit, dest, reach[dest])
-        if not unit.walking:                 # start the Move action (1 point)
-            if unit.ap < 1:
-                return False
-            unit.ap -= 1
-            unit.walking = True
-            unit.moved = 0
-            unit.diag_steps = 0              # a fresh walk restarts the diagonal alternation
-            self.log("log.moves", unit=unit.name)
-            
+        if not unit.walking and not self.begin_walk(unit):
+            return False
+
         platforms = self._platforms()
         current_z = self.elevation(unit)
         
@@ -691,9 +757,15 @@ class Battle:
     def _living_side(self, team):
         return [u for u in self.units if u.alive and u.team == team]
 
+    def settle_morale(self):
+        """Fold what just happened into every combatant's morale (`morale.settle`): called after each
+        action and at each turn change, so it is up to date whoever acts next."""
+        morale.settle(self)
+
     def _check_winner(self):
         if self.winner:
             return self.winner
+        self.settle_morale()
 
         forced = self.scenario.win_check(self)
         if forced:
@@ -906,6 +978,7 @@ class Battle:
     def _end_turn(self):
         self.scenario.on_turn_end(self, self.active)
         self.active.end_turn(self.log)       # demoralized expires at the end of the sufferer's turn
+        self.land_fliers()
         self._advance_turn()
 
     def delay_block(self, unit):

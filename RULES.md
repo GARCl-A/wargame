@@ -594,11 +594,16 @@ to the fight, as before.
   - **natural 20** = automatic hit + crit: the blow's whole damage (dice, modifiers, bonuses, Brutal) is
     multiplied last, by 2 (3 for the `crit_3x` weapons).
   - **natural 1** = automatic miss.
-- **Flanking**: the defender suffers a **−2 penalty to AC** (reduced to −1 by
-  the `Peripheral Vision` talent) when the attacker **and** an ally are both
-  adjacent to the target and on **opposite sides** — the line between their cells
+- **Off-guard**: the defender suffers a **−2 penalty to AC** (reduced to −1 by
+  the `Peripheral Vision` talent), against melee, ranged and thrown attacks alike, when it
+  **has not begun a turn yet this fight** (every unit starts the fight off-guard, and one that
+  joins later is off-guard until its first turn, a Surprised unit until its skipped turn) **or** it is
+  **flanked**. Two reasons never stack: still −2. The first turns of a fight therefore favour whoever acts
+  first. Sneak Attack, Precise Thrust, Nimble Skirmisher and Ambush Predator read "off-guard".
+- **Flanking** makes the target off-guard: the attacker **and** an ally are both
+  adjacent to it and on **opposite sides** — the line between their cells
   crosses the target's footprint. Pack Tactics (Goblin) gives the attacker +2 to
-  hit when an ally is adjacent; because flanking penalises the defender's AC rather
+  hit when an ally is adjacent; because off-guard penalises the defender's AC rather
   than modifying the attack roll, both benefits combine.
 - **Damage**: `weapon die (+ Strength mod if melee)`, minimum 1, minus the
   target's damage reduction.
@@ -766,6 +771,19 @@ triples.
   elevation difference — a pit edge is a wall to anyone walking. **Exception:**
   anyone who **flies** (or, in future, has a climb speed) moves in three
   dimensions as normal movement and a pit does not stop them.
+- **Fly up / Fly down** (a flier's actions, no target): a flier hovers `altitude` levels (0-4) above
+  the floor. Distance is three-dimensional (`battle.units_distance`): the floor plan's octagon with the
+  height between the two bodies as a third axis, the longest axis whole and the other two at half, rounded
+  down. It decides every reach and range, melee and shot alike: a sword (reach 1) misses a flier 2 levels
+  up, a glaive (reach 2) needs 3 levels or fewer straight above, a bow loses range to the height. A body is
+  as tall as it is wide (a Large one is 2x2x2, so a Centaur reaches from its whole height and is taller to
+  reach too); the Grippli's Tongue follows the same reach. Rising is hard going: a level
+  costs **2 squares** of the walk (a Sprite's speed 3 buys one level per point), sinking costs 1. A step the
+  walk cannot cover opens a new walk (1 point), like Move. Altitude is relative to the floor, so it
+  follows the ground as the flier walks. A flier whose wings give out (Pixie Dust ends) falls from where
+  it hovered; a flier that is downed floats down unhurt, and one that is grappled, entangled, rooted or
+  prone is pulled to the ground (unhurt) and cannot rise until freed. The AI sends a winged shooter or
+  caster one level past the longest reach among the ground fighters closing in, and brings a winged fighter down to swing.
 - **Fall damage.** Descending `h` levels at once costs `max(0, h−1)d6` — the
   first level is free, each level beyond it is 1d6. Fliers take no fall damage, and the
   Catfolk's *Catfall* frees three more levels (`Ability.fall_free`). In `battle.apply_fall`.
@@ -907,8 +925,8 @@ Rules in `board.py` (`los_clear`) and `vision.py` (`cell_lit`, `can_see`).
   dropped weapon when unarmed). What it counts for fleeing, waiting and the
   Signal Horn is the foes some unit of its side sees.
 - **Flanking:** a melee unit that can walk to the far side of a foe an ally is already beside
-  (a cell where `_flanked` holds) goes there first and strikes against the foe's −2 AC; archers and units
-  already beside the foe do not reposition.
+  (a cell where `_flanked` holds) goes there first and strikes against the foe's −2 AC; archers, units
+  already beside the foe and a foe that has not acted yet (off-guard already) do not reposition.
 - **With nobody in sight the AI acts by its role** (`Battle.aggressor`, set where the map
   builds the fight): the side that *brought* the fight (an ambush, a patrol, a raid, a hunt
   where the pack finds you, the guild sweeping its Claim, delving the Ruins, tracking the
@@ -997,45 +1015,51 @@ target's confidence instead of wounding them.
 - The AI prioritises recovering its own dropped weapon before attacking again
   (it ignores torches).
 
-### Fleeing 🟡
+### Morale and fleeing 🟡
 
-Action in `actions/movement.py` (the `Flee` class). For **both sides** — player and AI.
+**Morale** (`gartok/morale.py`) is a fighter's nerve in a **lethal** fight. The dead, the raised and the machines
+that break when downed have none, and neither does a non-lethal fight (arena, brawl). The wiki's Rules tab
+("Morale") reads its numbers off the same constants.
+
+- **Start = ceiling:** `BASE` + WIS mod + CHA mod + racial level × `PER_RACIAL_LEVEL` + 1 Lawful / −1 Chaotic
+  + `talent_bonus("morale")`, never under `START_MIN`. Gains stop at it. Losses have no floor.
+- **Loses 1** each time an ally it *sees* goes down (dying / stable / broken) and 1 more when that ally dies;
+  the first time its own HP reaches 50 % and 25 %; every time it reaches 10 % from above (healed and hurt again
+  counts again); each Demoralize that lands.
+- **Gains 1** whenever the fighters of the other sides lose someone (any cause, a fleeing unit's side included).
+- **Routed** (`conditions.Routed`): at morale ≤ 0 the unit, a guild member too, is played by `ai/` and runs for the
+  exit. The moment morale is above 0 again the controls return. A cornered unit fights.
+- **Who sees it:** the own side sees the exact value; a foe's is an intel field (MEDIUM, like Mental Defense);
+  everyone sees Routed.
+- `morale.settle` is the only hook: it compares each combatant with what it saw last time, so it is idempotent
+  and catches falls from fire, traps, spells and bleeding alike. `Battle._check_winner` and the combat log's
+  `recorded` wrapper call it.
+
+**Flee** is the action in `actions/combat.py` (the `Flee` class), for **both sides**.
 
 - **Cost:** 1 point, and it **ends the turn** (you are running, not fighting).
-- **Position requirement:** you can only flee from a cell **on the map edge**
-  (any footprint cell touching `x = 0`, `x = COLS−1`, `y = 0` or `y = ROWS−1`).
-  Off the edge the button is dark ("reach the edge").
-- **The flee succeeds** (deterministic — the button lights only when it works)
-  if **either**:
+- **Position requirement:** a cell of the map's **exit**. A map with `escape_cells` (ruins, lair, serpent nest)
+  allows only those; a map without them (road, wilds) allows any footprint cell on the border. Off the exit the
+  button is dark.
+- **The flee succeeds** (deterministic, the button lights only when it works) if **either**:
   - your **speed** is **greater** than the fastest living pursuer's; **or**
-  - you are already **far enough** — the nearest living enemy is **further** than
-    the fastest pursuer's speed: in a race off the map they cannot close the
-    gap.
+  - you are already **far enough**: the nearest living enemy is **further** than the fastest pursuer's speed.
   - With no living enemies, you always flee.
-- **Effect:** the character enters the `fled` state — off the board (not drawn,
-  does not block, does not count for victory, not a target), but **survives** the
-  battle and returns to the guild with what it carried. Not loot.
-- **Drags adjacent downed allies.** On fleeing, every **downed** ally (dying /
-  stable / broken) in a cell **adjacent** to the fugitive also leaves (becomes
-  `fled`, survives). Anyone further away is **left behind**: if the last one up
-  flees, the other side "wins" and the bodies left are **lost with the defeat**.
+- **Effect:** the character enters the `fled` state: off the board (not drawn, does not block, does not count for
+  victory, not a target), but **survives** and returns to the guild with what it carried. Not loot.
+- **Drags adjacent downed allies.** On fleeing, every **downed** ally in a cell **adjacent** to the fugitive also
+  leaves (becomes `fled`, survives). Anyone further away is **left behind**: if the last one up flees, the other
+  side "wins" and the bodies left are **lost with the defeat**.
 - If **all enemies** flee/fall, the player wins normally.
 
-**AI behaviour by alignment** — alignment tempers the AI's edges, mostly on the
-moral axis:
+**AI behaviour by alignment** (alignment no longer decides who flees, only the starting morale):
 
-- **Evil:** delivers the **coup de grace** to an adjacent downed enemy (hammers
-  the `dying` clock, spending its actions to deny the player a stabilize), but only when no standing enemy is within its reach. Only in
-  a **lethal** fight — in the arena it just knocks out.
-- **Good:** **stabilizes** an adjacent downed ally before anything else and, when
-  it flees, drags the wounded along.
-- **Neutral:** breaks and runs at **HP ≤ 10 %** with more than one foe in sight past its standing
-  allies (`ai.FLEE_HP`: a person fights on until nearly down, and running later did not lose the AI
-  fights or lives head to head, `scripts/combat_pairs.py --set`).
-- **Chaotic:** breaks and runs **sooner** (HP ≤ 50 %, and merely outnumbered).
-  **Lawful:** flees only when **no ally is still up**.
-- **Pathfinding to flee:** when an AI unit breaks and runs, it moves toward the
-  nearest map edge turn by turn before executing the Flee action.
+- **Evil:** delivers the **coup de grace** to an adjacent downed enemy (hammers the `dying` clock, spending its
+  actions to deny the player a stabilize), but only when no standing enemy is within its reach. Only in a
+  **lethal** fight; in the arena it just knocks out.
+- **Good:** **stabilizes** an adjacent downed ally before anything else and, when it flees, drags the wounded along.
+- **Routed units:** go to the exit cheapest by real path (`ai.flee._exit_cells`: the map's `escape_cells`, else
+  the border) and run turn by turn before the Flee action. After a Push the AI keeps attacking instead of backing off.
 
 ### Auto-Win (Monte Carlo Stomp Simulation) 🟡
 

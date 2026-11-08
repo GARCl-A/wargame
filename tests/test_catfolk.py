@@ -25,6 +25,9 @@ def _duel(picks=(), foe_race="Human", armed=False):
         cat.equipped_weapon = None
     foe = standard_unit("enemy")
     foe.set_race(foe_race)
+    foe._hp_roll = foe.race["hd"]
+    foe._derive_combat()
+    foe.hp = foe.hp_max
     batt = Battle([cat], [foe])
     batt.board.walls = set()
     batt.ambient_light = True

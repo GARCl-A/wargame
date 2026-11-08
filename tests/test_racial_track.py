@@ -83,7 +83,7 @@ def test_another_race_cannot_pick_them():
     ("Halfling", ("second_breakfast",), "rest_heal_bonus", 1),
     ("Gnome", ("gnome_magic_excitement", "arcane_curiosity"), "spell_range", 1),
     ("Human", ("cosmopolitan", "polyglot"), "language_study", 2),
-    ("Kenku", ("eye_for_detail",), "assess_bonus", 1),
+    ("Kenku", ("eye_for_detail",), "assess_bonus", 2),
     ("Kenku", ("mimic_voices",), "tavern_perform_bonus", 1),
     ("Orc", ("war_cry",), "demoralize_bonus", 1),
 ])
@@ -178,6 +178,7 @@ def test_cavalry_charge_helps_the_rider_once_the_centaur_has_moved():
 
 def test_the_racial_mods_reach_the_attack_roll():
     batt, liz, foe = _duel(_racial("Lizardfolk", "ambush_predator"), Unit("enemy"))
+    foe.turns_taken = 0
     mods = liz.attack_mods(foe, False, battle=batt)
     assert "Ambush Predator" in _labels(mods)
 

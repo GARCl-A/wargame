@@ -51,6 +51,7 @@ def _announced(execute):
     def run(self, battle, actor, target=None, **kw):
         ap, flies = actor.ap, self.flies(actor)
         result = execute(self, battle, actor, target, **kw)
+        battle.note_grounded()
         aim = getattr(target, "pos", target) if flies else None
         name = self.name if self.announce else None
         if actor.ap < ap and (name or aim):
@@ -162,6 +163,22 @@ def _flanked(battle, attacker, target):
                 and _facing(battle, u, tcells) == (-da[0], -da[1])):
             return True
     return False
+
+
+def off_guard_reasons(battle, attacker, target):
+    """Why the target is off-guard against `attacker`: "unacted" (it has not begun a turn this fight),
+    "flanked" (`attacker` and an ally flank it); empty when it is not. A new reason is one more entry here
+    and its `log.roll.off_guard_why.<reason>` text."""
+    reasons = []
+    if target.turns_taken == 0:
+        reasons.append("unacted")
+    if _flanked(battle, attacker, target):
+        reasons.append("flanked")
+    return reasons
+
+
+def off_guard(battle, attacker, target):
+    return bool(off_guard_reasons(battle, attacker, target))
 
 
 def _phalanxed(battle, target):
@@ -284,13 +301,12 @@ def obscured_penalty(battle, attacker, target):
     return 0
 
 
-def _flank_penalty(battle, attacker, target):
-    """Strict flank: the attacker and an ally are both adjacent to the target and
-    on opposite sides. Defender suffers -2 AC (reduced to -1 AC if target has
-    flank_defense / Peripheral Vision)."""
-    if not _flanked(battle, attacker, target):
+def _off_guard_penalty(battle, attacker, target):
+    """An off-guard defender suffers -2 AC (-1 with off_guard_defense / Peripheral Vision), once
+    however many reasons it has."""
+    if not off_guard(battle, attacker, target):
         return 0
-    relief = getattr(target.char, "talent_bonus", lambda x: 0)("flank_defense") if hasattr(target, "char") else 0
+    relief = getattr(target.char, "talent_bonus", lambda x: 0)("off_guard_defense") if hasattr(target, "char") else 0
     return max(0, 2 - relief)
 
 
@@ -345,6 +361,10 @@ def _gore_charge(battle, attacker, target):
         Push.throw(battle, attacker, target, path)
 
 
+def _guard_why(battle, attacker, target):
+    return ", ".join(i18n.t(f"log.roll.off_guard_why.{r}") for r in off_guard_reasons(battle, attacker, target))
+
+
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
                  weapon=None, armor_pierce=False, bonus_damage=0, crit_mult=None, brutal=0, brutal_why=""):
     pulled = nonlethal_penalty(attacker)
@@ -358,9 +378,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     total = nat + bonus
     melee = not thrown and (weapon is not None or not attacker.ranged)
     ac = target.ac_vs(attacker, armor_pierce=armor_pierce, ranged=not melee)
-    flank_pen = _flank_penalty(battle, attacker, target)
-    if flank_pen:
-        ac -= flank_pen
+    guard_pen = _off_guard_penalty(battle, attacker, target)
+    if guard_pen:
+        ac -= guard_pen
     phalanx = _phalanxed(battle, target)
     if phalanx:
         ac += 1
@@ -380,7 +400,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
     roll_line = {"head": prefix, "nat": nat, "detail": detail, "total": total, "shown": shown,
-                 "flank": i18n.Msg("log.roll.flank", n=flank_pen) if flank_pen else "",
+                 "off_guard": i18n.Msg("log.roll.off_guard", n=guard_pen, why=_guard_why(battle, attacker, target)) if guard_pen else "",
                  "phalanx": i18n.Msg("log.roll.phalanx") if phalanx and shown != "?" else ""}
     fx_text = i18n.t("fx.vs_ac", total=total, shown=shown)
     if nat == 1:
@@ -404,15 +424,15 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         cull = 0
         if getattr(target, "demoralized", False) and hasattr(attacker, "char"):
             cull = getattr(attacker.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
-        flank_finesse = 0
-        if _flanked(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
-            flank_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("flank_finesse_damage")
+        guard_finesse = 0
+        if off_guard(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
+            guard_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("off_guard_finesse_damage")
         frenzy = attacker.char.talent_bonus("blood_frenzy") if melee and target.hp < target.hp_max / 2 else 0
         brutal_total = brutal + (attacker.crit_brutal() if crit else 0)
         if brutal_total:
             battle.log("log.brutal", why=brutal_why if brutal else i18n.Msg("log.brutal_savage"), n=brutal_total)
         dmg = attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon, crit_mult=crit_mult,
-                                   bonus_damage=bonus_damage + cull + flank_finesse + frenzy, brutal=brutal)
+                                   bonus_damage=bonus_damage + cull + guard_finesse + frenzy, brutal=brutal)
         dmg = _stone_endurance(battle, target, dmg)
         target.take_damage(dmg, battle.log, knockout=bool(pulled))
         if dmg > 0:

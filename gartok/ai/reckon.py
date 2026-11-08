@@ -2,12 +2,13 @@
 
 import math
 
-from .. import actions, conditions, data, intel, items
+from .. import actions, conditions, data, intel, items, morale
 from ..board import cells
 from ..conditions import BLEEDING_CLAWS_TURNS
 from .common import _avg_die, _hand_die, _runs_flag
 
 D20_STEP = 0.05            # one point on a d20 roll
+ROUT_ROUNDS = 3            # rounds of a foe's blows that breaking its nerve takes off the field (it may rally)
 
 
 def _spell_odds(battle, unit, target, spell):
@@ -91,12 +92,13 @@ def _demoralize_worth(battle, unit, target):
     """The hit points a Demoralize on `target` is expected to be worth through its next turn: the odds
     the CHA roll beats its Mental Defense (a bare 10 until read) times the -1 on every blow and
     defence. Each striker of the unit's side that can reach the foe lands its blows 5% more often
-    (and for its own Menacing cull), the foe's own two blows land 5% less."""
+    (and for its own Menacing cull), the foe's own two blows land 5% less. A foe whose morale it has read
+    and that this Demoralize would break (down to 0) is worth `ROUT_ROUNDS` rounds of its blows more."""
     char = unit.char
     mod = unit.mod_charisma
     if char.has_talent("intimidating_presence"):
         mod = max(mod, unit.mod_strength)
-    mod += char.talent_bonus("demoralize_bonus")
+    mod += char.talent_bonus("demoralize_bonus") + actions.demoralize_language_penalty(unit, target)
     if unit.ability.demoralize_vs_weaker and unit.mod_strength > target.mod_strength:
         mod += unit.ability.demoralize_vs_weaker
     md = target.mental_defense if intel.knows(battle, unit.team, target, "md") else 10
@@ -110,6 +112,9 @@ def _demoralize_worth(battle, unit, target):
         worth += blows * (D20_STEP * _blow(a) + _hit_odds(battle, a, target) * cull)
     if battle.units_distance(unit, target) <= target.attack_range + target.speed:
         worth += 2 * D20_STEP * _blow(target)
+    if (morale.has_morale(battle, target) and intel.knows(battle, unit.team, target, "morale")
+            and 0 < target.morale <= -morale.DEMORALIZED):
+        worth += ROUT_ROUNDS * 2 * D20_STEP * _blow(target)
     return odds * worth
 
 
@@ -146,9 +151,9 @@ def _reckoned_ac(battle, unit, target, armor_pierce=False):
 
 def _hit_odds(battle, unit, target, extra=0, armor_pierce=False, thrown=False):
     mods = unit.attack_mods(target, actions._pack_flank(battle, unit, target), thrown=thrown, battle=battle)
-    flank_pen = actions._flank_penalty(battle, unit, target)
+    guard_pen = actions._off_guard_penalty(battle, unit, target)
     bonus, _ = data.resolve_bonus(mods)
-    need = (_reckoned_ac(battle, unit, target, armor_pierce) - flank_pen) - bonus - extra
+    need = (_reckoned_ac(battle, unit, target, armor_pierce) - guard_pen) - bonus - extra
     return max(0.05, min(0.95, (21 - need) / 20))
 
 
@@ -362,8 +367,9 @@ FLANK_ODDS = 0.1            # the +2 a flank gives each blow of the pair
 
 def _unflank_worth(battle, unit, foe):
     """`foe` and a mate of its stand on opposite sides of `unit`: shoving it out breaks the flank
-    for the blows both would land before the unit's next turn."""
-    if battle.units_distance(unit, foe) > 1 or not actions._flanked(battle, foe, unit):
+    for the blows both would land before the unit's next turn. A foe that has not acted is off-guard
+    anyway, so breaking the flank costs it nothing."""
+    if battle.units_distance(unit, foe) > 1 or foe.turns_taken == 0 or not actions._flanked(battle, foe, unit):
         return 0.0
     pair = [f for f in battle.units if f.alive and f.team == foe.team and battle.units_distance(f, unit) <= 1]
     return FLANK_ODDS * sum(2 * _blow(f) for f in pair)
@@ -372,11 +378,12 @@ def _unflank_worth(battle, unit, foe):
 def _flank_step_worth(battle, unit, target, free):
     """What stepping to a cell that flanks `target` is worth against staying: the blows the unit still
     has, struck from the new cell (the flank's hit odds, and the Backstab damage of a Dexterity
-    fighter), plus the odds the flank gives each mate beside the foe. `unit.pos` is the cell tried."""
+    fighter), plus the odds the flank gives each mate beside the foe. `unit.pos` is the cell tried.
+    A foe that has not acted is off-guard already, so a flank adds nothing."""
     blows = unit.ap if free else unit.ap - 1
-    if blows < 1 or not actions._flanked(battle, unit, target):
+    if blows < 1 or target.turns_taken == 0 or not actions._flanked(battle, unit, target):
         return None
-    extra = unit.char.talent_bonus("flank_finesse_damage") if unit.is_dex_melee else 0
+    extra = unit.char.talent_bonus("off_guard_finesse_damage") if unit.is_dex_melee else 0
     own = blows * _strike_worth(battle, unit, target, bonus_damage=extra)
     mates = [m for m in battle.units if m.alive and m.team == unit.team and m is not unit
              and battle.units_distance(m, target) <= 1 and not m.ranged]

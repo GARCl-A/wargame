@@ -125,6 +125,7 @@ def _melee_battle():
     batt.board.walls = set()
     batt.ambient_light = True
     a, d = batt.units
+    a.turns_taken = d.turns_taken = 1                # a fight under way: nobody is off-guard for not having acted
     a.pos, d.pos = (5, 5), (6, 5)
     a.weapon_hand, a.torch_hand = True, False
     return batt, a, d

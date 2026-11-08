@@ -16,8 +16,9 @@ def _focus_key(battle, unit, foe):
 
 def _flank_cell(battle, unit, target):
     """A cell the unit can walk to this turn, beside `target`, where an ally already at the foe makes
-    a flank (+2 to hit): the nearest such cell, or None."""
-    if unit.ranged or unit.ap < 1 or battle.units_distance(unit, target) <= 1:
+    a flank (the foe is off-guard): the nearest such cell, or None. A foe that has not acted is off-guard
+    already."""
+    if unit.ranged or unit.ap < 1 or target.turns_taken == 0 or battle.units_distance(unit, target) <= 1:
         return None
     if not any(a.alive and a.team == unit.team and a is not unit and battle.units_distance(a, target) <= 1
                for a in battle.units):
@@ -40,7 +41,8 @@ def _flank_step(battle, unit, target):
     """The cell a melee unit already beside `target` should step to for a flank, or None: the free step
     (one square, no point spent) or a walk that costs one point, whichever leaves the most worth over
     staying put and striking. The foes' own AC and the unit's talents are in `_strike_worth`."""
-    if unit.ranged or unit.ap < 1 or battle.units_distance(unit, target) > 1 or actions._flanked(battle, unit, target):
+    if (unit.ranged or unit.ap < 1 or target.turns_taken == 0 or battle.units_distance(unit, target) > 1
+            or actions._flanked(battle, unit, target)):
         return None
     if not any(a.alive and a.team == unit.team and a is not unit and battle.units_distance(a, target) <= 1
                for a in battle.units):
@@ -63,6 +65,20 @@ def _flank_step(battle, unit, target):
         if worth is not None and worth > best[0]:
             best = (worth, pos)
     return best[1]
+
+
+def _free_approach(battle, unit, target):
+    """The Free Step square that brings the unit closer to `target`, or None. The step costs no point, so a unit that has to
+    close the distance anyway takes it every turn, flank or not."""
+    here = grid_distance(unit.pos, target.pos)
+    best = None
+    for pos in actions.FREE_STEP._spots(battle, unit):
+        if battle.fire and any(c in battle.fire for c in cells(pos, unit.footprint)):
+            continue
+        d = grid_distance(pos, target.pos)
+        if d < here and (best is None or d < best[0]):
+            best = (d, pos)
+    return best[1] if best else None
 
 
 def _approach_reach(unit):

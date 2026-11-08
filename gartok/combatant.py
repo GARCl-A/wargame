@@ -15,13 +15,14 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import conditions, data, i18n, intel, items, natural_weapons, progression
+from . import conditions, data, i18n, intel, items, morale, natural_weapons, progression
 from .conditions import Hexed
 from .data import resolve_bonus, roll
 from .i18n import Ref
 from .unit import flatten_pack
 
 AP_PER_TURN = 2
+PINNING = ("grappled", "entangled", "rooted", "prone")    # hold a body to the ground: no hovering
 UNDER_THE_WHIP_RANGE = 6     # squares to the stronger ally a Goblin fights for
 
 
@@ -49,9 +50,25 @@ class Combatant:
     # the Z axis: pits, climbing, falling                                #
     # ------------------------------------------------------------------ #
     @property
+    def winged(self):
+        """Flies on its own -- the race or a talent -- not on borrowed Pixie Dust."""
+        return self._ability.flies or bool(getattr(self.char, "talent_bonus", lambda _: 0)("flies"))
+
+    @property
     def flies(self):
-        return (self._ability.flies or bool(getattr(self.char, "talent_bonus", lambda _: 0)("flies"))
-                or self.has_condition("pixie_flight"))
+        return self.winged or self.has_condition("pixie_flight")
+
+    @property
+    def altitude(self):
+        """Levels hovering above the floor. Anything that pins a body -- a grip, a web, roots, a fall
+        to the ground -- pulls a flier down to it, no hurt."""
+        if self._altitude and any(self.has_condition(c) for c in PINNING):
+            self._altitude = 0
+        return self._altitude
+
+    @altitude.setter
+    def altitude(self, levels):
+        self._altitude = levels
 
     @property
     def can_move_vertically(self):
@@ -74,6 +91,7 @@ class Combatant:
         self.hp = min(c.hp_max, max(1, cur_hp))
         self.pos = (0, 0)
         self.z = None                 # floor elevation standing on (None = query board)
+        self._altitude = 0            # levels hovering above that floor (a flier's Fly up / Fly down)
         self.status = "up"            # up | dying | stable | broken | fled | dead
         self.death_clock = 0          # dying: own turns elapsed; save on DYING_TURNS
         self.raised = False           # stood back up by Raise Dead: undead now, falls for good
@@ -135,6 +153,8 @@ class Combatant:
         self.rider = None             # a Combatant riding this one (Centaur mount)
         self.hurt_by = set()          # who has landed a blow on this unit this fight (Grudge)
         self.turns_taken = 0          # turns begun this fight (Ambush Predator)
+        self.demoralized_hits = 0     # Demoralized landed on this unit, each one counted (morale reads the rise)
+        morale.start(self)
 
     def credit_kill(self, victim, magic=False):
         """Book a downed enemy: +1 to the kill count, plus XP scaled by the level gap
@@ -255,7 +275,14 @@ class Combatant:
     def has_condition(self, cid):
         return any(c.id == cid for c in self.conditions)
 
+    @property
+    def routed(self):
+        """Morale spent: `ai/` runs this unit for the exit (`morale.settle` sets and lifts it)."""
+        return self.has_condition("routed")
+
     def add_condition(self, cond):
+        if cond.id == "demoralized":
+            self.demoralized_hits += 1
         held = self.condition(cond.id)
         if held is None:
             self.conditions.append(cond)
@@ -679,7 +706,9 @@ class Combatant:
         if grudge and target in self.hurt_by:
             mods.append((grudge, None, i18n.t("log.mod.grudge")))
         ambush = c.talent_bonus("ambush_predator")
-        if ambush and target.turns_taken == 0:
+        if ambush:
+            from .actions.base import off_guard     # local: actions imports this module
+        if ambush and off_guard(battle, self, target):
             mods.append((ambush, None, i18n.t("log.mod.ambush_predator")))
         whip = c.talent_bonus("under_the_whip")
         if whip and any(u.alive and u.team == self.team and u is not self

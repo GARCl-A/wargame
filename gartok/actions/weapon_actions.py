@@ -3,8 +3,8 @@
 A 2-AP action is one strike for the price of two plain attacks, so out of its favoured case it is
 the worse buy; in that case (`favoured`) the strike is Brutal 1 (gartok/keywords.py) plus the action's own
 edge, and beats the two attacks for any weapon or modifier:
-- Dagger: Sneak Attack (a flanked foe; +1d4)
-- Rapier: Precise Thrust (a flanked foe; +2 to hit)
+- Dagger: Sneak Attack (an off-guard foe; +1d4)
+- Rapier: Precise Thrust (an off-guard foe; +2 to hit)
 - Axe / Dwarf Axe: Cleave (a second foe beside both: two swings, each +2 to hit)
 - Quarterstaff: Repel Strike (shoves the foe; with its back to a wall or a body it is slammed)
 - Club / Hammer / Light Hammer: Maiming Strike (halves foe speed; a foe that cannot dodge)
@@ -25,18 +25,25 @@ from ..i18n import Msg
 from .base import (
     Action,
     _cell_free,
-    _flanked,
     _hostile_target,
     _land_thrown,
     _pack_flank,
     _resolve_hit,
     _sign,
     item_ref,
+    off_guard,
 )
 from .combat import PUSH_DC_BASE, _strike
 
 UNGUARDED = ("entangled", "sleeping", "surprised", "demoralized")
 BRUTAL = 1      # every Brutal of a favoured strike; the keyword's value, see keywords.py
+
+
+def _strikable_off_guard(battle, actor, target):
+    """An off-guard foe the actor can strike: within its weapon's reach, in sight and seen."""
+    return (off_guard(battle, actor, target)
+            and battle.units_distance(actor, target) <= actor.attack_range
+            and battle.los_between(actor, target) and battle.can_see_unit(actor, target))
 
 
 # --------------------------------------------------------------------------- #
@@ -56,13 +63,13 @@ class SneakAttack(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        return _flanked(battle, actor, target) and battle.los_between(actor, target)
+        return _strikable_off_guard(battle, actor, target)
 
     def label(self, battle, actor):
         return i18n.t("action.sneak_attack.label")
 
     def favoured(self, battle, actor, target):
-        return _flanked(battle, actor, target)
+        return off_guard(battle, actor, target)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -98,13 +105,13 @@ class PreciseThrust(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        return _flanked(battle, actor, target) and battle.los_between(actor, target)
+        return _strikable_off_guard(battle, actor, target)
 
     def label(self, battle, actor):
         return i18n.t("action.precise_thrust.label")
 
     def favoured(self, battle, actor, target):
-        return _flanked(battle, actor, target)
+        return off_guard(battle, actor, target)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -633,8 +640,6 @@ class LongThrust(Action):
         if not self.available(battle, actor) or actor.ranged or not _hostile_target(actor, target):
             return False
         if battle.units_distance(actor, target) > self.reach(actor):
-            return False
-        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 

@@ -205,12 +205,50 @@ def test_ai_shoves_a_foe_into_a_deep_pit(monkeypatch):
     assert batt.elevation(p) < 0 or p.pos == (6, 5)
 
 
+def test_after_a_failed_shove_the_ai_strikes_instead_of_defending(monkeypatch):
+    batt, e, p = _duel("Club")
+    batt.turn_idx = batt.order.index(e)
+
+    def failed_shove(battle, unit):
+        monkeypatch.undo()
+        unit.ap -= 1
+        return p                                  # the foe is still beside it
+    monkeypatch.setattr(ai.turn, "_try_shove", failed_shove)
+    with fixed_d20(20):
+        ai.take_turn(batt, e)
+    assert not e.defending and p.hp < 30
+
+
+def test_after_a_shove_that_lands_the_ai_closes_in_and_never_backs_off(monkeypatch):
+    batt, e, p = _duel("Club")
+    batt.turn_idx = batt.order.index(e)
+
+    def landed_shove(battle, unit):
+        monkeypatch.undo()
+        unit.ap -= 1
+        p.pos = (8, 5)                            # thrown out of reach
+        return p
+    monkeypatch.setattr(ai.turn, "_try_shove", landed_shove)
+    with fixed_d20(20):
+        ai.take_turn(batt, e)
+    assert batt.units_distance(e, p) < 3
+
+
 def test_shoving_a_flanker_counts_the_flank_it_breaks():
     batt, e, p = _duel("Club")
+    p.turns_taken = 1                       # a foe that has not acted is off-guard anyway: no flank to break
     mate = _recruit(batt, team="player")
     mate.pos = (4, 5)
     assert ai._unflank_worth(batt, e, p) > 0
     mate.pos = (5, 4)
+    assert ai._unflank_worth(batt, e, p) == 0
+
+
+def test_shoving_a_flanker_breaks_nothing_while_it_has_not_acted():
+    batt, e, p = _duel("Club")
+    mate = _recruit(batt, team="player")
+    mate.pos = (4, 5)
+    p.turns_taken = 0
     assert ai._unflank_worth(batt, e, p) == 0
 
 
@@ -324,6 +362,7 @@ def _case(aid, favoured):
               "repel_strike": "Quarterstaff", "maiming_strike": "Club", "armor_pierce": "Pick",
               "power_shot": "Shortbow", "hook_shield": "Hatchet", "parry_strike": "Broadsword"}[aid]
     batt, e, p = _duel(weapon)
+    e.turns_taken = p.turns_taken = 1
     e.ammo = 6
     if aid == "power_shot":
         p.pos = (13, 5) if favoured else (8, 5)

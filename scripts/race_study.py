@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from gartok import ai, data, economy, intel, map_lib, outfit, talents
-from gartok.actions.base import _flanked
+from gartok.actions.base import off_guard
 from gartok.battle import Battle
 from gartok.scenario import CustomScenario, ErmosScenario
 from scripts import race_study_builds as rb
@@ -59,7 +59,7 @@ def _known(battle, team, foe):
 class Counting:
     """A combat-log sink that counts what each unit did (the interface `Battle.record_to` wants): the actions by name,
     and, for the ones aimed at a foe, the context they happened in, as sparse counters read back by name:
-    `f.<action>` the foe was flanked, `d.<action>` it was demoralized, `hit.` / `miss.` / `crit.<action>` the rolls,
+    `f.<action>` the foe was off-guard (it has not acted, or is flanked), `d.<action>` it was demoralized, `hit.` / `miss.` / `crit.<action>` the rolls,
     `dmg.<action>` / `critdmg.<action>` the hit points taken off it, `assess.new` / `assess.full` what an Assess opened."""
 
     def __init__(self):
@@ -89,7 +89,7 @@ class Counting:
             self._first_read(battle, actor)
             log0, hp0 = battle.log_total, (foe.hp if foe else 0)
             if foe:
-                if _flanked(battle, actor, foe):
+                if off_guard(battle, actor, foe):
                     c["f." + name] += 1
                 if any(cd.id == "demoralized" for cd in foe.conditions):
                     c["d." + name] += 1
@@ -102,8 +102,10 @@ class Counting:
             with contextlib.suppress(Exception):   # a counter that cannot be read must not lose the fight
                 keys = [getattr(getattr(ln, "msg", None), "key", "") for ln in battle.log_lines[-(battle.log_total - log0):]]                     if battle.log_total > log0 else []
                 crit = "log.roll.crit" in keys
-                for tag, n in (("hit.", keys.count("log.roll.hit") + keys.count("log.roll.crit")),
-                               ("miss.", keys.count("log.roll.miss") + keys.count("log.roll.crit_miss"))):
+                for tag, n in (("hit.", keys.count("log.roll.hit") + keys.count("log.roll.crit")
+                                + keys.count("log.demoralize.lands") + keys.count("log.demoralize.crit")),
+                               ("miss.", keys.count("log.roll.miss") + keys.count("log.roll.crit_miss")
+                                + keys.count("log.demoralize.none") + keys.count("log.demoralize.crit_miss"))):
                     if n:
                         c[tag + name] += n
                 if crit:
@@ -161,18 +163,27 @@ def play(job):
     sb, nb = _squad("player" if job["sw"] else "enemy", job["rb"], job["bb"], lv, rng, fixed=fixed, drop=False, over=job.get("ob"))
     a, b = (sb, sa) if job["sw"] else (sa, sb)
     sink = Counting()
+    a_team = "enemy" if job["sw"] else "player"
     battle = Battle(a, b, scenario=_scenario(job.get("map")), daylight=True)
     battle.record_to(sink)
+    shouts = Counter()
+    team_of = {u.name: ("A" if u.team == a_team else "B") for u in battle.units}
+    log = battle.log
+
+    def counting_log(key, *args, **kw):         # the Inspiring Shout is a rider on a landed Demoralize, with no action of its own
+        if key == "log.inspiring_shout":
+            shouts[team_of.get(str(kw.get("ally")))] += 1
+        return log(key, *args, **kw)
+    battle.log = counting_log
     guard = 0
     while battle.winner is None and guard < GUARD:
         guard += 1
         ai.take_turn(battle, battle.active)
-    a_team = "enemy" if job["sw"] else "player"
     win = "D" if battle.winner not in ("player", "enemy") else ("A" if battle.winner == a_team else "B")
     units = [_unit_row("A" if u.team == a_team else "B", u, sink.acts.get(id(u), {}), sink.init.get(id(u))) for u in battle.units]
     read = {("A" if t == a_team else "B"): v for t, v in sink.intel0.items()}
     return {**job, "win": win, "rounds": battle.round_no, "capped": guard >= GUARD,
-            "notes": sorted(set(na + nb)), "units": units, "read0": read}
+            "notes": sorted(set(na + nb)), "units": units, "read0": read, "shouts": dict(shouts)}
 
 
 # -- the waves -------------------------------------------------------------------------------------------------
@@ -363,25 +374,37 @@ def _chunk_path(data_dir, wave, lv, c):
     return os.path.join(data_dir, f"{wave}_L{lv}_{c:05d}.jsonl.gz")
 
 
+def _encode(rows):
+    return gzip.compress("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows).encode("utf-8"))
+
+
+def _write_chunk(path, blob):
+    tmp = path + ".tmp"
+    with open(tmp, "wb") as f:
+        f.write(blob)
+    os.replace(tmp, path)
+
+
 def run_chunk(args):
-    wave, lv, c, jobs, deadline, data_dir = args
+    """Plays one chunk. With `remote` the worker is another machine: it returns the gzip bytes and the
+    coordinator writes the file; otherwise the worker writes it into `data_dir` itself."""
+    wave, lv, c, jobs, deadline, data_dir, remote = args
     path = _chunk_path(data_dir, wave, lv, c)
-    if os.path.exists(path):
-        return wave, lv, c, 0, 0.0
+    if not remote and os.path.exists(path):
+        return wave, lv, c, 0, 0.0, None
     if deadline and time.time() > deadline:
-        return wave, lv, c, -1, 0.0
+        return wave, lv, c, -1, 0.0, None
     t0, rows = time.time(), []
     for job in jobs:
         try:
             rows.append(play(job))
         except Exception as e:  # noqa: BLE001 -- a failed fight is recorded, never lost silently
             rows.append({**job, "win": "E", "err": f"{type(e).__name__}: {e}"[:200]})
-    tmp = path + ".tmp"
-    with gzip.open(tmp, "wt", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, separators=(",", ":")) + "\n")
-    os.replace(tmp, path)
-    return wave, lv, c, len(rows), time.time() - t0
+    blob = _encode(rows)
+    if remote:
+        return wave, lv, c, len(rows), time.time() - t0, blob
+    _write_chunk(path, blob)
+    return wave, lv, c, len(rows), time.time() - t0, None
 
 
 def keep_awake():
@@ -410,18 +433,33 @@ def cmd_run(args):
     keep_awake()
     deadline = datetime.fromisoformat(args.until).timestamp() if args.until else 0
     levels = [int(x) for x in args.levels.split(",")]
-    with ProcessPoolExecutor(max_workers=args.workers) as ex:
+    remote = bool(args.scheduler)
+    if remote:
+        # Workers on other machines import the function by module name, not as __main__.
+        from distributed import Client
+
+        from scripts import race_study as mod
+        client = Client(args.scheduler)
+        ex, work = client.get_executor(), mod.run_chunk
+        log(f"scheduler {args.scheduler}: {sum(w['nthreads'] for w in client.scheduler_info()['workers'].values())} threads")
+    else:
+        ex, work = ProcessPoolExecutor(max_workers=args.workers), run_chunk
+    with ex:
         for spec in args.waves.split(","):
             wave, _, sc = spec.partition(":")
             for lv in levels:
                 jobs = wave_jobs(wave, lv, float(sc) if sc else args.scale)
-                tasks = [(wave, lv, c, jobs[c * CHUNK:(c + 1) * CHUNK], deadline, DATA)
-                         for c in range((len(jobs) + CHUNK - 1) // CHUNK)]
+                tasks = [(wave, lv, c, jobs[c * CHUNK:(c + 1) * CHUNK], deadline, DATA, remote)
+                         for c in range((len(jobs) + CHUNK - 1) // CHUNK)
+                         if not (remote and os.path.exists(_chunk_path(DATA, wave, lv, c)))]
                 if not tasks:
                     continue
                 log(f"wave {wave} L{lv}: {len(jobs)} fights in {len(tasks)} chunks")
                 t0, fights = time.time(), 0
-                for done, (_, _, _, n, _) in enumerate(ex.map(run_chunk, tasks, chunksize=1), 1):
+                results = ex.map(work, tasks) if remote else ex.map(work, tasks, chunksize=1)
+                for done, (_, _, c, n, _, blob) in enumerate(results, 1):
+                    if blob is not None:
+                        _write_chunk(_chunk_path(DATA, wave, lv, c), blob)
                     fights += max(n, 0)
                     keep_awake()
                     if done % 20 == 0 or done == len(tasks):
@@ -456,12 +494,13 @@ def main():
     s = sub.add_parser("smoke")
     s.add_argument("-n", type=int, default=30)
     r = sub.add_parser("run")
-    r.add_argument("--waves", default="mb,ef,rb,gw,sp,vr,ws,rt")
+    r.add_argument("--waves", default="mb,ef,rb,gw,sp,vr,ws")
     r.add_argument("--out", default="teste-builds")
-    r.add_argument("--levels", default="0,5")
+    r.add_argument("--levels", default="5")
     r.add_argument("--scale", type=float, default=1.0)
     r.add_argument("--workers", type=int, default=15)
     r.add_argument("--until", default="")
+    r.add_argument("--scheduler", default="", help="host:port of a dask scheduler; workers on other machines share the run")
     args = ap.parse_args()
     {"smoke": cmd_smoke, "run": cmd_run}[args.cmd](args)
 
