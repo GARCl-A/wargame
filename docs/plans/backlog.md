@@ -614,3 +614,20 @@ has one "Enter" button and its functions are tabs inside.
   preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
   and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
   playtest shows whether bout chains break anything.
+
+
+==========
+
+Notas cruas de backlog - 08/11/2026 - 4dca9e05 - Jogo em PT-BR
+
+- Evitar o uso de travessões ou "--" nas caixas de texto do jogo. Como por exemplo "...trabalho honesto -- então todo mundo...".
+
+- O fit de "continuar" não está muito bom no botão da tela de escolher vocação, isso se deve ao fato de que o jogo foi feito primeiro em ingles, que é substancialmente "menor" que o português. POREM, é importante a gente pensar num jeito dessas localizações serem escalaveis, pq nao é so pq a palavra foi de 5 pra 8 letras que a ui tem que quebrar. Isso vai acontecer em varias parte do jogo.
+
+- E se a habilidade do marsh for reduzir as penalidades de atributo pra fome ou algo do tipo, ao inves de "Nao apodrecer a comida".
+
+- E se a habilidade dos delvers fosse bonus somente em COLETA, ou seja, minerar e coletar lenha COM LICENÇA e caçada/forrageio. Ao inves de ser simplesmente ganhar mais dinheiro em todo trabalho. (checar se essa ultima frase é verdade)
+
+- Medir se o bonus de +2 dos scholar é bom o suficiente, ou se era melhor q fosse +4.
+
+- Muda a habilidade do warband pra +1 de moral nos personagens

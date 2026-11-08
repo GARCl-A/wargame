@@ -39,7 +39,7 @@ const crest = b => `<div class="crest"><div class="rim"></div><div class="body">
 // ---------------------------------------------------------------- the menu
 function menu() {
   let n = 0;
-  const hot = {guilds: "load", saves: "load"}[T.mode];
+  const hot = { guilds: "load", saves: "load" }[T.mode];
   $("menu").innerHTML = T.menu.map(m => {
     if (!m) return `<div class="gap"></div>`;
     const cls = ["item", m.primary ? "primary" : "", m.quiet ? "quiet" : "", m.enabled ? "" : "off", hot === m.key ? "hot" : ""].join(" ");
@@ -53,7 +53,7 @@ function choose(key) {
   if (!m || !m.enabled) return;
   if (key === "continue") post("continue");
   else if (key === "new") post("new");
-  else if (key === "load") post("page", {page: T.mode === "guilds" ? "home" : "guilds"});
+  else if (key === "load") post("page", { page: T.mode === "guilds" ? "home" : "guilds" });
   else if (key === "wiki" || key === "settings" || key === "credits") post(key);
   else if (key === "quit") post("quit");
 }
@@ -89,8 +89,8 @@ function charter() {
   banner($("title"), C);
   if (!T.map) el.classList.add("alone");
   el.classList.toggle("clickable", !C.broken);
-  const where = C.where ? `<div class="where"><b>${tr("title.at", {place: esc(C.where.place)})}</b>${C.where.rest ? ` · ${esc(C.where.rest)}` : ""}</div>` : "";
-  el.innerHTML = `<div class="kicker">${tr("title.last_guild")} <em>${tr("title.saved", {when: esc(C.saved)})}</em></div>
+  const where = C.where ? `<div class="where"><b>${tr("title.at", { place: esc(C.where.place) })}</b>${C.where.rest ? ` · ${esc(C.where.rest)}` : ""}</div>` : "";
+  el.innerHTML = `<div class="kicker">${tr("title.last_guild")} <em>${tr("title.saved", { when: esc(C.saved) })}</em></div>
     <div class="head">${crest(C)}<div><h2>${esc(C.name)}</h2>${C.vocation ? `<div class="voc">${esc(C.vocation)}</div>` : ""}
       ${C.motto ? `<div class="motto">${esc(C.motto)}</div>` : ""}</div></div>
     <div class="ledger">${C.ledger.map(([v, k]) => `<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("")}</div>
@@ -106,8 +106,8 @@ function guilds() {
     const ask = asking === "w:" + w.world;
     return `<div class="row" data-world="${esc(w.world)}" style="--banner:${shade(w.color, 1)};--banner-hi:${shade(w.color, 1.25)};--banner-lo:${shade(w.color, .55)}">
       ${crest(w)}
-      <div class="txt"><b>${esc(w.name)}</b><span>${w.vocation ? esc(w.vocation) + " · " : ""}${tr("title.day", {n: w.day})} · ${trn("unit.member", w.members)} · ${trn("unit.win", w.wins)}</span>
-        <small>${tr("title.last_played", {when: esc(w.saved)})} · ${trn("unit.save", w.saves)}</small></div>
+      <div class="txt"><b>${esc(w.name)}</b><span>${w.vocation ? esc(w.vocation) + " · " : ""}${tr("title.day", { n: w.day })} · ${trn("unit.member", w.members)} · ${trn("unit.win", w.wins)}</span>
+        <small>${tr("title.last_played", { when: esc(w.saved) })} · ${trn("unit.save", w.saves)}</small></div>
       <div class="mini">${w.faces.map(f => `<div class="medal">${face(f.portrait, f.name)}</div>`).join("")}</div>
       <div class="acts">${ask
         ? `<span class="ask">${tr("title.ask_world")}</span><div class="pbtn danger" data-do="delete_world">${tr("title.delete")}</div><div class="pbtn" data-do="cancel">${tr("title.keep")}</div>`
@@ -125,7 +125,7 @@ function saves() {
     const ask = asking === "s:" + s.id;
     return `<div class="row" data-save="${esc(s.id)}"><div class="tag ${s.kind}">${esc(s.kind_label)}</div>
       <div class="txt"><b>${esc(s.saved)}</b><span>${esc(s.label)}</span>
-        <small>${s.day != null ? `${tr("title.day", {n: s.day})} · ` : ""}${trn("unit.member", s.members)} · ${trn("unit.win", s.wins)}</small></div>
+        <small>${s.day != null ? `${tr("title.day", { n: s.day })} · ` : ""}${trn("unit.member", s.members)} · ${trn("unit.win", s.wins)}</small></div>
       <div class="acts">${ask
         ? `<span class="ask">${tr("title.ask_save")}</span><div class="pbtn danger" data-do="delete_save">${tr("title.delete")}</div><div class="pbtn" data-do="cancel">${tr("title.keep")}</div>`
         : `<div class="pbtn go" data-do="load_save">${tr("title.load_btn")}</div>${s.kind === "current" ? "" : `<div class="pbtn danger" data-do="ask_save">${tr("title.delete")}</div>`}`}</div></div>`;
@@ -139,7 +139,6 @@ function saves() {
 // ---------------------------------------------------------------- the whole screen
 function render(state) {
   T = state;
-  $("quote").innerHTML = esc(T.quote).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
   $("notice").hidden = !T.notice;
   $("notice").textContent = T.notice || "";
   menu();
@@ -161,15 +160,15 @@ $("page").addEventListener("click", e => {
   const w = t.closest("[data-world]"), s = t.closest("[data-save]");
   const world = w ? w.dataset.world : T.saves && T.saves.world, save = s && s.dataset.save;
   const d = t.dataset.do;
-  if (d === "home" || d === "guilds") post("page", {page: d});
-  else if (d === "saves") post("page", {page: "saves", world});
-  else if (d === "load") post("load", {world});
-  else if (d === "load_save") post("load", {world, save});
+  if (d === "home" || d === "guilds") post("page", { page: d });
+  else if (d === "saves") post("page", { page: "saves", world });
+  else if (d === "load") post("load", { world });
+  else if (d === "load_save") post("load", { world, save });
   else if (d === "ask_world") { asking = "w:" + world; guilds(); }
   else if (d === "ask_save") { asking = "s:" + save; saves(); }
   else if (d === "cancel") { asking = null; T.mode === "guilds" ? guilds() : saves(); }
-  else if (d === "delete_world") post("delete_world", {world});
-  else if (d === "delete_save") post("delete_save", {world, save});
+  else if (d === "delete_world") post("delete_world", { world });
+  else if (d === "delete_save") post("delete_save", { world, save });
 });
 
 addEventListener("keydown", e => {
@@ -177,8 +176,8 @@ addEventListener("keydown", e => {
   if (e.key === "Enter" && T.mode === "home") choose("continue");
   else if (e.key === "Escape") {
     if (asking) { asking = null; T.mode === "guilds" ? guilds() : saves(); }
-    else if (T.mode === "saves") post("page", {page: "guilds"});
-    else if (T.mode === "guilds") post("page", {page: "home"});
+    else if (T.mode === "saves") post("page", { page: "guilds" });
+    else if (T.mode === "guilds") post("page", { page: "home" });
   }
 });
 

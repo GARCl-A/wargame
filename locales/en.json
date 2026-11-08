@@ -524,10 +524,6 @@
       "no_guild_tutorial": "the tutorials belong to a guild; open one first"
     },
     "title": {
-      "tagline": "A squad wargame · a sandbox guild",
-      "subtitle": "Tactical",
-      "foot_name": "Gartok Tactical",
-      "foot": "the lost RPG, rebuilt from its character generator",
       "no_guild": "No guild yet",
       "found": "Found a guild",
       "found_note": "Draft three of the nine who answer the call, give them a name and a banner, and send them out.",
@@ -4604,7 +4600,6 @@
     "guild": "The Guild",
     "live_state_saved_on_every": "the live state, saved on every stop",
     "other_band": "other band",
-    "quote": "In Gartok **the risk pays.** Most of those who take it do not live to spend it.",
     "kind": {
       "current": "Current",
       "auto": "Auto",
