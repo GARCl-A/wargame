@@ -730,7 +730,7 @@ for next turn's breath.
   discarded after battle, and automatically reloads from any spare quiver carried
   in the unit's inventory.
 - **Reload** is a 1-point action: takes a bolt from the Quiver and chambers it.
-  **The crossbow enters the battle unloaded.**
+  **The crossbow enters the battle loaded**: one bolt is already chambered from the Quiver.
 - Firing needs the crossbow **loaded** and empties it — in practice the
   Crossbowman gets **one shot per turn** (Reload + Shoot spend both points).
 - **An unloaded crossbow = an improvised weapon:** a **melee** attack, range 1,
@@ -1001,8 +1001,12 @@ target's confidence instead of wounding them.
 - **Duration:** the condition expires **at the end of the sufferer's own turn**.
   So a target demoralized right after its turn carries the −1 for the whole round
   until its next turn closes.
-- The **AI** uses Demoralize when it cannot reach the target to attack and the
-  target is not already demoralized.
+- **Stacking:** each Demoralize that lands adds a stack, up to **3**; a 4th is impossible until a stack
+  falls. Each stack is −1 to attack, AC and Mental Defense. The end of the sufferer's turn takes one stack off.
+- The **AI** spends a point on Demoralize when that is worth more than the strike the point would buy,
+  on the foe it pays most on. Each Demoralize is priced as a share of breaking the foe: the morale its side
+  reckons the foe has left is the real one once read, else 8 (the average start) less each Demoralize that
+  landed and each wound mark the foe's hit points crossed. A foe at the stack cap is not a target.
 
 ### Ground objects 🟡
 

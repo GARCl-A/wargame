@@ -3,6 +3,7 @@ that steps to a flank and leaves the light to someone else."""
 
 from gartok import actions, ai, items, outfit
 from gartok.ai.target import _flank_step, _free_approach
+from gartok.conditions import DEMORALIZE_MAX_STACKS, Demoralized
 from tests.helpers import Battle, standard_unit
 
 PATH = ("agile", "deadeye", "fleet", "free_step")
@@ -139,6 +140,8 @@ def test_a_unit_with_ground_to_cover_spends_the_free_step_on_the_approach():
     step = _free_approach(b, c, foe)
     assert step is not None and step != c.pos
     b.ambient_light = True
+    for _ in range(DEMORALIZE_MAX_STACKS):       # a foe still worth shouting at would take the walker's points
+        foe.add_condition(Demoralized())
     ai.take_turn(b, c)
     assert c.free_step_used
 

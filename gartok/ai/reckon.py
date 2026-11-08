@@ -8,7 +8,8 @@ from ..conditions import BLEEDING_CLAWS_TURNS
 from .common import _avg_die, _hand_die, _runs_flag
 
 D20_STEP = 0.05            # one point on a d20 roll
-ROUT_ROUNDS = 3            # rounds of a foe's blows that breaking its nerve takes off the field (it may rally)
+UNKNOWN_MORALE = morale.BASE + 1     # the morale a side guesses for a foe it has not read: an average fighter's start
+ROUT_ROUNDS = 1            # rounds of a foe's blows that breaking its nerve takes off the field (it may rally)
 
 
 def _spell_odds(battle, unit, target, spell):
@@ -88,12 +89,43 @@ def _roots_worth(battle, unit, target):
     return _spell_odds(battle, unit, target, actions.CastSpellAction("grasping_roots")) * held
 
 
+def _foe_morale(battle, unit, target):
+    """The morale `unit`'s side reckons `target` has left: the real one once read, else the average start less what the
+    fight has shown (each Demoralize that landed, each wound mark its hit points crossed)."""
+    if intel.knows(battle, unit.team, target, "morale"):
+        return max(1, target.morale)
+    return max(1, UNKNOWN_MORALE - target.demoralized_hits - morale.wounds_taken(target))
+
+
+def _acts_before(battle, unit, target):
+    """Whether `unit` takes its turn before `target` does, counting on from the active turn: the Demoralize
+    lasts until the end of the target's turn, so a blow struck after it is not helped."""
+    order = battle.order
+    if unit not in order or target not in order:
+        return True
+    n, now = len(order), battle.turn_idx
+    return (order.index(unit) - now) % n < (order.index(target) - now) % n
+
+
+def _blows_on(battle, unit, target, points):
+    """The blows `unit` can land on `target` with `points` left: all of them from where it stands, one fewer when
+    it has to walk up first, none when even a walk does not reach."""
+    gap = battle.units_distance(unit, target)
+    if gap <= unit.attack_range:
+        return points
+    if gap <= unit.attack_range + unit.speed:
+        return max(points - 1, 0)
+    return 0
+
+
 def _demoralize_worth(battle, unit, target):
     """The hit points a Demoralize on `target` is expected to be worth through its next turn: the odds
-    the CHA roll beats its Mental Defense (a bare 10 until read) times the -1 on every blow and
-    defence. Each striker of the unit's side that can reach the foe lands its blows 5% more often
-    (and for its own Menacing cull), the foe's own two blows land 5% less. A foe whose morale it has read
-    and that this Demoralize would break (down to 0) is worth `ROUT_ROUNDS` rounds of its blows more."""
+    the CHA roll beats its Mental Defense (a bare 10 until read) times the -1 on every blow and defence.
+    Each striker of the unit's side that acts before the foe's turn ends lands the blows it can make on the
+    foe 5% more often (and its Menacing cull, shared among the foes it can reach). The foe's own two blows
+    land 5% less. Each Demoralize takes its point (two with Dread Voice) off the morale the side reckons the
+    foe has left (`_foe_morale`): breaking it is worth `ROUT_ROUNDS` rounds of its blows, and one
+    Demoralize is that share of the break."""
     char = unit.char
     mod = unit.mod_charisma
     if char.has_talent("intimidating_presence"):
@@ -105,16 +137,20 @@ def _demoralize_worth(battle, unit, target):
     odds = max(0.05, min(0.95, (21 - md + mod) / 20))
     worth = 0.0
     for a in battle.units:
-        if not (a.alive and a.team == unit.team) or battle.units_distance(a, target) > a.attack_range + a.speed:
+        if not (a.alive and a.team == unit.team) or (a is not unit and not _acts_before(battle, a, target)):
             continue
-        blows = max(unit.ap - 1, 0) if a is unit else 2
+        blows = _blows_on(battle, a, target, max(unit.ap - 1, 0) if a is unit else 2)
+        if not blows:
+            continue
         cull = a.char.talent_bonus("demoralized_target_damage")
-        worth += blows * (D20_STEP * _blow(a) + _hit_odds(battle, a, target) * cull)
+        choices = sum(1 for f in battle.units if f.alive and f.team != unit.team
+                      and battle.units_distance(a, f) <= a.attack_range + a.speed)
+        worth += blows * (D20_STEP * _blow(a) + _hit_odds(battle, a, target) * cull / max(1, choices))
     if battle.units_distance(unit, target) <= target.attack_range + target.speed:
         worth += 2 * D20_STEP * _blow(target)
-    if (morale.has_morale(battle, target) and intel.knows(battle, unit.team, target, "morale")
-            and 0 < target.morale <= -morale.DEMORALIZED):
-        worth += ROUT_ROUNDS * 2 * D20_STEP * _blow(target)
+    if morale.has_morale(battle, target):
+        cost = -morale.DEMORALIZED + unit.char.talent_bonus("demoralize_morale")
+        worth += ROUT_ROUNDS * 2 * D20_STEP * _blow(target) * min(1, cost / _foe_morale(battle, unit, target))
     return odds * worth
 
 

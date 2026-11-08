@@ -333,7 +333,7 @@ def test_crossbowman_starts_with_ammo():
     u = _unit()
     u.set_kit("Crossbow", data.AMMO_ITEM)
     assert u.quiver_charges == data.QUIVER_AMMO
-    assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Crossbow"
+    assert Combatant(u).ammo == data.QUIVER_AMMO - 1 and u.weapon_name == "Crossbow"   # one bolt is chambered
 
 
 def test_giving_quiver_sets_quiver_charges():
@@ -344,12 +344,20 @@ def test_giving_quiver_sets_quiver_charges():
     assert Combatant(u).ammo == data.QUIVER_AMMO
 
 
-def test_crossbow_starts_unloaded_and_must_reload_first():
+def test_crossbow_starts_loaded_with_one_bolt_taken_from_the_quiver():
     u = _unit()
     u.set_kit("Crossbow", data.AMMO_ITEM)
     c = Combatant(u)
-    assert not c.crossbow_loaded and not c.ranged and c.improvised   # can't shoot yet
-    assert c.can_reload and c.attack_range == 1                       # swings it until reloaded
+    assert c.crossbow_loaded and c.ranged and not c.improvised and not c.can_reload
+    assert c.ammo == data.QUIVER_AMMO - 1
+
+
+def test_crossbow_with_an_empty_quiver_starts_unloaded():
+    u = _unit()
+    u.set_kit("Crossbow", data.AMMO_ITEM)
+    u.quiver_charges = 0
+    c = Combatant(u)
+    assert not c.crossbow_loaded and c.improvised and not c.can_reload
 
 
 def test_crossbow_reload_cycle():

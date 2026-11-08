@@ -45,19 +45,33 @@ class Defending(Condition):
         return True  # the Defend bonus lasts until the start of the next turn
 
 
+DEMORALIZE_MAX_STACKS = 3
+
+
 class Demoralized(Condition):
+    """-1 to attack, AC and Mental Defense for each stack. Every Demoralize that lands adds a stack (up to
+    `DEMORALIZE_MAX_STACKS`); the end of the victim's turn takes one off."""
     id = "demoralized"
 
+    def __init__(self):
+        self.stacks = 1
+
+    def stack(self, other):
+        self.stacks = min(DEMORALIZE_MAX_STACKS, self.stacks + other.stacks)
+
     def attack_mods(self):
-        return [(-1, "status", "Demoralized")]
+        return [(-self.stacks, "status", "Demoralized")]
 
     def ac_mods(self):
-        return [(-1, "status", "Demoralized")]
+        return [(-self.stacks, "status", "Demoralized")]
 
     def mental_defense_mods(self):
-        return [(-1, "status", "Demoralized")]
+        return [(-self.stacks, "status", "Demoralized")]
 
     def on_turn_end(self, unit, log):
+        self.stacks -= 1
+        if self.stacks > 0:
+            return False
         log("log.cond.demoralized_ends", unit=unit.name)
         return True
 
@@ -113,10 +127,9 @@ class Grappled(Condition):
         return 0
 
     def on_turn_start(self, unit, log):
-        if self.grappler is not None:
-            if not getattr(self.grappler, "alive", True):
-                log("log.cond.grappled_ends", unit=unit.name)
-                return True
+        if self.grappler is not None and not getattr(self.grappler, "alive", True):
+            log("log.cond.grappled_ends", unit=unit.name)
+            return True
         return False
 
 

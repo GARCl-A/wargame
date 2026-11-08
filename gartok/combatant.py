@@ -16,7 +16,7 @@ and the next fight re-seeds a new Combatant from the character.
 """
 
 from . import conditions, data, i18n, intel, items, morale, natural_weapons, progression
-from .conditions import Hexed
+from .conditions import DEMORALIZE_MAX_STACKS, Hexed
 from .data import resolve_bonus, roll
 from .i18n import Ref
 from .unit import flatten_pack
@@ -124,9 +124,11 @@ class Combatant:
         self.inventory = flatten_pack(c)
         self.ammo = (getattr(c, "quiver_charges", data.QUIVER_AMMO)
                      if data.AMMO_ITEM in self.inventory else 0)
-        # a crossbow holds one bolt at a time and starts the fight empty: spend an
-        # action to Reload (chambers one from the quiver), fire, repeat.
+        # a crossbow holds one bolt at a time and starts the fight with one chambered from the quiver
         self.crossbow_loaded = False
+        if self.weapon.get("reload") and self.ammo > 0:
+            self.ammo -= 1
+            self.crossbow_loaded = True
         # first aid charges are now persistent (campaign-long).
         self.first_aid_charges = (c.first_aid_charges
                                   if data.FIRST_AID_ITEM in self.inventory else 0)
@@ -153,7 +155,8 @@ class Combatant:
         self.rider = None             # a Combatant riding this one (Centaur mount)
         self.hurt_by = set()          # who has landed a blow on this unit this fight (Grudge)
         self.turns_taken = 0          # turns begun this fight (Ambush Predator)
-        self.demoralized_hits = 0     # Demoralized landed on this unit, each one counted (morale reads the rise)
+        self.demoralized_hits = 0     # Demoralized landed on this unit, each one counted
+        self.demoralize_extra = 0     # morale points a Dread Voice took on top of those hits (morale reads the rise)
         morale.start(self)
 
     def credit_kill(self, victim, magic=False):
@@ -276,12 +279,24 @@ class Combatant:
         return any(c.id == cid for c in self.conditions)
 
     @property
+    def shaken(self):
+        """The morale points Demoralize has taken from this unit so far (`morale.settle` reads the rise)."""
+        return self.demoralized_hits + self.demoralize_extra
+
+    @property
+    def demoralize_stacks(self):
+        held = self.condition("demoralized")
+        return held.stacks if held else 0
+
+    @property
     def routed(self):
         """Morale spent: `ai/` runs this unit for the exit (`morale.settle` sets and lifts it)."""
         return self.has_condition("routed")
 
     def add_condition(self, cond):
         if cond.id == "demoralized":
+            if self.demoralize_stacks >= DEMORALIZE_MAX_STACKS:       # nothing more to shake out of it this turn
+                return
             self.demoralized_hits += 1
         held = self.condition(cond.id)
         if held is None:
@@ -707,9 +722,9 @@ class Combatant:
             mods.append((grudge, None, i18n.t("log.mod.grudge")))
         ambush = c.talent_bonus("ambush_predator")
         if ambush:
-            from .actions.base import off_guard     # local: actions imports this module
-        if ambush and off_guard(battle, self, target):
-            mods.append((ambush, None, i18n.t("log.mod.ambush_predator")))
+            from .actions.base import off_guard  # local: actions imports this module
+            if off_guard(battle, self, target):
+                mods.append((ambush, None, i18n.t("log.mod.ambush_predator")))
         whip = c.talent_bonus("under_the_whip")
         if whip and any(u.alive and u.team == self.team and u is not self
                         and u.combat_level > self.combat_level

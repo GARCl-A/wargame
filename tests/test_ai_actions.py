@@ -438,7 +438,7 @@ def test_a_favoured_strike_is_brutal_1():
 def test_ai_swings_instead_of_demoralizing_a_foe_in_reach():
     from gartok.ai import attack
     batt, a, d = _melee_battle()
-    assert not attack._demoralize_pays(batt, a, d)
+    assert attack._demoralize_victim(batt, a, d) is None
 
 
 def test_ai_demoralizes_rather_than_walk_up_to_a_foe_it_cannot_yet_hit():
@@ -447,17 +447,18 @@ def test_ai_demoralizes_rather_than_walk_up_to_a_foe_it_cannot_yet_hit():
     a.pos, d.pos, a.ap = (4, 5), (8, 5), 1
     a.languages = d.languages = ["Ankarin"]
     assert actions.DEMORALIZE.can(batt, a, d)
-    assert attack._demoralize_pays(batt, a, d)
+    assert attack._demoralize_victim(batt, a, d) is d
 
 
-def test_ai_does_not_demoralize_a_foe_already_rattled():
+def test_ai_does_not_demoralize_a_foe_already_at_the_most_stacks():
     from gartok.ai import attack
-    from gartok.conditions import Demoralized
+    from gartok.conditions import DEMORALIZE_MAX_STACKS, Demoralized
     batt, a, d = _melee_battle()
     a.pos, d.pos, a.ap = (4, 5), (8, 5), 1
     a.languages = d.languages = ["Ankarin"]
-    d.add_condition(Demoralized())
-    assert not attack._demoralize_pays(batt, a, d)
+    for _ in range(DEMORALIZE_MAX_STACKS):
+        d.add_condition(Demoralized())
+    assert not actions.DEMORALIZE.can(batt, a, d) and attack._demoralize_victim(batt, a, d) is None
 
 
 def test_ai_assesses_only_when_the_side_has_a_use_for_the_read():

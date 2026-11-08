@@ -67,7 +67,7 @@ BUILDS = {b.id: b for b in (
     Build("archer", "Longbow: two random talents", ("Longbow",), AUTO, None,
           ("agile", "long_reach", "deadeye"), ("brawny", "nimble_fingers"), quiver=True, role="ranged"),
     Build("intimidator", "Demoralize, then cull or take down", ("Sword",), AUTO, None,
-          ("imposing", "menacing", "wordless_menace", "cull_the_broken", "strong"), ("brawny", "charismatic", "sturdy", "nimble_fingers")),
+          ("imposing", "menacing", "wordless_menace", "cull_the_broken", "dread_voice"), ("brawny", "charismatic", "sturdy", "nimble_fingers")),
     Build("commander", "Shouts the line on", ("Hatchet",), AUTO, SHIELD,
           ("imposing", "menacing", "wordless_menace", "gruesome_takedown", "inspiring_shout"),
           ("brawny", "charismatic", "sturdy", "nimble_fingers", "observant")),

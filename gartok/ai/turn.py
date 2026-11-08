@@ -4,7 +4,7 @@ from .. import actions
 from ..board import grid_distance
 from .attack import (
     _breath_spot,
-    _demoralize_pays,
+    _demoralize_victim,
     _eat_corpse,
     _finish_off,
     _pick_attack,
@@ -286,8 +286,9 @@ def take_turn(battle, unit):
                     actions.DEFEND.execute(battle, unit)
             continue
 
-        if _demoralize_pays(battle, unit, target):
-            actions.DEMORALIZE.execute(battle, unit, target)
+        victim = _demoralize_victim(battle, unit, target)
+        if victim is not None:
+            actions.DEMORALIZE.execute(battle, unit, victim)
             continue
 
         step = _flank_step(battle, unit, target)
@@ -316,7 +317,7 @@ def take_turn(battle, unit):
         if _spin_web(battle, unit, target):
             continue
 
-        if not target.demoralized and actions.DEMORALIZE.can(battle, unit, target):
+        if actions.DEMORALIZE.can(battle, unit, target):
             actions.DEMORALIZE.execute(battle, unit, target)
             continue
 
