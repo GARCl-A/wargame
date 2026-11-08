@@ -24,12 +24,11 @@ def _pick_attack(battle, unit, target):
     """The attack to make on `target` this instant, or None. Evaluates spells,
     2-AP weapon actions when AP is available, Grippli Tongue reach lash, and basic
     attacks."""
-    if "sleep" in getattr(unit, "spells_known", []):
-        if (not _sleep_immune(battle, unit, target) and not target.has_condition("sleeping")
-                and _another_awake_foe(battle, unit, target)):
-            sleep_spell = actions.CastSpellAction("sleep")
-            if sleep_spell.can(battle, unit, target):
-                return sleep_spell     # a sleeper only frees the unit to fight someone else
+    if ("sleep" in getattr(unit, "spells_known", []) and not _sleep_immune(battle, unit, target)
+            and not target.has_condition("sleeping") and _another_awake_foe(battle, unit, target)):
+        sleep_spell = actions.CastSpellAction("sleep")
+        if sleep_spell.can(battle, unit, target):
+            return sleep_spell     # a sleeper only frees the unit to fight someone else
 
     hold = _hex_or_roots(battle, unit, target)
     if hold is not None:
@@ -103,10 +102,16 @@ def _hex_or_roots(battle, unit, target):
     return best
 
 
-def _demoralize_pays(battle, unit, target):
-    """Demoralize `target` instead of the strike the point would buy, when it is expected to be worth more."""
-    return (not target.demoralized and actions.DEMORALIZE.can(battle, unit, target)
-            and _demoralize_worth(battle, unit, target) > _point_worth(battle, unit, target))
+def _demoralize_victim(battle, unit, target):
+    """The foe to Demoralize instead of striking `target`, or None: the one it is expected to be worth most on,
+    when that beats the strike the point would buy."""
+    best, best_worth = None, 0.0
+    for f in battle.units:
+        if f.alive and f.team != unit.team and actions.DEMORALIZE.can(battle, unit, f):
+            worth = _demoralize_worth(battle, unit, f)
+            if worth > best_worth:
+                best, best_worth = f, worth
+    return best if best_worth > _point_worth(battle, unit, target) else None
 
 
 def _weapon_action(battle, unit, target):
@@ -144,9 +149,7 @@ def _should_grab(battle, unit, target):
     has_grip = getattr(char, "has_talent", lambda _: False)("death_grip")
     if (has_bite or has_grip) and target.hp > 3:
         return True
-    if _runs_flag(battle, target) or target.routed:
-        return True
-    return False
+    return bool(_runs_flag(battle, target) or target.routed)
 
 
 def _should_takedown(battle, unit, target):

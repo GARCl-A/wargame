@@ -193,3 +193,106 @@ def test_the_wiki_reads_the_constants(monkeypatch):
 def test_the_combat_log_row_carries_morale():
     from gartok import combat_log
     assert "morale" in combat_log.UNIT_FIELDS
+
+
+def test_a_foe_not_read_is_reckoned_at_the_average_start_less_what_the_fight_showed(monkeypatch):
+    from gartok.ai.reckon import UNKNOWN_MORALE, _foe_morale
+    batt, (a, _), (f, _) = _fight()
+    monkeypatch.setattr(intel, "knows", lambda *args: False)
+    assert UNKNOWN_MORALE == 8 and _foe_morale(batt, a, f) == 8
+    f.demoralized_hits = 2
+    assert _foe_morale(batt, a, f) == 6
+    f.hp = f.hp_max // 2
+    assert _foe_morale(batt, a, f) == 5
+    f.demoralized_hits, f.hp = 20, 1
+    assert _foe_morale(batt, a, f) == 1                      # never under the last point
+
+
+def test_a_foe_read_is_reckoned_at_its_real_morale(monkeypatch):
+    from gartok.ai.reckon import _foe_morale
+    batt, (a, _), (f, _) = _fight()
+    f.morale = 3
+    monkeypatch.setattr(intel, "knows", lambda b, team, t, name: name == "morale")
+    assert _foe_morale(batt, a, f) == 3
+
+
+def test_the_ai_demoralizes_the_foe_nearest_to_breaking(monkeypatch):
+    from gartok.ai.attack import _demoralize_victim
+    batt, (a, _), (f1, f2) = _fight()
+    monkeypatch.setattr(intel, "knows", lambda *args: False)
+    a.pos, a.ap = (4, 5), 1
+    f1.pos, f2.pos = (9, 4), (9, 6)
+    for f in (f1, f2):
+        a.languages = f.languages = ["Ankarin"]
+    f2.demoralized_hits = 4
+    assert _demoralize_victim(batt, a, f1) is f2
+
+
+def test_dread_voice_raises_what_the_ai_prices_a_demoralize_at(monkeypatch):
+    from gartok.ai.reckon import _demoralize_worth
+    batt, (a, _), (f, _) = _fight()
+    monkeypatch.setattr(intel, "knows", lambda *args: False)
+    a.pos, f.pos, a.ap = (4, 5), (9, 5), 1
+    a.languages = f.languages = ["Ankarin"]
+    plain = _demoralize_worth(batt, a, f)
+    monkeypatch.setattr(type(a.char), "talent_bonus",
+                        lambda self, key, *args: 1 if key == "demoralize_morale" else 0)
+    assert _demoralize_worth(batt, a, f) > plain
+
+
+def test_demoralized_stacks_and_one_stack_falls_at_the_end_of_the_victims_turn():
+    from gartok.conditions import DEMORALIZE_MAX_STACKS, Demoralized
+    batt, _, (f, _) = _fight()
+    for _ in range(DEMORALIZE_MAX_STACKS + 2):
+        f.add_condition(Demoralized())
+    assert f.demoralize_stacks == DEMORALIZE_MAX_STACKS
+    assert f.ac_mods_total() if hasattr(f, "ac_mods_total") else True
+    held = f.condition("demoralized")
+    assert held.ac_mods() == [(-DEMORALIZE_MAX_STACKS, "status", "Demoralized")]
+    assert not held.on_turn_end(f, batt.log) and f.demoralize_stacks == DEMORALIZE_MAX_STACKS - 1
+    while not held.on_turn_end(f, batt.log):
+        pass
+    assert held.stacks == 0
+
+
+def test_a_demoralize_at_the_most_stacks_is_impossible_and_costs_the_foe_no_morale():
+    from gartok import actions
+    from gartok.conditions import DEMORALIZE_MAX_STACKS, Demoralized
+    batt, (a, _), (f, _) = _fight()
+    a.pos, f.pos, a.ap = (4, 5), (9, 5), 2
+    a.languages = f.languages = ["Ankarin"]
+    for _ in range(DEMORALIZE_MAX_STACKS):
+        f.add_condition(Demoralized())
+    hits = f.demoralized_hits
+    assert not actions.DEMORALIZE.can(batt, a, f)
+    f.add_condition(Demoralized())                          # a shout from any other source changes nothing either
+    assert f.demoralized_hits == hits and f.demoralize_stacks == DEMORALIZE_MAX_STACKS
+    f.condition("demoralized").on_turn_end(f, batt.log)      # its turn passes: one stack falls and shouting works again
+    assert actions.DEMORALIZE.can(batt, a, f)
+
+
+def test_an_ally_who_acts_after_the_foe_adds_nothing_to_the_demoralize(monkeypatch):
+    from gartok.ai.reckon import _acts_before, _demoralize_worth
+    batt, (a, ally), (f, _) = _fight()
+    monkeypatch.setattr(intel, "knows", lambda *args: False)
+    a.pos, f.pos, ally.pos, a.ap = (4, 5), (9, 5), (8, 6), 1
+    a.languages = f.languages = ["Ankarin"]
+    batt.order = [a, ally, f, *[u for u in batt.units if u not in (a, ally, f)]]
+    batt.turn_idx = 0
+    assert _acts_before(batt, ally, f)
+    before = _demoralize_worth(batt, a, f)
+    batt.order = [a, f, ally, *[u for u in batt.units if u not in (a, ally, f)]]
+    assert not _acts_before(batt, ally, f)
+    assert _demoralize_worth(batt, a, f) < before
+
+
+def test_an_ally_adds_two_blows_in_reach_one_after_a_walk_and_none_out_of_reach():
+    from gartok.ai.reckon import _blows_on
+    batt, (a, ally), (f, _) = _fight()
+    ally.pos, f.pos = (8, 5), (9, 5)
+    assert _blows_on(batt, ally, f, 2) == 2
+    f.pos = (8 + ally.attack_range + ally.speed, 5)
+    assert _blows_on(batt, ally, f, 2) == 1
+    f.pos = (8 + ally.attack_range + ally.speed + 1, 5)
+    assert _blows_on(batt, ally, f, 2) == 0
+    assert _blows_on(batt, ally, f, 0) == 0

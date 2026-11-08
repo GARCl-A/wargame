@@ -2,15 +2,14 @@
 the Non-lethal toggle."""
 
 
-from .. import i18n, intel, natural_weapons
+from .. import i18n, intel, morale, natural_weapons
 from ..board import cells, cells_in_radius, cone_cells
-from ..conditions import Defending, Demoralized, Grappled, Prone
+from ..conditions import DEMORALIZE_MAX_STACKS, Defending, Demoralized, Grappled, Prone
 from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll, squares
 from ..i18n import Msg, Ref, plural_key
 from .base import (
     Action,
     _attackable_target,
-    _cell_free,
     _hostile_target,
     _land_thrown,
     _pack_flank,
@@ -79,9 +78,7 @@ class Attack(Action):
             return False
         if not battle.los_between(actor, target):
             return False
-        if not battle.can_see_unit(actor, target):
-            return False
-        return True
+        return battle.can_see_unit(actor, target)
 
     def highlight_cells(self, battle, actor):
         rng = actor.attack_range
@@ -329,6 +326,8 @@ class Demoralize(Action):
     def can(self, battle, actor, target=None):
         if actor.ap < self.cost or not _hostile_target(actor, target):
             return False
+        if target.demoralize_stacks >= DEMORALIZE_MAX_STACKS:
+            return False
         if battle.units_distance(actor, target) > DEMORALIZE_RANGE:
             return False
         if not (battle.can_see_unit(actor, target) and battle.can_see_unit(target, actor)):
@@ -350,11 +349,34 @@ class Demoralize(Action):
         execute_demoralize(battle, actor, target)
 
 
+def _inspire(battle, actor, initiative, rally):
+    """Inspiring Shout: the ally with the least morale left acts sooner and takes `rally` of it back; when no ally
+    has lost any, the ally last in the turn order acts sooner."""
+    if not (initiative or rally):
+        return
+    allies = [u for u in battle.units if u.alive and u.team == actor.team and u is not actor and u.status == "up"]
+    weary = [u for u in allies if morale.has_morale(battle, u) and u.morale < u.morale_max]
+    if weary:
+        ally = min(weary, key=lambda u: u.morale)
+    else:
+        ordered = [u for u in getattr(battle, "order", []) if u in allies]
+        if not ordered:
+            return
+        ally = ordered[-1]
+    if initiative and hasattr(battle, "raise_initiative"):
+        battle.raise_initiative([ally], initiative)
+        battle.log("log.inspiring_shout", ally=ally.name, n=initiative)
+    if rally and weary and (gained := morale.lift(ally, rally)):
+        battle.log("log.inspiring_shout_morale", ally=ally.name, n=gained)
+
+
 def execute_demoralize(battle, actor, target, *, free=False, ignore_language=False):
+    if target.demoralize_stacks >= DEMORALIZE_MAX_STACKS:
+        return
     base_mod = actor.mod_charisma
     using_str = False
-    has_talent = getattr(actor.char, "has_talent", lambda x: False)
-    if has_talent("intimidating_presence") and actor.mod_strength > actor.mod_charisma:
+    char = actor.char
+    if char.has_talent("intimidating_presence") and actor.mod_strength > actor.mod_charisma:
         base_mod = actor.mod_strength
         using_str = True
 
@@ -365,7 +387,7 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
     browbeat = actor.ability.demoralize_vs_weaker
     if browbeat and actor.mod_strength > target.mod_strength:
         mods.append((browbeat, "circumstance", i18n.t("log.mod.browbeat")))
-    demo_bonus = getattr(actor.char, "talent_bonus", lambda x: 0)("demoralize_bonus") if hasattr(actor, "char") else 0
+    demo_bonus = char.talent_bonus("demoralize_bonus")
     if demo_bonus:
         mods.append((demo_bonus, "training", i18n.t("log.mod.menacing")))
     if not (free or ignore_language) and (unspoken := demoralize_language_penalty(actor, target)):
@@ -373,9 +395,9 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
     bonus, applied = resolve_bonus(mods)
     detail = " ".join(f"{v:+}({r})" for v, r in applied)
 
-    if (actor.ability.demoralize_ignores_language or ignore_language) and not _shared_language(actor, target):
-        if not free:
-            battle.log("log.mimic", actor=actor.name, target=target.name)
+    if (not free and (actor.ability.demoralize_ignores_language or ignore_language)
+            and not _shared_language(actor, target)):
+        battle.log("log.mimic", actor=actor.name, target=target.name)
 
     nat = d20()
     total = nat + bonus
@@ -391,15 +413,8 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
     elif crit or total >= md:
         target.add_condition(Demoralized())
         battle.log("log.demoralize.crit" if crit else "log.demoralize.lands", **roll_line)
-        init_boost = getattr(actor.char, "talent_bonus", lambda x: 0)("demoralize_ally_initiative") if hasattr(actor, "char") else 0
-        if init_boost and hasattr(battle, "order") and hasattr(battle, "raise_initiative"):
-            allies = [u for u in battle.order if u.alive and u.team == actor.team and u is not actor]
-            if allies:
-                idx = getattr(battle, "turn_idx", 0)
-                after = [u for u in battle.order[idx + 1:] if u in allies]
-                target_ally = after[0] if after else allies[0]
-                battle.raise_initiative([target_ally], init_boost)
-                battle.log("log.inspiring_shout", ally=target_ally.name, n=init_boost)
+        target.demoralize_extra += char.talent_bonus("demoralize_morale")
+        _inspire(battle, actor, char.talent_bonus("demoralize_ally_initiative"), char.talent_bonus("demoralize_rally"))
     else:
         battle.log("log.demoralize.none", **roll_line)
 

@@ -78,6 +78,9 @@ exactly one consumer that reads it back:
     free_step         actions.FreeStep                 --
     defend_mental_defense Combatant.mental_defense     --
     demoralize_ally_initiative actions.combat.execute_demoralize --
+    demoralize_rally  actions.combat.execute_demoralize --
+    demoralize_morale actions.combat.execute_demoralize --
+    ally_takedown_demoralize actions.base._check_gruesome_takedown --
     full_intel_crit_range actions.base._resolve_hit    --
     flies             Combatant.flies                  --
     fly_speed         Unit._derive_speed               --
@@ -102,7 +105,7 @@ exactly one consumer that reads it back:
     parley            dialogue.Encounter.mod           --
     small_appetite    Unit.consume_daily_food          --
     bountiful_harvest guild_upkeep / rest (Bloom Fruit) --
-    morale            morale.start_value (the fight's starting morale; no talent feeds it yet) --
+    morale            morale.start_value (the fight's starting morale) --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -268,7 +271,11 @@ _LIST = [
     Talent("wordless_menace", "combat", 3, requires="menacing",
            effects=(Effect("demoralize_no_language", 1),), icon="action/shouting"),
     Talent("inspiring_shout", "combat", 3, requires="gruesome_takedown",
-           effects=(Effect("demoralize_ally_initiative", 1),), icon="action/shouting"),
+           effects=(Effect("demoralize_ally_initiative", 1), Effect("demoralize_rally", 1)), icon="action/shouting"),
+    Talent("dread_voice", "combat", 3, requires="menacing",
+           effects=(Effect("demoralize_morale", 1),), icon="action/screaming"),
+    Talent("grim_chorus", "combat", 3, requires="gruesome_takedown",
+           effects=(Effect("ally_takedown_demoralize", 1),), icon="action/boot-stomp"),
 
     Talent("tactical_mind", "combat", 1, effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
     Talent("sharp_analysis", "combat", 2, requires="tactical_mind",

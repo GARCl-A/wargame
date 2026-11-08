@@ -71,7 +71,20 @@ def watch(c):
     """Take `c`'s present state as the baseline `settle` measures against."""
     share = _share(c)
     c.morale_watch = _Watch(c.status, {m for m in HP_MARKS_ONCE if share <= m}, share <= HP_MARK_EVERY,
-                            c.demoralized_hits)
+                            c.shaken)
+
+
+def lift(c, amount):
+    """Give `c` back up to `amount` morale, never over its ceiling; returns what it regained."""
+    gained = min(amount, c.morale_max - c.morale)
+    c.morale += max(gained, 0)
+    return max(gained, 0)
+
+
+def wounds_taken(c):
+    """How many of the wound marks (`HP_MARKS_ONCE`, `HP_MARK_EVERY`) `c`'s visible hit points have crossed."""
+    share = _share(c)
+    return sum(share <= m for m in HP_MARKS_ONCE) + (share <= HP_MARK_EVERY)
 
 
 def _sees(battle, witness, body):
@@ -120,9 +133,9 @@ def settle(battle):
                 _note(losses, u, HP_MARK, "wounded")
         else:
             w.low = False
-        if u.demoralized_hits > w.demoralized:
-            _note(losses, u, DEMORALIZED * (u.demoralized_hits - w.demoralized), "shaken")
-            w.demoralized = u.demoralized_hits
+        if u.shaken > w.demoralized:
+            _note(losses, u, DEMORALIZED * (u.shaken - w.demoralized), "shaken")
+            w.demoralized = u.shaken
     for u, why in losses.items():
         for reason, amount in why.items():
             u.morale += amount

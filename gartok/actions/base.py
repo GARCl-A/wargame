@@ -311,18 +311,21 @@ def _off_guard_penalty(battle, attacker, target):
 
 
 def _check_gruesome_takedown(battle, attacker, downed_target):
-    if not hasattr(attacker, "char") or not attacker.char.has_talent("gruesome_takedown"):
-        return
+    """Gruesome Takedown: the one who downs a foe, and Grim Chorus: every ally who sees it, roars at the nearest foe."""
     from ..data import DEMORALIZE_RANGE
     from .combat import execute_demoralize
-    foes = [u for u in battle.units if u.alive and u.team != attacker.team and u is not downed_target
-            and not u.hidden_from(attacker.team) and battle.units_distance(attacker, u) <= DEMORALIZE_RANGE]
-    if not foes:
-        return
-    foes.sort(key=lambda u: battle.units_distance(attacker, u))
-    victim = foes[0]
-    battle.log("log.gruesome_takedown", attacker=attacker.name, victim=victim.name)
-    execute_demoralize(battle, attacker, victim, free=True, ignore_language=True)
+    for roarer in [attacker, *[u for u in battle.units if u.alive and u.team == attacker.team and u is not attacker]]:
+        talent = "gruesome_takedown" if roarer is attacker else "grim_chorus"
+        if not hasattr(roarer, "char") or not roarer.char.has_talent(talent):
+            continue
+        foes = [u for u in battle.units if u.alive and u.team != attacker.team and u is not downed_target
+                and not u.hidden_from(attacker.team) and battle.units_distance(roarer, u) <= DEMORALIZE_RANGE]
+        if not foes:
+            continue
+        victim = min(foes, key=lambda u: battle.units_distance(roarer, u))
+        key = "log.gruesome_takedown" if roarer is attacker else "log.grim_chorus"
+        battle.log(key, attacker=roarer.name, victim=victim.name)
+        execute_demoralize(battle, roarer, victim, free=True, ignore_language=True)
 
 
 def _stone_endurance(battle, target, dmg):

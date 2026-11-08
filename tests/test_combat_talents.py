@@ -318,30 +318,119 @@ def test_iron_stance_defend_mental_defense():
     assert c.mental_defense == base_md + 2
 
 
-def test_inspiring_shout_demoralize_initiative():
-    u1 = _body("player", "Leader")
-    u1.set_track_level("combat", 1)
-    u1.choose_talent("combat", "imposing")
-    u1.set_track_level("combat", 2)
-    u1.choose_talent("combat", "gruesome_takedown")
-    u1.set_track_level("combat", 3)
-    assert u1.choose_talent("combat", "inspiring_shout")
-    assert u1.talent_bonus("demoralize_ally_initiative") == 1
+def _taught(unit, *ids):
+    for level, tid in enumerate(ids, 1):
+        unit.set_track_level("combat", level)
+        assert unit.choose_talent("combat", tid)
 
-    u2 = _body("player", "Follower")
+
+def test_inspiring_shout_gives_the_weariest_ally_a_point_of_morale_back():
+    u1, u2, u3 = _body("player", "Leader"), _body("player", "Follower"), _body("player", "Weary")
+    _taught(u1, "imposing", "gruesome_takedown", "inspiring_shout")
+    assert u1.talent_bonus("demoralize_rally") == 1
     f = _body("enemy", "WeakFoe", "Goblin")
-
     f.languages = u1.languages
-    b = Battle([u1, u2], [f])
-    c1, c2, cf = b.units
-    c1.pos, c2.pos, cf.pos = (5, 5), (5, 6), (6, 5)
-
-    init_before = c2.initiative
+    b = Battle([u1, u2, u3], [f], lethal=True)
+    c1, c2, c3, cf = b.units
+    c1.pos, c2.pos, c3.pos, cf.pos = (5, 5), (5, 6), (5, 7), (6, 5)
+    c2.morale, c3.morale = c2.morale_max - 1, c3.morale_max - 3
     with fixed_d20(20):
         actions.DEMORALIZE.execute(b, c1, cf)
     assert cf.has_condition("demoralized")
-    assert c2.initiative == init_before + 1
-    assert any("Inspiring Shout" in line for line in b.log_lines)
+    assert c3.morale == c3.morale_max - 2 and c2.morale == c2.morale_max - 1
+    assert any("Inspiring Shout" in line and "morale" in line for line in b.log_lines)
+
+
+def test_inspiring_shout_with_no_weary_ally_speeds_the_last_one_in_the_order():
+    u1, u2, u3 = _body("player", "Leader"), _body("player", "First"), _body("player", "Last")
+    _taught(u1, "imposing", "gruesome_takedown", "inspiring_shout")
+    f = _body("enemy", "WeakFoe", "Goblin")
+    f.languages = u1.languages
+    b = Battle([u1, u2, u3], [f], lethal=True)
+    c1, c2, c3, cf = b.units
+    c1.pos, c2.pos, c3.pos, cf.pos = (5, 5), (5, 6), (5, 7), (6, 5)
+    last = [u for u in b.order if u in (c2, c3)][-1]
+    other = c2 if last is c3 else c3
+    before, other_before = last.initiative, other.initiative
+    with fixed_d20(20):
+        actions.DEMORALIZE.execute(b, c1, cf)
+    assert last.initiative == before + 1 and other.initiative == other_before
+    assert last.morale == last.morale_max and not any("morale back" in line for line in b.log_lines)
+
+
+def test_inspiring_shout_speeds_the_weariest_ally_and_gives_it_morale_back():
+    u1, u2, u3 = _body("player", "Leader"), _body("player", "Fine"), _body("player", "Weary")
+    _taught(u1, "imposing", "gruesome_takedown", "inspiring_shout")
+    f = _body("enemy", "WeakFoe", "Goblin")
+    f.languages = u1.languages
+    b = Battle([u1, u2, u3], [f], lethal=True)
+    c1, c2, c3, cf = b.units
+    c1.pos, c2.pos, c3.pos, cf.pos = (5, 5), (5, 6), (5, 7), (6, 5)
+    c3.morale = c3.morale_max - 2
+    before, fine_before = c3.initiative, c2.initiative
+    with fixed_d20(20):
+        actions.DEMORALIZE.execute(b, c1, cf)
+    assert c3.initiative == before + 1 and c3.morale == c3.morale_max - 1 and c2.initiative == fine_before
+
+
+def test_dread_voice_takes_two_morale_per_demoralize():
+    u1 = _body("player", "Tyrant")
+    _taught(u1, "imposing", "menacing", "dread_voice")
+    f = _body("enemy", "Victim", "Goblin")
+    f.languages = u1.languages
+    b = Battle([u1], [f], lethal=True)
+    c1, cf = b.units
+    c1.pos, cf.pos = (5, 5), (6, 5)
+    before = cf.morale
+    with fixed_d20(20):
+        actions.DEMORALIZE.execute(b, c1, cf)
+    b.settle_morale()
+    assert cf.morale == before - 2
+
+
+def test_dread_voice_costs_nothing_when_the_demoralize_misses():
+    u1 = _body("player", "Tyrant")
+    _taught(u1, "imposing", "menacing", "dread_voice")
+    f = _body("enemy", "Victim", "Goblin")
+    f.languages = u1.languages
+    b = Battle([u1], [f], lethal=True)
+    c1, cf = b.units
+    c1.pos, cf.pos = (5, 5), (6, 5)
+    before = cf.morale
+    with fixed_d20(2):
+        actions.DEMORALIZE.execute(b, c1, cf)
+    b.settle_morale()
+    assert cf.morale == before and cf.demoralize_extra == 0
+
+
+def test_grim_chorus_makes_a_free_demoralize_when_an_ally_downs_a_foe():
+    u1, u2 = _body("player", "Executioner"), _body("player", "Chorus")
+    _taught(u2, "imposing", "gruesome_takedown", "grim_chorus")
+    f1, f2 = _body("enemy", "Weakling", "Goblin"), _body("enemy", "Bystander", "Orc")
+    f2.languages = ("Orcish",)
+    b = Battle([u1, u2], [f1, f2])
+    c1, c2, cf1, cf2 = b.units
+    c1.pos, c2.pos, cf1.pos, cf2.pos = (5, 5), (4, 8), (6, 5), (4, 10)
+    cf1.hp = 2
+    c1.damage_roll = lambda **kw: 10
+    with fixed_d20(20):
+        actions._strike(b, c1, cf1)
+    assert cf1.hp <= 0
+    assert any("Grim Chorus" in line for line in b.log_lines)
+    assert cf2.has_condition("demoralized")
+
+
+def test_grim_chorus_stays_quiet_for_an_ally_without_the_talent():
+    u1, u2 = _body("player", "Executioner"), _body("player", "Plain")
+    f1, f2 = _body("enemy", "Weakling", "Goblin"), _body("enemy", "Bystander", "Orc")
+    b = Battle([u1, u2], [f1, f2])
+    c1, c2, cf1, cf2 = b.units
+    c1.pos, c2.pos, cf1.pos, cf2.pos = (5, 5), (4, 8), (6, 5), (4, 10)
+    cf1.hp = 2
+    c1.damage_roll = lambda **kw: 10
+    with fixed_d20(20):
+        actions._strike(b, c1, cf1)
+    assert not any("Grim Chorus" in line for line in b.log_lines)
 
 
 def test_anatomist_crit_range_full_intel():
