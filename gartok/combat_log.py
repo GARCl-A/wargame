@@ -19,7 +19,7 @@ Rows (all carry `e`):
          the static data of anyone who joined mid-fight (reinforcements).
   end    the result: `winner`, `rounds`, `survivors`, `seconds`.
 
-A `state` is {"units": [[x, y, z, hp, ap, status, [conditions], mounted_on, delayed, ammo], ...]
+A `state` is {"units": [[x, y, z, hp, ap, status, [conditions], mounted_on, delayed, ammo, morale], ...]
 (one entry per unit, in `units` order; `UNIT_FIELDS`), "order": [unit index, ...],
 "turn": position of the active unit in `order`, "round": n}, plus "world" (ground objects, flags,
 creatures) whenever it changed since the last row. `load` and `frames` turn the file back into
@@ -33,7 +33,7 @@ import random
 import time
 
 FORMAT = 2
-UNIT_FIELDS = ("x", "y", "z", "hp", "ap", "status", "conditions", "mounted_on", "delayed", "ammo")
+UNIT_FIELDS = ("x", "y", "z", "hp", "ap", "status", "conditions", "mounted_on", "delayed", "ammo", "morale")
 
 
 def _cell(c):
@@ -94,7 +94,7 @@ class CombatLog:
         self.busy = True
         try:
             idx = battle.units.index(actor)
-            by = "ai" if actor.ai_ally else self.controllers.get(actor.team, "ai")
+            by = "ai" if actor.ai_ally or actor.routed else self.controllers.get(actor.team, "ai")
             before = {"round": battle.round_no, "ap": actor.ap, "options": legal_options(battle, actor)}
             guess = ai_choice(battle, actor) if by == "human" else None
             result = run()
@@ -137,7 +137,7 @@ class CombatLog:
             "units": [[*_cell(u.pos), u.z or 0, u.hp, u.ap, u.status,
                        sorted(c.id for c in u.conditions),
                        units.index(u.mounted_on) if u.mounted_on in units else None,
-                       bool(u.delayed), u.ammo] for u in units],
+                       bool(u.delayed), u.ammo, u.morale] for u in units],
             "order": [units.index(u) for u in battle.order],
             "turn": battle.turn_idx, "round": battle.round_no,
         }
@@ -259,11 +259,16 @@ def recorded(name_of):
     the log. A battle with no sink (almost every one) pays one attribute read."""
     def wrap(fn):
         def run(self, battle, actor, target=None, **kw):
+            def act():
+                result = fn(self, battle, actor, target, **kw)
+                settle = getattr(battle, "settle_morale", None)
+                if settle is not None:
+                    settle()                 # inside the decision, so its row shows the morale it left
+                return result
             sink = getattr(battle, "sink", None)
             if sink is None or sink.busy:
-                return fn(self, battle, actor, target, **kw)
-            return sink.record(battle, name_of(self), actor, target, kw,
-                               lambda: fn(self, battle, actor, target, **kw))
+                return act()
+            return sink.record(battle, name_of(self), actor, target, kw, act)
         run.__name__, run.__doc__ = fn.__name__, fn.__doc__
         run.recorded = True
         return run

@@ -15,7 +15,7 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import conditions, data, i18n, intel, items, natural_weapons, progression
+from . import conditions, data, i18n, intel, items, morale, natural_weapons, progression
 from .conditions import Hexed
 from .data import resolve_bonus, roll
 from .i18n import Ref
@@ -153,6 +153,8 @@ class Combatant:
         self.rider = None             # a Combatant riding this one (Centaur mount)
         self.hurt_by = set()          # who has landed a blow on this unit this fight (Grudge)
         self.turns_taken = 0          # turns begun this fight (Ambush Predator)
+        self.demoralized_hits = 0     # Demoralized landed on this unit, each one counted (morale reads the rise)
+        morale.start(self)
 
     def credit_kill(self, victim, magic=False):
         """Book a downed enemy: +1 to the kill count, plus XP scaled by the level gap
@@ -273,7 +275,14 @@ class Combatant:
     def has_condition(self, cid):
         return any(c.id == cid for c in self.conditions)
 
+    @property
+    def routed(self):
+        """Morale spent: `ai/` runs this unit for the exit (`morale.settle` sets and lifts it)."""
+        return self.has_condition("routed")
+
     def add_condition(self, cond):
+        if cond.id == "demoralized":
+            self.demoralized_hits += 1
         held = self.condition(cond.id)
         if held is None:
             self.conditions.append(cond)

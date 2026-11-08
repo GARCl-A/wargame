@@ -475,6 +475,7 @@
    "hp": "PV",
    "ac": "CA",
    "md": "DM",
+   "morale": "Moral",
    "speed": "Velocidade",
    "pick_up_note": "Pegar levanta o que as suas mãos aguentam.",
    "assess": "{read} — Avalie para saber mais.",
@@ -1309,6 +1310,10 @@
    "pixie_flight": {
     "name": "Voando",
     "rule": "Voa até o fim do seu próximo turno."
+   },
+   "routed": {
+    "name": "Em fuga",
+    "rule": "Moral esgotada: corre para a saída, jogado pela IA, até a moral voltar acima de 0."
    }
   },
   "settings": {
@@ -1839,7 +1844,7 @@
   },
   "flee": {
    "name": "Fugir",
-   "desc": "Foge da batalha pela borda do mapa.",
+   "desc": "Fugir da batalha pela saída do mapa (pela borda, se ele não tiver saída). Quem esgotou a moral faz isso sozinho.",
    "reason_ap": "precisa de 1 pt",
    "reason_grappled": "agarrado",
    "reason_prone": "caído no chão",
@@ -2597,6 +2602,17 @@
   "held": {
    "last_foe": "O último inimigo caiu.",
    "ruins": "O último inimigo caiu. As ruínas são suas para vasculhar -- saia pela entrada."
+  },
+  "morale": {
+   "falls": "{unit} perde {amount} de moral ({why}): {morale}/{ceiling}.",
+   "why": {
+    "ally_down": "um aliado caiu",
+    "ally_dead": "um aliado morreu",
+    "wounded": "ferido",
+    "shaken": "desmoralizado"
+   },
+   "routs": "{unit} perde a coragem e corre para a saída!",
+   "rallies": "{unit} se recompõe e volta a lutar."
   }
  },
  "map_session": {
@@ -5784,7 +5800,9 @@
    "brother_quillon": "Irmão Quillon"
   },
   "keyword": {
-   "brutal": "Brutal"
+   "brutal": "Brutal",
+   "morale": "Moral",
+   "routed": "Em fuga"
   }
  },
  "desc": {
@@ -6169,7 +6187,9 @@
    "far_cast": "+1 casa de alcance com magias que não são corpo a corpo."
   },
   "keyword": {
-   "brutal": "Brutal N: o golpe rola o dano da arma N vezes a mais, modificadores incluídos, e soma tudo. Ainda é um só golpe com uma só rolagem de acerto. Brutal de várias fontes se soma: Brutal 1 e Brutal 1 dão Brutal 2."
+   "brutal": "Brutal N: o golpe rola o dano da arma N vezes a mais, modificadores incluídos, e soma tudo. Ainda é um só golpe com uma só rolagem de acerto. Brutal de várias fontes se soma: Brutal 1 e Brutal 1 dão Brutal 2.",
+   "morale": "Moral: a coragem de um combatente numa luta mortal, com um valor inicial que também é o seu teto. Cai quando aliados caem, quando o combatente está muito ferido e quando é Desmoralizado, e sobe quando o seu lado derruba um inimigo. Em 0 ou menos o combatente entra em fuga.",
+   "routed": "Em fuga: a moral acabou. O combatente corre para a saída e a IA joga por ele, mesmo sendo da guilda, até a moral voltar acima de 0."
   }
  },
  "tutorial": {
@@ -6536,6 +6556,16 @@
    "1": "Um inimigo está flanqueado quando você e um aliado estão ao lado dele, em lados opostos. Ele perde 2 de CA contra você (1 com Visão Periférica); o registro mostra [Flanco -2].",
    "2": "Um aliado apenas ao lado do inimigo não forma um flanco. Ele só alimenta a Tática de Matilha, que algumas raças e feras têm.",
    "3": "Ataque Furtivo (Adaga) e Estocada Precisa (Rapieira) só funcionam contra um inimigo flanqueado: o golpe é Brutal 1, mais +1d4 (Ataque Furtivo) ou +2 para acertar (Estocada Precisa)."
+  },
+  "morale": {
+   "title": "Moral",
+   "1": "Numa luta mortal todo combatente tem Moral, a coragem de seguir lutando. Mortos, erguidos e máquinas não têm, nem uma luta de arena (ninguém morre lá).",
+   "2": "Começa em {base} + o modificador de SAB + o de CAR + {per} por nível racial, {lawful} se Leal, {chaotic} se Caótico, e nunca abaixo de {min}. Esse valor também é o teto: a moral nunca passa dele.",
+   "3": "Cai {ally_down} a cada aliado que ele vê cair, e mais {ally_dead} quando esse aliado morre. Cai {wound} na primeira vez que a própria vida chega a {half}% e a {quarter}%, e toda vez que chega a {low}% (curar e ferir de novo conta outra vez). Cai {shaken} a cada Demoralizar que o atinge.",
+   "4": "Sobe {foe_down} toda vez que o lado do combatente derruba um inimigo, não importa quem nem como (golpe, magia, fogo), mesmo que seja um combatente em fuga. Nunca passa do teto. Por enquanto nada mais a faz subir.",
+   "5": "Em 0 ou menos (pode ficar abaixo de 0) o combatente entra em fuga: a IA joga por ele, mesmo sendo da guilda, e ele corre para a saída, a do próprio mapa quando há, senão a borda. Sai da luta ali se os perseguidores não o alcançarem. Encurralado, luta.",
+   "6": "No instante em que a moral volta acima de 0 o combatente é dono de si e você recupera o controle. Quem corre ainda conta: as mortes dos outros devolvem a coragem a ele.",
+   "7": "Os seus combatentes mostram a moral exata. A de um inimigo é lida como a Defesa Mental dele, numa boa leitura. Todos veem quem está em fuga."
   },
   "weapon": {
    "title": "Ações de Arma (2 Pontos)",

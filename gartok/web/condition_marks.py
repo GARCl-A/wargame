@@ -24,6 +24,7 @@ MARKS = {
     "defending": ("item/round-shield", "boon"),
     "invisible": ("state/" + B + "lorc/hidden", "boon"),
     "pixie_flight": ("wing/" + B + "lorc/fairy", "boon"),
+    "routed": ("state/" + B + "lorc/terror", "mind"),
 }
 _ORDER = list(MARKS)
 

@@ -21,6 +21,7 @@ from .. import (
     item_icon,
     items,
     lighting,
+    morale,
     vision,
     wiki_terms,
 )
@@ -115,8 +116,9 @@ class BattleSession(Session):
         return self.controllers["player"] == self.controllers["enemy"] == "human"
 
     def plays(self, unit):
-        """A person moves `unit`: its side is human and it is not an allied NPC (`ai_ally`)."""
-        return self.controllers.get(unit.team) == "human" and not unit.ai_ally
+        """A person moves `unit`: its side is human and it is not an allied NPC (`ai_ally`) nor a
+        fighter who broke and runs (`routed`: `ai/` plays it until its morale is back above 0)."""
+        return self.controllers.get(unit.team) == "human" and not unit.ai_ally and not unit.routed
 
     def my_turn(self):
         b = self.battle
@@ -692,6 +694,11 @@ class BattleSession(Session):
                         "active": u is b.active})
         return out
 
+    def _morale(self, u):
+        if u.team != self.team or not morale.has_morale(self.battle, u):
+            return {"morale": None, "morale_max": None}
+        return {"morale": u.morale, "morale_max": u.morale_max}
+
     def _sheet(self, u):
         w = u.weapon
         return {
@@ -706,6 +713,7 @@ class BattleSession(Session):
             "off_hand": (lambda n: i18n.name("item", n) if n else None)(draw.hands(u)[1]) if u.team == self.team else None,
             "ac": u.ac if u.team == self.team else None,
             "md": u.mental_defense if u.team == self.team else None,
+            **self._morale(u),
             "speed": u.speed, "ap": u.ap, "ap_max": AP_PER_TURN,
             "weapon": None if w is None else {
                 "name": w.name, "damage": f"{w.damage[0]}d{w.damage[1]}" if w.damage else None,

@@ -102,6 +102,7 @@ exactly one consumer that reads it back:
     parley            dialogue.Encounter.mod           --
     small_appetite    Unit.consume_daily_food          --
     bountiful_harvest guild_upkeep / rest (Bloom Fruit) --
+    morale            morale.start_value (the fight's starting morale; no talent feeds it yet) --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the

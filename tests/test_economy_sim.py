@@ -809,7 +809,7 @@ def test_a_scholars_sim_reads_its_foes_better_and_fights_differently():
     sim = _sim("balanced", vocation="scholars", library=plain)
     assert sim.library.info_bonus == vocations.INFO_BONUS and plain.info_bonus == 0
     assert sim.library.cache is plain.cache
-    assert sim.library.pool("wilds", 2, 3) != plain.pool("wilds", 2, 3)
+    assert sim.library.pool("wilds", 3, 3) != plain.pool("wilds", 3, 3)
     assert _sim("balanced", vocation="warband", library=plain).library is plain
 
 

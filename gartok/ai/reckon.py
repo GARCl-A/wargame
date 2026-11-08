@@ -2,12 +2,13 @@
 
 import math
 
-from .. import actions, conditions, data, intel, items
+from .. import actions, conditions, data, intel, items, morale
 from ..board import cells
 from ..conditions import BLEEDING_CLAWS_TURNS
 from .common import _avg_die, _hand_die, _runs_flag
 
 D20_STEP = 0.05            # one point on a d20 roll
+ROUT_ROUNDS = 3            # rounds of a foe's blows that breaking its nerve takes off the field (it may rally)
 
 
 def _spell_odds(battle, unit, target, spell):
@@ -91,7 +92,8 @@ def _demoralize_worth(battle, unit, target):
     """The hit points a Demoralize on `target` is expected to be worth through its next turn: the odds
     the CHA roll beats its Mental Defense (a bare 10 until read) times the -1 on every blow and
     defence. Each striker of the unit's side that can reach the foe lands its blows 5% more often
-    (and for its own Menacing cull), the foe's own two blows land 5% less."""
+    (and for its own Menacing cull), the foe's own two blows land 5% less. A foe whose morale it has read
+    and that this Demoralize would break (down to 0) is worth `ROUT_ROUNDS` rounds of its blows more."""
     char = unit.char
     mod = unit.mod_charisma
     if char.has_talent("intimidating_presence"):
@@ -110,6 +112,9 @@ def _demoralize_worth(battle, unit, target):
         worth += blows * (D20_STEP * _blow(a) + _hit_odds(battle, a, target) * cull)
     if battle.units_distance(unit, target) <= target.attack_range + target.speed:
         worth += 2 * D20_STEP * _blow(target)
+    if (morale.has_morale(battle, target) and intel.knows(battle, unit.team, target, "morale")
+            and 0 < target.morale <= -morale.DEMORALIZED):
+        worth += ROUT_ROUNDS * 2 * D20_STEP * _blow(target)
     return odds * worth
 
 

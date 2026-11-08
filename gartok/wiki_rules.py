@@ -4,12 +4,32 @@
 so the page moves with them. RULES.md stays the designer's full prose.
 """
 
-from . import actions, captives, cohesion, dialogue, group, i18n, items, recruit, wagon
+from . import (
+    actions,
+    captives,
+    cohesion,
+    dialogue,
+    group,
+    i18n,
+    items,
+    morale,
+    recruit,
+    wagon,
+)
 from .combatant import AP_PER_TURN
 
 
 def _lines(section, n, **fmt):
     return [i18n.t(f"wiki_rules.{section}.{i}", **fmt) for i in range(1, n + 1)]
+
+
+def _morale_lines():
+    half, quarter = morale.HP_MARKS_ONCE
+    return _lines(
+        "morale", 7, base=morale.BASE, per=morale.PER_RACIAL_LEVEL, lawful=f"{morale.LAWFUL:+d}",
+        chaotic=f"{morale.CHAOTIC:+d}", min=morale.START_MIN, ally_down=-morale.ALLY_DOWN, ally_dead=-morale.ALLY_DEAD,
+        wound=-morale.HP_MARK, half=round(half * 100), quarter=round(quarter * 100),
+        low=round(morale.HP_MARK_EVERY * 100), shaken=-morale.DEMORALIZED, foe_down=morale.FOE_DOWN)
 
 
 def sections():
@@ -19,6 +39,7 @@ def sections():
     return [
         (i18n.t("wiki_rules.turns.title"), _lines("turns", 7, ap=AP_PER_TURN)),
         (i18n.t("wiki_rules.flanking.title"), _lines("flanking", 3)),
+        (i18n.t("wiki_rules.morale.title"), _morale_lines()),
         (i18n.t("wiki_rules.weapon.title"), [*_lines("weapon", 6), i18n.t("wiki_rules.weapon.7", reach=reach, hit=hit)]),
         (i18n.t("wiki_rules.talk.title"), [
             i18n.t("wiki_rules.talk.1", dc=dialogue.BASE_DC),

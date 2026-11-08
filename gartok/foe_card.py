@@ -13,7 +13,7 @@ def _format(name, value):
         return value[0], value
     if name == "attrs":
         return "  ".join(f"{abbr} {v}" for abbr, v in value), None
-    if name == "hp":
+    if name in ("hp", "morale"):
         return f"{value[0]} / {value[1]}", None
     if name == "talents":
         shown = ", ".join(n for n, _ in value) or "none"

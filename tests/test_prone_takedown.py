@@ -3,7 +3,7 @@ from unittest.mock import patch
 from gartok import actions, ai
 from gartok.ai.attack import _should_takedown
 from gartok.battle import Battle
-from gartok.conditions import Prone
+from gartok.conditions import Prone, Routed
 from tests.helpers import standard_unit
 
 
@@ -133,7 +133,7 @@ def test_ai_leaves_an_ordinary_foe_standing():
 
 def test_ai_takes_down_a_fleeing_foe():
     battle, a, b = _fight()
-    b.fleeing = True
+    b.add_condition(Routed())
     assert _should_takedown(battle, a, b)
 
 

@@ -21,7 +21,7 @@ import math
 import random
 from dataclasses import dataclass, field
 
-from . import i18n, items, magic, talents, weapon_traits
+from . import i18n, items, magic, morale, talents, weapon_traits
 
 STEPS = 5                 # a foe's health shows in this many steps
 BASE_DC = 7
@@ -31,13 +31,13 @@ EASY, MEDIUM, HARD = 0, 5, 10     # the margin a band opens at
 
 FIELDS = {                # field -> the band that opens it
     "damage_die": EASY, "speed": EASY, "level": EASY, "racial_ability": EASY,
-    "to_hit": MEDIUM, "damage_bonus": MEDIUM, "ac": MEDIUM, "md": MEDIUM,
+    "to_hit": MEDIUM, "damage_bonus": MEDIUM, "ac": MEDIUM, "md": MEDIUM, "morale": MEDIUM,
     "attrs": HARD, "hp": HARD, "talents": HARD, "spells": HARD, "artifact": HARD,
 }
 BANDS = (("EASY", EASY), ("MEDIUM", MEDIUM), ("HARD", HARD))
 LABELS = {
     "damage_die": "damage die", "speed": "speed", "level": "level", "racial_ability": "racial ability",
-    "to_hit": "to hit", "damage_bonus": "damage bonus", "ac": "AC", "md": "mental defense",
+    "to_hit": "to hit", "damage_bonus": "damage bonus", "ac": "AC", "md": "mental defense", "morale": "morale",
     "attrs": "attributes", "hp": "hit points", "talents": "talents", "spells": "spells", "artifact": "artefact",
 }
 _ATTRS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
@@ -225,6 +225,8 @@ def _open(battle, team, target):
         opened.add("racial_ability")
     if target.team != team and not target.equipped_artifact:
         opened.discard("artifact")
+    if not morale.has_morale(battle, target):
+        opened.discard("morale")
     return opened
 
 
@@ -267,6 +269,8 @@ def _value(name, u):
         return u.ac
     if name == "md":
         return u.mental_defense
+    if name == "morale":
+        return (u.morale, u.morale_max)
     if name == "attrs":
         return [(abbr, getattr(u, attr)) for abbr, attr in _ATTRS]
     if name == "hp":
@@ -318,7 +322,8 @@ def known_fields(battle, team, target):
     observe(battle, team)
     opened = _open(battle, team, target)
     fields = {name: (_value(name, target) if name in opened else None)
-              for name in FIELDS if not (name == "artifact" and not target.equipped_artifact)}
+              for name in FIELDS if not (name == "artifact" and not target.equipped_artifact)
+              and not (name == "morale" and not morale.has_morale(battle, target))}
     visible = {"name": target.name, "race": target.race["name"], "size": target.size,
                "alignment": target.alignment, "conditions": _conditions(target),
                "weapon": target.weapon.name,

@@ -422,8 +422,8 @@ class Flee(Action):
     @staticmethod
     def _at_edge(battle, actor):
         escape_cells = getattr(battle, "escape_cells", None)
-        if escape_cells and any(c in escape_cells for c in battle.cells_of(actor)):
-            return True
+        if escape_cells:                       # a map with its own way out: only that way out counts
+            return any(c in escape_cells for c in battle.cells_of(actor))
         b = battle.board
         return any(x == 0 or x == b.cols - 1 or y == 0 or y == b.rows - 1
                    for x, y in battle.cells_of(actor))

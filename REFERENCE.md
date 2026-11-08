@@ -215,6 +215,8 @@ Reserved words of the rules: each always means the one thing written here.
 | Keyword | Meaning |
 |---|---|
 | Brutal | Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2. |
+| Morale | Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed. |
+| Routed | Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again. |
 
 ## Armor
 

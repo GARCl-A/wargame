@@ -23,7 +23,7 @@ class Keyword:
         return i18n.desc("keyword", self.id)
 
 
-_KEYWORDS = [Keyword(id="brutal")]
+_KEYWORDS = [Keyword(id="brutal"), Keyword(id="morale"), Keyword(id="routed")]
 
 KEYWORDS = {k.id: k for k in _KEYWORDS}
 

@@ -1851,6 +1851,7 @@
       "hp": "HP",
       "ac": "AC",
       "md": "MD",
+      "morale": "Morale",
       "speed": "Speed",
       "pick_up_note": "Pick up lifts what your hands can hold.",
       "assess": "{read} — Assess to read more.",
@@ -1998,6 +1999,10 @@
       "pixie_flight": {
         "name": "Flying",
         "rule": "Flies until the end of its next turn."
+      },
+      "routed": {
+        "name": "Routed",
+        "rule": "Morale spent: runs for the exit, played by the AI, until its morale is above 0 again."
       }
     },
     "lab": {
@@ -2588,6 +2593,17 @@
     "held": {
       "last_foe": "The last foe is down.",
       "ruins": "The last foe is down. The ruins are yours to search -- leave by the entrance."
+    },
+    "morale": {
+      "falls": "{unit} loses {amount} morale ({why}): {morale}/{ceiling}.",
+      "why": {
+        "ally_down": "an ally went down",
+        "ally_dead": "an ally died",
+        "wounded": "wounded",
+        "shaken": "demoralized"
+      },
+      "routs": "{unit} breaks and runs for the exit!",
+      "rallies": "{unit} steadies and can fight again."
     }
   },
   "action": {
@@ -2630,7 +2646,7 @@
     },
     "flee": {
       "name": "Flee",
-      "desc": "Flee the battle from the map edge.",
+      "desc": "Flee the battle from the map's exit (its border when it has none). A fighter whose morale is spent does it on its own.",
       "reason_ap": "need 1 AP",
       "reason_grappled": "grappled",
       "reason_prone": "on the ground",
@@ -3781,7 +3797,9 @@
       "brother_quillon": "Brother Quillon"
     },
     "keyword": {
-      "brutal": "Brutal"
+      "brutal": "Brutal",
+      "morale": "Morale",
+      "routed": "Routed"
     }
   },
   "job_board": {
@@ -5885,7 +5903,9 @@
       "brother_quillon": "Light a candle for whoever you left behind. Then go and bring the rest home."
     },
     "keyword": {
-      "brutal": "Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2."
+      "brutal": "Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2.",
+      "morale": "Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed.",
+      "routed": "Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again."
     }
   },
   "item": {
@@ -6161,6 +6181,16 @@
       "1": "A foe is flanked when you and an ally are both next to it, on opposite sides. It loses 2 AC against you (1 with Peripheral Vision); the log shows [Flank -2].",
       "2": "An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some races and beasts have.",
       "3": "Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on a flanked foe: the blow is Brutal 1, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."
+    },
+    "morale": {
+      "title": "Morale",
+      "1": "In a deadly fight every fighter has Morale, the nerve to keep fighting. The dead, the raised and machines have none, and neither does an arena bout (nobody dies there).",
+      "2": "It starts at {base} + the WIS modifier + the CHA modifier + {per} per racial level, {lawful} if Lawful, {chaotic} if Chaotic, and never under {min}. That value is also the ceiling: morale never rises above it.",
+      "3": "It falls by {ally_down} each time an ally it can see goes down, and by {ally_dead} more when that ally dies. It falls by {wound} the first time the fighter's own health drops to {half}% and to {quarter}%, and every time it drops to {low}% (healed and wounded again counts again). It falls by {shaken} each time a Demoralize lands on it.",
+      "4": "It rises by {foe_down} every time the fighter's side downs a foe, whoever does it and however (a blow, a spell, fire), even a fighter who is running. It never goes above the ceiling. Nothing else raises it yet.",
+      "5": "At 0 or less (it can go below 0) the fighter is Routed: the AI plays it, a guild member included, and it runs for the exit, the map's own when it has one, else the border. It leaves the fight there if its pursuers cannot keep up. Cornered, it fights.",
+      "6": "The moment morale is above 0 again the fighter is its own master and you have the controls back. A fighter who runs still counts: the kills of the others give it its nerve back.",
+      "7": "Your fighters show their exact morale. A foe's is read like its Mental Defense, on a good read of it. Everyone sees who is Routed."
     },
     "weapon": {
       "title": "Weapon Actions (2 Points)",

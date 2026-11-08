@@ -205,6 +205,35 @@ def test_ai_shoves_a_foe_into_a_deep_pit(monkeypatch):
     assert batt.elevation(p) < 0 or p.pos == (6, 5)
 
 
+def test_after_a_failed_shove_the_ai_strikes_instead_of_defending(monkeypatch):
+    batt, e, p = _duel("Club")
+    batt.turn_idx = batt.order.index(e)
+
+    def failed_shove(battle, unit):
+        monkeypatch.undo()
+        unit.ap -= 1
+        return p                                  # the foe is still beside it
+    monkeypatch.setattr(ai.turn, "_try_shove", failed_shove)
+    with fixed_d20(20):
+        ai.take_turn(batt, e)
+    assert not e.defending and p.hp < 30
+
+
+def test_after_a_shove_that_lands_the_ai_closes_in_and_never_backs_off(monkeypatch):
+    batt, e, p = _duel("Club")
+    batt.turn_idx = batt.order.index(e)
+
+    def landed_shove(battle, unit):
+        monkeypatch.undo()
+        unit.ap -= 1
+        p.pos = (8, 5)                            # thrown out of reach
+        return p
+    monkeypatch.setattr(ai.turn, "_try_shove", landed_shove)
+    with fixed_d20(20):
+        ai.take_turn(batt, e)
+    assert batt.units_distance(e, p) < 3
+
+
 def test_shoving_a_flanker_counts_the_flank_it_breaks():
     batt, e, p = _duel("Club")
     mate = _recruit(batt, team="player")

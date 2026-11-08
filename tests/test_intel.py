@@ -97,7 +97,7 @@ def test_the_foe_side_reads_the_hero_the_same_way():
 @pytest.mark.parametrize("margin, opened", [
     (-1, set()),
     (0, {"damage_die", "speed", "level", "racial_ability"}),
-    (5, {"damage_die", "speed", "level", "racial_ability", "to_hit", "damage_bonus", "ac", "md"}),
+    (5, {"damage_die", "speed", "level", "racial_ability", "to_hit", "damage_bonus", "ac", "md", "morale"}),
     (10, set(intel.FIELDS) - {"artifact"}),
 ])
 def test_the_margin_opens_the_bands(margin, opened):
@@ -273,13 +273,6 @@ def test_the_ai_assumes_a_foe_can_sleep_until_its_racial_ability_is_read():
     assert not ai._sleep_immune(batt, hero, foe)
     _read(batt, "player", foe, 0)
     assert ai._sleep_immune(batt, hero, foe)
-
-
-def test_the_ai_counts_only_the_foes_it_sees_when_deciding_to_run():
-    batt, _hero, (foe,) = _fight(hidden=True)
-    foe.hp, foe.alignment = 1, "Chaotic and Neutral"
-    assert intel.visible_foes(batt, foe) == []
-    assert not ai._should_flee(batt, foe)         # nobody in sight: nothing to flee from
 
 
 def test_the_ai_spends_a_spare_point_to_assess_the_foe_it_knows_least():

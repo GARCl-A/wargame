@@ -144,7 +144,7 @@ def _should_grab(battle, unit, target):
     has_grip = getattr(char, "has_talent", lambda _: False)("death_grip")
     if (has_bite or has_grip) and target.hp > 3:
         return True
-    if _runs_flag(battle, target) or getattr(target, "fleeing", False):
+    if _runs_flag(battle, target) or target.routed:
         return True
     return False
 
@@ -154,7 +154,7 @@ def _should_takedown(battle, unit, target):
     spends standing, which headless fights show never pays (a squad that takes down a harder-hitting
     foe on the contest's odds loses more, not less)."""
     return (actions.TAKEDOWN.can(battle, unit, target)
-            and (_runs_flag(battle, target) or getattr(target, "fleeing", False)))
+            and (_runs_flag(battle, target) or target.routed))
 
 
 def _another_awake_foe(battle, unit, target):

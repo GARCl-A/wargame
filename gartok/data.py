@@ -388,7 +388,7 @@ BLACKSMITH_RECIPES = items.BLACKSMITH_RECIPES
 
 # --------------------------------------------------------------------------- #
 # Alignment  (two axes: order Lawful/Neutral/Chaotic, morality Good/Neutral/Evil)     #
-#   Feeds both the enemy AI (tendency) and market haggling (price sympathy).    #
+#   Feeds the starting morale (lawful +1 / chaotic -1) and market haggling (price sympathy).    #
 # --------------------------------------------------------------------------- #
 _ORDER_AXIS = {"Lawful": 1, "Neutral": 0, "Chaotic": -1}
 _MORAL_AXIS = {"Good": 1, "Neutral": 0, "Evil": -1}

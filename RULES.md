@@ -1010,45 +1010,51 @@ target's confidence instead of wounding them.
 - The AI prioritises recovering its own dropped weapon before attacking again
   (it ignores torches).
 
-### Fleeing 🟡
+### Morale and fleeing 🟡
 
-Action in `actions/movement.py` (the `Flee` class). For **both sides** — player and AI.
+**Morale** (`gartok/morale.py`) is a fighter's nerve in a **lethal** fight. The dead, the raised and the machines
+that break when downed have none, and neither does a non-lethal fight (arena, brawl). The wiki's Rules tab
+("Morale") reads its numbers off the same constants.
+
+- **Start = ceiling:** `BASE` + WIS mod + CHA mod + racial level × `PER_RACIAL_LEVEL` + 1 Lawful / −1 Chaotic
+  + `talent_bonus("morale")`, never under `START_MIN`. Gains stop at it. Losses have no floor.
+- **Loses 1** each time an ally it *sees* goes down (dying / stable / broken) and 1 more when that ally dies;
+  the first time its own HP reaches 50 % and 25 %; every time it reaches 10 % from above (healed and hurt again
+  counts again); each Demoralize that lands.
+- **Gains 1** whenever the fighters of the other sides lose someone (any cause, a fleeing unit's side included).
+- **Routed** (`conditions.Routed`): at morale ≤ 0 the unit, a guild member too, is played by `ai/` and runs for the
+  exit. The moment morale is above 0 again the controls return. A cornered unit fights.
+- **Who sees it:** the own side sees the exact value; a foe's is an intel field (MEDIUM, like Mental Defense);
+  everyone sees Routed.
+- `morale.settle` is the only hook: it compares each combatant with what it saw last time, so it is idempotent
+  and catches falls from fire, traps, spells and bleeding alike. `Battle._check_winner` and the combat log's
+  `recorded` wrapper call it.
+
+**Flee** is the action in `actions/combat.py` (the `Flee` class), for **both sides**.
 
 - **Cost:** 1 point, and it **ends the turn** (you are running, not fighting).
-- **Position requirement:** you can only flee from a cell **on the map edge**
-  (any footprint cell touching `x = 0`, `x = COLS−1`, `y = 0` or `y = ROWS−1`).
-  Off the edge the button is dark ("reach the edge").
-- **The flee succeeds** (deterministic — the button lights only when it works)
-  if **either**:
+- **Position requirement:** a cell of the map's **exit**. A map with `escape_cells` (ruins, lair, serpent nest)
+  allows only those; a map without them (road, wilds) allows any footprint cell on the border. Off the exit the
+  button is dark.
+- **The flee succeeds** (deterministic, the button lights only when it works) if **either**:
   - your **speed** is **greater** than the fastest living pursuer's; **or**
-  - you are already **far enough** — the nearest living enemy is **further** than
-    the fastest pursuer's speed: in a race off the map they cannot close the
-    gap.
+  - you are already **far enough**: the nearest living enemy is **further** than the fastest pursuer's speed.
   - With no living enemies, you always flee.
-- **Effect:** the character enters the `fled` state — off the board (not drawn,
-  does not block, does not count for victory, not a target), but **survives** the
-  battle and returns to the guild with what it carried. Not loot.
-- **Drags adjacent downed allies.** On fleeing, every **downed** ally (dying /
-  stable / broken) in a cell **adjacent** to the fugitive also leaves (becomes
-  `fled`, survives). Anyone further away is **left behind**: if the last one up
-  flees, the other side "wins" and the bodies left are **lost with the defeat**.
+- **Effect:** the character enters the `fled` state: off the board (not drawn, does not block, does not count for
+  victory, not a target), but **survives** and returns to the guild with what it carried. Not loot.
+- **Drags adjacent downed allies.** On fleeing, every **downed** ally in a cell **adjacent** to the fugitive also
+  leaves (becomes `fled`, survives). Anyone further away is **left behind**: if the last one up flees, the other
+  side "wins" and the bodies left are **lost with the defeat**.
 - If **all enemies** flee/fall, the player wins normally.
 
-**AI behaviour by alignment** — alignment tempers the AI's edges, mostly on the
-moral axis:
+**AI behaviour by alignment** (alignment no longer decides who flees, only the starting morale):
 
-- **Evil:** delivers the **coup de grace** to an adjacent downed enemy (hammers
-  the `dying` clock, spending its actions to deny the player a stabilize), but only when no standing enemy is within its reach. Only in
-  a **lethal** fight — in the arena it just knocks out.
-- **Good:** **stabilizes** an adjacent downed ally before anything else and, when
-  it flees, drags the wounded along.
-- **Neutral:** breaks and runs at **HP ≤ 10 %** with more than one foe in sight past its standing
-  allies (`ai.FLEE_HP`: a person fights on until nearly down, and running later did not lose the AI
-  fights or lives head to head, `scripts/combat_pairs.py --set`).
-- **Chaotic:** breaks and runs **sooner** (HP ≤ 50 %, and merely outnumbered).
-  **Lawful:** flees only when **no ally is still up**.
-- **Pathfinding to flee:** when an AI unit breaks and runs, it moves toward the
-  nearest map edge turn by turn before executing the Flee action.
+- **Evil:** delivers the **coup de grace** to an adjacent downed enemy (hammers the `dying` clock, spending its
+  actions to deny the player a stabilize), but only when no standing enemy is within its reach. Only in a
+  **lethal** fight; in the arena it just knocks out.
+- **Good:** **stabilizes** an adjacent downed ally before anything else and, when it flees, drags the wounded along.
+- **Routed units:** go to the exit cheapest by real path (`ai.flee._exit_cells`: the map's `escape_cells`, else
+  the border) and run turn by turn before the Flee action. After a Push the AI keeps attacking instead of backing off.
 
 ### Auto-Win (Monte Carlo Stomp Simulation) 🟡
 

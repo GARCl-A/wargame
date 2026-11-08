@@ -11,7 +11,7 @@ roster and a rematch could reuse the same picks.
 
 import random
 
-from . import captives, data, i18n, intel, names, outfit, vision
+from . import captives, data, i18n, intel, morale, names, outfit, vision
 from .board import (
     COLS,
     ROWS,
@@ -164,6 +164,7 @@ class Battle:
         
         for u in self.units:
             u.check_collapse(self.log)
+        morale.baseline(self)                # a body laid out at the start is no fall to flinch at
         self._roll_initiative()
         self.log("log.round", n=1)
         self._announce_turn()
@@ -756,9 +757,15 @@ class Battle:
     def _living_side(self, team):
         return [u for u in self.units if u.alive and u.team == team]
 
+    def settle_morale(self):
+        """Fold what just happened into every combatant's morale (`morale.settle`): called after each
+        action and at each turn change, so it is up to date whoever acts next."""
+        morale.settle(self)
+
     def _check_winner(self):
         if self.winner:
             return self.winner
+        self.settle_morale()
 
         forced = self.scenario.win_check(self)
         if forced:

@@ -1,8 +1,8 @@
 """Running away, delaying and skittish beasts."""
 
-from .. import actions, intel
+from .. import actions, intel, morale
 from ..board import cells, grid_distance
-from .common import _axes, _mindless
+from .common import _mindless
 from .target import _target
 
 
@@ -31,32 +31,40 @@ def _try_escape_grapple(battle, unit):
     return False
 
 
-FLEE_HP = 0.1               # share of its HP at which a unit thinks of running (a person runs near 0)
-
-
-FLEE_HP_CHAOTIC = 0.5
-
-
-FLEE_OUTNUMBERED = 1        # foes in sight past the allies standing before it runs (chaotic: 0)
-
-
 def _should_flee(battle, unit):
-    """Whether the unit breaks and runs this turn. Never from a non-lethal bout
-    (the arena -- nobody dies). Chaotic units break sooner and while less outnumbered;
-    lawful units stay while any ally is still standing."""
-    if not battle.lethal or _mindless(unit):
+    """Whether the unit breaks and runs this turn: its morale is spent (`morale.settle` made it Routed).
+    Never from a non-lethal bout (the arena -- nobody dies), and the dead and the machines have no nerve."""
+    return morale.has_morale(battle, unit) and unit.routed
+
+
+def _exit_cells(battle):
+    """Where a unit may leave the fight from: the map's own exit when it has one, else the whole border."""
+    escape = getattr(battle, "escape_cells", None)
+    if escape:
+        return sorted(escape)
+    cols, rows = battle.board.cols, battle.board.rows
+    edges = []
+    for x in range(cols):
+        edges.extend([(x, 0), (x, rows - 1)])
+    for y in range(1, rows - 1):
+        edges.extend([(0, y), (cols - 1, y)])
+    return edges
+
+
+def _run_for_the_exit(battle, unit):
+    """Walk toward the exit that is cheapest to reach by the way the unit would really walk (a wall
+    between it and the nearest exit by eye sends it the long way). False when it cannot move at all."""
+    exits = _exit_cells(battle)
+    _, _, _, (dist, _) = battle._route_field(unit)
+    open_exits = [c for c in exits if c in dist]
+    goal = (min(open_exits, key=lambda c: dist[c]) if open_exits
+            else min(exits, key=lambda c: grid_distance(unit.pos, c)))
+    dest = battle.path_step_toward(unit, goal, unit.speed, reach=0)
+    if dest == unit.pos:
         return False
-    order = _axes(unit)[0]
-    allies = [u for u in battle.units
-              if u.alive and u.team == unit.team and u is not unit]
-    foes = intel.visible_foes(battle, unit)
-    if not foes:
-        return False
-    if order > 0 and allies:                 # lawful: hold the line
-        return False
-    hurt = unit.hp <= unit.hp_max * (FLEE_HP_CHAOTIC if order < 0 else FLEE_HP)
-    outmatched = len(foes) > len(allies) + (0 if order < 0 else FLEE_OUTNUMBERED)
-    return hurt and outmatched
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
+    return True
 
 
 def _try_vanish(battle, unit):
@@ -74,13 +82,6 @@ def _try_vanish(battle, unit):
         vanish.execute(battle, unit)
         return True
     return False
-
-
-def _slipping_away(battle, unit):
-    """An invisible unit at half its HP or less makes for the edge instead of striking (a blow
-    would show it)."""
-    return (battle.lethal and unit.has_condition("invisible") and not _mindless(unit)
-            and unit.hp <= unit.hp_max * 0.5)
 
 
 def _should_delay(battle, unit):
@@ -154,29 +155,6 @@ def _skitter(battle, unit):
     actions.MOVE.execute(battle, unit, best)
     unit.walking = False
     return "moved"
-
-
-def _retreat_from(battle, unit, foe):
-    """Back away from `foe` into a safe cell that increases distance from it,
-    or Defend if no retreat cell is available. Returns True if acted."""
-    if unit.ap < 1 or not unit.alive:
-        return False
-    reach = battle.reachable(unit)
-    cur_dist = battle.units_distance(unit, foe)
-    safe = [
-        p for p in reach
-        if all(c not in battle.fire for c in cells(p, unit.footprint))
-        and grid_distance(p, foe.pos) > cur_dist
-    ]
-    if safe:
-        dest = max(safe, key=lambda p: grid_distance(p, foe.pos))
-        actions.MOVE.execute(battle, unit, dest)
-        unit.walking = False
-        return True
-    if actions.DEFEND.available(battle, unit):
-        actions.DEFEND.execute(battle, unit)
-        return True
-    return False
 
 
 def _leave_fire(battle, unit):

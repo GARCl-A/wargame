@@ -384,11 +384,12 @@ def test_no_vanishing_in_an_arena_bout():
     assert not ai._try_vanish(b, me)
 
 
-def test_a_hurt_invisible_unit_makes_for_the_edge_instead_of_striking():
+def test_a_routed_invisible_unit_makes_for_the_edge_instead_of_striking():
     from gartok.conditions import Invisible
     b, me, foe = _duel("nature", "invisibility")
     me.add_condition(Invisible())
-    me.hp = me.hp_max // 3
+    me.morale = 0
+    b.settle_morale()
     foe.pos = (6, 5)                                       # right beside it
     start = me.pos
     ai.take_turn(b, me)

@@ -19,11 +19,10 @@ from .common import _spell_can, _wants_alive
 from .flee import (
     _is_skittish,
     _leave_fire,
-    _retreat_from,
+    _run_for_the_exit,
     _should_delay,
     _should_flee,
     _skitter,
-    _slipping_away,
     _try_escape_grapple,
     _try_stand_up,
     _try_vanish,
@@ -201,26 +200,15 @@ def take_turn(battle, unit):
         if _try_vanish(battle, unit):
             continue
 
-        if _should_flee(battle, unit) or _slipping_away(battle, unit):
+        if _should_flee(battle, unit):
             if actions.FLEE.available(battle, unit):
                 actions.FLEE.execute(battle, unit)
                 break
+            elif _run_for_the_exit(battle, unit):
+                continue
             else:
-                cols, rows = battle.board.cols, battle.board.rows
-                edges = []
-                for x in range(cols):
-                    edges.extend([(x, 0), (x, rows - 1)])
-                for y in range(1, rows - 1):
-                    edges.extend([(0, y), (cols - 1, y)])
-                target_edge = min(edges, key=lambda c: grid_distance(unit.pos, c))
-                dest = battle.path_step_toward(unit, target_edge, unit.speed, reach=0)
-                if dest != unit.pos:
-                    actions.MOVE.execute(battle, unit, dest)
-                    unit.walking = False
-                    continue
-                else:
-                    battle.log(f"{unit.name} is cornered and turns to fight!")
-                    # fall through to normal combat below
+                battle.log(f"{unit.name} is cornered and turns to fight!")
+                # fall through to normal combat below
 
         body = _finish_off(battle, unit)
         if body is not None:                  # evil: put the downed enemy away
@@ -288,25 +276,14 @@ def take_turn(battle, unit):
 
         shoved_foe = _try_shove(battle, unit)
         if shoved_foe is not None:
-            if unit.ap > 0 and unit.alive:
-                # Compound 2-action tactical replanning:
-                # If shove succeeded (foe displaced): execute planned Retreat or Ranged Attack
-                # If shove failed (foe remained adjacent): pivot to Defend (+2 AC)
-                shove_succeeded = (shoved_foe not in battle.units or not shoved_foe.alive
-                                   or battle.units_distance(unit, shoved_foe) > 1)
-                if shove_succeeded:
-                    atk = _pick_attack(battle, unit, shoved_foe)
-                    if atk is not None:
-                        atk.execute(battle, unit, shoved_foe)
-                    else:
-                        _retreat_from(battle, unit, shoved_foe)
-                else:
-                    if actions.DEFEND.available(battle, unit):
-                        actions.DEFEND.execute(battle, unit)
-                    else:
-                        atk = _pick_attack(battle, unit, shoved_foe)
-                        if atk is not None:
-                            atk.execute(battle, unit, shoved_foe)
+            if unit.ap > 0 and unit.alive and shoved_foe.alive and shoved_foe in battle.units:
+                # the shove was the opening, not the plan: hit the foe if it can be reached (a failed shove
+                # leaves it adjacent), else the next pass closes in on it again; never back off
+                atk = _pick_attack(battle, unit, shoved_foe)
+                if atk is not None:
+                    atk.execute(battle, unit, shoved_foe)
+                elif battle.units_distance(unit, shoved_foe) <= 1 and actions.DEFEND.available(battle, unit):
+                    actions.DEFEND.execute(battle, unit)
             continue
 
         if _demoralize_pays(battle, unit, target):
