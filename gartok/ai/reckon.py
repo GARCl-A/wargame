@@ -151,9 +151,9 @@ def _reckoned_ac(battle, unit, target, armor_pierce=False):
 
 def _hit_odds(battle, unit, target, extra=0, armor_pierce=False, thrown=False):
     mods = unit.attack_mods(target, actions._pack_flank(battle, unit, target), thrown=thrown, battle=battle)
-    flank_pen = actions._flank_penalty(battle, unit, target)
+    guard_pen = actions._off_guard_penalty(battle, unit, target)
     bonus, _ = data.resolve_bonus(mods)
-    need = (_reckoned_ac(battle, unit, target, armor_pierce) - flank_pen) - bonus - extra
+    need = (_reckoned_ac(battle, unit, target, armor_pierce) - guard_pen) - bonus - extra
     return max(0.05, min(0.95, (21 - need) / 20))
 
 
@@ -367,8 +367,9 @@ FLANK_ODDS = 0.1            # the +2 a flank gives each blow of the pair
 
 def _unflank_worth(battle, unit, foe):
     """`foe` and a mate of its stand on opposite sides of `unit`: shoving it out breaks the flank
-    for the blows both would land before the unit's next turn."""
-    if battle.units_distance(unit, foe) > 1 or not actions._flanked(battle, foe, unit):
+    for the blows both would land before the unit's next turn. A foe that has not acted is off-guard
+    anyway, so breaking the flank costs it nothing."""
+    if battle.units_distance(unit, foe) > 1 or foe.turns_taken == 0 or not actions._flanked(battle, foe, unit):
         return 0.0
     pair = [f for f in battle.units if f.alive and f.team == foe.team and battle.units_distance(f, unit) <= 1]
     return FLANK_ODDS * sum(2 * _blow(f) for f in pair)
@@ -377,11 +378,12 @@ def _unflank_worth(battle, unit, foe):
 def _flank_step_worth(battle, unit, target, free):
     """What stepping to a cell that flanks `target` is worth against staying: the blows the unit still
     has, struck from the new cell (the flank's hit odds, and the Backstab damage of a Dexterity
-    fighter), plus the odds the flank gives each mate beside the foe. `unit.pos` is the cell tried."""
+    fighter), plus the odds the flank gives each mate beside the foe. `unit.pos` is the cell tried.
+    A foe that has not acted is off-guard already, so a flank adds nothing."""
     blows = unit.ap if free else unit.ap - 1
-    if blows < 1 or not actions._flanked(battle, unit, target):
+    if blows < 1 or target.turns_taken == 0 or not actions._flanked(battle, unit, target):
         return None
-    extra = unit.char.talent_bonus("flank_finesse_damage") if unit.is_dex_melee else 0
+    extra = unit.char.talent_bonus("off_guard_finesse_damage") if unit.is_dex_melee else 0
     own = blows * _strike_worth(battle, unit, target, bonus_damage=extra)
     mates = [m for m in battle.units if m.alive and m.team == unit.team and m is not unit
              and battle.units_distance(m, target) <= 1 and not m.ranged]

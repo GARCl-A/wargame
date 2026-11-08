@@ -31,6 +31,7 @@ def _squad_battle():
     f1 = _body("enemy", "Foe", "Goblin")
     b = Battle([u1, u2], [f1])
     c1, c2, cf = b.units
+    c1.turns_taken = c2.turns_taken = cf.turns_taken = 1
     c1.pos, cf.pos, c2.pos = (4, 5), (5, 5), (6, 5)
     return b, c1, c2, cf
 
@@ -79,7 +80,7 @@ def test_flanking_reduces_defender_ac_and_peripheral_vision_halves_it():
     assert actions._flanked(b, c1, cf)
 
     # Standard defender without talent suffers 2 AC penalty
-    pen = actions._flank_penalty(b, c1, cf)
+    pen = actions._off_guard_penalty(b, c1, cf)
     assert pen == 2
 
     # Give defender Peripheral Vision
@@ -90,13 +91,13 @@ def test_flanking_reduces_defender_ac_and_peripheral_vision_halves_it():
     cf.char.set_track_level("combat", 3)
     assert cf.char.choose_talent("combat", "peripheral_vision")
 
-    pen_with_talent = actions._flank_penalty(b, c1, cf)
+    pen_with_talent = actions._off_guard_penalty(b, c1, cf)
     assert pen_with_talent == 1
 
-    # In attack resolution, log shows [Flank -1]
+    # In attack resolution, log shows [Off-guard -1]
     with fixed_d20(15):
         actions._strike(b, c1, cf)
-        assert any("[Flank -1]" in line for line in b.log_lines)
+        assert any("[Off-guard -1: flanked]" in line for line in b.log_lines)
 
 
 # --------------------------------------------------------------------------- #
@@ -277,7 +278,7 @@ def test_nimble_skirmisher_flank_damage():
     u1.choose_talent("combat", "deadeye")
     u1.set_track_level("combat", 3)
     assert u1.choose_talent("combat", "nimble_skirmisher")
-    assert u1.talent_bonus("flank_finesse_damage") == 2
+    assert u1.talent_bonus("off_guard_finesse_damage") == 2
 
     u2 = _body("player", "Buddy")
     f = _body("enemy", "FlankTarget", "Goblin")

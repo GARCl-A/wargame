@@ -27,7 +27,7 @@ pick, waiting for the author's read in play.
 | Initiative, Round, Turn | iniciativa, rodada, turno | proposed |
 | Reach, Range | alcance, distância | proposed |
 | Square (sq) | casa | proposed |
-| Flanked, Prone, Downed | flanqueado, caído, incapacitado | proposed |
+| Flanked, Off-guard, Prone, Downed | flanqueado, desprevenido, caído, incapacitado | proposed |
 | Damage, To hit | dano, para acertar | proposed |
 | Armour, Shield | armadura, escudo | proposed |
 | pt / pts (action points) | pt / pts | proposed |

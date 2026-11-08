@@ -194,8 +194,8 @@ Properties and keywords carried by weapons.
 | Finesse | Uses Dexterity instead of Strength for attack and damage rolls. |
 | Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
 | Crit 3x | Critical hits multiply the blow's damage by 3 instead of 2. |
-| Sneak Attack | 2 AP: One strike; against a flanked foe the blow is Brutal 1, +1d4. |
-| Precise Thrust | 2 AP: One strike; against a flanked foe +2 to hit and the blow is Brutal 1. |
+| Sneak Attack | 2 AP: One strike; against an off-guard foe the blow is Brutal 1, +1d4. |
+| Precise Thrust | 2 AP: One strike; against an off-guard foe +2 to hit and the blow is Brutal 1. |
 | Cleave | 2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit. |
 | Repel Strike | 2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4. |
 | Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1. |
@@ -387,7 +387,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
 | 3 | Fleet | +1 square of Speed. | Deadeye |
 | 4 | Free Step | Once per turn, step 1 square without spending an action point. | Fleet |
-| 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against flanked targets. | Deadeye |
+| 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against off-guard targets. | Deadeye |
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | Tough |
 | 3 | Recovery | heal 1 HP after every fight you survive. | Hardy |
@@ -395,7 +395,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Armor Bearer | reduces the carried weight of equipped armor by up to 6 kg. | Bulwark |
 | 1 | Alert | +1 Wisdom. | -- |
 | 2 | Quick Wits | +2 initiative. | Alert |
-| 3 | Peripheral Vision | when flanked, your AC is only reduced by 1 instead of 2. | Quick Wits |
+| 3 | Peripheral Vision | when off-guard, your AC is only reduced by 1 instead of 2. | Quick Wits |
 | 2 | Iron Will | +2 Mental Defense. | Alert |
 | 3 | Iron Stance | using Defend grants +2 Mental Defense in addition to AC until your next turn. | Iron Will |
 | 1 | Imposing | +1 Charisma. | -- |
@@ -502,7 +502,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Kobold | 1 | Trap Salvage | after a won fight, your traps that never sprang go back into your pack. | -- |
 | Kobold | 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- |
 | Kobold | 2 | Trap Master | plant your traps up to 3 squares away when a fight begins. | Trapper |
-| Lizardfolk | 1 | Ambush Predator | +2 to hit a foe that has not yet had a turn this fight. | -- |
+| Lizardfolk | 1 | Ambush Predator | +2 to hit an off-guard foe. | -- |
 | Lizardfolk | 1 | Organic Harvester | scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- |
 | Lizardfolk | 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each. | -- |
 | Ogre | 1 | Mighty Shove | your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- |

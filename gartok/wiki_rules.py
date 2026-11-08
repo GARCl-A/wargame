@@ -38,7 +38,7 @@ def sections():
     tools = i18n.t("wiki_rules.or").join(i18n.name("item", t) for t in captives.CAPTURE_TOOLS)
     return [
         (i18n.t("wiki_rules.turns.title"), _lines("turns", 7, ap=AP_PER_TURN)),
-        (i18n.t("wiki_rules.flanking.title"), _lines("flanking", 3)),
+        (i18n.t("wiki_rules.flanking.title"), _lines("flanking", 4)),
         (i18n.t("wiki_rules.morale.title"), _morale_lines()),
         (i18n.t("wiki_rules.weapon.title"), [*_lines("weapon", 6), i18n.t("wiki_rules.weapon.7", reach=reach, hit=hit)]),
         (i18n.t("wiki_rules.talk.title"), [

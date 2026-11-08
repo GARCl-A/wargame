@@ -1265,7 +1265,11 @@
    },
    "surprised": {
     "name": "Surpreso",
-    "rule": "Pego desprevenido: perde o primeiro turno."
+    "rule": "Pego de surpresa: perde o primeiro turno."
+   },
+   "off_guard": {
+    "name": "Desprevenido",
+    "rule": "Ainda não teve turno nesta luta: -2 de CA contra todo ataque até que tenha."
    },
    "rooted": {
     "name": "Enraizado",
@@ -1912,15 +1916,15 @@
   },
   "sneak_attack": {
    "name": "Ataque Furtivo",
-   "desc": "2 pts: só contra um inimigo flanqueado: o golpe é Brutal 1, +1d4.",
+   "desc": "2 pts: só contra um inimigo desprevenido: o golpe é Brutal 1, +1d4.",
    "reason": "exige adaga",
-   "label": "Ataque Furtivo (2 pts, Brutal 1 +1d4 contra flanqueado)"
+   "label": "Ataque Furtivo (2 pts, Brutal 1 +1d4 contra desprevenido)"
   },
   "precise_thrust": {
    "name": "Estocada Precisa",
-   "desc": "2 pts: só contra um inimigo flanqueado: +2 para acertar, o golpe é Brutal 1.",
+   "desc": "2 pts: só contra um inimigo desprevenido: +2 para acertar, o golpe é Brutal 1.",
    "reason": "exige rapieira",
-   "label": "Estocada Precisa (2 pts, +2 para acertar e Brutal 1 contra flanqueado)"
+   "label": "Estocada Precisa (2 pts, +2 para acertar e Brutal 1 contra desprevenido)"
   },
   "cleave": {
    "name": "Ceifar",
@@ -2196,14 +2200,18 @@
  },
  "log": {
   "roll": {
-   "flank": " [Flanco -{n}]",
+   "off_guard": " [Desprevenido -{n}: {why}]",
+   "off_guard_why": {
+    "unacted": "ainda não agiu",
+    "flanked": "flanqueado"
+   },
    "phalanx": " [Falange]",
-   "crit_miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{flank}{phalanx}  -> erro crítico.",
-   "spared": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{flank}{phalanx}  -> o golpe é contido; o caído é poupado.",
-   "on_fallen": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{flank}{phalanx}  -> um golpe no caído.",
-   "crit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{flank}{phalanx}  -> ACERTO CRÍTICO!",
-   "hit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{flank}{phalanx}  -> acerta.",
-   "miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{flank}{phalanx}  -> erra."
+   "crit_miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> erro crítico.",
+   "spared": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> o golpe é contido; o caído é poupado.",
+   "on_fallen": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> um golpe no caído.",
+   "crit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> ACERTO CRÍTICO!",
+   "hit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> acerta.",
+   "miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> erra."
   },
   "brutal": "  {why}: Brutal {n}!",
   "brutal_savage": "Ataques Selvagens",
@@ -2572,7 +2580,6 @@
   "jump": "{actor} salta: d20({nat}) {str:+}(FOR) = {total} -> {dist} casas, cai em {cell}.",
   "swim": "{actor} nada: d20({nat}) {str:+}(FOR) = {total} -> {dist} casas, até {cell}.",
   "mod": {
-   "flank": "Flanco",
    "browbeat": "Intimidação",
    "menacing": "Ameaçador",
    "wordless": "Ameaça Sem Palavras",
@@ -5810,8 +5817,8 @@
    "finesse": "Usa Destreza no lugar de Força nas jogadas de ataque e de dano.",
    "thrown": "Pode ser arremessada até o alcance de arremesso. Soma o modificador de Força ao ataque e ao dano.",
    "crit_3x": "Um acerto crítico multiplica o dano do golpe por 3, em vez de 2.",
-   "sneak_attack": "2 pts: um golpe; contra um inimigo flanqueado, o golpe é Brutal 1, +1d4.",
-   "precise_thrust": "2 pts: um golpe; contra um inimigo flanqueado, +2 para acertar e o golpe é Brutal 1.",
+   "sneak_attack": "2 pts: um golpe; contra um inimigo desprevenido, o golpe é Brutal 1, +1d4.",
+   "precise_thrust": "2 pts: um golpe; contra um inimigo desprevenido, +2 para acertar e o golpe é Brutal 1.",
    "cleave": "2 pts: um golpe; com um segundo inimigo ao lado dos dois, o arco também o atinge, cada golpe com +2 para acertar.",
    "repel_strike": "2 pts: um golpe que empurra o alvo (+2 no empurrão); contra um inimigo com as costas numa parede ou num corpo, o golpe é Brutal 1, +1d4.",
    "maiming_strike": "2 pts: um golpe que reduz à metade a velocidade do alvo até a próxima rodada; contra um inimigo Enredado, Dormindo, Surpreso ou Desmoralizado, +2 para acertar e o golpe é Brutal 1.",
@@ -6046,7 +6053,7 @@
    "keen_bolts": "Um disparo de Besta é crítico com 19 ou 20 natural.",
    "deadeye": "+1 para acertar com ataques baseados em Destreza.",
    "fleet": "+1 casa de Velocidade.",
-   "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos flanqueados.",
+   "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos desprevenidos.",
    "duelist": "+1 de dano com uma arma de acuidade enquanto a outra mão está vazia (sem escudo, sem luz).",
    "free_step": "Uma vez por turno, dê 1 passo de 1 casa sem gastar ponto de ação.",
    "tough": "+1 de Constituição.",
@@ -6056,7 +6063,7 @@
    "armor_bearer": "reduz em até 6 kg o peso carregado da armadura equipada.",
    "alert": "+1 de Sabedoria.",
    "quick_wits": "+2 de iniciativa.",
-   "peripheral_vision": "quando flanqueado, sua CA é reduzida em apenas 1 em vez de 2.",
+   "peripheral_vision": "quando desprevenido, sua CA é reduzida em apenas 1 em vez de 2.",
    "iron_will": "+2 de Defesa Mental.",
    "iron_stance": "usar Defender concede +2 de Defesa Mental, além da CA, até o seu próximo turno.",
    "imposing": "+1 de Carisma.",
@@ -6145,7 +6152,7 @@
    "second_breakfast": "recupera +1 PV a mais a cada 8 horas de descanso ininterrupto.",
    "quartermaster": "um acampamento organizado: +2 na rolagem diária de coesão de um grupo sobrecarregado que você lidera.",
    "hold_the_line": "enquanto você Defende, cada aliado adjacente a você tem +1 de CA.",
-   "ambush_predator": "+2 para acertar um inimigo que ainda não teve turno nesta luta.",
+   "ambush_predator": "+2 para acertar um inimigo desprevenido.",
    "tail_sweep": "2 pontos: sua cauda varre dois inimigos adjacentes -- um ataque desarmado e um Empurrar em cada um.",
    "polyglot": "+2 nas rolagens de progresso ao estudar um idioma estrangeiro.",
    "parley": "+1 ao Persuadir, Blefar ou Intimidar na conversa antes de uma luta.",
@@ -6552,10 +6559,11 @@
    "7": "Bônus do mesmo tipo não se acumulam: Defender e outro bônus de circunstância na CA, só vale o maior."
   },
   "flanking": {
-   "title": "Flanqueio",
-   "1": "Um inimigo está flanqueado quando você e um aliado estão ao lado dele, em lados opostos. Ele perde 2 de CA contra você (1 com Visão Periférica); o registro mostra [Flanco -2].",
-   "2": "Um aliado apenas ao lado do inimigo não forma um flanco. Ele só alimenta a Tática de Matilha, que algumas raças e feras têm.",
-   "3": "Ataque Furtivo (Adaga) e Estocada Precisa (Rapieira) só funcionam contra um inimigo flanqueado: o golpe é Brutal 1, mais +1d4 (Ataque Furtivo) ou +2 para acertar (Estocada Precisa)."
+   "title": "Desprevenido e flanqueio",
+   "1": "Um combatente está desprevenido até começar o primeiro turno dele na luta, então quem age primeiro golpeia inimigos que ainda não se mexeram. Ele perde 2 de CA contra todo ataque (1 com Visão Periférica); o registro mostra [Desprevenido -2] e o motivo (ainda não agiu, flanqueado).",
+   "2": "Um inimigo também fica desprevenido quando você e um aliado estão ao lado dele, em lados opostos (um flanco). Os dois motivos não se somam: continua -2 de CA.",
+   "3": "Um aliado apenas ao lado do inimigo não forma um flanco. Ele só alimenta a Tática de Matilha, que algumas raças e feras têm.",
+   "4": "Ataque Furtivo (Adaga) e Estocada Precisa (Rapieira) só funcionam contra um inimigo desprevenido: o golpe é Brutal 1, mais +1d4 (Ataque Furtivo) ou +2 para acertar (Estocada Precisa)."
   },
   "morale": {
    "title": "Moral",

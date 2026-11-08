@@ -11,7 +11,6 @@ from .base import (
     Action,
     _attackable_target,
     _cell_free,
-    _flanked,
     _hostile_target,
     _land_thrown,
     _pack_flank,
@@ -279,8 +278,6 @@ class Throw(Action):
         weapon_name = actor.weapon_name
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True, battle=battle)
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", i18n.t("log.mod.flank")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()

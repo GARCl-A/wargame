@@ -236,10 +236,19 @@ def test_after_a_shove_that_lands_the_ai_closes_in_and_never_backs_off(monkeypat
 
 def test_shoving_a_flanker_counts_the_flank_it_breaks():
     batt, e, p = _duel("Club")
+    p.turns_taken = 1                       # a foe that has not acted is off-guard anyway: no flank to break
     mate = _recruit(batt, team="player")
     mate.pos = (4, 5)
     assert ai._unflank_worth(batt, e, p) > 0
     mate.pos = (5, 4)
+    assert ai._unflank_worth(batt, e, p) == 0
+
+
+def test_shoving_a_flanker_breaks_nothing_while_it_has_not_acted():
+    batt, e, p = _duel("Club")
+    mate = _recruit(batt, team="player")
+    mate.pos = (4, 5)
+    p.turns_taken = 0
     assert ai._unflank_worth(batt, e, p) == 0
 
 
@@ -353,6 +362,7 @@ def _case(aid, favoured):
               "repel_strike": "Quarterstaff", "maiming_strike": "Club", "armor_pierce": "Pick",
               "power_shot": "Shortbow", "hook_shield": "Hatchet", "parry_strike": "Broadsword"}[aid]
     batt, e, p = _duel(weapon)
+    e.turns_taken = p.turns_taken = 1
     e.ammo = 6
     if aid == "power_shot":
         p.pos = (13, 5) if favoured else (8, 5)

@@ -495,7 +495,7 @@ class BattleScreen(BattleDrawMixin, Screen):
             return None, None
         spell_id = getattr(self.aim_action, "spell_id", None)
         if self.aim_action is actions.ATTACK:
-            return "click a highlighted enemy to Attack (Flank: ally on opposite side grants +2 to hit)", board_style.ATK_HL
+            return "click a highlighted enemy to Attack (Off-guard: a foe that has not acted, or is flanked, loses 2 AC)", board_style.ATK_HL
         elif self.aim_action is actions.DEMORALIZE:
             return "click a purple enemy to Demoralize", board_style.DEMO_HL
         elif self.aim_action is actions.ATTACK_TONGUE:

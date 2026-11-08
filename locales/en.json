@@ -1956,6 +1956,10 @@
         "name": "Surprised",
         "rule": "Caught off guard: loses its first turn."
       },
+      "off_guard": {
+        "name": "Off-guard",
+        "rule": "Has not had a turn yet this fight: -2 AC against every attack until it does."
+      },
       "rooted": {
         "name": "Rooted",
         "rule": "Walks 1 cell at most until the end of its next whole turn."
@@ -2187,14 +2191,18 @@
   },
   "log": {
     "roll": {
-      "flank": " [Flank -{n}]",
+      "off_guard": " [Off-guard -{n}: {why}]",
+      "off_guard_why": {
+        "unacted": "has not acted",
+        "flanked": "flanked"
+      },
       "phalanx": " [Phalanx]",
-      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> critical miss.",
-      "spared": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> the blow is pulled; the fallen is spared.",
-      "on_fallen": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> a blow on the fallen.",
-      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> CRITICAL HIT!",
-      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> hit.",
-      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{flank}{phalanx}  -> misses."
+      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> critical miss.",
+      "spared": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> the blow is pulled; the fallen is spared.",
+      "on_fallen": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> a blow on the fallen.",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> CRITICAL HIT!",
+      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> hit.",
+      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> misses."
     },
     "brutal": "  {why}: Brutal {n}!",
     "brutal_savage": "Savage Attacks",
@@ -2563,7 +2571,6 @@
     "jump": "{actor} jumps: d20({nat}) {str:+}(STR) = {total} -> {dist} squares, lands at {cell}.",
     "swim": "{actor} swims: d20({nat}) {str:+}(STR) = {total} -> {dist} squares, to {cell}.",
     "mod": {
-      "flank": "Flank",
       "browbeat": "Browbeat",
       "menacing": "Menacing",
       "wordless": "Wordless Menace",
@@ -2714,15 +2721,15 @@
     },
     "sneak_attack": {
       "name": "Sneak Attack",
-      "desc": "2 AP: Only against a flanked foe: the blow is Brutal 1, +1d4.",
+      "desc": "2 AP: Only against an off-guard foe: the blow is Brutal 1, +1d4.",
       "reason": "requires dagger",
-      "label": "Sneak Attack (2 pts, Brutal 1 +1d4 vs flanked)"
+      "label": "Sneak Attack (2 pts, Brutal 1 +1d4 vs off-guard)"
     },
     "precise_thrust": {
       "name": "Precise Thrust",
-      "desc": "2 AP: Only against a flanked foe: +2 to hit, the blow is Brutal 1.",
+      "desc": "2 AP: Only against an off-guard foe: +2 to hit, the blow is Brutal 1.",
       "reason": "requires rapier",
-      "label": "Precise Thrust (2 pts, +2 to hit & Brutal 1 vs flanked)"
+      "label": "Precise Thrust (2 pts, +2 to hit & Brutal 1 vs off-guard)"
     },
     "cleave": {
       "name": "Cleave",
@@ -5550,7 +5557,7 @@
       "keen_bolts": "A Crossbow shot is a critical hit on a natural 19 or 20.",
       "deadeye": "+1 to hit with Dexterity-based attacks.",
       "fleet": "+1 square of Speed.",
-      "nimble_skirmisher": "+2 damage on Dexterity melee attacks against flanked targets.",
+      "nimble_skirmisher": "+2 damage on Dexterity melee attacks against off-guard targets.",
       "duelist": "+1 damage with a finesse weapon while the off hand is empty (no shield, no light).",
       "free_step": "Once per turn, step 1 square without spending an action point.",
       "tough": "+1 Constitution.",
@@ -5560,7 +5567,7 @@
       "armor_bearer": "reduces the carried weight of equipped armor by up to 6 kg.",
       "alert": "+1 Wisdom.",
       "quick_wits": "+2 initiative.",
-      "peripheral_vision": "when flanked, your AC is only reduced by 1 instead of 2.",
+      "peripheral_vision": "when off-guard, your AC is only reduced by 1 instead of 2.",
       "iron_will": "+2 Mental Defense.",
       "iron_stance": "using Defend grants +2 Mental Defense in addition to AC until your next turn.",
       "imposing": "+1 Charisma.",
@@ -5649,7 +5656,7 @@
       "second_breakfast": "recover +1 additional HP for every 8 hours of unbroken rest.",
       "quartermaster": "an orderly camp: +2 on the daily cohesion roll of an overextended group you lead.",
       "hold_the_line": "while you Defend, every ally adjacent to you has +1 AC.",
-      "ambush_predator": "+2 to hit a foe that has not yet had a turn this fight.",
+      "ambush_predator": "+2 to hit an off-guard foe.",
       "tail_sweep": "2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each.",
       "polyglot": "+2 to progress rolls when studying a foreign language.",
       "parley": "+1 when you Persuade, Bluff or Intimidate in the talk before a fight.",
@@ -5721,8 +5728,8 @@
       "finesse": "Uses Dexterity instead of Strength for attack and damage rolls.",
       "thrown": "Can be thrown up to its thrown range. Adds Strength modifier to attack and damage.",
       "crit_3x": "Critical hits multiply the blow's damage by 3 instead of 2.",
-      "sneak_attack": "2 AP: One strike; against a flanked foe the blow is Brutal 1, +1d4.",
-      "precise_thrust": "2 AP: One strike; against a flanked foe +2 to hit and the blow is Brutal 1.",
+      "sneak_attack": "2 AP: One strike; against an off-guard foe the blow is Brutal 1, +1d4.",
+      "precise_thrust": "2 AP: One strike; against an off-guard foe +2 to hit and the blow is Brutal 1.",
       "cleave": "2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit.",
       "repel_strike": "2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4.",
       "maiming_strike": "2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1.",
@@ -6177,10 +6184,11 @@
       "7": "Bonuses of the same type do not stack: Defend and another circumstance bonus to AC, only the larger counts."
     },
     "flanking": {
-      "title": "Flanking",
-      "1": "A foe is flanked when you and an ally are both next to it, on opposite sides. It loses 2 AC against you (1 with Peripheral Vision); the log shows [Flank -2].",
-      "2": "An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some races and beasts have.",
-      "3": "Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on a flanked foe: the blow is Brutal 1, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."
+      "title": "Off-guard and flanking",
+      "1": "A fighter is off-guard until its first turn of the fight begins, so whoever acts first strikes foes that have not yet moved. It loses 2 AC against every attack (1 with Peripheral Vision); the log shows [Off-guard -2] and why (has not acted, flanked).",
+      "2": "A foe is also off-guard when you and an ally are both next to it, on opposite sides (a flank). The two never add up: it is still -2 AC.",
+      "3": "An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some races and beasts have.",
+      "4": "Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on an off-guard foe: the blow is Brutal 1, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."
     },
     "morale": {
       "title": "Morale",

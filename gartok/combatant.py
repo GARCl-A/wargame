@@ -706,7 +706,9 @@ class Combatant:
         if grudge and target in self.hurt_by:
             mods.append((grudge, None, i18n.t("log.mod.grudge")))
         ambush = c.talent_bonus("ambush_predator")
-        if ambush and target.turns_taken == 0:
+        if ambush:
+            from .actions.base import off_guard     # local: actions imports this module
+        if ambush and off_guard(battle, self, target):
             mods.append((ambush, None, i18n.t("log.mod.ambush_predator")))
         whip = c.talent_bonus("under_the_whip")
         if whip and any(u.alive and u.team == self.team and u is not self

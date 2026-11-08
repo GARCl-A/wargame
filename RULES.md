@@ -594,11 +594,16 @@ to the fight, as before.
   - **natural 20** = automatic hit + crit: the blow's whole damage (dice, modifiers, bonuses, Brutal) is
     multiplied last, by 2 (3 for the `crit_3x` weapons).
   - **natural 1** = automatic miss.
-- **Flanking**: the defender suffers a **−2 penalty to AC** (reduced to −1 by
-  the `Peripheral Vision` talent) when the attacker **and** an ally are both
-  adjacent to the target and on **opposite sides** — the line between their cells
+- **Off-guard**: the defender suffers a **−2 penalty to AC** (reduced to −1 by
+  the `Peripheral Vision` talent), against melee, ranged and thrown attacks alike, when it
+  **has not begun a turn yet this fight** (every unit starts the fight off-guard, and one that
+  joins later is off-guard until its first turn, a Surprised unit until its skipped turn) **or** it is
+  **flanked**. Two reasons never stack: still −2. The first turns of a fight therefore favour whoever acts
+  first. Sneak Attack, Precise Thrust, Nimble Skirmisher and Ambush Predator read "off-guard".
+- **Flanking** makes the target off-guard: the attacker **and** an ally are both
+  adjacent to it and on **opposite sides** — the line between their cells
   crosses the target's footprint. Pack Tactics (Goblin) gives the attacker +2 to
-  hit when an ally is adjacent; because flanking penalises the defender's AC rather
+  hit when an ally is adjacent; because off-guard penalises the defender's AC rather
   than modifying the attack roll, both benefits combine.
 - **Damage**: `weapon die (+ Strength mod if melee)`, minimum 1, minus the
   target's damage reduction.
@@ -920,8 +925,8 @@ Rules in `board.py` (`los_clear`) and `vision.py` (`cell_lit`, `can_see`).
   dropped weapon when unarmed). What it counts for fleeing, waiting and the
   Signal Horn is the foes some unit of its side sees.
 - **Flanking:** a melee unit that can walk to the far side of a foe an ally is already beside
-  (a cell where `_flanked` holds) goes there first and strikes against the foe's −2 AC; archers and units
-  already beside the foe do not reposition.
+  (a cell where `_flanked` holds) goes there first and strikes against the foe's −2 AC; archers, units
+  already beside the foe and a foe that has not acted yet (off-guard already) do not reposition.
 - **With nobody in sight the AI acts by its role** (`Battle.aggressor`, set where the map
   builds the fight): the side that *brought* the fight (an ambush, a patrol, a raid, a hunt
   where the pack finds you, the guild sweeping its Claim, delving the Ruins, tracking the

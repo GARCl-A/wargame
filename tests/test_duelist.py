@@ -99,6 +99,7 @@ def _flank_fight(path=(), weapon="Rapier"):
     mate = standard_unit("player")
     b = Battle([me, mate], [standard_unit("enemy")])
     c, m, foe = b.units
+    c.turns_taken = m.turns_taken = foe.turns_taken = 1
     b.board.walls.clear()
     b.ambient_light = True
     foe.pos = (5, 5)

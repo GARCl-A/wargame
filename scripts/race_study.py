@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from gartok import ai, data, economy, intel, map_lib, outfit, talents
-from gartok.actions.base import _flanked
+from gartok.actions.base import off_guard
 from gartok.battle import Battle
 from gartok.scenario import CustomScenario, ErmosScenario
 from scripts import race_study_builds as rb
@@ -59,7 +59,7 @@ def _known(battle, team, foe):
 class Counting:
     """A combat-log sink that counts what each unit did (the interface `Battle.record_to` wants): the actions by name,
     and, for the ones aimed at a foe, the context they happened in, as sparse counters read back by name:
-    `f.<action>` the foe was flanked, `d.<action>` it was demoralized, `hit.` / `miss.` / `crit.<action>` the rolls,
+    `f.<action>` the foe was off-guard (it has not acted, or is flanked), `d.<action>` it was demoralized, `hit.` / `miss.` / `crit.<action>` the rolls,
     `dmg.<action>` / `critdmg.<action>` the hit points taken off it, `assess.new` / `assess.full` what an Assess opened."""
 
     def __init__(self):
@@ -89,7 +89,7 @@ class Counting:
             self._first_read(battle, actor)
             log0, hp0 = battle.log_total, (foe.hp if foe else 0)
             if foe:
-                if _flanked(battle, actor, foe):
+                if off_guard(battle, actor, foe):
                     c["f." + name] += 1
                 if any(cd.id == "demoralized" for cd in foe.conditions):
                     c["d." + name] += 1

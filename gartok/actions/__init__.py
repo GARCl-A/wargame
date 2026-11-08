@@ -17,10 +17,10 @@ from .base import (  # noqa: F401
     _cell_free,
     _drop_cell,
     _facing,
-    _flank_penalty,
     _flanked,
     _hostile_target,
     _land_thrown,
+    _off_guard_penalty,
     _pack_flank,
     _phalanxed,
     _pickable,
@@ -29,6 +29,8 @@ from .base import (  # noqa: F401
     _shovable_target,
     _sign,
     item_ref,
+    off_guard,
+    off_guard_reasons,
 )
 from .combat import (  # noqa: F401
     Attack,

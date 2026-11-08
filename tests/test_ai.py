@@ -276,6 +276,7 @@ def _pincer():
     a, b = batt.player_units
     foe = batt.enemy_units[0]
     for u in (a, b, foe):
+        u.turns_taken = 1
         u.weapon_hand, u.torch_hand = True, False
         u.equipped_weapon = "Dagger"
         u.size = "Medium"
@@ -321,7 +322,7 @@ def test_the_ai_takes_the_flank_and_then_strikes():
     from gartok.conditions import Demoralized
     foe.add_condition(Demoralized())                          # so the spare point is not spent shouting
     ai.take_turn(batt, b)
-    assert any("Flank" in line for line in batt.log_lines)    # it walked round and struck with the +2
+    assert any("Off-guard" in line for line in batt.log_lines)    # it walked round and struck at the foe's -2 AC
 
 
 def _dark_pair():

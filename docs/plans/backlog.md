@@ -90,7 +90,7 @@ the rest.
 
 - **Rules as keywords, the next ones (playtest 2026-10-30).** `keywords.py` and the wiki's KEYWORDS chapter
   exist, with *Brutal N* the first (N more rolls of the weapon's damage; every Brutal of the game is 1;
-  the crit multiplies the whole blow last). Missing: look for the next repeated rules (Flanked, Prone...)
+  the crit multiplies the whole blow last). Missing: look for the next repeated rules (Off-guard, Prone...)
   and add each as a `Keyword`; a keyword written inside a description (tooltips of the sheet, of the
   action bar) should link to its entry on hover; the assess card in the bestiary should link a racial
   ability and a weapon to their wiki entry on hover (playtest 2026-11-01); check the sheet's weapon-action
@@ -140,7 +140,7 @@ the rest.
 - **The wiki and the tutorials read every number off the code (author 2026-11-01).** The group capacity
   went wrong because the text restated the rule by hand. Three parts: a test that no string literal in
   `wiki_rules.py` holds a digit, with the constant made where the code has none either (Defend's +1 AC
-  in `actions/combat.py`, the flank's -2 in `actions/base.py`, the coin values, Sneak Attack's +1d4);
+  in `actions/combat.py`, the off-guard -2 in `actions/base.py`, the coin values, Sneak Attack's +1d4);
   the `group.CAPACITY_TERMS` pattern (the sum is the rule, the text reads the same tuple) for the other
   formulas the wiki states (`recruit.capacity` / `leader_capacity`, `Group.herd_capacity` with Beast
   Whisperer); and the `locales/en.json` cards (the tavern's says "past the guild's second" and "$15 a

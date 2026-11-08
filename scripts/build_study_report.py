@@ -309,7 +309,7 @@ def attack_names(m):
 
 
 def share(m, prefix):
-    """Of the actions that rolled to hit, the share that had the context `prefix` (`f.` flanked foe, `d.` demoralized foe)."""
+    """Of the actions that rolled to hit, the share that had the context `prefix` (`f.` off-guard foe, `d.` demoralized foe)."""
     names = attack_names(m)
     total = sum(m["acts"][nm] for nm in names)
     return sum(m["acts"][prefix + nm] for nm in names) / total if total else float("nan")
@@ -332,7 +332,7 @@ def behaviour_section(st, lv):
             f"{per_unit(m, 'throw'):.2f}", f"{sum(casts.values()):.1f}",
             ", ".join(f"{k} {v:.1f}" for k, v in sorted(casts.items(), key=lambda t: -t[1])[:4]) or "-",
         ))
-    head = ["build", "units", "attacks/unit", "attacks on a flanked foe", "sneak attacks/unit", "demoralize/unit",
+    head = ["build", "units", "attacks/unit", "attacks on an off-guard foe", "sneak attacks/unit", "demoralize/unit",
             "attacks on a demoralized foe", "assess/unit", "foes read to HARD by an assess/unit",
             "foes at HARD at the first action (of 3)", "throws/unit", "casts/unit", "spells (per unit)"]
     return table(head, body)

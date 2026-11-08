@@ -60,7 +60,7 @@ exactly one consumer that reads it back:
     spell_heal        actions.SpellAction              --
     spell_range       actions.SpellAction              --
     obscured_penalty_relief actions.base.obscured_penalty --
-    flank_defense     actions.base._flank_penalty      --
+    off_guard_defense     actions.base._off_guard_penalty  --
     bleeding_claws    actions.base._claw               --
     night_prowler     vocations.ambush_mult            --
     open_market       economy.haggle_voice             --
@@ -73,7 +73,7 @@ exactly one consumer that reads it back:
     full_intel_to_hit Combatant.attack_mods            --
     grab_bonus        actions.combat.Grab              --
     push_bonus        actions.combat.Push              --
-    flank_finesse_damage actions.base._resolve_hit     --
+    off_guard_finesse_damage actions.base._resolve_hit     --
     free_hand_damage  Combatant.damage_roll            --
     free_step         actions.FreeStep                 --
     defend_mental_defense Combatant.mental_defense     --
@@ -236,7 +236,7 @@ _LIST = [
     Talent("free_step", "combat", 4, requires="fleet",
            effects=(Effect("free_step", 1),), icon="action/slalom"),
     Talent("nimble_skirmisher", "combat", 3, requires="deadeye",
-           effects=(Effect("flank_finesse_damage", 2),), icon="action/backstab"),
+           effects=(Effect("off_guard_finesse_damage", 2),), icon="action/backstab"),
 
     Talent("tough", "combat", 1, effects=(Effect("attr", 1, "constitution"),), icon="body/bell-shield"),
     Talent("hardy", "combat", 2, requires="tough",
@@ -252,7 +252,7 @@ _LIST = [
     Talent("quick_wits", "combat", 2, requires="alert",
            effects=(Effect("initiative", 2),), icon="head/quick-man"),
     Talent("peripheral_vision", "combat", 3, requires="quick_wits",
-           effects=(Effect("flank_defense", 1),), icon="head/one-eyed"),
+           effects=(Effect("off_guard_defense", 1),), icon="head/one-eyed"),
     Talent("iron_will", "combat", 2, requires="alert",
            effects=(Effect("mental_defense", 2),), icon="action/meditation"),
     Talent("iron_stance", "combat", 3, requires="iron_will",
