@@ -29,6 +29,7 @@ from .flee import (
     _try_vanish,
 )
 from .movement import (
+    _adjust_altitude,
     _assess_target,
     _light_globe,
     _recover_torch,
@@ -58,7 +59,14 @@ from .support import (
     _try_share_magic,
     _try_signal_horn,
 )
-from .target import _approach_reach, _flank_cell, _flank_step, _no_contact, _target
+from .target import (
+    _approach_reach,
+    _flank_cell,
+    _flank_step,
+    _free_approach,
+    _no_contact,
+    _target,
+)
 
 
 def take_turn(battle, unit):
@@ -240,6 +248,9 @@ def take_turn(battle, unit):
         if battle.lethal and unit.nonlethal_blows != _wants_alive(battle, unit, target):
             actions.NONLETHAL.execute(battle, unit)
 
+        if _adjust_altitude(battle, unit, target):
+            continue
+
         # a crossbow only fires loaded -- keep it fed instead of closing to melee
         if unit.can_reload:
             actions.RELOAD.execute(battle, unit)
@@ -344,6 +355,11 @@ def take_turn(battle, unit):
         if flank is not None:
             actions.MOVE.execute(battle, unit, flank)
             unit.walking = False
+            continue
+
+        free = _free_approach(battle, unit, target)
+        if free is not None:
+            actions.FREE_STEP.execute(battle, unit, free)
             continue
 
         reach = _approach_reach(unit)

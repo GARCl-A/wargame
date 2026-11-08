@@ -13,7 +13,7 @@ from tests.helpers import Unit, _recruit, fixed_d20
 
 
 def _duel(school, spell, caster_team="enemy"):
-    random.seed(4)
+    random.seed(1)
     caster, foe = Unit(caster_team), Unit("player" if caster_team == "enemy" else "enemy")
     caster.add_magic_source(school)
     caster.set_spell_known(spell, True)

@@ -634,8 +634,6 @@ class LongThrust(Action):
             return False
         if battle.units_distance(actor, target) > self.reach(actor):
             return False
-        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
-            return False
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
     def label(self, battle, actor):

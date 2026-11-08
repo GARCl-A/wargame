@@ -250,7 +250,7 @@ def test_the_gatherer_buys_the_yards_licence_then_gathers_and_sells_the_haul(mon
 
 def test_a_pack_on_a_gathering_shift_is_fought_with_its_own_pack_and_a_win_banks_the_haul(monkeypatch):
     monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
-    sim = _sim(skill=1.0, library=_WON)
+    sim = _sim(skill=1.0, library=_WON, seed=2)
     sim.guild.licences.add("lumber_yard")
     for u in sim.guild.roster:
         u.give_to_pack("Axe")

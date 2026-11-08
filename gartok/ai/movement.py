@@ -1,7 +1,7 @@
 """Walking: the step toward a goal, terrain and traps in the way, picking things up."""
 
 from .. import actions, intel, items, vision
-from ..board import cells, grid_distance, line_cells
+from ..board import cells, cells_distance, grid_distance, line_cells
 from .common import _other_side
 from .target import _approach_reach
 
@@ -313,3 +313,34 @@ def _reachable_step(battle, unit, goals, reach=1):
         if battle.can_reach(unit, goal, reach):
             return battle.path_step_toward(unit, goal, unit.speed, reach=reach)
     return None
+
+
+def _from_afar(unit):
+    return bool(unit.ranged or getattr(unit, "spells_known", None))
+
+
+def _adjust_altitude(battle, unit, target):
+    """True if the unit spent the point on its height. A shooter or caster with wings rises past the
+    reach of a ground foe closing in; a fighter that cannot swing across the gap comes back down."""
+    if not unit.flies:
+        return False
+    if unit.altitude and not _from_afar(unit):
+        flat = cells_distance(battle.cells_of(unit), battle.cells_of(target))
+        if flat <= unit.attack_range < battle.units_distance(unit, target) and actions.FLY_DOWN.available(battle, unit):
+            actions.FLY_DOWN.execute(battle, unit)
+            return True
+        return False
+    if not (unit.winged and _from_afar(unit)):
+        return False
+    reaches = [f.attack_range + f.footprint - 1 for f in battle.units
+               if f.alive and f.team != unit.team and not f.flies and not f.ranged
+               and battle.units_distance(unit, f) <= f.speed + f.attack_range]
+    safe = min(max(reaches, default=0) + 1, actions.movement.MAX_ALTITUDE)
+    if not reaches or unit.altitude >= safe:
+        return False
+    per_walk = max(1, unit.speed // actions.FLY_UP.squares)     # levels one walk buys
+    walks = -(-(safe - unit.altitude) // per_walk)
+    if not actions.FLY_UP.available(battle, unit) or (not unit.walking and unit.ap < walks):
+        return False
+    actions.FLY_UP.execute(battle, unit)
+    return True

@@ -766,6 +766,19 @@ triples.
   elevation difference — a pit edge is a wall to anyone walking. **Exception:**
   anyone who **flies** (or, in future, has a climb speed) moves in three
   dimensions as normal movement and a pit does not stop them.
+- **Fly up / Fly down** (a flier's actions, no target): a flier hovers `altitude` levels (0-4) above
+  the floor. Distance is three-dimensional (`battle.units_distance`): the floor plan's octagon with the
+  height between the two bodies as a third axis, the longest axis whole and the other two at half, rounded
+  down. It decides every reach and range, melee and shot alike: a sword (reach 1) misses a flier 2 levels
+  up, a glaive (reach 2) needs 3 levels or fewer straight above, a bow loses range to the height. A body is
+  as tall as it is wide (a Large one is 2x2x2, so a Centaur reaches from its whole height and is taller to
+  reach too); the Grippli's Tongue follows the same reach. Rising is hard going: a level
+  costs **2 squares** of the walk (a Sprite's speed 3 buys one level per point), sinking costs 1. A step the
+  walk cannot cover opens a new walk (1 point), like Move. Altitude is relative to the floor, so it
+  follows the ground as the flier walks. A flier whose wings give out (Pixie Dust ends) falls from where
+  it hovered; a flier that is downed floats down unhurt, and one that is grappled, entangled, rooted or
+  prone is pulled to the ground (unhurt) and cannot rise until freed. The AI sends a winged shooter or
+  caster one level past the longest reach among the ground fighters closing in, and brings a winged fighter down to swing.
 - **Fall damage.** Descending `h` levels at once costs `max(0, h−1)d6` — the
   first level is free, each level beyond it is 1d6. Fliers take no fall damage, and the
   Catfolk's *Catfall* frees three more levels (`Ability.fall_free`). In `battle.apply_fall`.

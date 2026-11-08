@@ -2164,6 +2164,16 @@
    "desc": "Desce para uma casa adjacente mais baixa.",
    "label": "Descer ao poço (1 pt, sofre a queda)"
   },
+  "fly_up": {
+   "name": "Voar para cima",
+   "desc": "Sobe um nível no ar. Subir é terreno difícil: custa o dobro de casas de um passo. Acima do alcance do inimigo, o corpo a corpo não te atinge.",
+   "label": "Voar para cima (abre uma caminhada, {n} casas de movimento por nível)"
+  },
+  "fly_down": {
+   "name": "Voar para baixo",
+   "desc": "Desce um nível rumo ao chão, o movimento de um passo comum.",
+   "label": "Voar para baixo ({n} casa de movimento por nível)"
+  },
   "jump": {
    "name": "Saltar",
    "desc": "Salta sobre vãos ou obstáculos.",
@@ -2547,6 +2557,10 @@
    "clear": "{roll}  -> desce.",
    "slips": "{roll}  -> escorrega e fica onde está."
   },
+  "fly_up": "{actor} voa para cima: {n} acima do chão.",
+  "fly_down": "{actor} voa para baixo: {n} acima do chão.",
+  "fly_grounded": "{unit} é puxado para baixo, para fora do ar.",
+  "fly_falls": "{unit} fica sem nada que o sustente e despenca.",
   "drop": {
    "into": "{actor} desce ao poço em {cell}."
   },
@@ -2556,6 +2570,7 @@
    "flank": "Flanco",
    "browbeat": "Intimidação",
    "menacing": "Ameaçador",
+   "wordless": "Ameaça Sem Palavras",
    "precise_thrust": "Estocada Precisa",
    "cleave": "Ceifar",
    "maiming_strike": "Golpe Mutilante",
@@ -5527,6 +5542,7 @@
    "iron_stance": "Postura de Ferro",
    "imposing": "Imponente",
    "menacing": "Ameaçador",
+   "wordless_menace": "Ameaça Sem Palavras",
    "gruesome_takedown": "Derrubada Macabra",
    "cull_the_broken": "Abater os Quebrados",
    "inspiring_shout": "Grito Inspirador",
@@ -6026,13 +6042,14 @@
    "iron_will": "+2 de Defesa Mental.",
    "iron_stance": "usar Defender concede +2 de Defesa Mental, além da CA, até o seu próximo turno.",
    "imposing": "+1 de Carisma.",
-   "menacing": "+1 nos testes de Desmoralizar.",
+   "menacing": "+2 nos testes de Desmoralizar.",
+   "wordless_menace": "Desmoralizar funciona contra quem não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
    "gruesome_takedown": "ao abater um inimigo, faz imediatamente um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
    "cull_the_broken": "+2 de dano nos ataques contra alvos desmoralizados.",
    "inspiring_shout": "ao desmoralizar um inimigo com sucesso, concede +1 de iniciativa ao próximo aliado na ordem de turnos.",
    "tactical_mind": "+1 de Inteligência.",
-   "sharp_analysis": "+1 em todos os testes de Avaliar e de observação do inimigo.",
-   "combat_analysis": "+2 nos testes ativos de Avaliar feitos durante a batalha.",
+   "sharp_analysis": "+2 em todos os testes de Avaliar e de observação do inimigo.",
+   "combat_analysis": "+4 nos testes ativos de Avaliar feitos durante a batalha.",
    "exploit_weakness": "+2 para acertar contra inimigos com Informação Completa.",
    "anatomist": "sua margem de crítico aumenta em 1 contra inimigos com Informação Completa (crítico com 19-20).",
    "brawny": "+1 de Força.",
@@ -6114,7 +6131,7 @@
    "tail_sweep": "2 pontos: sua cauda varre dois inimigos adjacentes -- um ataque desarmado e um Empurrar em cada um.",
    "polyglot": "+2 nas rolagens de progresso ao estudar um idioma estrangeiro.",
    "parley": "+1 ao Persuadir, Blefar ou Intimidar na conversa antes de uma luta.",
-   "eye_for_detail": "+1 em todos os testes de Avaliar e de observação do inimigo.",
+   "eye_for_detail": "+2 em todos os testes de Avaliar e de observação do inimigo.",
    "mimic_voices": "+1 nas rolagens de apresentação no palco da taverna.",
    "razor_claws": "golpes de mão nua que machucam cortam: o alvo fica Sangrando 1 por 2 turnos. Os ferimentos se acumulam: os danos se somam e a duração passa a ser a maior.",
    "night_prowler": "a noite é sua: enquanto o grupo viaja Cauteloso, a chance de emboscada é x0,8 à noite.",

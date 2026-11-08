@@ -65,6 +65,7 @@ exactly one consumer that reads it back:
     night_prowler     vocations.ambush_mult            --
     open_market       economy.haggle_voice             --
     demoralize_bonus  actions.combat.Demoralize        --
+    demoralize_no_language actions.combat.Demoralize   --
     gruesome_takedown actions.base._resolve_hit        --
     demoralized_target_damage actions.base._resolve_hit --
     assess_bonus      intel._roll                      --
@@ -258,19 +259,21 @@ _LIST = [
 
     Talent("imposing", "combat", 1, effects=(Effect("attr", 1, "charisma"),), icon="action/shouting"),
     Talent("menacing", "combat", 2, requires="imposing",
-           effects=(Effect("demoralize_bonus", 1),), icon="action/shouting"),
+           effects=(Effect("demoralize_bonus", 2),), icon="action/shouting"),
     Talent("gruesome_takedown", "combat", 2, requires="imposing",
            effects=(Effect("gruesome_takedown", 1),), icon="body/deadly-strike"),
     Talent("cull_the_broken", "combat", 3, requires="menacing",
            effects=(Effect("demoralized_target_damage", 2),), icon="action/boot-stomp"),
+    Talent("wordless_menace", "combat", 3, requires="menacing",
+           effects=(Effect("demoralize_no_language", 1),), icon="action/shouting"),
     Talent("inspiring_shout", "combat", 3, requires="gruesome_takedown",
            effects=(Effect("demoralize_ally_initiative", 1),), icon="action/shouting"),
 
     Talent("tactical_mind", "combat", 1, effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
     Talent("sharp_analysis", "combat", 2, requires="tactical_mind",
-           effects=(Effect("assess_bonus", 1),), icon="head/spectacles"),
+           effects=(Effect("assess_bonus", 2),), icon="head/spectacles"),
     Talent("combat_analysis", "combat", 2, requires="tactical_mind",
-           effects=(Effect("assess_active_bonus", 2),), icon="action/targeting"),
+           effects=(Effect("assess_active_bonus", 4),), icon="action/targeting"),
     Talent("exploit_weakness", "combat", 3, requires="combat_analysis",
            effects=(Effect("full_intel_to_hit", 2),), icon="gui/convergence-target"),
     Talent("anatomist", "combat", 3, requires="sharp_analysis",
@@ -447,7 +450,7 @@ _LIST = [
     Talent("parley", "racial", 1, race="Human",
            effects=(Effect("parley", 1),), icon="action/discussion"),
     Talent("eye_for_detail", "racial", 1, race="Kenku",
-           effects=(Effect("assess_bonus", 1),), icon="head/kenku-head"),
+           effects=(Effect("assess_bonus", 2),), icon="head/kenku-head"),
     Talent("mimic_voices", "racial", 1, race="Kenku",
            effects=(Effect("tavern_perform_bonus", 1),), icon="action/sing"),
     Talent("razor_claws", "racial", 1, race="Catfolk",

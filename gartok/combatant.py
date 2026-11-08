@@ -22,6 +22,7 @@ from .i18n import Ref
 from .unit import flatten_pack
 
 AP_PER_TURN = 2
+PINNING = ("grappled", "entangled", "rooted", "prone")    # hold a body to the ground: no hovering
 UNDER_THE_WHIP_RANGE = 6     # squares to the stronger ally a Goblin fights for
 
 
@@ -49,9 +50,25 @@ class Combatant:
     # the Z axis: pits, climbing, falling                                #
     # ------------------------------------------------------------------ #
     @property
+    def winged(self):
+        """Flies on its own -- the race or a talent -- not on borrowed Pixie Dust."""
+        return self._ability.flies or bool(getattr(self.char, "talent_bonus", lambda _: 0)("flies"))
+
+    @property
     def flies(self):
-        return (self._ability.flies or bool(getattr(self.char, "talent_bonus", lambda _: 0)("flies"))
-                or self.has_condition("pixie_flight"))
+        return self.winged or self.has_condition("pixie_flight")
+
+    @property
+    def altitude(self):
+        """Levels hovering above the floor. Anything that pins a body -- a grip, a web, roots, a fall
+        to the ground -- pulls a flier down to it, no hurt."""
+        if self._altitude and any(self.has_condition(c) for c in PINNING):
+            self._altitude = 0
+        return self._altitude
+
+    @altitude.setter
+    def altitude(self, levels):
+        self._altitude = levels
 
     @property
     def can_move_vertically(self):
@@ -74,6 +91,7 @@ class Combatant:
         self.hp = min(c.hp_max, max(1, cur_hp))
         self.pos = (0, 0)
         self.z = None                 # floor elevation standing on (None = query board)
+        self._altitude = 0            # levels hovering above that floor (a flier's Fly up / Fly down)
         self.status = "up"            # up | dying | stable | broken | fled | dead
         self.death_clock = 0          # dying: own turns elapsed; save on DYING_TURNS
         self.raised = False           # stood back up by Raise Dead: undead now, falls for good

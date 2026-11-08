@@ -14,7 +14,7 @@ def test_a_race_reads_its_mods_ability_language_and_racial_track():
     dwarf = next(e for e in wiki_races.entries() if e["name"] == "Dwarf")
     assert dwarf["mods"].startswith("STR +1  DEX +0  CON +2")
     assert dwarf["abilities"] == [f"Darkvision: {abilities.get('darkvision').effect}"]
-    assert "Dwarvish" in dwarf["meta"] and "d10" in dwarf["meta"]
+    assert "Dwarvish" in dwarf["meta"] and "d8" in dwarf["meta"]
     assert dwarf["talents"] == [t.name for t in talents.racial_tree("Dwarf")]
 
 

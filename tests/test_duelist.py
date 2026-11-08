@@ -2,7 +2,7 @@
 that steps to a flank and leaves the light to someone else."""
 
 from gartok import actions, ai, items, outfit
-from gartok.ai.target import _flank_step
+from gartok.ai.target import _flank_step, _free_approach
 from tests.helpers import Battle, standard_unit
 
 PATH = ("agile", "deadeye", "fleet", "free_step")
@@ -130,6 +130,28 @@ def test_a_unit_already_flanking_or_alone_does_not_step():
     _m.pos = (11, 11)
     c.pos = (5, 4)
     assert _flank_step(b, c, foe) is None
+
+
+def test_a_unit_with_ground_to_cover_spends_the_free_step_on_the_approach():
+    b, c = _walker(PATH)
+    foe = b.units[1]
+    step = _free_approach(b, c, foe)
+    assert step is not None and step != c.pos
+    b.ambient_light = True
+    ai.take_turn(b, c)
+    assert c.free_step_used
+
+
+def test_a_unit_already_in_reach_keeps_the_free_step_for_a_flank_or_nothing():
+    b, c = _walker(PATH)
+    foe = b.units[1]
+    c.pos, foe.pos = (5, 5), (6, 5)
+    assert _free_approach(b, c, foe) is None
+
+
+def test_a_unit_without_the_talent_has_no_free_approach():
+    b, c = _walker(("agile",))
+    assert _free_approach(b, c, b.units[1]) is None
 
 
 def test_a_ranged_unit_never_steps_to_flank():

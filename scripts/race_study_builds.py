@@ -46,7 +46,7 @@ class Build(NamedTuple):
 
 
 FRONT = ("brawny", "sturdy", "nimble_fingers")
-HEAVY = ("strong", "sure_strike", "heavy_hand", "tough", "bulwark")
+HEAVY = ("strong", "sure_strike", "heavy_hand", "tough", "hardy")
 CASTER_MAGIC = ("arcane_mind", "spell_focus", "destructive_casting")
 CASTER_WORK = ("nimble_fingers", "sturdy", "clever")
 
@@ -67,9 +67,9 @@ BUILDS = {b.id: b for b in (
     Build("archer", "Longbow: two random talents", ("Longbow",), AUTO, None,
           ("agile", "long_reach", "deadeye"), ("brawny", "nimble_fingers"), quiver=True, role="ranged"),
     Build("intimidator", "Demoralize, then cull or take down", ("Sword",), AUTO, None,
-          ("imposing", "menacing", "cull_the_broken", "strong", "heavy_hand"), ("brawny", "charismatic", "sturdy", "nimble_fingers")),
+          ("imposing", "menacing", "wordless_menace", "cull_the_broken", "strong"), ("brawny", "charismatic", "sturdy", "nimble_fingers")),
     Build("commander", "Shouts the line on", ("Hatchet",), AUTO, SHIELD,
-          ("imposing", "gruesome_takedown", "inspiring_shout", "alert", "quick_wits"),
+          ("imposing", "menacing", "wordless_menace", "gruesome_takedown", "inspiring_shout"),
           ("brawny", "charismatic", "sturdy", "nimble_fingers", "observant")),
     Build("analyst", "Assess: reads the foe", ("Rapier",), AUTO, None,
           ("tactical_mind", "combat_analysis", "sharp_analysis", "anatomist", "exploit_weakness"),
@@ -97,19 +97,17 @@ BUILDS = {b.id: b for b in (
 
 # The talent choices inside a build, each a full combat priority: fought as mirrors of the same build, not as builds.
 VARIANTS = {
-    **{b: {"bulwark": HEAVY, "hardy": HEAVY[:-1] + ("hardy",)}
-       for b in ("sword_board", "axe_board", "broadsword", "glaive")},
     # Free Step needs Fleet, so a pair holding it holds both
     "rapier_duelist": {f"{x} + {y}": ("agile", "duelist", "deadeye", x, y)
                        for x, y in (("nimble_skirmisher", "fleet"), ("fleet", "free_step"))},
     "dagger_skirmisher": {f"{x} + {y}": ("agile", "nimble_skirmisher", "deadeye", x, y)
                           for x, y in (("fleet", "duelist"), ("fleet", "free_step"))},
-    "intimidator": {f"{k} + {h}": ("imposing", "menacing", k, "strong", h)
-                    for k in ("cull_the_broken", "gruesome_takedown") for h in ("heavy_hand", "sure_strike")},
+    "intimidator": {k: ("imposing", "menacing", "wordless_menace", k, "strong")
+                    for k in ("cull_the_broken", "gruesome_takedown")},
 }
 COMBAT_IDS = frozenset(t.id for t in talents.TREE["combat"])
 # The builds whose weapon is a question, and the weapons it is asked over.
-SWEEP_BUILDS = ("fortress", "intimidator", "commander", "analyst", "smart_miner", "nature_caster", "blood_caster", "faith_caster")
+SWEEP_BUILDS = ("fortress", "intimidator", "commander", "analyst", "nature_caster", "blood_caster", "faith_caster")
 
 PLAIN = Build("plain", "Sword, shield, no talent line (the base of the single-factor tests)", ("Sword",),
               "Chainmail", SHIELD, ())

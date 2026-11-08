@@ -48,10 +48,13 @@ from .combat import (  # noqa: F401
     Throw,
     ZombieBite,
     _strike,
+    demoralize_language_penalty,
 )
 from .movement import (  # noqa: F401
     Climb,
     DropIn,
+    FlyDown,
+    FlyUp,
     FreeStep,
     Jump,
     Move,
@@ -132,6 +135,8 @@ FIRST_AID = FirstAid()
 PUSH = Push()
 CLIMB = Climb()
 DROP = DropIn()
+FLY_UP = FlyUp()
+FLY_DOWN = FlyDown()
 FREE_STEP = FreeStep()
 JUMP = Jump()
 SWIM = Swim()
@@ -228,6 +233,8 @@ UTILITY_ACTIONS = [
     JUMP,
     CLIMB,
     DROP,
+    FLY_UP,
+    FLY_DOWN,
     SWIM,
     FREE_STEP,
     SHARE_MAGIC,
@@ -243,7 +250,7 @@ UTILITY_ACTIONS = [
 PANEL_ACTIONS = COMBAT_ACTIONS + UTILITY_ACTIONS
 
 FIXED_HOTKEYS = {"delay": 9, "end": 0}   # off the 1-8 count, so the rest never shift
-CONTEXTUAL = (CLIMB, DROP, SWIM, FREE_STEP)        # shown only while they can be taken
+CONTEXTUAL = (CLIMB, DROP, FLY_UP, FLY_DOWN, SWIM, FREE_STEP)        # shown only while they can be taken
 
 
 def aim_kind(action):

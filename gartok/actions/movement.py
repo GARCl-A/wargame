@@ -1,13 +1,15 @@
-"""Movement actions: Move, the Free Step, and the Z axis (Climb, Drop in, Jump, Swim)."""
+"""Movement actions: Move, the Free Step, and the Z axis (Climb, Drop in, Jump, Swim, Fly up, Fly down)."""
 
 from .. import i18n
 from ..board import cells, cells_in_radius, grid_distance, line_cells
+from ..combatant import PINNING
 from ..data import d20
 from ..i18n import Msg
 from .base import Action, _cell_free
 
 JUMP_DIVISOR = 5          # Jump: (d20 + Strength) / this = squares cleared, capped at speed
 SWIM_DIVISOR = 5          # Swim: (d20 + Strength) / this = squares crossed, capped at half speed
+MAX_ALTITUDE = 4          # levels a flier can hover above the floor
 
 
 # --------------------------------------------------------------------------- #
@@ -178,6 +180,58 @@ class DropIn(_VerticalStep):
         actor.z = z_to
         battle.log("log.drop.into", actor=actor.name, cell=str(target))
         battle.apply_fall(actor, z_from - z_to, battle.log)
+
+
+class _Hover(Action):
+    """Shared base for Fly up / Fly down: a flier changing how high it hovers, paid out of its walking
+    speed like any step (the first one opens a walk, 1 point). No target; the AI and the bar both
+    read `available`."""
+
+    cost, target = 1, "none"
+    announce = False
+    squares = 1                          # movement squares one level costs
+
+    def _free(self, actor):
+        return not (any(actor.has_condition(c) for c in PINNING) or getattr(actor, "mounted_on", None) is not None)
+
+    def _room(self, actor):
+        raise NotImplementedError
+
+    def available(self, battle, actor):
+        return (actor.flies and self._free(actor) and self._room(actor)
+                and battle.can_spend_walk(actor, self.squares))
+
+    def can(self, battle, actor, target=None):
+        return self.available(battle, actor)
+
+    def label(self, battle, actor):
+        return i18n.t(f"action.{self.id}.label", n=self.squares)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        battle.spend_walk(actor, self.squares)
+        actor.altitude += self.step
+        battle.log(f"log.{self.id}", actor=actor.name, n=actor.altitude)
+
+
+class FlyUp(_Hover):
+    """Climb one level of air. Rising is hard going -- double the squares of a plain step -- so a
+    flier of speed 6 gains three levels from a whole walk. Past a foe's reach it cannot be struck in melee."""
+
+    id, step, squares = "fly_up", 1, 2
+
+    def _room(self, actor):
+        return actor.altitude < MAX_ALTITUDE
+
+
+class FlyDown(_Hover):
+    """Sink one level toward the ground: a plain step's worth of movement."""
+
+    id, step, squares = "fly_down", -1, 1
+
+    def _room(self, actor):
+        return actor.altitude > 0
 
 
 class Jump(Action):

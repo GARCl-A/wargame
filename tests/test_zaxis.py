@@ -84,7 +84,7 @@ def test_melee_cannot_reach_two_levels_down():
     assert actions.ATTACK.can(batt, a, d) is True
 
 
-def test_tongue_lash_reaches_two_squares_but_still_stops_at_a_deep_drop():
+def test_tongue_lash_reaches_two_squares_and_counts_the_height():
     batt, a, d = _pit_battle(depth=0)
     a.char.talents["racial"] = ["tongue"]
     a.tongue_weapon_name = "Dagger"
@@ -92,8 +92,10 @@ def test_tongue_lash_reaches_two_squares_but_still_stops_at_a_deep_drop():
     a.pos, d.pos = (5, 5), (7, 5)           # two squares apart, flat ground
     assert actions.ATTACK.can(batt, a, d) is False        # the hand weapon is reach 1
     assert a.tongue_reach == 2 and actions.ATTACK_TONGUE.can(batt, a, d) is True
-    batt.board.elevation = {(6, 5): -2, (7, 5): -2}       # target now two levels down
-    assert actions.ATTACK_TONGUE.can(batt, a, d) is False  # still melee: no deep drop
+    batt.board.elevation = {(6, 5): -1, (7, 5): -1}       # a level down: 2 squares + the height still fits
+    assert actions.ATTACK_TONGUE.can(batt, a, d) is True
+    batt.board.elevation = {(6, 5): -2, (7, 5): -2}       # two levels down: the reach is 3D, 2 + 1 > 2
+    assert actions.ATTACK_TONGUE.can(batt, a, d) is False
 
 
 def test_push_shoves_the_target_back_a_square():

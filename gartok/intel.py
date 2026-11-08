@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from . import i18n, items, magic, talents, weapon_traits
 
 STEPS = 5                 # a foe's health shows in this many steps
-BASE_DC = 8
+BASE_DC = 7
 RACE_DISCOUNT = 2         # the DC drops this much against a race the guild has fought
 ASSESS_BONUS = 4
 EASY, MEDIUM, HARD = 0, 5, 10     # the margin a band opens at

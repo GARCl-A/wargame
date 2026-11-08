@@ -65,6 +65,20 @@ def _flank_step(battle, unit, target):
     return best[1]
 
 
+def _free_approach(battle, unit, target):
+    """The Free Step square that brings the unit closer to `target`, or None. The step costs no point, so a unit that has to
+    close the distance anyway takes it every turn, flank or not."""
+    here = grid_distance(unit.pos, target.pos)
+    best = None
+    for pos in actions.FREE_STEP._spots(battle, unit):
+        if battle.fire and any(c in battle.fire for c in cells(pos, unit.footprint)):
+            continue
+        d = grid_distance(pos, target.pos)
+        if d < here and (best is None or d < best[0]):
+            best = (d, pos)
+    return best[1] if best else None
+
+
 def _approach_reach(unit):
     """How close the unit needs to get to a foe to strike -- so the path stops
     there instead of always closing to adjacent. The hand weapon's reach normally; the Tongue's longer

@@ -2548,6 +2548,10 @@
       "clear": "{roll}  -> down.",
       "slips": "{roll}  -> slips, stays put."
     },
+    "fly_up": "{actor} flies up: {n} above the ground.",
+    "fly_down": "{actor} flies down: {n} above the ground.",
+    "fly_grounded": "{unit} is dragged down out of the air.",
+    "fly_falls": "{unit} has nothing holding them up and drops.",
     "drop": {
       "into": "{actor} drops into the pit at {cell}."
     },
@@ -2557,6 +2561,7 @@
       "flank": "Flank",
       "browbeat": "Browbeat",
       "menacing": "Menacing",
+      "wordless": "Wordless Menace",
       "precise_thrust": "Precise Thrust",
       "cleave": "Cleave",
       "maiming_strike": "Maiming Strike",
@@ -2950,6 +2955,16 @@
       "desc": "Drop into a lower adjacent square.",
       "label": "Drop into the pit (1 pt, take the fall)"
     },
+    "fly_up": {
+      "name": "Fly up",
+      "desc": "Rise one level of air. Rising is hard going: it costs double the squares of a step. Past a foe's reach, melee cannot strike you.",
+      "label": "Fly up (opens a walk, {n} squares of movement per level)"
+    },
+    "fly_down": {
+      "name": "Fly down",
+      "desc": "Sink one level toward the ground, a plain step's worth of movement.",
+      "label": "Fly down ({n} square of movement per level)"
+    },
     "jump": {
       "name": "Jump",
       "desc": "Jump across gaps or obstacles.",
@@ -3189,6 +3204,7 @@
       "iron_stance": "Iron Stance",
       "imposing": "Imposing",
       "menacing": "Menacing",
+      "wordless_menace": "Wordless Menace",
       "gruesome_takedown": "Gruesome Takedown",
       "cull_the_broken": "Cull the Broken",
       "inspiring_shout": "Inspiring Shout",
@@ -5530,13 +5546,14 @@
       "iron_will": "+2 Mental Defense.",
       "iron_stance": "using Defend grants +2 Mental Defense in addition to AC until your next turn.",
       "imposing": "+1 Charisma.",
-      "menacing": "+1 to Demoralize checks.",
+      "menacing": "+2 to Demoralize checks.",
+      "wordless_menace": "Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
       "gruesome_takedown": "upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language).",
       "cull_the_broken": "+2 damage on attacks against demoralized targets.",
       "inspiring_shout": "upon successfully demoralizing an enemy, grant +1 initiative to the next ally in turn order.",
       "tactical_mind": "+1 Intelligence.",
-      "sharp_analysis": "+1 on all Assess and enemy observation checks.",
-      "combat_analysis": "+2 on active Assess checks made during battle.",
+      "sharp_analysis": "+2 on all Assess and enemy observation checks.",
+      "combat_analysis": "+4 on active Assess checks made during battle.",
       "exploit_weakness": "+2 to hit against enemies with Full Intel.",
       "anatomist": "your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
       "brawny": "+1 Strength.",
@@ -5618,7 +5635,7 @@
       "tail_sweep": "2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each.",
       "polyglot": "+2 to progress rolls when studying a foreign language.",
       "parley": "+1 when you Persuade, Bluff or Intimidate in the talk before a fight.",
-      "eye_for_detail": "+1 on all Assess and enemy observation checks.",
+      "eye_for_detail": "+2 on all Assess and enemy observation checks.",
       "mimic_voices": "+1 on performance rolls when playing on the tavern stage.",
       "razor_claws": "bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer.",
       "night_prowler": "the night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night.",

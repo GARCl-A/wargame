@@ -20,7 +20,7 @@ const ICONS = {
   first_aid: "body/heart-inside", stabilize: "body/heart-organ", capture: "action/arrest",
   drink_potion: "action/drinking", signal_horn: "action/shouting", pick_up: "action/snatch", draw: "action/switch-weapon",
   disarm: "action/drop-weapon", investigate: "action/look-at", jump: "action/jump-across",
-  climb: "action/mountain-climbing", drop: "action/stairs-goal", swim: "action/drowning",
+  climb: "action/mountain-climbing", drop: "action/stairs-goal", fly_up: "action/flying-fox", fly_down: "action/stairs-goal", swim: "action/drowning",
   share_magic: "action/transfuse", eat_corpse: "action/eating", spin_web: "action/hive-mind",
   mount: "action/leapfrog", dismount: "action/kneeling", lift_rider: "action/muscle-up",
   pixie_dust: "action/fruiting", wake_up: "action/shaking-hands", spells: "action/meditation",
@@ -172,7 +172,7 @@ function renderTokens() {
     el.className = cls.join(" ");
     el.style.cssText = `left:${x}px;top:${y}px;width:${d}px;height:${d}px;z-index:${n - at};--offer:${offerCol}`;
     const col = u.hp_frac > .5 ? "#7fa557" : "#d0493a";
-    const badge = n === 1 && u.dying ? `<div class="badge">${esc(u.dying)}</div>` : "";
+    const badge = n === 1 && (u.dying || u.altitude) ? `<div class="badge">${esc(u.dying || "↑" + u.altitude)}</div>` : "";
     const nameplate = (u.active && S.my_turn) || ui.armed === u.id || ui.inspect === u.id
       ? `<div class="nameplate ${u.side}">${esc(u.name)}</div>` : "";
     const carried = u.carries ? `<div class="flagbadge ${u.carries}"${tip(tr(u.carries === "ally" ? "battle.flag_ally" : "battle.flag_foe"))}>⚑</div>` : "";

@@ -656,7 +656,7 @@ class BattleSession(Session):
             "id": self.uid(u), "name": u.name, "side": self._side(u), "seat": self._seat(u), "team": u.team,
             "race": u.race_label,
             "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
-            "pos": _cell(u.pos), "fp": u.footprint,
+            "pos": _cell(u.pos), "fp": u.footprint, "altitude": u.altitude,
             **self._health(u),
             "active": u is b.active and b.winner is None,
             "torch": u.has_torch, "defending": u.defending, "demoralized": u.demoralized,

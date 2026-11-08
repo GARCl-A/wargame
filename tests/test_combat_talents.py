@@ -115,7 +115,7 @@ def test_charisma_combat_tree_progression():
     # Tier 2a: Menacing (+1 Demoralize)
     u.set_track_level("combat", 2)
     assert u.choose_talent("combat", "menacing")
-    assert u.talent_bonus("demoralize_bonus") == 1
+    assert u.talent_bonus("demoralize_bonus") == 2
 
     # Tier 3: Cull the Broken (+2 damage vs demoralized)
     u.set_track_level("combat", 3)
@@ -200,7 +200,7 @@ def test_intelligence_combat_tree_progression():
     # Tier 2a: Sharp Analysis (+1 on all Assess / observation)
     u.set_track_level("combat", 2)
     assert u.choose_talent("combat", "sharp_analysis")
-    assert u.talent_bonus("assess_bonus") == 1
+    assert u.talent_bonus("assess_bonus") == 2
 
     # Tier 2b / Tier 3: on another unit
     u2 = _body("player", "Tactician")
@@ -208,7 +208,7 @@ def test_intelligence_combat_tree_progression():
     u2.choose_talent("combat", "tactical_mind")
     u2.set_track_level("combat", 2)
     assert u2.choose_talent("combat", "combat_analysis")
-    assert u2.talent_bonus("assess_active_bonus") == 2
+    assert u2.talent_bonus("assess_active_bonus") == 4
 
     # Tier 3: Exploit Weakness (+2 to hit vs full intel)
     u2.set_track_level("combat", 3)

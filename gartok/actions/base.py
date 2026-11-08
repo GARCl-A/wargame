@@ -51,6 +51,7 @@ def _announced(execute):
     def run(self, battle, actor, target=None, **kw):
         ap, flies = actor.ap, self.flies(actor)
         result = execute(self, battle, actor, target, **kw)
+        battle.note_grounded()
         aim = getattr(target, "pos", target) if flies else None
         name = self.name if self.announce else None
         if actor.ap < ap and (name or aim):

@@ -5,7 +5,7 @@ the Non-lethal toggle."""
 from .. import i18n, intel, natural_weapons
 from ..board import cells, cells_in_radius, cone_cells
 from ..conditions import Defending, Demoralized, Grappled, Prone
-from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll
+from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll, squares
 from ..i18n import Msg, Ref, plural_key
 from .base import (
     Action,
@@ -78,10 +78,6 @@ class Attack(Action):
             return False
         if battle.units_distance(actor, target) > actor.attack_range:
             return False
-        # melee only crosses a one-level lip; a deeper drop is out of reach
-        if not actor.ranged \
-                and abs(battle.elevation(actor) - battle.elevation(target)) > 1:
-            return False
         if not battle.los_between(actor, target):
             return False
         if not battle.can_see_unit(actor, target):
@@ -136,8 +132,6 @@ class AttackTongue(Action):
         if not _attackable_target(actor, target):
             return False
         if battle.units_distance(actor, target) > actor.tongue_reach:
-            return False
-        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
@@ -309,8 +303,26 @@ class Throw(Action):
 # Demoralize                                                                   #
 # --------------------------------------------------------------------------- #
 
+UNSPOKEN_RANGE = squares(9)       # Wordless Menace: the threat carries 6 squares without a shared tongue
+UNSPOKEN_PENALTY = -2             # and costs the +2 of Menacing
+
+
+def demoralize_language_penalty(actor, target):
+    """The roll penalty of a Demoralize carried by Wordless Menace alone: no shared tongue and no mimicry."""
+    char = getattr(actor, "char", None)
+    if (not char or not char.talent_bonus("demoralize_no_language") or actor.ability.demoralize_ignores_language
+            or _shared_language(actor, target)):
+        return 0
+    return UNSPOKEN_PENALTY
+
+
 class Demoralize(Action):
     id, cost, target, aimed = "demoralize", 1, "enemy", True
+
+    def _wordless(self, battle, actor, target):
+        char = getattr(actor, "char", None)
+        return bool(char and char.talent_bonus("demoralize_no_language")
+                    and battle.units_distance(actor, target) <= UNSPOKEN_RANGE)
 
     def _can_provoke(self, battle, actor, target):
         return (actor.ability.demoralize_ignores_language
@@ -324,7 +336,7 @@ class Demoralize(Action):
             return False
         if not (battle.can_see_unit(actor, target) and battle.can_see_unit(target, actor)):
             return False
-        return self._can_provoke(battle, actor, target)
+        return self._can_provoke(battle, actor, target) or self._wordless(battle, actor, target)
 
     def label(self, battle, actor):
         return i18n.t("action.demoralize.label")
@@ -359,6 +371,8 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
     demo_bonus = getattr(actor.char, "talent_bonus", lambda x: 0)("demoralize_bonus") if hasattr(actor, "char") else 0
     if demo_bonus:
         mods.append((demo_bonus, "training", i18n.t("log.mod.menacing")))
+    if not (free or ignore_language) and (unspoken := demoralize_language_penalty(actor, target)):
+        mods.append((unspoken, None, i18n.t("log.mod.wordless")))
     bonus, applied = resolve_bonus(mods)
     detail = " ".join(f"{v:+}({r})" for v, r in applied)
 
@@ -501,8 +515,6 @@ class Push(Action):
         if actor.ap < self.cost or not _shovable_target(actor, target):
             return False
         if battle.units_distance(actor, target) > 1:
-            return False
-        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         return battle.los_between(actor, target)
 
@@ -750,8 +762,6 @@ class Grab(Action):
             return False
         if battle.units_distance(actor, target) > 1:
             return False
-        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
-            return False
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
     def label(self, battle, actor):
@@ -805,8 +815,6 @@ class Takedown(Action):
         if target.has_condition("prone") or target.flies:
             return False
         if battle.units_distance(actor, target) > 1:
-            return False
-        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
@@ -936,8 +944,6 @@ class ZombieBite(Action):
         if not target.alive or not target.has_condition("grappled"):
             return False
         if battle.units_distance(actor, target) > 1:
-            return False
-        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 

@@ -96,7 +96,7 @@ def _demoralize_worth(battle, unit, target):
     mod = unit.mod_charisma
     if char.has_talent("intimidating_presence"):
         mod = max(mod, unit.mod_strength)
-    mod += char.talent_bonus("demoralize_bonus")
+    mod += char.talent_bonus("demoralize_bonus") + actions.demoralize_language_penalty(unit, target)
     if unit.ability.demoralize_vs_weaker and unit.mod_strength > target.mod_strength:
         mod += unit.ability.demoralize_vs_weaker
     md = target.mental_defense if intel.knows(battle, unit.team, target, "md") else 10
