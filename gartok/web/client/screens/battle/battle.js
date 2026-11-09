@@ -698,8 +698,14 @@ function renderLedger() {
 $("overlay").addEventListener("click", async e => {
   if (ui.dragged) { ui.dragged = false; return; }
   if (!S || ui.busy || S.winner) return;
-  if (ui.pile) { closePile(); return; }
   const cell = Board.cellAt(...sheetPoint(e)), z = zoneAt(e);
+  if (ui.pile) {
+    // a second click on the medallion that opened the card takes its highlighted row (a double click)
+    const again = z && z.kind === "bodies" && z.cell && ui.pile.cell[0] === z.cell[0] && ui.pile.cell[1] === z.cell[1];
+    if (again && ui.pile.rows[ui.pile.sel] && ui.pile.rows[ui.pile.sel].legal) return takePile(ui.pile.sel);
+    closePile();
+    return;
+  }
   const sameCell = c => z && z.cell && c && z.cell[0] === c[0] && z.cell[1] === c[1];
   if (ui.loot) {
     const pinned = ui.loot.mode === "pin" && z && z.kind === ui.loot.kind && sameCell(ui.loot.cell);
