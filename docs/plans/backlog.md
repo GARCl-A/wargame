@@ -1,4 +1,4 @@
-﻿# Backlog — everything still open
+# Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
 `docs/plans/` ([loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
@@ -143,6 +143,48 @@ the rest.
   +1 reach (if it has one), so a weapon's entry must list every property it carries, read off its
   `ItemDef`.
 
+- **Body size AC adjustment (playtest sim balance, author 2026-11-08).** Simulation shows 4 of 5 small races
+  underperform (score < 50) due to reduced weapon damage. Apply size AC adjustments: Tiny (+2 AC), Small (+1 AC),
+  Medium (0 AC), Large (-1 AC) in `unit_derive.py`. Re-measure with `scripts/combat_pairs.py` and `scripts/economy_report.py`.
+
+- **Vocation tweaks: Warband, Delvers, Marsh (author 2026-11-08).**
+  (1) Warband: +1 Morale for group members.
+  (2) Delvers: bonus restricted specifically to licensed gathering (mining and lumber with license)
+  and hunting/foraging, instead of an unspecific wage bonus across all work.
+  (3) Marsh: softens hunger attribute penalties by 2 (day 1 Hungry gives 0 penalty instead of -2;
+  day 2 Starving gives -2 instead of -4, while HP max remains capped at 1; days 3 and 4 remain unchanged:
+  day 3 Incapacitated, day 4 Starvation death). Replaces the old "food pause every 10 days" perk.
+
+- **Wiki: document Hunger and Starvation rules.** The in-game wiki does not yet explain the hunger rules.
+  Document: 1 meal/ration required per day at upkeep; hunger progression (fed -> hungry -> starving -> dying);
+  attribute penalties (-2 for hungry, -4 for starving); HP max capped at 1 when starving; incapacitation on day 3;
+  starvation death at 4 missed meals; Rotten Food eaten only in last-resort desperation.
+
+- **Wiki: dynamic alphabetical chapter ordering & Conditions vs Keywords.** Sort wiki chapters dynamically
+  by translated label (`locales/*.json`) so ordering is natural in all languages. Check whether "Fleeing" belongs
+  under Conditions (`conditions.py`) rather than Keywords.
+
+- **Draft screen: weapon ability tooltip on hover (author 2026-11-08).** Hovering over a drafted character's
+  weapon should show the weapon ability tooltip, clarifying tactical traits during hiring.
+
+- **Map screen: overencumbered member tag (author 2026-11-08).** In the band member dropdown on the left side
+  of the map screen, add an "overencumbered" tag alongside the existing "leading" and "hungry" status tags.
+
+- **Combat log: full damage roll breakdown (author 2026-11-08).** The log currently displays the hit roll
+  breakdown but not the damage roll. Add damage roll detail at the same level of transparency.
+
+- **AI heuristics: Shove vs Attack x2 (playtest 2026-11-08).** Review AI combat priorities when surrounded or
+  flanked. Ensure the AI does not overvalue shoving a foe away (to break flanking or force movement) over
+  attacking twice to eliminate or soften an immediate threat.
+
+- **AI target selection against flying units (playtest 2026-11-08).** When an enemy flyer (fairy) is out of
+  reach, nearby melee AI (wolves) defaulted to Defend instead of advancing to attack reachable grounded allies.
+  Adjust AI target evaluation to seek alternate reachable targets.
+
+- **Wiki race metadata translations and UI text polish (playtest 2026-11-08).** Ensure "Small", "Hit Die",
+  "Speed", "Speaks" and attribute abbreviations are properly localized in the races wiki (`locales/pt-br.json`).
+  Avoid double hyphens ("--") in dialogue text boxes. Capitalize the first letter in talent descriptions.
+
 ---
 
 # Large and later
@@ -224,13 +266,6 @@ agent asks for art instead of generating it. Order is the suggested priority.
   **Prompts are not kept in the repo yet** (the Gemini prompts for the finished textures were not
   saved). From now on save each prompt that works (and the reference images attached) next to the
   texture, in `docs/art/<name>_options/`, and write the prompt that failed under its item.
-  - [x] Cave rock floor — `rock.jpg`
-  - [x] Grass floor — `grass.jpg`
-  - [x] Stone floor — `flagstones.jpg`
-  - [x] Arena sand — `sand.jpg`
-  - [x] Trees from above — `tree_1..3.png` (cut out of their parchment)
-  - [x] UI materials — `paper.png`, `leather.png`, `brass_button.png` /
-    `brass_button_pressed.png`, `seal.png` (End Turn), `portrait_frame.png`
   - [ ] Boulders from above — one of three, `boulder.png` (the other came inside a drawn
     circle)
   - [ ] Road earth (twice wrong: straight ruts like grid lines, then a copy of `rock.jpg`;
@@ -328,6 +363,13 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 ---
 
 # Playtest notes
+
+## 2026-11-08
+
+PT-BR playtest (commit 4dca9e05):
+- **UI & layout regressions:** Check font hierarchy and styling on post-fight recap ("who killed whom")
+  and roster screen. Ensure "consumables & equipment" header text wrapping looks balanced. Check occasional
+  image cache misses on screen transition.
 
 ## 2026-11-02
 
@@ -569,17 +611,14 @@ has one "Enter" button and its functions are tabs inside.
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
   Open: tier 2+ spells and any reputation penalty for rivalry.
 
-- **Recipes learned by owning the item or a teacher (author 2026-10-31).** Built (2026-11-05): a recipe paper
-  (`Recipe of <Name>`, `ItemDef.recipe_id`) is studied like a level-0 spell, and the Apothecary's venom errand
-  pays the first one (Antidote); the others come one at a time as the game needs them. Open: where the papers
+- **Recipes learned by owning the item or a teacher (author 2026-10-31).** A recipe paper
+  is studied like a level-0 spell (Apothecary's Antidote errand is the first). Open: where more recipe papers
   come from. Today a recipe comes from a race (Dwarf at level 5), a crafting talent (Apothecary, Smith) or that
-  paper, and few exist. The intent: learn by
-  owning an item (take the axe to the smith and study it until you can make it) or by being taught. A
-  first form: the Library makes dictionaries, so a leader who speaks only Draconic hires a Lizardfolk and
-  writes the dictionary to learn the language. Some recipes come from missions, artefacts from quests;
-  the Kobold learns trap recipes and places traps farther. The tester's idea: a research system to
-  discover formulas. Open: teachers (who, what it costs), study time, what the Library's dictionary
-  gives, research. Size a first form when the production chain is picked up.
+  paper, and few exist. The intent: learn by owning an item (take the axe to the smith and study it until you can make it)
+  or by being taught. A first form: the Library makes dictionaries, so a leader who speaks only Draconic hires a Lizardfolk and
+  writes the dictionary to learn the language. Some recipes come from missions, artefacts from quests; the Kobold learns trap
+  recipes and places traps farther. The tester's idea: a research system to discover formulas. Open: teachers (who, what it costs),
+  study time, what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
 
 - **Better food: dishes with buffs (after the magic arc).** Food only quells hunger and the Potato does it
   cheapest. The preservation recipes are built (Jerky, Roast Meat, Fruit Compote; no buffs, by design).
@@ -607,65 +646,8 @@ has one "Enter" button and its functions are tabs inside.
   and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
   playtest shows whether bout chains break anything.
 
+- **Kenku archetype design (author 2026-11-08).** Kenku stats (DEX/WIS/CHA) leave it neither a pure caster
+  nor a melee bruiser. Design space: high-initiative ranged archery and Demoralize synergy.
 
-==========
-
-Notas cruas de backlog - 08/11/2026 - 4dca9e05 - Jogo em PT-BR
-
-- Evitar o uso de travessões ou "--" nas caixas de texto do jogo. Como por exemplo "...trabalho honesto -- então todo mundo...".
-
-- O fit de "continuar" não está muito bom no botão da tela de escolher vocação, isso se deve ao fato de que o jogo foi feito primeiro em ingles, que é substancialmente "menor" que o português. POREM, é importante a gente pensar num jeito dessas localizações serem escalaveis, pq nao é so pq a palavra foi de 5 pra 8 letras que a ui tem que quebrar. Isso vai acontecer em varias parte do jogo.
-
-- E se a habilidade do marsh for reduzir as penalidades de atributo pra fome ou algo do tipo, ao inves de "Nao apodrecer a comida".
-
-- E se a habilidade dos delvers fosse bonus somente em COLETA, ou seja, minerar e coletar lenha COM LICENÇA e caçada/forrageio. Ao inves de ser simplesmente ganhar mais dinheiro em todo trabalho. (checar se essa ultima frase é verdade)
-
-- Medir se o bonus de +2 dos scholar é bom o suficiente, ou se era melhor q fosse +4.
-
-- Muda a habilidade do warband pra +1 de moral nos personagens
-
-- Na wiki, o número romano das "regras" ficou undefined depois q adicionamos o tópico de "condições". Dito isso algumas outras coisas, acho q vale ordernar os capitulos da wiki por ordem alfabetica dinamicamente (pra suportar ordenar nas diferentes traduções). E "Em fuga" não é mais uma condição do que uma keyword?
-
-- A "leitura inicial" descrita como uma vantagem dos eruditos, não simplesmnete a ação "avaliar". logo, o texto "correto" não seria simplesmente "+2 nas rolages de Avaliar"?
-
-- Na tela de draft, ![alt text](evidences/image.png) ta tudo sobrepondo ali.
-
-- o passar o mouse em cima da habilidade da arma no draft deveria aparecer o texto da habilidade.
-
-- Em alguns momentos quando eu mudo de uma tela pra outra, algumas imagens e ícones não estão vindo. Ai eu dou f5 e eles vem certinho.
-
-- Aqui o botão ficou ruim em portugues ![alt text](evidences/2.png)
-
-- Na descrição dos talentos, seria bom que a primeiroa letra da descrição fosse maiuscula né.
-
-- ![alt text](evidences/3.png) aqui ficou muito ruim quando clica que o texto de "consumiveis e equipamento" fica dividido em 2 linhas, meio ruim.
-
-- A fonte aqui ficou PESSIMA:  ![alt text](evidences/4.png). Nao sei se foi uma das alterações de CSS que fiz ao mexer no mapa, mas aqui ficou bem ruim "lotação/grupo". Não orna nada com a tela. O mesmo no "quem abateu quem" na tela de "depois da luta"
-
-- O texto descritivo da arena, no mapa, "não letal" "aposte dinheiro, ganhe a bolsa". Pq q ta em duas linhas n faz sentido nenhum.
-
-- Isso aqui tambem tem cara de algum colateral indesejado que eu fiz quando tava mexendo na UI ![alt text](evidences/5.png)
-
-- Os icones da espada larga, espada e rapieira são os mesmos. Os icones do machado e machadinha são os mesmos.
-
-- Na tela de loot, na wilds, nao ta dando pra equipar a armadura no cara.
-
-- Não ta trivial, na tela de mapa, saber q meus perosangens estão sobrecarregados.
-
-- Combate nos ermos no dia 27, antes da rodada 9. A Braema não conseguia bater no Pyrtor.
-
-- No log, nao da pra ver a rolagem de dano, so do acerto. Seria bom conseguir ver, no mesmo nivel de detalhe.
-
-- Empurrar um inimigo pra bater no outro me parece uma ação bem ruim, comparada a bater 2x... Achei esquisito.
-
-- Nos ermos, combate no dia 38 no save dos estudadores, tivemos um problema, pq os 2 lobos próximos da Braema, simplesmente usaram "defend" ao inves de irem atacar os outros aliados delas q estavam no chão. Parece q a IA ta lidando muito mal contra o voo da fada.
-
-- Na wiki de raças o tamanho "small" o "hit Die" a "speed" e o "speaks x" nçao ficaram traduduzidos. Nem as abreveciações dos atributos.
-
-
-====
-
-Usando o sim_result/sleep_both/report.md como base pra esses pensamentos:
-como pendencias de balanceamento. Das 10 raças com score abaixo de 50, 4 das 5 raças pequenas estão lá. EAI, dado que ser pequeno paga o custo de ter menos dano, eu to pensando em aumentar a CA. Ou seja, as raças pequenas ganham +1 de CA (tiny ganha 2) e raças grandes PERDEM 1 de CA [O colateral aqui é nerfar o centauro, mas seja oq deus quiser. depois a resolve esse problema]. A expectativa é que com a CA mais alta, a gente mais valor no demoralize e nas magias. Oq é bom, pq aumenta os bonus de acerto que o jogo da, dado q 6 raças vão ficar mais dificeis de fazer as coisa. Enfim, só vendo como vai ser o impacto.
-
-Eai a build mais coitada q eu to com dificuldade ate de saber oq fazer, é com o kenku. Pq ele tem destreza, sabedoria e carisma. LOGO, ele não é um excelente caster, nem um bom combatente melee. Na minha visão o espaço de design dele é alguem que joga desmoralizando a distância. E que joga primeiro.
+- **Weapon SVG icons audit (author 2026-11-08).** Broadsword, sword and rapier share an icon; axe and hatchet share
+  an icon. Check local `gartok/assets/` pool for distinctive alternatives before sourcing external SVGs.

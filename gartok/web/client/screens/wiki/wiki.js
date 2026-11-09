@@ -2,7 +2,7 @@
 "use strict";
 
 let W = null, busy = false, typed = null;
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI"];
 
 function toast(text) {
   const t = $("toast");
@@ -49,7 +49,7 @@ function render(state) {
   W = state;
   $("back").textContent = W.back;
   $("chapters").innerHTML = W.chapters.map((c, i) =>
-    `<div class="ch ${c.id === W.chapter ? "on" : ""}" data-ch="${c.id}"><span class="n">${ROMAN[i]}</span>${esc(c.label)}</div>`).join("");
+    `<div class="ch ${c.id === W.chapter ? "on" : ""}" data-ch="${c.id}"><span class="n">${ROMAN[i] || (i + 1)}</span>${esc(c.label)}</div>`).join("");
   const label = W.chapters.find(c => c.id === W.chapter).label;
   $("chapter").textContent = label;
   $("count").textContent = W.query.trim() ? tr("wiki.of_total", {n: W.entries.length, total: W.total, q: W.query.trim()}) : tr("wiki.entries", {n: W.total});
