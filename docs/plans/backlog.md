@@ -624,3 +624,39 @@ Notas cruas de backlog - 08/11/2026 - 4dca9e05 - Jogo em PT-BR
 - Medir se o bonus de +2 dos scholar é bom o suficiente, ou se era melhor q fosse +4.
 
 - Muda a habilidade do warband pra +1 de moral nos personagens
+
+- Na wiki, o número romano das "regras" ficou undefined depois q adicionamos o tópico de "condições". Dito isso algumas outras coisas, acho q vale ordernar os capitulos da wiki por ordem alfabetica dinamicamente (pra suportar ordenar nas diferentes traduções). E "Em fuga" não é mais uma condição do que uma keyword?
+
+- A "leitura inicial" descrita como uma vantagem dos eruditos, não simplesmnete a ação "avaliar". logo, o texto "correto" não seria simplesmente "+2 nas rolages de Avaliar"?
+
+- Na tela de draft, ![alt text](evidences/image.png) ta tudo sobrepondo ali.
+
+- o passar o mouse em cima da habilidade da arma no draft deveria aparecer o texto da habilidade.
+
+- Em alguns momentos quando eu mudo de uma tela pra outra, algumas imagens e ícones não estão vindo. Ai eu dou f5 e eles vem certinho.
+
+- Aqui o botão ficou ruim em portugues ![alt text](evidences/2.png)
+
+- Na descrição dos talentos, seria bom que a primeiroa letra da descrição fosse maiuscula né.
+
+- ![alt text](evidences/3.png) aqui ficou muito ruim quando clica que o texto de "consumiveis e equipamento" fica dividido em 2 linhas, meio ruim.
+
+- A fonte aqui ficou PESSIMA:  ![alt text](evidences/4.png). Nao sei se foi uma das alterações de CSS que fiz ao mexer no mapa, mas aqui ficou bem ruim "lotação/grupo". Não orna nada com a tela. O mesmo no "quem abateu quem" na tela de "depois da luta"
+
+- O texto descritivo da arena, no mapa, "não letal" "aposte dinheiro, ganhe a bolsa". Pq q ta em duas linhas n faz sentido nenhum.
+
+- Isso aqui tambem tem cara de algum colateral indesejado que eu fiz quando tava mexendo na UI ![alt text](evidences/5.png)
+
+- Os icones da espada larga, espada e rapieira são os mesmos. Os icones do machado e machadinha são os mesmos.
+
+- Na tela de loot, na wilds, nao ta dando pra equipar a armadura no cara.
+
+- Não ta trivial, na tela de mapa, saber q meus perosangens estão sobrecarregados.
+
+- Combate nos ermos no dia 27, antes da rodada 9. A Braema não conseguia bater no Pyrtor.
+
+- No log, nao da pra ver a rolagem de dano, so do acerto. Seria bom conseguir ver, no mesmo nivel de detalhe.
+
+- Empurrar um inimigo pra bater no outro me parece uma ação bem ruim, comparada a bater 2x... Achei esquisito.
+
+- Nos ermos, combate no dia 38 no save dos estudadores, tivemos um problema, pq os 2 lobos próximos da Braema, simplesmente usaram "defend" ao inves de irem atacar os outros aliados delas q estavam no chão. Parece q a IA ta lidando muito mal contra o voo da fada.2
