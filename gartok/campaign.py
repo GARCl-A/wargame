@@ -167,6 +167,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     wraps. `node` is the world node the fight happened at (for the faction deeds);
     `arena_offer` is the `world.Bout` for an arena fight, or None.
     """
+    battle.return_dropped_gear()
     survivors, fallen, fallen_combatants, stabilized, xp_awards, leveled_up = [], [], [], [], {}, []
     report, level_ups, memorials = [], [], []
     takedowns, downed = aftermath.takedowns(battle), {}

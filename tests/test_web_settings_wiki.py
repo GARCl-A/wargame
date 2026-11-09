@@ -119,7 +119,7 @@ def test_from_the_map_the_settings_carry_the_guilds_tutorial_and_save_it(saves):
 def test_the_wiki_opens_on_items_and_every_chapter_reads_the_catalogs(saves):
     w = WikiSession(lambda: {"screen": "title"})
     st = w.state()
-    assert st["chapter"] == "items" and len(st["chapters"]) == 9
+    assert st["chapter"] == "items" and len(st["chapters"]) == 10
     assert st["total"] == len(items.all_items()) and len(st["entries"]) == st["total"]
     sword = next(e for e in st["entries"] if e["name"] == "Broadsword")
     assert "1d12" in sword["tags"] and "Two-handed" in sword["tags"] and sword["glyph"].startswith("item/")

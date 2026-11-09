@@ -11,7 +11,7 @@ roster and a rematch could reuse the same picks.
 
 import random
 
-from . import captives, data, i18n, intel, morale, names, outfit, vision
+from . import captives, data, i18n, intel, items, morale, names, outfit, vision
 from .board import (
     COLS,
     ROWS,
@@ -129,6 +129,7 @@ class Battle:
         self.units = list(self.player_units) + list(self.enemy_units) + list(self.other_units)
         for u in self.units:
             u.reset_battle_state()           # fresh state (also full heal on a rematch)
+            u.on_fall = self._lay_down_kit
             u.nonlethal = not self.lethal    # 0 HP -> knocked out instead of dying
 
         self.creatures = []                  # neutral bodies that block their cells
@@ -189,7 +190,43 @@ class Battle:
         (self.enemy_units if team == "enemy" else self.other_units).append(c)
         self.units.append(c)
         self.order.append(c)
+        c.on_fall = self._lay_down_kit
         return c
+
+    def _lay_down_kit(self, unit, kit):
+        """What a fallen unit let go of lands on the free cells beside it, one each, the first free
+        neighbour in board order (its own cell when none is free)."""
+        own = set(self.cells_of(unit))
+        for kind, name in kit:
+            free = [p for c in own if self.board.in_bounds(c) for p in self.board.neighbors(c)
+                    if p not in own and p not in self.board.walls and self.unit_at(p) is None and self.ground_at(p) is None]
+            dest = free[0] if free else unit.pos
+            if kind == GroundObject.TORCH:
+                self.ground.append(GroundObject.torch(dest, owner=unit))
+                self.log("log.drops_torch", actor=unit.name, cell=str(dest))
+                continue
+            self.ground.append(GroundObject.shield(dest, name, owner=unit) if kind == GroundObject.SHIELD
+                               else GroundObject.weapon(dest, name, owner=unit))
+            item = items.get(name)
+            self.log("log.drops", actor=unit.name, item=Ref("item", item.name if item else name, name, False), cell=str(dest))
+
+    def return_dropped_gear(self):
+        """The battle is over: what a unit let go of when it fell goes back to its hands if it still stands
+        or lies alive and they are empty; the rest stays on the ground as loot."""
+        for obj in list(self.ground):
+            u = obj.owner
+            if u is None or u.dead or getattr(u, "fled", False):
+                continue
+            if (obj.is_weapon and not u.weapon_hand and u.char.can_wield(obj.weapon_name)
+                    and items.get(obj.weapon_name).hands <= u.free_hands):
+                u.equip_weapon(obj.weapon_name)
+            elif obj.is_shield and u.can_take_shield:
+                u.equip_shield(obj.item_name)
+            elif obj.is_torch and not u.torch_hand and u.free_hands >= 1:
+                u.torch_hand = True
+            else:
+                continue
+            self.ground.remove(obj)
 
     def creature_cells(self):
         return {c for cr in self.creatures for c in cells(cr.pos, cr.footprint)}

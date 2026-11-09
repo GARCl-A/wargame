@@ -15,8 +15,18 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import conditions, data, i18n, intel, items, morale, natural_weapons, progression
-from .conditions import DEMORALIZE_MAX_STACKS, Hexed
+from . import (
+    conditions,
+    data,
+    draw,
+    i18n,
+    intel,
+    items,
+    morale,
+    natural_weapons,
+    progression,
+)
+from .conditions import DEMORALIZE_MAX_STACKS, Hexed, Prone
 from .data import resolve_bonus, roll
 from .i18n import Ref
 from .unit import flatten_pack
@@ -114,6 +124,7 @@ class Combatant:
         self.lantern_hand = False
         self.drew = False             # hands changed with Draw: the character carries them back (`draw.carry_back`)
         self.shield_ac_delta = 0      # the AC a shield drawn or stowed in the fight adds to the character's own
+        self.on_fall = None           # set by the battle: puts what a fallen unit lets go of on the ground
         if c.equipped_offhand in (data.TORCH_ITEM, data.LANTERN_ITEM):
             weapon_hands = self.weapon.hands if self.weapon_hand else 0
             free_off_hand = weapon_hands < 2         # a 2-handed weapon leaves no off hand
@@ -250,6 +261,7 @@ class Combatant:
             self.status = "dead"
             log("log.down.raised", unit=self.name)
             return
+        self._fall_to_the_ground()
         if self.nonlethal or knockout:
             self.status = "stable"           # knocked out, survives
             log("log.down.knocked_out_fight" if self.nonlethal else "log.down.knocked_out", unit=self.name)
@@ -262,6 +274,45 @@ class Combatant:
         self.status = "dying"
         self.death_clock = 0
         log("log.down.dying", unit=self.name, turns=data.DYING_TURNS)
+
+    def _fall_to_the_ground(self):
+        """A body that goes down lies Prone and lets go of what its hands hold, which the battle puts
+        on a free cell beside it (a unit with no battle around it keeps its kit)."""
+        if not self.has_condition("prone"):
+            self.add_condition(Prone())
+        if self.on_fall is not None:
+            self.on_fall(self, self.let_go_of_kit())
+
+    def let_go_of_kit(self):
+        """Empties both hands; -> [(kind, item name)] for the ground. A natural weapon cannot be let go,
+        a lantern goes back to the pack (see `drop_lantern`)."""
+        out = []
+        shield = draw.hands(self)[1]
+        weapon = self.drop_weapon()
+        if weapon:
+            if self.crossbow_loaded:
+                self.ammo += 1
+                self.crossbow_loaded = False
+            out.append(weapon)
+        torch = self.drop_torch()
+        if torch:
+            out.append(torch)
+        self.drop_lantern()
+        if shield and items.is_shield(shield):
+            self.equipped_offhand = None
+            self.shield_ac_delta -= items.get(shield).ac
+            out.append(("shield", shield))
+        return out
+
+    def equip_shield(self, shield_name):
+        """Takes a shield in the free off hand (the caller checked `can_take_shield`)."""
+        self.equipped_offhand = shield_name
+        self.shield_ac_delta += items.get(shield_name).ac
+
+    @property
+    def can_take_shield(self):
+        """An empty off hand with a one-handed (or no) weapon in the other."""
+        return self.free_hands >= 1 and not draw.hands(self)[1]
 
     def check_collapse(self, log):
         """An attribute at zero (poison, hunger and Hex counted) drops a standing unit to

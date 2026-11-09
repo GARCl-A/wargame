@@ -31,6 +31,7 @@ from .movement import (
     _adjust_altitude,
     _assess_target,
     _light_globe,
+    _recover_shield,
     _recover_torch,
     _recover_weapon,
     _sight_cell,
@@ -50,8 +51,8 @@ from .scripted import (
 )
 from .support import (
     _ally_to_help,
-    _try_drink_potion,
     _sleeps_beyond_turn,
+    _try_drink_potion,
     _try_healing_touch,
     _try_lift_rider,
     _try_mount,
@@ -219,7 +220,7 @@ def take_turn(battle, unit):
         if _eat_corpse(battle, unit):         # Gnoll: devour a dead enemy
             continue
 
-        if _recover_weapon(battle, unit):
+        if _recover_weapon(battle, unit) or _recover_shield(battle, unit):
             continue
 
         if _recover_torch(battle, unit):

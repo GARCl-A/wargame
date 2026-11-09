@@ -33,7 +33,7 @@ class PickUp(Action):
                 return (0, chebyshev(o.pos, actor.pos))
             if actor.unarmed and o.is_weapon:
                 return (1, chebyshev(o.pos, actor.pos))
-            if o.is_torch:
+            if o.is_shield or o.is_torch:
                 return (2, chebyshev(o.pos, actor.pos))
             return (3, chebyshev(o.pos, actor.pos))
         return sorted(
@@ -65,7 +65,10 @@ class PickUp(Action):
         actor.ap -= 1
         actor.walking = False
 
-        if obj.is_torch:
+        if obj.is_shield:
+            actor.equip_shield(obj.item_name)
+            battle.log("log.picks_up", actor=actor.name, item=item_ref(obj.item_name))
+        elif obj.is_torch:
             dropped = actor.equip_torch()
             battle.log("log.picks_torch", actor=actor.name, n=data.TORCH_RADIUS)
             for kind, weapon_name in dropped:

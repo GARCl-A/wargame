@@ -1941,7 +1941,7 @@
       },
       "prone": {
         "name": "Prone",
-        "rule": "On the ground: cannot walk until it stands up (1 AP). Attacks at -2."
+        "rule": "On the ground (thrown down, or fallen at 0 HP): cannot walk until it stands up (1 AP). Attacks at -2."
       },
       "sleeping": {
         "name": "Asleep",
@@ -2145,6 +2145,7 @@
       "recipes": "Recipes",
       "actions": "Actions",
       "keywords": "Keywords",
+      "conditions": "Conditions",
       "races": "Races",
       "beasts": "Beasts",
       "rules": "Rules",
@@ -6286,6 +6287,7 @@
     "utility": "Utility",
     "kind_cost": "{kind} · {ap} AP",
     "keyword": "Keyword",
+    "condition": "Condition",
     "thrown_sq": "Thrown {n} sq"
   }
 }

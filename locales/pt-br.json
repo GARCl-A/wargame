@@ -1256,7 +1256,7 @@
             },
             "prone": {
                 "name": "Caído",
-                "rule": "No chão: não anda até se levantar (1 PA). Ataques com -2."
+                "rule": "No chão (derrubado, ou caído a 0 PV): não anda até se levantar (1 PA). Ataques com -2."
             },
             "sleeping": {
                 "name": "Dormindo",
@@ -1774,6 +1774,7 @@
             "recipes": "Receitas",
             "actions": "Ações",
             "keywords": "Palavras-chave",
+            "conditions": "Condições",
             "races": "Raças",
             "beasts": "Feras",
             "rules": "Regras",
@@ -5181,7 +5182,7 @@
                 "gender": "f"
             },
             "Leather Jerkin": "Gibão de Couro",
-            "Studded Leather": "Couro Rebitado",
+            "Studded Leather": "Couro Batido",
             "Chainmail": {
                 "name": "Cota de Malha",
                 "gender": "f"
@@ -6661,6 +6662,7 @@
         "utility": "Utilidade",
         "kind_cost": "{kind} · {ap} pts",
         "keyword": "Palavra-chave",
+        "condition": "Condição",
         "thrown_sq": "Arremesso {n} casas"
     }
 }

@@ -42,6 +42,7 @@ from .flee import (
     _try_vanish,
 )
 from .movement import (
+    _recover_shield,
     _recover_torch,
     _recover_weapon,
     _step_over_terrain,

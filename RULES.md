@@ -816,6 +816,13 @@ triples.
   at **-2** until it spends **1 point** on **Stand Up**, which is only open while Prone. The AI stands
   up before anything else and takes a foe down only to stop a runner or flag carrier: against an
   ordinary foe the trade (a point for the point it spends standing) lost in headless fights.
+- **Falling.** A unit that goes down (0 HP: dying, knocked out or a broken machine) lies **Prone** and **lets go of
+  what its hands hold** -- the weapon, the shield, a torch (a lantern goes back to its pack; a natural weapon cannot be
+  let go) -- each on a free cell beside it (`Battle._lay_down_kit`). Whoever raises it (Healing Touch, a potion, a
+  repair) gets a unit that must **Stand Up** (1 point) and **Pick Up** its kit again (1 point each, and a foe may
+  take it first). When the battle ends a unit that is alive gets back what is still on the ground and its hands can
+  hold (`Battle.return_dropped_gear`); a dead one's kit is loot. The AI takes a dropped weapon or shield that lies
+  in reach (`ai.movement._recover_weapon`, `_recover_shield`).
 - **Vertical combat.** Melee reaches between two elevations if the difference is
   **≤ 1** (a fight at the lip). A difference of **2 or more** takes the target
   out of melee reach until someone climbs — a **ranged** attack still connects.
@@ -1011,10 +1018,11 @@ target's confidence instead of wounding them.
 ### Ground objects 🟡
 
 - An object occupies a cell but **does not block** movement or a line of fire.
-- Kinds today (`GroundObject.kind`): **`weapon`** (a thrown/dropped weapon) and
-  **`torch`**.
+- Kinds today (`GroundObject.kind`): **`weapon`** (a thrown/dropped weapon), **`shield`** (let go by a
+  fallen unit) and **`torch`**.
 - The **Pick Up** action (1 point), object in the cell or **adjacent**:
   - **weapon:** only if you are **unarmed**.
+  - **shield:** anyone with an empty off hand (no torch, no shield, a one-handed weapon or none).
   - **torch:** anyone — armed = a swap (the weapon drops).
 - The AI prioritises recovering its own dropped weapon before attacking again
   (it ignores torches).

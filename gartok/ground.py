@@ -1,6 +1,6 @@
 """Things that sit on the board but are not units.
 
-`GroundObject` replaces the old dict-with-a-`kind`-key: a dropped weapon or a
+`GroundObject` replaces the old dict-with-a-`kind`-key: a dropped weapon, shield or
 torch lying on a cell. `Creature` is a neutral, non-controllable body (the
 Shepherd's sheep) that only blocks its cell and gets drawn.
 
@@ -12,14 +12,16 @@ to it; consumers ask `obj.kind` / `obj.is_weapon` / `obj.is_torch`.
 class GroundObject:
     WEAPON = "weapon"
     TORCH = "torch"
+    SHIELD = "shield"
     TRAP = "trap"
     RELIC = "relic"
     CHEST = "chest"
     DISK = "floating_disk"
 
     def __init__(self, kind, pos, weapon_name=None, trap_type=None, trap_owner_team=None,
-                 item_name=None, contents=None, elevation=0, trap_group=None):
+                 item_name=None, contents=None, elevation=0, trap_group=None, owner=None):
         self.kind = kind
+        self.owner = owner                  # the combatant that dropped it: it gets its kit back if it lives
         self.pos = pos
         self.weapon_name = weapon_name
         self.trap_type = trap_type
@@ -31,12 +33,16 @@ class GroundObject:
         self.fixture = False                # part of the place (a dungeon's chest): taken by hand, never field loot
 
     @classmethod
-    def weapon(cls, pos, weapon_name):
-        return cls(cls.WEAPON, pos, weapon_name)
+    def weapon(cls, pos, weapon_name, owner=None):
+        return cls(cls.WEAPON, pos, weapon_name, owner=owner)
 
     @classmethod
-    def torch(cls, pos):
-        return cls(cls.TORCH, pos)
+    def torch(cls, pos, owner=None):
+        return cls(cls.TORCH, pos, owner=owner)
+
+    @classmethod
+    def shield(cls, pos, shield_name, owner=None):
+        return cls(cls.SHIELD, pos, item_name=shield_name, owner=owner)
 
     @classmethod
     def trap(cls, pos, trap_type, trap_owner_team, group=None):
@@ -62,6 +68,10 @@ class GroundObject:
     @property
     def is_torch(self):
         return self.kind == self.TORCH
+
+    @property
+    def is_shield(self):
+        return self.kind == self.SHIELD
 
     @property
     def is_trap(self):

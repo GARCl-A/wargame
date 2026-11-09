@@ -39,6 +39,7 @@ def test_throw_disarms_and_drops_object():
     a.equip_weapon("Dagger")
     a.pos, d.pos = (5, 5), (8, 5)
     a.ap = 2
+    d.hp = d.hp_max = 100                      # the target stays on its feet: only the thrown dagger lands
     n_obj = len(batt.ground)
     assert actions.THROW.can(batt, a, d)
     actions.THROW.execute(batt, a, d)

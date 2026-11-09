@@ -51,6 +51,17 @@ def _recover_weapon(battle, unit):
     return True
 
 
+def _recover_shield(battle, unit):
+    """True if an armed unit with an empty off hand picked up a shield lying within reach."""
+    if unit.unarmed or not unit.can_take_shield or not unit.ap:
+        return False
+    shield = next((o for o in battle.ground_in_reach(unit) if o.is_shield), None)
+    if shield is None:
+        return False
+    actions.PICK_UP.execute(battle, unit, shield)
+    return True
+
+
 def _torches_on_ground(battle):
     return [o for o in battle.ground if o.is_torch]
 

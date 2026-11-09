@@ -805,7 +805,7 @@ def test_a_warband_sim_keeps_the_member_a_plain_guild_loses_to_the_crowd(monkeyp
 
 
 def test_a_scholars_sim_reads_its_foes_better_and_fights_differently():
-    plain = sim_mod.FightLibrary(samples=16)
+    plain = sim_mod.FightLibrary(samples=40)
     sim = _sim("balanced", vocation="scholars", library=plain)
     assert sim.library.info_bonus == vocations.INFO_BONUS and plain.info_bonus == 0
     assert sim.library.cache is plain.cache
@@ -941,11 +941,12 @@ def test_the_library_dresses_a_squad_in_the_kit_most_of_the_party_wears():
 def test_a_library_fight_is_played_in_the_kit_it_was_asked_for(monkeypatch):
     seen = []
     real = act.play
-    monkeypatch.setattr(act, "play", lambda squad, *a, **k: (seen.append(list(squad)), real(squad, *a, **k))[1])
+    monkeypatch.setattr(act, "play", lambda squad, *a, **k: (
+        seen.append([(u.equipped_armor, u.equipped_weapon) for u in squad]), real(squad, *a, **k))[1])
     lib = sim_mod.FightLibrary(samples=1)
     lib.pool("arena", 0, 3, ("Studded Leather", "Axe"))
     assert ("arena", (0, 0), 3, ("Studded Leather", "Axe")) in lib.cache
-    assert all(u.equipped_armor == "Studded Leather" and u.equipped_weapon == "Axe" for u in seen[0])
+    assert all(kit == ("Studded Leather", "Axe") for kit in seen[0])
 
 
 def test_an_arena_bout_fields_and_stakes_only_the_opponent_count():

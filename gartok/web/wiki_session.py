@@ -1,5 +1,5 @@
-"""The wiki and compendium, as pygame's `WikiScreen`: nine chapters (items, recipes, actions,
-spells, keywords, talents, races, beasts, rules) read off the live catalogs, and a filter over the open one.
+"""The wiki and compendium, as pygame's `WikiScreen`: ten chapters (items, recipes, actions,
+spells, keywords, conditions, talents, races, beasts, rules) read off the live catalogs, and a filter over the open one.
 Opened from the title or the map's menu; BACK returns there."""
 
 from typing import ClassVar
@@ -18,9 +18,10 @@ from .. import (
     wiki_rules,
     wiki_terms,
 )
+from . import condition_marks
 from .session import Session
 
-CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), ("spells", "Spells"), ("keywords", "Keywords"),
+CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), ("spells", "Spells"), ("keywords", "Keywords"), ("conditions", "Conditions"),
             ("talents", "Talents"),
             ("races", "Races"), ("beasts", "Beasts"), ("rules", "Rules"))
 MAX_QUERY = 24
@@ -75,6 +76,18 @@ def _terms(chapter):
         links = [_link(k, wiki_terms.terms()[k]["name"]) for k in wiki_terms.keywords_in(t["text"]) if k != tid]
         out.append(_entry(t["name"], t["kind"], body=[t["text"]] if t["text"] else [], links=links,
                           find=[t["text"], *(x["label"] for x in links)], eid=tid))
+    return sorted(out, key=lambda e: e["name"])
+
+
+def _conditions():
+    """One entry per condition the battle board marks (`condition_marks.MARKS`), its rule as the tooltip reads it;
+    a rule's blanks (the damage and turns of a wound) read "N", and hunger, which is only a label, has none."""
+    out = []
+    for cid in condition_marks.MARKS:
+        if cid == "hungry":
+            continue
+        rule = i18n.t(f"ui.cond.{cid}.rule", damage="N", turns="N")
+        out.append(_entry(i18n.t(f"ui.cond.{cid}.name"), i18n.t("wiki_terms.condition"), body=[rule], find=[rule], eid=cid))
     return sorted(out, key=lambda e: e["name"])
 
 
@@ -137,7 +150,7 @@ BUILD = {"items": lambda: [_item(i) for i in sorted(items.all_items().values(), 
                                     for target, rl in items.CRAFTING_RECIPES.items()
                                     for rec in (rl if isinstance(rl, (list, tuple)) else [rl])),
                                    key=lambda e: e["name"]),
-         "actions": lambda: _terms("actions"), "spells": _spells, "keywords": lambda: _terms("keywords"),
+         "actions": lambda: _terms("actions"), "spells": _spells, "keywords": lambda: _terms("keywords"), "conditions": _conditions,
          "talents": _talents, "races": _races, "beasts": _beasts, "rules": _rules}
 
 
