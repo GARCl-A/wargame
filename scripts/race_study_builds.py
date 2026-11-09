@@ -106,6 +106,7 @@ VARIANTS = {
                     for k in ("cull_the_broken", "gruesome_takedown")},
 }
 COMBAT_IDS = frozenset(t.id for t in talents.TREE["combat"])
+TALKERS = ("intimidator", "commander")   # the builds a player stacks languages on
 # The builds whose weapon is a question, and the weapons it is asked over.
 SWEEP_BUILDS = ("fortress", "intimidator", "commander", "analyst", "nature_caster", "blood_caster", "faith_caster")
 
@@ -405,7 +406,16 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
         _arm(unit, build.weapons, build.armor, build.shield, build.quiver, notes, level,
              over.get("spares", THROWN_SPARES if build.thrower else 0), build.armor_first)
     unit.hp = unit.hp_max
+    _learn_languages(unit, build_id, rng)
     return unit, notes
+
+
+def _learn_languages(unit, build_id, rng):
+    """A player building for intimidation learns more tongues: Draconic (a quest dictionary) and three at random."""
+    if build_id in TALKERS:
+        for lang in ["Draconic", *rng.sample([l for l in data.LANGUAGES if l not in unit.languages and l != "Draconic"], 3)]:
+            if lang not in unit.languages:
+                unit.languages.append(lang)
 
 
 def _random_kit(unit, level, rng, notes, drop_racial=False, fixed=False):

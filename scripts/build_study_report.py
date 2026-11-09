@@ -256,9 +256,11 @@ def race_table(scores):
     for race, (sc, per) in sorted(scores.items(), key=lambda t: -(t[1][0] or 0)):
         ranked = sorted(per.items(), key=lambda t: -(t[1] or 0))
         viable = sum(1 for _b, v in ranked if v is not None and v > 100 * VIABLE)
+        top = [v for _b, v in ranked[:3] if v is not None]
         body.append((race, pct(sc), f"{viable}/{len(ranked)} ({100 * viable / len(ranked):.0f}%)" if ranked else "-",
+                     pct(sum(top) / len(top)) if top else "-",
                      ", ".join(f"{b} {pct(v)}" for b, v in ranked[:3])))
-    return table(["race", "score", f"flexibility (builds above {100 * VIABLE:.0f}% / builds it fields)", "its three best builds (win rate)"], body)
+    return table(["race", "score", f"flexibility (builds above {100 * VIABLE:.0f}% / builds it fields)", "mean of its three best", "its three best builds (win rate)"], body)
 
 
 def vocation_table(scores):
