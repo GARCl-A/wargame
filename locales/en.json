@@ -4152,7 +4152,6 @@
     "speaks": "Speaks {join}",
     "cha": "Cha {cha:+d}",
     "no_one_speaks": "No one speaks {join}",
-    "large": "Large {b}",
     "no_such_pack": "no such pack",
     "nothing_in_that_slot": "nothing in that {loc} slot",
     "no_such_stack": "no such stack",

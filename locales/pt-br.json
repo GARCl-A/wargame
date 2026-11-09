@@ -3822,7 +3822,6 @@
         "speaks": "Fala {join}",
         "cha": "Car {cha:+d}",
         "no_one_speaks": "Ninguém fala {join}",
-        "large": "{b} Grande",
         "no_such_pack": "mochila inexistente",
         "nothing_in_that_slot": "nada nesse espaço de {loc}",
         "no_such_stack": "pilha inexistente",
@@ -4997,8 +4996,8 @@
             "Ogre": "Ogro"
         },
         "size": {
-            "Tiny": "Minúsculo",
-            "Small": "Pequeno",
+            "Tiny": {"name": "Minúsculo", "f": "Minúscula"},
+            "Small": {"name": "Pequeno", "f": "Pequena"},
             "Medium": "Médio",
             "Large": "Grande",
             "Huge": "Enorme"

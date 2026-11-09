@@ -94,6 +94,13 @@ def _body(team, race, attributes, hp_roll, language, age, weapon):
     return u
 
 
+def fitted(unit, name):
+    """`name` cut for `unit`'s body (the plain item for a Medium one): what a Small Grippli can hold."""
+    body = getattr(getattr(unit, "char", unit), "size", "Medium")
+    variant = items.sized(name, body)
+    return variant.name if variant else name
+
+
 def duelists():
     """The two bodies the duel boards were tuned on: a Lizardfolk (player) and a Grippli (enemy),
     two peoples with no tongue in common."""

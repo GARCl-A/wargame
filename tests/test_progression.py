@@ -17,6 +17,7 @@ from tests.helpers import (
     actions,
     data,
     economy,
+    fitted,
     persist,
     recruit,
     standard_unit,
@@ -292,21 +293,22 @@ def test_tongue_is_a_grippli_racial_node_that_opens_a_reach_weapon_slot():
     u.set_race("Grippli")
     u.set_track_level("racial", 5)                # first racial pick unlocks at level 5
     assert u.picks_available("racial") == 1
-    assert not u.fits_tongue("Axe")              # no talent yet -> no slot
+    assert not u.fits_tongue(fitted(u, "Axe"))              # no talent yet -> no slot
     assert u.choose_talent("racial", "tongue")
     assert u.has_tongue
 
-    assert u.give_to_tongue("Axe")
-    assert u.equipped_tongue == "Axe" and u.tongue_reach == 2
-    assert not u.give_to_tongue("Broadsword")    # 2-handed does not fit the single limb
+    axe = fitted(u, "Axe")
+    assert u.give_to_tongue(axe)
+    assert u.equipped_tongue == axe and u.tongue_reach == 2
+    assert not u.give_to_tongue(fitted(u, "Broadsword"))    # 2-handed does not fit the single limb
 
     c = Combatant(u)
     assert c.has_tongue_weapon and c.tongue_reach == 2
     assert c.attack_range == 1                   # the HAND weapon is still reach 1
     # the hand can carry the 2-handed Broadsword alongside -- no lockout
-    u.give_to_hand("Broadsword")
+    u.give_to_hand(fitted(u, "Broadsword"))
     c = Combatant(u)
-    assert c.weapon_name == "Broadsword" and c.tongue_weapon_name == "Axe"
+    assert c.weapon_name == fitted(u, "Broadsword") and c.tongue_weapon_name == axe
 
 
 def test_tongue_slot_empties_when_the_talent_goes_away():
@@ -314,10 +316,11 @@ def test_tongue_slot_empties_when_the_talent_goes_away():
     u.set_race("Grippli")
     u.set_track_level("racial", 5)
     u.choose_talent("racial", "tongue")
-    u.give_to_tongue("Dagger")
+    dagger = fitted(u, "Dagger")
+    u.give_to_tongue(dagger)
     u.set_race("Orc")                            # not a Grippli any more
     assert not u.has_tongue and u.equipped_tongue is None
-    assert u.has_item("Dagger")                  # stowed, not lost
+    assert u.has_item(dagger)                  # stowed, not lost
 
 
 def test_tongue_is_refused_to_non_grippli():

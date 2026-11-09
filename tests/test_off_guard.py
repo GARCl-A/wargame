@@ -3,7 +3,14 @@
 from gartok import ai
 from gartok.actions.base import _resolve_hit
 from gartok.web import condition_marks
-from tests.helpers import _combatant, _melee_battle, _recruit, actions, fixed_d20
+from tests.helpers import (
+    _combatant,
+    _melee_battle,
+    _recruit,
+    actions,
+    fitted,
+    fixed_d20,
+)
 
 
 def _flanked_pair(batt, a, d):
@@ -71,20 +78,20 @@ def test_a_unit_that_joins_the_fight_is_off_guard_until_its_first_turn():
 
 def test_sneak_attack_and_precise_thrust_work_on_a_foe_that_has_not_acted():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Dagger")
+    a.equip_weapon(fitted(a, "Dagger"))
     a.ap = 2
     d.turns_taken = 1
     assert actions.SNEAK_ATTACK.can(batt, a, d) is False
     d.turns_taken = 0
     assert actions.SNEAK_ATTACK.can(batt, a, d) is True
     assert actions.SNEAK_ATTACK.favoured(batt, a, d) is True
-    a.equip_weapon("Rapier")
+    a.equip_weapon(fitted(a, "Rapier"))
     assert actions.PRECISE_THRUST.can(batt, a, d) is True
 
 
 def test_the_off_guard_actions_still_need_reach():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Dagger")
+    a.equip_weapon(fitted(a, "Dagger"))
     a.ap = 2
     d.turns_taken = 0
     d.pos = (9, 5)
@@ -93,7 +100,7 @@ def test_the_off_guard_actions_still_need_reach():
 
 def test_a_thrown_weapon_at_a_flanked_foe_gets_no_extra_bonus_to_hit():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Dagger")
+    a.equip_weapon(fitted(a, "Dagger"))
     _flanked_pair(batt, a, d)
     d.turns_taken = 1
     with fixed_d20(10):

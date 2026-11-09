@@ -51,7 +51,10 @@ def _item(it):
         tags.append(i18n.t("wiki_session.range_sq", range=it.range))
     if it.hands == 2:
         tags.append(i18n.t("wiki_session.two_handed"))
-    return _entry(it.name, i18n.lab(it.type.value), [i18n.t("wiki_session.kg", weight=it.weight), f"${it.price}", i18n.lab(it.rarity.value)], tags=tags,
+    cuts = items.sizes_of(it.name) if it.size else []
+    body = [" · ".join([f"{i18n.name('size', c.size)}: {c.damage[0]}d{c.damage[1]}" if c.damage else f"{i18n.name('size', c.size)}",
+                        i18n.t("wiki_session.kg", weight=c.weight), f"${c.price}"]) for c in cuts] if len(cuts) > 1 else []
+    return _entry(it.name, i18n.lab(it.type.value), [i18n.t("wiki_session.kg", weight=it.weight), f"${it.price}", i18n.lab(it.rarity.value)], body, tags=tags,
                   glyph=item_icon.glyph(it.name), links=links, find=[x["label"] for x in links],
                   label=i18n.name("item", it.name))
 
@@ -145,7 +148,8 @@ def _rules():
     return [_entry(title, body=lines, find=lines) for title, lines in wiki_rules.sections()]
 
 
-BUILD = {"items": lambda: [_item(i) for i in sorted(items.all_items().values(), key=lambda i: i18n.name("item", i.name))],
+BUILD = {"items": lambda: [_item(i) for i in sorted((i for i in items.all_items().values() if i.base is None),
+                                                         key=lambda i: i18n.name("item", i.name))],
          "recipes": lambda: sorted((_recipe(target, rec)
                                     for target, rl in items.CRAFTING_RECIPES.items()
                                     for rec in (rl if isinstance(rl, (list, tuple)) else [rl])),

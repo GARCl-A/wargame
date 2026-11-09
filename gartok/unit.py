@@ -310,7 +310,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
     def _roll_kit(self):
         """A weapon is just a held item: `equipped_weapon` is the one in the weapon
         hand (None = fighting unarmed); spares ride in `_base_inventory`."""
-        self._stock(*starter_kit.roll())
+        self._stock(*starter_kit.roll(self.race["size"]))
 
     @property
     def title(self):

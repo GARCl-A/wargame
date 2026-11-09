@@ -81,9 +81,9 @@ class Counter(economy.PartyPurse):
         shop = self._shop()
         cats = economy.market_categories(self._node_id(), shop.strays() if shop else ())
 
-        def base_names(names):     # a weapon row is its Medium name; the size toggle picks the Large one
-            return list(dict.fromkeys(n.removeprefix("Large ") for n in names))
-        return [(lbl, key, base_names(names) if key == "weapons" else names) for lbl, key, names in cats]
+        def base_names(names):     # a weapon or armor row is its plain name; the size toggle picks the cut
+            return list(dict.fromkeys(items.get(n).base_name if items.get(n) else n for n in names))
+        return [(lbl, key, base_names(names) if key in ("weapons", "armor") else names) for lbl, key, names in cats]
 
     def _node_id(self):
         return getattr(getattr(self, "node", None), "id", None)
@@ -94,10 +94,10 @@ class Counter(economy.PartyPurse):
 
     def _stock_of(self, name):
         """Units of `name` left to buy, or None if the shop has no count -- also None with
-        no `guild` (a few tests build a bare counter with no campaign behind it). A weapon the
-        shelf does not keep is 0: the size toggle can name one."""
+        no `guild` (a few tests build a bare counter with no campaign behind it). A weapon or armor
+        the shelf does not keep is 0."""
         shop = self._shop()
-        if shop and name not in shop.stock and items.is_weapon(name):
+        if shop and name not in shop.stock and (items.is_weapon(name) or items.is_armor(name) or items.is_shield(name)):
             return 0
         return economy.stock_of(shop.stock, name) if shop else None
 

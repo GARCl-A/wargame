@@ -138,9 +138,15 @@ In the wargame **1 cell = 1.5 m**. 🟡
 ## 6. Starting kit 🟢
 
 A recruit starts with one **weapon** and one **item**, each drawn evenly from the shelf of what
-costs little (`starter_kit.py`): the base weapons (no Large or Huge) up to 35 copper, so an Axe or a
-Pick can come up and that recruit can gather on day one, and any item up to 20 copper that is not a
-quest item or money. Nothing is written on the character: the kit is just what is in hand and in the pack.
+costs little (`starter_kit.py`): the plain weapons up to 35 copper, so an Axe or a Pick can come up and
+that recruit can gather on day one, and any item up to 20 copper that is not a quest item or money. The
+pick is then **cut for the body**: a weapon at the body's own size but never above Medium (a Centaur
+gets no free Large weapon), armor at exactly its size. Nothing is written on the character: the kit is
+just what is in hand and in the pack.
+
+The kit weighs what its size weighs, and a Strength that cannot carry it is one of the reasons a draft
+card reads **RISKY**: a Sprite's Tiny kit is 3.13 kg, a Goblin's Small one 4.75 kg, a Human's Medium one
+8 kg and a Centaur's 14 kg (`archetypes.starter_kit_kg`).
 
 ---
 
@@ -1099,13 +1105,25 @@ immediately without manual combat grind.
 The full table (damage, range, finesse, thrown, hands, weight, price) is in
 [`REFERENCE.md`](REFERENCE.md) (§ Weapons); a crossbow must be reloaded between shots (*Ammo*, above).
 
-- **Weapon sizes:** Base weapons are **Medium**. **Large** variants have double
-  weight (`weight × 2`) and deal **+1 damage step** (`1d4 -> 1d6 -> 1d8 -> 1d10 -> 1d12 -> 2d8`).
-  **Huge** variants weigh `× 4`, cost `× 4` and step the die **twice**. Large ones are sold only at the friendly **Ogre's Fortress** (the
-  Large forge weapons, finite stock); a town shop holds one only if a player sold it there. Huge is never sold.
-- **Wielding requirements:** a weapon above Medium needs a body that big (a Large
-  Centaur holds a Large weapon). **Giant's Grip** (a racial talent of the Goliath and
-  the Ogre) lifts that one size: a Goliath holds a Large weapon, an Ogre a Huge one.
+- **Item sizes:** gear is made for a body. Base weapons, armor and shields are **Medium**; each step
+  doubles (bigger) or halves (smaller) its **weight and price** (price rounds up, 1 copper at least;
+  weight to two decimals). A weapon also steps its die one rung per size
+  (`1d2 <- 1d3 <- 1d4 <- 1d6 <- 1d8 <- 1d10 <- 1d12 -> 2d8`, floored at 1d2); its range and traits do not
+  change. A Sword is Tiny 9 copper / 0.75 kg / 1d4, Small 18 / 1.5 / 1d6, Medium 35 / 3 / 1d8, Large 70 / 6 / 1d10.
+  **Huge** weapons weigh `× 4`, cost `× 4` and step the die **twice**. Armor and shields come in Tiny,
+  Small, Medium and Large (a Huge body wears the Large cut) and change weight and price only, never AC.
+- **Where they are sold:** a town's shops stock the **Tiny, Small and Medium** cuts, each at the shelf's
+  count (a shop dedicated to Tiny gear will take Tiny off the town shelves, see the backlog). **Large**
+  weapons **and armor** are sold only at the friendly **Ogre's Fortress** (finite stock); Huge is never
+  sold. Any shop buys and resells any size as a stray. Crafting still makes Medium only.
+- **Wielding requirements:** a body wields a weapon of its **own size or smaller** (a Goblin holds a
+  Small Sword, a Human a Medium one, a Centaur a Large one). **Giant's Grip** (a racial talent of the
+  Goliath and the Ogre) lifts that one size: a Goliath holds a Large weapon, an Ogre a Huge one.
+- **Wearing requirements:** armor and shields fit **only their own size** (a Goblin wears Small, a
+  Centaur Large). A torch fits anyone. A body whose kit stops fitting (a race swap, a size talent, an old
+  save) stows it in the pack.
+- **Who buys what:** a generated enemy buys the cut of its own body and never a smaller one to save coin
+  (a Large body buys Medium or Large weapons); the race study gives every body its ideal cut, shelf or not.
 
 ---
 
@@ -2020,11 +2038,11 @@ The Wilds and the foci an hour off the Great Focus.
   where it was, linked to the same nodes **an hour farther**, each with its own week.
 - **The Great Focus** is the fortress going up: **talk** the Ogre round (the same chain, **DC 15**, `wildfire.OGRE_DC = 15`,
   **−1 for every small focus taught**) or **STORM THE FORTRESS** (`fortress_scenario.py`: half-raised
-  walls, the bonfire spreading, the **Ogre** -- `npcs/ogre.json`, racial 10, Large, plate armour and a Huge Club,
+  walls, the bonfire spreading, the **Ogre** -- `npcs/ogre.json`, racial 10, Large, Large brigandine and a Huge Club,
   Giant's Grip and Mighty Shove -- and **5 Goblins and Hobgoblins** (`wildfire.ESCORT = 5`) at level **6** (`wildfire.ESCORT_LEVEL = 6`), whatever the squad's level). The fight is
   won when the Ogre is down. Either way the errand is **done**: +1 reputation with the Nature Coven and
   a **Scroll of Water Jet** to the signer. Talked round, he builds it right: **The Ogre's Fortress**
-  stays as a friendly node and **Grumbold**, its Ogre chieftain, sells the Large forge weapons there
+  stays as a friendly node and **Grumbold**, its Ogre chieftain, sells Large weapons and armor there
   (Jotun, Chaotic Neutral). The small foci still burning keep their clock.
 - **Day 14**: every focus still burning is lost. With the Ogre unbeaten the errand **fails** and the
   fortress stands **hostile** for good: more ambushes on a Wilds hunt (above), and **STORM THE

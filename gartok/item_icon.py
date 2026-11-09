@@ -150,11 +150,14 @@ STYLE_GLYPHS = {"mail": "chain-mail", "plates": "breastplate"}
 
 
 def _base(name):
-    """The catalogue name an icon is filed under: no ` (aged)` suffix, no `Large ` / `Huge ` prefix, and every
+    """The catalogue name an icon is filed under: no ` (aged)` suffix, a size variant filed under its plain item, and every
     spell scroll and language dictionary is the plain Scroll and Dictionary."""
     if hasattr(name, "name"):
         name = name.name
-    name = str(name).split(" (")[0].removeprefix("Large ").removeprefix("Huge ").removeprefix("Any ")
+    name = str(name).split(" (")[0].removeprefix("Any ")
+    defn = items.get(name)
+    if defn is not None:
+        name = defn.base_name
     if name.startswith("Scroll of "):
         return "Scroll"
     if name.startswith("Dictionary of "):

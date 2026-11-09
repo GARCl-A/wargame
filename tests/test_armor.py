@@ -1,6 +1,6 @@
 """Worn armor: AC, the Dexterity cap, the speed hit, the weight."""
 
-from tests.helpers import Combatant, Unit, _unit, data, economy
+from tests.helpers import Combatant, Unit, _unit, data, economy, items
 
 
 def _bare_human(strength=20, **over):
@@ -73,7 +73,7 @@ def test_worn_armor_reaches_the_combatant():
 def test_armor_is_stocked_and_priced_by_the_ac_it_grants():
     crafted_only = set(data.CRAFTING_RECIPES)
     for name in data.ARMOR:
-        if name in crafted_only:
+        if items.get(name).base_name in crafted_only or items.get(name).size == "Large":      # the Ogre's fortress sells those
             continue
         assert name in economy.MARKET_STOCK and name in economy.PRICES
     assert (economy.PRICES["Leather Jerkin"] < economy.PRICES["Chainmail"]

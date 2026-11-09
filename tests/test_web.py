@@ -16,6 +16,7 @@ import pytest
 from gartok import actions, ai, combat_lab, data, lighting, recorder, vision
 from gartok.web.battle_session import BattleSession
 from gartok.web.server import Game, serve
+from tests.helpers import fitted
 
 
 def _session(fight="dungeon", seed=3):
@@ -685,7 +686,7 @@ def test_a_save_opens_the_map_through_the_same_router(tmp_path, monkeypatch):
 
 
 def test_the_side_gets_only_the_lights_it_sees_and_the_levels_leave_them_to_the_client():
-    s = _session("lair", seed=1)
+    s = _session("lair", seed=3)
     _to_my_turn(s)
     st, b = s.state(), s.battle
     visible = {tuple(c) for c in st["visible"]}
@@ -796,13 +797,14 @@ def test_the_web_draw_card_lists_the_pack_and_the_act_swaps_the_hand():
             break
         s.advance()
     actor = s.battle.active
-    actor.equip_weapon("Dagger")
-    actor.inventory = ["Axe"]
+    axe = fitted(actor, "Axe")
+    actor.equip_weapon(fitted(actor, "Dagger"))
+    actor.inventory = [axe]
     actor.ap = 2
     rows = s.state()["draws"]
-    assert [r["id"] for r in rows if not r["stow"]] == ["Axe"]
+    assert [r["id"] for r in rows if not r["stow"]] == [axe]
     assert any(r["stow"] for r in rows)
-    s.act("draw", item="Axe")
-    assert actor.weapon_name == "Axe" and actor.inventory == ["Dagger"]
+    s.act("draw", item=axe)
+    assert actor.weapon_name == axe and actor.inventory == [fitted(actor, "Dagger")]
     with pytest.raises(ValueError):
         s.act("draw", item="Sword of Nothing")

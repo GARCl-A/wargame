@@ -173,7 +173,7 @@ def _weapons():
     for name, w in items.weapons().items():
         rng = "melee" if w.range == 0 else f"{w.range} sq"
         thrown = "--" if w.thrown == 0 else f"{w.thrown} sq"
-        price = economy._base_price(name) if (name in economy.PRICES or name.startswith(("Large ", "Huge "))) else "--"
+        price = economy._base_price(name)
         rows.append((name, w.size or "Medium", _dice(*w.damage), rng,
                      "yes" if w.has_trait("finesse") else "--", thrown, w.hands,
                      f"{w.weight:g} kg", price))
@@ -199,18 +199,18 @@ def _armor():
         cap = "--" if a.max_dex is None else f"+{a.max_dex}"
         spd = "--" if a.speed_penalty == 0 else f"-{a.speed_penalty} sq"
         guard = f"+{a.guard_bonus}" if a.guard_bonus else "--"
-        rows.append((name, f"+{a.ac}", cap, spd, guard, f"{a.weight:g} kg",
+        rows.append((name, a.size or "Medium", f"+{a.ac}", cap, spd, guard, f"{a.weight:g} kg",
                      economy.PRICES.get(name, "--")))
-    head = ("Armor", "AC", "Max DEX to AC", "Speed", "Guard test", "Weight", "Price ($)")
+    head = ("Armor", "Size", "AC", "Max DEX to AC", "Speed", "Guard test", "Weight", "Price ($)")
     return "## Armor\n\n" + _table(head, rows)
 
 
 def _shields():
     rows = []
     for name, s in items.shields().items():
-        rows.append((name, f"+{s.ac}", f"{s.weight:g} kg",
+        rows.append((name, s.size or "Medium", f"+{s.ac}", f"{s.weight:g} kg",
                      economy.PRICES.get(name, "--")))
-    head = ("Shield", "AC", "Weight", "Price ($)")
+    head = ("Shield", "Size", "AC", "Weight", "Price ($)")
     return "## Shields\n\n" + _table(head, rows)
 
 

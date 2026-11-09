@@ -44,12 +44,26 @@ class DerivationMixin:
             self._pack_add(self.equipped_tongue)
             self.equipped_tongue = None
         self._derive_size()
+        self._fit_kit()
         self._derive_carry()
         self._derive_attribute_mods()
         self._derive_hp()
         self._derive_ac()
         self._derive_speed()
         self.dr = self._ability.damage_reduction
+
+    def _fit_kit(self):
+        """Whatever the body no longer fits (a race swap, a size talent, a save from before gear had sizes)
+        goes to the pack."""
+        for slot, fits in (("equipped_weapon", self.can_wield), ("equipped_offhand", self.fits_offhand),
+                           ("equipped_armor", self.fits_armor)):
+            name = getattr(self, slot, None)
+            if name and not fits(name):
+                self._pack_add(name)
+                setattr(self, slot, None)
+        if self.equipped_tongue and not self.fits_tongue(self.equipped_tongue):
+            self._pack_add(self.equipped_tongue)
+            self.equipped_tongue = None
 
     def _derive_size(self):
         """The race's size, stepped up by talents (capped at Large); the board

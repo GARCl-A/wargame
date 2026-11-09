@@ -64,14 +64,14 @@
     "Halfling",
     "Ankarin"
   ],
-  "equipped_weapon": "Dagger",
+  "equipped_weapon": "Small Dagger",
   "equipped_offhand": "Torch",
   "equipped_tongue": null,
-  "equipped_armor": "Studded Leather",
+  "equipped_armor": "Small Studded Leather",
   "inventory": [
     {
       "id": "cloak",
-      "name": "Cloak",
+      "name": "Small Cloak",
       "qty": 1
     },
     {

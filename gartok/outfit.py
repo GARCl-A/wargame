@@ -30,7 +30,7 @@ side the player does not play.
 
 import random
 
-from . import economy, items
+from . import data, economy, items
 
 KIT_BUDGET = {0: 56, 1: 67, 2: 120, 3: 216, 4: 344, 5: 1054, 6: 1995, 7: 2960, 8: 5741}
 ARMOR_SHARE = 0.5
@@ -73,7 +73,7 @@ def _armor(unit, cap):
     best = (_armor_ac(unit, worn), -_price(worn))
     choice = worn
     for name in _SOLD:
-        if not items.is_armor(name) or _price(name) > cap:
+        if not unit.fits_armor(name) or _price(name) > cap:
             continue
         key = (_armor_ac(unit, name), -_price(name))
         if key <= best:
@@ -143,6 +143,12 @@ def _light(unit):
     return _price(items.TORCH_ITEM)
 
 
+def _own_size(unit, name):
+    """A body buys weapons cut for it, never a smaller size to save coin (a Large body, Medium and up)."""
+    order = data.SIZE_ORDER
+    return order.index(items.get(name).size) >= min(order.index(unit.size), order.index("Medium"))
+
+
 def _candidates(unit, style, cap):
     """Weapons of `style` within `cap` (the one in hand costs nothing more) that `unit` carries
     with their extras unencumbered, dearest first."""
@@ -150,7 +156,7 @@ def _candidates(unit, style, cap):
     snap = _snapshot(unit)
     out = []
     for name in _SOLD:
-        if not items.is_weapon(name) or not _fits(name, style):
+        if not items.is_weapon(name) or not _fits(name, style) or not _own_size(unit, name):
             continue
         if name != held and (_price(name) > cap or not unit.can_wield(name)):
             continue

@@ -16,7 +16,7 @@ so there is someone to protect.
 
 import random
 
-from . import encounters
+from . import encounters, items
 from .board import Board
 from .ground import GroundObject
 from .scenario import Scenario
@@ -48,9 +48,10 @@ def build_soldiers(level, rng=random):
 
 
 def dress(unit, armor):
-    """Put `armor` on `unit` when it fits and it wears none."""
-    if unit.fits_armor(armor) and not unit.equipped_armor:
-        unit.give_to_armor(armor)
+    """Put `armor`, cut for `unit`'s body, on it when it wears none."""
+    fitted = items.sized(armor, unit.size)
+    if fitted and unit.fits_armor(fitted.name) and not unit.equipped_armor:
+        unit.give_to_armor(fitted.name)
     return unit
 
 

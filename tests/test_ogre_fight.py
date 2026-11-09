@@ -47,7 +47,7 @@ def test_the_authored_ogre_follows_the_racial_rule_and_holds_his_two_picks():
     assert u.racial_level == progression.racial_level(u.racial_xp)
     assert u.talents["racial"] == ["giant_grip", "mighty_shove"]
     assert u.equipped_weapon == "Huge Club" and u.can_wield("Huge Club")
-    assert u.equipped_armor == "Plate Armor" and not u.encumbered
+    assert u.equipped_armor == "Large Brigandine" and not u.encumbered
     assert len(u._level_hp_rolls) == 10
 
 

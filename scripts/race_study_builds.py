@@ -8,8 +8,6 @@ wield, armour too heavy) instead of faking it; the study logs it.
 
 from __future__ import annotations
 
-import functools
-import random
 from typing import NamedTuple
 
 from gartok import data, economy, items, magic, outfit, talents
@@ -30,7 +28,7 @@ SHIELD = "Dwarf Shield"
 class Build(NamedTuple):
     id: str
     label: str
-    weapons: tuple          # first one the body can wield (the Large variant of each is tried first)
+    weapons: tuple          # plain names, the first the body can field (`sized_weapons` cuts each for the body)
     armor: str | None
     shield: str | None
     combat: tuple           # talent priority, in prerequisite order; the picks it leaves are random
@@ -134,13 +132,8 @@ RANDOM_KIT = "random"
 TORCH = items.TORCH_ITEM
 
 
-def _catalog_weapons():
-    return [d.name for d in items.weapons().values()
-            if d.size not in (items.WeaponSize.LARGE, items.WeaponSize.HUGE)]
-
-
-CATALOG = _catalog_weapons()
-ARMORS = sorted(items.armor())
+CATALOG = [d.name for d in items.weapons().values() if d.base is None]        # plain names; each body buys its own cut
+ARMORS = sorted(d.name for d in items.armor().values() if d.base is None)
 THROWN_SPARES = 8           # spares of the thrown weapon a thrower buys at most (the cap `tests/test_thrown_supply.py` measures)
 EXTRA_QUIVERS = 2           # an archer buys a bow and one Quiver, then the armour, then up to this many more Quivers
 
@@ -227,6 +220,23 @@ def fix_body(unit):
     unit._derive_combat()
 
 
+def sized_weapons(unit, weapons):
+    """Each plain weapon cut for `unit`, shelf or not: the biggest size its body wields down to its own, the way the
+    study measures a race's potential (a Centaur takes the Large one, a Goblin the Small, a body never a smaller one to save coin)."""
+    order = data.SIZE_ORDER
+    floor = min(order.index(unit.size), order.index("Medium"))
+    return [v.name for w in weapons for v in reversed(items.sizes_of(w))
+            if order.index(v.size) >= floor and unit.can_wield(v.name)]
+
+
+def _cut(unit, name):
+    """Armor or a shield `name` made for `unit`'s body (a Huge body wears the Large cut, the biggest there is)."""
+    if name is None:
+        return None
+    size = data.SIZE_ORDER[min(data.SIZE_ORDER.index(unit.size), data.SIZE_ORDER.index("Large"))]
+    return items.sized(name, size).name
+
+
 def _buy_armor(unit, armor, left, notes, lit):
     if armor == AUTO:
         if lit:
@@ -235,6 +245,7 @@ def _buy_armor(unit, armor, left, notes, lit):
         if lit:
             unit.equipped_offhand = None
     elif armor:
+        armor = _cut(unit, armor)
         unit.give_to_armor(armor)
         if unit.equipped_armor != armor:
             notes.append("armour refused")
@@ -263,6 +274,7 @@ def _arm(unit, weapons, armor, shield, quiver, notes, level=0, spares=0, armor_f
     from the rest (a two-handed one gives the shield back)."""
     left = outfit.budget(level)
     unit.equipped_weapon = None
+    weapons, shield = sized_weapons(unit, weapons), _cut(unit, shield)
     if armor_first:
         left = _buy_armor(unit, armor, left, notes, lit=False)
         if shield:
@@ -282,15 +294,11 @@ def _arm(unit, weapons, armor, shield, quiver, notes, level=0, spares=0, armor_f
             continue
         held = w
         break
-    if held is None:
+    if held is None:                                      # the budget bought the armour and left no weapon: fists
         unit.equipped_weapon = None
-        if any(unit.can_wield(w) for w in weapons):       # the budget bought the armour and left no weapon: fists
-            notes.append("unarmed")
-            unit._derive_combat()
-            return
-        notes.append("no weapon")
-        held = "Dagger"
-        unit.give_to_hand(held)
+        notes.append("unarmed")
+        unit._derive_combat()
+        return
     if shielded and unit.equipped_offhand != shield:        # a two-handed weapon frees the hand: the shield is sold back
         unit.equipped_offhand = None
         left += economy.buy_price(shield)
@@ -340,27 +348,12 @@ def _cast(unit, build, level, notes):
     unit.spells_known = [s for s in build.spells5 if magic.casts(unit, magic.SPELLS[s])]
 
 
-def fields(build_id, race, level, weapon=None):
-    """Whether `race` can field `build_id` at `level` (with `weapon` in place of the build's own): a caster at level 0 only if the
-    race starts with its school's magic, and no build whose weapon the body cannot wield (the game would hand it a free Dagger)."""
+def fields(build_id, race, level):
+    """Whether `race` can field `build_id` at `level`: a caster at level 0 only if the race starts with its school's magic."""
     if build_id == RANDOM_KIT:
         return True
     build = lookup(build_id)
-    if not level and build.role == "caster" and not (race == "Gnome" and "nature" in build.sources):
-        return False
-    return _wields(build_id, race, level, weapon)
-
-
-@functools.cache
-def _wields(build_id, race, level, weapon):
-    _unit, notes = make_unit("player", race, build_id, level, random.Random(0), over={"weapon": weapon} if weapon else None)
-    return "no weapon" not in notes
-
-
-def large_first(weapons):
-    """The Large variant of each weapon ahead of it: the study proved a body that can wield the bigger one is better off."""
-    have = items.weapons()
-    return tuple(w for x in weapons for w in (f"Large {x}", x) if w in have)
+    return bool(level or build.role != "caster" or (race == "Gnome" and "nature" in build.sources))
 
 
 def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=False, over=None):
@@ -374,7 +367,7 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
     unit.set_race(race)
     notes = []
     plan = level_plan(build_id, level)
-    unit.set_kit("Dagger", None)
+    unit.set_kit(None, None)
     if level:
         for track, lv in plan.items():
             if lv:
@@ -386,7 +379,7 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
         build = lookup(build_id)
         if "weapon" in over:
             build = build._replace(weapons=(over["weapon"],), quiver=bool(items.get(over["weapon"]).range))
-        build = build._replace(weapons=large_first(build.weapons), armor=AUTO if build.armor else None)
+        build = build._replace(armor=AUTO if build.armor else None)
         if "combat" in over:
             build = build._replace(combat=tuple(over["combat"]))
         if "armor" in over:
@@ -437,7 +430,7 @@ def _random_kit(unit, level, rng, notes, drop_racial=False, fixed=False):
         pool = [s.id for s in magic.SPELLS.values() if magic.casts(unit, s) and s.level <= (1 if level else 0)
                 and s.id not in ("light_globe", "floating_disk")]
         unit.spells_known = rng.sample(pool, min(len(pool), rng.randint(2, 4)))
-    weapon = rng.choice([w for w in CATALOG if unit.can_wield(w) and affordable(w, level)] or ["Dagger"])
+    weapon = rng.choice([w for w in CATALOG if sized_weapons(unit, (w,)) and affordable(w, level)] or ["Dagger"])
     shield = SHIELD if items.get(weapon).hands == 1 and rng.random() < 0.5 else None
     quiver = bool(items.get(weapon).range)
     if fixed:

@@ -16,6 +16,7 @@ from tests.helpers import (
     _recruit,
     _unit,
     actions,
+    fitted,
     fixed_d20,
 )
 
@@ -66,7 +67,7 @@ def test_weapon_traits_catalog_and_properties():
 
 def test_a_critical_hit_multiplies_the_whole_blow_last():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Pick")
+    a.equip_weapon(fitted(a, "Pick"))
     with patch("gartok.combatant.roll", return_value=4):
         plain = a.damage_roll()
         assert a.damage_roll(crit=True) == 3 * plain
@@ -84,7 +85,7 @@ def test_brutal_adds_a_roll_and_a_critical_hit_multiplies_it():
 def test_sneak_attack_action():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Dagger")
+    a.equip_weapon(fitted(a, "Dagger"))
     a.ap = 2
     assert actions.SNEAK_ATTACK.applicable(batt, a)[0] is True
 
@@ -105,7 +106,7 @@ def test_sneak_attack_action():
 def test_precise_thrust_action():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Rapier")
+    a.equip_weapon(fitted(a, "Rapier"))
     a.ap = 2
     assert actions.PRECISE_THRUST.applicable(batt, a)[0] is True
 
@@ -126,7 +127,7 @@ def test_precise_thrust_action():
 def test_cleave_action_hits_two_foes():
     batt, a, d1 = _melee_battle()
     d1.hp = 20
-    a.equip_weapon("Axe")
+    a.equip_weapon(fitted(a, "Axe"))
     a.ap = 2
     d2 = _recruit(batt, team="enemy")
     d2.hp = 20
@@ -146,7 +147,7 @@ def test_cleave_action_hits_two_foes():
 def test_repel_strike_shoves_foe():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Quarterstaff")
+    a.equip_weapon(fitted(a, "Quarterstaff"))
     a.ap = 2
     a.pos = (5, 5)
     d.pos = (6, 5)
@@ -161,7 +162,7 @@ def test_repel_strike_shoves_foe():
 def test_maiming_strike_halves_speed():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Hammer")
+    a.equip_weapon(fitted(a, "Hammer"))
     a.ap = 2
     assert actions.MAIMING_STRIKE.applicable(batt, a)[0] is True
 
@@ -183,8 +184,8 @@ def test_maiming_strike_halves_speed():
 def test_armor_pierce_ignores_armor_ac():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Pick")
-    d.char.give_to_armor("Plate Armor")  # Plate Armor is +5 AC
+    a.equip_weapon(fitted(a, "Pick"))
+    d.char.give_to_armor(fitted(d, "Plate Armor"))  # Plate Armor is +5 AC
     a.ap = 2
     assert actions.ARMOR_PIERCE.applicable(batt, a)[0] is True
 
@@ -201,7 +202,7 @@ def test_armor_pierce_ignores_armor_ac():
 def test_power_shot_adds_str():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Shortbow")
+    a.equip_weapon(fitted(a, "Shortbow"))
     a.char.base_attributes["strength"] = 16
     a.ammo = 10
     a.pos = (3, 3)
@@ -223,7 +224,7 @@ def test_extreme_shot_reaches_double_range():
     d.hp = 20
     batt.board = Board(cols=40, rows=12)
     batt.ambient_light = True
-    a.equip_weapon("Crossbow")
+    a.equip_weapon(fitted(a, "Crossbow"))
     a.ammo = 10
     a.crossbow_loaded = True
     a.pos = (2, 2)
@@ -243,8 +244,8 @@ def test_extreme_shot_reaches_double_range():
 def test_hook_shield_nullifies_shield_ac():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Hatchet")
-    d.char.give_to_offhand("Dwarf Shield")  # +2 shield AC
+    a.equip_weapon(fitted(a, "Hatchet"))
+    d.char.give_to_offhand(fitted(d, "Dwarf Shield"))  # +2 shield AC
     base_ac = d.ac
     a.ap = 2
 
@@ -270,8 +271,8 @@ def test_hook_shield_resolves_on_a_foe_flanked_on_all_eight_cells(team):
     others = [_recruit(batt, team=team) for _ in range(7)]
     _surround(batt, d, [a] + others)
     d.hp = 30
-    a.equip_weapon("Hatchet")
-    d.char.give_to_offhand("Dwarf Shield")
+    a.equip_weapon(fitted(a, "Hatchet"))
+    d.char.give_to_offhand(fitted(d, "Dwarf Shield"))
     a.ap = 2
 
     assert actions.HOOK_SHIELD.can(batt, a, d)
@@ -286,7 +287,7 @@ def test_hook_shield_resolves_on_a_foe_flanked_on_all_eight_cells(team):
 def test_javelin_charge_requires_moving():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Shortspear")
+    a.equip_weapon(fitted(a, "Shortspear"))
     a.pos = (3, 3)
     d.pos = (8, 3)
     a.ap = 2
@@ -309,7 +310,7 @@ def test_javelin_charge_requires_moving():
 def test_parry_strike_grants_defending():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Broadsword")
+    a.equip_weapon(fitted(a, "Broadsword"))
     a.ap = 2
     assert actions.PARRY_STRIKE.applicable(batt, a)[0] is True
 
@@ -331,7 +332,7 @@ def test_the_sword_is_a_one_handed_broadsword_and_the_longbow_a_farther_shortbow
 def test_parry_strike_with_a_sword():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon("Sword")
+    a.equip_weapon(fitted(a, "Sword"))
     a.ap = 2
     assert actions.PARRY_STRIKE.applicable(batt, a)[0] is True
     with fixed_d20(18):
@@ -346,9 +347,9 @@ def test_a_longbow_power_shot_reaches_past_the_shortbow():
     batt.ambient_light = True
     a.ammo, a.ap = 10, 2
     a.pos, d.pos = (2, 3), (20, 3)
-    a.equip_weapon("Shortbow")
+    a.equip_weapon(fitted(a, "Shortbow"))
     assert not actions.POWER_SHOT.can(batt, a, d)
-    a.equip_weapon("Longbow")
+    a.equip_weapon(fitted(a, "Longbow"))
     assert actions.POWER_SHOT.can(batt, a, d)
     with fixed_d20(18):
         actions.POWER_SHOT.execute(batt, a, d)
@@ -359,7 +360,7 @@ def _glaive_battle():
     batt, a, d = _melee_battle()
     batt.board.walls = set()
     batt.ambient_light = True
-    a.equip_weapon("Glaive")
+    a.equip_weapon(fitted(a, "Glaive"))
     a.ap = 2
     return batt, a, d
 
@@ -377,7 +378,7 @@ def test_a_glaive_strikes_two_squares_away_and_a_sword_does_not():
     assert a.attack_range == 2 and actions.ATTACK.can(batt, a, d)
     d.pos = (8, 5)
     assert not actions.ATTACK.can(batt, a, d)
-    a.equip_weapon("Sword")
+    a.equip_weapon(fitted(a, "Sword"))
     d.pos = (7, 5)
     assert a.attack_range == 1 and not actions.ATTACK.can(batt, a, d)
 
@@ -400,5 +401,5 @@ def test_long_thrust_reaches_one_square_past_the_glaive_at_plus_one():
 
 def test_long_thrust_needs_a_glaive():
     batt, a, _ = _melee_battle()
-    a.equip_weapon("Broadsword")
+    a.equip_weapon(fitted(a, "Broadsword"))
     assert actions.LONG_THRUST.applicable(batt, a)[0] is False

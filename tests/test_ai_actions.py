@@ -13,6 +13,7 @@ from tests.helpers import (
     abilities,
     actions,
     duelists,
+    fitted,
     fixed_d20,
 )
 from tests.test_ai_racial import _centaur, _rider_unit
@@ -28,7 +29,7 @@ def _duel(weapon="Axe"):
     batt.board.walls = set()
     batt.board.elevation = {}
     batt.ambient_light = True
-    e.equip_weapon(weapon)
+    e.equip_weapon(fitted(e, weapon))
     e.pos, p.pos = (5, 5), (6, 5)
     p.hp = p.hp_max = 30
     e.ap = 2

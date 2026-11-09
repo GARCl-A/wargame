@@ -243,12 +243,12 @@ def _land_thrown(battle, actor, target, weapon_name):
 
 
 def _pickable(unit, obj):
-    """Anyone can pick up a torch or a shield if the off hand is free; relics and chests can
+    """Anyone can pick up a torch, or a shield cut for their body, if the off hand is free; relics and chests can
     always be retrieved; a weapon only if the unit is unarmed and can wield it."""
     if obj.is_torch:
         return not unit.has_torch and not unit.has_lantern
     if obj.is_shield:
-        return unit.can_take_shield
+        return unit.can_take_shield and unit.char.fits_offhand(obj.item_name)
     if getattr(obj, "is_relic", False) or getattr(obj, "is_chest", False):
         return True
     return unit.unarmed and unit.char.can_wield(obj.weapon_name)

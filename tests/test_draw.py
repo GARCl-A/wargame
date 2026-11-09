@@ -1,7 +1,7 @@
 """Draw and stow: the hands, the pack they swap with, and the rules of `gartok/draw.py`."""
 
 from gartok import actions, campaign, data, draw
-from tests.helpers import _melee_battle, fixed_d20, standard_unit
+from tests.helpers import _melee_battle, fitted, fixed_d20, standard_unit
 
 
 def _armed(weapon="Dagger", pack=(), off=None):
@@ -157,7 +157,7 @@ def test_the_ai_throws_with_a_spare_even_with_two_points_left():
 
 def test_a_javelin_charge_also_draws_the_spare():
     batt, a, d = _thrower(["Shortspear"])
-    a.equip_weapon("Shortspear")
+    a.equip_weapon(fitted(a, "Shortspear"))
     a.moved = 3
     with fixed_d20(1):
         actions.JAVELIN_CHARGE.execute(batt, a, d)

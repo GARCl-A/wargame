@@ -9,14 +9,18 @@ commission tokens to guarantee functional squad roles without endless rerolling.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import i18n, items
+from . import i18n, items, starter_kit
 from .data import ATTRIBUTES
 from .unit import Unit
 
 STARTER_KIT = ("Studded Leather", "Dagger", "Torch", "Potato")      # what a new recruit is expected to haul
-STARTER_KIT_KG = round(sum(items.item_weight(n) for n in STARTER_KIT), 1)
 RISKY_CON = 8                  # at or under: the slow healer, the poor swimmer, the one a poison drops
 RISKY_TOTAL = 56               # the six attributes at or under (the average body is 63)
+
+
+def starter_kit_kg(size: str) -> float:
+    """What the starting kit weighs cut for a body of `size` (the Torch and the Potato have no size)."""
+    return round(sum(items.item_weight(starter_kit.for_body(n, size)) for n in STARTER_KIT), 2)
 
 
 def risks(u: Unit) -> list[str]:
@@ -27,8 +31,9 @@ def risks(u: Unit) -> list[str]:
     total = sum(getattr(u, a) for a in ATTRIBUTES)
     if total <= RISKY_TOTAL:
         out.append(i18n.t("archetype.risk.total", total=total))
-    if u.carry_normal < STARTER_KIT_KG:
-        out.append(i18n.t("archetype.risk.carry", carry=f"{u.carry_normal:g}", kit=f"{STARTER_KIT_KG:g}"))
+    kit = starter_kit_kg(u.size)
+    if u.carry_normal < kit:
+        out.append(i18n.t("archetype.risk.carry", carry=f"{u.carry_normal:g}", kit=f"{kit:g}"))
     return out
 
 

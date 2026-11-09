@@ -75,11 +75,11 @@
   "languages": [
     "Sylvan"
   ],
-  "equipped_weapon": "Broadsword",
+  "equipped_weapon": "Small Broadsword",
   "equipped_offhand": null,
-  "equipped_tongue": "Shortspear",
+  "equipped_tongue": "Small Shortspear",
   "equipped_artifact": null,
-  "equipped_armor": "Chainmail",
+  "equipped_armor": "Small Chainmail",
   "inventory": [
     {
       "id": "meat",

@@ -8,7 +8,7 @@ are marked by the screen where they happen (`complete`).
 
 from dataclasses import dataclass
 
-from . import i18n
+from . import i18n, items
 
 AXE = "Axe"
 
@@ -49,7 +49,7 @@ OBJECTIVES = tuple(Objective(i) for i in (
 
 def _owns_axe(guild):
     holders = [*guild.roster, *(s for g in guild.groups for s in g.stores)]
-    return any(u.has_item(AXE) for u in holders) or any(it.name == AXE for it in guild.bank.items)
+    return any(items.is_kind(it.name, AXE) for u in holders for it in u._base_inventory) or any(items.is_kind(it.name, AXE) for it in guild.bank.items)
 
 
 def _work_chain_blurb(guild):

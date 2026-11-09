@@ -283,7 +283,9 @@ def test_the_friendly_ogre_sells_the_large_forge_weapons_and_restocks_them():
     wildfire.talk(guild, state.great, b, _FixedRNG(20))
     shelf = economy.targets_of(wildfire.FORTRESS_ID)
     assert shelf and all(items.weapon_size(n) == "Large" for n in shelf)
-    assert {n.removeprefix("Large ") for n in shelf} <= set(economy.SHELVES["smith"])
+    town = {items.get(n).base_name for n in economy.MARKET_STOCK}
+    assert {items.get(n).base_name for n in shelf} <= town
+    assert any(items.is_armor(n) for n in shelf)
     assert not any(n.startswith("Large ") for n in economy.MARKET_STOCK)
 
     shop = guild.shop(wildfire.FORTRESS_ID)

@@ -172,10 +172,11 @@ def test_risky_names_each_reason_and_leaves_an_ordinary_body_alone():
 
 
 def test_risky_when_the_strength_cannot_carry_the_starting_kit():
-    assert archetypes.STARTER_KIT_KG == 8.0
+    kit = archetypes.starter_kit_kg("Medium")
+    assert kit == 8.0
     ok, weak = _body(strength=8), _body(strength=7)
-    assert ok.carry_normal >= archetypes.STARTER_KIT_KG and not archetypes.risks(ok)
-    assert weak.carry_normal < archetypes.STARTER_KIT_KG
+    assert ok.carry_normal >= kit and not archetypes.risks(ok)
+    assert weak.carry_normal < kit
     assert any("starting kit" in r for r in archetypes.risks(weak))
 
 

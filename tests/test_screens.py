@@ -3,7 +3,7 @@
 import random
 
 from gartok.guild import Guild
-from tests.helpers import Unit, data, economy, packed, standard_unit
+from tests.helpers import Unit, data, economy, fitted, packed, standard_unit
 
 
 def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
@@ -55,12 +55,13 @@ def test_the_band_multidrop_on_a_hand_takes_the_first_that_fits():
     random.seed(4)
     a = Unit("player")
     a.equipped_weapon = None
-    a._base_inventory = packed(["Rope", "Dagger"])
+    dagger = fitted(a, "Dagger")
+    a._base_inventory = packed(["Rope", dagger])
     g = Guild([a])
     scr = BandKit(g, g.groups[0])
     scr.selected = [(a, 0), (a, 1)]
     scr._give_many(a, "hand")
-    assert a.equipped_weapon == "Dagger" and a._base_inventory == packed(["Rope"])
+    assert a.equipped_weapon == dagger and a._base_inventory == packed(["Rope"])
 
 
 def test_the_band_distributes_its_load():

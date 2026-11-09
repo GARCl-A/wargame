@@ -17,6 +17,7 @@ from tests.helpers import (
     actions,
     data,
     duelists,
+    fitted,
     patch_action_d20,
 )
 
@@ -352,7 +353,7 @@ def test_frog_leap_jumps_two_squares_farther():
 
 def test_sticky_tongue_reels_in_and_grabs():
     grippli = _racial("Grippli", "tongue", "sticky_tongue")
-    assert grippli.give_to_tongue("Dagger") or grippli.give_to_tongue("Club")
+    assert grippli.give_to_tongue(fitted(grippli, "Dagger")) or grippli.give_to_tongue(fitted(grippli, "Club"))
     batt, g, foe = _duel(grippli, Unit("enemy"), bpos=(7, 5))
     foe.hp = foe.hp_max = 100
     with patch_action_d20(return_value=19):

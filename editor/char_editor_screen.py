@@ -173,12 +173,12 @@ class CharEditorScreen(Screen):
         elif kind == "picker":
             _, pk = action
             opts = {"race": data.ALL_RACE_NAMES, "alignment": [a for _, a in data.ALIGNMENTS],
-                    "weapon": ["(unarmed)"] + list(items.weapons()),
+                    "weapon": ["(unarmed)"] + [n for n in items.weapons() if u.can_wield(n)],
                     "tongue": ["(empty)"] + [n for n, w in items.weapons().items()
-                                             if w.hands == 1],
+                                             if w.hands == 1 and u.can_wield(n)],
                     "artifact": ["(empty)"] + [n for n, i in items.all_items().items()
                                                if i.type == items.ItemType.ARTIFACT],
-                    "armor": ["(none)"] + list(items.armor()),
+                    "armor": ["(none)"] + [n for n in items.armor() if u.fits_armor(n)],
                     "additem": _ITEM_CATALOG}[pk]
             cur = {"race": u.race["name"],
                    "alignment": u.alignment, "weapon": u.equipped_weapon,

@@ -100,33 +100,39 @@ class LoadoutMixin(CoinPurse):
     def is_weapon(name):
         return items.is_weapon(name)
 
-    @staticmethod
-    def fits_offhand(name):
-        return items.is_shield(name) or items.is_light_source(name)
+    def fits_offhand(self, name):
+        """A light source in any hand; a shield only one made for this body."""
+        return items.is_light_source(name) or (items.is_shield(name) and self._made_for_body(name))
 
+    def fits_armor(self, name):
+        return items.is_armor(name) and self._made_for_body(name)
 
-    @staticmethod
-    def fits_armor(name):
-        return items.is_armor(name)
+    def _made_for_body(self, name):
+        """Armor and shields are cut to one size: the body's own (a Huge body wears the Large cut, the
+        biggest there is)."""
+        size = items.get(name).size
+        if size is None:
+            return True
+        return data.SIZE_ORDER.index(size) == min(data.SIZE_ORDER.index(self.size), data.SIZE_ORDER.index("Large"))
 
     @staticmethod
     def fits_artifact(name):
         return items.is_artifact(name)
 
     def can_wield(self, name):
-        """Checks if this unit can wield `name`. A weapon above Medium needs a body that
-        big (a Centaur holds a Large one); Giant's Grip lifts one size more (a Goliath
-        holds a Large weapon, an Ogre a Huge one)."""
+        """Checks if this unit can wield `name`: a weapon of the body's own size or smaller (a Goblin
+        holds a Small one, a Centaur a Large one); Giant's Grip lifts one size more (a Goliath holds a
+        Large weapon, an Ogre a Huge one)."""
         if not self.is_weapon(name):
             return False
         w = items.get(name)
         if not w:
             return False
-        order = data.SIZE_ORDER
-        need = order.index(w.size or "Medium")
-        if need <= order.index("Medium"):
+        if w.size is None:
             return True
-        return order.index(self.size) + (1 if self.has_talent("giant_grip") else 0) >= need
+        order = data.SIZE_ORDER
+        over = order.index(w.size) - order.index(self.size)
+        return over <= 0 or (over == 1 and self.has_talent("giant_grip"))
 
     def fits_tongue(self, name):
         """The Tongue slot takes one 1-handed weapon (it is a single extra limb),

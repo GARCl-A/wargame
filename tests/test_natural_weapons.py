@@ -2,7 +2,7 @@
 
 from gartok import data, intel, items, natural_weapons
 from gartok.ground import GroundObject
-from tests.helpers import Battle, Unit, _melee_battle, actions, standard_unit
+from tests.helpers import Battle, Unit, _melee_battle, actions, fitted, standard_unit
 
 
 def test_every_beast_names_its_weapon():
@@ -46,7 +46,7 @@ def test_a_humanoid_fights_with_unarmed_at_its_size():
 
 def test_a_humanoid_with_a_weapon_is_armed_and_without_one_unarmed():
     batt, _, fighter = _melee_battle()
-    fighter.equip_weapon("Broadsword")
+    fighter.equip_weapon(fitted(fighter, "Broadsword"))
     assert fighter.armed and not fighter.unarmed and not fighter.natural
     fighter.disarm()
     assert fighter.unarmed and not fighter.armed and not fighter.natural
@@ -65,8 +65,8 @@ def test_a_beast_is_natural_never_unarmed():
 
 def test_only_bare_hands_pick_up_a_weapon():
     batt, _, fighter = _melee_battle()
-    fighter.equip_weapon("Broadsword")
-    obj = GroundObject.weapon((0, 0), "Dagger")
+    fighter.equip_weapon(fitted(fighter, "Broadsword"))
+    obj = GroundObject.weapon((0, 0), fitted(fighter, "Dagger"))
     assert not actions.base._pickable(fighter, obj)
     fighter.disarm()
     assert actions.base._pickable(fighter, obj)
@@ -87,7 +87,7 @@ def test_a_talent_grants_a_trait_to_the_body_weapon_only():
 
 def test_a_crossbow_swung_empty_hits_with_the_body_die():
     batt, _, fighter = _melee_battle()
-    fighter.equip_weapon("Crossbow")
+    fighter.equip_weapon(fitted(fighter, "Crossbow"))
     fighter.ammo = 0
     assert fighter.improvised
     assert fighter.hand_die == fighter.char.natural_weapon.damage

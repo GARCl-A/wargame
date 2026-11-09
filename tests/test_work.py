@@ -2,7 +2,16 @@
 
 import random
 
-from tests.helpers import Unit, _unit, economy, fixed_d20, packed, persist, world
+from tests.helpers import (
+    Unit,
+    _unit,
+    economy,
+    fitted,
+    fixed_d20,
+    packed,
+    persist,
+    world,
+)
 
 
 def test_lumber_yard_is_a_work_town_one_hour_from_the_city():
@@ -109,7 +118,7 @@ def test_outgrown_lumber_yard_pays_but_teaches_nothing():
     assert u.money == 4 and u.work_hours == before      # paid, but no XP: outgrown
 
     u.money = 0
-    u.give_to_hand("Axe")
+    u.give_to_hand(fitted(u, "Axe"))
     guild.work_shift([u], 16)
     assert u.money == 5                                  # the better, own-Axe wage
     assert u.work_hours == before + 16                  # level 1 job teaches a level 1 worker

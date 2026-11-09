@@ -220,7 +220,7 @@ class Battle:
             if (obj.is_weapon and not u.weapon_hand and u.char.can_wield(obj.weapon_name)
                     and items.get(obj.weapon_name).hands <= u.free_hands):
                 u.equip_weapon(obj.weapon_name)
-            elif obj.is_shield and u.can_take_shield:
+            elif obj.is_shield and u.can_take_shield and u.char.fits_offhand(obj.item_name):
                 u.equip_shield(obj.item_name)
             elif obj.is_torch and not u.torch_hand and u.free_hands >= 1:
                 u.torch_hand = True

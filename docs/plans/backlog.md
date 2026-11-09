@@ -155,6 +155,11 @@ the rest.
 
 ## Large
 
+- **A shop for Tiny gear.** Today the town shops stock Tiny, Small and Medium at the same counts
+  (`economy.TOWN_SIZES`). A dedicated Tiny-gear shop takes Tiny off the town shelves (`RULES.md`, Item sizes).
+- **Sized recipes.** Crafting yields Medium gear only; a Small or Large recipe (or a size choice on the
+  existing one) is missing.
+
 - **Routine unlocks (author 2026-11-04). A POSSIBLE IDEA, not a design decision.** It is decided only after
   the playtest with every routine open from the start. Today every block and every place is open to a routine
   (`routine_book.py`, the Book of routines). The idea: blocks are mission
@@ -659,4 +664,14 @@ Notas cruas de backlog - 08/11/2026 - 4dca9e05 - Jogo em PT-BR
 
 - Empurrar um inimigo pra bater no outro me parece uma ação bem ruim, comparada a bater 2x... Achei esquisito.
 
-- Nos ermos, combate no dia 38 no save dos estudadores, tivemos um problema, pq os 2 lobos próximos da Braema, simplesmente usaram "defend" ao inves de irem atacar os outros aliados delas q estavam no chão. Parece q a IA ta lidando muito mal contra o voo da fada.2
+- Nos ermos, combate no dia 38 no save dos estudadores, tivemos um problema, pq os 2 lobos próximos da Braema, simplesmente usaram "defend" ao inves de irem atacar os outros aliados delas q estavam no chão. Parece q a IA ta lidando muito mal contra o voo da fada.
+
+- Na wiki de raças o tamanho "small" o "hit Die" a "speed" e o "speaks x" nçao ficaram traduduzidos. Nem as abreveciações dos atributos.
+
+
+====
+
+Usando o sim_result/sleep_both/report.md como base pra esses pensamentos:
+como pendencias de balanceamento. Das 10 raças com score abaixo de 50, 4 das 5 raças pequenas estão lá. EAI, dado que ser pequeno paga o custo de ter menos dano, eu to pensando em aumentar a CA. Ou seja, as raças pequenas ganham +1 de CA (tiny ganha 2) e raças grandes PERDEM 1 de CA [O colateral aqui é nerfar o centauro, mas seja oq deus quiser. depois a resolve esse problema]. A expectativa é que com a CA mais alta, a gente mais valor no demoralize e nas magias. Oq é bom, pq aumenta os bonus de acerto que o jogo da, dado q 6 raças vão ficar mais dificeis de fazer as coisa. Enfim, só vendo como vai ser o impacto.
+
+Eai a build mais coitada q eu to com dificuldade ate de saber oq fazer, é com o kenku. Pq ele tem destreza, sabedoria e carisma. LOGO, ele não é um excelente caster, nem um bom combatente melee. Na minha visão o espaço de design dele é alguem que joga desmoralizando a distância. E que joga primeiro.

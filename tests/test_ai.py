@@ -10,6 +10,7 @@ from tests.helpers import (
     _melee_battle,
     _recruit,
     abilities,
+    fitted,
     fixed_d20,
     standard_unit,
 )
@@ -33,7 +34,7 @@ def test_ai_reloads_an_empty_crossbow_rather_than_only_walking():
     batt.board.walls = set()
     for u in batt.units:
         u._ability = abilities.get("none")
-    d.equip_weapon("Crossbow")
+    d.equip_weapon(fitted(d, "Crossbow"))
     d.ammo, d.crossbow_loaded = 5, False
     d.pos, a.pos = (2, 5), (12, 5)
     batt.turn_idx = batt.order.index(d)
@@ -311,7 +312,7 @@ def test_an_archer_and_a_unit_already_beside_the_foe_do_not_reposition():
     b.pos = (9, 5)
     assert ai._flank_cell(batt, b, foe) is None               # already beside it
     b.pos = (7, 9)
-    b.equip_weapon("Crossbow")
+    b.equip_weapon(fitted(b, "Crossbow"))
     b.ammo, b.crossbow_loaded = 5, True
     assert b.ranged and ai._flank_cell(batt, b, foe) is None
 
@@ -350,7 +351,7 @@ def test_a_two_handed_fighter_does_not_trade_its_weapon_for_a_torch():
     from gartok import ai
     batt, a, d = _dark_pair()
     batt.ground.append(GroundObject.torch((5, 4)))
-    a.equip_weapon("Glaive")
+    a.equip_weapon(fitted(a, "Glaive"))
     assert a.free_hands < 1 and not ai._recover_torch(batt, a)
-    a.equip_weapon("Dagger")
+    a.equip_weapon(fitted(a, "Dagger"))
     assert ai._recover_torch(batt, a)                         # a free hand: it does fetch the light

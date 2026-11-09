@@ -2,7 +2,7 @@
 
 from gartok import abilities, ai, foe_card, intel, weapon_traits
 from gartok.sheet import unit_to_ch
-from tests.helpers import _melee_battle, _recruit, actions, fixed_d20
+from tests.helpers import _melee_battle, _recruit, actions, fitted, fixed_d20
 
 
 def test_a_weapon_names_its_own_action_and_a_plain_one_none():
@@ -14,19 +14,19 @@ def test_a_weapon_names_its_own_action_and_a_plain_one_none():
 
 def test_the_sheet_and_the_foe_card_carry_the_weapon_and_its_action():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Axe")
-    d.equip_weapon("Broadsword")
+    a.equip_weapon(fitted(a, "Axe"))
+    d.equip_weapon(fitted(d, "Broadsword"))
     d.weapon_hand = True
     assert unit_to_ch(a)["weapon"]["action"] == "Cleave"
     card = foe_card.foe_card(intel.known_fields(batt, "player", d))
-    assert card["weapon"]["name"] == "Broadsword" and card["weapon"]["action"] == "Parry & Strike"
+    assert card["weapon"]["name"] == fitted(d, "Broadsword") and card["weapon"]["action"] == "Parry & Strike"
     assert card["weapon"]["action_tip"].startswith("Parry & Strike\nWeapon action")
     assert all(label != "weapon" for label, _ in card["equipment"])
 
 
 def test_a_disarmed_foe_shows_bare_hands():
     batt, _, d = _melee_battle()
-    d.equip_weapon("Broadsword")
+    d.equip_weapon(fitted(d, "Broadsword"))
     d.disarm()
     card = foe_card.foe_card(intel.known_fields(batt, "player", d))
     assert card["weapon"]["name"] == "Unarmed" and card["weapon"]["action"] == "Wrest"
@@ -43,7 +43,7 @@ def test_a_plain_swing_is_not_named():
 
 def test_a_weapon_action_is_named_over_its_actor():
     batt, a, d1 = _melee_battle()
-    a.equip_weapon("Axe")
+    a.equip_weapon(fitted(a, "Axe"))
     a.ap = 2
     d1.hp = d1.hp_max = 40
     d2 = _recruit(batt, team="enemy")
@@ -57,7 +57,7 @@ def test_a_shot_flies_to_its_target_unnamed():
     batt, a, d = _melee_battle()
     batt.board.walls = set()
     batt.ambient_light = True
-    a.equip_weapon("Shortbow")
+    a.equip_weapon(fitted(a, "Shortbow"))
     a.ammo = 4
     a.pos, d.pos = (2, 5), (6, 5)
     a.ap = 2
@@ -88,7 +88,7 @@ def test_the_ai_names_its_actions_too():
     batt.board.walls = set()
     batt.board.elevation = {}
     batt.ambient_light = True
-    d.equip_weapon("Axe")
+    d.equip_weapon(fitted(d, "Axe"))
     d.pos, a.pos = (5, 5), (6, 5)
     a.hp = a.hp_max = 30
     _recruit(batt, team="player").pos = (6, 6)

@@ -148,8 +148,9 @@ PRICES = {item.name: item.price for item in items.all_items().values()}
 # purpose (early armor is meant to feel earned); 1sqm Hide starts at zero -- the
 # tanner's mission (`missions.py`) wants it hunted in the Wilds, not bought, so
 # the market only ever has what a player has actually sold back to it.
+TOWN_SIZES = ("Tiny", "Small", "Medium")     # the sizes a town's shops stock (`SHELVES`)
 STOCK = {
-    "Leather Jerkin": 3, "Studded Leather": 3,
+    **{items.sized(name, size).name: 3 for name in ("Leather Jerkin", "Studded Leather") for size in TOWN_SIZES},
     "1sqm Hide": 0,
     "Minor Healing Potion": 3, "Vial": 10,
 }
@@ -159,7 +160,7 @@ STOCK = {
 # anything at half price and resells it, so the targets are what makes each one specialised.
 # A fractional rate accrues over days. A count above the target (the player sold) walks back
 # down at the same rate; a rate of 0 leaves it alone.
-SHELVES = {
+_SHELVES = {
     "smith": {
         "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Shortspear": (6, 2),
         "Axe": (6, 1), "Pick": (6, 1), "Hammer": (6, 1), "Sword": (6, 1), "Broadsword": (3, 0.5), "Glaive": (2, 0.3), "Rapier": (2, 0.3),
@@ -184,13 +185,32 @@ SHELVES = {
     "carpenter": {
         "Shortbow": (2, 0.3), "Longbow": (1, 0.15), "Crossbow": (2, 0.3), "Quarterstaff": (4, 1),
     },
-    # the friendly Ogre's fortress (wildfire.FORTRESS_ID): the only shelf of Large weapons
+    # the friendly Ogre's fortress (wildfire.FORTRESS_ID): the only shelf of Large weapons and armor
     "ogre_fortress": {
-        "Large Club": (3, 0.5), "Large Dagger": (3, 0.5), "Large Hatchet": (3, 0.5),
-        "Large Shortspear": (2, 0.3), "Large Axe": (2, 0.3), "Large Pick": (2, 0.3),
-        "Large Hammer": (2, 0.3), "Large Broadsword": (1, 0.15), "Large Rapier": (1, 0.1),
+        "Club": (3, 0.5), "Dagger": (3, 0.5), "Hatchet": (3, 0.5),
+        "Shortspear": (2, 0.3), "Axe": (2, 0.3), "Pick": (2, 0.3),
+        "Hammer": (2, 0.3), "Broadsword": (1, 0.15), "Rapier": (1, 0.1),
+        "Leather Jerkin": (2, 0.3), "Studded Leather": (2, 0.3), "Chainmail": (1, 0.15),
+        "Brigandine": (1, 0.1), "Plate Armor": (1, 0.05),
     },
 }
+
+# Weapons, armor and shields are shelved by their plain name above and sold in the sizes a shop carries:
+# a town's smith stocks the Tiny, Small and Medium of each at the shelf's count (a dedicated shop for
+# Tiny gear will take Tiny off the town shelves); the Ogre's fortress, only Large. A shop still buys
+# and resells any size as a stray.
+SHELF_SIZES = {"ogre_fortress": ("Large",)}
+
+
+def _shelved_sizes(node_id, name):
+    item = items.get(name)
+    if item is None or item.type not in (items.ItemType.WEAPON, items.ItemType.ARMOR, items.ItemType.SHIELD):
+        return [name]
+    return [v.name for z in SHELF_SIZES.get(node_id, TOWN_SIZES) if (v := items.sized(name, z))]
+
+
+SHELVES = {node_id: {sized: spec for name, spec in shelf.items() for sized in _shelved_sizes(node_id, name)}
+           for node_id, shelf in _SHELVES.items()}
 NODE_SHELVES = {node_id: (node_id,) for node_id in SHELVES}
 
 # What the town's shops sell between them (the yard, the mine and the library keep their own).
@@ -377,7 +397,8 @@ def owns_tool(unit, node_id):
     """The worker carries the node's own tool (`GATHER_TOOLS`): in the pack is enough, it does not
     have to be the weapon in hand."""
     tool = GATHER_TOOLS[node_id]
-    return unit.has_item(tool) or unit.equipped_weapon == tool or unit.equipped_tongue == tool
+    held = (unit.equipped_weapon, unit.equipped_tongue, *(entry.name for entry in unit._base_inventory))
+    return any(items.is_kind(name, tool) for name in held)
 
 
 def work_level(unit, node_id):

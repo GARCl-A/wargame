@@ -87,9 +87,13 @@ def test_the_fortress_with_more_copper_gets_a_weapon_after_the_shield():
     assert unit.equipped_armor and unit.equipped_offhand == rb.SHIELD and unit.equipped_weapon == "Hammer"
 
 
-def test_a_large_body_takes_the_large_weapon_and_a_small_one_the_plain_one():
+def test_each_body_takes_the_weapon_and_the_armor_cut_for_it():
     assert _unit("sword_board", "Goliath")[0].equipped_weapon == "Large Sword"
     assert _unit("sword_board", "Human")[0].equipped_weapon == "Sword"
+    assert _unit("sword_board", "Goblin")[0].equipped_weapon == "Small Sword"
+    assert _unit("sword_board", "Sprite")[0].equipped_weapon == "Tiny Sword"
+    centaur = _unit("sword_board", "Centaur", level=5)[0]
+    assert centaur.equipped_weapon == "Large Sword" and items.get(centaur.equipped_armor).size == "Large"
 
 
 def test_a_two_handed_weapon_gives_the_fortress_shield_back():
@@ -102,10 +106,10 @@ def test_a_level_0_caster_is_only_fielded_by_a_race_that_starts_with_magic():
     assert not any(rb.fields(b, r[1], 0) for b in ("blood_caster", "faith_caster") for r in rs.data.RACES)
 
 
-def test_a_race_that_cannot_wield_the_weapon_is_not_fielded_with_it():
-    fielded = rb.fields("glaive", "Sprite", 5)
-    _, notes = _unit("glaive", "Sprite")
-    assert fielded == ("no weapon" not in notes)
+def test_a_small_race_fields_every_weapon_in_its_own_size():
+    assert rb.fields("glaive", "Sprite", 5)
+    unit, notes = _unit("glaive", "Sprite")
+    assert unit.equipped_weapon == "Tiny Glaive" and "unarmed" not in notes
 
 
 def test_every_sweep_weapon_is_a_real_affordable_item():

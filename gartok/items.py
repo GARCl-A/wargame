@@ -5,6 +5,7 @@ All items are defined with strong types, Enums, and typed ItemDef instances.
 """
 
 from dataclasses import dataclass, replace
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Any
 
@@ -94,9 +95,14 @@ class ItemDef:
         return trait_id in self.traits
 
     @property
+    def base_name(self) -> str:
+        """The plain item's name, whatever its size: "Crossbow" for a Small or Large one."""
+        return self.base or self.name
+
+    @property
     def family(self) -> str:
-        """The plain weapon's id, whatever its size: "crossbow" for a Large or Huge one."""
-        return self.id.removeprefix("large_").removeprefix("huge_")
+        """The plain item's id, whatever its size: "crossbow" for a Small or Large one."""
+        return _LOOKUP[self.base].id if self.base else self.id
 
     @property
     def is_finesse(self) -> bool:
@@ -258,8 +264,35 @@ DAMAGE_STEPS = {
 }
 
 
+DAMAGE_STEPS_DOWN = {up: down for down, up in DAMAGE_STEPS.items() if down != (2, 6)}
+
+
 def step_damage_die(dice: tuple[int, int]) -> tuple[int, int]:
     return DAMAGE_STEPS.get(tuple(dice), (dice[0], dice[1] + 2))
+
+
+def step_damage_die_down(dice: tuple[int, int]) -> tuple[int, int]:
+    """One step down the same ladder, floored at 1d2 (a Tiny dagger is 1d2)."""
+    return DAMAGE_STEPS_DOWN.get(tuple(dice), tuple(dice) if dice[1] <= 2 else (dice[0], dice[1] - 2))
+
+
+SIZE_STEPS = {WeaponSize.TINY: -2, WeaponSize.SMALL: -1, WeaponSize.MEDIUM: 0, WeaponSize.LARGE: 1, WeaponSize.HUGE: 2}
+
+
+def _scaled_weight(weight: float, steps: int) -> float:
+    """x2 per size step up, /2 per step down, two decimals rounded half up (0.125 kg is 0.13)."""
+    exact = Decimal(str(weight)) * (Decimal(2) ** steps)
+    return float(exact.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
+def _scaled_price(price: int, steps: int) -> int:
+    return price * 2 ** steps if steps >= 0 else max(1, -(-price // 2 ** -steps))
+
+
+def _scaled_die(dice: tuple[int, int], steps: int) -> tuple[int, int]:
+    for _ in range(abs(steps)):
+        dice = step_damage_die(dice) if steps > 0 else step_damage_die_down(dice)
+    return dice
 
 
 # --------------------------------------------------------------------------- #
@@ -314,33 +347,35 @@ for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits
         range=rng, reach=reach, finesse=fin, thrown=thr, hands=hands, reload=reload,
         traits=traits, crit_mult=crit_mult,
     ))
-    # Large variant
-    large_slug = f"large_{slug}"
-    large_name = f"Large {name}"
-    _register(ItemDef(
-        id=large_slug, name=large_name, type=ItemType.WEAPON, rarity=rarity,
-        weight=round(weight * 2, 1), price=price * 2, size=WeaponSize.LARGE,
-        damage=step_damage_die(dmg), range=rng, reach=reach, finesse=fin, thrown=thr,
-        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult, base=name,
-    ))
-    # Huge variant: an Ogre's, or a Large body with Giant's Grip
-    _register(ItemDef(
-        id=f"huge_{slug}", name=f"Huge {name}", type=ItemType.WEAPON, rarity=rarity,
-        weight=round(weight * 4, 1), price=price * 4, size=WeaponSize.HUGE,
-        damage=step_damage_die(step_damage_die(dmg)), range=rng, reach=reach, finesse=fin, thrown=thr,
-        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult, base=name,
-    ))
+    for size in (WeaponSize.TINY, WeaponSize.SMALL, WeaponSize.LARGE, WeaponSize.HUGE):
+        steps = SIZE_STEPS[size]
+        _register(ItemDef(
+            id=f"{size.lower()}_{slug}", name=f"{size.value} {name}", type=ItemType.WEAPON, rarity=rarity,
+            weight=_scaled_weight(weight, steps), price=_scaled_price(price, steps), size=size,
+            damage=_scaled_die(dmg, steps), range=rng, reach=reach, finesse=fin, thrown=thr,
+            hands=hands, reload=reload, traits=traits, crit_mult=crit_mult, base=name,
+        ))
 
-# Armor
-_register(ItemDef(id="leather_jerkin", name="Leather Jerkin", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=4.0, price=20, ac=1, max_dex=None, speed_penalty=0))
-_register(ItemDef(id="studded_leather", name="Studded Leather", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=6.0, price=55, ac=2, max_dex=3, speed_penalty=0))
-_register(ItemDef(id="chainmail", name="Chainmail", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=10.0, price=160, ac=3, max_dex=2, speed_penalty=0))
-_register(ItemDef(id="brigandine", name="Brigandine", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=18.0, price=400, ac=4, max_dex=1, speed_penalty=1))
-_register(ItemDef(id="plate_armor", name="Plate Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=28.0, price=950, ac=5, max_dex=0, speed_penalty=2))
-_register(ItemDef(id="dwarf_armor", name="Dwarf Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=25.0, price=110, ac=5, max_dex=0, speed_penalty=1))
+# Armor and shields: fitted to a body, so each comes in every size a body can be but Huge (weight and price only)
+_WORN_SIZES = (WeaponSize.TINY, WeaponSize.SMALL, WeaponSize.LARGE)
 
-# Shields
-_register(ItemDef(id="dwarf_shield", name="Dwarf Shield", type=ItemType.SHIELD, rarity=ItemRarity.UNCOMMON, weight=3.0, price=60, ac=2))
+
+def _register_worn(**fields) -> None:
+    item = _register(ItemDef(size=WeaponSize.MEDIUM, **fields))
+    for size in _WORN_SIZES:
+        steps = SIZE_STEPS[size]
+        _register(replace(
+            item, id=f"{size.lower()}_{item.id}", name=f"{size.value} {item.name}", size=size,
+            weight=_scaled_weight(item.weight, steps), price=_scaled_price(item.price, steps), base=item.name))
+
+
+_register_worn(id="leather_jerkin", name="Leather Jerkin", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=4.0, price=20, ac=1, max_dex=None, speed_penalty=0)
+_register_worn(id="studded_leather", name="Studded Leather", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=6.0, price=55, ac=2, max_dex=3, speed_penalty=0)
+_register_worn(id="chainmail", name="Chainmail", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=10.0, price=160, ac=3, max_dex=2, speed_penalty=0)
+_register_worn(id="brigandine", name="Brigandine", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=18.0, price=400, ac=4, max_dex=1, speed_penalty=1)
+_register_worn(id="plate_armor", name="Plate Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=28.0, price=950, ac=5, max_dex=0, speed_penalty=2)
+_register_worn(id="dwarf_armor", name="Dwarf Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=25.0, price=110, ac=5, max_dex=0, speed_penalty=1)
+_register_worn(id="dwarf_shield", name="Dwarf Shield", type=ItemType.SHIELD, rarity=ItemRarity.UNCOMMON, weight=3.0, price=60, ac=2)
 
 # Food
 _register(ItemDef(id="meat", name="Meat", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=5, food=True, lifespan=2))
@@ -413,7 +448,7 @@ _register(ItemDef(id="signal_horn", name="Signal Horn", type=ItemType.ARTIFACT, 
 _register(ItemDef(id="leather_of_biwolf", name="Leather of Biwolf", type=ItemType.ARTIFACT, rarity=ItemRarity.RARE, weight=1.0, price=150))
 _register(ItemDef(id="thunderhide", name="Thunderhide", type=ItemType.ARTIFACT, rarity=ItemRarity.UNIQUE, weight=1.5, price=400))
 _register(ItemDef(id="legendary_horn", name="Legendary Horn", type=ItemType.MATERIAL, rarity=ItemRarity.UNIQUE, weight=2.0, price=60))
-_register(ItemDef(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1))
+_register_worn(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1)
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="flint_and_steel", name="Flint and Steel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=40))
 _register(ItemDef(id="semi_precious_gemstone", name="Semi-precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))
@@ -441,6 +476,30 @@ def get(key: str) -> ItemDef | None:
     return _LOOKUP.get(key.lower())
 
 
+def sized(name: str, size: str) -> ItemDef | None:
+    """`name` made for a body of `size`: the Small Sword of "Sword" or "Large Sword". None when that item
+    has no such size (a Torch, a Huge Chainmail)."""
+    item = get(name)
+    if item is None:
+        return None
+    plain = get(item.base_name)
+    size = WeaponSize(size)
+    if size == (plain.size or WeaponSize.MEDIUM):
+        return plain
+    return get(f"{size.value} {plain.name}")
+
+
+def is_kind(name: str | None, plain: str) -> bool:
+    """`name` is `plain` of any size: a Small Axe is an Axe."""
+    item = get(name) if name else None
+    return item is not None and item.base_name == plain
+
+
+def sizes_of(name: str) -> list[ItemDef]:
+    """Every size `name` comes in, smallest first."""
+    return [d for z in WeaponSize if (d := sized(name, z)) is not None]
+
+
 def _composed_names(cat):
     """The shown names of the items that are built from parts, not written one by one: a size variant is its
     plain weapon + a size word, a scroll its spell, a recipe paper its recipe, a dictionary its language (`name.compose.*` hold each
@@ -455,10 +514,11 @@ def _composed_names(cat):
 
     for item in _REGISTRY.values():
         if item.base and "name.compose.size" in cat:
-            base, size = cat.get(f"name.item.{item.base}"), cat.get(f"name.size.{item.size.value}")
+            base, gender = cat.get(f"name.item.{item.base}"), cat.get(f"name.item.{item.base}.gender")
+            word = f"name.size.{item.size.value}"
+            size = (cat.get(f"{word}.f") if gender in ("f", "fp") else None) or cat.get(word)
             if base and size:
-                put(item.name, cat["name.compose.size"].format(base=base, size=size),
-                    cat.get(f"name.item.{item.base}.gender"))
+                put(item.name, cat["name.compose.size"].format(base=base, size=size), gender)
         elif item.spell_id and "name.compose.scroll" in cat and cat.get(f"name.spell.{item.spell_id}"):
             put(item.name, cat["name.compose.scroll"].format(spell=cat[f"name.spell.{item.spell_id}"]), "m")
         elif item.recipe_id and "name.compose.recipe" in cat and cat.get(f"name.item.{item.recipe_id}"):

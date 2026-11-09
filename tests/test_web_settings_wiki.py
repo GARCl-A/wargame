@@ -120,7 +120,8 @@ def test_the_wiki_opens_on_items_and_every_chapter_reads_the_catalogs(saves):
     w = WikiSession(lambda: {"screen": "title"})
     st = w.state()
     assert st["chapter"] == "items" and len(st["chapters"]) == 10
-    assert st["total"] == len(items.all_items()) and len(st["entries"]) == st["total"]
+    plain = [i for i in items.all_items().values() if i.base is None]
+    assert st["total"] == len(plain) and len(st["entries"]) == st["total"]
     sword = next(e for e in st["entries"] if e["name"] == "Broadsword")
     assert "1d12" in sword["tags"] and "Two-handed" in sword["tags"] and sword["glyph"].startswith("item/")
     assert all("_find" not in e for e in st["entries"])
@@ -166,7 +167,7 @@ def test_every_trait_and_action_an_item_names_opens_its_entry_and_shows_it_on_ho
     w = WikiSession(lambda: {"screen": "title"})
     pages = w.state()["entries"]
     named = 0
-    for it in items.all_items().values():
+    for it in (i for i in items.all_items().values() if i.base is None):
         page = next(e for e in pages if e["name"] == it.name)
         for tid in it.traits:
             if weapon_traits.get(tid):
@@ -178,7 +179,7 @@ def test_every_trait_and_action_an_item_names_opens_its_entry_and_shows_it_on_ho
             assert st["chapter"] == "actions" and link["tip"].startswith(entry["name"] + "\n")
             assert entry["body"] == [] or entry["body"][0] in link["tip"]
         w.chapter("items")
-    assert named > 50
+    assert named > 30
 
 
 def test_the_wiki_links_what_an_item_brings_besides_its_traits(saves):

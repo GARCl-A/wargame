@@ -15,6 +15,7 @@ from tests.helpers import (
     abilities,
     actions,
     data,
+    fitted,
     fixed_d20,
     packed,
 )
@@ -36,7 +37,7 @@ def test_defend_adds_condition():
 
 def test_throw_disarms_and_drops_object():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Dagger")
+    a.equip_weapon(fitted(a, "Dagger"))
     a.pos, d.pos = (5, 5), (8, 5)
     a.ap = 2
     d.hp = d.hp_max = 100                      # the target stays on its feet: only the thrown dagger lands
@@ -74,7 +75,7 @@ def test_demoralize_requires_shared_language():
 
 def test_crossbow_takes_two_hands():
     u = _combatant()
-    u.equip_weapon("Crossbow")
+    u.equip_weapon(fitted(u, "Crossbow"))
     assert u.weapon["hands"] == 2 and u.free_hands == 0
     dropped = u.equip_torch()                         # only fits by dropping the crossbow
     assert dropped == [("weapon", "Crossbow")] and u.has_torch and u.unarmed
@@ -82,7 +83,7 @@ def test_crossbow_takes_two_hands():
 
 def test_one_handed_weapon_and_torch_coexist():
     u = _combatant()
-    u.equip_weapon("Dagger")
+    u.equip_weapon(fitted(u, "Dagger"))
     dropped = u.equip_torch()
     assert dropped == [] and not u.unarmed and u.has_torch and u.free_hands == 0
 
@@ -99,7 +100,7 @@ def test_stowed_weapon_weighs_the_same_as_wielded():
 def test_load_sums_weapon_torch_and_items():
     from gartok.data import TORCH_WEIGHT, WEAPONS, item_weight
     u = _combatant()
-    u.equip_weapon("Axe")
+    u.equip_weapon(fitted(u, "Axe"))
     u.torch_hand = True
     u.inventory = ["Rope", "Torch"]
     expected = round(WEAPONS["Axe"]["weight"] + TORCH_WEIGHT
@@ -109,7 +110,7 @@ def test_load_sums_weapon_torch_and_items():
 
 def test_pickup_torch_with_free_hand_does_not_drop_weapon():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Dagger")                           # one-handed weapon
+    a.equip_weapon(fitted(a, "Dagger"))                           # one-handed weapon
     batt.ground.append(GroundObject.torch(a.pos))
     a.ap = 2
     n_obj = len(batt.ground)
@@ -119,7 +120,7 @@ def test_pickup_torch_with_free_hand_does_not_drop_weapon():
 
 def test_lantern_in_hand_blocks_picking_up_a_ground_torch():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Dagger")
+    a.equip_weapon(fitted(a, "Dagger"))
     a.lantern_hand = True
     batt.ground.append(GroundObject.torch(a.pos))
     a.ap = 2
@@ -130,10 +131,10 @@ def test_lantern_in_hand_blocks_picking_up_a_ground_torch():
 
 def test_two_handed_weapon_bumps_lantern_to_pack_not_ground():
     u = _combatant()
-    u.equip_weapon("Dagger")
+    u.equip_weapon(fitted(u, "Dagger"))
     u.lantern_hand = True
     n_lanterns = u.inventory.count(data.LANTERN_ITEM)
-    dropped = u.equip_weapon("Crossbow")           # two-handed: no off hand left
+    dropped = u.equip_weapon(fitted(u, "Crossbow"))           # two-handed: no off hand left
     assert dropped == [] and not u.lantern_hand
     assert u.inventory.count(data.LANTERN_ITEM) == n_lanterns + 1
 
@@ -364,7 +365,7 @@ def test_crossbow_with_an_empty_quiver_starts_unloaded():
 def test_crossbow_reload_cycle():
     batt, a, d = _melee_battle()
     batt.board.walls = set()                          # clear lane between shooter and target
-    a.equip_weapon("Crossbow"); a.ammo = 3; a.crossbow_loaded = True
+    a.equip_weapon(fitted(a, "Crossbow")); a.ammo = 3; a.crossbow_loaded = True
     a.pos, d.pos = (2, 5), (9, 5)
     a.torch_hand = False
     for u in batt.units:                              # light the lane so LOS+sight hold
@@ -396,7 +397,7 @@ def test_ranged_attack_log_differentiates_bolts_and_arrows():
         u._ability = abilities.get("none")
 
     # Crossbow uses bolts
-    a.equip_weapon("Crossbow")
+    a.equip_weapon(fitted(a, "Crossbow"))
     a.ammo = 5
     a.crossbow_loaded = True
     a.pos, d.pos = (2, 5), (6, 5)
@@ -406,7 +407,7 @@ def test_ranged_attack_log_differentiates_bolts_and_arrows():
     assert any("shoots (5 bolts in the quiver)" in line for line in batt.log_lines)
 
     # Shortbow uses arrows
-    a.equip_weapon("Shortbow")
+    a.equip_weapon(fitted(a, "Shortbow"))
     a.ammo = 4
     a.pos, d.pos = (2, 5), (6, 5)
     a.ap = 2
@@ -477,7 +478,7 @@ def test_attack_bonus_folds_in_the_to_hit_talent():
 
 def test_crossbow_without_ammo_is_improvised():
     u = _combatant()
-    u.equip_weapon("Crossbow"); u.ammo = 0
+    u.equip_weapon(fitted(u, "Crossbow")); u.ammo = 0
     assert u.improvised and not u.ranged and u.attack_range == 1
     # to-hit uses Strength (melee), not Dexterity
     labels = {lbl for _, _, lbl in u.attack_mods(None)}
@@ -616,7 +617,7 @@ def test_good_ai_does_not_walk_to_an_already_stable_ally():
 def test_a_bow_spends_an_arrow_per_shot_and_goes_improvised_when_dry():
     batt, a, d = _melee_battle()
     batt.board.walls = set()
-    a.equip_weapon("Shortbow"); a.ammo = 2
+    a.equip_weapon(fitted(a, "Shortbow")); a.ammo = 2
     a.pos, d.pos = (2, 5), (6, 5)
     a.torch_hand = False
     for u in batt.units:
@@ -766,7 +767,7 @@ def test_flee_blocked_reasons():
 
 def _thrown_hatchet(surround=False):
     batt, a, d = _melee_battle()
-    a.equip_weapon("Hatchet")
+    a.equip_weapon(fitted(a, "Hatchet"))
     a.pos, d.pos = (5, 5), (8, 5)
     a.ap = 2
     if surround:

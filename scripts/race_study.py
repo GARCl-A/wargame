@@ -225,9 +225,9 @@ COMBOS = (
 )
 
 
-def racing(build_id, lv, weapon=None):
+def racing(build_id, lv):
     """The races that can field `build_id` at `lv`."""
-    return [r for r in RACES if rb.fields(build_id, r, lv, weapon)]
+    return [r for r in RACES if rb.fields(build_id, r, lv)]
 
 
 def own(rng, race, lv, field):
@@ -312,7 +312,7 @@ def wave_jobs(wave, lv, scale):
                         add(race, ba, race, ba, oa={"large": True})
     elif wave == "gw":
         for wpn in [w for w in rb.CATALOG if rb.affordable(w, lv)]:
-            races = racing("plain", lv, wpn)
+            races = racing("plain", lv)
             for _ in range(int(150 * scale) if races else 0):
                 rr = rng.choice(races)
                 add(rr, "plain", rr, "plain", oa={"weapon": wpn}, ob={"weapon": "Sword"})
@@ -361,7 +361,7 @@ def wave_jobs(wave, lv, scale):
             if not rb.exists(bid, lv) or (lv == 0 and rb.lookup(bid).role == "caster"):
                 continue
             for weapon in rb.sweep_weapons(bid, lv):
-                races = [r for r in racing(bid, lv, weapon) if rb.fields(rb.MELEE_REF, r, lv)]
+                races = [r for r in racing(bid, lv) if rb.fields(rb.MELEE_REF, r, lv)]
                 for _ in range(int(100 * scale) if races else 0):
                     rr = rng.choice(races)
                     add(rr, bid, rr, rb.MELEE_REF, oa={"weapon": weapon})

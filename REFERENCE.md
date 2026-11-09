@@ -131,57 +131,93 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Weapon | Size | Damage | Range | Finesse | Thrown | Hands | Weight | Price ($) |
 |---|---|---|---|---|---|---|---|---|
 | Dagger | Medium | 1d4 | melee | yes | 6 sq | 1 | 0.5 kg | 8 |
+| Tiny Dagger | Tiny | 1d2 | melee | yes | 6 sq | 1 | 0.13 kg | 2 |
+| Small Dagger | Small | 1d3 | melee | yes | 6 sq | 1 | 0.25 kg | 4 |
 | Large Dagger | Large | 1d6 | melee | yes | 6 sq | 1 | 1 kg | 16 |
 | Huge Dagger | Huge | 1d8 | melee | yes | 6 sq | 1 | 2 kg | 32 |
 | Hatchet | Medium | 1d6 | melee | -- | 4 sq | 1 | 1 kg | 10 |
+| Tiny Hatchet | Tiny | 1d3 | melee | -- | 4 sq | 1 | 0.25 kg | 3 |
+| Small Hatchet | Small | 1d4 | melee | -- | 4 sq | 1 | 0.5 kg | 5 |
 | Large Hatchet | Large | 1d8 | melee | -- | 4 sq | 1 | 2 kg | 20 |
 | Huge Hatchet | Huge | 1d10 | melee | -- | 4 sq | 1 | 4 kg | 40 |
 | Axe | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
+| Tiny Axe | Tiny | 1d4 | melee | -- | -- | 1 | 0.75 kg | 9 |
+| Small Axe | Small | 1d6 | melee | -- | -- | 1 | 1.5 kg | 18 |
 | Large Axe | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
 | Huge Axe | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 140 |
 | Light Hammer | Medium | 1d4 | melee | yes | 8 sq | 1 | 1 kg | 10 |
+| Tiny Light Hammer | Tiny | 1d2 | melee | yes | 8 sq | 1 | 0.25 kg | 3 |
+| Small Light Hammer | Small | 1d3 | melee | yes | 8 sq | 1 | 0.5 kg | 5 |
 | Large Light Hammer | Large | 1d6 | melee | yes | 8 sq | 1 | 2 kg | 20 |
 | Huge Light Hammer | Huge | 1d8 | melee | yes | 8 sq | 1 | 4 kg | 40 |
 | Hammer | Medium | 1d8 | melee | -- | -- | 1 | 4 kg | 35 |
+| Tiny Hammer | Tiny | 1d4 | melee | -- | -- | 1 | 1 kg | 9 |
+| Small Hammer | Small | 1d6 | melee | -- | -- | 1 | 2 kg | 18 |
 | Large Hammer | Large | 1d10 | melee | -- | -- | 1 | 8 kg | 70 |
 | Huge Hammer | Huge | 1d12 | melee | -- | -- | 1 | 16 kg | 140 |
 | Club | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 6 |
+| Tiny Club | Tiny | 1d3 | melee | -- | -- | 1 | 0.38 kg | 2 |
+| Small Club | Small | 1d4 | melee | -- | -- | 1 | 0.75 kg | 3 |
 | Large Club | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 12 |
 | Huge Club | Huge | 1d10 | melee | -- | -- | 1 | 6 kg | 24 |
 | Quarterstaff | Medium | 1d6 | melee | yes | -- | 1 | 2 kg | 5 |
+| Tiny Quarterstaff | Tiny | 1d3 | melee | yes | -- | 1 | 0.5 kg | 2 |
+| Small Quarterstaff | Small | 1d4 | melee | yes | -- | 1 | 1 kg | 3 |
 | Large Quarterstaff | Large | 1d8 | melee | yes | -- | 1 | 4 kg | 10 |
 | Huge Quarterstaff | Huge | 1d10 | melee | yes | -- | 1 | 8 kg | 20 |
 | Shortspear | Medium | 1d6 | melee | -- | 12 sq | 1 | 1.5 kg | 12 |
+| Tiny Shortspear | Tiny | 1d3 | melee | -- | 12 sq | 1 | 0.38 kg | 3 |
+| Small Shortspear | Small | 1d4 | melee | -- | 12 sq | 1 | 0.75 kg | 6 |
 | Large Shortspear | Large | 1d8 | melee | -- | 12 sq | 1 | 3 kg | 24 |
 | Huge Shortspear | Huge | 1d10 | melee | -- | 12 sq | 1 | 6 kg | 48 |
 | Light Pick | Medium | 1d4 | melee | yes | 6 sq | 1 | 1 kg | 10 |
+| Tiny Light Pick | Tiny | 1d2 | melee | yes | 6 sq | 1 | 0.25 kg | 3 |
+| Small Light Pick | Small | 1d3 | melee | yes | 6 sq | 1 | 0.5 kg | 5 |
 | Large Light Pick | Large | 1d6 | melee | yes | 6 sq | 1 | 2 kg | 20 |
 | Huge Light Pick | Huge | 1d8 | melee | yes | 6 sq | 1 | 4 kg | 40 |
 | Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
+| Tiny Pick | Tiny | 1d4 | melee | -- | -- | 1 | 0.75 kg | 9 |
+| Small Pick | Small | 1d6 | melee | -- | -- | 1 | 1.5 kg | 18 |
 | Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
 | Huge Pick | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 140 |
 | Sword | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
+| Tiny Sword | Tiny | 1d4 | melee | -- | -- | 1 | 0.75 kg | 9 |
+| Small Sword | Small | 1d6 | melee | -- | -- | 1 | 1.5 kg | 18 |
 | Large Sword | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
 | Huge Sword | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 140 |
 | Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
+| Tiny Broadsword | Tiny | 1d8 | melee | -- | -- | 2 | 1 kg | 27 |
+| Small Broadsword | Small | 1d10 | melee | -- | -- | 2 | 2 kg | 53 |
 | Large Broadsword | Large | 2d8 | melee | -- | -- | 2 | 8 kg | 210 |
 | Huge Broadsword | Huge | 3d8 | melee | -- | -- | 2 | 16 kg | 420 |
 | Glaive | Medium | 1d10 | melee | -- | -- | 2 | 4.5 kg | 137 |
+| Tiny Glaive | Tiny | 1d6 | melee | -- | -- | 2 | 1.13 kg | 35 |
+| Small Glaive | Small | 1d8 | melee | -- | -- | 2 | 2.25 kg | 69 |
 | Large Glaive | Large | 1d12 | melee | -- | -- | 2 | 9 kg | 274 |
 | Huge Glaive | Huge | 2d8 | melee | -- | -- | 2 | 18 kg | 548 |
 | Crossbow | Medium | 1d10 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
+| Tiny Crossbow | Tiny | 1d6 | 18 sq | -- | -- | 2 | 0.63 kg | 20 |
+| Small Crossbow | Small | 1d8 | 18 sq | -- | -- | 2 | 1.25 kg | 40 |
 | Large Crossbow | Large | 1d12 | 18 sq | -- | -- | 2 | 5 kg | 160 |
 | Huge Crossbow | Huge | 2d8 | 18 sq | -- | -- | 2 | 10 kg | 320 |
 | Shortbow | Medium | 1d6 | 14 sq | -- | -- | 2 | 1 kg | 320 |
+| Tiny Shortbow | Tiny | 1d3 | 14 sq | -- | -- | 2 | 0.25 kg | 80 |
+| Small Shortbow | Small | 1d4 | 14 sq | -- | -- | 2 | 0.5 kg | 160 |
 | Large Shortbow | Large | 1d8 | 14 sq | -- | -- | 2 | 2 kg | 640 |
 | Huge Shortbow | Huge | 1d10 | 14 sq | -- | -- | 2 | 4 kg | 1280 |
 | Longbow | Medium | 1d8 | 21 sq | -- | -- | 2 | 1.5 kg | 640 |
+| Tiny Longbow | Tiny | 1d4 | 21 sq | -- | -- | 2 | 0.38 kg | 160 |
+| Small Longbow | Small | 1d6 | 21 sq | -- | -- | 2 | 0.75 kg | 320 |
 | Large Longbow | Large | 1d10 | 21 sq | -- | -- | 2 | 3 kg | 1280 |
 | Huge Longbow | Huge | 1d12 | 21 sq | -- | -- | 2 | 6 kg | 2560 |
 | Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | 75 |
+| Tiny Dwarf Axe | Tiny | 1d6 | melee | -- | -- | 1 | 1 kg | 19 |
+| Small Dwarf Axe | Small | 1d8 | melee | -- | -- | 1 | 2 kg | 38 |
 | Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 150 |
 | Huge Dwarf Axe | Huge | 2d8 | melee | -- | -- | 1 | 16 kg | 300 |
 | Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
+| Tiny Rapier | Tiny | 1d3 | melee | yes | -- | 1 | 0.25 kg | 17 |
+| Small Rapier | Small | 1d4 | melee | yes | -- | 1 | 0.5 kg | 33 |
 | Large Rapier | Large | 1d8 | melee | yes | -- | 1 | 2 kg | 130 |
 | Huge Rapier | Huge | 1d10 | melee | yes | -- | 1 | 4 kg | 260 |
 
@@ -220,21 +256,45 @@ Reserved words of the rules: each always means the one thing written here.
 
 ## Armor
 
-| Armor | AC | Max DEX to AC | Speed | Guard test | Weight | Price ($) |
-|---|---|---|---|---|---|---|
-| Leather Jerkin | +1 | -- | -- | -- | 4 kg | 20 |
-| Studded Leather | +2 | +3 | -- | -- | 6 kg | 55 |
-| Chainmail | +3 | +2 | -- | -- | 10 kg | 160 |
-| Brigandine | +4 | +1 | -1 sq | -- | 18 kg | 400 |
-| Plate Armor | +5 | +0 | -2 sq | -- | 28 kg | 950 |
-| Dwarf Armor | +5 | +0 | -1 sq | -- | 25 kg | 110 |
-| Cloak | +0 | -- | -- | +1 | 1 kg | 2 |
+| Armor | Size | AC | Max DEX to AC | Speed | Guard test | Weight | Price ($) |
+|---|---|---|---|---|---|---|---|
+| Leather Jerkin | Medium | +1 | -- | -- | -- | 4 kg | 20 |
+| Tiny Leather Jerkin | Tiny | +1 | -- | -- | -- | 1 kg | 5 |
+| Small Leather Jerkin | Small | +1 | -- | -- | -- | 2 kg | 10 |
+| Large Leather Jerkin | Large | +1 | -- | -- | -- | 8 kg | 40 |
+| Studded Leather | Medium | +2 | +3 | -- | -- | 6 kg | 55 |
+| Tiny Studded Leather | Tiny | +2 | +3 | -- | -- | 1.5 kg | 14 |
+| Small Studded Leather | Small | +2 | +3 | -- | -- | 3 kg | 28 |
+| Large Studded Leather | Large | +2 | +3 | -- | -- | 12 kg | 110 |
+| Chainmail | Medium | +3 | +2 | -- | -- | 10 kg | 160 |
+| Tiny Chainmail | Tiny | +3 | +2 | -- | -- | 2.5 kg | 40 |
+| Small Chainmail | Small | +3 | +2 | -- | -- | 5 kg | 80 |
+| Large Chainmail | Large | +3 | +2 | -- | -- | 20 kg | 320 |
+| Brigandine | Medium | +4 | +1 | -1 sq | -- | 18 kg | 400 |
+| Tiny Brigandine | Tiny | +4 | +1 | -1 sq | -- | 4.5 kg | 100 |
+| Small Brigandine | Small | +4 | +1 | -1 sq | -- | 9 kg | 200 |
+| Large Brigandine | Large | +4 | +1 | -1 sq | -- | 36 kg | 800 |
+| Plate Armor | Medium | +5 | +0 | -2 sq | -- | 28 kg | 950 |
+| Tiny Plate Armor | Tiny | +5 | +0 | -2 sq | -- | 7 kg | 238 |
+| Small Plate Armor | Small | +5 | +0 | -2 sq | -- | 14 kg | 475 |
+| Large Plate Armor | Large | +5 | +0 | -2 sq | -- | 56 kg | 1900 |
+| Dwarf Armor | Medium | +5 | +0 | -1 sq | -- | 25 kg | 110 |
+| Tiny Dwarf Armor | Tiny | +5 | +0 | -1 sq | -- | 6.25 kg | 28 |
+| Small Dwarf Armor | Small | +5 | +0 | -1 sq | -- | 12.5 kg | 55 |
+| Large Dwarf Armor | Large | +5 | +0 | -1 sq | -- | 50 kg | 220 |
+| Cloak | Medium | +0 | -- | -- | +1 | 1 kg | 2 |
+| Tiny Cloak | Tiny | +0 | -- | -- | +1 | 0.25 kg | 1 |
+| Small Cloak | Small | +0 | -- | -- | +1 | 0.5 kg | 1 |
+| Large Cloak | Large | +0 | -- | -- | +1 | 2 kg | 4 |
 
 ## Shields
 
-| Shield | AC | Weight | Price ($) |
-|---|---|---|---|
-| Dwarf Shield | +2 | 3 kg | 60 |
+| Shield | Size | AC | Weight | Price ($) |
+|---|---|---|---|---|
+| Dwarf Shield | Medium | +2 | 3 kg | 60 |
+| Tiny Dwarf Shield | Tiny | +2 | 0.75 kg | 15 |
+| Small Dwarf Shield | Small | +2 | 1.5 kg | 30 |
+| Large Dwarf Shield | Large | +2 | 6 kg | 120 |
 
 ## Enemy kit by level
 

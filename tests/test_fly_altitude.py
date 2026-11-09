@@ -5,13 +5,13 @@ import pytest
 from gartok import ai
 from gartok.actions.movement import MAX_ALTITUDE
 from gartok.conditions import Entangled, PixieFlight, Prone
-from tests.helpers import Battle, actions, data, standard_unit
+from tests.helpers import Battle, actions, data, fitted, standard_unit
 
 
 def _sprite(team="player", kit=("Quarterstaff", None)):
     u = standard_unit(team)
     u.set_race("Sprite")
-    u.set_kit(*kit)
+    u.set_kit(fitted(u, kit[0]), kit[1])
     u._derive_combat()
     return u
 

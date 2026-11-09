@@ -6,7 +6,7 @@ import random
 from gartok.guild import Guild
 from gartok.holdings import Stash
 from gartok.vault import BankVault
-from tests.helpers import Unit, economy, packed
+from tests.helpers import Unit, economy, fitted, packed
 
 
 def test_renting_debits_the_pooled_purse_and_flips_the_capacity_on():
@@ -72,12 +72,13 @@ def test_equip_straight_out_of_the_chest():
     random.seed(2)
     p = Unit("player")
     p._base_inventory = []
-    guild = Guild([p], bank=Stash(30, packed(["Dagger"])))
+    dagger = fitted(p, "Dagger")
+    guild = Guild([p], bank=Stash(30, packed([dagger])))
     s = BankVault(guild, [p])
 
     s.selected = [("bank", 0)]
     s._give_many(p, "hand")
-    assert p.equipped_weapon == "Dagger" and guild.bank.items == []
+    assert p.equipped_weapon == dagger and guild.bank.items == []
 
 
 def test_stashing_an_equipped_weapon_unequips_it():

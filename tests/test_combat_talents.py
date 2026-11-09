@@ -8,6 +8,7 @@
 from gartok import actions, intel
 from tests.helpers import (
     Battle,
+    fitted,
     fixed_d20,
     standard_unit,
 )
@@ -287,7 +288,7 @@ def test_nimble_skirmisher_flank_damage():
 
     b = Battle([u1, u2], [f])
     c1, c2, cf = b.units
-    c1.equip_weapon("Rapier")
+    c1.equip_weapon(fitted(c1, "Rapier"))
     # Flank positions: c1 at (4, 5), cf at (5, 5), c2 at (6, 5)
     c1.pos, cf.pos, c2.pos = (4, 5), (5, 5), (6, 5)
 

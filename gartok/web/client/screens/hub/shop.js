@@ -7,7 +7,7 @@
 
 const Shop = (() => {
   let S = null, cat = null, picks = null, drag = null;
-  const qty = {}, mark = dropMarker();
+  const qty = {}, chosen = {}, mark = dropMarker();
   const allRows = () => S.shelf.flatMap(c => c.rows);
   const ware = name => allRows().find(r => r.name === name);
   const pack = id => S.packs.find(p => p.id === id);
@@ -37,6 +37,28 @@ const Shop = (() => {
   }
 
   // ---------------------------------------------------------------- the shelf
+  // A weapon or armor comes in several sizes, one row each from the server; the shelf shows one row per family and a
+  // toggle for the cuts it keeps, starting on the size the person last chose, else the band's leader's body.
+  const ORDER = ["Tiny", "Small", "Medium", "Large", "Huge"];
+  function families(rows) {
+    const out = [], seen = {};
+    rows.forEach(r => {
+      if (!r.base) return out.push(r);
+      (seen[r.base] = seen[r.base] || (out.push({base: r.base, cuts: []}), out[out.length - 1])).cuts.push(r);
+    });
+    return out.map(f => {
+      if (!f.cuts) return f;
+      const want = ORDER.indexOf(chosen[f.base] || S.size);
+      const row = f.cuts.reduce((a, b) => Math.abs(ORDER.indexOf(b.size) - want) < Math.abs(ORDER.indexOf(a.size) - want) ? b : a);
+      return {...row, cuts: f.cuts};
+    });
+  }
+
+  function sizes(r) {
+    if (!r.cuts || r.cuts.length < 2) return "";
+    return `<span class="szs">${r.cuts.map(c => `<i class="${c.size === r.size ? "on" : ""}" data-base="${esc(r.base)}" data-size="${c.size}"${tip(nm("size", c.size))}>${esc(nm("size", c.size).slice(0, 3))}</i>`).join("")}</span>`;
+  }
+
   function wareRow(r) {
     const out = r.stock !== null && r.stock <= 0, q = qty[r.name] || 1;
     const sel = picks && picks.ware === r.name;
@@ -48,7 +70,7 @@ const Shop = (() => {
       : Kit.stepper(q);
     return `<div class="row ${out ? "out" : ""} ${sel ? "picked" : ""}" data-ware="${esc(r.name)}"${tip(r.tip, "item")}>
       <div class="ico mask" style="--icon:url(/assets/icons/${r.glyph}.svg)"></div>
-      <div style="min-width:0"><div class="nm">${esc(nm("item", r.name))}</div><div class="use">${esc(r.use)}</div></div>
+      <div style="min-width:0"><div class="nm">${esc(nm("item", r.name))}</div><div class="use"><span class="t">${esc(r.use)}</span>${sizes(r)}</div></div>
       <div class="wt r">${r.weight.toFixed(1)} <small>${tr("kit.kg")}</small></div>
       <div class="stk c">${stock}${pips}</div>
       <div class="price r ${tone}">${r.price}</div>${buy}</div>`;
@@ -58,10 +80,10 @@ const Shop = (() => {
     const c = S.shelf.find(x => x.key === cat) || S.shelf[0];
     const tabs = S.shelf.length > 1
       ? `<div class="cats">${S.shelf.map(x => `<span class="${x.key === c.key ? "on" : ""}" data-cat="${x.key}">${esc(lab(x.label))}</span>`).join("")}</div>` : "";
-    return `<div class="paper" id="shelf"><div class="kicker">${tr("shop.shelf")} <em>${trn("shop.wares", allRows().length)}</em></div>
+    return `<div class="paper" id="shelf"><div class="kicker">${tr("shop.shelf")} <em>${trn("shop.wares", S.shelf.reduce((n, x) => n + families(x.rows).length, 0))}</em></div>
       <div class="shelfhead"><h3>${esc(c ? lab(c.label) : tr("shop.nothing"))}</h3>${tabs}</div>
       <div class="cols"><span></span><span>${tr("shop.ware")}</span><span class="r">${tr("shop.weight")}</span><span class="c">${tr("shop.stock")}</span><span class="r">${tr("shop.price")}</span><span class="r">${tr("shop.buy")}</span></div>
-      <div id="rows">${c ? c.rows.map(wareRow).join("") : ""}</div>
+      <div id="rows">${c ? families(c.rows).map(wareRow).join("") : ""}</div>
       <div class="shelffoot">${tr("shop.foot")}</div></div>`;
   }
 
@@ -174,7 +196,7 @@ const Shop = (() => {
   }
 
   function source(el) {
-    if (el.closest(".qty") || el.closest(".cats")) return null;
+    if (el.closest(".qty") || el.closest(".cats") || el.closest(".szs")) return null;
     const w = el.closest(".row[data-ware]");
     if (w) return w.classList.contains("out") ? null : {ware: w.dataset.ware};
     const it = el.closest(".it[data-loc]");
@@ -279,6 +301,8 @@ const Shop = (() => {
       qty[name] = Math.max(1, Math.min(cap, (qty[name] || 1) + step));
       return redraw();
     }
+    const z = e.target.closest(".szs [data-size]");
+    if (z) { chosen[z.dataset.base] = z.dataset.size; picks = null; return redraw(); }
     const c = e.target.closest(".cats [data-cat]");
     if (c) { cat = c.dataset.cat; return redraw(); }
     drag = {src: source(e.target), x: e.clientX, y: e.clientY, moving: false};

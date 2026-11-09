@@ -43,12 +43,18 @@ class ShopTab:
             "till": m._cash(),
             "purse": m.purse,
             "shelf": self._shelf(),
+            "size": self._body_size(),
             "packs": [self._store(o) if store_column.is_store(o) else self._member(o, o is voice) for o in owners],
             "marked": sorted(m._marked()),
             "marked_total": m._marked_total(),
             "marked_held": bool(m._marked_stock()[0]),
             "notice": notice,
         }
+
+    def _body_size(self):
+        """The size the size toggles start on: the band's leader's body (else the first shopper's)."""
+        who = self.group.leader if self.group and self.group.leader else next(iter(self.m.shoppers), None)
+        return getattr(who, "size", "Medium")
 
     def _voice(self):
         """Who haggles for the band and how far their bent is from the keeper's."""
@@ -82,9 +88,9 @@ class ShopTab:
         targets = shop.targets if shop else {}
         cats = []
         for label, key, names in m.get_categories():
-            if key == "weapons":       # a Large weapon is a row of its own beside its Medium one
-                names = [n for b in names for n in (b, i18n.t("shop_tab.large", b=b))
-                         if items.get(n) and (n == b or (shop and n in shop.stock))]
+            if key in ("weapons", "armor"):       # one row per size the shelf keeps: the client folds them into a size toggle
+                names = [d.name for b in names for d in items.sizes_of(b)
+                         if (d.name in shop.stock if shop else d.base is None)]
             cats.append({"key": key, "label": i18n.lab(label.title().replace(" And ", " & ")),
                          "rows": [self._ware(n, key, targets) for n in names]})
         return cats
@@ -95,7 +101,9 @@ class ShopTab:
         spec = m._stock_spec(name) if cat in ("weapons", "armor") else ""
         use = spec or _first_line(name)
         life = items.shelf_life(name)
-        return {"name": name, "glyph": item_icon.glyph(name), "use": f"{use} · {life}" if life else use,
+        item = items.get(name)
+        sized = {"base": item.base_name, "size": item.size.value} if cat in ("weapons", "armor") and item and item.size else {}
+        return {**sized, "name": name, "glyph": item_icon.glyph(name), "use": f"{use} · {life}" if life else use,
                 "tip": _tip(name), "weight": items.item_weight(name),
                 "stock": stock, "target": targets.get(name, (None, 0))[0],
                 "price": economy.buy_price(name, m.deal), "list": economy.buy_price(name),
