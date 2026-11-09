@@ -72,10 +72,10 @@
 
 /* ---------- the shelf ---------- */
 #shelf{position:absolute;left:32px;top:0;width:660px;height:656px;padding:22px 24px}
-.shelfhead{display:flex;align-items:flex-end;gap:14px;margin-top:12px}
+.shelfhead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 14px;margin-top:12px}
 .shelfhead h3{font:700 23px/1 Cinzel,serif;color:#2a1a0e;white-space:nowrap}
 .cats{margin-left:auto;display:flex;gap:2px}
-.cats span{font:600 10px/1 Cinzel,serif;letter-spacing:.18em;color:#8a6c47;padding:6px 8px;border-bottom:1px solid rgba(90,60,30,.25);cursor:pointer;text-transform:uppercase}
+.cats span{white-space:nowrap;font:600 10px/1 Cinzel,serif;letter-spacing:.18em;color:#8a6c47;padding:6px 8px;border-bottom:1px solid rgba(90,60,30,.25);cursor:pointer;text-transform:uppercase}
 .cats span:hover{color:#4a3420}
 .cats span.on{color:#24170c;border-bottom:2px solid #7a2318}
 .kicker em{order:2;font:15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}

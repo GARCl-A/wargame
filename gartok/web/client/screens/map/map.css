@@ -602,10 +602,12 @@
 }
 
 .bactions .ghost-btn {
-  flex: 1;
+  flex: 1 1 auto;
   height: 32px;
   font-size: 10px;
-  padding: 0 8px
+  padding: 0 8px;
+  letter-spacing: .1em;
+  white-space: nowrap
 }
 
 .bactions .ghost-btn .ico {
@@ -1615,6 +1617,7 @@
   line-height: 1.4;
   color: #6e5538;
   text-transform: none;
+  text-wrap: balance;
 }
 
 /* Estados de Tinta (Cera e Nanquim) */

@@ -131,6 +131,12 @@ body:not(.ready) #tut-badge {
   text-transform: uppercase
 }
 
+/* the .lbl halo is for dark leather; on paper it only smears the letters */
+.paper .lbl,
+.book .lbl {
+  text-shadow: none
+}
+
 /* paper: a page to read */
 .paper {
   position: relative;

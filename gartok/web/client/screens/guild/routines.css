@@ -80,9 +80,9 @@ select.fld{appearance:none;field-sizing:content;padding-right:20px;max-width:280
 input.fld{field-sizing:content;min-width:2.2em;text-align:center;cursor:text}
 input.fld::placeholder{font-weight:400;font-style:italic;color:#8a7352}
 select.fld:focus,input.fld:focus{outline:2px solid var(--brass);outline-offset:1px}
-.chip{display:inline-flex;align-items:center;gap:6px;margin:0 4px 0 0;padding:0 8px;border-radius:12px;background:rgba(79,138,125,.18);border:1px solid rgba(47,90,82,.5);font-weight:600}
-.chip i{font-style:normal;cursor:pointer;color:#7b4a3a;font-size:15px}
-.chip input.fld{background:transparent;border-bottom:1px solid #7d5c37;width:2em}
+#bpage .chip{display:inline-flex;align-items:center;gap:6px;margin:0 4px 0 0;padding:0 8px;border-radius:12px;background:rgba(79,138,125,.18);border:1px solid rgba(47,90,82,.5);font-weight:600}
+#bpage .chip i{font-style:normal;cursor:pointer;color:#7b4a3a;font-size:15px}
+#bpage .chip input.fld{background:transparent;border-bottom:1px solid #7d5c37;width:2em}
 .plain{color:#6b5236;font-weight:400}
 .tog{display:inline-flex;align-items:center;gap:10px;font:italic 18px/1.2 "IM Fell English",serif;color:#5d4426;cursor:pointer}
 .sw{position:relative;width:38px;height:20px;border-radius:10px;background:#a79270;box-shadow:inset 0 1px 3px rgba(0,0,0,.4);flex:none}
