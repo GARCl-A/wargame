@@ -211,6 +211,30 @@ def test_a_load_past_the_hard_limit_is_refused_with_why():
     assert me.count_of("Plate Armor") == 0 and _stack(st, "Plate Armor")["qty"] == 1
 
 
+def test_the_armor_slot_takes_armor_from_the_field_and_swaps_the_worn_one_to_the_pack():
+    _, s, squad = _field(loot=("Chainmail",))
+    me = squad[0]
+    me.equipped_armor = "Cloak"
+    st = s.take([{"from": "field", "loc": _stack(s.state(), "Chainmail")["loc"]}], me.uid, "armor")
+    assert me.equipped_armor == "Chainmail" and me.count_of("Cloak") == 1
+    assert st["loot"]["refused"] is None and not any(r["name"] == "Chainmail" for c in st["loot"]["cats"] for r in c["rows"])
+
+
+def test_armor_too_heavy_for_the_slot_says_the_load_not_the_slot():
+    _, s, squad = _field(loot=("Chainmail",))
+    me = squad[0]
+    me.give_to_pack("Lumber", int(me.carry_max - me.load))
+    st = s.take([{"from": "field", "loc": _stack(s.state(), "Chainmail")["loc"]}], me.uid, "armor")
+    assert me.equipped_armor != "Chainmail" and "limit" in st["loot"]["refused"]["why"]
+
+
+def test_armor_cut_for_another_body_is_refused_as_the_wrong_size():
+    _, s, squad = _field(loot=("Small Chainmail",))
+    me = squad[0]
+    st = s.take([{"from": "field", "loc": _stack(s.state(), "Small Chainmail")["loc"]}], me.uid, "armor")
+    assert me.equipped_armor != "Small Chainmail" and st["loot"]["refused"]["why"].startswith("Wrong size")
+
+
 def test_a_worn_slot_takes_a_weapon_from_the_field_and_a_pack_item_goes_back():
     _, s, squad = _field()
     me = squad[0]

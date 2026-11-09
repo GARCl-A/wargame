@@ -4510,6 +4510,7 @@
     "nothing_picked": "nothing picked",
     "that_is_on_field_already": "that is on the field already",
     "cannot_take_in_that_slot": "{name} cannot take the {item} in that slot.",
+    "wrong_size": "Wrong size: the {item} is cut for a {item_size} body and {name} is {size}.",
     "s": "the {name}'s {kg}",
     "these": "these {kg}",
     "already_carries_of_limit_would": "{name} already carries {load} of a {limit} limit; {what} would put them at {total}.",

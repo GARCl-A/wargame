@@ -3450,6 +3450,7 @@
         "nothing_picked": "nada escolhido",
         "that_is_on_field_already": "isso já está no campo",
         "cannot_take_in_that_slot": "{name} não pode levar {item:o} nesse espaço.",
+        "wrong_size": "Tamanho inadequado: {item} é feito para um corpo {item_size} e {name} é {size}.",
         "s": "{kg} de {name}",
         "these": "estes {kg}",
         "already_carries_of_limit_would": "{name} já carrega {load} de um limite de {limit}; {what} o levaria a {total}.",

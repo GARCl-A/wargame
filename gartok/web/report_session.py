@@ -189,7 +189,13 @@ class ReportSession(Session):
 
     def _why(self, dst, zone, moving):
         name = moving[0][0]
-        if zone != "pack":
+        if zone != "pack" and not self.loot._fits_slot(dst, zone, name):
+            size = items.get(name).size
+            made_for_a_body = (zone == "armor" and items.is_armor(name)) or (zone == "offhand" and items.is_shield(name)) \
+                or (zone in ("hand", "tongue") and items.is_weapon(name))
+            if size is not None and made_for_a_body:
+                return {"uid": dst.uid, "item": name, "why": i18n.t("report_session.wrong_size", name=dst.name, item=i18n.Ref("item", name),
+                                                                     item_size=i18n.name("size", size), size=i18n.name("size", dst.size))}
             return {"uid": dst.uid, "item": name, "why": i18n.t("report_session.cannot_take_in_that_slot", name=dst.name, item=i18n.Ref("item", name))}
         add = sum(items.item_weight(n) * q for n, q, owner in moving if owner == "pool")
         what = i18n.t("report_session.s", name=name, kg=_kg(add)) if len(moving) == 1 else i18n.t("report_session.these", kg=_kg(add))
