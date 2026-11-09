@@ -20,13 +20,23 @@ of play the player tells a story with a character's name in it.
 - **The player is the guild**, an entity outside the groups; that is why it commands several groups
   at once. No avatar: an avatar dies to a wolf in a game built on a disposable early squad. Members
   are **partners, not employees** (no wages, no treasury: the guild has to be worth it to them).
+  The guild functions as a collective / partnership rather than top-down subordination, demanding
+  constant conciliation between individual member ambitions and organizational priorities.
   The guild leader and the group leaders are managerial roles, not a hierarchy.
 - **A member is a statblock + named traits + an aspiration.**
   - **Occupations go** (a classless game; an occupation is only a preset of the random item roll).
-  - **The aspiration** is what the member wants to become: a mage, famous, rich (their own coins), to
-    see the world, a quiet life, to serve faction X. The main loyalty input, and it ties loyalty to
-    progression: a talent or an initiation spent on them is spent toward what they want. A fulfilled
-    aspiration is a story beat (a new one, or they retire a legend).
+  - **The aspiration** is what the member wants to achieve or become, organically tied to their
+    attributes, background, and personal vocation:
+    - *Exploration* ("See the world"): requires discovering and visiting new map nodes.
+    - *Economy* ("Get rich"): requires continuous growth of personal purse / treasury share.
+    - *Labor* ("Master miner / Master craftsman"): requires hitting extraction or production quotas.
+    - *Martial / Arcane* ("Legendary fighter / Great mage"): requires defeating elite foes or learning
+      advanced spells / weapon actions.
+    The aspiration is the main loyalty input and ties loyalty directly to progression. A fulfilled
+    aspiration is a major story beat (they adopt a grander aspiration, or retire as a legend).
+  - **Dissatisfaction & neglected aspirations:** If an aspiration remains neglected for prolonged
+    periods without progress, the member voices verbal complaints in notices/dialogue and suffers
+    progressive, escalating loyalty loss.
   - **Alignment becomes named traits.** The two axes stay underneath, shown as words (proposed:
     Steadfast / Fickle on the law axis, Merciful / Ruthless on the moral one). What alignment does
     today, in the author's words: keeping one's word, holding the formation (law); not killing, not

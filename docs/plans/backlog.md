@@ -30,9 +30,11 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author
-  plays in `pt-br` and flags the tone, the text longer than its box (Portuguese runs 20-30% longer), accents the font lacks, sort order and
-  number and money formats. The terms: [../glossary_pt_br.md](../glossary_pt_br.md); the settings screen's "Linhas do registro" note is still open.
+- **Translation to pt-br: the author reads it in play & UI layout audit.** Every text has a `pt-br` entry (the parity test is strict). Left:
+  (1) the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats ([../glossary_pt_br.md](../glossary_pt_br.md);
+  settings "Linhas do registro" still open);
+  (2) UI truncation and overflow audit: adjust dialog boxes, tabs, tables and cards to accommodate Portuguese text, which expands on average
+  20-30% compared to English, avoiding ugly word breaks or clipped text.
 - **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
 - The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
   ones), the overflows, the icons' authors, then the skills.
@@ -185,11 +187,89 @@ the rest.
   "Speed", "Speaks" and attribute abbreviations are properly localized in the races wiki (`locales/pt-br.json`).
   Avoid double hyphens ("--") in dialogue text boxes. Capitalize the first letter in talent descriptions.
 
+- **Bug fix: Brisk Hands / work speed talent scaling (author/Yohan alignment).** `work_speedup` in `gartok/guild_labor.py`
+  evaluates `max(mults)`, meaning the 10% speedup only takes effect if every member on the crew has the talent. Adjust
+  calculation so individual worker bonuses contribute proportionally (or crew weighted average), ensuring a single
+  specialist speeds up the shift.
+
+- **Apothecary & Antidote utility and tooltip clarity (author/Yohan alignment).** Fix Antidote so the Constitution save
+  reliably reduces duration / clears poison or disease stacks (`unit_poison.py`). Accurately document the DC, save behavior,
+  and cure mechanics in the in-game wiki and display this info on the inventory item hover tooltip and band kit screen.
+
+- **Pickaxe targeted bonus damage vs. metal (author/Yohan alignment).** Tool and weapon overhaul: grant the Pickaxe a
+  targeted bonus damage modifier specifically against targets equipped with metal armor and against metallic
+  structures/fortifications, establishing it as a dedicated tactical counter against heavy units.
+
+- **AI: Creature-specific action restrictions (author/Yohan alignment).** Restrict unnatural or illogical tactical actions
+  for beasts and monsters in combat AI (`ai/`). Predators (e.g., wolves, bears, spiders) must not use human tactical actions
+  such as First Aid / "Stabilize" on fallen allies or perform complex humanoid maneuvers.
+
+- **AI: Crowd-control-aware target decision (author/Yohan alignment).** Improve AI action sequencing when applying control
+  effects: when a boss, caster or controller inflicts Sleep or similar incapacitation that breaks on damage, nearby AI
+  attackers must retarget awake/active threats instead of attacking the sleeping target and immediately breaking the condition.
+
+## Medium
+
+- **Armor material categorization (author/Yohan alignment).** Classify all armors by primary composition material
+  (e.g., Leather, Metal, Cloth/Padded, Magical) in `ItemDef` and registries. Provides the structural foundation for
+  systematic material-specific rules (Pickaxe anti-metal bonus, lightning conductivity, element/spell vulnerabilities).
+
+- **"Modifiers Matter" feedback in combat log and panel (author/Yohan alignment).** Visual combat log and UI enhancement
+  (inspired by Pathfinder 2e's *Modifiers Matter* module): visibly highlight whenever a passive bonus, aura, trait, or
+  talent was the decisive factor turning a miss into a hit, an ordinary strike into a critical, or facilitating a clutch dodge.
+
+- **Continuous / Endless Dungeon signaling (author/Yohan alignment).** UI and UX clarity for continuous exploratory dungeons:
+  clearly communicate to the player that there is no traditional "Victory" screen upon clearing a floor. Spoil retention
+  and character survival depend entirely on the voluntary decision to retreat back to the entrance point.
+
+- **Assess action utility buff & tactical rework (author/Yohan alignment).** Restructure the reward for spending an action on
+  Assess: make it a competitive tactical choice against direct attacks or spells by granting substantial combat value
+  (revealing resistances, exposing vulnerabilities, granting to-hit/crit bonuses against the target). Ties into the planned
+  Intelligence combat tree.
+
+- **Intimidation build rework & mathematical tuning (author/Yohan alignment).** Overhaul the mathematical progression, DCs,
+  and action economy for the Intimidation combat build (Demoralize, Provoke, and associated Charisma/Wisdom talents) to raise
+  its win rate and tactical reliability in battle.
+
+- **Workplace skills: INT/WIS in automated production loops (author/Yohan alignment).** Connect Intelligence and Wisdom
+  workplace talents into automated routines (e.g., automated mushroom foraging + medicinal herbalism loops that craft and
+  maintain target stocks of healing potions).
+
 ---
 
 # Large and later
 
 ## Large
+
+- **Loyalty & Aspirations system (author/Yohan alignment).** Plan: [loyalty.md](loyalty.md). Replaces traditional
+  alignment with organic motivation mechanics. Characters receive individual aspirations organically tied to their
+  attributes, background, and personal vocation:
+  - *Exploration* ("See the world"): requires discovering and visiting new map nodes.
+  - *Economy* ("Get rich"): requires continuous growth of personal coin / guild treasury.
+  - *Labor* ("Master miner / Master craftsman"): requires hitting extraction or crafting quotas.
+  - *Dissatisfaction triggers:* unmet aspirations over prolonged periods cause members to voice complaints in dialogue/notices
+    and suffer progressive, accelerating loyalty loss.
+  - *Guild collective model:* the guild functions as a collective / partnership rather than top-down subordination, demanding
+    constant conciliation between member ambitions and organizational priorities.
+
+- **Food system & Morale rework: de-combatize and diet monotony (author/Yohan alignment).** De-combatize food utility away
+  from immediate mid-fight buffs toward resting recovery, inspiration, travel sustain, and guild morale management. A
+  monotonous diet (such as surviving exclusively on potatoes daily) steadily erodes party morale, humor, and member loyalty,
+  requiring food variety and culinary planning. (Supersedes the old combat-buff cooking concept).
+
+- **AI Leveling & Large Guild Build Planner (author/Yohan alignment).**
+  (1) AI leveling logic for rival/opponent guilds so opposing factions build cohesive, optimized characters.
+  (2) Player-facing "Build Planner" to automate level-ups, talent picks, and stat allocations across large rosters (e.g., 30+
+  members) without repetitive manual clicks.
+
+- **Terrain alteration spells (author/Yohan alignment).** Field manipulation spells for casters (e.g., creating stone/ice walls,
+  digging pits/trenches, or dropping temporary physical obstacles on the tactical grid) to control choke points and enemy movement.
+
+- **Game Modes & Character Creation Flow (author/Yohan alignment).**
+  (1) *Game Modes:* Evaluate splitting into two distinct experiences: structured Campaign mode (handcrafted story milestones,
+  authored progression) vs. procedural Sandbox mode (procedurally generated map, nodes, and encounters).
+  (2) *Character Creation:* Retain the Draft system for the standard/campaign mode for emergent diversity and replayability; provide
+  a direct character builder / commission token system for players who prefer exact custom starting parties (RimWorld / XCOM style).
 
 - **A shop for Tiny gear.** Today the town shops stock Tiny, Small and Medium at the same counts
   (`economy.TOWN_SIZES`). A dedicated Tiny-gear shop takes Tiny off the town shelves (`RULES.md`, Item sizes).
@@ -472,8 +552,9 @@ has one "Enter" button and its functions are tabs inside.
 - **Too few icons for the guild banner (10-21).**
 - **World and soul (10-21):** the world needs story depth before the Archaeology arc; the game still lacks
   "soul" (see *Loyalty* in *Needs more information*).
-- **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
-  repeated every level.
+- **Leveling templates / Build Planner:** see *AI Leveling & Large Guild Build Planner* under *Large*.
+  Player-made, editable autopick of talents and stats, so the same clicks are not repeated every level across
+  large rosters.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 - **The Battlefield beyond the Faith mission.** For now its only use is the Faith Order's errands, and it
@@ -590,9 +671,10 @@ has one "Enter" button and its functions are tabs inside.
      line" is the queen's move: shooter and target aligned on a row, a column or a diagonal. The *Brutal N*
      keyword exists (`keywords.py`). Open: the tiers.
 
-- **Assess grows into an Intelligence combat tree (author 2026-10-31).** Study the foe, and what you
-  know grants crit and to-hit: a turn spent investigating before the beating is a real option. Not built
-  to the author's liking yet. Sits beside the Intelligence talents in *Talent ideas* above.
+- **Assess grows into an Intelligence combat tree (author 2026-10-31, author/Yohan alignment).** See
+  *Assess action utility buff & tactical rework* under *Medium*. Study the foe, and what you know grants
+  substantial combat edge (crit, to-hit, exposed weakness): a turn spent investigating becomes a competitive
+  tactical choice against direct damage. Sits beside the Intelligence talents in *Talent ideas* above.
 
 - **New body actions: one per natural weapon.** A 2 AP action for `Claws`, `Bite`, `Fangs`, `Hooves` and
   `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
@@ -620,15 +702,10 @@ has one "Enter" button and its functions are tabs inside.
   recipes and places traps farther. The tester's idea: a research system to discover formulas. Open: teachers (who, what it costs),
   study time, what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
 
-- **Better food: dishes with buffs (after the magic arc).** Food only quells hunger and the Potato does it
-  cheapest. The preservation recipes are built (Jerky, Roast Meat, Fruit Compote; no buffs, by design).
-  Decided: cooking is an ordinary craft; a premium dish gives a 24 h buff that moves one number (HP, an
-  attribute, advantage on a named kind of action...), and only the most recent meal's buff is active.
-  Open: the dishes and their buffs, and the cost to the economy sim (`cheapest_food_price` stops being
-  the one price of a meal). Survivors's slower rot is priced low until this lands.
-  - **A use for Rotten Food (author 2026-11-01).** Today it is worthless (`price=0`) and a keeper bins
-    it. Weigh giving it a use, compost at the Farm or a crafting material, when the food patch or the
-    farm patch comes up.
+- **Better food: systemic utility, morale, and diet monotony (replaces combat-buff dishes).** See entry under
+  *Large*. Food utility is de-combatized: focus shifts to resting recovery, inspiration, travel sustain, and guild
+  morale/loyalty rather than immediate mid-fight buffs. A monotonous diet (e.g., eating only potatoes) steadily
+  erodes party morale and member humor. Rotten Food use (compost at the Farm or crafting material) remains open.
 
 - **Holy Symbol source (author 2026-11-01, quest decided 2026-11-04).** No recruit starts with one (only the
   Priest did) and no shelf sells it, while Faith's rite (`rite.py`) consumes it, so the Faith school has no
