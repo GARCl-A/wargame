@@ -8,6 +8,7 @@ from . import (
     actions,
     captives,
     cohesion,
+    data,
     dialogue,
     group,
     i18n,
@@ -17,6 +18,7 @@ from . import (
     wagon,
 )
 from .combatant import AP_PER_TURN
+from .unit_hunger import HUNGER_PENALTIES
 
 
 def _lines(section, n, **fmt):
@@ -71,6 +73,9 @@ def sections():
         ]),
         (i18n.t("wiki_rules.wagons.title"), [i18n.t("wiki_rules.wagons.1", dist=wagon.WEAR_DISTANCE), *_lines("wagons", 3)[1:]]),
         (i18n.t("wiki_rules.money.title"), _lines("money", 4)),
+        (i18n.t("wiki_rules.hunger.title"), _lines(
+            "hunger", 7, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2],
+            death=data.STARVATION_DEATH_DAYS)),
         (i18n.t("wiki_rules.stomp.title"), _lines("stomp", 2)),
     ]
 

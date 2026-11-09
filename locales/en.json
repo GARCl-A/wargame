@@ -6267,6 +6267,16 @@
       "3": "Everyone eats every day. Hunger lowers the attributes and brings sickness.",
       "4": "Death is permanent. The run ends only when the whole guild is gone."
     },
+    "hunger": {
+      "title": "Hunger \u0026 Starvation",
+      "1": "Every member eats 1 meal a day at upkeep. Fresh food nearing spoilage is eaten first. SHARE RATIONS lets a member feed hungry groupmates from their pack.",
+      "2": "1 day unfed — Hungry: {pen1} to all attributes.",
+      "3": "2 days unfed — Starving: {pen2} to all attributes; maximum HP capped at 1.",
+      "4": "3 days unfed — Incapacitated: too weak to fight, cannot be sent into battle.",
+      "5": "{death} days unfed — starvation death: the character is gone permanently.",
+      "6": "Rotten Food is eaten only on the last day before death, as a desperate last resort. It resets the hunger but sickens the eater. Eaten again while already sick, it adds Gut Rot. Strong Stomach (Gnoll) is immune.",
+      "7": "A hungry or starving character cannot heal through rest. Treefolk (Autotroph) never eat and never starve. If the whole guild starves, the campaign ends."
+    },
     "stomp": {
       "title": "Clean Stomp & Auto-Win",
       "1": "Before an ambush the game fights it many times headless, both sides on the AI, and shows how many of those fights were a clean stomp: everyone standing, no potion, no first aid, no ammunition spent. It is not the odds of winning.",

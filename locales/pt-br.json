@@ -6642,6 +6642,16 @@
             "3": "Todo mundo come todo dia. A fome reduz os atributos e traz doença.",
             "4": "A morte é permanente. A campanha só termina quando a guilda inteira se foi."
         },
+        "hunger": {
+            "title": "Fome e Inanição",
+            "1": "Todo membro come 1 refeição por dia na manutenção. Comida fresca perto de estragar é comida primeiro. COMPARTILHAR RAÇÕES deixa um membro alimentar companheiros famintos com a própria mochila.",
+            "2": "1 dia sem comer — Faminto: {pen1} em todos os atributos.",
+            "3": "2 dias sem comer — Inanição: {pen2} em todos os atributos; PV máximo limitado a 1.",
+            "4": "3 dias sem comer — Incapacitado: fraco demais para lutar, não pode ser enviado à batalha.",
+            "5": "{death} dias sem comer — morte por inanição: o personagem se foi permanentemente.",
+            "6": "Comida Podre só é comida no último dia antes da morte, como último recurso. Ela zera a fome mas adoece quem come. Comida de novo enquanto já doente adiciona Apodrecimento. Estômago Forte (Gnoll) é imune.",
+            "7": "Um personagem faminto ou em inanição não se cura pelo descanso. Treefolk (Autotrófico) nunca comem e nunca passam fome. Se a guilda inteira morrer de fome, a campanha termina."
+        },
         "stomp": {
             "title": "Atropelo Limpo e Vitória Automática",
             "1": "Antes de uma emboscada, o jogo luta contra ela muitas vezes sem tela, com os dois lados na IA, e mostra quantas dessas lutas foram um atropelo limpo: todos de pé, sem poção, sem primeiros socorros, sem munição gasta. Não é a chance de vencer.",

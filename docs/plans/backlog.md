@@ -154,11 +154,6 @@ the rest.
   day 2 Starving gives -2 instead of -4, while HP max remains capped at 1; days 3 and 4 remain unchanged:
   day 3 Incapacitated, day 4 Starvation death). Replaces the old "food pause every 10 days" perk.
 
-- **Wiki: document Hunger and Starvation rules.** The in-game wiki does not yet explain the hunger rules.
-  Document: 1 meal/ration required per day at upkeep; hunger progression (fed -> hungry -> starving -> dying);
-  attribute penalties (-2 for hungry, -4 for starving); HP max capped at 1 when starving; incapacitation on day 3;
-  starvation death at 4 missed meals; Rotten Food eaten only in last-resort desperation.
-
 - **Wiki: dynamic alphabetical chapter ordering & Conditions vs Keywords.** Sort wiki chapters dynamically
   by translated label (`locales/*.json`) so ordering is natural in all languages. Check whether "Fleeing" belongs
   under Conditions (`conditions.py`) rather than Keywords.

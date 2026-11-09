@@ -7,6 +7,7 @@ from . import data, i18n, items, poisons
 
 BLOOM_FRUIT = "Bloom Fruit"     # what a Treefolk with Bountiful Harvest bears: food that heals
 BLOOM_HEAL = (1, 4)
+HUNGER_PENALTIES = (0, -2, -4, -4)
 
 
 def take_ration(pack, allow_rotten=True):
@@ -64,7 +65,7 @@ class HungerMixin:
 
     @property
     def hunger_attribute_penalty(self):
-        return (0, -2, -4, -4)[self.hunger_level]
+        return HUNGER_PENALTIES[self.hunger_level]
 
     @property
     def hunger_label(self):
