@@ -1,7 +1,7 @@
 """The wiki's RACES tab: each playable race read off the live tables (`data`, `abilities`,
 `talents`), so the page never drifts from the rules."""
 
-from . import abilities, data, talents
+from . import abilities, data, i18n, talents
 
 _ABBREV = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 
@@ -34,3 +34,18 @@ def matching(query):
         return entries()
     return [e for e in entries()
             if q in " ".join([e["name"], e["meta"], *e["abilities"], *e["talents"]]).lower()]
+
+
+def race_tip(name: str) -> str:
+    """The tooltip of a race: its localized name, attribute modifiers, and racial abilities."""
+    if not name:
+        return ""
+    race = data.race_by_name(name)
+    if not race:
+        return ""
+    head = i18n.name("race", race["name"])
+    mods = "  ".join(f"{a} {m:+d}" for a, m in zip(_ABBREV, race["mods"]))
+    traits = [abilities.get(a) for a in _ability_ids(race)]
+    ab_lines = [f"{t.name}: {t.effect}" for t in traits if t is not None]
+    return "\n".join([head, mods, *ab_lines])
+

@@ -21,3 +21,15 @@ def test_a_race_reads_its_mods_ability_language_and_racial_track():
 def test_the_filter_finds_a_race_by_its_ability():
     assert [e["name"] for e in wiki_races.matching("darkvision")] == ["Dwarf"]
     assert len(wiki_races.matching("")) == len(data.RACE_NAMES)
+
+
+def test_race_tip_lists_localized_name_attribute_modifiers_and_abilities():
+    tip = wiki_races.race_tip("Dwarf")
+    assert tip.startswith("Dwarf\nSTR +1  DEX +0  CON +2")
+    assert f"Darkvision: {abilities.get('darkvision').effect}" in tip
+    assert wiki_races.race_tip("") == ""
+    assert wiki_races.race_tip("NonExistent") == ""
+    for r in data.RACE_NAMES:
+        t = wiki_races.race_tip(r)
+        assert t and "STR " in t
+

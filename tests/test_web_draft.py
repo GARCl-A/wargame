@@ -201,3 +201,22 @@ def test_the_pick_card_lists_every_tag_from_the_catalog_and_the_slip_carries_its
     assert all(r["rule"] and r["text"] and r["stamp"]["style"] for r in rows)
     assert d.tutorial_rows("draft.vocation") == []
     assert all(a["rule"] for a in d.state()["archetypes"])
+
+
+def test_vocation_races_and_candidate_weapon_carry_tooltips(saves):
+    d = _draft()
+    st = d.state()
+    for voc in st["vocations"]:
+        assert len(voc["races"]) == 6
+        for r in voc["races"]:
+            assert r["tip"].startswith(r["race"])
+            assert "STR " in r["tip"]
+    d.choose_vocation(vocations.CARAVAN)
+    st = d.next()
+    for c in st["pool"]:
+        assert c["race_tip"].startswith(c["race"])
+        assert "STR " in c["race_tip"]
+        assert "action_tip" in c["weapon"]
+        if c["weapon"]["action"]:
+            assert c["weapon"]["action_tip"].startswith(c["weapon"]["action"])
+

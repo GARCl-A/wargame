@@ -118,9 +118,6 @@ the rest.
   light and fog layers at a lower resolution; skip the repaint of those layers when an action did not change
   what the side sees; paint a first frame (cached floor) before the light.
 
-- **Hover on the vocation's races shows their modifiers (author 2026-11-01).** On the vocation pick,
-  hovering a race lists its attribute modifiers and racial abilities, read off the registries.
-
 - **The dictionary crafts too fast (playtest 2026-11-01).** One was made on day 18 in about 4 or 5 hours.
   Target (author 2026-11-04): a character with INT 10 and no bonus takes about 3 days. Find the time the
   craft takes (`craft_level.py` and the recipe) and bring it to that, without lengthening the other
@@ -165,9 +162,6 @@ the rest.
 - **Wiki: dynamic alphabetical chapter ordering & Conditions vs Keywords.** Sort wiki chapters dynamically
   by translated label (`locales/*.json`) so ordering is natural in all languages. Check whether "Fleeing" belongs
   under Conditions (`conditions.py`) rather than Keywords.
-
-- **Draft screen: weapon ability tooltip on hover (author 2026-11-08).** Hovering over a drafted character's
-  weapon should show the weapon ability tooltip, clarifying tactical traits during hiring.
 
 - **Map screen: overencumbered member tag (author 2026-11-08).** In the band member dropdown on the left side
   of the map screen, add an "overencumbered" tag alongside the existing "leading" and "hungry" status tags.

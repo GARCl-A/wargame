@@ -115,7 +115,7 @@ function vocations() {
       ${v.chosen ? `<div class="chip"><div class="seal"><div>${ico(v.icon)}<b>${tr("draft.chosen")}</b></div></div></div>` : ""}
       <div class="top"><div class="em">${ico(v.icon)}</div><div><h3>${esc(v.name)}</h3><div class="motto">${esc(v.motto)}</div></div></div>
       <div class="kicker rlabel">${tr("draft.its_races")}</div>
-      <div class="races">${v.races.map(r => `<div class="race">${medal(r.portrait, r.race, 58)}<span>${esc(r.race)}</span></div>`).join("")}</div>
+      <div class="races">${v.races.map(r => `<div class="race"${tip(r.tip, "item")}>${medal(r.portrait, r.race, 58)}<span>${esc(r.race)}</span></div>`).join("")}</div>
       <div class="perk"><div class="k">${v.open ? tr("draft.guild_perk") : tr("draft.not_open")}</div><p>${esc(v.perk)}</p></div></div>`).join("");
 }
 
@@ -125,11 +125,11 @@ function dossier(c, i) {
   return `<div class="paper dos ${k >= 0 ? "picked" : ""}" data-pick="${i}" style="left:${530 + (i % 3) * 452}px;top:${108 + Math.floor(i / 3) * 314}px">
     ${k >= 0 ? `<div class="ribbon">${k + 1}</div>` : c.commissioned ? `<span class="newmark">${tr("draft.commissioned")}</span>` : ""}
     <div class="top"><div data-sheet="${c.uid}"${tip(tr("draft.open_sheet", {name: c.name}))}>${medal(c.portrait, c.name, 68)}</div>
-      <div class="who"><h4>${esc(c.name)}</h4><div class="ro">${esc(c.race)} ·</div>
+      <div class="who"><h4>${esc(c.name)}</h4><div class="ro"${tip(c.race_tip, "item")}>${esc(c.race)} ·</div>
         <div class="al">${tr("draft.age", {align: esc(c.align), size: esc(c.size), age: c.age})}</div><div class="stamps">${stamps}</div></div></div>
     <div class="vit"><div><span>${tr("stat.hp")}</span><b>${c.hp}</b></div><div><span>${tr("stat.ac")}</span><b>${c.ac}</b></div><div><span>${tr("stat.md")}</span><b>${c.md}</b></div><div><span>${tr("stat.spd")}</span><b>${c.spd}</b></div><div><span>${tr("stat.init")}</span><b>${esc(c.init)}</b></div></div>
     <div class="att">${c.attrs.map(a => `<div><span>${a.k}</span><b>${a.v}</b><i class="${modCls(a.mod)}">${sign(a.mod)}</i></div>`).join("")}</div>
-    <div class="wpn"><b>${esc(w.name)}</b><span>${esc(w.hit)} · ${esc(w.dmg)} · ${esc(w.tags)}</span>${w.action ? `<em>${esc(w.action)}</em>` : ""}</div>
+    <div class="wpn"${tip(w.action_tip, "item")}><b>${esc(w.name)}</b><span>${esc(w.hit)} · ${esc(w.dmg)} · ${esc(w.tags)}</span>${w.action ? `<em${tip(w.action_tip, "item")}>${esc(w.action)}</em>` : ""}</div>
     <div class="ab"${tip(c.ability.text)}><b>${esc(c.ability.name)}</b> · ${c.langs.map(esc).join(", ") || tr("draft.no_langs")}</div>
     <div class="xstamp">${tr("draft.replace")}</div></div>`;
 }

@@ -6,7 +6,7 @@ The title's New guild opens it."""
 
 from typing import ClassVar
 
-from .. import art_files, i18n, persist, recorder, settings, vocations, wildfire, world
+from .. import art_files, i18n, persist, recorder, settings, vocations, wildfire, wiki_races, wiki_terms, world
 from ..archetypes import ARCHETYPES, is_compatible, unit_archetypes
 from ..combatant import Combatant
 from ..draft import (
@@ -246,7 +246,8 @@ class DraftSession(Session):
             return None
         return {"id": v.id, "name": v.name, "motto": v.motto, "perk": v.perk, "open": v.active,
                 "icon": VOCATION_GLYPHS.get(v.id), "chosen": v.id == self.vocation,
-                "races": [{"race": i18n.name("race", r), "portrait": asset_url(art_files.portrait_path(r, 0))} for r in v.races]}
+                "races": [{"race": i18n.name("race", r), "portrait": asset_url(art_files.portrait_path(r, 0)),
+                           "tip": wiki_races.race_tip(r)} for r in v.races]}
 
     def _card(self, u):
         d = self.draft
@@ -255,13 +256,15 @@ class DraftSession(Session):
         tags = [{"label": lb, "style": st, "desc": ds, "commissioned": lb in called} for lb, st, ds in unit_archetypes(u)]
         tags.sort(key=lambda t: not t["commissioned"])
         w = ch["weapon"]
-        return {"uid": u.uid, "name": u.name, "race": ch["race"], "align": ch["align"], "size": ch["size"],
+        return {"uid": u.uid, "name": u.name, "race": ch["race"], "race_tip": wiki_races.race_tip(u.race["name"]),
+                "align": ch["align"], "size": ch["size"],
                 "age": ch["age"], "portrait": _portrait(u), "hp": ch["hp"][1], "ac": ch["ac"], "md": ch["md"],
                 "spd": ch["spd"], "init": ch["init"],
                 "attrs": [{"k": k, "v": v, "mod": m} for k, v, m, _ in ch["attrs"]],
                 "weapon": {"name": w["nm"], "hit": w["hit"], "dmg": w["dmg"],
                            "tags": " · ".join(p.strip() for p in w["tags"].split("·") if p.strip()),
-                           "action": w["action"]},
+                           "action": w["action"],
+                           "action_tip": wiki_terms.action_tip(w["action"])},
                 "ability": {"name": ch["ability"][0], "text": ch["ability"][1]}, "langs": ch["langs"],
                 "tags": tags, "commissioned": bool(called), "picked": u in d.picks}
 
