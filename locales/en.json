@@ -1876,6 +1876,7 @@
       "hint_binding": "Enemies down — Capture a fallen foe, or Space to let the round run out.",
       "hint_ctf": "Carry their flag home to win, and guard your own.",
       "hint_flee": "At the edge of the field: you can Flee.",
+      "hint_cannot_move": "Cannot move: {why}.",
       "hint_default": "Click a marked cell to move · a foe twice to strike · Space: defend and end the turn · 9: Delay, let the others go first · wheel zooms, drag pans.",
       "hand_over": "Hand over",
       "turn_first": "First player's turn",
@@ -3000,6 +3001,15 @@
     "empty_hand": {
       "thrown": "no {weapon} in hand (thrown at {at})",
       "thrown_lying": "no {weapon} in hand (thrown at {at}, on the ground at {lying})"
+    },
+    "move_blocked": {
+      "mounted": "it is riding, the mount walks for it",
+      "entangled": "it is Entangled and cannot walk until it tears free",
+      "grappled": "it is Grappled and cannot walk until it breaks loose",
+      "prone": "it is Prone and must Stand Up before it can walk",
+      "spent": "it has walked its whole speed this turn",
+      "no_ap": "it has no action point left to walk",
+      "boxed_in": "there is no free cell within its reach"
     }
   },
   "unit": {

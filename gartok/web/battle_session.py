@@ -516,6 +516,7 @@ class BattleSession(Session):
                                                              self._shows(b.active, obs, my_turn)) else None,
             "actions": self._actions(my_turn),
             "reach": ([[x, y, c] for (x, y), c in sorted(b.reachable(b.active).items())] if my_turn else []),
+            "move_why": actions.MOVE.blocked_reason(b, b.active) if my_turn else "",
             "trail": [_cell(c) for c in b.active.path] if my_turn and len(b.active.path) >= 2 else [],
             "inspect": self._inspect(inspect, obs, my_turn),
             "log": list(b.log_lines[-LOG_LINES:]),

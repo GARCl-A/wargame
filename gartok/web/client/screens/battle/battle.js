@@ -343,6 +343,7 @@ function renderHint() {
   else if (S.talk) h = tr("battle.hint_talk");
   else if (!S.my_turn) h = tr("battle.hint_other");
   else if (ui.aim) h = tr(ui.aim.cellTarget ? "battle.hint_aim_cell" : "battle.hint_aim_target", {name: ui.aim.name});
+  else if (S.move_why) h = tr("battle.hint_cannot_move", {why: S.move_why});
   else if (S.flags.mopping_up) h = tr("battle.hint_mopping");
   else if (S.flags.binding) h = tr("battle.hint_binding");
   else if (S.flags.ctf) h = tr("battle.hint_ctf");

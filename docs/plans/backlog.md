@@ -56,12 +56,6 @@ the rest.
   `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md`: turn the 78 literals of `reference.py`
   into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
 
-- **A disabled Move must say why (playtest 2026-11-02).** The cause was a spider's web (`Entangled` blocks walking, and
-  now Jump too); the condition gems on the token now show it, but the action bar still gives no reason for a
-  disabled Move. Make it always name the blocker (condition, no free cell, AP). Mock both ways first (author
-  2026-11-01): the tooltip the other disabled actions have, and a fixed line on the bar; compare them with
-  today's and pick. Test: a disabled Move always carries a reason.
-
 - **Combat teaches itself: the tutorial and the conditions (playtest 2026-11-02, Johann 2026-10-31).**
   (1) The combat tutorial explains the actions: today the cards are text and did not help, so show the
   control (a highlight on the bar) and cover each action of the bar. Web only (`screens/battle/`), with the

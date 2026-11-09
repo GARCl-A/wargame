@@ -504,6 +504,7 @@
             "hint_binding": "Inimigos caídos — Capture um inimigo tombado, ou Espaço para deixar a rodada acabar.",
             "hint_ctf": "Leve a bandeira deles para casa para vencer, e proteja a sua.",
             "hint_flee": "Na borda do campo: você pode Fugir.",
+            "hint_cannot_move": "Não pode mover: {why}.",
             "hint_default": "Clique numa casa marcada para mover · num inimigo duas vezes para golpear · Espaço: defender e encerrar o turno · 9: Adiar, deixa os outros irem primeiro · a roda dá zoom, arrastar move.",
             "hand_over": "Passar a vez",
             "turn_first": "Vez do primeiro jogador",
@@ -2193,6 +2194,15 @@
         "empty_hand": {
             "thrown": "sem {weapon} na mão (arremessada em {at})",
             "thrown_lying": "sem {weapon} na mão (arremessada em {at}, no chão em {lying})"
+        },
+        "move_blocked": {
+            "mounted": "está montado, quem anda é a montaria",
+            "entangled": "está Enredado e não anda até se soltar",
+            "grappled": "está Agarrado e não anda até se libertar",
+            "prone": "está Caído e precisa Levantar antes de andar",
+            "spent": "já andou toda a velocidade neste turno",
+            "no_ap": "não tem ponto de ação para andar",
+            "boxed_in": "não há casa livre ao alcance"
         }
     },
     "log": {

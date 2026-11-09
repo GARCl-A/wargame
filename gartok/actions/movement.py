@@ -30,6 +30,21 @@ class Move(Action):
             return False
         return target in battle.reachable(actor)
 
+    def blocked_reason(self, battle, actor):
+        """Why the actor cannot walk now, or "" when it can: the line the battle's hint shows."""
+        if self.available(battle, actor):
+            return ""
+        if getattr(actor, "mounted_on", None) is not None:
+            return i18n.t("action.move_blocked.mounted")
+        for cond in ("entangled", "grappled", "prone"):
+            if actor.has_condition(cond):
+                return i18n.t(f"action.move_blocked.{cond}")
+        if actor.walking:
+            return i18n.t("action.move_blocked.spent")
+        if actor.ap < 1:
+            return i18n.t("action.move_blocked.no_ap")
+        return i18n.t("action.move_blocked.boxed_in")
+
     def execute(self, battle, actor, target=None):
         if getattr(actor, "mounted_on", None) is not None:
             return
