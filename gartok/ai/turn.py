@@ -51,6 +51,7 @@ from .scripted import (
 from .support import (
     _ally_to_help,
     _try_drink_potion,
+    _sleeps_beyond_turn,
     _try_healing_touch,
     _try_lift_rider,
     _try_mount,
@@ -128,7 +129,7 @@ def take_turn(battle, unit):
             continue
 
         if actions.WAKE_UP.available(battle, unit):
-            targets = actions.WAKE_UP.highlight_targets(battle, unit)
+            targets = [t for t in actions.WAKE_UP.highlight_targets(battle, unit) if _sleeps_beyond_turn(t)]
             if targets:
                 actions.WAKE_UP.execute(battle, unit, targets[0])
                 continue

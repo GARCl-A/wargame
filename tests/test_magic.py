@@ -11,6 +11,7 @@ dataclass field abilities.Ability never defined).
 """
 
 import random
+from unittest import mock
 
 from gartok import actions, ai, data, magic, orders, persist
 from gartok.group import Group
@@ -114,6 +115,67 @@ def test_cast_sleep_is_resisted_on_a_low_roll():
     assert not d.has_condition("sleeping")
 
 
+def test_sleep_reaches_four_squares_and_no_further():
+    batt, a, d = _melee_battle()
+    _caster(a, ["sleep"])
+    a.ap = 2
+    spell = actions.SleepAction()
+    d.pos = (a.pos[0] + 4, a.pos[1])
+    assert spell.can(batt, a, d)
+    d.pos = (a.pos[0] + 5, a.pos[1])
+    assert not spell.can(batt, a, d)
+
+
+def test_sleep_lasts_five_less_wisdom_and_ignores_constitution(monkeypatch):
+    _batt, _a, d = _melee_battle()
+    monkeypatch.setattr(random, "randint", lambda lo, hi: 0)
+    spell = actions.SleepAction()
+    d.mod_wisdom, d.mod_constitution = 2, -3
+    assert spell.sleep_turns(d) == 3
+    d.mod_wisdom, d.mod_constitution = 2, 4
+    assert spell.sleep_turns(d) == 3             # a sturdy body sleeps no shorter
+    d.mod_wisdom = -2
+    assert spell.sleep_turns(d) == 7             # a dull mind sleeps longer
+
+
+def test_sleep_varies_by_one_turn_and_lasts_at_least_one():
+    _batt, _a, d = _melee_battle()
+    spell = actions.SleepAction()
+    d.mod_wisdom = 0
+    assert {spell.sleep_turns(d) for _ in range(200)} == {4, 5, 6}
+    d.mod_wisdom = 9
+    assert {spell.sleep_turns(d) for _ in range(50)} == {1}
+
+
+def test_ai_does_not_wake_a_sleeper_with_one_turn_left():
+    from gartok.ai.support import _sleeps_beyond_turn
+    from gartok.conditions import Sleeping
+    _batt, _a, d = _melee_battle()
+    d.add_condition(Sleeping(duration=1))
+    assert not _sleeps_beyond_turn(d)            # it wakes by itself when its turn ends
+    d.conditions.clear()
+    d.add_condition(Sleeping(duration=2))
+    assert _sleeps_beyond_turn(d)
+    d.conditions.clear()
+    d.add_condition(Sleeping())
+    assert _sleeps_beyond_turn(d)                # no end in sight: worth waking
+
+
+def test_ai_wakes_a_long_sleeper_but_not_one_about_to_wake():
+    from gartok.conditions import Sleeping
+    batt, a, d = _melee_battle()
+    d.team = a.team
+    d.pos = (a.pos[0] + 1, a.pos[1])
+    d.add_condition(Sleeping(duration=3))
+    a.ap = 2
+    ai.take_turn(batt, a)
+    assert not d.has_condition("sleeping")
+    d.add_condition(Sleeping(duration=1))
+    a.ap = 2
+    ai.take_turn(batt, a)
+    assert d.has_condition("sleeping")
+
+
 def test_elf_is_immune_to_sleep():
     """Regression: `Ability` had no `sleep_immunity` field, so the Elf's own
     racial ability (data.py's "Elf" row -> ability id "sleep_immunity") never
@@ -135,8 +197,8 @@ def test_sleep_duration_formula_and_expiration():
     a.ap = 2
     spell = actions.CastSpellAction("sleep")
 
-    expected_duration = max(1, 10 - d.mod_constitution - d.mod_wisdom)
-    with fixed_d20(20):
+    expected_duration = max(1, 5 - d.mod_wisdom)
+    with fixed_d20(20), mock.patch.object(random, "randint", lambda lo, hi: 0):
         spell.execute(batt, a, d)
     assert d.has_condition("sleeping")
     cond = next(c for c in d.conditions if c.id == "sleeping")

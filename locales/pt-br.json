@@ -2109,7 +2109,7 @@
             "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra CA: {dice} de dano. Um 20 natural rola o dado duas vezes; um 1 natural falha sem efeito."
         },
         "cast_sleep": {
-            "desc": "Um inimigo a até {reach} casas, d20 + INT contra Defesa Mental: ele adormece (−2 CA) por até max(1, 10 − mod. CON − mod. SAB) rodadas, acordando antes se sofrer dano ou se um aliado adjacente o acordar. Um corpo com Imunidade a Sono nunca é afetado."
+            "desc": "Um inimigo a até {reach} casas, d20 + INT contra Defesa Mental: ele adormece (−2 CA) por {turns} − mod. SAB rodadas (±{noise}, no mínimo 1), acordando antes se sofrer dano ou se um aliado adjacente o acordar. Um corpo com Imunidade a Sono nunca é afetado."
         },
         "cast_water_jet": {
             "desc": "Um inimigo ao alcance de um arremesso de adaga ({reach} casas), d20 + INT contra CA: {dice} + INT de dano, e o jato lança o alvo 1 casa para longe do conjurador, a menos que algo esteja no caminho (nas chamas, ele queima)."

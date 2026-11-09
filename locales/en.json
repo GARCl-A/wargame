@@ -2916,7 +2916,7 @@
       "desc": "A foe in sight within {reach} squares, d20 + INT against AC: {dice} damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect."
     },
     "cast_sleep": {
-      "desc": "A foe within {reach} squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for up to max(1, 10 - CON mod - WIS mod) rounds, ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected."
+      "desc": "A foe within {reach} squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for {turns} - WIS mod rounds (give or take {noise}, at least 1), ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected."
     },
     "cast_water_jet": {
       "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against AC: {dice} + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns)."

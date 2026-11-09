@@ -66,6 +66,12 @@ def _try_mount(battle, unit):
     return True
 
 
+def _sleeps_beyond_turn(ally):
+    """A sleeper with one turn left wakes by himself when it ends: waking him would cost a point for nothing."""
+    cond = next((c for c in ally.conditions if c.id == "sleeping"), None)
+    return cond is not None and (cond.duration is None or cond.duration > 1)
+
+
 def _try_signal_horn(battle, unit):
     """Blow the Signal Horn while the fight is still a walk away: it takes the whole turn,
     so only when nobody is in reach to hit and at least two allies hear it."""

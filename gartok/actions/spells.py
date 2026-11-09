@@ -97,8 +97,13 @@ class MagicMissileAction(SpellAction):
 class SleepAction(SpellAction):
     spell_id = "sleep"
     target, aimed = "enemy", True
-    REACH = 6
-    desc = i18n.Text("action", "desc", reach=REACH)
+    REACH = 4
+    BASE_TURNS = 5
+    NOISE = 1
+    desc = i18n.Text("action", "desc", reach=REACH, turns=BASE_TURNS, noise=NOISE)
+
+    def sleep_turns(self, target):
+        return max(1, self.BASE_TURNS - target.mod_wisdom + random.randint(-self.NOISE, self.NOISE))
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
@@ -126,7 +131,7 @@ class SleepAction(SpellAction):
         if atk == 1:
             battle.log("log.spell.roll_crit_miss", roll=roll)
         elif atk == 20 or hit_score >= md:
-            duration = max(1, 10 - target.mod_constitution - target.mod_wisdom)
+            duration = self.sleep_turns(target)
             target.add_condition(Sleeping(duration=duration))
             battle.log("log.sleep.crit" if atk == 20 else "log.sleep.lands", roll=roll, target=target.name, n=duration)
         else:
