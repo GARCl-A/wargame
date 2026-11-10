@@ -58,8 +58,6 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   draft steps, arena, hunt, watch, battle. Still to walk: the hub tabs other than the shop (work, medic, jobs, craft,
   stables, vault, ledger, house), talk, credits. Run
   `scripts/i18n_leaks.py` too. Size: Small (the rest of the screens, each fix is small).
-- **Post-fight recap and roster type hierarchy (playtest 2026-11-08, PT-BR).** The font hierarchy and styling of
-  the "who killed whom" recap and of the roster look off (the author's call: what should read first). Size: Small.
 - **UI sound: level-up too loud, sound lags the click (playtest 2026-11-01).** Lower the level-up cue's
   `LEVEL` in `gartok/sound.py`; for the lag, measure first whether it is the audio start or the round trip to
   the server. The missing cues stay in *Small -> UI sound*. Size: Small.
