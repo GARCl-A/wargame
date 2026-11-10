@@ -92,8 +92,6 @@ function drawMembers() {
 }
 
 // ---------------------------------------------------------------- THE GUILD
-const HOLD_ICON = {"City house": "gui/house", "The Claim": "map/claim", "Strongbox": "item/locked-chest"};
-
 function drawCharter() {
   const C = G.guild, v = C.vocation;
   const max = Math.max(7, ...C.standing.map(f => f.rep));
@@ -132,7 +130,7 @@ function drawCharter() {
       <div class="act"><div class="ghost-btn" data-look="${esc(h.name)}">${showing.has(h.name) ? tr("guild.close") : tr("guild.look")}</div></div>
       ${showing.has(h.name) ? `<div class="inside">${h.inside.length ? h.inside.map(it => `<div class="it">${ico(it.glyph)}<div class="n">${esc(nm("item", it.name))}</div><span class="q">${it.qty > 1 ? "×" + it.qty : ""}</span><span></span></div>`).join("")
         : `<div class="empty-note">${tr("guild.empty")}</div>`}<div class="empty-note">${tr("guild.bank_note")}</div></div>` : ""}` : "";
-    return `<div class="hold ${tone[h.tone]}">${ico(HOLD_ICON[h.name] || "item/locked-chest")}<div>
+    return `<div class="hold ${tone[h.tone]}">${ico(h.icon)}<div>
       <h3>${esc(h.name)}<span class="mark ${tone[h.tone]}">${esc(h.status.toLowerCase())}</span></h3><p>${esc(h.detail)}</p>${look}</div></div>`;
   }).join("");
   $("body").innerHTML = charter + `<div class="leather" id="holds"><div class="lbl" style="margin:4px 2px 0">${tr("guild.holdings")}</div>${holds}</div>`;

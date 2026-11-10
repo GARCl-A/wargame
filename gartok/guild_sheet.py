@@ -36,6 +36,11 @@ def _days(n):
     return i18n.count("day", n)
 
 
+_CLAIM_STAGE_KEY = {"SCOUTED": "guild_sheet.stage_scouted", "CLEARED": "guild_sheet.stage_cleared",
+                    "FENCED": "guild_sheet.stage_fenced", "SWEPT": "guild_sheet.stage_swept",
+                    "SUSTAINING": "guild_sheet.stage_sustaining"}
+
+
 class GuildSheet:
     def __init__(self, guild):
         self.guild = guild
@@ -336,12 +341,12 @@ class GuildSheet:
         if not house.owned:
             out.append((i18n.t("guild_sheet.city_house"), i18n.t("guild_sheet.not_owned"), "muted", i18n.t("guild_sheet.buy_one_from_bankers_in")))
         elif house.squatting:
-            out.append((i18n.t("guild_sheet.city_house"), "SQUATTED", "bad", i18n.t("guild_sheet.unpaid_tax_guard_raids_it")))
+            out.append((i18n.t("guild_sheet.city_house"), i18n.t("guild_sheet.squatted"), "bad", i18n.t("guild_sheet.unpaid_tax_guard_raids_it")))
         elif house.missed_payments:
             out.append((i18n.t("guild_sheet.city_house"), i18n.t("guild_sheet.behind_on_tax"), "warn",
                         i18n.plural("guild_sheet.missed_payment", house.missed_payments)))
         else:
-            out.append((i18n.t("guild_sheet.city_house"), "OWNED", "good", i18n.t("guild_sheet.tax_paid_up")))
+            out.append((i18n.t("guild_sheet.city_house"), i18n.t("guild_sheet.owned"), "good", i18n.t("guild_sheet.tax_paid_up")))
 
         stage = guild.wilds_claim_stage
         held = any(g.node == world.WILDS_TERRITORY_NODE and g.order is not None
@@ -349,22 +354,25 @@ class GuildSheet:
         if stage == "NONE":
             out.append((i18n.t("guild_sheet.claim"), i18n.t("guild_sheet.not_claimed"), "muted", i18n.t("guild_sheet.scout_it_from_wilds_to")))
         elif stage == "ESTABLISHED" and guild.wilds_claim_owner == "seized":
-            out.append((i18n.t("guild_sheet.claim"), "SEIZED", "bad", i18n.t("guild_sheet.travel_there_and_beat_occupiers")))
+            out.append((i18n.t("guild_sheet.claim"), i18n.t("guild_sheet.seized"), "bad", i18n.t("guild_sheet.travel_there_and_beat_occupiers")))
         elif stage == "ESTABLISHED":
-            out.append((i18n.t("guild_sheet.claim"), "HELD" if held else "UNGUARDED", "good" if held else "warn",
+            out.append((i18n.t("guild_sheet.claim"), i18n.t("guild_sheet.held") if held else i18n.t("guild_sheet.unguarded"), "good" if held else "warn",
                         i18n.t("guild_sheet.garrison_stands_on_land") if held
                         else i18n.t("guild_sheet.unguarded_claim_can_be_seized")))
         else:
             left = guild.wilds_claim_sustain_days_left
             detail = (i18n.t("guild_sheet.days_to_hold_it", left=left) if stage == "SUSTAINING" and left is not None
                       else i18n.t("guild_sheet.claim_campaign_in_progress"))
-            out.append((i18n.t("guild_sheet.claim"), stage.title(), "warn", detail))
+            out.append((i18n.t("guild_sheet.claim"), i18n.t(_CLAIM_STAGE_KEY[stage]), "warn", detail))
 
         bank = guild.bank
-        out.append(("Strongbox", "RENTED" if bank.open else "NONE", "good" if bank.open else "muted",
+        out.append((i18n.t("guild_sheet.strongbox"), i18n.t("guild_sheet.rented") if bank.open else i18n.t("guild_sheet.no_strongbox"), "good" if bank.open else "muted",
                     i18n.t("guild_sheet.kg_used", load=bank.load, capacity=bank.capacity) if bank.open
                     else i18n.t("guild_sheet.rent_one_at_bank_in")))
-        return [{"name": n, "status": st, "tone": tone, "detail": d} for n, st, tone, d in out]
+        keys = ("house", "claim", "strongbox")
+        icons = {"house": "gui/house", "claim": "map/claim", "strongbox": "item/locked-chest"}
+        return [{"name": n, "status": st, "tone": tone, "detail": d, "key": k, "icon": icons[k]}
+                for k, (n, st, tone, d) in zip(keys, out, strict=True)]
 
     def _vocation(self):
         voc = vocations.of(self.guild)

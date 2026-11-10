@@ -561,7 +561,7 @@ class GuildSession(Session):
         bank = g.bank
         holds = s._holdings()
         for h in holds:
-            if h["name"] == "Strongbox" and bank.open:
+            if h["key"] == "strongbox" and bank.open:
                 h["load"] = [round(bank.load, 1), bank.capacity]
                 h["inside"] = [{"name": items.stack_name(e), "qty": e[1], "glyph": item_icon.glyph(items.stack_name(e))}
                                for e in bank.items]

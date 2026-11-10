@@ -54,12 +54,12 @@ Something on a screen is wrong today. Pick these before any UI improvement below
 
 - **pt-br overflow and truncation audit.** Portuguese runs 20-30% longer than English: walk every screen
   in `pt-br` and fix dialog boxes, tabs, tables and cards that clip or break a word badly. Done so far: title,
-  map, guild members tab, talents, settings, wiki races/talents, post-fight stages, one hub shop. Still to walk: the
-  other guild tabs, the other hub tabs, draft steps, talk, battle, hunt, arena, watch, credits. Run
+  map, every guild tab, talents, settings, wiki races/talents, post-fight stages, the hub shops (shelf header fixed),
+  draft steps, arena, hunt, watch, battle. Still to walk: the hub tabs other than the shop (work, medic, jobs, craft,
+  stables, vault, ledger, house), talk, credits. Run
   `scripts/i18n_leaks.py` too. Size: Small (the rest of the screens, each fix is small).
 - **Post-fight recap and roster type hierarchy (playtest 2026-11-08, PT-BR).** The font hierarchy and styling of
-  the "who killed whom" recap and of the roster look off (the author's call: what should read first); the
-  "consumables & kit" shelf header wrapped unevenly in the playtest and did not reproduce at 1920x1080. Size: Small.
+  the "who killed whom" recap and of the roster look off (the author's call: what should read first). Size: Small.
 - **UI sound: level-up too loud, sound lags the click (playtest 2026-11-01).** Lower the level-up cue's
   `LEVEL` in `gartok/sound.py`; for the lag, measure first whether it is the audio start or the round trip to
   the server. The missing cues stay in *Small -> UI sound*. Size: Small.

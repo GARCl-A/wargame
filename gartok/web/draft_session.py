@@ -261,7 +261,7 @@ class DraftSession(Session):
                 "age": ch["age"], "portrait": _portrait(u), "hp": ch["hp"][1], "ac": ch["ac"], "md": ch["md"],
                 "spd": ch["spd"], "init": ch["init"],
                 "attrs": [{"k": k, "v": v, "mod": m} for k, v, m, _ in ch["attrs"]],
-                "weapon": {"name": w["nm"], "hit": w["hit"], "dmg": w["dmg"],
+                "weapon": {"name": i18n.name("item", w["nm"]), "hit": w["hit"], "dmg": w["dmg"],
                            "tags": " · ".join(p.strip() for p in w["tags"].split("·") if p.strip()),
                            "action": w["action"],
                            "action_tip": wiki_terms.action_tip(w["action"])},

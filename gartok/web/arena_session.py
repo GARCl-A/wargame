@@ -232,7 +232,7 @@ class ArenaSession(Session):
         if u.pending_picks:
             flags.append({"text": i18n.t("arena_session.talent_pick_ready"), "tone": "good"})
         return {"uid": u.uid, "name": u.name, "race": u.race_label,                 "portrait": _portrait(u), "hp": [max(0, u.hp), u.hp_max], "ac": u.ac, "md": u.mental_defense,
-                "speed": u.speed, "weapon": u.weapon.name, "dmg": f"{n}d{faces}",
+                "speed": u.speed, "weapon": i18n.name("item", u.weapon.name), "dmg": f"{n}d{faces}",
                 "money": u.money, "money_text": fmt_money(u.money), "level": lvl, "flags": flags,
                 "unfit": u.incapacitated, "picked": u in self.picked,
                 "title": bool(getattr(u, "arena_title", False))}

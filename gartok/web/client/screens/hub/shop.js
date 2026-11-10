@@ -81,7 +81,7 @@ const Shop = (() => {
     const tabs = S.shelf.length > 1
       ? `<div class="cats">${S.shelf.map(x => `<span class="${x.key === c.key ? "on" : ""}" data-cat="${x.key}">${esc(lab(x.label))}</span>`).join("")}</div>` : "";
     return `<div class="paper" id="shelf"><div class="kicker">${tr("shop.shelf")} <em>${trn("shop.wares", S.shelf.reduce((n, x) => n + families(x.rows).length, 0))}</em></div>
-      <div class="shelfhead"><h3>${esc(c ? lab(c.label) : tr("shop.nothing"))}</h3>${tabs}</div>
+      <div class="shelfhead">${tabs || `<h3>${esc(c ? lab(c.label) : tr("shop.nothing"))}</h3>`}</div>
       <div class="cols"><span></span><span>${tr("shop.ware")}</span><span class="r">${tr("shop.weight")}</span><span class="c">${tr("shop.stock")}</span><span class="r">${tr("shop.price")}</span><span class="r">${tr("shop.buy")}</span></div>
       <div id="rows">${c ? families(c.rows).map(wareRow).join("") : ""}</div>
       <div class="shelffoot">${tr("shop.foot")}</div></div>`;
@@ -117,12 +117,12 @@ const Shop = (() => {
     const goods = picks && picks.items ? picks.items.filter(p => p.sell != null) : [];
     let line, ready = false;
     if (goods.length) {
-      const what = goods.length === 1 ? `${goods[0].qty > 1 ? goods[0].qty + " " : ""}${goods[0].name}` : trn("unit.stack", goods.length);
+      const what = goods.length === 1 ? `${goods[0].qty > 1 ? goods[0].qty + " " : ""}${nm("item", goods[0].name)}` : trn("unit.stack", goods.length);
       const t = sellTotal(goods);
       line = t ? tr("shop.sell_line", {what: esc(what), price: money(t)}) : tr("shop.worthless", {what: esc(what)});
       ready = true;
     } else if (S.marked.length) {
-      const names = S.marked.length > 4 ? tr("shop.more", {names: S.marked.slice(0, 4).join(", "), n: S.marked.length - 4}) : S.marked.join(", ");
+      const names = S.marked.length > 4 ? tr("shop.more", {names: S.marked.slice(0, 4).map(n => nm("item", n)).join(", "), n: S.marked.length - 4}) : S.marked.map(n => nm("item", n)).join(", ");
       line = tr("shop.auto_line", {names: esc(names), rest: S.marked_total ? tr("shop.auto_all", {price: money(S.marked_total)}) : S.marked_held ? tr("shop.auto_throw") : tr("shop.auto_none")});
       ready = S.marked_held;
     } else {

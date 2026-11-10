@@ -717,7 +717,7 @@ class BattleSession(Session):
             **self._morale(u),
             "speed": u.speed, "ap": u.ap, "ap_max": AP_PER_TURN,
             "weapon": None if w is None else {
-                "name": w.name, "damage": f"{w.damage[0]}d{w.damage[1]}" if w.damage else None,
+                "name": i18n.name("item", w.name), "damage": f"{w.damage[0]}d{w.damage[1]}" if w.damage else None,
                 "thrown": w.thrown or None, "range": w.range or None,
                 "action": (act := next((a.name for a in actions.WEAPON_ACTIONS if w.has_trait(a.id)), None)),
                 "action_tip": wiki_terms.action_tip(act),
