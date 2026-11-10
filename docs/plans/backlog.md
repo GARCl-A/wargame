@@ -12,7 +12,7 @@ Sizes are estimates. When an item is done, delete it here and, if it changed a d
 Parts, in this order:
 
 - **Before the friends' playtest** — what is left before the build goes out.
-- **Ready to do** — defined enough to start: *Small*, then *Medium*, in the order to pick them up.
+- **Ready to do** — defined enough to start: *UI bugs* first, then *Small*, then *Medium*, in the order to pick them up.
 - **Large and later** — after the playtest or after another system: *Large*, *Art*, *Epic*.
 - **Deprioritised**, **Notes to remember**, **To discuss and reflect on** — wanted one day, or premises to
   think over; not tasks.
@@ -33,11 +33,9 @@ combat presentation and the hub kit are done. Left:
 - **Translation to pt-br: the author reads it in play & UI layout audit.** Every text has a `pt-br` entry (the parity test is strict). Left:
   (1) the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats ([../glossary_pt_br.md](../glossary_pt_br.md);
   settings "Linhas do registro" still open);
-  (2) UI truncation and overflow audit: adjust dialog boxes, tabs, tables and cards to accommodate Portuguese text, which expands on average
-  20-30% compared to English, avoiding ugly word breaks or clipped text.
+  (2) the overflow audit is *Ready to do -> UI bugs*.
 - **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
-- The *Small* items below, in order: the bugs (the fighter that cannot move and the rest of the 2026-11-02
-  ones), the overflows, the icons' authors, then the skills.
+- The *UI bugs* and the *Small* items below, in order.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -49,6 +47,23 @@ Prisoners, Archaeology at Ancient Ruins.
 
 Order inside a size is the order to pick them up: first what blocks the friends' playtest, then bugs, then
 the rest.
+
+## UI bugs
+
+Something on a screen is wrong today. Pick these before any UI improvement below.
+
+- **pt-br overflow and truncation audit.** Portuguese runs 20-30% longer than English: walk every screen
+  in `pt-br` and fix dialog boxes, tabs, tables and cards that clip or break a word badly. Run
+  `scripts/i18n_leaks.py` too. Size: Medium (many screens, each fix is small).
+- **Post-fight recap and roster layout (playtest 2026-11-08, PT-BR).** The font hierarchy and styling of the
+  "who killed whom" recap and of the roster look off; the "consumables & equipment" header wraps unevenly;
+  an image sometimes misses the cache on a screen change (the first paint shows it empty). Size: Small.
+- **Wiki race metadata and text polish (playtest 2026-11-08).** "Small", "Hit Die", "Speed", "Speaks" and the
+  attribute abbreviations are not localized in the races wiki (`locales/pt-br.json`); a double hyphen ("--")
+  shows in dialogue boxes; talent descriptions do not start with a capital. Size: Small.
+- **UI sound: level-up too loud, sound lags the click (playtest 2026-11-01).** Lower the level-up cue's
+  `LEVEL` in `gartok/sound.py`; for the lag, measure first whether it is the audio start or the round trip to
+  the server. The missing cues stay in *Small -> UI sound*. Size: Small.
 
 ## Small
 
@@ -106,8 +121,7 @@ the rest.
   which act plays which cue (one table in `docs/web_ui/web_client.md`), and wire them: equip in the sheet,
   confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
   from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
-  Playtest 2026-11-01 adds two: the level-up cue is much louder than a click (lower its `LEVEL`), and the
-  sound lags behind the click (measure first whether it is the audio start or the round trip to the server).
+  The level-up volume and the lag are in *UI bugs*.
 
 - **The battle takes ~1 s to open, and each action repaints for ~230 ms (playtest 2026-11-01; the author does
   not feel it, so investigate before changing anything).** Title,
@@ -172,9 +186,17 @@ the rest.
   reach, nearby melee AI (wolves) defaulted to Defend instead of advancing to attack reachable grounded allies.
   Adjust AI target evaluation to seek alternate reachable targets.
 
-- **Wiki race metadata translations and UI text polish (playtest 2026-11-08).** Ensure "Small", "Hit Die",
-  "Speed", "Speaks" and attribute abbreviations are properly localized in the races wiki (`locales/pt-br.json`).
-  Avoid double hyphens ("--") in dialogue text boxes. Capitalize the first letter in talent descriptions.
+- **Weapon icons: give each its own (author 2026-11-08).** Broadsword, sword and rapier share an icon; axe
+  and hatchet share an icon (`item_icon.ICONS`). Check the local `gartok/assets/` pool for distinct ones
+  before sourcing external SVGs.
+
+- **Show what a race and a vocation give at the pick (Johann, 2026-10-31).** He chose Delvers by lore and
+  could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
+  `92c60533`); check what the pick still hides and say it in plain words. The vocation balance stays in
+  *Needs more information*.
+
+- **A link from the tutorial to the wiki for rations (Johann, 2026-10-31).** Travel eats a ration a day and
+  he learned it by spending them; the card for the map should point to the wiki's entry.
 
 - **Bug fix: Brisk Hands / work speed talent scaling (author/Yohan alignment).** `work_speedup` in `gartok/guild_labor.py`
   evaluates `max(mults)`, meaning the 10% speedup only takes effect if every member on the crew has the talent. Adjust
@@ -198,6 +220,15 @@ the rest.
   attackers must retarget awake/active threats instead of attacking the sleeping target and immediately breaking the condition.
 
 ## Medium
+
+- **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the exit
+  while it can, instead of ordering each one. Read the flee rules first (what blocks a flee, who is held)
+  and reuse the AI's flee path. End-to-end: web button in `screens/battle/`, `ai/`, tests, tutorial mention.
+
+- **Difficulty signal before a fight (Johann, 2026-10-31).** The player avoided the arena because nothing
+  said how hard it was. Show a danger hint on a node or fight before entering (a level range, or "easy /
+  hard for this group") built on `encounters.pack_power`, compared with the group's own power. Web map and
+  the fight's confirm dialog, tests that the hint matches `pack_power`.
 
 - **Armor material categorization (author/Yohan alignment).** Classify all armors by primary composition material
   (e.g., Leather, Metal, Cloth/Padded, Magical) in `ItemDef` and registries. Provides the structural foundation for
@@ -433,13 +464,6 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 # Playtest notes
 
-## 2026-11-08
-
-PT-BR playtest (commit 4dca9e05):
-- **UI & layout regressions:** Check font hierarchy and styling on post-fight recap ("who killed whom")
-  and roster screen. Ensure "consumables & equipment" header text wrapping looks balanced. Check occasional
-  image cache misses on screen transition.
-
 ## 2026-11-02
 
 The session's recordings (saves and combat logs) are not in the repo yet; the author sends them when a note
@@ -457,9 +481,6 @@ needs a fight rebuilt.
   2026-11-04). Is playing Survivors objectively worse than Caravan? Either flag it to the player ("risky" and
   the like), or balance them to be equally desirable. Either way the game needs a way to test the vocations' balance (`balance_sim.py`,
   `economy_sim.py`; see *Vocations are far apart* under 2026-10-31).
-- **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the
-  exit while it can, instead of ordering each one. Needs the flee rules read first (what blocks a flee,
-  who is held) and the AI's flee path reused. End-to-end: web button, `ai/`, tests.
 - **Surrender and prisoners (author 2026-11-01, future).** Morale and the rout shipped; a fighter whose morale is
   spent could give up instead of running. Think what a surrender does and tie it to *Prisoners*.
 
@@ -484,8 +505,8 @@ items it touches. Raw feedback, not yet sized:
   behind it exists (`encounters.pack_power`).
 - **Race and vocation choice cannot be read.** He chose Delvers for the buff, by lore, not by numbers, and
   could not tell what a race gives ("mental bonus, stat check: means nothing yet"). He thought the Automaton the
-  strongest race; the author says Orc and Goliath are, and the game does not show it. Show what a race gives
-  in plain words at the pick, and see the vocation balance below.
+  strongest race; the author says Orc and Goliath are, and the game does not show it. The pick's text is in
+  *Ready to do -> Small*; see the vocation balance below.
 - **Vocations are far apart** (author): Delvers and Caravan ahead; Warband fine for Orc / Goliath; Scholars
   for the races that cast early; Wanderers and Survivors weak. Rework or balance with the vocation probation in
   *Loyalty, the oath...*; each perk should act on a daily loop. **Not validated** (author 2026-10-31: these
@@ -715,5 +736,3 @@ has one "Enter" button and its functions are tabs inside.
 - **Kenku archetype design (author 2026-11-08).** Kenku stats (DEX/WIS/CHA) leave it neither a pure caster
   nor a melee bruiser. Design space: high-initiative ranged archery and Demoralize synergy.
 
-- **Weapon SVG icons audit (author 2026-11-08).** Broadsword, sword and rapier share an icon; axe and hatchet share
-  an icon. Check local `gartok/assets/` pool for distinctive alternatives before sourcing external SVGs.
