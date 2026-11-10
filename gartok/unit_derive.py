@@ -242,7 +242,8 @@ class DerivationMixin:
             ("base", 10), ("DEX (armor cap)" if capped else "DEX", dex),
             (self.armor_name if armor else "armor", armor.ac if armor else 0),
             (shield.name if shield else "shield", shield.ac if shield else 0),
-            ("talents", self.talent_bonus("ac")), (f"{self._ability.name} (natural)", self._ability.ac_natural),
+            ("talents", self.talent_bonus("ac")), (f"{self.size} size", data.SIZES[self.size]["ac"]),
+            (f"{self._ability.name} (natural)", self._ability.ac_natural),
             ("natural armor", self.natural_armor),
         ], self.ac)
 
@@ -287,7 +288,7 @@ class DerivationMixin:
         if armor is not None and armor.max_dex is not None:
             dex_ac = min(dex_ac, armor.max_dex)
         self.ac_base = (10 + dex_ac + (armor.ac if armor else 0)
-                        + self.talent_bonus("ac"))
+                        + self.talent_bonus("ac") + data.SIZES[self.size]["ac"])
         if self.equipped_offhand and items.is_shield(self.equipped_offhand):
             shield = items.get(self.equipped_offhand)
             self.ac_base += shield.ac if shield else 0

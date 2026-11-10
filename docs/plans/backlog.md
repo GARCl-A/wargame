@@ -138,10 +138,6 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   +1 reach (if it has one), so a weapon's entry must list every property it carries, read off its
   `ItemDef`.
 
-- **Body size AC adjustment (playtest sim balance, author 2026-11-08).** Simulation shows 4 of 5 small races
-  underperform (score < 50) due to reduced weapon damage. Apply size AC adjustments: Tiny (+2 AC), Small (+1 AC),
-  Medium (0 AC), Large (-1 AC) in `unit_derive.py`. Re-measure with `scripts/combat_pairs.py` and `scripts/economy_report.py`.
-
 - **Vocation tweaks: Warband, Delvers, Marsh (author 2026-11-08).**
   (1) Warband: +1 Morale for group members.
   (2) Delvers: the bonus applies only to material returns (decided 2026-11-10), never to wages: the gather
@@ -207,6 +203,26 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   attackers must retarget awake/active threats instead of attacking the sleeping target and immediately breaking the condition.
 
 ## Medium
+
+- **Kenku and Crossbow balance changes (race study 2026-11-10, `ca-depois`).** The two last places of the study:
+  Kenku is 38.5 (the lowest race; 5 of 18 builds above 50%, its three best average 59) and the Crossbow build is
+  the worst build of 18 of the 19 races (0.02 to 0.29 of win rate; Centaur's worst is the Dagger). Measure every
+  change below with `race_study.py run --waves mb,ef --levels 5` then `build_study_report.py` (the Races table:
+  score, builds above 50%, mean of the three best; the Crossbow is a build, so read it in the Builds ranking).
+  - *Kenku archetype (author 2026-11-08).* Its stats (DEX/WIS/CHA) leave it neither a pure caster nor a melee
+    bruiser. Direction (author 2026-11-10): a demoralising archer (ranged plus Demoralize). Its best build today
+    is `faith_caster` 61.5, then `sage_archer` 58.2; no study build is built around its Demoralize.
+  - *Interacts, and could lift the Kenku:* **Intimidation build rework** (the DCs and action economy of Demoralize,
+    Medium); in **Talent ideas (2026-10-30)** item 3 (Charisma + Wisdom: Demoralize on beasts) and item 4 (Archery:
+    +1 damage with a bow, then a conditional Brutal). **Vocation tweaks** (1) Warband +1 Morale does not touch the
+    Kenku (it is Marsh and Scholars).
+  - *Interacts, and could lift the Crossbow:* **Weapon actions: tune the favoured cases** (Extreme Shot is the
+    Crossbow's trait, with `crit_3x`) and Archery (item 4), if "a bow" is read to include the Crossbow: decide it when
+    the talent is designed. Today it is d10, range 18, reload, 80 copper against the Longbow's d8, range 21, no reload,
+    640; the study says the reload action costs more than the die gives. Open: whether the fix is the reload (free
+    with a talent, or a lighter cost), the damage or the price.
+  - *Already applied (2026-11-10):* size AC, Tiny/Small +2/+1, Large -1. The Kenku is Medium, so it did not move
+    (-0.4 in the study).
 
 - **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the exit
   while it can, instead of ordering each one. Read the flee rules first (what blocks a flee, who is held)
@@ -722,6 +738,3 @@ has one "Enter" button and its functions are tabs inside.
   cost time (about a minute per 10 rounds, which the 6 s round already gives) and the real cost is the
   recovery of the wounded; he suspects it could break things. Decide after the playtest shows whether bout
   chains break anything.
-
-- **Kenku archetype design (author 2026-11-08).** Kenku stats (DEX/WIS/CHA) leave it neither a pure caster
-  nor a melee bruiser. Direction (author 2026-11-10): a demoralising archer (ranged plus Demoralize).

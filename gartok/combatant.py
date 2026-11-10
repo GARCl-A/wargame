@@ -652,12 +652,12 @@ class Combatant:
     @property
     def touch_ac(self):
         """AC against a spell that needs no blow past armour: 10 + Dexterity (the armour's cap
-        ignored) + the typed bonuses, never the armour, the shield or a Hex (already in Dexterity)."""
+        ignored) + the typed bonuses, the size bonus, never the armour, the shield or a Hex (already in Dexterity)."""
         mods = [m for m in self._condition_mods("ac_mods") if m[1] != "hex"]
         if self.ac_natural:
             mods.append((self.ac_natural, "natural", "race"))
         total, _ = resolve_bonus(mods)
-        return 10 + self.mod_dexterity + self.char.talent_bonus("ac") + total
+        return 10 + self.mod_dexterity + self.char.talent_bonus("ac") + data.SIZES[self.size]["ac"] + total
 
     @property
     def mental_defense(self):
