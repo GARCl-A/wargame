@@ -59,7 +59,7 @@ class JobsTab:
         if t.fight_at and verb == "turn_in":
             on = False                # the fight is the turn-in: it happens on the map, not here
         return {"id": t.id, "name": t.name, "glyph": _glyph(t), "blurb": t.blurb or "",
-                "tags": [{"label": g.lower(), "tone": TAG_TONE.get(g.lower(), "")} for g in t.tags],
+                "tags": [{"label": i18n.name("mission_tag", g), "tone": TAG_TONE.get(g.lower(), "")} for g in t.tags],
                 "detail": [p.removeprefix("goal: ") for p in detail.split("  ·  ")],
                 "taken": m is not None, "ready": bool(lay.get("ready")),
                 "out": m is None and b._active_of(t) is not None,

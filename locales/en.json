@@ -3801,6 +3801,33 @@
       "recipe": "Recipe of {recipe}",
       "any": "Any {base}"
     },
+    "mission_tag": {
+      "apothecary": "apothecary",
+      "bankers": "bankers",
+      "battlefield": "battlefield",
+      "biwolf": "biwolf",
+      "blood": "blood",
+      "codex": "codex",
+      "dragon_clutch": "dragon clutch",
+      "economic": "economic",
+      "faith": "faith",
+      "guards": "guards",
+      "hides": "hides",
+      "ledger_hold": "ledger hold",
+      "library": "library",
+      "magic": "magic",
+      "mentorship": "mentorship",
+      "nature": "nature",
+      "necromancer": "necromancer",
+      "ox": "ox",
+      "ruins": "ruins",
+      "scholarly": "scholarly",
+      "snake_dragon": "snake dragon",
+      "tanner": "tanner",
+      "trust": "trust",
+      "venom": "venom",
+      "wildfire": "wildfire"
+    },
     "language": {
       "Common": "Common",
       "Ankarin": "Ankarin",
@@ -4702,8 +4729,6 @@
     }
   },
   "hub_session": {
-    "house": "The House",
-    "claim": "The Claim",
     "bankers_want_answer_about_house": "the Bankers want an answer about the house first",
     "this_place_has_no_shop": "this place has no shop",
     "no_tab_here": "no {what} tab here",
@@ -4717,6 +4742,13 @@
     "is_busy": "{display_name} is busy",
     "traders_speak": " · the traders speak {lang}",
     "day": "Day {day}, {part}{tongue}",
+    "part": {
+      "night": "night",
+      "morning": "morning",
+      "afternoon": "afternoon",
+      "evening": "evening"
+    },
+    "or": "{a} or {b}",
     "at_is_not_in_browser": "{capitalize} at {name} is not in the browser yet.",
     "tab": {
       "carpentry": "Carpentry",
@@ -4742,6 +4774,8 @@
       "vault": "Vault",
       "the_cells": "The Cells",
       "the_desk": "The Desk",
+      "the_house": "The House",
+      "the_claim": "The Claim",
       "campfire": "Campfire"
     },
     "what": {
@@ -5575,6 +5609,8 @@
   },
   "group_msg": {
     "of_breaks_down_on_road": "the {lower} of {display_name} breaks down on the road.",
+    "band_of": "{name}'s Band",
+    "group_of_n": "Group ({n})",
     "leader_must_be_member_of": "leader must be a member of the group",
     "can_t_change_leaders_with": "can't change leaders with a fight about to start"
   },

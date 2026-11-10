@@ -10,6 +10,10 @@ from .constants import fmt_money
 TAG_TONE = {"economic": "money", "trust": "money", "bankers": "money", "apothecary": "good", "ruins": "bad"}
 
 
+def _item(name):
+    return i18n.name("item", name)
+
+
 def _item_names(names):
     return ", ".join(i18n.name("item", n) for n in names)
 
@@ -180,11 +184,11 @@ class TannerBoard(Board):
     def get_req_str(self, t):
         pay = i18n.t("job_board.pay", fmt_money=fmt_money(t.reward)) if t.reward else ""
         due = i18n.t("job_board.no_deadline") if t.deadline_days is None else i18n.t("job_board.deadline_days", deadline_days=t.deadline_days)
-        return i18n.t("job_board.goal_x", goal_qty=t.goal_qty, goal_item=t.goal_item, pay=pay, due=due)
+        return i18n.t("job_board.goal_x", goal_qty=t.goal_qty, goal_item=_item(t.goal_item), pay=pay, due=due)
 
     def get_status_str(self, t, progress, ready, days_left):
         left = "" if days_left is None else i18n.t("job_board.day_s_left", days_left=days_left)
-        return f"{progress} / {t.goal_qty} {t.goal_item}{left}"
+        return f"{progress} / {t.goal_qty} {_item(t.goal_item)}{left}"
 
     def get_success_notice(self, reward):
         if not reward:
@@ -207,12 +211,12 @@ class ApothecaryBoard(Board):
     def get_req_str(self, t):
         if t.goal_any:
             return i18n.t("job_board.goal_venom_paid_in_recipe", goal_qty=t.goal_qty, deadline_days=t.deadline_days)
-        return i18n.t("job_board.goal_x_pay_deadline_days", goal_qty=t.goal_qty, goal_item=t.goal_item, fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
+        return i18n.t("job_board.goal_x_pay_deadline_days", goal_qty=t.goal_qty, goal_item=_item(t.goal_item), fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
 
     def get_status_str(self, t, progress, ready, days_left):
         if t.goal_any:
             return i18n.t("job_board.venom_glands_progress", progress=progress, goal_qty=t.goal_qty, days_left=days_left)
-        return i18n.t("job_board.day_s_left_2", progress=progress, goal_qty=t.goal_qty, goal_item=t.goal_item, days_left=days_left)
+        return i18n.t("job_board.day_s_left_2", progress=progress, goal_qty=t.goal_qty, goal_item=_item(t.goal_item), days_left=days_left)
 
     def get_success_notice(self, reward):
         if reward:
@@ -235,10 +239,10 @@ class LibraryBoard(Board):
     def get_req_str(self, t):
         if t.goal_item == "Any Dictionary":
             return i18n.t("job_board.goal_x_dictionary_unarchived_tongue", goal_qty=t.goal_qty, fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
-        return i18n.t("job_board.goal_x_pay_deadline_days", goal_qty=t.goal_qty, goal_item=t.goal_item, fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
+        return i18n.t("job_board.goal_x_pay_deadline_days", goal_qty=t.goal_qty, goal_item=_item(t.goal_item), fmt_money=fmt_money(t.reward), deadline_days=t.deadline_days)
 
     def get_status_str(self, t, progress, ready, days_left):
-        item_label = "Dictionary" if t.goal_item == "Any Dictionary" else t.goal_item
+        item_label = _item("Dictionary" if t.goal_item == "Any Dictionary" else t.goal_item)
         return i18n.t("job_board.day_s_left_3", progress=progress, goal_qty=t.goal_qty, item_label=item_label, days_left=days_left)
 
 
@@ -272,9 +276,9 @@ class ShrineBoard(Board):
         if t.fight_at:
             goal = i18n.t("job_board.win_skirmish_at_every_soldier", name=world.node(t.fight_at).name)
             if t.starting_item and not any(m.template_id == t.id for m in self.guild.missions):
-                goal += i18n.t("job_board.you_get_x", starting_qty=t.starting_qty, starting_item=t.starting_item)
+                goal += i18n.t("job_board.you_get_x", starting_qty=t.starting_qty, starting_item=_item(t.starting_item))
         else:
-            goal = i18n.t("job_board.alive", goal_item=t.goal_item) if t.goal_captive else f"{t.goal_qty}x {t.goal_item}"
+            goal = i18n.t("job_board.alive", goal_item=_item(t.goal_item)) if t.goal_captive else f"{t.goal_qty}x {_item(t.goal_item)}"
         due = i18n.t("job_board.days", deadline_days=t.deadline_days) if t.deadline_days else i18n.t("job_board.no_deadline")
         prize = i18n.t("job_board.you_get", reward_item=_item_names(t.reward_items)) if t.reward_items else ""
         return i18n.t("job_board.goal", goal=goal, due=due, prize=prize)
@@ -290,7 +294,7 @@ class ShrineBoard(Board):
             if t is missions.FAITH_NECROMANCER:
                 return i18n.t("job_board.dead_rise_at_find_one", name=world.node(t.fight_at).name, due=due)
             return i18n.t("job_board.fight_at_lose_no_soldier", name=world.node(t.fight_at).name, due=due)
-        return f"{progress} / {t.goal_qty} {t.goal_item}"
+        return f"{progress} / {t.goal_qty} {_item(t.goal_item)}"
 
     def get_turn_in_label(self, t, progress, ready):
         if t.fight_at:
@@ -334,11 +338,11 @@ class TrustBoard(Board):
         return self.TEMPLATE
 
     def get_req_str(self, t):
-        return i18n.t("job_board.carry_bring_back_deadline_days", starting_item=t.starting_item, goal_item=t.goal_item, deadline_days=t.deadline_days)
+        return i18n.t("job_board.carry_bring_back_deadline_days", starting_item=_item(t.starting_item), goal_item=_item(t.goal_item), deadline_days=t.deadline_days)
 
     def get_status_str(self, t, progress, ready, days_left):
         if ready:
-            return i18n.t("job_board.in_hand_day_s_left", goal_item=t.goal_item, days_left=days_left)
+            return i18n.t("job_board.in_hand_day_s_left", goal_item=_item(t.goal_item), days_left=days_left)
         return i18n.t("job_board.carrying_sealed_chest_to_ledger", days_left=days_left)
 
     def get_turn_in_label(self, t, progress, ready):

@@ -1362,3 +1362,21 @@ def test_every_hub_a_node_offers_opens_on_every_one_of_its_tabs():
             for key, _label in hub.tabs:
                 assert hub.pick_tab(key)["tab"] == key, (node.id, f.order_kind, key)
 
+
+
+def test_a_hubs_header_tabs_and_jobs_read_in_the_chosen_language(saves):
+    from gartok import i18n, missions
+    i18n.set_language("pt-br")
+    hub, guild, g = _house(owned=False, rep=0)
+    st = hub.state()
+    assert [t["label"] for t in st["tabs"]] == ["A Casa"], "the tab label is a catalog key, not a translated slug"
+    assert st["band"] == f"Grupo de {g.leader.name}" and st["sub"].startswith("Dia ")
+    assert not any(w in st["sub"] for w in ("night", "morning", "afternoon", "evening", "Band"))
+    tavern, _, _ = _hub("tavern", "recruit")
+    assert "Halfling" in tavern.state()["sub"] and " or " not in tavern.state()["sub"]
+    chest = missions.TRUST_CHEST
+    guild = _guild("city")
+    board = HubSession(MapSession(guild), guild.groups[0], orders.Order("trust")).board
+    job = next(j for j in board.state()["jobs"] if j["id"] == chest.id)
+    assert {t["label"] for t in job["tags"]} == {"confiança", "banqueiros"}
+    assert "Sealed Chest" not in " ".join(job["detail"]) and "Letter of Receipt" not in " ".join(job["detail"])

@@ -220,7 +220,7 @@ class TavernTab:
     def seat(self, uid):
         m = self._member(uid)
         if not economy.can_perform(m):
-            raise ValueError(i18n.t("tavern_tab.has_no", name=m.name, lower=economy.PERFORM_ITEM.lower()))
+            raise ValueError(i18n.t("tavern_tab.has_no", name=m.name, lower=i18n.name("item", economy.PERFORM_ITEM).lower()))
         self.s.perform_off ^= {m}
 
     def show(self):
@@ -238,7 +238,7 @@ class TavernTab:
     def _stage(self):
         s = self.s
         return {"hours": s.perform_hours, "lengths": list(economy.PERFORM_SHIFT_HOURS),
-                "base": economy.PERFORM_TIP_BASE, "step": economy.PERFORM_TIP_STEP, "item": economy.PERFORM_ITEM,
+                "base": economy.PERFORM_TIP_BASE, "step": economy.PERFORM_TIP_STEP, "item": i18n.name("item", economy.PERFORM_ITEM),
                 "players": [self._player(m) for m in s.party], "can": bool(s._performers()),
                 "report": self.report}
 

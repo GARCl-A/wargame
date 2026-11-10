@@ -1478,7 +1478,7 @@
             "empty": "{title} está vazio. Arraste para cá o que o grupo puder dispensar.",
             "stack": "Pilha",
             "each": "Cada",
-            "held": "Guardado",
+            "held": "Qtd.",
             "take": "Retirar",
             "foot": "<b>Arraste</b> um item para cá para guardá-lo · daqui para uma mochila ou um espaço de vestir",
             "foot_gold": "<b>Arraste</b> um item para cá para guardá-lo · daqui para uma mochila ou um espaço de vestir · <b>clique com o botão direito</b> numa pilha de moedas para cunhar ou fundir ouro",
@@ -3057,8 +3057,6 @@
         }
     },
     "hub_session": {
-        "claim": "A Posse",
-        "house": "A Casa",
         "bankers_want_answer_about_house": "os Banqueiros querem uma resposta sobre a casa primeiro",
         "this_place_has_no_shop": "este lugar não tem loja",
         "no_tab_here": "sem aba de {what} aqui",
@@ -3072,6 +3070,13 @@
         "is_busy": "{display_name} está ocupado",
         "traders_speak": " · os comerciantes falam {lang}",
         "day": "Dia {day}, {part}{tongue}",
+        "part": {
+            "night": "noite",
+            "morning": "manhã",
+            "afternoon": "tarde",
+            "evening": "fim de tarde"
+        },
+        "or": "{a} ou {b}",
         "at_is_not_in_browser": "{capitalize} em {name} ainda não está no navegador.",
         "tab": {
             "carpentry": "Carpintaria",
@@ -3097,6 +3102,8 @@
             "vault": "Cofre",
             "the_cells": "As Celas",
             "the_desk": "A Mesa",
+            "the_house": "A Casa",
+            "the_claim": "A Posse",
             "campfire": "Fogueira"
         },
         "what": {
@@ -4751,6 +4758,8 @@
     },
     "group_msg": {
         "of_breaks_down_on_road": "{lower:o} de {display_name} quebra na estrada.",
+        "band_of": "Grupo de {name}",
+        "group_of_n": "Grupo ({n})",
         "leader_must_be_member_of": "o líder deve ser membro do grupo",
         "can_t_change_leaders_with": "não dá para trocar de líder com uma luta prestes a começar"
     },
@@ -5045,6 +5054,33 @@
             "Medium": "Médio",
             "Large": "Grande",
             "Huge": "Enorme"
+        },
+        "mission_tag": {
+            "apothecary": "botica",
+            "bankers": "banqueiros",
+            "battlefield": "campo de batalha",
+            "biwolf": "bilobo",
+            "blood": "sangue",
+            "codex": "códice",
+            "dragon_clutch": "ninhada de dragão",
+            "economic": "economia",
+            "faith": "fé",
+            "guards": "guardas",
+            "hides": "couros",
+            "ledger_hold": "posto de comando",
+            "library": "biblioteca",
+            "magic": "magia",
+            "mentorship": "mentoria",
+            "nature": "natureza",
+            "necromancer": "necromante",
+            "ox": "boi",
+            "ruins": "ruínas",
+            "scholarly": "erudito",
+            "snake_dragon": "dragão-serpente",
+            "tanner": "curtume",
+            "trust": "confiança",
+            "venom": "veneno",
+            "wildfire": "incêndio"
         },
         "language": {
             "Ankarin": "Ankarin",

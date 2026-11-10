@@ -103,14 +103,14 @@ def _node_tabs(node):
 def _house_tabs(guild):
     """The City house's tabs: the kitchen once it has an oven, the garage once it is owned."""
     house = guild.house
-    return [("property", i18n.t("hub_session.house")), *((("kitchen", "Kitchen"),) if house.owned and house.oven else ()),
+    return [("property", "The House"), *((("kitchen", "Kitchen"),) if house.owned and house.oven else ()),
             *((("garage", "Garage"),) if house.owned else ())]
 
 
 def _claim_tabs(guild):
     """The Wilds Claim's tabs: gathering and the garage once the garrison opens them, the kitchen once
     the hearth can cook."""
-    return [("claim", i18n.t("hub_session.claim")), *((("gather", "Gathering"),) if guild.claim_held else ()),
+    return [("claim", "The Claim"), *((("gather", "Gathering"),) if guild.claim_held else ()),
             *((("kitchen", "Kitchen"),) if guild.wilds_claim_can_cook else ()),
             *((("garage", "Garage"),) if guild.claim_held else ())]
 
@@ -560,10 +560,10 @@ class HubSession(Session):
                   "line": k.get("line", ""),
                   "portrait": asset_url(art_files.portrait_path(None, k["portrait"])) if k.get("portrait") else None}
         lang = getattr(n, "language", None)
-        if isinstance(lang, (list, tuple)):
-            lang = " or ".join(lang)
+        tongues = [i18n.name("language", t) for t in ((lang,) if isinstance(lang, str) else lang or ())]
+        lang = i18n.t("hub_session.or", a=tongues[0], b=tongues[1]) if len(tongues) == 2 else "".join(tongues)
         tongue = i18n.t("hub_session.traders_speak", lang=lang) if lang else ""
-        out = {"place": n.name, "sub": i18n.t("hub_session.day", day=c.day, part=part, tongue=tongue), "band": self.group.display_name,
+        out = {"place": n.name, "sub": i18n.t("hub_session.day", day=c.day, part=i18n.t(f"hub_session.part.{part}"), tongue=tongue), "band": self.group.display_name,
                "icon": "/".join(node_icon(n.id) or ("map", "signpost")), "keeper": keeper,
                "tabs": [] if self.repossession_due else
                        [{"key": key, "label": i18n.t(f"hub_session.tab.{_slug(label)}"), "live": key in LIVE} for key, label in self.tabs],

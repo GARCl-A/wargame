@@ -208,8 +208,8 @@ class Group:
         if self.name:
             return self.name
         if self.leader:
-            return f"{self.leader.name}'s Band"
-        return f"Group ({len(self.members)})"
+            return i18n.t("group_msg.band_of", name=self.leader.name)
+        return i18n.t("group_msg.group_of_n", n=len(self.members))
 
     @property
     def empty(self):

@@ -30,9 +30,8 @@ combat presentation and the hub kit are done. Left:
 - **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
-- **Translation to pt-br: the author reads it in play & UI layout audit.** Every text has a `pt-br` entry (the parity test is strict). Left:
-  (1) the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats ([../glossary_pt_br.md](../glossary_pt_br.md));
-  (2) the overflow audit is *Ready to do -> UI bugs*.
+- **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
+  ([../glossary_pt_br.md](../glossary_pt_br.md)).
 - **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
 - The *UI bugs* and the *Small* items below, in order.
 
@@ -51,10 +50,6 @@ the rest.
 
 Something on a screen is wrong today. Pick these before any UI improvement below.
 
-- **pt-br overflow and truncation audit.** Portuguese runs 20-30% longer than English: walk every screen
-  in `pt-br` and fix dialog boxes, tabs, tables and cards that clip or break a word badly. Left to walk: the
-  hub tabs other than the shop (work, medic, jobs, craft, stables, vault, ledger, house), talk, credits. Run
-  `scripts/i18n_leaks.py` too. Size: Small (each fix is small).
 - **UI sound lags the click (playtest 2026-11-01).** Measure first whether it is the audio start or the
   round trip to the server. The missing cues stay in *Small -> UI sound*. Size: Small.
 
