@@ -20,4 +20,4 @@ CUES = {
 }
 
 # how loud each cue sits against the others, before the player's volume
-LEVEL = {"hit": 0.7, "crit": 0.9, "miss": 0.5, "fall": 0.8, "coins": 0.7, "level_up": 0.8, "click": 0.35}
+LEVEL = {"hit": 0.7, "crit": 0.9, "miss": 0.5, "fall": 0.8, "coins": 0.7, "level_up": 0.5, "click": 0.35}

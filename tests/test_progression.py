@@ -480,7 +480,7 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
     rich = _work_ready("brawny", "piecework")
     quick = _work_ready("brawny", "brisk_hands")
 
-    # mixed crew: pay is per-worker; the guild leaves when the SLOWEST is done
+    # mixed crew: pay is per-worker; the clock runs the crew's average multiplier
     guild = Guild([plain, rich, quick], clock=Clock(6 * 3600))
     base = economy.lumber_pay(16)                 # 4 copper
     guild.work_shift([plain, rich, quick], 16)
@@ -489,7 +489,7 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
     assert quick.money == base                     # speed does not touch the pay
     assert all(u.work_hours == economy.LUMBER_XP_HOURS * 6
                for u in (plain, rich, quick))     # already work level 2: this job teaches nothing
-    assert guild.clock.seconds == 6 * 3600 + 16 * 3600    # plain drags: full 16 h
+    assert guild.clock.seconds == 6 * 3600 + round(16 * (1 + 1 + 0.9) / 3 * 3600)   # one quick hand shaves the shift
 
     # a Brisk worker on their own: 16 h of work banked in 14.4 h of the clock
     solo = Guild([_work_ready("brawny", "brisk_hands")], clock=Clock(6 * 3600))

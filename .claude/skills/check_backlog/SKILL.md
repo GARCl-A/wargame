@@ -4,7 +4,8 @@ description: Tech-lead / PM review of the backlog against the last 5 commits —
 ---
 
 Act as the user's tech lead / product manager. Read-only: do not edit files unless the user asks
-afterwards.
+afterwards. Write the whole report in Portuguese (pt-BR), to cut the author's reading friction; keep file
+names, code identifiers and backlog item titles as they are.
 
 `pre-commit` already syncs the backlog and the docs with each commit (its step 5) and runs the
 tests before each one, so this is the safety net for what slipped through, not a second gate:

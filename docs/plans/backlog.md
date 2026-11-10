@@ -31,8 +31,7 @@ combat presentation and the hub kit are done. Left:
   map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
   and flags what still rings false.
 - **Translation to pt-br: the author reads it in play & UI layout audit.** Every text has a `pt-br` entry (the parity test is strict). Left:
-  (1) the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats ([../glossary_pt_br.md](../glossary_pt_br.md);
-  settings "Linhas do registro" still open);
+  (1) the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats ([../glossary_pt_br.md](../glossary_pt_br.md));
   (2) the overflow audit is *Ready to do -> UI bugs*.
 - **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
 - The *UI bugs* and the *Small* items below, in order.
@@ -53,14 +52,11 @@ the rest.
 Something on a screen is wrong today. Pick these before any UI improvement below.
 
 - **pt-br overflow and truncation audit.** Portuguese runs 20-30% longer than English: walk every screen
-  in `pt-br` and fix dialog boxes, tabs, tables and cards that clip or break a word badly. Done so far: title,
-  map, every guild tab, talents, settings, wiki races/talents, post-fight stages, the hub shops (shelf header fixed),
-  draft steps, arena, hunt, watch, battle. Still to walk: the hub tabs other than the shop (work, medic, jobs, craft,
-  stables, vault, ledger, house), talk, credits. Run
-  `scripts/i18n_leaks.py` too. Size: Small (the rest of the screens, each fix is small).
-- **UI sound: level-up too loud, sound lags the click (playtest 2026-11-01).** Lower the level-up cue's
-  `LEVEL` in `gartok/sound.py`; for the lag, measure first whether it is the audio start or the round trip to
-  the server. The missing cues stay in *Small -> UI sound*. Size: Small.
+  in `pt-br` and fix dialog boxes, tabs, tables and cards that clip or break a word badly. Left to walk: the
+  hub tabs other than the shop (work, medic, jobs, craft, stables, vault, ledger, house), talk, credits. Run
+  `scripts/i18n_leaks.py` too. Size: Small (each fix is small).
+- **UI sound lags the click (playtest 2026-11-01).** Measure first whether it is the audio start or the
+  round trip to the server. The missing cues stay in *Small -> UI sound*. Size: Small.
 
 ## Small
 
@@ -113,7 +109,9 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   initiated in magic (direction 2026-10-19).
 
 - **UI sound: the missing cues.** `gartok/sound.py` has 7 cues and every one
-  of the 16 files in `assets/sounds/` is used, so confirm, error, equip and end of turn have no sound. The
+  of the 16 files in `assets/sounds/` is used, so confirm, error, equip and end of turn have no sound. Wanted
+  first (author 2026-11-10): a cue for Demoralize and one for the upkeep meal; the rest the author notes in the
+  next playtest. The
   author picks the files (Kenney, CC0, same `LICENSE.txt`); then add them to `CUES` / `LEVEL`, write down
   which act plays which cue (one table in `docs/web_ui/web_client.md`), and wire them: equip in the sheet,
   confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
@@ -159,8 +157,10 @@ Something on a screen is wrong today. Pick these before any UI improvement below
 
 - **Vocation tweaks: Warband, Delvers, Marsh (author 2026-11-08).**
   (1) Warband: +1 Morale for group members.
-  (2) Delvers: bonus restricted specifically to licensed gathering (mining and lumber with license)
-  and hunting/foraging, instead of an unspecific wage bonus across all work.
+  (2) Delvers: the bonus applies only to material returns (decided 2026-11-10), never to wages: the gather
+  tabs of the Mine and the Lumber Yard, hunting (meat per hour) and foraging (fruit and mushrooms per hour).
+  Today `vocations.GATHER_BONUS` (+15%) is a yield bonus on gathering work; check where it is applied and
+  that no wage path reads it.
   (3) Marsh: softens hunger attribute penalties by 2 (day 1 Hungry gives 0 penalty instead of -2;
   day 2 Starving gives -2 instead of -4, while HP max remains capped at 1; days 3 and 4 remain unchanged:
   day 3 Incapacitated, day 4 Starvation death). Replaces the old "food pause every 10 days" perk.
@@ -183,22 +183,25 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   reach, nearby melee AI (wolves) defaulted to Defend instead of advancing to attack reachable grounded allies.
   Adjust AI target evaluation to seek alternate reachable targets.
 
-- **Weapon icons: give each its own (author 2026-11-08).** Broadsword, sword and rapier share an icon; axe
-  and hatchet share an icon (`item_icon.ICONS`). Check the local `gartok/assets/` pool for distinct ones
-  before sourcing external SVGs.
+- **Weapon icons: give each its own (author 2026-11-08).** Broadsword, sword and rapier share the `broadsword`
+  glyph; axe and hatchet share `battle-axe` (`item_icon.GLYPHS` / `HEAD_GLYPHS`). `assets/icons/item/` has no
+  spare blade or axe (only `battle-axe`, `broadsword`, `plain-dagger`); look in the other `assets/icons/`
+  folders, otherwise source new game-icons.net SVGs (same licence).
 
 - **Show what a race and a vocation give at the pick (Johann, 2026-10-31).** He chose Delvers by lore and
   could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
   `92c60533`); check what the pick still hides and say it in plain words. The vocation balance stays in
   *Needs more information*.
 
-- **A link from the tutorial to the wiki for rations (Johann, 2026-10-31).** Travel eats a ration a day and
-  he learned it by spending them; the card for the map should point to the wiki's entry.
-
-- **Bug fix: Brisk Hands / work speed talent scaling (author/Yohan alignment).** `work_speedup` in `gartok/guild_labor.py`
-  evaluates `max(mults)`, meaning the 10% speedup only takes effect if every member on the crew has the talent. Adjust
-  calculation so individual worker bonuses contribute proportionally (or crew weighted average), ensuring a single
-  specialist speeds up the shift.
+- **Rule pop-ups by trigger, with a link to the wiki (playtest 2026-11-10; Johann, 2026-10-31).** Some rules
+  slip past players. A one-time card fires on a trigger, has *Close* and *See in the wiki* (opens the wiki on
+  that entry, so the player sees what surrounds the rule); check first that each rule has a wiki entry. Cases:
+  (1) the first studyable item received (dictionary, scroll, recipe): it is learned by a character, study it at
+  the tavern; (2) the second fight of a campaign: every character rolls a free Assess at the start (highlight in
+  the combat log); (3) the first endless or exploratory dungeon: clearing it does not end it, the exit is the
+  entrance, and loot and survival depend on walking back; (4) the first player unit that falls: Stabilize, a
+  Wisdom check any character may try, no class or item needed; (5) rations: travel eats one a day (Johann).
+  Each card has its key in `locales/en.json` and its own "seen" flag in the save.
 
 - **Apothecary & Antidote utility and tooltip clarity (author/Yohan alignment).** Fix Antidote so the Constitution save
   reliably reduces duration / clears poison or disease stacks (`unit_poison.py`). Accurately document the DC, save behavior,
@@ -227,9 +230,10 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   hard for this group") built on `encounters.pack_power`, compared with the group's own power. Web map and
   the fight's confirm dialog, tests that the hint matches `pack_power`.
 
-- **Armor material categorization (author/Yohan alignment).** Classify all armors by primary composition material
-  (e.g., Leather, Metal, Cloth/Padded, Magical) in `ItemDef` and registries. Provides the structural foundation for
-  systematic material-specific rules (Pickaxe anti-metal bonus, lightning conductivity, element/spell vulnerabilities).
+- **Armor material categorization (author/Yohan alignment).** Decided 2026-11-10: a `material` field on each armor's
+  `ItemDef` (today two values, leather and metal). It is the foundation for material-specific rules; the first is the
+  Pickaxe's bonus damage, only against metal armor (*Small*, *Pickaxe targeted bonus*). Lightning conductivity and
+  spell vulnerabilities come later.
 
 - **"Modifiers Matter" feedback in combat log and panel (author/Yohan alignment).** Visual combat log and UI enhancement
   (inspired by Pathfinder 2e's *Modifiers Matter* module): visibly highlight whenever a passive bonus, aura, trait, or
@@ -237,7 +241,9 @@ Something on a screen is wrong today. Pick these before any UI improvement below
 
 - **Continuous / Endless Dungeon signaling (author/Yohan alignment).** UI and UX clarity for continuous exploratory dungeons:
   clearly communicate to the player that there is no traditional "Victory" screen upon clearing a floor. Spoil retention
-  and character survival depend entirely on the voluntary decision to retreat back to the entrance point.
+  and character survival depend entirely on the voluntary decision to retreat back to the entrance point. The
+  first-entry card is case (3) of *Rule pop-ups by trigger* (*Small*); this item is the permanent signal on the map
+  and the confirm dialog.
 
 - **Assess action utility buff & tactical rework (author/Yohan alignment).** Restructure the reward for spending an action on
   Assess: make it a competitive tactical choice against direct attacks or spells by granting substantial combat value
@@ -273,6 +279,9 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   from immediate mid-fight buffs toward resting recovery, inspiration, travel sustain, and guild morale management. A
   monotonous diet (such as surviving exclusively on potatoes daily) steadily erodes party morale, humor, and member loyalty,
   requiring food variety and culinary planning. (Supersedes the old combat-buff cooking concept).
+  Decided 2026-11-10: each unit keeps the foods it ate in the last 7 days, an ordered list of 7 entries (a saved
+  `Unit` field with a neutral default in `SAVE_DEFAULTS`). Open: how many distinct entries count as varied and
+  how much morale a repeat costs; what Rotten Food is for (compost at the Farm or a crafting material).
 
 - **AI Leveling & Large Guild Build Planner (author/Yohan alignment).**
   (1) AI leveling logic for rival/opponent guilds so opposing factions build cohesive, optimized characters.
@@ -709,11 +718,6 @@ has one "Enter" button and its functions are tabs inside.
   recipes and places traps farther. The tester's idea: a research system to discover formulas. Open: teachers (who, what it costs),
   study time, what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
 
-- **Better food: systemic utility, morale, and diet monotony (replaces combat-buff dishes).** See entry under
-  *Large*. Food utility is de-combatized: focus shifts to resting recovery, inspiration, travel sustain, and guild
-  morale/loyalty rather than immediate mid-fight buffs. A monotonous diet (e.g., eating only potatoes) steadily
-  erodes party morale and member humor. Rotten Food use (compost at the Farm or crafting material) remains open.
-
 - **Holy Symbol source (author 2026-11-01, quest decided 2026-11-04).** No recruit starts with one (only the
   Priest did) and no shelf sells it, while Faith's rite (`rite.py`) consumes it, so the Faith school has no
   way to get it. Not for sale at the Market. Direction: (1) a super rare drop from bandit ambushes; (2) a
@@ -727,45 +731,10 @@ has one "Enter" button and its functions are tabs inside.
   (6 s each, `campaign.py`), which is about a minute: a squad can chain bouts the same day with no
   meal or rest in between. That is plausible for the fight itself; the open question is whether the
   preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
-  and whether it matters to the economy (`scripts/economy_report.py`). Decide after the
-  playtest shows whether bout chains break anything.
+  and whether it matters to the economy (`scripts/economy_report.py`). Author 2026-11-10: every fight should
+  cost time (about a minute per 10 rounds, which the 6 s round already gives) and the real cost is the
+  recovery of the wounded; he suspects it could break things. Decide after the playtest shows whether bout
+  chains break anything.
 
 - **Kenku archetype design (author 2026-11-08).** Kenku stats (DEX/WIS/CHA) leave it neither a pure caster
-  nor a melee bruiser. Design space: high-initiative ranged archery and Demoralize synergy.
-
-=======
-
-Ouvindo jogadores no playtest, percebi que algumas regras estão passando batido. Queria colocar o "tutorial por trigger" delas. Dado q não são tutoriais de tela, não vão ficar acessíveis no "?" que fica no canto superior direito das telas, então vale checar se essas regras estão descritas na wiki. E aqui é interessante, pq acho q são boas oportunidades de "apontar" o jogador pra wiki. Então esses cards de tutorial vão ter os botões de "FECHAR" e o de "Beja na wiki" que já leva o jogador pra wiki com a entrada sendo exibida. Ai ele meio q vai ver as outras coisas q estão "ao redor" dessa regra e isso talvez já mitigue alguma coisa.
-
-10. Sistemas de Tutorial & Onboarding (Ensino de Regras Ocultas)
-Item Estudável (Dicionários, Scrolls e Receitas):
-
-Gatilho: Assim que o jogador receber um item da categoria estudável pela primeira vez.
-
-Interface: Pop-up tutorial explicativo.
-
-Mensagem/Regra: Explicar que o item pode ser aprendido pelos personagens e orientar o jogador a ir até a taverna para realizar a ação de estudar.
-
-Rolagem Automática de Assess no Início do Combate:
-
-Gatilho: No segundo combate realizado na campanha.
-
-Interface: Destaque no log de combate + pop-up de aviso.
-
-Mensagem/Regra: Explicar que, no início de todo combate, todos os personagens realizam um teste gratuito de avaliar (Assess) para descobrir os atributos e defesas dos inimigos.
-
-Saída de Masmorras Exploratórias/Infinitas:
-
-Gatilho: Na primeira vez que o jogador entrar em uma instância/dungeon desse tipo.
-
-Interface: Pop-up/aviso de navegação.
-
-Mensagem/Regra: Explicar que a masmorra não finaliza automaticamente ao derrotar inimigos ou desarmar armadilhas, devendo a saída ser feita manualmente pelo mesmo ponto de entrada.
-
-Mecânica de Estabilizar (Sem Pré-requisitos):
-
-Gatilho: Na primeira vez que um personagem do jogador cair (ficar inconsciente) em combate.
-
-Interface: Pop-up explicativo de ação de combate.
-
-Mensagem/Regra: Explicar a ação de Estabilizar, destacando que qualquer personagem pode tentar realizar o teste (Wisdom check) sem exigência de classe ou item prévio.
+  nor a melee bruiser. Direction (author 2026-11-10): a demoralising archer (ranged plus Demoralize).

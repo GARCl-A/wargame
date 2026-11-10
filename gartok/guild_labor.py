@@ -26,9 +26,8 @@ from .unit_loadout import pooled_unlocked
 class LaborMixin:
     def work_speedup(self, crew):
         """The clock-time multiplier a work shift actually takes: 1.0 unless
-        someone on `crew` has Brisk Hands, in which case the whole guild moves
-        on only once the SLOWEST worker is done -- so the saving lands only
-        when nobody on the crew is dragging."""
+        someone on `crew` is quicker, and then the crew's average of its members'
+        own multipliers (the quick make up for the slow)."""
         if not crew:
             return 1.0
         goblins = sum(1 for u in crew if u.race["name"] == "Goblin")
@@ -38,7 +37,7 @@ class LaborMixin:
             if u.has_talent("swarm_logic"):
                 speed += 0.10 * max(0, goblins - 1)
             mults.append(1 - speed)
-        return max(mults)
+        return sum(mults) / len(mults)
 
     def work_shift(self, workers, hours, node_id="lumber_yard"):
         """A stint at a work node (the lumber yard outside the walls, the Mine), done right now:
