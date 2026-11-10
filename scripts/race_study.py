@@ -7,7 +7,7 @@ with many builds, on the Ribbit Brothers' map fought as plain elimination.
 
 Every job is one fight, written as one JSON row (gzip, one file per chunk of jobs, so a run can stop and
 resume): the two squads' races and builds, the winner, the rounds, and for every unit its attributes,
-talents, spells, gear, hit points and the actions it took. `race_study_report.py` reads them back.
+talents, spells, gear, hit points and the actions it took. `build_study_report.py` reads them back.
 The seed of a job is a function of its wave, level and index alone, so a chunk written twice is the same.
 """
 
