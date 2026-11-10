@@ -87,14 +87,6 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   move detail to hovers and use the space better. Judge each screen against the map's and list the
   changes per screen before touching one.
 
-- **Rules as keywords, the next ones (playtest 2026-10-30).** `keywords.py` and the wiki's KEYWORDS chapter
-  exist, with *Brutal N* the first (N more rolls of the weapon's damage; every Brutal of the game is 1;
-  the crit multiplies the whole blow last). Missing: look for the next repeated rules (Off-guard, Prone...)
-  and add each as a `Keyword`; a keyword written inside a description (tooltips of the sheet, of the
-  action bar) should link to its entry on hover; the assess card in the bestiary should link a racial
-  ability and a weapon to their wiki entry on hover (playtest 2026-11-01); check the sheet's weapon-action
-  chip shows the new text on hover.
-
 - **Review the cheapest item prices (author 2026-11-01).** Several sit at 1 or 2 copper with no logic:
   a Chisel at 1, a Scroll at 1 (below Paper at 10 and 1sqm Hide at 12), a Cloak and a Torch at 2. Price a
   tool or a crafted good above the material it is made from, then run the `balance` tier and

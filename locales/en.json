@@ -2680,7 +2680,7 @@
     },
     "push": {
       "name": "Push",
-      "desc": "Push an adjacent unit.",
+      "desc": "Shove an adjacent unit.",
       "label_mighty": "Mighty Shove (1 pt, STR vs 10 + target CON, {n} sq, 1d6)",
       "label": "Push (1 pt, STR vs 10 + target CON)"
     },
@@ -2720,14 +2720,14 @@
     },
     "nonlethal": {
       "name": "Non-lethal",
-      "desc": "Free: pull your blows (-1 to hit); a foe you drop is knocked out, not dying.",
+      "desc": "Free: pull your blows (-1 to hit); a foe you drop is Knocked out, not Dying.",
       "reason": "the fight is non-lethal already.",
       "label_on": "Non-lethal: ON",
       "label_off": "Non-lethal: OFF"
     },
     "tail_sweep": {
       "name": "Tail Sweep",
-      "desc": "2 points: an unarmed tail strike and a Push on two adjacent foes.",
+      "desc": "2 points: an unarmed tail strike and a Shove on two adjacent foes.",
       "reason": "Missing 'tail_sweep' talent.",
       "label": "Tail Sweep (2 pts, strike and shove 2 adjacent foes)"
     },
@@ -2752,7 +2752,7 @@
     },
     "repel_strike": {
       "name": "Repel Strike",
-      "desc": "2 AP: Attacks and shoves target back with a +2 bonus to the push check.",
+      "desc": "2 AP: Attacks and Shoves the target with a +2 bonus to the check.",
       "reason": "requires quarterstaff",
       "label": "Repel Strike (2 pts, attack & push +2; Brutal 1 +1d4 vs a foe against a wall)"
     },
@@ -2830,7 +2830,7 @@
     },
     "stabilize": {
       "name": "Stabilize",
-      "desc": "50% chance to stabilize an adjacent dying ally.",
+      "desc": "50% chance to stabilize an adjacent Dying ally.",
       "label": "Stabilize a downed ally (1 pt: 50%, or repair automaton INT vs {dc})"
     },
     "first_aid": {
@@ -2945,7 +2945,7 @@
       "desc": "A foe in sight within {reach} squares, d20 + INT against Mental Defense: -{points} on each of its six attribute scores for {turns} of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it."
     },
     "cast_spare_the_dying": {
-      "desc": "Touch: a dying ally in reach is stable, no check."
+      "desc": "Touch: a Dying ally in reach is stable, no check."
     },
     "cast_healing_touch": {
       "desc": "Touch: an ally in reach, or the caster, heals {dice}, nothing added; a body on the ground (dying or stable) is back on its feet."
@@ -3488,6 +3488,12 @@
       "Hammer": "Hammer",
       "Club": "Club",
       "Quarterstaff": "Quarterstaff",
+      "Unarmed": "Unarmed",
+      "Bite": "Bite",
+      "Fangs": "Fangs",
+      "Claws": "Claws",
+      "Hooves": "Hooves",
+      "Horns": "Horns",
       "Shortspear": "Shortspear",
       "Light Pick": "Light Pick",
       "Pick": "Pick",
@@ -3867,7 +3873,12 @@
     "keyword": {
       "brutal": "Brutal",
       "morale": "Morale",
-      "routed": "Routed"
+      "routed": "Routed",
+      "critical_hit": "Critical hit",
+      "flanked": "Flanked",
+      "shove": "Shove",
+      "dying": "Dying",
+      "knocked_out": "Knocked out"
     }
   },
   "job_board": {
@@ -5616,7 +5627,11 @@
   },
   "foe_card": {
     "not_read_yet": "not read yet",
-    "int_read_on_dc": "INT read {margin:+} on DC {dc}"
+    "int_read_on_dc": "INT read {margin:+} on DC {dc}",
+    "racial_ability": "Racial ability",
+    "talents": "Talents",
+    "none": "none",
+    "artifact": "Artefact"
   },
   "spoils": {
     "won_t_fit_s_load": "won't fit {name}'s load.",
@@ -5644,7 +5659,7 @@
       "long_reach": "+1 square of range with ranged and thrown weapons.",
       "heavy_bolts": "+1 damage with a Crossbow.",
       "ready_hand": "After a throw, an identical weapon from the pack is in hand at no action cost.",
-      "keen_bolts": "A Crossbow shot is a critical hit on a natural 19 or 20.",
+      "keen_bolts": "A Crossbow shot is a Critical hit on a natural 19 or 20.",
       "deadeye": "+1 to hit with Dexterity-based attacks.",
       "fleet": "+1 square of Speed.",
       "nimble_skirmisher": "+2 damage on Dexterity melee attacks against off-guard targets.",
@@ -5672,7 +5687,7 @@
       "sharp_analysis": "+2 on all Assess and enemy observation checks.",
       "combat_analysis": "+4 on active Assess checks made during battle.",
       "exploit_weakness": "+2 to hit against enemies with Full Intel.",
-      "anatomist": "Your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
+      "anatomist": "Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
       "brawny": "+1 Strength.",
       "piecework": "+20% coin from work that pays in coin.",
       "brisk_hands": "Work finishes 10% faster, so you keep the time.",
@@ -5714,7 +5729,7 @@
       "tireless_worker": "Machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster.",
       "centaur_mount": "Your strong back: allow a Medium or Small ally to ride you.",
       "giant_grip": "Immense physical strength: wield weapons one size above your own (Large for a Goliath, Huge for an Ogre).",
-      "mighty_shove": "Your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more.",
+      "mighty_shove": "Your Shove throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more.",
       "phalanx": "Martial discipline: +1 AC if you are adjacent to at least one ally.",
       "organic_harvester": "Scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle.",
       "corpse_eater": "Brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you.",
@@ -5749,7 +5764,7 @@
       "quartermaster": "An orderly camp: +2 on the daily cohesion roll of an overextended group you lead.",
       "hold_the_line": "While you Defend, every ally adjacent to you has +1 AC.",
       "ambush_predator": "+2 to hit an off-guard foe.",
-      "tail_sweep": "2 points: your tail sweeps two adjacent foes, with an unarmed strike and a Push on each.",
+      "tail_sweep": "2 points: your tail sweeps two adjacent foes, with an unarmed strike and a Shove on each.",
       "polyglot": "+2 to progress rolls when studying a foreign language.",
       "parley": "+1 when you Persuade, Bluff or Intimidate in the talk before a fight.",
       "eye_for_detail": "+2 on all Assess and enemy observation checks.",
@@ -5759,7 +5774,7 @@
       "open_market": "A stranger's coin is as good as any: no price penalty for a vendor of a different tendency when you haggle.",
       "trap_master": "Plant your traps up to 3 squares away when a fight begins.",
       "trap_salvage": "After a won fight, your traps that never sprang go back into your pack.",
-      "savage_attacks": "Your critical hits are Brutal 1.",
+      "savage_attacks": "Your Critical hits are Brutal 1.",
       "war_cry": "+1 to Demoralize checks.",
       "tiny_target": "+2 AC against ranged and thrown attacks.",
       "pixie_dust": "1 point: an adjacent ally takes wing through the end of their next turn.",
@@ -5793,7 +5808,7 @@
       "none": "no effect.",
       "browbeat": "+2 to Demoralize against a target with a lower Strength modifier.",
       "darkvision": "sees {darkvision} squares in the dark as if it were lit.",
-      "inorganic_body": "at 0 HP goes BROKEN instead of dying (no death save) until an ally repairs it (Stabilize: INT vs DC {automaton_repair_dc}).",
+      "inorganic_body": "at 0 HP goes BROKEN instead of Dying (no death save) until an ally repairs it (Stabilize: INT vs DC {automaton_repair_dc}).",
       "gallop": "+3 m (2 squares) of speed.",
       "sleep_immunity": "immune to sleep effects.",
       "strong_stomach": "Can eat Rotten Food without getting sick.",
@@ -5809,7 +5824,7 @@
       "mimic_sounds": "can Demoralize with no shared language (mimics the target's voice), but only on offence; being demoralized still needs a common tongue.",
       "blood_magic": "ancestral blood magic: starts initiated in blood magic, +2 to spell study rolls.",
       "autotroph": "photosynthesises: never needs to eat, immune to the hunger rules.",
-      "ferocity": "once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there).",
+      "ferocity": "once per battle, when downed drops to 0 HP and Dying, but only falls at the end of their turn (the death save runs normally from there).",
       "flight": "flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage.",
       "spider_venom": "a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity.",
       "serpentine": "a body that strikes before it is seen: every attack is a finesse attack (Dexterity to hit and to hurt), and the unarmed attack is a bite of Fangs.",
@@ -5819,11 +5834,11 @@
     "trait": {
       "finesse": "Uses Dexterity instead of Strength for attack and damage rolls.",
       "thrown": "Can be thrown up to its thrown range. Adds Strength modifier to attack and damage.",
-      "crit_3x": "Critical hits multiply the blow's damage by 3 instead of 2.",
+      "crit_3x": "A Critical hit multiplies the blow's damage by 3 instead of 2.",
       "sneak_attack": "2 AP: One strike; against an off-guard foe the blow is Brutal 1, +1d4.",
       "precise_thrust": "2 AP: One strike; against an off-guard foe +2 to hit and the blow is Brutal 1.",
       "cleave": "2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit.",
-      "repel_strike": "2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4.",
+      "repel_strike": "2 AP: One strike that Shoves the target (+2 to the check); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4.",
       "maiming_strike": "2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1.",
       "armor_pierce": "2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1.",
       "power_shot": "2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1.",
@@ -6004,7 +6019,12 @@
     "keyword": {
       "brutal": "Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2.",
       "morale": "Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed.",
-      "routed": "Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again."
+      "routed": "Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again.",
+      "critical_hit": "Critical hit: a natural 20 on the hit roll. It hits whatever the AC, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so.",
+      "flanked": "Flanked: a foe is flanked when you and an ally are both next to it, on opposite sides, and a flanked foe is off-guard. An ally merely next to the foe is not a flank.",
+      "shove": "Shove: moves the target 1 cell straight back. A pit behind it drops the target in; a wall or a body behind it stops the shove. Push, Repel Strike and Tail Sweep shove; Mighty Shove throws the target 3 cells instead.",
+      "dying": "Dying: at 0 HP a fighter is down on its cell and its death clock runs. On its 4th turn down it makes a death save (d20, 11 or more lives: it is Knocked out; less dies). Each hit on a dying body ticks the clock once. Stabilize and First Aid save it on the spot.",
+      "knocked_out": "Knocked out: 0 HP and unconscious, out of the fight; it survives the battle. A hit on a knocked-out body puts it back to Dying. A foe dropped by a Non-lethal blow is knocked out, not dying."
     }
   },
   "item": {

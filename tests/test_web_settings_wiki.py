@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from gartok import (
+    actions,
     items,
     keywords,
     persist,
@@ -326,7 +327,7 @@ def test_every_author_the_icons_license_lists_reaches_the_credits():
 def test_a_keyword_has_its_own_chapter_and_the_actions_that_name_it_link_to_it(saves):
     w = WikiSession(lambda: {"screen": "title"})
     st = w.chapter("keywords")
-    assert [e["name"] for e in st["entries"]] == [k.name for k in keywords.all_keywords()]
+    assert [e["name"] for e in st["entries"]] == sorted(k.name for k in keywords.all_keywords())
     brutal = st["entries"][0]
     assert brutal["kind"] == "Keyword" and brutal["body"] == [keywords.get("brutal").text]
     dagger = next(e for e in w.chapter("actions")["entries"] if e["id"] == "sneak_attack")
@@ -335,6 +336,23 @@ def test_a_keyword_has_its_own_chapter_and_the_actions_that_name_it_link_to_it(s
     st = w.open(link["ref"])
     assert (st["chapter"], st["focus"]) == ("keywords", "brutal")
     assert "brutal" not in [e["id"] for e in w.chapter("actions")["entries"]]
+
+
+def test_a_tooltip_that_names_a_keyword_carries_its_entry_once_and_never_chains():
+    sneak = wiki_terms.tip("sneak_attack").split("\n")
+    assert sneak[-1] == keywords.get("brutal").text and sneak.count(keywords.get("brutal").text) == 1
+    assert wiki_terms.action_tip("Sneak Attack") == wiki_terms.tip("sneak_attack")
+    assert wiki_terms.tip("brutal").split("\n") == ["Brutal", "Keyword", keywords.get("brutal").text]
+    dying = wiki_terms.tip("dying").split("\n")
+    assert dying[3:] == [keywords.get("knocked_out").text]
+
+
+def test_the_rules_keywords_exist_and_each_names_itself_in_its_text():
+    ids = [k.id for k in keywords.all_keywords()]
+    assert {"critical_hit", "flanked", "shove", "dying", "knocked_out"} <= set(ids)
+    assert len(set(ids)) == len(ids) and not set(ids) & {a.id for a in actions.PANEL_ACTIONS}
+    for k in keywords.all_keywords():
+        assert k.text.startswith(k.name) and k.id in wiki_terms.keywords_in(k.text)
 
 
 def test_a_keyword_is_written_once_and_every_other_text_says_only_the_word():

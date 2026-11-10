@@ -7,21 +7,27 @@ def _row(label, value, tip=None):
     return {"label": label, "value": value, "tip": tip}
 
 
+def _talents_tip(talents):
+    """One line per talent, then each keyword they name once, so twenty talents stay a short note."""
+    glosses = dict.fromkeys(g for _, effect in talents for g in wiki_terms.glosses(effect))
+    return "\n".join([i18n.t("foe_card.talents"), *(f"{n}: {e}" for n, e in talents), *glosses])
+
+
 def _format(name, value):
     """-> `(text, tip)` for one learned field."""
     if name == "racial_ability":
-        return value[0], value
+        return value[0], wiki_terms.ability_tip(i18n.t("foe_card.racial_ability"), *value)
     if name == "attrs":
         return "  ".join(f"{abbr} {v}" for abbr, v in value), None
     if name in ("hp", "morale"):
         return f"{value[0]} / {value[1]}", None
     if name == "talents":
-        shown = ", ".join(n for n, _ in value) or "none"
-        return shown, (("Talents", "\n".join(f"{n}: {e}" for n, e in value)) if value else None)
+        shown = ", ".join(n for n, _ in value) or i18n.t("foe_card.none")
+        return shown, _talents_tip(value) if value else None
     if name == "spells":
-        return ", ".join(value) or "none", None
+        return ", ".join(value) or i18n.t("foe_card.none"), None
     if name == "artifact":
-        return value, ("Artefact", value)
+        return value, "\n".join([value, i18n.t("foe_card.artifact")])
     if name == "damage_bonus":
         return f"{value:+}", None
     if name == "level":
@@ -34,9 +40,9 @@ def foe_card(known):
     v = known.visible
     equipment = []
     if v["armor"]:
-        equipment.append(("armour", v["armor"]))
+        equipment.append((i18n.lab("armour"), i18n.name("item", v["armor"])))
     if v["artifact"]:
-        equipment.append(("artefact", v["artifact"]))
+        equipment.append((i18n.lab("artefact"), i18n.name("item", v["artifact"])))
     bands = []
     for label, need in intel.BANDS:
         rows = []
@@ -51,6 +57,6 @@ def foe_card(known):
             else i18n.t("foe_card.int_read_on_dc", margin=known.margin, dc=known.dc))
     return {"name": v["name"], "race": v["race"], "size": v["size"], "alignment": v["alignment"],
             "conditions": v["conditions"], "steps": known.steps, "steps_max": intel.STEPS,
-            "weapon": {"name": v["weapon"], "action": v["weapon_action"],
+            "weapon": {"name": i18n.name("item", v["weapon"]), "tip": wiki_terms.item_tip(v["weapon"]), "action": v["weapon_action"],
                        "action_tip": wiki_terms.action_tip(v["weapon_action"])},
             "equipment": equipment, "read": read, "bands": bands}

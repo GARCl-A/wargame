@@ -34,14 +34,15 @@ def terms() -> dict[str, dict]:
 def keywords_in(text: str) -> list[str]:
     """The ids of the keywords `text` names, in the order they first appear."""
     found = [(m.start(), k.id) for k in keywords.all_keywords()
-             for m in [re.search(rf"\b{re.escape(k.name)}\b", text or "")] if m]
+             for m in [re.search(rf"\b{re.escape(k.name)}s?\b", text or "")] if m]
     return [kid for _, kid in sorted(found)]
 
 
 def tip(term_id: str) -> str:
-    """The entry as the game's tooltip reads it: the name, the kind, the text."""
+    """The entry as the game's tooltip reads it: the name, the kind, the text, then the text of each
+    keyword it names (one level, so a tooltip never opens a chain)."""
     t = terms()[term_id]
-    return "\n".join(x for x in (t["name"], t["kind"], t["text"]) if x)
+    return "\n".join(x for x in (t["name"], t["kind"], t["text"], *glosses(t["text"], skip=term_id)) if x)
 
 
 def of_item(it) -> list[tuple[str, str]]:
@@ -54,6 +55,32 @@ def of_item(it) -> list[tuple[str, str]]:
         ids += [t for t in ("thrown", "throw") if t not in ids]
     ids += [a for a in ITEM_ACTIONS.get(it.name, ()) if a not in ids]
     return [(tid, i18n.t("wiki_terms.thrown_sq", n=it.thrown) if tid == "thrown" else known[tid]["name"]) for tid in ids]
+
+
+def glosses(text: str, skip: str = "") -> list[str]:
+    """The text of each keyword `text` names, for a tooltip to carry under it."""
+    known = terms()
+    return [known[k]["text"] for k in keywords_in(text) if k != skip]
+
+
+def item_tip(name: str | None) -> str:
+    """The item's wiki entry as a tooltip: name, kind, its stats, then each term it brings, or "" for
+    a body that is no catalog item (Unarmed, a beast's Bite)."""
+    it = items.get(name) if name else None
+    if it is None:
+        return ""
+    stats = [f"{it.damage[0]}d{it.damage[1]}"] if it.damage else []
+    stats += [f"AC +{it.ac}"] if it.ac else []
+    stats += [i18n.t("wiki_session.range_sq", range=it.range)] if it.range else []
+    known = terms()
+    brought = [(lab, known[tid]["text"]) for tid, lab in of_item(it) if known[tid]["text"]]
+    return "\n".join([i18n.name("item", it.name), " · ".join([i18n.lab(it.type.value), *stats]),
+                      *(f"{lab}: {text}" for lab, text in brought), *glosses(" ".join(text for _, text in brought))])
+
+
+def ability_tip(kind: str, name: str, effect: str) -> str:
+    """A named rule of a unit (racial ability, talent) as a tooltip, with the keywords it names."""
+    return "\n".join([name, kind, effect, *glosses(effect)])
 
 
 def action_tip(name: str | None) -> str:

@@ -228,7 +228,7 @@ function renderTop() {
 }
 
 const tier = (label, facts) => `<section class="tier"><span>${esc(label)}</span><div class="facts">${facts}</div></section>`;
-const weaponFacts = w => `<span><b>${esc(w.name)}</b>${w.damage ? " " + esc(w.damage) : ""}</span>${w.action ? `<span${tip(w.action_tip, "item")}>${esc(w.action)}</span>` : ""}`;
+const weaponFacts = w => `<span${tip(w.tip, "item")}><b>${esc(w.name)}</b>${w.damage ? " " + esc(w.damage) : ""}</span>${w.action ? `<span${tip(w.action_tip, "item")}>${esc(w.action)}</span>` : ""}`;
 const foeHead = (t, chips, extra) => `<div class="foehead"><div class="med" style="--side:${SEAT[t.seat] || "var(--blood)"}">${face(t.portrait, t.name)}</div>
   <div><h2>${esc(t.name)}</h2>${chips}${extra || ""}</div></div>`;
 const lootIcon = t => t.glyph ? ico(t.glyph) : `<i class="flagico ${t.flag}">⚑</i>`;
@@ -252,7 +252,7 @@ function renderInspect() {
     return;
   }
   const bars = Array.from({length: t.steps_max}, (_, i) => `<i class="${i < t.steps ? "on" : ""}"></i>`).join("");
-  const bands = t.bands.map(b => tier(b.label, b.rows.map(r => r.value == null ? `<span class="q">${esc(r.label)}</span>` : `<span>${esc(r.label)} <b>${esc(r.value)}</b></span>`).join(""))).join("");
+  const bands = t.bands.map(b => tier(b.label, b.rows.map(r => r.value == null ? `<span class="q">${esc(r.label)}</span>` : `<span${tip(r.tip, "item")}>${esc(r.label)} <b>${esc(r.value)}</b></span>`).join(""))).join("");
   card(tr(ui.armed === t.id ? "battle.bestiary_target" : "battle.bestiary_foe"),
     foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.alignment)}</div>${chipRow([t.size, ...(t.conditions || [])])}`, `<div class="health">${bars}</div>`),
     tier(tr("battle.arms"), weaponFacts({...t.weapon, damage: ""}) + t.equipment.map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("")) + groundTier(t) + bands,

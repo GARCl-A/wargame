@@ -1,6 +1,6 @@
 """Reading the fight at a glance: each side's colour, the weapon in hand, the action named on the board."""
 
-from gartok import abilities, ai, foe_card, intel, weapon_traits
+from gartok import abilities, ai, foe_card, intel, keywords, weapon_traits
 from gartok.sheet import unit_to_ch
 from tests.helpers import _melee_battle, _recruit, actions, fitted, fixed_d20
 
@@ -97,3 +97,34 @@ def test_the_ai_names_its_actions_too():
     with fixed_d20(18):
         ai.take_turn(batt, d)
     assert (d, "Cleave", None) in batt.acts
+
+NL = chr(10)
+
+
+def test_the_foe_card_weapon_and_rules_open_their_wiki_entry_on_hover():
+    batt, _, d = _melee_battle()
+    d.equip_weapon(fitted(d, "Dagger"))
+    card = foe_card.foe_card(intel.known_fields(batt, "player", d))
+    tip = card["weapon"]["tip"].split(NL)
+    assert tip[0] == fitted(d, "Dagger") and keywords.get("brutal").text in tip
+    d.disarm()
+    assert foe_card.foe_card(intel.known_fields(batt, "player", d))["weapon"]["tip"] == ""
+    _, ability = foe_card._format("racial_ability", ("Mighty Shove", "Your Shove throws the target."))
+    assert ability.split(NL) == ["Mighty Shove", "Racial ability", "Your Shove throws the target.", keywords.get("shove").text]
+    _, talents = foe_card._format("talents", [("Savage Attacks", "Your Critical hits are Brutal 1.")])
+    assert set(talents.split(NL)[2:]) == {keywords.get("brutal").text, keywords.get("critical_hit").text}
+
+
+def test_the_foe_card_names_its_weapon_and_armour_in_the_players_language():
+    from gartok import i18n
+    batt, _, d = _melee_battle()
+    d.equip_weapon(fitted(d, "Quarterstaff"))
+    i18n.set_language("pt-br")
+    try:
+        card = foe_card.foe_card(intel.known_fields(batt, "player", d))
+        assert card["weapon"]["name"] == i18n.name("item", fitted(d, "Quarterstaff")) != fitted(d, "Quarterstaff")
+        assert card["weapon"]["tip"].split(NL)[0] == card["weapon"]["name"]
+        d.disarm()
+        assert foe_card.foe_card(intel.known_fields(batt, "player", d))["weapon"]["name"] == "Desarmado"
+    finally:
+        i18n.set_language("en")

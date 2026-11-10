@@ -720,7 +720,7 @@ class BattleSession(Session):
                 "name": i18n.name("item", w.name), "damage": f"{w.damage[0]}d{w.damage[1]}" if w.damage else None,
                 "thrown": w.thrown or None, "range": w.range or None,
                 "action": (act := next((a.name for a in actions.WEAPON_ACTIONS if w.has_trait(a.id)), None)),
-                "action_tip": wiki_terms.action_tip(act),
+                "action_tip": wiki_terms.action_tip(act), "tip": wiki_terms.item_tip(w.name),
             },
             "conditions": [getattr(c, "label", None) or i18n.lab(intel.CONDITION_LABELS.get(c.id, c.id)) for c in u.conditions],
         }

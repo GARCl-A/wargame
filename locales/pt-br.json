@@ -1873,7 +1873,7 @@
         },
         "push": {
             "name": "Empurrar",
-            "desc": "Empurra uma unidade adjacente.",
+            "desc": "Empurrão em uma unidade adjacente.",
             "label_mighty": "Empurrão Poderoso (1 pt, FOR contra 10 + CON do alvo, {n} casas, 1d6)",
             "label": "Empurrar (1 pt, FOR contra 10 + CON do alvo)"
         },
@@ -1913,14 +1913,14 @@
         },
         "nonlethal": {
             "name": "Não letal",
-            "desc": "Grátis: você contém os golpes (−1 para acertar); um inimigo que cai fica desacordado, não morrendo.",
+            "desc": "Grátis: você contém os golpes (−1 para acertar); um inimigo que cai fica Nocauteado, não Morrendo.",
             "reason": "a luta já é não letal.",
             "label_on": "Não letal: LIGADO",
             "label_off": "Não letal: DESLIGADO"
         },
         "tail_sweep": {
             "name": "Varrida de Cauda",
-            "desc": "2 pontos: uma cauda desarmada golpeia e empurra dois inimigos adjacentes.",
+            "desc": "2 pontos: uma cauda desarmada golpeia e dá um Empurrão em dois inimigos adjacentes.",
             "reason": "Falta o talento 'tail_sweep'.",
             "label": "Varrida de Cauda (2 pts, golpeia e empurra 2 inimigos adjacentes)"
         },
@@ -1945,7 +1945,7 @@
         },
         "repel_strike": {
             "name": "Rechaçar",
-            "desc": "2 pts: ataca e empurra o alvo para trás, com +2 no teste de empurrão.",
+            "desc": "2 pts: ataca e dá Empurrão no alvo, com +2 no teste.",
             "reason": "exige bordão",
             "label": "Rechaçar (2 pts, ataque e empurrão +2; Brutal 1 +1d4 contra inimigo encostado numa parede)"
         },
@@ -2023,7 +2023,7 @@
         },
         "stabilize": {
             "name": "Estabilizar",
-            "desc": "50% de chance de estabilizar um aliado adjacente que esteja morrendo.",
+            "desc": "50% de chance de estabilizar um aliado adjacente Morrendo.",
             "label": "Estabilizar um aliado caído (1 pt: 50%, ou reparar autômato INT contra {dc})"
         },
         "first_aid": {
@@ -2138,7 +2138,7 @@
             "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra Defesa Mental: −{points} em cada um dos seus seis atributos por {turns} dos seus turnos. Cada conjuração é um acúmulo próprio e os acúmulos se somam; um atributo em zero derruba o alvo."
         },
         "cast_spare_the_dying": {
-            "desc": "Toque: um aliado moribundo ao alcance se estabiliza, sem teste."
+            "desc": "Toque: um aliado Morrendo ao alcance se estabiliza, sem teste."
         },
         "cast_healing_touch": {
             "desc": "Toque: um aliado ao alcance, ou o próprio conjurador, cura {dice}, sem somar nada; um corpo no chão (morrendo ou estável) volta a ficar de pé."
@@ -4765,7 +4765,11 @@
     },
     "foe_card": {
         "not_read_yet": "ainda não avaliado",
-        "int_read_on_dc": "INT avaliou {margin:+} na CD {dc}"
+        "int_read_on_dc": "INT avaliou {margin:+} na CD {dc}",
+        "racial_ability": "Habilidade racial",
+        "talents": "Talentos",
+        "none": "nenhum",
+        "artifact": "Artefato"
     },
     "spoils": {
         "won_t_fit_s_load": "não cabe na carga de {name}.",
@@ -5239,6 +5243,12 @@
                 "gender": "f"
             },
             "Quarterstaff": "Bordão",
+            "Unarmed": "Desarmado",
+            "Bite": "Mordida",
+            "Fangs": "Presas",
+            "Claws": "Garras",
+            "Hooves": "Cascos",
+            "Horns": "Chifres",
             "Shortspear": {
                 "name": "Lança Curta",
                 "gender": "f"
@@ -5899,18 +5909,23 @@
         "keyword": {
             "brutal": "Brutal",
             "morale": "Moral",
-            "routed": "Em fuga"
+            "routed": "Em fuga",
+            "critical_hit": "Acerto crítico",
+            "flanked": "Flanqueado",
+            "shove": "Empurrão",
+            "dying": "Morrendo",
+            "knocked_out": "Nocauteado"
         }
     },
     "desc": {
         "trait": {
             "finesse": "Usa Destreza no lugar de Força nas jogadas de ataque e de dano.",
             "thrown": "Pode ser arremessada até o alcance de arremesso. Soma o modificador de Força ao ataque e ao dano.",
-            "crit_3x": "Um acerto crítico multiplica o dano do golpe por 3, em vez de 2.",
+            "crit_3x": "Um Acerto crítico multiplica o dano do golpe por 3, em vez de 2.",
             "sneak_attack": "2 pts: um golpe; contra um inimigo desprevenido, o golpe é Brutal 1, +1d4.",
             "precise_thrust": "2 pts: um golpe; contra um inimigo desprevenido, +2 para acertar e o golpe é Brutal 1.",
             "cleave": "2 pts: um golpe; com um segundo inimigo ao lado dos dois, o arco também o atinge, cada golpe com +2 para acertar.",
-            "repel_strike": "2 pts: um golpe que empurra o alvo (+2 no empurrão); contra um inimigo com as costas numa parede ou num corpo, o golpe é Brutal 1, +1d4.",
+            "repel_strike": "2 pts: um golpe que dá Empurrão no alvo (+2 no teste); contra um inimigo com as costas numa parede ou num corpo, o golpe é Brutal 1, +1d4.",
             "maiming_strike": "2 pts: um golpe que reduz à metade a velocidade do alvo até a próxima rodada; contra um inimigo Enredado, Dormindo, Surpreso ou Desmoralizado, +2 para acertar e o golpe é Brutal 1.",
             "armor_pierce": "2 pts: um golpe que ignora a CA da armadura vestida; contra um inimigo de armadura, o golpe é Brutal 1.",
             "power_shot": "2 pts: um tiro com +FOR de dano; a metade do alcance do arco ou mais longe, +FOR (no mínimo +1) e o golpe é Brutal 1.",
@@ -5962,7 +5977,7 @@
             "none": "sem efeito.",
             "browbeat": "+2 em Desmoralizar contra um alvo com modificador de Força menor.",
             "darkvision": "enxerga {darkvision} casas no escuro como se estivessem iluminadas.",
-            "inorganic_body": "com 0 PV fica QUEBRADO em vez de morrer (sem teste contra a morte) até um aliado consertá-lo (Estabilizar: INT contra CD {automaton_repair_dc}).",
+            "inorganic_body": "com 0 PV fica QUEBRADO em vez de Morrendo (sem teste contra a morte) até um aliado consertá-lo (Estabilizar: INT contra CD {automaton_repair_dc}).",
             "gallop": "+3 m (2 casas) de velocidade.",
             "sleep_immunity": "imune a efeitos de sono.",
             "strong_stomach": "Pode comer Comida Podre sem ficar doente.",
@@ -5978,7 +5993,7 @@
             "mimic_sounds": "pode Desmoralizar sem idioma em comum (imita a voz do alvo), mas só no ataque; ser desmoralizado ainda exige uma língua comum.",
             "blood_magic": "magia de sangue ancestral: começa iniciado em magia de sangue, +2 nas rolagens de estudo de magia.",
             "autotroph": "faz fotossíntese: nunca precisa comer, imune às regras de fome.",
-            "ferocity": "uma vez por batalha, quando abatido cai a 0 PV e morrendo, mas só tomba no fim do seu turno (o teste contra a morte corre normalmente a partir daí).",
+            "ferocity": "uma vez por batalha, quando abatido cai a 0 PV e Morrendo, mas só tomba no fim do seu turno (o teste contra a morte corre normalmente a partir daí).",
             "flight": "voa: move-se livremente em três dimensões (sobe e desce poços sem teste, ignora o terreno) e nunca sofre dano de queda.",
             "spider_venom": "uma mordida que tira sangue força um teste de Constituição (CD 11 + o nível racial da aranha), ou a vítima é envenenada: Veneno de Aranha Gigante, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Destreza.",
             "serpentine": "um corpo que ataca antes de ser visto: todo ataque é de acuidade (Destreza para acertar e para o dano), e o ataque desarmado é uma mordida de Presas.",
@@ -6140,7 +6155,7 @@
             "long_reach": "+1 casa de alcance com armas à distância e de arremesso.",
             "heavy_bolts": "+1 de dano com a Besta.",
             "ready_hand": "Depois de um arremesso, uma arma idêntica da mochila já está na mão, sem gastar ação.",
-            "keen_bolts": "Um disparo de Besta é crítico com 19 ou 20 natural.",
+            "keen_bolts": "Um disparo de Besta é Acerto crítico com 19 ou 20 natural.",
             "deadeye": "+1 para acertar com ataques baseados em Destreza.",
             "fleet": "+1 casa de Velocidade.",
             "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos desprevenidos.",
@@ -6168,7 +6183,7 @@
             "sharp_analysis": "+2 em todos os testes de Avaliar e de observação do inimigo.",
             "combat_analysis": "+4 nos testes ativos de Avaliar feitos durante a batalha.",
             "exploit_weakness": "+2 para acertar contra inimigos com Informação Completa.",
-            "anatomist": "Sua margem de crítico aumenta em 1 contra inimigos com Informação Completa (crítico com 19-20).",
+            "anatomist": "Sua margem de Acerto crítico aumenta em 1 contra inimigos com Informação Completa (crítico com 19-20).",
             "brawny": "+1 de Força.",
             "piecework": "+20% de moedas em trabalhos que pagam em moedas.",
             "brisk_hands": "O trabalho termina 10% mais rápido, então o tempo economizado é seu.",
@@ -6210,7 +6225,7 @@
             "tireless_worker": "Máquinas não dormem nem reclamam: você conclui tarefas simples de trabalho e coleta bem mais rápido.",
             "centaur_mount": "Suas costas fortes: permite que um aliado Médio ou Pequeno monte em você.",
             "giant_grip": "Força física imensa: empunha armas um tamanho acima do seu (Grande para um Golias, Enorme para um Ogro).",
-            "mighty_shove": "Seu Empurrar lança o alvo 3 casas para trás e causa 1d6; o que o parar no caminho (uma parede, ou um corpo, que também sofre o 1d6) causa mais 1d6.",
+            "mighty_shove": "Seu Empurrão lança o alvo 3 casas para trás e causa 1d6; o que o parar no caminho (uma parede, ou um corpo, que também sofre o 1d6) causa mais 1d6.",
             "phalanx": "Disciplina marcial: +1 de CA se estiver adjacente a pelo menos um aliado.",
             "organic_harvester": "Instinto de catador: 25% de chance por tipo de saque orgânico de achar mais carne ou pele depois de uma batalha com feras.",
             "corpse_eater": "Banquete brutal: gaste 1 pt para comer um inimigo morto, saciando a fome e desmoralizando os inimigos que o virem.",
@@ -6245,7 +6260,7 @@
             "quartermaster": "Um acampamento organizado: +2 na rolagem diária de coesão de um grupo sobrecarregado que você lidera.",
             "hold_the_line": "Enquanto você Defende, cada aliado adjacente a você tem +1 de CA.",
             "ambush_predator": "+2 para acertar um inimigo desprevenido.",
-            "tail_sweep": "2 pontos: sua cauda varre dois inimigos adjacentes, com um ataque desarmado e um Empurrar em cada um.",
+            "tail_sweep": "2 pontos: sua cauda varre dois inimigos adjacentes, com um ataque desarmado e um Empurrão em cada um.",
             "polyglot": "+2 nas rolagens de progresso ao estudar um idioma estrangeiro.",
             "parley": "+1 ao Persuadir, Blefar ou Intimidar na conversa antes de uma luta.",
             "eye_for_detail": "+2 em todos os testes de Avaliar e de observação do inimigo.",
@@ -6255,7 +6270,7 @@
             "open_market": "A moeda de um estranho vale como qualquer outra: sem penalidade de preço por um vendedor de tendência diferente ao pechinchar.",
             "trap_master": "Arma suas armadilhas até 3 casas de distância quando uma luta começa.",
             "trap_salvage": "Depois de uma luta vencida, suas armadilhas que nunca dispararam voltam para a sua mochila.",
-            "savage_attacks": "Seus acertos críticos são Brutal 1.",
+            "savage_attacks": "Seu Acerto crítico é Brutal 1.",
             "war_cry": "+1 nos testes de Desmoralizar.",
             "tiny_target": "+2 de CA contra ataques à distância e de arremesso.",
             "pixie_dust": "1 ponto: um aliado adjacente alça voo até o fim do próximo turno dele.",
@@ -6288,7 +6303,12 @@
         "keyword": {
             "brutal": "Brutal N: o golpe rola o dano da arma N vezes a mais, modificadores incluídos, e soma tudo. Ainda é um só golpe com uma só rolagem de acerto. Brutal de várias fontes se soma: Brutal 1 e Brutal 1 dão Brutal 2.",
             "morale": "Moral: a coragem de um combatente numa luta mortal, com um valor inicial que também é o seu teto. Cai quando aliados caem, quando o combatente está muito ferido e quando é Desmoralizado, e sobe quando o seu lado derruba um inimigo. Em 0 ou menos o combatente entra em fuga.",
-            "routed": "Em fuga: a moral acabou. O combatente corre para a saída e a IA joga por ele, mesmo sendo da guilda, até a moral voltar acima de 0."
+            "routed": "Em fuga: a moral acabou. O combatente corre para a saída e a IA joga por ele, mesmo sendo da guilda, até a moral voltar acima de 0.",
+            "critical_hit": "Acerto crítico: um 20 natural na rolagem de acerto. Acerta qualquer CA, e o golpe inteiro (dados, modificadores, bônus, Brutal) é multiplicado por último, por 2, ou por 3 numa arma que diga isso.",
+            "flanked": "Flanqueado: um inimigo está flanqueado quando você e um aliado estão ao lado dele, em lados opostos, e um inimigo flanqueado está desprevenido. Um aliado apenas ao lado do inimigo não é um flanco.",
+            "shove": "Empurrão: move o alvo 1 casa em linha reta para trás. Um buraco atrás o derruba; uma parede ou um corpo atrás detém o empurrão. Empurrar, Rechaçar e Varrida de Cauda empurram; Empurrão Poderoso arremessa o alvo 3 casas.",
+            "dying": "Morrendo: com 0 PV o combatente cai na sua casa e o relógio da morte corre. No 4º turno caído faz um teste de morte (d20, 11 ou mais vive: fica Nocauteado; menos, morre). Cada golpe num corpo morrendo avança o relógio uma vez. Estabilizar e Primeiros Socorros o salvam na hora.",
+            "knocked_out": "Nocauteado: 0 PV e inconsciente, fora da luta; sobrevive à batalha. Um golpe num corpo nocauteado o devolve a Morrendo. Um inimigo derrubado por golpe não letal fica nocauteado, não morrendo."
         }
     },
     "tutorial": {

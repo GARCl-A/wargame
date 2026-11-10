@@ -56,7 +56,7 @@ The generator kept only the names; every effect below was designed for the warga
 |---|---|---|
 | Browbeat | Hobgoblin | +2 to Demoralize against a target with a lower Strength modifier. |
 | Darkvision | Dwarf, Dragon, Skeleton, Zombie | sees 12 squares in the dark as if it were lit. |
-| Inorganic Body | Automaton | at 0 HP goes BROKEN instead of dying (no death save) until an ally repairs it (Stabilize: INT vs DC 15). |
+| Inorganic Body | Automaton | at 0 HP goes BROKEN instead of Dying (no death save) until an ally repairs it (Stabilize: INT vs DC 15). |
 | Gallop | Centaur | +3 m (2 squares) of speed. |
 | Sleep Immunity | Elf, Skeleton, Zombie | immune to sleep effects. |
 | Strong Stomach | Gnoll | Can eat Rotten Food without getting sick. |
@@ -72,7 +72,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Mimic Sounds | Kenku | can Demoralize with no shared language (mimics the target's voice), but only on offence; being demoralized still needs a common tongue. |
 | Blood Magic | Kobold | ancestral blood magic: starts initiated in blood magic, +2 to spell study rolls. |
 | Autotroph | Treefolk | photosynthesises: never needs to eat, immune to the hunger rules. |
-| Ferocity | Orc | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
+| Ferocity | Orc | once per battle, when downed drops to 0 HP and Dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | Sprite | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
 | Spider Venom | Giant Spider | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
 | Serpentine | Snake | a body that strikes before it is seen: every attack is a finesse attack (Dexterity to hit and to hurt), and the unarmed attack is a bite of Fangs. |
@@ -90,7 +90,7 @@ A spell is cast from a known `Scroll of <Spell>` studied to the end (price in It
 | 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores for 3 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
 | 0 | Light Globe | any | 1 | Drops a light source on a free square within 6 squares. | 105 |
 | 0 | Magic Missile | any | 1 | A foe in sight within 6 squares, d20 + INT against AC: 1d4 damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect. | 105 |
-| 0 | Spare the Dying | faith | 1 | Touch: a dying ally in reach is stable, no check. | 105 |
+| 0 | Spare the Dying | faith | 1 | Touch: a Dying ally in reach is stable, no check. | 105 |
 | 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d6 fire damage. Blood magic costs no hit points. | 224 |
 | 1 | Healing Touch | faith | 1 | Touch: an ally in reach, or the caster, heals 1d6, nothing added; a body on the ground (dying or stable) is back on its feet. | 224 |
 | 1 | Sleep | any | 1 | A foe within 4 squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for 5 - WIS mod rounds (give or take 1, at least 1), ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected. | 224 |
@@ -229,11 +229,11 @@ Properties and keywords carried by weapons.
 |---|---|
 | Finesse | Uses Dexterity instead of Strength for attack and damage rolls. |
 | Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
-| Crit 3x | Critical hits multiply the blow's damage by 3 instead of 2. |
+| Crit 3x | A Critical hit multiplies the blow's damage by 3 instead of 2. |
 | Sneak Attack | 2 AP: One strike; against an off-guard foe the blow is Brutal 1, +1d4. |
 | Precise Thrust | 2 AP: One strike; against an off-guard foe +2 to hit and the blow is Brutal 1. |
 | Cleave | 2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit. |
-| Repel Strike | 2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4. |
+| Repel Strike | 2 AP: One strike that Shoves the target (+2 to the check); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4. |
 | Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1. |
 | Armor Pierce | 2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1. |
 | Power Shot | 2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1. |
@@ -251,6 +251,11 @@ Reserved words of the rules: each always means the one thing written here.
 | Keyword | Meaning |
 |---|---|
 | Brutal | Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2. |
+| Critical hit | Critical hit: a natural 20 on the hit roll. It hits whatever the AC, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so. |
+| Flanked | Flanked: a foe is flanked when you and an ally are both next to it, on opposite sides, and a flanked foe is off-guard. An ally merely next to the foe is not a flank. |
+| Shove | Shove: moves the target 1 cell straight back. A pit behind it drops the target in; a wall or a body behind it stops the shove. Push, Repel Strike and Tail Sweep shove; Mighty Shove throws the target 3 cells instead. |
+| Dying | Dying: at 0 HP a fighter is down on its cell and its death clock runs. On its 4th turn down it makes a death save (d20, 11 or more lives: it is Knocked out; less dies). Each hit on a dying body ticks the clock once. Stabilize and First Aid save it on the spot. |
+| Knocked out | Knocked out: 0 HP and unconscious, out of the fight; it survives the battle. A hit on a knocked-out body puts it back to Dying. A foe dropped by a Non-lethal blow is knocked out, not dying. |
 | Morale | Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed. |
 | Routed | Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again. |
 
@@ -441,7 +446,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 1 | Agile | +1 Dexterity. | -- |
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | Agile |
 | 3 | Heavy Bolts | +1 damage with a Crossbow. | Long Reach |
-| 3 | Keen Bolts | A Crossbow shot is a critical hit on a natural 19 or 20. | Long Reach |
+| 3 | Keen Bolts | A Crossbow shot is a Critical hit on a natural 19 or 20. | Long Reach |
 | 3 | Ready Hand | After a throw, an identical weapon from the pack is in hand at no action cost. | Long Reach + Strong |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | Agile |
 | 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
@@ -470,7 +475,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Sharp Analysis | +2 on all Assess and enemy observation checks. | Tactical Mind |
 | 2 | Combat Analysis | +4 on active Assess checks made during battle. | Tactical Mind |
 | 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | Combat Analysis |
-| 3 | Anatomist | Your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Sharp Analysis |
+| 3 | Anatomist | Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Sharp Analysis |
 
 ### Work track
 
@@ -566,10 +571,10 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Kobold | 2 | Trap Master | Plant your traps up to 3 squares away when a fight begins. | Trapper |
 | Lizardfolk | 1 | Ambush Predator | +2 to hit an off-guard foe. | -- |
 | Lizardfolk | 1 | Organic Harvester | Scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- |
-| Lizardfolk | 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes, with an unarmed strike and a Push on each. | -- |
-| Ogre | 1 | Mighty Shove | Your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- |
+| Lizardfolk | 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes, with an unarmed strike and a Shove on each. | -- |
+| Ogre | 1 | Mighty Shove | Your Shove throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- |
 | Orc, Ogre | 1 | Intimidating Presence | A terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- |
-| Orc | 1 | Savage Attacks | Your critical hits are Brutal 1. | -- |
+| Orc | 1 | Savage Attacks | Your Critical hits are Brutal 1. | -- |
 | Orc | 1 | War Cry | +1 to Demoralize checks. | -- |
 | Ox | 1 | Aurochs Might | A gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- |
 | Ox | 1 | Gore Charge | After walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- |
