@@ -27,6 +27,13 @@ def _face(race, pid):
     return asset_url(art_files.portrait_path(race, pid))
 
 
+def _names_line(names):
+    line = names[0] if names else ""
+    for n in names[1:]:
+        line = i18n.t("report_session.names_and", first=line, second=n)
+    return line
+
+
 def _foe_status(c):
     if c.captured:
         return "bound"
@@ -293,8 +300,8 @@ class ReportSession(Session):
             at = "done" if n < self.at_stage else "now" if n == self.at_stage else "later"
             faces = []
             if kind == "memorial":
-                title, line = i18n.t("report_session.fallen"), " and ".join(m.name for m in o.memorials)
-                line += ", seen" if at == "done" else ""
+                line = _names_line([m.name for m in o.memorials])
+                title, line = i18n.t("report_session.fallen"), i18n.t("report_session.memorial_seen", names=line) if at == "done" else line
             elif kind == "report":
                 title, line = i18n.t("report_session.report"), i18n.t("report_session.this_page") if at == "now" else i18n.t("report_session.who_stood_who_fell")
             elif kind == "level":
@@ -340,7 +347,7 @@ class ReportSession(Session):
             before, after = r.xp_before, r.xp_before + r.xp_gain
             into, span = progression.to_next(curve, after)
             was_into, was_span = progression.to_next(curve, before)
-            rows.append({"name": r.name, "race": r.race, "portrait": _face(r.race, r.portrait_id), "status": r.status,
+            rows.append({"name": r.name, "race": i18n.name("race", r.race), "portrait": _face(r.race, r.portrait_id), "status": r.status,
                          "downed": list(r.downed), "xp_gain": r.xp_gain, "magic_gain": r.magic_gain,
                          "level_before": curve.level(before), "level": curve.level(after),
                          "into": into, "span": span, "bar": into / span if span else 1.0,

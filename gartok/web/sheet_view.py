@@ -56,7 +56,7 @@ def bio(u):
 def _record(s, u):
     who = s._recruited_by(u)
     out = [i18n.t("sheet_view.recruited_by", who=who) if who else i18n.t("sheet_view.founding_member_of_guild"),
-           s._sponsor_line(u).replace(" -- ", ": ") + "."]
+           s._sponsor_line(u) + "."]
     if getattr(u, "arena_title", False):
         out.append(i18n.t("sheet_view.holds_title_champion_of_pit"))
     text = bio(u)
@@ -125,7 +125,7 @@ def animal_sheet(a, guild):
         "sub": i18n.t("sheet_view.animal", size=i18n.name("size", a.size)), "band": grp.display_name if grp else None, "gid": grp.gid if grp else None,
         "where": node_label(grp.node) if grp else i18n.lab("Camp"),
         "hp": [max(0, a.hp), a.hp_max],
-        "attrs": [{"k": k, "v": a.attributes[n], "mod": data.mod(a.attributes[n]), "low": False}
+        "attrs": [{"k": i18n.lab(k), "v": a.attributes[n], "mod": data.mod(a.attributes[n]), "low": False}
                   for k, n in ATTRIBUTE_LABELS],
         "speed": f"{a.speed:g} m",
         "ability": [a.ability.name, a.ability.effect] if a.race["ability"] else None,

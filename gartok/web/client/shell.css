@@ -162,7 +162,14 @@ body:not(.ready) #tut-badge {
   display: flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap;
   text-transform: uppercase
+}
+
+.kicker em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis
 }
 
 .kicker:after {
@@ -295,8 +302,8 @@ body:not(.ready) #tut-badge {
 
 .seal b {
   display: block;
-  font: 700 15px/1 Cinzel, serif;
-  letter-spacing: .16em;
+  font: 700 14px/1 Cinzel, serif;
+  letter-spacing: .1em;
   color: #fff3ea;
   margin-top: 6px;
   text-shadow: 0 1px 0 #3a0c06;
@@ -1054,3 +1061,5 @@ body:not(.ready) #tut-badge {
 [data-sheet] {
   cursor: zoom-in
 }
+/* balanced lines: a heading that must wrap breaks into even halves, not one word on its own line */
+h1,h2,h3,.cap{text-wrap:balance}

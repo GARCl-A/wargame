@@ -33,6 +33,7 @@ async function api(path, body) {
   try {
     res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
     data = await res.json();
+    if (res.ok) await preload(data);
   } finally { pending--; }
   Tutorial.sync(res.headers.get("X-Tutorial"));
   if (!res.ok) {
@@ -288,6 +289,18 @@ function pictures(root) {
   const imgs = [...root.querySelectorAll("img")].filter(i => !i.complete).map(i => i.decode().catch(() => {}));
   urls.forEach(u => warmed.add(u));
   return [...imgs, ...[...urls].map(u => Object.assign(new Image(), {src: u}).decode().catch(() => {}))];
+}
+
+// the portraits and icons an answer names, decoded before the screen that draws them swaps in: on a slow machine
+// a stage that brings new faces would otherwise paint them empty first (a cap keeps a dead file from holding the answer)
+function preload(data, cap = 2500) {
+  const urls = new Set();
+  (function walk(v) {
+    if (typeof v === "string") { if (/^\/assets\/(portraits|icons)\//.test(v) && !warmed.has(v)) urls.add(v); }
+    else if (v && typeof v === "object") Object.values(v).forEach(walk);
+  })(data);
+  urls.forEach(u => warmed.add(u));
+  return Promise.race([sleep(cap), Promise.all([...urls].map(u => Object.assign(new Image(), {src: u}).decode().catch(() => {})))]);
 }
 
 // waits until a round finds nothing left to wait for; `cap` keeps a screen that never goes quiet (or a

@@ -7,8 +7,8 @@
         "button": "Begin",
         "body": [
           "Gartok is a familiar medieval-fantasy world: many races, magic, ruins, nobles with gold to spend.",
-          "The economy has tipped. Delving into ruins, catacombs and wild forests for creatures, artefacts and magic items pays far better than honest work -- so everyone who can hold a weapon is out there, risking their neck.",
-          "Adventurers band together in guilds, and the big ones grow into something closer to companies: armed, skilled, ruling whole forests as territory. You are founding one, with a little coin and three recruits -- picked next."
+          "The economy has tipped. Delving into ruins, catacombs and wild forests for creatures, artefacts and magic items pays far better than honest work, so everyone who can hold a weapon is out there, risking their neck.",
+          "Adventurers band together in guilds, and the big ones grow into something closer to companies: armed, skilled, ruling whole forests as territory. You are founding one, with a little coin and three recruits, picked next."
         ]
       },
       "vocation": {
@@ -47,7 +47,7 @@
       "button": "See your objectives",
       "body": [
         "Each card on the left is one group of your people. Select a group, then click a place on the map to send it there; the panel on the right lists what it can do where it stands.",
-        "There is no turn button: once every group has an order the clock runs by itself, and stops when a group needs you. Everyone eats one food a day -- watch the RATIONS line.",
+        "There is no turn button: once every group has an order the clock runs by itself, and stops when a group needs you. Everyone eats one food a day, so watch the RATIONS line.",
         "Everything that happens is written in THE LOG at the bottom right, newest last, with what is due next below it. Click its title to search it by word, kind or band.",
         "Not sure what to do first? Your objectives are on the next screen."
       ]
@@ -65,7 +65,7 @@
       "overview": {
         "title": "How far the guild reaches",
         "body": [
-          "Every group takes one slot. Fame -- your reputation with every faction, added up -- opens more. Deeds raise it; nothing lowers it.",
+          "Every group takes one slot. Fame, your reputation with every faction added up, opens more. Deeds raise it; nothing lowers it.",
           "A group bigger than its leader can hold starts to fray: each day its weakest member may walk. With a free slot they strike out alone; without one they give 7 days' notice, then leave."
         ]
       },
@@ -73,7 +73,7 @@
         "title": "What you're playing for",
         "body": [
           "There is no score and no fight you must win. The objectives at the top are small tasks that show you what the guild can do; take them in any order.",
-          "Below them, each faction lists its deeds. Reputation only moves when you pull one off -- a one-shot achievement, not a grind -- and it unlocks what the card lists. The Pits and the Bankers are open from day one; the others appear once you walk into their places."
+          "Below them, each faction lists its deeds. Reputation only moves when you pull one off (a one-shot achievement, not a grind) and it unlocks what the card lists. The Pits and the Bankers are open from day one; the others appear once you walk into their places."
         ]
       },
       "band_routine": {
@@ -179,7 +179,7 @@
     "level": {
       "title": "Spending picks",
       "body": [
-        "Each XP track -- combat, work, magic and racial -- has its own talent tree. A lit node means a pick is waiting there: click it to take it.",
+        "Each XP track (combat, work, magic and racial) has its own talent tree. A lit node means a pick is waiting there: click it to take it.",
         "Combat XP comes from downing foes at or above your level, magic XP from doing it with magic, work XP from hours worked at a job you haven't outgrown. Racial levels come from the sum of the others."
       ]
     },
@@ -222,7 +222,7 @@
       "body": [
         "Only recipes someone in the party knows appear. Starting one consumes the materials from every pack in the group, wagons and animals included (never a padlocked item); then each hour rolls d20 + INT toward the batch. A named tool (a Chisel, say) is not consumed, but some pack must hold it.",
         "WORK makes the whole group wait out the hours. ALONE splits the crafter off into a group of their own (it takes a free slot, and only their pack feeds the craft); merge them back by hand.",
-        "Everyone can cook -- Jerky, Roast Meat, Fruit Compote -- at a fire: a field campfire (Flint and Steel, 1 Lumber and 1 Coal, from the map), the Claim's, or the house oven. Jerky keeps 20 days; Meat only 2."
+        "Everyone can cook (Jerky, Roast Meat, Fruit Compote) at a fire: a field campfire (Flint and Steel, 1 Lumber and 1 Coal, from the map), the Claim's, or the house oven. Jerky keeps 20 days; Meat only 2."
       ]
     },
     "initiation": {
@@ -237,7 +237,7 @@
       "title": "The Medic",
       "body": [
         "Pick the patients. The price is the potions, First Aid Kit charges and Antidotes the cure would use, at 70% of the shop price; everyone picked leaves at full HP, cured and unpoisoned. The group pays from its packs, richest first.",
-        "The whole group waits out the longest treatment: an hour for wounds, eight for sickness, longer for poison. A treatment over a day is a hospital stay: pick that patient alone and Admit them -- they split off until it ends (or the group waits, with no free slot); merge them back by hand."
+        "The whole group waits out the longest treatment: an hour for wounds, eight for sickness, longer for poison. A treatment over a day is a hospital stay: pick that patient alone and Admit them. They split off until it ends (or the group waits, with no free slot); merge them back by hand."
       ]
     },
     "property": {
@@ -253,7 +253,7 @@
       "body": [
         "Each bay ($690) keeps one wagon and one animal safe at the house. Park what the group doesn't need on the road; a parked wagon keeps its cargo.",
         "Garaged animals eat from the house stash and the parked cargo, and don't count against the herd limit; with no food they starve. Lose the house and you lose the garage.",
-        "The Claim has one too, unlimited, once its garrison opens -- safe only while someone stands guard."
+        "The Claim has one too, unlimited, once its garrison opens. It is safe only while someone stands guard."
       ]
     },
     "watch": {
@@ -266,7 +266,7 @@
     "claim": {
       "title": "Claiming the wilds",
       "body": [
-        "Six stages: scout the land (2 h), clear the creatures there (a fight), fence it (10 Lumber, 8 h), sweep a nearby camp (a fight), then hold it with a garrison for 10 days -- each day a 20% chance of a raid.",
+        "Six stages: scout the land (2 h), clear the creatures there (a fight), fence it (10 Lumber, 8 h), sweep a nearby camp (a fight), then hold it with a garrison for 10 days, with a 20% chance of a raid each day.",
         "Once the garrison holds, the Gathering tab puts it to work: Lumber and Fruit, with no licence to buy, only an Axe. A shift does not leave the post. Raids still come.",
         "A campfire (1 Lumber, 1 h, a Wisdom check) cooks while someone is garrisoned; an oven (15 Stone Brick from the Mine, 8 h) cooks for good. Once the garrison opens, the Claim has a garage too."
       ]
@@ -275,7 +275,7 @@
       "title": "The guard has caught up",
       "body": [
         "The City guard has caught members with a rap sheet. You choose for the whole group, and pick who speaks.",
-        "Surrender and serve the time, fight the patrol (lethal), or run -- which can get you caught again or ambushed. A bluff or a bribe lets you go but the rap sheet stays; a failed bluff lets the patrol strike first."
+        "Surrender and serve the time, fight the patrol (lethal), or run, which can get you caught again or ambushed. A bluff or a bribe lets you go but the rap sheet stays; a failed bluff lets the patrol strike first."
       ]
     },
     "dialogue": {
@@ -1328,7 +1328,6 @@
       "note_held": "{note} · {n} held",
       "racial_level": "racial level {level} · HP {hp}/{max}",
       "four": "The four tracks",
-      "four_note": "a level, a pick",
       "can": "Can take now",
       "can_n": "{n} open",
       "can_row": "{track} · tier {tier}",
@@ -1360,8 +1359,8 @@
       "held": "held",
       "map": "The map",
       "branch": "The branch",
-      "no_gifts": "— no gifts written for the {race} yet —",
-      "waits_school": "— waits for a school —<small>a school opens with initiation at its sanctuary</small>",
+      "no_gifts": "no gifts written for the {race} yet",
+      "waits_school": "waits for a school<small>a school opens with initiation at its sanctuary</small>",
       "lg_held": "held",
       "lg_open": "can take",
       "lg_waiting": "needs a pick",
@@ -1373,7 +1372,7 @@
       "around": "Around {name}",
       "around_note": "needs above · opens below",
       "in_hand": "The talent in hand",
-      "in_hand_note": "click a talent to read it",
+      "in_hand_note": "click to read",
       "changes": "What it changes",
       "mod_move": "mod {a} → {b}",
       "mod_flat": "mod {b}",
@@ -1850,7 +1849,7 @@
       "morale": "Morale",
       "speed": "Speed",
       "pick_up_note": "Pick up lifts what your hands can hold.",
-      "assess": "{read} — Assess to read more.",
+      "assess": "{read} · Assess to read more.",
       "out_of_sight": "The fight goes on out of sight…",
       "hit_points": "Hit points",
       "lv": "LV",
@@ -1870,10 +1869,10 @@
       "hint_trap": "{name} sets a trap: click a marked cell, or Skip traps.",
       "hint_talk": "A patrol challenges the squad.",
       "hint_other": "The other side is moving…",
-      "hint_aim_cell": "{name}: click a marked cell — Esc to cancel.",
-      "hint_aim_target": "{name}: click a marked target — Esc to cancel.",
-      "hint_mopping": "Enemies down — stabilize the downed, or Space to let the counter run.",
-      "hint_binding": "Enemies down — Capture a fallen foe, or Space to let the round run out.",
+      "hint_aim_cell": "{name}: click a marked cell · Esc to cancel.",
+      "hint_aim_target": "{name}: click a marked target · Esc to cancel.",
+      "hint_mopping": "Enemies down. Stabilize the downed, or Space to let the counter run.",
+      "hint_binding": "Enemies down. Capture a fallen foe, or Space to let the round run out.",
       "hint_ctf": "Carry their flag home to win, and guard your own.",
       "hint_flee": "At the edge of the field: you can Flee.",
       "hint_cannot_move": "Cannot move: {why}.",
@@ -1898,7 +1897,7 @@
       "two_players": "Two players",
       "fight": "Fight",
       "strike": "Strike",
-      "pile_who": "{name} — who",
+      "pile_who": "{name}: who",
       "st_dying": "dying · {n}",
       "st_stable": "down · stable",
       "st_broken": "broken",
@@ -1906,7 +1905,7 @@
       "why_ally": "ally",
       "why_not_target": "not a target",
       "why_not_downed": "not downed",
-      "pick_which": "Pick up — which",
+      "pick_which": "Pick up: which",
       "draw_which": "Draw which?",
       "draw_after": "After this",
       "hand_weapon": "Weapon hand",
@@ -2007,6 +2006,19 @@
       }
     },
     "lab": {
+      "travelling": "travelling",
+      "gather": "gather",
+      "search": "search",
+      "work": "work",
+      "rest": "rest",
+      "wait": "wait",
+      "hunt": "hunt",
+      "market": "market",
+      "bank": "bank",
+      "recruit": "recruit",
+      "prison": "prison",
+      "craft": "craft",
+      "garrison": "garrison",
       "steel": "steel",
       "teal": "teal",
       "forest": "forest",
@@ -2398,9 +2410,9 @@
     "cured": "  {target} is cured of their sickness!",
     "potion": {
       "drinks": "{actor} drinks a {potion}, recovering {heal} HP.",
-      "drinks_up": "{actor} drinks a {potion}, recovering {heal} HP -- back on their feet.",
+      "drinks_up": "{actor} drinks a {potion}, recovering {heal} HP and getting back on their feet.",
       "feeds": "{actor} feeds {target} a {potion}, recovering {heal} HP.",
-      "feeds_up": "{actor} feeds {target} a {potion}, recovering {heal} HP -- back on their feet."
+      "feeds_up": "{actor} feeds {target} a {potion}, recovering {heal} HP and getting them back on their feet."
     },
     "eat_corpse": "{actor} devours {target}'s corpse (hunger reset to 0).",
     "feast": "  Terrifying feast: d20({nat}) {bonus:+} = {total} (AoE Demoralize)",
@@ -2463,9 +2475,9 @@
     },
     "healing_touch": {
       "self": "{actor} casts {spell} on themself, healing {heal} HP.",
-      "self_up": "{actor} casts {spell} on themself, healing {heal} HP -- back on their feet.",
+      "self_up": "{actor} casts {spell} on themself, healing {heal} HP and getting back on their feet.",
       "other": "{actor} casts {spell} on {target}, healing {heal} HP.",
-      "other_up": "{actor} casts {spell} on {target}, healing {heal} HP -- back on their feet."
+      "other_up": "{actor} casts {spell} on {target}, healing {heal} HP and getting them back on their feet."
     },
     "light_globe": {
       "casts": "{actor} casts {spell}."
@@ -2477,7 +2489,7 @@
       "casts": "{actor} casts {spell} and fades from sight."
     },
     "raise_dead": {
-      "rises": "The earth stirs at {cell} -- {body} rises again!"
+      "rises": "The earth stirs at {cell}: {body} rises again!"
     },
     "share_magic": {
       "alone": "{actor} tries to share magic, but no allies are nearby!",
@@ -2490,16 +2502,16 @@
     "fire": "{unit} is in the flames! ({dice})",
     "moves": "{unit} moves (1 action point).",
     "free_step": "{unit} takes a free step.",
-    "bumps": "{unit} bumps into something unseen -- {lurker} is there!",
+    "bumps": "{unit} bumps into something unseen, and {lurker} is there!",
     "ungrappled": "  {unit} is no longer grappled.",
-    "mopup_stabilize": "Enemies down -- stabilize the downed allies before the fight ends.",
-    "mopup_bind": "Enemies down -- one round to bind the fallen before the fight ends.",
+    "mopup_stabilize": "Enemies down. Stabilize the downed allies before the fight ends.",
+    "mopup_bind": "Enemies down. One round to bind the fallen before the fight ends.",
     "aftermath": {
       "stable": "{unit} was stabilized and survived unconscious.",
       "broken": "{unit} was recovered broken."
     },
     "fall": {
-      "water": "{unit} plunges into deep water -- the water breaks the fall.",
+      "water": "{unit} plunges into deep water, and the water breaks the fall.",
       "feet": "{unit} falls {n} levels and lands on their feet.",
       "hurt": "{unit} falls {n} levels -> {dmg} damage ({dice}d6)."
     },
@@ -2545,7 +2557,7 @@
       "knocked_out": "  {unit} is knocked out.",
       "broken": "  {unit} stops working: BROKEN (only back up if an ally repairs it).",
       "dying": "  {unit} goes down, dying ({turns} turns to the death save).",
-      "zeroed": "  {unit}'s {attribute} is gone -- collapses.",
+      "zeroed": "  {unit}'s {attribute} is gone: collapses.",
       "knocked_out_fight": "  {unit} is knocked out (non-lethal fight)."
     },
     "flickers": "{unit} flickers into sight!",
@@ -2555,7 +2567,7 @@
     "climb": {
       "up": "up",
       "down": "down",
-      "auto": "{actor} climbs {way} (Climber -- no check).",
+      "auto": "{actor} climbs {way} (Climber, no check).",
       "roll": "{actor} climbs {way}: d20({nat}) {str:+}(STR) = {total} vs DC {dc}",
       "over": "{roll}  -> up and over.",
       "clear": "{roll}  -> down.",
@@ -2599,7 +2611,7 @@
     },
     "held": {
       "last_foe": "The last foe is down.",
-      "ruins": "The last foe is down. The ruins are yours to search -- leave by the entrance."
+      "ruins": "The last foe is down. The ruins are yours to search. Leave by the entrance."
     },
     "morale": {
       "falls": "{unit} loses {amount} morale ({why}): {morale}/{ceiling}.",
@@ -3024,7 +3036,7 @@
       "eases": "The Antidote eases {poison} on {unit} to {n} ({roll})."
     },
     "work": {
-      "below": "{unit}: no work XP -- this job is below work level {n}.",
+      "below": "{unit}: no work XP because this job is below work level {n}.",
       "to_next": "{done}/{span} h to work level {n}",
       "maxed": "work level maxed",
       "banked": "{unit}: +{h} work h ({togo}).",
@@ -3062,8 +3074,8 @@
   },
   "campaign": {
     "claim": {
-      "fail": "The attempt fails -- the claim's stage is unchanged.",
-      "advance": "The Wilds claim advances -- now {stage}."
+      "fail": "The attempt fails and the claim's stage is unchanged.",
+      "advance": "The Wilds claim advances to {stage}."
     },
     "delve": {
       "ruins_empty": "The Ancient Ruins lie silent: nothing is left down there.",
@@ -3120,10 +3132,10 @@
       "level_up": "{name} reached combat level {level}!"
     },
     "arena": {
-      "vacant": "Nobody on your side put the champion down cleanly -- the title stays vacant.",
+      "vacant": "Nobody on your side put the champion down cleanly, so the title stays vacant.",
       "won": "{name} lands the finishing blow and takes the Champion of the Pit.",
       "defended": "{name} turns the challenger away and keeps the title.",
-      "lost": "{name} is beaten -- the Champion of the Pit title is lost."
+      "lost": "{name} is beaten and the Champion of the Pit title is lost."
     },
     "rest": {
       "member": "{name} {hp}/{hp_max} HP",
@@ -3154,7 +3166,7 @@
     "ox": "{who} spent {hours} h on the trail of the ox.",
     "meat": "{who} bring back {kg} kg of meat ({hours} h hunted).",
     "skin": "{name} skins {item} from the hunt.",
-    "empty_hunt": "{who} come back empty-handed ({hours} h hunted -- not enough for a kill).",
+    "empty_hunt": "{who} come back empty-handed ({hours} h hunted, not enough for a kill).",
     "found": {
       "mushroom": "{n} {item}(s)",
       "fruit": "{n} {item}(s)",
@@ -3191,11 +3203,11 @@
       "doing": "mending a wagon"
     },
     "scout": {
-      "done": "the land is scouted -- ready to clear."
+      "done": "the land is scouted and ready to clear."
     },
     "fences": {
       "short": "the fences wait: the Lumber banked for them is short.",
-      "done": "the fences go up -- time to sweep the region."
+      "done": "the fences go up: time to sweep the region."
     }
   },
   "name": {
@@ -3418,6 +3430,17 @@
       "blood_cult": "The Blood Cult",
       "nature_coven": "The Nature Coven",
       "faith_order": "The Faith Order"
+    },
+    "alignment": {
+      "Lawful and Good": "Lawful and Good",
+      "Lawful and Neutral": "Lawful and Neutral",
+      "Lawful and Evil": "Lawful and Evil",
+      "Neutral and Good": "Neutral and Good",
+      "Neutral and Neutral": "Neutral and Neutral",
+      "Neutral and Evil": "Neutral and Evil",
+      "Chaotic and Good": "Chaotic and Good",
+      "Chaotic and Neutral": "Chaotic and Neutral",
+      "Chaotic and Evil": "Chaotic and Evil"
     },
     "alignment_bent": {
       "Lawful and Good": "Lawful Good",
@@ -3871,7 +3894,7 @@
     "goal": "goal: {goal}  ·  {due}{prize}",
     "burned": "  ·  {burned} burned",
     "keeper_takes_it_and_speaks": "the keeper takes it and speaks your name to the school.",
-    "bankers_accept_letter_your_trust": "the Bankers accept the letter -- your trust is earned.",
+    "bankers_accept_letter_your_trust": "the Bankers accept the letter and your trust is earned.",
     "accept_job": "ACCEPT THE JOB",
     "take_task": "TAKE ON THE TASK",
     "accept_trust": "ACCEPT THE TEST OF TRUST",
@@ -3970,7 +3993,7 @@
   },
   "vault": {
     "won_t_fit_s_load": "won't fit {name}'s load.",
-    "won_t_fit_kg_free": "won't fit -- {free:g} kg free on the {lower}.",
+    "won_t_fit_kg_free": "won't fit: {free:g} kg free on the {lower}.",
     "stashed": "stashed {one}.",
     "redistributed_packs_by_carrying_capacity": "redistributed packs by carrying capacity.",
     "party_purse": "party purse",
@@ -3978,10 +4001,10 @@
     "needs_standing_with_bankers": "{fmt_money}  ·  needs {city_property_rep_gate} standing with the Bankers",
     "buy_house": "BUY THE HOUSE",
     "kg_held_in_city": "{fmt_money}  ·  {bank_chest_capacity} kg held in the City",
-    "strongbox_costs_party_has": "the strongbox costs {cost} -- the party has {wealth}.",
-    "rented_strongbox_kg_of_storage": "rented a strongbox -- {capacity} kg of storage at the bank.",
-    "bankers_want_for_house_party": "the Bankers want {cost} for the house -- the party has {wealth}.",
-    "bought_house_in_city_bankers": "bought a house in the City -- the Bankers' tax starts now.",
+    "strongbox_costs_party_has": "the strongbox costs {cost}, but the party has {wealth}.",
+    "rented_strongbox_kg_of_storage": "rented a strongbox with {capacity} kg of storage at the bank.",
+    "bankers_want_for_house_party": "the Bankers want {cost} for the house, but the party has {wealth}.",
+    "bought_house_in_city_bankers": "bought a house in the City, and the Bankers' tax starts now.",
     "minted_gold_coins_for": "minted {n} gold coins for {fmt_money}.",
     "melted_gold_coins_into": "melted {n} gold coins into {fmt_money}.",
     "pay_toward_debt": "PAY TOWARD THE DEBT",
@@ -3989,11 +4012,11 @@
     "buy_oven": "BUY AN OVEN",
     "unlocks_cooking_at_house": "{fmt_money}  ·  unlocks cooking at the house",
     "needs_standing_with_bankers_have": "{fmt_money}  ·  needs {city_property_rep_gate} standing with the Bankers (have {get})",
-    "oven_costs_party_has": "an oven costs {cost} -- the party has {wealth}.",
-    "oven_is_installed_house_can": "the oven is installed -- the house can cook now.",
+    "oven_costs_party_has": "an oven costs {cost}, but the party has {wealth}.",
+    "oven_is_installed_house_can": "the oven is installed, so the house can cook now.",
     "party_has_no_money_to": "the party has no money to pay with.",
     "paid_toward_debt": "paid {fmt_money} toward the debt.",
-    "debt_cleared_bankers_deal_with": "debt cleared -- the Bankers deal with the guild again.",
+    "debt_cleared_bankers_deal_with": "debt cleared, so the Bankers deal with the guild again.",
     "no_tax": "no tax",
     "guard_raids_this_place": "the guard raids this place",
     "missed_more_before_bankers_act": "{missed_payments} missed  ·  {max} more before the Bankers act",
@@ -4002,10 +4025,10 @@
     "owed_to_bankers": "owed to the bankers",
     "label_bank": "the strongbox",
     "closed_bank": "rent a strongbox first.",
-    "no_room_bank": "won't fit -- {free} kg free in the chest.",
+    "no_room_bank": "won't fit: {free} kg free in the chest.",
     "label_house": "the house",
     "closed_house": "buy the house first.",
-    "no_room_house": "won't fit -- {free} kg free at the property.",
+    "no_room_house": "won't fit: {free} kg free at the property.",
     "items": {
       "one": "{n} item",
       "other": "{n} items"
@@ -4035,7 +4058,7 @@
     "cannot_mint": "cannot mint {n} gold coins there"
   },
   "ledger": {
-    "hands_over_sealed_chest_outpost": "{name} hands over the sealed chest -- the outpost gives a letter of receipt in return.",
+    "hands_over_sealed_chest_outpost": "{name} hands over the sealed chest, and the outpost gives a letter of receipt in return.",
     "treefolk_joins_your_group_for": "{name} (Treefolk) joins your group for mentorship.",
     "recruit_steps_into_garrison": "The recruit steps into the garrison. {fmt_money} reward received!",
     "offer_req": "a green Treefolk recruit joins the group  ·  train them to racial level 2, then bring them back  ·  {fmt_money}, and the recruit leaves the guild",
@@ -4355,12 +4378,12 @@
     "redistributed_packs_by_carrying_capacity": "Redistributed packs by carrying capacity.",
     "no_talent_to_pick": "no talent to pick",
     "back_to_hunt": "Back to the hunt",
-    "too_dark_to_read_ground": "Too dark to read the ground -- come back at dawn",
+    "too_dark_to_read_ground": "Too dark to read the ground. Come back at dawn",
     "this_fight_is_not_clean": "this fight is not a clean stomp",
-    "biwolf_s_leather_is_lost": "The Biwolf's leather is lost -- the tanner's job is failed for good.",
-    "biwolf_got_away_he_will": "The Biwolf got away. He will come again to the smell of meat -- and not alone.",
+    "biwolf_s_leather_is_lost": "The Biwolf's leather is lost, and the tanner's job is failed for good.",
+    "biwolf_got_away_he_will": "The Biwolf got away. He will come again to the smell of meat, and not alone.",
     "aurochs_immortal_ox_is_dead": "Aurochs, the immortal ox, is dead.",
-    "hide_is_lost_tanner_s": "The hide is lost -- the tanner's job is failed for good.",
+    "hide_is_lost_tanner_s": "The hide is lost, and the tanner's job is failed for good.",
     "ox_s_trail": "The ox's trail",
     "biwolf": "The Biwolf",
     "ambush_in_wilds": "Ambush in the Wilds",
@@ -4389,7 +4412,7 @@
       "other": "{n} Wisdom checks"
     },
     "one_check_hour_against_dc": "One check an hour against DC {dc}; a found trail opens the field and makes the next DC {next_dc}. The tracks can only be read by daylight.",
-    "too_dark_to_read_ground_2": "Too dark to read the ground -- come back at dawn.",
+    "too_dark_to_read_ground_2": "Too dark to read the ground. Come back at dawn.",
     "trail_is_fresh": "The trail is fresh!",
     "aurochs_is_grazing_somewhere_on": "Aurochs is grazing somewhere on the open fields ahead.",
     "lethal_chase_he_runs_from": "A lethal chase: he runs from anyone near. Pin him in a canyon and bring him down, and every few rounds the herd answers his call.",
@@ -4519,6 +4542,8 @@
     "fallen": "The fallen",
     "report": "The report",
     "this_page": "this page",
+    "names_and": "{first} and {second}",
+    "memorial_seen": "{names}, seen",
     "who_stood_who_fell": "who stood, who fell",
     "reaches_level": "{name} reaches {lower} level {level}",
     "number_rise": {
@@ -4684,8 +4709,8 @@
     "no_tab_here": "no {what} tab here",
     "no_tavern_here": "no tavern here",
     "bankers_want_nothing_of_house": "the Bankers want nothing of the house now",
-    "property_is_returned_to_bankers": "The property is returned to the Bankers -- the guild now owes {fmt_money}.",
-    "guild_keeps_house_without_paying": "The guild keeps the house without paying -- the guard won't like that.",
+    "property_is_returned_to_bankers": "The property is returned to the Bankers, and the guild now owes {fmt_money}.",
+    "guild_keeps_house_without_paying": "The guild keeps the house without paying. The guard won't like that.",
     "no_such_answer": "no such answer: {choice}",
     "no_workbench_here": "no workbench here",
     "no_h_shift": "no {hours} h shift",
@@ -4811,6 +4836,7 @@
     "only": "{join} only",
     "hit_die_d": "Hit Die d{b}",
     "speed_m": "Speed {b:g} m",
+    "speaks": "Speaks {languages}",
     "drops": "Drops: {value}",
     "no_chapter_called": "no chapter called {tab}",
     "no_entry_called": "no entry called {ref}",
@@ -4843,11 +4869,11 @@
     "pulls": "pulls {lower}",
     "no_tack": "no tack",
     "carries_up_to_kg_on": "carries up to {capacity:g} kg on its back",
-    "hitched_to": " -- hitched to the {lower}",
-    "not_hitched": " -- not hitched",
+    "hitched_to": " (hitched to the {lower})",
+    "not_hitched": " (not hitched)",
     "pulls_up_to_kg": "pulls up to {pull:g} kg{hitched}",
     "idle_pack_saddle_lets_it": "idle: a Pack Saddle lets it carry {back_load:g} kg, a Harness lets it pull {draw:g} kg",
-    "hungry_day_s_starves_at": "hungry {unfed_days} day(s) -- starves at {starve_days}",
+    "hungry_day_s_starves_at": "hungry {unfed_days} day(s), starves at {starve_days}",
     "kg": "{load:g} / {most:g} kg",
     "attack_modifier_d_against_target": "Attack modifier {bab} ({src}): d20 {bonus} against the target's armor class",
     "weapon_dice_plus_strength_on": "{w}: weapon dice plus strength on a hit",
@@ -4858,7 +4884,7 @@
     "spd": "  -{speed_penalty} SPD",
     "more_may_join_on_their": "{value} more may join on their word",
     "none_left": "none left",
-    "sponsored_recruits_of": "Sponsored recruits: {used} of {cap} -- {left}",
+    "sponsored_recruits_of": "Sponsored recruits: {used} of {cap}: {left}",
     "group": "the group",
     "guild_leader_2": "Guild leader",
     "adds_cha_bonus_to_taverna": "Adds a CHA bonus to taverna recruitment",
@@ -4868,7 +4894,7 @@
     "make_guild_leader": "MAKE GUILD LEADER",
     "make_this_member_lead_whole": "Make this member lead the whole guild",
     "group_leader_2": "Group leader",
-    "leads_holds_up_to_members": "Leads {band} -- holds up to {cap} members",
+    "leads_holds_up_to_members": "Leads {band}: holds up to {cap} members",
     "group_size_capacity_is_cha": "Group size capacity is 3 + CHA modifier + half racial level",
     "would_hold_up_to_members": "Would hold up to {cap} members",
     "make_group_leader": "MAKE GROUP LEADER",
@@ -4909,7 +4935,7 @@
     "boarding_at_sanctuary_daily_progress": "Boarding at the sanctuary: daily progress toward initiation.",
     "rolls_d_int_per_day_2": "Rolls 1d20 + INT per day while boarding. {done}/{total} {unit_word}.",
     "notice_leaves_guild_in": "NOTICE: {name} leaves the guild in {days}",
-    "has_given_notice_and_leaves": "{name} has given notice and leaves the guild in {days} -- ",
+    "has_given_notice_and_leaves": "{name} has given notice and leaves the guild in {days}. ",
     "is_over_capacity_with_no": "{display_name} is over capacity with no free slot.",
     "is_over_capacity_and_guild": "{display_name} is over capacity and the guild has no free slot: ",
     "its_weakest_member_may_give": "its weakest member may give notice any day.",
@@ -4952,7 +4978,7 @@
         "tip": "Members and animals that are hungry, or have a level-up waiting"
       }
     },
-    "fight_due_tip": "A fight is about to start -- this group can't change until it is over"
+    "fight_due_tip": "A fight is about to start. This group can't change until it is over"
   },
   "wildfire": {
     "great_focus": "The Great Focus",
@@ -4962,7 +4988,7 @@
     "stone_walls_in_clearing_that": "Stone walls in a clearing that stopped burning. The Ogre built it right, and keeps his goblins to the axe now. Their forge beats out weapons sized for bodies like his.",
     "big_walls_big_axes_little": "Big walls, big axes. Little people pay double. Joke! ...Mostly.",
     "black_stumps_for_mile_round": "Black stumps for a mile round a finished keep. The Ogre's goblins range the Wilds from it.",
-    "fire_took_clearing_back_to": "{display_name}: the fire took the clearing -- back to The Wilds.",
+    "fire_took_clearing_back_to": "{display_name}: the fire took the clearing; back to The Wilds.",
     "clearing_ahead_is_gone_march": "{display_name}: the clearing ahead is gone; the march stops.",
     "burned_through_stretch_of_wilds": "{name} burned through a stretch of the Wilds.",
     "fire_jumps_on_is_burning": "The fire jumps on: {name} is burning.",
@@ -4975,7 +5001,7 @@
     "gets_hearing_from_now_show": "{name} gets a hearing from {who} ({roll}). Now show them how.",
     "shows_how_it_is_done": "{name} shows {who} how it is done ({roll}). ",
     "ogre_builds_it_right_without": "The Ogre builds it right, without the fire. ",
-    "goblins_smother_fire_and_keep": "The goblins smother the fire and keep the lesson -- word will reach the Ogre.",
+    "goblins_smother_fire_and_keep": "The goblins smother the fire and keep the lesson, and word will reach the Ogre.",
     "d_int_vs_dc": "d20({nat}) {mod_intelligence:+}(INT) = {total} vs DC {put_out_dc}",
     "leads_work_but_fire_is": "{name} leads the work, but the fire is not out ({roll}). It can be tried again.",
     "leads_work_and_is_out": "{name} leads the work and {other} is out ({roll}). The clearing is saved.",
@@ -5053,7 +5079,7 @@
   },
   "routines": {
     "is_busy": "{display_name} is busy",
-    "routine_stopped": "{display_name}: routine stopped -- {reason}.",
+    "routine_stopped": "{display_name}: routine stopped ({reason}).",
     "routine_finished": "{display_name}: routine finished.",
     "too_many_blocks_in_no": "too many blocks in no time",
     "nothing_to_gather_here": "nothing to gather here",
@@ -5119,6 +5145,7 @@
     },
     "day_to_day": "DAY {joined_day} TO DAY {day}",
     "starved_to_death": "Starved to death",
+    "killed_in_combat": "Killed in combat",
     "day_without_meal": {
       "one": "{n} day without a meal.",
       "other": "{n} days without a meal."
@@ -5149,9 +5176,9 @@
     "nobody_here_has_instrument_to": "Nobody here has an instrument to play.",
     "tavern_stage_played_h": "Tavern stage: played {hours} h ({tips}).",
     "unknown_recipe": "Unknown recipe {recipe}.",
-    "can_t_craft_needs": "{name} can't craft {target} -- needs a {join}.",
-    "can_t_craft_missing_materials": "{name} can't craft {target} -- missing materials.",
-    "out_of_materials_after_h": " -- out of materials after {worked}h",
+    "can_t_craft_needs": "{name} can't craft {target}: needs a {join}.",
+    "can_t_craft_missing_materials": "{name} can't craft {target}: missing materials.",
+    "out_of_materials_after_h": " (out of materials after {worked}h)",
     "finished_crafting": "{name} finished crafting: {target}{value}!{more}",
     "worked_on_for_h_progress": "{name} worked on {target} for {worked}h (+{progress_total} progress)."
   },
@@ -5162,7 +5189,7 @@
     "games_brawl": "Games: Brawl",
     "games_capture_flag": "Games: Capture the Flag",
     "games_ribbit_brothers": "Games: The Ribbit Brothers",
-    "never_answered_challenge_champion_of": "{name} never answered the challenge -- the Champion of the Pit title is forfeit.",
+    "never_answered_challenge_champion_of": "{name} never answered the challenge, so the Champion of the Pit title is forfeit.",
     "lv_lackeys_lv": "Lv {value} + Lackeys (Lv 0)",
     "lv": "Lv {value}",
     "bosses_lackeys_lv": "Bosses + Lackeys (Lv {level})",
@@ -5178,12 +5205,12 @@
     "starved_to_death": "{name} starved to death.",
     "needs_no_repair": "the {name} needs no repair.",
     "it_takes_to_mend": "it takes {cost} {repair_item} to mend the {name}.",
-    "fails_to_mend_vs_dc": "{name} fails to mend the {item} ({total} vs DC {repair_dc}) -- the {repair_item} is wasted.",
+    "fails_to_mend_vs_dc": "{name} fails to mend the {item} ({total} vs DC {repair_dc}) and the {repair_item} is wasted.",
     "mends_hp": "{name} mends the {item}: +{gained} HP ({hp}/{hp_max}).",
-    "studies_are_over_rooms_released": "{name}: studies are over -- rooms released.",
-    "no_one_can_pay_for": "{name}: no one can pay for another night -- rooms released.",
+    "studies_are_over_rooms_released": "{name}: studies are over, rooms released.",
+    "no_one_can_pay_for": "{name}: no one can pay for another night, rooms released.",
     "bankers_collect_in_property_tax": "The Bankers collect {fmt_money} in property tax.",
-    "guild_can_t_cover_property": "The guild can't cover the property tax -- the Bankers note it.",
+    "guild_can_t_cover_property": "The guild can't cover the property tax, and the Bankers note it.",
     "s_unpaid_debt_to_bankers": "{name}'s unpaid debt to the Bankers reaches the guard's ears."
   },
   "guild_rules": {
@@ -5191,7 +5218,7 @@
     "no_free_guild_leader_change": "no free guild leader change left",
     "split_needs_non_empty_proper": "split needs a non-empty, proper subset of the group",
     "can_t_split_group_with": "can't split a group with an order in flight",
-    "no_free_group_slot_guild": "no free group slot -- the guild is not famous enough to run another",
+    "no_free_group_slot_guild": "no free group slot: the guild is not famous enough to run another",
     "herd_would_outgrow_what_can": "the herd would outgrow what {name} can control ({herd_capacity})",
     "can_only_merge_groups_standing": "can only merge groups standing on the same node",
     "can_t_merge_group_with": "can't merge a group with an order in flight"
@@ -5209,12 +5236,12 @@
   "guild_claim": {
     "claim_already_has_oven": "the claim already has an oven.",
     "oven_needs_group_carries": "the oven needs {claim_oven_bricks} {claim_oven_brick}; the group carries {have}.",
-    "oven_is_built_claim_can": "the oven is built -- the claim can cook, fire or no fire.",
+    "oven_is_built_claim_can": "the oven is built, so the claim can cook, fire or no fire.",
     "nobody_has_to_burn": "nobody has {campfire_fuel} to burn.",
-    "fire_catches_claim_has_hearth": "the fire catches -- the claim has a hearth now.",
-    "wood_won_t_catch_fuel": "the wood won't catch -- the fuel is wasted.",
-    "wilds_claim_sits_unguarded_sustaining": "The Wilds claim sits unguarded -- sustaining it starts over.",
-    "wilds_claim_is_established_land": "The Wilds claim is ESTABLISHED -- the land is the guild's."
+    "fire_catches_claim_has_hearth": "the fire catches and the claim has a hearth now.",
+    "wood_won_t_catch_fuel": "the wood won't catch and the fuel is wasted.",
+    "wilds_claim_sits_unguarded_sustaining": "The Wilds claim sits unguarded, so sustaining it starts over.",
+    "wilds_claim_is_established_land": "The Wilds claim is ESTABLISHED. The land is the guild's."
   },
   "ox": {
     "squad": "The squad",
@@ -5235,13 +5262,13 @@
     "searches_for_hours_and_finds": "{who} searches for {search_hours} hours and finds no den (d20({nat}) {wis:+}(WIS) = {total} vs DC {search_dc})."
   },
   "necromancer": {
-    "falls_and_every_dead_thing": "{name} falls -- and every dead thing he raised falls with him.",
+    "falls_and_every_dead_thing": "{name} falls, and every dead thing he raised falls with him.",
     "necromancer_is_down_squad_may": "The necromancer is down. The squad may withdraw, or fight on for the field."
   },
   "ox_fields": {
     "right_here": "right here",
     "hooves_drum_somewhere_to": "Hooves drum somewhere to the {direction_name}.",
-    "aurochs_bellows_answering_call_rolls": "Aurochs bellows -- an answering call rolls across the fields, and an ox charges in!"
+    "aurochs_bellows_answering_call_rolls": "Aurochs bellows, an answering call rolls across the fields, and an ox charges in!"
   },
   "guild_log": {
     "guild": "The Guild",
@@ -5253,16 +5280,16 @@
     "step_buy_axe_at_smithy": "Step 1/3: buy an Axe at the Smithy.",
     "step_work_shifts_at_lumber": "Step 0/3: work shifts at the Lumber Yard to reach Work Lv 1.",
     "guild_objectives": "Guild Objectives",
-    "small_tasks_that_show_what": "Small tasks that show what the guild can do, in any order. No coins or fame -- just a guide.",
+    "small_tasks_that_show_what": "Small tasks that show what the guild can do, in any order. No coins or fame, just a guide.",
     "done": "done",
     "section": "Objectives"
   },
   "map_view": {
     "ambushed_enem_block_path": {
-      "one": "ambushed -- {n} enemy block the path",
-      "other": "ambushed -- {n} enemies block the path"
+      "one": "ambushed: {n} enemy blocks the path",
+      "other": "ambushed: {n} enemies block the path"
     },
-    "routine_stopped": "routine stopped -- {paused}",
+    "routine_stopped": "routine stopped: {paused}",
     "supply_run_h": "supply run → {name} ({value:.1f} h)",
     "via_h": "→ {dest_name} via {name} ({remaining:g} h)",
     "resting_left": "resting ({format_hours} left)",
@@ -5287,18 +5314,18 @@
     "no_gathering_licence": "no gathering licence",
     "strongbox_kg": "strongbox: {load:g} / {capacity} kg",
     "bankers_want_house_back_or": "the Bankers want the house back, or the tax paid",
-    "squatting_guard_can_still_come": "squatting -- the guard can still come to clear it out",
+    "squatting_guard_can_still_come": "squatting: the guard can still come to clear it out",
     "house_kg": "house: {load:g} / {city_property_capacity} kg",
     "owes_bankers": "owes the Bankers {fmt_money}",
-    "seized_send_group_to_retake": "SEIZED -- send a group to retake it",
-    "established_guild_s_own_ground": "established -- the guild's own ground",
+    "seized_send_group_to_retake": "SEIZED: send a group to retake it",
+    "established_guild_s_own_ground": "established: the guild's own ground",
     "sustaining_day_s_left": "sustaining: {wilds_claim_sustain_days_left} day(s) left",
-    "unclaimed_scout_it_to_begin": "unclaimed -- scout it to begin",
+    "unclaimed_scout_it_to_begin": "unclaimed: scout it to begin",
     "stage": "stage: {title}",
     "ambushed_on_road": "Ambushed on the road!",
     "enem_block_path_there_is": {
-      "one": "{n} enemy block the path -- there is no escaping this fight.",
-      "other": "{n} enemies block the path -- there is no escaping this fight."
+      "one": "{n} enemy blocks the path. There is no escaping this fight.",
+      "other": "{n} enemies block the path. There is no escaping this fight."
     },
     "busy": "Busy: {order_status}",
     "stop_resting": "STOP RESTING",
@@ -5310,7 +5337,7 @@
     "continue_routine": "CONTINUE ROUTINE",
     "defend_your_title": "DEFEND YOUR TITLE",
     "bet_at_arena": "BET AT THE ARENA",
-    "v_for_champion_of_pit": "1v1 for the Champion of the Pit -- no stake, no backup",
+    "v_for_champion_of_pit": "1v1 for the Champion of the Pit: no stake, no backup",
     "non_lethal_stake_money_win": "non-lethal · stake money, win the purse",
     "lethal_combat_loot_bodies": "lethal combat · loot the bodies",
     "trail_is_cold_only_tanner": "The trail is cold. Only the tanner's job brings you back here.",
@@ -5336,7 +5363,7 @@
   "band_kit": {
     "has_no_animal_hitched_to": "the {lower} has no animal hitched to pull it.",
     "wears_no_pack_saddle": "the {species} wears no pack saddle.",
-    "won_t_fit_kg_free": "won't fit -- {free:g} kg free on the {lower}.",
+    "won_t_fit_kg_free": "won't fit: {free:g} kg free on the {lower}.",
     "already_pulls": "the {species} already pulls the {lower}.",
     "now_pulls": "the {species} now pulls the {lower}.",
     "needs_harness_to_pull_anything": "the {species} needs a Harness to pull anything.",
@@ -5355,9 +5382,9 @@
     "stop_studying": "stop studying",
     "open_chest": "OPEN THE CHEST",
     "to": "to {name}",
-    "can_t_pick_lock_chest": "{name} can't pick the lock -- the chest is still there.",
-    "breaks_bankers_seal_spill_out": "{name} breaks the Bankers' seal -- {gems} {gem_item} spill out, but the trust mission is ruined. Crime: {crime}.",
-    "picks_lock_inside": "{name} picks the lock -- {gems} {gem_item} inside.",
+    "can_t_pick_lock_chest": "{name} can't pick the lock, so the chest is still there.",
+    "breaks_bankers_seal_spill_out": "{name} breaks the Bankers' seal and {gems} {gem_item} spill out, but the trust mission is ruined. Crime: {crime}.",
+    "picks_lock_inside": "{name} picks the lock: {gems} {gem_item} inside.",
     "is_already_at_full_health": "{name} is already at full health.",
     "drinks_minor_healing_potion_recovering": "{name} drinks a Minor Healing Potion, recovering {heal} HP.",
     "drop": "Drop",
@@ -5436,18 +5463,18 @@
   },
   "stables": {
     "party_purse": "party purse",
-    "costs_party_has": "{what} costs {cost} -- the party has {wealth}.",
+    "costs_party_has": "{what} costs {cost}, but the party has {wealth}.",
     "can_control_herd_of_at": "{name} can control a herd of {herd_capacity} at most.",
     "joins_group": "a {species} joins the group.",
     "now_wears": "the {species} now wears a {tack}.",
     "unload_first": "unload the {species} first.",
     "sold": "sold the {species}.",
-    "is_yours_harness_animal_to": "the {lower} is yours -- harness an animal to pull it.",
+    "is_yours_harness_animal_to": "the {lower} is yours: harness an animal to pull it.",
     "unload_first_2": "unload the {lower} first.",
     "sold_2": "sold the {lower}."
   },
   "holdings": {
-    "bay_costs_party_has": "a bay costs {cost} -- the party has {wealth}.",
+    "bay_costs_party_has": "a bay costs {cost}, but the party has {wealth}.",
     "new_bay_room_for_one": "a new bay: room for one more wagon and one more animal.",
     "is_parked_in_garage": "the {lower} is parked in the garage.",
     "every_bay_already_holds_wagon": "every bay already holds a wagon.",
@@ -5475,6 +5502,10 @@
   "sheet": {
     "no_arrow_improvised": "{weapon_name} (no arrow -> improvised)",
     "range_arrows": "{size_str}range {weapon}  ·  {ammo} arrows  ·  {hands}",
+    "two_hands": "2 hands",
+    "one_hand": "1 hand",
+    "melee": "melee",
+    "crit_fumble": "crit 20, fumble 1",
     "thrown": "  ·  thrown {weapon}",
     "dying": "dying {death_clock}/{dying_turns}",
     "ac": "{armor_name}  ·  +{a} AC"
@@ -5496,7 +5527,7 @@
     "no_light_of_their_own": "no light of their own (only sees light along the line of sight)"
   },
   "captives": {
-    "is_led_away_in_bonds": "{name} is led away in bonds -- a captive for {captive_days} days (group screen, QUESTS & CAPTIVES).",
+    "is_led_away_in_bonds": "{name} is led away in bonds: a captive for {captive_days} days (group screen, QUESTS & CAPTIVES).",
     "is_set_loose": "{name} is set loose.",
     "dies_in_captivity_keeps_body": "{name} dies in captivity; {captor} keeps the body.",
     "dies_in_captivity": "{name} dies in captivity."
@@ -5505,7 +5536,7 @@
     "deposited_lumber_toward_fences": "deposited {total} Lumber toward the fences.",
     "nobody_here_is_carrying_lumber": "nobody here is carrying Lumber.",
     "nobody_has_to_burn": "nobody has {campfire_fuel} to burn.",
-    "garrison_stands_down_sustaining_claim": "the garrison stands down -- sustaining the claim starts over."
+    "garrison_stands_down_sustaining_claim": "the garrison stands down, so sustaining the claim starts over."
   },
   "draft_rules": {
     "base": "base {base_recruit_capacity}",
@@ -5557,7 +5588,7 @@
     "talent": {
       "strong": "+1 Strength.",
       "sure_strike": "+1 to hit with Strength-based attacks.",
-      "blind_strike": "reduces the attack penalty against obscured or dark targets by 1.",
+      "blind_strike": "Reduces the attack penalty against obscured or dark targets by 1.",
       "heavy_hand": "+1 damage on melee attacks.",
       "wrestler": "+1 to Push and Grab checks.",
       "agile": "+1 Dexterity.",
@@ -5572,32 +5603,32 @@
       "free_step": "Once per turn, step 1 square without spending an action point.",
       "tough": "+1 Constitution.",
       "hardy": "+1 max HP for every Hit Die you have.",
-      "recovery": "heal 1 HP after every fight you survive.",
+      "recovery": "Heal 1 HP after every fight you survive.",
       "bulwark": "+1 AC.",
-      "armor_bearer": "reduces the carried weight of equipped armor by up to 6 kg.",
+      "armor_bearer": "Reduces the carried weight of equipped armor by up to 6 kg.",
       "alert": "+1 Wisdom.",
       "quick_wits": "+2 initiative.",
-      "peripheral_vision": "when off-guard, your AC is only reduced by 1 instead of 2.",
+      "peripheral_vision": "When off-guard, your AC is only reduced by 1 instead of 2.",
       "iron_will": "+2 Mental Defense.",
-      "iron_stance": "using Defend grants +2 Mental Defense in addition to AC until your next turn.",
+      "iron_stance": "Using Defend grants +2 Mental Defense in addition to AC until your next turn.",
       "imposing": "+1 Charisma.",
       "menacing": "+2 to Demoralize checks.",
       "wordless_menace": "Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
-      "gruesome_takedown": "upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language).",
+      "gruesome_takedown": "Upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language).",
       "cull_the_broken": "+2 damage on attacks against demoralized targets.",
-      "inspiring_shout": "upon successfully demoralizing an enemy, the ally with the least morale left gains +1 initiative and takes 1 morale back; when no ally has lost morale, the ally last in the turn order gains +1 initiative.",
-      "dread_voice": "a Demoralize of yours that lands takes 2 morale from the foe instead of 1.",
-      "grim_chorus": "when an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language).",
+      "inspiring_shout": "Upon successfully demoralizing an enemy, the ally with the least morale left gains +1 initiative and takes 1 morale back; when no ally has lost morale, the ally last in the turn order gains +1 initiative.",
+      "dread_voice": "A Demoralize of yours that lands takes 2 morale from the foe instead of 1.",
+      "grim_chorus": "When an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language).",
       "tactical_mind": "+1 Intelligence.",
       "sharp_analysis": "+2 on all Assess and enemy observation checks.",
       "combat_analysis": "+4 on active Assess checks made during battle.",
       "exploit_weakness": "+2 to hit against enemies with Full Intel.",
-      "anatomist": "your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
+      "anatomist": "Your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
       "brawny": "+1 Strength.",
       "piecework": "+20% coin from work that pays in coin.",
-      "brisk_hands": "work finishes 10% faster -- you keep the time.",
-      "steady_pace": "work counts as rest: you recover HP while you work, as if resting.",
-      "heavy_haul": "carry up to 6 kg more before you stagger, in anything that is not equipment (materials, food, loot -- not weapons, armor, shields or artifacts).",
+      "brisk_hands": "Work finishes 10% faster, so you keep the time.",
+      "steady_pace": "Work counts as rest: you recover HP while you work, as if resting.",
+      "heavy_haul": "Carry up to 6 kg more before you stagger, in anything that is not equipment (materials, food, loot, but not weapons, armor, shields or artifacts).",
       "charismatic": "+1 Charisma.",
       "negotiator": "+1 Charisma for market buy and sell checks.",
       "fixer": "+1 to your pitch when talking someone into the guild.",
@@ -5606,102 +5637,102 @@
       "clever": "+1 Intelligence.",
       "linguist": "+2 to progress rolls when studying a foreign language.",
       "crafter": "+1 to progress rolls when crafting items.",
-      "apothecary": "learn a random apothecary recipe (or +1 brewing rolls if all known).",
-      "blacksmith": "learn a random forge recipe (or +1 forging rolls if all known).",
+      "apothecary": "Learn a random apothecary recipe (or +1 brewing rolls if all known).",
+      "blacksmith": "Learn a random forge recipe (or +1 forging rolls if all known).",
       "nimble_fingers": "+1 Dexterity.",
       "woodcarver": "+1 to progress rolls on the Carpenter's recipes.",
-      "skinner": "harvest 1 additional 1sqm Hide when hunting beasts in the Wilds.",
-      "fletcher": "carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests.",
-      "wheelwright": "skilled cartwright: repairs restore double HP on damaged wagons.",
+      "skinner": "Harvest 1 additional 1sqm Hide when hunting beasts in the Wilds.",
+      "fletcher": "Carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests.",
+      "wheelwright": "Skilled cartwright: repairs restore double HP on damaged wagons.",
       "sturdy": "+1 Constitution.",
-      "deep_reserves": "tolerate missing 1 daily meal before suffering hunger penalties.",
-      "restful_sleep": "recover +1 additional HP for every 8 hours of unbroken rest.",
-      "field_cook": "efficient camp cook: field campfires burn for 6 hours instead of 4.",
-      "hardened": "tough worker frame: clear non-lethal damage after 16 hours of unbroken rest instead of 24.",
+      "deep_reserves": "Tolerate missing 1 daily meal before suffering hunger penalties.",
+      "restful_sleep": "Recover +1 additional HP for every 8 hours of unbroken rest.",
+      "field_cook": "Efficient camp cook: field campfires burn for 6 hours instead of 4.",
+      "hardened": "Tough worker frame: clear non-lethal damage after 16 hours of unbroken rest instead of 24.",
       "observant": "+1 Wisdom.",
       "field_medic": "+2 to First Aid and Stabilize checks outside of combat.",
-      "beast_whisperer": "skilled with pack animals: grants +1 herd capacity to the group.",
-      "triage": "field medic triage: everyone in your group recovers +1 extra HP per 8 hours of rest.",
-      "pathfinder": "skilled trail scout: reduces travel time by 10% on paths and roads.",
-      "tongue": "your tongue is a third limb and a weapon: +1 square of reach on melee attacks.",
-      "webbed_feet": "a strong swimmer: +1 square on every Swim, never past your full speed.",
-      "fruitful": "your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions.",
-      "cosmopolitan": "at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading.",
-      "halfling_luck": "fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat).",
-      "woodland_scout": "the forest whispers its secrets to you: while the group travels Cautious, the chance of an ambush on the road or on a hunt is 10% lower.",
-      "intimidating_presence": "a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies.",
-      "swarm_logic": "there is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you.",
-      "tireless_worker": "machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster.",
-      "centaur_mount": "your strong back: allow a Medium or Small ally to ride you.",
-      "giant_grip": "immense physical strength: wield weapons one size above your own (Large for a Goliath, Huge for an Ogre).",
-      "mighty_shove": "your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more.",
-      "phalanx": "martial discipline: +1 AC if you are adjacent to at least one ally.",
-      "organic_harvester": "scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle.",
-      "corpse_eater": "brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you.",
-      "gnome_magic_excitement": "enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress.",
-      "kenku_faith_initiate": "divine calling: you become initiated in faith magic. If already initiated, gain a free spell.",
-      "sprite_nature_initiate": "fey magic: you become initiated in nature magic and gain the Share Magic action.",
-      "dwarf_crafting": "your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor.",
-      "kobold_trapper": "cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them.",
-      "aurochs_might": "a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks.",
+      "beast_whisperer": "Skilled with pack animals: grants +1 herd capacity to the group.",
+      "triage": "Field medic triage: everyone in your group recovers +1 extra HP per 8 hours of rest.",
+      "pathfinder": "Skilled trail scout: reduces travel time by 10% on paths and roads.",
+      "tongue": "Your tongue is a third limb and a weapon: +1 square of reach on melee attacks.",
+      "webbed_feet": "A strong swimmer: +1 square on every Swim, never past your full speed.",
+      "fruitful": "Your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions.",
+      "cosmopolitan": "At home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading.",
+      "halfling_luck": "Fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat).",
+      "woodland_scout": "The forest whispers its secrets to you: while the group travels Cautious, the chance of an ambush on the road or on a hunt is 10% lower.",
+      "intimidating_presence": "A terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies.",
+      "swarm_logic": "There is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you.",
+      "tireless_worker": "Machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster.",
+      "centaur_mount": "Your strong back: allow a Medium or Small ally to ride you.",
+      "giant_grip": "Immense physical strength: wield weapons one size above your own (Large for a Goliath, Huge for an Ogre).",
+      "mighty_shove": "Your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more.",
+      "phalanx": "Martial discipline: +1 AC if you are adjacent to at least one ally.",
+      "organic_harvester": "Scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle.",
+      "corpse_eater": "Brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you.",
+      "gnome_magic_excitement": "Enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress.",
+      "kenku_faith_initiate": "Divine calling: you become initiated in faith magic. If already initiated, gain a free spell.",
+      "sprite_nature_initiate": "Fey magic: you become initiated in nature magic and gain the Share Magic action.",
+      "dwarf_crafting": "Your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor.",
+      "kobold_trapper": "Cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them.",
+      "aurochs_might": "A gore that lifts a man: +5 squares of speed and +3 damage on melee attacks.",
       "thick_hide": "+1 AC.",
-      "gore_charge": "after walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back.",
-      "deep_miner": "at home under the mountain: the odds of a pack finding your crew while gathering at the Mine are 25% lower.",
-      "grudge": "a dwarf never forgets: +1 to hit anyone who has hurt you this fight.",
-      "self_repair": "your works mend themselves: heal 1 HP after every fight you survive.",
+      "gore_charge": "After walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back.",
+      "deep_miner": "At home under the mountain: the odds of a pack finding your crew while gathering at the Mine are 25% lower.",
+      "grudge": "A dwarf never forgets: +1 to hit anyone who has hurt you this fight.",
+      "self_repair": "Your works mend themselves: heal 1 HP after every fight you survive.",
       "iron_plating": "+1 AC.",
-      "cavalry_charge": "your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved.",
+      "cavalry_charge": "Your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved.",
       "lift_rider": "1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move.",
-      "twilight_sight": "elven eyes in the dusk: in the dark you see 6 m as if the ground were lit.",
+      "twilight_sight": "Elven eyes in the dusk: in the dark you see 6 m as if the ground were lit.",
       "light_step": "+1 square of Speed.",
       "blood_frenzy": "+2 damage on melee attacks against a target below half its HP.",
-      "bloodscent": "you smell the wounded: you know where every foe below half its HP is within 6 squares, seen or not.",
+      "bloodscent": "You smell the wounded: you know where every foe below half its HP is within 6 squares, seen or not.",
       "arcane_curiosity": "+1 square of range with non-melee spells.",
       "underfoot": "+2 AC against attackers of Large size or bigger.",
-      "small_appetite": "a goblin lives on scraps: you need a meal only every other day.",
+      "small_appetite": "A goblin lives on scraps: you need a meal only every other day.",
       "under_the_whip": "+1 to hit while an ally of a higher combat level than yours stands within 6 squares.",
-      "stone_endurance": "once per fight, the first blow that hurts you deals 1d4 + your Constitution modifier less.",
+      "stone_endurance": "Once per fight, the first blow that hurts you deals 1d4 + your Constitution modifier less.",
       "arena_born": "+1 to hit in arena bouts.",
-      "sticky_tongue": "a Lash that hits also grabs the target and reels it 1 square in.",
+      "sticky_tongue": "A Lash that hits also grabs the target and reels it 1 square in.",
       "frog_leap": "+2 squares on every Jump.",
       "brave": "+2 Mental Defense.",
-      "second_breakfast": "recover +1 additional HP for every 8 hours of unbroken rest.",
-      "quartermaster": "an orderly camp: +2 on the daily cohesion roll of an overextended group you lead.",
-      "hold_the_line": "while you Defend, every ally adjacent to you has +1 AC.",
+      "second_breakfast": "Recover +1 additional HP for every 8 hours of unbroken rest.",
+      "quartermaster": "An orderly camp: +2 on the daily cohesion roll of an overextended group you lead.",
+      "hold_the_line": "While you Defend, every ally adjacent to you has +1 AC.",
       "ambush_predator": "+2 to hit an off-guard foe.",
-      "tail_sweep": "2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each.",
+      "tail_sweep": "2 points: your tail sweeps two adjacent foes, with an unarmed strike and a Push on each.",
       "polyglot": "+2 to progress rolls when studying a foreign language.",
       "parley": "+1 when you Persuade, Bluff or Intimidate in the talk before a fight.",
       "eye_for_detail": "+2 on all Assess and enemy observation checks.",
       "mimic_voices": "+1 on performance rolls when playing on the tavern stage.",
-      "razor_claws": "bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer.",
-      "night_prowler": "the night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night.",
-      "open_market": "a stranger's coin is as good as any: no price penalty for a vendor of a different tendency when you haggle.",
-      "trap_master": "plant your traps up to 3 squares away when a fight begins.",
-      "trap_salvage": "after a won fight, your traps that never sprang go back into your pack.",
-      "savage_attacks": "your critical hits are Brutal 1.",
+      "razor_claws": "Bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer.",
+      "night_prowler": "The night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night.",
+      "open_market": "A stranger's coin is as good as any: no price penalty for a vendor of a different tendency when you haggle.",
+      "trap_master": "Plant your traps up to 3 squares away when a fight begins.",
+      "trap_salvage": "After a won fight, your traps that never sprang go back into your pack.",
+      "savage_attacks": "Your critical hits are Brutal 1.",
       "war_cry": "+1 to Demoralize checks.",
       "tiny_target": "+2 AC against ranged and thrown attacks.",
       "pixie_dust": "1 point: an adjacent ally takes wing through the end of their next turn.",
-      "bountiful_harvest": "you bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it.",
-      "thornskin": "whoever hits you in melee takes 1 damage.",
-      "rending_bite": "jaws that tear: roll one extra die on your bite.",
-      "elder_skeleton": "centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma.",
-      "skeleton_faith_initiate": "a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell.",
-      "deft_bones": "light, quick bones: your bare hands hit and hurt with Dexterity.",
-      "giant_growth": "you swell past your kin: your size goes up one step (Medium to Large, 2x2).",
-      "titanic_growth": "a second growth spurt: your size goes up another step (Large to Huge, 3x3).",
-      "spin_web": "spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn.",
-      "serpent_growth": "you outgrow your coils: your size goes up one step (Small to Medium).",
-      "great_serpent": "a second shedding: your size goes up another step (Medium to Large, 2x2).",
-      "snake_venom": "your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution.",
-      "dire_growth": "you grow past your kin: your size goes up one step (a Wolf becomes Large).",
-      "dragon": "dragon blood runs in you: your hide hardens into scales (+1 AC).",
+      "bountiful_harvest": "You bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it.",
+      "thornskin": "Whoever hits you in melee takes 1 damage.",
+      "rending_bite": "Jaws that tear: roll one extra die on your bite.",
+      "elder_skeleton": "Centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma.",
+      "skeleton_faith_initiate": "A vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell.",
+      "deft_bones": "Light, quick bones: your bare hands hit and hurt with Dexterity.",
+      "giant_growth": "You swell past your kin: your size goes up one step (Medium to Large, 2x2).",
+      "titanic_growth": "A second growth spurt: your size goes up another step (Large to Huge, 3x3).",
+      "spin_web": "Spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn.",
+      "serpent_growth": "You outgrow your coils: your size goes up one step (Small to Medium).",
+      "great_serpent": "A second shedding: your size goes up another step (Medium to Large, 2x2).",
+      "snake_venom": "Your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution.",
+      "dire_growth": "You grow past your kin: your size goes up one step (a Wolf becomes Large).",
+      "dragon": "Dragon blood runs in you: your hide hardens into scales (+1 AC).",
       "dragon_breath": "2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit.",
-      "sweeping_claws": "your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once.",
-      "draconic_wings": "massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares.",
-      "death_grip": "your cold dead hands lock like iron: +2 to grab checks.",
-      "zombie_bite": "sink your teeth into held flesh: an attack targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage.",
+      "sweeping_claws": "Your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once.",
+      "draconic_wings": "Massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares.",
+      "death_grip": "Your cold dead hands lock like iron: +2 to grab checks.",
+      "zombie_bite": "Sink your teeth into held flesh: an attack targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage.",
       "arcane_mind": "+1 Intelligence.",
       "spell_focus": "+1 to hit with spell attacks.",
       "destructive_casting": "+1 damage with damaging spells.",
@@ -5726,7 +5757,7 @@
       "climber": "climbs any surface of DC 25 or lower with no check (still costs the action).",
       "extra_language": "speaks a second random language: can Demoralize enemies that share either of the two.",
       "catfall": "always lands on their feet: 3 more levels of a fall cost nothing (a drop of up to 4 levels does no damage).",
-      "mimic_sounds": "can Demoralize with no shared language (mimics the target's voice) -- offence only; being demoralized still needs a common tongue.",
+      "mimic_sounds": "can Demoralize with no shared language (mimics the target's voice), but only on offence; being demoralized still needs a common tongue.",
       "blood_magic": "ancestral blood magic: starts initiated in blood magic, +2 to spell study rolls.",
       "autotroph": "photosynthesises: never needs to eat, immune to the hunger rules.",
       "ferocity": "once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there).",
@@ -5813,7 +5844,7 @@
     },
     "mission": {
       "tanner_hides": "The tanner wants 15 sqm of hide off anything with fur. The Wilds is thick with it, if you can bring down what's wearing it.",
-      "tanner_biwolf": "The tanner has heard of a wolf the size of a cart that hunts the Wilds by night. It follows the smell of meat -- hunt after dark with fifteen portions in your packs and it will find you, and its pack with it. Bring me its leather.",
+      "tanner_biwolf": "The tanner has heard of a wolf the size of a cart that hunts the Wilds by night. It follows the smell of meat: hunt after dark with fifteen portions in your packs and it will find you, and its pack with it. Bring me its leather.",
       "tanner_ox": "The tanner tells of Aurochs, an ox that has outlived every hunter sent after it, grazing the fertile fields south of the farm. Its hide is the finest there is. Bring it to me and I will teach you what the horn is good for.",
       "bankers_trust_chest": "The Bankers want proof the guild can be trusted with something precious before they'll vouch for it: carry a sealed chest to their outpost at Field Command, safe, and bring back their letter of receipt. Don't peek.",
       "apothecary_mushrooms": "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
@@ -5823,12 +5854,12 @@
       "blood_codex": "The blood mages have waited for the Ancient Codex. There is only one: give it to us, and the other schools will never read it.",
       "nature_codex": "The grove asks for the Ancient Codex. There is only one: leave it with us, and the other schools will never read it.",
       "faith_codex": "The cathedral asks for the Ancient Codex. There is only one: entrust it to us, and the other schools will never read it.",
-      "blood_snake": "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. Bring us its body: the blood is read in the flesh, and the cult would read it.",
-      "nature_snake": "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. Something has twisted it, a curse perhaps. Bring it to us alive, bound with rope or chain, and the grove will tend it.",
-      "faith_battlefield": "The cathedral sends its medicine where the dying are -- the first time it asks, six potions go with you. Go to the Battlefield past Field Command's frontier outpost and fight beside the soldiers there. Win the skirmish, and bring every one of them through alive.",
+      "blood_snake": "A snake with dragon blood in it nests near the Lumber Yard. Search the yard for its den. Bring us its body: the blood is read in the flesh, and the cult would read it.",
+      "nature_snake": "A snake with dragon blood in it nests near the Lumber Yard. Search the yard for its den. Something has twisted it, a curse perhaps. Bring it to us alive, bound with rope or chain, and the grove will tend it.",
+      "faith_battlefield": "The cathedral sends its medicine where the dying are: the first time it asks, six potions go with you. Go to the Battlefield past Field Command's frontier outpost and fight beside the soldiers there. Win the skirmish, and bring every one of them through alive.",
       "faith_necromancer": "The soldiers who fell at the Battlefield do not stay dead: days later they get up and walk. Someone out there is raising them, and nobody has seen who. Go to the front, find whoever wakes the dead, and put them down.",
-      "nature_wildfire": "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn the forest to do it -- badly. Every fire they set runs wild. Teach them, or stop them, and put the fires out before they spread. The Ogre is at the heart of it.",
-      "blood_clutch": "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on its clutch. Search the deep galleries, go down, and bring us one of its eggs -- the bloodline itself, unhatched. Whatever else you carry out of there is yours.",
+      "nature_wildfire": "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn the forest to do it, though badly. Every fire they set runs wild. Teach them, or stop them, and put the fires out before they spread. The Ogre is at the heart of it.",
+      "blood_clutch": "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on its clutch. Search the deep galleries, go down, and bring us one of its eggs: the bloodline itself, unhatched. Whatever else you carry out of there is yours.",
       "ledger_treefolk": "Commander Varkas of Field Command entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison."
     },
     "faction": {
@@ -5846,7 +5877,7 @@
       "arena_first_blood": "Win a staked bout in the pits.",
       "arena_lone_wolf": "Win in the entry pit with a single fighter.",
       "arena_dethrone": "Beat the pit's champion team.",
-      "arena_bloodsport": "Win a bout in the Games -- the arena's second stage.",
+      "arena_bloodsport": "Win a bout in the Games, the arena's second stage.",
       "arena_flag_runner": "Capture the enemy flag in the Games.",
       "arena_untouchable": "Capture the flag without knocking anyone out.",
       "arena_ribbit_brothers": "Beat the three Grippli in the Games.",
@@ -5874,11 +5905,11 @@
       "ledger_hold_supply_run": "Successfully complete 10 military supply caravan runs to the frontier outpost."
     },
     "node": {
-      "city": "The Bankers' counting-house in Ankareth. Where the guild sets out from -- and where the Bankers keep their strongboxes.",
-      "lumber_yard": "A sawmill just outside the walls. The foreman lends the axe -- you fell a tree that isn't yours and take only the wage for the hours. The yard buys what it yields and sells its lumber and fruit.",
+      "city": "The Bankers' counting-house in Ankareth, where the guild sets out from and where the Bankers keep their strongboxes.",
+      "lumber_yard": "A sawmill just outside the walls. The foreman lends the axe: you fell a tree that isn't yours and take only the wage for the hours. The yard buys what it yields and sells its lumber and fruit.",
       "carpenter": "A fragrant workshop of cedar shavings and drying timber between the city walls and the sawmill. Bows, crossbows, carts, carriages and timber crafting are offered here, and the treefolk keeper bends living wood to shape.",
       "mine": "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal for sale are sold here.",
-      "arena": "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
+      "arena": "Staked bouts in the pits under the city. Nobody dies, but you lose the purse.",
       "market": "Buy and sell gear for copper. The traders speak Ankarin.",
       "smith": "A forge on the road out of the walls, loud enough to hear from the gate. Weapons, metal armour and iron bars are sold here, and the smith lends the anvil.",
       "tanner": "Racks of hide downwind of the lumber yard. Leather armour, cloaks, quivers and bows, and a tanner with work for anyone who hunts.",
@@ -5886,11 +5917,11 @@
       "tavern": "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
       "prison": "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
       "road": "A dirt track cutting across the open country to the east.",
-      "wilds": "Open ground under the sky, outside the walls. Hunt it for meat -- and risk what else hunts here.",
-      "ledger_hold": "A fortified counting-house the Bankers keep well outside the walls -- armed, and used to precious cargo.",
-      "frontier_outpost": "A palisade at the edge of the march, where Field Command's caravans end and its soldiers take over. Nothing for hire here -- the war is one road further.",
+      "wilds": "Open ground under the sky, outside the walls. Hunt it for meat, and risk what else hunts here.",
+      "ledger_hold": "A fortified counting-house the Bankers keep well outside the walls, armed and used to precious cargo.",
+      "frontier_outpost": "A palisade at the edge of the march, where Field Command's caravans end and its soldiers take over. Nothing for hire here: the war is one road further.",
       "battlefield": "Two lines of trenches and churned ground between them, where the border war is fought. Field Command holds the near trench.",
-      "wilds_territory": "A stretch of the Wilds the guild means to make its own -- if it can clear it, fence it, and hold it.",
+      "wilds_territory": "A stretch of the Wilds the guild means to make its own, if it can clear it, fence it, and hold it.",
       "library": "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
       "farm": "A farmstead beyond the walls. It sells what the fields give and keeps the stables: the animals that carry and pull, and their tack.",
       "ancient_ruins": "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
@@ -6012,7 +6043,7 @@
     },
     "line": {
       "ambush": "\"Your purse or your blood.\" {n} of them block the way.",
-      "guard": "\"{names}, in the name of the City -- you will come with us.\"",
+      "guard": "\"{names}, in the name of the City, you will come with us.\"",
       "challenge": "\"Who walks in the master's halls?\" The patrol raises its torch.",
       "wildfire_great": "\"Fire clears ground. Everybody knows that.\" The Ogre does not look up.",
       "wildfire": "\"More wood! Green wood burns longest!\" The foreman waves the crew on."
@@ -6091,31 +6122,31 @@
     "found_faction": "You have found {faction}.",
     "the_group": "The group",
     "arrest": {
-      "one": "{who} accepts arrest -- {n} day in the City's cells.",
-      "other": "{who} accepts arrest -- {n} days in the City's cells."
+      "one": "{who} accepts arrest and spends {n} day in the City's cells.",
+      "other": "{who} accepts arrest and spends {n} days in the City's cells."
     },
     "fall_back": "{who} fall back toward {place}.",
-    "guard_survivor": "{who} lives to fight another day -- crime now {crime}.",
+    "guard_survivor": "{who} lives to fight another day. Crime now {crime}.",
     "gather": {
       "lost": "The crew is driven off the work site and comes away with nothing.",
       "won": "The crew drives the pack off."
     },
     "supply": {
-      "lost": "The supply caravan is routed -- the cargo is lost; the escort falls back to {place}.",
+      "lost": "The supply caravan is routed and the cargo is lost; the escort falls back to {place}.",
       "won": "The caravan guards drive the soldiers off and the caravan rolls on."
     },
     "raid": {
-      "won": "The guild's fighters drive off the guard patrol -- the property stays, for now.",
-      "lost": "The City guard finally clears the squatted property -- it's gone for good."
+      "won": "The guild's fighters drive off the guard patrol, and the property stays for now.",
+      "lost": "The City guard finally clears the squatted property, and it's gone for good."
     },
     "claim": {
-      "unguarded": "The Wilds claim sits unguarded -- it's seized without a fight.",
+      "unguarded": "The Wilds claim sits unguarded, so it's seized without a fight.",
       "raid_won": "The crew drives off the raiders and the claim keeps sustaining.",
-      "raid_lost": "The crew is scattered -- sustaining the claim starts over.",
+      "raid_lost": "The crew is scattered, so sustaining the claim starts over.",
       "seizure_won": "The crew drives off the raiders and holds the claim.",
-      "seizure_lost": "The crew falls -- the Wilds claim is seized.",
-      "retaken": "The Wilds claim is retaken -- the occupiers are driven out.",
-      "retake_failed": "The attempt to retake the claim fails -- it stays lost."
+      "seizure_lost": "The crew falls and the Wilds claim is seized.",
+      "retaken": "The Wilds claim is retaken and the occupiers are driven out.",
+      "retake_failed": "The attempt to retake the claim fails, so it stays lost."
     },
     "title": {
       "ambush": "AMBUSHED ON THE ROAD",
@@ -6270,10 +6301,10 @@
     "hunger": {
       "title": "Hunger \u0026 Starvation",
       "1": "Every member eats 1 meal a day at upkeep. Fresh food nearing spoilage is eaten first. SHARE RATIONS lets a member feed hungry groupmates from their pack.",
-      "2": "1 day unfed — Hungry: {pen1} to all attributes.",
-      "3": "2 days unfed — Starving: {pen2} to all attributes; maximum HP capped at 1.",
-      "4": "3 days unfed — Incapacitated: too weak to fight, cannot be sent into battle.",
-      "5": "{death} days unfed — starvation death: the character is gone permanently.",
+      "2": "1 day unfed · Hungry: {pen1} to all attributes.",
+      "3": "2 days unfed · Starving: {pen2} to all attributes; maximum HP capped at 1.",
+      "4": "3 days unfed · Incapacitated: too weak to fight, cannot be sent into battle.",
+      "5": "{death} days unfed · starvation death: the character is gone permanently.",
       "6": "Rotten Food is eaten only on the last day before death, as a desperate last resort. It resets the hunger but sickens the eater. Eaten again while already sick, it adds Gut Rot. Strong Stomach (Gnoll) is immune.",
       "7": "A hungry or starving character cannot heal through rest. Treefolk (Autotroph) never eat and never starve. If the whole guild starves, the campaign ends."
     },

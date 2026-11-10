@@ -478,7 +478,7 @@
             "morale": "Moral",
             "speed": "Velocidade",
             "pick_up_note": "Pegar levanta o que as suas mãos aguentam.",
-            "assess": "{read} — Avalie para saber mais.",
+            "assess": "{read} · Avalie para saber mais.",
             "out_of_sight": "A luta continua fora de vista…",
             "hit_points": "Pontos de vida",
             "lv": "NV",
@@ -498,10 +498,10 @@
             "hint_trap": "{name} arma uma armadilha: clique numa casa marcada, ou Pular armadilhas.",
             "hint_talk": "Uma patrulha desafia o esquadrão.",
             "hint_other": "O outro lado está se movendo…",
-            "hint_aim_cell": "{name}: clique numa casa marcada — Esc cancela.",
-            "hint_aim_target": "{name}: clique num alvo marcado — Esc cancela.",
-            "hint_mopping": "Inimigos caídos — estabilize os caídos, ou Espaço para deixar a contagem correr.",
-            "hint_binding": "Inimigos caídos — Capture um inimigo tombado, ou Espaço para deixar a rodada acabar.",
+            "hint_aim_cell": "{name}: clique numa casa marcada · Esc cancela.",
+            "hint_aim_target": "{name}: clique num alvo marcado · Esc cancela.",
+            "hint_mopping": "Inimigos caídos. Estabilize os caídos, ou Espaço para deixar a contagem correr.",
+            "hint_binding": "Inimigos caídos. Capture um inimigo tombado, ou Espaço para deixar a rodada acabar.",
             "hint_ctf": "Leve a bandeira deles para casa para vencer, e proteja a sua.",
             "hint_flee": "Na borda do campo: você pode Fugir.",
             "hint_cannot_move": "Não pode mover: {why}.",
@@ -526,7 +526,7 @@
             "two_players": "Dois jogadores",
             "fight": "Lutar",
             "strike": "Golpear",
-            "pile_who": "{name} — quem",
+            "pile_who": "{name}: quem",
             "st_dying": "morrendo · {n}",
             "st_stable": "caído · estável",
             "st_broken": "quebrado",
@@ -534,7 +534,7 @@
             "why_ally": "aliado",
             "why_not_target": "não é um alvo",
             "why_not_downed": "não está caído",
-            "pick_which": "Pegar — qual",
+            "pick_which": "Pegar: qual",
             "draw_which": "Sacar qual?",
             "draw_after": "Depois disso",
             "hand_weapon": "Mão da arma",
@@ -741,7 +741,6 @@
             "note_held": "{note} · {n} obtidos",
             "racial_level": "nível racial {level} · PV {hp}/{max}",
             "four": "As quatro trilhas",
-            "four_note": "um nível, uma escolha",
             "can": "Pode pegar agora",
             "can_n": "{n} abertos",
             "can_row": "{track} · grau {tier}",
@@ -773,8 +772,8 @@
             "held": "obtidos",
             "map": "O mapa",
             "branch": "O ramo",
-            "no_gifts": "— ainda não há dons escritos para {race} —",
-            "waits_school": "— espera por uma escola —<small>uma escola se abre com a iniciação no seu santuário</small>",
+            "no_gifts": "ainda não há dons escritos para {race}",
+            "waits_school": "espera por uma escola<small>uma escola se abre com a iniciação no seu santuário</small>",
             "lg_held": "obtido",
             "lg_open": "pode pegar",
             "lg_waiting": "precisa de uma escolha",
@@ -786,7 +785,7 @@
             "around": "Em torno de {name}",
             "around_note": "exige acima · abre abaixo",
             "in_hand": "O talento em mãos",
-            "in_hand_note": "clique num talento para lê-lo",
+            "in_hand_note": "clique para ler",
             "changes": "O que muda",
             "mod_move": "mod. {a} → {b}",
             "mod_flat": "mod. {b}",
@@ -1653,6 +1652,19 @@
             "total": "Total"
         },
         "lab": {
+            "travelling": "viajando",
+            "gather": "coletando",
+            "search": "procurando",
+            "work": "trabalhando",
+            "rest": "descansando",
+            "wait": "esperando",
+            "hunt": "caçando",
+            "market": "no mercado",
+            "bank": "no banco",
+            "recruit": "recrutando",
+            "prison": "na prisão",
+            "craft": "fabricando",
+            "garrison": "de guarnição",
             "armor": "Armadura",
             "consumables & kit": "Consumíveis e Equipamento",
             "supplies": "Suprimentos",
@@ -2495,7 +2507,7 @@
             "casts": "{actor} conjura {spell} e some da vista."
         },
         "raise_dead": {
-            "rises": "A terra se agita em {cell} -- {body} se levanta outra vez!"
+            "rises": "A terra se agita em {cell}: {body} se levanta outra vez!"
         },
         "share_magic": {
             "alone": "{actor} tenta compartilhar magia, mas não há aliados por perto!",
@@ -2508,16 +2520,16 @@
         "fire": "{unit} está nas chamas! ({dice})",
         "moves": "{unit} se move (1 ponto de ação).",
         "free_step": "{unit} dá um passo livre.",
-        "bumps": "{unit} esbarra em algo invisível -- {lurker} está ali!",
+        "bumps": "{unit} esbarra em algo invisível, e {lurker} está ali!",
         "ungrappled": "  {unit} não está mais agarrado.",
-        "mopup_stabilize": "Inimigos caídos -- estabilize os aliados caídos antes que a luta termine.",
-        "mopup_bind": "Inimigos caídos -- uma rodada para amarrar os caídos antes que a luta termine.",
+        "mopup_stabilize": "Inimigos caídos. Estabilize os aliados caídos antes que a luta termine.",
+        "mopup_bind": "Inimigos caídos. Uma rodada para amarrar os caídos antes que a luta termine.",
         "aftermath": {
             "stable": "{unit} foi estabilizado e sobreviveu inconsciente.",
             "broken": "{unit} foi recuperado quebrado."
         },
         "fall": {
-            "water": "{unit} mergulha em águas profundas -- a água amortece a queda.",
+            "water": "{unit} mergulha em águas profundas, e a água amortece a queda.",
             "feet": "{unit} cai {n} níveis e aterrissa de pé.",
             "hurt": "{unit} cai {n} níveis -> {dmg} de dano ({dice}d6)."
         },
@@ -2563,7 +2575,7 @@
             "knocked_out": "  {unit} é nocauteado.",
             "broken": "  {unit} para de funcionar: QUEBRADO (só volta se um aliado consertar).",
             "dying": "  {unit} cai, morrendo ({turns} turnos até o teste contra a morte).",
-            "zeroed": "  {attribute} de {unit} se esvai -- desaba.",
+            "zeroed": "  {attribute} de {unit} se esvai: desaba.",
             "knocked_out_fight": "  {unit} é nocauteado (luta não letal)."
         },
         "flickers": "{unit} reaparece à vista!",
@@ -2573,7 +2585,7 @@
         "climb": {
             "up": "para cima",
             "down": "para baixo",
-            "auto": "{actor} escala {way} (Escalador -- sem teste).",
+            "auto": "{actor} escala {way} (Escalador, sem teste).",
             "roll": "{actor} escala {way}: d20({nat}) {str:+}(FOR) = {total} contra CD {dc}",
             "over": "{roll}  -> sobe e passa por cima.",
             "clear": "{roll}  -> desce.",
@@ -2617,7 +2629,7 @@
         },
         "held": {
             "last_foe": "O último inimigo caiu.",
-            "ruins": "O último inimigo caiu. As ruínas são suas para vasculhar -- saia pela entrada."
+            "ruins": "O último inimigo caiu. As ruínas são suas para vasculhar. Saia pela entrada."
         },
         "morale": {
             "falls": "{unit} perde {amount} de moral ({why}): {morale}/{ceiling}.",
@@ -2732,11 +2744,11 @@
         "pulls": "puxa {lower:o}",
         "no_tack": "sem arreios",
         "carries_up_to_kg_on": "carrega até {capacity:g} kg nas costas",
-        "hitched_to": " -- atrelado {lower:ao}",
-        "not_hitched": " -- não atrelado",
+        "hitched_to": " (atrelado {lower:ao})",
+        "not_hitched": " (não atrelado)",
         "pulls_up_to_kg": "puxa até {pull:g} kg{hitched}",
         "idle_pack_saddle_lets_it": "ocioso: uma Sela de Carga o deixa carregar {back_load:g} kg, um Arnês o deixa puxar {draw:g} kg",
-        "hungry_day_s_starves_at": "com fome há {unfed_days} dia(s) -- morre de fome em {starve_days}",
+        "hungry_day_s_starves_at": "com fome há {unfed_days} dia(s), morre de fome em {starve_days}",
         "kg": "{load:g} / {most:g} kg",
         "attack_modifier_d_against_target": "Modificador de ataque {bab} ({src}): d20 {bonus} contra a classe de armadura do alvo",
         "weapon_dice_plus_strength_on": "{w}: dados da arma mais força em um acerto",
@@ -2747,7 +2759,7 @@
         "spd": "  -{speed_penalty} VEL",
         "more_may_join_on_their": "mais {value} podem entrar por sua palavra",
         "none_left": "nenhum restante",
-        "sponsored_recruits_of": "Recrutas apadrinhados: {used} de {cap} -- {left}",
+        "sponsored_recruits_of": "Recrutas apadrinhados: {used} de {cap}: {left}",
         "group": "o grupo",
         "guild_leader_2": "Líder da guilda",
         "adds_cha_bonus_to_taverna": "Soma um bônus de CAR ao recrutamento na taverna",
@@ -2757,7 +2769,7 @@
         "make_guild_leader": "TORNAR LÍDER DA GUILDA",
         "make_this_member_lead_whole": "Faz este membro liderar a guilda inteira",
         "group_leader_2": "Líder do grupo",
-        "leads_holds_up_to_members": "Lidera {band} -- comporta até {cap} membros",
+        "leads_holds_up_to_members": "Lidera {band}: comporta até {cap} membros",
         "group_size_capacity_is_cha": "A capacidade do grupo é 3 + modificador de CAR + metade do nível racial",
         "would_hold_up_to_members": "Comportaria até {cap} membros",
         "make_group_leader": "TORNAR LÍDER DO GRUPO",
@@ -2798,7 +2810,7 @@
         "boarding_at_sanctuary_daily_progress": "Internado no santuário: progresso diário rumo à iniciação.",
         "rolls_d_int_per_day_2": "Rola 1d20 + INT por dia enquanto está internado. {done}/{total} {unit_word}.",
         "notice_leaves_guild_in": "AVISO: {name} deixa a guilda em {days}",
-        "has_given_notice_and_leaves": "{name} deu aviso prévio e deixa a guilda em {days} -- ",
+        "has_given_notice_and_leaves": "{name} deu aviso prévio e deixa a guilda em {days}. ",
         "is_over_capacity_with_no": "{display_name} está acima da capacidade e sem vaga livre.",
         "is_over_capacity_and_guild": "{display_name} está acima da capacidade e a guilda não tem vaga livre: ",
         "its_weakest_member_may_give": "o membro mais fraco pode dar aviso prévio a qualquer dia.",
@@ -2841,14 +2853,14 @@
                 "tip": "Membros e animais com fome, ou com um novo nível à espera"
             }
         },
-        "fight_due_tip": "Uma luta está para começar -- este grupo não pode mudar até que ela termine"
+        "fight_due_tip": "Uma luta está para começar. Este grupo não pode mudar até que ela termine"
     },
     "map_view": {
         "ambushed_enem_block_path": {
-            "one": "emboscada -- {n} inimigo bloqueia o caminho",
-            "other": "emboscada -- {n} inimigos bloqueiam o caminho"
+            "one": "emboscada: {n} inimigo bloqueia o caminho",
+            "other": "emboscada: {n} inimigos bloqueiam o caminho"
         },
-        "routine_stopped": "rotina parada -- {paused}",
+        "routine_stopped": "rotina parada: {paused}",
         "supply_run_h": "viagem de suprimentos → {name} ({value:.1f} h)",
         "via_h": "→ {dest_name} via {name} ({remaining:g} h)",
         "resting_left": "descansando (faltam {format_hours})",
@@ -2873,18 +2885,18 @@
         "no_gathering_licence": "sem licença de coleta",
         "strongbox_kg": "cofre: {load:g} / {capacity} kg",
         "bankers_want_house_back_or": "os Banqueiros querem a casa de volta, ou o imposto pago",
-        "squatting_guard_can_still_come": "ocupação irregular -- a guarda ainda pode vir expulsá-los",
+        "squatting_guard_can_still_come": "ocupação irregular: a guarda ainda pode vir expulsá-los",
         "house_kg": "casa: {load:g} / {city_property_capacity} kg",
         "owes_bankers": "deve aos Banqueiros {fmt_money}",
-        "seized_send_group_to_retake": "TOMADA -- envie um grupo para retomá-la",
-        "established_guild_s_own_ground": "estabelecida -- terra própria da guilda",
+        "seized_send_group_to_retake": "TOMADA: envie um grupo para retomá-la",
+        "established_guild_s_own_ground": "estabelecida: terra própria da guilda",
         "sustaining_day_s_left": "sustentando: faltam {wilds_claim_sustain_days_left} dia(s)",
-        "unclaimed_scout_it_to_begin": "sem dono -- explore para começar",
+        "unclaimed_scout_it_to_begin": "sem dono: explore para começar",
         "stage": "etapa: {title}",
         "ambushed_on_road": "Emboscada na estrada!",
         "enem_block_path_there_is": {
-            "one": "{n} inimigo bloqueia o caminho -- não há como escapar desta luta.",
-            "other": "{n} inimigos bloqueiam o caminho -- não há como escapar desta luta."
+            "one": "{n} inimigo bloqueia o caminho. Não há como escapar desta luta.",
+            "other": "{n} inimigos bloqueiam o caminho. Não há como escapar desta luta."
         },
         "busy": "Ocupado: {order_status}",
         "stop_resting": "PARAR DE DESCANSAR",
@@ -2896,7 +2908,7 @@
         "continue_routine": "CONTINUAR ROTINA",
         "defend_your_title": "DEFENDER SEU TÍTULO",
         "bet_at_arena": "APOSTAR NA ARENA",
-        "v_for_champion_of_pit": "1 contra 1 pelo título de Campeão da Fossa -- sem aposta, sem reforços",
+        "v_for_champion_of_pit": "1 contra 1 pelo título de Campeão da Fossa: sem aposta, sem reforços",
         "non_lethal_stake_money_win": "não letal · aposte dinheiro, ganhe a bolsa",
         "lethal_combat_loot_bodies": "combate letal · saqueie os corpos",
         "trail_is_cold_only_tanner": "O rastro esfriou. Só o serviço do coureiro traz você de volta aqui.",
@@ -2956,7 +2968,7 @@
         },
         "line": {
             "ambush": "\"A bolsa ou o sangue.\" {n} deles bloqueiam o caminho.",
-            "guard": "\"{names}, em nome da Cidade -- vocês virão conosco.\"",
+            "guard": "\"{names}, em nome da Cidade, vocês virão conosco.\"",
             "challenge": "\"Quem anda pelos salões do mestre?\" A patrulha ergue a tocha.",
             "wildfire_great": "\"O fogo limpa o terreno. Todo mundo sabe disso.\" O Ogro nem levanta os olhos.",
             "wildfire": "\"Mais lenha! Lenha verde queima mais!\" O capataz acena para a turma continuar."
@@ -3039,8 +3051,8 @@
         "no_tab_here": "sem aba de {what} aqui",
         "no_tavern_here": "sem taverna aqui",
         "bankers_want_nothing_of_house": "os Banqueiros não querem mais nada da casa",
-        "property_is_returned_to_bankers": "O imóvel volta aos Banqueiros -- a guilda agora deve {fmt_money}.",
-        "guild_keeps_house_without_paying": "A guilda fica com a casa sem pagar -- a guarda não vai gostar.",
+        "property_is_returned_to_bankers": "O imóvel volta aos Banqueiros, e a guilda agora deve {fmt_money}.",
+        "guild_keeps_house_without_paying": "A guilda fica com a casa sem pagar. A guarda não vai gostar.",
         "no_such_answer": "resposta inexistente: {choice}",
         "no_workbench_here": "sem bancada aqui",
         "no_h_shift": "sem turno de {hours} h",
@@ -3080,8 +3092,8 @@
     },
     "campaign": {
         "claim": {
-            "fail": "A tentativa falha -- a etapa da posse continua a mesma.",
-            "advance": "A posse nos Ermos avança -- agora em {stage}."
+            "fail": "A tentativa falha e a etapa da posse continua a mesma.",
+            "advance": "A posse nos Ermos avança para {stage}."
         },
         "delve": {
             "ruins_empty": "As Ruínas Antigas jazem em silêncio: não restou nada lá embaixo.",
@@ -3138,10 +3150,10 @@
             "level_up": "{name} chegou ao nível de combate {level}!"
         },
         "arena": {
-            "vacant": "Ninguém do seu lado derrubou o campeão limpamente -- o título continua vago.",
+            "vacant": "Ninguém do seu lado derrubou o campeão limpamente, então o título continua vago.",
             "won": "{name} desfere o golpe final e conquista o título de Campeão da Fossa.",
             "defended": "{name} rechaça o desafiante e mantém o título.",
-            "lost": "{name} é derrotado -- o título de Campeão da Fossa está perdido."
+            "lost": "{name} é derrotado e o título de Campeão da Fossa está perdido."
         },
         "rest": {
             "member": "{name} {hp}/{hp_max} PV",
@@ -3206,7 +3218,7 @@
         "goal": "meta: {goal}  ·  {due}{prize}",
         "burned": "  ·  {burned} queimados",
         "keeper_takes_it_and_speaks": "o guardião aceita e fala o seu nome à escola.",
-        "bankers_accept_letter_your_trust": "os Banqueiros aceitam a carta -- sua confiança está conquistada.",
+        "bankers_accept_letter_your_trust": "os Banqueiros aceitam a carta e sua confiança está conquistada.",
         "accept_job": "ACEITAR O TRABALHO",
         "take_task": "ASSUMIR A TAREFA",
         "accept_trust": "ACEITAR A PROVA DE CONFIANÇA",
@@ -3329,12 +3341,12 @@
         "redistributed_packs_by_carrying_capacity": "Mochilas redistribuídas conforme a capacidade de carga.",
         "no_talent_to_pick": "nenhum talento para escolher",
         "back_to_hunt": "Voltar à caça",
-        "too_dark_to_read_ground": "Escuro demais para ler o chão -- volte ao amanhecer",
+        "too_dark_to_read_ground": "Escuro demais para ler o chão. Volte ao amanhecer",
         "this_fight_is_not_clean": "esta luta não é uma vitória esmagadora",
-        "biwolf_s_leather_is_lost": "O couro do Biwolf se perdeu -- a tarefa do coureiro fracassou de vez.",
-        "biwolf_got_away_he_will": "O Biwolf escapou. Ele voltará ao cheiro de carne -- e não sozinho.",
+        "biwolf_s_leather_is_lost": "O couro do Biwolf se perdeu, e a tarefa do coureiro fracassou de vez.",
+        "biwolf_got_away_he_will": "O Biwolf escapou. Ele voltará ao cheiro de carne, e não sozinho.",
         "aurochs_immortal_ox_is_dead": "Aurochs, o boi imortal, está morto.",
-        "hide_is_lost_tanner_s": "O couro se perdeu -- a tarefa do coureiro fracassou de vez.",
+        "hide_is_lost_tanner_s": "O couro se perdeu, e a tarefa do coureiro fracassou de vez.",
         "ox_s_trail": "O rastro do boi",
         "biwolf": "O Biwolf",
         "ambush_in_wilds": "Emboscada nos Ermos",
@@ -3363,7 +3375,7 @@
             "other": "{n} testes de Sabedoria"
         },
         "one_check_hour_against_dc": "Um teste por hora contra CD {dc}; um rastro encontrado abre o campo e faz a próxima CD ser {next_dc}. Os rastros só podem ser lidos à luz do dia.",
-        "too_dark_to_read_ground_2": "Escuro demais para ler o chão -- volte ao amanhecer.",
+        "too_dark_to_read_ground_2": "Escuro demais para ler o chão. Volte ao amanhecer.",
         "trail_is_fresh": "O rastro é recente!",
         "aurochs_is_grazing_somewhere_on": "O Aurochs pasta em algum lugar nos campos abertos à frente.",
         "lethal_chase_he_runs_from": "Uma perseguição letal: ele foge de quem se aproxima. Encurrale-o num desfiladeiro e derrube-o, e a cada poucas rodadas a manada atende ao seu chamado.",
@@ -3459,6 +3471,8 @@
         "fallen": "Os caídos",
         "report": "O relatório",
         "this_page": "esta página",
+        "names_and": "{first} e {second}",
+        "memorial_seen": "{names}, vistos",
         "who_stood_who_fell": "quem ficou de pé, quem caiu",
         "reaches_level": "{name} alcança o nível {level} de {lower}",
         "number_rise": {
@@ -3548,7 +3562,7 @@
             "eases": "O Antídoto reduz {poison:o} em {unit} para {n} ({roll})."
         },
         "work": {
-            "below": "{unit}: sem XP de trabalho -- este serviço está abaixo do nível de trabalho {n}.",
+            "below": "{unit}: sem XP de trabalho porque este serviço está abaixo do nível de trabalho {n}.",
             "to_next": "{done}/{span} h para o nível de trabalho {n}",
             "maxed": "nível de trabalho máximo",
             "banked": "{unit}: +{h} h de trabalho ({togo}).",
@@ -3601,7 +3615,7 @@
         "ox": "{who} passou {hours} h no rastro do boi.",
         "meat": "{who} trazem {kg} kg de carne ({hours} h de caça).",
         "skin": "{name} tira {item:o} da caça.",
-        "empty_hunt": "{who} voltam de mãos vazias ({hours} h de caça -- pouco para abater algo).",
+        "empty_hunt": "{who} voltam de mãos vazias ({hours} h de caça, pouco para abater algo).",
         "found": {
             "mushroom": "{n} {item}(s)",
             "fruit": "{n} {item}(s)",
@@ -3638,11 +3652,11 @@
             "doing": "consertando uma carroça"
         },
         "scout": {
-            "done": "a terra foi explorada -- pronta para ser limpa."
+            "done": "a terra foi explorada e está pronta para ser limpa."
         },
         "fences": {
             "short": "as cercas esperam: falta Madeira guardada para elas.",
-            "done": "as cercas sobem -- hora de varrer a região."
+            "done": "as cercas sobem: hora de varrer a região."
         }
     },
     "tavern_tab": {
@@ -3680,7 +3694,7 @@
     },
     "vault": {
         "won_t_fit_s_load": "não cabe na carga de {name}.",
-        "won_t_fit_kg_free": "não cabe -- {free:g} kg livres em {lower}.",
+        "won_t_fit_kg_free": "não cabe: {free:g} kg livres em {lower}.",
         "stashed": "guardou {one}.",
         "redistributed_packs_by_carrying_capacity": "mochilas redistribuídas conforme a capacidade de carga.",
         "party_purse": "bolsa do grupo",
@@ -3688,10 +3702,10 @@
         "needs_standing_with_bankers": "{fmt_money}  ·  exige {city_property_rep_gate} de prestígio com os Banqueiros",
         "buy_house": "COMPRAR A CASA",
         "kg_held_in_city": "{fmt_money}  ·  {bank_chest_capacity} kg guardados na Cidade",
-        "strongbox_costs_party_has": "o cofre custa {cost} -- o grupo tem {wealth}.",
-        "rented_strongbox_kg_of_storage": "alugou um cofre -- {capacity} kg de espaço no banco.",
-        "bankers_want_for_house_party": "os Banqueiros querem {cost} pela casa -- o grupo tem {wealth}.",
-        "bought_house_in_city_bankers": "comprou uma casa na Cidade -- o imposto dos Banqueiros começa agora.",
+        "strongbox_costs_party_has": "o cofre custa {cost}, mas o grupo tem {wealth}.",
+        "rented_strongbox_kg_of_storage": "alugou um cofre com {capacity} kg de espaço no banco.",
+        "bankers_want_for_house_party": "os Banqueiros querem {cost} pela casa, mas o grupo tem {wealth}.",
+        "bought_house_in_city_bankers": "comprou uma casa na Cidade, e o imposto dos Banqueiros começa agora.",
         "minted_gold_coins_for": "cunhou {n} moedas de ouro por {fmt_money}.",
         "melted_gold_coins_into": "derreteu {n} moedas de ouro em {fmt_money}.",
         "pay_toward_debt": "PAGAR A DÍVIDA",
@@ -3699,11 +3713,11 @@
         "buy_oven": "COMPRAR UM FORNO",
         "unlocks_cooking_at_house": "{fmt_money}  ·  libera cozinhar na casa",
         "needs_standing_with_bankers_have": "{fmt_money}  ·  exige {city_property_rep_gate} de prestígio com os Banqueiros (tem {get})",
-        "oven_costs_party_has": "um forno custa {cost} -- o grupo tem {wealth}.",
-        "oven_is_installed_house_can": "o forno foi instalado -- a casa já pode cozinhar.",
+        "oven_costs_party_has": "um forno custa {cost}, mas o grupo tem {wealth}.",
+        "oven_is_installed_house_can": "o forno foi instalado, então a casa já pode cozinhar.",
         "party_has_no_money_to": "o grupo não tem dinheiro para pagar.",
         "paid_toward_debt": "pagou {fmt_money} da dívida.",
-        "debt_cleared_bankers_deal_with": "dívida quitada -- os Banqueiros voltam a negociar com a guilda.",
+        "debt_cleared_bankers_deal_with": "dívida quitada, então os Banqueiros voltam a negociar com a guilda.",
         "no_tax": "sem imposto",
         "guard_raids_this_place": "a guarda invade este lugar",
         "missed_more_before_bankers_act": "{missed_payments} atrasados  ·  mais {max} antes de os Banqueiros agirem",
@@ -3712,10 +3726,10 @@
         "owed_to_bankers": "devido aos banqueiros",
         "label_bank": "o cofre",
         "closed_bank": "alugue um cofre primeiro.",
-        "no_room_bank": "não cabe -- {free} kg livres no baú.",
+        "no_room_bank": "não cabe: {free} kg livres no baú.",
         "label_house": "a casa",
         "closed_house": "compre a casa primeiro.",
-        "no_room_house": "não cabe -- {free} kg livres no imóvel.",
+        "no_room_house": "não cabe: {free} kg livres no imóvel.",
         "items": {
             "one": "{n} item",
             "other": "{n} itens"
@@ -3745,7 +3759,7 @@
         "cannot_mint": "não dá para cunhar {n} moedas de ouro ali"
     },
     "ledger": {
-        "hands_over_sealed_chest_outpost": "{name} entrega o baú lacrado -- o posto dá uma carta de recibo em troca.",
+        "hands_over_sealed_chest_outpost": "{name} entrega o baú lacrado, e o posto dá uma carta de recibo em troca.",
         "treefolk_joins_your_group_for": "{name} (Treefolk) se junta ao seu grupo para a mentoria.",
         "recruit_steps_into_garrison": "O recruta entra para a guarnição. Recompensa de {fmt_money} recebida!",
         "offer_req": "um recruta Treefolk inexperiente se junta ao grupo  ·  treine-o até o nível racial 2 e depois traga-o de volta  ·  {fmt_money}, e o recruta deixa a guilda",
@@ -4167,6 +4181,7 @@
         "only": "somente {join}",
         "hit_die_d": "Dado de vida d{b}",
         "speed_m": "Velocidade {b:g} m",
+        "speaks": "Fala {languages}",
         "drops": "Solta: {value}",
         "no_chapter_called": "nenhum capítulo chamado {tab}",
         "no_entry_called": "nenhuma entrada chamada {ref}",
@@ -4198,7 +4213,7 @@
         "stone_walls_in_clearing_that": "Muros de pedra numa clareira que parou de queimar. O Ogro construiu direito, e agora mantém os goblins no machado. A forja deles bate armas do tamanho de corpos como o dele.",
         "big_walls_big_axes_little": "Muros grandes, machados grandes. Gente pequena paga em dobro. Brincadeira! ...Quase.",
         "black_stumps_for_mile_round": "Tocos negros por uma milha ao redor de uma fortaleza pronta. Os goblins do Ogro percorrem os Ermos a partir dela.",
-        "fire_took_clearing_back_to": "{display_name}: o fogo tomou a clareira -- de volta aos Ermos.",
+        "fire_took_clearing_back_to": "{display_name}: o fogo tomou a clareira; de volta aos Ermos.",
         "clearing_ahead_is_gone_march": "{display_name}: a clareira à frente sumiu; a marcha para.",
         "burned_through_stretch_of_wilds": "{name} queimou um trecho dos Ermos.",
         "fire_jumps_on_is_burning": "O fogo avança: {name} está queimando.",
@@ -4211,7 +4226,7 @@
         "gets_hearing_from_now_show": "{name} consegue ser ouvido por {who} ({roll}). Agora mostre como se faz.",
         "shows_how_it_is_done": "{name} mostra a {who} como se faz ({roll}). ",
         "ogre_builds_it_right_without": "O Ogro constrói direito, sem o fogo. ",
-        "goblins_smother_fire_and_keep": "Os goblins abafam o fogo e guardam a lição -- a notícia chegará ao Ogro.",
+        "goblins_smother_fire_and_keep": "Os goblins abafam o fogo e guardam a lição, e a notícia chegará ao Ogro.",
         "d_int_vs_dc": "d20({nat}) {mod_intelligence:+}(INT) = {total} contra CD {put_out_dc}",
         "leads_work_but_fire_is": "{name} lidera o trabalho, mas o fogo não apagou ({roll}). Dá para tentar de novo.",
         "leads_work_and_is_out": "{name} lidera o trabalho e {other} apagou ({roll}). A clareira está salva.",
@@ -4289,7 +4304,7 @@
     },
     "routines": {
         "is_busy": "{display_name} está ocupado",
-        "routine_stopped": "{display_name}: rotina parada -- {reason}.",
+        "routine_stopped": "{display_name}: rotina parada ({reason}).",
         "routine_finished": "{display_name}: rotina concluída.",
         "too_many_blocks_in_no": "blocos demais sem tempo",
         "nothing_to_gather_here": "nada para coletar aqui",
@@ -4355,6 +4370,7 @@
         },
         "day_to_day": "DIA {joined_day} AO DIA {day}",
         "starved_to_death": "Morreu de fome",
+        "killed_in_combat": "Morto em combate",
         "day_without_meal": {
             "one": "{n} dia sem uma refeição.",
             "other": "{n} dias sem uma refeição."
@@ -4385,9 +4401,9 @@
         "nobody_here_has_instrument_to": "Ninguém aqui tem um instrumento para tocar.",
         "tavern_stage_played_h": "Palco da taverna: tocaram {hours} h ({tips}).",
         "unknown_recipe": "Receita desconhecida {recipe}.",
-        "can_t_craft_needs": "{name} não consegue fabricar {target} -- precisa de {join}.",
-        "can_t_craft_missing_materials": "{name} não consegue fabricar {target} -- faltam materiais.",
-        "out_of_materials_after_h": " -- sem materiais após {worked}h",
+        "can_t_craft_needs": "{name} não consegue fabricar {target}: precisa de {join}.",
+        "can_t_craft_missing_materials": "{name} não consegue fabricar {target}: faltam materiais.",
+        "out_of_materials_after_h": " (sem materiais após {worked}h)",
         "finished_crafting": "{name} terminou de fabricar: {target}{value}!{more}",
         "worked_on_for_h_progress": "{name} trabalhou em {target} por {worked}h (+{progress_total} de progresso)."
     },
@@ -4398,7 +4414,7 @@
         "games_brawl": "Jogos: Briga",
         "games_capture_flag": "Jogos: Capture a Bandeira",
         "games_ribbit_brothers": "Jogos: Os Irmãos Ribbit",
-        "never_answered_challenge_champion_of": "{name} nunca respondeu ao desafio -- o título de Campeão da Fossa está perdido.",
+        "never_answered_challenge_champion_of": "{name} nunca respondeu ao desafio, então o título de Campeão da Fossa está perdido.",
         "lv_lackeys_lv": "Nv {value} + Capangas (Nv 0)",
         "lv": "Nv {value}",
         "bosses_lackeys_lv": "Chefes + Capangas (Nv {level})",
@@ -4414,12 +4430,12 @@
         "starved_to_death": "{name} morreu de fome.",
         "needs_no_repair": "{name:o} não precisa de conserto.",
         "it_takes_to_mend": "são necessários {cost} {repair_item} para consertar {name:o}.",
-        "fails_to_mend_vs_dc": "{name} não consegue consertar {item:o} ({total} contra CD {repair_dc}) -- gasta {repair_item} à toa.",
+        "fails_to_mend_vs_dc": "{name} não consegue consertar {item:o} ({total} contra CD {repair_dc}) e gasta {repair_item} à toa.",
         "mends_hp": "{name} conserta {item:o}: +{gained} PV ({hp}/{hp_max}).",
-        "studies_are_over_rooms_released": "{name}: os estudos acabaram -- quartos liberados.",
-        "no_one_can_pay_for": "{name}: ninguém pode pagar mais uma noite -- quartos liberados.",
+        "studies_are_over_rooms_released": "{name}: os estudos acabaram, quartos liberados.",
+        "no_one_can_pay_for": "{name}: ninguém pode pagar mais uma noite, quartos liberados.",
         "bankers_collect_in_property_tax": "Os Banqueiros cobram {fmt_money} de imposto predial.",
-        "guild_can_t_cover_property": "A guilda não cobre o imposto predial -- os Banqueiros anotam.",
+        "guild_can_t_cover_property": "A guilda não cobre o imposto predial, e os Banqueiros anotam.",
         "s_unpaid_debt_to_bankers": "A dívida não paga de {name} com os Banqueiros chega aos ouvidos da guarda."
     },
     "guild_rules": {
@@ -4427,7 +4443,7 @@
         "no_free_guild_leader_change": "sem troca de líder da guilda grátis restante",
         "split_needs_non_empty_proper": "dividir exige um subconjunto próprio e não vazio do grupo",
         "can_t_split_group_with": "não dá para dividir um grupo com uma ordem em andamento",
-        "no_free_group_slot_guild": "sem vaga livre de grupo -- a guilda não é famosa o bastante para manter outro",
+        "no_free_group_slot_guild": "sem vaga livre de grupo: a guilda não é famosa o bastante para manter outro",
         "herd_would_outgrow_what_can": "o rebanho passaria do que {name} consegue controlar ({herd_capacity})",
         "can_only_merge_groups_standing": "só dá para juntar grupos no mesmo local",
         "can_t_merge_group_with": "não dá para juntar um grupo com uma ordem em andamento"
@@ -4445,12 +4461,12 @@
     "guild_claim": {
         "claim_already_has_oven": "a posse já tem um forno.",
         "oven_needs_group_carries": "o forno exige {claim_oven_bricks} {claim_oven_brick}; o grupo carrega {have}.",
-        "oven_is_built_claim_can": "o forno foi construído -- a posse pode cozinhar, com ou sem fogueira.",
+        "oven_is_built_claim_can": "o forno foi construído, então a posse pode cozinhar, com ou sem fogueira.",
         "nobody_has_to_burn": "ninguém tem {campfire_fuel} para queimar.",
-        "fire_catches_claim_has_hearth": "o fogo pega -- a posse agora tem uma lareira.",
-        "wood_won_t_catch_fuel": "a madeira não pega -- o combustível se perdeu.",
-        "wilds_claim_sits_unguarded_sustaining": "A posse nos Ermos está sem guarda -- a sustentação recomeça.",
-        "wilds_claim_is_established_land": "A posse nos Ermos está ESTABELECIDA -- a terra é da guilda."
+        "fire_catches_claim_has_hearth": "o fogo pega e a posse agora tem uma lareira.",
+        "wood_won_t_catch_fuel": "a madeira não pega e o combustível se perdeu.",
+        "wilds_claim_sits_unguarded_sustaining": "A posse nos Ermos está sem guarda, então a sustentação recomeça.",
+        "wilds_claim_is_established_land": "A posse nos Ermos está ESTABELECIDA. A terra é da guilda."
     },
     "ox": {
         "squad": "O esquadrão",
@@ -4471,13 +4487,13 @@
         "searches_for_hours_and_finds": "{who} procura por {search_hours} horas e não encontra toca (d20({nat}) {wis:+}(SAB) = {total} contra CD {search_dc})."
     },
     "necromancer": {
-        "falls_and_every_dead_thing": "{name} cai -- e toda coisa morta que ele ergueu cai junto.",
+        "falls_and_every_dead_thing": "{name} cai, e toda coisa morta que ele ergueu cai junto.",
         "necromancer_is_down_squad_may": "O necromante caiu. O esquadrão pode se retirar, ou lutar pelo campo."
     },
     "ox_fields": {
         "right_here": "bem aqui",
         "hooves_drum_somewhere_to": "Cascos ressoam em algum lugar a {direction_name}.",
-        "aurochs_bellows_answering_call_rolls": "Aurochs muge -- um chamado em resposta ecoa pelos campos, e um boi vem em disparada!"
+        "aurochs_bellows_answering_call_rolls": "Aurochs muge, um chamado em resposta ecoa pelos campos, e um boi vem em disparada!"
     },
     "guild_log": {
         "guild": "A Guilda",
@@ -4489,7 +4505,7 @@
         "step_buy_axe_at_smithy": "Etapa 1/3: compre um Machado na Ferraria.",
         "step_work_shifts_at_lumber": "Etapa 0/3: trabalhe turnos no Pátio de Madeira para chegar ao Nv de Trabalho 1.",
         "guild_objectives": "Objetivos da Guilda",
-        "small_tasks_that_show_what": "Pequenas tarefas que mostram o que a guilda pode fazer, em qualquer ordem. Sem moedas nem fama -- apenas um guia.",
+        "small_tasks_that_show_what": "Pequenas tarefas que mostram o que a guilda pode fazer, em qualquer ordem. Sem moedas nem fama, apenas um guia.",
         "done": "feito",
         "section": "Objetivos"
     },
@@ -4499,7 +4515,7 @@
             "f": "{lower:o} não tem animal atrelado para puxá-la."
         },
         "wears_no_pack_saddle": "{species:o} não usa sela de carga.",
-        "won_t_fit_kg_free": "não cabe -- {free:g} kg livres em {lower}.",
+        "won_t_fit_kg_free": "não cabe: {free:g} kg livres em {lower}.",
         "already_pulls": "{species:o} já puxa {lower:o}.",
         "now_pulls": "{species:o} agora puxa {lower:o}.",
         "needs_harness_to_pull_anything": "{species:o} precisa de um Arnês para puxar qualquer coisa.",
@@ -4521,9 +4537,9 @@
         "stop_studying": "parar de estudar",
         "open_chest": "ABRIR O BAÚ",
         "to": "para {name}",
-        "can_t_pick_lock_chest": "{name} não consegue arrombar a fechadura -- o baú continua ali.",
-        "breaks_bankers_seal_spill_out": "{name} rompe o selo dos Banqueiros -- {gems} {gem_item} se espalham, mas a missão de confiança está arruinada. Crime: {crime}.",
-        "picks_lock_inside": "{name} arromba a fechadura -- {gems} {gem_item} lá dentro.",
+        "can_t_pick_lock_chest": "{name} não consegue arrombar a fechadura, então o baú continua ali.",
+        "breaks_bankers_seal_spill_out": "{name} rompe o selo dos Banqueiros e {gems} {gem_item} se espalham, mas a missão de confiança está arruinada. Crime: {crime}.",
+        "picks_lock_inside": "{name} arromba a fechadura: {gems} {gem_item} lá dentro.",
         "is_already_at_full_health": "{name} já está com a saúde plena.",
         "drinks_minor_healing_potion_recovering": "{name} bebe uma Poção de Cura Menor e recupera {heal} PV.",
         "drop": "Largar",
@@ -4608,7 +4624,7 @@
     },
     "stables": {
         "party_purse": "bolsa do grupo",
-        "costs_party_has": "{what} custa {cost} -- o grupo tem {wealth}.",
+        "costs_party_has": "{what} custa {cost}, mas o grupo tem {wealth}.",
         "can_control_herd_of_at": "{name} controla um rebanho de, no máximo, {herd_capacity}.",
         "joins_group": "{species:um} se junta ao grupo.",
         "now_wears": "{species:o} agora usa {tack:um}.",
@@ -4618,8 +4634,8 @@
             "f": "{species:o} foi vendida."
         },
         "is_yours_harness_animal_to": {
-            "name": "{lower:o} é seu -- atrele um animal para puxá-lo.",
-            "f": "{lower:o} é sua -- atrele um animal para puxá-la."
+            "name": "{lower:o} é seu: atrele um animal para puxá-lo.",
+            "f": "{lower:o} é sua: atrele um animal para puxá-la."
         },
         "unload_first_2": "descarregue {lower:o} primeiro.",
         "sold_2": {
@@ -4628,7 +4644,7 @@
         }
     },
     "holdings": {
-        "bay_costs_party_has": "uma baia custa {cost} -- o grupo tem {wealth}.",
+        "bay_costs_party_has": "uma baia custa {cost}, mas o grupo tem {wealth}.",
         "new_bay_room_for_one": "uma nova baia: espaço para mais uma carroça e mais um animal.",
         "is_parked_in_garage": {
             "name": "{lower:o} está estacionado na garagem.",
@@ -4662,6 +4678,10 @@
     "sheet": {
         "no_arrow_improvised": "{weapon_name} (sem flecha -> improvisada)",
         "range_arrows": "{size_str}à distância {weapon}  ·  {ammo} flechas  ·  {hands}",
+        "two_hands": "2 mãos",
+        "one_hand": "1 mão",
+        "melee": "corpo a corpo",
+        "crit_fumble": "crítico 20, falha 1",
         "thrown": "  ·  {weapon} arremessável",
         "dying": "morrendo {death_clock}/{dying_turns}",
         "ac": "{armor_name}  ·  +{a} CA"
@@ -4683,7 +4703,7 @@
         "no_light_of_their_own": "sem luz própria (só enxerga luz ao longo da linha de visão)"
     },
     "captives": {
-        "is_led_away_in_bonds": "{name} é levado preso -- prisioneiro por {captive_days} dias (tela do grupo, MISSÕES E PRISIONEIROS).",
+        "is_led_away_in_bonds": "{name} é levado preso: prisioneiro por {captive_days} dias (tela do grupo, MISSÕES E PRISIONEIROS).",
         "is_set_loose": "{name} é solto.",
         "dies_in_captivity_keeps_body": "{name} morre no cativeiro; {captor} fica com o corpo.",
         "dies_in_captivity": "{name} morre no cativeiro."
@@ -4692,7 +4712,7 @@
         "deposited_lumber_toward_fences": "depositou {total} de Madeira para as cercas.",
         "nobody_here_is_carrying_lumber": "ninguém aqui carrega Madeira.",
         "nobody_has_to_burn": "ninguém tem {campfire_fuel} para queimar.",
-        "garrison_stands_down_sustaining_claim": "a guarnição se dispensa -- a sustentação da posse recomeça."
+        "garrison_stands_down_sustaining_claim": "a guarnição se dispensa, então a sustentação da posse recomeça."
     },
     "draft_rules": {
         "base": "base {base_recruit_capacity}",
@@ -4792,31 +4812,31 @@
         "found_faction": "Você encontrou {faction}.",
         "the_group": "O grupo",
         "arrest": {
-            "one": "{who} aceita a prisão -- {n} dia nas celas da Cidade.",
-            "other": "{who} aceita a prisão -- {n} dias nas celas da Cidade."
+            "one": "{who} aceita a prisão e passa {n} dia nas celas da Cidade.",
+            "other": "{who} aceita a prisão e passa {n} dias nas celas da Cidade."
         },
         "fall_back": "{who} recuam em direção a {place}.",
-        "guard_survivor": "{who} vive para lutar outro dia -- crime agora {crime}.",
+        "guard_survivor": "{who} vive para lutar outro dia. Crime agora {crime}.",
         "gather": {
             "lost": "A equipe é expulsa do local de trabalho e sai sem nada.",
             "won": "A equipe afugenta a matilha."
         },
         "supply": {
-            "lost": "A caravana de suprimentos é desbaratada -- a carga se perde; a escolta recua para {place}.",
+            "lost": "A caravana de suprimentos é desbaratada e a carga se perde; a escolta recua para {place}.",
             "won": "Os guardas da caravana afugentam os soldados e a caravana segue."
         },
         "raid": {
-            "won": "Os lutadores da guilda afugentam a patrulha da guarda -- o imóvel fica, por enquanto.",
-            "lost": "A guarda da Cidade finalmente desocupa o imóvel invadido -- perdido de vez."
+            "won": "Os lutadores da guilda afugentam a patrulha da guarda, e o imóvel fica, por enquanto.",
+            "lost": "A guarda da Cidade finalmente desocupa o imóvel invadido, e ele se perde de vez."
         },
         "claim": {
-            "unguarded": "A posse nos Ermos está sem guarda -- é tomada sem luta.",
+            "unguarded": "A posse nos Ermos está sem guarda, então é tomada sem luta.",
             "raid_won": "A equipe afugenta os invasores e a posse continua sendo sustentada.",
-            "raid_lost": "A equipe se dispersa -- a sustentação da posse recomeça.",
+            "raid_lost": "A equipe se dispersa, então a sustentação da posse recomeça.",
             "seizure_won": "A equipe afugenta os invasores e mantém a posse.",
-            "seizure_lost": "A equipe cai -- a posse nos Ermos é tomada.",
-            "retaken": "A posse nos Ermos é retomada -- os ocupantes são expulsos.",
-            "retake_failed": "A tentativa de retomar a posse fracassa -- ela continua perdida."
+            "seizure_lost": "A equipe cai e a posse nos Ermos é tomada.",
+            "retaken": "A posse nos Ermos é retomada e os ocupantes são expulsos.",
+            "retake_failed": "A tentativa de retomar a posse fracassa, então ela continua perdida."
         },
         "title": {
             "ambush": "EMBOSCADA NA ESTRADA",
@@ -5073,6 +5093,17 @@
                 "name": "A Ordem da Fé",
                 "gender": "f"
             }
+        },
+        "alignment": {
+            "Lawful and Good": "Leal e Bom",
+            "Lawful and Neutral": "Leal e Neutro",
+            "Lawful and Evil": "Leal e Mau",
+            "Neutral and Good": "Neutro e Bom",
+            "Neutral and Neutral": "Neutro",
+            "Neutral and Evil": "Neutro e Mau",
+            "Chaotic and Good": "Caótico e Bom",
+            "Chaotic and Neutral": "Caótico e Neutro",
+            "Chaotic and Evil": "Caótico e Mau"
         },
         "alignment_bent": {
             "Lawful and Good": "Leal e Bom",
@@ -5895,7 +5926,7 @@
             "climber": "escala qualquer superfície de CD 25 ou menos sem teste (ainda gasta a ação).",
             "extra_language": "fala um segundo idioma sorteado: pode Desmoralizar inimigos que compartilhem qualquer um dos dois.",
             "catfall": "sempre cai de pé: 3 níveis a mais de queda não custam nada (uma queda de até 4 níveis não causa dano).",
-            "mimic_sounds": "pode Desmoralizar sem idioma em comum (imita a voz do alvo) -- só no ataque; ser desmoralizado ainda exige uma língua comum.",
+            "mimic_sounds": "pode Desmoralizar sem idioma em comum (imita a voz do alvo), mas só no ataque; ser desmoralizado ainda exige uma língua comum.",
             "blood_magic": "magia de sangue ancestral: começa iniciado em magia de sangue, +2 nas rolagens de estudo de magia.",
             "autotroph": "faz fotossíntese: nunca precisa comer, imune às regras de fome.",
             "ferocity": "uma vez por batalha, quando abatido cai a 0 PV e morrendo, mas só tomba no fim do seu turno (o teste contra a morte corre normalmente a partir daí).",
@@ -5906,11 +5937,11 @@
             "reach": "braços longos num corpo enorme: ataques corpo a corpo alcançam 1 casa a mais."
         },
         "node": {
-            "city": "A casa de contagem dos Banqueiros em Ankareth. De onde a guilda parte -- e onde os Banqueiros guardam seus cofres.",
-            "lumber_yard": "Uma serraria logo fora das muralhas. O machado é emprestado -- você derruba uma árvore que não é sua e leva só o salário das horas. A serraria compra o que rende e vende sua madeira e suas frutas.",
+            "city": "A casa de contagem dos Banqueiros em Ankareth, de onde a guilda parte e onde os Banqueiros guardam seus cofres.",
+            "lumber_yard": "Uma serraria logo fora das muralhas. O machado é emprestado: você derruba uma árvore que não é sua e leva só o salário das horas. A serraria compra o que rende e vende sua madeira e suas frutas.",
             "carpenter": "Uma oficina perfumada de lascas de cedro e madeira secando, entre as muralhas da cidade e a serraria. Aqui se oferecem arcos, bestas, carroças, carruagens e trabalho em madeira, e quem cuida dela, do Povo-Árvore, dobra a madeira viva até dar forma.",
             "mine": "Uma pedreira em funcionamento depois da Estrada Velha. A picareta é emprestada na entrada, e a única pedra, o único minério e o único carvão à venda são vendidos aqui.",
-            "arena": "Lutas apostadas nos fossos sob a cidade. Ninguém morre -- você perde a bolsa.",
+            "arena": "Lutas apostadas nos fossos sob a cidade. Ninguém morre, mas você perde a bolsa.",
             "market": "Compre e venda equipamento por cobre. Os comerciantes falam Ankarin.",
             "smith": "Uma forja na estrada para fora das muralhas, tão barulhenta que se ouve do portão. Aqui se vendem armas, armaduras de metal e barras de ferro, e a bigorna é emprestada.",
             "tanner": "Varais de couro a favor do vento da serraria. Armaduras de couro, capas, aljavas e arcos, e trabalho para qualquer um que cace.",
@@ -5918,11 +5949,11 @@
             "tavern": "Fumaça, cerveja morna e gente sem contrato. Convença alguém a entrar na guilda.",
             "prison": "As celas da Cidade para criminosos menores. Pague a fiança de um detento pela chance de recrutá-lo.",
             "road": "Uma trilha de terra cortando o campo aberto a leste.",
-            "wilds": "Campo aberto sob o céu, fora das muralhas. Cace aqui por carne -- e arrisque o que mais caça por aqui.",
-            "ledger_hold": "Uma casa de contagem fortificada que os Banqueiros mantêm bem longe das muralhas -- armada e acostumada a carga preciosa.",
-            "frontier_outpost": "Uma paliçada no limite da marca, onde as caravanas do Posto de Comando terminam e seus soldados assumem. Nada para contratar aqui -- a guerra está uma estrada adiante.",
+            "wilds": "Campo aberto sob o céu, fora das muralhas. Cace aqui por carne e arrisque o que mais caça por aqui.",
+            "ledger_hold": "Uma casa de contagem fortificada que os Banqueiros mantêm bem longe das muralhas, armada e acostumada a carga preciosa.",
+            "frontier_outpost": "Uma paliçada no limite da marca, onde as caravanas do Posto de Comando terminam e seus soldados assumem. Nada para contratar aqui: a guerra está uma estrada adiante.",
             "battlefield": "Duas linhas de trincheiras e terreno revirado entre elas, onde se trava a guerra da fronteira. O Posto de Comando guarda a trincheira mais próxima.",
-            "wilds_territory": "Um trecho dos Ermos que a guilda pretende tornar seu -- se conseguir limpá-lo, cercá-lo e mantê-lo.",
+            "wilds_territory": "Um trecho dos Ermos que a guilda pretende tornar seu, se conseguir limpá-lo, cercá-lo e mantê-lo.",
             "library": "Um lugar quieto de estudo logo fora da cidade. Vende dicionários e busca conhecimento perdido.",
             "farm": "Uma propriedade rural além das muralhas. Vende o que os campos dão e cuida dos estábulos: os animais que carregam e puxam, e seus arreios.",
             "ancient_ruins": "Torres de pedra em ruínas enterradas no mato selvagem. Os cofres da biblioteca perdida estão embaixo.",
@@ -5986,7 +6017,7 @@
         },
         "mission": {
             "tanner_hides": "O curtidor quer 15 m² de pele de qualquer coisa com pelo. Os Ermos estão cheias delas, se você conseguir abater quem as veste.",
-            "tanner_biwolf": "O curtidor ouviu falar de um lobo do tamanho de uma carroça que caça nos Ermos à noite. Ele segue o cheiro de carne -- cace depois de escurecer com quinze porções nas mochilas e ele vai achar vocês, e a matilha dele junto. Traga-me o couro dele.",
+            "tanner_biwolf": "O curtidor ouviu falar de um lobo do tamanho de uma carroça que caça nos Ermos à noite. Ele segue o cheiro de carne: cace depois de escurecer com quinze porções nas mochilas e ele vai achar vocês, e a matilha dele junto. Traga-me o couro dele.",
             "tanner_ox": "O curtidor fala de Auroque, um boi que sobreviveu a todo caçador mandado atrás dele, pastando nos campos férteis ao sul da fazenda. A pele dele é a melhor que existe. Traga-a para mim e eu ensino pra que serve o chifre.",
             "bankers_trust_chest": "Os Banqueiros querem uma prova de que a guilda merece confiança com algo precioso antes de darem seu aval: leve um baú lacrado até o posto deles no Posto de Comando, em segurança, e traga de volta a carta de recebimento. Não espie.",
             "apothecary_mushrooms": "O boticário precisa de 15 cogumelos vermelhos para preparar mais poções. Eles crescem nos Ermos.",
@@ -5996,19 +6027,19 @@
             "blood_codex": "Os magos de sangue esperam pelo Códice Antigo. Há só um: entregue-o a nós, e as outras escolas nunca o lerão.",
             "nature_codex": "O bosque pede o Códice Antigo. Há só um: deixe-o conosco, e as outras escolas nunca o lerão.",
             "faith_codex": "A catedral pede o Códice Antigo. Há só um: confie-o a nós, e as outras escolas nunca o lerão.",
-            "blood_snake": "Uma cobra com sangue de dragão faz ninho perto da Serraria -- procure a toca dela no pátio. Traga-nos o corpo: o sangue se lê na carne, e o culto o leria.",
-            "nature_snake": "Uma cobra com sangue de dragão faz ninho perto da Serraria -- procure a toca dela no pátio. Algo a retorceu, uma maldição talvez. Traga-a viva até nós, amarrada com corda ou corrente, e o bosque cuidará dela.",
-            "faith_battlefield": "A catedral manda seus remédios onde estão os moribundos -- na primeira vez que pede, seis poções vão com você. Vá ao Campo de Batalha depois do posto de fronteira do Posto de Comando e lute ao lado dos soldados de lá. Vença a escaramuça e traga cada um deles de volta vivo.",
+            "blood_snake": "Uma cobra com sangue de dragão faz ninho perto da Serraria. Procure a toca dela no pátio. Traga-nos o corpo: o sangue se lê na carne, e o culto o leria.",
+            "nature_snake": "Uma cobra com sangue de dragão faz ninho perto da Serraria. Procure a toca dela no pátio. Algo a retorceu, uma maldição talvez. Traga-a viva até nós, amarrada com corda ou corrente, e o bosque cuidará dela.",
+            "faith_battlefield": "A catedral manda seus remédios onde estão os moribundos: na primeira vez que pede, seis poções vão com você. Vá ao Campo de Batalha depois do posto de fronteira do Posto de Comando e lute ao lado dos soldados de lá. Vença a escaramuça e traga cada um deles de volta vivo.",
             "faith_necromancer": "Os soldados que tombaram no Campo de Batalha não ficam mortos: dias depois eles se levantam e andam. Alguém lá fora os ergue, e ninguém viu quem. Vá à linha de frente, ache quem acorda os mortos e derrube.",
-            "nature_wildfire": "Um Ogro trouxe um bando de goblins para os Ermos para limpar terreno para uma fortaleza, e eles queimam a floresta para isso -- mal. Cada fogo que acendem foge do controle. Ensine-os, ou detenha-os, e apague os fogos antes que se espalhem. O Ogro está no centro de tudo.",
-            "blood_clutch": "O Códice nomeia uma toca abaixo da Mina, onde as galerias esquentam: um dragão dorme ali sobre a ninhada. Vasculhe as galerias fundas, desça e traga-nos um dos ovos -- a própria linhagem, ainda não chocada. O que mais você trouxer de lá é seu.",
+            "nature_wildfire": "Um Ogro trouxe um bando de goblins para os Ermos para limpar terreno para uma fortaleza, e eles queimam a floresta para isso, só que mal. Cada fogo que acendem foge do controle. Ensine-os, ou detenha-os, e apague os fogos antes que se espalhem. O Ogro está no centro de tudo.",
+            "blood_clutch": "O Códice nomeia uma toca abaixo da Mina, onde as galerias esquentam: um dragão dorme ali sobre a ninhada. Vasculhe as galerias fundas, desça e traga-nos um dos ovos: a própria linhagem, ainda não chocada. O que mais você trouxer de lá é seu.",
             "ledger_treefolk": "O Comandante Varkas do Posto de Comando confia à sua guilda um recruta novo do Povo-Árvore. Treine-o na estrada até dominar suas raízes raciais (nível racial 2) e devolva-o à guarnição."
         },
         "deed": {
             "arena_first_blood": "Vença uma luta apostada nos fossos.",
             "arena_lone_wolf": "Vença no fosso de entrada com um único lutador.",
             "arena_dethrone": "Derrote o time de campeões do fosso.",
-            "arena_bloodsport": "Vença uma luta nos Jogos -- o segundo estágio da arena.",
+            "arena_bloodsport": "Vença uma luta nos Jogos, o segundo estágio da arena.",
             "arena_flag_runner": "Capture a bandeira inimiga nos Jogos.",
             "arena_untouchable": "Capture a bandeira sem nocautear ninguém.",
             "arena_ribbit_brothers": "Derrote os três Grippli nos Jogos.",
@@ -6036,14 +6067,14 @@
             "ledger_hold_supply_run": "Complete com sucesso 10 corridas de caravana de suprimentos militares até o posto de fronteira."
         },
         "npc": {
-            "adelio-small-knife": "Um batedor de carteiras de aldeia que conversou até entrar nos Fossos há uma temporada. Luta sujo, se abaixa cedo e segurou o cinturão do último degrau mais tempo do que qualquer um apostou -- o melhor de um mau lote, e ele sabe.",
+            "adelio-small-knife": "Um batedor de carteiras de aldeia que conversou até entrar nos Fossos há uma temporada. Luta sujo, se abaixa cedo e segurou o cinturão do último degrau mais tempo do que qualquer um apostou: o melhor de um mau lote, e ele sabe.",
             "aurochs": "O boi imortal. Cada caçador mandado atrás dele é uma história que alguém conta.",
             "biwolf": "Só um lobo GRANDE pra caramba.",
-            "bufo": "O irmão mais velho. Planta-se entre você e a bandeira e não sai -- uma muralha de músculo cheio de verrugas, com uma espada larga nos punhos e uma lança na língua.",
+            "bufo": "O irmão mais velho. Planta-se entre você e a bandeira e não sai: uma muralha de músculo cheio de verrugas, com uma espada larga nos punhos e uma lança na língua.",
             "dragon": "Um dragão vermelho mais velho que a Mina, dormindo sobre a ninhada no escuro quente abaixo das galerias. O sangue dele é o que a Dragobra carregava, e o que o Culto do Sangue lê.",
             "necromancer": "Um coveiro da Fé que aprendeu a acordar o que enterrou. A guerra lhe dá todos os mortos que ele quer.",
             "ogre": "Um Ogro que pretende construir uma fortaleza nos Ermos e não faz ideia de como limpar o terreno para ela. Os goblins dele queimam a floresta por acres.",
-            "peep": "O caçula, e o mais mortal à distância. Fica no fundo dos canais de água até o queixo -- respira nela sem problema -- e derruba quem atravessa a vau enquanto os irmãos seguram a margem.",
+            "peep": "O caçula, e o mais mortal à distância. Fica no fundo dos canais de água até o queixo, respirando nela sem problema, e derruba quem atravessa a vau enquanto os irmãos seguram a margem.",
             "ribit": "O mais velho dos três e o que fala. Rápido, nunca onde o golpe cai, e gosta de deixar você se cansar a céu aberto antes de a adaga achar sua garganta.",
             "ruin-sentry": "Antigo autômato construído e preso à guarda da entrada da biblioteca.",
             "sanctum-spider": "Faz ninho no santuário do Arquivista e cobre de teia o caminho até o códice.",
@@ -6053,7 +6084,7 @@
         "talent": {
             "strong": "+1 de Força.",
             "sure_strike": "+1 para acertar com ataques baseados em Força.",
-            "blind_strike": "reduz em 1 a penalidade de ataque contra alvos ocultos ou no escuro.",
+            "blind_strike": "Reduz em 1 a penalidade de ataque contra alvos ocultos ou no escuro.",
             "heavy_hand": "+1 de dano nos ataques corpo a corpo.",
             "wrestler": "+1 nos testes de Empurrar e Agarrar.",
             "agile": "+1 de Destreza.",
@@ -6068,32 +6099,32 @@
             "free_step": "Uma vez por turno, dê 1 passo de 1 casa sem gastar ponto de ação.",
             "tough": "+1 de Constituição.",
             "hardy": "+1 de PV máximo por cada Dado de Vida que você tem.",
-            "recovery": "recupera 1 PV depois de cada luta em que sobreviver.",
+            "recovery": "Recupera 1 PV depois de cada luta em que sobreviver.",
             "bulwark": "+1 de CA.",
-            "armor_bearer": "reduz em até 6 kg o peso carregado da armadura equipada.",
+            "armor_bearer": "Reduz em até 6 kg o peso carregado da armadura equipada.",
             "alert": "+1 de Sabedoria.",
             "quick_wits": "+2 de iniciativa.",
-            "peripheral_vision": "quando desprevenido, sua CA é reduzida em apenas 1 em vez de 2.",
+            "peripheral_vision": "Quando desprevenido, sua CA é reduzida em apenas 1 em vez de 2.",
             "iron_will": "+2 de Defesa Mental.",
-            "iron_stance": "usar Defender concede +2 de Defesa Mental, além da CA, até o seu próximo turno.",
+            "iron_stance": "Usar Defender concede +2 de Defesa Mental, além da CA, até o seu próximo turno.",
             "imposing": "+1 de Carisma.",
             "menacing": "+2 nos testes de Desmoralizar.",
             "wordless_menace": "Desmoralizar funciona contra quem não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
-            "gruesome_takedown": "ao abater um inimigo, faz imediatamente um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
+            "gruesome_takedown": "Ao abater um inimigo, faz imediatamente um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
             "cull_the_broken": "+2 de dano nos ataques contra alvos desmoralizados.",
-            "inspiring_shout": "ao desmoralizar um inimigo com sucesso, o aliado com menos moral restante ganha +1 de iniciativa e recupera 1 de moral; se nenhum aliado perdeu moral, o último aliado na ordem de turnos ganha +1 de iniciativa.",
-            "dread_voice": "um Desmoralizar seu que acerta tira 2 de moral do inimigo em vez de 1.",
-            "grim_chorus": "quando um aliado abate um inimigo, você faz um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
+            "inspiring_shout": "Ao desmoralizar um inimigo com sucesso, o aliado com menos moral restante ganha +1 de iniciativa e recupera 1 de moral; se nenhum aliado perdeu moral, o último aliado na ordem de turnos ganha +1 de iniciativa.",
+            "dread_voice": "Um Desmoralizar seu que acerta tira 2 de moral do inimigo em vez de 1.",
+            "grim_chorus": "Quando um aliado abate um inimigo, você faz um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
             "tactical_mind": "+1 de Inteligência.",
             "sharp_analysis": "+2 em todos os testes de Avaliar e de observação do inimigo.",
             "combat_analysis": "+4 nos testes ativos de Avaliar feitos durante a batalha.",
             "exploit_weakness": "+2 para acertar contra inimigos com Informação Completa.",
-            "anatomist": "sua margem de crítico aumenta em 1 contra inimigos com Informação Completa (crítico com 19-20).",
+            "anatomist": "Sua margem de crítico aumenta em 1 contra inimigos com Informação Completa (crítico com 19-20).",
             "brawny": "+1 de Força.",
             "piecework": "+20% de moedas em trabalhos que pagam em moedas.",
-            "brisk_hands": "o trabalho termina 10% mais rápido -- o tempo economizado é seu.",
-            "steady_pace": "o trabalho conta como descanso: você recupera PV enquanto trabalha, como se descansasse.",
-            "heavy_haul": "carrega até 6 kg a mais antes de cambalear, em qualquer coisa que não seja equipamento (materiais, comida, saque -- não armas, armaduras, escudos ou artefatos).",
+            "brisk_hands": "O trabalho termina 10% mais rápido, então o tempo economizado é seu.",
+            "steady_pace": "O trabalho conta como descanso: você recupera PV enquanto trabalha, como se descansasse.",
+            "heavy_haul": "Carrega até 6 kg a mais antes de cambalear, em qualquer coisa que não seja equipamento (materiais, comida, saque, mas não armas, armaduras, escudos ou artefatos).",
             "charismatic": "+1 de Carisma.",
             "negotiator": "+1 de Carisma nos testes de compra e venda no mercado.",
             "fixer": "+1 na sua lábia ao convencer alguém a entrar na guilda.",
@@ -6102,102 +6133,102 @@
             "clever": "+1 de Inteligência.",
             "linguist": "+2 nas rolagens de progresso ao estudar um idioma estrangeiro.",
             "crafter": "+1 nas rolagens de progresso ao fabricar itens.",
-            "apothecary": "aprende uma receita aleatória de boticário (ou +1 nas rolagens de preparo se já souber todas).",
-            "blacksmith": "aprende uma receita aleatória de forja (ou +1 nas rolagens de forja se já souber todas).",
+            "apothecary": "Aprende uma receita aleatória de boticário (ou +1 nas rolagens de preparo se já souber todas).",
+            "blacksmith": "Aprende uma receita aleatória de forja (ou +1 nas rolagens de forja se já souber todas).",
             "nimble_fingers": "+1 de Destreza.",
             "woodcarver": "+1 nas rolagens de progresso das receitas da Carpintaria.",
-            "skinner": "colhe 1 Pele de 1 m² a mais ao caçar feras nos Ermos.",
-            "fletcher": "talha flechas ao descansar: consome 1 Madeira para reabastecer as aljavas sempre que o grupo descansa.",
-            "wheelwright": "carroceiro habilidoso: os consertos restauram o dobro de PV nas carroças danificadas.",
+            "skinner": "Colhe 1 Pele de 1 m² a mais ao caçar feras nos Ermos.",
+            "fletcher": "Talha flechas ao descansar: consome 1 Madeira para reabastecer as aljavas sempre que o grupo descansa.",
+            "wheelwright": "Carroceiro habilidoso: os consertos restauram o dobro de PV nas carroças danificadas.",
             "sturdy": "+1 de Constituição.",
-            "deep_reserves": "aguenta perder 1 refeição diária antes de sofrer as penalidades da fome.",
-            "restful_sleep": "recupera +1 PV a mais a cada 8 horas de descanso ininterrupto.",
-            "field_cook": "cozinheiro de acampamento eficiente: as fogueiras de campo queimam por 6 horas em vez de 4.",
-            "hardened": "corpo de trabalhador rijo: limpa o dano não letal após 16 horas de descanso ininterrupto em vez de 24.",
+            "deep_reserves": "Aguenta perder 1 refeição diária antes de sofrer as penalidades da fome.",
+            "restful_sleep": "Recupera +1 PV a mais a cada 8 horas de descanso ininterrupto.",
+            "field_cook": "Cozinheiro de acampamento eficiente: as fogueiras de campo queimam por 6 horas em vez de 4.",
+            "hardened": "Corpo de trabalhador rijo: limpa o dano não letal após 16 horas de descanso ininterrupto em vez de 24.",
             "observant": "+1 de Sabedoria.",
             "field_medic": "+2 nos testes de Primeiros Socorros e Estabilizar fora de combate.",
-            "beast_whisperer": "habilidoso com animais de carga: concede +1 de capacidade de rebanho ao grupo.",
-            "triage": "triagem de médico de campo: todos do seu grupo recuperam +1 PV extra a cada 8 horas de descanso.",
-            "pathfinder": "batedor habilidoso: reduz em 10% o tempo de viagem em trilhas e estradas.",
-            "tongue": "sua língua é um terceiro membro e uma arma: +1 casa de alcance nos ataques corpo a corpo.",
-            "webbed_feet": "ótimo nadador: +1 casa em cada Nadar, nunca além da sua velocidade total.",
-            "fruitful": "seu corpo folhoso floresce ao amanhecer: produz 1 fruta fresca por dia para nutrir você ou seus companheiros.",
-            "cosmopolitan": "à vontade entre estranhos: reduz em 1 as penalidades de distância de alinhamento ao recrutar, negociar ou comerciar.",
-            "halfling_luck": "o destino se curva ao seu redor: uma vez a cada 24 horas, rola de novo o seu primeiro teste de d20 falho (dentro ou fora de combate).",
-            "woodland_scout": "a floresta sussurra seus segredos para você: enquanto o grupo viaja Cauteloso, a chance de emboscada na estrada ou numa caçada é 10% menor.",
-            "intimidating_presence": "uma presença física aterradora: pode usar seu modificador de Força em vez de Carisma ao tentar Desmoralizar inimigos.",
-            "swarm_logic": "há segurança, e velocidade, na multidão: você trabalha 10% mais rápido por cada outro Goblin trabalhando ao seu lado.",
-            "tireless_worker": "máquinas não dormem nem reclamam: você conclui tarefas simples de trabalho e coleta bem mais rápido.",
-            "centaur_mount": "suas costas fortes: permite que um aliado Médio ou Pequeno monte em você.",
-            "giant_grip": "força física imensa: empunha armas um tamanho acima do seu (Grande para um Golias, Enorme para um Ogro).",
-            "mighty_shove": "seu Empurrar lança o alvo 3 casas para trás e causa 1d6; o que o parar no caminho (uma parede, ou um corpo, que também sofre o 1d6) causa mais 1d6.",
-            "phalanx": "disciplina marcial: +1 de CA se estiver adjacente a pelo menos um aliado.",
-            "organic_harvester": "instinto de catador: 25% de chance por tipo de saque orgânico de achar mais carne ou pele depois de uma batalha com feras.",
-            "corpse_eater": "banquete brutal: gaste 1 pt para comer um inimigo morto, saciando a fome e desmoralizando os inimigos que o virem.",
-            "gnome_magic_excitement": "entusiasmo pelo desconhecido: no primeiro dia estudando uma magia nova, rola duas vezes o progresso.",
-            "kenku_faith_initiate": "chamado divino: você se torna iniciado na magia da fé. Se já for iniciado, ganha uma magia grátis.",
-            "sprite_nature_initiate": "magia feérica: você se torna iniciado na magia da natureza e ganha a ação Compartilhar Magia.",
-            "dwarf_crafting": "seu ofício ancestral: você aprende as receitas para forjar o Machado, o Escudo e a Armadura Enânicos.",
-            "kobold_trapper": "mecanismos astutos: você aprende as receitas das armadilhas de Urso e de Alarme, e pode armá-las.",
-            "aurochs_might": "uma chifrada que ergue um homem: +5 casas de velocidade e +3 de dano nos ataques corpo a corpo.",
+            "beast_whisperer": "Habilidoso com animais de carga: concede +1 de capacidade de rebanho ao grupo.",
+            "triage": "Triagem de médico de campo: todos do seu grupo recuperam +1 PV extra a cada 8 horas de descanso.",
+            "pathfinder": "Batedor habilidoso: reduz em 10% o tempo de viagem em trilhas e estradas.",
+            "tongue": "Sua língua é um terceiro membro e uma arma: +1 casa de alcance nos ataques corpo a corpo.",
+            "webbed_feet": "Ótimo nadador: +1 casa em cada Nadar, nunca além da sua velocidade total.",
+            "fruitful": "Seu corpo folhoso floresce ao amanhecer: produz 1 fruta fresca por dia para nutrir você ou seus companheiros.",
+            "cosmopolitan": "À vontade entre estranhos: reduz em 1 as penalidades de distância de alinhamento ao recrutar, negociar ou comerciar.",
+            "halfling_luck": "O destino se curva ao seu redor: uma vez a cada 24 horas, rola de novo o seu primeiro teste de d20 falho (dentro ou fora de combate).",
+            "woodland_scout": "A floresta sussurra seus segredos para você: enquanto o grupo viaja Cauteloso, a chance de emboscada na estrada ou numa caçada é 10% menor.",
+            "intimidating_presence": "Uma presença física aterradora: pode usar seu modificador de Força em vez de Carisma ao tentar Desmoralizar inimigos.",
+            "swarm_logic": "Há segurança, e velocidade, na multidão: você trabalha 10% mais rápido por cada outro Goblin trabalhando ao seu lado.",
+            "tireless_worker": "Máquinas não dormem nem reclamam: você conclui tarefas simples de trabalho e coleta bem mais rápido.",
+            "centaur_mount": "Suas costas fortes: permite que um aliado Médio ou Pequeno monte em você.",
+            "giant_grip": "Força física imensa: empunha armas um tamanho acima do seu (Grande para um Golias, Enorme para um Ogro).",
+            "mighty_shove": "Seu Empurrar lança o alvo 3 casas para trás e causa 1d6; o que o parar no caminho (uma parede, ou um corpo, que também sofre o 1d6) causa mais 1d6.",
+            "phalanx": "Disciplina marcial: +1 de CA se estiver adjacente a pelo menos um aliado.",
+            "organic_harvester": "Instinto de catador: 25% de chance por tipo de saque orgânico de achar mais carne ou pele depois de uma batalha com feras.",
+            "corpse_eater": "Banquete brutal: gaste 1 pt para comer um inimigo morto, saciando a fome e desmoralizando os inimigos que o virem.",
+            "gnome_magic_excitement": "Entusiasmo pelo desconhecido: no primeiro dia estudando uma magia nova, rola duas vezes o progresso.",
+            "kenku_faith_initiate": "Chamado divino: você se torna iniciado na magia da fé. Se já for iniciado, ganha uma magia grátis.",
+            "sprite_nature_initiate": "Magia feérica: você se torna iniciado na magia da natureza e ganha a ação Compartilhar Magia.",
+            "dwarf_crafting": "Seu ofício ancestral: você aprende as receitas para forjar o Machado, o Escudo e a Armadura Enânicos.",
+            "kobold_trapper": "Mecanismos astutos: você aprende as receitas das armadilhas de Urso e de Alarme, e pode armá-las.",
+            "aurochs_might": "Uma chifrada que ergue um homem: +5 casas de velocidade e +3 de dano nos ataques corpo a corpo.",
             "thick_hide": "+1 de CA.",
-            "gore_charge": "depois de andar 4+ casas neste turno, um acerto corpo a corpo também lança o alvo 2 casas em linha reta para trás.",
-            "deep_miner": "à vontade debaixo da montanha: a chance de uma matilha encontrar sua turma ao coletar na Mina é 25% menor.",
-            "grudge": "um anão nunca esquece: +1 para acertar quem o machucou nesta luta.",
-            "self_repair": "suas peças se consertam sozinhas: recupera 1 PV depois de cada luta em que sobreviver.",
+            "gore_charge": "Depois de andar 4+ casas neste turno, um acerto corpo a corpo também lança o alvo 2 casas em linha reta para trás.",
+            "deep_miner": "À vontade debaixo da montanha: a chance de uma matilha encontrar sua turma ao coletar na Mina é 25% menor.",
+            "grudge": "Um anão nunca esquece: +1 para acertar quem o machucou nesta luta.",
+            "self_repair": "Suas peças se consertam sozinhas: recupera 1 PV depois de cada luta em que sobreviver.",
             "iron_plating": "+1 de CA.",
-            "cavalry_charge": "seu cavaleiro golpeia com o seu peso por trás do golpe: +2 para acertar para quem monta em você, num turno em que você se moveu.",
+            "cavalry_charge": "Seu cavaleiro golpeia com o seu peso por trás do golpe: +2 para acertar para quem monta em você, num turno em que você se moveu.",
             "lift_rider": "1 ponto: lança um aliado Pequeno ou Médio adjacente, desperto ou caído, sobre suas costas e o carrega enquanto se move.",
-            "twilight_sight": "olhos élficos no crepúsculo: no escuro você enxerga 6 m como se o chão estivesse iluminado.",
+            "twilight_sight": "Olhos élficos no crepúsculo: no escuro você enxerga 6 m como se o chão estivesse iluminado.",
             "light_step": "+1 casa de Velocidade.",
             "blood_frenzy": "+2 de dano nos ataques corpo a corpo contra um alvo abaixo da metade dos PV.",
-            "bloodscent": "você fareja os feridos: sabe onde está cada inimigo abaixo da metade dos PV em até 6 casas, visto ou não.",
+            "bloodscent": "Você fareja os feridos: sabe onde está cada inimigo abaixo da metade dos PV em até 6 casas, visto ou não.",
             "arcane_curiosity": "+1 casa de alcance com magias que não são corpo a corpo.",
             "underfoot": "+2 de CA contra atacantes de tamanho Grande ou maior.",
-            "small_appetite": "um goblin vive de restos: você precisa de uma refeição só dia sim, dia não.",
+            "small_appetite": "Um goblin vive de restos: você precisa de uma refeição só dia sim, dia não.",
             "under_the_whip": "+1 para acertar enquanto um aliado de nível de combate maior que o seu estiver a até 6 casas.",
-            "stone_endurance": "uma vez por luta, o primeiro golpe que o machucar causa 1d4 + seu modificador de Constituição a menos.",
+            "stone_endurance": "Uma vez por luta, o primeiro golpe que o machucar causa 1d4 + seu modificador de Constituição a menos.",
             "arena_born": "+1 para acertar nas lutas da arena.",
-            "sticky_tongue": "um Chicote que acerta também agarra o alvo e o puxa 1 casa.",
+            "sticky_tongue": "Um Chicote que acerta também agarra o alvo e o puxa 1 casa.",
             "frog_leap": "+2 casas em cada Saltar.",
             "brave": "+2 de Defesa Mental.",
-            "second_breakfast": "recupera +1 PV a mais a cada 8 horas de descanso ininterrupto.",
-            "quartermaster": "um acampamento organizado: +2 na rolagem diária de coesão de um grupo sobrecarregado que você lidera.",
-            "hold_the_line": "enquanto você Defende, cada aliado adjacente a você tem +1 de CA.",
+            "second_breakfast": "Recupera +1 PV a mais a cada 8 horas de descanso ininterrupto.",
+            "quartermaster": "Um acampamento organizado: +2 na rolagem diária de coesão de um grupo sobrecarregado que você lidera.",
+            "hold_the_line": "Enquanto você Defende, cada aliado adjacente a você tem +1 de CA.",
             "ambush_predator": "+2 para acertar um inimigo desprevenido.",
-            "tail_sweep": "2 pontos: sua cauda varre dois inimigos adjacentes -- um ataque desarmado e um Empurrar em cada um.",
+            "tail_sweep": "2 pontos: sua cauda varre dois inimigos adjacentes, com um ataque desarmado e um Empurrar em cada um.",
             "polyglot": "+2 nas rolagens de progresso ao estudar um idioma estrangeiro.",
             "parley": "+1 ao Persuadir, Blefar ou Intimidar na conversa antes de uma luta.",
             "eye_for_detail": "+2 em todos os testes de Avaliar e de observação do inimigo.",
             "mimic_voices": "+1 nas rolagens de apresentação no palco da taverna.",
-            "razor_claws": "golpes de mão nua que machucam cortam: o alvo fica Sangrando 1 por 2 turnos. Os ferimentos se acumulam: os danos se somam e a duração passa a ser a maior.",
-            "night_prowler": "a noite é sua: enquanto o grupo viaja Cauteloso, a chance de emboscada é x0,8 à noite.",
-            "open_market": "a moeda de um estranho vale como qualquer outra: sem penalidade de preço por um vendedor de tendência diferente ao pechinchar.",
-            "trap_master": "arma suas armadilhas até 3 casas de distância quando uma luta começa.",
-            "trap_salvage": "depois de uma luta vencida, suas armadilhas que nunca dispararam voltam para a sua mochila.",
-            "savage_attacks": "seus acertos críticos são Brutal 1.",
+            "razor_claws": "Golpes de mão nua que machucam cortam: o alvo fica Sangrando 1 por 2 turnos. Os ferimentos se acumulam: os danos se somam e a duração passa a ser a maior.",
+            "night_prowler": "A noite é sua: enquanto o grupo viaja Cauteloso, a chance de emboscada é x0,8 à noite.",
+            "open_market": "A moeda de um estranho vale como qualquer outra: sem penalidade de preço por um vendedor de tendência diferente ao pechinchar.",
+            "trap_master": "Arma suas armadilhas até 3 casas de distância quando uma luta começa.",
+            "trap_salvage": "Depois de uma luta vencida, suas armadilhas que nunca dispararam voltam para a sua mochila.",
+            "savage_attacks": "Seus acertos críticos são Brutal 1.",
             "war_cry": "+1 nos testes de Desmoralizar.",
             "tiny_target": "+2 de CA contra ataques à distância e de arremesso.",
             "pixie_dust": "1 ponto: um aliado adjacente alça voo até o fim do próximo turno dele.",
-            "bountiful_harvest": "você floresce duas vezes ao amanhecer, e sua fruta cura 1d4 PV de quem a comer.",
-            "thornskin": "quem o acerta no corpo a corpo sofre 1 de dano.",
-            "rending_bite": "mandíbulas que rasgam: rola um dado extra na sua mordida.",
-            "elder_skeleton": "séculos de morte-vida afiam a mente e a voz: +4 de Inteligência e +4 de Carisma.",
-            "skeleton_faith_initiate": "um voto que sobreviveu à morte: você se torna iniciado na magia da fé. Se já for iniciado, ganha uma magia grátis.",
-            "deft_bones": "ossos leves e rápidos: suas mãos nuas acertam e ferem com Destreza.",
-            "giant_growth": "você incha além dos seus parentes: seu tamanho sobe um degrau (Médio para Grande, 2x2).",
-            "titanic_growth": "um segundo estirão: seu tamanho sobe mais um degrau (Grande para Enorme, 3x3).",
-            "spin_web": "tece uma armadilha de teia ao seu lado, tão larga quanto o seu corpo (1x1, 2x2 ou 3x3): o primeiro inimigo a tocá-la fica preso, sem poder andar no próximo turno.",
-            "serpent_growth": "você cresce além das suas espirais: seu tamanho sobe um degrau (Pequeno para Médio).",
-            "great_serpent": "uma segunda muda: seu tamanho sobe mais um degrau (Médio para Grande, 2x2).",
-            "snake_venom": "suas presas escorrem veneno: uma mordida que machuca força um teste de Constituição (CD 11 + seu nível racial), ou a vítima é envenenada, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Constituição.",
-            "dire_growth": "você cresce além dos seus parentes: seu tamanho sobe um degrau (um Lobo se torna Grande).",
-            "dragon": "sangue de dragão corre em você: seu couro endurece em escamas (+1 de CA).",
+            "bountiful_harvest": "Você floresce duas vezes ao amanhecer, e sua fruta cura 1d4 PV de quem a comer.",
+            "thornskin": "Quem o acerta no corpo a corpo sofre 1 de dano.",
+            "rending_bite": "Mandíbulas que rasgam: rola um dado extra na sua mordida.",
+            "elder_skeleton": "Séculos de morte-vida afiam a mente e a voz: +4 de Inteligência e +4 de Carisma.",
+            "skeleton_faith_initiate": "Um voto que sobreviveu à morte: você se torna iniciado na magia da fé. Se já for iniciado, ganha uma magia grátis.",
+            "deft_bones": "Ossos leves e rápidos: suas mãos nuas acertam e ferem com Destreza.",
+            "giant_growth": "Você incha além dos seus parentes: seu tamanho sobe um degrau (Médio para Grande, 2x2).",
+            "titanic_growth": "Um segundo estirão: seu tamanho sobe mais um degrau (Grande para Enorme, 3x3).",
+            "spin_web": "Tece uma armadilha de teia ao seu lado, tão larga quanto o seu corpo (1x1, 2x2 ou 3x3): o primeiro inimigo a tocá-la fica preso, sem poder andar no próximo turno.",
+            "serpent_growth": "Você cresce além das suas espirais: seu tamanho sobe um degrau (Pequeno para Médio).",
+            "great_serpent": "Uma segunda muda: seu tamanho sobe mais um degrau (Médio para Grande, 2x2).",
+            "snake_venom": "Suas presas escorrem veneno: uma mordida que machuca força um teste de Constituição (CD 11 + seu nível racial), ou a vítima é envenenada, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Constituição.",
+            "dire_growth": "Você cresce além dos seus parentes: seu tamanho sobe um degrau (um Lobo se torna Grande).",
+            "dragon": "Sangue de dragão corre em você: seu couro endurece em escamas (+1 de CA).",
             "dragon_breath": "2 pontos: sopra um cone de 3 casas de profundidade (1, 3 e 5 de largura); uma rolagem de ataque contra todos nele, aliados inclusive, 2d6 de dano em cada acerto.",
-            "sweeping_claws": "suas garras varrem em arcos amplos e letais: ganham o traço Ceifar, atingindo dois inimigos adjacentes de uma vez.",
-            "draconic_wings": "enormes asas coriáceas o levam ao ar: você ganha voo (move-se livremente em terreno 3D e poços, imune a dano de queda) e sua velocidade sobe para 12 casas.",
-            "death_grip": "suas mãos frias e mortas travam como ferro: +2 nos testes de agarrar.",
-            "zombie_bite": "crava os dentes na carne agarrada: um ataque contra um inimigo agarrado; +2 para acertar, causa 1d8 + Força de dano.",
+            "sweeping_claws": "Suas garras varrem em arcos amplos e letais: ganham o traço Ceifar, atingindo dois inimigos adjacentes de uma vez.",
+            "draconic_wings": "Enormes asas coriáceas o levam ao ar: você ganha voo (move-se livremente em terreno 3D e poços, imune a dano de queda) e sua velocidade sobe para 12 casas.",
+            "death_grip": "Suas mãos frias e mortas travam como ferro: +2 nos testes de agarrar.",
+            "zombie_bite": "Crava os dentes na carne agarrada: um ataque contra um inimigo agarrado; +2 para acertar, causa 1d8 + Força de dano.",
             "arcane_mind": "+1 de Inteligência.",
             "spell_focus": "+1 para acertar com ataques de magia.",
             "destructive_casting": "+1 de dano com magias de dano.",
@@ -6219,8 +6250,8 @@
                 "button": "Começar",
                 "body": [
                     "Gartok é um mundo de fantasia medieval familiar: muitas raças, magia, ruínas, nobres com ouro para gastar.",
-                    "A economia virou. Explorar ruínas, catacumbas e florestas selvagens atrás de criaturas, artefatos e itens mágicos paga muito melhor que trabalho honesto -- então todo mundo que consegue segurar uma arma está lá fora, arriscando o pescoço.",
-                    "Aventureiros se juntam em guildas, e as grandes crescem até virar algo mais próximo de companhias: armadas, habilidosas, governando florestas inteiras como território. Você está fundando uma, com um pouco de moeda e três recrutas -- escolhidos a seguir."
+                    "A economia virou. Explorar ruínas, catacumbas e florestas selvagens atrás de criaturas, artefatos e itens mágicos paga muito melhor que trabalho honesto, então todo mundo que consegue segurar uma arma está lá fora, arriscando o pescoço.",
+                    "Aventureiros se juntam em guildas, e as grandes crescem até virar algo mais próximo de companhias: armadas, habilidosas, governando florestas inteiras como território. Você está fundando uma, com um pouco de moeda e três recrutas, escolhidos a seguir."
                 ]
             },
             "vocation": {
@@ -6259,7 +6290,7 @@
             "button": "Ver seus objetivos",
             "body": [
                 "Cada cartão à esquerda é um grupo de gente sua. Selecione um grupo e clique num lugar do mapa para mandá-lo até lá; o painel à direita lista o que ele pode fazer onde está.",
-                "Não há botão de turno: quando todo grupo tem uma ordem, o relógio corre sozinho e para quando um grupo precisa de você. Todo mundo come uma comida por dia -- fique de olho na linha RAÇÕES.",
+                "Não há botão de turno: quando todo grupo tem uma ordem, o relógio corre sozinho e para quando um grupo precisa de você. Todo mundo come uma comida por dia, então fique de olho na linha RAÇÕES.",
                 "Tudo o que acontece fica escrito em O REGISTRO, embaixo à direita, o mais novo por último, com o que vence a seguir logo abaixo. Clique no título para buscar por palavra, tipo ou grupo.",
                 "Sem saber o que fazer primeiro? Seus objetivos estão na próxima tela."
             ]
@@ -6277,7 +6308,7 @@
             "overview": {
                 "title": "Até onde a guilda alcança",
                 "body": [
-                    "Cada grupo ocupa um espaço. A Fama -- sua reputação com todas as facções, somada -- abre mais. Feitos a aumentam; nada a diminui.",
+                    "Cada grupo ocupa um espaço. A Fama, que é a sua reputação com todas as facções somada, abre mais. Feitos a aumentam; nada a diminui.",
                     "Um grupo maior do que seu líder consegue sustentar começa a se desfazer: a cada dia o membro mais fraco pode ir embora. Com um espaço livre ele sai por conta própria; sem um, avisa com 7 dias de antecedência e vai."
                 ]
             },
@@ -6285,7 +6316,7 @@
                 "title": "Pelo que você joga",
                 "body": [
                     "Não há pontuação nem luta que você precise vencer. Os objetivos no topo são tarefas pequenas que mostram o que a guilda pode fazer; faça-as em qualquer ordem.",
-                    "Abaixo deles, cada facção lista seus feitos. A reputação só se move quando você realiza um -- uma conquista única, não uma moagem -- e ela destrava o que o cartão lista. As Fossas e os Banqueiros estão abertos desde o primeiro dia; as outras aparecem quando você entra nos lugares delas."
+                    "Abaixo deles, cada facção lista seus feitos. A reputação só se move quando você realiza um (uma conquista única, não uma moagem) e ela destrava o que o cartão lista. As Fossas e os Banqueiros estão abertos desde o primeiro dia; as outras aparecem quando você entra nos lugares delas."
                 ]
             },
             "band_routine": {
@@ -6391,7 +6422,7 @@
         "level": {
             "title": "Gastando escolhas",
             "body": [
-                "Cada trilha de XP -- combate, trabalho, magia e racial -- tem a própria árvore de talentos. Um nó aceso significa que há uma escolha esperando ali: clique para pegá-la.",
+                "Cada trilha de XP (combate, trabalho, magia e racial) tem a própria árvore de talentos. Um nó aceso significa que há uma escolha esperando ali: clique para pegá-la.",
                 "O XP de combate vem de derrubar inimigos no seu nível ou acima, o de magia de fazer isso com magia, o de trabalho de horas trabalhadas num serviço que você ainda não superou. Os níveis raciais vêm da soma dos outros."
             ]
         },
@@ -6434,7 +6465,7 @@
             "body": [
                 "Só aparecem receitas que alguém do grupo conhece. Começar uma consome os materiais de todas as mochilas do grupo, carroças e animais inclusive (nunca um item com cadeado); depois cada hora rola d20 + INT rumo ao lote. Uma ferramenta nomeada (um Cinzel, por exemplo) não é consumida, mas alguma mochila precisa tê-la.",
                 "TRABALHAR faz o grupo inteiro esperar as horas. SOZINHO separa o artesão num grupo só dele (ocupa um espaço livre, e só a mochila dele alimenta a fabricação); junte-os de volta à mão.",
-                "Todos sabem cozinhar -- Charque, Carne Assada, Compota de Fruta -- numa fogueira: uma fogueira de campo (Pederneira e Aço, 1 Madeira e 1 Carvão, pelo mapa), a do Território, ou o forno da casa. O Charque dura 20 dias; a Carne só 2."
+                "Todos sabem cozinhar (Charque, Carne Assada, Compota de Fruta) numa fogueira: uma fogueira de campo (Pederneira e Aço, 1 Madeira e 1 Carvão, pelo mapa), a do Território, ou o forno da casa. O Charque dura 20 dias; a Carne só 2."
             ]
         },
         "initiation": {
@@ -6449,7 +6480,7 @@
             "title": "O Médico",
             "body": [
                 "Escolha os pacientes. O preço são as poções, cargas de Kit de Primeiros Socorros e Antídotos que a cura usaria, a 70% do preço da loja; todos os escolhidos saem com PV cheio, curados e sem veneno. O grupo paga das mochilas, do mais rico ao mais pobre.",
-                "O grupo inteiro espera o tratamento mais longo: uma hora para ferimentos, oito para doença, mais para veneno. Um tratamento de mais de um dia é uma internação: escolha esse paciente sozinho e Interne-o -- ele se separa até acabar (ou o grupo espera, sem espaço livre); junte-o de volta à mão."
+                "O grupo inteiro espera o tratamento mais longo: uma hora para ferimentos, oito para doença, mais para veneno. Um tratamento de mais de um dia é uma internação: escolha esse paciente sozinho e Interne-o. Ele se separa até acabar (ou o grupo espera, sem espaço livre); junte-o de volta à mão."
             ]
         },
         "property": {
@@ -6465,7 +6496,7 @@
             "body": [
                 "Cada baia ($690) guarda uma carroça e um animal em segurança na casa. Estacione o que o grupo não precisa na estrada; uma carroça estacionada mantém a carga.",
                 "Animais na garagem comem do estoque da casa e da carga estacionada, e não contam no limite do rebanho; sem comida, passam fome. Perca a casa e perde a garagem.",
-                "O Território tem uma também, ilimitada, depois que a guarnição abre -- segura só enquanto alguém monta guarda."
+                "O Território tem uma também, ilimitada, depois que a guarnição abre. Fica segura só enquanto alguém monta guarda."
             ]
         },
         "watch": {
@@ -6478,7 +6509,7 @@
         "claim": {
             "title": "Reivindicando os ermos",
             "body": [
-                "Seis etapas: reconhecer o terreno (2 h), limpar as criaturas de lá (uma luta), cercar (10 Madeira, 8 h), vasculhar um acampamento próximo (uma luta), e então mantê-lo com uma guarnição por 10 dias -- a cada dia, 20% de chance de ataque.",
+                "Seis etapas: reconhecer o terreno (2 h), limpar as criaturas de lá (uma luta), cercar (10 Madeira, 8 h), vasculhar um acampamento próximo (uma luta), e então mantê-lo com uma guarnição por 10 dias, com 20% de chance de ataque a cada dia.",
                 "Quando a guarnição se firma, a aba Coleta o põe para trabalhar: Madeira e Fruta, sem licença para comprar, só um Machado. Um turno não sai do posto. Os ataques ainda vêm.",
                 "Uma fogueira (1 Madeira, 1 h, um teste de Sabedoria) cozinha enquanto alguém está de guarnição; um forno (15 Tijolos de Pedra da Mina, 8 h) cozinha para sempre. Quando a guarnição abre, o Território também tem uma garagem."
             ]
@@ -6487,7 +6518,7 @@
             "title": "A guarda alcançou vocês",
             "body": [
                 "A guarda da Cidade pegou membros com ficha criminal. Você escolhe pelo grupo todo e decide quem fala.",
-                "Renda-se e cumpra a pena, lute contra a patrulha (letal) ou fuja -- o que pode levar a ser pego de novo ou emboscado. Um blefe ou um suborno deixa vocês irem, mas a ficha continua; um blefe falho deixa a patrulha atacar primeiro."
+                "Renda-se e cumpra a pena, lute contra a patrulha (letal) ou fuja, o que pode levar a ser pego de novo ou emboscado. Um blefe ou um suborno deixa vocês irem, mas a ficha continua; um blefe falho deixa a patrulha atacar primeiro."
             ]
         },
         "dialogue": {
@@ -6645,10 +6676,10 @@
         "hunger": {
             "title": "Fome e Inanição",
             "1": "Todo membro come 1 refeição por dia na manutenção. Comida fresca perto de estragar é comida primeiro. COMPARTILHAR RAÇÕES deixa um membro alimentar companheiros famintos com a própria mochila.",
-            "2": "1 dia sem comer — Faminto: {pen1} em todos os atributos.",
-            "3": "2 dias sem comer — Inanição: {pen2} em todos os atributos; PV máximo limitado a 1.",
-            "4": "3 dias sem comer — Incapacitado: fraco demais para lutar, não pode ser enviado à batalha.",
-            "5": "{death} dias sem comer — morte por inanição: o personagem se foi permanentemente.",
+            "2": "1 dia sem comer · Faminto: {pen1} em todos os atributos.",
+            "3": "2 dias sem comer · Inanição: {pen2} em todos os atributos; PV máximo limitado a 1.",
+            "4": "3 dias sem comer · Incapacitado: fraco demais para lutar, não pode ser enviado à batalha.",
+            "5": "{death} dias sem comer · morte por inanição: o personagem se foi permanentemente.",
             "6": "Comida Podre só é comida no último dia antes da morte, como último recurso. Ela zera a fome mas adoece quem come. Comida de novo enquanto já doente adiciona Apodrecimento. Estômago Forte (Gnoll) é imune.",
             "7": "Um personagem faminto ou em inanição não se cura pelo descanso. Treefolk (Autotrófico) nunca comem e nunca passam fome. Se a guilda inteira morrer de fome, a campanha termina."
         },

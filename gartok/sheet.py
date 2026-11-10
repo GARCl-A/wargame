@@ -14,19 +14,19 @@ def _to_hit(u):
 def _weapon_line(u):
     n, faces = u.hand_die
     if not u.armed:
-        return u.weapon.name, f"{n}d{faces} {u.mod_strength:+} (STR)", "melee"
+        return u.weapon.name, f"{n}d{faces} {u.mod_strength:+} ({i18n.lab('STR')})", "melee"
     if u.improvised:
         return (i18n.t("sheet.no_arrow_improvised", weapon_name=u.weapon_name),
-                f"{n}d{faces} {u.mod_strength:+} (STR)", "melee")
+                f"{n}d{faces} {u.mod_strength:+} ({i18n.lab('STR')})", "melee")
     bonus = u.mod_strength if not u.ranged else 0
-    dmg = f"{n}d{faces}" + (f" {bonus:+} (STR)" if bonus else "")
-    hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
+    dmg = f"{n}d{faces}" + (f" {bonus:+} ({i18n.lab('STR')})" if bonus else "")
+    hands = i18n.t("sheet.two_hands" if u.weapon["hands"] == 2 else "sheet.one_hand")
     size_str = f"{u.weapon.get('size')} · " if u.weapon.get("size") and u.weapon.get("size") != "Medium" else ""
     if u.ranged:
         reach = i18n.t("sheet.range_arrows", size_str=size_str, weapon=u.weapon['range'], ammo=u.ammo, hands=hands)
     else:
         thrown = i18n.t("sheet.thrown", weapon=u.weapon['thrown']) if u.weapon["thrown"] else ""
-        reach = f"{size_str}melee  ·  {hands}{thrown}"
+        reach = f"{size_str}{i18n.t('sheet.melee')}  ·  {hands}{thrown}"
     return u.weapon_name, dmg, reach
 
 
@@ -65,7 +65,7 @@ def unit_to_ch(u):
         tn, tf = u.tongue_weapon["damage"]
         tb = u.mod_strength + u.char.talent_bonus("melee_damage")
         tongue = (u.tongue_weapon_name,
-                  f"{tn}d{tf}" + (f" {tb:+} (STR)" if tb else ""), u.tongue_reach)
+                  f"{tn}d{tf}" + (f" {tb:+} ({i18n.lab('STR')})" if tb else ""), u.tongue_reach)
 
     held = " + ".join(p for p in ("weapon" if u.weapon_hand else "",
                                   "torch" if u.torch_hand else "",
@@ -85,9 +85,9 @@ def unit_to_ch(u):
         "status": status, "tags": tags,
         "hp": (max(u.hp, 0), u.hp_max), "ac": u.ac, "md": u.mental_defense, "spd": u.speed,
         "init": f"{u.initiative_bonus():+}",
-        "attrs": [(k, eff(name), getattr(u, f"mod_{name}"), eff(name) < getattr(u, name)) for k, name in _ATTRS],
-        "weapon": {"nm": wname, "hit": f"d20 {bab:+} ({src})", "dmg": dmg, "tags": reach,
-                  "crit": "crit 20, fumble 1",
+        "attrs": [(i18n.lab(k), eff(name), getattr(u, f"mod_{name}"), eff(name) < getattr(u, name)) for k, name in _ATTRS],
+        "weapon": {"nm": wname, "hit": f"d20 {bab:+} ({i18n.lab(src)})", "dmg": dmg, "tags": reach,
+                  "crit": i18n.t("sheet.crit_fumble"),
                   "action": weapon_traits.action_name(u.weapon)},
         "tongue": tongue,
         "gear": {"hands": held, "armor": armor, "pack": pack,

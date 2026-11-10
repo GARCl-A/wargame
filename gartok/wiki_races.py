@@ -11,6 +11,17 @@ def _ability_ids(race):
     return a if isinstance(a, (tuple, list)) else (a,) if a else ()
 
 
+def mods_line(race):
+    """The six attribute modifiers, abbreviated in the current language."""
+    return "  ".join(f"{i18n.lab(a)} {m:+d}" for a, m in zip(_ABBREV, race["mods"]))
+
+
+def meta_line(race):
+    return "  ·  ".join([i18n.name("size", race["size"]), i18n.t("wiki_session.hit_die_d", b=race["hd"]),
+                         i18n.t("wiki_session.speed_m", b=race["speed"]),
+                         i18n.t("wiki_session.speaks", languages=", ".join(i18n.names("language", race["languages"])))])
+
+
 def entries():
     """One dict per playable race, alphabetical: name, the line of numbers, the attribute
     modifiers, the racial abilities, the racial talent track."""
@@ -19,9 +30,8 @@ def entries():
         traits = [abilities.get(a) for a in _ability_ids(race)]
         out.append({
             "name": race["name"],
-            "meta": (f"{race['size']}  ·  Hit Die d{race['hd']}  ·  Speed {race['speed']:g} m  ·  "
-                     f"Speaks {', '.join(race['languages'])}"),
-            "mods": "  ".join(f"{a} {m:+d}" for a, m in zip(_ABBREV, race["mods"])),
+            "meta": meta_line(race),
+            "mods": mods_line(race),
             "abilities": [f"{t.name}: {t.effect}" for t in traits if t is not None],
             "talents": [t.name for t in talents.racial_tree(race["name"])],
         })
@@ -44,7 +54,7 @@ def race_tip(name: str) -> str:
     if not race:
         return ""
     head = i18n.name("race", race["name"])
-    mods = "  ".join(f"{a} {m:+d}" for a, m in zip(_ABBREV, race["mods"]))
+    mods = mods_line(race)
     traits = [abilities.get(a) for a in _ability_ids(race)]
     ab_lines = [f"{t.name}: {t.effect}" for t in traits if t is not None]
     return "\n".join([head, mods, *ab_lines])

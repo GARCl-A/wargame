@@ -69,7 +69,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Climber | Lizardfolk, Giant Spider | climbs any surface of DC 25 or lower with no check (still costs the action). |
 | Extra Language | Human | speaks a second random language: can Demoralize enemies that share either of the two. |
 | Catfall | Catfolk | always lands on their feet: 3 more levels of a fall cost nothing (a drop of up to 4 levels does no damage). |
-| Mimic Sounds | Kenku | can Demoralize with no shared language (mimics the target's voice) -- offence only; being demoralized still needs a common tongue. |
+| Mimic Sounds | Kenku | can Demoralize with no shared language (mimics the target's voice), but only on offence; being demoralized still needs a common tongue. |
 | Blood Magic | Kobold | ancestral blood magic: starts initiated in blood magic, +2 to spell study rolls. |
 | Autotroph | Treefolk | photosynthesises: never needs to eat, immune to the hunger rules. |
 | Ferocity | Orc | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
@@ -435,7 +435,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 |---|---|---|---|
 | 1 | Strong | +1 Strength. | -- |
 | 2 | Sure Strike | +1 to hit with Strength-based attacks. | Strong |
-| 3 | Blind Strike | reduces the attack penalty against obscured or dark targets by 1. | Sure Strike |
+| 3 | Blind Strike | Reduces the attack penalty against obscured or dark targets by 1. | Sure Strike |
 | 2 | Heavy Hand | +1 damage on melee attacks. | Strong |
 | 3 | Wrestler | +1 to Push and Grab checks. | Heavy Hand |
 | 1 | Agile | +1 Dexterity. | -- |
@@ -450,27 +450,27 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against off-guard targets. | Deadeye |
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | Tough |
-| 3 | Recovery | heal 1 HP after every fight you survive. | Hardy |
+| 3 | Recovery | Heal 1 HP after every fight you survive. | Hardy |
 | 2 | Bulwark | +1 AC. | Tough |
-| 3 | Armor Bearer | reduces the carried weight of equipped armor by up to 6 kg. | Bulwark |
+| 3 | Armor Bearer | Reduces the carried weight of equipped armor by up to 6 kg. | Bulwark |
 | 1 | Alert | +1 Wisdom. | -- |
 | 2 | Quick Wits | +2 initiative. | Alert |
-| 3 | Peripheral Vision | when off-guard, your AC is only reduced by 1 instead of 2. | Quick Wits |
+| 3 | Peripheral Vision | When off-guard, your AC is only reduced by 1 instead of 2. | Quick Wits |
 | 2 | Iron Will | +2 Mental Defense. | Alert |
-| 3 | Iron Stance | using Defend grants +2 Mental Defense in addition to AC until your next turn. | Iron Will |
+| 3 | Iron Stance | Using Defend grants +2 Mental Defense in addition to AC until your next turn. | Iron Will |
 | 1 | Imposing | +1 Charisma. | -- |
 | 2 | Menacing | +2 to Demoralize checks. | Imposing |
-| 2 | Gruesome Takedown | upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language). | Imposing |
+| 2 | Gruesome Takedown | Upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language). | Imposing |
 | 3 | Cull the Broken | +2 damage on attacks against demoralized targets. | Menacing |
 | 3 | Wordless Menace | Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2. | Menacing |
-| 3 | Inspiring Shout | upon successfully demoralizing an enemy, the ally with the least morale left gains +1 initiative and takes 1 morale back; when no ally has lost morale, the ally last in the turn order gains +1 initiative. | Gruesome Takedown |
-| 3 | Dread Voice | a Demoralize of yours that lands takes 2 morale from the foe instead of 1. | Menacing |
-| 3 | Grim Chorus | when an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language). | Gruesome Takedown |
+| 3 | Inspiring Shout | Upon successfully demoralizing an enemy, the ally with the least morale left gains +1 initiative and takes 1 morale back; when no ally has lost morale, the ally last in the turn order gains +1 initiative. | Gruesome Takedown |
+| 3 | Dread Voice | A Demoralize of yours that lands takes 2 morale from the foe instead of 1. | Menacing |
+| 3 | Grim Chorus | When an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language). | Gruesome Takedown |
 | 1 | Tactical Mind | +1 Intelligence. | -- |
 | 2 | Sharp Analysis | +2 on all Assess and enemy observation checks. | Tactical Mind |
 | 2 | Combat Analysis | +4 on active Assess checks made during battle. | Tactical Mind |
 | 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | Combat Analysis |
-| 3 | Anatomist | your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Sharp Analysis |
+| 3 | Anatomist | Your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Sharp Analysis |
 
 ### Work track
 
@@ -478,9 +478,9 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 |---|---|---|---|
 | 1 | Brawny | +1 Strength. | -- |
 | 2 | Piecework | +20% coin from work that pays in coin. | Brawny |
-| 2 | Brisk Hands | work finishes 10% faster -- you keep the time. | Brawny |
-| 3 | Steady Pace | work counts as rest: you recover HP while you work, as if resting. | Brisk Hands |
-| 3 | Heavy Haul | carry up to 6 kg more before you stagger, in anything that is not equipment (materials, food, loot -- not weapons, armor, shields or artifacts). | Piecework |
+| 2 | Brisk Hands | Work finishes 10% faster, so you keep the time. | Brawny |
+| 3 | Steady Pace | Work counts as rest: you recover HP while you work, as if resting. | Brisk Hands |
+| 3 | Heavy Haul | Carry up to 6 kg more before you stagger, in anything that is not equipment (materials, food, loot, but not weapons, armor, shields or artifacts). | Piecework |
 | 1 | Charismatic | +1 Charisma. | -- |
 | 2 | Negotiator | +1 Charisma for market buy and sell checks. | Charismatic |
 | 2 | Fixer | +1 to your pitch when talking someone into the guild. | Charismatic |
@@ -489,107 +489,107 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 1 | Clever | +1 Intelligence. | -- |
 | 2 | Linguist | +2 to progress rolls when studying a foreign language. | Clever |
 | 2 | Crafter | +1 to progress rolls when crafting items. | Clever |
-| 3 | Apothecary | learn a random apothecary recipe (or +1 brewing rolls if all known). | Crafter |
-| 3 | Blacksmith | learn a random forge recipe (or +1 forging rolls if all known). | Crafter |
+| 3 | Apothecary | Learn a random apothecary recipe (or +1 brewing rolls if all known). | Crafter |
+| 3 | Blacksmith | Learn a random forge recipe (or +1 forging rolls if all known). | Crafter |
 | 1 | Nimble Fingers | +1 Dexterity. | -- |
 | 2 | Woodcarver | +1 to progress rolls on the Carpenter's recipes. | Nimble Fingers |
-| 2 | Skinner | harvest 1 additional 1sqm Hide when hunting beasts in the Wilds. | Nimble Fingers |
-| 3 | Fletcher | carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests. | Woodcarver |
-| 3 | Wheelwright | skilled cartwright: repairs restore double HP on damaged wagons. | Woodcarver |
+| 2 | Skinner | Harvest 1 additional 1sqm Hide when hunting beasts in the Wilds. | Nimble Fingers |
+| 3 | Fletcher | Carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests. | Woodcarver |
+| 3 | Wheelwright | Skilled cartwright: repairs restore double HP on damaged wagons. | Woodcarver |
 | 1 | Sturdy | +1 Constitution. | -- |
-| 2 | Deep Reserves | tolerate missing 1 daily meal before suffering hunger penalties. | Sturdy |
-| 2 | Restful Sleep | recover +1 additional HP for every 8 hours of unbroken rest. | Sturdy |
-| 3 | Field Cook | efficient camp cook: field campfires burn for 6 hours instead of 4. | Deep Reserves |
-| 3 | Hardened | tough worker frame: clear non-lethal damage after 16 hours of unbroken rest instead of 24. | Restful Sleep |
+| 2 | Deep Reserves | Tolerate missing 1 daily meal before suffering hunger penalties. | Sturdy |
+| 2 | Restful Sleep | Recover +1 additional HP for every 8 hours of unbroken rest. | Sturdy |
+| 3 | Field Cook | Efficient camp cook: field campfires burn for 6 hours instead of 4. | Deep Reserves |
+| 3 | Hardened | Tough worker frame: clear non-lethal damage after 16 hours of unbroken rest instead of 24. | Restful Sleep |
 | 1 | Observant | +1 Wisdom. | -- |
 | 2 | Field Medic | +2 to First Aid and Stabilize checks outside of combat. | Observant |
-| 2 | Beast Whisperer | skilled with pack animals: grants +1 herd capacity to the group. | Observant |
-| 3 | Triage | field medic triage: everyone in your group recovers +1 extra HP per 8 hours of rest. | Field Medic |
-| 3 | Pathfinder | skilled trail scout: reduces travel time by 10% on paths and roads. | Beast Whisperer |
+| 2 | Beast Whisperer | Skilled with pack animals: grants +1 herd capacity to the group. | Observant |
+| 3 | Triage | Field medic triage: everyone in your group recovers +1 extra HP per 8 hours of rest. | Field Medic |
+| 3 | Pathfinder | Skilled trail scout: reduces travel time by 10% on paths and roads. | Beast Whisperer |
 
 ### Racial track
 
 | Race | Tier | Talent | Effect | Requires |
 |---|---|---|---|---|
 | Automaton | 1 | Iron Plating | +1 AC. | -- |
-| Automaton | 1 | Self-Repair | your works mend themselves: heal 1 HP after every fight you survive. | -- |
-| Automaton | 1 | Tireless Worker | machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- |
-| Catfolk | 1 | Night Prowler | the night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night. | -- |
-| Catfolk | 1 | Open Market | a stranger's coin is as good as any: no price penalty for a vendor of a different tendency when you haggle. | -- |
-| Catfolk | 1 | Razor Claws | bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer. | -- |
+| Automaton | 1 | Self-Repair | Your works mend themselves: heal 1 HP after every fight you survive. | -- |
+| Automaton | 1 | Tireless Worker | Machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- |
+| Catfolk | 1 | Night Prowler | The night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night. | -- |
+| Catfolk | 1 | Open Market | A stranger's coin is as good as any: no price penalty for a vendor of a different tendency when you haggle. | -- |
+| Catfolk | 1 | Razor Claws | Bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer. | -- |
 | Centaur | 1 | Lift Rider | 1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move. | -- |
-| Centaur | 1 | Mount | your strong back: allow a Medium or Small ally to ride you. | -- |
-| Centaur | 2 | Cavalry Charge | your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved. | Mount |
-| Dragon | 1 | Dragon | dragon blood runs in you: your hide hardens into scales (+1 AC). | -- |
+| Centaur | 1 | Mount | Your strong back: allow a Medium or Small ally to ride you. | -- |
+| Centaur | 2 | Cavalry Charge | Your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved. | Mount |
+| Dragon | 1 | Dragon | Dragon blood runs in you: your hide hardens into scales (+1 AC). | -- |
 | Dragon | 2 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | Dragon |
-| Dragon | 2 | Sweeping Claws | your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once. | Dragon |
-| Dragon | 3 | Draconic Wings | massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares. | Dragon |
-| Dwarf | 1 | Deep Miner | at home under the mountain: the odds of a pack finding your crew while gathering at the Mine are 25% lower. | -- |
-| Dwarf | 1 | Dwarven Forging | your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- |
-| Dwarf | 1 | Grudge | a dwarf never forgets: +1 to hit anyone who has hurt you this fight. | -- |
+| Dragon | 2 | Sweeping Claws | Your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once. | Dragon |
+| Dragon | 3 | Draconic Wings | Massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares. | Dragon |
+| Dwarf | 1 | Deep Miner | At home under the mountain: the odds of a pack finding your crew while gathering at the Mine are 25% lower. | -- |
+| Dwarf | 1 | Dwarven Forging | Your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- |
+| Dwarf | 1 | Grudge | A dwarf never forgets: +1 to hit anyone who has hurt you this fight. | -- |
 | Elf | 1 | Light Step | +1 square of Speed. | -- |
-| Elf | 1 | Twilight Sight | elven eyes in the dusk: in the dark you see 6 m as if the ground were lit. | -- |
-| Elf | 1 | Woodland Scout | the forest whispers its secrets to you: while the group travels Cautious, the chance of an ambush on the road or on a hunt is 10% lower. | -- |
-| Giant Spider | 1 | Giant Growth | you swell past your kin: your size goes up one step (Medium to Large, 2x2). | -- |
-| Giant Spider | 1 | Spin Web | spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn. | -- |
-| Giant Spider | 2 | Titanic Growth | a second growth spurt: your size goes up another step (Large to Huge, 3x3). | Giant Growth |
+| Elf | 1 | Twilight Sight | Elven eyes in the dusk: in the dark you see 6 m as if the ground were lit. | -- |
+| Elf | 1 | Woodland Scout | The forest whispers its secrets to you: while the group travels Cautious, the chance of an ambush on the road or on a hunt is 10% lower. | -- |
+| Giant Spider | 1 | Giant Growth | You swell past your kin: your size goes up one step (Medium to Large, 2x2). | -- |
+| Giant Spider | 1 | Spin Web | Spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn. | -- |
+| Giant Spider | 2 | Titanic Growth | A second growth spurt: your size goes up another step (Large to Huge, 3x3). | Giant Growth |
 | Gnoll | 1 | Blood Frenzy | +2 damage on melee attacks against a target below half its HP. | -- |
-| Gnoll | 1 | Bloodscent | you smell the wounded: you know where every foe below half its HP is within 6 squares, seen or not. | -- |
-| Gnoll | 1 | Corpse Eater | brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you. | -- |
-| Gnome | 1 | Magic Excitement | enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress. | -- |
+| Gnoll | 1 | Bloodscent | You smell the wounded: you know where every foe below half its HP is within 6 squares, seen or not. | -- |
+| Gnoll | 1 | Corpse Eater | Brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you. | -- |
+| Gnome | 1 | Magic Excitement | Enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress. | -- |
 | Gnome | 1 | Underfoot | +2 AC against attackers of Large size or bigger. | -- |
 | Gnome | 2 | Arcane Curiosity | +1 square of range with non-melee spells. | Magic Excitement |
-| Goblin | 1 | Small Appetite | a goblin lives on scraps: you need a meal only every other day. | -- |
-| Goblin | 1 | Swarm Logic | there is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- |
+| Goblin | 1 | Small Appetite | A goblin lives on scraps: you need a meal only every other day. | -- |
+| Goblin | 1 | Swarm Logic | There is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- |
 | Goblin | 1 | Under the Whip | +1 to hit while an ally of a higher combat level than yours stands within 6 squares. | -- |
 | Goliath | 1 | Arena Born | +1 to hit in arena bouts. | -- |
-| Goliath, Ogre | 1 | Giant's Grip | immense physical strength: wield weapons one size above your own (Large for a Goliath, Huge for an Ogre). | -- |
-| Goliath | 1 | Stone's Endurance | once per fight, the first blow that hurts you deals 1d4 + your Constitution modifier less. | -- |
+| Goliath, Ogre | 1 | Giant's Grip | Immense physical strength: wield weapons one size above your own (Large for a Goliath, Huge for an Ogre). | -- |
+| Goliath | 1 | Stone's Endurance | Once per fight, the first blow that hurts you deals 1d4 + your Constitution modifier less. | -- |
 | Grippli | 1 | Frog Leap | +2 squares on every Jump. | -- |
-| Grippli | 1 | Tongue | your tongue is a third limb and a weapon: +1 square of reach on melee attacks. | -- |
-| Grippli | 1 | Webbed Feet | a strong swimmer: +1 square on every Swim, never past your full speed. | -- |
-| Grippli | 2 | Sticky Tongue | a Lash that hits also grabs the target and reels it 1 square in. | Tongue |
+| Grippli | 1 | Tongue | Your tongue is a third limb and a weapon: +1 square of reach on melee attacks. | -- |
+| Grippli | 1 | Webbed Feet | A strong swimmer: +1 square on every Swim, never past your full speed. | -- |
+| Grippli | 2 | Sticky Tongue | A Lash that hits also grabs the target and reels it 1 square in. | Tongue |
 | Halfling | 1 | Brave | +2 Mental Defense. | -- |
-| Halfling | 1 | Halfling Luck | fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- |
-| Halfling | 1 | Second Breakfast | recover +1 additional HP for every 8 hours of unbroken rest. | -- |
-| Hobgoblin | 1 | Hold the Line | while you Defend, every ally adjacent to you has +1 AC. | -- |
-| Hobgoblin | 1 | Phalanx | martial discipline: +1 AC if you are adjacent to at least one ally. | -- |
-| Hobgoblin | 1 | Quartermaster | an orderly camp: +2 on the daily cohesion roll of an overextended group you lead. | -- |
-| Human | 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- |
+| Halfling | 1 | Halfling Luck | Fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- |
+| Halfling | 1 | Second Breakfast | Recover +1 additional HP for every 8 hours of unbroken rest. | -- |
+| Hobgoblin | 1 | Hold the Line | While you Defend, every ally adjacent to you has +1 AC. | -- |
+| Hobgoblin | 1 | Phalanx | Martial discipline: +1 AC if you are adjacent to at least one ally. | -- |
+| Hobgoblin | 1 | Quartermaster | An orderly camp: +2 on the daily cohesion roll of an overextended group you lead. | -- |
+| Human | 1 | Cosmopolitan | At home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- |
 | Human | 1 | Parley | +1 when you Persuade, Bluff or Intimidate in the talk before a fight. | -- |
 | Human | 2 | Polyglot | +2 to progress rolls when studying a foreign language. | Cosmopolitan |
 | Kenku | 1 | Eye for Detail | +2 on all Assess and enemy observation checks. | -- |
-| Kenku | 1 | Faith Initiate | divine calling: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
+| Kenku | 1 | Faith Initiate | Divine calling: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
 | Kenku | 1 | Mimic Voices | +1 on performance rolls when playing on the tavern stage. | -- |
-| Kobold | 1 | Trap Salvage | after a won fight, your traps that never sprang go back into your pack. | -- |
-| Kobold | 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- |
-| Kobold | 2 | Trap Master | plant your traps up to 3 squares away when a fight begins. | Trapper |
+| Kobold | 1 | Trap Salvage | After a won fight, your traps that never sprang go back into your pack. | -- |
+| Kobold | 1 | Trapper | Cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- |
+| Kobold | 2 | Trap Master | Plant your traps up to 3 squares away when a fight begins. | Trapper |
 | Lizardfolk | 1 | Ambush Predator | +2 to hit an off-guard foe. | -- |
-| Lizardfolk | 1 | Organic Harvester | scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- |
-| Lizardfolk | 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each. | -- |
-| Ogre | 1 | Mighty Shove | your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- |
-| Orc, Ogre | 1 | Intimidating Presence | a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- |
-| Orc | 1 | Savage Attacks | your critical hits are Brutal 1. | -- |
+| Lizardfolk | 1 | Organic Harvester | Scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- |
+| Lizardfolk | 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes, with an unarmed strike and a Push on each. | -- |
+| Ogre | 1 | Mighty Shove | Your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- |
+| Orc, Ogre | 1 | Intimidating Presence | A terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- |
+| Orc | 1 | Savage Attacks | Your critical hits are Brutal 1. | -- |
 | Orc | 1 | War Cry | +1 to Demoralize checks. | -- |
-| Ox | 1 | Aurochs Might | a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- |
-| Ox | 1 | Gore Charge | after walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- |
+| Ox | 1 | Aurochs Might | A gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- |
+| Ox | 1 | Gore Charge | After walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- |
 | Ox | 1 | Thick Hide | +1 AC. | -- |
-| Skeleton | 1 | Deft Bones | light, quick bones: your bare hands hit and hurt with Dexterity. | -- |
-| Skeleton | 1 | Elder Skeleton | centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- |
-| Skeleton | 1 | Faith Initiate | a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
-| Snake | 1 | Serpent Growth | you outgrow your coils: your size goes up one step (Small to Medium). | -- |
-| Snake | 1 | Snake Venom | your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution. | -- |
-| Snake | 2 | Great Serpent | a second shedding: your size goes up another step (Medium to Large, 2x2). | Serpent Growth |
-| Sprite | 1 | Nature Initiate | fey magic: you become initiated in nature magic and gain the Share Magic action. | -- |
+| Skeleton | 1 | Deft Bones | Light, quick bones: your bare hands hit and hurt with Dexterity. | -- |
+| Skeleton | 1 | Elder Skeleton | Centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- |
+| Skeleton | 1 | Faith Initiate | A vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
+| Snake | 1 | Serpent Growth | You outgrow your coils: your size goes up one step (Small to Medium). | -- |
+| Snake | 1 | Snake Venom | Your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution. | -- |
+| Snake | 2 | Great Serpent | A second shedding: your size goes up another step (Medium to Large, 2x2). | Serpent Growth |
+| Sprite | 1 | Nature Initiate | Fey magic: you become initiated in nature magic and gain the Share Magic action. | -- |
 | Sprite | 1 | Pixie Dust | 1 point: an adjacent ally takes wing through the end of their next turn. | -- |
 | Sprite | 1 | Tiny Target | +2 AC against ranged and thrown attacks. | -- |
-| Treefolk | 1 | Fruitful | your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- |
-| Treefolk | 1 | Thornskin | whoever hits you in melee takes 1 damage. | -- |
-| Treefolk | 2 | Bountiful Harvest | you bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it. | Fruitful |
-| Wolf | 1 | Dire Growth | you grow past your kin: your size goes up one step (a Wolf becomes Large). | -- |
-| Wolf | 1 | Rending Bite | jaws that tear: roll one extra die on your bite. | -- |
-| Zombie | 1 | Death Grip | your cold dead hands lock like iron: +2 to grab checks. | -- |
-| Zombie | 2 | Zombie Bite | sink your teeth into held flesh: an attack targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage. | Death Grip |
+| Treefolk | 1 | Fruitful | Your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- |
+| Treefolk | 1 | Thornskin | Whoever hits you in melee takes 1 damage. | -- |
+| Treefolk | 2 | Bountiful Harvest | You bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it. | Fruitful |
+| Wolf | 1 | Dire Growth | You grow past your kin: your size goes up one step (a Wolf becomes Large). | -- |
+| Wolf | 1 | Rending Bite | Jaws that tear: roll one extra die on your bite. | -- |
+| Zombie | 1 | Death Grip | Your cold dead hands lock like iron: +2 to grab checks. | -- |
+| Zombie | 2 | Zombie Bite | Sink your teeth into held flesh: an attack targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage. | Death Grip |
 
 ### Magic track
 
@@ -615,7 +615,7 @@ The staked bouts in the cellars under the city. Win, and be known.
 | First Blood | Win a staked bout in the pits. | +1 | -- |
 | Lone Wolf | Win in the entry pit with a single fighter. | +1 | -- |
 | Dethrone the Champions | Beat the pit's champion team. | +1 | -- |
-| Bloodsport | Win a bout in the Games -- the arena's second stage. | +1 | Dethrone the Champions |
+| Bloodsport | Win a bout in the Games, the arena's second stage. | +1 | Dethrone the Champions |
 | Flag Runner | Capture the enemy flag in the Games. | +1 | Dethrone the Champions |
 | Untouchable | Capture the flag without knocking anyone out. | +1 | Dethrone the Champions |
 | The Ribbit Brothers | Beat the three Grippli in the Games. | +1 | Dethrone the Champions |

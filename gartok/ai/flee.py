@@ -135,7 +135,7 @@ def _skitter(battle, unit):
         if getattr(unit, "fled_turns", 0) >= SKITTISH_STAMINA:
             unit.fled_turns = 0
             unit.charging_until = battle.round_no + SKITTISH_CHARGE_ROUNDS - 1
-            battle.log(f"{unit.name} is winded -- it lowers its head and charges!")
+            battle.log(f"{unit.name} is winded, lowers its head and charges!")
             return "fight"
         unit.fled_turns = getattr(unit, "fled_turns", 0) + 1
         unit.flee_round = battle.round_no

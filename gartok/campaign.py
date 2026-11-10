@@ -205,7 +205,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
             recorder.death(member, "combat", **note)
             killer = getattr(combatant, "downed_by", None)
             memorials.append(aftermath.memorial(
-                member, day=guild.clock.day, cause="Killed in combat",
+                member, day=guild.clock.day, cause=i18n.t("aftermath.killed_in_combat"),
                 place=getattr(node, "name", None), killer=killer.name if killer is not None else None,
                 line=note["trail"][-1] if note["trail"] else None))
 

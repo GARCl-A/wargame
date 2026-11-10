@@ -101,9 +101,9 @@ def _talents():
     for track, t in rows:
         need = " + ".join(talents.get(n).name for n in t.needs)
         races = (t.race,) if isinstance(t.race, str) else tuple(t.race or ())
-        out.append(_entry(t.name, i18n.t("wiki_session.tier", track=track, tier=t.tier),
+        out.append(_entry(t.name, i18n.t("wiki_session.tier", track=i18n.t(f"talent_session.track.{track}"), tier=t.tier),
                           [i18n.t("wiki_session.needs", value=need) if t.needs else i18n.lab("a root"),
-                           i18n.t("wiki_session.only", join=', '.join(races)) if races else None],
+                           i18n.t("wiki_session.only", join=', '.join(i18n.names("race", races))) if races else None],
                           [t.effect], glyph=t.icon, find=[t.effect, *races]))
     return out
 

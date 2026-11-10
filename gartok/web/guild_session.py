@@ -196,7 +196,7 @@ class GuildSession(Session):
     @staticmethod
     def _role(r):
         act = r["action"]
-        return {"key": r["key"], "title": r["title"], "sub": r["sub"].replace(" -- ", ": "),
+        return {"key": r["key"], "title": r["title"], "sub": r["sub"],
                 "current": r["current"], "tip": r["tip"],
                 "action": None if act is None else {"label": act[0].capitalize(), "on": act[1]}}
 
@@ -573,7 +573,7 @@ class GuildSession(Session):
             "standing": [{"name": f.name, "rep": g.reputation.get(f.id, 0)} for f in known],
             "groups": [{**r, "gid": gr.gid, "task": self._task(gr.gid).capitalize()}
                        for r, gr in zip(s._group_rows(), g.groups)],
-            "notices": [{"text": t.replace(" -- ", ": "), "tone": tone} for t, tone in s._notices()],
+            "notices": [{"text": t, "tone": tone} for t, tone in s._notices()],
             "holdings": holds,
         }
 
@@ -586,7 +586,7 @@ class GuildSession(Session):
         card = objectives.card_data(g)
         n, total = card["rep"].split("/")
         return {
-            "objectives": {"done": int(n), "total": int(total), "blurb": card["blurb"].replace(" -- ", ": "),
+            "objectives": {"done": int(n), "total": int(total), "blurb": card["blurb"],
                            "rows": [{"name": nm, "blurb": b, "done": st == "done"} for nm, b, _, st in card["deeds"]]},
             "factions": [{"name": f.name, "blurb": f.blurb, "rep": g.reputation.get(f.id, 0),
                           "deeds": [{"name": d.name, "blurb": d.blurb, "rep": d.rep,

@@ -1,7 +1,7 @@
 /* The settings: one ruled row per preference on a page, its choices as stamps to press. */
 #settings{position:absolute;inset:0;
   background:radial-gradient(ellipse 70% 65% at 50% 48%,#3b2a1b 0%,#20170f 55%,#0d0906 100%)}
-#page{position:absolute;left:50%;top:110px;width:1040px;transform:translateX(-50%);padding:44px 52px 36px}
+#page{position:absolute;left:50%;top:32px;width:1040px;max-height:calc(100% - 64px);overflow-y:auto;scrollbar-width:thin;transform:translateX(-50%);padding:44px 52px 36px}
 #page h2{margin-top:14px;font:700 40px/1 Cinzel,serif;color:#2a1a0e}
 #rows{margin-top:26px}
 .row{display:flex;gap:30px;align-items:center;padding:20px 4px;border-top:1px solid rgba(90,60,30,.3)}

@@ -78,8 +78,8 @@ function who() {
   $("who").innerHTML = `
     <div class="plate"><div class="medal">${face(u.portrait, u.name)}</div>
       <div><b>${esc(u.name)}</b><span>${esc(u.race)}</span><small>${tr("talents.racial_level", {level: u.racial_level, hp: u.hp, max: u.hp_max})}</small></div></div>
-    <div class="attrs">${u.attrs.map(a => `<div class="attr ${hot.has(a.k) ? "hot" : ""}"><span>${a.k}</span><b>${a.v}</b><i>${mod(a.v)}</i></div>`).join("")}</div>
-    <div class="kicker">${tr("talents.four")}<em>${tr("talents.four_note")}</em></div>
+    <div class="attrs">${u.attrs.map(a => `<div class="attr ${hot.has(a.k) ? "hot" : ""}"><span>${lab(a.k)}</span><b>${a.v}</b><i>${mod(a.v)}</i></div>`).join("")}</div>
+    <div class="kicker">${tr("talents.four")}</div>
     ${T.tracks.map(trackCard).join("")}
     <div class="kicker">${tr("talents.can")}<em>${tr("talents.can_n", {n: T.can_take.length})}</em></div>
     <div class="canlist">${T.can_take.length ? T.can_take.map(c => `<div class="crow ${c.id === T.hand?.id ? "on" : ""}" data-track="${c.track}" data-id="${c.id}">

@@ -53,14 +53,13 @@ the rest.
 Something on a screen is wrong today. Pick these before any UI improvement below.
 
 - **pt-br overflow and truncation audit.** Portuguese runs 20-30% longer than English: walk every screen
-  in `pt-br` and fix dialog boxes, tabs, tables and cards that clip or break a word badly. Run
-  `scripts/i18n_leaks.py` too. Size: Medium (many screens, each fix is small).
-- **Post-fight recap and roster layout (playtest 2026-11-08, PT-BR).** The font hierarchy and styling of the
-  "who killed whom" recap and of the roster look off; the "consumables & equipment" header wraps unevenly;
-  an image sometimes misses the cache on a screen change (the first paint shows it empty). Size: Small.
-- **Wiki race metadata and text polish (playtest 2026-11-08).** "Small", "Hit Die", "Speed", "Speaks" and the
-  attribute abbreviations are not localized in the races wiki (`locales/pt-br.json`); a double hyphen ("--")
-  shows in dialogue boxes; talent descriptions do not start with a capital. Size: Small.
+  in `pt-br` and fix dialog boxes, tabs, tables and cards that clip or break a word badly. Done so far: title,
+  map, guild members tab, talents, settings, wiki races/talents, post-fight stages, one hub shop. Still to walk: the
+  other guild tabs, the other hub tabs, draft steps, talk, battle, hunt, arena, watch, credits. Run
+  `scripts/i18n_leaks.py` too. Size: Small (the rest of the screens, each fix is small).
+- **Post-fight recap and roster type hierarchy (playtest 2026-11-08, PT-BR).** The font hierarchy and styling of
+  the "who killed whom" recap and of the roster look off (the author's call: what should read first); the
+  "consumables & kit" shelf header wrapped unevenly in the playtest and did not reproduce at 1920x1080. Size: Small.
 - **UI sound: level-up too loud, sound lags the click (playtest 2026-11-01).** Lower the level-up cue's
   `LEVEL` in `gartok/sound.py`; for the lag, measure first whether it is the audio start or the round trip to
   the server. The missing cues stay in *Small -> UI sound*. Size: Small.
@@ -736,3 +735,39 @@ has one "Enter" button and its functions are tabs inside.
 - **Kenku archetype design (author 2026-11-08).** Kenku stats (DEX/WIS/CHA) leave it neither a pure caster
   nor a melee bruiser. Design space: high-initiative ranged archery and Demoralize synergy.
 
+=======
+
+Ouvindo jogadores no playtest, percebi que algumas regras estão passando batido. Queria colocar o "tutorial por trigger" delas. Dado q não são tutoriais de tela, não vão ficar acessíveis no "?" que fica no canto superior direito das telas, então vale checar se essas regras estão descritas na wiki. E aqui é interessante, pq acho q são boas oportunidades de "apontar" o jogador pra wiki. Então esses cards de tutorial vão ter os botões de "FECHAR" e o de "Beja na wiki" que já leva o jogador pra wiki com a entrada sendo exibida. Ai ele meio q vai ver as outras coisas q estão "ao redor" dessa regra e isso talvez já mitigue alguma coisa.
+
+10. Sistemas de Tutorial & Onboarding (Ensino de Regras Ocultas)
+Item Estudável (Dicionários, Scrolls e Receitas):
+
+Gatilho: Assim que o jogador receber um item da categoria estudável pela primeira vez.
+
+Interface: Pop-up tutorial explicativo.
+
+Mensagem/Regra: Explicar que o item pode ser aprendido pelos personagens e orientar o jogador a ir até a taverna para realizar a ação de estudar.
+
+Rolagem Automática de Assess no Início do Combate:
+
+Gatilho: No segundo combate realizado na campanha.
+
+Interface: Destaque no log de combate + pop-up de aviso.
+
+Mensagem/Regra: Explicar que, no início de todo combate, todos os personagens realizam um teste gratuito de avaliar (Assess) para descobrir os atributos e defesas dos inimigos.
+
+Saída de Masmorras Exploratórias/Infinitas:
+
+Gatilho: Na primeira vez que o jogador entrar em uma instância/dungeon desse tipo.
+
+Interface: Pop-up/aviso de navegação.
+
+Mensagem/Regra: Explicar que a masmorra não finaliza automaticamente ao derrotar inimigos ou desarmar armadilhas, devendo a saída ser feita manualmente pelo mesmo ponto de entrada.
+
+Mecânica de Estabilizar (Sem Pré-requisitos):
+
+Gatilho: Na primeira vez que um personagem do jogador cair (ficar inconsciente) em combate.
+
+Interface: Pop-up explicativo de ação de combate.
+
+Mensagem/Regra: Explicar a ação de Estabilizar, destacando que qualquer personagem pode tentar realizar o teste (Wisdom check) sem exigência de classe ou item prévio.

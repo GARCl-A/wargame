@@ -266,7 +266,7 @@ class MapSession(MapView, Session):
         label = (stints.doing(o) if stints.is_stint(o) else "gather" if o.kind == "work" and o.gather
                  else "search" if o.task in campaign.SEARCHES else o.task if o.kind == "solo"
                  else "travelling" if o.kind == "travel" else o.kind)
-        return label.replace("_", " "), "go" if o.kind == "travel" else "busy"
+        return i18n.lab(label.replace("_", " ")), "go" if o.kind == "travel" else "busy"
 
     def _band(self, g):
         chip, tone = self._chip(g)

@@ -1370,6 +1370,7 @@
   bottom: 30px;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 6px
 }
 
@@ -1391,8 +1392,11 @@
 }
 
 .zoom div.fit {
+  width: auto;
+  padding: 0 7px;
   font-size: 9px;
-  letter-spacing: .14em
+  letter-spacing: .14em;
+  white-space: nowrap
 }
 
 /* ---------- the inspector ---------- */

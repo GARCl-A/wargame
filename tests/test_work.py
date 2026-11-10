@@ -288,7 +288,7 @@ def test_a_job_below_the_workers_level_says_it_teaches_nothing():
     u = Unit("player")
     u.work_hours = economy.LUMBER_XP_HOURS * 2          # work level 1
     before = u.work_hours
-    assert u.bank_work(8, 0) == [f"{u.name}: no work XP -- this job is below work level 1."]
+    assert u.bank_work(8, 0) == [f"{u.name}: no work XP because this job is below work level 1."]
     assert u.work_hours == before
 
 

@@ -119,7 +119,7 @@ def test_the_claims_fight_won_moves_the_claim_a_stage():
     _win(s)
     s.done()
     assert guild.wilds_claim_stage == "CLEARED"
-    assert any("now Cleared" in n for n in game.session.map.notices)
+    assert any("advances to Cleared" in n for n in game.session.map.notices)
 
 
 def test_a_lab_fight_has_nothing_after_it():
