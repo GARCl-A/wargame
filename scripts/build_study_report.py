@@ -448,7 +448,7 @@ Todas valem para qualquer raça que consiga empunhar a arma; atributos 3d6; só 
   Conjuradores: 3 de combate, 4 de trabalho, 3 de magia. Racial: 1 talento sorteado entre os que a raça pode pegar primeiro (a onda `rt` mede cada um). **Nível 0**: nenhum talento.
 - Combate, magia e raízes de trabalho seguem a lista da build, na ordem dos pré-requisitos; o que sobra é sorteado entre os legais.
   Um talento da lista que o personagem não consegue pegar vira o aviso `talent X not legal` (o teste `test_race_study_builds` trava isso).
-- **Compra, em ordem:** a arma (a versão Large primeiro, se o corpo empunha), a aljava de quem atira, a armadura (a que dá mais CA somando a
+- **Compra, em ordem:** a arma (o maior tamanho que o personagem consegue empunhar, do Large ao seu próprio), a aljava de quem atira, a armadura (a que dá mais CA somando a
   Destreza, a mais barata entre as empatadas), mais aljavas ou reservas de arremesso, o escudo. **Fortress inverte:** armadura, escudo, e a arma
   com o que sobra; se nada sobra, luta **desarmado** (aviso `unarmed`); uma arma de duas mãos devolve o escudo.
 - **Luz:** o mapa do CTF é escuro; só os Ermos têm luz. Depois de montar os três, se ninguém leva luz e o esquadrão não é todo de visão no escuro
@@ -466,7 +466,7 @@ Todas valem para qualquer raça que consiga empunhar a arma; atributos 3d6; só 
 def builds_doc():
     body = []
     for b in rb.BUILDS.values():
-        weapon = b.weapons[0] + (" (primeiro Large)" if b.weapons else "")
+        weapon = b.weapons[0] + (" (o maior tamanho que o personagem empunha)" if b.weapons else "")
         body.append((b.id, b.label, weapon, b.shield or "-", "armadura > escudo > arma" if b.armor_first else "arma > armadura > escudo",
                      ", ".join(b.combat), ", ".join(b.work) + " + sorteio", ", ".join(b.magic_talents) or "-", ", ".join(b.spells5) or "-"))
     text = BUILDS_INTRO + table(["build", "descricao", "arma", "escudo", "compra", "talentos de combate (ordem)", "trabalho", "magia", "magias L5"], body)
