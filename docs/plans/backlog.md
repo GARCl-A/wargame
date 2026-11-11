@@ -32,7 +32,7 @@ combat presentation and the hub kit are done. Left:
   and flags what still rings false.
 - **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
-- **Holy Symbol: the drop and the Farmer's quest** (*Needs more information*), after the translation.
+- **Holy Symbol: the Farmer's quest** (*Needs more information*; the bandit drop is built).
 - The *UI bugs* and the *Small* items below, in order.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
@@ -731,14 +731,11 @@ has one "Enter" button and its functions are tabs inside.
   recipes and places traps farther. The tester's idea: a research system to discover formulas. Open: teachers (who, what it costs),
   study time, what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
 
-- **Holy Symbol source (author 2026-11-01, quest decided 2026-11-04).** No recruit starts with one (only the
-  Priest did) and no shelf sells it, while Faith's rite (`rite.py`) consumes it, so the Faith school has no
-  way to get it. Not for sale at the Market. Direction: (1) a super rare drop from bandit ambushes; (2) a
-  Farmer's quest: his daughter went to the church and has sent no word for a while; an investigation ends
-  with the body found on the new node between the church and the country roads, and the Holy Symbol is on
-  it. Open: the drop chance, the node, and the investigation's steps (it needs the story thought through). Order
-  (author 2026-11-04): after the translation, before the next playtest. Until then the rite cannot start in a
-  new game.
+- **Holy Symbol: the Farmer's quest (author 2026-11-11).** The bandit drop is built; the reliable source is a
+  quest that Edric Ashvale gives at the Farm from day 30, once the Faith Cathedral is found: his daughter, a clue
+  hunt (*Ask around*), a hidden cult site and a ritual fight. Plan, phases and open points:
+  [holy_symbol_quest.md](holy_symbol_quest.md). Order (author 2026-11-04): before the next playtest. Until it
+  ships, the rite starts only with a Holy Symbol from a bandit pack.
 
 - **Does an arena bout cost hours? (author 2026-11-01)** A bout advances the clock only by its rounds
   (6 s each, `campaign.py`), which is about a minute: a squad can chain bouts the same day with no
