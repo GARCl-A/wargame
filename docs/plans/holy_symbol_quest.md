@@ -1,6 +1,6 @@
 # Holy Symbol: a quest do Fazendeiro (a filha do Edric)
 
-Escrito em portugues a pedido do autor. Status: **em construcao** na branch `quest-holy-symbol` (fases 1 a 4 feitas). A chave de lancamento
+Escrito em portugues a pedido do autor. Status: **em construcao** na branch `quest-holy-symbol` (fases 1 a 5 feitas). A chave de lancamento
 `missions.FARMER_QUEST_LIVE` (hoje `False`) mantem a quest inteira apagada: o job, a aba Jobs da Farm e a loja fechada.
 
 ## Por que existe
@@ -93,7 +93,7 @@ Cada fase e um commit no `main`.
    `PAYLOAD_DEFAULTS` (sem bump de `SAVE_VERSION`).
 4. **Busca, Cult Site e arestas (feita; o no e efemero, como os do wildfire: so entra no mapa e nas rotas depois de achado, senao o atalho Farm-Igreja vazaria o no; o no ainda nao tem funcao nem tela: `cult_ritual` vem na fase 6).** No oculto `cult_site` (`world.free_spot`), arestas, funcao `cult_ritual`, glifo
    em `map_view.NODE_ICON`; `search_cult` em `campaign.SEARCHES` com botao nas Country Roads.
-5. **Raca Demon e NPCs.** Raca `Demon` (`kind: demon`, posta a mao como o Skeleton) e glifo em `art_files.RACE_ICON`;
+5. **Raca Demon e NPCs (feita; nomes dos NPCs e do demonio sao provisorios: Maren Voss, Brann, Kessa Thorn, Ilsa, Orrin, Tavish, Wynn Ashvale, "O Inquilino Palido"; o glifo do Demon e um emprestimo do Kobold ate o autor dar arte; Demon: 260 PV pinados, racial 22 derivado (combate 16, trabalho 14, magia 14: o teste proibe pinar), habilidades darkvision + ferocity; `python scripts/make_cult_npcs.py` regenera os 8 arquivos).** Raca `Demon` (`kind: demon`, posta a mao como o Skeleton) e glifo em `art_files.RACE_ICON`;
    os 8 NPCs em `npcs/*.json` por um script (modelo `necromancer.json`); drop do demonio em `loot.UNIQUE_DROPS`.
 6. **O cenario.** `gartok/cult_site.py`, `CultSiteScenario` (modelo `ox_fields.py` e `necromancer.py`): mapa
    aberto `outdoor`, triangulo, a filha como `ai_ally` dormente; barra e Ritual Final em `on_round`, no `CombatLog`;

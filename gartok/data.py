@@ -249,6 +249,13 @@ GIANTS = [
 ]
 _GIANTS = [_race_dict(*row) for row in GIANTS]
 
+# The Demon the Cult calls (`cult_site.py`): placed by hand, never drawn into a pack or rolled.
+DEMONS = [
+    # threshold, name, token, Str Dex Con Int Wis Cha  ability                  language     age     hd  size
+    (100, "Demon", "v", ( 6,  2,  6,  2,  2,  4), ("darkvision", "ferocity"), "Infernal", 50.000, 12, "Large"),
+]
+_DEMONS = [_race_dict(*row, kind="demon") for row in DEMONS]
+
 # Public pools for anything that needs to draw an arbitrary body from one
 # (`encounters.EncounterEntry.race_pool`) -- `roll_race` stays the one path
 # that rolls a fresh *player* race (humanoid, weighted by `RACES`' thresholds).
@@ -273,7 +280,8 @@ RACE_NAMES = [r["name"] for r in _RACES]
 BEAST_NAMES = [r["name"] for r in _BEASTS]
 UNDEAD_NAMES = [r["name"] for r in _UNDEAD]
 GIANT_NAMES = [r["name"] for r in _GIANTS]
-ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES + UNDEAD_NAMES + GIANT_NAMES   # what the creator offers; RACE_NAMES stays the playable set
+DEMON_NAMES = [r["name"] for r in _DEMONS]
+ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES + UNDEAD_NAMES + GIANT_NAMES + DEMON_NAMES   # what the creator offers; RACE_NAMES stays the playable set
 _SIZE_ORDER = ("Tiny", "Small", "Medium", "Large", "Huge")
 _HD_STEPS = (6, 8, 10, 12)
 
@@ -289,7 +297,7 @@ def roll_race():
 def _single_race(name):
     if name == "Leshy":
         name = "Treefolk"
-    for race in _RACES + _BEASTS + _UNDEAD + _GIANTS:
+    for race in _RACES + _BEASTS + _UNDEAD + _GIANTS + _DEMONS:
         if race["name"] == name:
             return dict(race)
     return None

@@ -47,6 +47,7 @@ Bodies that are never rolled as a player's race (`data.BEASTS`, `UNDEAD`, `GIANT
 | Skeleton | undead | +0 +2 +4 -4 -2 -4 | d8 | Medium | 9 m | Darkvision, Sleep Immunity | -- |
 | Zombie | undead | +2 -2 +4 -4 -2 -4 | d8 | Medium | 6 m | Darkvision, Sleep Immunity | -- |
 | Ogre | humanoid | +4 -2 +2 -2 +2 -2 | d12 | Large | 9 m | Reach | -- |
+| Demon | demon | +6 +2 +6 +2 +2 +4 | d12 | Large | 9 m | Darkvision, Ferocity | -- |
 
 ## Racial abilities
 
@@ -55,7 +56,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Ability | Held by | Effect |
 |---|---|---|
 | Browbeat | Hobgoblin | +2 to Demoralize against a target with a lower Strength modifier. |
-| Darkvision | Dwarf, Dragon, Skeleton, Zombie | sees 12 squares in the dark as if it were lit. |
+| Darkvision | Dwarf, Dragon, Skeleton, Zombie, Demon | sees 12 squares in the dark as if it were lit. |
 | Inorganic Body | Automaton | at 0 HP goes BROKEN instead of Dying (no death save) until an ally repairs it (Stabilize: INT vs DC 15). |
 | Gallop | Centaur | +3 m (2 squares) of speed. |
 | Sleep Immunity | Elf, Skeleton, Zombie | immune to sleep effects. |
@@ -72,7 +73,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Mimic Sounds | Kenku | can Demoralize with no shared language (mimics the target's voice), but only on offence; being demoralized still needs a common tongue. |
 | Blood Magic | Kobold | ancestral blood magic: starts initiated in blood magic, +2 to spell study rolls. |
 | Autotroph | Treefolk | photosynthesises: never needs to eat, immune to the hunger rules. |
-| Ferocity | Orc | once per battle, when downed drops to 0 HP and Dying, but only falls at the end of their turn (the death save runs normally from there). |
+| Ferocity | Orc, Demon | once per battle, when downed drops to 0 HP and Dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | Sprite | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
 | Spider Venom | Giant Spider | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
 | Serpentine | Snake | a body that strikes before it is seen: every attack is a finesse attack (Dexterity to hit and to hurt), and the unarmed attack is a bite of Fangs. |

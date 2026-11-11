@@ -1,0 +1,120 @@
+{
+  "uid": "1cd83c653a9949198f66359d42ca29e9",
+  "recruited_by": null,
+  "joined_day": 1,
+  "name": "Maren Voss, the Red Hierophant",
+  "auto_name": false,
+  "portrait_id": 483933285,
+  "portrait_file": null,
+  "race": "Human",
+  "alignment": "Neutral and Evil",
+  "crime": 0,
+  "unfed_days": 0,
+  "full_belly": false,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "unbroken_rest_hours": 0,
+  "non_lethal_damage": 0,
+  "last_daily_luck_day": 0,
+  "hp": 82,
+  "share_food": true,
+  "combat_xp": 36,
+  "magic_xp": 210,
+  "work_hours": 672,
+  "bio": "Keeps the rite and the book it is read from. He means to open the door and thinks the price fair.",
+  "bio_slug": null,
+  "epithet": null,
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Orcish"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_sources": [
+    "blood"
+  ],
+  "spells_known": [
+    "magic_missile",
+    "hex",
+    "sleep",
+    "dragonfire"
+  ],
+  "study_target": null,
+  "study_progress": {},
+  "magic_blood": false,
+  "blood_tested": false,
+  "blood_test_days": 0,
+  "rite_school": null,
+  "rite_progress": {},
+  "talents": {
+    "combat": [
+      "tough",
+      "alert",
+      "tactical_mind",
+      "bulwark"
+    ],
+    "work": [
+      "charismatic",
+      "clever",
+      "observant",
+      "linguist",
+      "fixer",
+      "nimble_fingers"
+    ],
+    "racial": [],
+    "magic": [
+      "arcane_mind",
+      "spell_focus",
+      "destructive_casting",
+      "far_cast",
+      "focused_will",
+      "blessed_hands"
+    ]
+  },
+  "level_hp_rolls": [
+    8,
+    6,
+    8,
+    4,
+    6,
+    2,
+    2,
+    7,
+    7,
+    5
+  ],
+  "base_attributes": {
+    "strength": 9,
+    "dexterity": 12,
+    "constitution": 13,
+    "intelligence": 16,
+    "wisdom": 15,
+    "charisma": 14
+  },
+  "age_base": 54,
+  "age": 54,
+  "hp_roll": 5,
+  "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
+  "languages": [
+    "Ankarin",
+    "Dwarvish"
+  ],
+  "equipped_weapon": "Quarterstaff",
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_artifact": null,
+  "equipped_armor": "Leather Jerkin",
+  "inventory": [],
+  "locked_items": {},
+  "dormant": false,
+  "afoot": false,
+  "awareness_radius": 8,
+  "npc_slug": "cult-leader"
+}

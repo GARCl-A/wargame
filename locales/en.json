@@ -3617,7 +3617,8 @@
       "Dragon": "Dragon",
       "Skeleton": "Skeleton",
       "Zombie": "Zombie",
-      "Ogre": "Ogre"
+      "Ogre": "Ogre",
+      "Demon": "Demon"
     },
     "size": {
       "Tiny": "Tiny",

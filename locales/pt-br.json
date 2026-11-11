@@ -4978,6 +4978,14 @@
     "name": {
         "npc": {
             "adelio-small-knife": "Adelio Facadinha",
+            "cult-leader": "Maren Voss, o Hierofante Rubro",
+            "cult-fighter-1": "Brann, Lâmina Jurada",
+            "cult-fighter-2": "Kessa Thorn, Faca do Rito",
+            "cult-channeler-blood": "Ilsa do Sangue",
+            "cult-channeler-nature": "Orrin Bosque-Cinza",
+            "cult-channeler-faith": "Irmão Tavish",
+            "farmers-daughter": "Wynn Ashvale",
+            "the-demon": "O Inquilino Pálido",
             "aurochs": "Auroque",
             "biwolf": "Grão-Lobo",
             "bufo": "Bufo",
@@ -5094,7 +5102,8 @@
             "Sprite": "Sprite",
             "Skeleton": "Esqueleto",
             "Zombie": "Zumbi",
-            "Ogre": "Ogro"
+            "Ogre": "Ogro",
+            "Demon": "Demônio"
         },
         "size": {
             "Tiny": {"name": "Minúsculo", "f": "Minúscula"},
@@ -6189,6 +6198,14 @@
         },
         "npc": {
             "adelio-small-knife": "Um batedor de carteiras de aldeia que conversou até entrar nos Fossos há uma temporada. Luta sujo, se abaixa cedo e segurou o cinturão do último degrau mais tempo do que qualquer um apostou: o melhor de um mau lote, e ele sabe.",
+            "cult-leader": "Guarda o rito e o livro de onde ele é lido. Quer abrir a porta e acha o preço justo.",
+            "cult-fighter-1": "Uma espada de aluguel que parou de perguntar para que foi contratada.",
+            "cult-fighter-2": "Rápida e silenciosa. Está ali para manter os canalizadores vivos e acabar com quem chegar neles.",
+            "cult-channeler-blood": "Lê o rito na ponta leste, numa voz que não é bem a dela.",
+            "cult-channeler-nature": "Um druida de beira de estrada que se perdeu. As raízes que ele chama seguram o chão sob o rito.",
+            "cult-channeler-faith": "Um padre da Catedral que rezou para a coisa errada e foi respondido.",
+            "farmers-daughter": "A filha de Edric Ashvale. Foi à Catedral acender uma vela para a mãe.",
+            "the-demon": "O que o Culto chamava. Não tem nome ao qual responda.",
             "aurochs": "O boi imortal. Cada caçador mandado atrás dele é uma história que alguém conta.",
             "biwolf": "Só um lobo GRANDE pra caramba.",
             "bufo": "O irmão mais velho. Planta-se entre você e a bandeira e não sai: uma muralha de músculo cheio de verrugas, com uma espada larga nos punhos e uma lança na língua.",

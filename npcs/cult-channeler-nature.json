@@ -1,0 +1,114 @@
+{
+  "uid": "99560423aeb34776917d0155135dbaa9",
+  "recruited_by": null,
+  "joined_day": 1,
+  "name": "Orrin Greywood",
+  "auto_name": false,
+  "portrait_id": 2572551203,
+  "portrait_file": null,
+  "race": "Human",
+  "alignment": "Neutral and Evil",
+  "crime": 0,
+  "unfed_days": 0,
+  "full_belly": false,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "unbroken_rest_hours": 0,
+  "non_lethal_damage": 0,
+  "last_daily_luck_day": 0,
+  "hp": 55,
+  "share_food": true,
+  "combat_xp": 21,
+  "magic_xp": 78,
+  "work_hours": 480,
+  "bio": "A hedge-druid turned. The roots he calls hold the ground under the rite.",
+  "bio_slug": null,
+  "epithet": null,
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Goblin"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_sources": [
+    "nature"
+  ],
+  "spells_known": [
+    "magic_missile",
+    "grasping_roots",
+    "sleep"
+  ],
+  "study_target": null,
+  "study_progress": {},
+  "magic_blood": false,
+  "blood_tested": false,
+  "blood_test_days": 0,
+  "rite_school": null,
+  "rite_progress": {},
+  "talents": {
+    "combat": [
+      "agile",
+      "long_reach",
+      "tough"
+    ],
+    "work": [
+      "charismatic",
+      "observant",
+      "negotiator",
+      "beast_whisperer",
+      "provisioner"
+    ],
+    "racial": [],
+    "magic": [
+      "arcane_mind",
+      "spell_focus",
+      "blessed_hands",
+      "destructive_casting",
+      "far_cast",
+      "focused_will"
+    ]
+  },
+  "level_hp_rolls": [
+    8,
+    3,
+    5,
+    1,
+    7,
+    4,
+    7
+  ],
+  "base_attributes": {
+    "strength": 9,
+    "dexterity": 11,
+    "constitution": 13,
+    "intelligence": 13,
+    "wisdom": 16,
+    "charisma": 10
+  },
+  "age_base": 80,
+  "age": 80,
+  "hp_roll": 4,
+  "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
+  "languages": [
+    "Ankarin",
+    "Verdant"
+  ],
+  "equipped_weapon": "Quarterstaff",
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_artifact": null,
+  "equipped_armor": null,
+  "inventory": [],
+  "locked_items": {},
+  "dormant": false,
+  "afoot": false,
+  "awareness_radius": 8,
+  "npc_slug": "cult-channeler-nature"
+}

@@ -1,0 +1,114 @@
+{
+  "uid": "72bf1704048d41959bc0c11b6c1f1d3b",
+  "recruited_by": null,
+  "joined_day": 1,
+  "name": "Ilsa of the Blood",
+  "auto_name": false,
+  "portrait_id": 1925125892,
+  "portrait_file": null,
+  "race": "Human",
+  "alignment": "Neutral and Evil",
+  "crime": 0,
+  "unfed_days": 0,
+  "full_belly": false,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "unbroken_rest_hours": 0,
+  "non_lethal_damage": 0,
+  "last_daily_luck_day": 0,
+  "hp": 39,
+  "share_food": true,
+  "combat_xp": 21,
+  "magic_xp": 78,
+  "work_hours": 480,
+  "bio": "Reads the rite from the east point, in a voice that is not quite hers.",
+  "bio_slug": null,
+  "epithet": null,
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Dwarvish"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_sources": [
+    "blood"
+  ],
+  "spells_known": [
+    "magic_missile",
+    "hex",
+    "sleep"
+  ],
+  "study_target": null,
+  "study_progress": {},
+  "magic_blood": false,
+  "blood_tested": false,
+  "blood_test_days": 0,
+  "rite_school": null,
+  "rite_progress": {},
+  "talents": {
+    "combat": [
+      "tactical_mind",
+      "imposing",
+      "alert"
+    ],
+    "work": [
+      "observant",
+      "sturdy",
+      "beast_whisperer",
+      "pathfinder",
+      "clever"
+    ],
+    "racial": [],
+    "magic": [
+      "arcane_mind",
+      "spell_focus",
+      "destructive_casting",
+      "far_cast",
+      "focused_will",
+      "blessed_hands"
+    ]
+  },
+  "level_hp_rolls": [
+    3,
+    7,
+    1,
+    1,
+    7,
+    7,
+    2
+  ],
+  "base_attributes": {
+    "strength": 8,
+    "dexterity": 13,
+    "constitution": 12,
+    "intelligence": 14,
+    "wisdom": 12,
+    "charisma": 13
+  },
+  "age_base": 22,
+  "age": 22,
+  "hp_roll": 3,
+  "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
+  "languages": [
+    "Ankarin",
+    "Jotun"
+  ],
+  "equipped_weapon": "Dagger",
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_artifact": null,
+  "equipped_armor": null,
+  "inventory": [],
+  "locked_items": {},
+  "dormant": false,
+  "afoot": false,
+  "awareness_radius": 8,
+  "npc_slug": "cult-channeler-blood"
+}
