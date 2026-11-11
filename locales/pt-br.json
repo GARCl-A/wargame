@@ -2954,7 +2954,9 @@
             "normal": "sem mudança na chance de emboscada",
             "cautious": "menos emboscadas só com a vocação Andarilhos ou um Batedor da Mata"
         },
-        "idle": "parado"
+        "idle": "parado",
+        "search_cult_h": "Procure nas estradas por um brilho vermelho ({search_hours} h)",
+        "search_cult_hint": "Procure onde um ritual poderia se esconder (teste de SAB, ajudado pelo que você soube perguntando por aí)"
     },
     "dialogue": {
         "verb": {
@@ -4259,6 +4261,12 @@
                 "ledger_hold": "Os oficiais do posto de comando não a viram. Ninguém com a descrição dela passou pela estrada nas últimas semanas."
             }
         }
+    },
+    "cult_site": {
+        "nothing_on_the_roads": "{who} percorre as estradas por {hours} horas e só encontra sulcos e trigo.",
+        "already_found": "{who} sabe onde fica o local.",
+        "found": "{who} segue um cheiro de fumaça e ferro quente por uma trilha que ninguém usa: um local de ritual se abre adiante.",
+        "missed": "{who} vasculha as estradas por {hours} horas e não acha nada: d20({nat}) {mod}(SAB) +{bonus}(pistas) = {total} vs {dc}."
     },
     "wildfire": {
         "great_focus": "O Grande Foco",
@@ -5577,7 +5585,8 @@
             "ogre_fortress": {
                 "name": "Fortaleza do Ogro",
                 "gender": "f"
-            }
+            },
+            "cult_site": "Local do Culto Demoníaco"
         },
         "node_function": {
             "shop": "ENTRAR NA LOJA",
@@ -5601,7 +5610,8 @@
             "camp_fight": "ATACAR O ACAMPAMENTO",
             "ogre_fight": "INVADIR A FORTALEZA",
             "serpents_nest": "ENTRAR NO NINHO",
-            "dragon_lair": "ENTRAR NA TOCA"
+            "dragon_lair": "ENTRAR NA TOCA",
+            "cult_ritual": "ENTRAR NO LOCAL"
         },
         "objective": {
             "obj_buy_food": "Comprar Comida",
@@ -6071,7 +6081,8 @@
             "serpents_nest": "Uma fenda na rocha abaixo da Serraria, pendurada de peles mudadas. Cobras fazem toca aqui, e algo mais antigo que cobras.",
             "dragon_lair": "Depois de onde os mineiros pararam, as galerias esquentam e cheiram a enxofre e ouro velho. Kobolds andam no escuro aqui, e algo vasto dorme lá embaixo.",
             "country_roads": "Trilhas de terra entre as fazendas ao sul da cidade. Quietas e bem abertas.",
-            "ox_fields": "Pasto fértil onde algo muito antigo e muito grande sobreviveu a todo caçador mandado atrás dele."
+            "ox_fields": "Pasto fértil onde algo muito antigo e muito grande sobreviveu a todo caçador mandado atrás dele.",
+            "cult_site": "Uma clareira fora das Estradas do Campo onde a grama foi queimada em forma de triângulo, com um braseiro em cada ponta. Algo está sendo chamado aqui."
         },
         "node_function": {
             "hunt": "passe o dia caçando ou colhendo  ·  uma matilha pode encontrar você primeiro",
@@ -6083,7 +6094,8 @@
             "camp_fight": "uma turma de goblins e seu capataz Hobgoblin, junto ao fogo  ·  letal",
             "ogre_fight": "o Ogro e seus goblins entre as muralhas, a fogueira se espalhando  ·  letal",
             "serpents_nest": "cinco câmaras escuras de cobras, e a Dragobra no fundo  ·  letal",
-            "dragon_lair": "patrulhas de kobolds, um tesouro, a ninhada, e o dragão dormindo ao lado  ·  letal"
+            "dragon_lair": "patrulhas de kobolds, um tesouro, a ninhada, e o dragão dormindo ao lado  ·  letal",
+            "cult_ritual": "uma clareira de luz vermelha onde cultistas entoam ao redor de um triângulo de braseiros  ·  letal"
         },
         "objective": {
             "obj_buy_food": "Todos comem uma comida por dia. Batatas e Carne são vendidas na Fazenda.",

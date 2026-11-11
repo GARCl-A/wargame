@@ -3654,7 +3654,8 @@
       "dragon_lair": "The Dragon's Lair",
       "country_roads": "Country Roads",
       "ox_fields": "Legendary Ox Fields",
-      "ogre_fortress": "The Ogre's Fortress"
+      "ogre_fortress": "The Ogre's Fortress",
+      "cult_site": "Demon Cult Site"
     },
     "objective": {
       "obj_buy_food": "Buy Food",
@@ -3697,7 +3698,8 @@
       "camp_fight": "ATTACK THE CAMP",
       "ogre_fight": "STORM THE FORTRESS",
       "serpents_nest": "ENTER THE NEST",
-      "dragon_lair": "ENTER THE LAIR"
+      "dragon_lair": "ENTER THE LAIR",
+      "cult_ritual": "ENTER THE SITE"
     },
     "mission": {
       "tanner_hides": "Fifteen Hides",
@@ -5081,6 +5083,12 @@
       }
     }
   },
+  "cult_site": {
+    "nothing_on_the_roads": "{who} walks the lanes for {hours} hours and finds only ruts and wheat.",
+    "already_found": "{who} knows where the site lies.",
+    "found": "{who} follows a smell of smoke and hot iron down a track nobody uses: a ritual site opens ahead.",
+    "missed": "{who} searches the lanes for {hours} hours and finds nothing: d20({nat}) {mod}(WIS) +{bonus}(clues) = {total} vs {dc}."
+  },
   "wildfire": {
     "great_focus": "The Great Focus",
     "wildfire": "Wildfire {rsplit}",
@@ -5459,7 +5467,9 @@
       "normal": "no change to the ambush chance",
       "cautious": "fewer ambushes only with the Wilds vocation or a Woodland Scout"
     },
-    "idle": "idle"
+    "idle": "idle",
+    "search_cult_h": "Search the lanes for a red glow ({search_hours} h)",
+    "search_cult_hint": "Look for where a ritual could be hidden (WIS check, helped by what you learned asking around)"
   },
   "band_kit": {
     "has_no_animal_hitched_to": "the {lower} has no animal hitched to pull it.",
@@ -5950,7 +5960,8 @@
       "camp_fight": "a goblin crew and its Hobgoblin foreman, by the fire  ·  lethal",
       "ogre_fight": "the Ogre and his goblins among the walls, the bonfire spreading  ·  lethal",
       "serpents_nest": "five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal",
-      "dragon_lair": "kobold patrols, a hoard, the clutch, and the dragon asleep beside it  ·  lethal"
+      "dragon_lair": "kobold patrols, a hoard, the clutch, and the dragon asleep beside it  ·  lethal",
+      "cult_ritual": "a red-lit clearing where cultists chant around a triangle of braziers  ·  lethal"
     },
     "mission": {
       "tanner_hides": "The tanner wants 15 sqm of hide off anything with fur. The Wilds is thick with it, if you can bring down what's wearing it.",
@@ -6042,7 +6053,8 @@
       "serpents_nest": "A split in the rock below the Lumber Yard, hung with shed skins. Snakes den here, and something older than snakes.",
       "dragon_lair": "Past where the miners stopped, the galleries run hot and smell of sulphur and old gold. Kobolds walk the dark here, and something vast sleeps below.",
       "country_roads": "Dirt lanes between the farmsteads south of the city. Quiet, and wide open.",
-      "ox_fields": "Fertile grazing land where something very old and very large has outlived every hunter sent after it."
+      "ox_fields": "Fertile grazing land where something very old and very large has outlived every hunter sent after it.",
+      "cult_site": "A clearing off the Country Roads where the grass has been burned into a triangle, a brazier at each point. Something is being called here."
     },
     "vendor": {
       "elysia": "Small hands, long memory. I never forget a debt, or a depositor.",

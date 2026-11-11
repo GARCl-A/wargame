@@ -31,6 +31,7 @@ from . import (
     aftermath,
     arena,
     captives,
+    cult_site,
     data,
     draw,
     economy,
@@ -622,4 +623,5 @@ SEARCHES = {
     "scout_fields": (ox.SCOUT_HOURS, ox.scout_country_roads),
     "search_nest": (serpent_nest.SEARCH_HOURS, serpent_nest.search),
     "search_lair": (lair.SEARCH_HOURS, lair.search),
+    "search_cult": (cult_site.SEARCH_HOURS, cult_site.search),
 }

@@ -29,7 +29,7 @@ import time
 import uuid
 from dataclasses import fields
 
-from . import captives, missions, routine_book, routines, wildfire
+from . import captives, cult_site, missions, routine_book, routines, wildfire
 from .animals import Animal
 from .clock import Clock
 from .group import NORMAL, Group
@@ -421,6 +421,7 @@ def load_game(world, save_id=CURRENT):
                  objectives_done=payload["objectives_done"],
                  log=payload["log"])
     wildfire.sync_world(guild)
+    cult_site.sync_world(guild)
     return guild
 
 

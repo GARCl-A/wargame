@@ -6,6 +6,7 @@ REST plans, where a pawn stands and each node's glyph. pygame's `MapScreen` and 
 from . import (
     arena,
     campaign,
+    cult_site,
     economy,
     gather,
     i18n,
@@ -39,6 +40,7 @@ NODE_ICON = {
     "serpents_nest": ("head", "snake-bite"), "dragon_lair": ("head", "dragon-head"),
     "nature_grove": ("map", "leaf"), "faith_cathedral": ("map", "cathedral"),
     "frontier_outpost": ("body", "spiked-wall"), "battlefield": ("action", "trench-assault"),
+    "cult_site": ("symbol", "pentagram-rose"),
 }
 # The ethereal nodes (`wildfire.py`): a focus is numbered as it starts, so it goes by its prefix.
 ETHEREAL_ICON = {wildfire.GREAT_ID: ("head", "ogre"), wildfire.FORTRESS_ID: ("head", "ogre")}   # never on the map together
@@ -294,6 +296,12 @@ class MapView:
                            "label": i18n.t("map_view.search_lanes_h", scout_hours=ox.SCOUT_HOURS)})
             blocks.append({"type": "text", "text": i18n.t("map_view.look_for_where_land_opens"),
                            "tone": "faint"})
+
+        if (here.id == "country_roads" and cult_site.quest_active(self.guild)
+                and not self.guild.is_node_revealed(cult_site.NODE)):
+            blocks.append({"type": "button", "key": "search_cult",
+                           "label": i18n.t("map_view.search_cult_h", search_hours=cult_site.SEARCH_HOURS)})
+            blocks.append({"type": "text", "text": i18n.t("map_view.search_cult_hint"), "tone": "faint"})
 
         return blocks
 

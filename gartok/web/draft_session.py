@@ -6,7 +6,7 @@ The title's New guild opens it."""
 
 from typing import ClassVar
 
-from .. import art_files, i18n, persist, recorder, settings, vocations, wildfire, wiki_races, wiki_terms, world
+from .. import art_files, cult_site, i18n, persist, recorder, settings, vocations, wildfire, wiki_races, wiki_terms, world
 from ..archetypes import ARCHETYPES, is_compatible, unit_archetypes
 from ..combatant import Combatant
 from ..draft import (
@@ -204,6 +204,7 @@ class DraftSession(Session):
                       banner_color=d.banner_color, banner_icon=d.banner_icon, tutorial=self.tutorial,
                       vocation=self.vocation)
         wildfire.sync_world(guild)
+        cult_site.sync_world(guild)
         if settings.get("record_play") == "ON":
             recorder.attach(persist.world_dir(world_id), guild)
         m = MapSession(guild, world_id)
