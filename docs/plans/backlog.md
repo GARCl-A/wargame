@@ -204,6 +204,10 @@ Something on a screen is wrong today. Pick these before any UI improvement below
 
 ## Medium
 
+- **Race study in four tests (`docs/race_study.md`).** The waves and `mixed_study_report.py` exist; missing: a full run
+  (sizes in the doc), the mixed error (a build twice in one squad is credited twice per unit, which is the intended score, but
+  its interval reads too narrow: cluster the error by squad), and deciding whether this report replaces
+  `build_study_report.py`'s tables. Combat first, the economy axis after.
 - **Kenku and Crossbow balance changes (race study 2026-11-10, `ca-depois`).** The two last places of the study:
   Kenku is 38.5 (the lowest race; 5 of 18 builds above 50%, its three best average 59) and the Crossbow build is
   the worst build of 18 of the 19 races (0.02 to 0.29 of win rate; Centaur's worst is the Dagger). Measure every

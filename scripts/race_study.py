@@ -43,8 +43,9 @@ RACES = [r[1] for r in data.RACES]
 
 
 def field_builds(lv):
-    """The builds a level can field: those whose first weapon its budget pays for, and the random kit."""
-    return rb.builds_at(lv) + [rb.RANDOM_KIT]
+    """The builds a level can field: those whose first weapon its budget pays for. No random kit: it was only ever
+    an opponent, never a measured row, so it pulled every score above 50%."""
+    return rb.builds_at(lv)
 
 
 def melee_builds(lv):
@@ -130,10 +131,11 @@ def _scenario(name=None):
     return CustomScenario(map_lib.load_map(rb.MAP_SLUG))
 
 
-def _squad(team, race, build, level, rng, *, fixed, drop, over=None):
+def _squad(team, race, build, level, rng, *, fixed, drop, over=None, members=None):
+    """Three clones of `(race, build)`, or the three `(race, build)` pairs of `members` (the mixed waves)."""
     squad, notes = [], []
-    for _ in range(3):
-        u, n = rb.make_unit(team, race, build, level, rng, fixed=fixed, drop_racial=drop, over=over)
+    for r, b in members or [(race, build)] * 3:
+        u, n = rb.make_unit(team, r, b, level, rng, fixed=fixed, drop_racial=drop, over=over)
         squad.append(u)
         notes += n
     rb.light_squad(squad)
@@ -159,8 +161,10 @@ def play(job):
     random.seed(job["seed"])
     rng = random.Random(job["seed"] ^ 0x5EED)
     lv, fixed = job["lv"], job["fx"]
-    sa, na = _squad("enemy" if job["sw"] else "player", job["ra"], job["ba"], lv, rng, fixed=fixed, drop=job["dr"], over=job.get("oa"))
-    sb, nb = _squad("player" if job["sw"] else "enemy", job["rb"], job["bb"], lv, rng, fixed=fixed, drop=False, over=job.get("ob"))
+    sa, na = _squad("enemy" if job["sw"] else "player", job["ra"], job["ba"], lv, rng, fixed=fixed, drop=job["dr"], over=job.get("oa"),
+                    members=job.get("ta"))
+    sb, nb = _squad("player" if job["sw"] else "enemy", job["rb"], job["bb"], lv, rng, fixed=fixed, drop=False, over=job.get("ob"),
+                    members=job.get("tb"))
     a, b = (sb, sa) if job["sw"] else (sa, sb)
     sink = Counting()
     a_team = "enemy" if job["sw"] else "player"
@@ -190,7 +194,7 @@ def play(job):
 def _job(wave, lv, i, ra, ba, rb_, bb, **kw):
     return {"w": wave, "lv": lv, "i": i, "ra": ra, "ba": ba, "rb": rb_, "bb": bb, "sw": i % 2 == 1,
             "fx": kw.get("fx", False), "dr": kw.get("dr", False), "oa": kw.get("oa"), "ob": kw.get("ob"), "map": kw.get("map"),
-            "seed": _seed(wave, lv, i)}
+            "ta": kw.get("ta"), "tb": kw.get("tb"), "seed": _seed(wave, lv, i)}
 
 
 def _seed(wave, lv, i):
@@ -296,6 +300,11 @@ def wave_jobs(wave, lv, scale):
                     for _ in range(int(60 * scale)):
                         rb_, bb = opponent(rng, lv, field)
                         add(ra, ba, rb_, bb, map="ermos")
+    elif wave in ("mm", "em"):
+        pairs = [(r, b) for b in field for r in RACES if rb.fields(b, r, lv)]
+        for _ in range(int(10000 * scale)):
+            add("mixed", "mixed", "mixed", "mixed", ta=[list(rng.choice(pairs)) for _ in range(3)],
+                tb=[list(rng.choice(pairs)) for _ in range(3)], map="ermos" if wave == "em" else None)
     elif wave == "cg":
         gear = {"weapon": "Hammer", "armor": "Chainmail" if lv else "Leather Jerkin", "shield": "none"}
         ids = ("plain", "nature_caster", "blood_caster", "faith_caster")
@@ -428,6 +437,8 @@ def set_out(name):
 
 
 def cmd_run(args):
+    global CHUNK
+    CHUNK = args.chunk
     set_out(args.out)
     os.makedirs(DATA, exist_ok=True)
     keep_awake()
@@ -499,6 +510,7 @@ def main():
     r.add_argument("--levels", default="5")
     r.add_argument("--scale", type=float, default=1.0)
     r.add_argument("--workers", type=int, default=15)
+    r.add_argument("--chunk", type=int, default=CHUNK, help="fights per file; a short run wants a small one, a wave ends with its slowest chunk")
     r.add_argument("--until", default="")
     r.add_argument("--scheduler", default="", help="host:port of a dask scheduler; workers on other machines share the run")
     args = ap.parse_args()
