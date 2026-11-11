@@ -687,7 +687,8 @@ def test_armor_bearer_requires_bulwark_and_reduces_armor_weight():
 def _bolt_shooter(*talents):
     u = _unit(seed=1)
     u.combat_xp = 40
-    for t in ("agile", "long_reach", *talents):
+    u.combat_xp = 100
+    for t in ("agile", "deadeye", *talents):
         assert u.choose_talent("combat", t)
     u.give_to_pack("Quiver")
     u.give_to_hand("Crossbow")
@@ -696,19 +697,21 @@ def _bolt_shooter(*talents):
     return shooter
 
 
-def test_the_bolt_talents_hang_from_long_reach():
+def test_the_bolt_talents_hang_from_deadeye_and_the_ambush_needs_both():
     u = _unit(seed=1)
-    u.combat_xp = 40
+    u.combat_xp = 100
     assert not u.choose_talent("combat", "heavy_bolts")
-    assert u.choose_talent("combat", "agile") and u.choose_talent("combat", "long_reach")
-    assert u.choose_talent("combat", "heavy_bolts") and u.choose_talent("combat", "keen_bolts")
+    assert u.choose_talent("combat", "agile") and u.choose_talent("combat", "deadeye")
+    assert u.choose_talent("combat", "heavy_bolts")
+    assert not u.choose_talent("combat", "ambush_shot")
+    assert u.choose_talent("combat", "keen_bolts") and u.choose_talent("combat", "ambush_shot")
 
 
-def test_heavy_bolts_add_a_point_to_a_crossbow_shot_and_nothing_else():
+def test_heavy_bolts_add_two_points_to_a_crossbow_shot_and_nothing_else():
     def top(shooter, **kw):
         return max(shooter.damage_roll(**kw) for _ in range(300))
     plain, heavy = _bolt_shooter(), _bolt_shooter("heavy_bolts")
-    assert top(heavy) == top(plain) + 1
+    assert top(heavy) == top(plain) + 2
     heavy.char.give_to_hand("Dagger")
     assert not Combatant(heavy.char).shoots_crossbow
 
@@ -724,3 +727,60 @@ def test_keen_bolts_make_a_19_a_critical_hit_only_with_a_crossbow():
             return base._resolve_hit(batt, shooter, batt.units[1], nat, 99, "", "x") == "crit"
     keen = _bolt_shooter("keen_bolts")
     assert crits(keen, 19) and not crits(_bolt_shooter(), 19)
+
+
+def _brutal_of_a_shot(shooter, target_acted):
+    from gartok.actions import base
+    from tests.helpers import Battle, Unit, fixed_d20
+
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    batt.units[0].pos, batt.units[1].pos = (5, 5), (8, 5)
+    foe = batt.units[1]
+    foe.turns_taken = 1 if target_acted else 0
+    seen = []
+    real = shooter.damage_roll
+    shooter.damage_roll = lambda **kw: seen.append(kw["brutal"]) or real(**kw)
+    with fixed_d20(10):
+        base._resolve_hit(batt, shooter, foe, 10, 99, "", "x")
+    return seen[0]
+
+
+def test_ambush_shot_makes_a_crossbow_shot_at_an_unready_target_brutal():
+    ambusher = _bolt_shooter("heavy_bolts", "keen_bolts", "ambush_shot")
+    assert _brutal_of_a_shot(ambusher, target_acted=False) == 1
+    assert _brutal_of_a_shot(ambusher, target_acted=True) == 0
+    assert _brutal_of_a_shot(_bolt_shooter("heavy_bolts", "keen_bolts"), target_acted=False) == 0
+
+
+def test_the_ai_counts_the_ambush_in_a_shot_at_an_unready_target():
+    from gartok.ai import reckon
+    from tests.helpers import Battle, Unit
+
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    foe = batt.units[1]
+    plain = _bolt_shooter("heavy_bolts", "keen_bolts")
+    ambusher = _bolt_shooter("heavy_bolts", "keen_bolts", "ambush_shot")
+    for s in (plain, ambusher):
+        s.pos, foe.pos, s.team = (5, 5), (8, 5), "player"
+    foe.turns_taken = 0
+    assert reckon._strike_worth(batt, ambusher, foe) > reckon._strike_worth(batt, plain, foe)
+    foe.turns_taken = 1
+    assert reckon._strike_worth(batt, ambusher, foe) == reckon._strike_worth(batt, plain, foe)
+
+
+def test_a_crossbow_shot_is_resolved_as_a_shot_and_leaves_the_crossbow_empty():
+    from gartok import actions
+    from tests.helpers import Battle, Unit, fixed_d20
+
+    shooter = _bolt_shooter("heavy_bolts", "keen_bolts", "ambush_shot")
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    batt.units[0], foe = shooter, batt.units[1]
+    batt.units[0].team = "player"
+    shooter.pos, foe.pos = (5, 5), (8, 5)
+    seen = []
+    real = shooter.damage_roll
+    shooter.damage_roll = lambda **kw: seen.append((shooter.shoots_crossbow, kw["brutal"])) or real(**kw)
+    with fixed_d20(15):
+        actions.ATTACK.execute(batt, shooter, foe)
+    assert seen == [(True, 1)]
+    assert not shooter.crossbow_loaded

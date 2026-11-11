@@ -208,11 +208,13 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   (sizes in the doc), the mixed error (a build twice in one squad is credited twice per unit, which is the intended score, but
   its interval reads too narrow: cluster the error by squad), and deciding whether this report replaces
   `build_study_report.py`'s tables. Combat first, the economy axis after.
-- **Kenku and Crossbow balance changes (race study 2026-11-10, `ca-depois`).** The two last places of the study:
-  Kenku is 38.5 (the lowest race; 5 of 18 builds above 50%, its three best average 59) and the Crossbow build is
-  the worst build of 18 of the 19 races (0.02 to 0.29 of win rate; Centaur's worst is the Dagger). Measure every
-  change below with `race_study.py run --waves mb,ef --levels 5` then `build_study_report.py` (the Races table:
-  score, builds above 50%, mean of the three best; the Crossbow is a build, so read it in the Builds ranking).
+- **Kenku and Crossbow balance changes (race study 2026-11-10, `ca-depois`).** Kenku is 38.5, the lowest race
+  (5 of 18 builds above 50%, its three best average 59). Measure every change below with
+  `race_study.py run --waves mb,ef --levels 5` then `build_study_report.py` (the Races table: score, builds above 50%,
+  mean of the three best; the Crossbow is a build, so read it in the Builds ranking).
+  - *Crossbow re-measure.* The study before the plain-shot fix and the new Deadeye line (Heavy Bolts +2, Keen Bolts,
+    Ambush Shot) put it last in 18 of 19 races. A 2-minute check (clones against random cells, L5) now reads about
+    64%, above the 40 to 60 band: run the full waves, and trim (Ambush Shot, Heavy Bolts) if it confirms.
   - *Kenku archetype (author 2026-11-08).* Its stats (DEX/WIS/CHA) leave it neither a pure caster nor a melee
     bruiser. Direction (author 2026-11-10): a demoralising archer (ranged plus Demoralize). Its best build today
     is `faith_caster` 61.5, then `sage_archer` 58.2; no study build is built around its Demoralize.
@@ -220,11 +222,9 @@ Something on a screen is wrong today. Pick these before any UI improvement below
     Medium); in **Talent ideas (2026-10-30)** item 3 (Charisma + Wisdom: Demoralize on beasts) and item 4 (Archery:
     +1 damage with a bow, then a conditional Brutal). **Vocation tweaks** (1) Warband +1 Morale does not touch the
     Kenku (it is Marsh and Scholars).
-  - *Interacts, and could lift the Crossbow:* **Weapon actions: tune the favoured cases** (Extreme Shot is the
-    Crossbow's trait, with `crit_3x`) and Archery (item 4), if "a bow" is read to include the Crossbow: decide it when
-    the talent is designed. Today it is d10, range 18, reload, 80 copper against the Longbow's d8, range 21, no reload,
-    640; the study says the reload action costs more than the die gives. Open: whether the fix is the reload (free
-    with a talent, or a lighter cost), the damage or the price.
+  - *Interacts with the Crossbow:* **Weapon actions: tune the favoured cases** (Extreme Shot is the Crossbow's trait,
+    with `crit_3x`) and Archery (item 4), if "a bow" is read to include the Crossbow: decide it when the talent is
+    designed.
   - *Already applied (2026-11-10):* size AC, Tiny/Small +2/+1, Large -1. The Kenku is Medium, so it did not move
     (-0.4 in the study).
 

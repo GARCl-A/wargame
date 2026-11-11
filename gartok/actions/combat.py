@@ -96,14 +96,16 @@ class Attack(Action):
         actor.walking = False
         if actor.ranged:
             if actor.weapon.get("reload"):
-                actor.crossbow_loaded = False               # spent -- needs a Reload before the next shot
                 battle.log(plural_key("log.shoot_bolt", actor.ammo), actor=actor.name, n=actor.ammo)
             else:
                 actor.ammo -= 1                             # a bow draws from the quiver on every shot
                 battle.log(plural_key("log.shoot_arrow", actor.ammo), actor=actor.name, n=actor.ammo)
         natural = actor.weapon.name if actor.natural else None
+        shot_crossbow = actor.ranged and actor.weapon.get("reload")
         _strike(battle, actor, target, prefix=Msg(
             "log.attack.head_via", actor=actor.name, target=target.name, how=item_ref(natural, lower=True)) if natural else None)
+        if shot_crossbow:
+            actor.crossbow_loaded = False                   # spent -- needs a Reload before the next shot
 
 
 class AttackTongue(Action):

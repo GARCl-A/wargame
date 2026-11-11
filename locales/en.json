@@ -2216,6 +2216,9 @@
     },
     "brutal": "  {why}: Brutal {n}!",
     "brutal_savage": "Savage Attacks",
+    "ambush_shot": {
+      "brutal": "The bolt finds an unready target"
+    },
     "thrown_lands": "  {weapon} lands at {cell}; {actor} is disarmed.",
     "con_save": "CON d20({nat}) {mod:+} = {total} vs DC {dc}",
     "poison_shaken": "  {target} shakes off the {poison} ({roll}).",
@@ -3232,6 +3235,7 @@
       "ready_hand": "Ready Hand",
       "keen_bolts": "Keen Bolts",
       "deadeye": "Deadeye",
+      "ambush_shot": "Ambush Shot",
       "fleet": "Fleet",
       "nimble_skirmisher": "Nimble Skirmisher",
       "duelist": "Duelist",
@@ -5658,7 +5662,8 @@
       "wrestler": "+1 to Push and Grab checks.",
       "agile": "+1 Dexterity.",
       "long_reach": "+1 square of range with ranged and thrown weapons.",
-      "heavy_bolts": "+1 damage with a Crossbow.",
+      "heavy_bolts": "+2 damage with a Crossbow.",
+      "ambush_shot": "A Crossbow shot at an off-guard target is Brutal 1.",
       "ready_hand": "After a throw, an identical weapon from the pack is in hand at no action cost.",
       "keen_bolts": "A Crossbow shot is a Critical hit on a natural 19 or 20.",
       "deadeye": "+1 to hit with Dexterity-based attacks.",

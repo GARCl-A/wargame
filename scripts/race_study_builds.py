@@ -89,7 +89,7 @@ BUILDS = {b.id: b for b in (
           ("agile", "strong", "long_reach", "ready_hand", "deadeye"), ("brawny", "nimble_fingers", "sturdy", "observant"),
           thrower=True, role="ranged"),
     Build("crossbow", "Crossbow and quiver", ("Crossbow",), AUTO, None,
-          ("agile", "long_reach", "heavy_bolts", "keen_bolts", "deadeye"), ("brawny", "nimble_fingers", "sturdy", "observant"),
+          ("agile", "deadeye", "keen_bolts", "heavy_bolts", "ambush_shot"), ("brawny", "nimble_fingers", "sturdy", "observant"),
           quiver=True, role="ranged"),
 )}
 

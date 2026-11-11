@@ -207,7 +207,9 @@ def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
     if getattr(target, "demoralized", False) and hasattr(unit, "char"):
         cull = getattr(unit.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
     bleed = _bleed_worth(unit, target) if not kw.get("thrown") else 0
-    return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage + cull + bleed)
+    ambush = _blow(unit) * unit.char.talent_bonus("crossbow_ambush") if (
+        unit.shoots_crossbow and not kw.get("thrown") and actions.off_guard(battle, unit, target)) else 0
+    return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage + cull + bleed + ambush)
 
 
 def _bleed_tick(foe):

@@ -402,6 +402,10 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         crit_range = max(2, crit_range - crit_relief)
     if weapon is None and getattr(attacker, "shoots_crossbow", False):
         crit_range -= attacker.char.talent_bonus("crossbow_crit_range")
+        ambush = int(attacker.char.talent_bonus("crossbow_ambush")) if off_guard(battle, attacker, target) else 0
+        if ambush:
+            brutal_why = brutal_why if brutal else i18n.Msg("log.ambush_shot.brutal")
+            brutal += ambush
     crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
     roll_line = {"head": prefix, "nat": nat, "detail": detail, "total": total, "shown": shown,

@@ -447,10 +447,11 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Wrestler | +1 to Push and Grab checks. | Heavy Hand |
 | 1 | Agile | +1 Dexterity. | -- |
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | Agile |
-| 3 | Heavy Bolts | +1 damage with a Crossbow. | Long Reach |
-| 3 | Keen Bolts | A Crossbow shot is a Critical hit on a natural 19 or 20. | Long Reach |
 | 3 | Ready Hand | After a throw, an identical weapon from the pack is in hand at no action cost. | Long Reach + Strong |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | Agile |
+| 3 | Heavy Bolts | +2 damage with a Crossbow. | Deadeye |
+| 3 | Keen Bolts | A Crossbow shot is a Critical hit on a natural 19 or 20. | Deadeye |
+| 4 | Ambush Shot | A Crossbow shot at an off-guard target is Brutal 1. | Heavy Bolts + Keen Bolts |
 | 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
 | 3 | Fleet | +1 square of Speed. | Deadeye |
 | 4 | Free Step | Once per turn, step 1 square without spending an action point. | Fleet |

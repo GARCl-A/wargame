@@ -2234,6 +2234,9 @@
         },
         "brutal": "  {why}: Brutal {n}!",
         "brutal_savage": "Ataques Selvagens",
+        "ambush_shot": {
+            "brutal": "O virote encontra um alvo desprevenido"
+        },
         "thrown_lands": "  {weapon:O} cai em {cell}; {actor} fica desarmado.",
         "con_save": "CON d20({nat}) {mod:+} = {total} contra CD {dc}",
         "poison_shaken": "  {target} resiste {poison:ao} ({roll}).",
@@ -5647,6 +5650,7 @@
             "ready_hand": "Mão Pronta",
             "keen_bolts": "Virotes Certeiros",
             "deadeye": "Pontaria",
+            "ambush_shot": "Tiro de Emboscada",
             "fleet": "Veloz",
             "nimble_skirmisher": "Escaramuçador Ágil",
             "duelist": "Duelista",
@@ -6155,7 +6159,8 @@
             "wrestler": "+1 nos testes de Empurrar e Agarrar.",
             "agile": "+1 de Destreza.",
             "long_reach": "+1 casa de alcance com armas à distância e de arremesso.",
-            "heavy_bolts": "+1 de dano com a Besta.",
+            "heavy_bolts": "+2 de dano com a Besta.",
+            "ambush_shot": "Um disparo de Besta contra um alvo desprevenido é Brutal 1.",
             "ready_hand": "Depois de um arremesso, uma arma idêntica da mochila já está na mão, sem gastar ação.",
             "keen_bolts": "Um disparo de Besta é Acerto crítico com 19 ou 20 natural.",
             "deadeye": "+1 para acertar com ataques baseados em Destreza.",
