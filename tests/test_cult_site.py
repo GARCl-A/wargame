@@ -3,7 +3,15 @@ Roads search that finds it, and its place in the save."""
 
 import pytest
 
-from gartok import campaign, cult_site, investigation, map_view, missions, persist, world
+from gartok import (
+    campaign,
+    cult_site,
+    investigation,
+    map_view,
+    missions,
+    persist,
+    world,
+)
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.web.map_session import MapSession

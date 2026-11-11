@@ -564,7 +564,7 @@ def _purse(g):
 def test_the_farm_opens_on_its_shop_beside_the_stables_which_list_the_animals_and_the_herd():
     hub, _, g = _hub("farm", "stable")
     st = hub.state()
-    assert st["tab"] == "shop" and [t["key"] for t in st["tabs"]] == ["shop", "stable"] and all(t["live"] for t in st["tabs"])
+    assert st["tab"] == "shop" and [t["key"] for t in st["tabs"]] == ["shop", "stable", "jobs"] and all(t["live"] for t in st["tabs"])
     s = hub.pick_tab("stable")["stable"]
     assert [o["name"] for o in s["offers"]] == list(LIVESTOCK) and s["herd"] == []
     assert s["capacity"] == g.herd_capacity and s["purse"] == _purse(g)

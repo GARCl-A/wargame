@@ -1,4 +1,4 @@
-"""The Farmer's quest (`docs/plans/holy_symbol_quest.md`): the gate on its job, the Farm's Jobs tab and the
+"""The Farmer's quest: the gate on its job, the Farm's Jobs tab and the
 shop shut while Edric waits for his daughter."""
 
 import pytest
@@ -35,8 +35,8 @@ def test_the_template_is_the_farmers_and_carries_the_symbol():
     assert missions.TEMPLATES[T.id] is T and T.name and T.blurb
 
 
-def test_nothing_is_offered_while_the_release_switch_is_off():
-    assert not missions.FARMER_QUEST_LIVE
+def test_nothing_is_offered_while_the_release_switch_is_off(monkeypatch):
+    monkeypatch.setattr(missions, "FARMER_QUEST_LIVE", False)
     assert T not in missions.offers_at(_guild(day=90), "farm")
 
 

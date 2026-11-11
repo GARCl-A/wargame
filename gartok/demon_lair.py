@@ -1,4 +1,4 @@
-"""The Demon's lair (`docs/plans/holy_symbol_quest.md`): `cult_site.LAIR_DAYS` after a failed rite the Demon
+"""The Demon's lair: `cult_site.LAIR_DAYS` after a failed rite the Demon
 comes back to the Cult Site and makes it its lair. One fight, lethal: the Demon alone, the strongest mob in
 the game. Its death reopens the Farm (`missions.shop_closed`); the Holy Symbol is the girl's, never the Demon's.
 """

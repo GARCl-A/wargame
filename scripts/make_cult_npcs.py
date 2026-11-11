@@ -2,7 +2,7 @@
 
     python scripts/make_cult_npcs.py
 
-Racial levels are fixed by the design (`docs/plans/holy_symbol_quest.md`): the leader 10, the
+Racial levels are fixed by the design: the leader 10, the
 fighters and the channelers 7, the Demon 22. Re-run it and the files are rewritten the same
 (bodies are set, not rolled; the hit dice rolls are seeded per NPC).
 """

@@ -234,10 +234,9 @@ LEDGER_TREEFOLK = MissionTemplate(
     tags=("guards", "ledger_hold", "mentorship"),
 )
 
-# The Farmer's (`docs/plans/holy_symbol_quest.md`): Edric Ashvale's daughter went to the Cathedral and sent
-# no word. The release switch keeps the whole quest dark (the job, the Farm's tab, the closed shop) until
-# the author flips it.
-FARMER_QUEST_LIVE = False
+# The Farmer's: Edric Ashvale's daughter went to the Cathedral and sent
+# no word. The release switch keeps the whole quest dark (the job, the Farm's tab, the closed shop) when off.
+FARMER_QUEST_LIVE = True
 FARMER_DAUGHTER = MissionTemplate(
     "farmer_daughter", "farmer", "farm",
     goal_item="Farmer's Daughter", goal_qty=1, reward=300, deadline_days=20,

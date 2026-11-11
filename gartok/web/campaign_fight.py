@@ -12,7 +12,6 @@ from .. import (
     campaign,
     combat_lab,
     cult_site,
-    demon_lair as demon_lair_module,
     encounters,
     factions,
     fight_nature,
@@ -28,6 +27,9 @@ from .. import (
     wagon_watch,
     wildfire,
     world,
+)
+from .. import (
+    demon_lair as demon_lair_module,
 )
 from ..battle import Battle
 from ..combat_log import CombatLog

@@ -1,4 +1,4 @@
-"""The Demon Cult's site (`docs/plans/holy_symbol_quest.md`): the hidden place off the Country Roads where
+"""The Demon Cult's site: the hidden place off the Country Roads where
 Edric Ashvale's daughter is held for the ritual.
 
 The node is ethereal (`world.add_node`): it is on the map, with its two roads (the Country Roads, the Faith
@@ -141,7 +141,7 @@ def _trees(taken):
 
 def cultists():
     """The six, fresh from their files, on the enemy side: the leader, two fighters, three channelers."""
-    from . import npc_lib       # npc_lib imports persist, which imports this module
+    from . import npc_lib  # npc_lib imports persist, which imports this module
     return [npc_lib.load_npc(slug) for slug in (LEADER, *FIGHTERS, *CHANNELERS)]
 
 

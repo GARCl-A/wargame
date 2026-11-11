@@ -76,6 +76,7 @@ def test_no_one_wears_a_worse_armor_than_they_can_carry():
 
 def test_infernal_presence_costs_morale_on_a_failed_save(monkeypatch):
     from types import SimpleNamespace
+
     from gartok import data, morale
     demon = npc_lib.load_npc("the-demon")
     log = []

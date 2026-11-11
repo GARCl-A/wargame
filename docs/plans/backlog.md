@@ -32,7 +32,7 @@ combat presentation and the hub kit are done. Left:
   and flags what still rings false.
 - **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
-- **Holy Symbol: the Farmer's quest** (*Needs more information*; the bandit drop is built).
+- **Holy Symbol: the Farmer's quest is live.** Left: the author plays it through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair) and flags what rings false; the polish entry below.
 - The *UI bugs* and the *Small* items below, in order.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
@@ -725,9 +725,19 @@ has one "Enter" button and its functions are tabs inside.
   recipes and places traps farther. The tester's idea: a research system to discover formulas. Open: teachers (who, what it costs),
   study time, what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
 
-- **Holy Symbol: the Farmer's quest (author 2026-11-11).** The bandit drop is built; the reliable source is a
-  quest that Edric Ashvale gives at the Farm from day 50, once the Faith Cathedral is found: his daughter, a clue
-  hunt (*Ask around*), a hidden cult site and a ritual fight. Plan, phases and open points:
-  [holy_symbol_quest.md](holy_symbol_quest.md). Order (author 2026-11-04): before the next playtest. Until it
-  ships, the rite starts only with a Holy Symbol from a bandit pack.
+- **Holy Symbol quest: polish after the first playthrough (author 2026-11-11).** The quest is built and live
+  (`missions.FARMER_QUEST_LIVE`, `cult_site.py`, `demon_lair.py`, `investigation.py`). Left:
+  - **Art.** Four Demon portraits from the author's Gemini run (prompt and references in
+    `docs/art/demon_options/README.md`): the best to `--npc the-demon`, the other three to the `--race Demon`
+    pool. Portraits for the six cultists, a Demon glyph of its own (`art_files.RACE_ICON` borrows the Kobold's
+    "horned-reptile"), the Cult Site's floor.
+  - **Validate the rite by playing it.** The bar (18, three steps of 6), the DCs, the levels and the `+1` per
+    clue are first numbers: the sim has no player who reads the bar (the raw cultist fight is level for a guild
+    of level 6 to 8 with 6 to 8 members; with the bar on, the sim player almost always loses). The Demon is
+    meant to be a problem and is not tuned for the guild to win.
+  - **Names.** The leader (Maren Voss), the lair and the Demon ("The Pale Tenant") are provisional; the node
+    keeps "Demon Cult Site" when it is the lair.
+  - **The Demon knows only Hex and Dragonfire.** More schools wait for the new spells the author will design.
+  - In the sim, a fight without the rite bar can stall for 80 to 200 rounds on average; worth a look if it
+    shows up in play.
 

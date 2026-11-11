@@ -8,7 +8,17 @@ Three talks open it: a forced fight's (the guard, the ambushes: `forced_talk`), 
 import re
 from typing import ClassVar
 
-from .. import cult_site, dialogue, encounters, forced, i18n, orders, recorder, wildfire, world
+from .. import (
+    cult_site,
+    dialogue,
+    encounters,
+    forced,
+    i18n,
+    orders,
+    recorder,
+    wildfire,
+    world,
+)
 from ..constants import fmt_money
 from .map_session import _portrait, _when
 from .session import Session

@@ -43,10 +43,10 @@ from .movement import (
 )
 from .scripted import (
     _ally_carries_flag,
+    _channel,
     _ctf_goal,
     _fetch,
     _heist,
-    _channel,
     _necromancy,
     _patrol,
 )
