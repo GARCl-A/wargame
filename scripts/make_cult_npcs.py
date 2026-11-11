@@ -20,7 +20,7 @@ ATTRS = ("strength", "dexterity", "constitution", "intelligence", "wisdom", "cha
 
 
 def body(name, race, attrs, weapon, armor, bio, *, levels, sources=(), spells=(), combat=(), work=(),
-         magic_t=(), racial=(), team="enemy", shield=None, hp=None, align="Neutral and Evil", slug=None):
+         magic_t=(), racial=(), team="enemy", legendary=False, shield=None, hp=None, align="Neutral and Evil", slug=None):
     random.seed(slug or name)
     u = Unit(team, name=name)
     u.set_race(race)
@@ -57,6 +57,7 @@ def body(name, race, attrs, weapon, armor, bio, *, levels, sources=(), spells=()
     if hp:
         u.set_hp(hp)
     u.hp = u.hp_max
+    u.legendary = legendary
     return u
 
 
@@ -103,7 +104,7 @@ def build():
                     "strong", "heavy_hand", "sure_strike", "wrestler",
                     "wordless_menace", "tough", "hardy", "bulwark", "recovery", "armor_bearer"),
             racial=("demon_claws", "cleaving_claws", "infernal_wings", "infernal_presence"),
-            sources=("blood",), spells=("hex", "dragonfire"), slug="the-demon"),
+            sources=("blood",), spells=("hex", "dragonfire"), legendary=True, slug="the-demon"),
     }
 
 

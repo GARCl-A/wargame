@@ -2910,6 +2910,7 @@
       "label": "Delay: let the others act first (once a round, before you spend a point)",
       "not_your_turn": "it is not your turn",
       "once": "already delayed this round",
+      "legendary": "a legendary creature does not wait",
       "spent": "you already spent a point this turn: Delay only works before you act",
       "nobody": "nobody is left to act after you"
     },

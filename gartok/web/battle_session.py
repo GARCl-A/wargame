@@ -683,7 +683,8 @@ class BattleSession(Session):
     def _initiative(self, obs):
         b = self.battle
         out = []
-        for u in sorted((u for u in b.order if not u.fled), key=lambda u: u.dead):
+        slots = [(i, u) for i, u in enumerate(b.order) if not u.fled and not (u.dead and u in b.order[:i])]
+        for i, u in sorted(slots, key=lambda s: s[1].dead):
             known = u.team == self.team or vision.enemy_visible(b, obs, u)
             if u.dead and not known:
                 continue
@@ -696,7 +697,7 @@ class BattleSession(Session):
                         "state": self._state(u) if known else None,
                         "dying": f"{u.death_clock}/{data.DYING_TURNS}" if known and u.dying else None,
                         "marks": condition_marks.marks(u) if known else [],
-                        "active": u is b.active})
+                        "active": i == b.turn_idx})
         return out
 
     def _morale(self, u):

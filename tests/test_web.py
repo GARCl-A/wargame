@@ -106,7 +106,7 @@ def test_state_holds_only_what_the_side_knows():
     assert hidden, "this seed opens with foes out of sight"
     assert not shown & {s.uid(u) for u in hidden}
     assert all(tuple(w) in known for w in st["board"]["walls"])
-    assert sum(1 for c in st["initiative"] if c["id"] is None) == len(hidden)
+    assert sum(1 for c in st["initiative"] if c["id"] is None) == sum(b.order.count(u) for u in hidden)
     assert all("hp" not in u for u in st["units"] if u["side"] == "foe")
     json.dumps(st)
 
@@ -242,7 +242,7 @@ def test_a_dead_foe_nobody_saw_stays_out_of_the_chain():
     unseen = next(u for u in b.units if u.team != "player" and not vision.enemy_visible(b, obs, u))
     before = len(s.state()["initiative"])
     unseen.hp, unseen.status = -9, "dead"
-    assert len(s.state()["initiative"]) == before - 1
+    assert len(s.state()["initiative"]) == before - b.order.count(unseen)
 
 
 def test_a_foe_shows_its_health_in_steps_and_its_card_only_what_intel_opened():

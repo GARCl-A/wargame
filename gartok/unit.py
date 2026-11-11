@@ -51,7 +51,7 @@ SAVE_DEFAULTS = {
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
     "equipped_armor": None, "equipped_tongue": None, "equipped_artifact": None, "natural_armor": 0,
-    "hp_override": None, "racial_override": None, "dormant": False, "awareness_radius": 8,
+    "hp_override": None, "racial_override": None, "dormant": False, "legendary": False, "awareness_radius": 8,
     "portrait_file": None, "afoot": False, "joined_day": 1,
 }
 
@@ -119,6 +119,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.afoot = False                             # the player has this member walk beside the wagon
         self.dormant = False                           # authored NPC that sleeps until a foe comes within awareness_radius
         self.awareness_radius = 8
+        self.legendary = False                         # rolls initiative twice: two turns a round (`Battle._roll_initiative`)
 
         self._auto_name = name is None
         self._name = name or (self.race["name"] if self.race["kind"] == "beast" else names.random_name())
@@ -214,6 +215,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.natural_armor = d["natural_armor"]
         u._racial_override = d["racial_override"]        # creator-pinned racial level, or None
         u.dormant = d["dormant"]
+        u.legendary = d["legendary"]
         u.afoot = d["afoot"]
         u.awareness_radius = d["awareness_radius"]
         u.magic_blood = magic.roll_magic_blood(u) if d["magic_blood"] is None else d["magic_blood"]

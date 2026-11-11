@@ -591,6 +591,10 @@ to the fight, as before.
 ### Initiative and attack
 
 - **Initiative**: `d20 + Wisdom mod` (+ racial bonus, + the Quick Wits talent).
+  A **legendary creature** (the Aurochs, the Biwolf, the Demon, the Dragon, the Snake Dragon, the Ancient Archivist: the
+  `legendary` flag of the authored NPC) rolls it **twice** and holds two slots in the order, so it acts twice a round
+  with its full points each time; it cannot Delay. Whatever counts per turn (conditions, bleeding, the death clock)
+  counts per turn, so it shakes off a condition twice as fast and suffers it twice as fast. It shows twice in the tracker.
   Decreasing order, fixed for the battle except what a dialogue before the fight, Delay and the
   Signal Horn move.
 - **Attack**: `d20 + mods` vs the target's `AC`.

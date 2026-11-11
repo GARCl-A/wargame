@@ -2091,6 +2091,7 @@
             "label": "Adiar: deixa os outros agirem primeiro (uma vez por rodada, antes de gastar um ponto)",
             "not_your_turn": "não é o seu turno",
             "once": "já adiou nesta rodada",
+            "legendary": "uma criatura lendária não espera",
             "spent": "você já gastou um ponto neste turno: Adiar só funciona antes de agir",
             "nobody": "não sobrou ninguém para agir depois de você"
         },

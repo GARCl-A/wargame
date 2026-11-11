@@ -148,6 +148,7 @@
   "inventory": [],
   "locked_items": {},
   "dormant": false,
+  "legendary": true,
   "afoot": false,
   "awareness_radius": 8,
   "npc_slug": "the-demon"

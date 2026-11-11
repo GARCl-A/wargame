@@ -110,6 +110,7 @@ class Combatant:
         self.ferocity_pending = False # Orc downed this turn, falls at end_turn
         self.rounds_submerged = 0     # turns spent underwater in deep water (breath / drowning)
         self.initiative = 0           # set by Battle._roll_initiative
+        self.extra_initiative = None  # a legendary body's second roll (the lower one): its second slot in the order
         self.delayed = False          # waiting at the end of the order; its turn resumes, not restarts
         self.delay_round = 0          # round of its last Delay: one per round (rounds start at 1)
         self.weapon_hand = c.equipped_weapon is not None
@@ -728,6 +729,15 @@ class Combatant:
             self.add_condition(hexed)
         hexed.add_stack(conditions.HEX_POINTS, conditions.HEX_TURNS)
         self.hex_sync(log)
+
+    @property
+    def legendary(self):
+        return bool(getattr(self.char, "legendary", False))
+
+    def set_initiative(self, rolls):
+        """`rolls` (one per slot, the higher first): the first is its initiative, a second its extra slot."""
+        self.initiative = rolls[0]
+        self.extra_initiative = rolls[1] if len(rolls) > 1 else None
 
     def initiative_bonus(self):
         return (self.mod_wisdom + self._ability.initiative

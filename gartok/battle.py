@@ -186,10 +186,10 @@ class Battle:
             return None
         c.pos = p
         c.z = self.board.elevation_at(p)
-        c.initiative = d20() + c.initiative_bonus()
+        self._roll_for(c)
         (self.enemy_units if team == "enemy" else self.other_units).append(c)
         self.units.append(c)
-        self.order.append(c)
+        self.order.extend([c] * (1 + c.legendary))
         c.on_fall = self._lay_down_kit
         return c
 
@@ -351,10 +351,25 @@ class Battle:
         if self.winner is None and self._check_winner():
             self.log("log.victory", winner=self.winner)
 
+    def _roll_for(self, u):
+        """A legendary creature rolls initiative twice and takes two turns a round."""
+        u.set_initiative(sorted((d20() + u.initiative_bonus() for _ in range(1 + u.legendary)), reverse=True))
+
+    def _build_order(self):
+        """The turn order: one slot per initiative a unit rolled, highest first."""
+        slots = [(u.initiative, u) for u in self.units]
+        slots += [(u.extra_initiative, u) for u in self.units if u.extra_initiative is not None]
+        self.order = [u for _, u in sorted(slots, key=lambda s: s[0], reverse=True)]
+
+    def _slot_initiative(self, i):
+        """The initiative the order's slot `i` stands on: a legendary unit's second slot is its extra roll."""
+        u = self.order[i]
+        return u.extra_initiative if u.extra_initiative is not None and u in self.order[:i] else u.initiative
+
     def _roll_initiative(self):
         for u in self.units:
-            u.initiative = d20() + u.initiative_bonus()
-        self.order = sorted(self.units, key=lambda u: u.initiative, reverse=True)
+            self._roll_for(u)
+        self._build_order()
         self.turn_idx = next((i for i, u in enumerate(self.order) if u.alive), 0)   # a body laid out dead never acts
         self.active.start_turn(self.log)
         self._apply_submersion(self.active)
@@ -1029,6 +1044,8 @@ class Battle:
         after it (otherwise there is nothing to wait for)."""
         if unit is not self.active or self.winner is not None:
             return i18n.t("action.delay.not_your_turn")
+        if unit.legendary:
+            return i18n.t("action.delay.legendary")
         if unit.delay_round == self.round_no:
             return i18n.t("action.delay.once")
         if unit.ap < AP_PER_TURN or unit.moved or unit.walking:
@@ -1057,11 +1074,13 @@ class Battle:
         boosted = set(units)
         for u in boosted:
             u.initiative += bonus
+            if u.extra_initiative is not None:
+                u.extra_initiative += bonus
         for lo, hi in ((0, self.turn_idx), (self.turn_idx + 1, len(self.order))):
             for i in range(lo, hi):
                 j = i
                 while (self.order[j] in boosted and j > lo
-                       and self.order[j - 1].initiative < self.order[j].initiative):
+                       and self._slot_initiative(j - 1) < self._slot_initiative(j)):
                     self.order[j - 1], self.order[j] = self.order[j], self.order[j - 1]
                     j -= 1
 
@@ -1133,7 +1152,9 @@ class Battle:
             if u.team == demoralized:
                 u.add_condition(Demoralized())
             u.initiative += (initiative or {}).get(u.team, 0)
-        self.order = sorted(self.units, key=lambda u: u.initiative, reverse=True)
+            if u.extra_initiative is not None:
+                u.extra_initiative += (initiative or {}).get(u.team, 0)
+        self._build_order()
         self.turn_idx = next((i for i, u in enumerate(self.order) if u.alive), 0)
         self.active.start_turn(self.log)
         self._apply_submersion(self.active)

@@ -99,6 +99,7 @@
   "inventory": [],
   "locked_items": {},
   "dormant": false,
+  "legendary": true,
   "afoot": false,
   "awareness_radius": 0,
   "npc_slug": "biwolf"

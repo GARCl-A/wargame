@@ -84,6 +84,7 @@
   "inventory": [],
   "locked_items": {},
   "dormant": true,
+  "legendary": true,
   "afoot": false,
   "awareness_radius": 6,
   "npc_slug": "snake_dragon"

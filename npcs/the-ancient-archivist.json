@@ -121,6 +121,7 @@
   ],
   "locked_items": {},
   "dormant": true,
+  "legendary": true,
   "afoot": false,
   "awareness_radius": 8,
   "npc_slug": "the-ancient-archivist"
