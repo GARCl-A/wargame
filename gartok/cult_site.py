@@ -7,6 +7,8 @@ Finding it is a search of the Country Roads while the job is out: Wisdom against
 clue asking around turned up (`investigation.bonus`).
 """
 
+import random
+
 from . import data, i18n, investigation, items, loot, missions, world
 from .board import Board, grid_distance
 from .ground import GroundObject
@@ -18,6 +20,8 @@ SEARCH_DC = 22
 SEARCH_PER_CLUE = 2
 POS = (0.76, 0.95)
 LINKS = (("country_roads", 2), ("faith_cathedral", 2))
+AMBUSH_NODES = ("country_roads", "farm")     # while the Demon lives it waits on the roads to the site and at the Farm
+AMBUSH_CHANCE = 0.3
 LAIR_DAYS = 15          # a failed rite leaves the site abandoned this long, then the Demon comes back to it
 
 
@@ -28,6 +32,20 @@ def quest_active(guild):
 def demon_loose(guild):
     """The rite closed and the Demon has not been killed: the Farm stays shut (`missions.shop_closed`)."""
     return guild.cult.get("state") in ("failed", "lair")
+
+
+def demon_slain(guild):
+    """The Demon is dead, wherever it fell: the Farm opens, the circle goes cold for good."""
+    guild.cult["state"] = "demon_dead"
+    sync_world(guild)
+
+
+def ambush(guild, node_id):
+    """The Demon's ambush, rolled once per arrival at a node of `AMBUSH_NODES` while it lives. -> its pack or None."""
+    from . import npc_lib
+    if not demon_loose(guild) or node_id not in AMBUSH_NODES or random.random() >= AMBUSH_CHANCE:
+        return None
+    return (npc_lib.load_npc(DEMON),)
 
 
 def _node(guild):

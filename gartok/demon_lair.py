@@ -1,6 +1,6 @@
 """The Demon's lair (`docs/plans/holy_symbol_quest.md`): `cult_site.LAIR_DAYS` after a failed rite the Demon
 comes back to the Cult Site and makes it its lair. One fight, lethal: the Demon alone, the strongest mob in
-the game. Its death reopens the Farm (`missions.shop_closed`) and drops the Holy Symbol (`loot.UNIQUE_DROPS`).
+the game. Its death reopens the Farm (`missions.shop_closed`); the Holy Symbol is the girl's, never the Demon's.
 """
 
 from . import i18n, npc_lib
@@ -28,6 +28,5 @@ def settle_fight(guild, battle):
     if battle.winner != "player":
         return []
     from . import cult_site
-    guild.cult["state"] = "demon_dead"
-    cult_site.sync_world(guild)
+    cult_site.demon_slain(guild)
     return [i18n.t("demon_lair.slain")]

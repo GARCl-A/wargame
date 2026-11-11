@@ -19,7 +19,7 @@ def live(monkeypatch):
     monkeypatch.setattr(missions, "FARMER_QUEST_LIVE", True)
 
 
-def _guild(day=30, revealed=("faith_cathedral",)):
+def _guild(day=50, revealed=("faith_cathedral",)):
     u = standard_unit()
     u.give_to_pack(items.COIN_ITEM, 200)
     guild = Guild([u])
@@ -37,29 +37,29 @@ def test_the_template_is_the_farmers_and_carries_the_symbol():
 
 def test_nothing_is_offered_while_the_release_switch_is_off():
     assert not missions.FARMER_QUEST_LIVE
-    assert T not in missions.offers_at(_guild(day=60), "farm")
+    assert T not in missions.offers_at(_guild(day=90), "farm")
 
 
-def test_it_opens_on_day_30_with_the_cathedral_found(live):
-    assert T in missions.offers_at(_guild(day=30), "farm")
+def test_it_opens_on_day_50_with_the_cathedral_found(live):
+    assert T in missions.offers_at(_guild(day=50), "farm")
 
 
 def test_it_is_not_offered_the_day_before(live):
-    assert T not in missions.offers_at(_guild(day=29), "farm")
+    assert T not in missions.offers_at(_guild(day=49), "farm")
 
 
 def test_it_is_not_offered_without_the_cathedral(live):
-    assert T not in missions.offers_at(_guild(day=45, revealed=()), "farm")
+    assert T not in missions.offers_at(_guild(day=70, revealed=()), "farm")
 
 
 def test_the_cathedral_found_late_opens_it_then(live):
-    guild = _guild(day=45, revealed=())
+    guild = _guild(day=70, revealed=())
     guild.reveal_node("faith_cathedral")
     assert T in missions.offers_at(guild, "farm")
 
 
 def test_the_job_is_offered_only_at_the_farm(live):
-    assert T not in missions.offers_at(_guild(day=30), "city")
+    assert T not in missions.offers_at(_guild(day=50), "city")
 
 
 def test_the_farm_gets_a_jobs_tab_only_when_live(live, monkeypatch):

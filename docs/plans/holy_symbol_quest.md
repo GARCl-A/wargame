@@ -14,7 +14,7 @@ comeca com ele. Duas fontes:
 
 ## O design
 
-**Abertura.** Dia 30 ou depois **e** a Faith Cathedral ja achada (quem vier por ultimo abre a quest). O Edric
+**Abertura.** Dia 50 ou depois **e** a Faith Cathedral ja achada (quem vier por ultimo abre a quest). O Edric
 Ashvale a oferece numa aba Jobs nova na Farm: a filha foi a igreja e nao manda noticia. Prazo de 20 dias.
 Recompensa: 300 copper e o Holy Symbol que a filha carrega.
 
@@ -107,24 +107,38 @@ Cada fase e um commit no `main`.
    mostra `cult_ritual` ou `demon_lair`; demonio autoral; registrar o template em `TEMPLATES`; `python -m
    gartok.reference`; wiki; tier `balance`; jogar de ponta a ponta; apagar a entrada do backlog.
 
-## Calibracao headless (2026-11-11, so relato, nada foi retocado)
+## Decisoes do autor (2026-11-11, de manha)
 
-Esquadrao de 4 (`encounters.build_enemy`), IA generica dos dois lados, 20 lutas por celula. A IA do jogador NAO
-conhece o rito (nao persegue o lider nem os canalizadores), entao ela subestima um humano atento.
+- **O Simbolo e da filha, nao do demonio.** Sai da recompensa da entrega (`reward_items`) ou, no fracasso, do
+  corpo dela em `guild.cult["remains"]`; o demonio nao dropa nada (`loot.UNIQUE_DROPS` sem `the-demon`). Os restos
+  tambem podem ser revistados depois que o demonio morre (`demon_dead`).
+- **Emboscada do demonio: 30% por chegada** nas Country Roads e na Farm, enquanto ele viver (estados `failed` e
+  `lair`): `cult_site.ambush` + `forced.demon_ambush_catch`, a primeira do evento `ambush`. Matar o demonio ali o
+  encerra como no covil (`cult_site.demon_slain`).
+- **Faixa da guilda: nivel 6 a 8 com 6 a 8 membros.** A calibracao abaixo usa 7 membros.
+- **A quest abre a partir do dia 50 (inclusive).**
+- Sobrenome do Edric: Ashvale (a filha, Wynn Ashvale).
 
-- Rito (luta do circulo): vitoria 0/20 em L3, L4, L5 e L6; o rito fecha em 16, 19, 20 e 20 de 20; mortos por
-  esquadrao 1.4, 0.6, 0.3, 0.8; ~7 a 8 rodadas. A barra (18, +1 por canalizador por turno) enche em ~6 rodadas:
-  quem nao derruba os canalizadores ou o lider logo perde. Alavancas se o autor quiser mais folga: barra maior,
-  menos canalizadores no inicio, passos de 8, ou a faixa de nivel da guilda.
-- Covil do demonio (nivel racial 22, 260 PV): vitoria 1/20, 1/20, 1/20, 0/20 em L3 a L6; ~3.8 de 4 mortos; luta
-  letal. E "o mob mais forte do jogo", como pedido, mas nao e vencivel por esquadrao L3 a L6 de 4 pessoas: o autor
-  decide a faixa de nivel recomendada, ou o numero de PV.
+## Calibracao headless (so relato)
+
+IA generica dos dois lados (a IA do jogador NAO conhece o rito: nao persegue o lider nem os canalizadores, entao
+subestima um humano atento). `encounters.build_enemy` no nivel indicado.
+
+- Esquadrao de 4, 20 lutas (primeira rodada de numeros): rito 0/20 vitorias em L3 a L6 (o rito fecha 16 a 20 de
+  20); covil 1/20 em L3 a L5 e 0/20 em L6.
+- **Esquadrao de 7, 12 lutas (a faixa decidida):**
+
+  | nivel | rito: vitorias | rito fecha | covil: vitorias | mortos de 7 no covil |
+  |---|---|---|---|---|
+  | L6 | 0/12 | 12/12 | 7/12 | 4.2 |
+  | L7 | 0/12 | 12/12 | 6/12 | 4.8 |
+  | L8 | 1/12 | 11/12 | 8/12 | 2.8 |
+
+- O covil fica perto de 50% a 65% na faixa (cada luta custa de 3 a 5 mortos de 7, so letal). O rito e o que
+  esta duro: a barra enche em ~6 rodadas e a IA generica nao quebra o circulo. Alavancas se um humano tambem
+  sofrer: barra maior, passos de 8, ou menos canalizadores no inicio.
 
 ## Em aberto
 
-- **Emboscada do demonio** nas Country Roads e na Farm: o mob mais forte contra uma guilda de nivel 3 e derrota
-  certa. Proposta: sem emboscada; o custo do fracasso e a Farm fechada e o covil para cacar. Decidir na fase 9.
-- Nomes da filha, do lider e do covil. Todos os numeros (barra, DCs, niveis, `+1` do Perguntar por aí) sao iniciais.
+- Nomes do lider e do covil. Todos os numeros (barra, DCs, niveis, `+1` do Perguntar por aí) sao iniciais.
 - Arte pedida ao autor: portrait do demonio e dos cultistas, chao do Cult Site.
-- Se a faixa de nivel da guilda para a quest precisa de um aviso: niveis fixos (lider 10, os outros 7) podem
-  esmagar uma guilda de nivel 3. Decidir com luta headless (`combat_pairs.py`, `encounter_sim.py`), alvo ~50%.

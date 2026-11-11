@@ -169,7 +169,7 @@ def cult_ritual(map_session, group):
     from .dialogue_session import _to_map
     guild = map_session.guild
     state = guild.cult.get("state", "")
-    if state == "failed":
+    if state in ("failed", "demon_dead") and guild.cult.get("remains"):
         map_session.say(cult_site.search_remains(guild, group), "guild", group)
         return _to_map(map_session, group)
     if state or not cult_site.quest_active(guild):

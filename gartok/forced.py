@@ -32,6 +32,7 @@ from types import SimpleNamespace
 
 from . import (
     constants,
+    cult_site,
     dialogue,
     economy,
     encounters,
@@ -119,6 +120,15 @@ def road_ambush_catch(guild, group, prev_node, resume_path):
     if not encounters.would_attack(pack, group.members):
         return None
     return orders.Order("ambush", pack=tuple(pack), resume_path=tuple(resume_path))
+
+
+def demon_ambush_catch(guild, group, prev_node, resume_path):
+    """While the Demon of the Cult lives it can fall on a band arriving at the Country Roads or the Farm
+    (`cult_site.ambush`); killing it there ends it as the lair would."""
+    pack = cult_site.ambush(guild, group.node)
+    if pack is None:
+        return None
+    return orders.Order("ambush", pack=pack, resume_path=tuple(resume_path))
 
 
 def fortress_ambush_catch(guild, group, prev_node, resume_path):
@@ -322,6 +332,8 @@ def resolve_guard_fight_aftermath(guild, group, order, outcome):
 
 def resolve_road_ambush(guild, group, order, outcome=None):
     """No choice to make: whoever is left resumes whatever the ambush interrupted."""
+    if outcome is not None and outcome.won and any(getattr(u, "bio_slug", None) == cult_site.DEMON for u in order.pack):
+        cult_site.demon_slain(guild)
     return resume_arrival(guild, group, order)
 
 
@@ -449,7 +461,7 @@ def settle_talk(guild, group, order):
 
 EVENTS = {e.kind: e for e in (
     ForcedEvent("guard", "talk", DETERMINED, resolve_guard_fight_aftermath, arrival=(guard_catch,)),
-    ForcedEvent("ambush", "map", OPPORTUNIST, resolve_road_ambush, arrival=(road_ambush_catch,)),
+    ForcedEvent("ambush", "map", OPPORTUNIST, resolve_road_ambush, arrival=(demon_ambush_catch, road_ambush_catch)),
     ForcedEvent("fortress_ambush", "map", DETERMINED, resolve_road_ambush, arrival=(fortress_ambush_catch,)),
     ForcedEvent("eviction", "battle", DETERMINED, resolve_property_raid, arrival=(property_raid_catch,)),
     ForcedEvent("wilds_retake", "battle", SOUGHT, resolve_wilds_claim_retake,

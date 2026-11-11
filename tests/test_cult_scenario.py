@@ -175,7 +175,7 @@ def at_the_site(tmp_path, monkeypatch):
     members = [standard_unit() for _ in range(3)]
     guild = Guild(members)
     guild.groups = [Group(members, "farm")]
-    guild.clock.seconds = 30 * SECONDS_PER_DAY
+    guild.clock.seconds = 50 * SECONDS_PER_DAY
     guild.revealed |= {"faith_cathedral"}
     mission = missions.accept(guild, members[0], missions.FARMER_DAUGHTER)
     cult_site.reveal(guild)
@@ -401,7 +401,7 @@ from gartok import demon_lair, loot
 
 
 def _fail_the_job(guild, days_after=21):
-    guild.clock.seconds = (30 + days_after) * SECONDS_PER_DAY
+    guild.clock.seconds = (50 + days_after) * SECONDS_PER_DAY
     return missions.expire_overdue(guild)
 
 
@@ -449,7 +449,7 @@ def test_the_lair_fight_is_the_demon_alone_and_its_death_drops_the_symbol(at_the
     assert game.session.act(g.gid, "demon_lair") == {"screen": "battle"}
     b = game.session.battle
     assert isinstance(b.scenario, demon_lair.DemonLairScenario) and len(b.enemy_units) == 1
-    assert items.HOLY_SYMBOL_ITEM in loot.UNIQUE_DROPS["the-demon"]
+    assert "the-demon" not in loot.UNIQUE_DROPS
     _finish(game, won=True)
     assert guild.cult["state"] == "demon_dead"
     assert world.node(cult_site.NODE).has("cult_ritual")
@@ -481,7 +481,7 @@ def test_the_whole_quest_from_the_offer_to_the_holy_symbol_in_the_pack(tmp_path,
     group = guild.groups[0] if guild.groups else Group(members, "farm")
     guild.groups = [group]
     group.node = "farm"
-    guild.clock.seconds = 30 * SECONDS_PER_DAY
+    guild.clock.seconds = 50 * SECONDS_PER_DAY
     try:
         assert missions.FARMER_DAUGHTER not in missions.offers_at(guild, "farm")
         guild.revealed |= {"faith_cathedral"}
@@ -510,3 +510,58 @@ def test_the_whole_quest_from_the_offer_to_the_holy_symbol_in_the_pack(tmp_path,
         if world.exists(cult_site.NODE):
             world.remove_node(cult_site.NODE)
         recorder.detach()
+
+
+# --- the Demon's ambush ------------------------------------------------------------------------------
+
+from gartok import forced
+
+
+def _arrive(guild, group, node, roll, monkeypatch):
+    monkeypatch.setattr(cult_site.random, "random", lambda: roll)
+    group.node = node
+    return forced.demon_ambush_catch(guild, group, None, ["x"])
+
+
+def test_the_demon_ambushes_at_the_roads_and_the_farm_thirty_percent_of_the_time(at_the_site, monkeypatch):
+    guild, g, _m = at_the_site
+    cult_site.let_proceed(guild)
+    for node in cult_site.AMBUSH_NODES:
+        order = _arrive(guild, g, node, 0.29, monkeypatch)
+        assert order.kind == "ambush" and cult_site.slug_of(type("C", (), {"char": order.pack[0]})) == cult_site.DEMON
+        assert _arrive(guild, g, node, 0.31, monkeypatch) is None
+    assert _arrive(guild, g, "city", 0.0, monkeypatch) is None
+
+
+def test_no_ambush_before_the_rite_fails_or_after_the_demon_dies(at_the_site, monkeypatch):
+    guild, g, _m = at_the_site
+    assert _arrive(guild, g, "farm", 0.0, monkeypatch) is None
+    guild.cult["state"] = "demon_dead"
+    assert _arrive(guild, g, "farm", 0.0, monkeypatch) is None
+
+
+def test_killing_the_demon_in_an_ambush_ends_it(at_the_site):
+    guild, g, _m = at_the_site
+    cult_site.let_proceed(guild)
+    from gartok import npc_lib, orders
+    order = orders.Order("ambush", pack=(npc_lib.load_npc(cult_site.DEMON),), resume_path=())
+    won = type("O", (), {"won": True, "survivors": list(g.members), "fallen": [], "player_ko": 0})()
+    forced.resolve_road_ambush(guild, g, order, won)
+    assert guild.cult["state"] == "demon_dead"
+
+
+def test_the_farmers_quest_opens_on_day_fifty_not_before(tmp_path, monkeypatch):
+    monkeypatch.setattr(missions, "FARMER_QUEST_LIVE", True)
+    guild = Guild([standard_unit()])
+    guild.revealed |= {"faith_cathedral"}
+    guild.clock.seconds = 48 * SECONDS_PER_DAY
+    assert guild.clock.day == 49 and missions.FARMER_DAUGHTER not in missions.offers_at(guild, "farm")
+    guild.clock.seconds = 49 * SECONDS_PER_DAY
+    assert guild.clock.day == 50 and missions.FARMER_DAUGHTER in missions.offers_at(guild, "farm")
+
+
+def test_a_pending_demon_ambush_survives_a_save():
+    from gartok import npc_lib, orders
+    order = orders.Order("ambush", pack=(npc_lib.load_npc(cult_site.DEMON),), resume_path=("farm",))
+    back = persist.order_from_dict(persist.order_to_dict(order))
+    assert back.pack[0].bio_slug == cult_site.DEMON and back.pack[0].hp_max == 260

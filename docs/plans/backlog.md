@@ -726,7 +726,7 @@ has one "Enter" button and its functions are tabs inside.
   study time, what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
 
 - **Holy Symbol: the Farmer's quest (author 2026-11-11).** The bandit drop is built; the reliable source is a
-  quest that Edric Ashvale gives at the Farm from day 30, once the Faith Cathedral is found: his daughter, a clue
+  quest that Edric Ashvale gives at the Farm from day 50, once the Faith Cathedral is found: his daughter, a clue
   hunt (*Ask around*), a hidden cult site and a ritual fight. Plan, phases and open points:
   [holy_symbol_quest.md](holy_symbol_quest.md). Order (author 2026-11-04): before the next playtest. Until it
   ships, the rite starts only with a Holy Symbol from a bandit pack.

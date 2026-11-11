@@ -24,7 +24,6 @@ import random
 from . import captives, items
 
 UNIQUE_DROPS = {"biwolf": (items.BIWOLF_LEATHER_ITEM,),
-               "the-demon": (items.HOLY_SYMBOL_ITEM,),
                "aurochs": (items.THUNDERHIDE_ITEM, items.LEGENDARY_HORN_ITEM)}
 BATTLEFIELD_SPARE_THE_DYING_CHANCE = 0.001
 SPARE_THE_DYING_SCROLL = "Scroll of Spare the Dying"

@@ -242,7 +242,7 @@ FARMER_DAUGHTER = MissionTemplate(
     "farmer_daughter", "farmer", "farm",
     goal_item="Farmer's Daughter", goal_qty=1, reward=300, deadline_days=20,
     tags=("farm", "rescue"), goal_captive="farmers_daughter",
-    reward_items=(items.HOLY_SYMBOL_ITEM,), min_day=30, needs_revealed="faith_cathedral",
+    reward_items=(items.HOLY_SYMBOL_ITEM,), min_day=50, needs_revealed="faith_cathedral",
 )
 
 TEMPLATES = {
