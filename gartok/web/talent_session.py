@@ -165,6 +165,8 @@ class TalentSession(Session):
             return i18n.t("talent_session.holds_already", name=u.name, talent=t.name)
         if state == "granted":
             return i18n.t("talent_session.comes_with_initiation_into", name=t.name, capitalize=(t.school or 'a school').capitalize())
+        if state == "locked" and u.redundant(t):
+            return i18n.t("talent_session.redundant_with_ability", name=t.name, ability=u.ability.name)
         if state == "locked":
             return i18n.t("talent_session.needs_first", name=t.name, talent=" + ".join(talents.get(n).name for n in t.needs if not u.holds_talent(track, n)))
         if track == "magic" and not u.magic_sources:

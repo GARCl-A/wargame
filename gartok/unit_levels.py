@@ -92,8 +92,12 @@ class LevelingMixin:
         t = talents.get(talent_id)
         return bool(t and t.granted and t.school in self.magic_sources)
 
+    def redundant(self, t):
+        """The race's own ability already does what `t` does."""
+        return bool(t.redundant_with and getattr(self.ability, t.redundant_with, False))
+
     def offerable(self, track, t):
-        return (not t.granted and t.id not in self.talents[track]
+        return (not t.granted and t.id not in self.talents[track] and not self.redundant(t)
                 and all(self.holds_talent(track, n) for n in t.needs))
 
     def _has_offerable(self, track):

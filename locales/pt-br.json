@@ -2341,6 +2341,9 @@
         "tail_sweep": {
             "head": "{actor} Varrida de Cauda -> {foe}"
         },
+        "merciless": {
+            "brutal": "Impiedoso"
+        },
         "sneak_attack": {
             "head": "{actor} Ataque Furtivo -> {target}",
             "brutal": "O Ataque Furtivo acerta um ponto fraco"
@@ -4164,6 +4167,7 @@
         "holds_already": "{name} já tem {talent}",
         "comes_with_initiation_into": "{name} vem com a iniciação em {capitalize}",
         "needs_first": "{name} exige {talent} antes",
+        "redundant_with_ability": "{name} não é oferecido: {ability} já faz tudo o que ele faz, e faz melhor",
         "has_no_school_yet_school": "{name} ainda não tem escola: uma escola se abre com a iniciação em seu santuário",
         "next_racial_pick_comes_at": "a próxima escolha racial vem no nível racial {nxt}",
         "has_no_pick_to_spend": "{name} não tem escolha de {track} para gastar; uma vem com o próximo nível",
@@ -5671,6 +5675,7 @@
             "wordless_menace": "Ameaça Sem Palavras",
             "gruesome_takedown": "Derrubada Macabra",
             "cull_the_broken": "Abater os Quebrados",
+            "merciless": "Impiedoso",
             "inspiring_shout": "Grito Inspirador",
             "dread_voice": "Voz do Pavor",
             "grim_chorus": "Coro Sinistro",
@@ -6185,6 +6190,7 @@
             "wordless_menace": "Desmoralizar funciona contra quem não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
             "gruesome_takedown": "Ao abater um inimigo, faz imediatamente um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
             "cull_the_broken": "+2 de dano nos ataques contra alvos desmoralizados.",
+            "merciless": "Seus ataques contra um alvo desmoralizado são Brutais 1.",
             "inspiring_shout": "Ao desmoralizar um inimigo com sucesso, o aliado com menos moral restante ganha +1 de iniciativa e recupera 1 de moral; se nenhum aliado perdeu moral, o último aliado na ordem de turnos ganha +1 de iniciativa.",
             "dread_voice": "Um Desmoralizar seu que acerta tira 2 de moral do inimigo em vez de 1.",
             "grim_chorus": "Quando um aliado abate um inimigo, você faz um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",

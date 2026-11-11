@@ -64,9 +64,13 @@ BUILDS = {b.id: b for b in (
           quiver=True, role="ranged"),
     Build("archer", "Longbow: two random talents", ("Longbow",), AUTO, None,
           ("agile", "long_reach", "deadeye"), ("brawny", "nimble_fingers"), quiver=True, role="ranged"),
-    Build("intimidator", "Demoralize, then cull or take down", ("Sword",), AUTO, None,
-          ("imposing", "menacing", "wordless_menace", "cull_the_broken", "dread_voice"), ("brawny", "charismatic", "sturdy", "nimble_fingers")),
-    Build("commander", "Shouts the line on", ("Hatchet",), AUTO, SHIELD,
+    Build("intimidator", "Demoralize, then cull or take down", ("Hammer",), AUTO, None,
+          ("imposing", "menacing", "wordless_menace", "cull_the_broken", "dread_voice"),
+          ("brawny", "charismatic", "sturdy", "nimble_fingers")),
+    Build("intimidator_archer", "Longbow: Demoralize, then cull and brutal", ("Longbow",), AUTO, None,
+          ("imposing", "menacing", "cull_the_broken", "merciless", "agile"),
+          ("charismatic", "brawny", "nimble_fingers"), quiver=True, role="ranged"),
+    Build("commander", "Shouts the line on", ("Hammer",), AUTO, SHIELD,
           ("imposing", "menacing", "wordless_menace", "gruesome_takedown", "inspiring_shout"),
           ("brawny", "charismatic", "sturdy", "nimble_fingers", "observant")),
     Build("analyst", "Assess: reads the foe", ("Rapier",), AUTO, None,
@@ -104,7 +108,9 @@ VARIANTS = {
                     for k in ("cull_the_broken", "gruesome_takedown")},
 }
 COMBAT_IDS = frozenset(t.id for t in talents.TREE["combat"])
-TALKERS = ("intimidator", "commander")   # the builds a player stacks languages on
+# What a race takes in place of a listed talent its own ability already does (the Kenku's Mimic Sounds does what Wordless Menace does)
+INSTEAD = {("intimidator", "wordless_menace"): "merciless", ("commander", "wordless_menace"): "dread_voice"}
+TALKERS = ("intimidator", "intimidator_archer", "commander")   # the builds a player stacks languages on
 # The builds whose weapon is a question, and the weapons it is asked over.
 SWEEP_BUILDS = ("fortress", "intimidator", "commander", "analyst", "nature_caster", "blood_caster", "faith_caster")
 
@@ -172,7 +178,8 @@ def _pick(unit, track, priority, rng, ban=(), notes=None):
             if unit.picks_available(track) > 0 and tid not in ban and tid not in unit.talents[track]:
                 progress = bool(unit.choose_talent(track, tid)) or progress
     if notes is not None and unit.picks_available(track) > 0:
-        notes += [f"talent {tid} not legal" for tid in priority if tid not in ban and tid not in unit.talents[track]]
+        notes += [f"talent {tid} not legal" for tid in priority if tid not in ban and tid not in unit.talents[track]
+                  and not unit.redundant(talents.get(tid))]
     tree = talents.TREE[track]
     while unit.picks_available(track) > 0:
         picked = unit.talents[track]
@@ -389,6 +396,8 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
         if "drop_spell" in over:
             build = build._replace(spells5=tuple(x for x in build.spells5 if x != over["drop_spell"]))
         ban = tuple(over.get("ban", ()))
+        build = build._replace(combat=tuple(
+            INSTEAD.get((build_id, t), t) if unit.redundant(talents.get(t)) else t for t in build.combat))
         _pick(unit, "combat", tuple(over.get("force", ())) + build.combat, rng, ban, notes)
         if plan["magic"]:
             _pick(unit, "magic", tuple(over.get("force", ())) + build.magic_talents, rng, ban, notes)

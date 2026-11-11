@@ -142,7 +142,7 @@ def _demoralize_worth(battle, unit, target):
         blows = _blows_on(battle, a, target, max(unit.ap - 1, 0) if a is unit else 2)
         if not blows:
             continue
-        cull = a.char.talent_bonus("demoralized_target_damage")
+        cull = a.char.talent_bonus("demoralized_target_damage") + _blow(a) * a.char.talent_bonus("demoralized_target_brutal")
         choices = sum(1 for f in battle.units if f.alive and f.team != unit.team
                       and battle.units_distance(a, f) <= a.attack_range + a.speed)
         worth += blows * (D20_STEP * _blow(a) + _hit_odds(battle, a, target) * cull / max(1, choices))
@@ -206,6 +206,7 @@ def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
     cull = 0
     if getattr(target, "demoralized", False) and hasattr(unit, "char"):
         cull = getattr(unit.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
+        cull += _blow(unit, kw.get("thrown", False)) * unit.char.talent_bonus("demoralized_target_brutal")
     bleed = _bleed_worth(unit, target) if not kw.get("thrown") else 0
     ambush = _blow(unit) * unit.char.talent_bonus("crossbow_ambush") if (
         unit.shoots_crossbow and not kw.get("thrown") and actions.off_guard(battle, unit, target)) else 0

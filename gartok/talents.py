@@ -69,6 +69,7 @@ exactly one consumer that reads it back:
     demoralize_no_language actions.combat.Demoralize   --
     gruesome_takedown actions.base._resolve_hit        --
     demoralized_target_damage actions.base._resolve_hit --
+    demoralized_target_brutal actions.base._resolve_hit --
     assess_bonus      intel._roll                      --
     assess_active_bonus intel.assess                   --
     full_intel_to_hit Combatant.attack_mods            --
@@ -181,6 +182,7 @@ class Talent:
     effects: tuple = ()              # Effect(...) contributions -- see the module docstring
     school: str | None = None        # magic track: the school this node belongs to
     granted: bool = False            # magic root: held while the school is held, never picked
+    redundant_with: str | None = None  # an Ability flag that already does what this does: not offered to that race
 
     @property
     def needs(self):
@@ -273,8 +275,11 @@ _LIST = [
            effects=(Effect("gruesome_takedown", 1),), icon="body/deadly-strike"),
     Talent("cull_the_broken", "combat", 3, requires="menacing",
            effects=(Effect("demoralized_target_damage", 2),), icon="action/boot-stomp"),
+    Talent("merciless", "combat", 4, requires="cull_the_broken",
+           effects=(Effect("demoralized_target_brutal", 1),), icon="action/boot-stomp"),
     Talent("wordless_menace", "combat", 3, requires="menacing",
-           effects=(Effect("demoralize_no_language", 1),), icon="action/shouting"),
+           effects=(Effect("demoralize_no_language", 1),), icon="action/shouting",
+           redundant_with="demoralize_ignores_language"),
     Talent("inspiring_shout", "combat", 3, requires="gruesome_takedown",
            effects=(Effect("demoralize_ally_initiative", 1), Effect("demoralize_rally", 1)), icon="action/shouting"),
     Talent("dread_voice", "combat", 3, requires="menacing",

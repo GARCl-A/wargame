@@ -430,6 +430,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         cull = 0
         if getattr(target, "demoralized", False) and hasattr(attacker, "char"):
             cull = getattr(attacker.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
+            if merciless := int(attacker.char.talent_bonus("demoralized_target_brutal")):
+                brutal_why = brutal_why if brutal else i18n.Msg("log.merciless.brutal")
+                brutal += merciless
         guard_finesse = 0
         if off_guard(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
             guard_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("off_guard_finesse_damage")

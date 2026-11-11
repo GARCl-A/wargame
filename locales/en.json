@@ -2323,6 +2323,9 @@
     "tail_sweep": {
       "head": "{actor} Tail Sweep -> {foe}"
     },
+    "merciless": {
+      "brutal": "Merciless"
+    },
     "sneak_attack": {
       "head": "{actor} Sneak Attack -> {target}",
       "brutal": "Sneak Attack strikes a vulnerable spot"
@@ -3256,6 +3259,7 @@
       "wordless_menace": "Wordless Menace",
       "gruesome_takedown": "Gruesome Takedown",
       "cull_the_broken": "Cull the Broken",
+      "merciless": "Merciless",
       "inspiring_shout": "Inspiring Shout",
       "dread_voice": "Dread Voice",
       "grim_chorus": "Grim Chorus",
@@ -4848,6 +4852,7 @@
     "holds_already": "{name} holds {talent} already",
     "comes_with_initiation_into": "{name} comes with initiation into {capitalize}",
     "needs_first": "{name} needs {talent} first",
+    "redundant_with_ability": "{name} is not offered: {ability} already does everything it does, and does it better",
     "has_no_school_yet_school": "{name} has no school yet: a school opens with initiation at its sanctuary",
     "next_racial_pick_comes_at": "the next racial pick comes at racial level {nxt}",
     "has_no_pick_to_spend": "{name} has no {track} pick to spend; one comes with the next level",
@@ -5688,6 +5693,7 @@
       "wordless_menace": "Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
       "gruesome_takedown": "Upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language).",
       "cull_the_broken": "+2 damage on attacks against demoralized targets.",
+      "merciless": "Your attacks against a demoralized target are Brutal 1.",
       "inspiring_shout": "Upon successfully demoralizing an enemy, the ally with the least morale left gains +1 initiative and takes 1 morale back; when no ally has lost morale, the ally last in the turn order gains +1 initiative.",
       "dread_voice": "A Demoralize of yours that lands takes 2 morale from the foe instead of 1.",
       "grim_chorus": "When an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language).",

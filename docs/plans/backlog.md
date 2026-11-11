@@ -217,7 +217,13 @@ Something on a screen is wrong today. Pick these before any UI improvement below
     64%, above the 40 to 60 band: run the full waves, and trim (Ambush Shot, Heavy Bolts) if it confirms.
   - *Kenku archetype (author 2026-11-08).* Its stats (DEX/WIS/CHA) leave it neither a pure caster nor a melee
     bruiser. Direction (author 2026-11-10): a demoralising archer (ranged plus Demoralize). Its best build today
-    is `faith_caster` 61.5, then `sage_archer` 58.2; no study build is built around its Demoralize.
+    is `faith_caster` 61.5, then `sage_archer` 58.2. Built, A/B on the Kenku clones only: the Merciless talent
+    (Brutal 1 against a demoralized target, under Cull the Broken; within noise on the melee builds, the Kenku bats
+    little), Wordless Menace not offered to a race whose ability crosses the language gap, the Hammer for the
+    Intimidator and Commander, and the `intimidator_archer` build (72, against 38 for the melee Intimidator). The AI
+    no longer grabs, takes down or Demoralizes a foe that is already running, and strikes a runner like any other foe:
+    that is for every race, so every number of the study above predates it. Missing: the full study run, and the
+    Commander's fifth talent for the Kenku (Dread Voice stands in for Wordless Menace, a guess).
   - *Interacts, and could lift the Kenku:* **Intimidation build rework** (the DCs and action economy of Demoralize,
     Medium); in **Talent ideas (2026-10-30)** item 3 (Charisma + Wisdom: Demoralize on beasts) and item 4 (Archery:
     +1 damage with a bow, then a conditional Brutal). **Vocation tweaks** (1) Warband +1 Morale does not touch the

@@ -161,3 +161,13 @@ def test_the_magic_tree_without_a_school_says_it_waits_for_one():
     assert "no school yet" in st["hand"]["status"]
     with pytest.raises(ValueError, match="no school yet"):
         s.take("magic", "arcane_mind")
+
+
+def test_a_talent_the_races_own_ability_already_does_says_so():
+    _game, s, units = _open()
+    units[0].set_race("Kenku")
+    for t in ("imposing", "menacing"):
+        assert units[0].choose_talent("combat", t)
+    st = s.look(tid="wordless_menace")
+    assert _node(st, "wordless_menace")["state"] == "locked"
+    assert st["hand"]["status"] == "Wordless Menace is not offered: Mimic Sounds already does everything it does, and does it better"

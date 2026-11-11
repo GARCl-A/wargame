@@ -470,6 +470,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Menacing | +2 to Demoralize checks. | Imposing |
 | 2 | Gruesome Takedown | Upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language). | Imposing |
 | 3 | Cull the Broken | +2 damage on attacks against demoralized targets. | Menacing |
+| 4 | Merciless | Your attacks against a demoralized target are Brutal 1. | Cull the Broken |
 | 3 | Wordless Menace | Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2. | Menacing |
 | 3 | Inspiring Shout | Upon successfully demoralizing an enemy, the ally with the least morale left gains +1 initiative and takes 1 morale back; when no ally has lost morale, the ally last in the turn order gains +1 initiative. | Gruesome Takedown |
 | 3 | Dread Voice | A Demoralize of yours that lands takes 2 morale from the foe instead of 1. | Menacing |
