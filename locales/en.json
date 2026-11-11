@@ -3712,7 +3712,8 @@
       "faith_necromancer": "The Necromancer at the Front",
       "nature_wildfire": "The Ogre's Wildfire",
       "blood_clutch": "The Dragon's Clutch",
-      "ledger_treefolk": "Treefolk Mentorship"
+      "ledger_treefolk": "Treefolk Mentorship",
+      "farmer_daughter": "The Farmer's Daughter"
     },
     "deed": {
       "arena_first_blood": "First Blood",
@@ -3836,6 +3837,8 @@
       "library": "library",
       "magic": "magic",
       "mentorship": "mentorship",
+      "farm": "farm",
+      "rescue": "rescue",
       "nature": "nature",
       "necromancer": "necromancer",
       "ox": "ox",
@@ -3898,6 +3901,9 @@
   },
   "job_board": {
     "jobs_on_board": "jobs on the board",
+    "farmer_req": "goal: bring his daughter home alive  ·  {deadline_days} days  ·  you get {fmt_money} and {reward_item}",
+    "farmer_status": "daughter {progress} / {goal_qty}  ·  {days_left} day(s) left",
+    "farmer_thanks": "Edric holds his daughter and pays {fmt_money}.",
     "party_purse": "party purse",
     "turn_in": "TURN IN",
     "paid_out_split_across_group": "paid out {fmt_money}, split across the group.",
@@ -3957,7 +3963,8 @@
       "apothecary": "\"Need someone to fetch rare reagents from the wilds.\"",
       "library": "\"We need to expand our archives. Translations are well paid.\"",
       "trust": "\"Prove the guild can be trusted with something precious.\"",
-      "ledger": "\"The march needs steady hands. Train my recruit and I will remember it.\""
+      "ledger": "\"The march needs steady hands. Train my recruit and I will remember it.\"",
+      "farmer": "\"My girl went to the church and never came back. Please.\""
     },
     "keeper": {
       "blood": "\"Blood remembers. What runs in the veins can be read.\"",
@@ -4236,6 +4243,8 @@
   },
   "shop_tab": {
     "speaks": "Speaks {join}",
+    "closed_grief": "Edric has shut the shop. He will sell nothing while his daughter is missing.",
+    "closed_demon": "The Farm is shut: a demon is loose, and Edric will not open the door.",
     "cha": "Cha {cha:+d}",
     "no_one_speaks": "No one speaks {join}",
     "no_such_pack": "no such pack",
@@ -5942,7 +5951,8 @@
       "faith_necromancer": "The soldiers who fell at the Battlefield do not stay dead: days later they get up and walk. Someone out there is raising them, and nobody has seen who. Go to the front, find whoever wakes the dead, and put them down.",
       "nature_wildfire": "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn the forest to do it, though badly. Every fire they set runs wild. Teach them, or stop them, and put the fires out before they spread. The Ogre is at the heart of it.",
       "blood_clutch": "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on its clutch. Search the deep galleries, go down, and bring us one of its eggs: the bloodline itself, unhatched. Whatever else you carry out of there is yours.",
-      "ledger_treefolk": "Commander Varkas of Field Command entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison."
+      "ledger_treefolk": "Commander Varkas of Field Command entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison.",
+      "farmer_daughter": "Edric Ashvale's daughter set out for the Faith Cathedral and has sent no word since. He cannot leave the farm, and he will sell nothing until she is home. Ask around, find where she went, and bring her back alive. He pays what he has, and the Holy Symbol she carries is yours."
     },
     "faction": {
       "arena": "The staked bouts in the cellars under the city. Win, and be known.",

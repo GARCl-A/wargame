@@ -31,7 +31,7 @@ def test_every_authored_record_has_its_en_text():
     for o in objectives.OBJECTIVES:
         assert f"name.objective.{o.id}" in EN and f"desc.objective.{o.id}" in EN, o.id
     for fn in node_functions.FUNCTIONS.values():
-        assert (fn.label is None) == (fn.id in ("work", "trust")), fn.id
+        assert (fn.label is None) == (fn.id in ("work", "trust", "farmer")), fn.id
     for n in world.NODES:
         assert f"desc.node.{n.id}" in EN, n.id
         for v in n.vendors.values():

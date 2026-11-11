@@ -12,7 +12,7 @@ band's campfire in the field the same kitchen; a tab the browser does not draw s
 import re
 from typing import ClassVar
 
-from .. import art_files, economy, i18n, orders, world
+from .. import art_files, economy, i18n, missions, orders, world
 from ..constants import fmt_money
 from ..map_view import node_icon
 from ..vault import BankVault, HouseVault
@@ -80,6 +80,8 @@ def _node_tabs(node):
                  else (("tavern", "Tavern"),))
     if node.has("stable"):
         tabs.append(("stable", "Stables"))
+    if node.has("farmer") and missions.FARMER_QUEST_LIVE:
+        tabs.append(("jobs", "Jobs"))
     if node.has("forge"):
         tabs.append(("forge", "Forge"))
     if node.has("carpenter"):

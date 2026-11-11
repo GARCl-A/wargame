@@ -46,6 +46,8 @@ class MissionTemplate:
     fight_at: str | None = None        # the goal is a fight won at this node, not a turn-in
     reward_items: tuple[str, ...] = ()   # handed to the first member of the delivering group at the turn-in
     goal_any: tuple[str, ...] = ()     # the goal is `goal_qty` of these items in any mix (`goal_item` is only the board's icon)
+    min_day: int = 0                   # not offered before this day of the campaign
+    needs_revealed: str | None = None  # not offered until this hidden node is on the guild's map
 
     @property
     def name(self):
@@ -232,6 +234,17 @@ LEDGER_TREEFOLK = MissionTemplate(
     tags=("guards", "ledger_hold", "mentorship"),
 )
 
+# The Farmer's (`docs/plans/holy_symbol_quest.md`): Edric Ashvale's daughter went to the Cathedral and sent
+# no word. The release switch keeps the whole quest dark (the job, the Farm's tab, the closed shop) until
+# the author flips it.
+FARMER_QUEST_LIVE = False
+FARMER_DAUGHTER = MissionTemplate(
+    "farmer_daughter", "farmer", "farm",
+    goal_item="Farmer's Daughter", goal_qty=1, reward=300, deadline_days=20,
+    tags=("farm", "rescue"), goal_captive="farmers_daughter",
+    reward_items=(items.HOLY_SYMBOL_ITEM,), min_day=30, needs_revealed="faith_cathedral",
+)
+
 TEMPLATES = {
     TANNER_HIDES.id: TANNER_HIDES,
     TANNER_BIWOLF.id: TANNER_BIWOLF,
@@ -248,6 +261,7 @@ TEMPLATES = {
     NATURE_WILDFIRE.id: NATURE_WILDFIRE,
     BLOOD_CLUTCH.id: BLOOD_CLUTCH,
     LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
+    FARMER_DAUGHTER.id: FARMER_DAUGHTER,
 }
 
 
@@ -258,6 +272,10 @@ def offers_at(guild, node_id):
     out = []
     for t in TEMPLATES.values():
         if t.node != node_id or not _open_to_take(guild, t):
+            continue
+        if t is FARMER_DAUGHTER and not FARMER_QUEST_LIVE:
+            continue
+        if guild.clock.day < t.min_day or (t.needs_revealed and t.needs_revealed not in guild.revealed):
             continue
         if t.id == "library_ancient_codex" and "library_initiate" not in guild.deeds_done:
             continue
@@ -285,6 +303,15 @@ def board(guild, giver, node_id):
         return shown
     taken = [t for t in mine if any(m.template_id == t.id for m in guild.missions)]
     return taken[-1:]
+
+
+def shop_closed(guild, node_id):
+    """The text of why `node_id`'s shop sells nothing right now, or None when it is open: the Farm, while
+    Edric waits for his daughter."""
+    if node_id == FARMER_DAUGHTER.node and FARMER_QUEST_LIVE and any(
+            m.template_id == FARMER_DAUGHTER.id and m.state == "active" for m in guild.missions):
+        return i18n.t("shop_tab.closed_grief")
+    return None
 
 
 def closed(guild, template):

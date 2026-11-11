@@ -262,7 +262,7 @@ NODES = [
          jurisdiction="ankareth", language="Draconic", alignment="Lawful and Evil", functions=("library", "shop"),
          vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png", female=True)}),
     Node("farm", "The Farm", "town", (0.30, 0.84),
-         language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop"),
+         language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop", "farmer"),
          vendors={"shop": Vendor("Edric Ashvale", "Human", "farmer", "farmer.png")}),
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE, hidden=True),

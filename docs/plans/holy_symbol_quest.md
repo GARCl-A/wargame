@@ -1,6 +1,7 @@
 # Holy Symbol: a quest do Fazendeiro (a filha do Edric)
 
-Escrito em portugues a pedido do autor. Status: **em planejamento**, nenhuma fase feita.
+Escrito em portugues a pedido do autor. Status: **em construcao** na branch `quest-holy-symbol` (fases 1 e 2 feitas). A chave de lancamento
+`missions.FARMER_QUEST_LIVE` (hoje `False`) mantem a quest inteira apagada: o job, a aba Jobs da Farm e a loja fechada.
 
 ## Por que existe
 
@@ -82,9 +83,9 @@ e ela entrega o Holy Symbol.
 Cada fase e um commit no `main`.
 
 1. **O documento** (este) e o ponteiro no backlog.
-2. **Portao e quadro.** `MissionTemplate` ganha `min_day` e `needs_revealed` (`offers_at`); template
+2. **Portao e quadro (feita).** `MissionTemplate` ganha `min_day` e `needs_revealed` (`offers_at`); template
    `FARMER_DAUGHTER` (giver `farmer`, no `farm`, 20 dias, `goal_captive`, 300 de reward, `reward_items` com o
-   simbolo) **fora de `TEMPLATES`**; a Farm ganha a funcao `farmer` (sem botao no mapa), `FarmerBoard` em
+   simbolo) em `TEMPLATES` mas **atras da chave `FARMER_QUEST_LIVE`**; a Farm ganha a funcao `farmer` (sem botao no mapa), `FarmerBoard` em
    `job_board.BOARDS` (+ `tests/test_desks.py`), aba Jobs em `hub_session._node_tabs`; loja fechada lendo
    `Guild.cult`; textos en e pt-br.
 3. **Perguntar por aí.** `gartok/investigation.py` (`CLUES`, `ask`, `bonus`); ordem `ask_around` por `_spent` com

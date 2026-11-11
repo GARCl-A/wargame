@@ -5,7 +5,7 @@ counter's pick the way a drop would and calls the same method, so the prices, th
 the purse and the deeds stay one source.
 """
 
-from .. import art_files, economy, i18n, item_icon, items, store_column, trade
+from .. import art_files, economy, i18n, item_icon, items, missions, store_column, trade
 from .session import asset_url
 
 SLOTS = (("hand", "Hand"), ("offhand", "Hand"), ("tongue", "Tongue"), ("armor", "Armour"), ("artifact", "Artifact"))
@@ -29,6 +29,10 @@ class ShopTab:
         self.m = trade.counter_for(guild, list(group.members), node)
         self.guild, self.group, self.node = guild, group, node
 
+    @property
+    def closed(self):
+        return missions.shop_closed(self.guild, self.node.id)
+
     # ------------------------------------------------------------------ #
     # the tab                                                             #
     # ------------------------------------------------------------------ #
@@ -49,6 +53,7 @@ class ShopTab:
             "marked_total": m._marked_total(),
             "marked_held": bool(m._marked_stock()[0]),
             "notice": notice,
+            "closed": self.closed,
         }
 
     def _body_size(self):
@@ -83,6 +88,8 @@ class ShopTab:
         return out
 
     def _shelf(self):
+        if self.closed:
+            return []
         m = self.m
         shop = m._shop()
         targets = shop.targets if shop else {}
@@ -180,6 +187,8 @@ class ShopTab:
 
     def buy(self, name, qty=1, to=None, zone="pack"):
         m = self.m
+        if self.closed:
+            raise ValueError(self.closed)
         if not any(r["name"] == name for c in self._shelf() for r in c["rows"]):
             raise ValueError(i18n.t("shop_tab.is_not_on_this_shelf", name=name))
         m.qty[name] = max(1, int(qty))
@@ -208,6 +217,8 @@ class ShopTab:
 
     def sell(self, picks):
         m = self.m
+        if self.closed:
+            raise ValueError(self.closed)
         self._select(picks)
         if not m._goods(m.selected):
             m.selected, m._sel_qty = [], {}
@@ -222,6 +233,8 @@ class ShopTab:
         self.m._toggle_marked(name)
 
     def sell_marked(self):
+        if self.closed:
+            raise ValueError(self.closed)
         self.m._sell_marked()
         self.m.selected, self.m._sel_qty = [], {}
 

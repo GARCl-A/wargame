@@ -400,6 +400,34 @@ class LedgerBoard(Board):
         return i18n.t("ledger.recruit_steps_into_garrison", fmt_money=fmt_money(reward))
 
 
+class FarmerBoard(Board):
+    """The Farm's one job: Edric Ashvale's daughter. The goal is the girl herself, brought home alive."""
+    GIVER = "farmer"
+
+    @property
+    def subtitle_text(self):
+        return i18n.t("job_board.subtitle.farmer")
+
+    def get_template(self):
+        return next(iter(self.get_templates()), None)
+
+    def get_templates(self):
+        return missions.board(self.guild, self.GIVER, self.group.node)
+
+    def get_req_str(self, t):
+        return i18n.t("job_board.farmer_req", deadline_days=t.deadline_days, fmt_money=fmt_money(t.reward),
+                      reward_item=_item_names(t.reward_items))
+
+    def get_status_str(self, t, progress, ready, days_left):
+        return i18n.t("job_board.farmer_status", progress=progress, goal_qty=t.goal_qty, days_left=days_left)
+
+    def get_turn_in_label(self, t, progress, ready):
+        return i18n.t("job_board.hand_it_over") if ready else i18n.t("job_board.not_back_yet")
+
+    def get_success_notice(self, reward):
+        return i18n.t("job_board.farmer_thanks", fmt_money=fmt_money(reward))
+
+
 # a node's function -> its giver's board, in the order a node's tabs list them
 BOARDS = (("tanner", TannerBoard), ("apothecary", ApothecaryBoard), ("library", LibraryBoard),
-          ("shrine", ShrineBoard), ("trust", TrustBoard), ("ledger", LedgerBoard))
+          ("shrine", ShrineBoard), ("trust", TrustBoard), ("ledger", LedgerBoard), ("farmer", FarmerBoard))

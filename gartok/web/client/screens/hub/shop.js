@@ -84,7 +84,7 @@ const Shop = (() => {
       <div class="shelfhead">${tabs || `<h3>${esc(c ? lab(c.label) : tr("shop.nothing"))}</h3>`}</div>
       <div class="cols"><span></span><span>${tr("shop.ware")}</span><span class="r">${tr("shop.weight")}</span><span class="c">${tr("shop.stock")}</span><span class="r">${tr("shop.price")}</span><span class="r">${tr("shop.buy")}</span></div>
       <div id="rows">${c ? families(c.rows).map(wareRow).join("") : ""}</div>
-      <div class="shelffoot">${tr("shop.foot")}</div></div>`;
+      <div class="shelffoot">${S.closed ? esc(S.closed) : tr("shop.foot")}</div></div>`;
   }
 
   // ---------------------------------------------------------------- the packs

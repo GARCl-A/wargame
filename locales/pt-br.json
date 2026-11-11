@@ -3199,6 +3199,9 @@
     },
     "job_board": {
         "jobs_on_board": "trabalhos no quadro",
+        "farmer_req": "meta: trazer a filha dele viva para casa  ·  {deadline_days} dias  ·  você recebe {fmt_money} e {reward_item}",
+        "farmer_status": "filha {progress} / {goal_qty}  ·  {days_left} dia(s) restante(s)",
+        "farmer_thanks": "Edric abraça a filha e paga {fmt_money}.",
         "party_purse": "bolsa do grupo",
         "turn_in": "ENTREGAR",
         "paid_out_split_across_group": "pagou {fmt_money}, dividido entre o grupo.",
@@ -3258,7 +3261,8 @@
             "apothecary": "\"Preciso de alguém que busque reagentes raros nos ermos.\"",
             "library": "\"Precisamos ampliar nossos arquivos. Traduções são bem pagas.\"",
             "trust": "\"Prove que a guilda merece confiança com algo precioso.\"",
-            "ledger": "\"A fronteira precisa de mãos firmes. Treine meu recruta e eu me lembro disso.\""
+            "ledger": "\"A fronteira precisa de mãos firmes. Treine meu recruta e eu me lembro disso.\"",
+            "farmer": "\"Minha menina foi à igreja e nunca voltou. Por favor.\""
         },
         "keeper": {
             "blood": "\"O sangue lembra. O que corre nas veias pode ser lido.\"",
@@ -3875,6 +3879,8 @@
     },
     "shop_tab": {
         "speaks": "Fala {join}",
+        "closed_grief": "Edric fechou a loja. Ele não vende nada enquanto a filha estiver desaparecida.",
+        "closed_demon": "A Fazenda está fechada: há um demônio à solta, e Edric não abre a porta.",
         "cha": "Car {cha:+d}",
         "no_one_speaks": "Ninguém fala {join}",
         "no_such_pack": "mochila inexistente",
@@ -5086,6 +5092,8 @@
             "library": "biblioteca",
             "magic": "magia",
             "mentorship": "mentoria",
+            "farm": "fazenda",
+            "rescue": "resgate",
             "nature": "natureza",
             "necromancer": "necromante",
             "ox": "boi",
@@ -5613,7 +5621,8 @@
             "faith_necromancer": "O Necromante na Linha de Frente",
             "nature_wildfire": "O Incêndio do Ogro",
             "blood_clutch": "A Ninhada do Dragão",
-            "ledger_treefolk": "Mentoria do Povo-Árvore"
+            "ledger_treefolk": "Mentoria do Povo-Árvore",
+            "farmer_daughter": "A Filha do Fazendeiro"
         },
         "deed": {
             "arena_first_blood": "Primeiro Sangue",
@@ -6113,7 +6122,8 @@
             "faith_necromancer": "Os soldados que tombaram no Campo de Batalha não ficam mortos: dias depois eles se levantam e andam. Alguém lá fora os ergue, e ninguém viu quem. Vá à linha de frente, ache quem acorda os mortos e derrube.",
             "nature_wildfire": "Um Ogro trouxe um bando de goblins para os Ermos para limpar terreno para uma fortaleza, e eles queimam a floresta para isso, só que mal. Cada fogo que acendem foge do controle. Ensine-os, ou detenha-os, e apague os fogos antes que se espalhem. O Ogro está no centro de tudo.",
             "blood_clutch": "O Códice nomeia uma toca abaixo da Mina, onde as galerias esquentam: um dragão dorme ali sobre a ninhada. Vasculhe as galerias fundas, desça e traga-nos um dos ovos: a própria linhagem, ainda não chocada. O que mais você trouxer de lá é seu.",
-            "ledger_treefolk": "O Comandante Varkas do Posto de Comando confia à sua guilda um recruta novo do Povo-Árvore. Treine-o na estrada até dominar suas raízes raciais (nível racial 2) e devolva-o à guarnição."
+            "ledger_treefolk": "O Comandante Varkas do Posto de Comando confia à sua guilda um recruta novo do Povo-Árvore. Treine-o na estrada até dominar suas raízes raciais (nível racial 2) e devolva-o à guarnição.",
+            "farmer_daughter": "A filha de Edric Ashvale partiu para a Catedral da Fé e não manda notícia desde então. Ele não pode deixar a fazenda e não vende nada até ela voltar. Pergunte por aí, descubra aonde ela foi e traga-a de volta viva. Ele paga o que tem, e o Símbolo Sagrado que ela carrega é seu."
         },
         "deed": {
             "arena_first_blood": "Vença uma luta apostada nos fossos.",

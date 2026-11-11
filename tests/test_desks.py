@@ -149,7 +149,7 @@ def test_the_tanner_board_signs_the_leader_and_pays_on_the_turn_in():
 def test_each_giver_has_its_board():
     guild, g, _ = _band("city")
     assert job_board.TrustBoard(guild, g).get_templates() == [missions.TRUST_CHEST]
-    assert {fn for fn, _ in job_board.BOARDS} == {"tanner", "apothecary", "library", "shrine", "trust", "ledger"}
+    assert {fn for fn, _ in job_board.BOARDS} == {"tanner", "apothecary", "library", "shrine", "trust", "ledger", "farmer"}
 
 
 def test_the_garage_desk_parks_a_wagon_and_takes_it_out():
