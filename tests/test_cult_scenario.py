@@ -1,7 +1,6 @@
 """The Cult Site fight (`cult_site.CultSiteScenario`): the bar, the Final Rite, its interruption and the
 Demon's non-lethal ending. Fights are driven by hand: no AI plays them."""
 
-import random
 
 import pytest
 
