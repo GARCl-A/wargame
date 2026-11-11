@@ -99,25 +99,44 @@ const Sound = (() => {
 const Tutorial = (() => {
   let key = null, up = false, shown = null;
   // what the card's copy cannot hold: a stamp (or a picture), its rule and what it is for
-  const rows = list => !list?.length ? "" : `<div class="tut-rows">${list.map(r => `<div class="trow">
+  const rows = list => !list?.length ? "" : `<div class="tut-rows">${list.map(r => `<div class="trow"${r.focus ? ` data-focus="${esc(r.focus)}"` : ""}>
     ${r.image ? `<img src="${esc(r.image)}" draggable="false">` : ""}<span class="tstamp ${esc(r.stamp?.style)}">${esc(r.stamp?.label)}</span>
     <div><b>${esc(r.rule)}</b><span>${esc(r.text)}</span></div></div>`).join("")}</div>`;
   const card = c => `<div id="tut-card" class="paper"><div class="kicker">${tr("tutorial.notes")}</div>
     <h2>${esc(c.title)}</h2>${c.body.map(p => `<p>${esc(p)}</p>`).join("")}${rows(c.rows)}
-    ${c.suggestion ? `<p class="next">${esc(c.suggestion)}</p>` : ""}<div class="btn">${esc(c.button)}</div></div>`;
+    ${c.suggestion ? `<p class="next">${esc(c.suggestion)}</p>` : ""}<div class="tut-btns">
+    ${c.wiki ? `<div class="btn alt" id="tut-wiki">${esc(c.wiki_button)}</div>` : ""}<div class="btn">${esc(c.button)}</div></div></div>`;
   const node = id => document.getElementById(id) || $("stage").appendChild(Object.assign(document.createElement("div"), {id}));
   const drop = id => document.getElementById(id)?.remove();
+  // the part of the screen the card is about stays lit above the veil, and a row lights what it names
+  const lit = (sel, cls, on) => { if (sel) document.querySelectorAll(sel).forEach(e => e.classList.toggle(cls, on)); };
+  let spot = null;
+  const unspot = () => { lit(spot, "tut-spot", false); document.querySelectorAll(".tut-focus").forEach(e => e.classList.remove("tut-focus")); spot = null; };
   function show(c) {
     if (c.key !== key || !up) return;
     drop("tut-badge");
     const veil = node("tut-veil");
     veil.innerHTML = card(c);
     veil.onclick = close;
+    veil.querySelector("#tut-wiki")?.addEventListener("click", async e => {
+      e.stopPropagation();
+      const r = await api("/api/tutorial/wiki", {});
+      if (r.screen) location.reload();
+    });
+    unspot();
+    spot = c.spot || null;
+    veil.classList.toggle("spotted", !!spot);
+    lit(spot, "tut-spot", true);
+    veil.querySelectorAll(".trow[data-focus]").forEach(r => {
+      r.onmouseenter = () => lit(r.dataset.focus, "tut-focus", true);
+      r.onmouseleave = () => lit(r.dataset.focus, "tut-focus", false);
+    });
   }
   async function close() {
     if (!up) return;
     up = false;
     drop("tut-veil");
+    unspot();
     shown = null;
     const r = await api("/api/tutorial/dismiss", {});
     if (r.screen && r.screen !== Shell.screen) location.reload();
@@ -145,8 +164,8 @@ const Tutorial = (() => {
       const [k, flag] = (header || "").split("|");
       key = k || null;
       up = key !== null && flag === "1";
-      if (!key) { drop("tut-veil"); drop("tut-badge"); shown = null; return; }
-      if (!up) { drop("tut-veil"); shown = null; badge(); return; }
+      if (!key) { drop("tut-veil"); drop("tut-badge"); unspot(); shown = null; return; }
+      if (!up) { drop("tut-veil"); unspot(); shown = null; badge(); return; }
       if (shown !== key) { shown = key; fetch("/api/tutorial").then(r => r.json()).then(c => Shell.ready.then(() => show(c))).catch(() => {}); }
     },
   };

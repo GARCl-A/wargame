@@ -1,6 +1,44 @@
 {
   "tutorial": {
     "default_button": "Got it",
+    "hint": {
+      "study": {
+        "title": "Learning from a scroll, a paper or a book",
+        "body": [
+          "A scroll, a recipe paper and a dictionary teach one character, not the whole group: the item has to be in that character's pack, and they study it at the Tavern.",
+          "Pick a target on the Tavern's STUDY tab, then rent a quiet room: each day the student rolls toward the lesson, and the room is paid for."
+        ]
+      },
+      "road": {
+        "title": "The road eats rations",
+        "body": [
+          "Every member eats one meal a day, walking or not, and a long road is days of meals.",
+          "Check the pack before you set out: the map warns when the rations will not last the trip, and a band that runs out goes hungry."
+        ]
+      },
+      "reading": {
+        "title": "Reading your foes",
+        "body": [
+          "The first time your side sees a foe, every character that sees it rolls d20 + INT to read it, and the best result is shared by the whole side. The more you beat the DC, the more of its card opens.",
+          "A race the guild has already fought is easier to read. Assess (1 point) rolls again, harder, on one foe."
+        ]
+      },
+      "fallen": {
+        "title": "A character is down",
+        "body": [
+          "At 0 HP a character is down, not dead, and bleeds out in a few rounds.",
+          "Any character can Stabilize them: a Wisdom check, no class or item needed. First Aid does it better with the right kit."
+        ]
+      },
+      "dungeon": {
+        "title": "A dungeon you walk out of",
+        "body": [
+          "Clearing the ruins does not end the fight: when the last foe falls the delve goes on, and it is won only when the squad has left by the entrance.",
+          "Chests and relics stay where the ruins keep them until someone takes them, so what you do not carry out is not yours. Plan the walk back."
+        ]
+      }
+    },
+    "wiki_button": "See in the wiki",
     "draft": {
       "intro": {
         "title": "Welcome to Gartok",
@@ -102,11 +140,16 @@
     "battle": {
       "title": "Fighting it out",
       "body": [
-        "Each character has 2 action points a turn. Walking, attacking and most actions cost 1; a weapon action costs 2. Space ends the turn; Delay (key 9, beside the action bar) lets the others act first, once a round, before you spend a point. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
+        "Each character has 2 action points a turn, and the lit bar at the bottom is what it can do with them: hover a line below and its plate lights up. Space or the seal beside it ends the turn. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
         "You see only what the active character's light and senses reach; L shows the whole squad's sight. A foe's ? fields are what you have not read yet: everyone reads a foe on first sight, and Assess (1 point) reads harder.",
         "At 0 HP a character is down, not dead: Stabilize or First Aid them before they bleed out."
-      ]
-    },
+    ],
+      "cost": {
+        "one": "{n} point",
+        "other": "{n} points"
+      },
+      "free": "Free"
+  },
     "loot": {
       "title": "Splitting the spoils",
       "body": [
@@ -6512,6 +6555,27 @@
       "title": "Clean Stomp & Auto-Win",
       "1": "Before an ambush the game fights it many times headless, both sides on the AI, and shows how many of those fights were a clean stomp: everyone standing, no potion, no first aid, no ammunition spent. It is not the odds of winning.",
       "2": "AUTO-WIN is offered only when every one of them was a clean stomp. It settles the fight at once and awards no combat XP."
+    },
+    "study": {
+      "title": "Studying",
+      "1": "A scroll, a recipe paper or a dictionary is learned by one character: it has to be in that character's pack (a mate's copy is moved over when the study begins).",
+      "2": "Study happens at the Tavern: pick the target on the STUDY tab, then rent a quiet room for the group.",
+      "3": "Each day the room is rented, the student pays ${cost} (from their own purse first, then their groupmates') and rolls 1d20 + INT toward the points the lesson needs; a first-level spell takes a few weeks of days.",
+      "4": "No scroll, no money or, for a spell, no school yet means no progress that day. When the points are in, the lesson is learned and the slot is free."
+    },
+    "dungeon": {
+      "title": "Dungeons you walk out of",
+      "1": "In the Ancient Ruins the fight does not end when the last foe falls: the squad has to leave by the entrance, and only then is the delve won.",
+      "2": "Chests, relics and the Ancient Codex stay where the ruins keep them until someone takes them; what is not carried out is not yours.",
+      "3": "The entrance is the exit: the cells by the door the squad came in through. A member who falls or stays inside is not out.",
+      "4": "The ruins remember: a foe that fell stays down and what a hand took is gone on the next delve, while a trap unsprung or a chest unopened waits."
+    },
+    "reading": {
+      "title": "Reading a foe",
+      "1": "The first time anyone on your side sees a foe, every teammate that sees it rolls d20 + INT against DC {dc} + the foe's racial level. The best margin is shared by the side.",
+      "2": "The better the margin, the more fields of the foe's card open (the ? are what you have not read yet). A failed roll reveals nothing and never lies.",
+      "3": "A race the guild has fought before is {discount} easier to read, and a racial ability the guild has seen is free on the next of that race.",
+      "4": "Assess (1 point) rolls again at +{bonus} on one foe in sight, once per foe each round."
     },
     "or": " or ",
     "term": {

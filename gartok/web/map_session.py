@@ -15,6 +15,7 @@ from .. import (
     economy,
     forced,
     gather,
+    hints,
     i18n,
     missions,
     node_functions,
@@ -820,7 +821,15 @@ class MapSession(MapView, Session):
         return {"quit": True}
 
     def tutorial_key(self):
-        return "group_turn" if self.turn is not None else "map"
+        key = "group_turn" if self.turn is not None else "map"
+        seen = self.guild.tutorial.seen
+        return key if key not in seen else hints.on_map(self.guild, seen) or key
+
+    def tutorial_wiki(self, key):
+        return hints.wiki_ref(key)
+
+    def resume(self):
+        return self.back()
 
     def tutorial_closed(self, key, first):
         """The map's card is the first after the draft: its first close opens the objectives, as pygame's."""

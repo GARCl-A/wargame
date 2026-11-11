@@ -6462,6 +6462,44 @@
     },
     "tutorial": {
         "default_button": "Entendi",
+        "hint": {
+            "study": {
+                "title": "Aprender com um pergaminho, um papel ou um livro",
+                "body": [
+                    "Um pergaminho, um papel de receita e um dicionário ensinam um personagem, não o grupo todo: o item precisa estar na mochila dele, e ele estuda na Taverna.",
+                    "Escolha o alvo na aba ESTUDO da Taverna e alugue um quarto silencioso: a cada dia o estudante rola rumo à lição, e o quarto é pago."
+                ]
+            },
+            "road": {
+                "title": "A estrada come rações",
+                "body": [
+                    "Cada membro come uma refeição por dia, andando ou não, e uma estrada longa são dias de refeições.",
+                    "Confira a mochila antes de partir: o mapa avisa quando as rações não aguentam a viagem, e um bando que fica sem elas passa fome."
+                ]
+            },
+            "reading": {
+                "title": "Lendo os inimigos",
+                "body": [
+                    "Na primeira vez que seu lado vê um inimigo, cada personagem que o vê rola d20 + INT para lê-lo, e o melhor resultado é de todo o lado. Quanto mais você passa da CD, mais da ficha dele se abre.",
+                    "Uma raça que a guilda já enfrentou é mais fácil de ler. Avaliar (1 ponto) rola de novo, mais forte, num inimigo."
+                ]
+            },
+            "fallen": {
+                "title": "Um personagem caiu",
+                "body": [
+                    "Com 0 PV um personagem cai, não morre, e sangra até o fim em poucas rodadas.",
+                    "Qualquer personagem pode Estabilizá-lo: um teste de Sabedoria, sem classe nem item. Primeiros Socorros faz melhor com o kit certo."
+                ]
+            },
+            "dungeon": {
+                "title": "Uma masmorra de onde se sai andando",
+                "body": [
+                    "Limpar as ruínas não encerra a luta: quando o último inimigo cai a incursão continua, e ela só é vencida quando o esquadrão saiu pela entrada.",
+                    "Baús e relíquias ficam onde as ruínas os guardam até alguém pegá-los, então o que você não leva para fora não é seu. Planeje a volta."
+                ]
+            }
+        },
+        "wiki_button": "Ver na enciclopédia",
         "draft": {
             "intro": {
                 "title": "Bem-vindo a Gartok",
@@ -6563,11 +6601,16 @@
         "battle": {
             "title": "Lutando",
             "body": [
-                "Cada personagem tem 2 pontos de ação por turno. Andar, atacar e a maioria das ações custam 1; uma ação de arma custa 2. Espaço encerra o turno; Adiar (tecla 9, ao lado da barra de ações) deixa os outros agirem primeiro, uma vez por rodada, antes de você gastar um ponto. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
+                "Cada personagem tem 2 pontos de ação por turno, e a barra iluminada embaixo é o que ele pode fazer com eles: passe o mouse numa linha abaixo e a placa dela se acende. Espaço ou o selo ao lado encerra o turno. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
                 "Você só vê o que a luz e os sentidos do personagem ativo alcançam; L mostra a visão de todo o esquadrão. Os campos ? de um inimigo são o que você ainda não leu: todos leem um inimigo ao avistá-lo, e Avaliar (1 ponto) lê mais fundo.",
                 "Com 0 PV um personagem cai, não morre: Estabilize-o ou use Primeiros Socorros antes que sangre até o fim."
-            ]
-        },
+        ],
+            "cost": {
+                "one": "{n} ponto",
+                "other": "{n} pontos"
+            },
+            "free": "Grátis"
+    },
         "loot": {
             "title": "Dividindo o espólio",
             "body": [
@@ -6905,6 +6948,27 @@
             "title": "Atropelo Limpo e Vitória Automática",
             "1": "Antes de uma emboscada, o jogo luta contra ela muitas vezes sem tela, com os dois lados na IA, e mostra quantas dessas lutas foram um atropelo limpo: todos de pé, sem poção, sem primeiros socorros, sem munição gasta. Não é a chance de vencer.",
             "2": "A VITÓRIA AUTOMÁTICA só é oferecida quando todas elas foram um atropelo limpo. Ela resolve a luta de imediato e não dá XP de combate."
+        },
+        "study": {
+            "title": "Estudar",
+            "1": "Um pergaminho, um papel de receita ou um dicionário é aprendido por um personagem: ele precisa estar na mochila dele (a cópia de um colega é passada para ele quando o estudo começa).",
+            "2": "O estudo acontece na Taverna: escolha o alvo na aba ESTUDO e alugue um quarto silencioso para o grupo.",
+            "3": "A cada dia de quarto alugado, o estudante paga ${cost} (da própria bolsa primeiro, depois da dos colegas de grupo) e rola 1d20 + INT rumo aos pontos que a lição pede; uma magia de nível 1 leva algumas semanas de dias.",
+            "4": "Sem pergaminho, sem dinheiro ou, numa magia, sem escola ainda, não há progresso no dia. Com os pontos completos, a lição é aprendida e a vaga fica livre."
+        },
+        "dungeon": {
+            "title": "Masmorras de onde se sai andando",
+            "1": "Nas Ruínas Antigas a luta não termina quando o último inimigo cai: o esquadrão precisa sair pela entrada, e só então a incursão é vencida.",
+            "2": "Baús, relíquias e o Códice Antigo ficam onde as ruínas os guardam até alguém pegá-los; o que não é levado para fora não é seu.",
+            "3": "A entrada é a saída: as casas junto à porta por onde o esquadrão entrou. Um membro que cai ou fica lá dentro não saiu.",
+            "4": "As ruínas lembram: um inimigo que caiu continua caído e o que uma mão pegou não está lá na próxima incursão, enquanto uma armadilha não disparada ou um baú fechado esperam."
+        },
+        "reading": {
+            "title": "Lendo um inimigo",
+            "1": "Na primeira vez que alguém do seu lado vê um inimigo, cada colega que o vê rola d20 + INT contra CD {dc} + o nível racial do inimigo. A melhor margem é de todo o lado.",
+            "2": "Quanto melhor a margem, mais campos da ficha do inimigo se abrem (os ? são o que você ainda não leu). Uma rolagem falha não revela nada e nunca mente.",
+            "3": "Uma raça que a guilda já enfrentou é {discount} mais fácil de ler, e uma habilidade racial que a guilda já viu sai de graça na próxima da raça.",
+            "4": "Avaliar (1 ponto) rola de novo com +{bonus} num inimigo à vista, uma vez por inimigo a cada rodada."
         },
         "or": " ou ",
         "term": {

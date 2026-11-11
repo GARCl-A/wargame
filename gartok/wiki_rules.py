@@ -10,8 +10,10 @@ from . import (
     cohesion,
     data,
     dialogue,
+    economy,
     group,
     i18n,
+    intel,
     items,
     morale,
     recruit,
@@ -32,6 +34,11 @@ def _morale_lines():
         chaotic=f"{morale.CHAOTIC:+d}", min=morale.START_MIN, ally_down=-morale.ALLY_DOWN, ally_dead=-morale.ALLY_DEAD,
         wound=-morale.HP_MARK, half=round(half * 100), quarter=round(quarter * 100),
         low=round(morale.HP_MARK_EVERY * 100), shaken=-morale.DEMORALIZED, foe_down=morale.FOE_DOWN)
+
+
+def title(section):
+    """A section's title as the wiki shows it, which is also its entry id."""
+    return i18n.t(f"wiki_rules.{section}.title")
 
 
 def sections():
@@ -77,6 +84,9 @@ def sections():
             "hunger", 7, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2],
             death=data.STARVATION_DEATH_DAYS)),
         (i18n.t("wiki_rules.stomp.title"), _lines("stomp", 2)),
+        (title("study"), _lines("study", 4, cost=economy.TAVERN_STUDY_COST_PER_DAY)),
+        (title("dungeon"), _lines("dungeon", 4)),
+        (title("reading"), _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS)),
     ]
 
 

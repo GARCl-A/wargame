@@ -16,6 +16,7 @@ from .. import (
     data,
     dialogue,
     draw,
+    hints,
     i18n,
     intel,
     item_icon,
@@ -186,7 +187,28 @@ class BattleSession(Session):
         return self.then()
 
     def tutorial_key(self):
-        return "battle" if self.guild is not None else None
+        if self.guild is None:
+            return None
+        seen = self.guild.tutorial.seen
+        return (hints.in_battle(self.guild, self.battle, seen) if "battle" in seen else None) or "battle"
+
+    def tutorial_wiki(self, key):
+        return hints.wiki_ref(key)
+
+    def tutorial_spot(self, key):
+        return ".bar, #seal" if key == "battle" else None
+
+    def tutorial_rows(self, key):
+        """The bar's standing actions, each lighting its plate while the pointer is on its row."""
+        rows = []
+        if key != "battle":
+            return rows
+        for action in (actions.ATTACK, actions.DEFEND, actions.ASSESS, actions.PUSH, actions.TAKEDOWN,
+                       actions.FLEE, actions.DELAY):
+            cost = i18n.plural("tutorial.battle.cost", action.cost) if action.cost else i18n.t("tutorial.battle.free")
+            rows.append({"stamp": {"label": cost, "style": "brass" if action.cost else "green"},
+                         "rule": action.name, "text": action.desc, "focus": f'[data-action="{action.id}"]'})
+        return rows
 
     def snapshot(self, inspect=None):
         """The board as it stands, as the one step of a fight just opened."""

@@ -170,3 +170,46 @@ def test_a_band_with_no_fight_due_has_no_swift_win():
     s = MapSession(guild)
     with pytest.raises(ValueError):
         s.act(guild.groups[0].gid, "swift_win")
+
+
+def test_the_battle_card_lists_the_bars_standing_actions_and_lights_the_bar():
+    from gartok import actions
+    game, _, g = _ambushed("w1")
+    game.session.act(g.gid, "resolve_event")
+    s = game.session
+    assert s.tutorial_key() == "battle" and s.tutorial_spot("battle") == ".bar, #seal"
+    rows = s.tutorial_rows("battle")
+    assert [r["focus"] for r in rows] == [f'[data-action="{i}"]' for i in
+                                          ("attack", "defend", "assess", "push", "takedown", "flee", "delay")]
+    on_bar = {a.id for a in actions.PANEL_ACTIONS}
+    assert all(r["focus"].split('"')[1] in on_bar for r in rows)
+    free = next(r for r in rows if "delay" in r["focus"])
+    assert free["stamp"]["style"] == "green" and next(r for r in rows if "attack" in r["focus"])["stamp"]["label"]
+
+
+def test_a_fallen_member_and_a_second_fight_fire_their_cards_after_the_battle_card():
+    game, guild, g = _ambushed("w1")
+    game.session.act(g.gid, "resolve_event")
+    s = game.session
+    assert s.tutorial_key() == "battle" and s.tutorial_wiki("battle") is None
+    guild.tutorial.dismiss("battle")
+    assert s.tutorial_key() == "battle"
+    guild.battles_won = 1
+    assert s.tutorial_key() == "hint.reading"
+    next(u for u in s.battle.units if u.team == "player").status = "dying"
+    assert s.tutorial_key() == "hint.fallen" and s.tutorial_wiki("hint.fallen") == "actions:stabilize"
+    assert s.tutorial_rows("hint.fallen") == [] and s.tutorial_spot("hint.fallen") is None
+    from gartok.web.server import _tutorial
+    assert _tutorial(s, "wiki", True) == {"screen": "wiki"} and "hint.fallen" in guild.tutorial.seen
+    assert game.session.back_to() == {"screen": "battle"} and game.session is s
+
+
+def test_a_place_the_squad_walks_out_of_fires_its_card_before_the_reading_one():
+    from gartok import hints
+    from gartok.battle import Battle
+    from gartok.scenario import AncientRuinsScenario
+    _, guild, g = _ambushed("w1")
+    guild.battles_won = 1
+    ruins = Battle(list(g.members), AncientRuinsScenario().enemies, scenario=AncientRuinsScenario())
+    assert hints.in_battle(guild, ruins, {"battle"}) == hints.DUNGEON
+    assert hints.in_battle(guild, ruins, {"battle", hints.DUNGEON}) == hints.READING

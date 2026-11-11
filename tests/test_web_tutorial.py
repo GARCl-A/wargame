@@ -9,7 +9,7 @@ import urllib.request
 
 import pytest
 
-from gartok import i18n, persist, recorder, tutorial
+from gartok import i18n, orders, persist, recorder, tutorial
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.web.draft_session import DraftSession
@@ -168,3 +168,47 @@ def test_the_reports_card_follows_its_stage():
         s.at_stage = n
         seen.append(s.tutorial_key())
     assert seen == ["memorial", "report", "level_up", "reward", "loot", None]
+
+
+# ---------------------------------------------------------------- the rule cards a trigger fires
+def test_a_studyable_item_in_a_pack_fires_its_card_once_the_maps_own_is_read(saves):
+    guild = _guild()
+    s = MapSession(guild)
+    assert s.tutorial_key() == "map"
+    guild.tutorial.dismiss("map")
+    assert s.tutorial_key() == "map"
+    guild.roster[0].give_to_pack("Scroll of Sleep")
+    assert s.tutorial_key() == "hint.study"
+    guild.tutorial.dismiss("hint.study")
+    assert s.tutorial_key() == "map"
+
+
+def test_a_band_on_the_road_fires_the_rations_card(saves):
+    guild = _guild()
+    guild.tutorial.dismiss("map")
+    s = MapSession(guild)
+    guild.groups[0].order = orders.travel(guild.groups[0], "road")
+    assert s.tutorial_key() == "hint.road"
+
+
+def test_every_hint_has_copy_and_a_wiki_entry_that_opens():
+    from gartok import hints
+    from gartok.web.wiki_session import WikiSession
+    for hid in hints.IDS:
+        assert hid in tutorial.TUTORIALS and i18n.has(f"tutorial.{hid}.title"), hid
+        WikiSession(lambda: None).open(hints.wiki_ref(hid))
+
+
+def test_the_wiki_button_dismisses_the_card_and_opens_the_wiki_over_the_map(served):
+    from gartok.web.wiki_session import WikiSession
+    url, game, guild = served
+    guild.tutorial.dismiss("map")
+    guild.roster[0].give_to_pack("Scroll of Sleep")
+    map_session = game.session
+    card, header = _call(url + "/api/tutorial")
+    assert card["key"] == "hint.study" and card["wiki"] == "rules:Studying" and card["wiki_button"]
+    answer, _ = _call(url + "/api/tutorial/wiki", {})
+    assert answer == {"screen": "wiki"} and "hint.study" in guild.tutorial.seen
+    assert isinstance(game.session, WikiSession) and game.session.focus == "Studying"
+    game.session.back_to()
+    assert game.session is map_session

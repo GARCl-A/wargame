@@ -41,6 +41,27 @@ class Session:
         """The rows of `key`'s card that the session draws from its registries (`tutorial.card`)."""
         return []
 
+    def tutorial_spot(self, key):
+        """The CSS selector of the part of the screen `key`'s card is about, lit above its veil, or None."""
+        return None
+
+    def tutorial_wiki(self, key):
+        """The wiki entry (`chapter:id`) a rule card's second button opens, or None."""
+        return None
+
+    def resume(self):
+        """Back from a screen opened over this one."""
+        self.game.open(self)
+        return {"screen": self.screen}
+
+    def open_wiki(self, ref):
+        """The wiki turned to `ref`, over this screen: its back button resumes here."""
+        from .wiki_session import WikiSession
+        wiki = WikiSession(self.resume)
+        wiki.open(ref)
+        self.game.open(wiki)
+        return {"screen": wiki.screen}
+
     def tutorials(self):
         """The `TutorialState` the card is read and dismissed in: the guild's."""
         guild = getattr(self, "guild", None)

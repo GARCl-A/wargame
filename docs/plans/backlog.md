@@ -54,11 +54,6 @@ the rest.
   `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md`: turn the 78 literals of `reference.py`
   into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
 
-- **Combat teaches itself: the tutorial and the conditions (playtest 2026-11-02, Johann 2026-10-31).**
-  The combat tutorial explains the actions: today the cards are text and did not help, so show the
-  control (a highlight on the bar) and cover each action of the bar. Web only (`screens/battle/`), with the
-  card's key in `locales/en.json`.
-
 - **Ambush on the way in, at every dangerous node (author, note outside playtests).** The Wilds, the
   Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road
   (`forced.py` rolls `world.ROAD_AMBUSH_CHANCE` once per arrival at an `unsafe` node), and the map should
@@ -157,15 +152,8 @@ the rest.
   could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
   `92c60533`); check what the pick still hides and say it in plain words.
 
-- **Rule pop-ups by trigger, with a link to the wiki (playtest 2026-11-10; Johann, 2026-10-31).** Some rules
-  slip past players. A one-time card fires on a trigger, has *Close* and *See in the wiki* (opens the wiki on
-  that entry, so the player sees what surrounds the rule); check first that each rule has a wiki entry. Cases:
-  (1) the first studyable item received (dictionary, scroll, recipe): it is learned by a character, study it at
-  the tavern; (2) the second fight of a campaign: every character rolls a free Assess at the start (highlight in
-  the combat log); (3) the first endless or exploratory dungeon: clearing it does not end it, the exit is the
-  entrance, and loot and survival depend on walking back; (4) the first player unit that falls: Stabilize, a
-  Wisdom check any character may try, no class or item needed; (5) rations: travel eats one a day (Johann).
-  Each card has its key in `locales/en.json` and its own "seen" flag in the save.
+- **Rule pop-ups by trigger: the combat log highlight (playtest 2026-11-10).** The cards are built (`gartok/hints.py`,
+  README *New rule pop-up*). Left: highlight in the combat log the read every character rolls when a fight opens.
 
 - **Apothecary & Antidote utility and tooltip clarity (author/Yohan alignment).** Fix Antidote so the Constitution save
   reliably reduces duration / clears poison or disease stacks (`unit_poison.py`). Accurately document the DC, save behavior,
@@ -211,8 +199,7 @@ the rest.
 - **Continuous / Endless Dungeon signaling (author/Yohan alignment).** UI and UX clarity for continuous exploratory dungeons:
   clearly communicate to the player that there is no traditional "Victory" screen upon clearing a floor. Spoil retention
   and character survival depend entirely on the voluntary decision to retreat back to the entrance point. The
-  first-entry card is case (3) of *Rule pop-ups by trigger* (*Small*); this item is the permanent signal on the map
-  and the confirm dialog.
+  first-entry card is built (`hints.DUNGEON`); this item is the permanent signal on the map and the confirm dialog.
 
 - **Intimidation build rework & mathematical tuning (author/Yohan alignment).** Overhaul the mathematical progression, DCs,
   and action economy for the Intimidation combat build (Demoralize, Provoke, and associated Charisma/Wisdom talents) to raise
