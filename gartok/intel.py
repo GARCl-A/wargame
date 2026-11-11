@@ -175,13 +175,20 @@ def observe(battle, team):
         if foe in intel.margin[team]:
             continue
         need = dc(battle, team, foe)
-        margin = max(_roll(battle, team, m) for m in seers) - need
+        total, reader = max(((_roll(battle, team, m), m) for m in seers), key=lambda r: r[0])
+        margin = total - need
         slug = _slug(foe)
         if best is not None and slug in best.named:
             margin = max(margin, best.named[slug])
+        before = _open(battle, team, foe)
         _store(battle, team, foe, margin)
         if best is not None:
             best.races.add(foe.race["name"])
+        if team == "player" and hasattr(battle, "log_lines"):
+            opened = sorted(_open(battle, team, foe) - before, key=list(FIELDS).index)
+            battle.log("log.read", actor=reader.name, target=foe.name, total=total, dc=need,
+                       learned=", ".join(label(f) for f in opened) or i18n.Msg("log.assess_nothing"))
+            battle.log_lines[-1].mark = "read"
 
 
 def visible_foes(battle, unit):

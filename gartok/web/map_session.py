@@ -295,7 +295,7 @@ class MapSession(MapView, Session):
     def _member(self, u, g):
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "lead": u is g.leader,
                 "hp": u.hp, "hp_max": u.hp_max, "hungry": u.hunger_level > 0, "sick": bool(u.sick),
-                "poisoned": bool(u.poisoned),
+                "poisoned": bool(u.poisoned), "encumbered": bool(u.encumbered),
                 "sub": i18n.t("map_session.lvl", race=u.race_label, racial_level=u.racial_level)}
 
     def _pace(self, g):

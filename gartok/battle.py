@@ -34,6 +34,7 @@ __all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
 class LogLine(str):
     """A line of the battle log that remembers the `i18n.Msg` it was rendered from (`msg`)."""
     msg = None
+    mark = None             # a kind the screen lights ("read": the opening read of a foe)
 
 FLAG_RUNNERS = 1        # a person sends one runner for the flag and keeps the rest home
 

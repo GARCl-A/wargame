@@ -33,7 +33,7 @@ from .attack import (
     _try_shove,
     _try_throw,
 )
-from .common import _wants_alive
+from .common import _instinctive, _wants_alive
 from .flee import (
     SKITTISH_STAMINA,
     _leave_fire,

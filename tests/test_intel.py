@@ -419,3 +419,17 @@ def test_a_lab_seed_rebuilds_the_same_fight_names_and_opening_reads_included():
         return ([(u.name, u.equipped_weapon) for u in battle.units], battle.intel.rng.random())
 
     assert fight() == fight()
+
+
+def test_the_opening_read_is_a_marked_line_in_the_log_once_per_foe():
+    batt, hero, (foe,) = _fight()
+    intel.observe(batt, "player")
+    intel.observe(batt, "player")
+    reads = [ln for ln in batt.log_lines if getattr(ln, "mark", None) == "read"]
+    assert len(reads) == 1 and hero.name in reads[0] and foe.name in reads[0] and "vs DC" in reads[0]
+
+
+def test_the_foe_side_reads_without_a_line_in_the_players_log():
+    batt, _hero, _foes = _fight()
+    intel.observe(batt, "enemy")
+    assert not [ln for ln in batt.log_lines if getattr(ln, "mark", None) == "read"]

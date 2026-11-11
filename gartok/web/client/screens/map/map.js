@@ -94,7 +94,7 @@ function bandCard(b) {
     return `<div class="mem">
           ${medal(m)}
           <div class="who">
-            <b><span class="nm">${esc(m.name)}</span>${m.lead ? `<em>${tr("map.leads")}</em>` : ""}${m.sick ? `<em class="ill">${tr("map.sick")}</em>` : ""}${m.poisoned ? `<em class="ill">${tr("map.poisoned")}</em>` : ""}</b>
+            <b><span class="nm">${esc(m.name)}</span>${m.lead ? `<em>${tr("map.leads")}</em>` : ""}${m.sick ? `<em class="ill">${tr("map.sick")}</em>` : ""}${m.poisoned ? `<em class="ill">${tr("map.poisoned")}</em>` : ""}${m.encumbered ? `<em class="ill">${tr("map.encumbered")}</em>` : ""}</b>
             <small>${esc(m.sub)}</small>
           </div>
           <div class="hp">

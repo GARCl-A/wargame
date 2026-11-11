@@ -139,6 +139,7 @@ class Combatant:
                      if data.AMMO_ITEM in self.inventory else 0)
         # a crossbow holds one bolt at a time and starts the fight with one chambered from the quiver
         self.crossbow_loaded = False
+        self.last_damage = None
         if self.weapon.get("reload") and self.ammo > 0:
             self.ammo -= 1
             self.crossbow_loaded = True
@@ -848,10 +849,25 @@ class Combatant:
         bonus_damage += self.run_down_bonus("run_down_damage")
         if crit:
             brutal += self.crit_brutal()
-        total = sum(roll(n, faces) + bonus for _ in range(1 + brutal)) + bonus_damage
-        if crit:
-            total *= max(1, crit_mult or w.get("crit_mult", 2))
+        dice = [roll(n, faces) for _ in range(1 + brutal)]
+        total = sum(d + bonus for d in dice) + bonus_damage
+        mult = max(1, crit_mult or w.get("crit_mult", 2)) if crit else 1
+        total *= mult
+        self.last_damage = {"dice": f"{n}d{faces}" if len(dice) == 1 else f"{len(dice)}x{n}d{faces}", "rolls": dice, "mod": bonus * len(dice), "flat": bonus_damage, "mult": mult}
         return max(1, total)
+
+    def damage_detail(self):
+        """The last `damage_roll` as the log prints it: `2d6(3+5) +2 x2`, each term the rule added."""
+        d = self.last_damage
+        if d is None:
+            return ""
+        text = f"{d['dice']}({'+'.join(map(str, d['rolls']))})"
+        extra = d["mod"] + d["flat"]
+        if extra:
+            text += f" {extra:+}"
+        if d["mult"] > 1:
+            text = f"({text}) x{d['mult']}"
+        return text
 
     def take_damage(self, amount, log, knockout=False, ignore_dr=False):
         if not ignore_dr:

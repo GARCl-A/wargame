@@ -101,12 +101,6 @@ the rest.
   light and fog layers at a lower resolution; skip the repaint of those layers when an action did not change
   what the side sees; paint a first frame (cached floor) before the light.
 
-- **The dictionary crafts too fast (playtest 2026-11-01).** One was made on day 18 in about 4 or 5 hours.
-  Target (author 2026-11-04): a character with INT 10 and no bonus takes about 3 days. Find the time the
-  craft takes (`craft_level.py` and the recipe) and bring it to that, without lengthening the other
-  crafts (the author fears slow, boring crafts): check their times against the dictionary's before
-  touching any.
-
 - **Is a STR/CON-heavy draft objectively best? (author 2026-11-01).** The author drafts a Charisma leader
   plus the strongest, toughest bodies for the rest and cannot tell bias from fact. Measure with the headless
   fights and the economy sim: squads built on max STR/CON against squads spread over other attributes, at
@@ -125,16 +119,6 @@ the rest.
   +1 reach (if it has one), so a weapon's entry must list every property it carries, read off its
   `ItemDef`.
 
-- **Wiki: dynamic alphabetical chapter ordering & Conditions vs Keywords.** Sort wiki chapters dynamically
-  by translated label (`locales/*.json`) so ordering is natural in all languages. Check whether "Fleeing" belongs
-  under Conditions (`conditions.py`) rather than Keywords.
-
-- **Map screen: overencumbered member tag (author 2026-11-08).** In the band member dropdown on the left side
-  of the map screen, add an "overencumbered" tag alongside the existing "leading" and "hungry" status tags.
-
-- **Combat log: full damage roll breakdown (author 2026-11-08).** The log currently displays the hit roll
-  breakdown but not the damage roll. Add damage roll detail at the same level of transparency.
-
 - **AI heuristics: Shove vs Attack x2 (playtest 2026-11-08).** Review AI combat priorities when surrounded or
   flanked. Ensure the AI does not overvalue shoving a foe away (to break flanking or force movement) over
   attacking twice to eliminate or soften an immediate threat.
@@ -152,9 +136,6 @@ the rest.
   could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
   `92c60533`); check what the pick still hides and say it in plain words.
 
-- **Rule pop-ups by trigger: the combat log highlight (playtest 2026-11-10).** The cards are built (`gartok/hints.py`,
-  README *New rule pop-up*). Left: highlight in the combat log the read every character rolls when a fight opens.
-
 - **Apothecary & Antidote utility and tooltip clarity (author/Yohan alignment).** Fix Antidote so the Constitution save
   reliably reduces duration / clears poison or disease stacks (`unit_poison.py`). Accurately document the DC, save behavior,
   and cure mechanics in the in-game wiki and display this info on the inventory item hover tooltip and band kit screen.
@@ -162,10 +143,6 @@ the rest.
 - **Pickaxe targeted bonus damage vs. metal (author/Yohan alignment).** Tool and weapon overhaul: grant the Pickaxe a
   targeted bonus damage modifier specifically against targets equipped with metal armor and against metallic
   structures/fortifications, establishing it as a dedicated tactical counter against heavy units.
-
-- **AI: Creature-specific action restrictions (author/Yohan alignment).** Restrict unnatural or illogical tactical actions
-  for beasts and monsters in combat AI (`ai/`). Predators (e.g., wolves, bears, spiders) must not use human tactical actions
-  such as First Aid / "Stabilize" on fallen allies or perform complex humanoid maneuvers.
 
 - **AI: Crowd-control-aware target decision (author/Yohan alignment).** Improve AI action sequencing when applying control
   effects: when a boss, caster or controller inflicts Sleep or similar incapacitation that breaks on damage, nearby AI
@@ -185,12 +162,6 @@ the rest.
   said how hard it was. Show a danger hint on a node or fight before entering (a level range, or "easy /
   hard for this group") built on `encounters.pack_power`, compared with the group's own power. Web map and
   the fight's confirm dialog, tests that the hint matches `pack_power`.
-
-- **Armor material categorization (author/Yohan alignment).** An enum field on each armor's `ItemDef`, `armor_material`,
-  with two values today: leather and metal (every armor in `items.py` gets one, a test fails on a missing one). The name
-  stays apart from `ItemDef.material`, the existing bool that marks a raw crafting input (tooltip, `is_material`). It is
-  the foundation for material-specific rules; the first is the Pickaxe's bonus damage, only against metal armor
-  (*Small*, *Pickaxe targeted bonus*). Lightning conductivity and spell vulnerabilities come later.
 
 - **"Modifiers Matter" feedback in combat log and panel (author/Yohan alignment).** Visual combat log and UI enhancement
   (inspired by Pathfinder 2e's *Modifiers Matter* module): visibly highlight whenever a passive bonus, aura, trait, or

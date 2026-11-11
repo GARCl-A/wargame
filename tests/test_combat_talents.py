@@ -457,3 +457,21 @@ def test_anatomist_crit_range_full_intel():
     with fixed_d20(19):
         res = actions.base._resolve_hit(b, c, cf, 19, 0, "+0", "Test")
         assert res == "crit"
+
+
+def test_a_hit_logs_its_damage_roll_dice_and_modifiers():
+    b, c1, _, cf = _squad_battle()
+    cf.hp, cf.hp_max = 50, 50
+    with fixed_d20(15):
+        actions._strike(b, c1, cf)
+    line = next(x for x in b.log_lines if "Damage:" in x)
+    dealt = 50 - cf.hp
+    assert f"= {dealt}" in line and c1.damage_detail().split("(")[0] in line
+
+
+def test_a_critical_hit_logs_the_multiplier():
+    b, c1, _, cf = _squad_battle()
+    cf.hp, cf.hp_max = 50, 50
+    with fixed_d20(20):
+        actions._strike(b, c1, cf)
+    assert "x2" in next(x for x in b.log_lines if "Damage:" in x)

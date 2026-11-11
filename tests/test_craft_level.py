@@ -69,3 +69,10 @@ def test_the_game_reads_the_level_where_a_shift_banks_its_xp():
     u = Unit("player")
     assert u.bank_work(4, items.CRAFTING_RECIPES["Antidote"].level)
     assert u.work_hours == 4 * (items.CRAFTING_RECIPES["Antidote"].level + 1)
+
+
+def test_a_dictionary_takes_three_16_hour_days_at_an_average_roll():
+    from gartok import gather
+    for name, rl in items.CRAFTING_RECIPES.items():
+        if name.startswith("Dictionary of "):
+            assert craft_level.batch_hours(rl[0]) == pytest.approx(3 * gather.DAY_HOURS, abs=0.1), name

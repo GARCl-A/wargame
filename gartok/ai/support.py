@@ -2,7 +2,7 @@
 
 from .. import actions, intel
 from ..board import cells, cells_distance
-from .common import _axes, _spell_can
+from .common import _axes, _instinctive, _spell_can
 
 
 def _try_healing_touch(battle, unit):
@@ -118,7 +118,7 @@ def _ally_to_help(battle, unit):
     """A downed ally this unit wants to stabilize -- only if it is of good bent (it will spend the
     action to save a friend). With a foe in reach of a blow it fights on, unless the ally is a turn
     from its death save: the others have time to be stable by the time the foe is dealt with."""
-    if _axes(unit)[1] <= 0:
+    if _axes(unit)[1] <= 0 or _instinctive(unit):
         return None
     pressed = any(actions.ATTACK.can(battle, unit, f) for f in battle.units if f.alive and f.team != unit.team)
 

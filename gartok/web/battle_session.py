@@ -545,6 +545,7 @@ class BattleSession(Session):
             "trail": [_cell(c) for c in b.active.path] if my_turn and len(b.active.path) >= 2 else [],
             "inspect": self._inspect(inspect, obs, my_turn),
             "log": list(b.log_lines[-LOG_LINES:]),
+            "log_marks": {i: ln.mark for i, ln in enumerate(b.log_lines[-LOG_LINES:]) if getattr(ln, "mark", None)},
             "flags": {"mopping_up": b.mopping_up, "binding": b.binding_captives, "ctf": b.is_ctf,
                       "can_withdraw": bool(b.can_withdraw and self.controllers["player"] == "human"
                                            and self.talk is None and b.winner is None),

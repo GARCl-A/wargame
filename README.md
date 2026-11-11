@@ -315,6 +315,7 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   default)` (`actions.base.item_ref(name)` for an item), a sentence inside a line an `i18n.Msg`; both resolve when the
   line is rendered. An action's `name` and `desc` are its `action.<id>.name` / `.desc` (`i18n.Text`, no class literal);
   its `label()` and blocked reasons are `action.<id>.label` / `.reason`.
+  A line the screen should light gets a kind on the `LogLine` (`battle.log_lines[-1].mark = "read"`, as `intel.observe` does); the battle state sends it in `log_marks` and the client puts it on the line as a CSS class.
 - **Text in the web client**: a key under `ui.` in `locales/en.json`; a script reads it with `tr("group.key",
   {name: value})`, a count with `trn("unit.day", n)` (`unit.day.one` / `.other`), a page's fixed label is
   `data-t="group.key"` (`data-t-tip` for a tooltip). The shell fetches `/api/locale` before it draws a screen,

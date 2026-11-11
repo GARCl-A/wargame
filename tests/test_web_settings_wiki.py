@@ -374,3 +374,26 @@ def test_a_keyword_is_written_once_and_every_other_text_says_only_the_word():
         assert "twice over" not in path.read_text(encoding="utf-8"), path
     for name in ("actions/weapon_actions.py", "weapon_traits.py"):
         assert not re.search(r"\bdouble\b", (root / name).read_text(encoding="utf-8")), name
+
+
+def test_the_wiki_orders_chapters_and_entries_by_what_the_player_reads(saves, monkeypatch):
+    from gartok.web import wiki_session
+
+    w = WikiSession(lambda: {"screen": "title"})
+    labels = [c["label"] for c in w.state()["chapters"]]
+    assert labels == sorted(labels, key=wiki_session.alpha)
+    names = [e["name"] for e in w.state()["entries"]]
+    assert names == sorted(names, key=wiki_session.alpha)
+    monkeypatch.setattr(wiki_session.i18n, "lab", lambda t: {"Items": "Zeta", "Rules": "Árvore"}.get(t, t))
+    labels = [c["label"] for c in w.state()["chapters"]]
+    assert labels[:3] == ["Actions", "Árvore", "Beasts"] and labels[-1] == "Zeta"
+    assert wiki_session.alpha("Árvore") == "arvore" and wiki_session.alpha("Água") < wiki_session.alpha("Bola")
+
+
+def test_a_keyword_that_names_the_routed_condition_links_to_its_conditions_entry(saves):
+    w = WikiSession(lambda: {"screen": "title"})
+    morale = next(e for e in w.chapter("keywords")["entries"] if e["id"] == "morale")
+    link = next(x for x in morale["links"] if x["label"] == "Routed")
+    assert link["ref"] == "conditions:routed" and "morale spent" in link["tip"].lower()
+    assert "routed" not in {e["id"] for e in w.chapter("keywords")["entries"]}
+    assert w.open(link["ref"])["focus"] == "routed"

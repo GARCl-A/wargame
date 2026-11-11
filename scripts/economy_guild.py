@@ -688,8 +688,8 @@ class Sim:
                         for n in supplies:
                             if not crafter.count_of(n):
                                 mkt.buy(crafter, n)
-                    for _ in range(3):
-                        self.guild.crafting_shift(crafter, dict_name, 4)
+                    for _ in range(5):
+                        self.guild.crafting_shift(crafter, dict_name, gather.DAY_HOURS)
                         if crafter.count_of(dict_name):
                             break
                     has_dict = any(u.has_item(dict_name) for u in self.members)
@@ -1500,7 +1500,7 @@ class Balanced(Policy):
         if self.mission is None:
             self.mission = missions.accept(sim.guild, crafter, missions.LIBRARY_DICTIONARY)
         mission = self.mission
-        for _ in range(8):
+        for _ in range(16):
             sim.guild.crafting_shift(crafter, self.DICTIONARY, 4)
             if crafter.count_of(self.DICTIONARY):
                 break

@@ -263,7 +263,6 @@ Reserved words of the rules: each always means the one thing written here.
 | Dying | Dying: at 0 HP a fighter is down on its cell and its death clock runs. On its 4th turn down it makes a death save (d20, 11 or more lives: it is Knocked out; less dies). Each hit on a dying body ticks the clock once. Stabilize and First Aid save it on the spot. |
 | Knocked out | Knocked out: 0 HP and unconscious, out of the fight; it survives the battle. A hit on a knocked-out body puts it back to Dying. A foe dropped by a Non-lethal blow is knocked out, not dying. |
 | Morale | Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed. |
-| Routed | Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again. |
 | Reach | Reach: how far a melee attack can be made, in squares. Every weapon has Reach 1 (the adjacent squares), so only a longer one says so: a Glaive has Reach 2. |
 | Distance | Distance: how far a shot flies, in squares: a Crossbow's Distance 18, a thrown weapon's Thrown 6. It is the range of a ranged attack, never of a melee one, which has Reach. |
 

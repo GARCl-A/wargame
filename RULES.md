@@ -968,6 +968,7 @@ shown (`intel.known_fields`).**
 - **The opening read:** the first time anyone on a side sees a foe, every teammate that sees it
   rolls d20 + INT modifier (+ the Scholars' +2) against `DC = 8 + the foe's racial level`
   (2 lower against a race the guild has fought); the best margin is stored and shared by the side.
+  The player's log writes the best roll as one lit line (`LogLine.mark = "read"`): who read the foe, the total against the DC and the fields it opened.
   Margin **≥ 0** opens damage die, speed, level and the racial ability (name and effect
   together, like every ability); **≥ +5** opens to-hit and damage bonus, AC and mental defense;
   **≥ +10** opens the attributes, exact and maximum HP, talents, known spells and the artefact's

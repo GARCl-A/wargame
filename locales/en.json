@@ -1734,6 +1734,7 @@
       "leads": "Leads",
       "sick": "Sick",
       "poisoned": "Poisoned",
+      "encumbered": "Overencumbered",
       "hp": "{a} / {b} HP",
       "merge": "Merge",
       "merge_em": "a band standing here",
@@ -2261,6 +2262,7 @@
       "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> misses."
     },
     "brutal": "  {why}: Brutal {n}!",
+    "damage_roll": "  Damage: {detail} = {dmg}",
     "brutal_savage": "Savage Attacks",
     "ambush_shot": {
       "brutal": "The bolt finds an unready target"
@@ -2486,6 +2488,7 @@
     "signal_horn": "{actor} blows the Signal Horn! {allies} gain +{n} initiative.",
     "assess": "{actor} studies {target}: d20 + INT + {bonus} = {total} vs DC {dc}  -> {learned}.",
     "assess_nothing": "nothing new",
+    "read": "{actor} reads {target}: d20 + INT = {total} vs DC {dc}  -> {learned}.",
     "secret_door": "{actor} inspects the wall and triggers a hidden lever! A secret door slides open at {cell}.",
     "finds_hiding": "{actor} searches and finds {target} hiding at {cell}!",
     "finds_nothing": "{actor} searches the dark around them and finds nothing.",
@@ -3960,7 +3963,6 @@
     "keyword": {
       "brutal": "Brutal",
       "morale": "Morale",
-      "routed": "Routed",
       "critical_hit": "Critical hit",
       "flanked": "Flanked",
       "shove": "Shove",
@@ -6170,7 +6172,6 @@
     "keyword": {
       "brutal": "Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2.",
       "morale": "Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed.",
-      "routed": "Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again.",
       "critical_hit": "Critical hit: a natural 20 on the hit roll. It hits whatever the AC, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so.",
       "flanked": "Flanked: a foe is flanked when you and an ally are both next to it, on opposite sides, and a flanked foe is off-guard. An ally merely next to the foe is not a flank.",
       "shove": "Shove: moves the target 1 cell straight back. A pit behind it drops the target in; a wall or a body behind it stops the shove. Push, Repel Strike and Tail Sweep shove; Mighty Shove throws the target 3 cells instead.",
