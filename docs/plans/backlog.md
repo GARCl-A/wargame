@@ -62,7 +62,7 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
 
 - **Combat teaches itself: the tutorial and the conditions (playtest 2026-11-02, Johann 2026-10-31).**
-  (1) The combat tutorial explains the actions: today the cards are text and did not help, so show the
+  The combat tutorial explains the actions: today the cards are text and did not help, so show the
   control (a highlight on the bar) and cover each action of the bar. Web only (`screens/battle/`), with the
   card's key in `locales/en.json`.
 
@@ -258,11 +258,6 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   first-entry card is case (3) of *Rule pop-ups by trigger* (*Small*); this item is the permanent signal on the map
   and the confirm dialog.
 
-- **Assess action utility buff & tactical rework (author/Yohan alignment).** Restructure the reward for spending an action on
-  Assess: make it a competitive tactical choice against direct attacks or spells by granting substantial combat value
-  (revealing resistances, exposing vulnerabilities, granting to-hit/crit bonuses against the target). Ties into the planned
-  Intelligence combat tree.
-
 - **Intimidation build rework & mathematical tuning (author/Yohan alignment).** Overhaul the mathematical progression, DCs,
   and action economy for the Intimidation combat build (Demoralize, Provoke, and associated Charisma/Wisdom talents) to raise
   its win rate and tactical reliability in battle.
@@ -294,7 +289,9 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   requiring food variety and culinary planning. (Supersedes the old combat-buff cooking concept).
   Decided 2026-11-10: each unit keeps the foods it ate in the last 7 days, an ordered list of 7 entries (a saved
   `Unit` field with a neutral default in `SAVE_DEFAULTS`). Open: how many distinct entries count as varied and
-  how much morale a repeat costs; what Rotten Food is for (compost at the Farm or a crafting material).
+  how much morale a repeat costs. Rotten Food (decided 2026-11-11): it is thrown away, eaten by a Gnoll, and
+  an emergency ration so a badly planned group does not starve (RULES.md, *Rotten Food is not a ration*);
+  later it is compost when the guild can farm.
 
 - **AI Leveling & Large Guild Build Planner (author/Yohan alignment).**
   (1) AI leveling logic for rival/opponent guilds so opposing factions build cohesive, optimized characters.
@@ -337,12 +334,9 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   arc's core content (author 2026-10-19). (2) *Tuning after playtests:* the numbers for the Battlefield,
   the Snake Dragon, the Ogre Wildfire, the Necromancer at the Front and the Dragon's Clutch, once campaign
   runs reach them.
-- **The sim's long game (found 2026-10-21, left for later the same day).** `economy_guild.Balanced` plays the
-  author's line: 92% of guilds meet the day-30 milestone, none die before it. Past it (the Pit, a recruit,
-  the Wilds hunt as the income) 18 of 40 die by day 60, all hunting: a lost lethal fight takes the whole
-  group. The sim gives the player `SKILL = 0.5` of the AI's losses in every fight; the author's 87 hunts
-  measure 0.84 (arena 0.44, road ambushes ~0, `combat_pairs.py`). Kept at 0.5 (the sim:
-  [../economy_sim.md](../economy_sim.md)).
+- **The sim's long game.** Past day 30 (the Pit, a recruit, the Wilds hunt as the income) 18 of 40 sim guilds
+  die by day 60, all hunting. Left: decide whether `SKILL = 0.5` (the player's share of the AI's losses)
+  stays, since the author's 87 hunts measure 0.84 (`combat_pairs.py`); see [../economy_sim.md](../economy_sim.md).
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
   group's output is another's input, the heart of the open-world vision. The Carpenter is open (2026-10-19).
   The Forge already smelts Iron Bar (2 Iron Ore + 1kg Coal). Next: wagon crafting, a crafting branch for
@@ -452,8 +446,6 @@ agent asks for art instead of generating it. Order is the suggested priority.
 
 ## Notes to remember when the case comes up
 
-- **A talent with more than one prerequisite.** The tree already draws the second requirement as a red dotted
-  line, but no talent has one yet. When the prerequisites become a list, check that this is how it reads.
 - **Roster of characters, not an army of clones (author 2026-10-31).** Many action-bar entries and each
   unit a character in its own right, friction accepted. The trade-off, named: eight identical units are
   fast to play (move, hit, hit), eight complex ones mean hundreds of buttons a turn.
@@ -566,7 +558,7 @@ items it touches. Raw feedback, not yet sized:
 - **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
   mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
   highlight of the control on the screen), or shorter cards that point at the first action. The combat
-  card is *Combat teaches itself* (*Medium*); the other screens wait for its answer.
+  card is *Combat teaches itself* (*Small*); the other screens wait for its answer.
 - **The Reputations tasks only half guide a start.** Found them "almost intuitive", not a clear "how
   to begin". Check whether the first deeds read as a path.
 - **Rations are learned the expensive way.** Travel eats rations (once a day) and he found out by
@@ -692,7 +684,7 @@ has one "Enter" button and its functions are tabs inside.
      `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets
      with no language of their own. The effect on the beast is the same as on a humanoid
      (`Demoralized`: cannot move, lower defenses). Decided (author 2026-11-04): it requires a Charisma (combat) talent and a Wisdom (combat) talent, which
-     needs the list of prerequisites (*Ready to do -> Medium*). Open: whether it also needs the holder to be
+     is the `also` prerequisite (`Talent.also`, as Ready Hand and Ambush Shot use it). Open: whether it also needs the holder to be
      able to see the beast for a turn (the existing sight check already does).
   4. *Archery (playtest 2026-11-02):* a combat talent giving +1 damage with a bow; and a second that
      adds a conditional *Brutal* to the blow, possibly "in a straight line" along the 8 directions (the
@@ -700,15 +692,17 @@ has one "Enter" button and its functions are tabs inside.
      line" is the queen's move: shooter and target aligned on a row, a column or a diagonal. The *Brutal N*
      keyword exists (`keywords.py`). Open: the tiers.
 
-- **Assess grows into an Intelligence combat tree (author 2026-10-31, author/Yohan alignment).** See
-  *Assess action utility buff & tactical rework* under *Medium*. Study the foe, and what you know grants
-  substantial combat edge (crit, to-hit, exposed weakness): a turn spent investigating becomes a competitive
-  tactical choice against direct damage. Sits beside the Intelligence talents in *Talent ideas* above.
+- **Does the Assess action itself need a reward? (author 2026-10-31, author/Yohan alignment).** The talent line
+  under Tactical Mind (Analytical Eye, Exploit Weakness, Anatomist, Surgical Strike; `talents.py`) already pays
+  for a full read, and the AI reads by expected value. Open: whether the action also reveals resistances and
+  vulnerabilities or grants a to-hit bonus on its own, so a turn spent investigating competes with a direct
+  attack even for a unit with none of those talents. Sits beside the Intelligence talents in *Talent ideas* above.
 
 - **New body actions: one per natural weapon.** A 2 AP action for `Claws`, `Bite`, `Fangs`, `Hooves` and
   `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
-  as a trait of that weapon. Open: the action for each, and which of the five knock the foe `Prone` (the
-  condition and Takedown exist, `conditions.py`, `actions/combat.py`). Each is end-to-end (rules, web tab,
+  as a trait of that weapon. Decided 2026-11-11 for `Hooves`: one action that resolves an attack, a shove
+  and a Takedown, in that order (the condition and Takedown exist, `conditions.py`, `actions/combat.py`).
+  Open: the action for each of the other four, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
   AI, tests, tutorial card). Compare with Takedown and Grab in the sim so none dominates.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
@@ -718,7 +712,7 @@ has one "Enter" button and its functions are tabs inside.
   would gate. Takedown and Stand Up are on the bar for everyone today. Ties to *Roster of characters* (*Notes to remember*) and *Levelling is vertical only*.
 
 - **Magic as the vertical progression.** The arc's work is the *Scroll of Invisibility* (*Ready to do ->
-  Medium*) and *Magic Arc, later* (*Large*). The schools are
+  Small*) and *Magic Arc, later* (*Large*). The schools are
   rival factions but not mutually exclusive for a character; magic comes strictly before Archaeology.
   Open: tier 2+ spells and any reputation penalty for rivalry.
 
@@ -737,11 +731,3 @@ has one "Enter" button and its functions are tabs inside.
   [holy_symbol_quest.md](holy_symbol_quest.md). Order (author 2026-11-04): before the next playtest. Until it
   ships, the rite starts only with a Holy Symbol from a bandit pack.
 
-- **Does an arena bout cost hours? (author 2026-11-01)** A bout advances the clock only by its rounds
-  (6 s each, `campaign.py`), which is about a minute: a squad can chain bouts the same day with no
-  meal or rest in between. That is plausible for the fight itself; the open question is whether the
-  preparation and the recovery around a bout should be an order (a stint through `MapSession.spend`),
-  and whether it matters to the economy (`scripts/economy_report.py`). Author 2026-11-10: every fight should
-  cost time (about a minute per 10 rounds, which the 6 s round already gives) and the real cost is the
-  recovery of the wounded; he suspects it could break things. Decide after the playtest shows whether bout
-  chains break anything.
