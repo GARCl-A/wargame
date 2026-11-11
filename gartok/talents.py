@@ -73,6 +73,7 @@ exactly one consumer that reads it back:
     assess_bonus      intel._roll                      --
     assess_active_bonus intel.assess                   --
     full_intel_to_hit Combatant.attack_mods            --
+    full_intel_brutal actions.base._resolve_hit        --
     grab_bonus        actions.combat.Grab              --
     push_bonus        actions.combat.Push              --
     off_guard_finesse_damage actions.base._resolve_hit     --
@@ -288,14 +289,14 @@ _LIST = [
            effects=(Effect("ally_takedown_demoralize", 1),), icon="action/boot-stomp"),
 
     Talent("tactical_mind", "combat", 1, effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
-    Talent("sharp_analysis", "combat", 2, requires="tactical_mind",
-           effects=(Effect("assess_bonus", 2),), icon="head/spectacles"),
-    Talent("combat_analysis", "combat", 2, requires="tactical_mind",
-           effects=(Effect("assess_active_bonus", 4),), icon="action/targeting"),
-    Talent("exploit_weakness", "combat", 3, requires="combat_analysis",
+    Talent("analytical_eye", "combat", 2, requires="tactical_mind",
+           effects=(Effect("assess_bonus", 2), Effect("assess_active_bonus", 2)), icon="head/spectacles"),
+    Talent("exploit_weakness", "combat", 3, requires="analytical_eye",
            effects=(Effect("full_intel_to_hit", 2),), icon="gui/convergence-target"),
-    Talent("anatomist", "combat", 3, requires="sharp_analysis",
+    Talent("anatomist", "combat", 3, requires="analytical_eye",
            effects=(Effect("full_intel_crit_range", 1),), icon="head/spectacles"),
+    Talent("surgical_strike", "combat", 4, requires="exploit_weakness",
+           effects=(Effect("full_intel_brutal", 1),), icon="action/targeting"),
 
     # ================================================================== #
     # work -- 6 attribute roots, 5 talents each = 30 talents             #

@@ -224,8 +224,8 @@ COMBOS = (
     ("imposing + gruesome + shout", "str", ("imposing", "gruesome_takedown", "inspiring_shout")),
     ("alert + iron will + iron stance", "str", ("alert", "iron_will", "iron_stance")),
     ("alert + quick wits + peripheral", "str", ("alert", "quick_wits", "peripheral_vision")),
-    ("tactical + combat analysis + exploit", "str", ("tactical_mind", "combat_analysis", "exploit_weakness")),
-    ("tactical + sharp + anatomist", "str", ("tactical_mind", "sharp_analysis", "anatomist")),
+    ("tactical + analytical eye + exploit", "str", ("tactical_mind", "analytical_eye", "exploit_weakness")),
+    ("tactical + analytical eye + anatomist", "str", ("tactical_mind", "analytical_eye", "anatomist")),
 )
 
 

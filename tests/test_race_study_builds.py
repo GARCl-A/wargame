@@ -118,3 +118,19 @@ def test_every_sweep_weapon_is_a_real_affordable_item():
             assert items.is_weapon(weapon) and rb.affordable(weapon, 5)
     assert all(items.get(w).has_trait("thrown") for w in rb.sweep_weapons("thrower", 5))
     assert outfit.budget(5) > outfit.budget(0)
+
+
+def test_the_analyst_wields_a_rapier_when_dex_beats_str_and_a_sword_otherwise():
+    seen = set()
+    for seed in range(40):
+        unit, notes = _unit("analyst", seed=seed)
+        want = "Rapier" if unit.dexterity > unit.strength else "Sword"
+        assert unit.equipped_weapon.startswith(want)
+        assert bool(unit.equipped_offhand) == ("no shield" not in notes)
+        seen.add(want)
+    assert seen == {"Rapier", "Sword"}
+
+
+def test_an_explicit_weapon_overrides_the_analysts_attribute_rule():
+    unit, _ = _unit("analyst", over={"weapon": "Hammer"})
+    assert unit.equipped_weapon.startswith("Hammer")

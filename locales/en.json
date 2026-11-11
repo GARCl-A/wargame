@@ -2326,6 +2326,9 @@
     "merciless": {
       "brutal": "Merciless"
     },
+    "surgical_strike": {
+      "brutal": "Surgical Strike"
+    },
     "sneak_attack": {
       "head": "{actor} Sneak Attack -> {target}",
       "brutal": "Sneak Attack strikes a vulnerable spot"
@@ -3264,9 +3267,9 @@
       "dread_voice": "Dread Voice",
       "grim_chorus": "Grim Chorus",
       "tactical_mind": "Tactical Mind",
-      "sharp_analysis": "Sharp Analysis",
-      "combat_analysis": "Combat Analysis",
+      "analytical_eye": "Analytical Eye",
       "exploit_weakness": "Exploit Weakness",
+      "surgical_strike": "Surgical Strike",
       "anatomist": "Anatomist",
       "brawny": "Brawny",
       "piecework": "Piecework",
@@ -5698,9 +5701,9 @@
       "dread_voice": "A Demoralize of yours that lands takes 2 morale from the foe instead of 1.",
       "grim_chorus": "When an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language).",
       "tactical_mind": "+1 Intelligence.",
-      "sharp_analysis": "+2 on all Assess and enemy observation checks.",
-      "combat_analysis": "+4 on active Assess checks made during battle.",
+      "analytical_eye": "+2 on all Assess and enemy observation checks, and +2 more on the Assess action made during battle.",
       "exploit_weakness": "+2 to hit against enemies with Full Intel.",
+      "surgical_strike": "Your attacks against a target with Full Intel are Brutal 1.",
       "anatomist": "Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
       "brawny": "+1 Strength.",
       "piecework": "+20% coin from work that pays in coin.",

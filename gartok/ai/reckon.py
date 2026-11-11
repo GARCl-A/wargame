@@ -10,6 +10,7 @@ from .common import _avg_die, _hand_die, _runs_flag
 D20_STEP = 0.05            # one point on a d20 roll
 UNKNOWN_MORALE = morale.BASE + 1     # the morale a side guesses for a foe it has not read: an average fighter's start
 ROUT_ROUNDS = 1            # rounds of a foe's blows that breaking its nerve takes off the field (it may rally)
+READ_ROUNDS = 2            # rounds of the side's blows a full read of a foe is counted over
 
 
 def _spell_odds(battle, unit, target, spell):
@@ -154,6 +155,34 @@ def _demoralize_worth(battle, unit, target):
     return odds * worth
 
 
+def _read_odds(battle, unit, foe):
+    """Chance an Assess by `unit` takes its side's read of `foe` to full: the same d20 as `intel.assess`."""
+    bonus = (unit.mod_intelligence + battle.intel.bonus[unit.team] + intel.ASSESS_BONUS
+             + unit.char.talent_bonus("assess_bonus") + unit.char.talent_bonus("assess_active_bonus"))
+    need = intel.HARD + intel.dc(battle, unit.team, foe) - bonus
+    return max(0.0, min(1.0, (21 - need) / 20))
+
+
+def _read_worth(battle, unit, foe):
+    """The hit points an Assess of `foe` is expected to be worth: the odds it reaches full intel times what the
+    blows of the side gain from that read (Exploit Weakness' hit, Anatomist's crit range, Surgical Strike's
+    Brutal), over `READ_ROUNDS` rounds of two points each, a striker's share on `foe` being one of the foes
+    still standing. Zero when nobody on the side holds such a talent."""
+    foes = sum(1 for f in battle.units if f.alive and f.team != unit.team)
+    if not foes:
+        return 0.0
+    gain = 0.0
+    for a in battle.units:
+        if not (a.alive and a.team == unit.team):
+            continue
+        char = a.char
+        step = (char.talent_bonus("full_intel_to_hit") + char.talent_bonus("full_intel_crit_range")) * D20_STEP
+        brutal = char.talent_bonus("full_intel_brutal")
+        if step or brutal:
+            gain += 2 * READ_ROUNDS / foes * _blow(a) * (step + _hit_odds(battle, a, foe) * brutal)
+    return _read_odds(battle, unit, foe) * gain
+
+
 def _point_worth(battle, unit, target):
     """What one point is worth as a plain strike on `target`: a swing or shot it can make now or
     after a walk this turn, else a Magic Missile, else nothing."""
@@ -207,6 +236,8 @@ def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
     if getattr(target, "demoralized", False) and hasattr(unit, "char"):
         cull = getattr(unit.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
         cull += _blow(unit, kw.get("thrown", False)) * unit.char.talent_bonus("demoralized_target_brutal")
+    if hasattr(unit, "char") and (surgical := unit.char.talent_bonus("full_intel_brutal")) and             intel.has_full_intel(battle, unit.team, target):
+        cull += _blow(unit, kw.get("thrown", False)) * surgical
     bleed = _bleed_worth(unit, target) if not kw.get("thrown") else 0
     ambush = _blow(unit) * unit.char.talent_bonus("crossbow_ambush") if (
         unit.shoots_crossbow and not kw.get("thrown") and actions.off_guard(battle, unit, target)) else 0

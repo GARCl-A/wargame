@@ -2,7 +2,7 @@
 - Strength T3: Blind Strike (reduces obscured penalty by 1)
 - Wisdom T3: Peripheral Vision (reduces flanked AC penalty from 2 to 1)
 - Charisma combat tree: Imposing, Menacing, Gruesome Takedown, Cull the Broken
-- Intelligence combat tree: Tactical Mind, Sharp Analysis, Combat Analysis, Exploit Weakness
+- Intelligence combat tree: Tactical Mind, Analytical Eye, Exploit Weakness, Anatomist
 """
 
 from gartok import actions, intel
@@ -187,7 +187,7 @@ def test_gruesome_takedown_demoralizes_nearest_foe_on_down():
 
 
 # --------------------------------------------------------------------------- #
-# Intelligence Combat Tree: Tactical Mind, Sharp/Combat Analysis, Exploit Weakness
+# Intelligence Combat Tree: Tactical Mind, Analytical Eye, Exploit Weakness, Anatomist
 # --------------------------------------------------------------------------- #
 
 def test_intelligence_combat_tree_progression():
@@ -199,23 +199,18 @@ def test_intelligence_combat_tree_progression():
     assert u.choose_talent("combat", "tactical_mind")
     assert u.intelligence == base_int + 1
 
-    # Tier 2a: Sharp Analysis (+1 on all Assess / observation)
+    # Tier 2: Analytical Eye (+2 on every read, +2 more on the Assess action)
     u.set_track_level("combat", 2)
-    assert u.choose_talent("combat", "sharp_analysis")
+    assert u.choose_talent("combat", "analytical_eye")
     assert u.talent_bonus("assess_bonus") == 2
+    assert u.talent_bonus("assess_active_bonus") == 2
 
-    # Tier 2b / Tier 3: on another unit
-    u2 = _body("player", "Tactician")
-    u2.set_track_level("combat", 1)
-    u2.choose_talent("combat", "tactical_mind")
-    u2.set_track_level("combat", 2)
-    assert u2.choose_talent("combat", "combat_analysis")
-    assert u2.talent_bonus("assess_active_bonus") == 4
-
-    # Tier 3: Exploit Weakness (+2 to hit vs full intel)
-    u2.set_track_level("combat", 3)
-    assert u2.choose_talent("combat", "exploit_weakness")
-    assert u2.talent_bonus("full_intel_to_hit") == 2
+    # Tier 3: both riders ask for it; Exploit Weakness (+2 to hit vs full intel)
+    u.set_track_level("combat", 3)
+    assert u.choose_talent("combat", "exploit_weakness")
+    assert u.talent_bonus("full_intel_to_hit") == 2
+    u.set_track_level("combat", 4)
+    assert u.choose_talent("combat", "anatomist")
 
 
 def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
@@ -223,7 +218,7 @@ def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "tactical_mind")
     u.set_track_level("combat", 2)
-    u.choose_talent("combat", "combat_analysis")
+    u.choose_talent("combat", "analytical_eye")
     u.set_track_level("combat", 3)
     u.choose_talent("combat", "exploit_weakness")
 
@@ -439,7 +434,7 @@ def test_anatomist_crit_range_full_intel():
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "tactical_mind")
     u.set_track_level("combat", 2)
-    u.choose_talent("combat", "sharp_analysis")
+    u.choose_talent("combat", "analytical_eye")
     u.set_track_level("combat", 3)
     assert u.choose_talent("combat", "anatomist")
     assert u.talent_bonus("full_intel_crit_range") == 1

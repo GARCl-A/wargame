@@ -2344,6 +2344,9 @@
         "merciless": {
             "brutal": "Impiedoso"
         },
+        "surgical_strike": {
+            "brutal": "Golpe Cirúrgico"
+        },
         "sneak_attack": {
             "head": "{actor} Ataque Furtivo -> {target}",
             "brutal": "O Ataque Furtivo acerta um ponto fraco"
@@ -5680,9 +5683,9 @@
             "dread_voice": "Voz do Pavor",
             "grim_chorus": "Coro Sinistro",
             "tactical_mind": "Mente Tática",
-            "sharp_analysis": "Análise Aguçada",
-            "combat_analysis": "Análise de Combate",
+            "analytical_eye": "Olhar Analítico",
             "exploit_weakness": "Explorar Fraqueza",
+            "surgical_strike": "Golpe Cirúrgico",
             "anatomist": "Anatomista",
             "brawny": "Musculoso",
             "piecework": "Trabalho por Peça",
@@ -6195,9 +6198,9 @@
             "dread_voice": "Um Desmoralizar seu que acerta tira 2 de moral do inimigo em vez de 1.",
             "grim_chorus": "Quando um aliado abate um inimigo, você faz um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
             "tactical_mind": "+1 de Inteligência.",
-            "sharp_analysis": "+2 em todos os testes de Avaliar e de observação do inimigo.",
-            "combat_analysis": "+4 nos testes ativos de Avaliar feitos durante a batalha.",
+            "analytical_eye": "+2 em todos os testes de Avaliar e de observação do inimigo, e +2 a mais na ação Avaliar feita durante a batalha.",
             "exploit_weakness": "+2 para acertar contra inimigos com Informação Completa.",
+            "surgical_strike": "Seus ataques contra um alvo com Informação Completa são Brutais 1.",
             "anatomist": "Sua margem de Acerto crítico aumenta em 1 contra inimigos com Informação Completa (crítico com 19-20).",
             "brawny": "+1 de Força.",
             "piecework": "+20% de moedas em trabalhos que pagam em moedas.",

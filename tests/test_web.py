@@ -686,7 +686,7 @@ def test_a_save_opens_the_map_through_the_same_router(tmp_path, monkeypatch):
 
 
 def test_the_side_gets_only_the_lights_it_sees_and_the_levels_leave_them_to_the_client():
-    s = _session("lair", seed=3)
+    s = _session("lair", seed=1)
     _to_my_turn(s)
     st, b = s.state(), s.battle
     visible = {tuple(c) for c in st["visible"]}

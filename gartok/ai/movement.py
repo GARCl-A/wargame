@@ -3,7 +3,8 @@
 from .. import actions, intel, items, vision
 from ..board import cells, cells_distance, grid_distance, line_cells
 from .common import _other_side
-from .target import _approach_reach
+from .reckon import _point_worth, _read_odds, _read_worth
+from .target import _approach_reach, _target
 
 CROWDED_CROSSING = 3      # steps a crossing with a mate at it counts farther
 CROSSING_RADIUS = 3       # how near a mate must stand to crowd a crossing
@@ -244,16 +245,16 @@ def _try_secret(battle, unit):
 
 
 def _reads_intel(team):
-    """Does someone on `team` use a full read of a foe (Exploit Weakness, Anatomist)?"""
+    """Does someone on `team` use a full read of a foe (Exploit Weakness, Anatomist, Surgical Strike)?"""
     return any(a.char.talent_bonus("full_intel_to_hit") or a.char.talent_bonus("full_intel_crit_range")
-               for a in team)
+               or a.char.talent_bonus("full_intel_brutal") for a in team)
 
 
 def _assess_target(battle, unit):
-    """The foe in sight to Assess now, or None. Assess is a point that wins nothing by itself: it
-    pays only while the side lacks a full read (`intel.has_full_intel`) that someone on it uses, an
-    Exploit Weakness / Anatomist build. The read
-    is the side's, so the best reader among those still to act takes it."""
+    """The foe in sight to Assess now, or None. Assess is a point that wins nothing by itself: it pays
+    through the talents that use a full read (`intel.has_full_intel`), so the foe taken is the one whose
+    read is worth the most (`reckon._read_worth`), and only when that beats what the point is worth as a
+    strike. The read is the side's, so the best reader among those still to act takes it."""
     team = [a for a in battle.units if a.alive and a.team == unit.team]
     if not _reads_intel(team) or not actions.ASSESS.available(battle, unit):
         return None
@@ -262,15 +263,15 @@ def _assess_target(battle, unit):
             and actions.ASSESS.can(battle, unit, f)]
     if not foes:
         return None
+    worth = {f: _read_worth(battle, unit, f) for f in foes}
+    foe = max(worth, key=worth.get)
     later = battle.order[battle.turn_idx + 1:]
     readers = [a for a in team if a is unit or a in later]
-
-    def skill(a):
-        return a.mod_intelligence + a.char.talent_bonus("assess_bonus") + a.char.talent_bonus("assess_active_bonus")
-
-    if skill(unit) < max(skill(a) for a in readers):
+    if _read_odds(battle, unit, foe) < max(_read_odds(battle, a, foe) for a in readers):
         return None
-    return min(foes, key=lambda f: battle.intel.margin[unit.team].get(f, -99))
+    target = _target(battle, unit)
+    strike = _point_worth(battle, unit, target) if target is not None else 0.0
+    return foe if worth[foe] > strike else None
 
 
 def _light_globe(battle, unit, target):

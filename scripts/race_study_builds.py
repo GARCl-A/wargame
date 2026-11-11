@@ -41,6 +41,7 @@ class Build(NamedTuple):
     thrower: bool = False   # buys spares of its thrown weapon, as an archer buys Quivers
     armor_first: bool = False   # buys the armour, then the shield, then the weapon with what is left
     role: str = "melee"
+    by_attribute: tuple = ()    # (weapon when DEX beats STR, weapon otherwise), chosen once the body is rolled
 
 
 FRONT = ("brawny", "sturdy", "nimble_fingers")
@@ -73,17 +74,14 @@ BUILDS = {b.id: b for b in (
     Build("commander", "Shouts the line on", ("Hammer",), AUTO, SHIELD,
           ("imposing", "menacing", "wordless_menace", "gruesome_takedown", "inspiring_shout"),
           ("brawny", "charismatic", "sturdy", "nimble_fingers", "observant")),
-    Build("analyst", "Assess: reads the foe", ("Rapier",), AUTO, None,
-          ("tactical_mind", "combat_analysis", "sharp_analysis", "anatomist", "exploit_weakness"),
-          ("brawny", "sturdy", "clever", "nimble_fingers")),
-    Build("smart_miner", "Pick: Armor Pierce, reads the foe for crits", ("Pick",), AUTO, None,
-          ("tactical_mind", "sharp_analysis", "anatomist", "strong", "heavy_hand"),
-          ("brawny", "sturdy", "clever", "nimble_fingers")),
+    Build("analyst", "Assess: reads the foe, rapier or sword by DEX against STR, and a shield", ("Rapier",), AUTO, SHIELD,
+          ("tactical_mind", "analytical_eye", "anatomist", "exploit_weakness", "surgical_strike"),
+          ("brawny", "sturdy", "clever", "nimble_fingers"), by_attribute=("Rapier", "Sword")),
     Build("nature_caster", "Nature: Water Jet, Roots, Sleep", ("Quarterstaff",), AUTO, None,
-          ("tactical_mind", "combat_analysis", "sharp_analysis"), CASTER_WORK, ("nature",),
+          ("tactical_mind", "analytical_eye"), CASTER_WORK, ("nature",),
           (), ("water_jet", "grasping_roots", "sleep"), CASTER_MAGIC, role="caster"),
     Build("blood_caster", "Blood: Hex, Dragonfire, Magic Missile, Sleep", ("Dagger",), AUTO, None,
-          ("tactical_mind", "combat_analysis", "sharp_analysis"), CASTER_WORK, ("blood",),
+          ("tactical_mind", "analytical_eye"), CASTER_WORK, ("blood",),
           (), ("hex", "dragonfire", "magic_missile", "sleep"), CASTER_MAGIC, role="caster"),
     Build("faith_caster", "Faith: Healing Touch, Spare the Dying, Sleep, Magic Missile", ("Quarterstaff",), AUTO, None,
           ("tough", "bulwark", "hardy"), CASTER_WORK, ("faith",),
@@ -405,6 +403,9 @@ def make_unit(team, race, build_id, level, rng, *, fixed=False, drop_racial=Fals
         _cast(unit, build, level, notes)
         if fixed:
             fix_body(unit)
+        if build.by_attribute and "weapon" not in over:
+            build = build._replace(weapons=(build.by_attribute[0] if unit.dexterity > unit.strength
+                                            else build.by_attribute[1],))
         _arm(unit, build.weapons, build.armor, build.shield, build.quiver, notes, level,
              over.get("spares", THROWN_SPARES if build.thrower else 0), build.armor_first)
     unit.hp = unit.hp_max

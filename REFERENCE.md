@@ -476,10 +476,10 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Dread Voice | A Demoralize of yours that lands takes 2 morale from the foe instead of 1. | Menacing |
 | 3 | Grim Chorus | When an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language). | Gruesome Takedown |
 | 1 | Tactical Mind | +1 Intelligence. | -- |
-| 2 | Sharp Analysis | +2 on all Assess and enemy observation checks. | Tactical Mind |
-| 2 | Combat Analysis | +4 on active Assess checks made during battle. | Tactical Mind |
-| 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | Combat Analysis |
-| 3 | Anatomist | Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Sharp Analysis |
+| 2 | Analytical Eye | +2 on all Assess and enemy observation checks, and +2 more on the Assess action made during battle. | Tactical Mind |
+| 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | Analytical Eye |
+| 3 | Anatomist | Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Analytical Eye |
+| 4 | Surgical Strike | Your attacks against a target with Full Intel are Brutal 1. | Exploit Weakness |
 
 ### Work track
 

@@ -354,24 +354,6 @@ def free_step_section(st, lv):
     return "\n".join(out)
 
 
-def crit_section(st, lv):
-    out = []
-    for bid in ("smart_miner",):
-        m = st.units.get((lv, bid))
-        if not m:
-            continue
-        rows_ = []
-        for name in ("attack", "armor_pierce"):
-            rolls = m["acts"][f"hit.{name}"] + m["acts"][f"miss.{name}"]
-            crits, dmg, critdmg = m["acts"][f"crit.{name}"], m["acts"][f"dmg.{name}"], m["acts"][f"critdmg.{name}"]
-            hits = m["acts"][f"hit.{name}"]
-            normal = (dmg - critdmg) / max(hits - crits, 1)
-            rows_.append((name, m["acts"][name], rolls, crits, f"{100 * crits / rolls:.1f}%" if rolls else "-",
-                          f"{normal:.1f}", f"{critdmg / crits:.1f}" if crits else "-"))
-        out.append(table(["action", "used", "rolls", "crits", "crit rate", "damage of a normal hit", "damage of a crit"], rows_))
-    return "\n".join(out)
-
-
 def shield_section(st, lv):
     body = []
     for bid in rb.BUILD_IDS:
@@ -534,8 +516,6 @@ def main():
             md.append(table(["build", "variant", "score in its mirrors"], body))
             md.append("### Variant against variant\n")
             md.append(table(["build", "variant", "against", "score"], [(b, va, vb, acc) for (l, b, va, vb), acc in sorted(st.pair.items()) if l == lv]))
-            md.append("### Pick and crit (Smart Miner)\n")
-            md.append(crit_section(st, lv))
             md.append("### The random talents of the Archer\n")
             md.append(talent_section(st, lv, "archer"))
         md.append("### Weapon sweeps (against the sword and shield with Hardy, same race both sides)\n")

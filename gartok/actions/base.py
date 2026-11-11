@@ -433,6 +433,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             if merciless := int(attacker.char.talent_bonus("demoralized_target_brutal")):
                 brutal_why = brutal_why if brutal else i18n.Msg("log.merciless.brutal")
                 brutal += merciless
+        if hasattr(attacker, "char") and (surgical := int(attacker.char.talent_bonus("full_intel_brutal"))) and                 intel.has_full_intel(battle, attacker.team, target):
+            brutal_why = brutal_why if brutal else i18n.Msg("log.surgical_strike.brutal")
+            brutal += surgical
         guard_finesse = 0
         if off_guard(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
             guard_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("off_guard_finesse_damage")

@@ -465,9 +465,28 @@ def test_ai_does_not_demoralize_a_foe_already_at_the_most_stacks():
 def test_ai_assesses_only_when_the_side_has_a_use_for_the_read():
     from gartok.ai import movement
     batt, a, d = _melee_battle()
+    a.pos, d.pos = (1, 5), (15, 5)          # no blow to trade the point for
     assert movement._assess_target(batt, a) is None
     a.char.talents["combat"].append("anatomist")
     assert movement._assess_target(batt, a) is d
+
+
+def test_ai_strikes_instead_of_reading_when_the_blow_is_worth_more():
+    from gartok.ai import movement, reckon
+    batt, a, d = _melee_battle()
+    a.char.talents["combat"].append("anatomist")
+    assert reckon._read_worth(batt, a, d) < reckon._point_worth(batt, a, d)
+    assert movement._assess_target(batt, a) is None
+
+
+def test_a_read_is_worth_more_to_a_side_that_lands_more_of_the_blows_it_unlocks():
+    from gartok.ai import reckon
+    batt, a, d = _melee_battle()
+    assert reckon._read_worth(batt, a, d) == 0
+    a.char.talents["combat"].append("anatomist")
+    one = reckon._read_worth(batt, a, d)
+    a.char.talents["combat"] += ["exploit_weakness", "surgical_strike"]
+    assert reckon._read_worth(batt, a, d) > one > 0
 
 
 def test_ai_stops_assessing_a_foe_it_has_fully_read():
