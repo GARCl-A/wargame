@@ -1584,6 +1584,8 @@
             "nobody_carries": "ninguém leva nenhum",
             "in_packs": "Nas mochilas",
             "in_packs_hint": "O que o grupo já leva para cada serviço do quadro.",
+            "ask_around": "Perguntar por aí",
+            "ask_around_hint": "Uma hora de conversa com o povo daqui sobre um trabalho que você tem. Um lugar já perguntado fica respondido.",
             "nothing": "Nada em oferta aqui agora.",
             "who_signs": "Quem assina",
             "signs_hint": "O líder assina, e o serviço viaja com ele: o grupo com que ele andar o entrega.",
@@ -3682,6 +3684,9 @@
         "claim_fire": {
             "doing": "acendendo uma fogueira"
         },
+        "ask_around": {
+            "doing": "perguntando por aí"
+        },
         "repair": {
             "doing": "consertando uma carroça"
         },
@@ -3870,6 +3875,9 @@
     },
     "jobs_tab": {
         "no_job_on_this_board": "sem trabalho {tid} neste quadro",
+        "ask_around": "PERGUNTAR POR AÍ ({hours} h)",
+        "asked_here": "JÁ PERGUNTADO",
+        "no_job_to_ask_about": "{name}: nenhum trabalho em andamento, nada a perguntar",
         "that_job_is_not_on": "esse trabalho não está disponível para este grupo",
         "not_ready_to_hand_over": "{name}: ainda não está pronto para entregar",
         "this_band_does_not_hold": "{name}: este grupo não tem o trabalho",
@@ -4240,6 +4248,17 @@
     },
     "session": {
         "nobody_by_that_id_here": "ninguém com esse id aqui"
+    },
+    "investigation": {
+        "nobody_knows": "Ninguém aqui sabe nada sobre isso.",
+        "found": "{name} faz algumas pessoas falarem.",
+        "no_luck": "{name} pergunta por aí durante uma hora e não descobre nada: d20({nat}) {mod}(CAR) +{extra}(pistas) = {total} vs {dc}.",
+        "clue": {
+            "farmer_daughter": {
+                "faith_cathedral": "O Irmão Quillon se lembra dela: veio visitar o túmulo dos pais e disse que voltaria ao anoitecer. Nunca mais passou pela porta.",
+                "ledger_hold": "Os oficiais do posto de comando não a viram. Ninguém com a descrição dela passou pela estrada nas últimas semanas."
+            }
+        }
     },
     "wildfire": {
         "great_focus": "O Grande Foco",

@@ -130,6 +130,7 @@ gartok/
   solo.py           solo tasks (hospital stay, craft): one member busy apart from the group on a `solo` order
   stints.py         hours a band spends where it stands (a show, a Medic's visit, the claim's work, a repair):
                     a `work` order with its `task`, settled by `campaign.advance` when the hours are up
+  investigation.py  asking around in a place's Jobs tab: an hour of Charisma, one answer per (job, place), the clue count other rolls read
   medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; `Ward` is its tab
   rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; `Initiation` is its tab
   orders.py         what a group is doing (travel/work/interactive) and how long it takes

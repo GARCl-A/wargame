@@ -67,6 +67,7 @@ class Order:
     wagon: str | None = None  # stint "repair": uid of the wagon being mended
     state: dict | None = None  # hunting: the hunt out on the clock and what its stretch rolled (`HuntSession`)
     prior: "Order | None" = None  # claim attack: what the band was doing, back on a win
+    subject: str | None = None  # stint "ask_around": the id of the job being asked about
 
     @property
     def interactive(self):

@@ -1,6 +1,6 @@
 # Holy Symbol: a quest do Fazendeiro (a filha do Edric)
 
-Escrito em portugues a pedido do autor. Status: **em construcao** na branch `quest-holy-symbol` (fases 1 e 2 feitas). A chave de lancamento
+Escrito em portugues a pedido do autor. Status: **em construcao** na branch `quest-holy-symbol` (fases 1 a 3 feitas). A chave de lancamento
 `missions.FARMER_QUEST_LIVE` (hoje `False`) mantem a quest inteira apagada: o job, a aba Jobs da Farm e a loja fechada.
 
 ## Por que existe
@@ -88,7 +88,7 @@ Cada fase e um commit no `main`.
    simbolo) em `TEMPLATES` mas **atras da chave `FARMER_QUEST_LIVE`**; a Farm ganha a funcao `farmer` (sem botao no mapa), `FarmerBoard` em
    `job_board.BOARDS` (+ `tests/test_desks.py`), aba Jobs em `hub_session._node_tabs`; loja fechada lendo
    `Guild.cult`; textos en e pt-br.
-3. **Perguntar por aí.** `gartok/investigation.py` (`CLUES`, `ask`, `bonus`); ordem `ask_around` por `_spent` com
+3. **Perguntar por aí (feita; o botao ficou numa secao "Perguntar por aí" da aba Jobs que lista TODO job ativo da guilda, de qualquer quadro, porque a pista da Catedral e do Ledger Hold e sobre um job que nao esta no quadro delas; DC 10 e +1 por pista, a calibrar).** `gartok/investigation.py` (`CLUES`, `ask`, `bonus`); ordem `ask_around` por `_spent` com
    o job perguntado num campo novo da `Order`; botao no cartao da aba Jobs; `Guild.investigation` em
    `PAYLOAD_DEFAULTS` (sem bump de `SAVE_VERSION`).
 4. **Busca, Cult Site e arestas.** No oculto `cult_site` (`world.free_spot`), arestas, funcao `cult_ritual`, glifo

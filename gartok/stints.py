@@ -9,7 +9,7 @@ issues the order.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import economy, i18n, medic, orders
+from . import economy, i18n, investigation, medic, orders
 
 
 @dataclass(frozen=True)
@@ -18,14 +18,14 @@ class Stint:
     settle: Callable     # (guild, group, order) -> the lines it says when the hours are up
 
 
-def order(task, hours, crew=(), clock_hours=None, wagon=None):
+def order(task, hours, crew=(), clock_hours=None, wagon=None, subject=None):
     """The `work` order for `task`: `hours` is the nominal length (what pay and XP are based on),
     `clock_hours` what the clock runs when Brisk Hands shortens it; `crew` the members it settles for."""
     if task not in STINTS:
         raise ValueError(f"no such stint: {task!r}")
     clock = hours if clock_hours is None else clock_hours
     return orders.Order("work", eta=clock, remaining=clock, hours=hours, task=task,
-                        crew=tuple(u.uid for u in crew), wagon=wagon)
+                        crew=tuple(u.uid for u in crew), wagon=wagon, subject=subject)
 
 
 def is_stint(order):
@@ -98,4 +98,5 @@ STINTS = {
     "claim_oven": Stint("stint.claim_oven.doing", _oven),
     "claim_fire": Stint("stint.claim_fire.doing", _fire),
     "repair": Stint("stint.repair.doing", _repair),
+    "ask_around": Stint("stint.ask_around.doing", lambda guild, group, order: investigation.ask(guild, group, order.subject)),
 }

@@ -162,6 +162,7 @@ class HubSession(Session):
         "accept": lambda s, b: s.on_board(JobsTab.accept, b["id"]),
         "turn_in": lambda s, b: s.on_board(JobsTab.turn_in, b["id"]),
         "sell_egg": lambda s, b: s.on_board(JobsTab.sell_egg),
+        "ask_around": lambda s, b: s.ask_around(b["id"]),
         "crafter": lambda s, b: s.crafter(b["uid"]),
         "craft": lambda s, b: s.craft(b["recipe"], int(b["hours"]), bool(b.get("alone"))),
         "buy_animal": lambda s, b: s.on_yard("stable", StableTab.buy, b["species"]),
@@ -467,6 +468,16 @@ class HubSession(Session):
         self.map._save()
         self.tab = "jobs"
         return self.state()
+
+    def ask_around(self, tid):
+        """An hour asking about job `tid` in this place: a stint run as the map's clock would (`_spent`);
+        a place already asked just reads its answer again."""
+        tab = self.board
+        order = tab.ask_order(tid)
+        if order is None:
+            self.tab = "jobs"
+            return self.state()
+        return self._spent("jobs", tab, order)
 
     def _shift(self, hours, **kw):
         if hours not in SHIFTS:

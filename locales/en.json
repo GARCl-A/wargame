@@ -595,6 +595,8 @@
       "nobody_carries": "nobody carries any",
       "in_packs": "In the packs",
       "in_packs_hint": "What the band already carries toward each job on the board.",
+      "ask_around": "Ask around",
+      "ask_around_hint": "An hour of talk with the people here about a job you hold. A place you asked once is answered for good.",
       "nothing": "Nothing on offer here right now.",
       "who_signs": "Who signs",
       "signs_hint": "The leader signs, and the job travels with them: whichever band they walk with hands it over.",
@@ -3209,6 +3211,9 @@
     "claim_fire": {
       "doing": "lighting a fire"
     },
+    "ask_around": {
+      "doing": "asking around"
+    },
     "repair": {
       "doing": "mending a wagon"
     },
@@ -4234,6 +4239,9 @@
   },
   "jobs_tab": {
     "no_job_on_this_board": "no job {tid} on this board",
+    "ask_around": "ASK AROUND ({hours} h)",
+    "asked_here": "ASKED HERE",
+    "no_job_to_ask_about": "{name}: no such job out, nothing to ask about",
     "that_job_is_not_on": "that job is not on offer to this band",
     "not_ready_to_hand_over": "{name}: not ready to hand over",
     "this_band_does_not_hold": "{name}: this band does not hold the job",
@@ -5061,6 +5069,17 @@
       }
     },
     "fight_due_tip": "A fight is about to start. This group can't change until it is over"
+  },
+  "investigation": {
+    "nobody_knows": "Nobody here knows anything about that.",
+    "found": "{name} gets a few people talking.",
+    "no_luck": "{name} asks around for an hour and learns nothing: d20({nat}) {mod}(CHA) +{extra}(clues) = {total} vs {dc}.",
+    "clue": {
+      "farmer_daughter": {
+        "faith_cathedral": "Brother Quillon remembers her: she came to visit her parents' graves and said she would be back by dusk. She never came back through the door.",
+        "ledger_hold": "The officers at the command post have not seen her. Nobody that matches her description came by the road in the last weeks."
+      }
+    }
   },
   "wildfire": {
     "great_focus": "The Great Focus",

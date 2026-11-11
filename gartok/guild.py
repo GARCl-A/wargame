@@ -123,7 +123,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  leaving=None, ox_trails=0, vocation=None, recruit_seen=None,
                  licences=None, revealed=None, supply_runs_completed=0, met_factions=None,
                  wildfire=None, boss_talks_seen=None, objectives_done=None, ruins_cleared=None,
-                 log=None, routine_pages=None):
+                 log=None, routine_pages=None, investigation=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -183,6 +183,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         # the guild so it saves and loads by slot, like everything else here;
         # the draft (before a Guild exists) keeps its own until `app._draft_done`
         # hands it in
+        self.investigation = investigation or {}           # `investigation.py`: per job id, its clues and the nodes already asked
         self.ox_trails = ox_trails                         # times the Aurochs' trail was found: each makes the next harder
         self.revealed = set(revealed or ())                 # node ids revealed on the world map
         self.met_factions = set(met_factions or ())         # hidden factions the guild has met (`factions.known`)

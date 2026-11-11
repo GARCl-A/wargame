@@ -5,7 +5,7 @@ for the band and what the packs already carry toward each goal.
 The reads, labels and verbs are the giver's `job_board.Board`, which pygame's board reads too.
 """
 
-from .. import i18n, item_icon, missions
+from .. import i18n, investigation, item_icon, missions, stints
 from ..job_board import BOARDS, TAG_TONE
 from .shop_tab import _portrait
 
@@ -23,6 +23,7 @@ class JobsTab:
         board = next(cls for fn, cls in BOARDS if node.has(fn))
         self.b = board(guild, group)
         self.guild, self.group, self.node = guild, group, node
+        self.report = []
 
     def _template(self, tid):
         t = missions.TEMPLATES.get(tid)
@@ -39,6 +40,17 @@ class JobsTab:
         if not self.b.turn_in(t):
             self.b.notice = (i18n.t("jobs_tab.not_ready_to_hand_over", name=t.name) if self.b._mission_of(t)
                              else i18n.t("jobs_tab.this_band_does_not_hold", name=t.name))
+
+    def ask_order(self, tid):
+        """An hour of asking around about the active job `tid`: -> the stint to run, or None when this place
+        was already asked (its answer is read again, in the notice)."""
+        t = missions.TEMPLATES.get(tid)
+        if t is None or not any(m.template_id == tid and m.state == "active" for m in self.guild.missions):
+            raise ValueError(i18n.t("jobs_tab.no_job_to_ask_about", name=tid))
+        if investigation.asked(self.guild, t.id, self.group.node):
+            self.b.notice = investigation.answer(t.id, self.group.node)
+            return None
+        return stints.order("ask_around", investigation.ASK_HOURS, subject=t.id)
 
     def sell_egg(self):
         if self.b.footer_action() is None:
@@ -65,6 +77,19 @@ class JobsTab:
                 "out": m is None and b._active_of(t) is not None,
                 "button": {"verb": verb, "label": label, "on": on}}
 
+    def _asks(self):
+        """Every job the guild has out, whichever board it came from: what this place was asked about it."""
+        out = []
+        for m in self.guild.missions:
+            if m.state != "active":
+                continue
+            done = investigation.asked(self.guild, m.template_id, self.group.node)
+            out.append({"id": m.template_id, "name": missions.TEMPLATES[m.template_id].name, "done": done,
+                        "answer": investigation.answer(m.template_id, self.group.node) if done else None,
+                        "label": i18n.t("jobs_tab.asked_here") if done
+                        else i18n.t("jobs_tab.ask_around", hours=investigation.ASK_HOURS)})
+        return out
+
     def _carried(self, templates):
         """Who in the band carries how much of each item a job it can take or hand over asks for."""
         out = []
@@ -87,10 +112,12 @@ class JobsTab:
         leader = self.group.leader
         extra = b.footer_action()
         notice, b.notice = b.notice, None
+        notice = notice or "  ".join(self.report) or None
+        self.report = []
         return {"cards": b.hub_cards(), "line": b.subtitle_text.strip('"'),
                 "jobs": [self._job(t) for t in templates],
                 "signer": {"name": leader.name, "portrait": _portrait(leader),
                            "sub": i18n.t("jobs_tab.leads_band", race=leader.race_label)},
-                "carried": self._carried(templates),
+                "carried": self._carried(templates), "asks": self._asks(),
                 "egg": None if extra is None else {"label": extra[0], "on": extra[1]},
                 "notice": notice}

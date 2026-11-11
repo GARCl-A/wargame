@@ -17,6 +17,13 @@ const Jobs = (() => {
       <div class="btn ${b.on ? "" : "off"}" data-job="${esc(j.id)}" data-verb="${b.verb}">${esc(b.label)}</div></div>`;
   }
 
+  function ask(a) {
+    return `<div class="job ask"><div></div>
+      <div class="jbody"><div class="jhead"><span class="nm">${esc(a.name)}</span></div>
+        ${a.answer ? `<p class="use">${esc(a.answer)}</p>` : ""}</div>
+      <div class="btn ${a.done ? "off" : ""}" data-job="${esc(a.id)}" data-verb="ask_around">${esc(a.label)}</div></div>`;
+  }
+
   function carried(c) {
     const who = c.who.length ? c.who.join(", ") : tr("jobs.nobody_carries");
     return `<div class="it carry"><span class="ico mask" style="--icon:url(/assets/icons/${c.glyph}.svg)"></span>
@@ -39,6 +46,7 @@ const Jobs = (() => {
         ${packs}${egg}</div>
       <div class="paper ledger"><div class="kicker">${tr("jobs.board")} <em>${esc(J.line)}</em></div>
         <div class="jobs">${board}</div>
+        ${J.asks.length ? `<div class="kicker">${tr("jobs.ask_around")}</div><p class="hint">${tr("jobs.ask_around_hint")}</p>${J.asks.map(ask).join("")}` : ""}
         <div class="ledgerfoot"><p>${tr("jobs.foot")}</p></div></div>`;
     toast(J.notice);
   }
