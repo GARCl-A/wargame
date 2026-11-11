@@ -107,6 +107,19 @@ Cada fase e um commit no `main`.
    mostra `cult_ritual` ou `demon_lair`; demonio autoral; registrar o template em `TEMPLATES`; `python -m
    gartok.reference`; wiki; tier `balance`; jogar de ponta a ponta; apagar a entrada do backlog.
 
+## Calibracao headless (2026-11-11, so relato, nada foi retocado)
+
+Esquadrao de 4 (`encounters.build_enemy`), IA generica dos dois lados, 20 lutas por celula. A IA do jogador NAO
+conhece o rito (nao persegue o lider nem os canalizadores), entao ela subestima um humano atento.
+
+- Rito (luta do circulo): vitoria 0/20 em L3, L4, L5 e L6; o rito fecha em 16, 19, 20 e 20 de 20; mortos por
+  esquadrao 1.4, 0.6, 0.3, 0.8; ~7 a 8 rodadas. A barra (18, +1 por canalizador por turno) enche em ~6 rodadas:
+  quem nao derruba os canalizadores ou o lider logo perde. Alavancas se o autor quiser mais folga: barra maior,
+  menos canalizadores no inicio, passos de 8, ou a faixa de nivel da guilda.
+- Covil do demonio (nivel racial 22, 260 PV): vitoria 1/20, 1/20, 1/20, 0/20 em L3 a L6; ~3.8 de 4 mortos; luta
+  letal. E "o mob mais forte do jogo", como pedido, mas nao e vencivel por esquadrao L3 a L6 de 4 pessoas: o autor
+  decide a faixa de nivel recomendada, ou o numero de PV.
+
 ## Em aberto
 
 - **Emboscada do demonio** nas Country Roads e na Farm: o mob mais forte contra uma guilda de nivel 3 e derrota
