@@ -1,10 +1,10 @@
 {
-  "uid": "3c6484c6c9f4416491e0fe52a152207f",
+  "uid": "5334ad32ff3d4941977b26cfcf0a59bd",
   "recruited_by": null,
   "joined_day": 1,
   "name": "The Pale Tenant",
   "auto_name": false,
-  "portrait_id": 1013220550,
+  "portrait_id": 1395961138,
   "portrait_file": null,
   "race": "Demon",
   "alignment": "Neutral and Evil",
@@ -33,8 +33,13 @@
   "crafting_target": null,
   "crafting_progress": 0,
   "craft_bonuses": {},
-  "magic_sources": [],
-  "spells_known": [],
+  "magic_sources": [
+    "blood"
+  ],
+  "spells_known": [
+    "hex",
+    "dragonfire"
+  ],
   "study_target": null,
   "study_progress": {},
   "magic_blood": false,
@@ -130,7 +135,7 @@
   "languages": [
     "Infernal"
   ],
-  "equipped_weapon": "Large Broadsword",
+  "equipped_weapon": "Huge Broadsword",
   "equipped_offhand": null,
   "equipped_tongue": null,
   "equipped_artifact": null,

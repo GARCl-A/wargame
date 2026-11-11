@@ -252,7 +252,7 @@ _GIANTS = [_race_dict(*row) for row in GIANTS]
 # The Demon the Cult calls (`cult_site.py`): placed by hand, never drawn into a pack or rolled.
 DEMONS = [
     # threshold, name, token, Str Dex Con Int Wis Cha  ability                  language     age     hd  size
-    (100, "Demon", "v", ( 6,  2,  6,  2,  2,  4), ("darkvision", "ferocity"), "Infernal", 50.000, 12, "Large"),
+    (100, "Demon", "v", ( 4,  0,  2,  4,  2,  4), ("darkvision", "ferocity"), "Infernal", 50.000, 10, "Huge"),
 ]
 _DEMONS = [_race_dict(*row, kind="demon") for row in DEMONS]
 

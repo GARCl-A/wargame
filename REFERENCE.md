@@ -47,7 +47,7 @@ Bodies that are never rolled as a player's race (`data.BEASTS`, `UNDEAD`, `GIANT
 | Skeleton | undead | +0 +2 +4 -4 -2 -4 | d8 | Medium | 9 m | Darkvision, Sleep Immunity | -- |
 | Zombie | undead | +2 -2 +4 -4 -2 -4 | d8 | Medium | 6 m | Darkvision, Sleep Immunity | -- |
 | Ogre | humanoid | +4 -2 +2 -2 +2 -2 | d12 | Large | 9 m | Reach | -- |
-| Demon | demon | +6 +2 +6 +2 +2 +4 | d12 | Large | 9 m | Darkvision, Ferocity | -- |
+| Demon | demon | +4 +0 +2 +4 +2 +4 | d10 | Huge | 9 m | Darkvision, Ferocity | -- |
 
 ## Racial abilities
 
