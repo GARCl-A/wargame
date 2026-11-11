@@ -92,11 +92,30 @@ def _recover_torch(battle, unit):
     return True
 
 
+def _chance(need, sure_on_twenty=False):
+    """The chance a d20 reaches `need` (a natural 20 always does when `sure_on_twenty`)."""
+    wins = 21 - min(max(need, 1), 21)
+    return max(wins, 1 if sure_on_twenty else 0) / 20
+
+
+def _odds(battle, unit, act, cell):
+    """The chance `act` carries the unit to `cell`: a climb's Strength check, a jump's roll to cover the squares;
+    a drop and a swim always make their move."""
+    if act is actions.CLIMB:
+        low = cell if battle.elevation_at(cell, unit) < battle.elevation(unit) else unit.pos
+        dc = battle.board.surface_dc(low)
+        return 1.0 if unit.auto_climb(dc) else _chance(dc - unit.mod_strength, sure_on_twenty=True)
+    if act is actions.JUMP:
+        squares = grid_distance(unit.pos, cell) - int(unit.char.talent_bonus("jump_reach"))
+        return _chance(actions.movement.JUMP_DIVISOR * squares - unit.mod_strength)
+    return 1.0
+
+
 def _step_over_terrain(battle, unit, target):
     """The unit can't walk any nearer -- a pit lip or deep water is between it and
     the target. Climb / drop / swim onto the reachable cell that best closes on
-    the target: nearer first, then matching its floor level so melee can connect.
-    Acts only when that beats standing still. Returns True if it acted (a slipped
+    the target: nearer first, then matching its floor level so melee can connect, then the
+    surest move. Acts only when that beats standing still. Returns True if it acted (a slipped
     climb still counts -- it spent the attempt)."""
     tz = battle.elevation(target)
 
@@ -110,8 +129,10 @@ def _step_over_terrain(battle, unit, target):
         spots = _jump_spots(battle, unit) if act is actions.JUMP else act.highlight_cells(battle, unit)
         for c in spots:
             s = score(c)
-            if s < now and act.can(battle, unit, c) and (best is None or s < best[0]):
-                best = (s, act, c)
+            if s < now and act.can(battle, unit, c):
+                key = (s, -_odds(battle, unit, act, c))
+                if best is None or key < best[0]:
+                    best = (key, act, c)
     if best is None:
         return _walk_to_the_shore(battle, unit, target)
     _, act, c = best

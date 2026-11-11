@@ -60,6 +60,66 @@ def test_climb_out_needs_a_strength_check():
     assert a.pos == (5, 5)
 
 
+def _channel_battle(footprint):
+    """A 2-wide channel (rows 4-5) flooded from x=8 to x=12, floor at both ends."""
+    batt, a, d = _pit_battle(depth=0)
+    batt.board.walls = set()
+    flooded = {(x, y) for x in range(8, 13) for y in (4, 5)}
+    batt.board.elevation = {c: -3 for c in flooded}
+    batt.board.water = set(flooded)
+    batt.board.deep_water = set(flooded)
+    a.footprint = footprint
+    d.pos = (18, 15)
+    a.ap = 2
+    return batt, a
+
+
+def test_a_large_body_climbs_out_with_all_four_squares_on_dry_ground():
+    batt, a = _channel_battle(2)
+    a.pos = (11, 4)                                    # afloat: columns 11 and 12 are water
+    spots = actions.CLIMB.highlight_cells(batt, a)
+    assert (13, 4) in spots and (13, 5) in spots        # two squares on: columns 13 and 14, no water under it
+    assert (12, 4) not in spots and (12, 5) not in spots   # never half in the water
+    with fixed_d20(20):
+        actions.CLIMB.execute(batt, a, (13, 4))
+    assert a.pos == (13, 4)
+    assert not any(batt.board.is_deep_water(c) for c in batt.cells_of(a))
+
+
+def test_a_medium_body_still_climbs_to_the_square_beside_it():
+    batt, a = _channel_battle(1)
+    a.pos = (12, 4)
+    assert (13, 4) in actions.CLIMB.highlight_cells(batt, a)
+    assert (14, 4) not in actions.CLIMB.highlight_cells(batt, a)
+
+
+def test_the_ai_odds_of_a_climb_and_a_jump_follow_the_strength_check():
+    from gartok import actions as acts
+    from gartok.ai.movement import _odds
+    batt, a = _channel_battle(2)
+    a.pos = (11, 4)
+    _set_stats(a, strength=10)                          # STR mod 0
+    assert _odds(batt, a, acts.CLIMB, (13, 4)) == 0.30        # d20 >= DC 15, or a natural 20
+    assert _odds(batt, a, acts.JUMP, (13, 4)) == 0.55         # 2 squares: d20 >= 10
+    assert _odds(batt, a, acts.SWIM, (10, 4)) == 1.0
+    a._ability = abilities.get("climber")
+    assert _odds(batt, a, acts.CLIMB, (13, 4)) == 1.0
+
+
+def test_the_ai_takes_the_surer_way_out_when_two_moves_close_the_same_distance():
+    from unittest.mock import patch
+
+    from gartok import ai
+    batt, a = _channel_battle(2)
+    a.pos = (11, 4)
+    _set_stats(a, strength=10)
+    foe = batt.enemy_units[0]
+    foe.pos = (15, 4)
+    with patch.object(actions.JUMP, "execute") as jump, patch.object(actions.CLIMB, "execute") as climb:
+        assert ai._step_over_terrain(batt, a, foe)
+    assert jump.called and not climb.called
+
+
 def test_rope_lowers_the_climb_dc():
     batt, a, d = _pit_battle(depth=2, rope=True)
     assert batt.board.surface_dc((6, 5)) == 10

@@ -108,13 +108,22 @@ class _VerticalStep(Action):
     target, aimed = "cell", True
 
     def _spots(self, battle, actor):
+        """Where the body can land: it moves to the floor beside it with its whole footprint on one level, so a
+        Large body (2x2) steps up to two squares and never ends half in a pit."""
         if actor.has_condition("prone"):
             return []
         z = battle.elevation(actor)
-        return [nb for nb in battle.board.neighbors(actor.pos)
-                if self._wants(battle.board.elevation_at(nb), z)
-                and _cell_free(battle, actor, nb)
-                and not battle.board.diagonal_corner_blocked(actor.pos, nb)]
+        size, (x, y) = actor.footprint, actor.pos
+        spots = []
+        for nb in ((x + dx, y + dy) for dx in range(-size, size + 1) for dy in range(-size, size + 1)):
+            if nb == actor.pos or not battle.board.in_bounds(nb):
+                continue
+            levels = {battle.board.elevation_at(c) for c in cells(nb, size)}
+            if (len(levels) == 1 and self._wants(levels.pop(), z) and _cell_free(battle, actor, nb)
+                    and not (max(abs(nb[0] - x), abs(nb[1] - y)) == 1
+                             and battle.board.diagonal_corner_blocked(actor.pos, nb))):
+                spots.append(nb)
+        return spots
 
     def _wants(self, z_nb, z_here):
         raise NotImplementedError
