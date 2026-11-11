@@ -1178,7 +1178,12 @@ def item_tip_lines(name: str) -> list[str]:
     if it.type == ItemType.WEAPON:
         n, faces = it.damage or (1, 4)
         hands = i18n.t("item.tip.two_handed" if it.hands >= 2 else "item.tip.one_handed")
-        reach = i18n.t("item.tip.range", m=f"{it.range * 1.5:g}") if it.range else i18n.t("item.tip.melee")
+        if it.range:
+            reach = i18n.t("item.tip.range", m=f"{it.range * 1.5:g}")
+        elif it.reach:
+            reach = i18n.t("item.tip.melee_reach", n=1 + it.reach)
+        else:
+            reach = i18n.t("item.tip.melee")
         desc.append(i18n.t("item.tip.weapon", n=n, faces=faces, hands=hands, reach=reach))
         for tid in it.traits:
             wt = weapon_traits.get(tid)

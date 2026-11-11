@@ -54,7 +54,12 @@ def of_item(it) -> list[tuple[str, str]]:
     if it.thrown:
         ids += [t for t in ("thrown", "throw") if t not in ids]
     ids += [a for a in ITEM_ACTIONS.get(it.name, ()) if a not in ids]
-    return [(tid, i18n.t("wiki_terms.thrown_sq", n=it.thrown) if tid == "thrown" else known[tid]["name"]) for tid in ids]
+    labels = {"thrown": i18n.t("wiki_terms.thrown_sq", n=it.thrown),
+              "reach": i18n.t("wiki_terms.reach_n", n=1 + it.reach),
+              "distance": i18n.t("wiki_terms.distance_sq", n=it.range)}
+    # Reach 1 is every weapon's and goes unsaid; Distance is a shot's
+    ids = [*(["reach"] if it.reach else []), *(["distance"] if it.range else []), *ids]
+    return [(tid, labels.get(tid, known[tid]["name"])) for tid in ids]
 
 
 def glosses(text: str, skip: str = "") -> list[str]:
@@ -71,7 +76,6 @@ def item_tip(name: str | None) -> str:
         return ""
     stats = [f"{it.damage[0]}d{it.damage[1]}"] if it.damage else []
     stats += [f"AC +{it.ac}"] if it.ac else []
-    stats += [i18n.t("wiki_session.range_sq", range=it.range)] if it.range else []
     known = terms()
     brought = [(lab, known[tid]["text"]) for tid, lab in of_item(it) if known[tid]["text"]]
     return "\n".join([i18n.name("item", it.name), " · ".join([i18n.lab(it.type.value), *stats]),

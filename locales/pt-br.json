@@ -1969,9 +1969,9 @@
         },
         "extreme_shot": {
             "name": "Tiro Extremo",
-            "desc": "2 pts: dobra o alcance do ataque para 36 casas.",
+            "desc": "2 pts: dobra a distância do ataque para 36 casas.",
             "reason": "exige besta",
-            "label": "Tiro Extremo (2 pts, alcance de 36 casas)"
+            "label": "Tiro Extremo (2 pts, distância de 36 casas)"
         },
         "hook_shield": {
             "name": "Prender Escudo",
@@ -4192,7 +4192,6 @@
         }
     },
     "wiki_session": {
-        "range_sq": "Alcance {range} casas",
         "kg": "{weight:g} kg",
         "level": "nível {level}",
         "tools": "Ferramentas: {join}",
@@ -4802,7 +4801,8 @@
         "tip": {
             "two_handed": "Duas mãos",
             "one_handed": "Uma mão",
-            "range": "alcance de {m}m",
+            "range": "distância de {m}m",
+            "melee_reach": "Corpo a corpo, alcance {n}",
             "melee": "Corpo a corpo",
             "weapon": "Arma: {n}d{faces} de dano  ·  {hands}  ·  {reach}.",
             "thrown": "Arremesso: pode ser arremessada até {m}m.",
@@ -5914,7 +5914,9 @@
             "flanked": "Flanqueado",
             "shove": "Empurrão",
             "dying": "Morrendo",
-            "knocked_out": "Nocauteado"
+            "knocked_out": "Nocauteado",
+            "reach": "Alcance",
+            "distance": "Distância"
         }
     },
     "desc": {
@@ -5929,7 +5931,7 @@
             "maiming_strike": "2 pts: um golpe que reduz à metade a velocidade do alvo até a próxima rodada; contra um inimigo Enredado, Dormindo, Surpreso ou Desmoralizado, +2 para acertar e o golpe é Brutal 1.",
             "armor_pierce": "2 pts: um golpe que ignora a CA da armadura vestida; contra um inimigo de armadura, o golpe é Brutal 1.",
             "power_shot": "2 pts: um tiro com +FOR de dano; a metade do alcance do arco ou mais longe, +FOR (no mínimo +1) e o golpe é Brutal 1.",
-            "extreme_shot": "2 pts: dobra o alcance do ataque para 36 casas.",
+            "extreme_shot": "2 pts: dobra a distância do ataque para 36 casas.",
             "hook_shield": "2 pts: contra um inimigo com escudo, prende o escudo primeiro (sem CA do escudo até a próxima rodada, este golpe incluso) e depois dá um golpe Brutal 1. Sem escudo, é um golpe comum.",
             "javelin_charge": "1 pt: arremessa a lança depois de se mover neste turno, com +1d4 de dano extra.",
             "parry_strike": "2 pts: um golpe e Defendendo (+1 CA) até a próxima rodada; com dois ou mais inimigos ao alcance, o golpe é Brutal 1.",
@@ -6308,7 +6310,9 @@
             "flanked": "Flanqueado: um inimigo está flanqueado quando você e um aliado estão ao lado dele, em lados opostos, e um inimigo flanqueado está desprevenido. Um aliado apenas ao lado do inimigo não é um flanco.",
             "shove": "Empurrão: move o alvo 1 casa em linha reta para trás. Um buraco atrás o derruba; uma parede ou um corpo atrás detém o empurrão. Empurrar, Rechaçar e Varrida de Cauda empurram; Empurrão Poderoso arremessa o alvo 3 casas.",
             "dying": "Morrendo: com 0 PV o combatente cai na sua casa e o relógio da morte corre. No 4º turno caído faz um teste de morte (d20, 11 ou mais vive: fica Nocauteado; menos, morre). Cada golpe num corpo morrendo avança o relógio uma vez. Estabilizar e Primeiros Socorros o salvam na hora.",
-            "knocked_out": "Nocauteado: 0 PV e inconsciente, fora da luta; sobrevive à batalha. Um golpe num corpo nocauteado o devolve a Morrendo. Um inimigo derrubado por golpe não letal fica nocauteado, não morrendo."
+            "knocked_out": "Nocauteado: 0 PV e inconsciente, fora da luta; sobrevive à batalha. Um golpe num corpo nocauteado o devolve a Morrendo. Um inimigo derrubado por golpe não letal fica nocauteado, não morrendo.",
+            "reach": "Alcance: o quão longe um ataque corpo a corpo pode ser feito, em casas. Toda arma tem Alcance 1 (as casas adjacentes), então só a mais longa diz isso: a Glaive tem Alcance 2.",
+            "distance": "Distância: o quão longe um tiro voa, em casas: a Distância 18 de uma Besta, o Arremesso 6 de uma arma arremessada. É o alcance de um ataque à distância, nunca de um corpo a corpo, que tem Alcance."
         }
     },
     "tutorial": {
@@ -6783,6 +6787,8 @@
         "kind_cost": "{kind} · {ap} pts",
         "keyword": "Palavra-chave",
         "condition": "Condição",
-        "thrown_sq": "Arremesso {n} casas"
+        "thrown_sq": "Arremesso {n} casas",
+        "reach_n": "Alcance {n}",
+        "distance_sq": "Distância {n} casas"
     }
 }

@@ -237,7 +237,7 @@ Properties and keywords carried by weapons.
 | Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1. |
 | Armor Pierce | 2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1. |
 | Power Shot | 2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1. |
-| Extreme Shot | 2 AP: Doubles attack range to 36 squares. |
+| Extreme Shot | 2 AP: Doubles attack distance to 36 squares. |
 | Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike. |
 | Javelin Charge | 1 AP: Throws the spear after moving this turn, +1d4 bonus damage. |
 | Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1. |
@@ -258,6 +258,8 @@ Reserved words of the rules: each always means the one thing written here.
 | Knocked out | Knocked out: 0 HP and unconscious, out of the fight; it survives the battle. A hit on a knocked-out body puts it back to Dying. A foe dropped by a Non-lethal blow is knocked out, not dying. |
 | Morale | Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed. |
 | Routed | Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again. |
+| Reach | Reach: how far a melee attack can be made, in squares. Every weapon has Reach 1 (the adjacent squares), so only a longer one says so: a Glaive has Reach 2. |
+| Distance | Distance: how far a shot flies, in squares: a Crossbow's Distance 18, a thrown weapon's Thrown 6. It is the range of a ranged attack, never of a melee one, which has Reach. |
 
 ## Armor
 

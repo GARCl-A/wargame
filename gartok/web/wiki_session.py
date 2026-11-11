@@ -47,8 +47,6 @@ def _item(it):
         tags.append(f"AC +{it.ac}")
     tags += [tid.replace("_", " ").title() for tid in it.traits if not weapon_traits.get(tid)]
     links = [_link(tid, label) for tid, label in wiki_terms.of_item(it)]
-    if it.range:
-        tags.append(i18n.t("wiki_session.range_sq", range=it.range))
     if it.hands == 2:
         tags.append(i18n.t("wiki_session.two_handed"))
     cuts = items.sizes_of(it.name) if it.size else []

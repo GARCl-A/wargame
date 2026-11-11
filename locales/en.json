@@ -2776,9 +2776,9 @@
     },
     "extreme_shot": {
       "name": "Extreme Shot",
-      "desc": "2 AP: Doubles attack range to 36 squares.",
+      "desc": "2 AP: Doubles attack distance to 36 squares.",
       "reason": "requires crossbow",
-      "label": "Extreme Shot (2 pts, 36 sq range)"
+      "label": "Extreme Shot (2 pts, 36 sq distance)"
     },
     "hook_shield": {
       "name": "Hook Shield",
@@ -3878,7 +3878,9 @@
       "flanked": "Flanked",
       "shove": "Shove",
       "dying": "Dying",
-      "knocked_out": "Knocked out"
+      "knocked_out": "Knocked out",
+      "reach": "Reach",
+      "distance": "Distance"
     }
   },
   "job_board": {
@@ -4872,7 +4874,6 @@
     }
   },
   "wiki_session": {
-    "range_sq": "Range {range} sq",
     "kg": "{weight:g} kg",
     "level": "level {level}",
     "tools": "Tools: {join}",
@@ -5842,7 +5843,7 @@
       "maiming_strike": "2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1.",
       "armor_pierce": "2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1.",
       "power_shot": "2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1.",
-      "extreme_shot": "2 AP: Doubles attack range to 36 squares.",
+      "extreme_shot": "2 AP: Doubles attack distance to 36 squares.",
       "hook_shield": "2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike.",
       "javelin_charge": "1 AP: Throws the spear after moving this turn, +1d4 bonus damage.",
       "parry_strike": "2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1.",
@@ -6024,7 +6025,9 @@
       "flanked": "Flanked: a foe is flanked when you and an ally are both next to it, on opposite sides, and a flanked foe is off-guard. An ally merely next to the foe is not a flank.",
       "shove": "Shove: moves the target 1 cell straight back. A pit behind it drops the target in; a wall or a body behind it stops the shove. Push, Repel Strike and Tail Sweep shove; Mighty Shove throws the target 3 cells instead.",
       "dying": "Dying: at 0 HP a fighter is down on its cell and its death clock runs. On its 4th turn down it makes a death save (d20, 11 or more lives: it is Knocked out; less dies). Each hit on a dying body ticks the clock once. Stabilize and First Aid save it on the spot.",
-      "knocked_out": "Knocked out: 0 HP and unconscious, out of the fight; it survives the battle. A hit on a knocked-out body puts it back to Dying. A foe dropped by a Non-lethal blow is knocked out, not dying."
+      "knocked_out": "Knocked out: 0 HP and unconscious, out of the fight; it survives the battle. A hit on a knocked-out body puts it back to Dying. A foe dropped by a Non-lethal blow is knocked out, not dying.",
+      "reach": "Reach: how far a melee attack can be made, in squares. Every weapon has Reach 1 (the adjacent squares), so only a longer one says so: a Glaive has Reach 2.",
+      "distance": "Distance: how far a shot flies, in squares: a Crossbow's Distance 18, a thrown weapon's Thrown 6. It is the range of a ranged attack, never of a melee one, which has Reach."
     }
   },
   "item": {
@@ -6043,8 +6046,9 @@
     "tip": {
       "two_handed": "Two-handed",
       "one_handed": "One-handed",
-      "range": "{m}m range",
+      "range": "{m}m distance",
       "melee": "Melee",
+      "melee_reach": "Melee, reach {n}",
       "weapon": "Weapon: {n}d{faces} damage  ·  {hands}  ·  {reach}.",
       "thrown": "Thrown: Can be thrown up to {m}m.",
       "armor": "Armor: +{ac} Armor Class.",
@@ -6408,6 +6412,8 @@
     "kind_cost": "{kind} · {ap} AP",
     "keyword": "Keyword",
     "condition": "Condition",
-    "thrown_sq": "Thrown {n} sq"
+    "thrown_sq": "Thrown {n} sq",
+    "reach_n": "Reach {n}",
+    "distance_sq": "Distance {n} sq"
   }
 }

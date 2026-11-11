@@ -177,7 +177,7 @@ def test_every_trait_and_action_an_item_names_opens_its_entry_and_shows_it_on_ho
             named += 1
             st = w.open(link["ref"])
             entry = next(e for e in st["entries"] if e["id"] == st["focus"])
-            assert st["chapter"] == "actions" and link["tip"].startswith(entry["name"] + "\n")
+            assert st["chapter"] == link["ref"].split(":")[0] and link["tip"].startswith(entry["name"] + "\n")
             assert entry["body"] == [] or entry["body"][0] in link["tip"]
         w.chapter("items")
     assert named > 30
@@ -195,6 +195,18 @@ def test_the_wiki_links_what_an_item_brings_besides_its_traits(saves):
     sword = next(e for e in w.state()["entries"] if e["name"] == "Broadsword")
     assert links["Broadsword"] == ["Parry & Strike"] and "Parry & Strike" not in sword["tags"]
     assert w.find("cleave")["entries"] and all("Cleave" in json.dumps(e) for e in w.state()["entries"])
+
+
+def test_the_wiki_names_a_melee_reach_and_a_shot_distance(saves):
+    w = WikiSession(lambda: {"screen": "title"})
+    links = {e["name"]: [x["label"] for x in e["links"]] for e in w.state()["entries"]}
+    assert "Reach 2" in links["Glaive"]
+    assert not any(x.startswith("Reach") for x in links["Broadsword"])
+    assert "Distance 18 sq" in links["Crossbow"]
+    assert not any(x.startswith("Distance") for x in links["Glaive"])
+    assert not any("Range" in t for e in w.state()["entries"] for t in e["tags"])
+    kw = {e["name"]: e["body"][0] for e in w.chapter("keywords")["entries"]}
+    assert "melee" in kw["Reach"] and "shot" in kw["Distance"]
 
 
 def test_opening_an_entry_turns_to_it_with_the_filter_cleared(saves):
