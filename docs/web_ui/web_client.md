@@ -38,7 +38,8 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   `pointer` or `zoom-in` cursor; `.off` and the open tab go back to `default`) and on a drag let go over a
   marked drop target, and an answer that is not ok plays the error cue. So a clickable element needs its
   cursor, `data-silent` keeps one quiet, and a screen plays only the cue its answer picks (`coins` when the
-  purse moved, `level_up`), never `click`.
+  purse moved, `level_up`), never `click`. The cues are decoded once into Web Audio buffers (an `<audio>`
+  element reloads its file at every play), and the first press or key resumes the context.
 - **Client text is a key:** a sentence a screen's script or HTML shows is `tr("ui.…")` / `data-t` (recipe in
   `README.md`), never a literal; the sentences a session sends are keys of their own (phase 3 of the translation plan).
 - **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.

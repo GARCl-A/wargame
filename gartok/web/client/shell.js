@@ -48,18 +48,32 @@ async function api(path, body) {
 // zoom-in cursor, which `.off` turns back to default) and on a drag let go over a marked drop target;
 // data-silent keeps an element quiet. A screen plays only the cue its answer picks (coins, level up)
 const Sound = (() => {
-  let bank = null, level = {}, volume = 0;
-  api("/api/sounds").then(r => {
+  let bank = null, level = {}, volume = 0, ctx = null;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  // decoded buffers start in a fraction of a millisecond; an <audio> element reloads its file at every play
+  const unlock = () => { if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {}); };
+  api("/api/sounds").then(async r => {
     level = r.level;
-    bank = Object.fromEntries(Object.entries(r.cues).map(([cue, urls]) => [cue, urls.map(u => new Audio(u))]));
+    ctx = new AC({latencyHint: "interactive"});
+    const decoded = {};
+    await Promise.all(Object.entries(r.cues).map(async ([cue, urls]) => {
+      decoded[cue] = (await Promise.all(urls.map(u =>
+        fetch(u).then(x => x.arrayBuffer()).then(b => ctx.decodeAudioData(b)).catch(() => null)))).filter(Boolean);
+    }));
+    bank = decoded;
   }).catch(() => {});
   function play(cue) {
     const list = bank && bank[cue];
-    if (!list || volume <= 0) return;
-    const a = list[Math.floor(Math.random() * list.length)].cloneNode();
-    a.volume = Math.min(1, volume * (level[cue] ?? 1));
-    a.play().catch(() => {});
+    if (!list || !list.length || volume <= 0) return;
+    unlock();
+    const src = ctx.createBufferSource(), gain = ctx.createGain();
+    src.buffer = list[Math.floor(Math.random() * list.length)];
+    gain.gain.value = Math.min(1, volume * (level[cue] ?? 1));
+    src.connect(gain).connect(ctx.destination);
+    src.start();
   }
+  addEventListener("pointerdown", unlock, true);
+  addEventListener("keydown", unlock, true);
   const CLICKABLE = new Set(["pointer", "zoom-in"]);
   addEventListener("click", e => {
     const el = e.composedPath()[0];

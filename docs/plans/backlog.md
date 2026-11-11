@@ -12,7 +12,7 @@ Sizes are estimates. When an item is done, delete it here and, if it changed a d
 Parts, in this order:
 
 - **Before the friends' playtest** — what is left before the build goes out.
-- **Ready to do** — defined enough to start: *UI bugs* first, then *Small*, then *Medium*, in the order to pick them up.
+- **Ready to do** — defined enough to start: *Small*, then *Medium*, in the order to pick them up.
 - **Large and later** — after the playtest or after another system: *Large*, *Art*, *Epic*.
 - **Deprioritised**, **Notes to remember**, **To discuss and reflect on** — wanted one day, or premises to
   think over; not tasks.
@@ -33,7 +33,7 @@ combat presentation and the hub kit are done. Left:
 - **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
 - **Holy Symbol: the Farmer's quest is live.** Left: the author plays it through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair) and flags what rings false; the polish entry below.
-- The *UI bugs* and the *Small* items below, in order.
+- The *Small* items below, in order.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
@@ -45,13 +45,6 @@ Prisoners, Archaeology at Ancient Ruins.
 
 Order inside a size is the order to pick them up: first what blocks the friends' playtest, then bugs, then
 the rest.
-
-## UI bugs
-
-Something on a screen is wrong today. Pick these before any UI improvement below.
-
-- **UI sound lags the click (playtest 2026-11-01).** Measure first whether it is the audio start or the
-  round trip to the server. The missing cues stay in *Small -> UI sound*. Size: Small.
 
 ## Small
 
@@ -103,7 +96,6 @@ Something on a screen is wrong today. Pick these before any UI improvement below
   which act plays which cue (one table in `docs/web_ui/web_client.md`), and wire them: equip in the sheet,
   confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
   from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
-  The level-up volume and the lag are in *UI bugs*.
 
 - **The battle takes ~1 s to open, and each action repaints for ~230 ms (playtest 2026-11-01; the author does
   not feel it, so investigate before changing anything).** Title,
