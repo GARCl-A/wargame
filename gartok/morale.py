@@ -11,7 +11,7 @@ the difference, so calling it again changes nothing. `Battle` calls it after eve
 turn change.
 """
 
-from . import data, vision
+from . import data, vision, vocations
 from .board import cells
 from .conditions import Routed
 from .i18n import Msg
@@ -51,10 +51,11 @@ def has_morale(battle, c):
 
 def start_value(char):
     """The morale a character takes into a fight: 7 + WIS mod + CHA mod + racial level, +1 lawful or -1
-    chaotic, plus the `morale` channel of its talents, never under `START_MIN`."""
+    chaotic, plus the `morale` channel of its talents and the Warband's +1 (`vocations.morale_bonus`), never under
+    `START_MIN`."""
     order = data.alignment_axes(char.alignment)[0]
     total = (BASE + char.mod_wisdom + char.mod_charisma + char.racial_level * PER_RACIAL_LEVEL
-             + (LAWFUL if order > 0 else CHAOTIC if order < 0 else 0) + int(char.talent_bonus("morale")))
+             + (LAWFUL if order > 0 else CHAOTIC if order < 0 else 0) + int(char.talent_bonus("morale")) + vocations.morale_bonus(char))
     return max(START_MIN, total)
 
 

@@ -14,6 +14,7 @@ from gartok import (
     forced,
     hunt,
     items,
+    morale,
     orders,
     persist,
     vocations,
@@ -97,56 +98,47 @@ def test_the_charter_shows_the_vocation_and_carries_its_dormant_flag():
 
 def test_no_vocation_changes_nothing():
     g = _guild()
-    assert vocations.cohesion_bonus(g) == 0 and vocations.gather_mult(g) == 1.0
-    assert vocations.travel_mult(g) == 1.0 and not vocations.food_pauses(g)
+    u = g.roster[0]
+    assert vocations.morale_bonus(u) == 0 and vocations.hunger_relief(u) == 0
+    assert vocations.gather_mult(g) == 1.0 and vocations.travel_mult(g) == 1.0
     assert vocations.ambush_mult(g, CAUTIOUS) == 1.0
 
 
-def test_warband_adds_one_to_the_cohesion_roll_only():
+def test_warband_adds_one_to_every_members_starting_morale():
+    u = standard_unit()
+    base = morale.start_value(u)
+    Guild([u], clock=Clock(0), vocation="warband")
+    assert u.vocation == "warband" and morale.start_value(u) == base + 1
+    Guild([u], clock=Clock(0), vocation="delvers")
+    assert morale.start_value(u) == base
+
+
+def test_warband_no_longer_touches_the_cohesion_roll():
     members = [Unit("player") for _ in range(BASE_CAPACITY + 2)]
     for u in members:
         u.set_base_attribute("charisma", 10)
         u._racial_override = 0                    # capacity is exactly BASE_CAPACITY
-    for vid, walks in ((None, True), ("warband", False)):
-        guild = Guild(None, groups=[Group(members, node="city", leader=members[0])], vocation=vid)
-        group = guild.groups[0]
-        assert group.overextension
-        roll = cohesion.weakest(guild, group).mental_defense    # a walk-out only without the bonus
-        events = cohesion._roll_groups(guild, lambda roll=roll: roll)
-        assert bool(events) is walks
-        members[:] = [u for g in guild.groups for u in g.members]
-        assert len(members) == BASE_CAPACITY + 2
+    guild = Guild(None, groups=[Group(members, node="city", leader=members[0])], vocation="warband")
+    group = guild.groups[0]
+    roll = cohesion.weakest(guild, group).mental_defense
+    assert cohesion._roll_groups(guild, lambda roll=roll: roll)
 
 
-def test_delvers_gather_fifteen_percent_more_from_a_work_shift_on_average():
-    u = Unit("player")
-    u._base_inventory = []
-    u.set_base_attribute("charisma", 10)
-    u.talents["racial"] = []
-    plain = Guild([u], clock=Clock(6 * 3600))
-    plain._pay_shift([u], 16, 16, "lumber_yard")
-    base = u.money
-    assert base > 0
-    delvers = Guild([u], clock=Clock(6 * 3600), vocation="delvers")
-    rng = random.Random(5)
-    total = sum(vocations.gather_pay(delvers, base, rng) for _ in range(4000))
-    assert abs(total / 4000 / base - 1.15) < 0.02
-    assert vocations.gather_pay(plain, base) == base
+def test_a_recruit_joining_later_is_stamped_with_the_vocation():
+    guild = _guild("warband")
+    late = Unit("player")
+    guild.add_member(late, guild.groups[0])
+    assert late.vocation == "warband"
 
 
-def test_the_leftover_fraction_of_a_coin_is_paid_by_chance():
-    delvers = _guild("delvers")
-
-    class Roll:
-        def __init__(self, value):
-            self.value = value
-
-        def random(self):
-            return self.value
-
-    assert vocations.gather_pay(delvers, 4, Roll(0.0)) == 5      # 0.6 of a coin left over
-    assert vocations.gather_pay(delvers, 4, Roll(0.9)) == 4
-    assert vocations.gather_pay(delvers, 20, Roll(0.9)) == 23     # 3 whole coins, no leftover
+def test_delvers_work_shifts_pay_the_same_as_any_guild():
+    pay = {}
+    for vid in (None, "delvers"):
+        u = standard_unit()
+        u._base_inventory = []
+        Guild([u], clock=Clock(6 * 3600), vocation=vid)._pay_shift([u], 16, 16, "lumber_yard")
+        pay[vid] = u.money
+    assert pay["delvers"] == pay[None] > 0
 
 
 def test_delvers_gather_more_meat_and_forage_on_a_hunt():
@@ -190,25 +182,36 @@ def test_caravan_keeps_the_pace_on_every_leg_of_a_route():
         assert abs(fast - plain * vocations.TRAVEL_FACTOR) < 1e-9
 
 
-def test_marsh_food_does_not_age_on_every_tenth_day():
-    for day, ages in ((9, True), (10, False), (11, True), (20, False)):
+def test_marsh_softens_the_hunger_penalty_of_the_first_two_days_only():
+    penalties = {}
+    for vid in (None, "marsh"):
+        u = standard_unit()
+        Guild([u], clock=Clock(0), vocation=vid)
+        row = []
+        for days in range(5):
+            u.unfed_days = days
+            row.append(u.hunger_attribute_penalty)
+        penalties[vid] = row
+    assert penalties[None] == [0, -2, -4, -4, -4]
+    assert penalties["marsh"] == [0, 0, -2, -4, -4]
+
+
+def test_marsh_starving_member_still_has_one_hit_point():
+    u = standard_unit()
+    Guild([u], clock=Clock(0), vocation="marsh")
+    u.unfed_days = 2
+    u._derive_combat()
+    assert u.hunger_level == 2 and u.hp_max == 1
+
+
+def test_food_ages_on_every_day_for_every_vocation():
+    for vid in (None, "marsh"):
         u = Unit("player")
         stack = items.create_instance("Potato", qty=9)
         stack.days_old = 0
         u._base_inventory = [stack]
-        guild = Guild([u], clock=Clock((day - 1) * 86400), vocation="marsh")
-        assert vocations.food_pauses(guild) is (not ages)
-        guild._daily_upkeep()
-        assert (stack.days_old == 1) is ages
-
-
-def test_other_guilds_age_their_food_on_the_tenth_day():
-    u = Unit("player")
-    stack = items.create_instance("Potato", qty=9)
-    stack.days_old = 0
-    u._base_inventory = [stack]
-    Guild([u], clock=Clock(9 * 86400))._daily_upkeep()
-    assert stack.days_old == 1
+        Guild([u], clock=Clock(9 * 86400), vocation=vid)._daily_upkeep()
+        assert stack.days_old == 1
 
 
 # ---- the travel stance --------------------------------------------------- #

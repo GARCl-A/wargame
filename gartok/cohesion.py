@@ -15,7 +15,7 @@ the same way, with one 7-day notice per group: when it lapses and the herd is
 still too big, one animal strays off and the notice restarts.
 """
 
-from . import data, i18n, items, vocations
+from . import data, i18n, items
 
 NOTICE_DAYS = 7
 
@@ -96,7 +96,7 @@ def _roll_groups(guild, d20):
         if not group.overextension or group in noticed:
             continue
         unit = weakest(guild, group)
-        if unit is None or d20() < unit.mental_defense + vocations.cohesion_bonus(guild) + quartermaster(group):
+        if unit is None or d20() < unit.mental_defense + quartermaster(group):
             continue
         if guild.free_slots and not group.locked:
             guild.split_group(group, [unit])

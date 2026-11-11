@@ -19,7 +19,6 @@ from . import (
     orders,
     recorder,
     rite,
-    vocations,
     wildfire,
     world,
 )
@@ -243,13 +242,12 @@ class UpkeepMixin:
         # 1) rot food in everyone's inventory, the bank chest and the house
         total_rotten = 0
         spoiled = []
-        if not vocations.food_pauses(self):
-            for u in self.roster:
-                total_rotten += self._rot_food(u._base_inventory, spoiled)
-            total_rotten += self._rot_food(self.bank.items, spoiled)
-            total_rotten += self._rot_food(self.house.stash.items, spoiled)
-            for pack in [p for g in self.groups for p in g.food_stores()] + self._garaged_food():
-                total_rotten += self._rot_food(pack, spoiled)
+        for u in self.roster:
+            total_rotten += self._rot_food(u._base_inventory, spoiled)
+        total_rotten += self._rot_food(self.bank.items, spoiled)
+        total_rotten += self._rot_food(self.house.stash.items, spoiled)
+        for pack in [p for g in self.groups for p in g.food_stores()] + self._garaged_food():
+            total_rotten += self._rot_food(pack, spoiled)
         if total_rotten:
             events.append(i18n.t("guild_upkeep.portions_of_food_rotted_away", total_rotten=total_rotten))
         events += [i18n.t("guild_upkeep.rotted_away", name=name) for name in spoiled]

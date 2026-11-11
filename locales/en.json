@@ -5958,12 +5958,12 @@
       "RISKY": "A hard pick: a frail body that has to be played around. Not always a bad one: a fine leader can be fragile."
     },
     "vocation": {
-      "warband": "+{cohesion_bonus} Mental Defense in the daily cohesion roll: fewer walk-outs from an overextended group.",
-      "delvers": "+{gather_bonus:.0%} yield from gathering: work shifts, and the meat, mushrooms and fruit of a hunt or forage.",
+      "warband": "+{morale_bonus} starting morale for every member in a fight.",
+      "delvers": "+{gather_bonus:.0%} yield from gathering: the Mine and the Lumber Yard's gather tabs, and the meat, mushrooms and fruit of a hunt or forage. Wages are not touched.",
       "wilds": "Ambushes are 20% less likely while a group travels Cautious: on the Old Road and on a hunt.",
       "scholars": "+{info_bonus} on the INT roll that reveals enemy information: the opening read and Assess.",
       "caravan": "Travel takes 15% fewer hours.",
-      "marsh": "On every {food_pause_every}th day no food in the guild ages."
+      "marsh": "The attribute penalty of a Hungry or Starving member is {hunger_relief} lighter."
     },
     "vocation_motto": {
       "warband": "We hold the line together, or not at all.",

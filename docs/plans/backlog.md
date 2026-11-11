@@ -130,16 +130,6 @@ the rest.
   +1 reach (if it has one), so a weapon's entry must list every property it carries, read off its
   `ItemDef`.
 
-- **Vocation tweaks: Warband, Delvers, Marsh (author 2026-11-08).**
-  (1) Warband: +1 Morale for group members.
-  (2) Delvers: the bonus applies only to material returns (decided 2026-11-10), never to wages: the gather
-  tabs of the Mine and the Lumber Yard, hunting (meat per hour) and foraging (fruit and mushrooms per hour).
-  Today `vocations.GATHER_BONUS` (+15%) is a yield bonus on gathering work; check where it is applied and
-  that no wage path reads it.
-  (3) Marsh: softens hunger attribute penalties by 2 (day 1 Hungry gives 0 penalty instead of -2;
-  day 2 Starving gives -2 instead of -4, while HP max remains capped at 1; days 3 and 4 remain unchanged:
-  day 3 Incapacitated, day 4 Starvation death). Replaces the old "food pause every 10 days" perk.
-
 - **Wiki: dynamic alphabetical chapter ordering & Conditions vs Keywords.** Sort wiki chapters dynamically
   by translated label (`locales/*.json`) so ordering is natural in all languages. Check whether "Fleeing" belongs
   under Conditions (`conditions.py`) rather than Keywords.
@@ -218,7 +208,7 @@ the rest.
     Commander's fifth talent for the Kenku (Dread Voice stands in for Wordless Menace, a guess).
   - *Interacts, and could lift the Kenku:* **Intimidation build rework** (the DCs and action economy of Demoralize,
     Medium); in **Talent ideas (2026-10-30)** item 3 (Charisma + Wisdom: Demoralize on beasts) and item 4 (Archery:
-    +1 damage with a bow, then a conditional Brutal). **Vocation tweaks** (1) Warband +1 Morale does not touch the
+    +1 damage with a bow, then a conditional Brutal). the Warband's +1 morale does not touch the
     Kenku (it is Marsh and Scholars).
   - *Interacts with the Crossbow:* **Weapon actions: tune the favoured cases** (Extreme Shot is the Crossbow's trait,
     with `crit_3x`) and Archery (item 4), if "a bow" is read to include the Crossbow: decide it when the talent is

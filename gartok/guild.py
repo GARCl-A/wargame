@@ -272,7 +272,9 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         the guild leader (by Charisma) if they're no longer on the roster,
         does the same per group (`Group.ensure_leader`), then folds each
         group's `overextension` into its members' Mental Defense
-        (`Unit._derive_ac` reads `unit.group_overextension`)."""
+        (`Unit._derive_ac` reads `unit.group_overextension`) and stamps the
+        guild's vocation on every member (`Unit.vocation`, read by `vocations.morale_bonus`
+        and `vocations.hunger_relief`)."""
         if self.roster and self.leader not in self.roster:
             self.leader = max(self.roster, key=lambda u: u.mod_charisma)
         changed = [g.ensure_leader() for g in self.groups]     # every group, so no short-circuit
@@ -281,8 +283,9 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         for g in self.groups:
             n = g.overextension
             for u in g.members:
-                if u.group_overextension != n:
+                if u.group_overextension != n or u.vocation != self.vocation:
                     u.group_overextension = n
+                    u.vocation = self.vocation
                     u._derive_combat()
 
     # ------------------------------------------------------------------ #

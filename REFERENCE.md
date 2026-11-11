@@ -120,12 +120,12 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 
 | Vocation | Races | Perk |
 |---|---|---|
-| Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll: fewer walk-outs from an overextended group. |
-| Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering: work shifts, and the meat, mushrooms and fruit of a hunt or forage. |
+| Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 starting morale for every member in a fight. |
+| Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering: the Mine and the Lumber Yard's gather tabs, and the meat, mushrooms and fruit of a hunt or forage. Wages are not touched. |
 | Wanderers | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | Ambushes are 20% less likely while a group travels Cautious: on the Old Road and on a hunt. |
 | Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information: the opening read and Assess. |
 | Caravan | Human, Halfling, Dwarf, Catfolk, Automaton, Centaur | Travel takes 15% fewer hours. |
-| Survivors | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | On every 10th day no food in the guild ages. |
+| Survivors | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | The attribute penalty of a Hungry or Starving member is 2 lighter. |
 
 ## Weapons
 

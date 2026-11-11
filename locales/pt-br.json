@@ -6066,12 +6066,12 @@
             "RISKY": "Uma escolha difícil: um corpo frágil, que exige jogar em torno dele. Nem sempre ruim: um ótimo líder pode ser frágil."
         },
         "vocation": {
-            "warband": "+{cohesion_bonus} de Defesa Mental na rolagem diária de coesão: menos deserções num grupo grande demais.",
-            "delvers": "+{gather_bonus:.0%} de rendimento na coleta: turnos de trabalho, e a carne, os cogumelos e as frutas de uma caçada ou busca.",
+            "warband": "+{morale_bonus} de moral inicial para cada membro numa luta.",
+            "delvers": "+{gather_bonus:.0%} de rendimento na coleta: as abas de coleta da Mina e da Serraria, e a carne, os cogumelos e as frutas de uma caçada ou busca. Salários não mudam.",
             "wilds": "Emboscadas são 20% menos prováveis enquanto o grupo viaja Cauteloso: na Estrada Velha e numa caçada.",
             "scholars": "+{info_bonus} na rolagem de INT que revela informações do inimigo: a leitura inicial e Avaliar.",
             "caravan": "A viagem leva 15% menos horas.",
-            "marsh": "A cada {food_pause_every}º dia, nenhum alimento da guilda envelhece."
+            "marsh": "A penalidade de atributo de um membro com Fome ou Faminto é {hunger_relief} menor."
         },
         "vocation_motto": {
             "warband": "Mantemos a linha juntos, ou não mantemos.",

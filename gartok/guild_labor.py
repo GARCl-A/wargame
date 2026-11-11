@@ -62,7 +62,7 @@ class LaborMixin:
         events = []
         for u in earners:
             level = economy.work_level(u, node_id)
-            pay = vocations.gather_pay(self, economy.work_pay(node_id, hours, level))
+            pay = economy.work_pay(node_id, hours, level)
             paid.append(self._pay_worker(u, pay, hours, level, events))
         if earners:
             names = ", ".join(u.name for u in earners)

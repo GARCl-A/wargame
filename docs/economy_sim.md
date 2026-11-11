@@ -105,20 +105,16 @@ The report prints today's number next to each; the exit code is 1 if one fails.
   (what-ifs), `--curve`, `--ranking`.
 - **Vocations (`--vocation`)** pass the id to the real `Guild`, so every perk runs through
   `gartok/vocations.py`; the script adds no rule. Delvers: the hunt's and the gathering shifts'
-  yield. Caravan: `vocations.travel_mult` on every walk. Survivors: the real daily upkeep skips
-  the rot on every 10th day (it shows only where food is held long enough to spoil, such as the
-  `balanced` guild's trip stock; the `lumber` guild buys day to day and loses nothing either way).
+  yield. Caravan: `vocations.travel_mult` on every walk. Survivors: `vocations.hunger_relief` softens the real hunger penalty (the sim's
+  members eat every day, so it never fires there).
   Wanderers: the guild travels *Cautious* (`Sim.main.stance`, the crew's too), which the rules
   make free, so the perk's x0.8 reaches the hunt hour, the Old Road leg and the gathering shift.
   Scholars: the library's fights are played with `battle.intel.bind("player", None,
   vocations.info_bonus(guild))` (`FightLibrary.with_info_bonus`; same seeds and cache as the plain
   library, only the bonus differs), so the squad reads its foes at +2 and the AI acts on more.
-  Warband: the real cohesion roll adds its +1 Mental Defense, and the roll is made for any group
-  that is overextended, whatever it is doing. **Still not exercised by any policy:** the sim's
-  groups never pass their leader's capacity (the policies cap the squad at 4), so the roll never
-  fires and Warband gives the same result as no vocation (`test_a_warband_sim_keeps_the_member_...`
-  proves the wiring with an overextended group). Missing sim behaviour: a guild that grows past
-  its leader's capacity. Also unexercised: the Scholars' Assess action and the
+  Warband: its +1 is starting morale in a fight, and the library's fights are played from fixed
+  seeds without the guild's vocation, so the sim never exercises it. Missing sim behaviour: the
+  vocation reaching the library's fighters. Also unexercised: the Scholars' Assess action and the
   bestiary's race discount (the library has no persistent bestiary, so only the opening read
   is bonused), the Night Prowler and Woodland Scout (talents, not vocations), and a Cautious
   guild's lost XP and loot beyond the fewer fights it draws.

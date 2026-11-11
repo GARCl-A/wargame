@@ -65,7 +65,12 @@ class HungerMixin:
 
     @property
     def hunger_attribute_penalty(self):
-        return HUNGER_PENALTIES[self.hunger_level]
+        level = self.hunger_level
+        penalty = HUNGER_PENALTIES[level]
+        if level in (1, 2):
+            from . import vocations     # vocations -> group -> animals -> stash -> unit: a top-level import is a cycle
+            penalty = min(0, penalty + vocations.hunger_relief(self))
+        return penalty
 
     @property
     def hunger_label(self):

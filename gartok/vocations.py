@@ -17,13 +17,13 @@ from .group import CAUTIOUS
 WARBAND, DELVERS, WILDS, SCHOLARS, CARAVAN, MARSH = (
     "warband", "delvers", "wilds", "scholars", "caravan", "marsh")
 
-COHESION_BONUS = 1          # Warband: added to Mental Defense in the daily cohesion roll only
+MORALE_BONUS = 1            # Warband: added to a member's starting morale in a fight
 GATHER_BONUS = 0.15         # Delvers: extra yield from gathering work
 NIGHT_PROWLER_AMBUSH = 0.8    # Catfolk Night Prowler: x on the ambush chance at night, while Cautious
 CAUTIOUS_AMBUSH = 0.8       # Wanderers: x on the ambush chance while the group is Cautious
 TRAVEL_FACTOR = 0.85        # Caravan: x on travel hours, after wagon and animal speed
 PATHFINDER_FACTOR = 0.90    # a Pathfinder in the group: x on travel hours, stacks with Caravan
-FOOD_PAUSE_EVERY = 10       # Survivors: on every 10th day of the guild's clock no food ages
+HUNGER_RELIEF = 2           # Marsh: softens the attribute penalty of a Hungry or Starving member (not the last two days)
 INFO_BONUS = 2              # Scholars: bonus on the INT roll that reveals enemy info (the opening read and Assess)
 
 POOL_SIZE = 9
@@ -41,8 +41,8 @@ class Vocation:
 
     @property
     def perk(self):
-        return i18n.desc("vocation", self.id, cohesion_bonus=COHESION_BONUS, gather_bonus=GATHER_BONUS,
-                         info_bonus=INFO_BONUS, food_pause_every=FOOD_PAUSE_EVERY)
+        return i18n.desc("vocation", self.id, morale_bonus=MORALE_BONUS, gather_bonus=GATHER_BONUS,
+                         info_bonus=INFO_BONUS, hunger_relief=HUNGER_RELIEF)
 
     @property
     def motto(self):
@@ -71,8 +71,8 @@ def _is(guild, vocation_id):
     return guild.vocation == vocation_id
 
 
-def cohesion_bonus(guild):
-    return COHESION_BONUS if _is(guild, WARBAND) else 0
+def morale_bonus(unit):
+    return MORALE_BONUS if _is(unit, WARBAND) else 0
 
 
 def info_bonus(guild):
@@ -81,15 +81,6 @@ def info_bonus(guild):
 
 def gather_mult(guild):
     return 1 + GATHER_BONUS if _is(guild, DELVERS) else 1.0
-
-
-def gather_pay(guild, copper, rng=random):
-    """`copper` plus the Delvers' share, in whole coins: the fraction of a coin the
-    bonus leaves over is paid out with that chance, so a small wage gets +15% on
-    average and not whatever rounding gives."""
-    extra = copper * (gather_mult(guild) - 1)
-    whole = int(extra)
-    return copper + whole + (rng.random() < extra - whole)
 
 
 def travel_mult(guild, group=None):
@@ -120,8 +111,8 @@ def ambush_mult(guild, stance, scout=False, prowler=False):
     return mult
 
 
-def food_pauses(guild):
-    return _is(guild, MARSH) and guild.clock.day % FOOD_PAUSE_EVERY == 0
+def hunger_relief(unit):
+    return HUNGER_RELIEF if _is(unit, MARSH) else 0
 
 
 def draft_pool(vocation_id, size=POOL_SIZE, rng=random):

@@ -775,35 +775,6 @@ def test_a_wanderers_sim_hunts_with_fewer_ambushes():
     assert chances == {0: 1.0, 1: 0.8}
 
 
-def test_a_survivors_sim_loses_less_food_to_rot():
-    from gartok import items
-    kept = {}
-    for vid in (None, "marsh"):
-        sim = _sim("lumber", vocation=vid, library=_WON)
-        stack = items.create_instance("Potato", qty=20)
-        stack.days_old = stack.defn.lifespan - 1
-        sim.members[0]._base_inventory.append(stack)
-        sim.guild.clock.seconds = 8 * 86400 + 1           # two days that cross the 10th
-        for _ in range(2):
-            sim.pass_hours(24)
-        kept[vid] = sum(i.qty for i in sim.members[0]._base_inventory if i.name == "Potato")
-    assert kept[None] == 0 < kept["marsh"]
-
-
-def test_a_warband_sim_keeps_the_member_a_plain_guild_loses_to_the_crowd(monkeypatch):
-    from gartok import cohesion
-    real = cohesion.daily
-    left = {}
-    for vid in (None, "warband"):
-        sim = _sim("lumber", size=6, vocation=vid, library=_WON)
-        assert sim.main.overextension
-        monkeypatch.setattr(cohesion, "daily", lambda guild: real(
-            guild, d20=lambda: cohesion.weakest(guild, guild.groups[0]).mental_defense))
-        sim.pass_hours(24)
-        left[vid] = bool(sim.guild.leaving) or len(sim.guild.groups) > 1
-    assert left == {None: True, "warband": False}
-
-
 def test_a_scholars_sim_reads_its_foes_better_and_fights_differently():
     plain = sim_mod.FightLibrary(samples=40)
     sim = _sim("balanced", vocation="scholars", library=plain)
