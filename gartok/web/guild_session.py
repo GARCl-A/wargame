@@ -372,7 +372,7 @@ class GuildSession(Session):
             "packs": [*(self._column(u) for u in g.members), *(self._animal_column(a) for a in g.herd)],
             "wagons": [self._wagon(w) for w in g.wagons],
             "jobs": self._jobs(),
-            "captives": [{"uid": c.unit.uid, "name": c.name, "race": c.unit.race_label, "days": c.days_left(today)}
+            "captives": [{"uid": c.unit.uid, "name": c.name, "race": c.unit.race_label, "days": None if c.ward else c.days_left(today), "ward": c.ward}
                          for c in g.captives],
         }
 

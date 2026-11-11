@@ -8,7 +8,7 @@ clue asking around turned up (`investigation.bonus`).
 """
 
 from . import data, i18n, investigation, items, loot, missions, world
-from .board import Board
+from .board import Board, grid_distance
 from .ground import GroundObject
 from .scenario import Scenario
 
@@ -71,6 +71,7 @@ FIGHTERS = ("cult-fighter-1", "cult-fighter-2")
 CHANNELERS = ("cult-channeler-blood", "cult-channeler-nature", "cult-channeler-faith")
 DAUGHTER = "farmers-daughter"
 DEMON = "the-demon"
+GOAL_CAPTIVE = "farmers_daughter"      # what `missions.FARMER_DAUGHTER.goal_captive` asks the band for
 
 COLS, ROWS = 36, 24
 POINTS = ((18, 5), (11, 17), (25, 17))      # the triangle: a channeler is bound to each
@@ -111,10 +112,10 @@ class CultSiteScenario(Scenario):
     torch_count = 0
     spares_the_squad = True
 
-    def __init__(self, squad=None):
+    def __init__(self, squad=None, head_start=False):
         self.allies = []
         self.enemies = cultists()
-        self.bar = 0
+        self.bar = STEP if head_start else 0
         self.rite_began = False
         self.demon_came = False
         self.daughter_alive = True
@@ -154,6 +155,24 @@ class CultSiteScenario(Scenario):
     @staticmethod
     def _leader(battle):
         return next((u for u in battle.enemy_units if slug_of(u) == LEADER), None)
+
+    def ai_post(self, battle, unit):
+        """Where `ai/` ties a cultist (`ai.scripted._channel`): a channeler to its point; the leader to the
+        centre once the bar is full, else to a point no one holds, so the rite never starves."""
+        slug = slug_of(unit)
+        if slug in CHANNELERS:
+            return POINTS[CHANNELERS.index(slug)]
+        if slug != LEADER:
+            return None
+        if self.bar >= BAR_MAX:
+            return CENTRE
+        held = {u.pos for u in battle.units if u.alive and u is not unit}
+        free = [p for p in POINTS if p not in held]
+        return min(free, key=lambda p: grid_distance(p, unit.pos)) if free else None
+
+    def ai_must_stay(self, battle, unit):
+        """The leader at the centre with the bar full spends his whole turn on the rite: no attacks."""
+        return slug_of(unit) == LEADER and unit.pos == CENTRE and self.bar >= BAR_MAX
 
     def on_turn_start(self, battle, unit):
         if self.demon_came or not knows_the_rite(unit) or not able(unit):
@@ -197,14 +216,41 @@ class CultSiteScenario(Scenario):
         battle._check_winner()
 
 
-def settle_fight(guild, battle):
+def head_start(opening):
+    """Did the talk before the fight give the rite a head start (a missed Bluff or Intimidate)?"""
+    return bool(opening is not None and opening.initiative.get("enemy"))
+
+
+def let_proceed(guild):
+    """The squad let the rite run: no fight, the girl lost, the site left as a closed rite leaves it (her
+    Holy Symbol lies there). -> the notice."""
+    guild.cult["state"] = "failed"
+    guild.cult["remains"] = [items.HOLY_SYMBOL_ITEM]
+    return i18n.t("cult_site.settle_failed")
+
+
+def free_daughter(guild, group):
+    """The cult is down: the daughter walks with the band as a ward (`captives.Captive.ward`), delivered at
+    the Farm by the job (`goal_captive`). Once only. -> the notice, or None."""
+    if guild.cult.get("state") != "won" or guild.cult.get("freed"):
+        return None
+    from . import captives, npc_lib
+    girl = npc_lib.load_npc(DAUGHTER)
+    girl.team = "player"
+    group.captives.append(captives.Captive(girl, guild.clock.day, GOAL_CAPTIVE, ward=True))
+    guild.cult["freed"] = True
+    return i18n.t("cult_site.daughter_walks_with_you", name=girl.name)
+
+
+def settle_fight(guild, battle, group=None):
     """What the fight leaves of the quest. -> the notice lines. A win frees the daughter (she waits for the
     guild's word, `cult["state"] == "won"`); a closed rite leaves the site abandoned, her body and what the
     guild's dead carried lying there for whoever comes back (`search_remains`)."""
     cult = guild.cult
     if battle.winner == "player":
         cult["state"] = "won"
-        return [i18n.t("cult_site.settle_won")]
+        walks = free_daughter(guild, group) if group is not None else None
+        return [i18n.t("cult_site.settle_won"), *([walks] if walks else [])]
     if battle.scenario.demon_came:
         cult["state"] = "failed"
         remains = [items.HOLY_SYMBOL_ITEM]

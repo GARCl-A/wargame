@@ -94,7 +94,7 @@ const Bands = (() => {
   function side() {
     const jobs = B.jobs.length ? B.jobs.map(j => `<div class="job"><b>${esc(j.name)}</b><p>${tr("bands.held_by", {by: esc(j.by)})}${j.days !== null && j.days !== undefined ? ` · ${tr("bands.days_left", {days: plural(j.days, "day")})}` : ""}${j.progress ? ` · ${j.progress[0]} / ${j.progress[1]} ${esc(j.progress[2])}` : ""}</p></div>`).join("")
       : `<div class="empty-note">${tr("bands.no_jobs")}</div>`;
-    const caps = B.captives.length ? B.captives.map(c => `<div class="job"><b>${esc(c.name)}</b><p>${tr("bands.dies_in", {race: esc(c.race), days: plural(c.days, "day")})}</p><div class="ghost-btn" data-btn="release:${c.uid}">${tr("bands.release")}</div></div>`).join("")
+    const caps = B.captives.length ? B.captives.map(c => `<div class="job"><b>${esc(c.name)}</b><p>${c.ward ? tr("bands.ward", {race: esc(c.race)}) : tr("bands.dies_in", {race: esc(c.race), days: plural(c.days, "day")})}</p>${c.ward ? "" : `<div class="ghost-btn" data-btn="release:${c.uid}">${tr("bands.release")}</div>`}</div>`).join("")
       : `<div class="empty-note">${tr("bands.no_captives")}</div>`;
     return B.wagons.map(wagon).join("") + `<div class="col" style="flex:1 0 auto">
       <div class="csec lbl" style="margin-top:2px">${tr("bands.jobs")}</div>${jobs}

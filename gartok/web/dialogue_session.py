@@ -8,15 +8,15 @@ Three talks open it: a forced fight's (the guard, the ambushes: `forced_talk`), 
 import re
 from typing import ClassVar
 
-from .. import dialogue, encounters, forced, i18n, orders, recorder, wildfire, world
+from .. import cult_site, dialogue, encounters, forced, i18n, orders, recorder, wildfire, world
 from ..constants import fmt_money
 from .map_session import _portrait, _when
 from .session import Session
 
 VERB_ICONS = {"persuade": "action/convince", "teach": "action/teacher", "bluff": "action/juggler",
               "intimidate": "action/shouting", "bribe": "item/two-coins", "surrender": "action/kneeling",
-              "leave": "action/run", "attack": "item/broadsword"}
-SEALS = {"guard": "action/arrest", "boss": "hat/crown", "wildfire": "item/torch"}
+              "leave": "action/run", "attack": "item/broadsword", "let_proceed": "action/kneeling"}
+SEALS = {"guard": "action/arrest", "boss": "hat/crown", "wildfire": "item/torch", "cult": "symbol/pentagram-rose"}
 _ROLL = re.compile(r"\s*\(d20\((\d+)\) ([+-]\d+)(?:\([A-Z]+\))? = (-?\d+) vs DC (\d+)\)")
 
 
@@ -211,6 +211,22 @@ def wildfire_talk(map_session, group):
         if result.kind == "fight":
             map_session.game.open(map_session)
             return map_session._enter(group, orders.interactive("ogre_fight" if great else "camp_fight", hours=0))
+        return _to_map(map_session, group)
+
+    return DialogueSession(map_session, group, enc, done)
+
+
+def cult_talk(map_session, group, squad, guarded):
+    """The talk at the circle before the rite fight: let it run (the girl is lost, no fight), or open the
+    fight with whatever the talk won or lost."""
+    from . import campaign_fight
+    guild = map_session.guild
+    enc = dialogue.CultTalk(cult_site.cultists())
+
+    def done(result):
+        if result.kind == "fight":
+            return campaign_fight.cult_fight(map_session, group, squad, guarded, result.opening)
+        map_session.say(cult_site.let_proceed(guild), "talk", group)
         return _to_map(map_session, group)
 
     return DialogueSession(map_session, group, enc, done)

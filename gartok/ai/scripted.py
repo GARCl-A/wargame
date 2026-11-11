@@ -1,4 +1,4 @@
-"""The turns a scenario scripts: capture the flag, patrols, the heist, the necromancer."""
+"""The turns a scenario scripts: capture the flag, patrols, the heist, the necromancer, the channelers."""
 
 from .. import actions
 from ..board import grid_distance
@@ -188,3 +188,37 @@ def _fetch(battle, unit):
     if battle.winner is None and battle.active is unit:
         battle.end_turn()
     return True
+
+
+CHANNEL_SPELL_REACH = 6     # what a caster tethered to its post still answers from there
+
+
+def _channel_reach(unit):
+    spells = bool(getattr(unit, "spells_known", ()))
+    return max(CHANNEL_SPELL_REACH if spells else 1, 1 + getattr(unit.weapon, "reach", 0), getattr(unit.weapon, "range", 0))
+
+
+def _channel(battle, unit):
+    """A unit the scenario ties to a post (`Scenario.ai_post`: a channeler's point, the leader's centre):
+    off it, walk back; on it, fight only what reaches from there, else keep the post and end the turn.
+    -> "acted", "hold" (the turn is spent) or None (no post, or it is held by a body to fight through:
+    play as usual)."""
+    post = getattr(battle.scenario, "ai_post", lambda _b, _u: None)(battle, unit)
+    if post is None:
+        return None
+    if unit.pos == post:
+        if getattr(battle.scenario, "ai_must_stay", lambda _b, _u: False)(battle, unit):
+            return "hold"
+        reach = _channel_reach(unit)
+        foes = [e for e in battle.units if e.alive and e.team != unit.team and not unit.hidden_from(e.team)
+                and battle.units_distance(unit, e) <= reach]
+        return None if foes and unit.ap >= 1 else "hold"
+    if unit.ap < 1 or unit.walking:
+        return None
+    reach = battle.reachable(unit)
+    dest = post if post in reach else next((c for c in reversed(battle.path_to(unit, post)) if c in reach), None)
+    if dest is None or dest == unit.pos:
+        return None
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
+    return "acted"

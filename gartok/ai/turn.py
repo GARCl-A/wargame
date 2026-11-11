@@ -46,6 +46,7 @@ from .scripted import (
     _ctf_goal,
     _fetch,
     _heist,
+    _channel,
     _necromancy,
     _patrol,
 )
@@ -173,6 +174,12 @@ def take_turn(battle, unit):
 
         if _try_capture(battle, unit):
             continue
+
+        posted = _channel(battle, unit)
+        if posted == "acted":
+            continue
+        if posted == "hold":
+            break
 
         raised = _necromancy(battle, unit)
         if raised == "acted":

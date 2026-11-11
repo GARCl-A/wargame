@@ -28,6 +28,7 @@ class Captive:
     unit: object                  # the bound Unit
     taken_day: int
     npc_slug: str | None = None
+    ward: bool = False            # under the guild's protection (a rescued girl): never dies in captivity, only a job takes her
 
     herd_weight = HERD_WEIGHT
 
@@ -57,7 +58,7 @@ def daily(guild):
     """A day passed: captives whose days are up die, leaving any body worth keeping."""
     lines = []
     for group in guild.groups:
-        for cap in [c for c in group.captives if c.days_left(guild.clock.day) <= 0]:
+        for cap in [c for c in group.captives if not c.ward and c.days_left(guild.clock.day) <= 0]:
             group.captives.remove(cap)
             body = CORPSES.get(cap.npc_slug)
             if body and group.leader is not None:
@@ -69,10 +70,10 @@ def daily(guild):
 
 
 def to_dict(cap, unit_to_dict):
-    return {"unit": unit_to_dict(cap.unit), "taken_day": cap.taken_day, "npc_slug": cap.npc_slug}
+    return {"unit": unit_to_dict(cap.unit), "taken_day": cap.taken_day, "npc_slug": cap.npc_slug, "ward": cap.ward}
 
 
 def from_dict(d, unit_from_save):
     unit = unit_from_save(d["unit"])
     unit.npc_slug = d["npc_slug"]
-    return Captive(unit, d["taken_day"], d["npc_slug"])
+    return Captive(unit, d["taken_day"], d["npc_slug"], d.get("ward", False))

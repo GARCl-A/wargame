@@ -175,18 +175,25 @@ def cult_ritual(map_session, group):
         map_session.say(i18n.t("cult_site.cold"), "guild", group)
         return _to_map(map_session, group)
     return _watched(map_session, group, i18n.t("campaign.errand.cult_site"), i18n.t("campaign.lead.cult_site"),
-                    lambda squad, guarded: _cult_fight(map_session, group, squad, guarded))
+                    lambda squad, guarded: _cult_talk(map_session, group, squad, guarded))
 
 
-def _cult_fight(map_session, group, squad, guarded):
+def _cult_talk(map_session, group, squad, guarded):
+    from .dialogue_session import cult_talk
+    return map_session._talk(cult_talk(map_session, group, squad, guarded))
+
+
+def cult_fight(map_session, group, squad, guarded, opening=None):
     guild, node = map_session.guild, world.node(group.node)
-    scenario = cult_site.CultSiteScenario(squad)
+    scenario = cult_site.CultSiteScenario(squad, head_start=cult_site.head_start(opening))
     battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=guild.clock.is_daylight, lethal=True,
                     clock_day=guild.clock.day, aggressor="player")
+    if opening is not None:
+        battle.open_with(**opening.to_dict())
 
     def settle(_outcome):
         wagon_watch.leave_outside(group, node, guarded)
-        return cult_site.settle_fight(guild, battle)
+        return cult_site.settle_fight(guild, battle, group)
 
     return _enter(map_session, group, battle, node, "cult_ritual", i18n.t("campaign.title.cult_site"), settle,
                   squad=squad, nature=ERRAND_NATURE)

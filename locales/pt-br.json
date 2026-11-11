@@ -940,6 +940,7 @@
             "unl_at": "em {need}"
         },
         "bands": {
+            "ward": "{race} · sob a sua proteção",
             "rename": "Renomear o grupo",
             "view_packs": "Mochilas",
             "view_routine": "Rotina",
@@ -2964,6 +2965,7 @@
             "teach": "Ensinar",
             "bluff": "Blefar",
             "intimidate": "Intimidar",
+            "let_proceed": "Deixar o rito seguir",
             "bribe": "Subornar",
             "surrender": "Render-se",
             "leave": "Fugir",
@@ -2991,11 +2993,13 @@
         "title": {
             "ambush": "EMBOSCADA",
             "guard": "A GUARDA",
+            "cult": "O CULTO DO DEMÔNIO",
             "challenge": "DESAFIO"
         },
         "line": {
             "ambush": "\"A bolsa ou o sangue.\" {n} deles bloqueiam o caminho.",
             "guard": "\"{names}, em nome da Cidade, vocês virão conosco.\"",
+            "cult": "\"Vão embora. Chegaram tarde demais para salvá-la, e cedo demais para ver para que ela serve.\" O Hierofante não baixa o livro.",
             "challenge": "\"Quem anda pelos salões do mestre?\" A patrulha ergue a tocha.",
             "wildfire_great": "\"O fogo limpa o terreno. Todo mundo sabe disso.\" O Ogro nem levanta os olhos.",
             "wildfire": "\"Mais lenha! Lenha verde queima mais!\" O capataz acena para a turma continuar."
@@ -3019,6 +3023,13 @@
                 "bribe": "eles olham para o outro lado: o crime fica",
                 "attack": "letal; sobreviver aumenta a ficha criminal",
                 "leave": "recue pelo caminho por onde o grupo veio"
+            },
+            "cult": {
+                "persuade": "fechado: eles já escolheram",
+                "bluff": "uma história que compra o primeiro golpe · se falhar, o rito ganha dianteira",
+                "intimidate": "quebre a coragem deles: começam desmoralizados · se falhar, o rito ganha dianteira",
+                "let_proceed": "sem luta: o rito se fecha e a moça se perde",
+                "attack": "rolar iniciativa"
             },
             "challenge": {
                 "bluff": "o novo turno, ou tributo ao mestre · se falhar, o alarme soa",
@@ -3051,6 +3062,15 @@
             "attack": "{speaker} ataca antes que eles possam dar o alarme!",
             "bluff_win": "O dracônico de {speaker} se sustenta ({line}). A patrulha segue em frente.",
             "bluff_miss": "Os kobolds sibilam diante da mentira ({line}) e atacam primeiro!"
+        },
+        "cult": {
+            "persuade_closed": "eles já escolheram",
+            "bluff_win": "A história de {speaker} cola ({line}). Os cultistas olham para o Hierofante, e o primeiro golpe é de vocês.",
+            "bluff_miss": "O Hierofante enxerga a mentira ({line}). \"Comecem o rito\", diz ele, e os canalizadores se inclinam sobre ele.",
+            "intimidate_win": "{speaker} os encara até baixarem os olhos ({line}). As mãos tremem sobre os livros.",
+            "intimidate_miss": "O Hierofante sorri ({line}). \"Comecem o rito\", diz ele, e os canalizadores se inclinam sobre ele.",
+            "let_proceed": "O grupo baixa as armas e recua. Os braseiros queimam brancos, o rito se fecha, e a moça não acorda.",
+            "attack": "{speaker} golpeia antes de a primeira palavra ser dita."
         },
         "wildfire": {
             "who_great": "o Ogro",
@@ -4275,6 +4295,7 @@
         "rite_closes": "O Rito Final se fecha.",
         "daughter_dies": "Wynn Ashvale, amarrada no centro, não acorda.",
         "demon_comes": "O ar se rasga. Algo enorme sai do círculo e o campo silencia. Não mata ninguem. Deita todos no chao.",
+        "daughter_walks_with_you": "{name} agora anda ao seu lado, sob a proteção da guilda até chegar em casa.",
         "settle_won": "O culto está quebrado. Wynn Ashvale está solta e viva; vai para casa com vocês.",
         "settle_failed": "Vocês acordam no chao frio. Os braseiros apagaram, o círculo está vazio e nada matou vocês. Quem não acordou jaz onde caiu, e a moça também.",
         "remains_none": "O círculo jaz frio. Não sobrou nada aqui.",

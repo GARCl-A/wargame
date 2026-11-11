@@ -956,6 +956,7 @@
       "unl_at": "at {need}"
     },
     "bands": {
+      "ward": "{race} · under your protection",
       "rename": "Rename the band",
       "view_packs": "Packs",
       "view_routine": "Routine",
@@ -5097,6 +5098,7 @@
     "rite_closes": "The Final Rite closes.",
     "daughter_dies": "Wynn Ashvale, bound at the centre, does not wake.",
     "demon_comes": "The air tears. Something enormous steps out of the circle and the field goes quiet. It kills no one. It lays everyone down.",
+    "daughter_walks_with_you": "{name} walks beside you now, under the guild's protection until she is home.",
     "settle_won": "The cult is broken. Wynn Ashvale is untied and alive; she will go home with you.",
     "settle_failed": "You wake on cold ground. The braziers are out, the circle is empty, and nothing killed you. Those who did not wake lie where they fell, and so does the girl.",
     "remains_none": "The circle lies cold. Nothing is left here.",
@@ -6161,6 +6163,7 @@
       "teach": "Teach",
       "bluff": "Bluff",
       "intimidate": "Intimidate",
+      "let_proceed": "Let it proceed",
       "bribe": "Bribe",
       "surrender": "Surrender",
       "leave": "Run",
@@ -6188,11 +6191,13 @@
     "title": {
       "ambush": "AMBUSHED",
       "guard": "THE GUARD",
+      "cult": "THE DEMON CULT",
       "challenge": "CHALLENGED"
     },
     "line": {
       "ambush": "\"Your purse or your blood.\" {n} of them block the way.",
       "guard": "\"{names}, in the name of the City, you will come with us.\"",
+      "cult": "\"Walk away. You came too late to save her, and too early to see what she is for.\" The Hierophant does not lower his book.",
       "challenge": "\"Who walks in the master's halls?\" The patrol raises its torch.",
       "wildfire_great": "\"Fire clears ground. Everybody knows that.\" The Ogre does not look up.",
       "wildfire": "\"More wood! Green wood burns longest!\" The foreman waves the crew on."
@@ -6216,6 +6221,13 @@
         "bribe": "they look away: the crime stays",
         "attack": "lethal; living through it adds to the rap sheet",
         "leave": "fall back the way the group came"
+      },
+      "cult": {
+        "persuade": "closed: they have already chosen",
+        "bluff": "a story that buys the first blow · a miss and the rite gets a head start",
+        "intimidate": "break their nerve: they start demoralized · a miss and the rite gets a head start",
+        "let_proceed": "no fight: the rite closes and the girl is lost",
+        "attack": "roll initiative"
       },
       "challenge": {
         "bluff": "the new shift, or tribute for the master · a miss rings the alarm",
@@ -6249,6 +6261,15 @@
       "bluff_win": "{speaker}'s Draconic holds ({line}). The patrol walks on.",
       "bluff_miss": "The kobolds hiss at the lie ({line}) and strike first!"
     },
+    "cult": {
+      "persuade_closed": "they have already chosen",
+      "bluff_win": "{speaker}'s story holds ({line}). The cultists look to the Hierophant, and the first blow is yours.",
+      "bluff_miss": "The Hierophant sees through it ({line}). \"Begin the rite,\" he says, and the channelers lean into it.",
+      "intimidate_win": "{speaker} stares them down ({line}). Hands shake on the books.",
+      "intimidate_miss": "The Hierophant smiles ({line}). \"Begin the rite,\" he says, and the channelers lean into it.",
+      "let_proceed": "The group lowers its arms and steps back. The braziers burn white, the rite closes, and the girl does not wake.",
+      "attack": "{speaker} strikes before the first word is said."
+    },
     "wildfire": {
       "who_great": "the Ogre",
       "who": "the foreman",
@@ -6264,6 +6285,7 @@
       "fight": "FIGHT",
       "leave": "RUN",
       "surrender": "GO WITH THEM",
+
       "next": "GO ON"
     }
   },

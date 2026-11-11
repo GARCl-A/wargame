@@ -99,9 +99,9 @@ Cada fase e um commit no `main`.
    aberto `outdoor`, triangulo, a filha como `ai_ally` dormente; barra e Ritual Final em `on_round`, no `CombatLog`;
    o fim nao letal (hoje `win_check` devolver `"enemy"` apaga o esquadrao, `battle.py:812`); os restos em
    `Guild.cult`.
-7. **A IA.** `_channel` em `ai/scripted.py` (modelo `_necromancy`); o lider faz o Ritual Final e canaliza numa
+7. **A IA (feito: `_channel` em `ai/scripted.py` ligado em `ai/turn.py` antes de `_necromancy`; `cult_site.ai_post`/`ai_must_stay` dizem a ponta de cada um e quem nao pode sair dela; canalizador fora da ponta anda de volta antes de agir, ja na ponta so ataca o que alcanca com o feitico; o lider assume a ponta vazia quando um canalizador cai.)** `_channel` em `ai/scripted.py` (modelo `_necromancy`); o lider faz o Ritual Final e canaliza numa
    ponta vazia; os lutadores protegem os canalizadores; a IA inimiga ignora a filha.
-8. **Conversa, resgate e entrega.** `CultTalk` (modelo `Challenge` e `WildfireTalk`); a filha como cativa `ward`
+8. **Conversa, resgate e entrega (feito: `dialogue.CultTalk` kind `cult`, verbos persuadir (fechado), blefar (surpresa), intimidar (cultistas Demoralized), deixar seguir (sem luta, `cult_site.let_proceed`: estado `failed`, filha perdida, so o Simbolo nos restos) e atacar; blefe ou intimidacao falhos dao ao rito a vantagem de um passo na barra (`head_start`); `dialogue_session.cult_talk` abre antes de `campaign_fight.cult_fight`; vitoria cria a cativa `ward` `farmers_daughter` (`cult_site.free_daughter`, uma vez) e a linha da aba Bandos mostra "sob protecao"; falta so a entrega na Farm, que ja funciona pelo `goal_captive` e e testada na fase 9).** `CultTalk` (modelo `Challenge` e `WildfireTalk`); a filha como cativa `ward`
    (ignora os 7 dias de `captives.daily`) e entrega pelo `goal_captive` que ja existe.
 9. **Fracasso e lancamento.** `Guild.cult` e o `daily` do `cult_site` em `guild_upkeep` (15 dias, prazo estourado); o no
    mostra `cult_ritual` ou `demon_lair`; demonio autoral; registrar o template em `TEMPLATES`; `python -m

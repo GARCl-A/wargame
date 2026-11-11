@@ -185,6 +185,14 @@ def at_the_site(tmp_path, monkeypatch):
     recorder.detach()
 
 
+def _fight(game, g, verb="attack"):
+    """The site's talk, ended with `verb` (a plain ATTACK: no roll), up to the battle screen."""
+    assert game.session.act(g.gid, "cult_ritual") == {"screen": "talk"}
+    game.session.choose(verb)
+    assert game.session.go_on() == {"screen": "battle"}
+    return game.session.battle
+
+
 def _finish(game, won):
     b = game.session.battle
     if won:
@@ -202,7 +210,7 @@ def _finish(game, won):
 def test_the_site_opens_the_fight_with_the_rite_hud(at_the_site):
     guild, g, _m = at_the_site
     game = Game(MapSession(guild))
-    assert game.session.act(g.gid, "cult_ritual") == {"screen": "battle"}
+    _fight(game, g)
     s = game.session
     assert isinstance(s, BattleSession) and isinstance(s.battle.scenario, CultSiteScenario)
     state = s.state()
@@ -213,16 +221,17 @@ def test_the_site_opens_the_fight_with_the_rite_hud(at_the_site):
 def test_winning_frees_the_daughter(at_the_site):
     guild, g, _m = at_the_site
     game = Game(MapSession(guild))
-    game.session.act(g.gid, "cult_ritual")
+    _fight(game, g)
     _finish(game, won=True)
-    assert guild.cult["state"] == "won"
+    assert guild.cult["state"] == "won" and guild.cult["freed"]
+    girl = g.captives[0]
+    assert girl.ward and girl.npc_slug == "farmers_daughter"
 
 
 def test_the_closed_rite_is_a_defeat_nobody_dies_from_and_the_site_is_searched_after(at_the_site):
     guild, g, _m = at_the_site
     game = Game(MapSession(guild))
-    game.session.act(g.gid, "cult_ritual")
-    b = game.session.battle
+    b = _fight(game, g)
     leader = fill(b, b.scenario)
     b.scenario.on_turn_end(b, leader)
     b.scenario.on_turn_start(b, leader)
@@ -248,3 +257,139 @@ def test_the_guild_keeps_the_cult_state_in_its_save(tmp_path, monkeypatch):
     guild.cult = {"state": "failed", "remains": ["Torch"]}
     persist.save_game("w", guild)
     assert persist.load_game("w").cult == guild.cult
+
+
+# --- the AI ------------------------------------------------------------------------------------------
+
+from gartok import ai
+
+
+def play_enemies(battle, turns):
+    """The cult's turns by the AI while the squad stands still; stops when the fight is decided."""
+    for _ in range(turns):
+        if battle.winner is not None:
+            break
+        act = battle.active
+        if not act.alive:
+            battle.end_turn()
+        elif act.team == "player":
+            battle.end_turn()
+        else:
+            ai.take_turn(battle, act)
+
+
+def far_squad(battle):
+    for i, c in enumerate(battle.player_units):
+        c.pos = (1, 1 + 3 * i)
+
+
+def test_left_alone_the_cult_fills_the_bar_and_closes_the_rite_without_killing_anyone():
+    battle, scenario = fight()
+    far_squad(battle)
+    for slug in cult_site.FIGHTERS:
+        who(battle, slug).status = "stable"           # the blades would walk over and end the squad first
+    play_enemies(battle, 400)
+    assert battle.winner == "enemy" and scenario.demon_came
+    assert all(c.status == "stable" for c in battle.player_units)
+
+
+def test_a_channeler_pushed_off_its_point_walks_back_before_anything_else():
+    battle, scenario = fight()
+    far_squad(battle)
+    blood = who(battle, cult_site.CHANNELERS[0])
+    who(battle, cult_site.LEADER).status = "stable"           # else he takes the empty point first
+    blood.pos = (POINTS[0][0] + 2, POINTS[0][1])
+    while battle.active is not blood:
+        battle.end_turn() if battle.active.team == "player" or not battle.active.alive else ai.take_turn(battle, battle.active)
+    battle.active.ap = 2
+    ai.take_turn(battle, blood)
+    assert blood.pos == POINTS[0]
+
+
+def test_with_a_channeler_down_the_leader_takes_the_empty_point():
+    battle, scenario = fight()
+    far_squad(battle)
+    downed = who(battle, cult_site.CHANNELERS[1])
+    downed.status = "stable"
+    leader = who(battle, cult_site.LEADER)
+    assert scenario.ai_post(battle, leader) == POINTS[1]
+    leader.pos = (POINTS[1][0], POINTS[1][1] - 2)
+    leader.ap = 2
+    ai.take_turn(battle, leader) if battle.active is leader else None
+    assert scenario.ai_post(battle, leader) == POINTS[1]
+
+
+def test_a_full_bar_sends_the_leader_to_the_centre_and_he_spends_the_turn_there():
+    battle, scenario = fight()
+    far_squad(battle)
+    scenario.bar = BAR_MAX
+    leader = who(battle, cult_site.LEADER)
+    assert scenario.ai_post(battle, leader) == CENTRE
+    leader.pos = CENTRE
+    assert scenario.ai_must_stay(battle, leader)
+
+
+def test_a_channeler_with_no_foe_in_reach_holds_its_point_and_ends_the_turn():
+    from gartok.ai.scripted import _channel
+    battle, scenario = fight()
+    far_squad(battle)
+    blood = who(battle, cult_site.CHANNELERS[0])
+    assert _channel(battle, blood) == "hold"
+    battle.player_units[0].pos = (blood.pos[0] + 1, blood.pos[1])
+    assert _channel(battle, blood) is None
+
+
+# --- the talk before the fight ----------------------------------------------------------------------
+
+from gartok import dialogue
+
+
+def test_persuade_is_closed_and_the_rest_are_offered(at_the_site):
+    guild, g, _m = at_the_site
+    game = Game(MapSession(guild))
+    game.session.act(g.gid, "cult_ritual")
+    st = game.session.state()
+    assert st["kind"] == "cult"
+    options = {o["verb"]: o for o in st["options"]}
+    assert set(options) == {"persuade", "bluff", "intimidate", "let_proceed", "attack"}
+    assert options["persuade"]["block"]
+
+
+def test_letting_the_rite_run_is_no_fight_and_the_girl_is_lost(at_the_site):
+    guild, g, _m = at_the_site
+    game = Game(MapSession(guild))
+    game.session.act(g.gid, "cult_ritual")
+    game.session.choose("let_proceed")
+    assert game.session.go_on()["screen"] == "map"
+    assert guild.cult["state"] == "failed" and guild.cult["remains"] == [items.HOLY_SYMBOL_ITEM]
+    assert len(guild.roster) == 3
+
+
+def test_a_won_bluff_surprises_and_a_won_intimidate_demoralizes():
+    enc = dialogue.CultTalk(cult_site.cultists())
+    speaker = standard_unit()
+    bluff = enc._checked("bluff", speaker, True, 3, "x")
+    assert bluff.kind == "fight" and bluff.opening.surprised == "enemy"
+    scare = enc._checked("intimidate", speaker, True, 3, "x")
+    assert scare.opening.demoralized == "enemy"
+    assert not cult_site.head_start(bluff.opening) and not cult_site.head_start(scare.opening)
+
+
+def test_a_missed_talk_gives_the_rite_its_head_start():
+    enc = dialogue.CultTalk(cult_site.cultists())
+    miss = enc._checked("bluff", standard_unit(), False, -3, "x")
+    assert miss.kind == "fight" and cult_site.head_start(miss.opening)
+    assert CultSiteScenario(head_start=True).bar == STEP
+    assert CultSiteScenario().bar == 0
+    assert not cult_site.head_start(None)
+
+
+def test_the_ward_row_shows_in_the_bands_sheet(at_the_site):
+    guild, g, _m = at_the_site
+    guild.cult["state"] = "won"
+    cult_site.free_daughter(guild, g)
+    assert cult_site.free_daughter(guild, g) is None and len(g.captives) == 1
+    from gartok.web.guild_session import GuildSession
+    state = GuildSession(MapSession(guild), "bands", g.gid).state()
+    rows = [c for band in str(state).split("'captives': ")[1:] for c in [band]]
+    assert "'ward': True" in rows[0] and "'days': None" in rows[0]

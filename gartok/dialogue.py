@@ -55,6 +55,7 @@ VERBS = {v.id: v for v in (
     Verb("surrender", None, False),
     Verb("leave", None, False),
     Verb("attack", None, False),
+    Verb("let_proceed", None, False),
 )}
 
 
@@ -366,6 +367,37 @@ class Challenge(Encounter):
             return Result("peace", i18n.t("dialogue.challenge.bluff_win", speaker=speaker.name, line=line))
         return Result("fight", i18n.t("dialogue.challenge.bluff_miss", line=line),
                       Opening(surprised="player"))
+
+
+class CultTalk(Encounter):
+    """The Demon Cult at its circle (`cult_site.py`). Letting the rite run is always open: no fight, the
+    girl is lost. Persuade is closed. A Bluff that holds gives the squad the first blow; an Intimidate that
+    holds starts the cult Demoralized (only a spent morale makes one run, `morale.py`). A miss at either
+    gives the rite a head start on its bar (the enemy's initiative edge, read back by `cult_site.head_start`)."""
+    kind = "cult"
+    verbs = ("persuade", "bluff", "intimidate", "let_proceed", "attack")
+
+    def __init__(self, foes):
+        super().__init__(foes, i18n.t("dialogue.title.cult"), i18n.t("dialogue.line.cult"))
+
+    def note(self, verb):
+        return _note("cult", verb)
+
+    def refusal(self, verb):
+        return i18n.t("dialogue.cult.persuade_closed") if verb == "persuade" else ""
+
+    def _plain(self, verb, speaker):
+        if verb == "let_proceed":
+            return Result("peace", i18n.t("dialogue.cult.let_proceed"))
+        return Result("fight", i18n.t("dialogue.cult.attack", speaker=speaker.name), Opening())
+
+    def _checked(self, verb, speaker, passed, margin, line):
+        key = "bluff" if verb == "bluff" else "intimidate"
+        if passed:
+            opening = Opening(surprised="enemy") if verb == "bluff" else Opening(demoralized="enemy")
+            return Result("fight", i18n.t(f"dialogue.cult.{key}_win", speaker=speaker.name, line=line), opening)
+        return Result("fight", i18n.t(f"dialogue.cult.{key}_miss", line=line),
+                      Opening(initiative={"enemy": INITIATIVE_EDGE}))
 
 
 class WildfireTalk(Encounter):
