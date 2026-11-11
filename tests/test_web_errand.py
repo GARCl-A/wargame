@@ -69,7 +69,7 @@ def _end(game, won=True, dead=()):
 
 def test_every_activity_the_campaign_reaches_has_a_screen_in_the_browser():
     played = {"arena", "hunt", "ox_hunt", "ancient_ruins", "serpents_nest", "dragon_lair",
-              "skirmish", "camp_fight", "ogre_fight", "cult_ritual"}
+              "skirmish", "camp_fight", "ogre_fight", "cult_ritual", "demon_lair"}
     assert orders.INTERACTIVE_KINDS <= HUB_KINDS | played
     guild, g = _guild("city")
     with pytest.raises(ValueError):

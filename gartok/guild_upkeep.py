@@ -8,6 +8,7 @@ by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 from . import (
     aftermath,
     captives,
+    cult_site,
     cohesion,
     data,
     i18n,
@@ -310,6 +311,7 @@ class UpkeepMixin:
         events += wildfire.daily(self)
         for m in missions.expire_overdue(self):
             events.append(i18n.t("guild_upkeep.deadline_passed", name=missions.template_of(m).name))
+        events += cult_site.daily(self)
         for u in justice.release_due(self):
             events.append(i18n.t("guild_upkeep.finishes_their_time_and_is", name=u.name))
         events += self._city_property_upkeep()

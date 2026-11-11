@@ -762,6 +762,9 @@ class MapSession(MapView, Session):
         if order.kind in ("ancient_ruins", "serpents_nest", "dragon_lair"):
             from .campaign_fight import delve
             return delve(self, group, order.kind)
+        if order.kind == "demon_lair":
+            from .campaign_fight import demon_lair
+            return demon_lair(self, group)
         if order.kind == "cult_ritual":
             from .campaign_fight import cult_ritual
             return cult_ritual(self, group)

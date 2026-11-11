@@ -3169,12 +3169,14 @@
         },
         "errand": {
             "cult_site": "ENTRAR NO LOCAL",
+            "demon_lair": "ENFRENTAR O DEMÔNIO",
             "skirmish": "ENTRAR NA ESCARAMUÇA",
             "camp": "ATACAR O ACAMPAMENTO",
             "fortress": "ASSALTAR A FORTALEZA"
         },
         "lead": {
             "cult_site": "Uma clareira vermelha: três conjuradores presos a um triângulo de braseiros, um líder com um livro, duas lâminas e uma moça amarrada no centro. Se o rito se fechar, ela morre.",
+            "demon_lair": "O Inquilino Pálido fez da clareira o seu lar: a grama negra, os braseiros frios, o ar pesado. Ele espera sozinho, e é a coisa mais forte do jogo.",
             "battlefield": "Quatro soldados do Posto de Comando seguram as trincheiras contra um bando de guerra. Se um deles morrer, a missão fracassa.",
             "necromancer": "O Campo de Batalha à noite: um bando de guerra, os mortos de dias atrás, e o necromante oculto entre eles.",
             "camp": "Os goblins do Ogro alimentam o fogo a partir do acampamento.",
@@ -3182,6 +3184,7 @@
         },
         "title": {
             "cult_site": "O Culto do Demônio",
+            "demon_lair": "O Inquilino Pálido",
             "necromancer": "O necromante",
             "battlefield": "Misericórdia na Linha de Frente",
             "camp": "O acampamento goblin",
@@ -4285,7 +4288,12 @@
             }
         }
     },
+    "demon_lair": {
+        "slain": "O Inquilino Pálido cai. O círculo esfria para sempre, e a Fazenda pode abrir as portas de novo."
+    },
     "cult_site": {
+        "pillar_of_light": "Uma coluna de luz vermelha sobe depois das Estradas do Campo e não cai. O que estavam chamando lá foi chamado.",
+        "demon_returns": "A notícia desce pelas estradas: o Demônio voltou ao seu círculo e está fazendo dele um covil.",
         "hud": "O rito: {bar} / {max}",
         "hud_closing": "O rito: {bar} / {max}. O HIEROFANTE COMECOU O RITO FINAL: pare-o antes do próximo turno dele.",
         "channels": "{name} alimenta o rito na ponta: {bar} / {max}.",
@@ -5658,7 +5666,8 @@
             "ogre_fight": "INVADIR A FORTALEZA",
             "serpents_nest": "ENTRAR NO NINHO",
             "dragon_lair": "ENTRAR NA TOCA",
-            "cult_ritual": "ENTRAR NO LOCAL"
+            "cult_ritual": "ENTRAR NO LOCAL",
+            "demon_lair": "ENFRENTAR O DEMÔNIO"
         },
         "objective": {
             "obj_buy_food": "Comprar Comida",
@@ -6142,7 +6151,8 @@
             "ogre_fight": "o Ogro e seus goblins entre as muralhas, a fogueira se espalhando  ·  letal",
             "serpents_nest": "cinco câmaras escuras de cobras, e a Dragobra no fundo  ·  letal",
             "dragon_lair": "patrulhas de kobolds, um tesouro, a ninhada, e o dragão dormindo ao lado  ·  letal",
-            "cult_ritual": "uma clareira de luz vermelha onde cultistas entoam ao redor de um triângulo de braseiros  ·  letal"
+            "cult_ritual": "uma clareira de luz vermelha onde cultistas entoam ao redor de um triângulo de braseiros  ·  letal",
+            "demon_lair": "o Demônio sozinho, a coisa mais forte do jogo  ·  letal"
         },
         "objective": {
             "obj_buy_food": "Todos comem uma comida por dia. Batatas e Carne são vendidas na Fazenda.",

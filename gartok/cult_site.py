@@ -18,14 +18,21 @@ SEARCH_DC = 22
 SEARCH_PER_CLUE = 2
 POS = (0.76, 0.95)
 LINKS = (("country_roads", 2), ("faith_cathedral", 2))
+LAIR_DAYS = 15          # a failed rite leaves the site abandoned this long, then the Demon comes back to it
 
 
 def quest_active(guild):
     return missions.active(guild, missions.FARMER_DAUGHTER)
 
 
-def _node():
-    return world.Node(NODE, "Demon Cult Site", "town", POS, floor="earth", functions=("cult_ritual",))
+def demon_loose(guild):
+    """The rite closed and the Demon has not been killed: the Farm stays shut (`missions.shop_closed`)."""
+    return guild.cult.get("state") in ("failed", "lair")
+
+
+def _node(guild):
+    function = "demon_lair" if guild.cult.get("state") == "lair" else "cult_ritual"
+    return world.Node(NODE, "Demon Cult Site", "town", POS, floor="earth", functions=(function,))
 
 
 def sync_world(guild):
@@ -33,7 +40,7 @@ def sync_world(guild):
     if world.exists(NODE):
         world.remove_node(NODE)
     if guild.is_node_revealed(NODE):
-        world.add_node(_node(), list(LINKS))
+        world.add_node(_node(guild), list(LINKS))
 
 
 def reveal(guild):
@@ -221,12 +228,32 @@ def head_start(opening):
     return bool(opening is not None and opening.initiative.get("enemy"))
 
 
+def _fail(guild, day, remains):
+    guild.cult.update(state="failed", failed_day=day, remains=sorted(remains))
+
+
 def let_proceed(guild):
     """The squad let the rite run: no fight, the girl lost, the site left as a closed rite leaves it (her
     Holy Symbol lies there). -> the notice."""
-    guild.cult["state"] = "failed"
-    guild.cult["remains"] = [items.HOLY_SYMBOL_ITEM]
+    _fail(guild, guild.clock.day, [items.HOLY_SYMBOL_ITEM])
     return i18n.t("cult_site.settle_failed")
+
+
+def daily(guild):
+    """Once a day, from `guild_upkeep`: a missed deadline abandons the rite as a closed one would (the site
+    shows itself, a pillar of red light), and `LAIR_DAYS` after a failure the Demon makes the site its lair.
+    -> the notice lines."""
+    cult, today = guild.cult, guild.clock.day
+    if not cult.get("state") and any(m.template_id == missions.FARMER_DAUGHTER.id and m.state == "failed"
+                                     for m in guild.missions):
+        _fail(guild, today, [items.HOLY_SYMBOL_ITEM])
+        reveal(guild)
+        return [i18n.t("cult_site.pillar_of_light")]
+    if cult.get("state") == "failed" and today >= cult.get("failed_day", today) + LAIR_DAYS:
+        cult["state"] = "lair"
+        sync_world(guild)
+        return [i18n.t("cult_site.demon_returns")]
+    return []
 
 
 def free_daughter(guild, group):
@@ -252,12 +279,11 @@ def settle_fight(guild, battle, group=None):
         walks = free_daughter(guild, group) if group is not None else None
         return [i18n.t("cult_site.settle_won"), *([walks] if walks else [])]
     if battle.scenario.demon_came:
-        cult["state"] = "failed"
         remains = [items.HOLY_SYMBOL_ITEM]
         for c in battle.player_units:
             if c.status == "dead":
                 remains += loot.carried_by(c) + _worn(c.char)
-        cult["remains"] = sorted(remains)
+        _fail(guild, battle.clock_day, remains)
         return [i18n.t("cult_site.settle_failed")]
     return []
 

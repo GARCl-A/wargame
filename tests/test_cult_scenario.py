@@ -393,3 +393,120 @@ def test_the_ward_row_shows_in_the_bands_sheet(at_the_site):
     state = GuildSession(MapSession(guild), "bands", g.gid).state()
     rows = [c for band in str(state).split("'captives': ")[1:] for c in [band]]
     assert "'ward': True" in rows[0] and "'days': None" in rows[0]
+
+
+# --- the failure's clock, the Demon's lair and the closed Farm --------------------------------------
+
+from gartok import demon_lair, loot
+
+
+def _fail_the_job(guild, days_after=21):
+    guild.clock.seconds = (30 + days_after) * SECONDS_PER_DAY
+    return missions.expire_overdue(guild)
+
+
+def test_a_missed_deadline_shows_the_site_and_leaves_it_abandoned(tmp_path, monkeypatch, at_the_site):
+    guild, g, mission = at_the_site
+    guild.revealed.discard(cult_site.NODE)
+    world.remove_node(cult_site.NODE)
+    _fail_the_job(guild)
+    notice = cult_site.daily(guild)
+    assert notice and guild.cult["state"] == "failed"
+    assert guild.is_node_revealed(cult_site.NODE) and world.exists(cult_site.NODE)
+    assert guild.cult["remains"] == [items.HOLY_SYMBOL_ITEM]
+    assert cult_site.daily(guild) == []
+
+
+def test_fifteen_days_after_a_failure_the_demon_makes_the_site_its_lair(at_the_site):
+    guild, g, _m = at_the_site
+    guild.clock.seconds = 40 * SECONDS_PER_DAY
+    cult_site.let_proceed(guild)
+    guild.clock.seconds = (40 + cult_site.LAIR_DAYS - 1) * SECONDS_PER_DAY
+    assert cult_site.daily(guild) == [] and guild.cult["state"] == "failed"
+    guild.clock.seconds = (40 + cult_site.LAIR_DAYS) * SECONDS_PER_DAY
+    assert cult_site.daily(guild) and guild.cult["state"] == "lair"
+    assert world.node(cult_site.NODE).has("demon_lair") and not world.node(cult_site.NODE).has("cult_ritual")
+
+
+def test_the_farm_stays_shut_while_the_demon_lives_and_opens_when_it_dies(at_the_site):
+    guild, g, _m = at_the_site
+    assert missions.shop_closed(guild, "farm")
+    cult_site.let_proceed(guild)
+    assert "demon" in missions.shop_closed(guild, "farm")
+    guild.cult["state"] = "lair"
+    assert missions.shop_closed(guild, "farm")
+    guild.cult["state"] = "demon_dead"
+    for m in guild.missions:
+        m.state = "failed"
+    assert missions.shop_closed(guild, "farm") is None
+
+
+def test_the_lair_fight_is_the_demon_alone_and_its_death_drops_the_symbol(at_the_site):
+    guild, g, _m = at_the_site
+    guild.cult["state"] = "lair"
+    cult_site.sync_world(guild)
+    game = Game(MapSession(guild))
+    assert game.session.act(g.gid, "demon_lair") == {"screen": "battle"}
+    b = game.session.battle
+    assert isinstance(b.scenario, demon_lair.DemonLairScenario) and len(b.enemy_units) == 1
+    assert items.HOLY_SYMBOL_ITEM in loot.UNIQUE_DROPS["the-demon"]
+    _finish(game, won=True)
+    assert guild.cult["state"] == "demon_dead"
+    assert world.node(cult_site.NODE).has("cult_ritual")
+
+
+def test_a_lost_lair_fight_leaves_the_demon_in_place(at_the_site):
+    guild, g, _m = at_the_site
+    guild.cult["state"] = "lair"
+    cult_site.sync_world(guild)
+    game = Game(MapSession(guild))
+    game.session.act(g.gid, "demon_lair")
+    b = game.session.battle
+    b.winner = "enemy"
+    assert demon_lair.settle_fight(guild, b) == [] and guild.cult["state"] == "lair"
+
+
+def test_nothing_to_fight_at_the_lair_before_the_demon_comes(at_the_site):
+    guild, g, _m = at_the_site
+    game = Game(MapSession(guild))
+    assert game.session.act(g.gid, "demon_lair")["screen"] == "map"
+
+
+def test_the_whole_quest_from_the_offer_to_the_holy_symbol_in_the_pack(tmp_path, monkeypatch):
+    from gartok import investigation, rite
+    monkeypatch.setattr(persist, "SAVE_DIR", str(tmp_path))
+    monkeypatch.setattr(missions, "FARMER_QUEST_LIVE", True)
+    members = [standard_unit() for _ in range(3)]
+    guild = Guild(members)
+    group = guild.groups[0] if guild.groups else Group(members, "farm")
+    guild.groups = [group]
+    group.node = "farm"
+    guild.clock.seconds = 30 * SECONDS_PER_DAY
+    try:
+        assert missions.FARMER_DAUGHTER not in missions.offers_at(guild, "farm")
+        guild.revealed |= {"faith_cathedral"}
+        assert missions.FARMER_DAUGHTER in missions.offers_at(guild, "farm")
+        mission = missions.accept(guild, members[0], missions.FARMER_DAUGHTER)
+        monkeypatch.setattr(cult_site.data, "d20", lambda: 20)
+        for node in ("faith_cathedral", "ledger_hold"):
+            group.node = node
+            investigation.ask(guild, group, missions.FARMER_DAUGHTER.id)
+        assert investigation.clues(guild, missions.FARMER_DAUGHTER.id) == 2
+        group.node = "country_roads"
+        assert cult_site.search(guild, group)[0] and guild.is_node_revealed(cult_site.NODE)
+        group.node = cult_site.NODE
+        game = Game(MapSession(guild))
+        _fight(game, group)
+        _finish(game, won=True)
+        assert guild.cult["state"] == "won" and group.captives[0].ward
+        group.node = "farm"
+        assert missions.can_turn_in(guild, mission)
+        missions.turn_in(guild, mission)
+        assert mission.state == "done" and not group.captives
+        assert any(u.has_item(items.HOLY_SYMBOL_ITEM) for u in members)
+        assert rite.HOLY_SYMBOL not in (rite.blocker(guild, group, members[0], "faith") or "")
+        assert missions.shop_closed(guild, "farm") is None
+    finally:
+        if world.exists(cult_site.NODE):
+            world.remove_node(cult_site.NODE)
+        recorder.detach()

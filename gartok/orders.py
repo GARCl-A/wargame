@@ -39,7 +39,7 @@ INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "
                                "ledger", "property", "claim", "forge", "carpenter", "apothecary",
                                "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine",
                                "serpents_nest", "skirmish", "camp_fight", "ogre_fight", "dragon_lair",
-                               "cult_ritual"})
+                               "cult_ritual", "demon_lair"})
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
 APPROACH_HOURS = 1          # default approach cost when dispatched from away

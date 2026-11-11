@@ -170,7 +170,8 @@ gartok/
   captives.py       foes bound in battle and kept by a group: herd room, 7 days to live
   ox.py             the tanner's last job: the Country Roads search, tracking Aurochs by daylight
   ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall
-  cult_site.py      the Demon Cult's hidden site (the Farmer's job): the Country Roads search that finds it and its node, on the map only once found
+  cult_site.py      the Demon Cult's hidden site (the Farmer's job): the Country Roads search that finds it, the ritual fight (bar, Final Rite, the Demon's non-lethal ending), the failure's clock and its node, on the map only once found
+  demon_lair.py     the Demon's lair at that site, 15 days after a failed rite: the lone lethal fight; its death reopens the Farm
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
   version.py        GAME_VERSION + build hash; docs/versions.csv is the release table, scripts/version_check.py guards it
   playtest_export.py  the Settings "Export playtest data" zip (saves, combat logs, build)

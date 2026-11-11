@@ -308,8 +308,11 @@ def board(guild, giver, node_id):
 def shop_closed(guild, node_id):
     """The text of why `node_id`'s shop sells nothing right now, or None when it is open: the Farm, while
     Edric waits for his daughter."""
-    if node_id == FARMER_DAUGHTER.node and FARMER_QUEST_LIVE and any(
-            m.template_id == FARMER_DAUGHTER.id and m.state == "active" for m in guild.missions):
+    if node_id != FARMER_DAUGHTER.node or not FARMER_QUEST_LIVE:
+        return None
+    if guild.cult.get("state") in ("failed", "lair"):
+        return i18n.t("shop_tab.closed_demon")
+    if any(m.template_id == FARMER_DAUGHTER.id and m.state == "active" for m in guild.missions):
         return i18n.t("shop_tab.closed_grief")
     return None
 

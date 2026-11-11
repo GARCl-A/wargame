@@ -3110,12 +3110,14 @@
     },
     "errand": {
       "cult_site": "ENTER THE SITE",
+      "demon_lair": "FACE THE DEMON",
       "skirmish": "JOIN THE SKIRMISH",
       "camp": "ATTACK THE CAMP",
       "fortress": "STORM THE FORTRESS"
     },
     "lead": {
       "cult_site": "A red-lit clearing: three casters bound to a triangle of braziers, a leader with a book, two blades, and a girl tied at the centre. If the rite closes, she dies.",
+      "demon_lair": "The Pale Tenant has made the clearing its own: the grass black, the braziers cold, the air thick. It waits alone, and it is the strongest thing in the game.",
       "battlefield": "Four Field Command soldiers hold the trenches against a warband. If one of them dies, the errand fails.",
       "necromancer": "The Battlefield at night: a warband, the dead of days before, and the necromancer unseen among them.",
       "camp": "The Ogre's goblins feed the fire from their camp.",
@@ -3123,6 +3125,7 @@
     },
     "title": {
       "cult_site": "The Demon Cult",
+      "demon_lair": "The Pale Tenant",
       "necromancer": "The necromancer",
       "battlefield": "Mercy at the Front",
       "camp": "The goblin camp",
@@ -3704,7 +3707,8 @@
       "ogre_fight": "STORM THE FORTRESS",
       "serpents_nest": "ENTER THE NEST",
       "dragon_lair": "ENTER THE LAIR",
-      "cult_ritual": "ENTER THE SITE"
+      "cult_ritual": "ENTER THE SITE",
+      "demon_lair": "FACE THE DEMON"
     },
     "mission": {
       "tanner_hides": "Fifteen Hides",
@@ -5088,7 +5092,12 @@
       }
     }
   },
+  "demon_lair": {
+    "slain": "The Pale Tenant falls. The circle is cold for good, and the Farm can open its doors again."
+  },
   "cult_site": {
+    "pillar_of_light": "A column of red light rises beyond the Country Roads and does not fall. Whatever was being called there has been called.",
+    "demon_returns": "Word comes down the roads: the Demon has come back to its circle and is making a lair of it.",
     "hud": "The rite: {bar} / {max}",
     "hud_closing": "The rite: {bar} / {max}. THE HIEROPHANT HAS BEGUN THE FINAL RITE: stop him before his next turn.",
     "channels": "{name} feeds the rite from the point: {bar} / {max}.",
@@ -5981,7 +5990,8 @@
       "ogre_fight": "the Ogre and his goblins among the walls, the bonfire spreading  ·  lethal",
       "serpents_nest": "five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal",
       "dragon_lair": "kobold patrols, a hoard, the clutch, and the dragon asleep beside it  ·  lethal",
-      "cult_ritual": "a red-lit clearing where cultists chant around a triangle of braziers  ·  lethal"
+      "cult_ritual": "a red-lit clearing where cultists chant around a triangle of braziers  ·  lethal",
+      "demon_lair": "the Demon alone, the strongest thing in the game  ·  lethal"
     },
     "mission": {
       "tanner_hides": "The tanner wants 15 sqm of hide off anything with fur. The Wilds is thick with it, if you can bring down what's wearing it.",

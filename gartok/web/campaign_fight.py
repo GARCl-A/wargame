@@ -12,6 +12,7 @@ from .. import (
     campaign,
     combat_lab,
     cult_site,
+    demon_lair as demon_lair_module,
     encounters,
     factions,
     fight_nature,
@@ -176,6 +177,31 @@ def cult_ritual(map_session, group):
         return _to_map(map_session, group)
     return _watched(map_session, group, i18n.t("campaign.errand.cult_site"), i18n.t("campaign.lead.cult_site"),
                     lambda squad, guarded: _cult_talk(map_session, group, squad, guarded))
+
+
+def demon_lair(map_session, group):
+    """The Cult Site once the Demon has made it its lair: the one fight, with the band's whole strength."""
+    from .dialogue_session import _to_map
+    guild = map_session.guild
+    if guild.cult.get("state") != "lair":
+        map_session.say(i18n.t("cult_site.cold"), "guild", group)
+        return _to_map(map_session, group)
+    return _watched(map_session, group, i18n.t("campaign.errand.demon_lair"), i18n.t("campaign.lead.demon_lair"),
+                    lambda squad, guarded: _demon_fight(map_session, group, squad, guarded))
+
+
+def _demon_fight(map_session, group, squad, guarded):
+    guild, node = map_session.guild, world.node(group.node)
+    scenario = demon_lair_module.DemonLairScenario(squad)
+    battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=guild.clock.is_daylight, lethal=True,
+                    clock_day=guild.clock.day, aggressor="player")
+
+    def settle(_outcome):
+        wagon_watch.leave_outside(group, node, guarded)
+        return demon_lair_module.settle_fight(guild, battle)
+
+    return _enter(map_session, group, battle, node, "demon_lair", i18n.t("campaign.title.demon_lair"), settle,
+                  squad=squad, nature=ERRAND_NATURE)
 
 
 def _cult_talk(map_session, group, squad, guarded):
