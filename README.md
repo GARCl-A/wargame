@@ -185,6 +185,7 @@ gartok/
   # onboarding + translation (i18n.py is project-wide; tutorial is its first consumer)
   i18n.py           dotted-key string catalogs (locales/*.json): t / plural / name / desc / gender, language fallback
   tutorial.py       the tutorial's ids + TutorialState (seen/enabled)
+  hints.py          the one-time rule cards a trigger fires (a studyable item, the road, a second fight, a fallen member, a dungeon walked out of) and the wiki entry each opens
 
   wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
   keywords.py       the reserved words of the rules (Brutal, Shove, Dying...): one text each, the KEYWORDS chapter of the wiki; a description says only the word
@@ -275,7 +276,14 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   `tutorial.TUTORIALS`, a `title`/`body`/optional `suggestion` block under
   `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
   screen's session (`web/session.py`). What the copy cannot hold (a list drawn from a registry, later a
-  picture) is `tutorial_rows(key)` on the session: each row is a stamp, a rule and a text, optionally an `image`.
+  picture) is `tutorial_rows(key)` on the session: each row is a stamp, a rule and a text, optionally an `image` and a `focus` (a selector lit on the screen
+  while the pointer is on the row). `tutorial_spot(key)` names the part of the screen the card is about (the battle's action bar), kept
+  lit above the veil while the card is up.
+- **New rule pop-up** (a one-time card a trigger fires, with a *See in the wiki* button): an id in `hints.IDS` and
+  `tutorial.TUTORIALS`, its `tutorial.hint.<name>` copy in `locales/en.json`, the trigger in `hints.on_map` or
+  `hints.in_battle` (the map's and the battle's `tutorial_key()` ask there once their own card is read), and the entry
+  that holds the rule in `hints.wiki_ref` (a `wiki_rules` section when the rule has none yet). Its `seen` flag is
+  `TutorialState.seen`, already saved.
 - **New translated string anywhere else**: a key under its own namespace in
   `locales/en.json`, read with `i18n.t(key, **params)` (a sentence is one key with `{placeholders}`, never
   fragments joined; a count is `i18n.plural(key, n)` with `key.one` / `key.other`; the shown name of an item,
@@ -307,6 +315,7 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   default)` (`actions.base.item_ref(name)` for an item), a sentence inside a line an `i18n.Msg`; both resolve when the
   line is rendered. An action's `name` and `desc` are its `action.<id>.name` / `.desc` (`i18n.Text`, no class literal);
   its `label()` and blocked reasons are `action.<id>.label` / `.reason`.
+  A line the screen should light gets a kind on the `LogLine` (`battle.log_lines[-1].mark = "read"`, as `intel.observe` does); the battle state sends it in `log_marks` and the client puts it on the line as a CSS class.
 - **Text in the web client**: a key under `ui.` in `locales/en.json`; a script reads it with `tr("group.key",
   {name: value})`, a count with `trn("unit.day", n)` (`unit.day.one` / `.other`), a page's fixed label is
   `data-t="group.key"` (`data-t-tip` for a tooltip). The shell fetches `/api/locale` before it draws a screen,

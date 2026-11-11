@@ -262,13 +262,13 @@ function renderInspect() {
 function renderLog() {
   const names = new Map(S.units.map(u => [u.name, u.side]));
   const box = $("log"), pinned = box.scrollHeight - box.scrollTop - box.clientHeight < 24;
-  const lines = S.log.map(line => {
+  const lines = S.log.map((line, i) => {
     const m = /^-+\s*Round\s+(\d+)\s*-+$/i.exec(line.trim());
     if (m) return `<div class="rnd">${tr("battle.round")} ${ROMAN(+m[1])}</div>`;
     let html = esc(line);
     for (const [n, side] of [...names].sort((a, b) => b[0].length - a[0].length))
       html = html.split(esc(n)).join(`<span class="${side === "ally" ? "a" : "f"}">${esc(n)}</span>`);
-    return `<p>${html}</p>`;
+    return `<p${S.log_marks && S.log_marks[i] ? ` class="${S.log_marks[i]}"` : ""}>${html}</p>`;
   });
   box.innerHTML = lines.join("");
   if (pinned) box.scrollTop = box.scrollHeight;

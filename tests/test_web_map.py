@@ -42,6 +42,15 @@ def _game(guild, world_id=None):
     return Game(MapSession(guild, world_id))
 
 
+def test_a_member_over_their_carry_limit_is_marked_overencumbered():
+    guild = _guild("lumber_yard")
+    light, heavy = guild.groups[0].members
+    heavy.give_to_pack("Potato", 200)
+    heavy._derive_combat()
+    members = {m["uid"]: m for m in _game(guild).session.state()["groups"][0]["members"]}
+    assert members[heavy.uid]["encumbered"] and not members[light.uid]["encumbered"]
+
+
 def test_the_state_holds_the_known_world_the_bands_and_what_the_picked_one_can_do():
     guild = _guild("lumber_yard")
     st = _game(guild).session.state()

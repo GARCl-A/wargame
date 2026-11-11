@@ -9,7 +9,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Any
 
-from . import i18n, weapon_traits
+from . import i18n, poisons, weapon_traits
 
 
 class ItemType(StrEnum):
@@ -49,6 +49,11 @@ class WeaponSize(StrEnum):
     HUGE = "Huge"
 
 
+class ArmorMaterial(StrEnum):
+    LEATHER = "leather"
+    METAL = "metal"
+
+
 class CraftingStation(StrEnum):
     FORGE = "forge"
     APOTHECARY = "apothecary"
@@ -80,6 +85,7 @@ class ItemDef:
     max_dex: int | None = None
     speed_penalty: int = 0
     guard_bonus: int = 0
+    armor_material: ArmorMaterial | None = None   # what a worn armor is made of (every ItemType.ARMOR has one)
     food: bool = False
     material: bool = False
     lifespan: int | None = None
@@ -370,12 +376,12 @@ def _register_worn(**fields) -> None:
             weight=_scaled_weight(item.weight, steps), price=_scaled_price(item.price, steps), base=item.name))
 
 
-_register_worn(id="leather_jerkin", name="Leather Jerkin", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=4.0, price=20, ac=1, max_dex=None, speed_penalty=0)
-_register_worn(id="studded_leather", name="Studded Leather", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=6.0, price=55, ac=2, max_dex=3, speed_penalty=0)
-_register_worn(id="chainmail", name="Chainmail", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=10.0, price=160, ac=3, max_dex=2, speed_penalty=0)
-_register_worn(id="brigandine", name="Brigandine", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=18.0, price=400, ac=4, max_dex=1, speed_penalty=1)
-_register_worn(id="plate_armor", name="Plate Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=28.0, price=950, ac=5, max_dex=0, speed_penalty=2)
-_register_worn(id="dwarf_armor", name="Dwarf Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=25.0, price=110, ac=5, max_dex=0, speed_penalty=1)
+_register_worn(id="leather_jerkin", name="Leather Jerkin", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=4.0, price=20, ac=1, max_dex=None, speed_penalty=0, armor_material=ArmorMaterial.LEATHER)
+_register_worn(id="studded_leather", name="Studded Leather", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=6.0, price=55, ac=2, max_dex=3, speed_penalty=0, armor_material=ArmorMaterial.LEATHER)
+_register_worn(id="chainmail", name="Chainmail", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=10.0, price=160, ac=3, max_dex=2, speed_penalty=0, armor_material=ArmorMaterial.METAL)
+_register_worn(id="brigandine", name="Brigandine", type=ItemType.ARMOR, rarity=ItemRarity.UNCOMMON, weight=18.0, price=400, ac=4, max_dex=1, speed_penalty=1, armor_material=ArmorMaterial.METAL)
+_register_worn(id="plate_armor", name="Plate Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=28.0, price=950, ac=5, max_dex=0, speed_penalty=2, armor_material=ArmorMaterial.METAL)
+_register_worn(id="dwarf_armor", name="Dwarf Armor", type=ItemType.ARMOR, rarity=ItemRarity.RARE, weight=25.0, price=110, ac=5, max_dex=0, speed_penalty=1, armor_material=ArmorMaterial.METAL)
 _register_worn(id="dwarf_shield", name="Dwarf Shield", type=ItemType.SHIELD, rarity=ItemRarity.UNCOMMON, weight=3.0, price=60, ac=2)
 
 # Food
@@ -449,7 +455,7 @@ _register(ItemDef(id="signal_horn", name="Signal Horn", type=ItemType.ARTIFACT, 
 _register(ItemDef(id="leather_of_biwolf", name="Leather of Biwolf", type=ItemType.ARTIFACT, rarity=ItemRarity.RARE, weight=1.0, price=150))
 _register(ItemDef(id="thunderhide", name="Thunderhide", type=ItemType.ARTIFACT, rarity=ItemRarity.UNIQUE, weight=1.5, price=400))
 _register(ItemDef(id="legendary_horn", name="Legendary Horn", type=ItemType.MATERIAL, rarity=ItemRarity.UNIQUE, weight=2.0, price=60))
-_register_worn(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1)
+_register_worn(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1, armor_material=ArmorMaterial.LEATHER)
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="flint_and_steel", name="Flint and Steel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=40))
 _register(ItemDef(id="semi_precious_gemstone", name="Semi-precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))
@@ -1026,7 +1032,7 @@ for _lang in _LANGUAGES:
         CraftingRecipe(
             target=f"Dictionary of {_lang}",
             materials=["1sqm Hide", "Paper", "Ink"],
-            complexity=25,
+            complexity=437,                     # with its materials' prices a goal of 504: three 16 h days of rolls at INT 10
             station=CraftingStation.SCRIPTORIUM,
         )
     ]
@@ -1231,6 +1237,8 @@ def item_tip_lines(name: str) -> list[str]:
         desc.append(i18n.t("item.tip.quiver", ammo=ammo))
     elif it.name == "Minor Healing Potion" or it.id == "minor_healing_potion":
         desc.append(i18n.t("item.tip.potion"))
+    elif it.name == "Antidote" or it.id == "antidote":
+        desc.append(i18n.t("item.tip.antidote", hours=poisons.ANTIDOTE_COOLDOWN_HOURS))
     elif it.name == TORCH_ITEM or it.id == "torch":
         r = it.light_radius or 4
         desc.append(i18n.t("item.tip.torch", m=f"{r * 1.5:g}"))

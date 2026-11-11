@@ -107,6 +107,30 @@ def test_good_ai_stabilizes_a_downed_ally_first():
     assert mate.stable
 
 
+def test_a_wild_beast_never_stabilizes_a_downed_ally_even_of_good_bent():
+    from gartok import ai
+    batt, a, d = _melee_battle()
+    mate = _recruit(batt, "enemy")
+    d.alignment = "Lawful and Good"
+    a.pos, d.pos, mate.pos = (12, 9), (6, 5), (7, 5)
+    mate.go_down(batt.log)
+    assert ai._ally_to_help(batt, d) is mate
+    d.char.set_race("Wolf")
+    assert ai._instinctive(d) and ai._ally_to_help(batt, d) is None
+    d.ap = 2
+    batt.turn_idx = batt.order.index(d)
+    with fixed_d20(20):
+        ai.take_turn(batt, d)
+    assert not mate.stable
+
+
+def test_a_beast_that_speaks_still_tends_its_fallen():
+    from gartok import ai
+    batt, _a, d = _melee_battle()
+    d.char.set_race("Dragon")
+    assert not ai._instinctive(d)
+
+
 def _ally_down_beside_a_foe(clock):
     from gartok import ai
     batt, a, d = _melee_battle()

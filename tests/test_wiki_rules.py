@@ -29,3 +29,10 @@ def test_the_group_size_line_names_every_term_capacity_adds():
     assert f"holds {group.BASE_CAPACITY} + " in line
     for phrase, _, _ in group.CAPACITY_TERMS:
         assert phrase in line
+
+
+def test_the_poison_rule_reads_the_antidote_cooldown_off_the_code():
+    from gartok import items, poisons
+    line = " ".join(dict(wiki_rules.sections())["Poison & Antidote"])
+    assert f"every {poisons.ANTIDOTE_COOLDOWN_HOURS} h" in line
+    assert str(poisons.ANTIDOTE_COOLDOWN_HOURS) in " ".join(items.item_tip_lines("Antidote"))

@@ -202,6 +202,7 @@
             "leads": "Lidera",
             "sick": "Doente",
             "poisoned": "Envenenado",
+            "encumbered": "Sobrecarregado",
             "hp": "{a} / {b} PV",
             "merge": "Juntar",
             "merge_em": "um grupo parado aqui",
@@ -1960,9 +1961,9 @@
         },
         "armor_pierce": {
             "name": "Perfurar Armadura",
-            "desc": "2 pts: o ataque ignora o bônus de CA da armadura vestida.",
+            "desc": "2 pts: o ataque ignora o bônus de CA de uma armadura de metal vestida (couro não é perfurado).",
             "reason": "exige picareta",
-            "label": "Perfurar Armadura (2 pts, ignora a CA da armadura; Brutal 1 contra inimigo de armadura)"
+            "label": "Perfurar Armadura (2 pts, ignora a CA da armadura de metal; Brutal 1 contra inimigo de armadura de metal)"
         },
         "power_shot": {
             "name": "Tiro Poderoso",
@@ -2237,6 +2238,7 @@
             "miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> erra."
         },
         "brutal": "  {why}: Brutal {n}!",
+        "damage_roll": "  Dano: {detail} = {dmg}",
         "brutal_savage": "Ataques Selvagens",
         "ambush_shot": {
             "brutal": "O virote encontra um alvo desprevenido"
@@ -2375,7 +2377,7 @@
         },
         "armor_pierce": {
             "head": "{actor} Perfurar Armadura -> {target}",
-            "brutal": "A ponta atravessa a armadura"
+            "brutal": "A ponta atravessa o metal"
         },
         "power_shot": {
             "head": "{actor} Tiro Poderoso -> {target}",
@@ -2462,6 +2464,7 @@
         "signal_horn": "{actor} sopra a Trompa Sinalizadora! {allies} ganham +{n} de iniciativa.",
         "assess": "{actor} estuda {target}: d20 + INT + {bonus} = {total} contra CD {dc}  -> {learned}.",
         "assess_nothing": "nada de novo",
+        "read": "{actor} lê {target}: d20 + INT = {total} contra CD {dc}  -> {learned}.",
         "secret_door": "{actor} examina a parede e aciona uma alavanca oculta! Uma porta secreta se abre em {cell}.",
         "finds_hiding": "{actor} procura e encontra {target} escondido em {cell}!",
         "finds_nothing": "{actor} vasculha a escuridão ao redor e não encontra nada.",
@@ -4917,6 +4920,7 @@
             "first_aid": "Restaura PV ou estabiliza uma unidade moribunda. Começa com {charges} cargas.",
             "quiver": "Munição para armas à distância. Comporta {ammo} flechas/virotes.",
             "potion": "Restaura 1d6 PV ao ser consumida.",
+            "antidote": "Usado fora de combate na tela do bando: o membro envenenado rola outra salvaguarda de Constituição contra a CD do veneno; se passar, uma pilha sai na hora. Um Antídoto por membro a cada {hours} h.",
             "torch": "Ilumina num raio de {m}m. Pode ser largada no chão.",
             "light": "Ilumina num raio de {m}m quando equipada na mão secundária.",
             "food": "A ração de um dia. Evita a fome durante o descanso.",
@@ -6034,7 +6038,6 @@
         "keyword": {
             "brutal": "Brutal",
             "morale": "Moral",
-            "routed": "Em fuga",
             "critical_hit": "Acerto crítico",
             "flanked": "Flanqueado",
             "shove": "Empurrão",
@@ -6054,7 +6057,7 @@
             "cleave": "2 pts: um golpe; com um segundo inimigo ao lado dos dois, o arco também o atinge, cada golpe com +2 para acertar.",
             "repel_strike": "2 pts: um golpe que dá Empurrão no alvo (+2 no teste); contra um inimigo com as costas numa parede ou num corpo, o golpe é Brutal 1, +1d4.",
             "maiming_strike": "2 pts: um golpe que reduz à metade a velocidade do alvo até a próxima rodada; contra um inimigo Enredado, Dormindo, Surpreso ou Desmoralizado, +2 para acertar e o golpe é Brutal 1.",
-            "armor_pierce": "2 pts: um golpe que ignora a CA da armadura vestida; contra um inimigo de armadura, o golpe é Brutal 1.",
+            "armor_pierce": "2 pts: um golpe que ignora a CA de uma armadura de metal vestida; contra um inimigo de armadura de metal, o golpe é Brutal 1.",
             "power_shot": "2 pts: um tiro com +FOR de dano; a metade do alcance do arco ou mais longe, +FOR (no mínimo +1) e o golpe é Brutal 1.",
             "extreme_shot": "2 pts: dobra a distância do ataque para 36 casas.",
             "hook_shield": "2 pts: contra um inimigo com escudo, prende o escudo primeiro (sem CA do escudo até a próxima rodada, este golpe incluso) e depois dá um golpe Brutal 1. Sem escudo, é um golpe comum.",
@@ -6314,7 +6317,7 @@
             "iron_stance": "Usar Defender concede +2 de Defesa Mental, além da CA, até o seu próximo turno.",
             "imposing": "+1 de Carisma.",
             "menacing": "+2 nos testes de Desmoralizar.",
-            "wordless_menace": "Desmoralizar funciona contra quem não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
+            "wordless_menace": "Desmoralizar funciona contra um humanoide que não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
             "gruesome_takedown": "Ao abater um inimigo, faz imediatamente um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
             "cull_the_broken": "+2 de dano nos ataques contra alvos desmoralizados.",
             "merciless": "Seus ataques contra um alvo desmoralizado são Brutais 1.",
@@ -6450,7 +6453,6 @@
         "keyword": {
             "brutal": "Brutal N: o golpe rola o dano da arma N vezes a mais, modificadores incluídos, e soma tudo. Ainda é um só golpe com uma só rolagem de acerto. Brutal de várias fontes se soma: Brutal 1 e Brutal 1 dão Brutal 2.",
             "morale": "Moral: a coragem de um combatente numa luta mortal, com um valor inicial que também é o seu teto. Cai quando aliados caem, quando o combatente está muito ferido e quando é Desmoralizado, e sobe quando o seu lado derruba um inimigo. Em 0 ou menos o combatente entra em fuga.",
-            "routed": "Em fuga: a moral acabou. O combatente corre para a saída e a IA joga por ele, mesmo sendo da guilda, até a moral voltar acima de 0.",
             "critical_hit": "Acerto crítico: um 20 natural na rolagem de acerto. Acerta qualquer CA, e o golpe inteiro (dados, modificadores, bônus, Brutal) é multiplicado por último, por 2, ou por 3 numa arma que diga isso.",
             "flanked": "Flanqueado: um inimigo está flanqueado quando você e um aliado estão ao lado dele, em lados opostos, e um inimigo flanqueado está desprevenido. Um aliado apenas ao lado do inimigo não é um flanco.",
             "shove": "Empurrão: move o alvo 1 casa em linha reta para trás. Um buraco atrás o derruba; uma parede ou um corpo atrás detém o empurrão. Empurrar, Rechaçar e Varrida de Cauda empurram; Empurrão Poderoso arremessa o alvo 3 casas.",
@@ -6462,6 +6464,44 @@
     },
     "tutorial": {
         "default_button": "Entendi",
+        "hint": {
+            "study": {
+                "title": "Aprender com um pergaminho, um papel ou um livro",
+                "body": [
+                    "Um pergaminho, um papel de receita e um dicionário ensinam um personagem, não o grupo todo: o item precisa estar na mochila dele, e ele estuda na Taverna.",
+                    "Escolha o alvo na aba ESTUDO da Taverna e alugue um quarto silencioso: a cada dia o estudante rola rumo à lição, e o quarto é pago."
+                ]
+            },
+            "road": {
+                "title": "A estrada come rações",
+                "body": [
+                    "Cada membro come uma refeição por dia, andando ou não, e uma estrada longa são dias de refeições.",
+                    "Confira a mochila antes de partir: o mapa avisa quando as rações não aguentam a viagem, e um bando que fica sem elas passa fome."
+                ]
+            },
+            "reading": {
+                "title": "Lendo os inimigos",
+                "body": [
+                    "Na primeira vez que seu lado vê um inimigo, cada personagem que o vê rola d20 + INT para lê-lo, e o melhor resultado é de todo o lado. Quanto mais você passa da CD, mais da ficha dele se abre.",
+                    "Uma raça que a guilda já enfrentou é mais fácil de ler. Avaliar (1 ponto) rola de novo, mais forte, num inimigo."
+                ]
+            },
+            "fallen": {
+                "title": "Um personagem caiu",
+                "body": [
+                    "Com 0 PV um personagem cai, não morre, e sangra até o fim em poucas rodadas.",
+                    "Qualquer personagem pode Estabilizá-lo: um teste de Sabedoria, sem classe nem item. Primeiros Socorros faz melhor com o kit certo."
+                ]
+            },
+            "dungeon": {
+                "title": "Uma masmorra de onde se sai andando",
+                "body": [
+                    "Limpar as ruínas não encerra a luta: quando o último inimigo cai a incursão continua, e ela só é vencida quando o esquadrão saiu pela entrada.",
+                    "Baús e relíquias ficam onde as ruínas os guardam até alguém pegá-los, então o que você não leva para fora não é seu. Planeje a volta."
+                ]
+            }
+        },
+        "wiki_button": "Ver na enciclopédia",
         "draft": {
             "intro": {
                 "title": "Bem-vindo a Gartok",
@@ -6563,11 +6603,16 @@
         "battle": {
             "title": "Lutando",
             "body": [
-                "Cada personagem tem 2 pontos de ação por turno. Andar, atacar e a maioria das ações custam 1; uma ação de arma custa 2. Espaço encerra o turno; Adiar (tecla 9, ao lado da barra de ações) deixa os outros agirem primeiro, uma vez por rodada, antes de você gastar um ponto. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
+                "Cada personagem tem 2 pontos de ação por turno, e a barra iluminada embaixo é o que ele pode fazer com eles: passe o mouse numa linha abaixo e a placa dela se acende. Espaço ou o selo ao lado encerra o turno. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
                 "Você só vê o que a luz e os sentidos do personagem ativo alcançam; L mostra a visão de todo o esquadrão. Os campos ? de um inimigo são o que você ainda não leu: todos leem um inimigo ao avistá-lo, e Avaliar (1 ponto) lê mais fundo.",
                 "Com 0 PV um personagem cai, não morre: Estabilize-o ou use Primeiros Socorros antes que sangre até o fim."
-            ]
-        },
+        ],
+            "cost": {
+                "one": "{n} ponto",
+                "other": "{n} pontos"
+            },
+            "free": "Grátis"
+    },
         "loot": {
             "title": "Dividindo o espólio",
             "body": [
@@ -6842,7 +6887,7 @@
             "2": "Ceifar (Machado): um segundo inimigo ao lado de ambos, cada golpe com +2 para acertar.",
             "3": "Rechaçar (Bordão): empurra o inimigo 1 casa; contra uma parede ou um corpo, +1d4 no lugar.",
             "4": "Golpe Mutilante (Clava, Martelos): corta a velocidade do inimigo pela metade; um inimigo que não pode se esquivar (Enredado, Dormindo, Surpreso, Desmoralizado) o sofre com +2 para acertar.",
-            "5": "Perfurar Armadura (Picaretas): ignora a armadura vestida. Tiro Poderoso (Arcos): +FOR, melhor a longa distância.",
+            "5": "Perfurar Armadura (Picaretas): ignora a armadura de metal vestida. Tiro Poderoso (Arcos): +FOR, melhor a longa distância.",
             "6": "Prender Escudo (Machadinha): o escudo do inimigo não dá CA até a próxima rodada. Aparar e Golpear (Espadas): enquanto Defende, com dois ou mais inimigos ao alcance.",
             "7": "Estocada Longa (Glaive): um golpe uma casa além do alcance de {reach} da Glaive, +{hit} para acertar."
         },
@@ -6905,6 +6950,34 @@
             "title": "Atropelo Limpo e Vitória Automática",
             "1": "Antes de uma emboscada, o jogo luta contra ela muitas vezes sem tela, com os dois lados na IA, e mostra quantas dessas lutas foram um atropelo limpo: todos de pé, sem poção, sem primeiros socorros, sem munição gasta. Não é a chance de vencer.",
             "2": "A VITÓRIA AUTOMÁTICA só é oferecida quando todas elas foram um atropelo limpo. Ela resolve a luta de imediato e não dá XP de combate."
+        },
+        "study": {
+            "title": "Estudar",
+            "1": "Um pergaminho, um papel de receita ou um dicionário é aprendido por um personagem: ele precisa estar na mochila dele (a cópia de um colega é passada para ele quando o estudo começa).",
+            "2": "O estudo acontece na Taverna: escolha o alvo na aba ESTUDO e alugue um quarto silencioso para o grupo.",
+            "3": "A cada dia de quarto alugado, o estudante paga ${cost} (da própria bolsa primeiro, depois da dos colegas de grupo) e rola 1d20 + INT rumo aos pontos que a lição pede; uma magia de nível 1 leva algumas semanas de dias.",
+            "4": "Sem pergaminho, sem dinheiro ou, numa magia, sem escola ainda, não há progresso no dia. Com os pontos completos, a lição é aprendida e a vaga fica livre."
+        },
+        "dungeon": {
+            "title": "Masmorras de onde se sai andando",
+            "1": "Nas Ruínas Antigas a luta não termina quando o último inimigo cai: o esquadrão precisa sair pela entrada, e só então a incursão é vencida.",
+            "2": "Baús, relíquias e o Códice Antigo ficam onde as ruínas os guardam até alguém pegá-los; o que não é levado para fora não é seu.",
+            "3": "A entrada é a saída: as casas junto à porta por onde o esquadrão entrou. Um membro que cai ou fica lá dentro não saiu.",
+            "4": "As ruínas lembram: um inimigo que caiu continua caído e o que uma mão pegou não está lá na próxima incursão, enquanto uma armadilha não disparada ou um baú fechado esperam."
+        },
+        "poison": {
+            "title": "Veneno e Antídoto",
+            "1": "Uma mordida venenosa força uma salvaguarda de Constituição (CD {dc} + o nível racial da criatura venenosa). Se falhar, a vítima fica envenenada: uma pilha, e cada pilha tira pontos de um atributo até passar.",
+            "2": "O veneno sobrevive à luta. Uma pilha some a cada {spent} h de tempo do mundo (Podridão Intestinal, de comida podre, a cada {rot} h); uma nova mordida zera o relógio.",
+            "3": "O Antídoto é usado fora de combate na tela do bando: o membro envenenado rola outra salvaguarda de Constituição contra a CD do pior veneno. Passar tira uma pilha na hora; falhar só gasta a dose.",
+            "4": "Um Antídoto por membro a cada {hours} h, tenha funcionado ou não."
+        },
+        "reading": {
+            "title": "Lendo um inimigo",
+            "1": "Na primeira vez que alguém do seu lado vê um inimigo, cada colega que o vê rola d20 + INT contra CD {dc} + o nível racial do inimigo. A melhor margem é de todo o lado.",
+            "2": "Quanto melhor a margem, mais campos da ficha do inimigo se abrem (os ? são o que você ainda não leu). Uma rolagem falha não revela nada e nunca mente.",
+            "3": "Uma raça que a guilda já enfrentou é {discount} mais fácil de ler, e uma habilidade racial que a guilda já viu sai de graça na próxima da raça.",
+            "4": "Avaliar (1 ponto) rola de novo com +{bonus} num inimigo à vista, uma vez por inimigo a cada rodada."
         },
         "or": " ou ",
         "term": {

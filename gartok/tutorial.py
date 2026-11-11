@@ -18,15 +18,18 @@ TUTORIALS = (
     "squad", "battle", "report", "memorial", "level_up", "loot", "reward",
     "market", "taverna", "hunt", "bank", "level", "library",
     "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "dialogue", "prison", "stable", "wagon_yard", "watch", "garage", "gathering", "initiation",
-    "group_turn"
+    "group_turn",
+    "hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon",
 )
 
 
-def card(key, rows=()):
+def card(key, rows=(), spot=None, wiki=None):
     """The copy of `key`'s card: title, paragraphs, an optional closing pointer and the button.
     `rows` is what the copy cannot hold, drawn by the screen's session from its own registry: each
     row is {"stamp": {"label", "style"}, "rule", "text"} plus an optional "image" (a url), shown
-    between the paragraphs and the pointer."""
+    between the paragraphs and the pointer; a row may carry a `focus` (a CSS selector lit on the screen
+    while the pointer is on the row). `spot` is the selector of the part of the screen the card is about,
+    kept lit above the veil while the card is up; `wiki` is the entry (`chapter:id`) a second button opens."""
     title = i18n.t(f"tutorial.{key}.title")
     body = i18n.t(f"tutorial.{key}.body")
     if isinstance(body, str):
@@ -35,7 +38,8 @@ def card(key, rows=()):
     suggestion = i18n.t(suggestion_key) if i18n.has(suggestion_key) else None
     button_key = f"tutorial.{key}.button"
     button = i18n.t(button_key if i18n.has(button_key) else "tutorial.default_button")
-    return {"title": title, "body": list(body), "rows": list(rows), "suggestion": suggestion, "button": button}
+    return {"title": title, "body": list(body), "rows": list(rows), "suggestion": suggestion, "button": button, "spot": spot, "wiki": wiki,
+            "wiki_button": i18n.t("tutorial.wiki_button") if wiki else None}
 
 
 class TutorialState:

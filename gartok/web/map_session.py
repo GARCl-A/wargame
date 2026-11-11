@@ -15,6 +15,7 @@ from .. import (
     economy,
     forced,
     gather,
+    hints,
     i18n,
     missions,
     node_functions,
@@ -294,7 +295,7 @@ class MapSession(MapView, Session):
     def _member(self, u, g):
         return {"uid": u.uid, "name": u.name, "portrait": _portrait(u), "lead": u is g.leader,
                 "hp": u.hp, "hp_max": u.hp_max, "hungry": u.hunger_level > 0, "sick": bool(u.sick),
-                "poisoned": bool(u.poisoned),
+                "poisoned": bool(u.poisoned), "encumbered": bool(u.encumbered),
                 "sub": i18n.t("map_session.lvl", race=u.race_label, racial_level=u.racial_level)}
 
     def _pace(self, g):
@@ -820,7 +821,15 @@ class MapSession(MapView, Session):
         return {"quit": True}
 
     def tutorial_key(self):
-        return "group_turn" if self.turn is not None else "map"
+        key = "group_turn" if self.turn is not None else "map"
+        seen = self.guild.tutorial.seen
+        return key if key not in seen else hints.on_map(self.guild, seen) or key
+
+    def tutorial_wiki(self, key):
+        return hints.wiki_ref(key)
+
+    def resume(self):
+        return self.back()
 
     def tutorial_closed(self, key, first):
         """The map's card is the first after the draft: its first close opens the objectives, as pygame's."""

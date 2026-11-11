@@ -15,6 +15,9 @@ ITEM_ACTIONS = {
 }
 
 
+LINKED_CONDITIONS = ("routed",)   # conditions a keyword's text names: they link to their entry in the CONDITIONS chapter
+
+
 def terms() -> dict[str, dict]:
     """Every term by id: its name, its kind line, its text and the wiki chapter it opens in; a trait
     that is a weapon action is that action's entry."""
@@ -28,13 +31,17 @@ def terms() -> dict[str, dict]:
                               "chapter": "actions"})
     for k in keywords.all_keywords():
         out.setdefault(k.id, {"name": k.name, "kind": i18n.t("wiki_terms.keyword"), "text": k.text, "chapter": "keywords"})
+    for cid in LINKED_CONDITIONS:
+        out.setdefault(cid, {"name": i18n.t(f"ui.cond.{cid}.name"), "kind": i18n.t("wiki_terms.condition"),
+                             "text": i18n.t(f"ui.cond.{cid}.rule"), "chapter": "conditions"})
     return out
 
 
 def keywords_in(text: str) -> list[str]:
     """The ids of the keywords `text` names, in the order they first appear."""
-    found = [(m.start(), k.id) for k in keywords.all_keywords()
-             for m in [re.search(rf"\b{re.escape(k.name)}s?\b", text or "")] if m]
+    named = [(k.id, k.name) for k in keywords.all_keywords()] + [(c, terms()[c]["name"]) for c in LINKED_CONDITIONS]
+    found = [(m.start(), kid) for kid, name in named
+             for m in [re.search(rf"\b{re.escape(name)}s?\b", text or "")] if m]
     return [kid for _, kid in sorted(found)]
 
 

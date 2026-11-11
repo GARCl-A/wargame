@@ -209,7 +209,7 @@ def _reckoned_ac(battle, unit, target, armor_pierce=False):
     the armour and shield it can see the foe wearing."""
     if intel.knows(battle, unit.team, target, "ac"):
         return target.ac_vs(unit, armor_pierce=armor_pierce)
-    worn = target.armor.ac if target.armor and not armor_pierce else 0
+    worn = (target.armor.ac if target.armor else 0) - (target.pierceable_ac if armor_pierce else 0)
     shield = 0 if target.has_condition("shield_hooked") else _shield_ac(target)
     return 10 + worn + shield
 

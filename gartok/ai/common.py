@@ -48,6 +48,12 @@ def _spell_can(battle, unit, spell_id, target):
             and actions.CastSpellAction(spell_id).can(battle, unit, target))
 
 
+def _instinctive(unit):
+    """A wild animal (a beast with no language): it fights, flees and defends, and never tends a fallen
+    friend the way a person does (First Aid, Stabilize). A beast that speaks, the Dragon, still can."""
+    return unit.race.get("kind") == "beast" and not unit.race.get("language")
+
+
 def _mindless(unit):
     """The dead do not break and run: an undead body, or one raised from the dead."""
     return getattr(unit, "raised", False) or unit.race.get("kind") == "undead"

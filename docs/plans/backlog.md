@@ -32,7 +32,7 @@ combat presentation and the hub kit are done. Left:
   and flags what still rings false.
 - **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
-- **Holy Symbol: the Farmer's quest is live.** Left: the author plays it through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair) and flags what rings false; the polish entry below.
+- **Holy Symbol: the Farmer's quest is live.** Left: the author plays it through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair); the polish is in *Needs more information*.
 - The *Small* items below, in order.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
@@ -53,11 +53,6 @@ the rest.
   title is chosen when the talk opens; text built from ids with `.title()` / `.capitalize()` (school, stage, node ids) and the stat labels of
   `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md`: turn the 78 literals of `reference.py`
   into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
-
-- **Combat teaches itself: the tutorial and the conditions (playtest 2026-11-02, Johann 2026-10-31).**
-  The combat tutorial explains the actions: today the cards are text and did not help, so show the
-  control (a highlight on the bar) and cover each action of the bar. Web only (`screens/battle/`), with the
-  card's key in `locales/en.json`.
 
 - **Ambush on the way in, at every dangerous node (author, note outside playtests).** The Wilds, the
   Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road
@@ -106,12 +101,6 @@ the rest.
   light and fog layers at a lower resolution; skip the repaint of those layers when an action did not change
   what the side sees; paint a first frame (cached floor) before the light.
 
-- **The dictionary crafts too fast (playtest 2026-11-01).** One was made on day 18 in about 4 or 5 hours.
-  Target (author 2026-11-04): a character with INT 10 and no bonus takes about 3 days. Find the time the
-  craft takes (`craft_level.py` and the recipe) and bring it to that, without lengthening the other
-  crafts (the author fears slow, boring crafts): check their times against the dictionary's before
-  touching any.
-
 - **Is a STR/CON-heavy draft objectively best? (author 2026-11-01).** The author drafts a Charisma leader
   plus the strongest, toughest bodies for the rest and cannot tell bias from fact. Measure with the headless
   fights and the economy sim: squads built on max STR/CON against squads spread over other attributes, at
@@ -130,16 +119,6 @@ the rest.
   +1 reach (if it has one), so a weapon's entry must list every property it carries, read off its
   `ItemDef`.
 
-- **Wiki: dynamic alphabetical chapter ordering & Conditions vs Keywords.** Sort wiki chapters dynamically
-  by translated label (`locales/*.json`) so ordering is natural in all languages. Check whether "Fleeing" belongs
-  under Conditions (`conditions.py`) rather than Keywords.
-
-- **Map screen: overencumbered member tag (author 2026-11-08).** In the band member dropdown on the left side
-  of the map screen, add an "overencumbered" tag alongside the existing "leading" and "hungry" status tags.
-
-- **Combat log: full damage roll breakdown (author 2026-11-08).** The log currently displays the hit roll
-  breakdown but not the damage roll. Add damage roll detail at the same level of transparency.
-
 - **AI heuristics: Shove vs Attack x2 (playtest 2026-11-08).** Review AI combat priorities when surrounded or
   flanked. Ensure the AI does not overvalue shoving a foe away (to break flanking or force movement) over
   attacking twice to eliminate or soften an immediate threat.
@@ -155,30 +134,7 @@ the rest.
 
 - **Show what a race and a vocation give at the pick (Johann, 2026-10-31).** He chose Delvers by lore and
   could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
-  `92c60533`); check what the pick still hides and say it in plain words. The vocation balance stays in
-  *Needs more information*.
-
-- **Rule pop-ups by trigger, with a link to the wiki (playtest 2026-11-10; Johann, 2026-10-31).** Some rules
-  slip past players. A one-time card fires on a trigger, has *Close* and *See in the wiki* (opens the wiki on
-  that entry, so the player sees what surrounds the rule); check first that each rule has a wiki entry. Cases:
-  (1) the first studyable item received (dictionary, scroll, recipe): it is learned by a character, study it at
-  the tavern; (2) the second fight of a campaign: every character rolls a free Assess at the start (highlight in
-  the combat log); (3) the first endless or exploratory dungeon: clearing it does not end it, the exit is the
-  entrance, and loot and survival depend on walking back; (4) the first player unit that falls: Stabilize, a
-  Wisdom check any character may try, no class or item needed; (5) rations: travel eats one a day (Johann).
-  Each card has its key in `locales/en.json` and its own "seen" flag in the save.
-
-- **Apothecary & Antidote utility and tooltip clarity (author/Yohan alignment).** Fix Antidote so the Constitution save
-  reliably reduces duration / clears poison or disease stacks (`unit_poison.py`). Accurately document the DC, save behavior,
-  and cure mechanics in the in-game wiki and display this info on the inventory item hover tooltip and band kit screen.
-
-- **Pickaxe targeted bonus damage vs. metal (author/Yohan alignment).** Tool and weapon overhaul: grant the Pickaxe a
-  targeted bonus damage modifier specifically against targets equipped with metal armor and against metallic
-  structures/fortifications, establishing it as a dedicated tactical counter against heavy units.
-
-- **AI: Creature-specific action restrictions (author/Yohan alignment).** Restrict unnatural or illogical tactical actions
-  for beasts and monsters in combat AI (`ai/`). Predators (e.g., wolves, bears, spiders) must not use human tactical actions
-  such as First Aid / "Stabilize" on fallen allies or perform complex humanoid maneuvers.
+  `92c60533`); check what the pick still hides and say it in plain words.
 
 - **AI: Crowd-control-aware target decision (author/Yohan alignment).** Improve AI action sequencing when applying control
   effects: when a boss, caster or controller inflicts Sleep or similar incapacitation that breaks on damage, nearby AI
@@ -190,32 +146,6 @@ the rest.
   (sizes in the doc), the mixed error (a build twice in one squad is credited twice per unit, which is the intended score, but
   its interval reads too narrow: cluster the error by squad), and deciding whether this report replaces
   `build_study_report.py`'s tables. Combat first, the economy axis after.
-- **Kenku and Crossbow balance changes (race study 2026-11-10, `ca-depois`).** Kenku is 38.5, the lowest race
-  (5 of 18 builds above 50%, its three best average 59). Measure every change below with
-  `race_study.py run --waves mb,ef --levels 5` then `build_study_report.py` (the Races table: score, builds above 50%,
-  mean of the three best; the Crossbow is a build, so read it in the Builds ranking).
-  - *Crossbow re-measure.* The study before the plain-shot fix and the new Deadeye line (Heavy Bolts +2, Keen Bolts,
-    Ambush Shot) put it last in 18 of 19 races. A 2-minute check (clones against random cells, L5) now reads about
-    64%, above the 40 to 60 band: run the full waves, and trim (Ambush Shot, Heavy Bolts) if it confirms.
-  - *Kenku archetype (author 2026-11-08).* Its stats (DEX/WIS/CHA) leave it neither a pure caster nor a melee
-    bruiser. Direction (author 2026-11-10): a demoralising archer (ranged plus Demoralize). Its best build today
-    is `faith_caster` 61.5, then `sage_archer` 58.2. Built, A/B on the Kenku clones only: the Merciless talent
-    (Brutal 1 against a demoralized target, under Cull the Broken; within noise on the melee builds, the Kenku bats
-    little), Wordless Menace not offered to a race whose ability crosses the language gap, the Hammer for the
-    Intimidator and Commander, and the `intimidator_archer` build (72, against 38 for the melee Intimidator). The AI
-    no longer grabs, takes down or Demoralizes a foe that is already running, and strikes a runner like any other foe:
-    that is for every race, so every number of the study above predates it. Missing: the full study run, and the
-    Commander's fifth talent for the Kenku (Dread Voice stands in for Wordless Menace, a guess).
-  - *Interacts, and could lift the Kenku:* **Intimidation build rework** (the DCs and action economy of Demoralize,
-    Medium); in **Talent ideas (2026-10-30)** item 3 (Charisma + Wisdom: Demoralize on beasts) and item 4 (Archery:
-    +1 damage with a bow, then a conditional Brutal). the Warband's +1 morale does not touch the
-    Kenku (it is Marsh and Scholars).
-  - *Interacts with the Crossbow:* **Weapon actions: tune the favoured cases** (Extreme Shot is the Crossbow's trait,
-    with `crit_3x`) and Archery (item 4), if "a bow" is read to include the Crossbow: decide it when the talent is
-    designed.
-  - *Already applied (2026-11-10):* size AC, Tiny/Small +2/+1, Large -1. The Kenku is Medium, so it did not move
-    (-0.4 in the study).
-
 - **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the exit
   while it can, instead of ordering each one. Read the flee rules first (what blocks a flee, who is held)
   and reuse the AI's flee path. End-to-end: web button in `screens/battle/`, `ai/`, tests, tutorial mention.
@@ -225,20 +155,14 @@ the rest.
   hard for this group") built on `encounters.pack_power`, compared with the group's own power. Web map and
   the fight's confirm dialog, tests that the hint matches `pack_power`.
 
-- **Armor material categorization (author/Yohan alignment).** Decided 2026-11-10: a `material` field on each armor's
-  `ItemDef` (today two values, leather and metal). It is the foundation for material-specific rules; the first is the
-  Pickaxe's bonus damage, only against metal armor (*Small*, *Pickaxe targeted bonus*). Lightning conductivity and
-  spell vulnerabilities come later.
-
-- **"Modifiers Matter" feedback in combat log and panel (author/Yohan alignment).** Visual combat log and UI enhancement
-  (inspired by Pathfinder 2e's *Modifiers Matter* module): visibly highlight whenever a passive bonus, aura, trait, or
-  talent was the decisive factor turning a miss into a hit, an ordinary strike into a critical, or facilitating a clutch dodge.
+- **"Modifiers Matter" in the combat log (author/Yohan alignment).** The *Damage* line already lists dice, modifiers and
+  multiplier (`log_marks`). Left: mark the modifier that was decisive, the one that turned a miss into a hit or a strike
+  into a critical (inspired by Pathfinder 2e's *Modifiers Matter*).
 
 - **Continuous / Endless Dungeon signaling (author/Yohan alignment).** UI and UX clarity for continuous exploratory dungeons:
   clearly communicate to the player that there is no traditional "Victory" screen upon clearing a floor. Spoil retention
   and character survival depend entirely on the voluntary decision to retreat back to the entrance point. The
-  first-entry card is case (3) of *Rule pop-ups by trigger* (*Small*); this item is the permanent signal on the map
-  and the confirm dialog.
+  first-entry card is built (`hints.DUNGEON`); this item is the permanent signal on the map and the confirm dialog.
 
 - **Intimidation build rework & mathematical tuning (author/Yohan alignment).** Overhaul the mathematical progression, DCs,
   and action economy for the Intimidation combat build (Demoralize, Provoke, and associated Charisma/Wisdom talents) to raise
@@ -270,8 +194,8 @@ the rest.
   monotonous diet (such as surviving exclusively on potatoes daily) steadily erodes party morale, humor, and member loyalty,
   requiring food variety and culinary planning. (Supersedes the old combat-buff cooking concept).
   Decided 2026-11-10: each unit keeps the foods it ate in the last 7 days, an ordered list of 7 entries (a saved
-  `Unit` field with a neutral default in `SAVE_DEFAULTS`). Open: how many distinct entries count as varied and
-  how much morale a repeat costs. Rotten Food (decided 2026-11-11): it is thrown away, eaten by a Gnoll, and
+  `Unit` field with a neutral default in `SAVE_DEFAULTS`). Decided (author 2026-11-11): the diet variation is a value from 1 to 7, the number of distinct
+  foods eaten in those 7 days. How the value maps to morale is decided with *Loyalty*, after it is designed (author 2026-11-11). Rotten Food (decided 2026-11-11): it is thrown away, eaten by a Gnoll, and
   an emergency ration so a badly planned group does not starve (RULES.md, *Rotten Food is not a ration*);
   later it is compost when the guild can farm.
 
@@ -459,9 +383,6 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 ## 2026-11-02
 
-The session's recordings (saves and combat logs) are not in the repo yet; the author sends them when a note
-needs a fight rebuilt.
-
 - **Is the two-step charge worth it? (author 2026-11-02, doubt).** Having one charge with two different
   values feels more of a hindrance than interesting. Review the rule against the Aurochs fight (day 112) and
   decide: keep, merge into one value, or drop. Measure with `scripts/combat_pairs.py`.
@@ -470,10 +391,6 @@ needs a fight rebuilt.
 
 ## 2026-11-01
 
-- **Vocations: difficulty or build? (author 2026-11-01).** Vocations stay and get more investment (author
-  2026-11-04). Is playing Survivors objectively worse than Caravan? Either flag it to the player ("risky" and
-  the like), or balance them to be equally desirable. Either way the game needs a way to test the vocations' balance (`balance_sim.py`,
-  `economy_sim.py`; see *Vocations are far apart* under 2026-10-31).
 - **Surrender and prisoners (author 2026-11-01, future).** Morale and the rout shipped; a fighter whose morale is
   spent could give up instead of running. Think what a surrender does and tie it to *Prisoners*.
 
@@ -483,29 +400,9 @@ A friend's (Johann) first session (about 2 h, no tutorial from the author). The 
 same talk is spread over *To discuss and reflect on*, *Notes to remember*, *Needs more information* and the
 items it touches. Raw feedback, not yet sized:
 
-- **What worked (do not "fix" it).** The character progression, combat, and the pull of "always something
-  to go after" (the exclamation marks on the map). Two musicians playing while the rest worked was the
-  strategy he liked. He compares it with, or above, Wartales /
-  Battle Brothers / Mount & Blade for fun, and finds it easy to play in short sessions. He stopped because
-  of that bug and because he had played a lot, not because he was bored.
-
 - **Theme: the rules sit where the player does not look.** The wiki, the menu and the tutorial text were
   not read; the player learned by doing, and paid for it (rations, the draft, Delay). A fix per case is
   small; the pattern is to show the rule where the decision is made (a pick, a price, a button).
-- **No difficulty signal.** He avoided the arena ("if wolves kill me, the arena will") and the first bout
-  is easier than the wolves (3 level-0 fighters against 2 to 6 wolves of level 1 to 4). Ideas: a danger
-  hint on a node or fight before entering (a level range, "easy / hard for this group"); the measure
-  behind it exists (`encounters.pack_power`).
-- **Race and vocation choice cannot be read.** He chose Delvers for the buff, by lore, not by numbers, and
-  could not tell what a race gives ("mental bonus, stat check: means nothing yet"). He thought the Automaton the
-  strongest race; the author says Orc and Goliath are, and the game does not show it. The pick's text is in
-  *Ready to do -> Small*; see the vocation balance below.
-- **Vocations are far apart** (author): Delvers and Caravan ahead; Warband fine for Orc / Goliath; Scholars
-  for the races that cast early; Wanderers and Survivors weak. Rework or balance with the vocation probation in
-  *Loyalty, the oath...*; each perk should act on a daily loop. **Not validated** (author 2026-10-31: these
-  are impressions, not measured). Check them first with `balance_sim.py` / `economy_sim.py` /
-  `scripts/economy_report.py`: vocation ranking, and whether Orc (does not fall) and Goliath (carries
-  double, no donkey to buy) really are the strongest races. Only then rework.
 - **Starting squad is weak.** STR 2 or 3 carries nothing, a bow is too dear, and the start weapon is
   a dagger or a piece of an axe ("at least one real weapon"). The author would take 18 STR, 18 CON and 0
   elsewhere at level 0.
@@ -537,15 +434,8 @@ items it touches. Raw feedback, not yet sized:
   Ask again. The friend's view: up to 8 units is fine, more groups slow it unless there is automation.
 - **Automation** (secondary groups on routines) is the author's answer to the macro load and was well received.
 
-- **Tutorial cards are text only and did not help.** He read them, but plain text did not explain the
-  mechanics; he learned by playing. Open question: show instead of tell (a small diagram or a
-  highlight of the control on the screen), or shorter cards that point at the first action. The combat
-  card is *Combat teaches itself* (*Small*); the other screens wait for its answer.
 - **The Reputations tasks only half guide a start.** Found them "almost intuitive", not a clear "how
   to begin". Check whether the first deeds read as a path.
-- **Rations are learned the expensive way.** Travel eats rations (once a day) and he found out by
-  spending them. The wiki was opened once and never used. Left: a link from the tutorial to the wiki.
-- Good sign: he understood the screens by playing and asked whether to continue (about 2 h in).
 
 ## Older raw notes (2026-10-12, 2026-10-21)
 
@@ -581,9 +471,7 @@ has one "Enter" button and its functions are tabs inside.
 
 # Needs more information
 
-- **Catfolk balance and glyph.** The race is in (slots, Catfall, Sylvan, the three talents, Caravan, 11
-  portraits). The head glyph (`sly`) is a stand-in: the icon set has no feline head. Its numbers (the +1 DEX/+1 CHA body, the three talents)
-  wait for the vocation balance work (*Vocations: difficulty or build?*).
+- **Catfolk glyph.** The head glyph (`sly`) is a stand-in: the icon set has no feline head.
 
 - **Playtest with every routine open (author 2026-11-04).** Every block and place is open to a routine today.
   The playtest decides *Routine unlocks* (in *Large*), whether the editor needs validation marks (today a routine
@@ -598,30 +486,21 @@ has one "Enter" button and its functions are tabs inside.
 - **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
   targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
   order of impact.
-  1. *The Games pay too little for their risk? (direction decided 2026-11-01; the author feels it balanced
-     on 2026-11-04, so this is a measurement, not a call: drop the item if the numbers agree).* A Games bout
-     (Brawl or Capture the Flag, 3 a side) costs $30 a fighter ($90 for the three) and pays a flat $130,
-     against three opponents rolled level 1 to 6 each (`encounters.ARENA_LEVEL_WEIGHTS`: 30/24/18/13/9/6,
-     mostly 1 to 3, mean ~2.7); the Ribbit Brothers' bout costs $40 a fighter for $450, six a side,
-     lackeys at level 3. A level 3-4 group has no reason to risk being beaten up for that: the purse (or
-     the stake against it) has to make a bout worth more than what the same group earns elsewhere in
-     the same days, the Wilds first. Measure the Games' net per bout against the Wilds hunt for that group
-     (`scripts/economy_activities.py`, `economy_report.py`), then set the numbers.
-  2. *How lethal the Wilds should be.* A level-3 squad that does not win nearly every fight cannot make a
+  1. *How lethal the Wilds should be.* A level-3 squad that does not win nearly every fight cannot make a
      living there, and the Old Road's ambush (20% a pass, `world.ROAD_AMBUSH_CHANCE`) fires on every walk.
      Re-measure now that a group too strong for a pack is no longer ambushed by it (author 2026-11-01).
-  3. *How much a crafting specialist may earn.* The shelves aim at 2-3x a lumberjack; the author's note says
+  2. *How much a crafting specialist may earn.* The shelves aim at 2-3x a lumberjack; the author's note says
      crafting is for saving money and reaching what cannot be bought, not a business. Needs the sum first
      (author 2026-11-01): what each crafting loop earns a day against the Yard, with
      `scripts/economy_report.py` and the restock sweep, before the call. Ties to *Tune the specialised
      shops*.
-  4. *The reference scenario past the start.* The sim tests the Wilds, the Games and the Claim from a
+  3. *The reference scenario past the start.* The sim tests the Wilds, the Games and the Claim from a
      guild that starts at level 3 with $250 (`economy_guild.py --level 3 --capital 250`), a guess. The
      author's own line (2026-11-01): a group of **4 at combat 1, work 2** already goes to the Wilds for
      hides and mushrooms. Make that the scenario: `--level` is one number today, so the sim needs the
      combat and work tracks apart (and `--size 4`); the starting coin is still open (proposal: what the
      sim's own guild holds the day it reaches combat 1, work 2).
-  5. *The Claim's numbers are old.* The Wilds claim (the guild's own holding in the Wilds, built by a
+  4. *The Claim's numbers are old.* The Wilds claim (the guild's own holding in the Wilds, built by a
      garrison that sustains it until it is established, then raided now and then) was measured before
      the garrison's `hold` job (rest and heal on the claim) existed, so the sim's "a gamble, established
      by 13-28% of guilds" may be wrong. Not a call: a re-measure, when a sim policy goes for the Claim.
@@ -649,30 +528,40 @@ has one "Enter" button and its functions are tabs inside.
      Decided (author 2026-11-01): the best roll counts (the talent is a way to try more than once); the
      holder becomes `recruited_by`; "could recruit" means every requirement the ally would need to
      recruit that target alone (`slots_free`, the shared language, the rest of `recruit.py`'s checks).
-     Decided (author 2026-11-04): three separate nodes that may connect. Group size +1: *combat*, T4 or T5
-     (recruiting is the strongest thing in the game so far). Crowd penalty -10%: *combat*, T3 or T4. Joint
-     pitch: *work*, T2 or T3, after Fixer. Open: whether "group size limit" is `cohesion.py`'s capacity (to be
-     replaced by Loyalty, see above).
+     Decided (author 2026-11-04, moved 2026-11-11): three separate nodes that may connect, all in the *work*
+     Charisma tree (Charismatic, Negotiator, Fixer, Provisioner, Troubadour today). Group size +1 and crowd
+     penalty -10% are work talents, no longer combat; joint pitch comes after Fixer. Open: the tier of each
+     (group size +1 deep, recruiting is the strongest thing in the game so far); whether "group size limit" is
+     `cohesion.py`'s capacity (to be replaced by Loyalty, see above); and the trade-off rule above, which spoke
+     of a pick that would make a better *fighter*: in the work track the price is a work pick, so say what a
+     big guild gives up.
   2. *Intelligence tree (combat), two talents:* (a) **group leader only: places the whole group** before
-     the fight; (b) **places only oneself**. Together they are a ladder (b the early node, a the late one),
-     and (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
+     the fight; (b) **places only oneself**. Decided (author 2026-11-11): a ladder, (b) hangs under Tactical Mind
+     and (a) under (b) (`requires`). (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
      the UI is like the flag's placement (a pre-fight setup step, `BattleSession` already has "flag" and
      "trap"), placing the characters one after another in initiative order. (a) works only when the
      leader is on the board (an arena bout picks its fighters, a hunt leaves its guards behind: without
      the leader, no one places the group). `ai/` places its own side at random at first; after a playtest with the talent, the author's placements
-     train it. Open: the tier of each.
-  3. *Charisma + Wisdom compound:* Demoralize on beasts. The point is the language: a beast has none,
-     so `Demoralize._can_provoke` (`actions/combat.py`) never allows it. The talent gives the holder what
-     `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets
-     with no language of their own. The effect on the beast is the same as on a humanoid
-     (`Demoralized`: cannot move, lower defenses). Decided (author 2026-11-04): it requires a Charisma (combat) talent and a Wisdom (combat) talent, which
-     is the `also` prerequisite (`Talent.also`, as Ready Hand and Ambush Shot use it). Open: whether it also needs the holder to be
-     able to see the beast for a turn (the existing sight check already does).
-  4. *Archery (playtest 2026-11-02):* a combat talent giving +1 damage with a bow; and a second that
+     train it. Open: the tier of each (b is T2 or T3 under Tactical Mind, a one tier below it).
+  3. *Charisma + Wisdom compound:* Demoralize on beasts. A beast has no language, so `Demoralize._can_provoke`
+     (`actions/combat.py`) never allows it, and Wordless Menace works on humanoids only. Decided (author
+     2026-11-11): not built until the Wisdom (combat) tree has its Beastmaster talents (*Beastmaster talents*
+     below). It requires Wordless Menace (Charisma, combat) and one of them, the `also` prerequisite
+     (`Talent.also`, as Ready Hand and Ambush Shot use it). The talent gives the holder what
+     `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets with no
+     language of their own; the effect on the beast is the same as on a humanoid (`Demoralized`). Open: whether
+     it also needs the holder to see the beast for a turn (the existing sight check already does).
+  4. *Archery (playtest 2026-11-02):* a combat talent giving +1 damage with a ranged DEX weapon (decided 2026-11-11: a crossbow is as much a bow as a longbow or shortbow); and a second that
      adds a conditional *Brutal* to the blow, possibly "in a straight line" along the 8 directions (the
-     shot must travel straight). Decided (author 2026-11-04): the +1 damage comes first and the Brutal one chains after it. "In a straight
+     shot must travel straight). Decided (author 2026-11-11): the +1 damage hangs under Deadeye (T3) and the
+     Brutal one under it (T4). "In a straight
      line" is the queen's move: shooter and target aligned on a row, a column or a diagonal. The *Brutal N*
-     keyword exists (`keywords.py`). Open: the tiers.
+     keyword exists (`keywords.py`).
+
+- **Beastmaster talents in the Wisdom tree.** Add Beastmaster talents to the Wisdom (combat) tree, which today
+  holds only Alert -> Quick Wits (-> Peripheral Vision) and Iron Will (-> Iron Stance). The first use is the
+  prerequisite of *Demoralize on beasts* (*Talent ideas*, item 3), which waits for this tree. Open: how many nodes, their tiers and what
+  each does with beasts (Demoralize, `Group.herd_capacity` is already Beast Whisperer's in the work tree).
 
 - **Does the Assess action itself need a reward? (author 2026-10-31, author/Yohan alignment).** The talent line
   under Tactical Mind (Analytical Eye, Exploit Weakness, Anatomist, Surgical Strike; `talents.py`) already pays
@@ -684,7 +573,7 @@ has one "Enter" button and its functions are tabs inside.
   `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
   as a trait of that weapon. Decided 2026-11-11 for `Hooves`: one action that resolves an attack, a shove
   and a Takedown, in that order (the condition and Takedown exist, `conditions.py`, `actions/combat.py`).
-  Open: the action for each of the other four, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
+  `Hooves` costs 2 AP. Open: the action for each of the other four, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
   AI, tests, tutorial card). Compare with Takedown and Grab in the sim so none dominates.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
@@ -717,9 +606,4 @@ has one "Enter" button and its functions are tabs inside.
     clue are first numbers: the sim has no player who reads the bar (the raw cultist fight is level for a guild
     of level 6 to 8 with 6 to 8 members; with the bar on, the sim player almost always loses). The Demon is
     meant to be a problem and is not tuned for the guild to win.
-  - **Names.** The leader (Maren Voss), the lair and the Demon ("The Pale Tenant") are provisional; the node
-    keeps "Demon Cult Site" when it is the lair.
   - **The Demon knows only Hex and Dragonfire.** More schools wait for the new spells the author will design.
-  - In the sim, a fight without the rite bar can stall for 80 to 200 rounds on average; worth a look if it
-    shows up in play.
-

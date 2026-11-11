@@ -136,14 +136,20 @@ def _tutorial(session, verb, post):
     if key is None or state is None:
         raise ValueError(i18n.t("server.this_screen_has_no_tutorial"))
     if not post and verb is None:
-        return {"key": key, **tutorial.card(key, session.tutorial_rows(key))}
+        return {"key": key, **tutorial.card(key, session.tutorial_rows(key), session.tutorial_spot(key), session.tutorial_wiki(key))}
     if post and verb == "dismiss":
         first = key not in state.seen
         state.dismiss(key)
         return session.tutorial_closed(key, first) or {}
+    if post and verb == "wiki":
+        ref = session.tutorial_wiki(key)
+        if ref is None:
+            raise ValueError(i18n.t("server.this_screen_has_no_tutorial"))
+        state.dismiss(key)
+        return session.open_wiki(ref)
     if post and verb == "reopen":
         state.reopen(key)
-        return {"key": key, **tutorial.card(key, session.tutorial_rows(key))}
+        return {"key": key, **tutorial.card(key, session.tutorial_rows(key), session.tutorial_spot(key), session.tutorial_wiki(key))}
     return None
 
 

@@ -462,6 +462,8 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             battle.log("log.brutal", why=brutal_why if brutal else i18n.Msg("log.brutal_savage"), n=brutal_total)
         dmg = attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon, crit_mult=crit_mult,
                                    bonus_damage=bonus_damage + cull + guard_finesse + frenzy, brutal=brutal)
+        if detail := attacker.damage_detail():
+            battle.log("log.damage_roll", detail=detail, dmg=dmg)
         dmg = _stone_endurance(battle, target, dmg)
         target.take_damage(dmg, battle.log, knockout=bool(pulled))
         if dmg > 0:

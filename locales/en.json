@@ -1,6 +1,44 @@
 {
   "tutorial": {
     "default_button": "Got it",
+    "hint": {
+      "study": {
+        "title": "Learning from a scroll, a paper or a book",
+        "body": [
+          "A scroll, a recipe paper and a dictionary teach one character, not the whole group: the item has to be in that character's pack, and they study it at the Tavern.",
+          "Pick a target on the Tavern's STUDY tab, then rent a quiet room: each day the student rolls toward the lesson, and the room is paid for."
+        ]
+      },
+      "road": {
+        "title": "The road eats rations",
+        "body": [
+          "Every member eats one meal a day, walking or not, and a long road is days of meals.",
+          "Check the pack before you set out: the map warns when the rations will not last the trip, and a band that runs out goes hungry."
+        ]
+      },
+      "reading": {
+        "title": "Reading your foes",
+        "body": [
+          "The first time your side sees a foe, every character that sees it rolls d20 + INT to read it, and the best result is shared by the whole side. The more you beat the DC, the more of its card opens.",
+          "A race the guild has already fought is easier to read. Assess (1 point) rolls again, harder, on one foe."
+        ]
+      },
+      "fallen": {
+        "title": "A character is down",
+        "body": [
+          "At 0 HP a character is down, not dead, and bleeds out in a few rounds.",
+          "Any character can Stabilize them: a Wisdom check, no class or item needed. First Aid does it better with the right kit."
+        ]
+      },
+      "dungeon": {
+        "title": "A dungeon you walk out of",
+        "body": [
+          "Clearing the ruins does not end the fight: when the last foe falls the delve goes on, and it is won only when the squad has left by the entrance.",
+          "Chests and relics stay where the ruins keep them until someone takes them, so what you do not carry out is not yours. Plan the walk back."
+        ]
+      }
+    },
+    "wiki_button": "See in the wiki",
     "draft": {
       "intro": {
         "title": "Welcome to Gartok",
@@ -102,11 +140,16 @@
     "battle": {
       "title": "Fighting it out",
       "body": [
-        "Each character has 2 action points a turn. Walking, attacking and most actions cost 1; a weapon action costs 2. Space ends the turn; Delay (key 9, beside the action bar) lets the others act first, once a round, before you spend a point. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
+        "Each character has 2 action points a turn, and the lit bar at the bottom is what it can do with them: hover a line below and its plate lights up. Space or the seal beside it ends the turn. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
         "You see only what the active character's light and senses reach; L shows the whole squad's sight. A foe's ? fields are what you have not read yet: everyone reads a foe on first sight, and Assess (1 point) reads harder.",
         "At 0 HP a character is down, not dead: Stabilize or First Aid them before they bleed out."
-      ]
-    },
+    ],
+      "cost": {
+        "one": "{n} point",
+        "other": "{n} points"
+      },
+      "free": "Free"
+  },
     "loot": {
       "title": "Splitting the spoils",
       "body": [
@@ -1691,6 +1734,7 @@
       "leads": "Leads",
       "sick": "Sick",
       "poisoned": "Poisoned",
+      "encumbered": "Overencumbered",
       "hp": "{a} / {b} HP",
       "merge": "Merge",
       "merge_em": "a band standing here",
@@ -2218,6 +2262,7 @@
       "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> misses."
     },
     "brutal": "  {why}: Brutal {n}!",
+    "damage_roll": "  Damage: {detail} = {dmg}",
     "brutal_savage": "Savage Attacks",
     "ambush_shot": {
       "brutal": "The bolt finds an unready target"
@@ -2356,7 +2401,7 @@
     },
     "armor_pierce": {
       "head": "{actor} Armor Pierce -> {target}",
-      "brutal": "The point punches through the armour"
+      "brutal": "The point punches through the metal"
     },
     "power_shot": {
       "head": "{actor} Power Shot -> {target}",
@@ -2443,6 +2488,7 @@
     "signal_horn": "{actor} blows the Signal Horn! {allies} gain +{n} initiative.",
     "assess": "{actor} studies {target}: d20 + INT + {bonus} = {total} vs DC {dc}  -> {learned}.",
     "assess_nothing": "nothing new",
+    "read": "{actor} reads {target}: d20 + INT = {total} vs DC {dc}  -> {learned}.",
     "secret_door": "{actor} inspects the wall and triggers a hidden lever! A secret door slides open at {cell}.",
     "finds_hiding": "{actor} searches and finds {target} hiding at {cell}!",
     "finds_nothing": "{actor} searches the dark around them and finds nothing.",
@@ -2782,9 +2828,9 @@
     },
     "armor_pierce": {
       "name": "Armor Pierce",
-      "desc": "2 AP: Attack ignores worn armor AC bonus.",
+      "desc": "2 AP: Attack ignores the AC bonus of a worn metal armor (leather is not pierced).",
       "reason": "requires pick",
-      "label": "Armor Pierce (2 pts, ignores armor AC; Brutal 1 vs an armoured foe)"
+      "label": "Armor Pierce (2 pts, ignores metal armor AC; Brutal 1 vs a metal-armoured foe)"
     },
     "power_shot": {
       "name": "Power Shot",
@@ -3917,7 +3963,6 @@
     "keyword": {
       "brutal": "Brutal",
       "morale": "Morale",
-      "routed": "Routed",
       "critical_hit": "Critical hit",
       "flanked": "Flanked",
       "shove": "Shove",
@@ -5775,7 +5820,7 @@
       "iron_stance": "Using Defend grants +2 Mental Defense in addition to AC until your next turn.",
       "imposing": "+1 Charisma.",
       "menacing": "+2 to Demoralize checks.",
-      "wordless_menace": "Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
+      "wordless_menace": "Demoralize works on a humanoid foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
       "gruesome_takedown": "Upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language).",
       "cull_the_broken": "+2 damage on attacks against demoralized targets.",
       "merciless": "Your attacks against a demoralized target are Brutal 1.",
@@ -5944,7 +5989,7 @@
       "cleave": "2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit.",
       "repel_strike": "2 AP: One strike that Shoves the target (+2 to the check); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4.",
       "maiming_strike": "2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1.",
-      "armor_pierce": "2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1.",
+      "armor_pierce": "2 AP: One strike that ignores the AC of a worn metal armor; against a metal-armoured foe the blow is Brutal 1.",
       "power_shot": "2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1.",
       "extreme_shot": "2 AP: Doubles attack distance to 36 squares.",
       "hook_shield": "2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike.",
@@ -6127,7 +6172,6 @@
     "keyword": {
       "brutal": "Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2.",
       "morale": "Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed.",
-      "routed": "Routed: morale spent. The fighter runs for the exit and the AI plays it, a guild member included, until its morale is above 0 again.",
       "critical_hit": "Critical hit: a natural 20 on the hit roll. It hits whatever the AC, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so.",
       "flanked": "Flanked: a foe is flanked when you and an ally are both next to it, on opposite sides, and a flanked foe is off-guard. An ally merely next to the foe is not a flank.",
       "shove": "Shove: moves the target 1 cell straight back. A pit behind it drops the target in; a wall or a body behind it stops the shove. Push, Repel Strike and Tail Sweep shove; Mighty Shove throws the target 3 cells instead.",
@@ -6171,6 +6215,7 @@
       "first_aid": "Restores HP or stabilizes a dying unit. Starts with {charges} charges.",
       "quiver": "Ammunition for ranged weapons. Holds {ammo} arrows/bolts.",
       "potion": "Restores 1d6 HP when consumed.",
+      "antidote": "Used outside combat from the band screen: the poisoned member rolls another Constitution save against the poison's DC; on success one stack is shed now. One Antidote per member every {hours} h.",
       "torch": "Provides light in a {m}m radius. Can be dropped on the ground.",
       "light": "Provides light in a {m}m radius when equipped in the off-hand.",
       "food": "A day's ration. Prevents starvation when resting.",
@@ -6449,7 +6494,7 @@
       "2": "Cleave (Axe): a second foe beside both, each swing +2 to hit.",
       "3": "Repel Strike (Quarterstaff): shoves the foe 1 cell; against a wall or a body, +1d4 instead.",
       "4": "Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, Sleeping, Surprised, Demoralized) takes it at +2 to hit.",
-      "5": "Armor Pierce (Picks): ignores worn armour. Power Shot (Bows): +STR, best at long range.",
+      "5": "Armor Pierce (Picks): ignores worn metal armour. Power Shot (Bows): +STR, best at long range.",
       "6": "Hook Shield (Hatchet): the foe's shield gives no AC until next round. Parry & Strike (Swords): while Defending, with two or more foes in reach.",
       "7": "Long Thrust (Glaive): one strike a cell past the Glaive's reach of {reach}, +{hit} to hit."
     },
@@ -6512,6 +6557,34 @@
       "title": "Clean Stomp & Auto-Win",
       "1": "Before an ambush the game fights it many times headless, both sides on the AI, and shows how many of those fights were a clean stomp: everyone standing, no potion, no first aid, no ammunition spent. It is not the odds of winning.",
       "2": "AUTO-WIN is offered only when every one of them was a clean stomp. It settles the fight at once and awards no combat XP."
+    },
+    "study": {
+      "title": "Studying",
+      "1": "A scroll, a recipe paper or a dictionary is learned by one character: it has to be in that character's pack (a mate's copy is moved over when the study begins).",
+      "2": "Study happens at the Tavern: pick the target on the STUDY tab, then rent a quiet room for the group.",
+      "3": "Each day the room is rented, the student pays ${cost} (from their own purse first, then their groupmates') and rolls 1d20 + INT toward the points the lesson needs; a first-level spell takes a few weeks of days.",
+      "4": "No scroll, no money or, for a spell, no school yet means no progress that day. When the points are in, the lesson is learned and the slot is free."
+    },
+    "dungeon": {
+      "title": "Dungeons you walk out of",
+      "1": "In the Ancient Ruins the fight does not end when the last foe falls: the squad has to leave by the entrance, and only then is the delve won.",
+      "2": "Chests, relics and the Ancient Codex stay where the ruins keep them until someone takes them; what is not carried out is not yours.",
+      "3": "The entrance is the exit: the cells by the door the squad came in through. A member who falls or stays inside is not out.",
+      "4": "The ruins remember: a foe that fell stays down and what a hand took is gone on the next delve, while a trap unsprung or a chest unopened waits."
+    },
+    "poison": {
+      "title": "Poison & Antidote",
+      "1": "A venomous bite forces a Constitution save (DC {dc} + the venomous creature's racial level). A failed save poisons the victim: one stack, and each stack costs points of one attribute until it wears off.",
+      "2": "Poison outlives the fight. One stack wears off every {spent} h of world time (Gut Rot, from rotten food, every {rot} h); a fresh bite resets the clock.",
+      "3": "An Antidote is used outside combat from the band screen: the poisoned member rolls another Constitution save against the worst poison's DC. Success sheds one stack now; failure only burns the dose.",
+      "4": "One Antidote per member every {hours} h, whether it worked or not."
+    },
+    "reading": {
+      "title": "Reading a foe",
+      "1": "The first time anyone on your side sees a foe, every teammate that sees it rolls d20 + INT against DC {dc} + the foe's racial level. The best margin is shared by the side.",
+      "2": "The better the margin, the more fields of the foe's card open (the ? are what you have not read yet). A failed roll reveals nothing and never lies.",
+      "3": "A race the guild has fought before is {discount} easier to read, and a racial ability the guild has seen is free on the next of that race.",
+      "4": "Assess (1 point) rolls again at +{bonus} on one foe in sight, once per foe each round."
     },
     "or": " or ",
     "term": {

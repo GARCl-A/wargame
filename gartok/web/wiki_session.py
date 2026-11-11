@@ -2,6 +2,7 @@
 spells, keywords, conditions, talents, races, beasts, rules) read off the live catalogs, and a filter over the open one.
 Opened from the title or the map's menu; BACK returns there."""
 
+import unicodedata
 from typing import ClassVar
 
 from .. import (
@@ -25,6 +26,12 @@ CHAPTERS = (("items", "Items"), ("recipes", "Recipes"), ("actions", "Actions"), 
             ("talents", "Talents"),
             ("races", "Races"), ("beasts", "Beasts"), ("rules", "Rules"))
 MAX_QUERY = 24
+ALPHABETICAL = ("items", "recipes", "actions", "keywords", "conditions", "races", "beasts")   # the rest keep their own order: tiers, levels, the book's
+
+
+def alpha(text):
+    """A sort key that reads a word the way its language's index does: no case, no accents."""
+    return unicodedata.normalize("NFKD", str(text)).encode("ascii", "ignore").decode().casefold() or str(text).casefold()
 
 
 def _entry(name, kind="", meta=(), body=(), tags=(), glyph=None, find=(), eid=None, links=(), label=None):
@@ -195,8 +202,10 @@ class WikiSession(Session):
 
     def state(self):
         rows = BUILD[self.tab]()
+        if self.tab in ALPHABETICAL:
+            rows = sorted(rows, key=lambda e: alpha(e["name"]))
         q = self.query.strip()
         shown = [{k: v for k, v in e.items() if k != "_find"} for e in rows if not q or q in e["_find"]]
-        return {"chapters": [{"id": c, "label": i18n.lab(label)} for c, label in CHAPTERS], "chapter": self.tab,
+        return {"chapters": sorted(({"id": c, "label": i18n.lab(label)} for c, label in CHAPTERS), key=lambda c: alpha(c["label"])), "chapter": self.tab,
                 "query": self.query, "entries": shown, "total": len(rows), "back": self.back_label,
                 "focus": self.focus}

@@ -424,6 +424,40 @@ body:not(.ready) #tut-badge {
   background: radial-gradient(ellipse at 50% 45%, rgba(10, 7, 4, .55), rgba(10, 7, 4, .85))
 }
 
+#tut-veil.spotted {
+  place-items: start center;
+  padding-top: 40px
+}
+
+#tut-veil.spotted #tut-card {
+  max-height: 840px;
+  padding: 30px 48px 26px
+}
+
+#tut-veil.spotted #tut-card .tut-btns {
+  margin-top: 16px
+}
+
+.tut-spot {
+  z-index: 95;
+  pointer-events: none;
+  outline: 2px solid var(--brass-hi, #e3c27a);
+  outline-offset: 6px;
+  border-radius: 4px;
+  animation: tut-pulse 1.6s ease-in-out infinite
+}
+
+.tut-focus {
+  transform: translateY(-8px);
+  filter: brightness(1.45)
+}
+
+@keyframes tut-pulse {
+  50% {
+    outline-color: transparent
+  }
+}
+
 #tut-card {
   animation: tut-card-in .38s ease-out .2s backwards;
   width: 760px;
@@ -513,9 +547,22 @@ body:not(.ready) #tut-badge {
   color: var(--ink-2)
 }
 
+#tut-card .tut-btns {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px
+}
+
 #tut-card .btn {
-  width: max-content;
-  margin: 24px auto 0
+  width: max-content
+}
+
+#tut-card .btn.alt {
+  background: none;
+  color: #5a2116;
+  border: 1.5px solid currentColor;
+  box-shadow: none
 }
 
 #tut-badge {

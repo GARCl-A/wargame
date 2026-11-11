@@ -174,3 +174,18 @@ def test_a_shop_row_carries_its_family_and_size_for_the_toggle():
 def test_the_fitting_helper_cuts_a_name_for_a_body():
     assert fitted(_of("Goblin"), "Sword") == "Small Sword" and fitted(_of("Human"), "Sword") == "Sword"
     assert fitted(_of("Goblin"), "Torch") == "Torch"
+
+
+def test_every_armor_has_a_material_and_nothing_else_does():
+    from gartok import items
+    for d in items._REGISTRY.values():
+        if d.type == items.ItemType.ARMOR:
+            assert isinstance(d.armor_material, items.ArmorMaterial), d.name
+        else:
+            assert d.armor_material is None, d.name
+
+
+def test_a_size_variant_keeps_its_armors_material():
+    from gartok import items
+    assert items.get("Small Chainmail").armor_material is items.ArmorMaterial.METAL
+    assert items.get("Large Leather Jerkin").armor_material is items.ArmorMaterial.LEATHER

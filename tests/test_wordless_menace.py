@@ -1,4 +1,4 @@
-"""Wordless Menace: Demoralize across a language gap, within 6 squares and in mutual sight, at -2 (Menacing's +2 spent)."""
+"""Wordless Menace: Demoralize a humanoid across a language gap, within 6 squares and in mutual sight, at -2 (Menacing's +2 spent)."""
 
 from gartok import actions
 from gartok.actions.combat import UNSPOKEN_PENALTY, demoralize_language_penalty
@@ -32,6 +32,12 @@ def test_without_the_talent_a_language_gap_blocks_demoralize():
 def test_with_the_talent_the_gap_is_crossed_within_six_squares():
     b, a, d = _duel(*PATH, gap=6)
     assert actions.DEMORALIZE.can(b, a, d)
+
+
+def test_a_beast_is_not_threatened_without_words():
+    b, a, d = _duel(*PATH)
+    d.char.race = dict(d.char.race, kind="beast")
+    assert not actions.DEMORALIZE.can(b, a, d)
 
 
 def test_beyond_six_squares_the_threat_needs_words():
