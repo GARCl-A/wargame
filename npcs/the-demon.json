@@ -1,10 +1,10 @@
 {
-  "uid": "a0060db0b90f41eb9ff2928b435a14b0",
+  "uid": "1416598269d746d8aaf0050a5c106219",
   "recruited_by": null,
   "joined_day": 1,
   "name": "The Pale Tenant",
   "auto_name": false,
-  "portrait_id": 2684751280,
+  "portrait_id": 337009026,
   "portrait_file": null,
   "race": "Demon",
   "alignment": "Neutral and Evil",
@@ -18,7 +18,7 @@
   "unbroken_rest_hours": 0,
   "non_lethal_damage": 0,
   "last_daily_luck_day": 0,
-  "hp": 260,
+  "hp": 251,
   "share_food": true,
   "combat_xp": 528,
   "magic_xp": 406,
@@ -42,7 +42,7 @@
   ],
   "study_target": null,
   "study_progress": {},
-  "magic_blood": false,
+  "magic_blood": true,
   "blood_tested": false,
   "blood_test_days": 0,
   "rite_school": null,
@@ -84,9 +84,9 @@
     ],
     "racial": [
       "demon_claws",
-      "rending_claws",
-      "razor_claws",
-      "infernal_visage"
+      "cleaving_claws",
+      "infernal_wings",
+      "infernal_presence"
     ],
     "magic": [
       "arcane_mind",
@@ -124,7 +124,7 @@
   "base_attributes": {
     "strength": 24,
     "dexterity": 14,
-    "constitution": 22,
+    "constitution": 12,
     "intelligence": 14,
     "wisdom": 14,
     "charisma": 18
@@ -132,7 +132,7 @@
   "age_base": 25,
   "age": 1250,
   "hp_roll": 10,
-  "hp_override": 260,
+  "hp_override": null,
   "poisons": {},
   "antidote_cooldown": 0,
   "natural_armor": 0,

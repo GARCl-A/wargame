@@ -564,7 +564,7 @@ def test_a_pending_demon_ambush_survives_a_save():
     from gartok import npc_lib, orders
     order = orders.Order("ambush", pack=(npc_lib.load_npc(cult_site.DEMON),), resume_path=("farm",))
     back = persist.order_from_dict(persist.order_to_dict(order))
-    assert back.pack[0].bio_slug == cult_site.DEMON and back.pack[0].hp_max == 260
+    assert back.pack[0].bio_slug == cult_site.DEMON and back.pack[0].hp_max == order.pack[0].hp_max
 
 
 # --- the map: the old stone circle, a few trees, the river in the north -----------------------------

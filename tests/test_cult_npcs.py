@@ -54,7 +54,7 @@ def test_the_demon_is_a_huge_bare_clawed_intimidator():
     assert demon.equipped_weapon is None and demon.weapon.name == "Claws"
     assert set(demon.spells_known) == {"hex", "dragonfire"}
     assert {"menacing", "cull_the_broken", "merciless", "dread_voice"} <= set(demon.talents["combat"])
-    assert {"demon_claws", "rending_claws", "infernal_visage"} <= set(demon.talents["racial"])
+    assert {"demon_claws", "cleaving_claws", "infernal_wings", "infernal_presence"} <= set(demon.talents["racial"])
 
 
 def test_claws_talent_is_for_the_demon_only():
@@ -72,3 +72,22 @@ def test_the_casters_know_their_schools_spells():
 def test_no_one_wears_a_worse_armor_than_they_can_carry():
     for slug in ("cult-channeler-blood", "cult-channeler-nature", "cult-channeler-faith"):
         assert npc_lib.load_npc(slug).equipped_armor is not None
+
+
+def test_infernal_presence_costs_morale_on_a_failed_save(monkeypatch):
+    from types import SimpleNamespace
+    from gartok import data, morale
+    demon = npc_lib.load_npc("the-demon")
+    log = []
+    bearer = SimpleNamespace(team="enemy", alive=True, name="Demon", char=demon, mod_charisma=demon.mod_charisma)
+    foe = SimpleNamespace(team="player", status="up", mod_wisdom=0, morale=5, morale_max=9, name="Foe", alive=True)
+    battle = SimpleNamespace(units=[bearer, foe], lethal=True, units_distance=lambda a, b: 1,
+                             log=lambda key, **kw: log.append(key))
+    monkeypatch.setattr(morale, "has_morale", lambda b, c: True)
+    monkeypatch.setattr(morale, "_sync_rout", lambda b, u: None)
+    monkeypatch.setattr(data, "d20", lambda: 1)
+    morale.dread(battle, foe)
+    assert foe.morale == 4 and log == ["log.infernal_presence"]
+    monkeypatch.setattr(data, "d20", lambda: 20)
+    morale.dread(battle, foe)
+    assert foe.morale == 4 and log[-1] == "log.infernal_presence_resisted"

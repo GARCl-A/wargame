@@ -97,13 +97,13 @@ def build():
             "Edric Ashvale's daughter. She went to the Cathedral to light a candle for her mother.",
             levels=(0, 1, 0), team="player", align="Neutral and Good", slug="farmers-daughter"),
         "the-demon": body(
-            "The Pale Tenant", "Demon", (24, 14, 22, 14, 14, 18), None, None,
+            "The Pale Tenant", "Demon", (24, 14, 12, 14, 14, 18), None, None,
             "What the Cult was calling. It has no name it will answer to.",
             levels=(16, 14, 14), combat=("imposing", "menacing", "gruesome_takedown", "cull_the_broken", "merciless", "dread_voice",
                     "strong", "heavy_hand", "sure_strike", "wrestler",
                     "wordless_menace", "tough", "hardy", "bulwark", "recovery", "armor_bearer"),
-            racial=("demon_claws", "rending_claws", "razor_claws", "infernal_visage"),
-            sources=("blood",), spells=("hex", "dragonfire"), hp=260, slug="the-demon"),
+            racial=("demon_claws", "cleaving_claws", "infernal_wings", "infernal_presence"),
+            sources=("blood",), spells=("hex", "dragonfire"), slug="the-demon"),
     }
 
 

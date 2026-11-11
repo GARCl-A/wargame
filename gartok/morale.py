@@ -173,3 +173,26 @@ def baseline(battle):
     """Take every combatant's present state as the one `settle` measures from (the fight just began)."""
     for u in battle.units:
         watch(u)
+
+
+PRESENCE_DC = 10
+
+
+def dread(battle, unit):
+    """Infernal Presence: a foe that begins its turn next to a bearer saves with WIS against
+    10 + the bearer's CHA modifier, or loses 1 morale."""
+    if unit.status != "up" or not has_morale(battle, unit):
+        return
+    for bearer in battle.units:
+        if (bearer.team == unit.team or not bearer.alive or not hasattr(bearer, "char")
+                or not bearer.char.has_talent("infernal_presence") or battle.units_distance(bearer, unit) > 1):
+            continue
+        roll = data.d20()
+        total, dc = roll + unit.mod_wisdom, PRESENCE_DC + bearer.mod_charisma
+        args = {"unit": unit.name, "bearer": bearer.name, "roll": roll, "mod": unit.mod_wisdom, "total": total, "dc": dc}
+        if total >= dc:
+            battle.log("log.infernal_presence_resisted", **args)
+            continue
+        unit.morale -= 1
+        battle.log("log.infernal_presence", **args, morale=unit.morale, ceiling=unit.morale_max)
+        _sync_rout(battle, unit)

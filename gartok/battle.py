@@ -358,6 +358,7 @@ class Battle:
         self.turn_idx = next((i for i, u in enumerate(self.order) if u.alive), 0)   # a body laid out dead never acts
         self.active.start_turn(self.log)
         self._apply_submersion(self.active)
+        self._apply_presence(self.active)
 
     # ------------------------------------------------------------------ #
     # state queries (used by actions, AI and UI)                         #
@@ -632,6 +633,10 @@ class Battle:
         self.log("log.fire", unit=unit.name, dice=f"{n * len(hot)}d{faces}")
         self.fx(unit.pos, f"-{dmg}", "crit")
         unit.take_damage(dmg, self.log)
+
+    def _apply_presence(self, unit):
+        if unit.alive:
+            morale.dread(self, unit)
 
     def _apply_fire(self, unit):
         """The top of a turn spent standing in fire burns like walking into it."""
@@ -1091,6 +1096,7 @@ class Battle:
         else:
             self.active.start_turn(self.log)
             self._apply_submersion(self.active)
+            self._apply_presence(self.active)
             self._apply_fire(self.active)
         if self._check_winner():
             self.log("log.victory", winner=self.winner)
@@ -1131,6 +1137,7 @@ class Battle:
         self.turn_idx = next((i for i, u in enumerate(self.order) if u.alive), 0)
         self.active.start_turn(self.log)
         self._apply_submersion(self.active)
+        self._apply_presence(self.active)
         if surprised:
             self.log("log.surprised_side", team=surprised)
         if not self._skip_surprised():
