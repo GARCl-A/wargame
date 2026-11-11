@@ -219,20 +219,23 @@ def test_bandit_ambush_locked_chest_drop():
         def random(self):
             return self.drop_roll
 
-    # 1. Bandit pack with lucky roll (< 0.01) gets Box of Gems
+    # 1. Bandit pack with lucky roll (< 0.01) gets a Box of Gems and a Holy Symbol
     lucky_rng = BanditDropRNG(drop_roll=0.005)
     pack = encounters.roll_encounter(encounters.WILDS_TABLE, rng=lucky_rng)
     assert any(u.count_of(data.BOX_OF_GEMS_ITEM) > 0 for u in pack)
+    assert any(u.count_of(items.HOLY_SYMBOL_ITEM) > 0 for u in pack)
 
-    # 2. Bandit pack with unlucky roll (>= 0.01) does not get Box of Gems
+    # 2. Bandit pack with unlucky roll (>= 0.01) gets neither
     unlucky_rng = BanditDropRNG(drop_roll=0.05)
     pack = encounters.roll_encounter(encounters.WILDS_TABLE, rng=unlucky_rng)
     assert not any(u.count_of(data.BOX_OF_GEMS_ITEM) > 0 for u in pack)
+    assert not any(u.count_of(items.HOLY_SYMBOL_ITEM) > 0 for u in pack)
 
-    # 3. Beast pack (wolves) never gets Box of Gems even if roll is lucky
+    # 3. Beast pack (wolves) never gets either, even if the roll is lucky
     beast_rng = BanditDropRNG(table_idx=0, drop_roll=0.005)  # 0 -> beast pool
     pack = encounters.roll_encounter(encounters.WILDS_TABLE, rng=beast_rng)
     assert not any(u.count_of(data.BOX_OF_GEMS_ITEM) > 0 for u in pack)
+    assert not any(u.count_of(items.HOLY_SYMBOL_ITEM) > 0 for u in pack)
 
 
 def test_material_flag_and_tags():

@@ -340,7 +340,7 @@ level-0 and a level-1 spell of its own.
   school, `Unit.rite_progress`); RESUME picks them up. Board is **$3 a day** with the meal, charged
   (own purse, then the group's) only on a day the boarder has no food in their own pack.
   - *Faith* (the Faith Cathedral, Brother Quillon, a Kenku): one **Holy Symbol**, consumed when the
-    rite first starts, and **180** learning points.
+    rite first starts (no shelf sells it: a bandit pack carries one now and then), and **180** learning points.
   - *Blood* (the Blood Sanctuary, Ssareth Coldvein, a Lizardfolk): **7 days** of testing the blood,
     then **90** learning points. `Unit.magic_blood` is rolled when the character is made (**5%**; a
     Kobold always has it; a private roll seeded by the uid, rolled on load for a unit saved without

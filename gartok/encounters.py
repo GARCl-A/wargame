@@ -25,7 +25,7 @@ import math
 import random
 from dataclasses import dataclass
 
-from . import constants, data, outfit, talents
+from . import constants, data, items, outfit, talents
 from .unit import Unit
 
 # The Wilds: a pack is 1..6 bodies, most often 3, tapering faster on the high
@@ -172,6 +172,7 @@ MINE_TABLE = (
 
 
 BANDIT_CHEST_DROP_CHANCE = 0.01  # 1% chance a bandit ambush pack carries a Box of Gems
+BANDIT_HOLY_SYMBOL_DROP_CHANCE = 0.01  # 1% chance a bandit pack carries a Holy Symbol (the Faith rite's cost)
 
 
 def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
@@ -181,8 +182,11 @@ def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
     i = weighted_choice({i: e.weight for i, e in enumerate(table)}, rng)
     pack = roll_pack(count_weights, level_weights, rng, race_pool=table[i].race_pool,
                      min_count=table[i].min_count)
-    if table[i].race_pool is None and pack and rng.random() < BANDIT_CHEST_DROP_CHANCE:
-        pack[0].give_to_pack(data.BOX_OF_GEMS_ITEM)
+    if table[i].race_pool is None and pack:
+        if rng.random() < BANDIT_CHEST_DROP_CHANCE:
+            pack[0].give_to_pack(data.BOX_OF_GEMS_ITEM)
+        if rng.random() < BANDIT_HOLY_SYMBOL_DROP_CHANCE:
+            pack[0].give_to_pack(items.HOLY_SYMBOL_ITEM)
     return pack
 
 

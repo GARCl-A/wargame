@@ -1088,6 +1088,7 @@ ANTIDOTE_ITEM = "Antidote"
 VENOM_GLAND_ITEM = "Venom Gland"
 SNAKE_VENOM_GLAND_ITEM = "Snake Venom Gland"
 ANTIDOTE_RECIPE_ITEM = "Recipe of Antidote"
+HOLY_SYMBOL_ITEM = "Holy Symbol"
 BOX_OF_GEMS_ITEM = "Box of Gems"   # price 273 = the mean haul (3.5 gems x 60) x 1.3
 BOX_ITEM = "Empty Box"             # what opening a Box of Gems leaves behind
 GEM_ITEM = "Semi-precious Gemstone"

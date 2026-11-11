@@ -14,7 +14,7 @@ the test only reveals it, and a failed test is final. The rite grants the school
 the magic talent track, no spell.
 """
 
-from . import data, economy, factions, i18n, orders, world
+from . import data, economy, factions, i18n, items, orders, world
 from .constants import fmt_money
 
 SANCTUARY = {"blood_sanctuary": "blood", "nature_grove": "nature", "faith_cathedral": "faith"}
@@ -23,7 +23,7 @@ REP_NEEDED = 2
 POINTS = {"faith": 180, "blood": 90, "nature": 270}
 BLOOD_TEST_DAYS = 7
 BOARD_PER_DAY = 3
-HOLY_SYMBOL = "Holy Symbol"
+HOLY_SYMBOL = items.HOLY_SYMBOL_ITEM
 JOB = "rite"
 
 
