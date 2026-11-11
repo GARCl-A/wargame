@@ -95,6 +95,36 @@ def test_strict_flank_against_large_target_opposite_sides():
     assert not actions._flanked(batt, a, e)
 
 
+def test_a_large_attacker_flanks_from_any_side_its_body_touches():
+    batt, a, b, e = _flank_battle()
+    e.pos = (10, 10)
+    a.footprint, a.pos = 2, (9, 8)                    # touches the foe on its north and north-west
+    b.pos = (11, 11)                                  # south-east: the diagonal pair
+    assert actions._flanked(batt, a, e)
+    b.pos = (10, 11)                                  # due south: the straight pair
+    assert actions._flanked(batt, a, e)
+    b.pos = (9, 11)                                   # south-west is opposite neither
+    assert not actions._flanked(batt, a, e)
+
+
+def test_two_large_bodies_flank_a_medium_foe():
+    batt, a, b, e = _flank_battle()
+    e.pos = (10, 10)
+    a.footprint, a.pos = 2, (8, 9)                    # west and north-west
+    b.footprint, b.pos = 2, (11, 10)                  # east and south-east
+    assert actions._flanked(batt, a, e)
+    b.pos = (11, 8)                                   # east side only touches the north-east
+    assert not actions._flanked(batt, a, e)
+
+
+def test_a_large_body_with_no_cell_next_to_the_foe_does_not_flank():
+    batt, a, b, e = _flank_battle()
+    e.pos = (10, 10)
+    a.footprint, a.pos = 2, (7, 8)
+    b.pos = (11, 10)
+    assert not actions._flanked(batt, a, e)
+
+
 def test_pack_tactics_and_flank_do_not_stack():
     batt, a, b, e = _flank_battle()
     a._ability = abilities.get("pack_tactics")

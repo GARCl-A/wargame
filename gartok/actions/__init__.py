@@ -16,7 +16,7 @@ from .base import (  # noqa: F401
     _attackable_target,
     _cell_free,
     _drop_cell,
-    _facing,
+    _facings,
     _flanked,
     _hostile_target,
     _land_thrown,

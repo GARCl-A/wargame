@@ -128,24 +128,22 @@ def _pack_flank(battle, attacker, target):
                and battle.units_distance(u, target) == 1)
 
 
-def _facing(battle, unit, target_cells):
-    """Which side of the target's footprint `unit` is on: each axis is -1/0/1,
-    0 meaning `unit` is aligned within the footprint's span on that axis (e.g.
-    directly north of a Large target, not off to a diagonal corner) -- a
-    fractional centre would never land on 0 for an even (Large+) footprint and
-    bias every facing to a diagonal, so this uses the footprint's box instead."""
+def _facings(battle, unit, target_cells):
+    """The sides of the target's footprint `unit` touches: one (-1/0/1, -1/0/1) pair per body cell next to
+    it. 0 means the cell is aligned within the footprint's span on that axis (directly north of a Large
+    target, not off to a diagonal corner) -- a fractional centre would never land on 0 for an even (Large+)
+    footprint and bias every facing to a diagonal, so this uses the footprint's box instead. A Large body
+    touches the target with several cells, each a side of its own."""
     xs = [x for x, _ in target_cells]
     ys = [y for _, y in target_cells]
     min_x, max_x, min_y, max_y = min(xs), max(xs), min(ys), max(ys)
-
-    def dist(c):
-        x, y = c
-        return (x - min(max(x, min_x), max_x)) ** 2 + (y - min(max(y, min_y), max_y)) ** 2
-
-    ux, uy = min(battle.cells_of(unit), key=dist)
-    sx = -1 if ux < min_x else (1 if ux > max_x else 0)
-    sy = -1 if uy < min_y else (1 if uy > max_y else 0)
-    return (sx, sy)
+    sides = set()
+    for ux, uy in battle.cells_of(unit):
+        sx = -1 if ux < min_x else (1 if ux > max_x else 0)
+        sy = -1 if uy < min_y else (1 if uy > max_y else 0)
+        if max(abs(ux - min(max(ux, min_x), max_x)), abs(uy - min(max(uy, min_y), max_y))) == 1:
+            sides.add((sx, sy))
+    return sides
 
 
 def _flanked(battle, attacker, target):
@@ -154,15 +152,14 @@ def _flanked(battle, attacker, target):
     if battle.units_distance(attacker, target) > 1:
         return False
     tcells = battle.cells_of(target)
-    da = _facing(battle, attacker, tcells)
-    if da == (0, 0):
+    mine = _facings(battle, attacker, tcells)
+    if not mine:
         return False
-    for u in battle.units:
-        if (u.alive and u.team == attacker.team and u is not attacker
-                and battle.units_distance(u, target) <= 1
-                and _facing(battle, u, tcells) == (-da[0], -da[1])):
-            return True
-    return False
+    opposite = {(-sx, -sy) for sx, sy in mine}
+    return any(u.alive and u.team == attacker.team and u is not attacker
+               and battle.units_distance(u, target) <= 1
+               and _facings(battle, u, tcells) & opposite
+               for u in battle.units)
 
 
 def off_guard_reasons(battle, attacker, target):
