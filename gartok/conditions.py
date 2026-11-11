@@ -10,7 +10,7 @@ here + whoever applies it calls `unit.add_condition(...)`.
 
 
 HEX_POINTS = 1               # what one Hex takes off every attribute score
-HEX_TURNS = 3                # victim turns a Hex stack lasts
+HEX_TURNS = 2                # victim turns a Hex stack lasts
 BLEEDING_CLAWS_TURNS = 2     # the Catfolk's Claws: each wound bleeds this many turns
 
 

@@ -185,12 +185,12 @@ def test_what_lies_under_a_token_is_named_with_its_icon_only_where_the_side_sees
     _to_my_turn(s)
     b = s.battle
     me = b.active
-    b.ground += [GroundObject.weapon(me.pos, "Shortspear"), GroundObject.torch(me.pos),
+    b.ground += [GroundObject.weapon(me.pos, "Javelin"), GroundObject.torch(me.pos),
                  GroundObject.trap(me.pos, "spikes", "enemy")]
     st = s.state(s.uid(me))
-    assert {(t["name"], t["glyph"]) for t in st["under"]} == {("Shortspear", "item/stone-spear"), ("Torch", "item/torch")}
+    assert {(t["name"], t["glyph"]) for t in st["under"]} == {("Javelin", "item/stone-spear"), ("Torch", "item/torch")}
     assert all(t["pos"] == list(me.pos) for t in st["under"])
-    assert [t["name"] for t in st["inspect"]["loot"]] == ["Shortspear", "Torch"]
+    assert [t["name"] for t in st["inspect"]["loot"]] == ["Javelin", "Torch"]
     s._last_visible = set()
     assert s._things([me.pos]) == []
 

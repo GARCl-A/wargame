@@ -578,6 +578,11 @@ class Combatant:
         shield = bool(self.equipped_offhand) and items.is_shield(self.equipped_offhand)
         return self.free_hands >= 1 and not shield
 
+    @property
+    def _finesse_in_hand(self):
+        w = self.attack_weapon
+        return (w.is_finesse if hasattr(w, "is_finesse") else bool(w.get("finesse", False))) or self.ability.finesse
+
     def melee_damage_mod(self, weapon=None):
         """What a melee blow adds to the weapon's roll: Dexterity for a finesse weapon (and the
         Duelist's point while the off hand is empty), Strength otherwise, plus the flat bonuses."""
@@ -629,6 +634,8 @@ class Combatant:
             mods.append((self.ac_natural, "natural", "race"))
         total, _ = resolve_bonus(mods)
         ac = self.ac_base + total + self.shield_ac_delta
+        if self.char.talent_bonus("free_hand_ac") and self._finesse_in_hand and self.free_hand:
+            ac += self.char.talent_bonus("free_hand_ac")
         if self.has_condition("shield_hooked") and self.equipped_offhand and items.is_shield(self.equipped_offhand):
             shield = items.get(self.equipped_offhand)
             if shield:

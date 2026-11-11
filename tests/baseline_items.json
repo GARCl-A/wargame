@@ -97,7 +97,7 @@
     "reload": false,
     "size": "Medium"
   },
-  "Shortspear": {
+  "Javelin": {
     "weight": 1.5,
     "price": 12,
     "damage": [
@@ -200,7 +200,7 @@
     "price": 65,
     "damage": [
       1,
-      6
+      8
     ],
     "range": 0,
     "finesse": true,
@@ -307,7 +307,7 @@
     "reload": false,
     "size": "Large"
   },
-  "Large Shortspear": {
+  "Large Javelin": {
     "weight": 3.0,
     "price": 24,
     "damage": [
@@ -410,7 +410,7 @@
     "price": 130,
     "damage": [
       1,
-      8
+      10
     ],
     "range": 0,
     "finesse": true,

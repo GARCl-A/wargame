@@ -156,12 +156,12 @@ def test_the_ai_throws_with_a_spare_even_with_two_points_left():
 
 
 def test_a_javelin_charge_also_draws_the_spare():
-    batt, a, d = _thrower(["Shortspear"])
-    a.equip_weapon(fitted(a, "Shortspear"))
+    batt, a, d = _thrower(["Javelin"])
+    a.equip_weapon(fitted(a, "Javelin"))
     a.moved = 3
     with fixed_d20(1):
         actions.JAVELIN_CHARGE.execute(batt, a, d)
-    assert a.weapon_name == "Shortspear" and not a.unarmed and a.inventory == []
+    assert a.weapon_name == "Javelin" and not a.unarmed and a.inventory == []
 
 
 def test_the_ai_throws_instead_of_demoralizing_when_the_throw_is_worth_more():

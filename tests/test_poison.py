@@ -16,7 +16,7 @@ VENOM = "giant_spider_venom"
 
 def _human(dex=10):
     u = standard_unit()
-    u.set_base_attribute("dexterity", dex)
+    u.set_base_attribute("dexterity", dex - data.race_by_name("Human")["mods"][1])
     return u
 
 
@@ -176,8 +176,8 @@ def test_the_ai_spider_poisons_the_party(monkeypatch):
 # --------------------------------------------------------------------------- #
 
 def test_a_unit_with_a_physical_attribute_at_zero_starts_the_battle_dying():
-    weak = _human(dex=4)
-    for _ in range(4):
+    weak = _human(dex=5)
+    for _ in range(5):
         weak.add_poison(VENOM, 11)
     assert weak.dexterity == 0 and weak.zeroed_attribute == "dexterity"
     batt = Battle([weak], [standard_unit("enemy")])
@@ -188,10 +188,10 @@ def test_a_unit_with_a_physical_attribute_at_zero_starts_the_battle_dying():
 
 def test_poison_that_takes_the_last_point_drops_the_victim_mid_fight(monkeypatch):
     _force(monkeypatch, save=1)
-    batt, sp, victim = _fight(_human(dex=4))
+    batt, sp, victim = _fight(_human(dex=5))
     for _ in range(2):
         victim.char.add_poison(VENOM, 11)
-    assert victim.alive and victim.char.dexterity == 2
+    assert victim.alive and victim.char.dexterity == 3
     victim.char.add_poison(VENOM, 11)
     victim.char.add_poison(VENOM, 11)                       # one short of zero already
     victim.status = "up"

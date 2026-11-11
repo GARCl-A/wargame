@@ -432,7 +432,7 @@ def test_alert_branch_lifts_wisdom_initiative_and_mental_defense():
     assert Combatant(u).mental_defense == md_after_alert + 2
 
 
-def test_fleet_adds_a_square_of_speed_and_chains_through_deadeye():
+def test_fleet_adds_two_squares_of_speed_and_chains_through_deadeye():
     u = _unit(seed=1)
     u.combat_xp = 21                              # 3 picks: agile -> deadeye -> fleet
     assert not u.choose_talent("combat", "fleet")  # deadeye (and agile) not taken
@@ -441,7 +441,7 @@ def test_fleet_adds_a_square_of_speed_and_chains_through_deadeye():
     assert u.choose_talent("combat", "deadeye")
     speed = u.speed
     assert u.choose_talent("combat", "fleet")
-    assert u.speed == speed + 1
+    assert u.speed == speed + 2
 
     u.drop_talent("combat", "deadeye")            # cascade drops fleet with its prereq
     assert u.talents["combat"] == ["agile"]
@@ -707,11 +707,11 @@ def test_the_bolt_talents_hang_from_deadeye_and_the_ambush_needs_both():
     assert u.choose_talent("combat", "keen_bolts") and u.choose_talent("combat", "ambush_shot")
 
 
-def test_heavy_bolts_add_two_points_to_a_crossbow_shot_and_nothing_else():
+def test_heavy_bolts_add_one_point_to_a_crossbow_shot_and_nothing_else():
     def top(shooter, **kw):
         return max(shooter.damage_roll(**kw) for _ in range(300))
     plain, heavy = _bolt_shooter(), _bolt_shooter("heavy_bolts")
-    assert top(heavy) == top(plain) + 2
+    assert top(heavy) == top(plain) + 1
     heavy.char.give_to_hand("Dagger")
     assert not Combatant(heavy.char).shoots_crossbow
 
@@ -784,3 +784,54 @@ def test_a_crossbow_shot_is_resolved_as_a_shot_and_leaves_the_crossbow_empty():
         actions.ATTACK.execute(batt, shooter, foe)
     assert seen == [(True, 1)]
     assert not shooter.crossbow_loaded
+
+
+def _duelist(weapon, offhand=None):
+    u = _unit(seed=1)
+    u.combat_xp = 100
+    for t in ("agile", "duelist"):
+        assert u.choose_talent("combat", t)
+    u.give_to_hand(weapon)
+    if offhand:
+        u.equipped_offhand = offhand
+    return Combatant(u)
+
+
+def test_duelist_adds_two_ac_only_with_a_finesse_weapon_and_the_off_hand_empty():
+    assert _duelist("Dagger").ac == _duelist("Dagger").ac_base + 2
+    assert _duelist("Sword").ac == _duelist("Sword").ac_base
+    shielded = _duelist("Dagger", "Dwarf Shield")
+    assert shielded.ac == shielded.ac_base
+
+
+def _duel_battle(foe_ally_beside_me=False, my_ally_beside_foe=False, weapon="Dagger", offhand=None):
+    from tests.helpers import Battle, Unit
+    me, foe = Unit("player"), Unit("enemy")
+    me.combat_xp = 100
+    for t in ("agile", "duelist", "single_combat"):
+        assert me.choose_talent("combat", t)
+    me.give_to_hand(weapon)
+    if offhand:
+        me.equipped_offhand = offhand
+    units = [me, foe] + ([Unit("enemy")] if foe_ally_beside_me else []) + ([Unit("player")] if my_ally_beside_foe else [])
+    b = Battle([u for u in units if u.team == "player"], [u for u in units if u.team == "enemy"])
+    a, t = b.units[0], next(u for u in b.units if u.team == "enemy")
+    a.pos, t.pos = (5, 5), (6, 5)
+    for u in b.units:
+        if u is not a and u is not t:
+            u.pos = (4, 5) if u.team == "enemy" else (7, 5)
+    return b, a, t
+
+
+def test_single_combat_needs_a_clear_duel_a_finesse_weapon_and_an_empty_off_hand():
+    from gartok.actions import base
+    assert base._dueling(*_duel_battle())
+    assert not base._dueling(*_duel_battle(foe_ally_beside_me=True))
+    assert not base._dueling(*_duel_battle(my_ally_beside_foe=True))
+    assert not base._dueling(*_duel_battle(weapon="Sword"))
+    assert not base._dueling(*_duel_battle(offhand="Dwarf Shield"))
+    b, a, t = _duel_battle()
+    assert not base._dueling(b, a, t, thrown=True)
+    b, a, t = _duel_battle()
+    a.char.talents["combat"].remove("single_combat")
+    assert not base._dueling(b, a, t)

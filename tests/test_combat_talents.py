@@ -205,15 +205,15 @@ def test_intelligence_combat_tree_progression():
     assert u.talent_bonus("assess_bonus") == 2
     assert u.talent_bonus("assess_active_bonus") == 2
 
-    # Tier 3: both riders ask for it; Exploit Weakness (+2 to hit vs full intel)
+    # Tier 3: both riders ask for it; Exploit Weakness (+1 to hit vs full intel)
     u.set_track_level("combat", 3)
     assert u.choose_talent("combat", "exploit_weakness")
-    assert u.talent_bonus("full_intel_to_hit") == 2
+    assert u.talent_bonus("full_intel_to_hit") == 1
     u.set_track_level("combat", 4)
     assert u.choose_talent("combat", "anatomist")
 
 
-def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
+def test_exploit_weakness_grants_plus_1_to_hit_on_full_intel():
     u = _body("player", "Analyst")
     u.set_track_level("combat", 1)
     u.choose_talent("combat", "tactical_mind")
@@ -237,7 +237,7 @@ def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
     b.intel.margin["player"][foe] = 12
     assert intel.has_full_intel(b, "player", foe)
     mods_full = c.attack_mods(foe, battle=b)
-    assert any("Exploit Weakness" in label and val == 2 for val, _, label in mods_full)
+    assert any("Exploit Weakness" in label and val == 1 for val, _, label in mods_full)
 
 
 # --------------------------------------------------------------------------- #

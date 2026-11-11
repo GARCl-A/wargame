@@ -11,24 +11,24 @@ The playable races. `d100` is the roll that picks one; the modifiers are added t
 
 | Race | d100 | STR DEX CON INT WIS CHA | Hit Die | Size | Language | Age | Ability |
 |---|---|---|---|---|---|---|---|
-| Dwarf | 1-14 | +1 +0 +2 +0 -1 -2 | d8 | Medium | Dwarvish | 5x | Darkvision |
-| Automaton | 15-16 | +1 +1 +0 +0 -1 -1 | d8 | Medium | Ankarin | 1x | Inorganic Body |
-| Centaur | 17-18 | +1 -2 +0 +0 +2 -1 | d8 | Large | Elvish | 2.5x | Gallop |
-| Elf | 19-32 | -2 +2 -1 +1 +0 +0 | d8 | Medium | Elvish | 8.75x | Sleep Immunity |
+| Dwarf | 1-14 | +0 +0 +1 +0 -1 -2 | d8 | Medium | Dwarvish | 5x | Darkvision |
+| Automaton | 15-16 | +0 +0 +0 +0 -1 -1 | d8 | Medium | Ankarin | 1x | Inorganic Body |
+| Centaur | 17-18 | +2 -1 +1 +0 +2 -1 | d8 | Large | Elvish | 2.5x | Gallop |
+| Elf | 19-32 | -1 +2 -1 +1 +0 +0 | d8 | Medium | Elvish | 8.75x | Sleep Immunity |
 | Gnoll | 33 | +0 +0 +2 -1 +0 -1 | d8 | Medium | Orcish | 0.625x | Strong Stomach |
-| Gnome | 34 | -2 +1 -1 +0 +1 +1 | d8 | Small | Gnomish | 6.25x | Nature Magic |
-| Goblin | 35-48 | -1 +2 +1 -1 +0 -1 | d8 | Small | Goblin | 0.625x | Pack Tactics |
-| Goliath | 49-51 | +2 +1 +0 -1 -1 -1 | d8 | Medium | Jotun | 1x | Strong Body |
+| Gnome | 34 | -1 +1 +0 +0 +1 +1 | d8 | Small | Gnomish | 6.25x | Nature Magic |
+| Goblin | 35-48 | -1 +2 +0 -1 +0 -1 | d8 | Small | Goblin | 0.625x | Pack Tactics |
+| Goliath | 49-51 | +1 +0 +0 -1 -1 -1 | d8 | Medium | Jotun | 1x | Strong Body |
 | Grippli | 52-54 | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
-| Halfling | 55-57 | -2 +2 -1 +0 +1 +1 | d8 | Small | Halfling | 1.5x | Innocent Face |
-| Hobgoblin | 58-61 | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Browbeat |
+| Halfling | 55-57 | -1 +2 -1 +0 +1 +1 | d8 | Small | Halfling | 1.5x | Innocent Face |
+| Hobgoblin | 58-61 | +1 +0 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Browbeat |
 | Lizardfolk | 62-71 | +1 +1 +0 -1 +0 -1 | d8 | Medium | Draconic | 0.875x | Climber |
-| Human | 72-86 | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
-| Kenku | 87-89 | -2 +2 -1 +0 +2 +2 | d8 | Medium | Sylvan | 1x | Mimic Sounds |
-| Catfolk | 90-92 | -1 +1 +0 -1 +0 +1 | d8 | Medium | Sylvan | 1x | Catfall |
-| Kobold | 93-95 | -2 +1 +0 +1 -1 +1 | d8 | Small | Draconic | 2.5x | Blood Magic |
+| Human | 72-86 | +0 +1 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
+| Kenku | 87-89 | -1 +2 +0 +0 +2 +2 | d8 | Medium | Sylvan | 1x | Mimic Sounds |
+| Catfolk | 90-92 | -1 +1 +1 -1 +0 +1 | d8 | Medium | Sylvan | 1x | Catfall |
+| Kobold | 93-95 | -1 +1 +0 +1 -1 +1 | d8 | Small | Draconic | 2.5x | Blood Magic |
 | Treefolk | 96 | -1 +0 +1 -1 +1 +0 | d8 | Medium | Verdant | 1x | Autotroph |
-| Orc | 97-99 | +2 +0 +1 -1 +0 -3 | d8 | Medium | Orcish | 0.625x | Ferocity |
+| Orc | 97-99 | +1 +0 +0 -1 +0 -3 | d8 | Medium | Orcish | 0.625x | Ferocity |
 | Sprite | 100 | -2 +1 -1 +0 +2 +3 | d8 | Tiny | Gnomish | 1.5x | Flight |
 
 ## Creatures
@@ -88,12 +88,12 @@ A spell is cast from a known `Scroll of <Spell>` studied to the end (price in It
 |---|---|---|---|---|---|
 | 0 | Floating Disk | any | 1 | A magical platform on a free square within 6 squares, at a chosen height: units walking at that height cross pits and deep water over it. One unit per square. | 105 |
 | 0 | Grasping Roots | nature | 1 | A foe in sight within 6 squares, d20 + INT against touch AC (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it. | 105 |
-| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores for 3 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
+| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores for 2 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
 | 0 | Light Globe | any | 1 | Drops a light source on a free square within 6 squares. | 105 |
 | 0 | Magic Missile | any | 1 | A foe in sight within 6 squares, d20 + INT against AC: 1d4 damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect. | 105 |
 | 0 | Spare the Dying | faith | 1 | Touch: a Dying ally in reach is stable, no check. | 105 |
 | 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d6 fire damage. Blood magic costs no hit points. | 224 |
-| 1 | Healing Touch | faith | 1 | Touch: an ally in reach, or the caster, heals 1d6, nothing added; a body on the ground (dying or stable) is back on its feet. | 224 |
+| 1 | Healing Touch | faith | 1 | Touch: an ally in reach, or the caster, heals 1d4, nothing added; a body on the ground (dying or stable) is back on its feet. | 224 |
 | 1 | Sleep | any | 1 | A foe within 4 squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for 5 - WIS mod rounds (give or take 1, at least 1), ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected. | 224 |
 | 1 | Water Jet | nature | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d8 + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns). | 224 |
 | 2 | Invisibility | any | 2 | The caster vanishes from every other side's sight until it hurts someone. | 357 |
@@ -166,11 +166,16 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Small Quarterstaff | Small | 1d4 | melee | yes | -- | 1 | 1 kg | 3 |
 | Large Quarterstaff | Large | 1d8 | melee | yes | -- | 1 | 4 kg | 10 |
 | Huge Quarterstaff | Huge | 1d10 | melee | yes | -- | 1 | 8 kg | 20 |
-| Shortspear | Medium | 1d6 | melee | -- | 12 sq | 1 | 1.5 kg | 12 |
-| Tiny Shortspear | Tiny | 1d3 | melee | -- | 12 sq | 1 | 0.38 kg | 3 |
-| Small Shortspear | Small | 1d4 | melee | -- | 12 sq | 1 | 0.75 kg | 6 |
-| Large Shortspear | Large | 1d8 | melee | -- | 12 sq | 1 | 3 kg | 24 |
-| Huge Shortspear | Huge | 1d10 | melee | -- | 12 sq | 1 | 6 kg | 48 |
+| Javelin | Medium | 1d6 | melee | -- | 12 sq | 1 | 1.5 kg | 12 |
+| Tiny Javelin | Tiny | 1d3 | melee | -- | 12 sq | 1 | 0.38 kg | 3 |
+| Small Javelin | Small | 1d4 | melee | -- | 12 sq | 1 | 0.75 kg | 6 |
+| Large Javelin | Large | 1d8 | melee | -- | 12 sq | 1 | 3 kg | 24 |
+| Huge Javelin | Huge | 1d10 | melee | -- | 12 sq | 1 | 6 kg | 48 |
+| Throwing Spear | Medium | 1d8 | melee | -- | 12 sq | 1 | 2 kg | 45 |
+| Tiny Throwing Spear | Tiny | 1d4 | melee | -- | 12 sq | 1 | 0.5 kg | 12 |
+| Small Throwing Spear | Small | 1d6 | melee | -- | 12 sq | 1 | 1 kg | 23 |
+| Large Throwing Spear | Large | 1d10 | melee | -- | 12 sq | 1 | 4 kg | 90 |
+| Huge Throwing Spear | Huge | 1d12 | melee | -- | 12 sq | 1 | 8 kg | 180 |
 | Light Pick | Medium | 1d4 | melee | yes | 6 sq | 1 | 1 kg | 10 |
 | Tiny Light Pick | Tiny | 1d2 | melee | yes | 6 sq | 1 | 0.25 kg | 3 |
 | Small Light Pick | Small | 1d3 | melee | yes | 6 sq | 1 | 0.5 kg | 5 |
@@ -216,11 +221,11 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Small Dwarf Axe | Small | 1d8 | melee | -- | -- | 1 | 2 kg | 38 |
 | Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 150 |
 | Huge Dwarf Axe | Huge | 2d8 | melee | -- | -- | 1 | 16 kg | 300 |
-| Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
-| Tiny Rapier | Tiny | 1d3 | melee | yes | -- | 1 | 0.25 kg | 17 |
-| Small Rapier | Small | 1d4 | melee | yes | -- | 1 | 0.5 kg | 33 |
-| Large Rapier | Large | 1d8 | melee | yes | -- | 1 | 2 kg | 130 |
-| Huge Rapier | Huge | 1d10 | melee | yes | -- | 1 | 4 kg | 260 |
+| Rapier | Medium | 1d8 | melee | yes | -- | 1 | 1 kg | 65 |
+| Tiny Rapier | Tiny | 1d4 | melee | yes | -- | 1 | 0.25 kg | 17 |
+| Small Rapier | Small | 1d6 | melee | yes | -- | 1 | 0.5 kg | 33 |
+| Large Rapier | Large | 1d10 | melee | yes | -- | 1 | 2 kg | 130 |
+| Huge Rapier | Huge | 1d12 | melee | yes | -- | 1 | 4 kg | 260 |
 
 ## Weapon Traits
 
@@ -450,11 +455,12 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | Agile |
 | 3 | Ready Hand | After a throw, an identical weapon from the pack is in hand at no action cost. | Long Reach + Strong |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | Agile |
-| 3 | Heavy Bolts | +2 damage with a Crossbow. | Deadeye |
+| 3 | Heavy Bolts | +1 damage with a Crossbow. | Deadeye |
 | 3 | Keen Bolts | A Crossbow shot is a Critical hit on a natural 19 or 20. | Deadeye |
 | 4 | Ambush Shot | A Crossbow shot at an off-guard target is Brutal 1. | Heavy Bolts + Keen Bolts |
-| 2 | Duelist | +1 damage with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
-| 3 | Fleet | +1 square of Speed. | Deadeye |
+| 2 | Duelist | +1 damage and +2 AC with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
+| 3 | Single Combat | Your finesse blows are Brutal 1 while your off hand is empty, no ally of your target stands beside you and no ally of yours stands beside your target. | Duelist |
+| 3 | Fleet | +2 squares of Speed. | Deadeye |
 | 4 | Free Step | Once per turn, step 1 square without spending an action point. | Fleet |
 | 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against off-guard targets. | Deadeye |
 | 1 | Tough | +1 Constitution. | -- |
@@ -478,7 +484,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Grim Chorus | When an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language). | Gruesome Takedown |
 | 1 | Tactical Mind | +1 Intelligence. | -- |
 | 2 | Analytical Eye | +2 on all Assess and enemy observation checks, and +2 more on the Assess action made during battle. | Tactical Mind |
-| 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | Analytical Eye |
+| 3 | Exploit Weakness | +1 to hit against enemies with Full Intel. | Analytical Eye |
 | 3 | Anatomist | Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Analytical Eye |
 | 4 | Surgical Strike | Your attacks against a target with Full Intel are Brutal 1. | Exploit Weakness |
 

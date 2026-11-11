@@ -162,7 +162,7 @@ STOCK = {
 # down at the same rate; a rate of 0 leaves it alone.
 _SHELVES = {
     "smith": {
-        "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Shortspear": (6, 2),
+        "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Javelin": (6, 2), "Throwing Spear": (2, 0.3),
         "Axe": (6, 1), "Pick": (6, 1), "Hammer": (6, 1), "Sword": (6, 1), "Broadsword": (3, 0.5), "Glaive": (2, 0.3), "Rapier": (2, 0.3),
         "Chainmail": (2, 0.3), "Brigandine": (1, 0.15), "Plate Armor": (1, 0.1),
         "Chains": (3, 0.5),
@@ -188,7 +188,7 @@ _SHELVES = {
     # the friendly Ogre's fortress (wildfire.FORTRESS_ID): the only shelf of Large weapons and armor
     "ogre_fortress": {
         "Club": (3, 0.5), "Dagger": (3, 0.5), "Hatchet": (3, 0.5),
-        "Shortspear": (2, 0.3), "Axe": (2, 0.3), "Pick": (2, 0.3),
+        "Javelin": (2, 0.3), "Axe": (2, 0.3), "Pick": (2, 0.3),
         "Hammer": (2, 0.3), "Broadsword": (1, 0.15), "Rapier": (1, 0.1),
         "Leather Jerkin": (2, 0.3), "Studded Leather": (2, 0.3), "Chainmail": (1, 0.15),
         "Brigandine": (1, 0.1), "Plate Armor": (1, 0.05),

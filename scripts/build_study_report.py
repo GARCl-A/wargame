@@ -438,7 +438,7 @@ Todas valem para qualquer raça que consiga empunhar a arma; atributos 3d6; só 
 - Uma build só entra com uma raça que consiga empunhar a arma dela. No nível 0, conjurador só existe para a raça que já começa com magia (Gnomo, natureza).
 - Variantes de talento (Robusto ou Baluarte, os pares do Rapier e do Dagger, Abater/Derrubada x Mão Pesada/Golpe Certeiro) lutam em espelho; Passo
   Livre exige Veloz, então são 2 pares legais em cada.
-- Javelin = Shortspear (não existe item Javelin); o arremessador compra reservas até o teto medido em `tests/test_thrown_supply.py`.
+- O arremessador (Lança de Arremesso) compra reservas até o teto medido em `tests/test_thrown_supply.py`.
 
 ## As builds
 

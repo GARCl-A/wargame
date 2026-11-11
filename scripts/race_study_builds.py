@@ -72,7 +72,7 @@ BUILDS = {b.id: b for b in (
           ("imposing", "menacing", "cull_the_broken", "merciless", "agile"),
           ("charismatic", "brawny", "nimble_fingers"), quiver=True, role="ranged"),
     Build("commander", "Shouts the line on", ("Hammer",), AUTO, SHIELD,
-          ("imposing", "menacing", "wordless_menace", "gruesome_takedown", "inspiring_shout"),
+          ("imposing", "gruesome_takedown", "inspiring_shout", "tough", "hardy"),
           ("brawny", "charismatic", "sturdy", "nimble_fingers", "observant")),
     Build("analyst", "Assess: reads the foe, rapier or sword by DEX against STR, and a shield", ("Rapier",), AUTO, SHIELD,
           ("tactical_mind", "analytical_eye", "anatomist", "exploit_weakness", "surgical_strike"),
@@ -87,7 +87,7 @@ BUILDS = {b.id: b for b in (
           ("tough", "bulwark", "hardy"), CASTER_WORK, ("faith",),
           (), ("healing_touch", "spare_the_dying", "sleep", "magic_missile"),
           ("arcane_mind", "spell_focus", "blessed_hands"), role="caster"),
-    Build("thrower", "Shortspear thrown: spares in the pack", ("Shortspear",), AUTO, None,
+    Build("thrower", "Throwing Spear thrown: spares in the pack", ("Throwing Spear",), AUTO, None,
           ("agile", "strong", "long_reach", "ready_hand", "deadeye"), ("brawny", "nimble_fingers", "sturdy", "observant"),
           thrower=True, role="ranged"),
     Build("crossbow", "Crossbow and quiver", ("Crossbow",), AUTO, None,
@@ -107,7 +107,7 @@ VARIANTS = {
 }
 COMBAT_IDS = frozenset(t.id for t in talents.TREE["combat"])
 # What a race takes in place of a listed talent its own ability already does (the Kenku's Mimic Sounds does what Wordless Menace does)
-INSTEAD = {("intimidator", "wordless_menace"): "merciless", ("commander", "wordless_menace"): "dread_voice"}
+INSTEAD = {("intimidator", "wordless_menace"): "merciless"}
 TALKERS = ("intimidator", "intimidator_archer", "commander")   # the builds a player stacks languages on
 # The builds whose weapon is a question, and the weapons it is asked over.
 SWEEP_BUILDS = ("fortress", "intimidator", "commander", "analyst", "nature_caster", "blood_caster", "faith_caster")

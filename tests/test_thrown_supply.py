@@ -7,7 +7,7 @@ from scripts import race_study as rs
 from scripts import race_study_builds as rb
 
 FIGHTS = 24
-THROWERS = {"javelin": "Shortspear", "knife": "Dagger"}
+THROWERS = {"javelin": "Javelin", "knife": "Dagger"}
 
 
 def _throws(weapon, level=5):

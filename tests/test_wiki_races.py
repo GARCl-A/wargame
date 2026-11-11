@@ -12,7 +12,7 @@ def test_every_playable_race_and_no_beast_is_listed():
 
 def test_a_race_reads_its_mods_ability_language_and_racial_track():
     dwarf = next(e for e in wiki_races.entries() if e["name"] == "Dwarf")
-    assert dwarf["mods"].startswith("STR +1  DEX +0  CON +2")
+    assert dwarf["mods"].startswith("STR +0  DEX +0  CON +1")
     assert dwarf["abilities"] == [f"Darkvision: {abilities.get('darkvision').effect}"]
     assert "Dwarvish" in dwarf["meta"] and "d8" in dwarf["meta"]
     assert dwarf["talents"] == [t.name for t in talents.racial_tree("Dwarf")]
@@ -25,7 +25,7 @@ def test_the_filter_finds_a_race_by_its_ability():
 
 def test_race_tip_lists_localized_name_attribute_modifiers_and_abilities():
     tip = wiki_races.race_tip("Dwarf")
-    assert tip.startswith("Dwarf\nSTR +1  DEX +0  CON +2")
+    assert tip.startswith("Dwarf\nSTR +0  DEX +0  CON +1")
     assert f"Darkvision: {abilities.get('darkvision').effect}" in tip
     assert wiki_races.race_tip("") == ""
     assert wiki_races.race_tip("NonExistent") == ""

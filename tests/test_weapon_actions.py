@@ -52,9 +52,9 @@ def test_weapon_traits_catalog_and_properties():
     assert staff.has_trait("finesse")
     assert staff.finesse is True
 
-    shortspear = items.get("shortspear")
-    assert shortspear.has_trait("javelin_charge")
-    assert shortspear.thrown == 12
+    javelin = items.get("javelin")
+    assert javelin.has_trait("javelin_charge")
+    assert javelin.thrown == 12
 
     shortbow = items.get("shortbow")
     assert shortbow.has_trait("power_shot")
@@ -287,7 +287,7 @@ def test_hook_shield_resolves_on_a_foe_flanked_on_all_eight_cells(team):
 def test_javelin_charge_requires_moving():
     batt, a, d = _melee_battle()
     d.hp = 20
-    a.equip_weapon(fitted(a, "Shortspear"))
+    a.equip_weapon(fitted(a, "Javelin"))
     a.pos = (3, 3)
     d.pos = (8, 3)
     a.ap = 2
@@ -403,3 +403,11 @@ def test_long_thrust_needs_a_glaive():
     batt, a, _ = _melee_battle()
     a.equip_weapon(fitted(a, "Broadsword"))
     assert actions.LONG_THRUST.applicable(batt, a)[0] is False
+
+
+def test_the_throwing_spear_is_the_javelin_with_a_d8_a_triple_crit_and_a_steeper_price():
+    jav, spear = items.get("javelin"), items.get("throwing_spear")
+    assert (jav.damage, jav.crit_mult, jav.price) == ((1, 6), 2, 12)
+    assert (spear.damage, spear.crit_mult, spear.price) == ((1, 8), 3, 45)
+    assert spear.thrown == jav.thrown == 12 and spear.has_trait("javelin_charge") and spear.has_trait("crit_3x")
+    assert spear.price > items.get("sword").price

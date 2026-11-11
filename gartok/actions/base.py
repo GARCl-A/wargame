@@ -174,6 +174,20 @@ def off_guard_reasons(battle, attacker, target):
     return reasons
 
 
+def _dueling(battle, attacker, target, thrown=False):
+    """Single Combat: a finesse blow struck with the off hand free, while no ally of the target stands
+    beside the attacker and no ally of the attacker stands beside the target."""
+    if thrown or not hasattr(attacker, "char") or not attacker.char.talent_bonus("duel_brutal"):
+        return False
+    if attacker.ranged or not attacker.free_hand or not attacker._finesse_in_hand:
+        return False
+    target_side_beside_me = any(u.alive and u is not target and u.team == target.team
+                                and battle.units_distance(u, attacker) <= 1 for u in battle.units)
+    my_side_beside_target = any(u.alive and u is not attacker and u.team == attacker.team
+                                and battle.units_distance(u, target) <= 1 for u in battle.units)
+    return not target_side_beside_me and not my_side_beside_target
+
+
 def off_guard(battle, attacker, target):
     return bool(off_guard_reasons(battle, attacker, target))
 
@@ -436,6 +450,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         if hasattr(attacker, "char") and (surgical := int(attacker.char.talent_bonus("full_intel_brutal"))) and                 intel.has_full_intel(battle, attacker.team, target):
             brutal_why = brutal_why if brutal else i18n.Msg("log.surgical_strike.brutal")
             brutal += surgical
+        if _dueling(battle, attacker, target, thrown):
+            brutal_why = brutal_why if brutal else i18n.Msg("log.single_combat.brutal")
+            brutal += int(attacker.char.talent_bonus("duel_brutal"))
         guard_finesse = 0
         if off_guard(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
             guard_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("off_guard_finesse_damage")

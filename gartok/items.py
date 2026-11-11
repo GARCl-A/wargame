@@ -325,7 +325,8 @@ _BASE_WEAPONS_DATA = [
     ("hammer", "Hammer", ItemRarity.COMMON, 4.0, 35, (1, 8), 0, False, 0, 1, False, ("maiming_strike",), 2),
     ("club", "Club", ItemRarity.COMMON, 1.5, 6, (1, 6), 0, False, 0, 1, False, ("maiming_strike",), 2),
     ("quarterstaff", "Quarterstaff", ItemRarity.COMMON, 2.0, 5, (1, 6), 0, True, 0, 1, False, ("finesse", "repel_strike"), 2),
-    ("shortspear", "Shortspear", ItemRarity.COMMON, 1.5, 12, (1, 6), 0, False, 12, 1, False, ("thrown", "javelin_charge"), 2),
+    ("javelin", "Javelin", ItemRarity.COMMON, 1.5, 12, (1, 6), 0, False, 12, 1, False, ("thrown", "javelin_charge"), 2),
+    ("throwing_spear", "Throwing Spear", ItemRarity.COMMON, 2.0, 45, (1, 8), 0, False, 12, 1, False, ("thrown", "javelin_charge", "crit_3x"), 3),
     ("light_pick", "Light Pick", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 6, 1, False, ("finesse", "thrown", "crit_3x", "armor_pierce"), 3),
     ("pick", "Pick", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("crit_3x", "armor_pierce"), 3),
     ("sword", "Sword", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("parry_strike",), 2),
@@ -335,7 +336,7 @@ _BASE_WEAPONS_DATA = [
     ("shortbow", "Shortbow", ItemRarity.COMMON, 1.0, 320, (1, 6), 14, False, 0, 2, False, ("power_shot",), 2),
     ("longbow", "Longbow", ItemRarity.COMMON, 1.5, 640, (1, 8), 21, False, 0, 2, False, ("power_shot",), 2),
     ("dwarf_axe", "Dwarf Axe", ItemRarity.UNCOMMON, 4.0, 75, (1, 10), 0, False, 0, 1, False, ("cleave",), 2),
-    ("rapier", "Rapier", ItemRarity.UNCOMMON, 1.0, 65, (1, 6), 0, True, 0, 1, False, ("finesse", "precise_thrust"), 2),
+    ("rapier", "Rapier", ItemRarity.UNCOMMON, 1.0, 65, (1, 8), 0, True, 0, 1, False, ("finesse", "precise_thrust"), 2),
 ]
 _REACH = {"glaive": 1}
 
@@ -975,11 +976,19 @@ CRAFTING_RECIPES: dict[str, list[CraftingRecipe]] = RecipeDict({
             station=CraftingStation.CARPENTER,
         ),
     ],
-    "Shortspear": [
+    "Javelin": [
         CraftingRecipe(
-            target="Shortspear",
+            target="Javelin",
             materials=["Lumber", "Iron Bar"],
             complexity=8,
+            station=CraftingStation.CARPENTER,
+        ),
+    ],
+    "Throwing Spear": [
+        CraftingRecipe(
+            target="Throwing Spear",
+            materials=["Lumber", "Iron Bar", "Iron Bar"],
+            complexity=12,
             station=CraftingStation.CARPENTER,
         ),
     ],

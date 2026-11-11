@@ -2332,6 +2332,9 @@
     "surgical_strike": {
       "brutal": "Surgical Strike"
     },
+    "single_combat": {
+      "brutal": "Single Combat"
+    },
     "sneak_attack": {
       "head": "{actor} Sneak Attack -> {target}",
       "brutal": "Sneak Attack strikes a vulnerable spot"
@@ -2804,7 +2807,7 @@
     "javelin_charge": {
       "name": "Javelin Charge",
       "desc": "1 AP: Throws the spear after moving this turn for +1d4 bonus damage.",
-      "reason": "requires shortspear",
+      "reason": "requires a javelin or a throwing spear",
       "label": "Javelin Charge (1 pt, throw after a move, +1d4 dmg)"
     },
     "parry_strike": {
@@ -3261,6 +3264,7 @@
       "fleet": "Fleet",
       "nimble_skirmisher": "Nimble Skirmisher",
       "duelist": "Duelist",
+      "single_combat": "Single Combat",
       "free_step": "Free Step",
       "tough": "Tough",
       "hardy": "Hardy",
@@ -3526,7 +3530,8 @@
       "Claws": "Claws",
       "Hooves": "Hooves",
       "Horns": "Horns",
-      "Shortspear": "Shortspear",
+      "Javelin": "Javelin",
+      "Throwing Spear": "Throwing Spear",
       "Light Pick": "Light Pick",
       "Pick": "Pick",
       "Sword": "Sword",
@@ -5748,14 +5753,15 @@
       "wrestler": "+1 to Push and Grab checks.",
       "agile": "+1 Dexterity.",
       "long_reach": "+1 square of range with ranged and thrown weapons.",
-      "heavy_bolts": "+2 damage with a Crossbow.",
+      "heavy_bolts": "+1 damage with a Crossbow.",
       "ambush_shot": "A Crossbow shot at an off-guard target is Brutal 1.",
       "ready_hand": "After a throw, an identical weapon from the pack is in hand at no action cost.",
       "keen_bolts": "A Crossbow shot is a Critical hit on a natural 19 or 20.",
       "deadeye": "+1 to hit with Dexterity-based attacks.",
-      "fleet": "+1 square of Speed.",
+      "fleet": "+2 squares of Speed.",
       "nimble_skirmisher": "+2 damage on Dexterity melee attacks against off-guard targets.",
-      "duelist": "+1 damage with a finesse weapon while the off hand is empty (no shield, no light).",
+      "single_combat": "Your finesse blows are Brutal 1 while your off hand is empty, no ally of your target stands beside you and no ally of yours stands beside your target.",
+      "duelist": "+1 damage and +2 AC with a finesse weapon while the off hand is empty (no shield, no light).",
       "free_step": "Once per turn, step 1 square without spending an action point.",
       "tough": "+1 Constitution.",
       "hardy": "+1 max HP for every Hit Die you have.",
@@ -5778,7 +5784,7 @@
       "grim_chorus": "When an ally downs a foe, you make a free Demoralize check against your nearest enemy within range (ignores language).",
       "tactical_mind": "+1 Intelligence.",
       "analytical_eye": "+2 on all Assess and enemy observation checks, and +2 more on the Assess action made during battle.",
-      "exploit_weakness": "+2 to hit against enemies with Full Intel.",
+      "exploit_weakness": "+1 to hit against enemies with Full Intel.",
       "surgical_strike": "Your attacks against a target with Full Intel are Brutal 1.",
       "anatomist": "Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
       "brawny": "+1 Strength.",

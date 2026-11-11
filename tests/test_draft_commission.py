@@ -165,7 +165,7 @@ def test_risky_names_each_reason_and_leaves_an_ordinary_body_alone():
     assert not archetypes.ARCHETYPES["RISKY"].predicate(_body())
     assert any("CON 8" in r for r in archetypes.risks(_body(constitution=8)))
     assert not archetypes.risks(_body(constitution=9))
-    low = _body(strength=9, dexterity=9, constitution=9, intelligence=10, wisdom=10, charisma=10)
+    low = _body(strength=9, dexterity=8, constitution=9, intelligence=10, wisdom=10, charisma=10)
     assert sum(getattr(low, a) for a in archetypes.ATTRIBUTES) == 57 and not archetypes.risks(low)
     low.set_base_attribute("charisma", 9)
     assert any("add up to 56" in r for r in archetypes.risks(low))

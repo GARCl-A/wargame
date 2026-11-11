@@ -363,10 +363,10 @@ class SpareTheDyingAction(_TouchSpellAction):
 
 
 class HealingTouchAction(_TouchSpellAction):
-    """Faith's level 1: 1d6 HP to an ally in reach (or the caster), nothing added; a body on
+    """Faith's level 1: 1d4 HP to an ally in reach (or the caster), nothing added; a body on
     the ground is back on its feet."""
     spell_id = "healing_touch"
-    DICE = (1, 6)
+    DICE = (1, 4)
     desc = i18n.Text("action", "desc", dice=_dice(DICE))
 
     def wants(self, unit):

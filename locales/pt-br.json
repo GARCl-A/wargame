@@ -2351,6 +2351,9 @@
         "surgical_strike": {
             "brutal": "Golpe Cirúrgico"
         },
+        "single_combat": {
+            "brutal": "Combate Singular"
+        },
         "sneak_attack": {
             "head": "{actor} Ataque Furtivo -> {target}",
             "brutal": "O Ataque Furtivo acerta um ponto fraco"
@@ -5355,8 +5358,12 @@
             "Claws": "Garras",
             "Hooves": "Cascos",
             "Horns": "Chifres",
-            "Shortspear": {
-                "name": "Lança Curta",
+            "Javelin": {
+                "name": "Azagaia",
+                "gender": "f"
+            },
+            "Throwing Spear": {
+                "name": "Lança de Arremesso",
                 "gender": "f"
             },
             "Light Pick": {
@@ -5761,6 +5768,7 @@
             "fleet": "Veloz",
             "nimble_skirmisher": "Escaramuçador Ágil",
             "duelist": "Duelista",
+            "single_combat": "Combate Singular",
             "free_step": "Passo Livre",
             "tough": "Resistente",
             "hardy": "Robusto",
@@ -6284,14 +6292,15 @@
             "wrestler": "+1 nos testes de Empurrar e Agarrar.",
             "agile": "+1 de Destreza.",
             "long_reach": "+1 casa de alcance com armas à distância e de arremesso.",
-            "heavy_bolts": "+2 de dano com a Besta.",
+            "heavy_bolts": "+1 de dano com a Besta.",
             "ambush_shot": "Um disparo de Besta contra um alvo desprevenido é Brutal 1.",
             "ready_hand": "Depois de um arremesso, uma arma idêntica da mochila já está na mão, sem gastar ação.",
             "keen_bolts": "Um disparo de Besta é Acerto crítico com 19 ou 20 natural.",
             "deadeye": "+1 para acertar com ataques baseados em Destreza.",
-            "fleet": "+1 casa de Velocidade.",
+            "fleet": "+2 casas de Velocidade.",
             "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos desprevenidos.",
-            "duelist": "+1 de dano com uma arma de acuidade enquanto a outra mão está vazia (sem escudo, sem luz).",
+            "single_combat": "Seus golpes de acuidade são Brutais 1 enquanto sua outra mão está vazia, nenhum aliado do seu alvo está ao seu lado e nenhum aliado seu está ao lado do alvo.",
+            "duelist": "+1 de dano e +2 de CA com uma arma de acuidade enquanto a outra mão está vazia (sem escudo, sem luz).",
             "free_step": "Uma vez por turno, dê 1 passo de 1 casa sem gastar ponto de ação.",
             "tough": "+1 de Constituição.",
             "hardy": "+1 de PV máximo por cada Dado de Vida que você tem.",
@@ -6314,7 +6323,7 @@
             "grim_chorus": "Quando um aliado abate um inimigo, você faz um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
             "tactical_mind": "+1 de Inteligência.",
             "analytical_eye": "+2 em todos os testes de Avaliar e de observação do inimigo, e +2 a mais na ação Avaliar feita durante a batalha.",
-            "exploit_weakness": "+2 para acertar contra inimigos com Informação Completa.",
+            "exploit_weakness": "+1 para acertar contra inimigos com Informação Completa.",
             "surgical_strike": "Seus ataques contra um alvo com Informação Completa são Brutais 1.",
             "anatomist": "Sua margem de Acerto crítico aumenta em 1 contra inimigos com Informação Completa (crítico com 19-20).",
             "brawny": "+1 de Força.",

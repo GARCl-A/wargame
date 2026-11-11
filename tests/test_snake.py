@@ -120,9 +120,10 @@ def test_a_snake_has_no_venom_until_it_takes_the_talent():
 
 def test_the_venom_eats_constitution_and_the_dc_follows_the_racial_level():
     victim = _human(con=12)
+    dex_before = victim.dexterity
     victim.add_poison(VENOM, 11)
     victim.add_poison(VENOM, 11)
-    assert victim.constitution == 10 and victim.dexterity == victim.base_attributes["dexterity"]
+    assert victim.constitution == 10 and victim.dexterity == dex_before
     assert "Snake Venom 2" in victim.poison_label
     assert poisons.save_dc(poisons.get(VENOM), _snake(racial=4)) == 15
 

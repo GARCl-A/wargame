@@ -238,6 +238,8 @@ def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
         cull += _blow(unit, kw.get("thrown", False)) * unit.char.talent_bonus("demoralized_target_brutal")
     if hasattr(unit, "char") and (surgical := unit.char.talent_bonus("full_intel_brutal")) and             intel.has_full_intel(battle, unit.team, target):
         cull += _blow(unit, kw.get("thrown", False)) * surgical
+    if hasattr(unit, "char") and actions.base._dueling(battle, unit, target, kw.get("thrown", False)):
+        cull += _blow(unit) * unit.char.talent_bonus("duel_brutal")
     bleed = _bleed_worth(unit, target) if not kw.get("thrown") else 0
     ambush = _blow(unit) * unit.char.talent_bonus("crossbow_ambush") if (
         unit.shoots_crossbow and not kw.get("thrown") and actions.off_guard(battle, unit, target)) else 0

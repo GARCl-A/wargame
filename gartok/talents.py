@@ -80,6 +80,8 @@ exactly one consumer that reads it back:
     push_bonus        actions.combat.Push              --
     off_guard_finesse_damage actions.base._resolve_hit     --
     free_hand_damage  Combatant.damage_roll            --
+    free_hand_ac      Combatant.ac                     --
+    duel_brutal       actions.base._resolve_hit        --
     free_step         actions.FreeStep                 --
     defend_mental_defense Combatant.mental_defense     --
     demoralize_ally_initiative actions.combat.execute_demoralize --
@@ -237,15 +239,17 @@ _LIST = [
     Talent("deadeye", "combat", 2, requires="agile",
            effects=(Effect("to_hit", 1, "dexterity"),), icon="action/ricochet"),
     Talent("heavy_bolts", "combat", 3, requires="deadeye",
-           effects=(Effect("crossbow_damage", 2),), icon="action/crush"),
+           effects=(Effect("crossbow_damage", 1),), icon="action/crush"),
     Talent("keen_bolts", "combat", 3, requires="deadeye",
            effects=(Effect("crossbow_crit_range", 1),), icon="action/targeting"),
     Talent("ambush_shot", "combat", 4, requires="heavy_bolts", also="keen_bolts",
            effects=(Effect("crossbow_ambush", 1),), icon="action/backstab"),
     Talent("duelist", "combat", 2, requires="agile",
-           effects=(Effect("free_hand_damage", 1),), icon="action/riposte"),
+           effects=(Effect("free_hand_damage", 1), Effect("free_hand_ac", 2)), icon="action/riposte"),
+    Talent("single_combat", "combat", 3, requires="duelist",
+           effects=(Effect("duel_brutal", 1),), icon="action/riposte"),
     Talent("fleet", "combat", 3, requires="deadeye",
-           effects=(Effect("speed", 1),), icon="action/leapfrog"),
+           effects=(Effect("speed", 2),), icon="action/leapfrog"),
     Talent("free_step", "combat", 4, requires="fleet",
            effects=(Effect("free_step", 1),), icon="action/slalom"),
     Talent("nimble_skirmisher", "combat", 3, requires="deadeye",
@@ -294,7 +298,7 @@ _LIST = [
     Talent("analytical_eye", "combat", 2, requires="tactical_mind",
            effects=(Effect("assess_bonus", 2), Effect("assess_active_bonus", 2)), icon="head/spectacles"),
     Talent("exploit_weakness", "combat", 3, requires="analytical_eye",
-           effects=(Effect("full_intel_to_hit", 2),), icon="gui/convergence-target"),
+           effects=(Effect("full_intel_to_hit", 1),), icon="gui/convergence-target"),
     Talent("anatomist", "combat", 3, requires="analytical_eye",
            effects=(Effect("full_intel_crit_range", 1),), icon="head/spectacles"),
     Talent("surgical_strike", "combat", 4, requires="exploit_weakness",

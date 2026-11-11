@@ -105,10 +105,10 @@ def test_the_kenku_intimidator_takes_merciless_in_its_place():
     assert not [n for n in notes if n.startswith("talent")], notes
 
 
-def test_the_kenku_commander_takes_dread_voice_in_its_place():
+def test_the_commander_is_a_shouter_with_the_hit_points_to_stay_in_the_line():
     unit, notes = rb.make_unit("player", "Kenku", "commander", 5, random.Random(1))
     held = set(unit.talents["combat"])
-    assert "wordless_menace" not in held and {"gruesome_takedown", "inspiring_shout", "dread_voice"} <= held
+    assert {"gruesome_takedown", "inspiring_shout", "tough", "hardy"} <= held
     assert not [n for n in notes if n.startswith("talent")], notes
 
 

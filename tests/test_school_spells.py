@@ -265,7 +265,8 @@ def test_the_ai_stacks_another_hex_on_a_foe_already_hexed(monkeypatch):
     assert ai._hex_or_roots(b, me, foe).id == "cast_hex"
 
 
-def test_the_ai_counts_every_caster_s_hexes_when_it_reckons_a_kill_within_the_hex_s_three_turns():
+def test_the_ai_counts_every_caster_s_hexes_when_it_reckons_a_kill_within_the_hex_s_three_turns(monkeypatch):
+    monkeypatch.setattr(conditions, "HEX_TURNS", 3)
     b, me, foe = _duel("blood", "hex")
     _scores(me, intelligence=20)
     _scores(foe, strength=11, dexterity=11, constitution=11, intelligence=11, wisdom=11, charisma=11)
