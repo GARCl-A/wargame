@@ -129,6 +129,7 @@ def _target(battle, unit):
             return None
     # no role (the arena): advance toward the nearest one anyway
     pool = visible or enemies
+    pool = [e for e in pool if not e.routed] or pool     # a foe already running is let go while another stands to fight
     awake = [e for e in pool if not e.has_condition("sleeping")]
     pool = awake or pool                   # a sleeper stays asleep while there is a foe to fight
     if battle.is_ctf:

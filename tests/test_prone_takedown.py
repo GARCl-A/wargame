@@ -131,10 +131,10 @@ def test_ai_leaves_an_ordinary_foe_standing():
     assert not _should_takedown(battle, a, b)
 
 
-def test_ai_takes_down_a_fleeing_foe():
+def test_ai_does_not_take_down_a_fleeing_foe():
     battle, a, b = _fight()
     b.add_condition(Routed())
-    assert _should_takedown(battle, a, b)
+    assert not _should_takedown(battle, a, b)
 
 
 def test_ai_takes_down_the_flag_runner(monkeypatch):

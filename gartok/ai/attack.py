@@ -107,7 +107,7 @@ def _demoralize_victim(battle, unit, target):
     when that beats the strike the point would buy."""
     best, best_worth = None, 0.0
     for f in battle.units:
-        if f.alive and f.team != unit.team and actions.DEMORALIZE.can(battle, unit, f):
+        if f.alive and f.team != unit.team and not f.routed and actions.DEMORALIZE.can(battle, unit, f):
             worth = _demoralize_worth(battle, unit, f)
             if worth > best_worth:
                 best, best_worth = f, worth
@@ -141,7 +141,7 @@ def _tail_sweep_pays(battle, unit, target):
 
 def _should_grab(battle, unit, target):
     """Grab when the unit has grab/bite talents (pins the foe to bite it), or when stopping
-    a fleeing enemy or flag runner."""
+    a flag runner. A foe that only runs is struck like any other: it is no reason to spend a point."""
     if not actions.GRAB.can(battle, unit, target):
         return False
     char = getattr(unit, "char", unit)
@@ -149,15 +149,14 @@ def _should_grab(battle, unit, target):
     has_grip = getattr(char, "has_talent", lambda _: False)("death_grip")
     if (has_bite or has_grip) and target.hp > 3:
         return True
-    return bool(_runs_flag(battle, target) or target.routed)
+    return _runs_flag(battle, target)
 
 
 def _should_takedown(battle, unit, target):
-    """Bring a runner or flag carrier down. Anything else is a point traded for the point the foe
+    """Bring a flag carrier down. Anything else is a point traded for the point the foe
     spends standing, which headless fights show never pays (a squad that takes down a harder-hitting
     foe on the contest's odds loses more, not less)."""
-    return (actions.TAKEDOWN.can(battle, unit, target)
-            and (_runs_flag(battle, target) or target.routed))
+    return actions.TAKEDOWN.can(battle, unit, target) and _runs_flag(battle, target)
 
 
 def _another_awake_foe(battle, unit, target):
