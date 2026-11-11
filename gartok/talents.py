@@ -91,6 +91,8 @@ exactly one consumer that reads it back:
     hold_the_line     actions.base._held_line          --
     blood_frenzy / thornskin / stone_endurance / gore_charge
                       actions.base._resolve_hit        --
+    run_down_hit      Combatant.attack_mods            --
+    run_down_damage   Combatant.damage_roll            --
     savage_attacks    Combatant.damage_roll            --
     twilight_sight    vision.dark_range                --
     bloodscent        vision.can_see_unit              --
@@ -420,6 +422,8 @@ _LIST = [
            effects=(Effect("cavalry_charge", 2),), icon="body/mounted-knight"),
     Talent("lift_rider", "racial", 1, race="Centaur",
            effects=(Effect("lift_rider", 1),), icon="body/lift"),
+    Talent("run_down", "racial", 1, race="Centaur",
+           effects=(Effect("run_down_hit", 1), Effect("run_down_damage", 2)), icon="action/boot-stomp"),
     Talent("twilight_sight", "racial", 1, race="Elf",
            effects=(Effect("twilight_sight", 4),), icon="head/elf-ear"),
     Talent("light_step", "racial", 1, race="Elf",

@@ -2618,6 +2618,7 @@
             "under_the_whip": "Sob o Chicote",
             "arena_born": "Nascido na Arena",
             "cavalry_charge": "Carga de Cavalaria",
+            "run_down": "Atropelar",
             "nonlethal": " -{n}(não letal)",
             "obscured": " -{n}(encoberto)"
         },
@@ -5737,6 +5738,7 @@
             "iron_plating": "Blindagem de Ferro",
             "cavalry_charge": "Carga de Cavalaria",
             "lift_rider": "Erguer Cavaleiro",
+            "run_down": "Atropelar",
             "twilight_sight": "Visão do Crepúsculo",
             "light_step": "Passo Leve",
             "blood_frenzy": "Frenesi de Sangue",
@@ -6250,6 +6252,7 @@
             "iron_plating": "+1 de CA.",
             "cavalry_charge": "Seu cavaleiro golpeia com o seu peso por trás do golpe: +2 para acertar para quem monta em você, num turno em que você se moveu.",
             "lift_rider": "1 ponto: lança um aliado Pequeno ou Médio adjacente, desperto ou caído, sobre suas costas e o carrega enquanto se move.",
+            "run_down": "Depois de andar 4 ou mais casas neste turno, seus ataques (corpo a corpo, arremesso ou tiro) ganham +1 para acertar e +2 de dano.",
             "twilight_sight": "Olhos élficos no crepúsculo: no escuro você enxerga 6 m como se o chão estivesse iluminado.",
             "light_step": "+1 casa de Velocidade.",
             "blood_frenzy": "+2 de dano nos ataques corpo a corpo contra um alvo abaixo da metade dos PV.",

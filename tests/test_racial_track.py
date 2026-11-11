@@ -8,6 +8,7 @@ import pytest
 
 from gartok import ai, campaign, cohesion, dialogue, persist, talents, vision
 from gartok.actions.base import _held_line, _resolve_hit
+from gartok.combatant import Combatant
 from gartok.guild import Guild
 from gartok.unit_hunger import BLOOM_FRUIT
 from tests.helpers import (
@@ -301,6 +302,72 @@ def test_gore_charge_needs_the_run_up():
     ox.path = [(4, 5), (5, 5)]
     _hit(batt, ox, foe)
     assert foe.pos == (6, 5)
+
+
+def _runner(path_squares):
+    batt, c, foe = _duel(_racial("Centaur", "run_down"), Unit("enemy"), apos=(4, 5))
+    foe.hp = foe.hp_max = 100
+    c.path = [(4 - i, 5) for i in range(path_squares + 1)]
+    return batt, c, foe
+
+
+def test_run_down_adds_to_hit_and_damage_after_a_run_up():
+    batt, c, foe = _runner(4)
+    assert (1, None, "Run Down") in c.attack_mods(foe, battle=batt)
+    ran = _hit(batt, c, foe)
+    c.path = [c.pos]
+    assert ran == _hit(batt, c, foe) + 2
+
+
+def test_run_down_needs_the_run_up():
+    batt, c, foe = _runner(3)
+    assert all(m[2] != "Run Down" for m in c.attack_mods(foe, battle=batt))
+    assert c.run_down_bonus("run_down_damage") == 0
+
+
+def _extra_damage_after_a_run(c, **attack):
+    with patch("gartok.combatant.roll", return_value=1):
+        c.path = [(4 - i, 5) for i in range(6)]
+        ran = c.damage_roll(**attack)
+        c.path = [c.pos]
+        return ran - c.damage_roll(**attack)
+
+
+def test_run_down_also_adds_to_a_thrown_weapon():
+    batt, c, foe = _runner(5)
+    assert (1, None, "Run Down") in c.attack_mods(foe, thrown=True, battle=batt)
+    assert _extra_damage_after_a_run(c, thrown=True) == 2
+
+
+def test_run_down_also_adds_to_a_shot():
+    archer = _racial("Centaur", "run_down")
+    archer._stock("Large Crossbow", None)
+    batt, c, foe = _duel(archer, Unit("enemy"), apos=(0, 5), bpos=(9, 5))
+    c.crossbow_loaded = True
+    assert c.ranged
+    c.path = [(i, 5) for i in range(6)]
+    assert (1, None, "Run Down") in c.attack_mods(foe, battle=batt)
+    assert _extra_damage_after_a_run(c) == 2
+
+
+def test_run_down_is_a_level_one_centaur_node_with_no_prerequisite():
+    t = talents.get("run_down")
+    assert t.tier == 1 and not t.requires and t.races == ("Centaur",)
+
+
+def test_ai_centaur_runs_a_distant_foe_down():
+    batt, c, _foe = _duel(_racial("Centaur", "run_down"), Unit("enemy"), apos=(0, 5), bpos=(9, 5))
+    seen = []
+    real = Combatant.attack_mods
+
+    def spy(self, *a, **k):
+        mods = real(self, *a, **k)
+        seen.append([m[2] for m in mods])
+        return mods
+
+    with patch.object(Combatant, "attack_mods", spy), patch_action_d20(return_value=10):
+        ai.take_turn(batt, c)
+    assert any("Run Down" in labels for labels in seen)
 
 
 # --------------------------------------------------------------------------- #

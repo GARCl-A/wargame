@@ -527,6 +527,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Catfolk | 1 | Razor Claws | Bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer. | -- |
 | Centaur | 1 | Lift Rider | 1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move. | -- |
 | Centaur | 1 | Mount | Your strong back: allow a Medium or Small ally to ride you. | -- |
+| Centaur | 1 | Run Down | After walking 4+ squares this turn, your attacks (melee, thrown or shot) get +1 to hit and +2 damage. | -- |
 | Centaur | 2 | Cavalry Charge | Your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved. | Mount |
 | Dragon | 1 | Dragon | Dragon blood runs in you: your hide hardens into scales (+1 AC). | -- |
 | Dragon | 2 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | Dragon |

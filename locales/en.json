@@ -2600,6 +2600,7 @@
       "under_the_whip": "Under the Whip",
       "arena_born": "Arena Born",
       "cavalry_charge": "Cavalry Charge",
+      "run_down": "Run Down",
       "nonlethal": " -{n}(non-lethal)",
       "obscured": " -{n}(obscured)"
     },
@@ -3322,6 +3323,7 @@
       "iron_plating": "Iron Plating",
       "cavalry_charge": "Cavalry Charge",
       "lift_rider": "Lift Rider",
+      "run_down": "Run Down",
       "twilight_sight": "Twilight Sight",
       "light_step": "Light Step",
       "blood_frenzy": "Blood Frenzy",
@@ -5753,6 +5755,7 @@
       "iron_plating": "+1 AC.",
       "cavalry_charge": "Your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved.",
       "lift_rider": "1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move.",
+      "run_down": "After walking 4+ squares this turn, your attacks (melee, thrown or shot) get +1 to hit and +2 damage.",
       "twilight_sight": "Elven eyes in the dusk: in the dark you see 6 m as if the ground were lit.",
       "light_step": "+1 square of Speed.",
       "blood_frenzy": "+2 damage on melee attacks against a target below half its HP.",

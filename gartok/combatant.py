@@ -34,6 +34,7 @@ from .unit import flatten_pack
 AP_PER_TURN = 2
 PINNING = ("grappled", "entangled", "rooted", "prone")    # hold a body to the ground: no hovering
 UNDER_THE_WHIP_RANGE = 6     # squares to the stronger ally a Goblin fights for
+RUN_DOWN_RUN_UP = 4          # squares walked this turn before a Centaur's attacks run the foe down
 
 
 
@@ -757,12 +758,21 @@ class Combatant:
         if self._ability.attack_mods:
             mods += self._ability.attack_mods(self, target, flanking)
         mods += self._condition_mods("attack_mods")
+        run = self.run_down_bonus("run_down_hit")
+        if run:
+            mods.append((run, None, i18n.t("log.mod.run_down")))
         if battle is not None and target is not None and hasattr(self, "char"):
             full_bonus = self.char.talent_bonus("full_intel_to_hit")
             if full_bonus and intel.has_full_intel(battle, self.team, target):
                 mods.append((full_bonus, "circumstance", i18n.t("log.mod.exploit_weakness")))
             mods += self.racial_hit_mods(battle, target)
         return mods
+
+    def run_down_bonus(self, effect):
+        """Centaur Run Down: the talent's bonus once the unit has walked `RUN_DOWN_RUN_UP` squares this turn, else 0."""
+        if len(self.path) - 1 < RUN_DOWN_RUN_UP:
+            return 0
+        return int(self.char.talent_bonus(effect))
 
     def racial_hit_mods(self, battle, target):
         """The racial talents that add to this unit's attack on `target`. Untyped, so they stack."""
@@ -818,6 +828,7 @@ class Combatant:
             bonus += self.melee_damage_mod(w)
         elif self.shoots_crossbow:
             bonus += self.char.talent_bonus("crossbow_damage")
+        bonus_damage += self.run_down_bonus("run_down_damage")
         if crit:
             brutal += self.crit_brutal()
         total = sum(roll(n, faces) + bonus for _ in range(1 + brutal)) + bonus_damage
