@@ -192,6 +192,22 @@
 #topright [hidden]{display:none}
 
 /* a crit across the board */
+#ritual{position:absolute;left:50%;top:14px;transform:translateX(-50%);width:640px;padding:8px 16px 10px;
+  background:linear-gradient(#1c130c,#120c07);border:2px solid var(--brass-lo);border-radius:4px;
+  box-shadow:0 0 0 1px #000,0 6px 22px rgba(0,0,0,.7);pointer-events:none;z-index:6}
+#ritual .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;
+  font:700 18px/1 Cinzel,serif;letter-spacing:.2em;color:var(--brass-hi);text-transform:uppercase}
+#ritual .head span{letter-spacing:.08em;color:#e8cfa0}
+#ritual .track{position:relative;height:22px;background:#0a0604;border:1px solid var(--brass-lo);overflow:hidden}
+#ritual .fill{height:100%;background:linear-gradient(#d4503f,#7d1f16);box-shadow:0 0 12px rgba(220,70,50,.6);
+  transition:width .6s ease-out}
+#ritual .track i{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--brass-lo)}
+#ritual.full .fill{background:linear-gradient(#ffd7a0,#e0662d);box-shadow:0 0 16px rgba(255,170,80,.9)}
+#ritual .warn{margin-top:7px;text-align:center;font:700 17px/1.2 Cinzel,serif;letter-spacing:.06em;color:#ffcf5a;
+  text-shadow:0 0 12px rgba(255,120,60,.8)}
+#ritual.closing{border-color:#e0662d;animation:ritualpulse 1s ease-in-out infinite}
+#ritual.closing .fill{background:linear-gradient(#ffe0a8,#ff6a2a)}
+@keyframes ritualpulse{50%{box-shadow:0 0 0 1px #000,0 0 28px rgba(255,100,40,.9)}}
 #banner{position:absolute;left:0;right:0;top:38%;text-align:center;pointer-events:none;opacity:0;
   font:900 54px/1 Cinzel,serif;letter-spacing:.18em;color:#ffcf5a;text-transform:uppercase;
   text-shadow:0 2px 0 #3a0c06,0 0 24px rgba(255,180,80,.6)}

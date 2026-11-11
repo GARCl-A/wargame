@@ -175,7 +175,8 @@ class CultSiteScenario(Scenario):
     def hud(self, battle):
         """The rite for the screen: the bar and, once the leader has begun, the warning."""
         text = i18n.t("cult_site.hud_closing" if self.rite_began else "cult_site.hud", bar=self.bar, max=BAR_MAX)
-        return {"bar": self.bar, "max": BAR_MAX, "text": text, "closing": self.rite_began}
+        return {"bar": self.bar, "max": BAR_MAX, "step": STEP, "text": text, "closing": self.rite_began,
+                "title": i18n.t("cult_site.hud_title"), "warn": i18n.t("cult_site.hud_warn")}
 
     @staticmethod
     def _leader(battle):

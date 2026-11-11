@@ -5098,6 +5098,8 @@
   "cult_site": {
     "pillar_of_light": "A column of red light rises beyond the Country Roads and does not fall. Whatever was being called there has been called.",
     "demon_returns": "Word comes down the roads: the Demon has come back to its circle and is making a lair of it.",
+    "hud_title": "THE RITE",
+    "hud_warn": "THE FINAL RITE HAS BEGUN: stop the Hierophant before his next turn",
     "hud": "The rite: {bar} / {max}",
     "hud_closing": "The rite: {bar} / {max}. THE HIEROPHANT HAS BEGUN THE FINAL RITE: stop him before his next turn.",
     "channels": "{name} feeds the rite from the point: {bar} / {max}.",

@@ -349,11 +349,23 @@ function renderHint() {
   else if (S.flags.ctf) h = tr("battle.hint_ctf");
   else if (S.flags.can_flee) h = tr("battle.hint_flee");
   else h = tr("battle.hint_default");
-  $("hint").textContent = (S.ritual ? S.ritual.text + "  ·  " : "") + h;
+  $("hint").textContent = h;
+}
+
+function renderRitual() {
+  const r = S.ritual, el = $("ritual");
+  el.hidden = !r;
+  if (!r) return;
+  const steps = Math.round(r.max / r.step);
+  const cuts = Array.from({length: steps - 1}, (_, i) => `<i style="left:${(i + 1) * 100 / steps}%"></i>`).join("");
+  el.className = r.closing ? "closing" : (r.bar >= r.max ? "full" : "");
+  el.innerHTML = `<div class="head"><b>${esc(r.title)}</b><span>${r.bar} / ${r.max}</span></div>`
+    + `<div class="track"><div class="fill" style="width:${100 * r.bar / r.max}%"></div>${cuts}</div>`
+    + (r.closing ? `<div class="warn">${esc(r.warn)}</div>` : "");
 }
 
 function renderAll() {
-  renderTop(); renderTokens(); renderInspect(); renderLog(); renderUnit(); renderPlates(); renderHint();
+  renderTop(); renderTokens(); renderInspect(); renderLog(); renderUnit(); renderPlates(); renderHint(); renderRitual();
   Board.overlay(S, ui);
   $("withdraw").hidden = !S.flags.can_withdraw;
   $("skiptraps").hidden = !(S.setup && S.setup.kind === "trap");

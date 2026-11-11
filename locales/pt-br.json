@@ -4294,8 +4294,10 @@
     "cult_site": {
         "pillar_of_light": "Uma coluna de luz vermelha sobe depois das Estradas do Campo e não cai. O que estavam chamando lá foi chamado.",
         "demon_returns": "A notícia desce pelas estradas: o Demônio voltou ao seu círculo e está fazendo dele um covil.",
+        "hud_title": "O RITO",
+        "hud_warn": "O RITO FINAL COMEÇOU: pare o Hierofante antes do próximo turno",
         "hud": "O rito: {bar} / {max}",
-        "hud_closing": "O rito: {bar} / {max}. O HIEROFANTE COMECOU O RITO FINAL: pare-o antes do próximo turno dele.",
+        "hud_closing": "O rito: {bar} / {max}. O HIEROFANTE COMEÇOU O RITO FINAL: pare-o antes do próximo turno dele.",
         "channels": "{name} alimenta o rito na ponta: {bar} / {max}.",
         "bar_full": "Os braseiros queimam brancos. O Hierofante caminha até o centro do triangulo.",
         "rite_begins": "{name} ergue o livro no centro. No próximo turno dele o rito se fecha. Pare-o.",
