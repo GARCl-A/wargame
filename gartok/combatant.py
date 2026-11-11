@@ -643,13 +643,19 @@ class Combatant:
                 ac -= shield.ac
         return ac
 
+    @property
+    def pierceable_ac(self):
+        """The AC an Armor Pierce strike takes off: only a metal armor is pierced."""
+        a = self.armor
+        return a.ac if a and a.armor_material == items.ArmorMaterial.METAL else 0
+
     def ac_vs(self, attacker, armor_pierce=False, ranged=None):
         """AC against one particular attacker: the Leather of Biwolf adds 1 against
         anything that is not a humanoid. If armor_pierce is True, ignores worn armor AC.
         `ranged` is whether the blow comes from afar (default: the attacker's held weapon)."""
         base = self.ac
-        if armor_pierce and self.armor:
-            base -= self.armor.ac
+        if armor_pierce:
+            base -= self.pierceable_ac
         if (self.artifact_name == items.BIWOLF_LEATHER_ITEM
                 and attacker.char.race.get("kind", "humanoid") != "humanoid"):
             base += 1

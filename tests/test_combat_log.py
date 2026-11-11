@@ -108,7 +108,10 @@ def test_rows_say_who_decided_and_only_a_person_gets_the_ais_guess(tmp_path):
     acts = [r for r in combat_log.load(log.path) if r["e"] == "act"]
     assert {r["by"] for r in acts} == {"human", "ai"}
     for r in acts:
-        assert (r["team"] == "player") == (r["by"] == "human")
+        if r["by"] == "human":
+            assert r["team"] == "player"
+        else:
+            assert r["team"] == "enemy" or r["ai"] is None   # a routed player unit is run by the AI
         assert (r["ai"] is not None) == (r["by"] == "human")
 
 

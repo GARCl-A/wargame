@@ -16,6 +16,7 @@ from . import (
     intel,
     items,
     morale,
+    poisons,
     recruit,
     wagon,
 )
@@ -84,6 +85,8 @@ def sections():
             "hunger", 7, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2],
             death=data.STARVATION_DEATH_DAYS)),
         (i18n.t("wiki_rules.stomp.title"), _lines("stomp", 2)),
+        (title("poison"), _lines("poison", 4, hours=poisons.ANTIDOTE_COOLDOWN_HOURS, dc=poisons.POISONS["snake_venom"].base_dc,
+                                 spent=poisons.POISONS["snake_venom"].hours, rot=poisons.POISONS["gut_rot"].hours)),
         (title("study"), _lines("study", 4, cost=economy.TAVERN_STUDY_COST_PER_DAY)),
         (title("dungeon"), _lines("dungeon", 4)),
         (title("reading"), _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS)),

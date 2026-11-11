@@ -9,7 +9,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Any
 
-from . import i18n, weapon_traits
+from . import i18n, poisons, weapon_traits
 
 
 class ItemType(StrEnum):
@@ -1237,6 +1237,8 @@ def item_tip_lines(name: str) -> list[str]:
         desc.append(i18n.t("item.tip.quiver", ammo=ammo))
     elif it.name == "Minor Healing Potion" or it.id == "minor_healing_potion":
         desc.append(i18n.t("item.tip.potion"))
+    elif it.name == "Antidote" or it.id == "antidote":
+        desc.append(i18n.t("item.tip.antidote", hours=poisons.ANTIDOTE_COOLDOWN_HOURS))
     elif it.name == TORCH_ITEM or it.id == "torch":
         r = it.light_radius or 4
         desc.append(i18n.t("item.tip.torch", m=f"{r * 1.5:g}"))

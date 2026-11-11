@@ -136,14 +136,6 @@ the rest.
   could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
   `92c60533`); check what the pick still hides and say it in plain words.
 
-- **Apothecary & Antidote utility and tooltip clarity (author/Yohan alignment).** Fix Antidote so the Constitution save
-  reliably reduces duration / clears poison or disease stacks (`unit_poison.py`). Accurately document the DC, save behavior,
-  and cure mechanics in the in-game wiki and display this info on the inventory item hover tooltip and band kit screen.
-
-- **Pickaxe targeted bonus damage vs. metal (author/Yohan alignment).** Tool and weapon overhaul: grant the Pickaxe a
-  targeted bonus damage modifier specifically against targets equipped with metal armor and against metallic
-  structures/fortifications, establishing it as a dedicated tactical counter against heavy units.
-
 - **AI: Crowd-control-aware target decision (author/Yohan alignment).** Improve AI action sequencing when applying control
   effects: when a boss, caster or controller inflicts Sleep or similar incapacitation that breaks on damage, nearby AI
   attackers must retarget awake/active threats instead of attacking the sleeping target and immediately breaking the condition.
@@ -163,9 +155,9 @@ the rest.
   hard for this group") built on `encounters.pack_power`, compared with the group's own power. Web map and
   the fight's confirm dialog, tests that the hint matches `pack_power`.
 
-- **"Modifiers Matter" feedback in combat log and panel (author/Yohan alignment).** Visual combat log and UI enhancement
-  (inspired by Pathfinder 2e's *Modifiers Matter* module): visibly highlight whenever a passive bonus, aura, trait, or
-  talent was the decisive factor turning a miss into a hit, an ordinary strike into a critical, or facilitating a clutch dodge.
+- **"Modifiers Matter" in the combat log (author/Yohan alignment).** The *Damage* line already lists dice, modifiers and
+  multiplier (`log_marks`). Left: mark the modifier that was decisive, the one that turned a miss into a hit or a strike
+  into a critical (inspired by Pathfinder 2e's *Modifiers Matter*).
 
 - **Continuous / Endless Dungeon signaling (author/Yohan alignment).** UI and UX clarity for continuous exploratory dungeons:
   clearly communicate to the player that there is no traditional "Victory" screen upon clearing a floor. Spoil retention
@@ -203,7 +195,7 @@ the rest.
   requiring food variety and culinary planning. (Supersedes the old combat-buff cooking concept).
   Decided 2026-11-10: each unit keeps the foods it ate in the last 7 days, an ordered list of 7 entries (a saved
   `Unit` field with a neutral default in `SAVE_DEFAULTS`). Decided (author 2026-11-11): the diet variation is a value from 1 to 7, the number of distinct
-  foods eaten in those 7 days. Open: how that value maps to morale (what is varied, what a repeat costs). Rotten Food (decided 2026-11-11): it is thrown away, eaten by a Gnoll, and
+  foods eaten in those 7 days. How the value maps to morale is decided with *Loyalty*, after it is designed (author 2026-11-11). Rotten Food (decided 2026-11-11): it is thrown away, eaten by a Gnoll, and
   an emergency ration so a badly planned group does not starve (RULES.md, *Rotten Food is not a ration*);
   later it is compost when the guild can farm.
 
@@ -391,9 +383,6 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 
 ## 2026-11-02
 
-The session's recordings (saves and combat logs) are not in the repo yet; the author sends them when a note
-needs a fight rebuilt.
-
 - **Is the two-step charge worth it? (author 2026-11-02, doubt).** Having one charge with two different
   values feels more of a hindrance than interesting. Review the rule against the Aurochs fight (day 112) and
   decide: keep, merge into one value, or drop. Measure with `scripts/combat_pairs.py`.
@@ -410,12 +399,6 @@ needs a fight rebuilt.
 A friend's (Johann) first session (about 2 h, no tutorial from the author). The author's stated intent from the
 same talk is spread over *To discuss and reflect on*, *Notes to remember*, *Needs more information* and the
 items it touches. Raw feedback, not yet sized:
-
-- **What worked (do not "fix" it).** The character progression, combat, and the pull of "always something
-  to go after" (the exclamation marks on the map). Two musicians playing while the rest worked was the
-  strategy he liked. He compares it with, or above, Wartales /
-  Battle Brothers / Mount & Blade for fun, and finds it easy to play in short sessions. He stopped because
-  of that bug and because he had played a lot, not because he was bored.
 
 - **Theme: the rules sit where the player does not look.** The wiki, the menu and the tutorial text were
   not read; the player learned by doing, and paid for it (rations, the draft, Delay). A fix per case is
@@ -453,7 +436,6 @@ items it touches. Raw feedback, not yet sized:
 
 - **The Reputations tasks only half guide a start.** Found them "almost intuitive", not a clear "how
   to begin". Check whether the first deeds read as a path.
-- Good sign: he understood the screens by playing and asked whether to continue (about 2 h in).
 
 ## Older raw notes (2026-10-12, 2026-10-21)
 
@@ -546,30 +528,40 @@ has one "Enter" button and its functions are tabs inside.
      Decided (author 2026-11-01): the best roll counts (the talent is a way to try more than once); the
      holder becomes `recruited_by`; "could recruit" means every requirement the ally would need to
      recruit that target alone (`slots_free`, the shared language, the rest of `recruit.py`'s checks).
-     Decided (author 2026-11-04): three separate nodes that may connect. Group size +1: *combat*, T4 or T5
-     (recruiting is the strongest thing in the game so far). Crowd penalty -10%: *combat*, T3 or T4. Joint
-     pitch: *work*, T2 or T3, after Fixer. Open: whether "group size limit" is `cohesion.py`'s capacity (to be
-     replaced by Loyalty, see above).
+     Decided (author 2026-11-04, moved 2026-11-11): three separate nodes that may connect, all in the *work*
+     Charisma tree (Charismatic, Negotiator, Fixer, Provisioner, Troubadour today). Group size +1 and crowd
+     penalty -10% are work talents, no longer combat; joint pitch comes after Fixer. Open: the tier of each
+     (group size +1 deep, recruiting is the strongest thing in the game so far); whether "group size limit" is
+     `cohesion.py`'s capacity (to be replaced by Loyalty, see above); and the trade-off rule above, which spoke
+     of a pick that would make a better *fighter*: in the work track the price is a work pick, so say what a
+     big guild gives up.
   2. *Intelligence tree (combat), two talents:* (a) **group leader only: places the whole group** before
-     the fight; (b) **places only oneself**. Together they are a ladder (b the early node, a the late one),
-     and (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
+     the fight; (b) **places only oneself**. Decided (author 2026-11-11): a ladder, (b) hangs under Tactical Mind
+     and (a) under (b) (`requires`). (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
      the UI is like the flag's placement (a pre-fight setup step, `BattleSession` already has "flag" and
      "trap"), placing the characters one after another in initiative order. (a) works only when the
      leader is on the board (an arena bout picks its fighters, a hunt leaves its guards behind: without
      the leader, no one places the group). `ai/` places its own side at random at first; after a playtest with the talent, the author's placements
-     train it. Open: the tier of each.
-  3. *Charisma + Wisdom compound:* Demoralize on beasts. The point is the language: a beast has none,
-     so `Demoralize._can_provoke` (`actions/combat.py`) never allows it. The talent gives the holder what
-     `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets
-     with no language of their own. The effect on the beast is the same as on a humanoid
-     (`Demoralized`: cannot move, lower defenses). Decided (author 2026-11-04): it requires a Charisma (combat) talent and a Wisdom (combat) talent, which
-     is the `also` prerequisite (`Talent.also`, as Ready Hand and Ambush Shot use it). Open: whether it also needs the holder to be
-     able to see the beast for a turn (the existing sight check already does).
+     train it. Open: the tier of each (b is T2 or T3 under Tactical Mind, a one tier below it).
+  3. *Charisma + Wisdom compound:* Demoralize on beasts. A beast has no language, so `Demoralize._can_provoke`
+     (`actions/combat.py`) never allows it, and Wordless Menace works on humanoids only. Decided (author
+     2026-11-11): not built until the Wisdom (combat) tree has its Beastmaster talents (*Beastmaster talents*
+     below). It requires Wordless Menace (Charisma, combat) and one of them, the `also` prerequisite
+     (`Talent.also`, as Ready Hand and Ambush Shot use it). The talent gives the holder what
+     `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets with no
+     language of their own; the effect on the beast is the same as on a humanoid (`Demoralized`). Open: whether
+     it also needs the holder to see the beast for a turn (the existing sight check already does).
   4. *Archery (playtest 2026-11-02):* a combat talent giving +1 damage with a ranged DEX weapon (decided 2026-11-11: a crossbow is as much a bow as a longbow or shortbow); and a second that
      adds a conditional *Brutal* to the blow, possibly "in a straight line" along the 8 directions (the
-     shot must travel straight). Decided (author 2026-11-04): the +1 damage comes first and the Brutal one chains after it. "In a straight
+     shot must travel straight). Decided (author 2026-11-11): the +1 damage hangs under Deadeye (T3) and the
+     Brutal one under it (T4). "In a straight
      line" is the queen's move: shooter and target aligned on a row, a column or a diagonal. The *Brutal N*
-     keyword exists (`keywords.py`). Open: the tiers.
+     keyword exists (`keywords.py`).
+
+- **Beastmaster talents in the Wisdom tree.** Add Beastmaster talents to the Wisdom (combat) tree, which today
+  holds only Alert -> Quick Wits (-> Peripheral Vision) and Iron Will (-> Iron Stance). The first use is the
+  prerequisite of *Demoralize on beasts* (*Talent ideas*, item 3), which waits for this tree. Open: how many nodes, their tiers and what
+  each does with beasts (Demoralize, `Group.herd_capacity` is already Beast Whisperer's in the work tree).
 
 - **Does the Assess action itself need a reward? (author 2026-10-31, author/Yohan alignment).** The talent line
   under Tactical Mind (Analytical Eye, Exploit Weakness, Anatomist, Surgical Strike; `talents.py`) already pays
@@ -581,7 +573,7 @@ has one "Enter" button and its functions are tabs inside.
   `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
   as a trait of that weapon. Decided 2026-11-11 for `Hooves`: one action that resolves an attack, a shove
   and a Takedown, in that order (the condition and Takedown exist, `conditions.py`, `actions/combat.py`).
-  Open: the action for each of the other four, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
+  `Hooves` costs 2 AP. Open: the action for each of the other four, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
   AI, tests, tutorial card). Compare with Takedown and Grab in the sim so none dominates.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is

@@ -318,6 +318,7 @@ class Demoralize(Action):
     def _wordless(self, battle, actor, target):
         char = getattr(actor, "char", None)
         return bool(char and char.talent_bonus("demoralize_no_language")
+                    and target.char.race.get("kind", "humanoid") == "humanoid"
                     and battle.units_distance(actor, target) <= UNSPOKEN_RANGE)
 
     def _can_provoke(self, battle, actor, target):

@@ -2401,7 +2401,7 @@
     },
     "armor_pierce": {
       "head": "{actor} Armor Pierce -> {target}",
-      "brutal": "The point punches through the armour"
+      "brutal": "The point punches through the metal"
     },
     "power_shot": {
       "head": "{actor} Power Shot -> {target}",
@@ -2828,9 +2828,9 @@
     },
     "armor_pierce": {
       "name": "Armor Pierce",
-      "desc": "2 AP: Attack ignores worn armor AC bonus.",
+      "desc": "2 AP: Attack ignores the AC bonus of a worn metal armor (leather is not pierced).",
       "reason": "requires pick",
-      "label": "Armor Pierce (2 pts, ignores armor AC; Brutal 1 vs an armoured foe)"
+      "label": "Armor Pierce (2 pts, ignores metal armor AC; Brutal 1 vs a metal-armoured foe)"
     },
     "power_shot": {
       "name": "Power Shot",
@@ -5820,7 +5820,7 @@
       "iron_stance": "Using Defend grants +2 Mental Defense in addition to AC until your next turn.",
       "imposing": "+1 Charisma.",
       "menacing": "+2 to Demoralize checks.",
-      "wordless_menace": "Demoralize works on a foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
+      "wordless_menace": "Demoralize works on a humanoid foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
       "gruesome_takedown": "Upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language).",
       "cull_the_broken": "+2 damage on attacks against demoralized targets.",
       "merciless": "Your attacks against a demoralized target are Brutal 1.",
@@ -5989,7 +5989,7 @@
       "cleave": "2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit.",
       "repel_strike": "2 AP: One strike that Shoves the target (+2 to the check); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4.",
       "maiming_strike": "2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1.",
-      "armor_pierce": "2 AP: One strike that ignores worn armor AC; against an armoured foe the blow is Brutal 1.",
+      "armor_pierce": "2 AP: One strike that ignores the AC of a worn metal armor; against a metal-armoured foe the blow is Brutal 1.",
       "power_shot": "2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1.",
       "extreme_shot": "2 AP: Doubles attack distance to 36 squares.",
       "hook_shield": "2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike.",
@@ -6215,6 +6215,7 @@
       "first_aid": "Restores HP or stabilizes a dying unit. Starts with {charges} charges.",
       "quiver": "Ammunition for ranged weapons. Holds {ammo} arrows/bolts.",
       "potion": "Restores 1d6 HP when consumed.",
+      "antidote": "Used outside combat from the band screen: the poisoned member rolls another Constitution save against the poison's DC; on success one stack is shed now. One Antidote per member every {hours} h.",
       "torch": "Provides light in a {m}m radius. Can be dropped on the ground.",
       "light": "Provides light in a {m}m radius when equipped in the off-hand.",
       "food": "A day's ration. Prevents starvation when resting.",
@@ -6493,7 +6494,7 @@
       "2": "Cleave (Axe): a second foe beside both, each swing +2 to hit.",
       "3": "Repel Strike (Quarterstaff): shoves the foe 1 cell; against a wall or a body, +1d4 instead.",
       "4": "Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, Sleeping, Surprised, Demoralized) takes it at +2 to hit.",
-      "5": "Armor Pierce (Picks): ignores worn armour. Power Shot (Bows): +STR, best at long range.",
+      "5": "Armor Pierce (Picks): ignores worn metal armour. Power Shot (Bows): +STR, best at long range.",
       "6": "Hook Shield (Hatchet): the foe's shield gives no AC until next round. Parry & Strike (Swords): while Defending, with two or more foes in reach.",
       "7": "Long Thrust (Glaive): one strike a cell past the Glaive's reach of {reach}, +{hit} to hit."
     },
@@ -6570,6 +6571,13 @@
       "2": "Chests, relics and the Ancient Codex stay where the ruins keep them until someone takes them; what is not carried out is not yours.",
       "3": "The entrance is the exit: the cells by the door the squad came in through. A member who falls or stays inside is not out.",
       "4": "The ruins remember: a foe that fell stays down and what a hand took is gone on the next delve, while a trap unsprung or a chest unopened waits."
+    },
+    "poison": {
+      "title": "Poison & Antidote",
+      "1": "A venomous bite forces a Constitution save (DC {dc} + the venomous creature's racial level). A failed save poisons the victim: one stack, and each stack costs points of one attribute until it wears off.",
+      "2": "Poison outlives the fight. One stack wears off every {spent} h of world time (Gut Rot, from rotten food, every {rot} h); a fresh bite resets the clock.",
+      "3": "An Antidote is used outside combat from the band screen: the poisoned member rolls another Constitution save against the worst poison's DC. Success sheds one stack now; failure only burns the dose.",
+      "4": "One Antidote per member every {hours} h, whether it worked or not."
     },
     "reading": {
       "title": "Reading a foe",

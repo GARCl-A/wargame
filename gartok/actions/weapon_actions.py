@@ -348,7 +348,7 @@ class ArmorPierce(Action):
         return i18n.t("action.armor_pierce.label")
 
     def favoured(self, battle, actor, target):
-        return target.armor is not None and target.armor.ac > 0
+        return target.pierceable_ac > 0
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):

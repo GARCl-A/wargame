@@ -1961,9 +1961,9 @@
         },
         "armor_pierce": {
             "name": "Perfurar Armadura",
-            "desc": "2 pts: o ataque ignora o bônus de CA da armadura vestida.",
+            "desc": "2 pts: o ataque ignora o bônus de CA de uma armadura de metal vestida (couro não é perfurado).",
             "reason": "exige picareta",
-            "label": "Perfurar Armadura (2 pts, ignora a CA da armadura; Brutal 1 contra inimigo de armadura)"
+            "label": "Perfurar Armadura (2 pts, ignora a CA da armadura de metal; Brutal 1 contra inimigo de armadura de metal)"
         },
         "power_shot": {
             "name": "Tiro Poderoso",
@@ -2377,7 +2377,7 @@
         },
         "armor_pierce": {
             "head": "{actor} Perfurar Armadura -> {target}",
-            "brutal": "A ponta atravessa a armadura"
+            "brutal": "A ponta atravessa o metal"
         },
         "power_shot": {
             "head": "{actor} Tiro Poderoso -> {target}",
@@ -4920,6 +4920,7 @@
             "first_aid": "Restaura PV ou estabiliza uma unidade moribunda. Começa com {charges} cargas.",
             "quiver": "Munição para armas à distância. Comporta {ammo} flechas/virotes.",
             "potion": "Restaura 1d6 PV ao ser consumida.",
+            "antidote": "Usado fora de combate na tela do bando: o membro envenenado rola outra salvaguarda de Constituição contra a CD do veneno; se passar, uma pilha sai na hora. Um Antídoto por membro a cada {hours} h.",
             "torch": "Ilumina num raio de {m}m. Pode ser largada no chão.",
             "light": "Ilumina num raio de {m}m quando equipada na mão secundária.",
             "food": "A ração de um dia. Evita a fome durante o descanso.",
@@ -6056,7 +6057,7 @@
             "cleave": "2 pts: um golpe; com um segundo inimigo ao lado dos dois, o arco também o atinge, cada golpe com +2 para acertar.",
             "repel_strike": "2 pts: um golpe que dá Empurrão no alvo (+2 no teste); contra um inimigo com as costas numa parede ou num corpo, o golpe é Brutal 1, +1d4.",
             "maiming_strike": "2 pts: um golpe que reduz à metade a velocidade do alvo até a próxima rodada; contra um inimigo Enredado, Dormindo, Surpreso ou Desmoralizado, +2 para acertar e o golpe é Brutal 1.",
-            "armor_pierce": "2 pts: um golpe que ignora a CA da armadura vestida; contra um inimigo de armadura, o golpe é Brutal 1.",
+            "armor_pierce": "2 pts: um golpe que ignora a CA de uma armadura de metal vestida; contra um inimigo de armadura de metal, o golpe é Brutal 1.",
             "power_shot": "2 pts: um tiro com +FOR de dano; a metade do alcance do arco ou mais longe, +FOR (no mínimo +1) e o golpe é Brutal 1.",
             "extreme_shot": "2 pts: dobra a distância do ataque para 36 casas.",
             "hook_shield": "2 pts: contra um inimigo com escudo, prende o escudo primeiro (sem CA do escudo até a próxima rodada, este golpe incluso) e depois dá um golpe Brutal 1. Sem escudo, é um golpe comum.",
@@ -6316,7 +6317,7 @@
             "iron_stance": "Usar Defender concede +2 de Defesa Mental, além da CA, até o seu próximo turno.",
             "imposing": "+1 de Carisma.",
             "menacing": "+2 nos testes de Desmoralizar.",
-            "wordless_menace": "Desmoralizar funciona contra quem não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
+            "wordless_menace": "Desmoralizar funciona contra um humanoide que não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
             "gruesome_takedown": "Ao abater um inimigo, faz imediatamente um teste grátis de Desmoralizar contra o inimigo mais próximo ao alcance (ignora idioma).",
             "cull_the_broken": "+2 de dano nos ataques contra alvos desmoralizados.",
             "merciless": "Seus ataques contra um alvo desmoralizado são Brutais 1.",
@@ -6886,7 +6887,7 @@
             "2": "Ceifar (Machado): um segundo inimigo ao lado de ambos, cada golpe com +2 para acertar.",
             "3": "Rechaçar (Bordão): empurra o inimigo 1 casa; contra uma parede ou um corpo, +1d4 no lugar.",
             "4": "Golpe Mutilante (Clava, Martelos): corta a velocidade do inimigo pela metade; um inimigo que não pode se esquivar (Enredado, Dormindo, Surpreso, Desmoralizado) o sofre com +2 para acertar.",
-            "5": "Perfurar Armadura (Picaretas): ignora a armadura vestida. Tiro Poderoso (Arcos): +FOR, melhor a longa distância.",
+            "5": "Perfurar Armadura (Picaretas): ignora a armadura de metal vestida. Tiro Poderoso (Arcos): +FOR, melhor a longa distância.",
             "6": "Prender Escudo (Machadinha): o escudo do inimigo não dá CA até a próxima rodada. Aparar e Golpear (Espadas): enquanto Defende, com dois ou mais inimigos ao alcance.",
             "7": "Estocada Longa (Glaive): um golpe uma casa além do alcance de {reach} da Glaive, +{hit} para acertar."
         },
@@ -6963,6 +6964,13 @@
             "2": "Baús, relíquias e o Códice Antigo ficam onde as ruínas os guardam até alguém pegá-los; o que não é levado para fora não é seu.",
             "3": "A entrada é a saída: as casas junto à porta por onde o esquadrão entrou. Um membro que cai ou fica lá dentro não saiu.",
             "4": "As ruínas lembram: um inimigo que caiu continua caído e o que uma mão pegou não está lá na próxima incursão, enquanto uma armadilha não disparada ou um baú fechado esperam."
+        },
+        "poison": {
+            "title": "Veneno e Antídoto",
+            "1": "Uma mordida venenosa força uma salvaguarda de Constituição (CD {dc} + o nível racial da criatura venenosa). Se falhar, a vítima fica envenenada: uma pilha, e cada pilha tira pontos de um atributo até passar.",
+            "2": "O veneno sobrevive à luta. Uma pilha some a cada {spent} h de tempo do mundo (Podridão Intestinal, de comida podre, a cada {rot} h); uma nova mordida zera o relógio.",
+            "3": "O Antídoto é usado fora de combate na tela do bando: o membro envenenado rola outra salvaguarda de Constituição contra a CD do pior veneno. Passar tira uma pilha na hora; falhar só gasta a dose.",
+            "4": "Um Antídoto por membro a cada {hours} h, tenha funcionado ou não."
         },
         "reading": {
             "title": "Lendo um inimigo",

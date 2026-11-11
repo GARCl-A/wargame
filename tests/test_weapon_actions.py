@@ -411,3 +411,15 @@ def test_the_throwing_spear_is_the_javelin_with_a_d8_a_triple_crit_and_a_steeper
     assert (spear.damage, spear.crit_mult, spear.price) == ((1, 8), 3, 45)
     assert spear.thrown == jav.thrown == 12 and spear.has_trait("javelin_charge") and spear.has_trait("crit_3x")
     assert spear.price > items.get("sword").price
+
+
+def test_armor_pierce_only_pierces_metal_armor():
+    batt, a, d = _melee_battle()
+    a.equip_weapon(fitted(a, "Pick"))
+    d.char.give_to_armor(fitted(d, "Studded Leather"))
+    assert d.pierceable_ac == 0
+    assert d.ac_vs(a, armor_pierce=True) == d.ac_vs(a, armor_pierce=False)
+    assert not actions.ARMOR_PIERCE.favoured(batt, a, d)
+    d.char.give_to_armor(fitted(d, "Chainmail"))
+    assert d.pierceable_ac == d.armor.ac > 0
+    assert actions.ARMOR_PIERCE.favoured(batt, a, d)
