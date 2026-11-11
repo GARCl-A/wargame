@@ -1,10 +1,10 @@
 {
-  "uid": "72bf1704048d41959bc0c11b6c1f1d3b",
+  "uid": "0e3677e9534e4729876c806de75dba9f",
   "recruited_by": null,
   "joined_day": 1,
   "name": "Ilsa of the Blood",
   "auto_name": false,
-  "portrait_id": 1925125892,
+  "portrait_id": 238450665,
   "portrait_file": null,
   "race": "Human",
   "alignment": "Neutral and Evil",
@@ -39,7 +39,8 @@
   "spells_known": [
     "magic_missile",
     "hex",
-    "sleep"
+    "sleep",
+    "dragonfire"
   ],
   "study_target": null,
   "study_progress": {},
@@ -104,7 +105,7 @@
   "equipped_offhand": null,
   "equipped_tongue": null,
   "equipped_artifact": null,
-  "equipped_armor": null,
+  "equipped_armor": "Studded Leather",
   "inventory": [],
   "locked_items": {},
   "dormant": false,

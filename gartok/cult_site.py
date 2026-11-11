@@ -109,9 +109,9 @@ RING = 8                                    # the old stone circle the rite is h
 
 
 def _river():
-    """The river that waters the Farm, across the north of the map, two to three cells deep (shallow:
+    """The river that waters the Farm, across the north of the map, three cells deep (shallow:
     difficult ground, never a pit)."""
-    return {(x, y) for x in range(COLS) for y in range(2 + (x // 3) % 2)}
+    return {(x, y) for x in range(COLS) for y in range(3)}
 
 
 def _stones():

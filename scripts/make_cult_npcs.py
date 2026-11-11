@@ -65,7 +65,7 @@ def build():
         "cult-leader": body(
             "Maren Voss, the Red Hierophant", "Human", (9, 12, 13, 16, 15, 14), "Quarterstaff", "Leather Jerkin",
             "Keeps the rite and the book it is read from. He means to open the door and thinks the price fair.",
-            levels=(4, 6, 10), sources=("blood",), spells=("magic_missile", "hex", "sleep", "dragonfire"),
+            levels=(4, 6, 10), sources=("blood", "faith"), spells=("magic_missile", "hex", "sleep", "dragonfire", "healing_touch"),
             combat=("tough", "alert"), work=("charismatic", "clever"),
             magic_t=("arcane_mind", "spell_focus", "destructive_casting"), slug="cult-leader"),
         "cult-fighter-1": body(
@@ -78,17 +78,17 @@ def build():
             levels=(7, 7, 0), combat=("agile", "duelist", "deadeye", "nimble_skirmisher"),
             work=("nimble_fingers", "sturdy"), slug="cult-fighter-2"),
         "cult-channeler-blood": body(
-            "Ilsa of the Blood", "Human", (8, 13, 12, 14, 12, 13), "Dagger", None,
+            "Ilsa of the Blood", "Human", (8, 13, 12, 14, 12, 13), "Dagger", "Studded Leather",
             "Reads the rite from the east point, in a voice that is not quite hers.",
-            levels=(3, 5, 6), sources=("blood",), spells=("magic_missile", "hex", "sleep"),
+            levels=(3, 5, 6), sources=("blood",), spells=("magic_missile", "hex", "sleep", "dragonfire"),
             magic_t=("arcane_mind", "spell_focus", "destructive_casting"), slug="cult-channeler-blood"),
         "cult-channeler-nature": body(
-            "Orrin Greywood", "Human", (9, 11, 13, 13, 16, 10), "Quarterstaff", None,
+            "Orrin Greywood", "Human", (9, 11, 13, 13, 16, 10), "Quarterstaff", "Leather Jerkin",
             "A hedge-druid turned. The roots he calls hold the ground under the rite.",
-            levels=(3, 5, 6), sources=("nature",), spells=("magic_missile", "grasping_roots", "sleep"),
+            levels=(3, 5, 6), sources=("nature",), spells=("magic_missile", "grasping_roots", "water_jet", "sleep"),
             magic_t=("arcane_mind", "spell_focus"), slug="cult-channeler-nature"),
         "cult-channeler-faith": body(
-            "Brother Tavish", "Human", (10, 10, 12, 12, 16, 12), "Quarterstaff", None,
+            "Brother Tavish", "Human", (10, 10, 12, 12, 16, 12), "Quarterstaff", "Studded Leather",
             "A priest of the Cathedral who prayed to the wrong thing and was answered.",
             levels=(3, 5, 6), sources=("faith",), spells=("magic_missile", "sleep", "healing_touch"),
             magic_t=("arcane_mind", "spell_focus", "blessed_hands"), slug="cult-channeler-faith"),

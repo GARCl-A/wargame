@@ -1,10 +1,10 @@
 {
-  "uid": "1cd83c653a9949198f66359d42ca29e9",
+  "uid": "d26e118fd5fb45f1a5a5f96f093f0156",
   "recruited_by": null,
   "joined_day": 1,
   "name": "Maren Voss, the Red Hierophant",
   "auto_name": false,
-  "portrait_id": 483933285,
+  "portrait_id": 3530428815,
   "portrait_file": null,
   "race": "Human",
   "alignment": "Neutral and Evil",
@@ -34,13 +34,15 @@
   "crafting_progress": 0,
   "craft_bonuses": {},
   "magic_sources": [
-    "blood"
+    "blood",
+    "faith"
   ],
   "spells_known": [
     "magic_missile",
     "hex",
     "sleep",
-    "dragonfire"
+    "dragonfire",
+    "healing_touch"
   ],
   "study_target": null,
   "study_progress": {},

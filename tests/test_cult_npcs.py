@@ -60,3 +60,15 @@ def test_the_demon_is_a_huge_bare_clawed_intimidator():
 def test_claws_talent_is_for_the_demon_only():
     from gartok import talents
     assert talents.get("demon_claws").for_race("Demon") and not talents.get("demon_claws").for_race("Human")
+
+
+def test_the_casters_know_their_schools_spells():
+    leader = npc_lib.load_npc("cult-leader")
+    assert {"blood", "faith"} <= set(leader.magic_sources) and "healing_touch" in leader.spells_known
+    assert "dragonfire" in npc_lib.load_npc("cult-channeler-blood").spells_known
+    assert "water_jet" in npc_lib.load_npc("cult-channeler-nature").spells_known
+
+
+def test_no_one_wears_a_worse_armor_than_they_can_carry():
+    for slug in ("cult-channeler-blood", "cult-channeler-nature", "cult-channeler-faith"):
+        assert npc_lib.load_npc(slug).equipped_armor is not None
