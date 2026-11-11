@@ -73,7 +73,7 @@ e ela entrega o Holy Symbol.
   corpo da filha (Holy Symbol) e o kit dos mortos do grupo.
 - **15 dias depois** o demonio volta e transforma o no em **covil do demonio**.
 - Prazo estourado sem achar o Cult Site: o no se revela sozinho com um aviso, no mesmo estado.
-- O demonio e o **mob mais forte do jogo**, acima do Dragon: proposta nivel racial 22 e ~260 PV. Mata-lo solta o
+- O demonio e o **mob mais forte do jogo**, acima do Dragon: nivel racial 22, 251 PV e criatura lendaria (age duas vezes por rodada); e um problemao de proposito, nao se calibra para a guilda vencer. Mata-lo solta o
   Holy Symbol e reabre a Farm.
 
 **Luz.** O cenario e `outdoor`: a luz segue o relogio (`battle.daylight`). O triangulo tem braseiros fixos acesos.
@@ -93,7 +93,7 @@ Cada fase e um commit no `main`.
    `PAYLOAD_DEFAULTS` (sem bump de `SAVE_VERSION`).
 4. **Busca, Cult Site e arestas (feita; o no e efemero, como os do wildfire: so entra no mapa e nas rotas depois de achado, senao o atalho Farm-Igreja vazaria o no; o no ainda nao tem funcao nem tela: `cult_ritual` vem na fase 6).** No oculto `cult_site` (`world.free_spot`), arestas, funcao `cult_ritual`, glifo
    em `map_view.NODE_ICON`; `search_cult` em `campaign.SEARCHES` com botao nas Country Roads.
-5. **Raca Demon e NPCs (feita; nomes dos NPCs e do demonio sao provisorios: Maren Voss, Brann, Kessa Thorn, Ilsa, Orrin, Tavish, Wynn Ashvale, "O Inquilino Palido"; o glifo do Demon e um emprestimo do Kobold ate o autor dar arte; Demon: 260 PV pinados, racial 22 derivado (combate 16, trabalho 14, magia 14: o teste proibe pinar), habilidades darkvision + ferocity; `python scripts/make_cult_npcs.py` regenera os 8 arquivos).** Raca `Demon` (`kind: demon`, posta a mao como o Skeleton) e glifo em `art_files.RACE_ICON`;
+5. **Raca Demon e NPCs (feita; nomes dos NPCs e do demonio sao provisorios: Maren Voss, Brann, Kessa Thorn, Ilsa, Orrin, Tavish, Wynn Ashvale, "O Inquilino Palido"; o glifo do Demon e um emprestimo do Kobold ate o autor dar arte; Demon: racial 22 derivado (combate 16, trabalho 14, magia 14: o teste proibe pinar), PV derivados da Constituicao (251, sem pino), bonus FOR+4 DES0 CON+2 INT+4 SAB+2 CAR+4, Enorme, d10, darkvision + ferocity, lendario (2 turnos por rodada), luta desarmado com Garras, so conhece Hex e Dragonfire por ora (as outras escolas virao com magias novas), talentos raciais Garras Infernais, Garras Ceifadoras, Asas Infernais e Presenca Infernal (teste de SAB contra 10 + CAR dele, ou -1 de moral), build de Carisma e depois Forca; `python scripts/make_cult_npcs.py` regenera os 8 arquivos).** Raca `Demon` (`kind: demon`, posta a mao como o Skeleton) e glifo em `art_files.RACE_ICON`;
    os 8 NPCs em `npcs/*.json` por um script (modelo `necromancer.json`); drop do demonio em `loot.UNIQUE_DROPS`.
 6. **O cenario (feito; mapa 36x24 aberto, `outdoor`; triangulo (18,5),(11,17),(25,17), centro (18,13), a filha amarrada ao lado do centro como prop `bound` desenhado, nao como unidade, entao a IA nunca a mira e nao conta para a vitoria; barra de 18 (3 passos de 6), +1 por turno de quem sabe o rito numa ponta, o lider comeca o Rito Final ao fim do turno no centro com a barra cheia e fecha no inicio do turno seguinte; interrompido (caiu, dormiu, Routed ou empurrado) a barra volta um passo; o demonio NAO e uma unidade na luta: o rito fechando deita todos (`stable`, `Scenario.spares_the_squad` pula o `_wipe_side`) e a filha morre; vitoria marca `guild.cult["state"]="won"`, fracasso `"failed"` com o Simbolo e o kit dos mortos em `guild.cult["remains"]`, que `cult_ritual` entrega uma vez ao voltar; ordem `cult_ritual` + `campaign_fight.cult_ritual`; o HUD da barra sai em `state["ritual"]` e vai na linha de dica; falta a entrega da filha viva como cativa: fase 8).** `gartok/cult_site.py`, `CultSiteScenario` (modelo `ox_fields.py` e `necromancer.py`): mapa
    aberto `outdoor`, triangulo, a filha como `ai_ally` dormente; barra e Ritual Final em `on_round`, no `CombatLog`;
@@ -140,5 +140,6 @@ subestima um humano atento). `encounters.build_enemy` no nivel indicado.
 
 ## Em aberto
 
+- Validar jogando o rito (a barra de 18, passos de 6): a simulacao nao tem um jogador que leia a barra, entao o numero real e do autor. O combate bruto dos cultistas ja esta nivelado para uma guilda de nivel 6 a 8 (5/12, 6/12, 8/12).
 - Nomes do lider e do covil. Todos os numeros (barra, DCs, niveis, `+1` do Perguntar por aí) sao iniciais.
 - Arte pedida ao autor: portrait do demonio e dos cultistas, chao do Cult Site.
