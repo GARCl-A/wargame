@@ -526,11 +526,14 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Automaton | 1 | Tireless Worker | Machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- |
 | Catfolk | 1 | Night Prowler | The night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night. | -- |
 | Catfolk | 1 | Open Market | A stranger's coin is as good as any: no price penalty for a vendor of a different tendency when you haggle. | -- |
-| Catfolk | 1 | Razor Claws | Bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer. | -- |
+| Catfolk, Demon | 1 | Razor Claws | Bare-handed blows that hurt cut: the target is Bleeding 1 for 2 turns. Wounds stack: the damages add up and the duration becomes the longer. | -- |
 | Centaur | 1 | Lift Rider | 1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move. | -- |
 | Centaur | 1 | Mount | Your strong back: allow a Medium or Small ally to ride you. | -- |
 | Centaur | 1 | Run Down | After walking 4+ squares this turn, your attacks (melee, thrown or shot) get +1 to hit and +2 damage. | -- |
 | Centaur | 2 | Cavalry Charge | Your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved. | Mount |
+| Demon | 1 | Infernal Claws | The body is the weapon: fights with Claws instead of bare hands. | -- |
+| Demon | 1 | Infernal Visage | +2 to Demoralize. | -- |
+| Demon | 2 | Rending Claws | The claws carry one more damage die. | Infernal Claws |
 | Dragon | 1 | Dragon | Dragon blood runs in you: your hide hardens into scales (+1 AC). | -- |
 | Dragon | 2 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | Dragon |
 | Dragon | 2 | Sweeping Claws | Your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once. | Dragon |

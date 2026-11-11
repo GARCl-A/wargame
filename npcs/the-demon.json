@@ -1,10 +1,10 @@
 {
-  "uid": "5334ad32ff3d4941977b26cfcf0a59bd",
+  "uid": "a0060db0b90f41eb9ff2928b435a14b0",
   "recruited_by": null,
   "joined_day": 1,
   "name": "The Pale Tenant",
   "auto_name": false,
-  "portrait_id": 1395961138,
+  "portrait_id": 2684751280,
   "portrait_file": null,
   "race": "Demon",
   "alignment": "Neutral and Evil",
@@ -49,22 +49,22 @@
   "rite_progress": {},
   "talents": {
     "combat": [
+      "imposing",
+      "menacing",
+      "gruesome_takedown",
+      "cull_the_broken",
+      "merciless",
+      "dread_voice",
       "strong",
-      "sure_strike",
       "heavy_hand",
+      "sure_strike",
+      "wrestler",
+      "wordless_menace",
       "tough",
       "hardy",
-      "blind_strike",
-      "imposing",
       "bulwark",
-      "menacing",
       "recovery",
-      "dread_voice",
-      "tactical_mind",
-      "agile",
-      "deadeye",
-      "cull_the_broken",
-      "analytical_eye"
+      "armor_bearer"
     ],
     "work": [
       "sturdy",
@@ -82,7 +82,12 @@
       "piecework",
       "fixer"
     ],
-    "racial": [],
+    "racial": [
+      "demon_claws",
+      "rending_claws",
+      "razor_claws",
+      "infernal_visage"
+    ],
     "magic": [
       "arcane_mind",
       "destructive_casting",
@@ -135,7 +140,7 @@
   "languages": [
     "Infernal"
   ],
-  "equipped_weapon": "Huge Broadsword",
+  "equipped_weapon": null,
   "equipped_offhand": null,
   "equipped_tongue": null,
   "equipped_artifact": null,

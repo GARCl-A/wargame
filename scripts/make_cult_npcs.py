@@ -20,7 +20,7 @@ ATTRS = ("strength", "dexterity", "constitution", "intelligence", "wisdom", "cha
 
 
 def body(name, race, attrs, weapon, armor, bio, *, levels, sources=(), spells=(), combat=(), work=(),
-         magic_t=(), team="enemy", shield=None, hp=None, align="Neutral and Evil", slug=None):
+         magic_t=(), racial=(), team="enemy", shield=None, hp=None, align="Neutral and Evil", slug=None):
     random.seed(slug or name)
     u = Unit(team, name=name)
     u.set_race(race)
@@ -37,6 +37,8 @@ def body(name, race, attrs, weapon, armor, bio, *, levels, sources=(), spells=()
         u.set_track_level("racial", levels[3])
     for sid in spells:
         u.set_spell_known(sid, True)
+    for tid in racial:
+        u.choose_talent("racial", tid)
     for track, wanted in (("combat", combat), ("work", work), ("magic", magic_t)):
         rng = random.Random(slug or name)
         for tid in wanted:
@@ -95,9 +97,12 @@ def build():
             "Edric Ashvale's daughter. She went to the Cathedral to light a candle for her mother.",
             levels=(0, 1, 0), team="player", align="Neutral and Good", slug="farmers-daughter"),
         "the-demon": body(
-            "The Pale Tenant", "Demon", (24, 14, 22, 14, 14, 18), "Huge Broadsword", None,
+            "The Pale Tenant", "Demon", (24, 14, 22, 14, 14, 18), None, None,
             "What the Cult was calling. It has no name it will answer to.",
-            levels=(16, 14, 14), combat=("strong", "sure_strike", "heavy_hand", "tough", "hardy"),
+            levels=(16, 14, 14), combat=("imposing", "menacing", "gruesome_takedown", "cull_the_broken", "merciless", "dread_voice",
+                    "strong", "heavy_hand", "sure_strike", "wrestler",
+                    "wordless_menace", "tough", "hardy", "bulwark", "recovery", "armor_bearer"),
+            racial=("demon_claws", "rending_claws", "razor_claws", "infernal_visage"),
             sources=("blood",), spells=("hex", "dragonfire"), hp=260, slug="the-demon"),
     }
 

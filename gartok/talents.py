@@ -15,6 +15,7 @@ exactly one consumer that reads it back:
     melee_damage      Combatant.damage_roll            --
     melee_reach       Combatant.tongue_reach           --
     natural_dice      Unit.natural_weapon (+N dice)    --
+    natural_claws     Unit.natural_weapon (Claws)      --
     size_up           Unit._derive_size (+N sizes)     --
     natural_trait     Unit.natural_weapon              weapon trait id
     spin_web          actions.SpinWeb                  --
@@ -474,7 +475,7 @@ _LIST = [
            effects=(Effect("assess_bonus", 2),), icon="head/kenku-head"),
     Talent("mimic_voices", "racial", 1, race="Kenku",
            effects=(Effect("tavern_perform_bonus", 1),), icon="action/sing"),
-    Talent("razor_claws", "racial", 1, race="Catfolk",
+    Talent("razor_claws", "racial", 1, race=("Catfolk", "Demon"),
            effects=(Effect("bleeding_claws", 1),), icon="action/tearing"),
     Talent("night_prowler", "racial", 1, race="Catfolk",
            effects=(Effect("night_prowler", 1),), icon="body/shadow-follower"),
@@ -527,6 +528,12 @@ _LIST = [
            effects=(Effect("flies", 1), Effect("fly_speed", 12)), icon="action/flying-fox"),
     Talent("death_grip", "racial", 1, race="Zombie",
            effects=(Effect("grab_bonus", 2),), icon="action/grab"),
+    Talent("demon_claws", "racial", 1, race="Demon",
+           effects=(Effect("natural_claws", 1),), icon="action/tearing"),
+    Talent("rending_claws", "racial", 2, requires="demon_claws", race="Demon",
+           effects=(Effect("natural_dice", 1),), icon="body/deadly-strike"),
+    Talent("infernal_visage", "racial", 1, race="Demon",
+           effects=(Effect("demoralize_bonus", 2),), icon="action/screaming"),
     Talent("zombie_bite", "racial", 2, requires="death_grip", race="Zombie",
            effects=(Effect("zombie_bite", 1),), icon="head/snake-bite"),
 

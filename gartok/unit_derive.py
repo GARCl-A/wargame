@@ -330,7 +330,7 @@ class DerivationMixin:
     def natural_weapon(self):
         """What this body fights with when nothing is in the weapon hand: its race's own weapon at
         its own size, with the dice and traits its talents add (`natural_weapons`)."""
-        base = natural_weapons.for_race(self.race["name"], self.size)
+        base = natural_weapons.for_race(self.race["name"], self.size, claws=bool(self.talent_bonus("natural_claws")))
         n, faces = base.damage
         return replace(base, damage=(n + self.talent_bonus("natural_dice"), faces),
                        traits=base.traits + tuple(self.talent_stats("natural_trait")))

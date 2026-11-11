@@ -65,6 +65,7 @@ def get(name, size="Medium"):
     return _TABLE.get((name, size))
 
 
-def for_race(race_name, size="Medium"):
-    """The weapon a body of `race_name` and `size` fights with when nothing is in its hand."""
-    return _TABLE[(RACE_WEAPON.get(race_name, DEFAULT), size)]
+def for_race(race_name, size="Medium", claws=False):
+    """The weapon a body of `race_name` and `size` fights with when nothing is in its hand
+    (`claws`: a talent grew it Claws whatever the race's own is)."""
+    return _TABLE[("Claws" if claws else RACE_WEAPON.get(race_name, DEFAULT), size)]
