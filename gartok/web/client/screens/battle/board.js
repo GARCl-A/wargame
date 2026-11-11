@@ -171,21 +171,23 @@ const Board = (() => {
   }
 
   function drawWalls(ctx, b, walls) {
-    const kind = b.wall_kind === "rock" && b.floor !== "cave" ? "block" : b.wall_kind;
+    const base = b.wall_kind === "rock" && b.floor !== "cave" ? "block" : b.wall_kind;
+    const own = new Map((b.kinds || []).map(([x, y, k]) => [K(x, y), k]));
+    const kindAt = k => own.get(k) || base;
     const has = (x, y) => walls.has(K(x, y));
     // the shadow each wall casts down and to the right
     ctx.fillStyle = "rgba(40,25,10,.28)";
     for (const k of walls) {
-      const [x, y] = k.split(",").map(Number);
-      if (kind === "tree") { ctx.beginPath(); ctx.ellipse(wx(x) + L.cell * .62, wy(y) + L.cell * .7, L.cell * .44, L.cell * .3, 0, 0, 7); ctx.fill(); }
+      const [x, y] = k.split(",").map(Number), kind = kindAt(k);
+      if (kind === "tree" || kind === "stone") { ctx.beginPath(); ctx.ellipse(wx(x) + L.cell * .62, wy(y) + L.cell * .7, L.cell * .44, L.cell * .3, 0, 0, 7); ctx.fill(); }
       else ctx.fillRect(wx(x) + L.cell * .14, wy(y) + L.cell * .18, L.cell, L.cell);
     }
     for (const k of [...walls].sort((a, b2) => a.split(",")[1] - b2.split(",")[1])) {
       const [x, y] = k.split(",").map(Number), r = rng(x * 977 + y * 131 + 7);
-      const X = wx(x), Y = wy(y), C = L.cell;
-      if (kind === "tree" || kind === "rock") {
+      const X = wx(x), Y = wy(y), C = L.cell, kind = kindAt(k);
+      if (kind === "tree" || kind === "rock" || kind === "stone") {
         const tree = kind === "tree", im = tree ? IMG["tree_" + (1 + Math.floor(hash(x, y) * 3))] : IMG.boulder;
-        sprite(ctx, im, X, Y, C, (tree ? 1.2 : 1.05) + r() * .15, r, WALL[kind]);
+        sprite(ctx, im, X, Y, C, (tree ? 1.2 : kind === "stone" ? 1.25 : 1.05) + r() * .15, r, WALL[tree ? "tree" : "rock"]);
         continue;
       }
       ctx.fillStyle = WALL.block; ctx.fillRect(X, Y, C, C);
@@ -220,9 +222,10 @@ const Board = (() => {
     for (let x = 0; x <= b.cols; x++) { g.beginPath(); g.moveTo(wx(x) + .5, L.oy); g.lineTo(wx(x) + .5, L.oy + gh); g.stroke(); }
     for (let y = 0; y <= b.rows; y++) { g.beginPath(); g.moveTo(L.ox, wy(y) + .5); g.lineTo(L.ox + gw, wy(y) + .5); g.stroke(); }
     g.setLineDash([]);
+    const river = b.water_look === "river";
     for (const [x, y] of b.water) {
-      g.fillStyle = "rgba(70,96,110,.32)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
-      g.strokeStyle = "rgba(40,60,72,.55)"; g.lineWidth = 1.1;
+      g.fillStyle = river ? "rgba(58,110,140,.78)" : "rgba(70,96,110,.32)"; g.fillRect(wx(x), wy(y), L.cell, L.cell);
+      g.strokeStyle = river ? "rgba(200,230,240,.6)" : "rgba(40,60,72,.55)"; g.lineWidth = 1.1;
       for (let k = 1; k <= 3; k++) {
         const yy = wy(y) + k * L.cell / 4; g.beginPath();
         for (let t = 0; t <= 6; t++) { const xx = wx(x) + 4 + t * (L.cell - 8) / 6; g.lineTo(xx, yy + Math.sin(t * 1.7 + x + k) * 2); }
@@ -378,16 +381,19 @@ const Board = (() => {
   function sunShadows(s) {
     const key = staticKey + "|" + s.board.walls.length;
     if (key === sunKey) return sunCanvas;
-    const C = L.cell, tree = s.board.wall_kind === "tree";
+    const C = L.cell, round = new Set((s.board.kinds || []).map(([x, y]) => K(x, y)));
+    if (s.board.wall_kind === "tree") for (const [x, y] of s.board.walls) round.add(K(x, y));
     const [sh, sg] = canvas();
     sg.fillStyle = "#000";
     for (const [x, y] of s.board.walls) for (let t = .15; t <= 1; t += .085) {
+      const tree = round.has(K(x, y));
       const X = wx(x) + t * C * .75, Y = wy(y) + t * C * .55;
       if (tree) { sg.beginPath(); sg.arc(X + C / 2, Y + C / 2, C * .5, 0, 7); sg.fill(); }
       else sg.fillRect(X, Y, C, C);
     }
     sg.globalCompositeOperation = "destination-out";
     for (const [x, y] of s.board.walls) {
+      const tree = round.has(K(x, y));
       if (tree) { sg.beginPath(); sg.arc(wx(x) + C / 2, wy(y) + C / 2, C * .6, 0, 7); sg.fill(); }
       else sg.fillRect(wx(x), wy(y), C, C);
     }

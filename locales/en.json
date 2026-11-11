@@ -3116,7 +3116,7 @@
       "fortress": "STORM THE FORTRESS"
     },
     "lead": {
-      "cult_site": "A red-lit clearing: three casters bound to a triangle of braziers, a leader with a book, two blades, and a girl tied at the centre. If the rite closes, she dies.",
+      "cult_site": "An old ring of standing stones above the river that waters the farms, the grass burned inside it: three casters bound to a triangle of braziers, a leader with a book, two blades, and a girl tied at the centre. If the rite closes, she dies.",
       "demon_lair": "The Pale Tenant has made the clearing its own: the grass black, the braziers cold, the air thick. It waits alone, and it is the strongest thing in the game.",
       "battlefield": "Four Field Command soldiers hold the trenches against a warband. If one of them dies, the errand fails.",
       "necromancer": "The Battlefield at night: a warband, the dead of days before, and the necromancer unseen among them.",
@@ -6086,7 +6086,7 @@
       "dragon_lair": "Past where the miners stopped, the galleries run hot and smell of sulphur and old gold. Kobolds walk the dark here, and something vast sleeps below.",
       "country_roads": "Dirt lanes between the farmsteads south of the city. Quiet, and wide open.",
       "ox_fields": "Fertile grazing land where something very old and very large has outlived every hunter sent after it.",
-      "cult_site": "A clearing off the Country Roads where the grass has been burned into a triangle, a brazier at each point. Something is being called here."
+      "cult_site": "A ring of old standing stones off the Country Roads, a short walk from the river, where the grass has been burned into a triangle with a brazier at each point. The farmers never ploughed here, and now something is being called here."
     },
     "vendor": {
       "elysia": "Small hands, long memory. I never forget a debt, or a depositor.",

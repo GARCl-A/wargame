@@ -3175,7 +3175,7 @@
             "fortress": "ASSALTAR A FORTALEZA"
         },
         "lead": {
-            "cult_site": "Uma clareira vermelha: três conjuradores presos a um triângulo de braseiros, um líder com um livro, duas lâminas e uma moça amarrada no centro. Se o rito se fechar, ela morre.",
+            "cult_site": "Um velho círculo de pedras acima do rio que rega as fazendas, a grama queimada dentro dele: três conjuradores presos a um triângulo de braseiros, um líder com um livro, duas lâminas e uma moça amarrada no centro. Se o rito se fechar, ela morre.",
             "demon_lair": "O Inquilino Pálido fez da clareira o seu lar: a grama negra, os braseiros frios, o ar pesado. Ele espera sozinho, e é a coisa mais forte do jogo.",
             "battlefield": "Quatro soldados do Posto de Comando seguram as trincheiras contra um bando de guerra. Se um deles morrer, a missão fracassa.",
             "necromancer": "O Campo de Batalha à noite: um bando de guerra, os mortos de dias atrás, e o necromante oculto entre eles.",
@@ -6140,7 +6140,7 @@
             "dragon_lair": "Depois de onde os mineiros pararam, as galerias esquentam e cheiram a enxofre e ouro velho. Kobolds andam no escuro aqui, e algo vasto dorme lá embaixo.",
             "country_roads": "Trilhas de terra entre as fazendas ao sul da cidade. Quietas e bem abertas.",
             "ox_fields": "Pasto fértil onde algo muito antigo e muito grande sobreviveu a todo caçador mandado atrás dele.",
-            "cult_site": "Uma clareira fora das Estradas do Campo onde a grama foi queimada em forma de triângulo, com um braseiro em cada ponta. Algo está sendo chamado aqui."
+            "cult_site": "Um círculo de pedras antigas fora das Estradas do Campo, perto do rio, onde a grama foi queimada em forma de triângulo, com um braseiro em cada ponta. Os fazendeiros nunca aravam aqui, e agora algo está sendo chamado."
         },
         "node_function": {
             "hunt": "passe o dia caçando ou colhendo  ·  uma matilha pode encontrar você primeiro",

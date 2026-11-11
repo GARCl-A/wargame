@@ -359,8 +359,9 @@ function renderRitual() {
   const steps = Math.round(r.max / r.step);
   const cuts = Array.from({length: steps - 1}, (_, i) => `<i style="left:${(i + 1) * 100 / steps}%"></i>`).join("");
   el.className = r.closing ? "closing" : (r.bar >= r.max ? "full" : "");
-  el.innerHTML = `<div class="head"><b>${esc(r.title)}</b><span>${r.bar} / ${r.max}</span></div>`
+  el.innerHTML = `<b>${esc(r.title)}</b>`
     + `<div class="track"><div class="fill" style="width:${100 * r.bar / r.max}%"></div>${cuts}</div>`
+    + `<span class="count">${r.bar} / ${r.max}</span>`
     + (r.closing ? `<div class="warn">${esc(r.warn)}</div>` : "");
 }
 

@@ -493,6 +493,8 @@ class BattleSession(Session):
                 "cols": board.cols, "rows": board.rows,
                 "floor": b.scenario.floor,
                 "wall_kind": wall_kind(b.scenario.floor),
+                "water_look": getattr(b.scenario, "water_look", "mud"),
+                "kinds": [[*c, k] for c, k in sorted(getattr(b.scenario, "wall_kinds", {}).items()) if c in known],
                 "walls": [_cell(c) for c in sorted(board.walls & known)],
                 "water": [_cell(c) for c in sorted(set(getattr(board, "water", ())) & known)],
                 "elevation": [[x, y, z] for (x, y), z in sorted(board.elevation.items()) if (x, y) in known],

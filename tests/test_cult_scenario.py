@@ -565,3 +565,30 @@ def test_a_pending_demon_ambush_survives_a_save():
     order = orders.Order("ambush", pack=(npc_lib.load_npc(cult_site.DEMON),), resume_path=("farm",))
     back = persist.order_from_dict(persist.order_to_dict(order))
     assert back.pack[0].bio_slug == cult_site.DEMON and back.pack[0].hp_max == 260
+
+
+# --- the map: the old stone circle, a few trees, the river in the north -----------------------------
+
+def test_the_site_is_a_stone_circle_with_a_few_trees_and_a_river_in_the_north():
+    battle, scenario = fight()
+    board = battle.board
+    kinds = scenario.wall_kinds
+    stones = {c for c, k in kinds.items() if k == "stone"}
+    assert len(stones) >= 10 and set(kinds) == board.walls
+    assert 8 <= sum(1 for k in kinds.values() if k == "tree") <= 16
+    for c in stones:
+        assert abs(((c[0] - CENTRE[0]) ** 2 + (c[1] - CENTRE[1]) ** 2) ** .5 - cult_site.RING) < 1.1
+    assert {x for x, _y in board.water} == set(range(cult_site.COLS))
+    assert all(2 <= len([1 for (x, y) in board.water if x == col]) <= 3 for col in range(cult_site.COLS))
+    assert all(y <= 2 for _x, y in board.water) and not board.deep_water
+
+
+def test_nothing_stands_on_a_point_the_centre_or_a_deployment_and_every_point_is_reachable():
+    battle, scenario = fight(7)
+    walls = battle.board.walls
+    assert not walls & {*POINTS, CENTRE, cult_site.BOUND}
+    assert not any(u.pos in walls or u.pos in battle.board.water for u in battle.units)
+    mover = battle.player_units[0]
+    for x, y in (*POINTS, CENTRE):
+        beside = [c for c in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)) if c not in walls and battle.board.in_bounds(c)]
+        assert any(battle.path_to(mover, c) for c in beside), (x, y)

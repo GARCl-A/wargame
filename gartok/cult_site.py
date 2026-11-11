@@ -7,6 +7,7 @@ Finding it is a search of the Country Roads while the job is out: Wisdom against
 clue asking around turned up (`investigation.bonus`).
 """
 
+import math
 import random
 
 from . import data, i18n, investigation, items, loot, missions, world
@@ -104,6 +105,38 @@ CENTRE = (18, 13)                           # where the leader closes the rite
 BOUND = (18, 14)                            # where the daughter is tied, beside it
 STEP, STEPS = 6, 3                          # the bar fills in three steps; an interrupted rite falls back one
 BAR_MAX = STEP * STEPS
+RING = 8                                    # the old stone circle the rite is held in: its radius round the centre
+
+
+def _river():
+    """The river that waters the Farm, across the north of the map, two to three cells deep (shallow:
+    difficult ground, never a pit)."""
+    return {(x, y) for x in range(COLS) for y in range(2 + (x // 3) % 2)}
+
+
+def _stones():
+    """The standing stones, one every 20 degrees on the circle but where a point of the triangle, the
+    centre or the bound girl stands: cover and corners to break a line of sight, never a wall across."""
+    keep = {*POINTS, CENTRE, BOUND}
+    out = set()
+    for deg in range(0, 360, 20):
+        c = (round(CENTRE[0] + RING * math.cos(math.radians(deg))), round(CENTRE[1] + RING * math.sin(math.radians(deg))))
+        if 3 <= c[1] < ROWS and all(max(abs(c[0] - k[0]), abs(c[1] - k[1])) > 2 for k in keep):
+            out.add(c)
+    return out
+
+
+def _trees(taken):
+    """A few trees, never dense: a fixed scatter so the map is the same every time, off the deployment edge,
+    away from the circle and the river."""
+    rng = random.Random(36)
+    spots = []
+    while len(spots) < 14:
+        c = (rng.randrange(6, COLS - 1), rng.randrange(3, ROWS - 1))
+        if math.dist(c, CENTRE) > RING + 2 and all(
+                max(abs(c[0] - t[0]), abs(c[1] - t[1])) > 2 for t in (*taken, *spots)):
+            spots.append(c)
+    return set(spots)
 
 
 def cultists():
@@ -133,6 +166,7 @@ class CultSiteScenario(Scenario):
     killed (`spares_the_squad`). The cultists all down first: the daughter is freed."""
 
     floor = "earth"
+    water_look = "river"
     outdoor = True
     torch_count = 0
     spares_the_squad = True
@@ -146,7 +180,10 @@ class CultSiteScenario(Scenario):
         self.daughter_alive = True
 
     def _make_board(self):
-        return Board(walls=set(), cols=COLS, rows=ROWS)
+        stones = _stones()
+        trees = _trees({*stones, *POINTS, CENTRE, BOUND})
+        self.wall_kinds = {**{c: "tree" for c in trees}, **{c: "stone" for c in stones}}
+        return Board(walls=stones | trees, water=_river(), cols=COLS, rows=ROWS)
 
     def _deploy_cells(self, u):
         slug = slug_of(u)
