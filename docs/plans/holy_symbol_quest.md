@@ -1,6 +1,6 @@
 # Holy Symbol: a quest do Fazendeiro (a filha do Edric)
 
-Escrito em portugues a pedido do autor. Status: **em construcao** na branch `quest-holy-symbol` (fases 1 a 5 feitas). A chave de lancamento
+Escrito em portugues a pedido do autor. Status: **em construcao** na branch `quest-holy-symbol` (fases 1 a 6 feitas). A chave de lancamento
 `missions.FARMER_QUEST_LIVE` (hoje `False`) mantem a quest inteira apagada: o job, a aba Jobs da Farm e a loja fechada.
 
 ## Por que existe
@@ -95,7 +95,7 @@ Cada fase e um commit no `main`.
    em `map_view.NODE_ICON`; `search_cult` em `campaign.SEARCHES` com botao nas Country Roads.
 5. **Raca Demon e NPCs (feita; nomes dos NPCs e do demonio sao provisorios: Maren Voss, Brann, Kessa Thorn, Ilsa, Orrin, Tavish, Wynn Ashvale, "O Inquilino Palido"; o glifo do Demon e um emprestimo do Kobold ate o autor dar arte; Demon: 260 PV pinados, racial 22 derivado (combate 16, trabalho 14, magia 14: o teste proibe pinar), habilidades darkvision + ferocity; `python scripts/make_cult_npcs.py` regenera os 8 arquivos).** Raca `Demon` (`kind: demon`, posta a mao como o Skeleton) e glifo em `art_files.RACE_ICON`;
    os 8 NPCs em `npcs/*.json` por um script (modelo `necromancer.json`); drop do demonio em `loot.UNIQUE_DROPS`.
-6. **O cenario.** `gartok/cult_site.py`, `CultSiteScenario` (modelo `ox_fields.py` e `necromancer.py`): mapa
+6. **O cenario (feito; mapa 36x24 aberto, `outdoor`; triangulo (18,5),(11,17),(25,17), centro (18,13), a filha amarrada ao lado do centro como prop `bound` desenhado, nao como unidade, entao a IA nunca a mira e nao conta para a vitoria; barra de 18 (3 passos de 6), +1 por turno de quem sabe o rito numa ponta, o lider comeca o Rito Final ao fim do turno no centro com a barra cheia e fecha no inicio do turno seguinte; interrompido (caiu, dormiu, Routed ou empurrado) a barra volta um passo; o demonio NAO e uma unidade na luta: o rito fechando deita todos (`stable`, `Scenario.spares_the_squad` pula o `_wipe_side`) e a filha morre; vitoria marca `guild.cult["state"]="won"`, fracasso `"failed"` com o Simbolo e o kit dos mortos em `guild.cult["remains"]`, que `cult_ritual` entrega uma vez ao voltar; ordem `cult_ritual` + `campaign_fight.cult_ritual`; o HUD da barra sai em `state["ritual"]` e vai na linha de dica; falta a entrega da filha viva como cativa: fase 8).** `gartok/cult_site.py`, `CultSiteScenario` (modelo `ox_fields.py` e `necromancer.py`): mapa
    aberto `outdoor`, triangulo, a filha como `ai_ally` dormente; barra e Ritual Final em `on_round`, no `CombatLog`;
    o fim nao letal (hoje `win_check` devolver `"enemy"` apaga o esquadrao, `battle.py:812`); os restos em
    `Guild.cult`.

@@ -809,7 +809,7 @@ class Battle:
             # the scenario's own objective settled the fight before either side
             # was wiped -- honour it, then tidy up like a normal finish.
             self.winner = forced
-            if forced == "enemy" and self.lethal:
+            if forced == "enemy" and self.lethal and not getattr(self.scenario, "spares_the_squad", False):
                 self._wipe_side("player")
             self._resolve_dangling_dying()
             self._log_aftermath()

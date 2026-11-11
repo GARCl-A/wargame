@@ -537,6 +537,15 @@ const Board = (() => {
         g.fillRect(X + C * .22, Y + C * .32, C * .56, C * .38); g.strokeRect(X + C * .22, Y + C * .32, C * .56, C * .38);
         g.beginPath(); g.moveTo(X + C * .22, Y + C * .45); g.lineTo(X + C * .78, Y + C * .45); g.stroke();
         g.fillStyle = "#e8c66a"; g.fillRect(X + C * .47, Y + C * .42, C * .06, C * .08);
+      } else if (p.kind === "rune") {
+        g.strokeStyle = "rgba(150,30,20,.8)"; g.lineWidth = Math.max(1.5, C / 26); const cx = X + C / 2, cy = Y + C / 2, R = C * .46;
+        g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
+        g.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * 4 * Math.PI / 5; g[i ? "lineTo" : "moveTo"](cx + Math.cos(a) * R, cy + Math.sin(a) * R); } g.closePath(); g.stroke();
+      } else if (p.kind === "bound") {
+        g.strokeStyle = "#2a1a0c"; g.fillStyle = "#c9a37a"; g.lineWidth = Math.max(1.5, C / 28);
+        g.beginPath(); g.arc(X + C / 2, Y + C * .34, C * .13, 0, 7); g.fill(); g.stroke();
+        g.fillStyle = "#8a6a4a"; g.fillRect(X + C * .38, Y + C * .48, C * .24, C * .34); g.strokeRect(X + C * .38, Y + C * .48, C * .24, C * .34);
+        g.strokeStyle = "#d8c39b"; g.beginPath(); g.moveTo(X + C * .3, Y + C * .58); g.lineTo(X + C * .7, Y + C * .58); g.moveTo(X + C * .3, Y + C * .7); g.lineTo(X + C * .7, Y + C * .7); g.stroke();
       } else if (p.kind === "trap") {
         g.strokeStyle = "#3a1008"; g.lineWidth = Math.max(1.5, C / 28);
         g.beginPath(); g.arc(X + C / 2, Y + C / 2, C * .22, 0, 7); g.stroke();

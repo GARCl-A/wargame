@@ -11,6 +11,7 @@ from .. import (
     battlefield,
     campaign,
     combat_lab,
+    cult_site,
     encounters,
     factions,
     fight_nature,
@@ -159,6 +160,36 @@ def errand(map_session, group, kind):
     label, lead = i18n.t(f"campaign.errand.{part}"), i18n.t(f"campaign.lead.{part}")
     return _watched(map_session, group, label, lead,
                     lambda squad, guarded: _wildfire(map_session, group, kind, focus, squad, guarded))
+
+
+def cult_ritual(map_session, group):
+    """The Cult Site: the rite still being read is a fight (the cult is there, the quest is out); the site a
+    closed rite left is searched for what lies there; a cold one holds nothing."""
+    from .dialogue_session import _to_map
+    guild = map_session.guild
+    state = guild.cult.get("state", "")
+    if state == "failed":
+        map_session.say(cult_site.search_remains(guild, group), "guild", group)
+        return _to_map(map_session, group)
+    if state or not cult_site.quest_active(guild):
+        map_session.say(i18n.t("cult_site.cold"), "guild", group)
+        return _to_map(map_session, group)
+    return _watched(map_session, group, i18n.t("campaign.errand.cult_site"), i18n.t("campaign.lead.cult_site"),
+                    lambda squad, guarded: _cult_fight(map_session, group, squad, guarded))
+
+
+def _cult_fight(map_session, group, squad, guarded):
+    guild, node = map_session.guild, world.node(group.node)
+    scenario = cult_site.CultSiteScenario(squad)
+    battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=guild.clock.is_daylight, lethal=True,
+                    clock_day=guild.clock.day, aggressor="player")
+
+    def settle(_outcome):
+        wagon_watch.leave_outside(group, node, guarded)
+        return cult_site.settle_fight(guild, battle)
+
+    return _enter(map_session, group, battle, node, "cult_ritual", i18n.t("campaign.title.cult_site"), settle,
+                  squad=squad, nature=ERRAND_NATURE)
 
 
 def _skirmish(map_session, group, mission, squad, guarded):

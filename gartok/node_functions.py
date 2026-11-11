@@ -61,6 +61,7 @@ FUNCTIONS = {f.id: f for f in (
     NodeFunction("ogre_fight", "ogre_fight"),
     NodeFunction("serpents_nest", "serpents_nest"),
     NodeFunction("dragon_lair", "dragon_lair"),
+    NodeFunction("cult_ritual", "cult_ritual"),
 )}
 
 

@@ -349,7 +349,7 @@ function renderHint() {
   else if (S.flags.ctf) h = tr("battle.hint_ctf");
   else if (S.flags.can_flee) h = tr("battle.hint_flee");
   else h = tr("battle.hint_default");
-  $("hint").textContent = h;
+  $("hint").textContent = (S.ritual ? S.ritual.text + "  ·  " : "") + h;
 }
 
 function renderAll() {

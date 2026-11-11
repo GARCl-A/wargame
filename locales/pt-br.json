@@ -3148,17 +3148,20 @@
             }
         },
         "errand": {
+            "cult_site": "ENTRAR NO LOCAL",
             "skirmish": "ENTRAR NA ESCARAMUÇA",
             "camp": "ATACAR O ACAMPAMENTO",
             "fortress": "ASSALTAR A FORTALEZA"
         },
         "lead": {
+            "cult_site": "Uma clareira vermelha: três conjuradores presos a um triângulo de braseiros, um líder com um livro, duas lâminas e uma moça amarrada no centro. Se o rito se fechar, ela morre.",
             "battlefield": "Quatro soldados do Posto de Comando seguram as trincheiras contra um bando de guerra. Se um deles morrer, a missão fracassa.",
             "necromancer": "O Campo de Batalha à noite: um bando de guerra, os mortos de dias atrás, e o necromante oculto entre eles.",
             "camp": "Os goblins do Ogro alimentam o fogo a partir do acampamento.",
             "fortress": "A fortaleza meio erguida do Ogro, sua fogueira se espalhando, e o Ogro lá dentro."
         },
         "title": {
+            "cult_site": "O Culto do Demônio",
             "necromancer": "O necromante",
             "battlefield": "Misericórdia na Linha de Frente",
             "camp": "O acampamento goblin",
@@ -4263,6 +4266,20 @@
         }
     },
     "cult_site": {
+        "hud": "O rito: {bar} / {max}",
+        "hud_closing": "O rito: {bar} / {max}. O HIEROFANTE COMECOU O RITO FINAL: pare-o antes do próximo turno dele.",
+        "channels": "{name} alimenta o rito na ponta: {bar} / {max}.",
+        "bar_full": "Os braseiros queimam brancos. O Hierofante caminha até o centro do triangulo.",
+        "rite_begins": "{name} ergue o livro no centro. No próximo turno dele o rito se fecha. Pare-o.",
+        "rite_broken": "O Rito Final foi quebrado. A barra volta um passo, para {bar} / {max}.",
+        "rite_closes": "O Rito Final se fecha.",
+        "daughter_dies": "Wynn Ashvale, amarrada no centro, não acorda.",
+        "demon_comes": "O ar se rasga. Algo enorme sai do círculo e o campo silencia. Não mata ninguem. Deita todos no chao.",
+        "settle_won": "O culto está quebrado. Wynn Ashvale está solta e viva; vai para casa com vocês.",
+        "settle_failed": "Vocês acordam no chao frio. Os braseiros apagaram, o círculo está vazio e nada matou vocês. Quem não acordou jaz onde caiu, e a moça também.",
+        "remains_none": "O círculo jaz frio. Não sobrou nada aqui.",
+        "remains_found": "{who} revista o círculo frio e leva o que os mortos deixaram: {items}.",
+        "cold": "O círculo jaz frio e vazio.",
         "nothing_on_the_roads": "{who} percorre as estradas por {hours} horas e só encontra sulcos e trigo.",
         "already_found": "{who} sabe onde fica o local.",
         "found": "{who} segue um cheiro de fumaça e ferro quente por uma trilha que ninguém usa: um local de ritual se abre adiante.",

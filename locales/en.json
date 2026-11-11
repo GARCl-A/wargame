@@ -3108,17 +3108,20 @@
       }
     },
     "errand": {
+      "cult_site": "ENTER THE SITE",
       "skirmish": "JOIN THE SKIRMISH",
       "camp": "ATTACK THE CAMP",
       "fortress": "STORM THE FORTRESS"
     },
     "lead": {
+      "cult_site": "A red-lit clearing: three casters bound to a triangle of braziers, a leader with a book, two blades, and a girl tied at the centre. If the rite closes, she dies.",
       "battlefield": "Four Field Command soldiers hold the trenches against a warband. If one of them dies, the errand fails.",
       "necromancer": "The Battlefield at night: a warband, the dead of days before, and the necromancer unseen among them.",
       "camp": "The Ogre's goblins feed the fire from their camp.",
       "fortress": "The Ogre's half-raised fortress, its bonfire spreading, and the Ogre inside."
     },
     "title": {
+      "cult_site": "The Demon Cult",
       "necromancer": "The necromancer",
       "battlefield": "Mercy at the Front",
       "camp": "The goblin camp",
@@ -5085,6 +5088,20 @@
     }
   },
   "cult_site": {
+    "hud": "The rite: {bar} / {max}",
+    "hud_closing": "The rite: {bar} / {max}. THE HIEROPHANT HAS BEGUN THE FINAL RITE: stop him before his next turn.",
+    "channels": "{name} feeds the rite from the point: {bar} / {max}.",
+    "bar_full": "The braziers burn white. The Hierophant walks to the centre of the triangle.",
+    "rite_begins": "{name} raises the book at the centre. On his next turn the rite closes. Stop him.",
+    "rite_broken": "The Final Rite is broken. The bar falls back a step, to {bar} / {max}.",
+    "rite_closes": "The Final Rite closes.",
+    "daughter_dies": "Wynn Ashvale, bound at the centre, does not wake.",
+    "demon_comes": "The air tears. Something enormous steps out of the circle and the field goes quiet. It kills no one. It lays everyone down.",
+    "settle_won": "The cult is broken. Wynn Ashvale is untied and alive; she will go home with you.",
+    "settle_failed": "You wake on cold ground. The braziers are out, the circle is empty, and nothing killed you. Those who did not wake lie where they fell, and so does the girl.",
+    "remains_none": "The circle lies cold. Nothing is left here.",
+    "remains_found": "{who} searches the cold circle and takes what the dead left: {items}.",
+    "cold": "The circle lies cold and empty.",
     "nothing_on_the_roads": "{who} walks the lanes for {hours} hours and finds only ruts and wheat.",
     "already_found": "{who} knows where the site lies.",
     "found": "{who} follows a smell of smoke and hot iron down a track nobody uses: a ritual site opens ahead.",

@@ -7,7 +7,10 @@ Finding it is a search of the Country Roads while the job is out: Wisdom against
 clue asking around turned up (`investigation.bonus`).
 """
 
-from . import data, i18n, investigation, missions, world
+from . import data, i18n, investigation, items, loot, missions, world
+from .board import Board
+from .ground import GroundObject
+from .scenario import Scenario
 
 NODE = "cult_site"
 SEARCH_HOURS = 2
@@ -22,7 +25,7 @@ def quest_active(guild):
 
 
 def _node():
-    return world.Node(NODE, "Demon Cult Site", "town", POS, floor="earth")
+    return world.Node(NODE, "Demon Cult Site", "town", POS, floor="earth", functions=("cult_ritual",))
 
 
 def sync_world(guild):
@@ -61,3 +64,170 @@ def search(guild, group):
         return True, i18n.t("cult_site.found", who=who)
     return False, i18n.t("cult_site.missed", who=who, hours=SEARCH_HOURS, nat=nat, mod=f"{mod:+}", bonus=bonus,
                          total=total, dc=SEARCH_DC)
+
+
+LEADER = "cult-leader"
+FIGHTERS = ("cult-fighter-1", "cult-fighter-2")
+CHANNELERS = ("cult-channeler-blood", "cult-channeler-nature", "cult-channeler-faith")
+DAUGHTER = "farmers-daughter"
+DEMON = "the-demon"
+
+COLS, ROWS = 36, 24
+POINTS = ((18, 5), (11, 17), (25, 17))      # the triangle: a channeler is bound to each
+CENTRE = (18, 13)                           # where the leader closes the rite
+BOUND = (18, 14)                            # where the daughter is tied, beside it
+STEP, STEPS = 6, 3                          # the bar fills in three steps; an interrupted rite falls back one
+BAR_MAX = STEP * STEPS
+
+
+def cultists():
+    """The six, fresh from their files, on the enemy side: the leader, two fighters, three channelers."""
+    from . import npc_lib       # npc_lib imports persist, which imports this module
+    return [npc_lib.load_npc(slug) for slug in (LEADER, *FIGHTERS, *CHANNELERS)]
+
+
+def slug_of(combatant):
+    return getattr(getattr(combatant, "char", None), "npc_slug", None)
+
+
+def able(combatant):
+    """Fit to channel: on its feet, awake and not running (`Routed`). Demoralized does not stop it."""
+    return combatant.alive and not combatant.has_condition("sleeping") and not combatant.has_condition("routed")
+
+
+def knows_the_rite(combatant):
+    return slug_of(combatant) in (LEADER, *CHANNELERS)
+
+
+class CultSiteScenario(Scenario):
+    """The triangle of braziers. The three channelers stand on its points and feed the rite one step a
+    turn without spending an action (`on_turn_start`); full, the leader walks to the centre and closes it
+    on his next turn. Stopping him (down, asleep, routed, or pushed off the centre) sets the bar back one
+    step. A closed rite is the failure: the daughter dies and the Demon lays every living body down, nobody
+    killed (`spares_the_squad`). The cultists all down first: the daughter is freed."""
+
+    floor = "earth"
+    outdoor = True
+    torch_count = 0
+    spares_the_squad = True
+
+    def __init__(self, squad=None):
+        self.allies = []
+        self.enemies = cultists()
+        self.bar = 0
+        self.rite_began = False
+        self.demon_came = False
+        self.daughter_alive = True
+
+    def _make_board(self):
+        return Board(walls=set(), cols=COLS, rows=ROWS)
+
+    def _deploy_cells(self, u):
+        slug = slug_of(u)
+        if slug in CHANNELERS:
+            return [POINTS[CHANNELERS.index(slug)]]
+        cx, cy = CENTRE
+        near = {LEADER: [(cx, cy - 2), (cx - 1, cy - 2), (cx + 1, cy - 2)],
+                FIGHTERS[0]: [(cx - 4, cy), (cx - 4, cy + 1), (cx - 3, cy)],
+                FIGHTERS[1]: [(cx + 4, cy), (cx + 4, cy + 1), (cx + 3, cy)]}.get(slug, [])
+        return near + super()._deploy_cells(u)
+
+    def build(self, battle):
+        super().build(battle)
+        for pos in (*POINTS, CENTRE):
+            brazier = GroundObject.torch(pos)
+            brazier.fixture = True
+            battle.ground.append(brazier)
+
+    def props(self, battle):
+        """Drawn on the board beyond the ground objects: the runes of the triangle and the bound girl."""
+        out = [{"kind": "rune", "pos": p} for p in (*POINTS, CENTRE)]
+        if self.daughter_alive:
+            out.append({"kind": "bound", "pos": BOUND})
+        return out
+
+    def hud(self, battle):
+        """The rite for the screen: the bar and, once the leader has begun, the warning."""
+        text = i18n.t("cult_site.hud_closing" if self.rite_began else "cult_site.hud", bar=self.bar, max=BAR_MAX)
+        return {"bar": self.bar, "max": BAR_MAX, "text": text, "closing": self.rite_began}
+
+    @staticmethod
+    def _leader(battle):
+        return next((u for u in battle.enemy_units if slug_of(u) == LEADER), None)
+
+    def on_turn_start(self, battle, unit):
+        if self.demon_came or not knows_the_rite(unit) or not able(unit):
+            return
+        if slug_of(unit) == LEADER and self.rite_began and unit.pos == CENTRE and self.bar >= BAR_MAX:
+            self._close(battle)
+            return
+        if unit.pos in POINTS and self.bar < BAR_MAX:
+            self.bar = min(BAR_MAX, self.bar + 1)
+            battle.log("cult_site.channels", name=unit.name, bar=self.bar, max=BAR_MAX)
+            if self.bar >= BAR_MAX:
+                battle.log("cult_site.bar_full")
+
+    def on_turn_end(self, battle, unit):
+        if (slug_of(unit) == LEADER and self.bar >= BAR_MAX and not self.rite_began and not self.demon_came
+                and unit.pos == CENTRE and able(unit)):
+            self.rite_began = True
+            battle.log("cult_site.rite_begins", name=unit.name)
+
+    def win_check(self, battle):
+        if self.demon_came:
+            return "enemy"
+        if self.rite_began:
+            leader = self._leader(battle)
+            if leader is None or not able(leader) or leader.pos != CENTRE:
+                self.bar = max(0, self.bar - STEP)
+                self.rite_began = False
+                battle.log("cult_site.rite_broken", bar=self.bar, max=BAR_MAX)
+        return None
+
+    def _close(self, battle):
+        """The rite closes: the daughter dies, the Demon lays everyone down, the fight is lost without a death."""
+        self.demon_came = True
+        self.daughter_alive = False
+        battle.log("cult_site.rite_closes")
+        battle.log("cult_site.daughter_dies")
+        battle.log("cult_site.demon_comes")
+        for u in battle.units:
+            if u.status in ("up", "dying", "broken", "fled"):
+                u.hp, u.status = 0, "stable"
+        battle._check_winner()
+
+
+def settle_fight(guild, battle):
+    """What the fight leaves of the quest. -> the notice lines. A win frees the daughter (she waits for the
+    guild's word, `cult["state"] == "won"`); a closed rite leaves the site abandoned, her body and what the
+    guild's dead carried lying there for whoever comes back (`search_remains`)."""
+    cult = guild.cult
+    if battle.winner == "player":
+        cult["state"] = "won"
+        return [i18n.t("cult_site.settle_won")]
+    if battle.scenario.demon_came:
+        cult["state"] = "failed"
+        remains = [items.HOLY_SYMBOL_ITEM]
+        for c in battle.player_units:
+            if c.status == "dead":
+                remains += loot.carried_by(c) + _worn(c.char)
+        cult["remains"] = sorted(remains)
+        return [i18n.t("cult_site.settle_failed")]
+    return []
+
+
+def _worn(char):
+    return [x for x in (char.equipped_armor, char.equipped_offhand, char.equipped_artifact) if x]
+
+
+def search_remains(guild, group):
+    """Search the abandoned circle: the remains go into the first member's pack, once. -> the notice."""
+    cult = guild.cult
+    remains = list(cult.get("remains", ()))
+    if not remains or not group.members:
+        return i18n.t("cult_site.remains_none")
+    cult["remains"] = []
+    carrier = group.members[0]
+    for name in remains:
+        carrier.give_to_pack(name)
+    return i18n.t("cult_site.remains_found", who=carrier.name, items=", ".join(remains))

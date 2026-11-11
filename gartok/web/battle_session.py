@@ -511,6 +511,7 @@ class BattleSession(Session):
             "draws": self._draws(my_turn),
             "under": self._under([u for u in b.units if self.uid(u) in self._shown]),
             "ctf": self._ctf(known),
+            "ritual": getattr(b.scenario, "hud", lambda _b: None)(b),
             "initiative": self._initiative(obs),
             "active": self._sheet(b.active) if b.active and (self.plays(b.active) or
                                                              self._shows(b.active, obs, my_turn)) else None,
@@ -536,6 +537,7 @@ class BattleSession(Session):
                     "trap" if getattr(o, "is_trap", False) else
                     "disk" if getattr(o, "is_disk", False) else "item")
             props.append({"kind": kind, "pos": o.pos})
+        props += getattr(b.scenario, "props", lambda _b: [])(b)
         props += [{"kind": "corpse", "pos": u.pos, "size": u.footprint} for u in b.units if u.dead]
         return props
 
