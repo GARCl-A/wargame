@@ -842,6 +842,7 @@ def test_an_ai_vantage_holder_places_itself_without_asking():
             break
         s._advance()
     assert foe not in b.place_queue
+    assert b.can_place(foe, foe.pos) and all(c in b.start_zones["enemy"] for c in b.cells_of(foe))
 
 
 def test_a_queens_arrow_archer_aim_marks_the_straight_line_cells_and_nobody_else_does():

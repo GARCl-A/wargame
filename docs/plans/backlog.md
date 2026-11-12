@@ -1,8 +1,7 @@
 # Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
-`docs/plans/` ([new_things_per_level.md](new_things_per_level.md),
-[backlog_hygiene.md](backlog_hygiene.md), [storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
+`docs/plans/` ([backlog_hygiene.md](backlog_hygiene.md), [storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
 that owns the subject: the test suite [../../tests/README.md](../../tests/README.md), the economy sim
 [../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
 What is already built is in the code, its tests and the git log.
@@ -27,9 +26,6 @@ Parts, in this order:
 
 Goal: a stable build for the author's playtest and one with friends. Left:
 
-- **A new thing to do per level (audit 2026-11-12).** Plan: [new_things_per_level.md](new_things_per_level.md).
-  The talents and body actions already decided under *Needs more information*: archery, `Hooves` and `Bite`,
-  placement, joint pitch and the crowd-penalty cut. Medium; after the two above.
 - **Backlog hygiene (audit 2026-11-12).** Plan: [backlog_hygiene.md](backlog_hygiene.md). Docs only: decided items
   move to *Ready to do*, the economy numbers become tasks, the Loyalty entry stops naming a guild treasury.
 - **Tutorials.** The author reads every card in play and flags what still rings false.
