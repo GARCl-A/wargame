@@ -50,8 +50,14 @@ async function api(path, body) {
     Sound.play("miss");
     throw Object.assign(new Error(data.error || res.statusText), {refusal: true});
   }
+  if (data && data.screen && Shell.screen && data.screen !== Shell.screen) Music.enter(data.screen);
   return data;
 }
+
+// the music plays in the host page (`host.html`, `music.js`), which never reloads, so it runs through every
+// screen change; opened without that frame the game is silent of music
+const Music = (() => { try { return window.parent !== window && window.parent.Music; } catch (e) { return null; } })()
+  || {set volume(v) {}, enter() {}, poke() {}};
 
 // the cues `sound.py` plays in pygame; silent until the browser allows audio. Every screen's click is played
 // here, before any screen's own listener can stop it: on whatever the styles mark clickable (a pointer or a
@@ -82,8 +88,8 @@ const Sound = (() => {
     src.connect(gain).connect(ctx.destination);
     src.start();
   }
-  addEventListener("pointerdown", unlock, true);
-  addEventListener("keydown", unlock, true);
+  addEventListener("pointerdown", () => { unlock(); Music.poke(); }, true);
+  addEventListener("keydown", () => { unlock(); Music.poke(); }, true);
   const CLICKABLE = new Set(["pointer", "zoom-in"]);
   addEventListener("click", e => {
     const el = e.composedPath()[0];
@@ -437,8 +443,11 @@ Promise.all([api("/api/screen"), api("/api/locale")]).then(([info, loc]) => {
   Object.assign(Locale, loc);
   document.documentElement.lang = loc.lang;
   document.querySelector("title").textContent = tr("app.title");
+  try { parent.document.querySelector("title").textContent = tr("app.title"); } catch (e) {}
   Object.assign(Shell, {screen: info.screen, lab: info.lab});
   Sound.volume = info.volume ?? 70;
+  Music.volume = info.music ?? 50;
+  Music.enter(info.screen);
   return open(info.screen);
 }).catch(e => { $("screen").innerHTML = `<div id="failed">${esc(e.message)}</div>`; })
   .finally(() => { document.body.classList.add("ready"); reveal(); });

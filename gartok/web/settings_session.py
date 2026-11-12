@@ -27,7 +27,7 @@ def _row(k, choices):
 
 
 def _shown(key, value):
-    if key == "volume":
+    if key in settings.PERCENT:
         return f"{value}%" if value else i18n.t("ui.settings.value.off")
     if key == "language":
         return i18n.LANGUAGES[value]
@@ -86,4 +86,4 @@ class SettingsSession(Session):
         if self.guild is not None:
             tut = {"enabled": self.guild.tutorial.enabled, "reset": self.reset_note}
         return {"rows": rows, "tutorial": tut, "guild": self.guild.name if self.guild else None,
-                "version": f"GARTOK v{GAME_VERSION} · {build_hash()}", "volume": settings.get("volume"), "back": self.back_label}
+                "version": f"GARTOK v{GAME_VERSION} · {build_hash()}", "volume": settings.get("volume"), "music": settings.get("music"), "back": self.back_label}

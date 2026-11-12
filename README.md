@@ -209,7 +209,7 @@ gartok/
                     name each race's glyph (`map_view.NODE_ICON` the nodes')
   sheet.py          a character's sheet as a plain dict (unit_to_ch)
   lighting.py       light per cell (`cell_levels`): one flat level per cell in sight; the web board draws it
-  sound.py          sound cues (assets/sounds/, Kenney CC0) the web plays, `volume` setting; the Editor has its own player
+  sound.py          sound cues (assets/sounds/, CC0) and music (assets/music/, CC0) the web plays, `volume` and `music` settings; the Editor has its own player
   loadout_move.py   the moves between a member's hands, armour and pack (the band's kit, the vaults)
   guild_sheet.py    the guild's sheet: the roster, a member's sheet and roles, the charter
   band_kit.py       one band's kit: the moves, the tack and the hitch, the item menu, first aid

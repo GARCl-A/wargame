@@ -403,7 +403,12 @@
     },
     "sounds": {
       "heading": "Sounds",
-      "intro": "The sound effects are by Kenney (www.kenney.nl), released under Creative Commons Zero (CC0). Credit is optional, and gladly given."
+      "intro": "The sound effects are by Kenney (www.kenney.nl) and the eating sounds by StarNinjas and Tito, all released under Creative Commons Zero (CC0). Credit is optional, and gladly given."
+    },
+    "music": {
+      "heading": "Music",
+      "intro": "The map's radio and the fight themes come from OpenGameArt.org, each released under Creative Commons Zero (CC0). Credit is optional, and gladly given.",
+      "authors": "Composers"
     }
   },
   "ui": {
@@ -565,6 +570,10 @@
         "volume": {
           "label": "Volume",
           "note": "The sounds of the fights, the buttons and the coins."
+        },
+        "music": {
+          "label": "Music",
+          "note": "The tracks that play on the map and in the fights, apart from the sounds."
         },
         "log_lines": {
           "label": "Log lines",
@@ -5783,6 +5792,7 @@
     "name": {
       "record_play": "PLAY RECORDER",
       "volume": "VOLUME",
+      "music": "MUSIC",
       "log_lines": "LOG LINES",
       "language": "LANGUAGE"
     }

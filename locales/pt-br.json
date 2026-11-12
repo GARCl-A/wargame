@@ -1357,6 +1357,10 @@
                     "label": "Volume",
                     "note": "Os sons das lutas, dos botões e das moedas."
                 },
+                "music": {
+                    "label": "Música",
+                    "note": "As faixas que tocam no mapa e nas lutas, separadas dos sons."
+                },
                 "log_lines": {
                     "label": "Linhas do registro",
                     "note": "Quantas linhas o registro do mapa guarda antes de perguntar o que fazer com as mais antigas. De 200 a 50000."
@@ -4862,6 +4866,7 @@
         "name": {
             "record_play": "GRAVADOR DE JOGADAS",
             "volume": "VOLUME",
+            "music": "MÚSICA",
             "log_lines": "LINHAS DO REGISTRO",
             "language": "IDIOMA"
         }
@@ -6927,7 +6932,12 @@
         },
         "sounds": {
             "heading": "Sons",
-            "intro": "Os efeitos sonoros são de Kenney (www.kenney.nl), liberados sob Creative Commons Zero (CC0). A atribuição é opcional, e dada de bom grado."
+            "intro": "Os efeitos sonoros são de Kenney (www.kenney.nl) e os sons de comer de StarNinjas e Tito, todos liberados sob Creative Commons Zero (CC0). A atribuição é opcional, e dada de bom grado."
+        },
+        "music": {
+            "heading": "Música",
+            "intro": "O rádio do mapa e os temas de luta vêm do OpenGameArt.org, cada um liberado sob Creative Commons Zero (CC0). A atribuição é opcional, e dada de bom grado.",
+            "authors": "Compositores"
         }
     },
     "wiki_rules": {

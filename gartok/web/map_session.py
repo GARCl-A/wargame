@@ -162,6 +162,7 @@ class MapSession(MapView, Session):
         g = self.guild
         self.notices = []                        # what the screens asked for has been said; the log keeps it
         focus, self.focus = self.focus, None
+        heard, g.heard = sorted(g.heard), set()
         known = {n.id for n in world.known(g)}
         return {
             "meta": self._meta(),
@@ -176,6 +177,7 @@ class MapSession(MapView, Session):
             "focus": focus,
             "turn": self._turn_card(),
             "wiped": self.wiped,
+            "sounds": heard,
         }
 
     def _turn_card(self):

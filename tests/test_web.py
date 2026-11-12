@@ -394,7 +394,10 @@ def test_the_action_bar_numbers_its_free_actions_one_to_eight():
 
 
 def test_server_serves_the_client_the_art_and_the_state(server):
-    assert _get(server + "/")[0] == 200
+    host = _get(server + "/")
+    assert host[0] == 200 and b'src="/game"' in host[1] and b"/client/music.js" in host[1]
+    assert _get(server + "/game")[0] == 200 and b'id="stage"' in _get(server + "/game")[1]
+    assert _get(server + "/client/music.js")[0] == 200
     assert _get(server + "/client/screens/battle/battle.js")[0] == 200
     assert _get(server + "/assets/icons/gui/halt.svg")[0] == 200
     status, body = _get(server + "/api/battle/state")
@@ -873,3 +876,38 @@ def test_a_queens_arrow_archer_aim_marks_the_straight_line_cells_and_nobody_else
     me.char.talents["combat"].remove("true_line")
     me.char._derive_combat()
     assert s.aim("attack")["line"] == []
+
+
+def test_every_music_track_exists_and_the_server_lists_the_radio_and_the_fight(server):
+    from gartok import sound
+    assert len(sound.MUSIC["radio"]) == 4 and len(sound.MUSIC["battle"]) == 3
+    music = Path(sound.DIR).parent / "music"
+    licence = (music / "LICENSE.txt").read_text(encoding="utf-8")
+    for f in sum(sound.MUSIC.values(), ()):
+        assert (music / f).is_file() and f in licence, f
+    got = json.loads(_get(server + "/api/sounds")[1])["music"]
+    assert set(got["tracks"]) == {"radio", "battle"} and got["silence"] == [30, 60]
+    assert _get(server + got["tracks"]["radio"][0])[0] == 200
+
+
+def test_every_cue_file_exists():
+    from gartok import sound
+    assert len(sound.CUES["eat"]) == 7
+    for files in sound.CUES.values():
+        for f in files:
+            assert os.path.isfile(os.path.join(sound.DIR, f)), f
+
+
+def test_server_answers_a_byte_range_so_audio_can_seek(server):
+    from gartok import sound
+    url = server + f"/assets/music/{sound.MUSIC['radio'][0]}"
+    full = urllib.request.urlopen(url).read()
+    req = urllib.request.Request(url, headers={"Range": "bytes=100-199"})
+    r = urllib.request.urlopen(req)
+    assert r.status == 206 and r.read() == full[100:200]
+    assert r.headers["Content-Range"] == f"bytes 100-199/{len(full)}"
+    tail = urllib.request.urlopen(urllib.request.Request(url, headers={"Range": f"bytes={len(full) - 5}-"})).read()
+    assert tail == full[-5:]
+    with pytest.raises(urllib.error.HTTPError) as e:
+        urllib.request.urlopen(urllib.request.Request(url, headers={"Range": f"bytes={len(full) + 10}-"}))
+    assert e.value.code == 416

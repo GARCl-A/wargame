@@ -60,7 +60,7 @@ finished and a sentence that says what the game is.
 1. **The frames.** Build [storefront_polish.md](storefront_polish.md): packages A, B, C and G are small;
    D (the fog) decides whether the Pit can be shown at all. Then retake the photos following that plan's
    last section (presentable names, no empty states, campaign fights instead of lab fights, the board zoomed).
-2. **Motion and sound for a trailer:** the same plan's packages E (a blow moves the token) and F (music).
+2. **Motion and sound for a trailer:** the same plan's package E (a blow moves the token); the music is in.
    A trailer of 30 to 45 seconds: the map with two bands walking, a routine written and then running, a
    fight with the fog opening, a death and its memorial.
 3. **The capsule image** (the picture in Steam's lists; it drives clicks more than anything else on the
@@ -100,8 +100,7 @@ most. A game enters Next Fest once, so the demo goes in only after it passes its
 3. **Steam Playtest first.** It is free, lives on the same page, feeds wishlists and replaces itch.io as
    the place strangers get the build. Run it before the demo to find what breaks.
 4. **Faults.** The error card and `errors.jsonl` exist; add a way for a tester to send that file.
-5. **Settings a stranger expects:** window size and full screen, a scale for the interface text, separate
-   volumes for music and effects.
+5. **Settings a stranger expects:** window size and full screen, a scale for the interface text.
 6. **Then Next Fest**, in whichever edition the exit test is met before (check the dates and the sign-up
    deadline on Steamworks; sign-up closes months ahead).
 

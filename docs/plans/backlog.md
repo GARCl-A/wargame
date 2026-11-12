@@ -93,11 +93,12 @@ the rest.
 - **Scroll of Invisibility (Magic Arc).** The item exists (`items.py`); missing is the Library quest, unlocked at max Library reputation with a caster
   initiated in magic (direction 2026-10-19).
 
-- **UI sound: the missing cues.** `gartok/sound.py` has 7 cues and every one
-  of the 16 files in `assets/sounds/` is used, so confirm, error, equip and end of turn have no sound. Wanted
-  first (author 2026-11-10): a cue for Demoralize and one for the upkeep meal; the rest the author notes in the
-  next playtest. The
-  author picks the files (Kenney, CC0, same `LICENSE.txt`); then add them to `CUES` / `LEVEL`, write down
+- **UI sound: the missing cues.** `gartok/sound.py` has 8 cues (the upkeep meal plays `eat`, one of 7 crunches,
+  off `Guild.heard` through the map's state), so confirm, error, equip and end of turn have no sound. Wanted
+  first (author 2026-11-10): a cue for Demoralize, a single voice shouting (not a groan: the author
+  rejected *Battlecry* by spookymodem, CC-BY, and the CC0 *Orc voice*; no single-voice CC0 war cry was found, the
+  Kenney *Voiceover Pack: Fighter* taunts are speech, CC0); the rest the author notes in the next playtest. The
+  author picks the files (CC0, or CC-BY if the credits screen names them: `LICENSE.txt` beside them); then add them to `CUES` / `LEVEL`, write down
   which act plays which cue (one table in `docs/web_ui/web_client.md`), and wire them: equip in the sheet,
   confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
   from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
@@ -149,7 +150,7 @@ the rest.
 - **Storefront polish (photo review 2026-11-12).** Plan: [storefront_polish.md](storefront_polish.md). What the
   real screenshots in [../photos/12112026/](../photos/12112026/) show: the unit panel overflowing at low hit
   points, the cut battle title, band pawns over place names on the map (three *Small*), the fog of war in a room
-  full of pillars (the author picks the look), a blow that moves the token, and music (the author picks the tracks).
+  full of pillars (the author picks the look) and a blow that moves the token.
 
 - **Race study in four tests (`docs/race_study.md`).** The waves and `mixed_study_report.py` exist; missing: a full run
   (sizes in the doc), the mixed error (a build twice in one squad is credited twice per unit, which is the intended score, but

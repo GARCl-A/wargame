@@ -581,3 +581,11 @@ def test_keep_more_raises_the_setting_and_stops_at_the_largest(prefs):
         MapSession.POST["log_full"](m, {"choice": "raise"})
     with pytest.raises(ValueError, match="no such answer"):
         MapSession.POST["log_full"](m, {"choice": "burn it"})
+
+
+def test_the_map_hands_over_the_cues_the_clock_raised_and_clears_them(prefs):
+    guild = _guild("lumber_yard")
+    m = MapSession(guild, None)
+    guild.heard.add("eat")
+    assert m.state()["sounds"] == ["eat"]
+    assert m.state()["sounds"] == []

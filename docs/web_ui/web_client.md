@@ -44,6 +44,15 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   cursor, `data-silent` keeps one quiet, and a screen plays only the cue its answer picks (`coins` when the
   purse moved, `level_up`), never `click`. The cues are decoded once into Web Audio buffers (an `<audio>`
   element reloads its file at every play), and the first press or key resumes the context.
+- **The music is `Music` in `music.js`, in the host page.** `/` is `host.html`, which holds the music and the game
+  in a frame (`/game`, the page `shell.js` runs in). A screen change reloads the frame, never the host, so a track
+  plays through every screen without a cut; the game reaches it through its frame's parent (`enter(screen)` from `api()` the
+  moment an answer names another screen, and at boot; `volume`; `poke()` on a press or key, which retries a start the
+  browser refused before the first click; the app window opens with the autoplay policy lifted, so only the default-browser fallback waits for a click). Files and timings are in `sound.py` (`MUSIC`, `MUSIC_SILENCE`, `MUSIC_FADE`),
+  the volume is its own `music` setting. A radio on every screen but the fight: one of 4 tracks, 30 to 60 seconds of
+  quiet, the next; in a fight one of 3 battle tracks at random, chained while the fight lasts. A change between the two
+  fades the old one out and the new one in; leaving a fight starts with the quiet. The game opened on `/game` alone is
+  silent of music. Closing the window is still the page's `bye` (the host sends it too).
 - **Client text is a key:** a sentence a screen's script or HTML shows is `tr("ui.…")` / `data-t` (recipe in
   `README.md`), never a literal; the sentences a session sends are keys of their own (phase 3 of the translation plan).
 - **A new screen has a tutorial card:** recipe in `README.md`, *New tutorial card*.

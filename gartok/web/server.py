@@ -15,6 +15,7 @@ import hashlib
 import json
 import mimetypes
 import os
+import re
 import threading
 import time
 import traceback
@@ -40,7 +41,7 @@ from .session import ASSETS
 from .title_session import TitleSession
 
 CLIENT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "client")
-ART = ("portraits", "icons", "sounds")    # the asset folders the client may read
+ART = ("portraits", "icons", "sounds", "music")    # the asset folders the client may read
 SCREENS = {"map": MapSession, "guild": lambda guild, world: GuildSession(MapSession(guild, world))}
 # the screens a save opens; a battle comes from the lab or the campaign
 
@@ -231,7 +232,19 @@ def make_handler(game):
                 self.end_headers()
                 return
             with open(path, "rb") as fh:
-                self._send(fh.read(), ctype, headers=(("ETag", tag),), cache="no-cache")
+                body = fh.read()
+            span = re.fullmatch(r"bytes=(\d*)-(\d*)", self.headers.get("Range", "").strip())
+            if span and (span[1] or span[2]):
+                # a browser asks an <audio> for byte ranges to seek and stream (Safari plays nothing without them)
+                size = len(body)
+                first, last = ((size - int(span[2]), size - 1) if not span[1]
+                               else (int(span[1]), min(int(span[2] or size - 1), size - 1)))
+                if first > last or first >= size:
+                    return self._send(b"", ctype, 416, (("Content-Range", f"bytes */{size}"),))
+                return self._send(body[first:last + 1], ctype, 206,
+                                  (("ETag", tag), ("Accept-Ranges", "bytes"),
+                                   ("Content-Range", f"bytes {first}-{last}/{size}")), cache="no-cache")
+            self._send(body, ctype, headers=(("ETag", tag), ("Accept-Ranges", "bytes")), cache="no-cache")
 
         def _body(self):
             n = int(self.headers.get("Content-Length") or 0)
@@ -248,13 +261,17 @@ def make_handler(game):
                 return self._json({})
             if parts == ["screen"] and not post:
                 return self._json({"screen": s.screen, "lab": game.lab is not None,
-                                   "volume": settings.get("volume")})
+                                   "volume": settings.get("volume"), "music": settings.get("music")})
             if parts == ["locale"] and not post:
                 return self._json({"lang": i18n.language(), "text": i18n.group("ui"), "names": i18n.group("name")})
             if parts == ["sounds"] and not post:
                 return self._json({"cues": {cue: [f"/assets/sounds/{f}" for f in files]
                                             for cue, files in sound.CUES.items()},
-                                   "level": sound.LEVEL})
+                                   "level": sound.LEVEL,
+                                   "music": {"tracks": {mode: [f"/assets/music/{f}" for f in files]
+                                                        for mode, files in sound.MUSIC.items()},
+                                             "silence": sound.MUSIC_SILENCE, "fade": sound.MUSIC_FADE,
+                                             "level": sound.MUSIC_LEVEL}})
             if parts[0] == "tutorial" and len(parts) <= 2:
                 try:
                     answer = _tutorial(s, parts[1] if len(parts) == 2 else None, post)
@@ -319,6 +336,8 @@ def make_handler(game):
             url = urlparse(self.path)
             parts = url.path.strip("/").split("/")
             if url.path in ("/", "/index.html"):
+                return self._file(os.path.join(CLIENT, "host.html"))     # holds the music; the game is its frame
+            if url.path == "/game":
                 return self._file(os.path.join(CLIENT, "index.html"))
             if parts[0] == "client" and len(parts) > 1:
                 return self._file(_inside(CLIENT, "/".join(parts[1:])))

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GARTOK Tactical</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0a09; overflow: hidden; }
+  iframe { display: block; border: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<iframe id="game" src="/game" allow="autoplay; fullscreen"></iframe>
+<script src="/client/music.js"></script>
+<script>
+  addEventListener("pagehide", () => navigator.sendBeacon("/api/bye"));
+  addEventListener("pointerdown", () => Music.poke(), true);
+  addEventListener("keydown", () => Music.poke(), true);
+</script>
+</body>
+</html>

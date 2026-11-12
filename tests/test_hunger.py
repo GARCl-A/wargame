@@ -190,6 +190,7 @@ def test_eat_now_pass_feeds_the_hungry_without_waiting_for_the_day():
     assert guild.clock.day == 1 and guild.clock.hour_of_day == 10     # no time passes
     assert u.unfed_days == 0 and u.rations == 0
     assert any("eat" in e for e in events)
+    assert guild.heard == {"eat"}
 
 
 def test_hunger_survives_a_save_round_trip():
@@ -546,3 +547,20 @@ def test_a_death_by_hunger_says_what_hunger_did_to_the_scores_and_a_poison_death
     assert "Wasted away" in mine and "Constitution fell to" in mine and "Hunger had cut every attribute by 4" in mine
     theirs = next(ev for ev in events if poisoned.name in ev and "died" in ev)
     assert "Hunger" not in theirs and not theirs.endswith(" ")
+
+
+def test_a_meal_raises_the_eat_cue_once_however_many_ate_and_a_day_nobody_eats_raises_none():
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    random.seed(3)
+    a, b = Unit("player"), Unit("player")
+    a._base_inventory, b._base_inventory = packed(["Meat"]), packed(["Meat"])
+    guild = Guild([a, b], clock=Clock(6 * 3600))
+    assert guild.heard == set()
+    guild.pass_time(24)
+    assert guild.heard == {"eat"}
+    guild.heard.clear()
+    empty = Guild([Unit("player")], clock=Clock(6 * 3600))
+    empty.pass_time(24)
+    assert empty.heard == set()
+

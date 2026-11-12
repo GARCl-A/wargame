@@ -299,6 +299,7 @@ class UpkeepMixin:
                 elif u.poisons.get("gut_rot", {}).get("level", 0) > gut_rot[u]:
                     events.append(i18n.t("guild_upkeep.ate_rotten_food_again_gut", name=u.name, poisons=u.poisons['gut_rot']['level']))
         if ate:
+            self.heard.add("eat")
             who = i18n.plural("guild_upkeep.members_ate", len(ate))
             events.append(i18n.t("guild_upkeep.rations_left", who=who, rations=self.rations))
         if casualties:
@@ -370,5 +371,6 @@ class UpkeepMixin:
                   for a in g.feed_hungry_animals()]
         if not fed and not beasts:
             return []
+        self.heard.add("eat")
         names = ", ".join([u.name for u in fed] + [a.species for a in beasts])
         return [i18n.t("guild_upkeep.stopped_to_eat_rations_left", names=names, rations=self.rations)]

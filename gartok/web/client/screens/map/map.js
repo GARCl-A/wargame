@@ -452,6 +452,7 @@ function show(state) {
   if (state.screen && state.screen !== "map") { location.reload(); return; }
   const was = M, paths = {};
   M = state;
+  for (const cue of state.sounds || []) Sound.play(cue);
   if (was && !matchMedia("(prefers-reduced-motion: reduce)").matches)
     for (const g of M.groups) {
       const old = was.groups.find(o => o.gid === g.gid);

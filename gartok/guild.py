@@ -194,6 +194,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.wildfire = wildfire              # wildfire.Wildfire once the Coven's errand was taken, else None
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self.log = GuildLog(log)
+        self.heard = set()                       # cues the clock raised (a meal) for the map to play once; never saved
         self._sync_leadership()
 
     def reveal_node(self, node_id: str) -> bool:

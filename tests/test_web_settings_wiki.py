@@ -317,13 +317,15 @@ def test_the_title_opens_the_credits_which_name_the_authors_the_licence_and_the_
     credits = title.game.session
     assert isinstance(credits, CreditsSession) and credits.tutorial_key() is None
     st = credits.state()
-    icons, sounds = st["sections"]
+    icons, sounds, music = st["sections"]
     names = {p["name"] for p in icons["people"]}
     assert {"Lorc", "Delapouite"} <= names, "the authors come from the icons' LICENSE.txt"
     assert [x["url"] for x in icons["links"]] == ["https://creativecommons.org/licenses/by/3.0/",
                                                   "https://game-icons.net/"]
     assert "CC BY 3.0" in icons["intro"] and "CC0" in sounds["intro"]
     assert sounds["people"][0]["name"] == "Kenney Vleugels" and sounds["links"][0]["url"].endswith("/zero/1.0/")
+    assert {p["name"] for p in music["people"]} >= {"RandomMind", "Emma_MA"} and music["links"][0]["url"].endswith("/zero/1.0/")
+    assert "StarNinjas" in {p["name"] for p in sounds["people"]}
     assert st["back"] == "Back to the title"
     assert credits.back_to() == {"screen": "title"} and title.game.session is title
 
@@ -404,3 +406,13 @@ def test_marks_name_the_keywords_and_finesse_a_description_uses_with_their_tips(
     assert [m["word"] for m in marks] == ["finesse", "Brutal"]
     assert marks[1]["tip"] == wiki_terms.tip("brutal") and marks[0]["tip"] == wiki_terms.tip("finesse")
     assert wiki_terms.marks("+2 squares of Speed.") == [] and wiki_terms.marks("") == []
+
+
+def test_the_music_has_its_own_volume_apart_from_the_sounds(saves):
+    s = SettingsSession(lambda: {"screen": "title"})
+    row = next(r for r in s.state()["rows"] if r["key"] == "music")
+    assert [c["value"] for c in row["choices"]] == [0, 25, 50, 75, 100] and row["choices"][0]["label"] == "Off"
+    assert row["choices"][2]["label"] == "50%" and row["label"] == "Music"
+    st = s.set("music", 25)
+    assert st["music"] == 25 and st["volume"] == settings.SPEC["volume"][2]
+    assert settings.label("music") == "MUSIC: 25%"

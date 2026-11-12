@@ -1,0 +1,16 @@
+Music from OpenGameArt.org, each track listed as Creative Commons Zero (CC0) on its page
+(read on 2026-11-12). Commercial use is allowed; credit is appreciated, not required.
+http://creativecommons.org/publicdomain/zero/1.0/
+
+Map and menu radio, by RandomMind:
+  Exploration.mp3        "Medieval: Exploration"        https://opengameart.org/content/medieval-exploration
+  The_Old_Tower_Inn.mp3  "Medieval: The Old Tower Inn"  https://opengameart.org/content/medieval-the-old-tower-inn
+  Minstrel_Dance.mp3     "Medieval: Minstrel Dance"     https://opengameart.org/content/medieval-minstrel-dance
+  The_Bards_Tale.mp3     "Medieval: The Bard's Tale"    https://opengameart.org/content/medieval-the-bards-tale
+
+Battle, one picked at random per fight:
+  QaziJamJam.mp3         "QaziJamJam (orchestral battle theme)" by Emma_MA   https://opengameart.org/content/qazijamjam-orchestral-battle-theme
+  Determined_Pursuit.mp3 "Determined Pursuit (epic orchestra loop)" by Emma_MA   https://opengameart.org/content/determined-pursuit-epic-orchestra-loop
+  Battle_Theme.mp3       "Battle Theme" by Theodore Kerr (uploaded as Wolfgang_)   https://opengameart.org/content/battle-theme-0
+
+Exploration, QaziJamJam and Determined_Pursuit are mp3 re-encodes of the author's wav/mp3 (size only).

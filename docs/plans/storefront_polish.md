@@ -24,7 +24,6 @@ Independent, one commit each, smallest first. Stop after any of them.
 | C | A band's pawn covers a place's name on the map | Small | no |
 | D | Fog of war in a room full of pillars | Medium | yes, picks the look |
 | E | A blow moves the token | Medium | no |
-| F | Music | Small code | yes, picks the tracks |
 | G | Small text faults the photo review found | Small | no |
 
 ### A. The unit panel overflows at low hit points
@@ -113,14 +112,6 @@ All of it is skipped under `prefers-reduced-motion` (`board.js` already reads it
 here: the cues are their own backlog item (*UI sound: the missing cues*). If an event the client needs is
 not sent (which unit dropped), add it to the state the combat log already produces, with a test beside the
 others.
-
-### F. Music
-
-The game has 16 sound files and no music; a trailer cannot be cut without it, and the title and the map are
-silent. The author picks the tracks (same rule as the sound cues: a licence that allows commercial use,
-recorded in `assets/sounds/LICENSE.txt`). Wanted first: one theme for the title and the map, one for a
-fight. Code: a looping track per screen family in the shell's `Sound`, its own volume setting apart from
-the effects, a fade between the two. A tutorial card is not needed; the settings screen gets the slider.
 
 ### G. Small text faults the photo review found
 

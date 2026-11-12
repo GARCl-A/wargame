@@ -32,6 +32,7 @@ const opts = (list, on, attr) => `<div class="opts">${list.map(c =>
 function render(state) {
   S = state;
   Sound.volume = S.volume;
+  Music.volume = S.music;
   $("back").textContent = S.back;
   $("rows").innerHTML = S.rows.map(r => `<div class="row" data-key="${r.key}"><div class="txt"><b>${esc(r.label)}</b><span>${esc(r.note)}</span></div>
     ${r.number ? `<input class="num" type="number" inputmode="numeric" min="${r.number.min}" max="${r.number.max}" value="${r.value}">`

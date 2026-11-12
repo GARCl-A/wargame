@@ -14,6 +14,11 @@ URL = re.compile(r"https?://[^\s)]+")
 PERSON = re.compile(r"^ {4}(?P<name>[^—\n]+?)(?:\s+—\s+(?P<url>https?://\S+))?\s*$")
 
 
+MUSIC_AUTHORS = [{"name": "RandomMind", "url": "https://opengameart.org/users/randommind"},
+                 {"name": "Emma_MA", "url": "https://opengameart.org/users/emmama"},
+                 {"name": "Theodore Kerr (Wolfgang_)", "url": "https://opengameart.org/users/wolfgang"}]
+
+
 def _read(folder):
     with open(os.path.join(ASSETS, folder, "LICENSE.txt"), encoding="utf-8") as f:
         return f.read()
@@ -35,18 +40,24 @@ def _link(label, text, pattern):
 
 
 def sections():
-    icons, sounds = _read("icons"), _read("sounds")
+    icons, sounds, music = _read("icons"), _read("sounds"), _read("music")
     icon_links = [_link(i18n.t("credits_session.license_cc_by"), icons, r"License:\s+(https?://\S+)"),
                   _link(i18n.t("credits_session.source_game_icons_net"), icons, r"Source:\s+(https?://\S+)")]
     sound_links = [_link(i18n.t("credits_session.license_cc"), sounds, r"(http://creativecommons\.org/publicdomain/zero/\S+)"),
                    {"label": i18n.t("credits_session.source_www_kenney_nl"), "url": "https://www.kenney.nl"}]
+    music_links = [_link(i18n.t("credits_session.license_cc"), music, r"(http://creativecommons\.org/publicdomain/zero/\S+)"),
+                   {"label": "OpenGameArt.org", "url": "https://opengameart.org"}]
     return [
         {"id": "icons", "heading": i18n.t("credits.icons.heading"), "intro": i18n.t("credits.icons.intro"),
          "people_label": i18n.t("credits.icons.authors"), "people": authors(icons),
          "links": [x for x in icon_links if x]},
         {"id": "sounds", "heading": i18n.t("credits.sounds.heading"), "intro": i18n.t("credits.sounds.intro"),
-         "people_label": None, "people": [{"name": i18n.t("credits_session.kenney_vleugels"), "url": "https://www.kenney.nl"}],
+         "people_label": None, "people": [{"name": i18n.t("credits_session.kenney_vleugels"), "url": "https://www.kenney.nl"},
+                                          {"name": "StarNinjas", "url": "https://opengameart.org/users/starninjas"}],
          "links": [x for x in sound_links if x]},
+        {"id": "music", "heading": i18n.t("credits.music.heading"), "intro": i18n.t("credits.music.intro"),
+         "people_label": i18n.t("credits.music.authors"), "people": MUSIC_AUTHORS,
+         "links": [x for x in music_links if x]},
     ]
 
 

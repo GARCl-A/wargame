@@ -15,12 +15,15 @@ PATH = os.path.join(os.path.dirname(persist.SAVE_DIR), "settings.json")
 SPEC = {
     "record_play": ("settings.name.record_play", ("OFF", "ON"), "OFF"),
     "volume": ("settings.name.volume", (0, 25, 50, 75, 100), 75),
+    "music": ("settings.name.music", (0, 25, 50, 75, 100), 50),
     "log_lines": ("settings.name.log_lines", (500, 1000, 2000, 5000), 2000),
     "language": ("settings.name.language", tuple(i18n.LANGUAGES), i18n.DEFAULT_LANG),
 }
 
 # A value the player types, within bounds; the choices of such an entry are the steps the map's "raise the limit" climbs.
 RANGES = {"log_lines": (200, 50000)}
+
+PERCENT = ("volume", "music")
 
 _values = None
 
@@ -90,7 +93,7 @@ def step_up(key):
 def label(key):
     name = i18n.t(SPEC[key][0])
     value = get(key)
-    if key == "volume":
+    if key in PERCENT:
         return f"{name}: {value}%" if value else i18n.t("settings.off", name=name)
     return f"{name}: {value}"
 
