@@ -128,6 +128,13 @@ class GuildSession(Session):
             return "guild.band_routine" if self.view == "routine" else "group"
         return {"guild": "guild.overview"}.get(self.tab, f"guild.{self.tab}")
 
+    def tutorial_closed(self, key, first):
+        """The objectives' card is the first the player meets here: its first close goes on to the roster, where hunger is explained."""
+        if first and key == "guild.reputations" and "guild.members" not in self.guild.tutorial.seen:
+            self.tab = "members"
+            return {"reload": True}
+        return None
+
     def sheet_units(self):
         return self.desk._everyone()
 

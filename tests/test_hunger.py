@@ -528,3 +528,21 @@ def test_a_wasting_with_no_poison_is_still_a_death_and_the_last_member_wipes_the
     crew[0]._apply_attributes()
     events, dead = guild.pass_time(1)
     assert dead == crew and guild.empty and crew[0].memorial.cause == "Wasted away"
+
+
+def test_a_death_by_hunger_says_what_hunger_did_to_the_scores_and_a_poison_death_does_not():
+    guild, crew = _guild_holding([], [])
+    starved, poisoned = crew
+    starved.name, poisoned.name = "Ornza", "Nimek"
+    starved.base_attributes["constitution"] = 3
+    starved.unfed_days = 2
+    starved._apply_attributes()
+    poisoned.sick = True
+    for _ in range(3):
+        poisoned.add_poison("gut_rot", 11)
+    assert starved.zeroed_attribute == "constitution" and poisoned.hunger_attribute_penalty == 0
+    events, _ = guild.pass_time(1)
+    mine = next(ev for ev in events if starved.name in ev and "died" in ev)
+    assert "Wasted away" in mine and "Constitution fell to" in mine and "Hunger had cut every attribute by 4" in mine
+    theirs = next(ev for ev in events if poisoned.name in ev and "died" in ev)
+    assert "Hunger" not in theirs and not theirs.endswith(" ")

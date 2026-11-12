@@ -139,7 +139,7 @@ const Tutorial = (() => {
     unspot();
     shown = null;
     const r = await api("/api/tutorial/dismiss", {});
-    if (r.screen && r.screen !== Shell.screen) location.reload();
+    if (r.reload || (r.screen && r.screen !== Shell.screen)) location.reload();
   }
   function place() {
     const b = document.getElementById("tut-badge"), top = $("screen").querySelector("#top");

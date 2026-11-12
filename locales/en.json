@@ -96,6 +96,7 @@
         "body": [
           "Members are listed by group; click one for their sheet, levels and talents. MANAGE GEAR, at the bottom, opens the selected member's group to move gear between them.",
           "SHARE RATIONS lets group-mates eat from that member's pack. A day unfed: hungry ({pen} to attributes). Two: starving (max HP {cap}). Three: too weak to fight. Four: dead.",
+          "Hunger is also a slow poison on the numbers: if Strength, Dexterity or Constitution reaches zero the character dies, and a frail body gets there first. The log then reads \"Wasted away\".",
           "Death is permanent; the run ends only when the whole guild is gone."
         ],
         "suggestion": "The REPUTATIONS tab holds your objectives and what each faction wants."
@@ -109,6 +110,7 @@
       },
       "reputations": {
         "title": "What you're playing for",
+        "button": "See your roster",
         "body": [
           "There is no score and no fight you must win. The objectives at the top are small tasks that show you what the guild can do; take them in any order.",
           "Below them, each faction lists its deeds. Reputation only moves when you pull one off (a one-shot achievement, not a grind) and it unlocks what the card lists. The Pits and the Bankers are open from day one; the others appear once you walk into their places."
@@ -5257,6 +5259,8 @@
     "rests_and_recovers_hp": "{name} rests and recovers {heal} HP.",
     "shakes_off_non_lethal_damage": "{name} shakes off {cleared} non-lethal damage after rest.",
     "died": "{name} died: {cause}.",
+    "died_collapse": "{name} died: {cause}. {line} {note}",
+    "hunger_note": "Hunger had cut every attribute by {pen}.",
     "portions_of_food_rotted_away": "{total_rotten} portions of food rotted away.",
     "rotted_away": "The {name} rotted away.",
     "blooms_at_dawn_and_yields": "{name} blooms at dawn and yields {n} fresh {fruit}.",
@@ -6006,7 +6010,7 @@
       "NIMBLE": "Harder to hit, and accurate with finesse weapons.",
       "GENIUS": "Crafts faster, reads manuals and does research.",
       "WISE": "Acts earlier in a fight, resists the mind and treats wounds in the field.",
-      "RISKY": "A hard pick: a frail body that has to be played around. Not always a bad one: a fine leader can be fragile."
+      "RISKY": "A hard pick: a frail body that has to be played around. Low Strength means gear they cannot carry. Low Constitution means slow healing and little HP gained per level. Very low scores mean that hunger or poison can drag Strength, Dexterity or Constitution to zero, and that kills: one missed meal run is enough early on. Not always a bad pick: a fine leader can be fragile."
     },
     "vocation": {
       "warband": "+{morale_bonus} starting morale for every member in a fight.",
@@ -6226,8 +6230,8 @@
   },
   "archetype": {
     "risk": {
-      "con": "CON {con}: heals slowly and little",
-      "total": "attributes add up to {total} (average 63)",
+      "con": "CON {con}: heals slowly and gains little HP per level",
+      "total": "attributes add up to {total} (average 63): hunger or poison can drive a score to zero, and that kills",
       "carry": "carries only {carry} kg: the {kit} kg starting kit overloads them"
     }
   },

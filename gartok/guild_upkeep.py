@@ -186,7 +186,9 @@ class UpkeepMixin:
             place = world.node(g.node).name if g is not None and g.node else None
             u.memorial = aftermath.collapsed(u, attribute, day=self.clock.day, place=place)
             recorder.death(u, "collapse", attribute=attribute)
-            events.append(i18n.t("guild_upkeep.died", name=u.name, cause=u.memorial.cause))
+            hunger = u.hunger_attribute_penalty
+            note = i18n.t("guild_upkeep.hunger_note", pen=-hunger) if hunger else ""
+            events.append(i18n.t("guild_upkeep.died_collapse", name=u.name, cause=u.memorial.cause, line=u.memorial.line, note=note).strip())
             dead.append(u)
         if dead:
             self.remove_members(dead)

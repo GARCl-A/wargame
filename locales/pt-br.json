@@ -4405,6 +4405,8 @@
         "rests_and_recovers_hp": "{name} descansa e recupera {heal} PV.",
         "shakes_off_non_lethal_damage": "{name} se livra de {cleared} de dano não letal depois do descanso.",
         "died": "{name} morreu: {cause}.",
+        "died_collapse": "{name} morreu: {cause}. {line} {note}",
+        "hunger_note": "A fome havia reduzido todos os atributos em {pen}.",
         "portions_of_food_rotted_away": "{total_rotten} porções de comida apodreceram.",
         "rotted_away": "{name} apodreceu.",
         "blooms_at_dawn_and_yields": "{name} floresce ao amanhecer e rende {n} {fruit} fresca(s).",
@@ -4931,8 +4933,8 @@
     },
     "archetype": {
         "risk": {
-            "con": "CON {con}: cura devagar e pouco",
-            "total": "os atributos somam {total} (média 63)",
+            "con": "CON {con}: cura devagar e ganha pouco PV por nível",
+            "total": "os atributos somam {total} (média 63): fome ou veneno podem levar um atributo a zero, e isso mata",
             "carry": "carrega só {carry} kg: o kit inicial de {kit} kg o sobrecarrega"
         }
     },
@@ -6074,7 +6076,7 @@
             "NIMBLE": "Mais difícil de acertar, e preciso com armas de acuidade.",
             "GENIUS": "Fabrica mais rápido, lê manuais e faz pesquisa.",
             "WISE": "Age mais cedo numa luta, resiste à mente e trata ferimentos em campo.",
-            "RISKY": "Uma escolha difícil: um corpo frágil, que exige jogar em torno dele. Nem sempre ruim: um ótimo líder pode ser frágil."
+            "RISKY": "Uma escolha difícil: um corpo frágil, que exige jogar em torno dele. Pouca Força: equipamento que não consegue carregar. Pouca Constituição: cura devagar e ganha pouco PV por nível. Atributos muito baixos: fome ou veneno podem levar Força, Destreza ou Constituição a zero, e isso mata. Nem sempre ruim: um ótimo líder pode ser frágil."
         },
         "vocation": {
             "warband": "+{morale_bonus} de moral inicial para cada membro numa luta.",
@@ -6559,6 +6561,7 @@
                 "body": [
                     "Os membros são listados por grupo; clique num para ver a ficha, os níveis e os talentos. GERENCIAR EQUIPAMENTO, embaixo, abre o grupo do membro selecionado para mover equipamento entre eles.",
                     "DIVIDIR RAÇÕES deixa os colegas de grupo comerem da mochila daquele membro. Um dia sem comer: com fome ({pen} nos atributos). Dois: faminto (PV máximo {cap}). Três: fraco demais para lutar. Quatro: morto.",
+                    "A fome também corrói os números: se Força, Destreza ou Constituição chegar a zero, o personagem morre, e um corpo frágil chega lá primeiro. O registro então diz \"Definhou\".",
                     "A morte é permanente; a partida só acaba quando a guilda inteira se foi."
                 ],
                 "suggestion": "A aba REPUTAÇÕES guarda seus objetivos e o que cada facção quer."
@@ -6572,6 +6575,7 @@
             },
             "reputations": {
                 "title": "Pelo que você joga",
+                "button": "Ver seu elenco",
                 "body": [
                     "Não há pontuação nem luta que você precise vencer. Os objetivos no topo são tarefas pequenas que mostram o que a guilda pode fazer; faça-as em qualquer ordem.",
                     "Abaixo deles, cada facção lista seus feitos. A reputação só se move quando você realiza um (uma conquista única, não uma moagem) e ela destrava o que o cartão lista. As Fossas e os Banqueiros estão abertos desde o primeiro dia; as outras aparecem quando você entra nos lugares delas."

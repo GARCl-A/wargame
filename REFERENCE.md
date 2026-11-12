@@ -112,7 +112,7 @@ Functional squad roles for candidate generation and commission tokens at the dra
 | NIMBLE | DEX +2. Harder to hit, and accurate with finesse weapons. |
 | GENIUS | INT +2. Crafts faster, reads manuals and does research. |
 | WISE | WIS +2. Acts earlier in a fight, resists the mind and treats wounds in the field. |
-| RISKY | CON ≤ 8 · total ≤ 56 · can barely carry gear. A hard pick: a frail body that has to be played around. Not always a bad one: a fine leader can be fragile. |
+| RISKY | CON ≤ 8 · total ≤ 56 · can barely carry gear. A hard pick: a frail body that has to be played around. Low Strength means gear they cannot carry. Low Constitution means slow healing and little HP gained per level. Very low scores mean that hunger or poison can drag Strength, Dexterity or Constitution to zero, and that kills: one missed meal run is enough early on. Not always a bad pick: a fine leader can be fragile. |
 
 ## Vocations
 

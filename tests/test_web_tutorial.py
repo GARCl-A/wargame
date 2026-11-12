@@ -143,6 +143,16 @@ def test_the_guild_sheets_card_follows_its_tab(saves):
                     "reputations": "guild.reputations", "routines": "guild.routines"}
 
 
+def test_closing_the_objectives_card_for_the_first_time_goes_on_to_the_roster(saves):
+    s = GuildSession(MapSession(_guild()), "reputations")
+    assert s.tutorial_closed("guild.reputations", False) is None
+    assert s.tutorial_closed("guild.reputations", True) == {"reload": True}
+    assert s.tab == "members" and s.tutorial_key() == "guild.members"
+    s.guild.tutorial.dismiss("guild.members")
+    s.tab = "reputations"
+    assert s.tutorial_closed("guild.reputations", True) is None and s.tab == "reputations"
+
+
 def test_the_draft_welcomes_first_then_names_each_steps_card():
     d = DraftSession()
     assert d.tutorial_key() == "draft.intro"
