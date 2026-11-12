@@ -1,6 +1,6 @@
 """Small helpers the other `ai` modules share."""
 
-from .. import actions, data
+from .. import actions, data, intel
 from ..board import grid_distance
 
 
@@ -57,3 +57,15 @@ def _instinctive(unit):
 def _mindless(unit):
     """The dead do not break and run: an undead body, or one raised from the dead."""
     return getattr(unit, "raised", False) or unit.race.get("kind") == "undead"
+
+
+def _another_awake_foe(battle, unit, target):
+    """A foe other than `target` the unit's side knows of that stands up and is awake."""
+    return any(f is not target and f.alive and not f.downed and not f.has_condition("sleeping")
+               for f in intel.visible_foes(battle, unit))
+
+
+def _leave_asleep(battle, unit, foe):
+    """A sleeping foe is left alone while the unit's side sees another foe standing and awake: any
+    damage wakes it."""
+    return foe.has_condition("sleeping") and _another_awake_foe(battle, unit, foe)

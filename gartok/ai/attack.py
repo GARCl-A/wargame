@@ -3,7 +3,15 @@
 from .. import actions, intel, natural_weapons
 from ..board import cells, grid_distance
 from . import reckon
-from .common import _avg_die, _axes, _hand_die, _runs_flag, _wants_alive
+from .common import (
+    _another_awake_foe,
+    _avg_die,
+    _axes,
+    _hand_die,
+    _leave_asleep,
+    _runs_flag,
+    _wants_alive,
+)
 from .reckon import (
     _bleed_tick,
     _blow,
@@ -107,7 +115,8 @@ def _demoralize_victim(battle, unit, target):
     when that beats the strike the point would buy."""
     best, best_worth = None, 0.0
     for f in battle.units:
-        if f.alive and f.team != unit.team and not f.routed and actions.DEMORALIZE.can(battle, unit, f):
+        if (f.alive and f.team != unit.team and not f.routed and not _leave_asleep(battle, unit, f)
+                and actions.DEMORALIZE.can(battle, unit, f)):
             worth = _demoralize_worth(battle, unit, f)
             if worth > best_worth:
                 best, best_worth = f, worth
@@ -135,6 +144,8 @@ def _tail_sweep_pays(battle, unit, target):
         return False
     tail = _avg_die(natural_weapons.get(natural_weapons.DEFAULT, unit.size)["damage"]) + unit.mod_strength + unit.char.talent_bonus("melee_damage")
     foes = [target] + [u for u in (sweep.second(battle, unit, target),) if u is not None]
+    if any(_leave_asleep(battle, unit, f) for f in foes):
+        return False
     worth = sum(_hit_odds(battle, unit, f) * tail + _shove_worth(battle, unit, f) for f in foes)
     return worth >= _two_points(battle, unit, target) and worth > 0
 
@@ -157,12 +168,6 @@ def _should_takedown(battle, unit, target):
     spends standing, which headless fights show never pays (a squad that takes down a harder-hitting
     foe on the contest's odds loses more, not less)."""
     return actions.TAKEDOWN.can(battle, unit, target) and _runs_flag(battle, target)
-
-
-def _another_awake_foe(battle, unit, target):
-    """A foe other than `target` the unit's side knows of that stands up and is awake."""
-    return any(f is not target and f.alive and not f.downed and not f.has_condition("sleeping")
-               for f in intel.visible_foes(battle, unit))
 
 
 def _sleep_immune(battle, unit, target):
@@ -292,15 +297,18 @@ BREATH_MIN_FOES = 3
 
 def _best_cone(battle, unit):
     """`(cell, foes)` of the cone from where the unit stands that catches the most foes, at least
-    `BREATH_MIN_FOES` and more foes than allies, or `(None, 0)`."""
+    `BREATH_MIN_FOES` and more foes than allies, or `(None, 0)`. A sleeper better left asleep
+    (`_leave_asleep`) is not counted, and of two cones as full the one that wakes fewer wins."""
     breath = actions.DRAGON_BREATH
-    best, best_foes = None, 0
+    best, best_key = None, (0, 0)
     for cell in breath.highlight_cells(battle, unit):
         caught = breath.caught(battle, unit, cell)
-        foes = sum(1 for u in caught if u.team != unit.team)
-        if foes >= BREATH_MIN_FOES and foes > len(caught) - foes and foes > best_foes:
-            best, best_foes = cell, foes
-    return best, best_foes
+        others = [u for u in caught if u.team != unit.team]
+        woken = sum(1 for u in others if _leave_asleep(battle, unit, u))
+        foes = len(others) - woken
+        if foes >= BREATH_MIN_FOES and foes > len(caught) - len(others) and (foes, -woken) > best_key:
+            best, best_key = cell, (foes, -woken)
+    return best, best_key[0]
 
 
 def _try_breath(battle, unit):
@@ -348,7 +356,7 @@ def _try_shove(battle, unit):
     swing = reckon.SHOVE_HIT_ODDS * (_hand_die(unit) + unit.mod_strength)
     best, best_worth = None, max(0.0, swing)
     for foe in push.highlight_targets(battle, unit):
-        if foe.team == unit.team:
+        if foe.team == unit.team or _leave_asleep(battle, unit, foe):
             continue
         worth = _shove_worth(battle, unit, foe)
         if worth > best_worth:
