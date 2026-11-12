@@ -56,11 +56,11 @@
 /* the fallen */
 #graves{position:absolute;left:0;right:0;top:118px;display:flex;justify-content:center;gap:56px}
 #graves.many{gap:28px}
-.grave{position:relative;width:560px;height:820px;padding:46px 54px;color:var(--ink);text-align:center;border-radius:2px;
+.grave{position:relative;display:flex;flex-direction:column;width:560px;min-height:820px;padding:46px 54px 40px;color:var(--ink);text-align:center;border-radius:2px;
   background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.18),transparent 60%),linear-gradient(176deg,#e6dbc4,#cbbd9f);
   box-shadow:inset 0 0 50px rgba(60,40,20,.35),0 0 0 1px #2a1d12,0 0 0 9px #17110c,0 0 0 10px #4a3d30,0 22px 36px rgba(0,0,0,.7)}
 .grave:nth-child(odd){transform:rotate(-.8deg)}.grave:nth-child(even){transform:rotate(.7deg)}
-#graves.many .grave{width:420px;padding:40px 30px}
+#graves.many .grave{width:420px;padding:40px 30px 34px}
 .grave .tag{font:600 11px/1 Cinzel,serif;letter-spacing:.42em;color:#5a4a3a;text-transform:uppercase}
 .grave .oval{width:210px;height:258px;margin:24px auto 0;border-radius:50%;overflow:hidden;position:relative;
   box-shadow:0 0 0 3px #17110c,0 0 0 7px #8a7a66,0 0 0 9px #17110c,0 10px 18px rgba(0,0,0,.45)}
@@ -76,8 +76,8 @@
 .grave .killer .medal{width:50px;height:50px}
 .grave .killer b{display:block;font:600 16px/1 Cinzel,serif;letter-spacing:.04em}
 .grave .killer span{display:block;margin-top:5px;font:15px/1 var(--read);color:#6b5540}
-.grave .line{margin-top:22px;font:italic 18px/1.35 "IM Fell English",serif;color:#3d2e20}
-.grave .left{position:absolute;left:64px;right:64px;bottom:40px;padding-top:16px;border-top:1px dotted rgba(40,28,16,.35);font:16px/1.35 var(--read);color:#5a4632}
+.grave .line{margin:22px 0 24px;font:italic 18px/1.35 "IM Fell English",serif;color:#3d2e20}
+.grave .left{margin-top:auto;padding-top:16px;border-top:1px dotted rgba(40,28,16,.35);font:16px/1.35 var(--read);color:#5a4632}
 .grave .left b{font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:#6b5540;text-transform:uppercase;margin-right:6px}
 #memfoot{position:absolute;left:0;right:0;bottom:56px;display:flex;justify-content:center;align-items:center;gap:30px}
 #memfoot i{font:italic 18px/1 "IM Fell English",serif;color:#9b8a74}
