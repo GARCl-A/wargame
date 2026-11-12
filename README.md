@@ -225,8 +225,9 @@ scripts/            the sims and tools; each opens with a docstring saying what 
                     combat_pairs.py (read the combat logs; the AI replays a person's squads),
                     make_cult_npcs.py (writes the Demon Cult's eight NPCs to npcs/),
                     release.py (publishes the last built version as a GitHub release; run by release.bat),
-                    gen_portrait.py (portraits from the local model, the /gen-portrait skill; portrait_lora/ has the setup)
-docs/               economy_sim.md (what the economy sim measures), web_ui/ (web_client.md: how to build a web screen; references/: the approved mockups), plans/ (backlog.md is all the open work; loyalty.md and campaign_ai_roadmap.md are the plans it points to)
+                    gen_portrait.py (portraits from the local model, the /gen-portrait skill; portrait_lora/ has the setup),
+                    portrait_press.py (levels every portrait to the same paper and ink; run after installing one)
+docs/               economy_sim.md (what the economy sim measures), web_ui/ (web_client.md: how to build a web screen; references/: the approved mockups; proposals/: looks not approved yet), plans/ (backlog.md is all the open work; loyalty.md and campaign_ai_roadmap.md are the plans it points to)
 ```
 
 ### How to add a system

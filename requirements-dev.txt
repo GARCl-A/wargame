@@ -4,3 +4,5 @@ pytest>=8
 pytest-xdist>=3
 ruff
 dask[distributed]>=2026.8  # only scripts/race_study.py --scheduler (a second machine as workers)
+Pillow>=12  # only scripts/portrait_press.py
+numpy>=2  # only scripts/portrait_press.py

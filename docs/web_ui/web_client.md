@@ -98,6 +98,9 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   agent does not generate art: it lists what is missing under Art in [plans/backlog.md](../plans/backlog.md)
   and asks the author. Save each Gemini prompt that works, with its reference images, in
   `docs/art/<name>_options/`.
+- **One press for every portrait.** A portrait is installed, then pressed: `python scripts/portrait_press.py`
+  levels it to the pool's paper and ink and adds the same grain (a pressed file is marked and skipped, so
+  running it over everything is safe). No portrait keeps a colour of its own.
 - **No tile sheets.** A floor is one seamless texture across the cell lines, tinted per place in code, in a
   lower value band than the tokens (cream tokens vanished on a cream floor). Files go in
   `gartok/web/client/img/`.
