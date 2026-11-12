@@ -294,10 +294,10 @@ Reserved words of the rules: each always means the one thing written here.
 | Tiny Dwarf Armor | Tiny | +5 | +0 | -1 sq | -- | 6.25 kg | 28 |
 | Small Dwarf Armor | Small | +5 | +0 | -1 sq | -- | 12.5 kg | 55 |
 | Large Dwarf Armor | Large | +5 | +0 | -1 sq | -- | 50 kg | 220 |
-| Cloak | Medium | +0 | -- | -- | +1 | 1 kg | 2 |
-| Tiny Cloak | Tiny | +0 | -- | -- | +1 | 0.25 kg | 1 |
-| Small Cloak | Small | +0 | -- | -- | +1 | 0.5 kg | 1 |
-| Large Cloak | Large | +0 | -- | -- | +1 | 2 kg | 4 |
+| Cloak | Medium | +0 | -- | -- | +1 | 1 kg | 12 |
+| Tiny Cloak | Tiny | +0 | -- | -- | +1 | 0.25 kg | 3 |
+| Small Cloak | Small | +0 | -- | -- | +1 | 0.5 kg | 6 |
+| Large Cloak | Large | +0 | -- | -- | +1 | 2 kg | 24 |
 
 ## Shields
 
@@ -340,7 +340,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Bloom Fruit | 0.2 kg | food, consumable | 6 |
 | Box of Gems | 1.5 kg | -- | 273 |
 | Chains | 5 kg | -- | 10 |
-| Chisel | 0.3 kg | -- | 1 |
+| Chisel | 0.3 kg | -- | 35 |
 | Copper Coin | 0.005 kg | -- | 1 |
 | Dictionary | 2 kg | -- | 150 |
 | Dictionary of (Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin, Halfling, Jotun, Orcish, Sylvan, Verdant) | 2 kg | -- | 150 |
@@ -376,7 +376,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Rope | 2 kg | material | 4 |
 | Rotten Food | 1 kg | food, consumable | -- |
 | Salt | 0.5 kg | material | 3 |
-| Scroll | 0.1 kg | -- | 1 |
+| Scroll | 0.1 kg | -- | 27 |
 | Scroll of (Dragonfire, Healing Touch, Sleep, Water Jet) | 0.1 kg | -- | 465 |
 | Scroll of (Floating Disk, Grasping Roots, Hex, Light Globe, Magic Missile, Spare the Dying) | 0.1 kg | -- | 180 |
 | Scroll of Invisibility | 0.1 kg | -- | 750 |
@@ -389,7 +389,7 @@ Everything that is not a weapon, armor or shield (see their tables). A row with 
 | Stone Brick | 3 kg | material | 10 |
 | Sugar | 0.5 kg | material | 4 |
 | Thunderhide | 1.5 kg | -- | 400 |
-| Torch | 0.5 kg | -- | 2 |
+| Torch | 0.5 kg | -- | 7 |
 | Venom Gland | 0.2 kg | material | 25 |
 | Vial | 0.1 kg | material | 10 |
 

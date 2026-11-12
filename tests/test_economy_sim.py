@@ -200,6 +200,7 @@ def test_walking_takes_the_real_route_time_and_stops_where_it_was_sent():
 
 def test_an_ambush_on_the_road_is_fought_and_the_walk_goes_on(monkeypatch):
     monkeypatch.setattr(world, "ROAD_AMBUSH_CHANCE", 1.0)
+    monkeypatch.setattr(forced.encounters, "would_attack", lambda *a: True)
     monkeypatch.setattr(forced, "encounter", lambda *a: None)     # a pack nobody in talks
     sim = _sim(skill=1.0, library=_WON)
     seen = []
@@ -211,6 +212,7 @@ def test_an_ambush_on_the_road_is_fought_and_the_walk_goes_on(monkeypatch):
 
 def test_an_ambush_the_squad_talks_down_is_never_fought(monkeypatch):
     monkeypatch.setattr(world, "ROAD_AMBUSH_CHANCE", 1.0)
+    monkeypatch.setattr(forced.encounters, "would_attack", lambda *a: True)
     monkeypatch.setattr(forced, "encounter", lambda *a: "a pack that talks")
     talks = []
     monkeypatch.setattr(dialogue, "ai_play",
@@ -838,9 +840,10 @@ def test_a_long_trip_buys_food_that_keeps_past_the_cheap_foods_life():
 
 def test_a_short_trip_buys_only_the_cheapest_food():
     sim = _sim("balanced", capital=500, library=_WON)
+    kit = _food_bought(sim)
     with sim.market() as shop:
         shop.buy_food(3)
-    bought = _food_bought(sim)
+    bought = {n: q - kit[n] for n, q in _food_bought(sim).items()}
     assert {n for n, q in bought.items() if q} == {sim_mod.cheapest_food()}
 
 

@@ -398,7 +398,7 @@ _register(ItemDef(id="fruit_compote", name="Fruit Compote", type=ItemType.FOOD, 
 _register(ItemDef(id="rotten_food", name="Rotten Food", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=0, food=True, lifespan=None))
 
 # Scrolls
-_register(ItemDef(id="scroll", name="Scroll", type=ItemType.SCROLL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
+_register(ItemDef(id="scroll", name="Scroll", type=ItemType.SCROLL, rarity=ItemRarity.COMMON, weight=0.1, price=27))
 _register(ItemDef(id="scroll_of_light_globe", name="Scroll of Light Globe", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="light_globe"), "scroll_light_globe")
 _register(ItemDef(id="scroll_of_magic_missile", name="Scroll of Magic Missile", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="magic_missile"), "scroll_magic_missile")
 _register(ItemDef(id="scroll_of_floating_disk", name="Scroll of Floating Disk", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="floating_disk"), "scroll_floating_disk")
@@ -423,7 +423,7 @@ for lang in _LANGUAGES:
 
 
 # Gear / Tools / Supplies / Containers / Traps / Gems
-_register(ItemDef(id="torch", name="Torch", type=ItemType.LIGHT, rarity=ItemRarity.COMMON, weight=0.5, price=2, light_radius=4))
+_register(ItemDef(id="torch", name="Torch", type=ItemType.LIGHT, rarity=ItemRarity.COMMON, weight=0.5, price=7, light_radius=4))
 _register(ItemDef(id="lantern", name="Lantern", type=ItemType.LIGHT, rarity=ItemRarity.COMMON, weight=1.0, price=30, light_radius=6))
 _register(ItemDef(id="first_aid_kit", name="First Aid Kit", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=0.8, price=40, max_charges=10))
 _register(ItemDef(id="quiver", name="Quiver", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=1.5, price=25, max_charges=20))
@@ -448,14 +448,14 @@ _register(ItemDef(id="gold_coin", name="Gold Coin", type=ItemType.CURRENCY, rari
 _register(ItemDef(id="pack_saddle", name="Pack Saddle", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=5.0, price=60))
 _register(ItemDef(id="harness", name="Harness", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=4.0, price=30))
 _register(ItemDef(id="rope", name="Rope", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
-_register(ItemDef(id="chisel", name="Chisel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=1))
+_register(ItemDef(id="chisel", name="Chisel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=35))
 _register(ItemDef(id="musical_instrument", name="Musical Instrument", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=18))
 _register(ItemDef(id="holy_symbol", name="Holy Symbol", type=ItemType.TOOL, rarity=ItemRarity.UNCOMMON, weight=0.5, price=80))
 _register(ItemDef(id="signal_horn", name="Signal Horn", type=ItemType.ARTIFACT, rarity=ItemRarity.UNCOMMON, weight=1.0, price=60))
 _register(ItemDef(id="leather_of_biwolf", name="Leather of Biwolf", type=ItemType.ARTIFACT, rarity=ItemRarity.RARE, weight=1.0, price=150))
 _register(ItemDef(id="thunderhide", name="Thunderhide", type=ItemType.ARTIFACT, rarity=ItemRarity.UNIQUE, weight=1.5, price=400))
 _register(ItemDef(id="legendary_horn", name="Legendary Horn", type=ItemType.MATERIAL, rarity=ItemRarity.UNIQUE, weight=2.0, price=60))
-_register_worn(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1, armor_material=ArmorMaterial.LEATHER)
+_register_worn(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=12, guard_bonus=1, armor_material=ArmorMaterial.LEATHER)
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="flint_and_steel", name="Flint and Steel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=40))
 _register(ItemDef(id="semi_precious_gemstone", name="Semi-precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))

@@ -474,7 +474,7 @@
   },
   "Cloak": {
     "weight": 1.0,
-    "price": 2,
+    "price": 12,
     "food": false,
     "lifespan": null
   },
@@ -588,7 +588,7 @@
   },
   "Scroll": {
     "weight": 0.1,
-    "price": 1,
+    "price": 27,
     "food": false,
     "lifespan": null
   },
@@ -600,7 +600,7 @@
   },
   "Chisel": {
     "weight": 0.3,
-    "price": 1,
+    "price": 35,
     "food": false,
     "lifespan": null
   },
@@ -630,7 +630,7 @@
   },
   "Torch": {
     "weight": 0.5,
-    "price": 2,
+    "price": 7,
     "food": false,
     "lifespan": null
   },
