@@ -46,3 +46,22 @@ def test_commits_that_only_touch_the_release_files_are_not_code():
     head = version_check.git("rev-parse", "HEAD")
     assert not version_check.code_changed_since(head, head)
     assert not version_check.code_changed_since("", head)
+
+
+def test_release_notes_warn_of_a_save_break_and_list_the_changes():
+    from scripts import release
+    text = release.notes({**ROW, "breaks_save": "yes"}, ["Primeira", "Segunda"])
+    assert text.index("saves") < text.index("- Primeira") < text.index("- Segunda")
+    assert "saves" not in release.notes({**ROW, "breaks_save": "no"}, ["Primeira"])
+
+
+def test_release_changes_skip_the_version_bookkeeping_commits():
+    from scripts import release
+    with open(version_check.CSV_PATH, encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    prev, last = rows[-2]["hash"], rows[-1]["hash"]
+    if not version_check.git("rev-parse", "--verify", "--quiet", f"{prev}^{{commit}}"):
+        return
+    subjects = release.changes(prev, last)
+    count = int(version_check.git("rev-list", "--count", "--no-merges", f"{prev}..{last}"))
+    assert subjects and len(subjects) <= count

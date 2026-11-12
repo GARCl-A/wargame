@@ -62,6 +62,8 @@ dismissed item is deleted, never kept with a note, the record is the git log).
   Versions are automatic: `build_exe.bat` runs `scripts/version_check.py --build`, which loads a
   save written by the last released commit with the current code, bumps `SAVE_VERSION` when it no
   longer loads, bumps `GAME_VERSION`, appends the `docs/versions.csv` row; commit the files it touched.
+  `release.bat` (`scripts/release.py`) then publishes that committed, pushed build as the GitHub release
+  `v<version>`.
 - **Registries, not branches:** actions are `Action` subclasses in `actions/` (+ `PANEL_ACTIONS`),
   racial abilities `abilities.py`, conditions `conditions.py`, weapon traits `weapon_traits.py`
   (`ItemDef.has_trait()`), talents `talents.py`, items `items.py` (single source), node services
