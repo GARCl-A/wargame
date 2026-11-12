@@ -2683,10 +2683,6 @@
       "shield": "shield",
       "status": "status"
     },
-    "held": {
-      "last_foe": "The last foe is down.",
-      "ruins": "The last foe is down. The ruins are yours to search. Leave by the entrance."
-    },
     "morale": {
       "falls": "{unit} loses {amount} morale ({why}): {morale}/{ceiling}.",
       "why": {
@@ -3145,6 +3141,12 @@
     "talk": {
       "caption": "CHA {cha:+d} · INT {int:+d} · {languages}",
       "no_language": "no language"
+    },
+    "held": {
+      "title": "No victory here",
+      "text": "The place is not won by killing. Leave by the entrance to keep what you carry.",
+      "tip": "In a place the squad has to walk out of, the fight does not end when the last foe falls. What the squad keeps is what it carries out through the entrance, and it leaves when you decide to.",
+      "enter": "The fight here does not end when the last foe falls: you keep what you carry out through the entrance."
     }
   },
   "campaign": {

@@ -365,8 +365,16 @@ function renderRitual() {
     + (r.closing ? `<div class="warn">${esc(r.warn)}</div>` : "");
 }
 
+function renderHeld() {
+  const h = S.held, el = $("held");
+  el.hidden = !h || !!S.ritual;
+  if (el.hidden) return;
+  el.innerHTML = `<b>${esc(h.title)}</b><span>${esc(h.text)}</span>`;
+  el.dataset.tip = h.tip;
+}
+
 function renderAll() {
-  renderTop(); renderTokens(); renderInspect(); renderLog(); renderUnit(); renderPlates(); renderHint(); renderRitual();
+  renderTop(); renderTokens(); renderInspect(); renderLog(); renderUnit(); renderPlates(); renderHint(); renderRitual(); renderHeld();
   Board.overlay(S, ui);
   $("withdraw").hidden = !S.flags.can_withdraw;
   $("skiptraps").hidden = !(S.setup && S.setup.kind === "trap");

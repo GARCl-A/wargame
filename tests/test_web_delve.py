@@ -68,6 +68,28 @@ def test_a_band_with_no_wagon_goes_straight_in_the_dark(key, scenario, saves):
     assert any(x["kind"] == "auto" for x in persist.list_saves("w1"))
 
 
+def test_a_place_that_holds_the_field_says_so_all_fight_and_the_last_foe_falling_changes_nothing():
+    guild, g = _guild("ancient_ruins")
+    game = Game(MapSession(guild, "w1"))
+    game.session.act(g.gid, "ancient_ruins")
+    s = game.session
+    held = s.state()["held"]
+    assert held and held["title"] and held["text"] and held["tip"]
+    lines = len(s.battle.log_lines)
+    for c in s.battle.foe_units:
+        c.hp, c.status = 0, "dead"
+    s.battle._check_winner()
+    assert s.battle.winner is None
+    assert s.state()["held"] == held and len(s.battle.log_lines) == lines
+
+
+def test_a_place_that_does_not_hold_the_field_has_no_plate():
+    guild, g = _guild("serpents_nest")
+    game = Game(MapSession(guild, "w1"))
+    game.session.act(g.gid, "serpents_nest")
+    assert game.session.state()["held"] is None
+
+
 def test_the_wagon_needs_a_watch_and_the_guards_stay_out_of_the_fight():
     guild, g = _guild("serpents_nest", wagon=True)
     game = Game(MapSession(guild))

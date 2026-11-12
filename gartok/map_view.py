@@ -259,6 +259,8 @@ class MapView:
                    "label": here.shop_label if fn.id == "shop" and here.shop_label else fn.label}
             if fn.id == "ancient_ruins":
                 btn["primary"] = True
+            if scenario.holds_field_at(fn.order_kind):
+                btn["sub"] = i18n.t("battle.held.enter")
             blocks.append(btn)
             blocks += self._function_notes(fn)
             if fn.id == "shop" and here.has("work"):

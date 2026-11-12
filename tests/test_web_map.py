@@ -68,6 +68,16 @@ def test_the_state_holds_the_known_world_the_bands_and_what_the_picked_one_can_d
     assert st["cta"]["key"] == "cycle_idle" and not st["cta"]["enabled"]
 
 
+def test_the_button_into_a_place_that_holds_the_field_carries_the_rule_and_others_none():
+    def button(node, key):
+        guild = _guild(node)
+        guild.reveal_node(node)
+        blocks = _game(guild).session.state()["groups"][0]["inspector"]["blocks"]
+        return next(b for b in blocks if b["t"] == "button" and b["key"] == key)
+    assert button("ancient_ruins", "ancient_ruins")["sub"]
+    assert not button("lumber_yard", "market")["sub"]
+
+
 def test_the_slip_over_a_place_gives_the_walk_the_order_takes():
     guild = _guild("lumber_yard")
     game = _game(guild)

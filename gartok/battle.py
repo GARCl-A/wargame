@@ -155,7 +155,6 @@ class Battle:
         self.intel = intel.Intel(self)
         self._mopup_open = False              # enemies down, allies still bleeding out
         self._capture_round = None            # enemies down: the round left to bind the fallen
-        self._held_open = False               # enemies down, the scenario keeps the field open
         if self.is_ctf:
             self._assign_flag_runners()
             
@@ -871,9 +870,6 @@ class Battle:
                 return None
 
         if players_up and self.scenario.holds_field(self):
-            if not self._held_open:
-                self._held_open = True
-                self.log(self.scenario.held_note)
             return None
 
         self.winner = "player"

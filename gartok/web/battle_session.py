@@ -536,6 +536,8 @@ class BattleSession(Session):
             "under": self._under([u for u in b.units if self.uid(u) in self._shown]),
             "ctf": self._ctf(known),
             "ritual": getattr(b.scenario, "hud", lambda _b: None)(b),
+            "held": ({"title": i18n.t("battle.held.title"), "text": i18n.t("battle.held.text"),
+                      "tip": i18n.t("battle.held.tip")} if b.scenario.holds_field(b) else None),
             "initiative": self._initiative(obs),
             "active": self._sheet(b.active) if b.active and (self.plays(b.active) or
                                                              self._shows(b.active, obs, my_turn)) else None,

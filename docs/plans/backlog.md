@@ -123,11 +123,6 @@ the rest.
   multiplier (`log_marks`). Left: mark the modifier that was decisive, the one that turned a miss into a hit or a strike
   into a critical (inspired by Pathfinder 2e's *Modifiers Matter*).
 
-- **Continuous / Endless Dungeon signaling (author/Yohan alignment).** UI and UX clarity for continuous exploratory dungeons:
-  clearly communicate to the player that there is no traditional "Victory" screen upon clearing a floor. Spoil retention
-  and character survival depend entirely on the voluntary decision to retreat back to the entrance point. The
-  first-entry card is built (`hints.DUNGEON`); this item is the permanent signal on the map and the confirm dialog.
-
 - **Intimidation build rework & mathematical tuning (author/Yohan alignment).** Overhaul the mathematical progression, DCs,
   and action economy for the Intimidation combat build (Demoralize, Provoke, and associated Charisma/Wisdom talents) to raise
   its win rate and tactical reliability in battle.

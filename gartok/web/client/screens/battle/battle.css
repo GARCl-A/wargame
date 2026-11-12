@@ -194,10 +194,14 @@
 #topright [hidden]{display:none}
 
 /* a crit across the board */
-#ritual{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:600px;padding:6px 14px 7px;
+#ritual,#held{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:600px;padding:6px 14px 7px;
   background:linear-gradient(#1c130c,#120c07);border:2px solid var(--brass-lo);border-radius:4px;
   box-shadow:0 0 0 1px #000,0 6px 22px rgba(0,0,0,.7);pointer-events:none;z-index:6;
   display:grid;grid-template-columns:auto 1fr auto;column-gap:14px;align-items:center}
+#held{pointer-events:auto;grid-template-columns:1fr;row-gap:4px;text-align:center}
+#held b{font:700 17px/1 Cinzel,serif;letter-spacing:.2em;color:var(--brass-hi);text-transform:uppercase}
+#held span{font:600 15px/1.25 Cinzel,serif;letter-spacing:.04em;color:#e8cfa0}
+#held[hidden]{display:none}
 #ritual b{font:700 17px/1 Cinzel,serif;letter-spacing:.2em;color:var(--brass-hi);text-transform:uppercase}
 #ritual[hidden]{display:none}
 #ritual .count{font:700 17px/1 Cinzel,serif;letter-spacing:.06em;color:#e8cfa0}

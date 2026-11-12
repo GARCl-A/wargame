@@ -92,12 +92,13 @@ class Scenario:
         a scenario whose objective can be met before every foe is down says yes."""
         return False
 
-    held_note = "log.held.last_foe"
+    holds = False
+    order_kind = None
 
     def holds_field(self, battle):
         """Does the fight run on once every foe is down (`Battle._check_winner`)? A place the
-        squad has to walk out of says yes; `held_note` is the log line when it starts."""
-        return False
+        squad has to walk out of says yes (`holds`); `order_kind` is the map order that goes in."""
+        return self.holds
 
     def after_battle(self, guild, battle):
         """What the fight leaves in the world once it is over (`campaign.absorb_battle`).
@@ -551,10 +552,8 @@ class AncientRuinsScenario(Scenario):
             return "player"
         return None
 
-    held_note = "log.held.ruins"
-
-    def holds_field(self, battle):
-        return True
+    holds = True
+    order_kind = "ancient_ruins"
 
     def treasure_on_floor(self, battle):
         """The chests and relics still where the ruins keep them: someone has to go and take them."""
@@ -576,6 +575,11 @@ class AncientRuinsScenario(Scenario):
         keys |= {f"chest:{i}" for i in range(len(self._chests))}
         keys |= {f"relic:{i}" for i in range(len(self._relics))}
         return keys - self.cleared
+
+
+def holds_field_at(order_kind):
+    """Does the fight the map order `order_kind` opens hold the field (`Scenario.holds`)?"""
+    return any(c.holds and c.order_kind == order_kind for c in Scenario.__subclasses__())
 
 
 def ruins_empty(guild):

@@ -2656,10 +2656,6 @@
             "shield": "escudo",
             "status": "status"
         },
-        "held": {
-            "last_foe": "O último inimigo caiu.",
-            "ruins": "O último inimigo caiu. As ruínas são suas para vasculhar. Saia pela entrada."
-        },
         "morale": {
             "falls": "{unit} perde {amount} de moral ({why}): {morale}/{ceiling}.",
             "why": {
@@ -3676,6 +3672,12 @@
         "talk": {
             "caption": "CAR {cha:+d} · INT {int:+d} · {languages}",
             "no_language": "sem idioma"
+        },
+        "held": {
+            "title": "Aqui não há vitória",
+            "text": "O lugar não se vence matando. Saia pela entrada para ficar com o que carrega.",
+            "tip": "Em um lugar de onde o esquadrão precisa sair andando, a luta não acaba quando o último inimigo cai. O que o esquadrão guarda é o que leva para fora pela entrada, e ele sai quando você decidir.",
+            "enter": "A luta aqui não acaba quando o último inimigo cai: você fica com o que levar para fora pela entrada."
         }
     },
     "hunt": {
