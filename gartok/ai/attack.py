@@ -347,21 +347,50 @@ def _breath_spot(battle, unit, target):
     return best[1] if best else None
 
 
-def _try_shove(battle, unit):
-    """Push a foe when the shove is worth more than a swing: into the flames, or with a Mighty
-    Shove against a wall. Returns the foe if it shoved, else None."""
+def _others_in_reach(battle, unit, but):
+    """The foes besides `but` the unit can swing at from where it stands, sleepers left asleep aside."""
+    return [f for f in battle.units
+            if f.alive and f.team != unit.team and f is not but and not f.downed
+            and not _leave_asleep(battle, unit, f) and actions.ATTACK.can(battle, unit, f)]
+
+
+def _shove_follow(battle, unit, shoved):
+    """`(foe, worth)` of the swing left after shoving `shoved`: the best one on another foe still in
+    reach, else on `shoved` itself, which only a failed shove leaves beside the unit."""
+    others = _others_in_reach(battle, unit, shoved)
+    if others:
+        foe = max(others, key=lambda f: _strike_worth(battle, unit, f))
+        return foe, _strike_worth(battle, unit, foe)
+    return shoved, (1 - reckon._shove_odds(unit, shoved)) * _strike_worth(battle, unit, shoved)
+
+
+def _drops(battle, unit, target):
+    """The blows the unit has left bring down a foe whose hit points its side has read."""
+    return (intel.knows(battle, unit.team, target, "hp") and actions.ATTACK.can(battle, unit, target)
+            and target.hp - _bleed_tick(target) <= unit.ap * _blow(unit))
+
+
+def _try_shove(battle, unit, target):
+    """Push a foe when the rest of the turn is worth more that way than as swings: the shove (into
+    the flames or a pit, a Mighty Shove against a wall, a flank broken) plus the swing the point left
+    buys on a foe still in reach, against every point spent striking `target` or a foe in reach worth
+    more. Never while the blows left would drop `target`. Returns the foe to turn to with the point
+    left, else None."""
     push = actions.PUSH
-    if not push.available(battle, unit):
+    if not push.available(battle, unit) or _drops(battle, unit, target):
         return None
-    swing = reckon.SHOVE_HIT_ODDS * (_hand_die(unit) + unit.mod_strength)
-    best, best_worth = None, max(0.0, swing)
+    left = unit.ap - push.cost
+    swings = [_strike_worth(battle, unit, f) for f in _others_in_reach(battle, unit, target)]
+    best, best_worth = None, max(_two_points(battle, unit, target) / 2, *swings, 0.0) * unit.ap
     for foe in push.highlight_targets(battle, unit):
         if foe.team == unit.team or _leave_asleep(battle, unit, foe):
             continue
-        worth = _shove_worth(battle, unit, foe)
-        if worth > best_worth:
-            best, best_worth = foe, worth
+        follow, swing = _shove_follow(battle, unit, foe) if left else (foe, 0.0)
+        shove = _shove_worth(battle, unit, foe)
+        worth = shove + left * swing
+        if shove > 0 and worth > best_worth:
+            best, best_worth, after = foe, worth, follow
     if best is None:
         return None
     push.execute(battle, unit, best)
-    return best
+    return after

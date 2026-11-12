@@ -24,11 +24,11 @@ def _pit_duel():
 def test_the_ai_does_not_shove_a_sleeper_while_another_foe_is_awake(monkeypatch):
     monkeypatch.setattr(ai.reckon, "_shove_odds", lambda unit, foe: 0.9)
     batt, e, p = _pit_duel()
-    assert ai._try_shove(batt, e) is not None
+    assert ai._try_shove(batt, e, p) is not None
     batt, e, p = _pit_duel()
     _asleep(p)
     _recruit(batt, team="player").pos = (9, 9)
-    assert ai._try_shove(batt, e) is None
+    assert ai._try_shove(batt, e, p) is None
 
 
 def test_the_ai_does_not_demoralize_a_sleeper_while_another_foe_is_awake():

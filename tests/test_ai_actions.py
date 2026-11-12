@@ -3,7 +3,8 @@ scored against two plain attacks, Throw, Jump, Push into a pit, traps, secret wa
 
 import random
 
-from gartok import ai
+from gartok import ai, intel
+from gartok.combatant import Combatant
 from gartok.ground import GroundObject
 from tests.helpers import (
     Battle,
@@ -204,7 +205,7 @@ def test_ai_shoves_a_foe_into_a_deep_pit(monkeypatch):
     batt, e, p = _duel("Club")
     batt.board.elevation = {(7, 5): -4}
     monkeypatch.setattr(ai.reckon, "_shove_odds", lambda unit, foe: 0.9)
-    assert ai._try_shove(batt, e)
+    assert ai._try_shove(batt, e, p)
     assert batt.elevation(p) < 0 or p.pos == (6, 5)
 
 
@@ -212,7 +213,7 @@ def test_after_a_failed_shove_the_ai_strikes_instead_of_defending(monkeypatch):
     batt, e, p = _duel("Club")
     batt.turn_idx = batt.order.index(e)
 
-    def failed_shove(battle, unit):
+    def failed_shove(battle, unit, target):
         monkeypatch.undo()
         unit.ap -= 1
         return p                                  # the foe is still beside it
@@ -226,7 +227,7 @@ def test_after_a_shove_that_lands_the_ai_closes_in_and_never_backs_off(monkeypat
     batt, e, p = _duel("Club")
     batt.turn_idx = batt.order.index(e)
 
-    def landed_shove(battle, unit):
+    def landed_shove(battle, unit, target):
         monkeypatch.undo()
         unit.ap -= 1
         p.pos = (8, 5)                            # thrown out of reach
@@ -253,6 +254,106 @@ def test_shoving_a_flanker_breaks_nothing_while_it_has_not_acted():
     mate.pos = (4, 5)
     p.turns_taken = 0
     assert ai._unflank_worth(batt, e, p) == 0
+
+
+def _flanked_duel(monkeypatch, shove_odds=0.9):
+    """The duel board with a second foe on the far side of the AI's unit, a fight under way (the flank
+    counts), every shove reckoned at `shove_odds`, and a spy on Push. -> battle, unit, foe, mate, shoved."""
+    batt, e, p = _duel("Club")
+    mate = Combatant(standard_unit("player"), "player")
+    batt.units.append(mate)
+    batt.player_units.append(mate)
+    mate.pos = (4, 5)
+    mate.hp = mate.hp_max = 30
+    for u in batt.units:
+        u.turns_taken = 1
+    batt.turn_idx = batt.order.index(e)
+    monkeypatch.setattr(ai.reckon, "_shove_odds", lambda unit, foe: shove_odds)
+    shoved, push = [], actions.PUSH.execute
+    monkeypatch.setattr(actions.PUSH, "execute",
+                        lambda battle, unit, foe: (shoved.append(foe), push(battle, unit, foe))[1])
+    return batt, e, p, mate, shoved
+
+
+def test_ai_does_not_shove_when_its_blows_would_drop_a_foe_it_has_read(monkeypatch):
+    batt, e, p, mate, shoved = _flanked_duel(monkeypatch)
+    batt.board.elevation = {(7, 5): -4}             # a pit behind the other one: a shove worth taking
+    mate.hp = 1
+    assert ai._try_shove(batt, e, mate) is not None
+    assert shoved.pop() is p
+
+    batt, e, p, mate, shoved = _flanked_duel(monkeypatch)
+    batt.board.elevation = {(7, 5): -4}
+    mate.hp = 1
+    monkeypatch.setattr(intel, "knows", lambda battle, team, target, name: True)
+    with fixed_d20(20):
+        ai.take_turn(batt, e)
+    assert not shoved and not mate.alive
+
+
+def test_ai_swings_twice_at_the_flanker_two_blows_drop_instead_of_shoving(monkeypatch):
+    batt, e, p, mate, shoved = _flanked_duel(monkeypatch)
+    batt.fire = {(7, 5)}                            # flames behind the other one
+    mate.hp = int(ai.reckon._blow(e)) + 1           # one landed blow leaves it standing, two do not
+    monkeypatch.setattr(intel, "knows", lambda battle, team, target, name: True)
+    assert ai._target(batt, e) is mate and e.ap == 2
+    with fixed_d20(15):
+        ai.take_turn(batt, e)
+    assert not shoved and p.hp == 30 and mate.hp < int(ai.reckon._blow(e)) + 1
+
+
+def test_ai_with_one_point_left_weighs_the_shove_against_one_swing(monkeypatch):
+    from gartok.ai import attack
+    for edge, shoves in ((0.1, True), (-0.1, False)):
+        batt, e, p, _mate, _shoved = _flanked_duel(monkeypatch)
+        e.ap = 1
+        swing = attack._strike_worth(batt, e, p)
+        monkeypatch.setattr(attack, "_shove_worth", lambda battle, unit, foe, w=swing + edge: w)
+        assert (ai._try_shove(batt, e, p) is not None) is shoves
+
+
+def test_ai_with_two_points_weighs_the_shove_and_a_swing_against_two_swings(monkeypatch):
+    from gartok.ai import attack
+    batt, e, p, mate, shoved = _flanked_duel(monkeypatch)
+    swing = attack._strike_worth(batt, e, p)
+    assert attack._strike_worth(batt, e, mate) == swing
+    for share, shoves in ((0.9, False), (1.1, True)):       # the swing left on the other foe is in both plans
+        monkeypatch.setattr(attack, "_shove_worth",
+                            lambda battle, unit, foe, w=swing * share: w if foe is mate else 0.0)
+        assert (ai._try_shove(batt, e, p) is p) is shoves
+    assert shoved == [mate]
+
+
+def test_ai_does_not_shove_a_foe_just_to_swing_at_an_easier_one(monkeypatch):
+    from gartok.ai import attack
+    batt, e, p, mate, shoved = _flanked_duel(monkeypatch)
+    monkeypatch.setattr(attack, "_strike_worth", lambda battle, unit, foe, **kw: 2.0 if foe is mate else 0.5)
+    monkeypatch.setattr(attack, "_shove_worth", lambda battle, unit, foe: 0.4)
+    assert ai._try_shove(batt, e, p) is None and not shoved
+
+
+def test_after_shoving_one_flanker_the_ai_strikes_the_one_still_beside_it(monkeypatch):
+    batt, e, p, mate, shoved = _flanked_duel(monkeypatch)
+    batt.fire = {(7, 5)}
+    with fixed_d20(20):
+        ai.take_turn(batt, e)
+    assert shoved == [p] and p.pos == (7, 5)
+    assert e.pos == (5, 5) and mate.hp < 30
+
+
+def test_ai_swings_at_a_lone_foe_then_shoves_it_into_the_flames_with_the_last_point(monkeypatch):
+    batt, e, p = _duel("Club")
+    batt.fire = {(7, 5)}
+    batt.turn_idx = batt.order.index(e)
+    monkeypatch.setattr(ai.reckon, "_shove_odds", lambda unit, foe: 0.5)
+    assert ai._try_shove(batt, e, p) is None        # shoved first, the second point has nobody to hit
+    push, at_shove = actions.PUSH.execute, []
+    monkeypatch.setattr(actions.PUSH, "execute",
+                        lambda battle, unit, foe: (at_shove.append((unit.ap, foe.hp)), push(battle, unit, foe))[1])
+    with fixed_d20(20):
+        ai.take_turn(batt, e)
+    assert p.pos == (7, 5)
+    assert at_shove[0][0] == 1 and at_shove[0][1] < 30      # it had swung first
 
 
 # --------------------------------------------------------------------------- #

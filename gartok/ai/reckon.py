@@ -402,7 +402,7 @@ def _jet_burns(battle, jet, unit, target):
     return dest is not None and any(c in battle.fire for c in cells(dest, target.footprint))
 
 
-SHOVE_HIT_ODDS = 0.6        # how often the AI reckons a swing lands, to weigh a shove against it
+SHOVE_HIT_ODDS = 0.6        # how often the AI reckons a swing lands when it has no foe to reckon it on
 
 
 def _shove_odds(unit, foe):

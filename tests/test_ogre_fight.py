@@ -301,12 +301,15 @@ def test_the_ai_casts_water_jet_when_it_beats_its_hand():
     assert isinstance(ai._pick_attack(batt, p, e), actions.WaterJetAction)
 
 
-def test_the_ogre_shoves_a_foe_against_a_wall_instead_of_swinging():
+def test_the_ogre_shoves_a_foe_its_swing_barely_lands_on_against_a_wall(monkeypatch):
     batt, p, _, o = _shove_battle()
     _stats(p, constitution=3)
     batt.board.walls = {(5, 5)}
-    assert ai._try_shove(batt, o)
-    assert o.ap == 1
+    o.ap = 1
+    assert not ai._try_shove(batt, o, p)      # its own swing is worth more than the shove's two dice
+    monkeypatch.setattr(ai.reckon, "_reckoned_ac", lambda battle, unit, target, armor_pierce=False: 25)
+    assert ai._try_shove(batt, o, p)
+    assert o.ap == 0
 
 
 def test_anyone_shoves_a_foe_into_the_flames():
@@ -316,9 +319,10 @@ def test_anyone_shoves_a_foe_into_the_flames():
     e.pos, p.pos = (2, 5), (3, 5)
     _stats(e, strength=18)
     _stats(p, constitution=3)
-    assert not ai._try_shove(batt, e)
+    e.ap = 1                                  # the last point: the shove against one swing
+    assert not ai._try_shove(batt, e, p)
     batt.fire = {(4, 5)}
-    assert ai._try_shove(batt, e)
+    assert ai._try_shove(batt, e, p)
     assert p.pos == (4, 5)
 
 

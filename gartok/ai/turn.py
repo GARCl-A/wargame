@@ -283,15 +283,16 @@ def take_turn(battle, unit):
                 actions.DEFEND.execute(battle, unit)
             break
 
-        shoved_foe = _try_shove(battle, unit)
-        if shoved_foe is not None:
-            if unit.ap > 0 and unit.alive and shoved_foe.alive and shoved_foe in battle.units:
-                # the shove was the opening, not the plan: hit the foe if it can be reached (a failed shove
-                # leaves it adjacent), else the next pass closes in on it again; never back off
-                atk = _pick_attack(battle, unit, shoved_foe)
+        after_shove = _try_shove(battle, unit, target)
+        if after_shove is not None:
+            if unit.ap > 0 and unit.alive and after_shove.alive and after_shove in battle.units:
+                # the shove was the opening, not the plan: the point left goes to the foe still beside
+                # it (the shoved one after a failed shove); with none in reach the next pass closes in
+                # again; never back off
+                atk = _pick_attack(battle, unit, after_shove)
                 if atk is not None:
-                    atk.execute(battle, unit, shoved_foe)
-                elif battle.units_distance(unit, shoved_foe) <= 1 and actions.DEFEND.available(battle, unit):
+                    atk.execute(battle, unit, after_shove)
+                elif battle.units_distance(unit, after_shove) <= 1 and actions.DEFEND.available(battle, unit):
                     actions.DEFEND.execute(battle, unit)
             continue
 
@@ -315,6 +316,8 @@ def take_turn(battle, unit):
             if unit.ap > 0 and unit.alive:
                 if _try_escape_grapple(battle, unit):
                     continue
+                if target.alive and not target.downed and _try_shove(battle, unit, target) is not None:
+                    continue                  # the last point: a shove now costs one swing, not two
                 second_atk = _pick_attack(battle, unit, target)
                 if second_atk is not None:
                     second_atk.execute(battle, unit, target)

@@ -818,8 +818,11 @@ triples.
   Whatever stops it on the way -- a wall, or a body (standing or downed, friend
   or foe), which takes **1d6** too -- deals **1d6 more**. Over a pit lip it falls
   in and the throw ends there; onto burning cells it burns (Fire, below). The AI
-  shoves when the throw is worth more than a swing: into the flames, a pit deep enough to hurt,
-  a bear trap, out of a flank on itself, or a Mighty Shove into a wall (`ai.attack._try_shove`).
+  weighs the rest of its turn: with its last point a shove against one swing, with two points the shove
+  plus the swing left on a foe still beside it against two swings, so a lone foe is struck first and
+  shoved second. What makes a shove worth it: the flames, a pit deep enough to hurt, a bear trap, a flank
+  on itself broken, a Mighty Shove into a wall. It never shoves while its blows left would drop a foe
+  whose hit points it has read (`ai.attack._try_shove`).
 - **Takedown** (1-point action, an adjacent enemy up to 1 level of difference, not a flier):
   `d20 + STR mod` (attacker) vs `d20 + DEX mod` (target); matching it is enough and a natural 20
   always lands. Success makes the target **Prone**: it cannot move, jump, swim or flee and attacks
