@@ -200,6 +200,7 @@
   display:grid;grid-template-columns:auto 1fr auto;column-gap:14px;align-items:center}
 #held{pointer-events:auto;grid-template-columns:1fr;row-gap:4px;text-align:center}
 #held b{font:700 17px/1 Cinzel,serif;letter-spacing:.2em;color:var(--brass-hi);text-transform:uppercase}
+#held .ghost-btn{justify-self:center;height:28px;margin-top:2px}
 #held span{font:600 15px/1.25 Cinzel,serif;letter-spacing:.04em;color:#e8cfa0}
 #held[hidden]{display:none}
 #ritual b{font:700 17px/1 Cinzel,serif;letter-spacing:.2em;color:var(--brass-hi);text-transform:uppercase}

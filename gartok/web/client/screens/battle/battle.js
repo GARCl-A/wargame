@@ -30,7 +30,7 @@ const ROMAN = n => { const m = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "
 
 let S = null;
 const ui = {tab: "combat", aim: null, route: null, hover: null, armed: null, inspect: null, busy: false, error: null,
-            turn: null, dragged: false, spellbook: false};
+            turn: null, dragged: false, spellbook: false, heldOk: false};
 const SEAT = {player: "var(--enamel)", ally: "var(--moss)", enemy: "var(--blood)", third: "var(--violet)"};
 
 async function act(body, path = "/api/battle/act") {
@@ -367,11 +367,16 @@ function renderRitual() {
 
 function renderHeld() {
   const h = S.held, el = $("held");
-  el.hidden = !h || !!S.ritual;
+  el.hidden = !h || !!S.ritual || ui.heldOk;
   if (el.hidden) return;
-  el.innerHTML = `<b>${esc(h.title)}</b><span>${esc(h.text)}</span>`;
+  el.innerHTML = `<b>${esc(h.title)}</b><span>${esc(h.text)}</span><div class="ghost-btn" id="heldok">${tr("battle.held_ok")}</div>`;
   el.dataset.tip = h.tip;
 }
+$("held").addEventListener("click", e => {
+  if (!e.target.closest("#heldok")) return;
+  ui.heldOk = true;
+  renderHeld();
+});
 
 function renderAll() {
   renderTop(); renderTokens(); renderInspect(); renderLog(); renderUnit(); renderPlates(); renderHint(); renderRitual(); renderHeld();
@@ -493,7 +498,7 @@ async function showEnd(picker = false) {
   if (!fights) return;
   $("again").onclick = async () => {
     const f = fights.find(x => x.id === $("fightsel").value);
-    m.hidden = true; ui.inspect = null; ui.aim = null; ui.armed = null;
+    m.hidden = true; ui.inspect = null; ui.aim = null; ui.armed = null; ui.heldOk = false;
     const r = await api("/api/lab/new", {fight: f.id, level: S.meta.level, squad: f.squad > 3 ? f.squad : S.meta.squad,
                                      players: Number($("playersel").value)});
     S = null; $("tokens").innerHTML = "";
