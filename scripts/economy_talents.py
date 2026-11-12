@@ -178,6 +178,17 @@ def _fixer(tid):
     return (gain * 100, "pp", None, "on a recruit pitch against an even Charisma")
 
 
+def _joint_pitch(tid):
+    won = sum(1 for a in range(1, 21) for b in range(1, 21) for c in range(1, 21)
+              if max(a, b) + 1 >= c) / 8000
+    return ((won - p_contest(0)) * 100, "pp", None, "on a recruit pitch with one ally who could recruit alone")
+
+
+def _crowd_pleaser(tid):
+    gain = p_contest(1) - p_contest(0)
+    return (gain * 100, "pp", None, "on a pitch from a guild with a penalty of 1 to 10 (a penalty of 11 to 20 gains twice that)")
+
+
 def _provisioner(tid):
     saved = CREW * act.cheapest_meal() * economy.CHA_DEAL_STEP
     return (saved, "$", saved, f"a day off {CREW} mouths of the cheapest meal")
@@ -285,7 +296,7 @@ def _pathfinder(tid):
 ROWS = {
     "brawny": _haul, "heavy_haul": _haul, "piecework": _piecework, "brisk_hands": _brisk,
     "steady_pace": _steady, "charismatic": _tips, "troubadour": _tips, "negotiator": _negotiator,
-    "fixer": _fixer, "provisioner": _provisioner, "clever": _clever, "linguist": _linguist,
+    "fixer": _fixer, "joint_pitch": _joint_pitch, "crowd_pleaser": _crowd_pleaser, "provisioner": _provisioner, "clever": _clever, "linguist": _linguist,
     "crafter": _craft("Jerky"),
     "woodcarver": _craft("Shortbow"),
     "apothecary": _recipe, "blacksmith": _recipe, "nimble_fingers": _attr("dexterity"),

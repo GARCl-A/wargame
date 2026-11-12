@@ -283,6 +283,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         for g in self.groups:
             n = g.overextension
             for u in g.members:
+                u.leads_group = u is g.leader
                 if u.group_overextension != n or u.vocation != self.vocation:
                     u.group_overextension = n
                     u.vocation = self.vocation

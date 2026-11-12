@@ -451,6 +451,8 @@
             "title": "Batalha",
             "sub_lab": "Nível {level} · esquadrão de {squad} · semente {seed}",
             "skip_traps": "Pular armadilhas",
+            "skip_place": "Manter posição",
+            "skip_places": "Manter todos",
             "withdraw": "Recuar",
             "new_fight": "Nova luta",
             "held_ok": "OK",
@@ -498,6 +500,7 @@
             "hint_over": "A luta acabou.",
             "hint_flag": "Finque a sua bandeira: clique numa casa marcada da sua metade.",
             "hint_trap": "{name} arma uma armadilha: clique numa casa marcada, ou Pular armadilhas.",
+            "hint_place": "{name} escolhe a casa de partida: clique numa casa marcada, ou Manter posição.",
             "hint_talk": "Uma patrulha desafia o esquadrão.",
             "hint_other": "O outro lado está se movendo…",
             "hint_aim_cell": "{name}: clique numa casa marcada · Esc cancela.",
@@ -813,6 +816,10 @@
         },
         "tavern": {
             "signed_lbl": "Contrato assinado · entra para o rol de {by}",
+            "joint_on": "Proposta conjunta, com:",
+            "joint_off": "Propondo sozinho. Clique para propor junto com:",
+            "joint_dice": "(dados: {dice}, vale o melhor)",
+            "joint_tip": "Todos os listados poderiam recrutar este estranho sozinhos. Juntos rolam um dado cada, +1 por cada outro que rola, e vale o melhor dado. Uma falha impede todos de tentar de novo na semana.",
             "pitch_signed": "Proposta de {by} em {lang}: {ours} = <b>{ours_total}</b> contra {theirs} = <b>{theirs_total}</b> · assinou",
             "pitch_down": "Proposta de {by} em {lang}: {ours} = <b>{ours_total}</b> contra {theirs} = <b>{theirs_total}</b> · recusada",
             "signed": "assinou",
@@ -2016,6 +2023,18 @@
             "reason": "exige mãos livres",
             "label": "Arrancar (2 pts, DES contra 15 + FOR: toma a arma do inimigo e golpeia com ela)"
         },
+        "trample": {
+            "name": "Pisotear",
+            "desc": "2 pts: golpeia, depois empurra o inimigo, depois tenta derrubá-lo.",
+            "reason": "exige cascos",
+            "label": "Pisotear (2 pts: golpeia, empurra, derruba)"
+        },
+        "clamp": {
+            "name": "Prender com os Dentes",
+            "desc": "2 pts: morde; se acertar, agarra o inimigo sem teste. Um inimigo já agarrado é mordido com Brutal 1.",
+            "reason": "exige uma mordida",
+            "label": "Prender com os Dentes (2 pts: morde e segura; Brutal 1 contra quem já está preso)"
+        },
         "pick_up": {
             "name": "Pegar",
             "desc": "Pega um item ou tocha caído na sua casa.",
@@ -2252,6 +2271,9 @@
         "ambush_shot": {
             "brutal": "O virote encontra um alvo desprevenido"
         },
+        "true_line": {
+            "brutal": "Linha limpa até o alvo"
+        },
         "thrown_lands": "  {weapon:O} cai em {cell}; {actor} fica desarmado.",
         "con_save": "CON d20({nat}) {mod:+} = {total} contra CD {dc}",
         "poison_shaken": "  {target} resiste {poison:ao} ({roll}).",
@@ -2420,6 +2442,14 @@
             "head_claws_sweeps": "  Garras em Arco varrem até -> {target}"
         },
         "maimed": "  {target} é mutilado (movimento pela metade até a próxima rodada).",
+        "trample": {
+            "head": "{actor} Pisotear -> {target}"
+        },
+        "clamp": {
+            "head": "{actor} Prender com os Dentes -> {target}",
+            "brutal": "As presas encontram {target} imobilizado",
+            "holds": "  {actor} prende {target} entre os dentes."
+        },
         "wrest": {
             "keeps": "{actor} Arrancar -> {target}: d20({nat}) + {dex}(DES) = {total} contra CD {dc} -> {target} mantém {weapon:o}.",
             "tears": "{actor} Arrancar -> {target}: d20({nat}) + {dex}(DES) = {total} contra CD {dc} -> {actor} arranca {weapon:o} das mãos dele!"
@@ -3750,6 +3780,7 @@
         "resists_cha": "{kind} · resiste a CAR {mod_charisma:+}",
         "speaks": "Fala {join}",
         "bail": " · fiança {fmt_money}",
+        "crowd_cut": " (os {plain} normais, menos {cut} por Agrada-Multidão)",
         "d_cha": "d20 {recruiter_roll} {mod_charisma:+} CAR",
         "d_cha_2": "d20 {candidate_roll} {mod_charisma:+} CAR",
         "sq": "{speed} casas",
@@ -4734,6 +4765,7 @@
         "opposite_alignment": "alinhamento oposto ({eff_dist})",
         "guild_of": "guilda de {roster_size}",
         "halfling_luck_reroll": "Sorte de Halfling (nova rolagem)",
+        "joint_pitch": "proposta conjunta (mais {n})",
         "not_convinced": "não convencido",
         "their_group_is_full_and": "O grupo deles está cheio e a guilda não tem vaga livre de grupo: alguém pode ir embora.",
         "party_is_empty": "o grupo está vazio",
@@ -5253,6 +5285,8 @@
             "javelin_charge": "Arremesso em Corrida",
             "parry_strike": "Aparar e Golpear",
             "wrest": "Arrancar",
+            "trample": "Pisotear",
+            "clamp": "Prender com os Dentes",
             "long_thrust": "Estocada Longa"
         },
         "faction": {
@@ -5779,6 +5813,10 @@
             "wrestler": "Lutador",
             "agile": "Ágil",
             "long_reach": "Longo Alcance",
+            "steady_aim": "Mira Firme",
+            "true_line": "Flecha da Rainha",
+            "vantage": "Vantagem",
+            "battle_plan": "Plano de Batalha",
             "heavy_bolts": "Virotes Pesados",
             "ready_hand": "Mão Pronta",
             "keen_bolts": "Virotes Certeiros",
@@ -5821,6 +5859,8 @@
             "charismatic": "Carismático",
             "negotiator": "Negociador",
             "fixer": "Articulador",
+            "joint_pitch": "Proposta Conjunta",
+            "crowd_pleaser": "Agrada-Multidão",
             "provisioner": "Provedor",
             "troubadour": "Trovador",
             "clever": "Esperto",
@@ -6079,7 +6119,9 @@
             "javelin_charge": "1 pt: arremessa a lança depois de se mover neste turno, com +1d4 de dano extra.",
             "parry_strike": "2 pts: um golpe e Defendendo (+1 CA) até a próxima rodada; com dois ou mais inimigos ao alcance, o golpe é Brutal 1.",
             "wrest": "2 pts, só de mãos nuas: toma a arma de um inimigo armado adjacente (d20 + Destreza contra 15 + a Força dele) e, se puder empunhá-la, golpeia com ela na hora.",
-            "long_thrust": "2 pts: um golpe uma casa além do alcance da arma, +1 para acertar: o único golpe que chega tão longe."
+            "long_thrust": "2 pts: um golpe uma casa além do alcance da arma, +1 para acertar: o único golpe que chega tão longe.",
+            "trample": "2 pts, só de cascos: um golpe, depois um empurrão, depois uma tentativa de derrubar; cada passo só vale se o inimigo ainda estiver de pé e ao alcance.",
+            "clamp": "2 pts, só de mordida: um golpe; se acertar, agarra o inimigo sem teste. Contra um inimigo já agarrado o golpe é Brutal 1."
         },
         "archetype": {
             "LEADER": "Define quantas pessoas a guilda comporta e quão bem vai o recrutamento. Também pechincha e levanta o moral.",
@@ -6310,6 +6352,10 @@
             "wrestler": "+1 nos testes de Empurrar e Agarrar.",
             "agile": "+1 de Destreza.",
             "long_reach": "+1 casa de alcance com armas à distância e de arremesso.",
+            "steady_aim": "+1 de dano com uma arma à distância de Destreza: arco ou besta, não um arremesso.",
+            "vantage": "Antes da luta, quem tem o talento escolhe a própria casa de partida dentro da zona de posicionamento do seu lado.",
+            "battle_plan": "Antes da luta, o líder do grupo escolhe a casa de partida de cada membro do lado, um a um. Exige Vantagem.",
+            "true_line": "Um disparo de arco ou besta é Brutal 1 quando atirador e alvo estão na mesma linha, na mesma coluna ou numa diagonal exata (contando a casa-âncora de cada um).",
             "heavy_bolts": "+1 de dano com a Besta.",
             "ambush_shot": "Um disparo de Besta contra um alvo desprevenido é Brutal 1.",
             "ready_hand": "Depois de um arremesso, uma arma idêntica da mochila já está na mão, sem gastar ação.",
@@ -6351,6 +6397,8 @@
             "heavy_haul": "Carrega até 6 kg a mais antes de cambalear, em qualquer coisa que não seja equipamento (materiais, comida, saque, mas não armas, armaduras, escudos ou artefatos).",
             "charismatic": "+1 de Carisma.",
             "negotiator": "+1 de Carisma nos testes de compra e venda no mercado.",
+            "joint_pitch": "Propõe a um estranho junto com todo membro do bando que poderia recrutá-lo sozinho: um dado cada, +1 por cada outro que rola, vale o melhor. Uma falha impede todos vocês de tentar de novo na semana.",
+            "crowd_pleaser": "Sua proposta paga 10% menos da penalidade de multidão, arredondado para cima. Exige Proposta Conjunta.",
             "fixer": "+1 na sua lábia ao convencer alguém a entrar na guilda.",
             "provisioner": "+1 na pechincha de comida, com idioma em comum ou não.",
             "troubadour": "+1 nas rolagens de apresentação no palco da taverna.",

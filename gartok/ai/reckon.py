@@ -227,7 +227,8 @@ def _blow(unit, thrown=False):
     if thrown:
         return _avg_die(unit.weapon["damage"]) + unit.mod_strength
     if unit.ranged:
-        return _hand_die(unit) + (unit.char.talent_bonus("crossbow_damage") if unit.shoots_crossbow else 0)
+        return (_hand_die(unit) + unit.char.talent_bonus("ranged_damage")
+                + (unit.char.talent_bonus("crossbow_damage") if unit.shoots_crossbow else 0))
     return _hand_die(unit) + unit.melee_damage_mod()
 
 
@@ -243,6 +244,8 @@ def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
     bleed = _bleed_worth(unit, target) if not kw.get("thrown") else 0
     ambush = _blow(unit) * unit.char.talent_bonus("crossbow_ambush") if (
         unit.shoots_crossbow and not kw.get("thrown") and actions.off_guard(battle, unit, target)) else 0
+    if actions.base._straight_shot(unit, target, thrown=kw.get("thrown", False)):
+        ambush += _blow(unit) * unit.char.talent_bonus("straight_shot_brutal")
     return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage + cull + bleed + ambush)
 
 
@@ -322,11 +325,45 @@ def _wrest_worth(battle, unit, target):
     return odds * (strike + lost)
 
 
+TAKEDOWN_STANDING = 0.5     # share of the foe's blow a Takedown takes: the point it spends standing up
+CLAMP_HOLD = 0.5            # share of a grab that lasts into the next bite (the foe may break free)
+
+
+def _takedown_worth(battle, unit, foe):
+    """A Takedown of `foe`: the odds the contest is won times the point it then spends getting up."""
+    if not actions.TAKEDOWN.in_reach(battle, unit, foe):
+        return 0.0
+    odds = max(0.05, min(0.95, 0.55 + 0.05 * (unit.mod_strength - foe.mod_dexterity)))
+    return odds * _blow(foe) * TAKEDOWN_STANDING
+
+
+def _trample_worth(battle, unit, target):
+    """A Trample: one strike, the shove, and the Takedown for the foe the shove leaves in reach."""
+    worth = _strike_worth(battle, unit, target)
+    if not actions.PUSH.in_reach(battle, unit, target):
+        return worth + _takedown_worth(battle, unit, target)
+    path, _ = actions.PUSH.landing(battle, unit, target)
+    stays = 1 - (_shove_odds(unit, target) if path else 0)
+    return worth + _shove_worth(battle, unit, target) + stays * _takedown_worth(battle, unit, target)
+
+
+def _clamp_worth(battle, unit, act, target):
+    """A Clamp: one strike, Brutal 1 on a foe already held; on a free one the grab it may leave, worth the
+    extra die the next bite carries."""
+    if act.favoured(battle, unit, target):
+        return _strike_worth(battle, unit, target, bonus_damage=_blow(unit))
+    return _strike_worth(battle, unit, target) + _hit_odds(battle, unit, target) * CLAMP_HOLD * _blow(unit)
+
+
 def _weapon_action_worth(battle, unit, act, target):
     """Expected damage (or its equivalent) of a 2-point weapon action on `target`: one strike, which
     is Brutal 1 in the action's favoured case (`act.favoured`), plus the action's own edge."""
     if act.id == "wrest":
         return _wrest_worth(battle, unit, target)
+    if act.id == "trample":
+        return _trample_worth(battle, unit, target)
+    if act.id == "clamp":
+        return _clamp_worth(battle, unit, act, target)
     if act.id == "extreme_shot":
         return _strike_worth(battle, unit, target) - UNLOADED_COST
     if act.id == "long_thrust":

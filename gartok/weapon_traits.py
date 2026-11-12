@@ -94,6 +94,14 @@ _TRAITS = [
         action_id="wrest",
     ),
     WeaponTrait(
+        id="trample",
+        action_id="trample",
+    ),
+    WeaponTrait(
+        id="clamp",
+        action_id="clamp",
+    ),
+    WeaponTrait(
         id="long_thrust",
         action_id="long_thrust",
     ),

@@ -598,8 +598,9 @@ class Sim:
                 continue
             talker = max(talkers, key=lambda m: m.mod_charisma)
             self.pitches += 1
+            allies = recruit.joint_allies(guild, self.members, cand, talker, lambda c, m: barred(guild, c, m))
             pitch = recruit.convince(talker, cand, len(guild.roster), day=guild.clock.day,
-                                     extra_mods=[BAIL_BONUS] if prison else None)
+                                     extra_mods=[BAIL_BONUS] if prison else None, allies=allies)
             if pitch.ok:
                 if bail:
                     economy.charge_richest_first(self.members, bail)
@@ -608,7 +609,8 @@ class Sim:
                 hired += 1
                 self.recruited += 1
             else:
-                bar(guild, cand, talker)
+                for who in (talker, *allies):
+                    bar(guild, cand, who)
         self.snap()
         return hired
 

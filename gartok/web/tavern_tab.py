@@ -54,6 +54,9 @@ class TavernTab:
             raise ValueError(i18n.t("tavern_tab.offer_moves_one_doubling_at"))
         self.s._raise(delta)
 
+    def joint(self):
+        self.s.joint = not self.s.joint
+
     def convince(self):
         s = self.s
         if s.sel is None or s.selected_recruiter is None:
@@ -76,7 +79,8 @@ class TavernTab:
         if not p.recruiter_roll:
             return {"ok": False, "by": who.name, "line": p.reason}
         mods = [f"{v:+} {label}" for v, label in p.modifiers if v]
-        return {"ok": p.ok, "by": who.name, "lang": p.language,
+        dice = " · ".join(str(r) for r in p.rolls) if len(p.rolls) > 1 else None
+        return {"ok": p.ok, "dice": dice, "by": who.name, "lang": p.language,
                 "ours": i18n.t("tavern_tab.d_cha", recruiter_roll=p.recruiter_roll, mod_charisma=who.mod_charisma) + "".join(f" {m}" for m in mods),
                 "ours_total": p.recruiter_total, "theirs": i18n.t("tavern_tab.d_cha_2", candidate_roll=p.candidate_roll, mod_charisma=c.mod_charisma),
                 "theirs_total": p.candidate_total}
@@ -124,15 +128,25 @@ class TavernTab:
             warn = recruit.overflow_warning(self.guild, who)
             hint = {"text": warn, "tone": "money"} if warn else None
         return {"pitchers": pitchers, "button": {"label": label, "on": can}, "hint": hint,
-                "terms": self._terms(who)}
+                "terms": self._terms(who), "joint": self._joint(c, who)}
+
+    def _joint(self, c, who):
+        """The Joint Pitch choice, or None: who would roll beside the one pitching, and whether it is on."""
+        if who is None:
+            return None
+        allies = recruit.joint_allies(self.guild, self.s.party, c, who, self.s._barred)
+        return {"on": self.s.joint, "names": [m.name for m in allies]} if allies else None
 
     def _terms(self, who):
         """The two numbers a pitch is weighed by before the roll: the crowd penalty and the room in
         the group the recruit would join."""
         size = len(self.guild.roster)
-        pen = recruit.size_penalty(size)
+        pen, cut = recruit.size_penalty(size, who), recruit.size_cut(size, who)
+        note = i18n.t("tavern_tab.guild_of_on_every_pitch", size=size, size_penalty=recruit.SIZE_PENALTY, free_slots=recruit.FREE_SLOTS)
+        if cut:
+            note += i18n.t("tavern_tab.crowd_cut", plain=pen + cut, cut=cut)
         crowd = {"label": i18n.lab("Crowd"), "value": f"-{pen}" if pen else "0", "tone": "bad" if pen else "good",
-                 "note": i18n.t("tavern_tab.guild_of_on_every_pitch", size=size, size_penalty=recruit.SIZE_PENALTY, free_slots=recruit.FREE_SLOTS)}
+                 "note": note}
         grp = (self.guild.group_of(who) if who is not None else None) or self.group
         (base, base_lbl), *rest = grp.capacity_terms()
         sum_line = " ".join([f"{base} {i18n.lab(base_lbl)}", *(f"{v:+} {i18n.lab(lbl)}" for v, lbl in rest)])

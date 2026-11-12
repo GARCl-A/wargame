@@ -104,6 +104,7 @@ from .support import (
 )
 from .weapon_actions import (
     ArmorPierce,
+    Clamp,
     Cleave,
     ExtremeShot,
     HookShield,
@@ -115,6 +116,7 @@ from .weapon_actions import (
     PreciseThrust,
     RepelStrike,
     SneakAttack,
+    Trample,
     Wrest,
 )
 
@@ -181,6 +183,8 @@ JAVELIN_CHARGE = JavelinCharge()
 PARRY_STRIKE = ParryStrike()
 LONG_THRUST = LongThrust()
 WREST = Wrest()
+TRAMPLE = Trample()
+CLAMP = Clamp()
 
 WEAPON_ACTIONS = [
     SNEAK_ATTACK,
@@ -196,6 +200,8 @@ WEAPON_ACTIONS = [
     PARRY_STRIKE,
     LONG_THRUST,
     WREST,
+    TRAMPLE,
+    CLAMP,
 ]
 
 # Panel actions split into clear combat and utility categories for the UI.

@@ -31,7 +31,7 @@ def _settle(s):
         if st["setup"]["kind"] == "flag":
             s.act("plant_flag", cell=st["setup"]["cells"][0])
         else:
-            s.act("skip_traps")
+            s.act("skip_places" if st["setup"]["kind"] == "place" else "skip_traps")
         return True
     if st["talk"]:
         s.answer(go_on=True) if st["talk"]["result"] else s.answer(verb="attack")
@@ -299,6 +299,7 @@ def test_events_drain_what_the_step_did():
 def test_the_steps_of_ai_turns_add_up_to_the_same_fight_as_plain_take_turn():
     stepped, plain = [], []
     s = _session("fortress", seed=11)
+    s.battle.place_queue.clear()
     for _ in range(40):
         if s.battle.winner is not None:
             break
@@ -309,6 +310,7 @@ def test_the_steps_of_ai_turns_add_up_to_the_same_fight_as_plain_take_turn():
             assert steps[-1]["state"] == s.state()
         stepped.append(_snapshot(s.battle))
     battle, _ = combat_lab.build("fortress", 2, 4, seed=11)
+    battle.place_queue.clear()
     for _ in range(len(stepped)):
         if battle.active.team == "player" and not battle.active.ai_ally:
             if actions.DEFEND.can(battle, battle.active):
@@ -412,7 +414,8 @@ def test_server_refuses_an_illegal_act_and_plays_a_legal_one(server):
         if state["my_turn"]:
             break
         if state["setup"]:
-            state = _post(server + "/api/battle/act", {"action": "skip_traps"})["steps"][-1]["state"]
+            skip = "skip_places" if state["setup"]["kind"] == "place" else "skip_traps"
+            state = _post(server + "/api/battle/act", {"action": skip})["steps"][-1]["state"]
             continue
         state = _post(server + "/api/battle/advance", {})["steps"][-1]["state"]
     with pytest.raises(urllib.error.HTTPError) as e:
@@ -456,9 +459,10 @@ def test_every_lab_fight_plays_to_its_end_with_a_person_on_every_human_choice(fi
         elif s.my_turn():
             s._stepped(lambda: ai.take_turn(battle, battle.active), None)    # a stand-in player
         else:
-            before = (battle.active, battle.round_no, battle.active.ap)
+            before = (battle.active, battle.round_no, battle.active.ap, len(battle.place_queue))
             s.advance()
-            assert (battle.active, battle.round_no, battle.active.ap) != before or battle.winner, "stuck"
+            after = (battle.active, battle.round_no, battle.active.ap, len(battle.place_queue))
+            assert after != before or battle.winner, "stuck"
     assert battle.winner is not None, f"{fight} never ended"
     if fight in ("ctf", "boss"):
         assert "setup" in asked
@@ -808,3 +812,33 @@ def test_the_web_draw_card_lists_the_pack_and_the_act_swaps_the_hand():
     assert actor.weapon_name == axe and actor.inventory == [fitted(actor, "Dagger")]
     with pytest.raises(ValueError):
         s.act("draw", item="Sword of Nothing")
+
+
+def test_a_vantage_holder_places_itself_through_the_session():
+    s = _session()
+    b = s.battle
+    holder = next(u for u in b.units if u.team == "player")
+    holder.char.combat_xp = 1000
+    for t in ("tactical_mind", "vantage"):
+        assert holder.char.choose_talent("combat", t)
+    b.place_queue = [holder]
+    while s.state()["setup"] and s.state()["setup"]["kind"] != "place":
+        s.act("skip_traps") if s.state()["setup"]["kind"] == "trap" else s.act(
+            "plant_flag", cell=s.state()["setup"]["cells"][0])
+    st = s.state()["setup"]
+    assert st["kind"] == "place" and st["name"] == holder.name and st["cells"]
+    s.act("place", cell=st["cells"][-1])
+    assert list(holder.pos) == list(st["cells"][-1])
+    assert not s.state()["setup"]
+
+
+def test_an_ai_vantage_holder_places_itself_without_asking():
+    s = _session()
+    b = s.battle
+    foe = next(u for u in b.units if u.team == "enemy")
+    b.place_queue = [foe]
+    for _ in range(20):
+        if foe not in b.place_queue:
+            break
+        s._advance()
+    assert foe not in b.place_queue

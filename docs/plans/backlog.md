@@ -1,7 +1,8 @@
 # Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
-`docs/plans/` ([loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
+`docs/plans/` ([new_things_per_level.md](new_things_per_level.md),
+[backlog_hygiene.md](backlog_hygiene.md), [storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
 that owns the subject: the test suite [../../tests/README.md](../../tests/README.md), the economy sim
 [../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
 What is already built is in the code, its tests and the git log.
@@ -26,6 +27,11 @@ Parts, in this order:
 
 Goal: a stable build for the author's playtest and one with friends. Left:
 
+- **A new thing to do per level (audit 2026-11-12).** Plan: [new_things_per_level.md](new_things_per_level.md).
+  The talents and body actions already decided under *Needs more information*: archery, `Hooves` and `Bite`,
+  placement, joint pitch and the crowd-penalty cut. Medium; after the two above.
+- **Backlog hygiene (audit 2026-11-12).** Plan: [backlog_hygiene.md](backlog_hygiene.md). Docs only: decided items
+  move to *Ready to do*, the economy numbers become tasks, the Loyalty entry stops naming a guild treasury.
 - **Tutorials.** The author reads every card in play and flags what still rings false.
 - **Translation to pt-br.** The author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
@@ -92,23 +98,16 @@ the rest.
   starting squad and the stat draft need a rebalance (*Starting squad is weak* in the playtest notes), and measure
   the casters' builds alone.
 
-- **AI heuristics: Shove vs Attack x2 (playtest 2026-11-08).** Review AI combat priorities when surrounded or
-  flanked. Ensure the AI does not overvalue shoving a foe away (to break flanking or force movement) over
-  attacking twice to eliminate or soften an immediate threat.
-
-- **AI target selection against flying units (playtest 2026-11-08).** When an enemy flyer (fairy) is out of
-  reach, nearby melee AI (wolves) defaulted to Defend instead of advancing to attack reachable grounded allies.
-  Adjust AI target evaluation to seek alternate reachable targets.
-
 - **Weapon icons: give each its own (author 2026-11-08).** Broadsword, sword and rapier share the `broadsword`
   glyph; axe and hatchet share `battle-axe` (`item_icon.GLYPHS` / `HEAD_GLYPHS`). Source a distinct glyph for each: other `assets/icons/`
   folders, otherwise new game-icons.net SVGs (same licence).
 
-- **AI: Crowd-control-aware target decision (author/Yohan alignment).** Improve AI action sequencing when applying control
-  effects: when a boss, caster or controller inflicts Sleep or similar incapacitation that breaks on damage, nearby AI
-  attackers must retarget awake/active threats instead of attacking the sleeping target and immediately breaking the condition.
-
 ## Medium
+
+- **Storefront polish (photo review 2026-11-12).** Plan: [storefront_polish.md](storefront_polish.md). What the
+  real screenshots in [../photos/12112026/](../photos/12112026/) show: the unit panel overflowing at low hit
+  points, the cut battle title, band pawns over place names on the map (three *Small*), the fog of war in a room
+  full of pillars (the author picks the look), a blow that moves the token, and music (the author picks the tracks).
 
 - **Race study in four tests (`docs/race_study.md`).** The waves and `mixed_study_report.py` exist; missing: a full run
   (sizes in the doc), the mixed error (a build twice in one squad is credited twice per unit, which is the intended score, but
@@ -323,7 +322,7 @@ Not tasks and not yet decisions: premises the author wants to think over before 
   story; what gates a thing is money, exploring a place, a reputation, a talent or a race. The author
   knows this makes levelling feel flat (*Playtest notes -> 2026-10-31 -> Levelling is vertical only*).
   Question: keep it fully open and fix levelling elsewhere, or let something be earned in order?
-- **Release (author 2026-10-31).** Itch.io first, as an indie demo (pay what you want), while the game
+- **Release (author 2026-10-31).** Strategy and order of work: [go_to_market.md](go_to_market.md) (2026-11-12), which revises the itch.io-first idea below. Itch.io first, as an indie demo (pay what you want), while the game
   grows; Steam when there are 20+ hours of play ($100 fee; the generative-AI content flag must be
   ticked). Mobile does not fit: the UI is heavy, though it is a web app. A Kickstarter to pay a real
   artist was suggested. State the AI use plainly on the store page: generative AI is only the character
@@ -333,6 +332,11 @@ Not tasks and not yet decisions: premises the author wants to think over before 
   10 of 10 to 8 L2 wolves, 3 L4 lose 9 of 10 to 4 L3 wolves, while 8 L3 sweep 2 L0 wolves and 10 L20 sweep
   6 L1 soldiers. Headcount weighs more than level, and armour barely moved the 3-against-4 result.
   Question: is that the progression the game wants, or should levels and gear count for more than bodies?
+  Measured again 2026-11-12 with the race study's builds (`scripts/race_study_builds.py`) raised to level 10, one
+  fighter against level 2 wolves, 200 fights each, both sides on the AI, open field: against 8 wolves a Glaive
+  build wins 8 to 10% (Human, Orc, Dwarf, Goliath), sword and shield 8.5%, Broadsword 6%, the Fortress 7%, a
+  random level 10 body 4%; the Human Glaive wins 45% against 4 wolves, 15% against 6, 4% against 12. The built
+  fighter is about twice the random one and still loses: headcount weighs more than level.
 - **Co-op / multiplayer on a shared map (author 2026-10-31).** Each band a player. A daydream; the
   tester does not see it fitting. No plan.
 
@@ -363,7 +367,8 @@ items it touches. Raw feedback, not yet sized:
   small; the pattern is to show the rule where the decision is made (a pick, a price, a button).
 - **Starting squad is weak.** STR 2 or 3 carries nothing, a bow is too dear, and the start weapon is
   a dagger or a piece of an axe ("at least one real weapon"). The author would take 18 STR, 18 CON and 0
-  elsewhere at level 0.
+  elsewhere at level 0. Decided (author 2026-11-12): the starting weapon stays as it is; a Dagger is not a
+  bad weapon (good actions, and finesse makes a Dexterity character work) and the starting weapon is not the problem.
 - **Food was learned wrong.** He bought what looked like 20 days of shelf life and it spoiled; beer
   first (cheap at 4 copper and durable), then Potato; a farm trip for it did not pay against Fruit at the
   grocery. Check the economy report: is beer the best buy per day? No
@@ -478,32 +483,13 @@ has one "Enter" button and its functions are tabs inside.
   immunities, no extra AP, no loot multipliers, no one-node perks. Trade-off rule (author 2026-10-31):
   group size and recruiting come from Charisma talents that cost a pick which would otherwise make a
   better individual fighter; a big guild or a strong fighter, not both.
-  1. *Charisma tree (work and combat):* +1 group size limit while leading; -10% crowd penalty
-     (`recruit.size_penalty`); and a joint pitch. Joint pitch, as the author means it: A (holds the
-     talent) recruits a target that B could also recruit on their own. A "consumes" B: instead of one
-     roll per recruiter, the pitch is N rolls (A and every other ally who could recruit that target), each
-     `1d20 + A's CHA + 1 per other ally who could`. A has +2 and B +1 in the author's example, so two
-     rolls of `d20+3`. A failure spends the week's attempt (`recruit.bar`) of everyone involved.
-     Decided (author 2026-11-01): the best roll counts (the talent is a way to try more than once); the
-     holder becomes `recruited_by`; "could recruit" means every requirement the ally would need to
-     recruit that target alone (`slots_free`, the shared language, the rest of `recruit.py`'s checks).
-     Decided (author 2026-11-04, moved 2026-11-11): three separate nodes that may connect, all in the *work*
-     Charisma tree (Charismatic, Negotiator, Fixer, Provisioner, Troubadour today). Group size +1 and crowd
-     penalty -10% are work talents, no longer combat; joint pitch comes after Fixer. Decided (author 2026-11-12):
-     joint pitch and the crowd-penalty cut are built now; the group size +1 node waits for *Loyalty*
-     (`cohesion.py`'s capacity is replaced by it). What a big guild gives up (author 2026-11-12): its work is slower,
-     it has fewer specialists in craft or healing, so it knows fewer recipes, carries less and earns less per
-     action: the bonuses on the work it does are smaller. Open: the tier of each (group size +1 deep, recruiting
-     is the strongest thing in the game so far).
-  2. *Intelligence tree (combat), two talents:* (a) **group leader only: places the whole group** before
-     the fight; (b) **places only oneself**. Decided (author 2026-11-11): a ladder, (b) hangs under Tactical Mind
-     and (a) under (b) (`requires`). (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
-     the UI is like the flag's placement (a pre-fight setup step, `BattleSession` already has "flag" and
-     "trap"), placing the characters one after another in initiative order. (a) works only when the
-     leader is on the board (an arena bout picks its fighters, a hunt leaves its guards behind: without
-     the leader, no one places the group). `ai/` places its own side at random at first; after a playtest with the talent, the author's placements
-     train it. Decided (author 2026-11-11): (b) is T2 under Tactical Mind, (a) is T3 under (b).
-  3. *Charisma + Wisdom compound:* Demoralize on beasts. A beast has no language, so `Demoralize._can_provoke`
+  1. *Charisma tree (work): group size +1 while leading.* Decided (author 2026-11-12): it waits for *Loyalty*
+     (`cohesion.py`'s capacity is replaced by it), and is a work talent, a node that may connect to the
+     others (Fixer, Joint Pitch and Crowd Pleaser are built). What a big guild gives up (author 2026-11-12): its
+     work is slower, it has fewer specialists in craft or healing, so it knows fewer recipes, carries less and
+     earns less per action: the bonuses on the work it does are smaller. Open: the tier of the node (deep:
+     recruiting is the strongest thing in the game so far).
+  2. *Charisma + Wisdom compound:* Demoralize on beasts. A beast has no language, so `Demoralize._can_provoke`
      (`actions/combat.py`) never allows it, and Wordless Menace works on humanoids only. Decided (author
      2026-11-11): not built until the Wisdom (combat) tree has its Beastmaster talents (*Beastmaster talents*
      below). It requires Wordless Menace (Charisma, combat) and one of them, the `also` prerequisite
@@ -511,19 +497,13 @@ has one "Enter" button and its functions are tabs inside.
      `AbilityDef.demoralize_ignores_language` gives the racial one (offence only), limited to targets with no
      language of their own; the effect on the beast is the same as on a humanoid (`Demoralized`). Open: whether
      it also needs the holder to see the beast for a turn (the existing sight check already does).
-  4. *Archery (playtest 2026-11-02):* a combat talent giving +1 damage with a ranged DEX weapon (decided 2026-11-11: a crossbow is as much a bow as a longbow or shortbow); and a second that
-     adds a conditional *Brutal* to the blow, possibly "in a straight line" along the 8 directions (the
-     shot must travel straight). Decided (author 2026-11-11): the +1 damage hangs under Deadeye (T3) and the
-     Brutal one under it (T4). "In a straight
-     line" is the queen's move: shooter and target aligned on a row, a column or a diagonal. The *Brutal N*
-     keyword exists (`keywords.py`).
 
 - **Beastmaster talents in the Wisdom tree.** Add Beastmaster talents to the Wisdom (combat) tree, which today
   holds only Alert -> Quick Wits (-> Peripheral Vision) and Iron Will (-> Iron Stance). The first use is the
-  prerequisite of *Demoralize on beasts* (*Talent ideas*, item 3), which waits for this tree. Decided (author 2026-11-11): the set is Demoralize on
+  prerequisite of *Demoralize on beasts* (*Talent ideas*, item 2), which waits for this tree. Decided (author 2026-11-11): the set is Demoralize on
   beasts, a pre-encounter dialogue window with beasts, taming a captured beast, and at the top commanding beasts in combat.
   Decided (author 2026-11-12): the order is Alert -> the dialogue window; the dialogue window + Wordless Menace (Charisma) -> taming;
-  taming -> commanding in combat. *Demoralize on beasts* stays as *Talent ideas*, item 3 says (it waits for this tree).
+  taming -> commanding in combat. *Demoralize on beasts* stays as *Talent ideas*, item 2 says (it waits for this tree).
   Open: the tier of each node (`Group.herd_capacity` is already Beast Whisperer's in the work tree).
 
 - **Does the Assess action itself need a reward? (author 2026-10-31, author/Yohan alignment).** The talent line
@@ -532,12 +512,12 @@ has one "Enter" button and its functions are tabs inside.
   vulnerabilities or grants a to-hit bonus on its own, so a turn spent investigating competes with a direct
   attack even for a unit with none of those talents. Sits beside the Intelligence talents in *Talent ideas* above.
 
-- **New body actions: one per natural weapon.** A 2 AP action for `Claws`, `Bite`, `Fangs`, `Hooves` and
-  `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
-  as a trait of that weapon. Decided 2026-11-11 for `Hooves`: one action that resolves an attack, a shove
-  and a Takedown, in that order (the condition and Takedown exist, `conditions.py`, `actions/combat.py`).
-  `Hooves` costs 2 AP. Decided (author 2026-11-11) for `Bite`: it attacks and, if it hits, grabs automatically (no roll); against a foe already `Grappled` the blow gains Brutal. Decided (author 2026-11-12): none of `Claws`, `Fangs` and `Horns` knocks the foe `Prone`; their actions are about something else. Open: what each one does. Each is end-to-end (rules, web tab,
-  AI, tests, tutorial card). Compare with Takedown and Grab in the sim so none dominates.
+- **New body actions: one per natural weapon.** `Claws`, `Fangs` and `Horns` still have no 2 AP action
+  (`Hooves` and `Bite` have Trample and Clamp, `natural_weapons.py`, `actions/weapon_actions.py`). One
+  special action per natural weapon, as a trait of that weapon, like Wrest for `Unarmed`. Decided (author
+  2026-11-12): none of the three knocks the foe `Prone`; their actions are about something else. Open: what each
+  one does. Each is end-to-end (rules, web tab, AI, tests, tutorial card). Compare with Takedown and Grab in the
+  sim so none dominates.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
   too much friction; new actions have to come in gradually, so a new player is not flooded while the

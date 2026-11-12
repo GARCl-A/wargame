@@ -28,10 +28,11 @@ PUSH_DC_BASE = 10          # Shove: Strength vs 10 + the target's Constitution m
 # Attack                                                                       #
 # --------------------------------------------------------------------------- #
 
-def _strike(battle, actor, target, *, weapon=None, prefix=None):
+def _strike(battle, actor, target, *, weapon=None, prefix=None, brutal=0, brutal_why=""):
     """The shared attack resolution once the AP is paid: assemble the mods (feint),
     roll, resolve the hit, fire the on-miss ability. `weapon` overrides the
-    held one (the Tongue). Returns 'hit'|'miss'|'crit'."""
+    held one (the Tongue); `brutal` is a Brutal the action itself adds to the blow.
+    Returns 'hit'|'miss'|'crit'."""
     mods = actor.attack_mods(target, _pack_flank(battle, actor, target), weapon=weapon, battle=battle)
 
     ab = actor.ability
@@ -43,7 +44,8 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
     detail = " ".join(f"{v:+}({r})" for v, r in applied)
     nat = d20()
     result = _resolve_hit(battle, actor, target, nat, bonus, detail,
-                          prefix or Msg("log.attack.head", actor=actor.name, target=target.name), weapon=weapon)
+                          prefix or Msg("log.attack.head", actor=actor.name, target=target.name), weapon=weapon,
+                          brutal=brutal, brutal_why=brutal_why)
 
     if result == "miss" and nat != 1 and ab.on_attack_miss \
             and actor.spend_once("on_attack_miss"):
@@ -526,12 +528,14 @@ class Push(Action):
     def available(self, battle, actor):
         return actor.ap >= self.cost and bool(self._targets(battle, actor))
 
+    @staticmethod
+    def in_reach(battle, actor, target):
+        """The shove could be tried on `target` from where `actor` stands, whatever its points."""
+        return (_shovable_target(actor, target) and battle.units_distance(actor, target) <= 1
+                and battle.los_between(actor, target))
+
     def can(self, battle, actor, target=None):
-        if actor.ap < self.cost or not _shovable_target(actor, target):
-            return False
-        if battle.units_distance(actor, target) > 1:
-            return False
-        return battle.los_between(actor, target)
+        return actor.ap >= self.cost and self.in_reach(battle, actor, target)
 
     def label(self, battle, actor):
         if actor.char.talent_bonus("mighty_shove"):
@@ -801,11 +805,16 @@ class Grab(Action):
         total = nat + bonus
         roll_line = {"actor": actor.name, "target": target.name, "nat": nat, "bonus": bonus, "total": total, "dc": dc}
         if nat == 20 or total >= dc:
-            target.add_condition(Grappled(grappler=actor))
+            self.hold(battle, actor, target)
             battle.log("log.grab.hit", **roll_line)
-            battle.fx(target.pos, i18n.t("fx.grappled"), "ok")
         else:
             battle.log("log.grab.miss", **roll_line)
+
+    @staticmethod
+    def hold(battle, actor, target):
+        """What a landed grab does: `target` is Grappled by `actor`."""
+        target.add_condition(Grappled(grappler=actor))
+        battle.fx(target.pos, i18n.t("fx.grappled"), "ok")
 
 
 # --------------------------------------------------------------------------- #
@@ -824,14 +833,17 @@ class Takedown(Action):
     def available(self, battle, actor):
         return actor.ap >= self.cost and bool(self._targets(battle, actor))
 
-    def can(self, battle, actor, target=None):
-        if actor.ap < self.cost or not _hostile_target(actor, target):
-            return False
-        if target.has_condition("prone") or target.flies:
+    @staticmethod
+    def in_reach(battle, actor, target):
+        """The takedown could be tried on `target` from where `actor` stands, whatever its points."""
+        if not _hostile_target(actor, target) or target.has_condition("prone") or target.flies:
             return False
         if battle.units_distance(actor, target) > 1:
             return False
         return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
+
+    def can(self, battle, actor, target=None):
+        return actor.ap >= self.cost and self.in_reach(battle, actor, target)
 
     def label(self, battle, actor):
         return i18n.t("action.takedown.label")
@@ -844,6 +856,11 @@ class Takedown(Action):
             return
         actor.ap -= 1
         actor.walking = False
+        self.knock_down(battle, actor, target)
+
+    @staticmethod
+    def knock_down(battle, actor, target):
+        """The contest itself, with no point spent."""
         mine, theirs = d20(), d20()
         total = mine + actor.mod_strength
         resist = theirs + target.mod_dexterity

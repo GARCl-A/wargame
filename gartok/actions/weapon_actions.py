@@ -16,6 +16,8 @@ edge, and beats the two attacks for any weapon or modifier:
 - Broadsword / Sword: Parry & Strike (gains Defending; two or more foes in reach)
 - Glaive: Long Thrust (one square past its reach, +1 to hit: the only blow that lands there)
 - Bare hands (`Unarmed`): Wrest (seize the weapon of an armed foe and strike with it)
+- Hooves: Trample (strike, then shove, then Takedown, each step only while it can still be tried)
+- Bite: Clamp (strike; a hit grabs with no roll; a foe already Grappled is bitten Brutal 1)
 """
 
 from .. import i18n, items
@@ -33,7 +35,7 @@ from .base import (
     item_ref,
     off_guard,
 )
-from .combat import PUSH_DC_BASE, _strike
+from .combat import PUSH_DC_BASE, Grab, Push, Takedown, _strike
 
 UNGUARDED = ("entangled", "sleeping", "surprised", "demoralized")
 BRUTAL = 1      # every Brutal of a favoured strike; the keyword's value, see keywords.py
@@ -723,3 +725,77 @@ class Wrest(Action):
         _strike(battle, actor, target, prefix=Msg(
             "log.attack.head_via_indented", actor=actor.name, target=target.name, how=item_ref(name, lower=True)))
 
+
+# --------------------------------------------------------------------------- #
+# Hooves: Trample                                                             #
+# --------------------------------------------------------------------------- #
+
+class Trample(Action):
+    id, cost, target, aimed = "trample", 2, "enemy", True
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.weapon.has_trait("trample"):
+            return False, i18n.t("action.trample.reason")
+        return True, ""
+
+    def can(self, battle, actor, target=None):
+        if not self.available(battle, actor) or not _hostile_target(actor, target):
+            return False
+        if battle.units_distance(actor, target) > actor.attack_range:
+            return False
+        return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
+
+    def label(self, battle, actor):
+        return i18n.t("action.trample.label")
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        _strike(battle, actor, target, prefix=Msg("log.trample.head", actor=actor.name, target=target.name))
+        if target.alive and Push.in_reach(battle, actor, target):
+            Push.shove(battle, actor, target)
+        if target.alive and Takedown.in_reach(battle, actor, target):
+            Takedown.knock_down(battle, actor, target)
+
+
+# --------------------------------------------------------------------------- #
+# Bite: Clamp                                                                 #
+# --------------------------------------------------------------------------- #
+
+class Clamp(Action):
+    id, cost, target, aimed = "clamp", 2, "enemy", True
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.weapon.has_trait("clamp"):
+            return False, i18n.t("action.clamp.reason")
+        return True, ""
+
+    def can(self, battle, actor, target=None):
+        if not self.available(battle, actor) or not _hostile_target(actor, target):
+            return False
+        if battle.units_distance(actor, target) > actor.attack_range:
+            return False
+        return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
+
+    def label(self, battle, actor):
+        return i18n.t("action.clamp.label")
+
+    def favoured(self, battle, actor, target):
+        """A foe already held: the jaws find a body that cannot twist away."""
+        return target.has_condition("grappled")
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        held = self.favoured(battle, actor, target)
+        res = _strike(battle, actor, target, prefix=Msg("log.clamp.head", actor=actor.name, target=target.name),
+                      brutal=BRUTAL * held, brutal_why=Msg("log.clamp.brutal", target=target.name))
+        if res in ("hit", "crit") and target.alive and not held:
+            Grab.hold(battle, actor, target)
+            battle.log("log.clamp.holds", actor=actor.name, target=target.name)

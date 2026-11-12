@@ -45,6 +45,7 @@ class Tavern:
         self.perform_off = set()            # members who sit the show out
         self.signed = None                  # {"unit", "by", "pitch", "line"} of the most recent sign-on
         self.raise_k = 0                    # doublings of the bail on offer (Prison)
+        self.joint = True                   # a Joint Pitch holder pitches with the allies who could (`joint_allies`)
 
     def _pool(self):
         return recruit.refresh_pool(self.guild)
@@ -61,7 +62,7 @@ class Tavern:
         size = len(self.guild.roster)
         days = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
         return [{"label": i18n.t("tavern.guild_size"), "value": str(size)},
-                {"label": i18n.t("tavern.crowd_penalty"), "value": f"-{recruit.size_penalty(size)}"},
+                {"label": i18n.t("tavern.crowd_penalty"), "value": f"-{recruit.size_penalty(size, self.selected_recruiter)}"},
                 {"label": i18n.t("tavern.new_faces_in"), "value": i18n.plural("tavern.days", days)},
                 purse]
 
@@ -104,12 +105,18 @@ class Tavern:
                 if recruit.can_pitch(m, cand) and not self._barred(cand, m)
                 and recruit.slots_free(self.guild, m) > 0]
 
+    def _allies(self, cand, m):
+        """Who rolls beside `m` when it pitches `cand`: nobody when the player pitches alone."""
+        if not self.joint:
+            return []
+        return recruit.joint_allies(self.guild, self.party, cand, m, self._barred)
+
     def _net(self, m, cand):
         """The pitch's net Charisma modifier for `m` against `cand`."""
         raw = alignment_distance(m.alignment, cand.alignment)
         dist = max(0, raw - int(m.talent_bonus("align_distance_reduction")))
         return (m.mod_charisma - recruit.ALIGNMENT_PENALTY * dist
-                - recruit.size_penalty(len(self.guild.roster))
+                - recruit.size_penalty(len(self.guild.roster), m) + len(self._allies(cand, m))
                 + m.talent_bonus("recruit_cha") + sum(v for v, _ in self.PITCH_BONUS)
                 + self.raise_k)
 
@@ -217,8 +224,10 @@ class Tavern:
         if cost and self._wealth() < cost:
             self.notice = i18n.t("tavern.not_enough_coin_to_pay", name=cand.name, fmt_money=fmt_money(cost))
             return
+        allies = self._allies(cand, member)
         pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day,
-                                 extra_mods=[*((v, i18n.t(label)) for v, label in self.PITCH_BONUS), *self._raise_mods()])
+                                 extra_mods=[*((v, i18n.t(label)) for v, label in self.PITCH_BONUS), *self._raise_mods()],
+                                 allies=allies)
         self.last[cand.uid] = (pitch, member)
         paid = cost if pitch.ok else 0
         raised, self.raise_k = self.raise_k, 0
@@ -242,7 +251,8 @@ class Tavern:
             else:
                 self.sel = None
         else:
-            self._bar(cand, member)
+            for who in (member, *allies):
+                self._bar(cand, who)
             if cost:
                 self.notice = i18n.t("tavern.turns_down_bail_stays_in", name=cand.name, other=member.name)
             else:

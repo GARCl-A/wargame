@@ -84,8 +84,8 @@ def test_a_fight_played_out_by_the_ai_on_both_sides_is_settled():
     for _ in range(400):
         if b.winner is not None:
             break
-        if s._setup() == "trap":
-            s.act("skip_traps")
+        if s._setup() in ("trap", "place"):
+            s.act("skip_traps" if s._setup() == "trap" else "skip_places")
         elif s.my_turn():
             s._stepped(lambda: ai.take_turn(b, b.active), None)     # a stand-in player
         else:

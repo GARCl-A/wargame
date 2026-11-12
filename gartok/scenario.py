@@ -131,7 +131,14 @@ class Scenario:
         self._cols, self._rows = battle.board.cols, battle.board.rows
         taken = set(battle.board.walls)
         for u in battle.units:
-            self._place(u, self._deploy_cells(u), taken, battle.board)
+            area = self._deploy_cells(u)
+            battle.start_zones.setdefault(u.team, set()).update(self.start_zone(u, area))
+            self._place(u, area, taken, battle.board)
+
+    def start_zone(self, u, area):
+        """The cells `u`'s side may be placed on before the fight (`Battle.can_place`): what its
+        deployment draws from, `area` (`_deploy_cells`)."""
+        return area
 
     @staticmethod
     def _place(u, candidates, taken, board):
@@ -365,6 +372,11 @@ class CustomScenario(Scenario):
         """A named library character (Adelio, a hand-built champion), not a
         generated `Unit("enemy")`."""
         return bool(getattr(u, "arena_role", None)) or not getattr(u, "_auto_name", True)
+
+    def start_zone(self, u, area):
+        """The painted zone of `u`'s side, when the map has one; the edge columns it falls back on otherwise."""
+        zone = self._zones["player"] if u.team == "player" else self._zones["enemy"] + self._zones["npc"]
+        return zone or area
 
     def _deploy_cells(self, u):
         if u.team == "player":

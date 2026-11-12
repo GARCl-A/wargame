@@ -6,6 +6,7 @@ health is in `intel` steps, cells never seen carry no terrain, and the light is 
 `lighting.cell_levels` gives. The client is never trusted with the rest.
 """
 
+import random
 from typing import ClassVar
 
 from .. import (
@@ -124,7 +125,8 @@ class BattleSession(Session):
     def my_turn(self):
         b = self.battle
         self._sync_seat()
-        return (b.winner is None and self._setup() is None and self.talk is None and self.handoff is None
+        return (b.winner is None and self._setup() is None and b.awaiting_place is None
+                and self.talk is None and self.handoff is None
                 and self.plays(b.active) and b.active.team == self.team)
 
     def _sync_seat(self):
@@ -138,12 +140,14 @@ class BattleSession(Session):
                 self.team = b.active.team
 
     def _setup(self):
-        """What a person places before the fight starts: "flag", "trap", or None."""
+        """What a person places before the fight starts: "flag", "trap", "place", or None."""
         b = self.battle
         if b.awaiting_flag and self.controllers["player"] == "human":
             return "flag"
         if b.awaiting_trap and self.plays(b.awaiting_trap):
             return "trap"
+        if b.awaiting_place and self.plays(b.awaiting_place):
+            return "place"
         return None
 
     def uid(self, unit):
@@ -274,13 +278,17 @@ class BattleSession(Session):
         elif b.awaiting_trap:
             cell = ai.trap_cell(b, b.awaiting_trap)
             b.skip_traps() if cell is None else b.plant_trap(b.awaiting_trap, cell)
+        elif b.awaiting_place:
+            unit = b.awaiting_place
+            spots = b.place_cells(unit)
+            b.place(unit, random.choice(spots)) if spots else b.skip_place()
         else:
             ai.take_turn(b, b.active)
 
     def _act(self, action_id, target, cell, elevation=None, item=None):
         b = self.battle
         cell = tuple(cell) if cell is not None else None
-        if action_id in ("plant_flag", "plant_trap", "skip_traps"):
+        if action_id in ("plant_flag", "plant_trap", "skip_traps", "place", "skip_place", "skip_places"):
             return self._place(action_id, cell)
         if action_id == "withdraw":
             if not (b.can_withdraw and self.controllers["player"] == "human" and self.talk is None):
@@ -342,6 +350,10 @@ class BattleSession(Session):
             b.plant_trap(b.awaiting_trap, cell)
         elif action_id == "skip_traps" and setup == "trap":
             b.skip_traps()
+        elif action_id == "place" and setup == "place" and cell is not None and b.can_place(b.awaiting_place, cell):
+            b.place(b.awaiting_place, cell)
+        elif action_id in ("skip_place", "skip_places") and setup == "place":
+            b.skip_place(rest=action_id == "skip_places")
         else:
             raise ValueError(i18n.t("battle.err.place"))
 
@@ -354,6 +366,11 @@ class BattleSession(Session):
             trapper = b.awaiting_trap
             return {"kind": "trap", "trapper": self.uid(trapper), "name": trapper.name,
                     "cells": [_cell(c) for c in board if b.can_plant_trap(trapper, c)]}
+        if setup == "place":
+            unit = b.awaiting_place
+            return {"kind": "place", "unit": self.uid(unit), "name": unit.name,
+                    "more": len([u for u in b.place_queue if u.team == unit.team]) - 1,
+                    "cells": [_cell(c) for c in b.place_cells(unit)]}
         return None
 
     # -- a challenge on the board (`lair.py`'s patrols) ----------------------------------- #

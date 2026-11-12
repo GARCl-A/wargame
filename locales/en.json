@@ -803,6 +803,10 @@
     },
     "tavern": {
       "signed_lbl": "Contract signed · joins {by}'s roster",
+      "joint_on": "Joint pitch, with:",
+      "joint_off": "Pitching alone. Click to pitch together with:",
+      "joint_dice": "(dice: {dice}, the best counts)",
+      "joint_tip": "Everyone listed could recruit this stranger alone. Together they roll one die each, +1 for every other roller, and the best die counts. A failure bars all of them for the week.",
       "pitch_signed": "{by}'s pitch in {lang}: {ours} = <b>{ours_total}</b> against {theirs} = <b>{theirs_total}</b> · signed",
       "pitch_down": "{by}'s pitch in {lang}: {ours} = <b>{ours_total}</b> against {theirs} = <b>{theirs_total}</b> · turned down",
       "signed": "signed",
@@ -1879,6 +1883,8 @@
       "title": "Battle",
       "sub_lab": "Level {level} · squad of {squad} · seed {seed}",
       "skip_traps": "Skip traps",
+      "skip_place": "Hold position",
+      "skip_places": "Hold all",
       "withdraw": "Withdraw",
       "new_fight": "New fight",
       "held_ok": "OK",
@@ -1926,6 +1932,7 @@
       "hint_over": "The fight is over.",
       "hint_flag": "Plant your flag: click a marked cell on your half.",
       "hint_trap": "{name} sets a trap: click a marked cell, or Skip traps.",
+      "hint_place": "{name} picks a starting cell: click a marked cell, or Hold position.",
       "hint_talk": "A patrol challenges the squad.",
       "hint_other": "The other side is moving…",
       "hint_aim_cell": "{name}: click a marked cell · Esc to cancel.",
@@ -2279,6 +2286,9 @@
     "ambush_shot": {
       "brutal": "The bolt finds an unready target"
     },
+    "true_line": {
+      "brutal": "A clean line to the target"
+    },
     "thrown_lands": "  {weapon} lands at {cell}; {actor} is disarmed.",
     "con_save": "CON d20({nat}) {mod:+} = {total} vs DC {dc}",
     "poison_shaken": "  {target} shakes off the {poison} ({roll}).",
@@ -2447,6 +2457,14 @@
       "head_claws_sweeps": "  Sweeping Claws sweeps into -> {target}"
     },
     "maimed": "  {target} is maimed (movement halved until next round).",
+    "trample": {
+      "head": "{actor} Trample -> {target}"
+    },
+    "clamp": {
+      "head": "{actor} Clamp -> {target}",
+      "brutal": "The jaws find {target} held fast",
+      "holds": "  {actor} clamps {target} in its jaws."
+    },
     "wrest": {
       "keeps": "{actor} Wrest -> {target}: d20({nat}) + {dex}(DEX) = {total} vs DC {dc} -> {target} keeps the {weapon}.",
       "tears": "{actor} Wrest -> {target}: d20({nat}) + {dex}(DEX) = {total} vs DC {dc} -> {actor} tears the {weapon} away!"
@@ -2882,6 +2900,18 @@
       "reason": "requires bare hands",
       "label": "Wrest (2 pts, DEX vs 15 + STR: take the foe's weapon and strike with it)"
     },
+    "trample": {
+      "name": "Trample",
+      "desc": "2 AP: Strike, then shove the foe, then try to take it down.",
+      "reason": "requires hooves",
+      "label": "Trample (2 pts: strike, shove, take down)"
+    },
+    "clamp": {
+      "name": "Clamp",
+      "desc": "2 AP: Bite; a hit grabs the foe with no roll. A foe already grappled is bitten with Brutal 1.",
+      "reason": "requires a bite",
+      "label": "Clamp (2 pts: bite and hold; Brutal 1 on a held foe)"
+    },
     "pick_up": {
       "name": "Pick up",
       "desc": "Pick up a dropped item or torch in your cell.",
@@ -3316,6 +3346,10 @@
       "wrestler": "Wrestler",
       "agile": "Agile",
       "long_reach": "Long Reach",
+      "steady_aim": "Steady Aim",
+      "true_line": "Queen's Arrow",
+      "vantage": "Vantage",
+      "battle_plan": "Battle Plan",
       "heavy_bolts": "Heavy Bolts",
       "ready_hand": "Ready Hand",
       "keen_bolts": "Keen Bolts",
@@ -3358,6 +3392,8 @@
       "charismatic": "Charismatic",
       "negotiator": "Negotiator",
       "fixer": "Fixer",
+      "joint_pitch": "Joint Pitch",
+      "crowd_pleaser": "Crowd Pleaser",
       "provisioner": "Provisioner",
       "troubadour": "Troubadour",
       "clever": "Clever",
@@ -3514,6 +3550,8 @@
       "javelin_charge": "Javelin Charge",
       "parry_strike": "Parry & Strike",
       "wrest": "Wrest",
+      "trample": "Trample",
+      "clamp": "Clamp",
       "long_thrust": "Long Thrust"
     },
     "faction": {
@@ -4109,6 +4147,7 @@
     "resists_cha": "{kind} · resists CHA {mod_charisma:+}",
     "speaks": "Speaks {join}",
     "bail": " · bail {fmt_money}",
+    "crowd_cut": " (the plain {plain}, less {cut} for Crowd Pleaser)",
     "d_cha": "d20 {recruiter_roll} {mod_charisma:+} CHA",
     "d_cha_2": "d20 {candidate_roll} {mod_charisma:+} CHA",
     "sq": "{speed} sq",
@@ -5655,6 +5694,7 @@
     "opposite_alignment": "opposite alignment ({eff_dist})",
     "guild_of": "guild of {roster_size}",
     "halfling_luck_reroll": "Halfling Luck (reroll)",
+    "joint_pitch": "joint pitch ({n} more)",
     "not_convinced": "not convinced",
     "their_group_is_full_and": "Their group is full and the guild has no free group slot: someone may walk out.",
     "party_is_empty": "party is empty",
@@ -5816,6 +5856,10 @@
       "wrestler": "+1 to Push and Grab checks.",
       "agile": "+1 Dexterity.",
       "long_reach": "+1 square of range with ranged and thrown weapons.",
+      "steady_aim": "+1 damage with a ranged Dexterity weapon: a bow or a crossbow, not a throw.",
+      "vantage": "Before the fight, the holder picks their own starting cell inside their side's deployment zone.",
+      "battle_plan": "Before the fight, the group's leader picks the starting cell of every member of the side, one by one. Needs Vantage.",
+      "true_line": "A shot with a bow or a crossbow is Brutal 1 when shooter and target stand on the same row, the same column or an exact diagonal (counted from the cell each unit is anchored on).",
       "heavy_bolts": "+1 damage with a Crossbow.",
       "ambush_shot": "A Crossbow shot at an off-guard target is Brutal 1.",
       "ready_hand": "After a throw, an identical weapon from the pack is in hand at no action cost.",
@@ -5857,6 +5901,8 @@
       "heavy_haul": "Carry up to 6 kg more before you stagger, in anything that is not equipment (materials, food, loot, but not weapons, armor, shields or artifacts).",
       "charismatic": "+1 Charisma.",
       "negotiator": "+1 Charisma for market buy and sell checks.",
+      "joint_pitch": "Pitch a stranger together with every member of the band who could recruit them alone: one die each, +1 for each other roller, the best counts. A failure bars all of you for the week.",
+      "crowd_pleaser": "Your pitch pays 10% less of the crowd penalty, rounded up. Needs Joint Pitch.",
       "fixer": "+1 to your pitch when talking someone into the guild.",
       "provisioner": "+1 to haggling on food, shared language or not.",
       "troubadour": "+1 on performance rolls when playing on the tavern stage.",
@@ -6014,7 +6060,9 @@
       "javelin_charge": "1 AP: Throws the spear after moving this turn, +1d4 bonus damage.",
       "parry_strike": "2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1.",
       "wrest": "2 AP, bare hands only: seize the weapon of an adjacent armed foe (d20 + Dexterity against 15 + its Strength) and, if you can wield it, strike with it at once.",
-      "long_thrust": "2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far."
+      "long_thrust": "2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far.",
+      "trample": "2 AP, hooves only: one strike, then a shove, then a takedown; each step is tried only if the foe is still standing and within reach.",
+      "clamp": "2 AP, a bite only: one strike; a hit grabs the foe with no roll. Against a foe already grappled the strike is Brutal 1."
     },
     "archetype": {
       "LEADER": "Sets how many people the guild can take in and how well recruiting goes. Also haggles and lifts morale.",

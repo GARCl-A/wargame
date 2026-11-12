@@ -24,6 +24,10 @@ exactly one consumer that reads it back:
     swim_reach        actions.Swim (+squares per swim) --
     ranged_reach      Combatant.attack_range/throw     --
     crossbow_damage   Combatant.damage_roll            --
+    place_self        battle.Battle.place_queue (its holder places itself before the fight) --
+    place_group       battle.Battle.place_queue (its holder, the group's leader, places the side) --
+    ranged_damage     Combatant.damage_roll (any shot, not a throw) --
+    straight_shot_brutal actions.base._resolve_hit (Brutal on a row, column or diagonal) --
     crossbow_crit_range actions.base._resolve_hit      --
     crossbow_ambush   actions.base._resolve_hit (Brutal vs off-guard) --
     throw_resupply    actions.Throw (draws the same weapon from the pack) --
@@ -41,6 +45,8 @@ exactly one consumer that reads it back:
     activity_speed    Guild.work_shift                 --
     work_rest         Guild.pass_time (passive heal)   --
     recruit_cha       recruit.convince                 --
+    joint_pitch       recruit.joint_allies             --
+    crowd_penalty_cut recruit.size_penalty             --
     craft_bonus       Unit.progress_crafting           --
     language_study    magic._progress_language         --
     fletcher          campaign._fletcher_rest_pass     --
@@ -152,6 +158,7 @@ XP_TRACKS = ("combat", "work", "magic")   # the tracks that earn their own XP / 
 # Work-track tuning knobs, kept here so the trees are the one place to tune.
 COIN_BONUS = 0.20         # "Piecework": fraction added to coin from paid work
 ACTIVITY_SPEEDUP = 0.10   # "Brisk Hands": fraction shaved off an activity's clock
+CROWD_CUT = 0.10          # "Crowd Pleaser": fraction of the crowd penalty a pitch does not pay (rounded up)
                           #   cost (user weighing 0.05 -- tune here after the math)
 
 
@@ -238,6 +245,10 @@ _LIST = [
            effects=(Effect("throw_resupply", 1),), icon="action/switch-weapon"),
     Talent("deadeye", "combat", 2, requires="agile",
            effects=(Effect("to_hit", 1, "dexterity"),), icon="action/ricochet"),
+    Talent("steady_aim", "combat", 3, requires="deadeye",
+           effects=(Effect("ranged_damage", 1),), icon="action/bowman"),
+    Talent("true_line", "combat", 4, requires="steady_aim",
+           effects=(Effect("straight_shot_brutal", 1),), icon="action/ricochet"),
     Talent("heavy_bolts", "combat", 3, requires="deadeye",
            effects=(Effect("crossbow_damage", 1),), icon="action/crush"),
     Talent("keen_bolts", "combat", 3, requires="deadeye",
@@ -303,9 +314,13 @@ _LIST = [
            effects=(Effect("full_intel_crit_range", 1),), icon="head/spectacles"),
     Talent("surgical_strike", "combat", 4, requires="exploit_weakness",
            effects=(Effect("full_intel_brutal", 1),), icon="action/targeting"),
+    Talent("vantage", "combat", 2, requires="tactical_mind",
+           effects=(Effect("place_self", 1),), icon="gui/convergence-target"),
+    Talent("battle_plan", "combat", 3, requires="vantage",
+           effects=(Effect("place_group", 1),), icon="action/rally-the-troops"),
 
     # ================================================================== #
-    # work -- 6 attribute roots, 5 talents each = 30 talents             #
+    # work -- 6 attribute roots, a few talents each             #
     # ================================================================== #
     # --- STR: Heavy Labor & Carrying ---
     Talent("brawny", "work", 1, effects=(Effect("attr", 1, "strength"),), icon="body/lift"),
@@ -328,6 +343,10 @@ _LIST = [
            effects=(Effect("food_haggle", 1),), icon="action/trade"),
     Talent("troubadour", "work", 3, requires="fixer",
            effects=(Effect("tavern_perform_bonus", 1),), icon="action/sing"),
+    Talent("joint_pitch", "work", 3, requires="fixer",
+           effects=(Effect("joint_pitch", 1),), icon="action/shaking-hands"),
+    Talent("crowd_pleaser", "work", 4, requires="joint_pitch",
+           effects=(Effect("crowd_penalty_cut", CROWD_CUT),), icon="action/talk"),
 
     # --- INT: Crafting & Lore ---
     Talent("clever", "work", 1, effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),

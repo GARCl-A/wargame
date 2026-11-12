@@ -11,7 +11,7 @@ const ICONS = {
   cleave: "action/crush", repel_strike: "action/riposte", maiming_strike: "action/amputation",
   armor_pierce: "action/disintegrate", power_shot: "action/bowman", extreme_shot: "action/targeting",
   hook_shield: "action/catch", javelin_charge: "action/trench-assault", parry_strike: "action/riposte",
-  long_thrust: "action/expander", wrest: "action/snatch", dragon_breath: "action/kindle", tail_sweep: "action/slalom",
+  long_thrust: "action/expander", wrest: "action/snatch", trample: "action/boot-stomp", clamp: "action/tearing", dragon_breath: "action/kindle", tail_sweep: "action/slalom",
   zombie_bite: "action/tearing", grab: "action/grab", escape_grapple: "action/dodging",
   takedown: "action/boot-kick", stand_up: "action/muscle-up",
   throw: "action/throwing-ball", demoralize: "action/screaming", assess: "action/look-at",
@@ -339,6 +339,7 @@ function renderHint() {
   if (ui.error) h = ui.error;
   else if (S.winner) h = tr("battle.hint_over");
   else if (S.setup && S.setup.kind === "flag") h = tr("battle.hint_flag");
+  else if (S.setup && S.setup.kind === "place") h = tr("battle.hint_place", {name: S.setup.name});
   else if (S.setup) h = tr("battle.hint_trap", {name: S.setup.name});
   else if (S.talk) h = tr("battle.hint_talk");
   else if (!S.my_turn) h = tr("battle.hint_other");
@@ -383,6 +384,8 @@ function renderAll() {
   Board.overlay(S, ui);
   $("withdraw").hidden = !S.flags.can_withdraw;
   $("skiptraps").hidden = !(S.setup && S.setup.kind === "trap");
+  $("skipplace").hidden = !(S.setup && S.setup.kind === "place");
+  $("skipplaces").hidden = !(S.setup && S.setup.kind === "place" && S.setup.more > 0);
   renderLoot();
   renderDraw();
   renderLedger();
@@ -753,7 +756,7 @@ $("overlay").addEventListener("click", async e => {
   const pile = unitsAt(cell), u = pile[0] || null;
   const marked = cells => cells.some(([x, y]) => x === cell[0] && y === cell[1]);
   if (S.setup) {
-    if (marked(S.setup.cells)) return act({action: S.setup.kind === "flag" ? "plant_flag" : "plant_trap", cell});
+    if (marked(S.setup.cells)) return act({action: {flag: "plant_flag", place: "place"}[S.setup.kind] || "plant_trap", cell});
     return;
   }
   if (ui.aim) {
@@ -826,6 +829,8 @@ $("tabs").addEventListener("click", e => {
 $("seal").addEventListener("click", () => S && S.my_turn && act({action: "end"}));
 $("withdraw").addEventListener("click", () => act({action: "withdraw"}));
 $("skiptraps").addEventListener("click", () => act({action: "skip_traps"}));
+$("skipplace").addEventListener("click", () => act({action: "skip_place"}));
+$("skipplaces").addEventListener("click", () => act({action: "skip_places"}));
 $("dialog").addEventListener("click", e => {
   if (ui.picking || !S) return;
   const t = e.target.closest("[data-seat],[data-goon],[data-speaker],[data-verb]");

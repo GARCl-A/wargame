@@ -689,3 +689,53 @@ def test_an_archer_still_targets_the_flyer():
     batt, archer, flyer, _walker = _under_a_flyer(kit=("Shortbow", data.AMMO_ITEM))
     assert archer.ranged
     assert ai._target(batt, archer) is flyer
+
+
+# --------------------------------------------------------------------------- #
+# Body actions: Clamp (Bite) and Trample (Hooves)                             #
+# --------------------------------------------------------------------------- #
+
+def _beast_duel(race):
+    batt = Battle([standard_unit("player")], [Unit("enemy", race=data.race_by_name(race))])
+    beast, foe = batt.enemy_units[0], batt.player_units[0]
+    batt.board.walls, batt.board.elevation = set(), {}
+    batt.ambient_light = True
+    beast.turns_taken = foe.turns_taken = 1
+    beast.pos, foe.pos = (5, 5), ((7, 5) if race == "Horse" else (6, 5))
+    beast.ap = 2
+    foe.hp = foe.char.hp_max = 60
+    return batt, beast, foe
+
+
+def test_a_wolf_clamps_a_foe_already_held_and_bites_twice_at_a_free_one():
+    from gartok.conditions import Grappled
+    batt, wolf, foe = _beast_duel("Wolf")
+    assert ai._pick_attack(batt, wolf, foe) is actions.ATTACK
+    foe.add_condition(Grappled(grappler=wolf))
+    assert ai._pick_attack(batt, wolf, foe) is actions.CLAMP
+
+
+def test_a_free_foe_is_worth_less_to_a_clamp_than_to_two_bites():
+    batt, wolf, foe = _beast_duel("Wolf")
+    assert ai.reckon._weapon_action_worth(batt, wolf, actions.CLAMP, foe) < ai._two_points(batt, wolf, foe)
+
+
+def test_a_horse_tramples_a_foe_it_can_shove_into_a_pit(monkeypatch):
+    batt, horse, foe = _beast_duel("Horse")
+    assert ai._pick_attack(batt, horse, foe) is actions.ATTACK
+    batt.board.elevation = {(8, 5): -4}
+    monkeypatch.setattr(ai.reckon, "_shove_odds", lambda unit, f: 0.9)
+    assert ai._pick_attack(batt, horse, foe) is actions.TRAMPLE
+
+
+def test_a_horse_strikes_twice_at_a_foe_with_nothing_to_shove_it_into():
+    batt, horse, foe = _beast_duel("Horse")
+    assert ai.reckon._weapon_action_worth(batt, horse, actions.TRAMPLE, foe) < ai._two_points(batt, horse, foe)
+    assert ai._pick_attack(batt, horse, foe) is actions.ATTACK
+
+
+def test_the_ai_with_one_point_left_takes_neither_body_action():
+    for race in ("Wolf", "Horse"):
+        batt, beast, foe = _beast_duel(race)
+        beast.ap = 1
+        assert ai._pick_attack(batt, beast, foe) is actions.ATTACK

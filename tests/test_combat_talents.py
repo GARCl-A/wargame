@@ -6,6 +6,7 @@
 """
 
 from gartok import actions, intel
+from gartok.combatant import Combatant
 from tests.helpers import (
     Battle,
     fitted,
@@ -475,3 +476,178 @@ def test_a_critical_hit_logs_the_multiplier():
     with fixed_d20(20):
         actions._strike(b, c1, cf)
     assert "x2" in next(x for x in b.log_lines if "Damage:" in x)
+
+
+# --------------------------------------------------------------------------- #
+# Dexterity tree, tier 3-4: Steady Aim and Queen's Arrow
+# --------------------------------------------------------------------------- #
+
+
+def _archer(weapon, *talents):
+    u = standard_unit("player")
+    u.combat_xp = 1000
+    for t in ("agile", "deadeye", *talents):
+        assert u.choose_talent("combat", t)
+    u.give_to_pack("Quiver")
+    u.give_to_hand(weapon)
+    shooter = Combatant(u)
+    shooter.crossbow_loaded = True
+    return shooter
+
+
+def _top(shooter, **kw):
+    return max(shooter.damage_roll(**kw) for _ in range(300))
+
+
+def test_steady_aim_adds_one_damage_to_a_bow_and_a_crossbow_and_to_no_other_weapon():
+    for weapon in ("Shortbow", "Longbow", "Crossbow"):
+        assert _top(_archer(weapon, "steady_aim")) == _top(_archer(weapon)) + 1, weapon
+    sword = _archer("Shortsword", "steady_aim")
+    assert not sword.ranged
+    assert _top(sword) == _top(_archer("Shortsword"))
+
+
+def test_steady_aim_does_not_touch_a_thrown_weapon():
+    thrower = _archer("Javelin", "steady_aim")
+    plain = _archer("Javelin")
+    assert _top(thrower, thrown=True) == _top(plain, thrown=True)
+
+
+def test_steady_aim_stacks_with_heavy_bolts_on_a_crossbow():
+    both = _archer("Crossbow", "steady_aim", "heavy_bolts")
+    assert _top(both) == _top(_archer("Crossbow")) + 2
+
+
+def test_the_archery_ladder_hangs_from_deadeye():
+    u = standard_unit("player")
+    u.combat_xp = 1000
+    assert not u.choose_talent("combat", "steady_aim")
+    assert u.choose_talent("combat", "agile") and u.choose_talent("combat", "deadeye")
+    assert not u.choose_talent("combat", "true_line")
+    assert u.choose_talent("combat", "steady_aim") and u.choose_talent("combat", "true_line")
+
+
+def _brutal_at(shooter, target_pos, shooter_pos=(5, 5), thrown=False):
+    from gartok.actions import base
+    batt = Battle([standard_unit("player")], [standard_unit("enemy")])
+    foe = batt.units[1]
+    foe.turns_taken = 1
+    shooter.pos, foe.pos = shooter_pos, target_pos
+    seen = []
+    real = shooter.damage_roll
+    shooter.damage_roll = lambda **kw: seen.append(kw["brutal"]) or real(**kw)
+    with fixed_d20(10):
+        base._resolve_hit(batt, shooter, foe, 10, 99, "", "x", thrown=thrown)
+    return seen[0]
+
+
+def test_true_line_makes_a_shot_brutal_on_a_row_a_column_and_a_diagonal():
+    for weapon in ("Shortbow", "Crossbow"):
+        shooter = _archer(weapon, "steady_aim", "true_line")
+        for cell in ((9, 5), (5, 9), (1, 5), (5, 2), (8, 8), (2, 2), (8, 2), (2, 8)):
+            assert _brutal_at(shooter, cell) == 1, (weapon, cell)
+
+
+def test_true_line_does_not_apply_one_cell_off_the_line():
+    shooter = _archer("Longbow", "steady_aim", "true_line")
+    for cell in ((9, 6), (8, 9), (7, 8), (6, 8)):
+        assert _brutal_at(shooter, cell) == 0, cell
+
+
+def test_true_line_needs_the_talent_and_a_shot():
+    assert _brutal_at(_archer("Shortbow", "steady_aim"), (9, 5)) == 0
+    assert _brutal_at(_archer("Javelin", "steady_aim", "true_line"), (9, 5), thrown=True) == 0
+    assert _brutal_at(_archer("Shortsword", "steady_aim", "true_line"), (6, 5)) == 0
+
+
+def test_the_ai_values_an_aligned_shot_above_a_crooked_one():
+    from gartok.ai import reckon
+    batt = Battle([standard_unit("player")], [standard_unit("enemy")])
+    foe = batt.units[1]
+    shooter = _archer("Longbow", "steady_aim", "true_line")
+    shooter.team = "player"
+    shooter.pos = (5, 5)
+    foe.pos = (9, 5)
+    aligned = reckon._strike_worth(batt, shooter, foe)
+    foe.pos = (9, 6)
+    assert aligned > reckon._strike_worth(batt, shooter, foe)
+    assert reckon._blow(_archer("Longbow", "steady_aim")) == reckon._blow(_archer("Longbow")) + 1
+
+
+def _placing_battle(*talents, leader=False, allies=1):
+    from gartok.battle import Battle
+    from gartok.scenario import Scenario
+    squad = [standard_unit("player") for _ in range(allies + 1)]
+    squad[0].combat_xp = 1000
+    squad[0].leads_group = leader
+    for t in talents:
+        assert squad[0].choose_talent("combat", t)
+    return Battle(squad, [standard_unit("enemy")], scenario=Scenario(), lethal=True), squad
+
+
+def _vantage(*extra, **kw):
+    return _placing_battle("tactical_mind", "vantage", *extra, **kw)
+
+
+def test_without_vantage_nobody_places_before_the_fight():
+    batt, _ = _placing_battle()
+    assert batt.place_queue == [] and batt.awaiting_place is None
+
+
+def test_vantage_lets_its_holder_pick_a_start_cell_inside_the_side_zone():
+    batt, squad = _vantage()
+    holder = next(u for u in batt.units if u.char is squad[0])
+    assert batt.place_queue == [holder] and batt.awaiting_place is holder
+    cells_ = batt.place_cells(holder)
+    assert cells_ and all(c in batt.start_zones["player"] for c in cells_)
+    target = cells_[-1]
+    batt.place(holder, target)
+    assert holder.pos == target and batt.awaiting_place is None
+    outside = (batt.board.cols - 1, 0)
+    assert not batt.can_place(holder, outside)
+
+
+def test_a_placed_unit_may_not_stand_on_another_body():
+    batt, squad = _vantage()
+    holder = next(u for u in batt.units if u.char is squad[0])
+    mate = next(u for u in batt.units if u.team == "player" and u is not holder)
+    assert not batt.can_place(holder, mate.pos)
+
+
+def test_holding_position_leaves_the_holder_where_deployment_put_it():
+    batt, squad = _vantage()
+    holder = next(u for u in batt.units if u.char is squad[0])
+    where = holder.pos
+    batt.skip_place()
+    assert holder.pos == where and batt.awaiting_place is None
+
+
+def test_battle_plan_gives_the_leader_the_whole_side_to_place():
+    batt, squad = _vantage("battle_plan", leader=True, allies=2)
+    sides = [u for u in batt.units if u.team == "player"]
+    assert set(batt.place_queue) == set(sides)
+    batt.skip_place(rest=True)
+    assert batt.place_queue == []
+
+
+def test_battle_plan_does_nothing_for_a_member_who_does_not_lead():
+    batt, squad = _vantage("battle_plan", leader=False, allies=2)
+    holder = next(u for u in batt.units if u.char is squad[0])
+    assert batt.place_queue == [holder]
+
+
+def test_the_flag_and_the_traps_come_before_the_placement(monkeypatch):
+    from gartok.battle import Battle
+    batt, _ = _vantage()
+    monkeypatch.setattr(Battle, "awaiting_flag", property(lambda self: True))
+    assert batt.awaiting_place is None
+
+
+def test_a_placement_goes_to_the_combat_log(tmp_path):
+    from gartok import combat_log
+    batt, squad = _vantage()
+    log = combat_log.CombatLog(str(tmp_path / "place.jsonl"), {}, {})
+    batt.record_to(log)
+    holder = next(u for u in batt.units if u.char is squad[0])
+    batt.place(holder, batt.place_cells(holder)[0])
+    assert combat_log.load(log.path)[1]["action"] == "place"

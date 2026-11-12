@@ -172,6 +172,7 @@ class HubSession(Session):
         "sell_wagon": lambda s, b: s.on_yard("wagons", WagonTab.sell, b["uid"]),
         "candidate": lambda s, b: s.on_tavern("recruits", TavernTab.candidate, b["uid"]),
         "recruiter": lambda s, b: s.on_tavern("recruits", TavernTab.recruiter, b["uid"]),
+        "joint": lambda s, b: s.on_tavern("recruits", TavernTab.joint),
         "raise_bail": lambda s, b: s.on_tavern("recruits", TavernTab.raise_bail, int(b["delta"])),
         "convince": lambda s, b: s.on_tavern("recruits", TavernTab.convince),
         "study_target": lambda s, b: s.on_tavern("rooms", TavernTab.set_target, b["uid"], b["id"]),

@@ -277,6 +277,11 @@ any order, and over enough levels a character can hold every node. A deeper node
 just needs the one above it first (`requires`), which chains down the branch. The node list with
 effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
 
+**Archery under Deadeye.** *Steady Aim* (tier 3) adds 1 damage to a shot with a bow or a crossbow (a thrown
+weapon is not a shot). *Queen's Arrow* (tier 4, under it) makes such a shot *Brutal 1* when shooter and target stand
+in a straight line, the queen's move: the same row, the same column or an exact diagonal, counted from the
+anchor cell of each body (`actions.base.in_straight_line`).
+
 **The magic track** (`magic_xp`, `progression.MAGIC_XP_THRESHOLDS`, combat's curve for now). Magic XP
 comes from a last hit dealt with magic (a spell or a magic action: the combat rule's amount,
 banked as magic instead of combat) and from finishing the study of a spell (`spell level + 1`).
@@ -466,12 +471,21 @@ Where each part lives is the code map of `README.md`.
   throw fill a turn. The AI scores each by expected damage (hit odds against the AC it can reckon)
   against the two plain attacks the same points buy (one shot for a crossbow, whose other point
   reloads it) and takes the better; a test holds the premise for every action, STR 10-18 and AC 10-19.
-  **Wrest** is the one action of bare hands (`Unarmed`; a beast's natural weapon has none), 2 points: an
+  **Wrest** is the action of bare hands (`Unarmed`), 2 points: an
   armed foe in reach, d20 + DEX against 15 + its STR (a natural 20 always passes, a 1 always fails). On a
   pass the actor takes the weapon (it must be one it can wield, with the hands free for it) and strikes
   with it at once, no penalty; on a failure only the points are lost. It is not a doubled strike, so the
   AI scores it apart: the odds times the blow struck with the stolen weapon plus the damage the foe loses
   by being left with its body for two turns.
+  Two natural weapons have an action of their own, 2 points, one for each, a trait of the body weapon
+  like Wrest (`Claws`, `Fangs` and `Horns` have none yet). **Trample** (`Hooves`: a horse, a donkey)
+  resolves one plain strike, then a shove, then a Takedown, in that order, with the rolls of the plain
+  actions; each step is tried only while the foe still stands and is in reach, so a shove that throws the
+  foe a square away leaves the Takedown unused. **Clamp** (`Bite`: a wolf, a giant spider) is one strike;
+  a hit grabs the foe with no roll (`Grappled`, as a won Grab), and against a foe already `Grappled`
+  the strike is Brutal 1 and grabs nothing new. The AI scores Trample as the strike plus the shove's
+  worth plus the Takedown for a foe the shove leaves beside it, and Clamp as the strike plus a share of
+  the grab (Brutal 1 once the foe is held): out of those cases it still bites or kicks twice.
 - **Reach** = a melee weapon strikes foes 1 cell away; one with a reach of its own reaches
   farther (`ItemDef.reach`: the **Glaive**, 2 cells), and a body's **Reach** ability adds 1 on
   top. The AI walks only as near as its reach and strikes from there.
@@ -597,6 +611,14 @@ to the fight, as before.
   counts per turn, so it shakes off a condition twice as fast and suffers it twice as fast. It shows twice in the tracker.
   Decreasing order, fixed for the battle except what a dialogue before the fight, Delay and the
   Signal Horn move.
+- **Placing before the fight** (the Intelligence combat tree, under Tactical Mind): after the flag and the
+  traps, a holder of **Vantage** picks their own starting cell, and the **leader of a group** holding
+  **Battle Plan** (which requires Vantage) picks the cell of every member of the side who is not an
+  ally under AI control. They go one after another in initiative order, and a cell has to be inside the
+  area the deployment drew the unit's side from, free, and big enough for the body. Holding position leaves
+  the unit where the deployment put it. The leader must be on the board: an arena bout or a hunt
+  that leaves the leader out gives no placement. The AI places its side at random, and a fight put back from
+  its log does not ask again.
 - **Attack**: `d20 + mods` vs the target's `AC`.
   - base mod = `Strength mod` (melee), `Dexterity mod` (ranged / thrown), or `Dexterity mod` (a *finesse*
     weapon, which also adds the Dexterity mod to the damage in place of Strength).
@@ -1713,6 +1735,15 @@ member and the candidate, docked for **no shared language** (no pitch at all),
 member past `FREE_SLOTS = 2`). A failed pitch bars that recruiter from that
 same candidate until the pool turns over (`taverna_blocked`); another member
 can still try.
+
+- **Joint pitch and Crowd Pleaser** (work Charisma tree: Fixer, then *Joint Pitch*, then *Crowd Pleaser*).
+  A holder of Joint Pitch pitches together with every other member of the band who could recruit that
+  candidate alone (a shared tongue, a free slot, not barred this week): one `d20` per roller, each with
+  `+1` per other roller on top of the holder's own pitch, and the best die counts against the candidate's
+  single roll. The holder is the recruiter and spends the slot; a failure bars every roller for the
+  week (`taverna_blocked` or `prison_blocked`). It is a choice the dossier offers, on by default.
+  *Crowd Pleaser* takes a tenth (`CROWD_CUT`) off the holder's crowd penalty, rounded up (a penalty of 1 to 10
+  pays one less).
 
 - **Capacity.** Each member can personally sponsor `BASE_RECRUIT_CAPACITY`
   (1) + their own Charisma modifier recruits (`recruit.capacity`); the guild

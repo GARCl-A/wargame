@@ -850,8 +850,10 @@ class Combatant:
             bonus += self.mod_strength              # thrown: add Strength to damage
         elif weapon is not None or not self.ranged:  # melee (includes unarmed and the Tongue)
             bonus += self.melee_damage_mod(w)
-        elif self.shoots_crossbow:
-            bonus += self.char.talent_bonus("crossbow_damage")
+        elif self.ranged:
+            bonus += self.char.talent_bonus("ranged_damage")
+            if self.shoots_crossbow:
+                bonus += self.char.talent_bonus("crossbow_damage")
         bonus_damage += self.run_down_bonus("run_down_damage")
         if crit:
             brutal += self.crit_brutal()

@@ -20,15 +20,15 @@ def _make_worker(*talent_chain):
     return u
 
 
-def test_work_tree_structure_30_talents_6_roots():
+def test_work_tree_structure_6_roots():
     work_nodes = talents.TREE["work"]
-    assert len(work_nodes) == 30
+    assert len(work_nodes) == 32
 
     roots = [t for t in work_nodes if not t.requires]
     assert len(roots) == 6
     assert [r.id for r in roots] == ["brawny", "charismatic", "clever", "nimble_fingers", "sturdy", "observant"]
 
-    # Verify each root has exactly 5 talents in its subtree
+    # Every root holds 5 talents, the Charisma one 7 (Joint Pitch and Crowd Pleaser hang under Fixer)
     for r in roots:
         subtree = {r.id}
         changed = True
@@ -38,7 +38,7 @@ def test_work_tree_structure_30_talents_6_roots():
                 if t.requires in subtree and t.id not in subtree:
                     subtree.add(t.id)
                     changed = True
-        assert len(subtree) == 5, f"Root {r.id} has {len(subtree)} talents: {subtree}"
+        assert len(subtree) == (7 if r.id == "charismatic" else 5), f"Root {r.id} has {len(subtree)} talents: {subtree}"
 
 
 # --------------------------------------------------------------------------- #

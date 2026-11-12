@@ -269,6 +269,8 @@ class Group:
         if self.fight_due:
             raise ValueError(i18n.t("group_msg.can_t_change_leaders_with"))
         self.leader = unit
+        for u in self.members:
+            u.leads_group = u is unit
 
     @property
     def capacity(self):

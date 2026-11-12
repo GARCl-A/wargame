@@ -17,10 +17,10 @@ _SMALL_DIE = (1, 2)             # Small and Tiny: the ladder has no step down
 # name -> (finesse, traits). Every race that fights with its body names one of these.
 _WEAPONS = {
     "Unarmed": (False, ("wrest",)),
-    "Bite": (False, ()),
+    "Bite": (False, ("clamp",)),
     "Fangs": (True, ()),
     "Claws": (False, ()),
-    "Hooves": (False, ()),
+    "Hooves": (False, ("trample",)),
     "Horns": (False, ()),
 }
 

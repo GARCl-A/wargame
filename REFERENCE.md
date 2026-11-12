@@ -248,6 +248,8 @@ Properties and keywords carried by weapons.
 | Javelin Charge | 1 AP: Throws the spear after moving this turn, +1d4 bonus damage. |
 | Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1. |
 | Wrest | 2 AP, bare hands only: seize the weapon of an adjacent armed foe (d20 + Dexterity against 15 + its Strength) and, if you can wield it, strike with it at once. |
+| Trample | 2 AP, hooves only: one strike, then a shove, then a takedown; each step is tried only if the foe is still standing and within reach. |
+| Clamp | 2 AP, a bite only: one strike; a hit grabs the foe with no roll. Against a foe already grappled the strike is Brutal 1. |
 | Long Thrust | 2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far. |
 
 ## Keywords
@@ -454,6 +456,8 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | Agile |
 | 3 | Ready Hand | After a throw, an identical weapon from the pack is in hand at no action cost. | Long Reach + Strong |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | Agile |
+| 3 | Steady Aim | +1 damage with a ranged Dexterity weapon: a bow or a crossbow, not a throw. | Deadeye |
+| 4 | Queen's Arrow | A shot with a bow or a crossbow is Brutal 1 when shooter and target stand on the same row, the same column or an exact diagonal (counted from the cell each unit is anchored on). | Steady Aim |
 | 3 | Heavy Bolts | +1 damage with a Crossbow. | Deadeye |
 | 3 | Keen Bolts | A Crossbow shot is a Critical hit on a natural 19 or 20. | Deadeye |
 | 4 | Ambush Shot | A Crossbow shot at an off-guard target is Brutal 1. | Heavy Bolts + Keen Bolts |
@@ -486,6 +490,8 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Exploit Weakness | +1 to hit against enemies with Full Intel. | Analytical Eye |
 | 3 | Anatomist | Your Critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | Analytical Eye |
 | 4 | Surgical Strike | Your attacks against a target with Full Intel are Brutal 1. | Exploit Weakness |
+| 2 | Vantage | Before the fight, the holder picks their own starting cell inside their side's deployment zone. | Tactical Mind |
+| 3 | Battle Plan | Before the fight, the group's leader picks the starting cell of every member of the side, one by one. Needs Vantage. | Vantage |
 
 ### Work track
 
@@ -501,6 +507,8 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Fixer | +1 to your pitch when talking someone into the guild. | Charismatic |
 | 3 | Provisioner | +1 to haggling on food, shared language or not. | Negotiator |
 | 3 | Troubadour | +1 on performance rolls when playing on the tavern stage. | Fixer |
+| 3 | Joint Pitch | Pitch a stranger together with every member of the band who could recruit them alone: one die each, +1 for each other roller, the best counts. A failure bars all of you for the week. | Fixer |
+| 4 | Crowd Pleaser | Your pitch pays 10% less of the crowd penalty, rounded up. Needs Joint Pitch. | Joint Pitch |
 | 1 | Clever | +1 Intelligence. | -- |
 | 2 | Linguist | +2 to progress rolls when studying a foreign language. | Clever |
 | 2 | Crafter | +1 to progress rolls when crafting items. | Clever |

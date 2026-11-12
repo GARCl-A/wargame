@@ -113,6 +113,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
         self.vocation = None                            # the guild's vocation id, stamped by Guild._sync_leadership, not persisted
+        self.leads_group = False                        # leads its group, stamped by Guild._sync_leadership, not persisted
         self.consecutive_rest_hours = 0
         self.unbroken_rest_hours = 0
         self.non_lethal_damage = 0
@@ -206,6 +207,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u._name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.vocation = None
+        u.leads_group = False
         u.token = u.race["token"]
         u.portrait_file = d.get("portrait_file") or (d.get("portrait") if isinstance(d.get("portrait"), str) else None)
         if u.portrait_file:

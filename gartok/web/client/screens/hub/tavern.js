@@ -31,7 +31,8 @@ const Tavern = (() => {
   function last(l) {
     if (!l) return "";
     if (!l.ours) return `<p class="lastpitch bad">${esc(l.by)}: ${esc(l.line)}</p>`;
-    return `<p class="lastpitch ${l.ok ? "good" : "bad"}">${tr(l.ok ? "tavern.pitch_signed" : "tavern.pitch_down", {by: esc(l.by), lang: esc(l.lang), ours: esc(l.ours), ours_total: l.ours_total, theirs: esc(l.theirs), theirs_total: l.theirs_total})}</p>`;
+    const dice = l.dice ? ` ${tr("tavern.joint_dice", {dice: esc(l.dice)})}` : "";
+    return `<p class="lastpitch ${l.ok ? "good" : "bad"}">${tr(l.ok ? "tavern.pitch_signed" : "tavern.pitch_down", {by: esc(l.by), lang: esc(l.lang), ours: esc(l.ours), ours_total: l.ours_total, theirs: esc(l.theirs), theirs_total: l.theirs_total})}${dice}</p>`;
   }
 
   function dossier(d) {
@@ -56,6 +57,7 @@ const Tavern = (() => {
       ${last(d.last)}
       <div class="sec dark"><span class="lbl">${tr("tavern.who_pitches")}</span></div>
       <div class="pitchers">${pitchers}</div>
+      ${d.joint ? `<div class="aside ${d.joint.on ? "good" : "muted"}" id="joint"${tip(tr("tavern.joint_tip"))}><b>${tr(d.joint.on ? "tavern.joint_on" : "tavern.joint_off")}</b> ${esc(d.joint.names.join(", "))}</div>` : ""}
       <div class="pterms">${d.terms.map(t => `<div class="fact"><span class="lbl">${esc(t.label)}</span><b class="${t.tone}">${esc(t.value)}</b><span class="use">${esc(t.note)}</span></div>`).join("")}</div>
       ${d.hint ? `<p class="aside ${d.hint.tone}">${esc(d.hint.text.charAt(0).toUpperCase() + d.hint.text.slice(1))}</p>` : ""}
       <div class="brass-btn wide ${d.button.on ? "" : "off"}" id="convince"><div><b>${esc(d.button.label)}</b></div></div>`;
@@ -154,6 +156,7 @@ const Tavern = (() => {
     let el;
     if ((el = on("[data-cand]"))) act("candidate", {uid: el.dataset.cand});
     else if ((el = on("[data-pitcher]"))) act("recruiter", {uid: el.dataset.pitcher});
+    else if (on("#joint")) act("joint");
     else if (on("#bail_more")) act("raise_bail", {delta: 1});
     else if (on("#bail_less")) act("raise_bail", {delta: -1});
     else if (on("#convince")) act("convince");

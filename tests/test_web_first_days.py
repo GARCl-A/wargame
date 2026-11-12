@@ -47,8 +47,8 @@ class Player:
                 b = s.battle
                 if b.winner is not None:
                     s.done()
-                elif s._setup() == "trap":
-                    s.act("skip_traps")
+                elif s._setup() in ("trap", "place"):
+                    s.act("skip_traps" if s._setup() == "trap" else "skip_places")
                 elif s.state().get("talk"):
                     s.answer(None, None, True, None)
                 elif s.my_turn():

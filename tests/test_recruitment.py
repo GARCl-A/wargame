@@ -469,3 +469,129 @@ def test_map_flags_a_pool_that_turned_over_until_the_guild_walks_in():
     assert not recruit.has_new_faces(g, "prison")
     g.clock.advance_hours(24 * recruit.REFRESH_DAYS)
     assert recruit.has_new_faces(g, "taverna") and recruit.has_new_faces(g, "prison")
+
+
+def _talker(*talents, cha=2):
+    u = standard_unit()
+    u.languages = ["Common"]
+    for level, tid in enumerate(talents, 1):
+        u.set_track_level("work", level)
+        assert u.choose_talent("work", tid)
+    u.mod_charisma = cha
+    return u
+
+
+_JOINT = ("charismatic", "fixer", "joint_pitch")
+_CUT = (*_JOINT, "crowd_pleaser")
+
+
+def test_the_crowd_penalty_cut_rounds_up_and_never_touches_a_small_guild():
+    cutter, plain = _talker(*_CUT), _talker()
+    paid = {n: recruit.size_penalty(recruit.FREE_SLOTS + n, cutter) for n in (0, 1, 5, 10, 11, 20)}
+    assert paid == {0: 0, 1: 0, 5: 4, 10: 9, 11: 9, 20: 18}
+    assert [recruit.size_penalty(recruit.FREE_SLOTS + n, plain) for n in (0, 1, 5, 20)] == [0, 1, 5, 20]
+    assert recruit.size_penalty(recruit.FREE_SLOTS + 5) == 5
+
+
+def _joint_scene(allies=2):
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    a = _talker(*_JOINT)
+    mates = [_talker(cha=1) for _ in range(allies)]
+    cand = standard_unit("player")
+    cand.languages = ["Common"]
+    g = Guild([a, *mates], clock=Clock())
+    return g, a, mates, cand
+
+
+def _no_bar(cand, member):
+    return False
+
+
+def test_allies_who_could_recruit_alone_are_the_joint_pitch_rollers():
+    g, a, mates, cand = _joint_scene(allies=3)
+    mates[0].languages = ["Other"]
+    mates[1].mod_charisma = -5                                 # no free slot: 1 + (-5) < 1
+    assert recruit.joint_allies(g, g.roster, cand, a, _no_bar) == [mates[2]]
+    assert recruit.joint_allies(g, g.roster, cand, a, lambda c, m: m is mates[2]) == []
+    assert recruit.joint_allies(g, g.roster, cand, mates[2], _no_bar) == []     # no talent, no joint pitch
+
+
+def test_a_joint_pitch_rolls_one_die_per_roller_each_with_plus_one_per_other_and_the_best_counts():
+    g, a, mates, cand = _joint_scene()
+    allies = recruit.joint_allies(g, g.roster, cand, a, _no_bar)
+    assert len(allies) == 2
+    pitch = recruit.convince(a, cand, recruit.FREE_SLOTS, rng=_FixedRNG(4, 17, 9, 10), allies=allies)
+    assert pitch.rolls == [4, 17, 9] and pitch.recruiter_roll == 17
+    assert pitch.recruiter_total == 17 + a.mod_charisma + 2 + a.talent_bonus("recruit_cha")
+    assert pitch.candidate_roll == 10 and pitch.ok
+    alone = recruit.convince(a, cand, recruit.FREE_SLOTS, rng=_FixedRNG(4, 10))
+    assert alone.rolls == [4] and not alone.ok
+
+
+def test_a_joint_pitch_that_wins_uses_only_the_slot_of_the_one_who_pitched(monkeypatch):
+    from gartok.tavern import Tavern
+    g, a, mates, cand = _joint_scene()
+    scr = Tavern(g, g.groups[0], [cand])
+    scr.party = [a, *mates]
+    scr.selected_recruiter = a
+    scr.sel = 0
+    used = [recruit.slots_used(g, m) for m in (a, *mates)]
+    orig = recruit.convince
+    monkeypatch.setattr(recruit, "convince", lambda *x, **kw: orig(*x, **{**kw, "rng": _FixedRNG(20, 20, 20, 1)}))
+    scr._pitch(a)
+    assert cand.recruited_by == a.uid
+    assert recruit.slots_used(g, a) == used[0] + 1 and [recruit.slots_used(g, m) for m in mates] == used[1:]
+    assert g.taverna_blocked == []
+
+
+def test_a_joint_pitch_that_fails_bars_everyone_who_rolled(monkeypatch):
+    from gartok.tavern import Tavern
+    g, a, mates, cand = _joint_scene()
+    bystander = _talker()
+    g.add_member(bystander, g.groups[0])
+    scr = Tavern(g, g.groups[0], [cand])
+    scr.party = [a, *mates]
+    scr.selected_recruiter = a
+    scr.sel = 0
+    orig = recruit.convince
+    monkeypatch.setattr(recruit, "convince", lambda *x, **kw: orig(*x, **{**kw, "rng": _FixedRNG(1, 1, 1, 20)}))
+    scr._pitch(a)
+    assert {tuple(b) for b in g.taverna_blocked} == {(cand.uid, m.uid) for m in (a, *mates)}
+
+
+def test_with_the_choice_off_the_pitch_is_alone_and_bars_only_the_pitcher(monkeypatch):
+    from gartok.tavern import Tavern
+    g, a, mates, cand = _joint_scene()
+    scr = Tavern(g, g.groups[0], [cand])
+    scr.party = [a, *mates]
+    scr.selected_recruiter = a
+    scr.sel = 0
+    scr.joint = False
+    seen = {}
+    orig = recruit.convince
+
+    def spy(*x, **kw):
+        seen.update(kw)
+        return orig(*x, **{**kw, "rng": _FixedRNG(1, 20)})
+    monkeypatch.setattr(recruit, "convince", spy)
+    scr._pitch(a)
+    assert not seen["allies"]
+    assert g.taverna_blocked == [[cand.uid, a.uid]]
+
+
+def test_a_prison_joint_pitch_bars_through_the_prison_list(monkeypatch):
+    from gartok.tavern import Prison
+    g, a, mates, cand = _joint_scene()
+    a.money = 1000
+    scr = Prison(g, g.groups[0])
+    scr.party = [a, *mates]
+    scr.selected_recruiter = a
+    scr.sel = 0
+    orig = recruit.convince
+    monkeypatch.setattr(recruit, "convince", lambda *x, **kw: orig(*x, **{**kw, "rng": _FixedRNG(1, 1, 1, 20)}))
+    cand = scr.candidates[0]
+    cand.languages = ["Common"]
+    scr._pitch(a)
+    assert {tuple(b) for b in g.prison_blocked} == {(cand.uid, m.uid) for m in (a, *mates)}
+    assert g.taverna_blocked == []

@@ -1380,3 +1380,21 @@ def test_a_hubs_header_tabs_and_jobs_read_in_the_chosen_language(saves):
     job = next(j for j in board.state()["jobs"] if j["id"] == chest.id)
     assert {t["label"] for t in job["tags"]} == {"confiança", "banqueiros"}
     assert "Sealed Chest" not in " ".join(job["detail"]) and "Letter of Receipt" not in " ".join(job["detail"])
+
+
+def test_a_joint_pitch_holder_sees_who_joins_and_the_verb_flips_the_choice():
+    hub, guild, g = _tavern()
+    leader = g.leader
+    for level, tid in enumerate(("charismatic", "fixer", "joint_pitch", "crowd_pleaser"), 1):
+        leader.set_track_level("work", level)
+        assert leader.choose_talent("work", tid)
+    mate = standard_unit()
+    mate.languages = list(leader.languages)
+    mate.mod_charisma = 3
+    guild.add_member(mate, g)
+    hub.tavern.s.sync_group()
+    hub.verb("recruiter", True)(hub, {"uid": leader.uid})
+    d = hub.pick_tab("recruits")["tavern"]["dossier"]
+    assert d["joint"]["on"] and len(d["joint"]["names"]) == len(g.members) - 1 and mate.name in d["joint"]["names"]
+    d = hub.verb("joint", True)(hub, {})["tavern"]["dossier"]
+    assert d["joint"]["on"] is False

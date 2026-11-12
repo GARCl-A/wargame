@@ -29,6 +29,7 @@ until `REFRESH_DAYS` pass. A recruiter who fails a pitch is barred from trying
 that same stranger again until the pool turns over (`taverna_blocked`).
 """
 
+import math
 import random
 from dataclasses import dataclass, field
 
@@ -55,9 +56,25 @@ def can_pitch(recruiter, candidate):
     return bool(shared_languages(recruiter, candidate))
 
 
-def size_penalty(roster_size):
+def size_cut(roster_size, recruiter=None):
+    """What a recruiter holding Crowd Pleaser does not pay of the crowd penalty: a fraction of it, rounded up."""
+    plain = SIZE_PENALTY * max(0, roster_size - FREE_SLOTS)
+    share = recruiter.talent_bonus("crowd_penalty_cut") if recruiter is not None else 0
+    return math.ceil(round(plain * share, 6)) if plain else 0
+
+
+def size_penalty(roster_size, recruiter=None):
     """The recruiter's handicap from an already-crowded guild."""
-    return SIZE_PENALTY * max(0, roster_size - FREE_SLOTS)
+    return SIZE_PENALTY * max(0, roster_size - FREE_SLOTS) - size_cut(roster_size, recruiter)
+
+
+def joint_allies(guild, party, candidate, recruiter, barred):
+    """The party members who join `recruiter`'s pitch when it holds Joint Pitch: those who could recruit
+    `candidate` alone (a shared tongue, a free slot, not `barred(candidate, member)` this week)."""
+    if not recruiter.talent_bonus("joint_pitch"):
+        return []
+    return [m for m in party if m is not recruiter and m in guild.roster and can_pitch(m, candidate)
+            and slots_free(guild, m) > 0 and not barred(candidate, m)]
 
 
 def bail_cost(candidate):
@@ -108,14 +125,16 @@ class Pitch:
     modifiers: list = field(default_factory=list)   # [(value, label)] on the recruiter's side
     language: str | None = None              # the tongue the pitch was made in
     reason: str = ""                         # why it failed (empty on success)
+    rolls: list = field(default_factory=list)   # every recruiter d20 of a joint pitch, in order
 
 
-def convince(recruiter, candidate, roster_size, rng=random, day=1, extra_mods=None):
+def convince(recruiter, candidate, roster_size, rng=random, day=1, extra_mods=None, allies=()):
     """Roll the recruiter's Charisma contest against the candidate's resolve.
 
     `roster_size` is how many members the guild has right now (it grows as you
     recruit within one visit, so the fourth hire of a session is harder than the
-    first). Returns a `Pitch`; a tie goes to the candidate.
+    first). Returns a `Pitch`; a tie goes to the candidate. `allies` (`joint_allies`) make it a joint
+    pitch: one recruiter die per roller, each with +1 per other roller, and the best die counts.
     """
     lang = shared_languages(recruiter, candidate)
     if not lang:
@@ -127,26 +146,29 @@ def convince(recruiter, candidate, roster_size, rng=random, day=1, extra_mods=No
     eff_dist = max(0, dist - red)
     if eff_dist:
         mods.append((-ALIGNMENT_PENALTY * eff_dist, i18n.t("recruit.opposite_alignment", eff_dist=eff_dist)))
-    pen = size_penalty(roster_size)
+    pen = size_penalty(roster_size, recruiter)
     if pen:
         mods.append((-pen, i18n.t("recruit.guild_of", roster_size=roster_size)))
+    if allies:
+        mods.append((len(allies), i18n.t("recruit.joint_pitch", n=len(allies))))
     knack = recruiter.talent_bonus("recruit_cha")     # Fixer talent
     if knack:
         mods.append((knack, "Fixer"))
 
-    rr, cr = rng.randint(1, 20), rng.randint(1, 20)
-    r_total = rr + recruiter.mod_charisma + sum(v for v, _ in mods)
+    rolls = [rng.randint(1, 20) for _ in range(1 + len(allies))]
+    cr = rng.randint(1, 20)
+    bonus = recruiter.mod_charisma + sum(v for v, _ in mods)
     c_total = cr + candidate.mod_charisma
-    if r_total <= c_total and recruiter.can_use_luck(day):
+    if max(rolls) + bonus <= c_total and recruiter.can_use_luck(day):
         recruiter.use_luck(day)
-        rr2 = rng.randint(1, 20)
-        r_total2 = rr2 + recruiter.mod_charisma + sum(v for v, _ in mods)
+        rolls[rolls.index(max(rolls))] = rng.randint(1, 20)
         mods.append((0, i18n.t("recruit.halfling_luck_reroll")))
-        rr, r_total = rr2, r_total2
+    rr = max(rolls)
+    r_total = rr + bonus
 
     ok = r_total > c_total                       # a tie goes to the stranger: they stay put
     return Pitch(ok, rr, r_total, cr, c_total, mods, lang[0],
-                 reason="" if ok else i18n.t("recruit.not_convinced"))
+                 reason="" if ok else i18n.t("recruit.not_convinced"), rolls=rolls)
 
 
 # --------------------------------------------------------------------------- #

@@ -174,6 +174,19 @@ def off_guard_reasons(battle, attacker, target):
     return reasons
 
 
+def in_straight_line(a, b):
+    """The queen's move: the same row, the same column or an exact diagonal between two anchor cells."""
+    dx, dy = a[0] - b[0], a[1] - b[1]
+    return dx == 0 or dy == 0 or abs(dx) == abs(dy)
+
+
+def _straight_shot(attacker, target, weapon=None, thrown=False):
+    """Queen's Arrow: a shot (not a throw) from the shooter's cell to the target's along a straight line."""
+    if thrown or weapon is not None or not hasattr(attacker, "char") or not attacker.ranged:
+        return False
+    return bool(attacker.char.talent_bonus("straight_shot_brutal")) and in_straight_line(attacker.pos, target.pos)
+
+
 def _dueling(battle, attacker, target, thrown=False):
     """Single Combat: a finesse blow struck with the off hand free, while nobody but the target
     stands beside the attacker (an ally of the target's flanking it does not matter)."""
@@ -417,6 +430,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         if ambush:
             brutal_why = brutal_why if brutal else i18n.Msg("log.ambush_shot.brutal")
             brutal += ambush
+    if _straight_shot(attacker, target, weapon, thrown):
+        brutal_why = brutal_why if brutal else i18n.Msg("log.true_line.brutal")
+        brutal += int(attacker.char.talent_bonus("straight_shot_brutal"))
     crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
     roll_line = {"head": prefix, "nat": nat, "detail": detail, "total": total, "shown": shown,

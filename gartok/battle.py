@@ -135,6 +135,7 @@ class Battle:
 
         self.creatures = []                  # neutral bodies that block their cells
         self.fire = set()                    # burning cells (a scenario lights them and spreads them)
+        self.start_zones = {}                # {team: cells} the deployment drew each side from (`can_place`)
         self._pf_cache = {}                   # per-turn Dijkstra field cache (see _pf_field)
         # capture-the-flag: {"player": cell|None, "enemy": cell|None}, else None.
         # the player's flag is planted by `battle_screen`; the scenario drops the
@@ -167,6 +168,7 @@ class Battle:
             u.check_collapse(self.log)
         morale.baseline(self)                # a body laid out at the start is no fall to flinch at
         self._roll_initiative()
+        self.place_queue = self._placers()
         self.log("log.round", n=1)
         self._announce_turn()
 
@@ -312,6 +314,68 @@ class Battle:
         if trapper is None:
             return
         self._recorded("skip_traps", trapper, None, self.trap_setup_queue.clear)
+
+    # ------------------------------------------------------------------ #
+    # placing the side before the first turn (Vantage, Battle Plan)      #
+    # ------------------------------------------------------------------ #
+    def _placers(self):
+        """Who may place themselves before the fight, in initiative order: whoever holds Vantage, and
+        everyone on a side that has its group's leader on the board holding Battle Plan."""
+        planners = {u.team for u in self.units
+                    if u.alive and u.char.leads_group and u.char.talent_bonus("place_group")}
+        queue = []
+        if not self.start_zones:
+            return queue                    # a fight put back from its log (`ReplayScenario`) has no zones to place in
+        for u in self.order:
+            if u in queue or not u.alive or u.team not in ("player", "enemy"):
+                continue
+            if u.char.talent_bonus("place_self") or (u.team in planners and not u.ai_ally):
+                queue.append(u)
+        return queue
+
+    @property
+    def awaiting_place(self):
+        """The unit that places itself next, or None: it waits for the flag and the traps."""
+        if self.awaiting_flag or self.awaiting_trap:
+            return None
+        return self.place_queue[0] if self.place_queue else None
+
+    def place_cells(self, unit):
+        """Every anchor cell `unit` may be placed on."""
+        zone = self.start_zones.get(unit.team) or set()
+        return sorted(c for c in zone if self.can_place(unit, c))
+
+    def can_place(self, unit, tile):
+        """Is `tile` a legal anchor for `unit` before the fight: its whole body inside its side's start
+        zone, on floor that is free of walls, other bodies, traps, pits, deep water and fire?"""
+        zone = self.start_zones.get(unit.team) or set()
+        body = cells(tile, unit.footprint)
+        others = {c for u in self.units if u is not unit and u.alive for c in self.cells_of(u)}
+        traps = {o.pos for o in self.ground if o.is_trap}
+        return all(c in zone and self.board.in_bounds(c) and c not in self.board.walls
+                   and c not in others and c not in self.creature_cells() and c not in traps
+                   and c not in self.fire and not self.board.is_deep_water(c)
+                   and self.board.elevation_at(c) >= 0 for c in body)
+
+    def place(self, unit, tile):
+        """Put the unit at the head of `place_queue` (`awaiting_place`) on `tile`."""
+        def run():
+            unit.pos = tile
+            unit.z = self.board.elevation_at(tile)
+            self.clear_pf_cache()
+            self.place_queue.remove(unit)
+        self._recorded("place", unit, tile, run)
+
+    def skip_place(self, rest=False):
+        """Leave the unit at the head of the queue where it stands (`rest`: its whole side's turn at it)."""
+        unit = self.awaiting_place
+        if unit is None:
+            return
+
+        def run():
+            self.place_queue[:] = ([u for u in self.place_queue if u.team != unit.team] if rest
+                                   else [u for u in self.place_queue if u is not unit])
+        self._recorded("skip_place", unit, None, run)
 
     def _assign_flag_runners(self):
         for side in (self.player_units, self.enemy_units):
@@ -1141,6 +1205,7 @@ class Battle:
         from .conditions import Demoralized, Surprised
         self.opening = {"surprised": surprised, "demoralized": demoralized,
                         "initiative": dict(initiative or {})}
+        self.place_queue = [u for u in self.place_queue if u.team != surprised]
         for u in self.units:
             if not u.alive:
                 continue
