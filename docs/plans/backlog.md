@@ -96,7 +96,37 @@ the rest.
   glyph; axe and hatchet share `battle-axe` (`item_icon.GLYPHS` / `HEAD_GLYPHS`). Source a distinct glyph for each: other `assets/icons/`
   folders, otherwise new game-icons.net SVGs (same licence).
 
+- **Less of a web page: the cursor and the browser's menu (visual audit 2026-11-12).** The game has no cursor
+  of its own, and the browser's context menu is blocked only on the map sheet and the battle sheet
+  (`screens/map/sheet.js`, `screens/battle/battle.js`), so a right click anywhere else opens it. Do: one
+  cursor for the whole client (and its pointing and dragging states) in `shell.css`, from the icon set
+  already licensed, and the context menu blocked in the shell for every screen (the shop's own item menu
+  stays). The native window is its own item (*Deprioritised*, and gate 3 of [go_to_market.md](go_to_market.md)).
+
 ## Medium
+
+- **A d20 rolled on the table (visual audit 2026-11-12, author approved).** The game comes from a tabletop
+  RPG and the chronicle already prints `d20(19) +3`, but no die is ever seen. Do: when a roll decides an act
+  (a strike, a Demoralize, an Assess, a forced talk's roll), a die tumbles on the table beside the board and
+  stops on the number rolled, before the floating number and the chronicle line; a natural 20 and a natural 1
+  each have their own stop. Client only, from the events the server already sends (`st.fx`, `st.cues`,
+  `st.acts` in `battle.js`; add the rolled face to them if it is not there, with a test in
+  `tests/test_battle_fx.py`). The die is an object on the table like the seal and the coins, not a panel; it
+  must not slow a turn (the AI's rolls play short or batch) and is skipped under `prefers-reduced-motion`. A
+  sound cue for the roll goes with *UI sound: the missing cues*. Builds on package E of
+  [storefront_polish.md](storefront_polish.md) (a blow moves the token).
+
+- **Objects on the table, not boxes on a page (visual audit 2026-11-12).** The screens that look most like
+  a game are the ones made of physical things that overlap and sit a little crooked (the title: the map
+  sheet, the guild card, the coins, the seal; the charter; the Victory stamp). The ones that look like a web
+  dashboard are grids of 1px-bordered rectangles inside rectangles with small spaced capitals and form
+  controls: the shop (about 40 boxes) and the routines editor (dropdowns, a toggle, chips, steppers) first,
+  then the bands tab and the reputations. Do, one screen at a time, shop first: fewer frames (a rule or the
+  material itself separates things, not a box per row), each panel a thing with a shadow that may overlap
+  its neighbour and tilt a degree or two, a hand-written note in the margin where a hint sits today, and
+  the empty paper filled by the composition instead of stretched panels. A mockup of the shop comes first
+  (`docs/web_ui/web_client.md`, *The mockups*); the rules that come out of it go in *Art direction*. It
+  comes after *One colour per name* (*Small*), which touches the same CSS.
 
 - **Storefront polish (photo review 2026-11-12).** Plan: [storefront_polish.md](storefront_polish.md). What the
   real screenshots in [../photos/12112026/](../photos/12112026/) show: the unit panel overflowing at low hit

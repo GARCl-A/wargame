@@ -1,0 +1,122 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Inked board</title>
+<style>
+@font-face{font-family:Cinzel;src:url(../../../../gartok/web/client/fonts/Cinzel-700.woff2);font-weight:700}
+@font-face{font-family:Fell;src:url(../../../../gartok/web/client/fonts/IMFellEnglish-400i.woff2);font-style:italic}
+@font-face{font-family:FellSC;src:url(../../../../gartok/web/client/fonts/IMFellEnglishSC-400.woff2)}
+*{margin:0;padding:0}html,body{background:#000;overflow:hidden}
+#stage{position:relative;width:1920px;height:1080px;background:url(today.png)}
+canvas{position:absolute;left:30px;top:112px}
+</style></head><body><div id="stage"><canvas id="c" width="1384" height="780"></canvas></div>
+<script>
+const cv=document.getElementById("c"),g=cv.getContext("2d"),BW=1384,BH=780;
+const C=60,W=16,H=12,OX=212,OY=30;                 // the arena sits where the real one does
+let seed=7;const R=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const K=(x,y)=>x+","+y;
+const pillars=new Set([[6,3],[6,4],[7,6],[7,7],[6,9],[6,10],[11,3],[12,3]].map(([x,y])=>K(x,y)));
+const torches=[[1,1],[11,0],[0,3],[13,7],[11,9],[2,11]];
+const allies=[{x:9,y:0,p:"human/4",act:1,name:"VOKORANYR"},{x:6,y:7,p:"dwarf/1"},{x:0,y:10,p:"human/5"}];
+const foes=[{x:10,y:1,p:"halfling/2"},{x:15,y:4,p:"human/10"},{x:13,y:6,p:"human/1"}];
+const inb=(x,y)=>x>=0&&y>=0&&x<W&&y<H;
+function los(a,b){const n=40;for(let i=1;i<n;i++){const x=a.x+.5+(b.x-a.x)*i/n,y=a.y+.5+(b.y-a.y)*i/n;
+  const cx=Math.floor(x),cy=Math.floor(y);if((cx!==b.x||cy!==b.y)&&pillars.has(K(cx,cy)))return false;}return true;}
+const vis=new Set(),mem=new Set();
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+  if(allies.some(a=>Math.hypot(a.x-x,a.y-y)<9&&los(a,{x,y})))vis.add(K(x,y));
+  else if(x<12||y>6)mem.add(K(x,y));                 // walked past earlier; the far corner was never seen
+}
+const load=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=s;});
+const layer=()=>{const c=document.createElement("canvas");c.width=BW;c.height=BH;return c;};
+function wob(g,pts,close){g.beginPath();pts.forEach(([x,y],i)=>{const jx=x+(R()-.5)*2.4,jy=y+(R()-.5)*2.4;i?g.lineTo(jx,jy):g.moveTo(jx,jy);});if(close)g.closePath();g.stroke();}
+function line(g,x0,y0,x1,y1){const n=Math.max(2,Math.round(Math.hypot(x1-x0,y1-y0)/38)),p=[];for(let i=0;i<=n;i++)p.push([x0+(x1-x0)*i/n,y0+(y1-y0)*i/n]);wob(g,p);}
+function hatch(g,x,y,w,h,step,a){g.save();g.beginPath();g.rect(x,y,w,h);g.clip();g.globalAlpha=a;
+  for(let d=-h;d<w;d+=step){g.beginPath();g.moveTo(x+d+(R()-.5)*2,y+h);g.lineTo(x+d+h+(R()-.5)*2,y);g.stroke();}g.restore();}
+function mask(set,grow,blur){const c=layer(),m=c.getContext("2d");m.filter=`blur(${blur}px)`;m.fillStyle="#fff";
+  for(const k of set){const [x,y]=k.split(",").map(Number);m.fillRect(OX+x*C-grow,OY+y*C-grow,C+grow*2,C+grow*2);}return c;}
+
+Promise.all([load("../../../../gartok/web/client/img/paper.png"),...[...allies,...foes].map(u=>load("../../../../gartok/assets/portraits/"+u.p+".png").then(i=>u.img=i)),document.fonts.load("700 20px Cinzel"),document.fonts.load("italic 20px Fell"),document.fonts.load("20px FellSC")]).then(([paper])=>{
+  const INK="#2a1c10";
+  // the sheet fills the whole board panel: no black margin
+  g.drawImage(paper,60,60,paper.width-120,paper.height-120,0,0,BW,BH);
+  g.fillStyle="rgba(226,205,160,.35)";g.fillRect(0,0,BW,BH);
+  const vg=g.createRadialGradient(BW/2,BH/2,300,BW/2,BH/2,900);vg.addColorStop(0,"rgba(90,60,20,0)");vg.addColorStop(1,"rgba(70,45,15,.38)");
+  g.fillStyle=vg;g.fillRect(0,0,BW,BH);
+  g.strokeStyle="rgba(42,28,16,.55)";g.lineWidth=1.5;g.strokeRect(12,12,BW-24,BH-24);g.lineWidth=.7;g.strokeRect(17,17,BW-34,BH-34);
+
+  // --- wash: colour is what the squad sees now ---
+  const wash=layer(),w=wash.getContext("2d");
+  w.fillStyle="rgba(96,112,140,.36)";w.fillRect(OX,OY,W*C,H*C);            // in sight, unlit: cool
+  for(const [tx,ty] of torches){const cx=OX+tx*C+C/2,cy=OY+ty*C+C/2,rg=w.createRadialGradient(cx,cy,10,cx,cy,250);
+    rg.addColorStop(0,"rgba(214,112,36,.8)");rg.addColorStop(.45,"rgba(222,140,60,.6)");rg.addColorStop(1,"rgba(222,150,70,0)");
+    w.fillStyle=rg;w.fillRect(OX,OY,W*C,H*C);}
+  w.globalCompositeOperation="destination-in";w.drawImage(mask(vis,3,16),0,0);
+  g.globalCompositeOperation="multiply";g.drawImage(wash,0,0);g.globalCompositeOperation="source-over";
+
+  // --- ink: what the squad has surveyed, seen now or before ---
+  const ink=layer(),k=ink.getContext("2d");k.strokeStyle=INK;k.fillStyle=INK;k.lineCap="round";
+  k.lineWidth=1;                                        // sand: stipple and a few pebbles
+  for(let i=0;i<2600;i++){const x=OX+R()*W*C,y=OY+R()*H*C;k.globalAlpha=.16+R()*.3;k.fillRect(x,y,1.3,1.3);}
+  for(let i=0;i<70;i++){const x=OX+R()*W*C,y=OY+R()*H*C,r=2+R()*3;k.globalAlpha=.4;k.beginPath();k.ellipse(x,y,r*1.4,r,R()*3,0,7);k.stroke();}
+  k.globalAlpha=.5;k.lineWidth=1;                         // the grid is a tick at each corner
+  for(let y=0;y<=H;y++)for(let x=0;x<=W;x++){const px=OX+x*C,py=OY+y*C;k.beginPath();k.moveTo(px-4,py);k.lineTo(px+4,py);k.moveTo(px,py-4);k.lineTo(px,py+4);k.stroke();}
+  k.globalAlpha=1;
+  for(const key of pillars){const [x,y]=key.split(",").map(Number),px=OX+x*C,py=OY+y*C;
+    k.fillStyle="#d9c59a";k.fillRect(px+3,py+3,C-6,C-6);k.lineWidth=1;hatch(k,px+3,py+3,C-6,C-6,6,.85);
+    k.save();k.translate(px+C,py);k.scale(-1,1);hatch(k,3,3,C-6,C-6,9,.5);k.restore();
+    k.lineWidth=2.6;wob(k,[[px+3,py+3],[px+C-3,py+3],[px+C-3,py+C-3],[px+3,py+C-3]],true);}
+  for(const [tx,ty] of torches){const cx=OX+tx*C+C/2,cy=OY+ty*C+C/2;                // torch: a small inked brazier
+    k.lineWidth=1.6;k.beginPath();k.arc(cx,cy,9,0,7);k.stroke();
+    k.fillStyle="#a8401c";k.beginPath();k.moveTo(cx,cy-8);k.quadraticCurveTo(cx+7,cy+1,cx,cy+6);k.quadraticCurveTo(cx-7,cy+1,cx,cy-8);k.fill();
+    for(let a=0;a<8;a++){const an=a*Math.PI/4;k.lineWidth=1;k.beginPath();k.moveTo(cx+Math.cos(an)*13,cy+Math.sin(an)*13);k.lineTo(cx+Math.cos(an)*18,cy+Math.sin(an)*18);k.stroke();}}
+  k.globalCompositeOperation="destination-in";k.drawImage(mask(new Set([...vis,...mem]),0,7),0,0);
+  g.drawImage(ink,0,0);
+
+  // the wall: a thick line, a thin one, and hatching behind it, wherever it was surveyed
+  const wall=layer(),wl=wall.getContext("2d");wl.strokeStyle=INK;wl.lineCap="round";
+  const x0=OX,y0=OY,x1=OX+W*C,y1=OY+H*C,T=22;wl.lineWidth=1;
+  hatch(wl,x0-T,y0-T,W*C+T*2,T,7,.8);hatch(wl,x0-T,y1,W*C+T*2,T,7,.8);hatch(wl,x0-T,y0,T,H*C,7,.8);hatch(wl,x1,y0,T,H*C,7,.8);
+  wl.lineWidth=3.4;line(wl,x0,y0,x1,y0);line(wl,x1,y0,x1,y1);line(wl,x1,y1,x0,y1);line(wl,x0,y1,x0,y0);
+  wl.lineWidth=1.2;wob(wl,[[x0-T,y0-T],[x1+T,y0-T],[x1+T,y1+T],[x0-T,y1+T]],true);
+  wl.globalCompositeOperation="destination-in";wl.drawImage(mask(new Set([...vis,...mem]),26,8),0,0);
+  g.drawImage(wall,0,0);
+
+  // never surveyed: the paper is simply empty, with the surveyor's note
+  g.font="italic 21px Fell";g.fillStyle="rgba(42,28,16,.6)";g.textAlign="center";
+  g.fillText("not yet seen",OX+14*C,OY+2.6*C);
+  // marginalia: title, scale, compass, a hand note
+  g.textAlign="left";g.fillStyle=INK;g.font="30px FellSC";g.fillText("The Pit",44,70);
+  g.font="italic 19px Fell";g.fillStyle="rgba(42,28,16,.8)";g.fillText("a plan of the sand,",44,96);g.fillText("as the band saw it",44,120);
+  g.strokeStyle=INK;g.lineWidth=1.4;const sx=44,sy=720;g.beginPath();g.moveTo(sx,sy);g.lineTo(sx+120,sy);for(let i=0;i<=2;i++){g.moveTo(sx+i*60,sy-6);g.lineTo(sx+i*60,sy+6);}g.stroke();
+  g.fillStyle=INK;g.fillRect(sx,sy-3,60,6);g.font="italic 17px Fell";g.fillText("2 squares · 3 m",sx,sy+26);
+  const cx=1290,cy=110;g.lineWidth=1.2;g.beginPath();g.arc(cx,cy,34,0,7);g.stroke();
+  for(let a=0;a<8;a++){const an=a*Math.PI/4,r=a%2?22:46;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(an-.16)*10,cy+Math.sin(an-.16)*10);g.lineTo(cx+Math.cos(an)*r,cy+Math.sin(an)*r);g.lineTo(cx+Math.cos(an+.16)*10,cy+Math.sin(an+.16)*10);g.closePath();a%2?g.stroke():g.fill();}
+  g.font="20px FellSC";g.textAlign="center";g.fillText("N",cx,cy-54);
+  g.save();g.translate(1218,640);g.rotate(-.05);g.font="italic 20px Fell";g.fillStyle="rgba(120,40,24,.85)";g.textAlign="left";
+  g.fillText("two more of them",0,0);g.fillText("behind the posts?",0,24);g.restore();
+
+  // move range of the active fighter: red-chalk dashes
+  const act=allies[0],reach=new Set([K(act.x,act.y)]);let fr=[[act.x,act.y,0]];
+  const occ=new Set([...allies,...foes].map(u=>K(u.x,u.y)));
+  while(fr.length){const [x,y,d]=fr.shift();if(d===4)continue;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,kk=K(nx,ny);
+    if(!inb(nx,ny)||reach.has(kk)||pillars.has(kk)||occ.has(kk))continue;reach.add(kk);fr.push([nx,ny,d+1]);}}
+  g.fillStyle="rgba(255,244,214,.2)";for(const kk of reach){const [x,y]=kk.split(",").map(Number);g.fillRect(OX+x*C,OY+y*C,C,C);}
+  g.strokeStyle="#8e2c1a";g.lineWidth=2.6;g.setLineDash([9,6]);g.beginPath();
+  for(const kk of reach){const [x,y]=kk.split(",").map(Number),px=OX+x*C,py=OY+y*C;
+    if(!reach.has(K(x,y-1))){g.moveTo(px,py+2);g.lineTo(px+C,py+2);}if(!reach.has(K(x,y+1))){g.moveTo(px,py+C-2);g.lineTo(px+C,py+C-2);}
+    if(!reach.has(K(x-1,y))){g.moveTo(px+2,py);g.lineTo(px+2,py+C);}if(!reach.has(K(x+1,y))){g.moveTo(px+C-2,py);g.lineTo(px+C-2,py+C);}}
+  g.stroke();g.setLineDash([]);
+
+  // pieces: turned discs standing on the sheet, with a real shadow
+  function piece(u,col){const cx=OX+u.x*C+C/2,cy=OY+u.y*C+C/2,r=26;
+    g.save();g.shadowColor="rgba(30,18,6,.65)";g.shadowBlur=9;g.shadowOffsetX=4;g.shadowOffsetY=6;g.fillStyle="#1c120a";g.beginPath();g.arc(cx,cy,r+4,0,7);g.fill();g.restore();
+    g.save();g.beginPath();g.arc(cx,cy,r,0,7);g.clip();g.drawImage(u.img,cx-r,cy-r,r*2,r*2);g.restore();
+    g.lineWidth=4;g.strokeStyle=col;g.beginPath();g.arc(cx,cy,r+1,0,7);g.stroke();
+    g.lineWidth=1;g.strokeStyle="rgba(255,240,200,.5)";g.beginPath();g.arc(cx,cy,r+3.5,0,7);g.stroke();
+    if(u.act){g.lineWidth=2.5;g.strokeStyle="#d9a441";g.beginPath();g.arc(cx,cy,r+7,0,7);g.stroke();}
+    if(u.name){g.font="700 12px Cinzel";const tw=g.measureText(u.name).width+16;g.save();g.translate(cx-tw-34,cy-11);g.rotate(-.02);
+      g.shadowColor="rgba(30,18,6,.5)";g.shadowBlur=5;g.shadowOffsetY=2;g.fillStyle="#efe2bd";g.fillRect(0,0,tw,22);g.shadowColor="transparent";
+      g.fillStyle=INK;g.textAlign="left";g.fillText(u.name,8,16);g.restore();}}
+  allies.forEach(u=>piece(u,"#2f5f93"));foes.filter(u=>vis.has(K(u.x,u.y))).forEach(u=>piece(u,"#96281c"));
+  document.title="done";
+});
+</script></body></html>
