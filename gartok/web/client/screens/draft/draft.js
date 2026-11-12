@@ -128,6 +128,7 @@ function dossier(c, i) {
       <div class="who"><h4>${esc(c.name)}</h4><div class="ro"${tip(c.race_tip, "item")}>${esc(c.race)} ·</div>
         <div class="al">${tr("draft.age", {align: esc(c.align), size: esc(c.size), age: c.age})}</div><div class="stamps">${stamps}</div></div></div>
     <div class="vit"><div><span>${tr("stat.hp")}</span><b>${c.hp}</b></div><div><span>${tr("stat.ac")}</span><b>${c.ac}</b></div><div><span>${tr("stat.md")}</span><b>${c.md}</b></div><div><span>${tr("stat.spd")}</span><b>${c.spd}</b></div><div><span>${tr("stat.init")}</span><b>${esc(c.init)}</b></div></div>
+    <div class="carry ${c.carry.load > c.carry.limit ? "over" : ""}"${tip(c.carry.tip, "sum")}>${tr("draft.carry", {load: +c.carry.load.toFixed(1), limit: +c.carry.limit.toFixed(1)})}</div>
     <div class="att">${c.attrs.map(a => `<div><span>${a.k}</span><b>${a.v}</b><i class="${modCls(a.mod)}">${sign(a.mod)}</i></div>`).join("")}</div>
     <div class="wpn"${tip(w.action_tip, "item")}><b>${esc(w.name)}</b><span>${esc(w.hit)} · ${esc(w.dmg)} · ${esc(w.tags)}</span>${w.action ? `<em${tip(w.action_tip, "item")}>${esc(w.action)}</em>` : ""}</div>
     <div class="ab"${tip(c.ability.text)}><b>${esc(c.ability.name)}</b> · ${c.langs.map(esc).join(", ") || tr("draft.no_langs")}</div>

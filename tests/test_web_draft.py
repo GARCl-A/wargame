@@ -11,6 +11,7 @@ from gartok import persist, recorder, vocations
 from gartok.archetypes import ARCHETYPES
 from gartok.guild import BANNER_COLORS
 from gartok.web.server import Game, serve
+from tests.helpers import standard_unit
 
 
 @pytest.fixture
@@ -201,6 +202,21 @@ def test_the_pick_card_lists_every_tag_from_the_catalog_and_the_slip_carries_its
     assert all(r["rule"] and r["text"] and r["stamp"]["style"] for r in rows)
     assert d.tutorial_rows("draft.vocation") == []
     assert all(a["rule"] for a in d.state()["archetypes"])
+
+
+def test_every_card_says_what_the_candidate_carries_against_what_the_kit_weighs(saves):
+    d = _draft(vocations.WARBAND)
+    pool = d.draft.pool
+    cards = d.state()["pool"]
+    for u, c in zip(pool, cards, strict=True):
+        assert c["carry"]["load"] == u.load and c["carry"]["limit"] == u.carry_normal
+        assert c["carry"]["tip"]
+    weak, strong = standard_unit(), standard_unit()
+    for u, strength in ((weak, 3), (strong, 16)):
+        u.base_attributes["strength"] = strength
+        u._apply_attributes()
+        u._derive_combat()
+    assert d._card(weak)["carry"]["limit"] < d._card(strong)["carry"]["limit"]
 
 
 def test_vocation_races_and_candidate_weapon_carry_tooltips(saves):

@@ -132,6 +132,8 @@
 .vit div+div{border-left:1px dashed rgba(90,60,30,.3)}
 .vit span{font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:#7b6142;margin-right:6px}
 .vit b{font:700 17px/1 Cinzel,serif;color:var(--ink)}
+.carry{margin-top:5px;text-align:center;font:13px/1 var(--read);color:#5b4630}
+.carry.over{color:var(--redink);font-weight:600}
 .att{display:grid;grid-template-columns:repeat(6,1fr);margin-top:8px}
 .att div{text-align:center}
 .att span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.16em;color:#7b6142}

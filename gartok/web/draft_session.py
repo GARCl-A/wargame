@@ -267,6 +267,8 @@ class DraftSession(Session):
                            "action": w["action"],
                            "action_tip": wiki_terms.action_tip(w["action"])},
                 "ability": {"name": ch["ability"][0], "text": ch["ability"][1]}, "langs": ch["langs"],
+                "carry": {"load": u.load, "limit": u.carry_normal,
+                          "tip": i18n.t("sheet_view.of_at_normal_pace_at", load=u.carry_normal, most=u.carry_max)},
                 "tags": tags, "commissioned": bool(called), "picked": u in d.picks}
 
     def _charter(self):

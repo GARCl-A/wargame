@@ -605,6 +605,7 @@
             "open_sheet": "Abrir a ficha inteira de {name}",
             "age": "{align} · {size} · {age} anos",
             "no_langs": "sem idiomas",
+            "carry": "carrega {load} de {limit} kg",
             "replace": "Trocar",
             "slip_kicker": "Encomenda",
             "tokens_left": {

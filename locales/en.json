@@ -1247,6 +1247,7 @@
       "open_sheet": "Open {name}'s whole sheet",
       "age": "{align} · {size} · age {age}",
       "no_langs": "no languages",
+      "carry": "carries {load} of {limit} kg",
       "replace": "Replace",
       "slip_kicker": "Commission",
       "tokens_left": {
