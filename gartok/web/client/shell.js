@@ -34,11 +34,21 @@ async function api(path, body) {
     res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
     data = await res.json();
     if (res.ok) await preload(data);
+  } catch (e) {
+    res = null;
   } finally { pending--; }
+  if (!res) {
+    Fault.card(tr("shell.lost"), false);
+    throw Object.assign(new Error(tr("shell.lost")), {fault: true});
+  }
   Tutorial.sync(res.headers.get("X-Tutorial"));
   if (!res.ok) {
+    if (res.status === 500 && data.fault) {
+      Fault.card(data.error, data.reload);
+      throw Object.assign(new Error(data.error), {fault: true});
+    }
     Sound.play("miss");
-    throw new Error(data.error || res.statusText);
+    throw Object.assign(new Error(data.error || res.statusText), {refusal: true});
   }
   return data;
 }
@@ -170,6 +180,54 @@ const Tutorial = (() => {
     },
   };
 })();
+
+// a fault the server wrote down, or no answer at all: a card over the screen; a script error: logged and a toast
+const Fault = (() => {
+  const sent = new Set();
+  let toastTimer = null, scriptToast = false;
+  const drop = id => document.getElementById(id)?.remove();
+  function card(text, reload) {
+    if (!Shell.screen) return;
+    drop("fault");
+    const veil = $("stage").appendChild(Object.assign(document.createElement("div"), {id: "fault"}));
+    veil.innerHTML = `<div class="paper"><div class="kicker">${tr("shell.fault_kicker")}</div><p>${esc(text)}</p>
+      <div class="btn">${tr(reload ? "shell.reload" : "shell.close")}</div></div>`;
+    veil.querySelector(".btn").onclick = () => reload ? location.reload() : veil.remove();
+  }
+  function toast(text) {
+    if (!Shell.screen) return;
+    drop("shellnews");
+    clearTimeout(toastTimer);
+    const el = $("stage").appendChild(Object.assign(document.createElement("div"), {id: "shellnews", textContent: text}));
+    el.onclick = () => el.remove();
+    toastTimer = setTimeout(() => el.remove(), 6000);
+  }
+  function report(where, error, trace) {
+    const key = where + error;
+    if (sent.has(key) || sent.size >= 20) return;
+    sent.add(key);
+    fetch("/api/client_error", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({where: String(where), error: String(error), trace: String(trace || "")})}).catch(() => {});
+  }
+  function script(where, error, trace) {
+    report(where, error, trace);
+    if (!scriptToast) { scriptToast = true; toast(tr("shell.script_error")); }
+  }
+  return {card, toast, report, script};
+})();
+
+addEventListener("error", e => {
+  const err = e.error;
+  Fault.script(e.filename ? `${e.filename}:${e.lineno}` : String(err?.stack || "").split("\n")[1]?.trim() || "", e.message, err?.stack);
+});
+addEventListener("unhandledrejection", e => {
+  const r = e.reason;
+  if (r?.fault) { e.preventDefault(); return; }
+  if (r?.refusal) { e.preventDefault(); Fault.toast(r.message); return; }
+  e.preventDefault();
+  const stack = String(r?.stack || "");
+  Fault.script(stack.split("\n")[1]?.trim() || "", r?.message ?? String(r), stack);
+});
 
 // a portrait, or the name's initial when there is none
 function face(src, name, cls = "") {

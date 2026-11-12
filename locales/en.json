@@ -403,6 +403,13 @@
     "app": {
       "title": "GARTOK Tactical"
     },
+    "shell": {
+      "fault_kicker": "The game stumbled",
+      "reload": "Reload the last save",
+      "close": "Close",
+      "lost": "The game stopped answering. Close this window and open the game again.",
+      "script_error": "Something on this screen misbehaved. It was written down for the author."
+    },
     "unit": {
       "day": {
         "one": "{n} day",
@@ -5003,7 +5010,9 @@
   },
   "server": {
     "this_screen_has_no_tutorial": "this screen has no tutorial card",
-    "open_screen_is": "the open screen is {screen}"
+    "open_screen_is": "the open screen is {screen}",
+    "fault": "Something broke in the game. It was written down for the author.",
+    "fault_title": "The game hit an error twice in a row. Load a save to go on."
   },
   "session": {
     "nobody_by_that_id_here": "nobody by that id here"

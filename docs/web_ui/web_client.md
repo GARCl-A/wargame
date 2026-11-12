@@ -24,6 +24,10 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
 - **The server half** is a `web/session.Session`: a `screen` id, `state`, its verbs, `tutorial_key()` (`tutorial_rows(key)` for a card's registry-drawn rows, `tutorial_spot(key)` for the part of the screen it lights) and
   `sheet_units` (who its `sheet` verb may open). It holds the desk; it never borrows a method off a screen.
   The server routes `/api/<screen>/<verb>` to the open session and refuses another screen's verbs.
+- **A refusal is a `ValueError`, the rest is a fault.** A verb refuses with `ValueError` (409, shown by the
+  screen, or by the shell's toast when the screen has no `catch`). Any other exception is logged to
+  `errors.jsonl` in the save folder, answered 500, and the game reloads its last save; the shell shows the
+  card. A screen never catches a fault to hide it.
 - **The client half** is `client/screens/<id>/`, with its files named in `SCREENS` in `shell.js`. A
   screen's scripts declare top-level names, so two scripts of one page must not share one (a test checks
   it).

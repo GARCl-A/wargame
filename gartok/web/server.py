@@ -4,6 +4,7 @@ and a JSON API over the screen being played. Standard library only.
     GET  /api/screen              -> which screen is open (the client's router reads it first)
     GET  /api/sounds              -> the sound cues
     POST /api/bye                 -> the page is going (closed, or reloaded on another screen)
+    POST /api/client_error        -> a script error of the page, written to the fault log
     GET  /api/tutorial            -> the open screen's tutorial card; POST .../dismiss, .../reopen
     GET  /api/settings/export     -> the playtest zip (saves, combat logs, build), while Settings is open
     *    /api/<screen>/<verb>     -> that screen's session (`session.Session`)
@@ -16,11 +17,13 @@ import mimetypes
 import os
 import threading
 import time
+import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 from .. import (
     combat_lab,
+    fault_log,
     i18n,
     persist,
     playtest_export,
@@ -71,6 +74,8 @@ class Game:
         self.lab = lab
         self.quit = lambda: None      # the window's QUIT; `__main__` stops the server with it
         self.gone_at = None           # when the page last said bye with no request since
+        self.world = None             # the save the open screens play on
+        self.faults = 0               # faults in a row
         self.open(session)
 
     def closed(self, grace):
@@ -85,6 +90,26 @@ class Game:
         if getattr(session, "map", None) is not None:      # a screen over the map opens with it
             session.map.game = self
         self.session = session
+        m = session if hasattr(session, "world_id") else getattr(session, "map", None)
+        if getattr(m, "world_id", None) is not None:
+            self.world = m.world_id
+        if session.screen == "title":
+            self.world = None
+
+    def recover(self):
+        """After a fault: back on the last save of the world being played, or the title when there is none to
+        trust (a second fault in a row, or a save that does not load). False when nothing was reloaded (a lab
+        fight, the title, the draft): the screen stays as it is."""
+        self.faults += 1
+        if self.world is None:
+            return False
+        try:
+            if self.faults >= 2:
+                raise LookupError
+            self.load(self.world)
+        except Exception:  # noqa: BLE001 -- a save that does not load is the title's job, whatever broke it
+            self.open(TitleSession(i18n.t("server.fault_title")))
+        return True
 
     @classmethod
     def fight(cls, fight="fortress", level=2, squad=4, seed=None, players=1, log_root=None):
@@ -218,6 +243,9 @@ def make_handler(game):
             if parts == ["bye"] and post:
                 game.gone_at = time.monotonic()
                 return self._json({})
+            if parts == ["client_error"] and post:
+                fault_log.record("client", args.get("where", ""), args.get("error", ""), args.get("trace", ""), s.screen)
+                return self._json({})
             if parts == ["screen"] and not post:
                 return self._json({"screen": s.screen, "lab": game.lab is not None,
                                    "volume": settings.get("volume")})
@@ -258,6 +286,34 @@ def make_handler(game):
             except ValueError as e:
                 return self._json({"error": str(e)}, 409)
 
+        def _guarded(self, parts, args, post):
+            """`_api`, with anything it did not expect written down and answered: a refusal is a ValueError
+            (409, inside `_api`); the rest is a fault (500) and the game goes back to its last save."""
+            try:
+                if callable(args):
+                    try:
+                        args = args()
+                    except ValueError as e:      # a body that is not JSON
+                        return self._json({"error": str(e)}, 409)
+                self._api(parts, args, post)
+                if parts != ["client_error"]:
+                    game.faults = 0
+            except ConnectionError:
+                pass                                  # the page left before the answer: not a fault
+            except Exception as e:  # noqa: BLE001 -- the fault is written down and answered, never re-raised
+                self._fault(parts, post, e)
+
+        def _fault(self, parts, post, e):
+            screen = getattr(game.session, "screen", "")
+            fault_log.record("server", ("POST " if post else "GET ") + "/".join(parts),
+                             f"{type(e).__name__}: {e}", traceback.format_exc(), screen)
+            reload = game.recover()
+            body = json.dumps({"error": i18n.t("server.fault"), "fault": True, "reload": reload}).encode()
+            try:
+                self._send(body, "application/json", 500)
+            except OSError:
+                pass
+
         def do_GET(self):
             game.gone_at = None
             url = urlparse(self.path)
@@ -270,7 +326,7 @@ def make_handler(game):
                 return self._file(_inside(ASSETS, "/".join(parts[1:])))
             if parts[0] == "api":
                 with game.lock:
-                    return self._api(parts[1:], {k: v[0] for k, v in parse_qs(url.query).items()}, False)
+                    return self._guarded(parts[1:], {k: v[0] for k, v in parse_qs(url.query).items()}, False)
             self._missing()
 
         def do_POST(self):
@@ -278,9 +334,8 @@ def make_handler(game):
             parts = urlparse(self.path).path.strip("/").split("/")
             if parts[0] != "api":
                 return self._missing()
-            body = self._body()
             with game.lock:
-                return self._api(parts[1:], body, True)
+                return self._guarded(parts[1:], self._body, True)
 
     return Handler
 

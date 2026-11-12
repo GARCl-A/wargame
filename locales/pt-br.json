@@ -1652,6 +1652,13 @@
         "app": {
             "title": "GARTOK Tático"
         },
+        "shell": {
+            "fault_kicker": "O jogo tropeçou",
+            "reload": "Recarregar o último save",
+            "close": "Fechar",
+            "lost": "O jogo parou de responder. Feche esta janela e abra o jogo de novo.",
+            "script_error": "Algo nesta tela se comportou mal. Ficou registrado para o autor."
+        },
         "tip": {
             "total": "Total"
         },
@@ -4281,7 +4288,9 @@
     },
     "server": {
         "this_screen_has_no_tutorial": "esta tela não tem cartão de tutorial",
-        "open_screen_is": "a tela aberta é {screen}"
+        "open_screen_is": "a tela aberta é {screen}",
+        "fault": "Algo quebrou no jogo. Ficou registrado para o autor.",
+        "fault_title": "O jogo deu erro duas vezes seguidas. Carregue um save para continuar."
     },
     "session": {
         "nobody_by_that_id_here": "ninguém com esse id aqui"

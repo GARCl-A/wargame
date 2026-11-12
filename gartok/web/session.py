@@ -4,7 +4,8 @@ person does, as `ui/` turns it into dicts for pygame today.
     GET  /api/<screen>/<verb>?query  -> Session.GET[verb](session, query)
     POST /api/<screen>/<verb> {body} -> Session.POST[verb](session, body)
 
-A verb answers JSON; a `ValueError` is a refusal (409). Every session has a `state` verb, the
+A verb answers JSON; a `ValueError` is a refusal (409); anything else is a fault (500): logged
+(`fault_log`), and the game reloads its last save. Every session has a `state` verb, the
 whole screen as its side knows it, and a `sheet` verb (`?uid=`): the book of anyone it shows
 (`sheet_units`), which the shell opens over the screen.
 

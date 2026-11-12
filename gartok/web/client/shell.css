@@ -571,6 +571,55 @@ body:not(.ready) #tut-badge {
   box-shadow: none
 }
 
+#fault {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at 50% 45%, rgba(10, 7, 4, .55), rgba(10, 7, 4, .85))
+}
+
+#fault .paper {
+  width: 640px;
+  padding: 36px 48px 32px;
+  cursor: default
+}
+
+#fault .kicker {
+  font: 600 16px/1 var(--read);
+  letter-spacing: .02em;
+  text-transform: none;
+  color: var(--blood)
+}
+
+#fault p {
+  margin: 16px 0 24px;
+  font: 20px/1.42 var(--read);
+  color: var(--ink-2)
+}
+
+#fault .btn {
+  width: max-content;
+  margin: 0 auto
+}
+
+#shellnews {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  z-index: 110;
+  transform: translateX(-50%);
+  max-width: 900px;
+  padding: 12px 22px;
+  border-radius: 2px;
+  cursor: pointer;
+  font: 18px/1.35 var(--read);
+  color: var(--paper);
+  background: rgba(10, 7, 4, .92);
+  box-shadow: 0 0 0 1px var(--brass), 0 6px 14px rgba(0, 0, 0, .5)
+}
+
 #tut-badge {
   position: absolute;
   z-index: 80;
