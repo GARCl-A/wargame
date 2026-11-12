@@ -6,7 +6,7 @@ money), so every activity is measured in copper *and* in XP. The sim replaced
 the old `economy_sim.py` script (one character, an invented town, no risk), now deleted.
 
 This is a reference, not a plan: the work still open is in [plans/backlog.md](plans/backlog.md)
-(*Economy numbers to sign off*, *The sim's long game*, *Sim policies*). The measurements of the
+(*Measure the economy against the decided lines*, *The sim's long game*, *Sim policies*). The measurements of the
 first rounds (2026-10-08 to 2026-10-22: twenty dated findings, the author's answers, the first
 decisions) are in git: `git show 1a999bf:docs/plans/economy_sim_v2.md`. The frozen story is the
 `project-context` reference `gartok-economy-sim-v2`.

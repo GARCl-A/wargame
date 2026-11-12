@@ -1,7 +1,7 @@
 # Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
-`docs/plans/` ([backlog_hygiene.md](backlog_hygiene.md), [storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
+`docs/plans/` ([storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
 that owns the subject: the test suite [../../tests/README.md](../../tests/README.md), the economy sim
 [../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
 What is already built is in the code, its tests and the git log.
@@ -26,8 +26,6 @@ Parts, in this order:
 
 Goal: a stable build for the author's playtest and one with friends. Left:
 
-- **Backlog hygiene (audit 2026-11-12).** Plan: [backlog_hygiene.md](backlog_hygiene.md). Docs only: decided items
-  move to *Ready to do*, the economy numbers become tasks, the Loyalty entry stops naming a guild treasury.
 - **Tutorials.** The author reads every card in play and flags what still rings false.
 - **Translation to pt-br.** The author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
@@ -57,7 +55,7 @@ the rest.
   Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road
   (`forced.py` rolls `world.ROAD_AMBUSH_CHANCE` once per arrival at an `unsafe` node), and the map should
   mark a node that has one ("ambush on the way"). Only the Old Road is `unsafe` today; the chance per node is
-  tuned together with *How lethal the Wilds should be* (*Needs more information -> Economy numbers*).
+  tuned together with *How lethal the Wilds should be* (*Ready to do -> Medium -> Measure the economy against the decided lines*).
 
 - **One colour per name, then the map screen's pass on every screen (author, notes outside playtests).**
   Two steps, in this order. (1) *Tokens:* the CSS declares about 70 custom properties (23 in `shell.css`)
@@ -126,6 +124,28 @@ the rest.
   workplace talents into automated routines (e.g., automated mushroom foraging + medicinal herbalism loops that craft and
   maintain target stocks of healing potions).
 
+- **Measure the economy against the decided lines (author 2026-11-11).** In this order, the first is what
+  the other two are measured with:
+  1. *The reference scenario past the start.* The sim tests the Wilds, the Games and the Claim from a
+     guild that starts at level 3 with $250 (`economy_guild.py --level 3 --capital 250`), a guess. Decided
+     (author 2026-11-11): the scenario is the *How lethal the Wilds should be* squad below (3 units, combat 1, work 2, the weapon and armour
+     above, its capital what that kit costs). `--level` is one number today, so the sim needs the combat and
+     work tracks apart (and `--size 3`) (`scripts/economy_guild.py`).
+  2. *How lethal the Wilds should be.* Decided (author 2026-11-11): 3 characters at combat 1 and work 2,
+     each with a weapon of up to 50 coins and a Studded Leather, win 50% of the Wilds ambushes. Measure it
+     with the headless fights and tune the Wilds packs to it; the Old Road's ambush (20% a pass,
+     `world.ROAD_AMBUSH_CHANCE`) is re-measured with it (a group too strong for a pack is no longer
+     ambushed by it, author 2026-11-01).
+  3. *How much a crafter may earn.* Decided (author 2026-11-11): a crafter (2 craft talents) profits at least
+     3x what a lumberjack earns per hour at the Yard, over a 16 h day. Craft profit = sale price - (reagents +
+     food). Left: measure each crafting loop against that line with `scripts/economy_report.py` and the restock
+     sweep, then tune prices and shelves. Ties to *Tune the specialised shops*.
+
+- **A test that opens every screen in the browser.** The client's scripts are checked only as text: a
+  typo in a screen is found by whoever opens it. Open each screen in headless Edge on a copy of a real
+  save (the screenshot recipe in `docs/web_ui/web_client.md`) and fail on a script error. *Fault capture*
+  already leaves every script error in the save folder's log (`errors.jsonl`).
+
 ---
 
 # Large and later
@@ -136,7 +156,7 @@ the rest.
   alignment with organic motivation mechanics. Characters receive individual aspirations organically tied to their
   attributes, background, and personal vocation:
   - *Exploration* ("See the world"): requires discovering and visiting new map nodes.
-  - *Economy* ("Get rich"): requires continuous growth of personal coin / guild treasury.
+  - *Economy* ("Get rich"): requires continuous growth of personal coin.
   - *Labor* ("Master miner / Master craftsman"): requires hitting extraction or crafting quotas.
   - *Dissatisfaction triggers:* unmet aspirations over prolonged periods cause members to voice complaints in dialogue/notices
     and suffer progressive, accelerating loyalty loss.
@@ -333,6 +353,8 @@ Not tasks and not yet decisions: premises the author wants to think over before 
   build wins 8 to 10% (Human, Orc, Dwarf, Goliath), sword and shield 8.5%, Broadsword 6%, the Fortress 7%, a
   random level 10 body 4%; the Human Glaive wins 45% against 4 wolves, 15% against 6, 4% against 12. The built
   fighter is about twice the random one and still loses: headcount weighs more than level.
+  This now blocks tuning: every new race and talent is balanced on a curve the author has not chosen (headcount
+  against level, and a +1 in CON or STR worth about four times a +1 in WIS, CHA or INT).
 - **Co-op / multiplayer on a shared map (author 2026-10-31).** Each band a player. A daydream; the
   tester does not see it fitting. No plan.
 
@@ -443,24 +465,10 @@ has one "Enter" button and its functions are tabs inside.
   per member; the oath is composed once, by the player; recruiting is one person convincing another;
   occupations are gone and the vocation stays on probation. The plan ends with its open questions.
 
-- **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
-  targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
-  order of impact.
-  1. *How lethal the Wilds should be.* Decided (author 2026-11-11): 3 characters at combat 1 and work 2,
-     each with a weapon of up to 50 coins and a Studded Leather, win 50% of the Wilds ambushes. Measure it
-     with the headless fights and tune the Wilds packs to it; the Old Road's ambush (20% a pass,
-     `world.ROAD_AMBUSH_CHANCE`) is re-measured with it (a group too strong for a pack is no longer
-     ambushed by it, author 2026-11-01).
-  2. *How much a crafter may earn.* Decided (author 2026-11-11): a crafter (2 craft talents) profits at least
-     3x what a lumberjack earns per hour at the Yard, over a 16 h day. Craft profit = sale price - (reagents +
-     food). Left: measure each crafting loop against that line with `scripts/economy_report.py` and the restock
-     sweep, then tune prices and shelves. Ties to *Tune the specialised shops*.
-  3. *The reference scenario past the start.* The sim tests the Wilds, the Games and the Claim from a
-     guild that starts at level 3 with $250 (`economy_guild.py --level 3 --capital 250`), a guess. Decided
-     (author 2026-11-11): the scenario is the item 1 squad (3 units, combat 1, work 2, the weapon and armour
-     above, its capital what that kit costs). `--level` is one number today, so the sim needs the combat and
-     work tracks apart (and `--size 3`).
-  4. *The Claim's numbers are old.* The Wilds claim (the guild's own holding in the Wilds, built by a
+- **Economy numbers (open since the sim's first rounds, 2026-10-08).** The sim meets its
+  targets ([../economy_sim.md](../economy_sim.md)); the calls were made (*Ready to do -> Medium -> Measure the
+  economy against the decided lines*), what is left is a re-measure.
+  - *The Claim's numbers are old.* The Wilds claim (the guild's own holding in the Wilds, built by a
      garrison that sustains it until it is established, then raided now and then) was measured before
      the garrison's `hold` job (rest and heal on the claim) existed, so the sim's "a gamble, established
      by 13-28% of guilds" may be wrong. Not a call: a re-measure, when a sim policy goes for the Claim.
