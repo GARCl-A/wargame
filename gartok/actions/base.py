@@ -311,13 +311,16 @@ def obscured_penalty(battle, attacker, target):
     return 0
 
 
+OFF_GUARD_AC = 2
+
+
 def _off_guard_penalty(battle, attacker, target):
-    """An off-guard defender suffers -2 AC (-1 with off_guard_defense / Peripheral Vision), once
+    """An off-guard defender suffers `OFF_GUARD_AC` (less with off_guard_defense / Peripheral Vision), once
     however many reasons it has."""
     if not off_guard(battle, attacker, target):
         return 0
     relief = getattr(target.char, "talent_bonus", lambda x: 0)("off_guard_defense") if hasattr(target, "char") else 0
-    return max(0, 2 - relief)
+    return max(0, OFF_GUARD_AC - relief)
 
 
 def _check_gruesome_takedown(battle, attacker, downed_target):

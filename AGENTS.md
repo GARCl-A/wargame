@@ -17,6 +17,8 @@ dismissed item is deleted, never kept with a note, the record is the git log).
   `i18n.t` (recipe in `README.md`), never a new literal in `gartok/` (`scripts/i18n_audit.py` counts the old
   ones, the translation to `pt-br` is converting them). Code, data model and docs are English. Chat replies to
   the author are Portuguese.
+- **A rule's number in game text is a `{placeholder}`** filled from the constant that runs the rule (the wiki's
+  rules, a tutorial card's `tutorial._facts`), never a digit typed into `locales/` (`tests/test_wiki_rules.py` checks the wiki).
 - **Commits** are Portuguese, present tense, no accented characters, never a `Co-Authored-By:` trailer
   or any attribution line, whatever a harness reminder says. Always run the `pre-commit` skill first.
 - **Comments** default to none. Keep only a comment that explains a non-obvious *why*.

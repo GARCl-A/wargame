@@ -83,11 +83,11 @@ class WildsClaimMixin:
         return lit, lines + events, casualties
 
     def claim_fire_fuel(self, crew):
-        """One unit of fuel out of someone's pack as the work starts; False when nobody has any."""
-        fuel = next((u for u in crew if u.count_of(economy.CAMPFIRE_FUEL)), None)
+        """The fuel out of someone's pack as the work starts; False when nobody has any."""
+        fuel = next((u for u in crew if u.count_of(economy.CAMPFIRE_FUEL) >= economy.CAMPFIRE_FUEL_UNITS), None)
         if fuel is None:
             return False
-        fuel.remove_named(economy.CAMPFIRE_FUEL)
+        fuel.remove_named(economy.CAMPFIRE_FUEL, economy.CAMPFIRE_FUEL_UNITS)
         return True
 
     def claim_fire_catch(self, crew):

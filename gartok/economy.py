@@ -105,7 +105,8 @@ CITY_PROPERTY_DEBT_GRACE_DAYS = 14            # days of ignored debt before the 
 OVEN_PRICE = 150                  # copper, bought from the Bankers once the house is the guild's
 GARAGE_PRICE = 690                # copper per tier, flat: 150 to build + 3 cp/kg for the 180 kg a Cart and an Ox open
 CAMPFIRE_HOURS = 1                # time to build a fire at the claim
-CAMPFIRE_FUEL = "Lumber"          # one unit burns per attempt, lit or not
+CAMPFIRE_FUEL = "Lumber"          # burns per attempt, lit or not
+CAMPFIRE_FUEL_UNITS = 1
 CAMPFIRE_DC = 8                   # 1d20 + WIS mod, best of the group
 CLAIM_OVEN_BRICK = "Stone Brick"
 CLAIM_OVEN_BRICKS = 15            # x the brick's price = OVEN_PRICE, paid in stone
@@ -115,6 +116,7 @@ FIELD_CAMPFIRE_HOURS = 4          # how long a field campfire burns at a node
 FIELD_CAMPFIRE_TOOL = "Flint and Steel"
 FIELD_CAMPFIRE_LUMBER = "Lumber"
 FIELD_CAMPFIRE_COAL = "1kg Coal"
+FIELD_CAMPFIRE_UNITS = 1
 
 TAVERN_STUDY_COST_PER_DAY = 15   # copper, per member per day to rent a quiet room to study
 

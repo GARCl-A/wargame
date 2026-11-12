@@ -20,7 +20,7 @@
         "title": "Reading your foes",
         "body": [
           "The first time your side sees a foe, every character that sees it rolls d20 + INT to read it, and the best result is shared by the whole side. The more you beat the DC, the more of its card opens.",
-          "A race the guild has already fought is easier to read. Assess (1 point) rolls again, harder, on one foe."
+          "A race the guild has already fought is easier to read. Assess ({assess} point) rolls again, harder, on one foe."
         ]
       },
       "fallen": {
@@ -68,7 +68,7 @@
         "title": "Identity and leadership",
         "body": [
           "The name and banner colour follow the guild for the whole run.",
-          "The leader haggles for the guild and leads any group they stand in. You get one free change later; after that only death replaces them. Each card shows how many people that candidate could recruit as leader: 1 + Charisma modifier + racial level."
+          "The leader haggles for the guild and leads any group they stand in. You get one free change later; after that only death replaces them. Each card shows how many people that candidate could recruit as leader: {base} + Charisma modifier + racial level."
         ]
       }
     },
@@ -95,7 +95,7 @@
         "title": "Your roster",
         "body": [
           "Members are listed by group; click one for their sheet, levels and talents. MANAGE GEAR, at the bottom, opens the selected member's group to move gear between them.",
-          "SHARE RATIONS lets group-mates eat from that member's pack. A day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead.",
+          "SHARE RATIONS lets group-mates eat from that member's pack. A day unfed: hungry ({pen} to attributes). Two: starving (max HP {cap}). Three: too weak to fight. Four: dead.",
           "Death is permanent; the run ends only when the whole guild is gone."
         ],
         "suggestion": "The REPUTATIONS tab holds your objectives and what each faction wants."
@@ -104,7 +104,7 @@
         "title": "How far the guild reaches",
         "body": [
           "Every group takes one slot. Fame, your reputation with every faction added up, opens more. Deeds raise it; nothing lowers it.",
-          "A group bigger than its leader can hold starts to fray: each day its weakest member may walk. With a free slot they strike out alone; without one they give 7 days' notice, then leave."
+          "A group bigger than its leader can hold starts to fray: each day its weakest member may walk. With a free slot they strike out alone; without one they give {days} days' notice, then leave."
         ]
       },
       "reputations": {
@@ -140,8 +140,8 @@
     "battle": {
       "title": "Fighting it out",
       "body": [
-        "Each character has 2 action points a turn, and the lit bar at the bottom is what it can do with them: hover a line below and its plate lights up. Space or the seal beside it ends the turn. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
-        "You see only what the active character's light and senses reach; L shows the whole squad's sight. A foe's ? fields are what you have not read yet: everyone reads a foe on first sight, and Assess (1 point) reads harder.",
+        "Each character has {ap} action points a turn, and the lit bar at the bottom is what it can do with them: hover a line below and its plate lights up. Space or the seal beside it ends the turn. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
+        "You see only what the active character's light and senses reach; L shows the whole squad's sight. A foe's ? fields are what you have not read yet: everyone reads a foe on first sight, and Assess ({assess} point) reads harder.",
         "At 0 HP a character is down, not dead: Stabilize or First Aid them before they bleed out."
     ],
       "cost": {
@@ -193,30 +193,30 @@
     "taverna": {
       "title": "Recruiting",
       "body": [
-        "Pick a stranger, then who from the party makes the pitch: Charisma against Charisma, in a language both speak. Each member past the guild's second and each step of alignment apart costs 1. A failed pitch can't be retried by that member until the pool turns over next week.",
-        "Each member can sponsor 1 + their Charisma modifier recruits; the guild leader adds their racial level.",
-        "STUDY rents a room ($15 a day) to learn a language from a Dictionary, or a spell from its Scroll if the student has that school. PERFORM sends anyone with a Musical Instrument on stage for tips."
+        "Pick a stranger, then who from the party makes the pitch: Charisma against Charisma, in a language both speak. Each member of the guild past {free} costs {size_pen}, and each step of alignment apart {align_pen}. A failed pitch can't be retried by that member until the pool turns over next week.",
+        "Each member can sponsor {base} + their Charisma modifier recruits; the guild leader adds their racial level.",
+        "STUDY rents a room (${study} a day) to learn a language from a Dictionary, or a spell from its Scroll if the student has that school. PERFORM sends anyone with a Musical Instrument on stage for tips."
       ]
     },
     "hunt": {
       "title": "Hunting the wilds",
       "body": [
-        "Pick a shift and head out. A crew of three brings back about 1 kg of Meat per 2 hours, and every hour risks an ambush: a real, lethal fight. Wolves leave Hide, which the Tannery buys.",
+        "Pick a shift and head out. A crew of three brings back about {kg} kg of Meat per {hours} hours, and every hour risks an ambush: a real, lethal fight. Wolves leave Hide, which the Tannery buys.",
         "Win and you can keep hunting or go back with what you have. FORAGE WILDS looks for Red Mushrooms and Fruit instead."
       ]
     },
     "ox_hunt": {
       "title": "Tracking the ox",
       "body": [
-        "Pick how many hours of daylight to read the ground: each hour is one Wisdom check by your best tracker. Every trail you find makes the next one 2 harder.",
+        "Pick how many hours of daylight to read the ground: each hour is one Wisdom check by your best tracker. Every trail you find makes the next one {step} harder.",
         "Aurochs runs from anyone near and outpaces you: pin him against the groves, a canyon or the map edge, and bring ranged hands. Every few rounds the herd answers his call. The fight is won when he falls."
       ]
     },
     "bank": {
       "title": "The strongbox",
       "body": [
-        "Rent a chest once ($90, 30 kg) and keep what the guild isn't carrying, safe and free. Drag an item onto the chest to store it, or onto a member to take it out.",
-        "Copper Coins are $1 and Gold Coins $100, both items in the pack. This is the only place to mint or melt gold: a coin stack's ... menu, $1 per coin each way. Shops spend copper first and break gold only when they must."
+        "Rent a chest once (${price}, {kg} kg) and keep what the guild isn't carrying, safe and free. Drag an item onto the chest to store it, or onto a member to take it out.",
+        "Copper Coins are ${copper} and Gold Coins ${gold}, both items in the pack. This is the only place to mint or melt gold: a coin stack's ... menu, ${fee} per coin each way. Shops spend copper first and break gold only when they must."
       ]
     },
     "level": {
@@ -229,7 +229,7 @@
     "library": {
       "title": "The Library Catalog",
       "body": [
-        "Dictionaries go on sale once the guild has 1 reputation with the scholars, and the shelf grows with it.",
+        "Dictionaries go on sale once the guild has {rep} reputation with the scholars, and the shelf grows with it.",
         "Anyone who speaks a tongue can write its dictionary on the WRITE tab, with Paper and Ink. The scholars' \"A New Translation\" job only takes one the shop doesn't already sell."
       ]
     },
@@ -265,36 +265,36 @@
       "body": [
         "Only recipes someone in the party knows appear. Starting one consumes the materials from every pack in the group, wagons and animals included (never a padlocked item); then each hour rolls d20 + INT toward the batch. A named tool (a Chisel, say) is not consumed, but some pack must hold it.",
         "WORK makes the whole group wait out the hours. ALONE splits the crafter off into a group of their own (it takes a free slot, and only their pack feeds the craft); merge them back by hand.",
-        "Everyone can cook (Jerky, Roast Meat, Fruit Compote) at a fire: a field campfire (Flint and Steel, 1 Lumber and 1 Coal, from the map), the Claim's, or the house oven. Jerky keeps 20 days; Meat only 2."
+        "Everyone can cook (Jerky, Roast Meat, Fruit Compote) at a fire: a field campfire (Flint and Steel, {fire_units} Lumber and {fire_units} Coal, from the map), the Claim's, or the house oven. Jerky keeps {jerky} days; Meat only {meat}."
       ]
     },
     "initiation": {
       "title": "The Initiation",
       "body": [
-        "A school takes the guild's people once the guild has 2 reputation with it. Reputation is the door, not the price: it is never spent.",
-        "BEGIN THE RITE: the member boards at the sanctuary in a group of their own (or the whole group waits, with no free slot) and rolls 1d20 + INT a day toward the school: 180 points for Faith, 90 for Blood, 270 for Nature. Leave and the points are kept.",
-        "Faith consumes a Holy Symbol. Blood first tests the blood for 7 days, and a failed test is final. Board is $3 on a day the boarder has no food. The rite grants the school, not a spell: spells are studied from scrolls."
+        "A school takes the guild's people once the guild has {rep} reputation with it. Reputation is the door, not the price: it is never spent.",
+        "BEGIN THE RITE: the member boards at the sanctuary in a group of their own (or the whole group waits, with no free slot) and rolls 1d20 + INT a day toward the school: {faith} points for Faith, {blood} for Blood, {nature} for Nature. Leave and the points are kept.",
+        "Faith consumes a Holy Symbol. Blood first tests the blood for {days} days, and a failed test is final. Board is ${board} on a day the boarder has no food. The rite grants the school, not a spell: spells are studied from scrolls."
       ]
     },
     "medic": {
       "title": "The Medic",
       "body": [
-        "Pick the patients. The price is the potions, First Aid Kit charges and Antidotes the cure would use, at 70% of the shop price; everyone picked leaves at full HP, cured and unpoisoned. The group pays from its packs, richest first.",
+        "Pick the patients. The price is the potions, First Aid Kit charges and Antidotes the cure would use, at {pct}% of the shop price; everyone picked leaves at full HP, cured and unpoisoned. The group pays from its packs, richest first.",
         "The whole group waits out the longest treatment: an hour for wounds, eight for sickness, longer for poison. A treatment over a day is a hospital stay: pick that patient alone and Admit them. They split off until it ends (or the group waits, with no free slot); merge them back by hand."
       ]
     },
     "property": {
       "title": "The City house",
       "body": [
-        "With 4 reputation with the Bankers you can buy a house ($1,440, once). It stores 600 kg, but costs $30 in tax every 7 days.",
+        "With {rep} reputation with the Bankers you can buy a house (${price}, once). It stores {kg} kg, but costs ${tax} in tax every {period} days.",
         "Miss three payments and the Bankers come to collect: give it back and owe them, or squat and risk the guard.",
-        "A house can take an oven ($150) to cook in, and garage bays for wagons and animals."
+        "A house can take an oven (${oven}) to cook in, and garage bays for wagons and animals."
       ]
     },
     "garage": {
       "title": "The garage",
       "body": [
-        "Each bay ($690) keeps one wagon and one animal safe at the house. Park what the group doesn't need on the road; a parked wagon keeps its cargo.",
+        "Each bay (${price}) keeps one wagon and one animal safe at the house. Park what the group doesn't need on the road; a parked wagon keeps its cargo.",
         "Garaged animals eat from the house stash and the parked cargo, and don't count against the herd limit; with no food they starve. Lose the house and you lose the garage.",
         "The Claim has one too, unlimited, once its garrison opens. It is safe only while someone stands guard."
       ]
@@ -303,15 +303,15 @@
       "title": "Someone has to mind the wagon",
       "body": [
         "The wagon can't follow you inside, and is no use on a hunt. Click a member to stay outside with it; one guard is enough, even a lone level 0. Guards stay in the group, they just sit this one out.",
-        "Left alone it may be gone when you come back: the place can take it (the Ruins and the Nest, 20%) and the animals may bolt (Donkey 5%, Horse 10%, Ox 15%). Cargo and animals go with it."
+        "Left alone it may be gone when you come back: the place can take it (the Ruins and the Nest, {take}%) and the animals may bolt (Donkey {donkey}%, Horse {horse}%, Ox {ox}%). Cargo and animals go with it."
       ]
     },
     "claim": {
       "title": "Claiming the wilds",
       "body": [
-        "Six stages: scout the land (2 h), clear the creatures there (a fight), fence it (10 Lumber, 8 h), sweep a nearby camp (a fight), then hold it with a garrison for 10 days, with a 20% chance of a raid each day.",
+        "Six stages: scout the land ({scout} h), clear the creatures there (a fight), fence it ({lumber} Lumber, {fence} h), sweep a nearby camp (a fight), then hold it with a garrison for {days} days, with a {raid}% chance of a raid each day.",
         "Once the garrison holds, the Gathering tab puts it to work: Lumber and Fruit, with no licence to buy, only an Axe. A shift does not leave the post. Raids still come.",
-        "A campfire (1 Lumber, 1 h, a Wisdom check) cooks while someone is garrisoned; an oven (15 Stone Brick from the Mine, 8 h) cooks for good. Once the garrison opens, the Claim has a garage too."
+        "A campfire ({fuel_units} Lumber, {fire} h, a Wisdom check) cooks while someone is garrisoned; an oven ({bricks} Stone Brick from the Mine, {oven} h) cooks for good. Once the garrison opens, the Claim has a garage too."
       ]
     },
     "guard": {
@@ -331,8 +331,8 @@
     "prison": {
       "title": "The prison",
       "body": [
-        "Offer a prisoner's bail to try recruiting them, the same pitch as the tavern: Charisma against Charisma, +2 for their gratitude.",
-        "Double the offer for another +1 each time. The bail is taken only if the pitch wins; if it fails you keep your money."
+        "Offer a prisoner's bail to try recruiting them, the same pitch as the tavern: Charisma against Charisma, +{bail} for their gratitude.",
+        "Double the offer for another +{step} each time. The bail is taken only if the pitch wins; if it fails you keep your money."
       ]
     },
     "stable": {
@@ -346,18 +346,18 @@
     "wagon_yard": {
       "title": "The wagon yard",
       "body": [
-        "A Cart ($150) carries up to 180 kg, a Carriage ($600) up to 540 kg. Cargo never goes into a fight, and the group eats from it on the road. An empty wagon sells back here.",
+        "A Cart (${cart_price}) carries up to {cart_kg} kg, a Carriage (${carriage_price}) up to {carriage_kg} kg. Cargo never goes into a fight, and the group eats from it on the road. An empty wagon sells back here.",
         "A wagon needs animals in a Harness (the Farm's stables) and carries only what they can draw. If the whole group dies, the wagon goes with it.",
-        "The road wears it 1 HP per 100 distance. At 0 HP it breaks: REPAIR it on the group screen (Lumber, 1 h, best INT against DC 15), or leave it behind."
+        "The road wears it {hp} HP per {dist} distance. At 0 HP it breaks: REPAIR it on the group screen (Lumber, {hours} h, best INT against DC {dc}), or leave it behind."
       ]
     },
     "work": {
       "title": "Day labour",
       "body": [
-        "Pick a shift (4 to 16 hours) and the whole group works it. Nothing attacks a wage crew, but it pays little.",
-        "A worker with their own tool (an Axe at the Lumber Yard, a Pick at the Mine) is paid more and keeps earning work XP past the first level. Each crew card shows the tool and what 16 h pays."
+        "Pick a shift ({min} to {max} hours) and the whole group works it. Nothing attacks a wage crew, but it pays little.",
+        "A worker with their own tool (an Axe at the Lumber Yard, a Pick at the Mine) is paid more and keeps earning work XP past the first level. Each crew card shows the tool and what {day} h pays."
       ],
-      "suggestion": "Work a 16 h shift when the guild runs out of copper; adventure pays better."
+      "suggestion": "Work a {day} h shift when the guild runs out of copper; adventure pays better."
     },
     "gathering": {
       "title": "Gathering materials",
@@ -365,7 +365,7 @@
         "Buy the node's licence once and every group of the guild can gather here instead of taking the wage.",
         "The Wilds Claim gathers the same way with no licence: the ground is the guild's.",
         "Only a worker carrying the node's own tool gathers (an Axe at the Lumber Yard and the Claim, a Pick at the Mine) and learns more than the wage teaches. The rest stand guard: no haul and no work XP, but they fight if a pack comes. Split them off on the map if they should earn elsewhere.",
-        "Pick a shift (4 to 16 hours); the haul goes into the gatherers' packs: Lumber and Fruit at the Lumber Yard; Stone Brick, Coal, Iron Ore and gems at the Mine. On average it out-earns the wage, but a pack of beasts may find the crew."
+        "Pick a shift ({min} to {max} hours); the haul goes into the gatherers' packs: Lumber and Fruit at the Lumber Yard; Stone Brick, Coal, Iron Ore and gems at the Mine. On average it out-earns the wage, but a pack of beasts may find the crew."
       ]
     },
     "group_turn": {
@@ -6463,20 +6463,20 @@
   "wiki_rules": {
     "turns": {
       "title": "Turns & Action Points",
-      "1": "Every combatant has {ap} action points a turn. Attack, Walk and Defend cost 1 each, in any mix: walk + attack, attack + attack, attack + defend...",
+      "1": "Every combatant has {ap} action points a turn. Attack, Walk and Defend cost {cost} each, in any mix: walk + attack, attack + attack, attack + defend...",
       "2": "Walk: up to your speed in cells. Diagonals cost 1, then 2, then 1 again within one walk.",
       "3": "You can cross an ally's cell but not stop on it. An enemy's cell blocks you completely.",
-      "4": "Defend: +1 AC (circumstance) until the start of your next turn.",
-      "5": "Delay (0 points): drop to the end of the initiative order for good, once a round, before you spend anything.",
-      "6": "Flee (1 point, ends the turn): only from the map edge, and only when you are faster than the fastest pursuer or already out of its reach.",
+      "4": "Defend: +{ac} AC (circumstance) until the start of your next turn.",
+      "5": "Delay ({delay} points): drop to the end of the initiative order for good, once a round, before you spend anything.",
+      "6": "Flee ({flee} point, ends the turn): only from the map edge, and only when you are faster than the fastest pursuer or already out of its reach.",
       "7": "Bonuses of the same type do not stack: Defend and another circumstance bonus to AC, only the larger counts."
     },
     "flanking": {
       "title": "Off-guard and flanking",
-      "1": "A fighter is off-guard until its first turn of the fight begins, so whoever acts first strikes foes that have not yet moved. It loses 2 AC against every attack (1 with Peripheral Vision); the log shows [Off-guard -2] and why (has not acted, flanked).",
-      "2": "A foe is also off-guard when you and an ally are both next to it, on opposite sides (a flank). The two never add up: it is still -2 AC.",
+      "1": "A fighter is off-guard until its first turn of the fight begins, so whoever acts first strikes foes that have not yet moved. It loses {pen} AC against every attack ({reduced} with Peripheral Vision); the log shows [Off-guard -{pen}] and why (has not acted, flanked).",
+      "2": "A foe is also off-guard when you and an ally are both next to it, on opposite sides (a flank). The two never add up: it is still -{pen} AC.",
       "3": "An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some races and beasts have.",
-      "4": "Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on an off-guard foe: the blow is Brutal 1, plus +1d4 (Sneak Attack) or +2 to hit (Precise Thrust)."
+      "4": "Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on an off-guard foe: the blow is Brutal {brutal}, plus +{die} (Sneak Attack) or +{hit} to hit (Precise Thrust)."
     },
     "morale": {
       "title": "Morale",
@@ -6490,10 +6490,10 @@
     },
     "weapon": {
       "title": "Weapon Actions (2 Points)",
-      "1": "One strike for the price of two attacks. Out of its case it is the worse buy; in its case the blow is Brutal 1 and beats the two attacks.",
-      "2": "Cleave (Axe): a second foe beside both, each swing +2 to hit.",
-      "3": "Repel Strike (Quarterstaff): shoves the foe 1 cell; against a wall or a body, +1d4 instead.",
-      "4": "Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, Sleeping, Surprised, Demoralized) takes it at +2 to hit.",
+      "1": "One strike for the price of two attacks. Out of its case it is the worse buy; in its case the blow is Brutal {brutal} and beats the two attacks.",
+      "2": "Cleave (Axe): a second foe beside both, each swing +{hit} to hit.",
+      "3": "Repel Strike (Quarterstaff): shoves the foe {cells} cell; against a wall or a body, +{die} instead.",
+      "4": "Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, Sleeping, Surprised, Demoralized) takes it at +{hit} to hit.",
       "5": "Armor Pierce (Picks): ignores worn metal armour. Power Shot (Bows): +STR, best at long range.",
       "6": "Hook Shield (Hatchet): the foe's shield gives no AC until next round. Parry & Strike (Swords): while Defending, with two or more foes in reach.",
       "7": "Long Thrust (Glaive): one strike a cell past the Glaive's reach of {reach}, +{hit} to hit."
@@ -6513,32 +6513,32 @@
       "1": "A pitch is d20 + Charisma (yours) against d20 + Charisma (theirs); a tie goes to the stranger. You need a language in common.",
       "2": "Crowd penalty: -{pen} for every member of the whole guild past {free}, counted across every group, not the group making the pitch.",
       "3": "Alignment: -{align} per step between the recruiter's alignment and the stranger's.",
-      "4": "Each member can sponsor {base} + their Charisma modifier recruits; the guild leader adds their racial level.",
+      "4": "Each member can sponsor {base} + {terms} recruits; the guild leader adds {leader}.",
       "5": "A failed pitch bars that recruiter from that stranger until the pool turns over. Someone else may still try.",
-      "6": "The Tavern keeps {tavern} strangers and the Prison {prison} prisoners; both re-roll every {days} days. Bail adds +2 to the pitch, and each doubling of the offer +1 more; it is taken only if the pitch wins."
+      "6": "The Tavern keeps {tavern} strangers and the Prison {prison} prisoners; both re-roll every {days} days. Bail adds +{bail} to the pitch, and each doubling of the offer +{step} more; it is taken only if the pitch wins."
     },
     "groups": {
       "title": "Groups, Leaders & Fame",
       "1": "The guild may run {base} groups, plus one more for every {fame} reputation summed across all factions.",
-      "2": "A group holds {cap} + {terms} members, and {herd} + the leader's Wisdom modifier animals and captives.",
+      "2": "A group holds {cap} + {terms} members, and {herd} + {herd_terms} animals and captives.",
       "3": "An overextended group rolls each day against its weakest member's Mental Defense (the leaders are exempt). That member splits off into a group of their own, or with no slot free gives {days} days' notice and then leaves the guild.",
       "4": "Who leaves takes by alignment: Lawful only what they wear, Neutral the pack too, Chaotic everything."
     },
     "captives": {
       "title": "Captives",
-      "1": "Capture (1 point): bind an adjacent fallen foe with a {tools}, which is used up. When the last foe falls the fight runs one more round to bind the fallen.",
+      "1": "Capture ({capture} point): bind an adjacent fallen foe with a {tools}, which is used up. When the last foe falls the fight runs one more round to bind the fallen.",
       "2": "A captive walks with the group, takes {weight} of its animal limit, never fights or eats, and dies {days} days after its capture.",
       "3": "The group screen lists the captives with their days left and a RELEASE button. A job that wants one alive takes it straight from the group."
     },
     "wagons": {
       "title": "Wagons & Animals",
-      "1": "The road wears a wagon 1 HP every {dist} distance; at 0 HP it is broken until repaired with Lumber.",
+      "1": "The road wears a wagon {hp} HP every {dist} distance; at 0 HP it is broken until repaired with Lumber.",
       "2": "Cargo on a wagon or on an animal's back counts for the group: food, shop sales and job deliveries read it.",
       "3": "Where a wagon cannot go in, anyone left outside guards it. Left alone it may be lost, cargo and animals with it."
     },
     "money": {
       "title": "Money, Food & Death",
-      "1": "There is no guild treasury: money is Copper ($1) and Gold ($100) coins in the packs. They weigh, split and move like any item.",
+      "1": "There is no guild treasury: money is Copper (${copper}) and Gold (${gold}) coins in the packs. They weigh, split and move like any item.",
       "2": "Paying spends copper first, then breaks gold and returns change. Gold only comes from the bank exchange.",
       "3": "Everyone eats every day. Hunger lowers the attributes and brings sickness.",
       "4": "Death is permanent. The run ends only when the whole guild is gone."
@@ -6546,9 +6546,9 @@
     "hunger": {
       "title": "Hunger \u0026 Starvation",
       "1": "Every member eats 1 meal a day at upkeep. Fresh food nearing spoilage is eaten first. SHARE RATIONS lets a member feed hungry groupmates from their pack.",
-      "2": "1 day unfed · Hungry: {pen1} to all attributes.",
-      "3": "2 days unfed · Starving: {pen2} to all attributes; maximum HP capped at 1.",
-      "4": "3 days unfed · Incapacitated: too weak to fight, cannot be sent into battle.",
+      "2": "{d1} day unfed · Hungry: {pen1} to all attributes.",
+      "3": "{d2} days unfed · Starving: {pen2} to all attributes; maximum HP capped at {cap}.",
+      "4": "{d3} days unfed · Incapacitated: too weak to fight, cannot be sent into battle.",
       "5": "{death} days unfed · starvation death: the character is gone permanently.",
       "6": "Rotten Food is eaten only on the last day before death, as a desperate last resort. It resets the hunger but sickens the eater. Eaten again while already sick, it adds Gut Rot. Strong Stomach (Gnoll) is immune.",
       "7": "A hungry or starving character cannot heal through rest. Treefolk (Autotroph) never eat and never starve. If the whole guild starves, the campaign ends."
@@ -6584,12 +6584,15 @@
       "1": "The first time anyone on your side sees a foe, every teammate that sees it rolls d20 + INT against DC {dc} + the foe's racial level. The best margin is shared by the side.",
       "2": "The better the margin, the more fields of the foe's card open (the ? are what you have not read yet). A failed roll reveals nothing and never lies.",
       "3": "A race the guild has fought before is {discount} easier to read, and a racial ability the guild has seen is free on the next of that race.",
-      "4": "Assess (1 point) rolls again at +{bonus} on one foe in sight, once per foe each round."
+      "4": "Assess ({assess} point) rolls again at +{bonus} on one foe in sight, once per foe each round."
     },
     "or": " or ",
     "term": {
       "cha": "the leader's Charisma modifier",
-      "half_level": "half the leader's racial level"
+      "half_level": "half the leader's racial level",
+      "member_cha": "their Charisma modifier",
+      "racial_level": "their racial level",
+      "leader_wis": "the leader's Wisdom modifier"
     }
   },
   "intel": {

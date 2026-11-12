@@ -40,11 +40,14 @@ def collect(picks, take):
     return moved, touched
 
 
+DICTIONARY_MIN_REP = 1     # the `library_initiate` deed's reputation
+
+
 def library_stock_dictionaries(guild):
-    """Dictionaries the Library sells today: none until the `library_initiate` deed (rep >= 1),
+    """Dictionaries the Library sells today: none until the `library_initiate` deed (`DICTIONARY_MIN_REP`),
     then one language per point of reputation, drawn afresh each day."""
     rep = guild.reputation.get("library", 0)
-    if rep <= 0:
+    if rep < DICTIONARY_MIN_REP:
         return []
     rng = random.Random(guild.clock.day)
     return [f"Dictionary of {lang}" for lang in rng.sample(data.LANGUAGES, min(rep, len(data.LANGUAGES)))]

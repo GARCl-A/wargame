@@ -6483,7 +6483,7 @@
                 "title": "Lendo os inimigos",
                 "body": [
                     "Na primeira vez que seu lado vê um inimigo, cada personagem que o vê rola d20 + INT para lê-lo, e o melhor resultado é de todo o lado. Quanto mais você passa da CD, mais da ficha dele se abre.",
-                    "Uma raça que a guilda já enfrentou é mais fácil de ler. Avaliar (1 ponto) rola de novo, mais forte, num inimigo."
+                    "Uma raça que a guilda já enfrentou é mais fácil de ler. Avaliar ({assess} ponto) rola de novo, mais forte, num inimigo."
                 ]
             },
             "fallen": {
@@ -6531,7 +6531,7 @@
                 "title": "Identidade e liderança",
                 "body": [
                     "O nome e a cor do estandarte acompanham a guilda durante toda a partida.",
-                    "O líder pechincha pela guilda e lidera qualquer grupo em que esteja. Você tem uma troca grátis depois; a partir daí só a morte o substitui. Cada cartão mostra quantas pessoas aquele candidato poderia recrutar como líder: 1 + modificador de Carisma + nível racial."
+                    "O líder pechincha pela guilda e lidera qualquer grupo em que esteja. Você tem uma troca grátis depois; a partir daí só a morte o substitui. Cada cartão mostra quantas pessoas aquele candidato poderia recrutar como líder: {base} + modificador de Carisma + nível racial."
                 ]
             }
         },
@@ -6558,7 +6558,7 @@
                 "title": "Seu elenco",
                 "body": [
                     "Os membros são listados por grupo; clique num para ver a ficha, os níveis e os talentos. GERENCIAR EQUIPAMENTO, embaixo, abre o grupo do membro selecionado para mover equipamento entre eles.",
-                    "DIVIDIR RAÇÕES deixa os colegas de grupo comerem da mochila daquele membro. Um dia sem comer: com fome (-2 nos atributos). Dois: faminto (PV máximo 1). Três: fraco demais para lutar. Quatro: morto.",
+                    "DIVIDIR RAÇÕES deixa os colegas de grupo comerem da mochila daquele membro. Um dia sem comer: com fome ({pen} nos atributos). Dois: faminto (PV máximo {cap}). Três: fraco demais para lutar. Quatro: morto.",
                     "A morte é permanente; a partida só acaba quando a guilda inteira se foi."
                 ],
                 "suggestion": "A aba REPUTAÇÕES guarda seus objetivos e o que cada facção quer."
@@ -6567,7 +6567,7 @@
                 "title": "Até onde a guilda alcança",
                 "body": [
                     "Cada grupo ocupa um espaço. A Fama, que é a sua reputação com todas as facções somada, abre mais. Feitos a aumentam; nada a diminui.",
-                    "Um grupo maior do que seu líder consegue sustentar começa a se desfazer: a cada dia o membro mais fraco pode ir embora. Com um espaço livre ele sai por conta própria; sem um, avisa com 7 dias de antecedência e vai."
+                    "Um grupo maior do que seu líder consegue sustentar começa a se desfazer: a cada dia o membro mais fraco pode ir embora. Com um espaço livre ele sai por conta própria; sem um, avisa com {days} dias de antecedência e vai."
                 ]
             },
             "reputations": {
@@ -6603,8 +6603,8 @@
         "battle": {
             "title": "Lutando",
             "body": [
-                "Cada personagem tem 2 pontos de ação por turno, e a barra iluminada embaixo é o que ele pode fazer com eles: passe o mouse numa linha abaixo e a placa dela se acende. Espaço ou o selo ao lado encerra o turno. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
-                "Você só vê o que a luz e os sentidos do personagem ativo alcançam; L mostra a visão de todo o esquadrão. Os campos ? de um inimigo são o que você ainda não leu: todos leem um inimigo ao avistá-lo, e Avaliar (1 ponto) lê mais fundo.",
+                "Cada personagem tem {ap} pontos de ação por turno, e a barra iluminada embaixo é o que ele pode fazer com eles: passe o mouse numa linha abaixo e a placa dela se acende. Espaço ou o selo ao lado encerra o turno. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
+                "Você só vê o que a luz e os sentidos do personagem ativo alcançam; L mostra a visão de todo o esquadrão. Os campos ? de um inimigo são o que você ainda não leu: todos leem um inimigo ao avistá-lo, e Avaliar ({assess} ponto) lê mais fundo.",
                 "Com 0 PV um personagem cai, não morre: Estabilize-o ou use Primeiros Socorros antes que sangre até o fim."
         ],
             "cost": {
@@ -6656,30 +6656,30 @@
         "taverna": {
             "title": "Recrutando",
             "body": [
-                "Escolha um estranho e depois quem do grupo faz o convite: Carisma contra Carisma, num idioma que os dois falem. Cada membro além do segundo da guilda e cada passo de alinhamento de distância custa 1. Um convite falho não pode ser repetido por aquele membro até a reserva renovar na semana seguinte.",
-                "Cada membro pode patrocinar 1 + seu modificador de Carisma recrutas; o líder da guilda soma o nível racial.",
-                "ESTUDAR aluga um quarto ($15 por dia) para aprender um idioma de um Dicionário, ou uma magia do seu Pergaminho, se o aluno tiver essa escola. APRESENTAR manda quem tem um Instrumento Musical para o palco atrás de gorjetas."
+                "Escolha um estranho e depois quem do grupo faz o convite: Carisma contra Carisma, num idioma que os dois falem. Cada membro da guilda além de {free} custa {size_pen}, e cada passo de alinhamento de distância {align_pen}. Um convite falho não pode ser repetido por aquele membro até a reserva renovar na semana seguinte.",
+                "Cada membro pode patrocinar {base} + seu modificador de Carisma recrutas; o líder da guilda soma o nível racial.",
+                "ESTUDAR aluga um quarto (${study} por dia) para aprender um idioma de um Dicionário, ou uma magia do seu Pergaminho, se o aluno tiver essa escola. APRESENTAR manda quem tem um Instrumento Musical para o palco atrás de gorjetas."
             ]
         },
         "hunt": {
             "title": "Caçando nos ermos",
             "body": [
-                "Escolha um turno e saia. Uma turma de três traz cerca de 1 kg de Carne a cada 2 horas, e a cada hora há risco de emboscada: uma luta de verdade, letal. Lobos deixam Pele, que o Curtume compra.",
+                "Escolha um turno e saia. Uma turma de três traz cerca de {kg} kg de Carne a cada {hours} horas, e a cada hora há risco de emboscada: uma luta de verdade, letal. Lobos deixam Pele, que o Curtume compra.",
                 "Vença e você pode continuar caçando ou voltar com o que tem. COLETAR NOS ERMOS procura Cogumelos Vermelhos e Fruta no lugar."
             ]
         },
         "ox_hunt": {
             "title": "Rastreando o boi",
             "body": [
-                "Escolha quantas horas de luz do dia dedicar a ler o chão: cada hora é um teste de Sabedoria do seu melhor rastreador. Cada pista que você acha deixa a próxima 2 mais difícil.",
+                "Escolha quantas horas de luz do dia dedicar a ler o chão: cada hora é um teste de Sabedoria do seu melhor rastreador. Cada pista que você acha deixa a próxima {step} mais difícil.",
                 "Auroque foge de quem chega perto e corre mais que você: encurrale-o contra os bosques, um desfiladeiro ou a borda do mapa, e traga quem ataca à distância. A cada poucas rodadas o rebanho atende ao chamado dele. A luta termina quando ele cai."
             ]
         },
         "bank": {
             "title": "O cofre",
             "body": [
-                "Alugue um baú uma vez ($90, 30 kg) e guarde o que a guilda não está carregando, em segurança e de graça. Arraste um item para o baú para guardá-lo, ou para um membro para tirá-lo.",
-                "Moedas de Cobre valem $1 e Moedas de Ouro $100, ambas itens da mochila. Este é o único lugar para cunhar ou fundir ouro: o menu ... de uma pilha de moedas, $1 por moeda em cada sentido. As lojas gastam cobre primeiro e só quebram ouro quando precisam."
+                "Alugue um baú uma vez (${price}, {kg} kg) e guarde o que a guilda não está carregando, em segurança e de graça. Arraste um item para o baú para guardá-lo, ou para um membro para tirá-lo.",
+                "Moedas de Cobre valem ${copper} e Moedas de Ouro ${gold}, ambas itens da mochila. Este é o único lugar para cunhar ou fundir ouro: o menu ... de uma pilha de moedas, ${fee} por moeda em cada sentido. As lojas gastam cobre primeiro e só quebram ouro quando precisam."
             ]
         },
         "level": {
@@ -6692,7 +6692,7 @@
         "library": {
             "title": "O Catálogo da Biblioteca",
             "body": [
-                "Os dicionários entram à venda quando a guilda tem 1 de reputação com os eruditos, e a prateleira cresce com ela.",
+                "Os dicionários entram à venda quando a guilda tem {rep} de reputação com os eruditos, e a prateleira cresce com ela.",
                 "Quem fala um idioma pode escrever o dicionário dele na aba ESCRITA, com Papel e Tinta. O trabalho \"Uma Nova Tradução\" dos eruditos só aceita um que a loja ainda não venda."
             ]
         },
@@ -6728,36 +6728,36 @@
             "body": [
                 "Só aparecem receitas que alguém do grupo conhece. Começar uma consome os materiais de todas as mochilas do grupo, carroças e animais inclusive (nunca um item com cadeado); depois cada hora rola d20 + INT rumo ao lote. Uma ferramenta nomeada (um Cinzel, por exemplo) não é consumida, mas alguma mochila precisa tê-la.",
                 "TRABALHAR faz o grupo inteiro esperar as horas. SOZINHO separa o artesão num grupo só dele (ocupa um espaço livre, e só a mochila dele alimenta a fabricação); junte-os de volta à mão.",
-                "Todos sabem cozinhar (Charque, Carne Assada, Compota de Fruta) numa fogueira: uma fogueira de campo (Pederneira e Aço, 1 Madeira e 1 Carvão, pelo mapa), a do Território, ou o forno da casa. O Charque dura 20 dias; a Carne só 2."
+                "Todos sabem cozinhar (Charque, Carne Assada, Compota de Fruta) numa fogueira: uma fogueira de campo (Pederneira e Aço, {fire_units} Madeira e {fire_units} Carvão, pelo mapa), a do Território, ou o forno da casa. O Charque dura {jerky} dias; a Carne só {meat}."
             ]
         },
         "initiation": {
             "title": "A Iniciação",
             "body": [
-                "Uma escola aceita o pessoal da guilda quando a guilda tem 2 de reputação com ela. A reputação é a porta, não o preço: nunca é gasta.",
-                "COMEÇAR O RITO: o membro se hospeda no santuário num grupo só dele (ou o grupo inteiro espera, sem espaço livre) e rola 1d20 + INT por dia rumo à escola: 180 pontos para a Fé, 90 para o Sangue, 270 para a Natureza. Se sair, os pontos ficam guardados.",
-                "A Fé consome um Símbolo Sagrado. O Sangue primeiro testa o sangue por 7 dias, e um teste falho é definitivo. A hospedagem custa $3 num dia em que o hóspede não tem comida. O rito concede a escola, não uma magia: as magias se estudam a partir de pergaminhos."
+                "Uma escola aceita o pessoal da guilda quando a guilda tem {rep} de reputação com ela. A reputação é a porta, não o preço: nunca é gasta.",
+                "COMEÇAR O RITO: o membro se hospeda no santuário num grupo só dele (ou o grupo inteiro espera, sem espaço livre) e rola 1d20 + INT por dia rumo à escola: {faith} pontos para a Fé, {blood} para o Sangue, {nature} para a Natureza. Se sair, os pontos ficam guardados.",
+                "A Fé consome um Símbolo Sagrado. O Sangue primeiro testa o sangue por {days} dias, e um teste falho é definitivo. A hospedagem custa ${board} num dia em que o hóspede não tem comida. O rito concede a escola, não uma magia: as magias se estudam a partir de pergaminhos."
             ]
         },
         "medic": {
             "title": "O Médico",
             "body": [
-                "Escolha os pacientes. O preço são as poções, cargas de Kit de Primeiros Socorros e Antídotos que a cura usaria, a 70% do preço da loja; todos os escolhidos saem com PV cheio, curados e sem veneno. O grupo paga das mochilas, do mais rico ao mais pobre.",
+                "Escolha os pacientes. O preço são as poções, cargas de Kit de Primeiros Socorros e Antídotos que a cura usaria, a {pct}% do preço da loja; todos os escolhidos saem com PV cheio, curados e sem veneno. O grupo paga das mochilas, do mais rico ao mais pobre.",
                 "O grupo inteiro espera o tratamento mais longo: uma hora para ferimentos, oito para doença, mais para veneno. Um tratamento de mais de um dia é uma internação: escolha esse paciente sozinho e Interne-o. Ele se separa até acabar (ou o grupo espera, sem espaço livre); junte-o de volta à mão."
             ]
         },
         "property": {
             "title": "A casa na Cidade",
             "body": [
-                "Com 4 de reputação com os Banqueiros você pode comprar uma casa ($1.440, uma vez). Ela guarda 600 kg, mas custa $30 de imposto a cada 7 dias.",
+                "Com {rep} de reputação com os Banqueiros você pode comprar uma casa (${price}, uma vez). Ela guarda {kg} kg, mas custa ${tax} de imposto a cada {period} dias.",
                 "Perca três pagamentos e os Banqueiros vêm cobrar: devolva-a e fique devendo, ou ocupe e arrisque a guarda.",
-                "Uma casa pode ganhar um forno ($150) para cozinhar, e baias de garagem para carroças e animais."
+                "Uma casa pode ganhar um forno (${oven}) para cozinhar, e baias de garagem para carroças e animais."
             ]
         },
         "garage": {
             "title": "A garagem",
             "body": [
-                "Cada baia ($690) guarda uma carroça e um animal em segurança na casa. Estacione o que o grupo não precisa na estrada; uma carroça estacionada mantém a carga.",
+                "Cada baia (${price}) guarda uma carroça e um animal em segurança na casa. Estacione o que o grupo não precisa na estrada; uma carroça estacionada mantém a carga.",
                 "Animais na garagem comem do estoque da casa e da carga estacionada, e não contam no limite do rebanho; sem comida, passam fome. Perca a casa e perde a garagem.",
                 "O Território tem uma também, ilimitada, depois que a guarnição abre. Fica segura só enquanto alguém monta guarda."
             ]
@@ -6766,15 +6766,15 @@
             "title": "Alguém precisa cuidar da carroça",
             "body": [
                 "A carroça não pode seguir você para dentro, e não serve numa caçada. Clique num membro para ficar do lado de fora com ela; um guarda basta, mesmo um nível 0 sozinho. Os guardas continuam no grupo, só ficam de fora desta vez.",
-                "Deixada sozinha, pode sumir quando você voltar: o lugar pode levá-la (as Ruínas e o Ninho, 20%) e os animais podem fugir (Burro 5%, Cavalo 10%, Boi 15%). A carga e os animais vão junto."
+                "Deixada sozinha, pode sumir quando você voltar: o lugar pode levá-la (as Ruínas e o Ninho, {take}%) e os animais podem fugir (Burro {donkey}%, Cavalo {horse}%, Boi {ox}%). A carga e os animais vão junto."
             ]
         },
         "claim": {
             "title": "Reivindicando os ermos",
             "body": [
-                "Seis etapas: reconhecer o terreno (2 h), limpar as criaturas de lá (uma luta), cercar (10 Madeira, 8 h), vasculhar um acampamento próximo (uma luta), e então mantê-lo com uma guarnição por 10 dias, com 20% de chance de ataque a cada dia.",
+                "Seis etapas: reconhecer o terreno ({scout} h), limpar as criaturas de lá (uma luta), cercar ({lumber} Madeira, {fence} h), vasculhar um acampamento próximo (uma luta), e então mantê-lo com uma guarnição por {days} dias, com {raid}% de chance de ataque a cada dia.",
                 "Quando a guarnição se firma, a aba Coleta o põe para trabalhar: Madeira e Fruta, sem licença para comprar, só um Machado. Um turno não sai do posto. Os ataques ainda vêm.",
-                "Uma fogueira (1 Madeira, 1 h, um teste de Sabedoria) cozinha enquanto alguém está de guarnição; um forno (15 Tijolos de Pedra da Mina, 8 h) cozinha para sempre. Quando a guarnição abre, o Território também tem uma garagem."
+                "Uma fogueira ({fuel_units} Madeira, {fire} h, um teste de Sabedoria) cozinha enquanto alguém está de guarnição; um forno ({bricks} Tijolos de Pedra da Mina, {oven} h) cozinha para sempre. Quando a guarnição abre, o Território também tem uma garagem."
             ]
         },
         "guard": {
@@ -6794,8 +6794,8 @@
         "prison": {
             "title": "A prisão",
             "body": [
-                "Ofereça a fiança de um preso para tentar recrutá-lo, o mesmo convite da taverna: Carisma contra Carisma, +2 pela gratidão dele.",
-                "Dobre a oferta para mais +1 cada vez. A fiança só é cobrada se o convite vencer; se falhar, você fica com o dinheiro."
+                "Ofereça a fiança de um preso para tentar recrutá-lo, o mesmo convite da taverna: Carisma contra Carisma, +{bail} pela gratidão dele.",
+                "Dobre a oferta para mais +{step} cada vez. A fiança só é cobrada se o convite vencer; se falhar, você fica com o dinheiro."
             ]
         },
         "stable": {
@@ -6809,18 +6809,18 @@
         "wagon_yard": {
             "title": "O pátio das carroças",
             "body": [
-                "Uma Carroça ($150) carrega até 180 kg, uma Carruagem ($600) até 540 kg. A carga nunca vai para uma luta, e o grupo come dela na estrada. Uma carroça vazia pode ser vendida de volta aqui.",
+                "Uma Carroça (${cart_price}) carrega até {cart_kg} kg, uma Carruagem (${carriage_price}) até {carriage_kg} kg. A carga nunca vai para uma luta, e o grupo come dela na estrada. Uma carroça vazia pode ser vendida de volta aqui.",
                 "Uma carroça precisa de animais de Arreio (os estábulos da Fazenda) e carrega só o que eles conseguem puxar. Se o grupo inteiro morrer, a carroça vai junto.",
-                "A estrada a desgasta em 1 PV a cada 100 de distância. Com 0 PV ela quebra: CONSERTE-a na tela do grupo (Madeira, 1 h, o melhor INT contra CD 15), ou deixe-a para trás."
+                "A estrada a desgasta em {hp} PV a cada {dist} de distância. Com 0 PV ela quebra: CONSERTE-a na tela do grupo (Madeira, {hours} h, o melhor INT contra CD {dc}), ou deixe-a para trás."
             ]
         },
         "work": {
             "title": "Trabalho braçal",
             "body": [
-                "Escolha um turno (4 a 16 horas) e o grupo inteiro o trabalha. Nada ataca uma turma de salário, mas paga pouco.",
-                "Um trabalhador com ferramenta própria (um Machado na Serraria, uma Picareta na Mina) ganha mais e continua ganhando XP de trabalho depois do primeiro nível. O cartão de cada turma mostra a ferramenta e quanto pagam 16 h."
+                "Escolha um turno ({min} a {max} horas) e o grupo inteiro o trabalha. Nada ataca uma turma de salário, mas paga pouco.",
+                "Um trabalhador com ferramenta própria (um Machado na Serraria, uma Picareta na Mina) ganha mais e continua ganhando XP de trabalho depois do primeiro nível. O cartão de cada turma mostra a ferramenta e quanto pagam {day} h."
             ],
-            "suggestion": "Trabalhe um turno de 16 h quando a guilda ficar sem cobre; aventura paga melhor."
+            "suggestion": "Trabalhe um turno de {day} h quando a guilda ficar sem cobre; aventura paga melhor."
         },
         "gathering": {
             "title": "Coletando materiais",
@@ -6828,7 +6828,7 @@
                 "Compre a licença do local uma vez e todo grupo da guilda pode coletar aqui em vez de receber o salário.",
                 "O Território dos Ermos coleta do mesmo jeito, sem licença: o chão é da guilda.",
                 "Só coleta quem carrega a ferramenta do local (um Machado na Serraria e no Território, uma Picareta na Mina) e aprende mais do que o salário ensina. Os demais montam guarda: sem colheita e sem XP de trabalho, mas lutam se uma matilha aparecer. Separe-os pelo mapa se devem ganhar em outro lugar.",
-                "Escolha um turno (4 a 16 horas); a colheita vai para as mochilas de quem coletou: Madeira e Fruta na Serraria; Tijolo de Pedra, Carvão, Minério de Ferro e gemas na Mina. Em média rende mais que o salário, mas uma matilha de feras pode encontrar a turma."
+                "Escolha um turno ({min} a {max} horas); a colheita vai para as mochilas de quem coletou: Madeira e Fruta na Serraria; Tijolo de Pedra, Carvão, Minério de Ferro e gemas na Mina. Em média rende mais que o salário, mas uma matilha de feras pode encontrar a turma."
             ]
         },
         "group_turn": {
@@ -6856,20 +6856,20 @@
     "wiki_rules": {
         "turns": {
             "title": "Turnos e Pontos de Ação",
-            "1": "Todo combatente tem {ap} pontos de ação por turno. Atacar, Mover e Defender custam 1 cada, em qualquer combinação: mover + atacar, atacar + atacar, atacar + defender...",
+            "1": "Todo combatente tem {ap} pontos de ação por turno. Atacar, Mover e Defender custam {cost} cada, em qualquer combinação: mover + atacar, atacar + atacar, atacar + defender...",
             "2": "Mover: até a sua velocidade em casas. Diagonais custam 1, depois 2, depois 1 de novo dentro de um mesmo movimento.",
             "3": "Você pode atravessar a casa de um aliado, mas não parar nela. A casa de um inimigo bloqueia você por completo.",
-            "4": "Defender: +1 CA (circunstância) até o início do seu próximo turno.",
-            "5": "Adiar (0 pontos): vai para o fim da ordem de iniciativa de vez, uma vez por rodada, antes de gastar qualquer coisa.",
-            "6": "Fugir (1 ponto, encerra o turno): só pela borda do mapa, e só quando você é mais rápido que o perseguidor mais veloz ou já está fora do alcance dele.",
+            "4": "Defender: +{ac} CA (circunstância) até o início do seu próximo turno.",
+            "5": "Adiar ({delay} pontos): vai para o fim da ordem de iniciativa de vez, uma vez por rodada, antes de gastar qualquer coisa.",
+            "6": "Fugir ({flee} ponto, encerra o turno): só pela borda do mapa, e só quando você é mais rápido que o perseguidor mais veloz ou já está fora do alcance dele.",
             "7": "Bônus do mesmo tipo não se acumulam: Defender e outro bônus de circunstância na CA, só vale o maior."
         },
         "flanking": {
             "title": "Desprevenido e flanqueio",
-            "1": "Um combatente está desprevenido até começar o primeiro turno dele na luta, então quem age primeiro golpeia inimigos que ainda não se mexeram. Ele perde 2 de CA contra todo ataque (1 com Visão Periférica); o registro mostra [Desprevenido -2] e o motivo (ainda não agiu, flanqueado).",
-            "2": "Um inimigo também fica desprevenido quando você e um aliado estão ao lado dele, em lados opostos (um flanco). Os dois motivos não se somam: continua -2 de CA.",
+            "1": "Um combatente está desprevenido até começar o primeiro turno dele na luta, então quem age primeiro golpeia inimigos que ainda não se mexeram. Ele perde {pen} de CA contra todo ataque ({reduced} com Visão Periférica); o registro mostra [Desprevenido -{pen}] e o motivo (ainda não agiu, flanqueado).",
+            "2": "Um inimigo também fica desprevenido quando você e um aliado estão ao lado dele, em lados opostos (um flanco). Os dois motivos não se somam: continua -{pen} de CA.",
             "3": "Um aliado apenas ao lado do inimigo não forma um flanco. Ele só alimenta a Tática de Matilha, que algumas raças e feras têm.",
-            "4": "Ataque Furtivo (Adaga) e Estocada Precisa (Rapieira) só funcionam contra um inimigo desprevenido: o golpe é Brutal 1, mais +1d4 (Ataque Furtivo) ou +2 para acertar (Estocada Precisa)."
+            "4": "Ataque Furtivo (Adaga) e Estocada Precisa (Rapieira) só funcionam contra um inimigo desprevenido: o golpe é Brutal {brutal}, mais +{die} (Ataque Furtivo) ou +{hit} para acertar (Estocada Precisa)."
         },
         "morale": {
             "title": "Moral",
@@ -6883,10 +6883,10 @@
         },
         "weapon": {
             "title": "Ações de Arma (2 Pontos)",
-            "1": "Um golpe pelo preço de dois ataques. Fora do seu caso, é a compra pior; dentro dele, o golpe é Brutal 1 e supera os dois ataques.",
-            "2": "Ceifar (Machado): um segundo inimigo ao lado de ambos, cada golpe com +2 para acertar.",
-            "3": "Rechaçar (Bordão): empurra o inimigo 1 casa; contra uma parede ou um corpo, +1d4 no lugar.",
-            "4": "Golpe Mutilante (Clava, Martelos): corta a velocidade do inimigo pela metade; um inimigo que não pode se esquivar (Enredado, Dormindo, Surpreso, Desmoralizado) o sofre com +2 para acertar.",
+            "1": "Um golpe pelo preço de dois ataques. Fora do seu caso, é a compra pior; dentro dele, o golpe é Brutal {brutal} e supera os dois ataques.",
+            "2": "Ceifar (Machado): um segundo inimigo ao lado de ambos, cada golpe com +{hit} para acertar.",
+            "3": "Rechaçar (Bordão): empurra o inimigo {cells} casa; contra uma parede ou um corpo, +{die} no lugar.",
+            "4": "Golpe Mutilante (Clava, Martelos): corta a velocidade do inimigo pela metade; um inimigo que não pode se esquivar (Enredado, Dormindo, Surpreso, Desmoralizado) o sofre com +{hit} para acertar.",
             "5": "Perfurar Armadura (Picaretas): ignora a armadura de metal vestida. Tiro Poderoso (Arcos): +FOR, melhor a longa distância.",
             "6": "Prender Escudo (Machadinha): o escudo do inimigo não dá CA até a próxima rodada. Aparar e Golpear (Espadas): enquanto Defende, com dois ou mais inimigos ao alcance.",
             "7": "Estocada Longa (Glaive): um golpe uma casa além do alcance de {reach} da Glaive, +{hit} para acertar."
@@ -6906,32 +6906,32 @@
             "1": "Uma proposta é d20 + Carisma (o seu) contra d20 + Carisma (o deles); o empate vai para o estranho. É preciso ter uma língua em comum.",
             "2": "Penalidade de lotação: -{pen} para cada membro da guilda inteira além de {free}, contados em todos os grupos, não só no grupo que faz a proposta.",
             "3": "Alinhamento: -{align} por passo entre o alinhamento de quem recruta e o do estranho.",
-            "4": "Cada membro pode apadrinhar {base} + o seu modificador de Carisma recrutas; o líder da guilda soma o próprio nível racial.",
+            "4": "Cada membro pode apadrinhar {base} + {terms} recrutas; o líder da guilda soma {leader}.",
             "5": "Uma proposta que falha impede aquele recrutador de tentar com aquele estranho até o grupo de candidatos se renovar. Outra pessoa ainda pode tentar.",
-            "6": "A Taverna mantém {tavern} estranhos e a Prisão {prison} prisioneiros; ambos são sorteados de novo a cada {days} dias. A fiança soma +2 à proposta, e cada vez que a oferta dobra, +1; ela só é cobrada se a proposta vencer."
+            "6": "A Taverna mantém {tavern} estranhos e a Prisão {prison} prisioneiros; ambos são sorteados de novo a cada {days} dias. A fiança soma +{bail} à proposta, e cada vez que a oferta dobra, +{step}; ela só é cobrada se a proposta vencer."
         },
         "groups": {
             "title": "Grupos, Líderes e Fama",
             "1": "A guilda pode manter {base} grupos, mais um para cada {fame} de reputação somada em todas as facções.",
-            "2": "Um grupo comporta {cap} + {terms} membros, e {herd} + o modificador de Sabedoria do líder em animais e cativos.",
+            "2": "Um grupo comporta {cap} + {terms} membros, e {herd} + {herd_terms} em animais e cativos.",
             "3": "Um grupo sobrecarregado rola todo dia contra a Defesa Mental do seu membro mais fraco (os líderes são isentos). Esse membro se separa num grupo só dele ou, sem vaga livre, dá aviso prévio de {days} dias e depois deixa a guilda.",
             "4": "Quem sai leva conforme o alinhamento: o Leal só o que veste, o Neutro a mochila também, o Caótico tudo."
         },
         "captives": {
             "title": "Cativos",
-            "1": "Capturar (1 ponto): amarra um inimigo caído adjacente com {tools}, que é consumida. Quando o último inimigo cai, a luta dura mais uma rodada para amarrar os caídos.",
+            "1": "Capturar ({capture} ponto): amarra um inimigo caído adjacente com {tools}, que é consumida. Quando o último inimigo cai, a luta dura mais uma rodada para amarrar os caídos.",
             "2": "Um cativo anda com o grupo, ocupa {weight} do limite de animais, nunca luta nem come, e morre {days} dias depois da captura.",
             "3": "A tela do grupo lista os cativos com os dias que restam e um botão SOLTAR. Um serviço que quer um vivo o tira direto do grupo."
         },
         "wagons": {
             "title": "Carroças e Animais",
-            "1": "A estrada desgasta uma carroça em 1 PV a cada {dist} de distância; com 0 PV ela quebra até ser consertada com Madeira.",
+            "1": "A estrada desgasta uma carroça em {hp} PV a cada {dist} de distância; com 0 PV ela quebra até ser consertada com Madeira.",
             "2": "A carga numa carroça ou nas costas de um animal conta para o grupo: comida, vendas na loja e entregas de serviço a leem.",
             "3": "Onde a carroça não pode entrar, quem ficar do lado de fora a guarda. Sozinha, ela pode se perder, com a carga e os animais."
         },
         "money": {
             "title": "Dinheiro, Comida e Morte",
-            "1": "Não existe tesouro da guilda: o dinheiro são moedas de Cobre ($1) e de Ouro ($100) nas mochilas. Elas pesam, se dividem e se movem como qualquer item.",
+            "1": "Não existe tesouro da guilda: o dinheiro são moedas de Cobre (${copper}) e de Ouro (${gold}) nas mochilas. Elas pesam, se dividem e se movem como qualquer item.",
             "2": "Pagar gasta o cobre primeiro, depois quebra o ouro e devolve o troco. O ouro só vem da casa de câmbio do banco.",
             "3": "Todo mundo come todo dia. A fome reduz os atributos e traz doença.",
             "4": "A morte é permanente. A campanha só termina quando a guilda inteira se foi."
@@ -6939,9 +6939,9 @@
         "hunger": {
             "title": "Fome e Inanição",
             "1": "Todo membro come 1 refeição por dia na manutenção. Comida fresca perto de estragar é comida primeiro. COMPARTILHAR RAÇÕES deixa um membro alimentar companheiros famintos com a própria mochila.",
-            "2": "1 dia sem comer · Faminto: {pen1} em todos os atributos.",
-            "3": "2 dias sem comer · Inanição: {pen2} em todos os atributos; PV máximo limitado a 1.",
-            "4": "3 dias sem comer · Incapacitado: fraco demais para lutar, não pode ser enviado à batalha.",
+            "2": "{d1} dia sem comer · Faminto: {pen1} em todos os atributos.",
+            "3": "{d2} dias sem comer · Inanição: {pen2} em todos os atributos; PV máximo limitado a {cap}.",
+            "4": "{d3} dias sem comer · Incapacitado: fraco demais para lutar, não pode ser enviado à batalha.",
             "5": "{death} dias sem comer · morte por inanição: o personagem se foi permanentemente.",
             "6": "Comida Podre só é comida no último dia antes da morte, como último recurso. Ela zera a fome mas adoece quem come. Comida de novo enquanto já doente adiciona Apodrecimento. Estômago Forte (Gnoll) é imune.",
             "7": "Um personagem faminto ou em inanição não se cura pelo descanso. Treefolk (Autotrófico) nunca comem e nunca passam fome. Se a guilda inteira morrer de fome, a campanha termina."
@@ -6977,12 +6977,15 @@
             "1": "Na primeira vez que alguém do seu lado vê um inimigo, cada colega que o vê rola d20 + INT contra CD {dc} + o nível racial do inimigo. A melhor margem é de todo o lado.",
             "2": "Quanto melhor a margem, mais campos da ficha do inimigo se abrem (os ? são o que você ainda não leu). Uma rolagem falha não revela nada e nunca mente.",
             "3": "Uma raça que a guilda já enfrentou é {discount} mais fácil de ler, e uma habilidade racial que a guilda já viu sai de graça na próxima da raça.",
-            "4": "Avaliar (1 ponto) rola de novo com +{bonus} num inimigo à vista, uma vez por inimigo a cada rodada."
+            "4": "Avaliar ({assess} ponto) rola de novo com +{bonus} num inimigo à vista, uma vez por inimigo a cada rodada."
         },
         "or": " ou ",
         "term": {
             "cha": "o modificador de Carisma do líder",
-            "half_level": "metade do nível racial do líder"
+            "half_level": "metade do nível racial do líder",
+            "member_cha": "o seu modificador de Carisma",
+            "racial_level": "o próprio nível racial",
+            "leader_wis": "o modificador de Sabedoria do líder"
         }
     },
     "intel": {

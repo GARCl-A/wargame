@@ -27,7 +27,8 @@ from . import i18n, items
 from .creature import Creature
 
 WAGON_DIE = 8              # every vehicle is an object with d8 Hit Dice
-WEAR_DISTANCE = 100        # map distance travelled per HP lost
+WEAR_DISTANCE = 100        # map distance travelled per step of wear
+WEAR_HP = 1                # HP the road takes each step
 REPAIR_HOURS = 1
 REPAIR_DC = 15
 REPAIR_ITEM = "Lumber"
@@ -109,14 +110,14 @@ class Wagon(Creature):
         return self.hp < self.hp_max
 
     def wear(self, distance):
-        """The road takes its toll: `WEAR_DISTANCE` of travel costs 1 HP. Returns the HP
+        """The road takes its toll: `WEAR_DISTANCE` of travel costs `WEAR_HP`. Returns the HP
         lost; a broken wagon does not wear further."""
         if self.broken:
             return 0
         self.travelled += distance
         points = int(self.travelled // WEAR_DISTANCE)
         self.travelled -= points * WEAR_DISTANCE
-        lost = min(self.hp, points)
+        lost = min(self.hp, points * WEAR_HP)
         self.hp -= lost
         return lost
 

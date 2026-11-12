@@ -41,6 +41,9 @@ CAPACITY_TERMS = (
     ("half the leader's racial level", "half level", lambda u: u.racial_level // 2),
 )
 
+# The leader's share of `herd_capacity`: (the wiki's label key, the value), read like `CAPACITY_TERMS`.
+HERD_TERMS = (("leader_wis", lambda u: u.mod_wisdom),)
+
 
 def capacity_terms(leader):
     """`[(value, label)]`: `BASE_CAPACITY` and, with a leader, each of `CAPACITY_TERMS`."""
@@ -283,7 +286,7 @@ class Group:
         bonus = sum(int(u.talent_bonus("herd_capacity_bonus")) for u in self.members)
         if not self.leader:
             return HERD_BASE + bonus
-        return max(1, HERD_BASE + self.leader.mod_wisdom + bonus)
+        return max(1, HERD_BASE + sum(value(self.leader) for _, value in HERD_TERMS) + bonus)
 
     @property
     def herd_load(self):
@@ -396,18 +399,18 @@ class Group:
         return max(0.0, round((self.campfire_expires - clock_seconds) / 3600, 1))
 
     def can_light_campfire(self):
-        """Checks if the group has Flint and Steel, plus 1 Lumber and 1 Coal unlocked."""
+        """Checks if the group has Flint and Steel, plus the Lumber and Coal unlocked."""
         has_tool = any(u.has_item(economy.FIELD_CAMPFIRE_TOOL) for u in (*self.members, *self.stores))
-        has_lumber = sum(u.unlocked_of(economy.FIELD_CAMPFIRE_LUMBER) for u in self.members) >= 1
-        has_coal = sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in self.members) >= 1
+        has_lumber = sum(u.unlocked_of(economy.FIELD_CAMPFIRE_LUMBER) for u in self.members) >= economy.FIELD_CAMPFIRE_UNITS
+        has_coal = sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in self.members) >= economy.FIELD_CAMPFIRE_UNITS
         return has_tool and has_lumber and has_coal
 
     def light_campfire(self, clock_seconds):
-        """Consumes 1 Lumber and 1 Coal from unlocked inventory and lights a 4-hour campfire."""
+        """Consumes the Lumber and Coal from unlocked inventory and lights a 4-hour campfire."""
         if not self.can_light_campfire():
             return False
         for item in (economy.FIELD_CAMPFIRE_LUMBER, economy.FIELD_CAMPFIRE_COAL):
-            needed = 1
+            needed = economy.FIELD_CAMPFIRE_UNITS
             for u in self.members:
                 if u.unlocked_of(item) > 0:
                     took = u.remove_named(item, needed)

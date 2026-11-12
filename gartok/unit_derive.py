@@ -8,6 +8,7 @@ from dataclasses import replace
 
 from . import data, items, natural_weapons
 from .data import ATTRIBUTES, mod, roll
+from .unit_hunger import STARVING_HP_MAX
 
 
 def carry_thresholds(score, size, ability):
@@ -135,7 +136,7 @@ class DerivationMixin:
                            + self.talent_bonus("hp_per_hd") * hit_dice)
             self.hp_max = max(self.hp_max, 1)
         if self.hunger_level >= 2:
-            self.hp_max = 1
+            self.hp_max = STARVING_HP_MAX
         if old_max is not None and old_hp is not None:
             delta = self.hp_max - old_max
             self.hp = max(1, min(old_hp + delta, self.hp_max))

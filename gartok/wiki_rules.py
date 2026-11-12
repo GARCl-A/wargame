@@ -18,10 +18,15 @@ from . import (
     morale,
     poisons,
     recruit,
+    talents,
+    tavern,
     wagon,
 )
+from .actions.base import OFF_GUARD_AC
+from .actions.weapon_actions import BRUTAL, EDGE_DIE, EDGE_TO_HIT, REPEL_CELLS
 from .combatant import AP_PER_TURN
-from .unit_hunger import HUNGER_PENALTIES
+from .conditions import DEFEND_AC
+from .unit_hunger import HUNGER_PENALTIES, STARVING_HP_MAX
 
 
 def _lines(section, n, **fmt):
@@ -37,6 +42,21 @@ def _morale_lines():
         low=round(morale.HP_MARK_EVERY * 100), shaken=-morale.DEMORALIZED, foe_down=morale.FOE_DOWN)
 
 
+def _off_guard_lines():
+    relief = int(talents.bonus(["peripheral_vision"], "off_guard_defense"))
+    return _lines("flanking", 4, pen=OFF_GUARD_AC, reduced=OFF_GUARD_AC - relief, brutal=BRUTAL,
+                  die="d".join(map(str, EDGE_DIE)), hit=EDGE_TO_HIT)
+
+
+def _weapon_lines(reach, hit):
+    return [*_lines("weapon", 6, brutal=BRUTAL, hit=EDGE_TO_HIT, die="d".join(map(str, EDGE_DIE)), cells=REPEL_CELLS),
+            i18n.t("wiki_rules.weapon.7", reach=reach, hit=hit)]
+
+
+def _terms(pairs):
+    return " + ".join(i18n.t(f"wiki_rules.term.{label}") for label, _ in pairs)
+
+
 def title(section):
     """A section's title as the wiki shows it, which is also its entry id."""
     return i18n.t(f"wiki_rules.{section}.title")
@@ -47,10 +67,11 @@ def sections():
     terms = " + ".join(i18n.t(f"wiki_rules.term.{label.lower().replace(' ', '_')}") for _, label, _ in group.CAPACITY_TERMS)
     tools = i18n.t("wiki_rules.or").join(i18n.name("item", t) for t in captives.CAPTURE_TOOLS)
     return [
-        (i18n.t("wiki_rules.turns.title"), _lines("turns", 7, ap=AP_PER_TURN)),
-        (i18n.t("wiki_rules.flanking.title"), _lines("flanking", 4)),
+        (i18n.t("wiki_rules.turns.title"), _lines("turns", 7, ap=AP_PER_TURN, cost=actions.DEFEND.cost, ac=DEFEND_AC,
+                                                       delay=actions.DELAY.cost, flee=actions.FLEE.cost)),
+        (i18n.t("wiki_rules.flanking.title"), _off_guard_lines()),
         (i18n.t("wiki_rules.morale.title"), _morale_lines()),
-        (i18n.t("wiki_rules.weapon.title"), [*_lines("weapon", 6), i18n.t("wiki_rules.weapon.7", reach=reach, hit=hit)]),
+        (i18n.t("wiki_rules.weapon.title"), _weapon_lines(reach, hit)),
         (i18n.t("wiki_rules.talk.title"), [
             i18n.t("wiki_rules.talk.1", dc=dialogue.BASE_DC),
             i18n.t("wiki_rules.talk.2", cap=dialogue.OUTMATCH_CAP),
@@ -64,32 +85,34 @@ def sections():
             i18n.t("wiki_rules.recruiting.1"),
             i18n.t("wiki_rules.recruiting.2", pen=recruit.SIZE_PENALTY, free=recruit.FREE_SLOTS),
             i18n.t("wiki_rules.recruiting.3", align=recruit.ALIGNMENT_PENALTY),
-            i18n.t("wiki_rules.recruiting.4", base=recruit.BASE_RECRUIT_CAPACITY),
+            i18n.t("wiki_rules.recruiting.4", base=recruit.BASE_RECRUIT_CAPACITY, terms=_terms(recruit.SPONSOR_TERMS),
+                   leader=_terms(recruit.LEADER_SPONSOR_TERMS)),
             i18n.t("wiki_rules.recruiting.5"),
-            i18n.t("wiki_rules.recruiting.6", tavern=recruit.TAVERNA_SIZE, prison=recruit.PRISON_SIZE, days=recruit.REFRESH_DAYS),
+            i18n.t("wiki_rules.recruiting.6", tavern=recruit.TAVERNA_SIZE, prison=recruit.PRISON_SIZE, days=recruit.REFRESH_DAYS, bail=tavern.BAIL_BONUS[0], step=tavern.BAIL_STEP),
         ]),
         (i18n.t("wiki_rules.groups.title"), [
             i18n.t("wiki_rules.groups.1", base=group.BASE_SLOTS, fame=group.FAME_PER_SLOT),
-            i18n.t("wiki_rules.groups.2", cap=group.BASE_CAPACITY, terms=terms, herd=group.HERD_BASE),
+            i18n.t("wiki_rules.groups.2", cap=group.BASE_CAPACITY, terms=terms, herd=group.HERD_BASE, herd_terms=_terms(group.HERD_TERMS)),
             i18n.t("wiki_rules.groups.3", days=cohesion.NOTICE_DAYS),
             i18n.t("wiki_rules.groups.4"),
         ]),
         (i18n.t("wiki_rules.captives.title"), [
-            i18n.t("wiki_rules.captives.1", tools=tools),
+            i18n.t("wiki_rules.captives.1", tools=tools, capture=actions.CAPTURE.cost),
             i18n.t("wiki_rules.captives.2", weight=captives.HERD_WEIGHT, days=captives.CAPTIVE_DAYS),
             i18n.t("wiki_rules.captives.3"),
         ]),
-        (i18n.t("wiki_rules.wagons.title"), [i18n.t("wiki_rules.wagons.1", dist=wagon.WEAR_DISTANCE), *_lines("wagons", 3)[1:]]),
-        (i18n.t("wiki_rules.money.title"), _lines("money", 4)),
+        (i18n.t("wiki_rules.wagons.title"), [i18n.t("wiki_rules.wagons.1", dist=wagon.WEAR_DISTANCE, hp=wagon.WEAR_HP), *_lines("wagons", 3)[1:]]),
+        (i18n.t("wiki_rules.money.title"), _lines("money", 4, copper=items.COIN_VALUE[items.COIN_ITEM], gold=items.COIN_VALUE[items.GOLD_ITEM])),
         (i18n.t("wiki_rules.hunger.title"), _lines(
-            "hunger", 7, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2],
-            death=data.STARVATION_DEATH_DAYS)),
+            "hunger", 7, d1=1, d2=2, d3=len(HUNGER_PENALTIES) - 1, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2],
+            death=data.STARVATION_DEATH_DAYS, cap=STARVING_HP_MAX)),
         (i18n.t("wiki_rules.stomp.title"), _lines("stomp", 2)),
         (title("poison"), _lines("poison", 4, hours=poisons.ANTIDOTE_COOLDOWN_HOURS, dc=poisons.POISONS["snake_venom"].base_dc,
                                  spent=poisons.POISONS["snake_venom"].hours, rot=poisons.POISONS["gut_rot"].hours)),
         (title("study"), _lines("study", 4, cost=economy.TAVERN_STUDY_COST_PER_DAY)),
         (title("dungeon"), _lines("dungeon", 4)),
-        (title("reading"), _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS)),
+        (title("reading"), _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS,
+                                 assess=actions.ASSESS.cost)),
     ]
 
 

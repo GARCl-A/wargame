@@ -21,6 +21,7 @@ from .data import alignment_distance
 
 ARCHETYPE_TONE = {"brass": "money", "green": "good", "muted": "muted"}
 BAIL_BONUS = (2, "tavern.paid_bail")
+BAIL_STEP = 1                  # each doubling of the offer adds this much more to the pitch
 
 
 class Tavern:

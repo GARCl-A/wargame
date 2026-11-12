@@ -69,6 +69,12 @@ def bail_cost(candidate):
     return (total_attr * (candidate.racial_level + 1)) + 20
 
 
+# What a member's sponsoring capacity adds to `BASE_RECRUIT_CAPACITY` (the wiki's `wiki_rules.term.<label>`
+# reads the same tuples, so the text cannot drift from the sum), and what the guild's leader adds besides.
+SPONSOR_TERMS = (("member_cha", lambda u: u.mod_charisma),)
+LEADER_SPONSOR_TERMS = (("racial_level", lambda u: u.racial_level),)
+
+
 def capacity(guild, unit):
     """How many people `unit` could personally sponsor into the guild. The
     guild leader's own racial level (both XP tracks) adds on top -- the one
@@ -76,12 +82,12 @@ def capacity(guild, unit):
     worth holding onto beyond flavour."""
     if unit is guild.leader:
         return leader_capacity(unit)
-    return max(0, BASE_RECRUIT_CAPACITY + unit.mod_charisma)
+    return max(0, BASE_RECRUIT_CAPACITY + sum(value(unit) for _, value in SPONSOR_TERMS))
 
 
 def leader_capacity(unit):
     """`capacity` for the guild's leader: the racial level adds on top."""
-    return max(0, BASE_RECRUIT_CAPACITY + unit.mod_charisma + unit.racial_level)
+    return max(0, BASE_RECRUIT_CAPACITY + sum(value(unit) for _, value in SPONSOR_TERMS + LEADER_SPONSOR_TERMS))
 
 
 def slots_used(guild, unit):

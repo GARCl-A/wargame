@@ -35,11 +35,14 @@ class Condition:
         return False
 
 
+DEFEND_AC = 1
+
+
 class Defending(Condition):
     id = "defending"
 
     def ac_mods(self):
-        return [(1, "circumstance", "Defend")]
+        return [(DEFEND_AC, "circumstance", "Defend")]
 
     def on_turn_start(self, unit, log):
         return True  # the Defend bonus lasts until the start of the next turn

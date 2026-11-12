@@ -37,6 +37,9 @@ from .combat import PUSH_DC_BASE, _strike
 
 UNGUARDED = ("entangled", "sleeping", "surprised", "demoralized")
 BRUTAL = 1      # every Brutal of a favoured strike; the keyword's value, see keywords.py
+EDGE_TO_HIT = 2     # the circumstance bonus of Precise Thrust, Cleave and Maiming Strike
+REPEL_CELLS = 1    # how far a Repel Strike that is not pinned shoves the foe
+EDGE_DIE = (1, 4)   # the extra damage of Sneak Attack and of a pinned Repel Strike
 
 
 def _strikable_off_guard(battle, actor, target):
@@ -77,7 +80,7 @@ class SneakAttack(Action):
         actor.ap -= self.cost
         actor.walking = False
 
-        bonus_dmg = roll(1, 4)
+        bonus_dmg = roll(*EDGE_DIE)
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
@@ -120,7 +123,7 @@ class PreciseThrust(Action):
         actor.walking = False
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
-        mods.append((2, "circumstance", i18n.t("log.mod.precise_thrust")))
+        mods.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.precise_thrust")))
 
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
@@ -178,7 +181,7 @@ class Cleave(Action):
         # 1. Primary strike
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         if sec is not None:
-            mods.append((2, "circumstance", i18n.t("log.mod.cleave")))
+            mods.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.cleave")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -189,7 +192,7 @@ class Cleave(Action):
         # 2. Secondary strike on adjacent foe
         if sec is not None and sec.alive:
             mods2 = actor.attack_mods(sec, _pack_flank(battle, actor, sec), battle=battle)
-            mods2.append((2, "circumstance", i18n.t("log.mod.cleave")))
+            mods2.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.cleave")))
             bonus2, applied2 = resolve_bonus(mods2)
             detail2 = " ".join(f"{v:+}({r})" for v, r in applied2)
             nat2 = d20()
@@ -247,7 +250,7 @@ class RepelStrike(Action):
         nat = d20()
         prefix = Msg("log.repel_strike.head", actor=actor.name, target=target.name)
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
-                           bonus_damage=roll(1, 4) if pinned else 0, brutal=BRUTAL * pinned,
+                           bonus_damage=roll(*EDGE_DIE) if pinned else 0, brutal=BRUTAL * pinned,
                            brutal_why=Msg("log.repel_strike.brutal", target=target.name))
 
         if res in ("hit", "crit") and not pinned:
@@ -264,7 +267,7 @@ class RepelStrike(Action):
             dx, dy = _sign(tx - ax), _sign(ty - ay)
             if dx == 0 and dy == 0:
                 return
-            dest = (tx + dx, ty + dy)
+            dest = (tx + dx * REPEL_CELLS, ty + dy * REPEL_CELLS)
             if (not battle.board.diagonal_corner_blocked(target.pos, dest)
                     and _cell_free(battle, actor, dest, target.footprint)):
                 battle.log("log.repel_strike.pushed", cell=str(dest), **check)
@@ -310,7 +313,7 @@ class MaimingStrike(Action):
         unguarded = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         if unguarded:
-            mods.append((2, "circumstance", i18n.t("log.mod.maiming_strike")))
+            mods.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.maiming_strike")))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()

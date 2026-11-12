@@ -10,7 +10,7 @@ verb that runs the clock (`perform`) lives on `HubSession`, which holds the map.
 from .. import economy, i18n, item_icon, magic, recruit
 from ..archetypes import unit_archetypes
 from ..constants import fmt_money
-from ..tavern import ARCHETYPE_TONE, BAIL_BONUS, Prison, Tavern
+from ..tavern import ARCHETYPE_TONE, BAIL_BONUS, BAIL_STEP, Prison, Tavern
 from .shop_tab import _portrait
 
 TABS = ("recruits", "rooms", "perform")
@@ -96,7 +96,7 @@ class TavernTab:
             return None
         k, due, held = self.s.raise_k, self.s._due(c), self.s._wealth()
         return {"base": fmt_money(base), "cost": fmt_money(due), "held": fmt_money(held), "ok": held >= due,
-                "bonus": BAIL_BONUS[0] + k, "k": k, "more": held >= base << (k + 1), "less": k > 0}
+                "bonus": BAIL_BONUS[0] + k * BAIL_STEP, "k": k, "more": held >= base << (k + 1), "less": k > 0}
 
     def _pitch(self, c):
         s, who = self.s, self.s.selected_recruiter

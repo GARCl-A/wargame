@@ -24,20 +24,17 @@ Parts, in this order:
 
 # Before the friends' playtest (agreed 2026-10-20)
 
-Goal: a stable build for the author's playtest and one with friends. Content, AI, measure and economy,
-combat presentation and the hub kit are done. Left:
+Goal: a stable build for the author's playtest and one with friends. Left:
 
-- **Tutorials.** Every card was checked against the code and cut to the rule it teaches (2026-10-21); the
-  map's card closes onto the objectives (`gartok/objectives.py`). Left: the author reads every card in play
-  and flags what still rings false.
-- **Translation to pt-br: the author reads it in play.** Every text has a `pt-br` entry (the parity test is strict). Left: the author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
+- **Tutorials.** The author reads every card in play and flags what still rings false.
+- **Translation to pt-br.** The author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
-- **Holy Symbol: the Farmer's quest is live.** Left: the author plays it through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair); the polish is in *Needs more information*.
+- **Holy Symbol.** The author plays the Farmer's quest through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair); the polish is in *Needs more information*.
 - The *Small* items below, in order.
 
 After the playtest (it answers them, or they are content past it): weapon actions tuning, *Tune the
 specialised shops*, Magic Arc tuning, the production chain, cooking with meal buffs, the campaign AI,
-Prisoners, Archaeology at Ancient Ruins.
+Prisoners.
 
 ---
 
@@ -57,7 +54,7 @@ the rest.
 - **Ambush on the way in, at every dangerous node (author, note outside playtests).** The Wilds, the
   Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road
   (`forced.py` rolls `world.ROAD_AMBUSH_CHANCE` once per arrival at an `unsafe` node), and the map should
-  mark a node that has one ("ambush on the way"). Check what `unsafe` covers today; the chance per node is
+  mark a node that has one ("ambush on the way"). Only the Old Road is `unsafe` today; the chance per node is
   tuned together with *How lethal the Wilds should be* (*Needs more information -> Economy numbers*).
 
 - **One colour per name, then the map screen's pass on every screen (author, notes outside playtests).**
@@ -75,11 +72,6 @@ the rest.
   move detail to hovers and use the space better. Judge each screen against the map's and list the
   changes per screen before touching one.
 
-- **Review the cheapest item prices (author 2026-11-01).** Several sit at 1 or 2 copper with no logic:
-  a Chisel at 1, a Scroll at 1 (below Paper at 10 and 1sqm Hide at 12), a Cloak and a Torch at 2. Price a
-  tool or a crafted good above the material it is made from, then run the `balance` tier and
-  `scripts/economy_report.py`. The starting kit draws items by price, so the prices set what a recruit carries.
-
 - **Scroll of Invisibility (Magic Arc).** The item exists (`items.py`); missing is the Library quest, unlocked at max Library reputation with a caster
   initiated in magic (direction 2026-10-19).
 
@@ -92,32 +84,11 @@ the rest.
   confirm on the dialogs, the error cue in place of `miss` in `api()`. End of turn is a battle cue: it comes
   from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
 
-- **The battle takes ~1 s to open, and each action repaints for ~230 ms (playtest 2026-11-01; the author does
-  not feel it, so investigate before changing anything).** Title,
-  map and hub are ready in ~350-450 ms; the battle is not, even with every file cached. The time is not the
-  files: `Board.draw` (`screens/battle/board.js`) runs on every state change and costs ~230 ms in a headless Chromium
-  without GPU, most of it `fogAndLight` (blurred light and fog layers at full resolution) and `memory`;
-  `drawStatic` (floor and walls) is cached and runs once. Real GPU timings are unknown. Options: draw the
-  light and fog layers at a lower resolution; skip the repaint of those layers when an action did not change
-  what the side sees; paint a first frame (cached floor) before the light.
-
 - **Is a STR/CON-heavy draft objectively best? (author 2026-11-01).** The author drafts a Charisma leader
   plus the strongest, toughest bodies for the rest and cannot tell bias from fact. Measure with the headless
   fights and the economy sim: squads built on max STR/CON against squads spread over other attributes, at
   equal cost. Result decides whether the starting squad and the stat draft need a rebalance
   (*Starting squad is weak* in the playtest notes).
-
-- **The wiki and the tutorials read every number off the code (author 2026-11-01).** The group capacity
-  went wrong because the text restated the rule by hand. Three parts: a test that no string literal in
-  `wiki_rules.py` holds a digit, with the constant made where the code has none either (Defend's +1 AC
-  in `actions/combat.py`, the off-guard -2 in `actions/base.py`, the coin values, Sneak Attack's +1d4);
-  the `group.CAPACITY_TERMS` pattern (the sum is the rule, the text reads the same tuple) for the other
-  formulas the wiki states (`recruit.capacity` / `leader_capacity`, `Group.herd_capacity` with Beast
-  Whisperer); and the `locales/en.json` cards (the tavern's says "past the guild's second" and "$15 a
-  day") filled from the constants or checked against them by a test. Then one load-bearing line in
-  `AGENTS.md`. Playtest 2026-11-02 adds a case: the wiki states the Glaive's extra action but not its
-  +1 reach (if it has one), so a weapon's entry must list every property it carries, read off its
-  `ItemDef`.
 
 - **AI heuristics: Shove vs Attack x2 (playtest 2026-11-08).** Review AI combat priorities when surrounded or
   flanked. Ensure the AI does not overvalue shoving a foe away (to break flanking or force movement) over
@@ -128,9 +99,8 @@ the rest.
   Adjust AI target evaluation to seek alternate reachable targets.
 
 - **Weapon icons: give each its own (author 2026-11-08).** Broadsword, sword and rapier share the `broadsword`
-  glyph; axe and hatchet share `battle-axe` (`item_icon.GLYPHS` / `HEAD_GLYPHS`). `assets/icons/item/` has no
-  spare blade or axe (only `battle-axe`, `broadsword`, `plain-dagger`); look in the other `assets/icons/`
-  folders, otherwise source new game-icons.net SVGs (same licence).
+  glyph; axe and hatchet share `battle-axe` (`item_icon.GLYPHS` / `HEAD_GLYPHS`). Source a distinct glyph for each: other `assets/icons/`
+  folders, otherwise new game-icons.net SVGs (same licence).
 
 - **Show what a race and a vocation give at the pick (Johann, 2026-10-31).** He chose Delvers by lore and
   could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
@@ -146,14 +116,10 @@ the rest.
   (sizes in the doc), the mixed error (a build twice in one squad is credited twice per unit, which is the intended score, but
   its interval reads too narrow: cluster the error by squad), and deciding whether this report replaces
   `build_study_report.py`'s tables. Combat first, the economy axis after.
+
 - **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the exit
   while it can, instead of ordering each one. Read the flee rules first (what blocks a flee, who is held)
   and reuse the AI's flee path. End-to-end: web button in `screens/battle/`, `ai/`, tests, tutorial mention.
-
-- **Difficulty signal before a fight (Johann, 2026-10-31).** The player avoided the arena because nothing
-  said how hard it was. Show a danger hint on a node or fight before entering (a level range, or "easy /
-  hard for this group") built on `encounters.pack_power`, compared with the group's own power. Web map and
-  the fight's confirm dialog, tests that the hint matches `pack_power`.
 
 - **"Modifiers Matter" in the combat log (author/Yohan alignment).** The *Damage* line already lists dice, modifiers and
   multiplier (`log_marks`). Left: mark the modifier that was decisive, the one that turned a miss into a hit or a strike
@@ -386,8 +352,7 @@ Not tasks and not yet decisions: premises the author wants to think over before 
 - **Is the two-step charge worth it? (author 2026-11-02, doubt).** Having one charge with two different
   values feels more of a hindrance than interesting. Review the rule against the Aurochs fight (day 112) and
   decide: keep, merge into one value, or drop. Measure with `scripts/combat_pairs.py`.
-- **The Snake Dragon dungeon was too easy (author 2026-11-02).** Possibly because the squad had grinded
-  before. Check the encounter's level against the squad's on entry in the headless set before changing it.
+- **The Snake Dragon dungeon was too easy (author 2026-11-02).** Compare the encounter's level with the squad's on entry in the headless set before changing it.
 
 ## 2026-11-01
 
@@ -486,20 +451,20 @@ has one "Enter" button and its functions are tabs inside.
 - **Economy numbers to sign off (open since the sim's first rounds, 2026-10-08).** The sim meets its
   targets ([../economy_sim.md](../economy_sim.md)); these are calls only the author can make, in rough
   order of impact.
-  1. *How lethal the Wilds should be.* A level-3 squad that does not win nearly every fight cannot make a
-     living there, and the Old Road's ambush (20% a pass, `world.ROAD_AMBUSH_CHANCE`) fires on every walk.
-     Re-measure now that a group too strong for a pack is no longer ambushed by it (author 2026-11-01).
-  2. *How much a crafting specialist may earn.* The shelves aim at 2-3x a lumberjack; the author's note says
-     crafting is for saving money and reaching what cannot be bought, not a business. Needs the sum first
-     (author 2026-11-01): what each crafting loop earns a day against the Yard, with
-     `scripts/economy_report.py` and the restock sweep, before the call. Ties to *Tune the specialised
-     shops*.
+  1. *How lethal the Wilds should be.* Decided (author 2026-11-11): 3 characters at combat 1 and work 2,
+     each with a weapon of up to 50 coins and a Studded Leather, win 50% of the Wilds ambushes. Measure it
+     with the headless fights and tune the Wilds packs to it; the Old Road's ambush (20% a pass,
+     `world.ROAD_AMBUSH_CHANCE`) is re-measured with it (a group too strong for a pack is no longer
+     ambushed by it, author 2026-11-01).
+  2. *How much a crafter may earn.* Decided (author 2026-11-11): a crafter (2 craft talents) profits at least
+     3x what a lumberjack earns per hour at the Yard, over a 16 h day. Craft profit = sale price - (reagents +
+     food). Left: measure each crafting loop against that line with `scripts/economy_report.py` and the restock
+     sweep, then tune prices and shelves. Ties to *Tune the specialised shops*.
   3. *The reference scenario past the start.* The sim tests the Wilds, the Games and the Claim from a
-     guild that starts at level 3 with $250 (`economy_guild.py --level 3 --capital 250`), a guess. The
-     author's own line (2026-11-01): a group of **4 at combat 1, work 2** already goes to the Wilds for
-     hides and mushrooms. Make that the scenario: `--level` is one number today, so the sim needs the
-     combat and work tracks apart (and `--size 4`); the starting coin is still open (proposal: what the
-     sim's own guild holds the day it reaches combat 1, work 2).
+     guild that starts at level 3 with $250 (`economy_guild.py --level 3 --capital 250`), a guess. Decided
+     (author 2026-11-11): the scenario is the item 1 squad (3 units, combat 1, work 2, the weapon and armour
+     above, its capital what that kit costs). `--level` is one number today, so the sim needs the combat and
+     work tracks apart (and `--size 3`).
   4. *The Claim's numbers are old.* The Wilds claim (the guild's own holding in the Wilds, built by a
      garrison that sustains it until it is established, then raided now and then) was measured before
      the garrison's `hold` job (rest and heal on the claim) existed, so the sim's "a gamble, established
@@ -542,7 +507,7 @@ has one "Enter" button and its functions are tabs inside.
      "trap"), placing the characters one after another in initiative order. (a) works only when the
      leader is on the board (an arena bout picks its fighters, a hunt leaves its guards behind: without
      the leader, no one places the group). `ai/` places its own side at random at first; after a playtest with the talent, the author's placements
-     train it. Open: the tier of each (b is T2 or T3 under Tactical Mind, a one tier below it).
+     train it. Decided (author 2026-11-11): (b) is T2 under Tactical Mind, (a) is T3 under (b).
   3. *Charisma + Wisdom compound:* Demoralize on beasts. A beast has no language, so `Demoralize._can_provoke`
      (`actions/combat.py`) never allows it, and Wordless Menace works on humanoids only. Decided (author
      2026-11-11): not built until the Wisdom (combat) tree has its Beastmaster talents (*Beastmaster talents*
@@ -560,8 +525,9 @@ has one "Enter" button and its functions are tabs inside.
 
 - **Beastmaster talents in the Wisdom tree.** Add Beastmaster talents to the Wisdom (combat) tree, which today
   holds only Alert -> Quick Wits (-> Peripheral Vision) and Iron Will (-> Iron Stance). The first use is the
-  prerequisite of *Demoralize on beasts* (*Talent ideas*, item 3), which waits for this tree. Open: how many nodes, their tiers and what
-  each does with beasts (Demoralize, `Group.herd_capacity` is already Beast Whisperer's in the work tree).
+  prerequisite of *Demoralize on beasts* (*Talent ideas*, item 3), which waits for this tree. Decided (author 2026-11-11): the set is Demoralize on
+  beasts, a pre-encounter dialogue window with beasts, taming a captured beast, and at the top commanding beasts in combat.
+  Open: the tiers and the order of the nodes (`Group.herd_capacity` is already Beast Whisperer's in the work tree).
 
 - **Does the Assess action itself need a reward? (author 2026-10-31, author/Yohan alignment).** The talent line
   under Tactical Mind (Analytical Eye, Exploit Weakness, Anatomist, Surgical Strike; `talents.py`) already pays
@@ -573,7 +539,7 @@ has one "Enter" button and its functions are tabs inside.
   `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
   as a trait of that weapon. Decided 2026-11-11 for `Hooves`: one action that resolves an attack, a shove
   and a Takedown, in that order (the condition and Takedown exist, `conditions.py`, `actions/combat.py`).
-  `Hooves` costs 2 AP. Open: the action for each of the other four, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
+  `Hooves` costs 2 AP. Decided (author 2026-11-11) for `Bite`: it attacks and, if it hits, grabs automatically (no roll); against a foe already `Grappled` the blow gains Brutal. Open: the action for `Claws`, `Fangs` and `Horns`, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
   AI, tests, tutorial card). Compare with Takedown and Grab in the sim so none dominates.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
@@ -593,8 +559,10 @@ has one "Enter" button and its functions are tabs inside.
   paper, and few exist. The intent: learn by owning an item (take the axe to the smith and study it until you can make it)
   or by being taught. A first form: the Library makes dictionaries, so a leader who speaks only Draconic hires a Lizardfolk and
   writes the dictionary to learn the language. Some recipes come from missions, artefacts from quests; the Kobold learns trap
-  recipes and places traps farther. The tester's idea: a research system to discover formulas. Open: teachers (who, what it costs),
-  study time, what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
+  recipes and places traps farther. The tester's idea: a research system to discover formulas. Decided (author 2026-11-11): a teacher is
+  either an NPC who teaches for free or another member of the group held back studying with the student, as if that member were
+  the dictionary, recipe or scroll itself; the study time depends on the level of what is learned, and the teacher's Charisma
+  bonus helps the student. Open: what the Library's dictionary gives, research. Size a first form when the production chain is picked up.
 
 - **Holy Symbol quest: polish after the first playthrough (author 2026-11-11).** The quest is built and live
   (`missions.FARMER_QUEST_LIVE`, `cult_site.py`, `demon_lair.py`, `investigation.py`). Left:
