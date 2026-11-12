@@ -147,7 +147,7 @@ class Counter(economy.PartyPurse):
         voice, dist = economy.haggle_voice(self.shoppers, lang, alignment,
                                            self.group.leader if self.group else None)
         if voice is None:
-            tongues = " or ".join(economy.vendor_tongues(lang))
+            tongues = i18n.t("trade.or_sep").join(i18n.names("language", economy.vendor_tongues(lang)))
             return {"headline": i18n.t("trade.no_haggling"), "tone": "none", "why": [i18n.t("trade.no_one_speaks", tongues=tongues), sell]}
         general = economy.deal_value(self.deal, None, "buy")
         food = economy.deal_value(self.deal, next(iter(items.food_items())), "buy")

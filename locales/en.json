@@ -4309,6 +4309,7 @@
     "fixed_prices": "fixed prices",
     "no_haggling": "no haggling",
     "no_one_speaks": "no one speaks {tongues}",
+    "or_sep": " or ",
     "list_price": "list price",
     "speaks_for_group": "{name} speaks for the group",
     "charisma": "Charisma {cha:+d}  ·  {bent_words}",

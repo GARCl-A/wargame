@@ -84,7 +84,7 @@ class ShopTab:
                             {"text": i18n.t("shop_tab.cha", cha=cha), "good": cha > 0},
                             {"text": trade.BENT_WORDS[dist].capitalize(), "good": dist <= 1}]
         elif lang:
-            out["marks"] = [{"text": i18n.t("shop_tab.no_one_speaks", join=' or '.join(economy.vendor_tongues(lang))), "good": False}]
+            out["marks"] = [{"text": i18n.t("shop_tab.no_one_speaks", join=i18n.t("trade.or_sep").join(i18n.names("language", economy.vendor_tongues(lang)))), "good": False}]
         return out
 
     def _shelf(self):

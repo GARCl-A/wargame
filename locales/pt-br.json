@@ -3399,6 +3399,7 @@
         "fixed_prices": "preços fixos",
         "no_haggling": "sem pechincha",
         "no_one_speaks": "ninguém fala {tongues}",
+        "or_sep": " ou ",
         "list_price": "preço de tabela",
         "speaks_for_group": "{name} fala pelo grupo",
         "charisma": "Carisma {cha:+d}  ·  {bent_words}",
