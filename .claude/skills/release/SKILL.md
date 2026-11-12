@@ -19,9 +19,10 @@ work around a refusal of `scripts/release.py` or `scripts/version_check.py`.
 
 3. **Tests.** `python -m pytest tests/ -n auto -m "not balance"`. A failure ends the release.
 
-4. **Build.** `cmd /c "build_exe.bat < NUL"` (the `< NUL` answers the script's `pause`), with a
-   10 minute timeout. It must end with `Done!` and leave a fresh `dist/GARTOK.exe`; the line
-   `Released v<version>` says a new version was cut, and whether saves break.
+4. **Build.** `cmd /c ".\build_exe.bat < NUL"` (the `< NUL` answers the script's `pause`; without
+   the `.\` cmd does not find the script here), with a 10 minute timeout. It must end with `Done!`
+   and leave a fresh `dist/GARTOK.exe`; the line `Released v<version>` says a new version was cut,
+   and whether saves break.
    When the output has no `Released` line, no code changed since the last version: go on, step 6
    refuses by itself if that version is already published.
 

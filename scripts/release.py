@@ -19,15 +19,17 @@ from scripts.version_check import CSV_PATH, RELEASE_FILES, code_changed_since, g
 
 EXE = os.path.join(ROOT, "dist", "GARTOK.exe")
 BUILD_INFO = os.path.join(ROOT, "gartok", "build_info.py")
+SHIPPED = ("gartok/", "locales/", "maps/", "npcs/", "main.py")
 
 
 def changes(prev_hash, last_hash):
-    """Subjects of the commits in the release, oldest first, without the version bookkeeping ones."""
+    """Subjects of the commits in the release that touch what the exe ships, oldest first, without
+    the version bookkeeping ones."""
     out = git("log", "--reverse", "--no-merges", "--name-only", "--format=%x00%s", f"{prev_hash}..{last_hash}")
     subjects = []
     for block in out.split("\x00")[1:]:
         subject, *files = [ln for ln in block.splitlines() if ln.strip()]
-        if not files or any(f not in RELEASE_FILES for f in files):
+        if any(f.startswith(SHIPPED) and f not in RELEASE_FILES for f in files):
             subjects.append(subject)
     return subjects
 
