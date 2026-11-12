@@ -117,6 +117,17 @@ def _role(battle, unit):
     return "attacker" if unit.team == battle.aggressor else "defender"
 
 
+def _out_of_reach(battle, unit, foe):
+    """`foe` hovers where this unit can never strike it: nothing to shoot, cast or throw, no wings of
+    its own, and the gap is past its reach even from the floor right under it."""
+    if not foe.altitude or unit.flies or unit.ranged or getattr(unit, "spells_known", None):
+        return False
+    if unit.resupplies_throw or actions.THROW.can(battle, unit, foe):
+        return False
+    reach = max(unit.attack_range, unit.tongue_reach if unit.has_tongue_weapon else 0)
+    return foe.altitude - (unit.footprint - 1) > reach
+
+
 def _target(battle, unit):
     enemies = [u for u in battle.units if u.alive and u.team != unit.team and not u.hidden_from(unit.team)]
     if not enemies:
@@ -132,6 +143,7 @@ def _target(battle, unit):
     pool = [e for e in pool if not e.routed] or pool     # a foe already running is let go while another stands to fight
     awake = [e for e in pool if not e.has_condition("sleeping")]
     pool = awake or pool                   # a sleeper stays asleep while there is a foe to fight
+    pool = [e for e in pool if not _out_of_reach(battle, unit, e)] or pool
     if battle.is_ctf:
         # someone is running off with OUR flag -- stopping them beats whatever
         # else this unit would otherwise pick a fight over

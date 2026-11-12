@@ -12,9 +12,11 @@ from tests.helpers import (
     _recruit,
     abilities,
     actions,
+    data,
     duelists,
     fitted,
     fixed_d20,
+    standard_unit,
 )
 from tests.test_ai_racial import _centaur, _rider_unit
 
@@ -525,3 +527,64 @@ def test_the_balance_sim_gives_a_bowman_a_quiver():
     import balance_sim
     squad = balance_sim._squad(("Human", "Longbow"), "player", 2, balance_sim.Build())
     assert all(u.has_item("Quiver") for u in squad)
+
+
+# --------------------------------------------------------------------------- #
+# A flyer out of reach                                                         #
+# --------------------------------------------------------------------------- #
+
+def _under_a_flyer(kit=("Quarterstaff", None), grounded=True):
+    """An enemy on the floor beside a Sprite hovering two levels up, and a second foe six cells off."""
+    sprite = standard_unit("player")
+    sprite.set_race("Sprite")
+    sprite.set_kit(fitted(sprite, "Quarterstaff"), None)
+    sprite._derive_combat()
+    hunter = standard_unit("enemy")
+    hunter.set_kit(*kit)
+    hunter._derive_combat()
+    batt = Battle([sprite] + ([standard_unit("player")] if grounded else []), [hunter])
+    batt.board.walls.clear()
+    batt.board.elevation = {}
+    batt.ambient_light = True
+    flyer, wolf = batt.player_units[0], batt.enemy_units[0]
+    wolf.pos, flyer.pos = (5, 5), (6, 5)
+    flyer.altitude = 2
+    walker = batt.player_units[1] if grounded else None
+    if walker:
+        walker.pos = (5, 11)
+    for u in batt.units:
+        u.turns_taken = 1
+    batt.clear_pf_cache()
+    batt.turn_idx = batt.order.index(wolf)
+    return batt, wolf, flyer, walker
+
+
+def _only_fights(monkeypatch):
+    """Take the talking out of the turn (Assess, Demoralize): what is left is walk, strike or defend."""
+    monkeypatch.setattr(ai.turn, "_assess_target", lambda battle, unit: None)
+    monkeypatch.setattr(ai.turn, "_try_assess", lambda battle, unit: False)
+    monkeypatch.setattr(ai.turn, "_demoralize_victim", lambda battle, unit, target: None)
+    monkeypatch.setattr(actions.DEMORALIZE, "can", lambda battle, unit, target: False)
+
+
+def test_a_melee_unit_under_a_flyer_walks_to_the_foe_on_the_ground(monkeypatch):
+    batt, wolf, flyer, walker = _under_a_flyer()
+    _only_fights(monkeypatch)
+    assert batt.units_distance(wolf, flyer) > wolf.attack_range
+    before = batt.units_distance(wolf, walker)
+    ai.take_turn(batt, wolf)
+    assert batt.units_distance(wolf, walker) < before and not wolf.defending
+
+
+def test_a_melee_unit_with_only_a_flyer_to_fight_still_ends_its_turn(monkeypatch):
+    batt, wolf, flyer, _ = _under_a_flyer(grounded=False)
+    _only_fights(monkeypatch)
+    assert ai._target(batt, wolf) is flyer
+    ai.take_turn(batt, wolf)
+    assert batt.active is not wolf
+
+
+def test_an_archer_still_targets_the_flyer():
+    batt, archer, flyer, _walker = _under_a_flyer(kit=("Shortbow", data.AMMO_ITEM))
+    assert archer.ranged
+    assert ai._target(batt, archer) is flyer
