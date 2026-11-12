@@ -51,6 +51,24 @@ the rest.
   `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md` does not exist yet: turn the literals of
   `reference.py` into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
 
+- **A crowded start zone puts a big body off the board or on top of another (bug, found 2026-11-12).**
+  `Scenario._place` (`scenario.py`) tries the side's edge cells in random order and, when no anchor fits
+  the footprint, falls back to `candidates[0]` without checking bounds or overlap. The body then stands
+  partly outside the board, and the first code that asks for the neighbours of one of its cells raises
+  `KeyError` in `Board.neighbors`: seen in `ai/movement._step_over_terrain` -> `actions/movement.Swim._at_water`
+  (`KeyError: (16, 7)` on a 16x12 board), which kills the AI's turn in a real fight and the thread of the
+  clean-stomp estimate (`autowin`). The zone is 3 columns by the board's rows, so it happens when the
+  bodies only fit if packed tight. Measured over 200 seeded deployments each: 5 Centaurs (Large, 2x2) land
+  wrong in 23, 6 Centaurs in 171, 3 Dragons (Huge, 3x3) in 1, 4 Dragons in 164; 4 Centaurs or 2 Dragons never.
+  The Dragon is only placed by hand today (`data.AUTHORED_BEASTS`), but a Wilds pack rolls up to 6 bodies
+  and a band can hold Large ones (Centaur, Horse, Ox, Donkey). Reproduce the bad deployment:
+  `random.seed(0)`, `Battle([standard_unit() for _ in range(4)], [Unit("enemy", race=data.race_by_name("Dragon")) for _ in range(4)], scenario=Scenario())`
+  leaves one Dragon anchored at `(15, 7)` with six cells past column 15 and three cells shared with
+  another; the crash: the same two sides through `autowin.simulate_matchup(squad, pack, scenario=Scenario, max_iterations=2, max_time=30)`
+  raises at seed 0 (23 of seeds 0..39 with 4 Dragons, 2 of 40 with 3). Do: place the biggest bodies first
+  and pack them, widen the zone inward when the edge is full, and never leave a body out of bounds or
+  overlapping (a test over seeds for 6 Large and 4 Huge bodies).
+
 - **Ambush on the way in, at every dangerous node (author, note outside playtests).** The Wilds, the
   Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road
   (`forced.py` rolls `world.ROAD_AMBUSH_CHANCE` once per arrival at an `unsafe` node), and the map should
