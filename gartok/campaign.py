@@ -143,7 +143,7 @@ def _death_note(battle, combatant):
 
     end = last("log.death_save.dies", "log.defeat_wipe")
     how = "unknown" if end is None else "defeat" if lines[end].msg.key == "log.defeat_wipe" else "death_save"
-    down = last("log.down.dying", "log.down.raised", "log.down.zeroed", before=len(lines) if end is None else end + 1)
+    down = last("log.down.dying", "log.down.raised", "log.down.zeroed", "log.down.zeroed_by_poison", before=len(lines) if end is None else end + 1)
     trail = [] if down is None else [str(ln).strip() for ln in lines[max(0, down - 3):down + 1]]
     foes = [c.name for c in battle.enemy_units][:8]
     return {"how": how, "round": battle.round_no, "foes": foes, "trail": trail}

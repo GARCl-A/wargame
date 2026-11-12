@@ -186,6 +186,27 @@ def test_a_unit_with_a_physical_attribute_at_zero_starts_the_battle_dying():
     assert healthy.player_units[0].alive
 
 
+def _collapse_line(batt):
+    return next(ln.msg for ln in batt.log_lines if getattr(ln, "msg", None) and ln.msg.key.startswith("log.down.zeroed"))
+
+
+def test_the_collapse_line_names_the_poison_that_ate_the_attribute():
+    weak = _human(dex=5)
+    for _ in range(5):
+        weak.add_poison(VENOM, 11)
+    line = _collapse_line(Battle([weak], [standard_unit("enemy")]))
+    assert line.key == "log.down.zeroed_by_poison" and line.params["poison"].ident == VENOM
+    assert poisons.get(VENOM).name in str(line)
+
+
+def test_a_collapse_no_poison_caused_names_none():
+    frail = standard_unit()
+    frail.base_attributes["dexterity"] = -data.race_by_name("Human")["mods"][1]     # below what a roll gives
+    frail.add_poison("snake_venom", 11)                     # eats Constitution, not the Dexterity that is gone
+    assert frail.zeroed_attribute == "dexterity"
+    assert _collapse_line(Battle([frail], [standard_unit("enemy")])).key == "log.down.zeroed"
+
+
 def test_poison_that_takes_the_last_point_drops_the_victim_mid_fight(monkeypatch):
     _force(monkeypatch, save=1)
     batt, sp, victim = _fight(_human(dex=5))

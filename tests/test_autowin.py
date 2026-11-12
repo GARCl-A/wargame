@@ -3,11 +3,12 @@
 import random
 import time
 
-from gartok import autowin, campaign, data, world
+from gartok import autowin, campaign, data, persist, world
 from gartok.battle import Battle
 from gartok.guild import Guild
 from gartok.scenario import Scenario
 from gartok.unit import Unit
+from tests.helpers import standard_unit
 
 
 def _make_fighter(level=4, weapon="Broadsword", hp=20):
@@ -148,3 +149,62 @@ def test_the_odds_are_the_share_of_fights_won():
     res = autowin.simulate_matchup([_make_scrapper(hp=2)], [_make_fighter(hp=30) for _ in range(4)],
                                    max_iterations=4, max_time=5)
     assert res.iterations == 4 and res.win_rate == 0.0 and not res.eligible
+
+
+def _spider_fight(monkeypatch):
+    """A band with things a fight spends or changes against a venomous pack; `bites` counts the venom
+    that lands, so a test knows the fights it watched did poison someone."""
+    random.seed(7)
+    squad = [standard_unit() for _ in range(4)]
+    squad[0].sick = True
+    squad[1].give_to_pack(data.FIRST_AID_ITEM)
+    squad[2].give_to_pack("Minor Healing Potion", 2)
+    squad[3].give_to_pack("Torch")
+    pack = [Unit("enemy", race=data.race_by_name("Giant Spider")) for _ in range(2)]
+    bites = []
+    real = Unit.add_poison
+    monkeypatch.setattr(Unit, "add_poison", lambda self, pid, dc: bites.append(self) or real(self, pid, dc))
+    monkeypatch.setattr(data, "d20", lambda: 1)             # every Constitution save fails
+    return squad, pack, bites
+
+
+def _sheets(units):
+    return [persist.unit_to_dict(u) for u in units]
+
+
+def test_a_simulated_fight_leaves_both_sides_as_they_were(monkeypatch):
+    squad, pack, bites = _spider_fight(monkeypatch)
+    before = _sheets(squad + pack)
+    res = autowin.simulate_matchup(squad, pack, max_iterations=6, max_time=30)
+    assert res.iterations == 6 and bites
+    assert not any(b is u for b in bites for u in squad)
+    assert _sheets(squad + pack) == before
+    assert not any(u.poisoned for u in squad) and all(u.epithet is None for u in pack)
+
+
+def test_the_threaded_estimate_leaves_both_sides_as_they_were(monkeypatch):
+    squad, pack, bites = _spider_fight(monkeypatch)
+    before = _sheets(squad + pack)
+    estimator = autowin.AutoWinEstimator()
+    estimator.request(squad, pack, max_iterations=6, max_time=30)
+    for _ in range(1500):
+        if not estimator.computing:
+            break
+        time.sleep(0.02)
+    assert estimator.result is not None and estimator.result.iterations == 6 and bites
+    assert _sheets(squad + pack) == before
+
+
+def test_the_estimate_fights_the_band_as_it_was_when_asked(monkeypatch):
+    seen = []
+    monkeypatch.setattr(autowin, "simulate_matchup", lambda squad, enemies, **kw: seen.append((squad, enemies)) or autowin.AutoWinResult())
+    squad, pack = [standard_unit()], [standard_unit("enemy")]
+    estimator = autowin.AutoWinEstimator()
+    estimator.request(squad, pack)
+    for _ in range(100):
+        if not estimator.computing:
+            break
+        time.sleep(0.02)
+    (fought, foes), = seen
+    assert fought[0] is not squad[0] and foes[0] is not pack[0]
+    assert fought[0].uid == squad[0].uid

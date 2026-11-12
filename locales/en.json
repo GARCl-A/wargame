@@ -2656,6 +2656,7 @@
       "broken": "  {unit} stops working: BROKEN (only back up if an ally repairs it).",
       "dying": "  {unit} goes down, dying ({turns} turns to the death save).",
       "zeroed": "  {unit}'s {attribute} is gone: collapses.",
+      "zeroed_by_poison": "  {unit}'s {attribute} is gone, eaten by the {poison}: collapses.",
       "knocked_out_fight": "  {unit} is knocked out (non-lethal fight)."
     },
     "flickers": "{unit} flickers into sight!",

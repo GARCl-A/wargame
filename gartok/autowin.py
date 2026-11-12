@@ -15,8 +15,13 @@ Trade-off when accepted:
 - 0 combat XP awarded from kills.
 - Party members take average simulated damage (rounded).
 - Field loot, clock advancement, and guild victory count are preserved.
+
+A simulated fight never touches the world: every run fights deep copies of both sides (a real fight
+writes on its `Unit`s: venom, a meal, a cured fever, what the pack spent), and the threaded estimate
+copies them before its thread starts, so it never reads a character the player is changing.
 """
 
+import copy
 import threading
 import time
 from dataclasses import dataclass, field
@@ -54,9 +59,9 @@ def simulate_matchup(squad, enemies, scenario=None, daylight=True, lethal=True,
         if run_idx > 0 and (time.monotonic() - t0) >= max_time:
             break
 
-        scen = scenario() if callable(scenario) else (scenario or Scenario())
-        battle = Battle(list(squad), list(enemies), scenario=scen,
-                        daylight=daylight, lethal=lethal)
+        scen = scenario() if callable(scenario) else (copy.deepcopy(scenario) or Scenario())
+        ours, theirs = copy.deepcopy((list(squad), list(enemies)))
+        battle = Battle(ours, theirs, scenario=scen, daylight=daylight, lethal=lethal)
 
         turn_cap = 60
         turns = 0
@@ -123,6 +128,7 @@ class AutoWinEstimator:
             token = self._token
             self.result = None
             self.computing = True
+        squad, enemies = copy.deepcopy((list(squad), list(enemies)))
 
         def _worker():
             res = simulate_matchup(squad, enemies, scenario=scenario,

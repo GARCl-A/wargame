@@ -30,6 +30,11 @@ class PoisonMixin:
         return ", ".join(f"{poisons.get(pid).name} {st['level']} ({st['hours']}h)"
                          for pid, st in self.poisons.items())
 
+    def worst_poison(self, attr):
+        """The active poison eating the most of `attr`, else None."""
+        eating = [poisons.get(pid) for pid in self.poisons if poisons.get(pid).attribute == attr]
+        return max(eating, key=lambda p: self.poisons[p.id]["level"] * p.per_stack, default=None)
+
     @property
     def zeroed_attribute(self):
         return self.zeroed_by(0)

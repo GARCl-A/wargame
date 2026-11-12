@@ -6,7 +6,7 @@ field); `web/report_session.py` reads it."""
 
 from dataclasses import dataclass, field
 
-from . import i18n, poisons
+from . import i18n
 
 
 @dataclass
@@ -47,8 +47,7 @@ def starved(unit, *, day, place=None):
 
 def collapsed(unit, attribute, *, day, place=None):
     """A physical score eaten down to nothing: named for the worst poison on that score, else a wasting."""
-    eating = [poisons.get(pid) for pid in unit.poisons if poisons.get(pid).attribute == attribute]
-    worst = max(eating, key=lambda p: unit.poisons[p.id]["level"] * p.per_stack, default=None)
+    worst = unit.worst_poison(attribute)
     return memorial(unit, day=day, cause=i18n.t("aftermath.died_of", name=worst.name) if worst else i18n.t("aftermath.wasted_away"), place=place,
                     line=i18n.t("aftermath.fell_to", capitalize=attribute.capitalize(), getattr=getattr(unit, attribute)))
 

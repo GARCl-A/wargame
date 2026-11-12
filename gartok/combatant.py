@@ -323,7 +323,13 @@ class Combatant:
         takes another point."""
         gone = self.char.zeroed_by(self.hex_points())
         if gone and self.alive:
-            log("log.down.zeroed", unit=self.name, attribute=Ref("attribute", gone, gone.capitalize()))
+            attribute = Ref("attribute", gone, gone.capitalize())
+            poison = self.char.worst_poison(gone)
+            if poison is None:
+                log("log.down.zeroed", unit=self.name, attribute=attribute)
+            else:
+                log("log.down.zeroed_by_poison", unit=self.name, attribute=attribute,
+                    poison=Ref("poison", poison.id, poison.name))
             self.go_down(log)
 
     # ------------------------------------------------------------------ #
