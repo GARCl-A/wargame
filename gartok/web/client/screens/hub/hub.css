@@ -261,6 +261,9 @@
 .lcol .it.carry b.good{color:#a9c98a}
 .jobs{margin-top:14px;height:640px;overflow-y:auto;border-top:1px solid rgba(90,60,30,.45);
   scrollbar-width:thin;scrollbar-color:rgba(90,60,30,.45) transparent}
+.ledger.jobsled{display:flex;flex-direction:column;box-sizing:border-box;padding-bottom:100px}
+.jobsled>*{flex:none}
+.jobsled>.jobs{flex:1 1 auto;min-height:120px;height:auto}
 .job{display:grid;grid-template-columns:62px 1fr 230px;gap:0 14px;align-items:center;padding:16px 10px;border-bottom:1px dashed rgba(90,60,30,.28)}
 .job>.ico{width:46px;height:46px;color:#3a2410;align-self:start;margin-top:2px}
 .job.taken{background:rgba(201,163,94,.1)}

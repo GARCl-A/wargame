@@ -44,7 +44,7 @@ const Jobs = (() => {
           <div class="who"><h3>${esc(s.name)}</h3><div class="race">${esc(s.sub)}</div></div></div></div>
         <p class="hint">${tr("jobs.signs_hint")}</p>
         ${packs}${egg}</div>
-      <div class="paper ledger"><div class="kicker">${tr("jobs.board")} <em>${esc(J.line)}</em></div>
+      <div class="paper ledger jobsled"><div class="kicker">${tr("jobs.board")} <em>${esc(J.line)}</em></div>
         <div class="jobs">${board}</div>
         ${J.asks.length ? `<div class="kicker">${tr("jobs.ask_around")}</div><p class="hint">${tr("jobs.ask_around_hint")}</p>${J.asks.map(ask).join("")}` : ""}
         <div class="ledgerfoot"><p>${tr("jobs.foot")}</p></div></div>`;
