@@ -194,8 +194,9 @@
 #charter{left:560px;top:150px;width:930px;height:740px;padding:46px 56px 40px;transform:rotate(-.7deg)}
 .bek{margin-top:34px;font:italic 21px/1 "IM Fell English",serif;color:#5b4630}
 .gname{display:flex;align-items:flex-end;margin-top:12px;height:66px;border-bottom:1.5px solid #3a2614}
-.gname input{flex:1;min-width:0;font:700 52px/1 Cinzel,serif;color:#1d120a;background:none;border:none;outline:none;padding:0;caret-color:#2a1a0e}
+.gname input{flex:1;min-width:0;font:600 56px/1 var(--read);color:#1d120a;background:none;border:none;outline:none;padding:0;caret-color:#2a1a0e}
 .gname input::placeholder{color:rgba(90,60,30,.4);font-weight:500}
+#charter .kicker{font:600 16px/1 var(--read);letter-spacing:.02em;text-transform:none}
 .gname .pen{margin-bottom:12px;width:26px;height:26px;color:#7b6142}
 .trade{margin-top:18px;font:19px/1.4 var(--read);color:#2c1c0e}
 .trade b{font:700 15px/1 Cinzel,serif;letter-spacing:.2em;color:var(--redink);text-transform:uppercase}

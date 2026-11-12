@@ -467,9 +467,15 @@ body:not(.ready) #tut-badge {
   cursor: default
 }
 
+#tut-card .kicker {
+  font: 600 16px/1 var(--read);
+  letter-spacing: .02em;
+  text-transform: none
+}
+
 #tut-card h2 {
   margin: 14px 0 18px;
-  font: 700 34px/1.1 Cinzel, serif;
+  font: 600 38px/1.1 var(--read);
   color: #2a1a0e
 }
 
