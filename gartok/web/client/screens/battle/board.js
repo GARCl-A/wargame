@@ -654,14 +654,18 @@ const Board = (() => {
       return;
     }
     const reach = new Set(s.reach.map(([x, y]) => K(x, y)));
-    over.fillStyle = "rgba(176,132,48,.16)";
+    over.fillStyle = "rgba(226,184,96,.14)";
     for (const [x, y] of s.reach) over.fillRect(cx(x), cy(y), C, C);
-    over.strokeStyle = "rgba(125,92,40,.8)"; over.lineWidth = 2; over.setLineDash([5, 4]);
+    const edges = [];
     for (const [x, y] of s.reach) {
-      if (!reach.has(K(x, y - 1))) { over.beginPath(); over.moveTo(cx(x), cy(y)); over.lineTo(cx(x + 1), cy(y)); over.stroke(); }
-      if (!reach.has(K(x, y + 1))) { over.beginPath(); over.moveTo(cx(x), cy(y + 1)); over.lineTo(cx(x + 1), cy(y + 1)); over.stroke(); }
-      if (!reach.has(K(x - 1, y))) { over.beginPath(); over.moveTo(cx(x), cy(y)); over.lineTo(cx(x), cy(y + 1)); over.stroke(); }
-      if (!reach.has(K(x + 1, y))) { over.beginPath(); over.moveTo(cx(x + 1), cy(y)); over.lineTo(cx(x + 1), cy(y + 1)); over.stroke(); }
+      if (!reach.has(K(x, y - 1))) edges.push([cx(x), cy(y), cx(x + 1), cy(y)]);
+      if (!reach.has(K(x, y + 1))) edges.push([cx(x), cy(y + 1), cx(x + 1), cy(y + 1)]);
+      if (!reach.has(K(x - 1, y))) edges.push([cx(x), cy(y), cx(x), cy(y + 1)]);
+      if (!reach.has(K(x + 1, y))) edges.push([cx(x + 1), cy(y), cx(x + 1), cy(y + 1)]);
+    }
+    for (const [col, w, dash] of [["rgba(12,8,4,.75)", 4, []], ["rgba(244,214,140,.95)", 2, [6, 5]]]) {
+      over.strokeStyle = col; over.lineWidth = w; over.setLineDash(dash);
+      for (const [x0, y0, x1, y1] of edges) { over.beginPath(); over.moveTo(x0, y0); over.lineTo(x1, y1); over.stroke(); }
     }
     over.setLineDash([]);
     const fp = s.active ? (s.units.find(u => u.id === s.active.id) || {fp: 1}).fp : 1;
@@ -669,18 +673,24 @@ const Board = (() => {
     for (let i = 0; i < s.trail.length - 1; i++) {
       const [ax, ay] = mid(s.trail[i]), [bx, by] = mid(s.trail[i + 1]);
       for (let t = .25; t < 1; t += .5) {
-        over.fillStyle = "rgba(42,26,12,.6)"; over.beginPath();
+        over.fillStyle = "rgba(240,215,158,.75)"; over.beginPath();
         over.ellipse(ax + (bx - ax) * t, ay + (by - ay) * t + (t < .5 ? -4 : 4), C / 11, C / 16, Math.atan2(by - ay, bx - ax), 0, 7); over.fill();
       }
     }
     if (ui.route && ui.route.path.length >= 2) {
-      over.strokeStyle = "rgba(42,26,12,.85)"; over.lineWidth = Math.max(2, C / 20); over.setLineDash([C / 7, C / 9]); over.lineCap = "round";
-      over.beginPath(); ui.route.path.forEach((c, i) => { const [x, y] = mid(c); i ? over.lineTo(x, y) : over.moveTo(x, y); }); over.stroke();
+      const lw = Math.max(2, C / 20);
+      over.lineCap = "round";
+      for (const [col, w, dash] of [["rgba(12,8,4,.8)", lw + 3, []], ["rgba(248,222,152,.98)", lw, [C / 7, C / 9]]]) {
+        over.strokeStyle = col; over.lineWidth = w; over.setLineDash(dash);
+        over.beginPath(); ui.route.path.forEach((c, i) => { const [x, y] = mid(c); i ? over.lineTo(x, y) : over.moveTo(x, y); }); over.stroke();
+      }
       over.setLineDash([]);
       const [ex, ey] = mid(ui.route.path[ui.route.path.length - 1]);
-      over.beginPath(); over.arc(ex, ey, C * .32, 0, 7); over.strokeStyle = "rgba(42,26,12,.85)"; over.lineWidth = 2; over.stroke();
+      over.beginPath(); over.arc(ex, ey, C * .32, 0, 7); over.strokeStyle = "rgba(12,8,4,.8)"; over.lineWidth = 5; over.stroke();
+      over.strokeStyle = "rgba(248,222,152,.98)"; over.lineWidth = 2; over.stroke();
       if (ui.route.cost != null) {
         over.fillStyle = "#2a1c10"; over.beginPath(); over.arc(ex + C * .3, ey - C * .3, C * .17, 0, 7); over.fill();
+        over.strokeStyle = "rgba(248,222,152,.98)"; over.lineWidth = 1.5; over.stroke();
         over.fillStyle = "#f0d79e"; over.font = `700 ${Math.round(C * .2)}px Cinzel`; over.textAlign = "center"; over.textBaseline = "middle";
         over.fillText(ui.route.cost, ex + C * .3, ey - C * .29);
       }

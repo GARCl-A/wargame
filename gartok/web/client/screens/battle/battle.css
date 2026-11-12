@@ -199,6 +199,7 @@
   box-shadow:0 0 0 1px #000,0 6px 22px rgba(0,0,0,.7);pointer-events:none;z-index:6;
   display:grid;grid-template-columns:auto 1fr auto;column-gap:14px;align-items:center}
 #ritual b{font:700 17px/1 Cinzel,serif;letter-spacing:.2em;color:var(--brass-hi);text-transform:uppercase}
+#ritual[hidden]{display:none}
 #ritual .count{font:700 17px/1 Cinzel,serif;letter-spacing:.06em;color:#e8cfa0}
 #ritual .track{position:relative;height:18px;background:#0a0604;border:1px solid var(--brass-lo);overflow:hidden}
 #ritual .fill{height:100%;background:linear-gradient(#d4503f,#7d1f16);box-shadow:0 0 12px rgba(220,70,50,.6);
