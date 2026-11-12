@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from gartok import ai, combat_lab, magic, npc_lib, progression, talents, wildfire
 from gartok.fortress_scenario import BONFIRE, GATE, OGRE_CELL, FortressScenario, walls
-from tests.helpers import Battle, Unit, abilities, actions, data, fixed_d20
+from tests.helpers import Battle, Unit, abilities, actions, data, fixed_d20, standard_unit
 
 
 def _ogre_unit():
@@ -93,7 +93,7 @@ def test_shared_racial_talents_are_offered_to_each_of_their_races():
 # --- Mighty Shove ------------------------------------------------------------------ #
 
 def _shove_battle():
-    batt = _open([Unit("player"), Unit("player")], [_ogre_unit()])
+    batt = _open([standard_unit("player"), standard_unit("player")], [_ogre_unit()])
     p, q, o = batt.units
     for c in (p, q, o):
         c._ability = abilities.get("none")
