@@ -207,12 +207,10 @@ def test_a_bribed_patrol_lets_the_group_go_with_the_crime_on_the_books():
 def test_a_peaceful_gather_ambush_banks_the_haul_like_a_won_fight(monkeypatch):
     g = Group([_speaker()], node="lumber_yard")
     guild = Guild(None, groups=[g])
-    banked = []
-    monkeypatch.setattr(guild, "bank_haul", lambda survivors, hours, node: banked.append(survivors) or ["haul"])
     order = orders.Order("gather_ambush", pack=tuple(_pack()), hours=8)
     g.pending = order
-    assert forced.settle_talk(guild, g, order) == ["The crew drives the pack off.", "haul"]
-    assert banked == [list(g.members)] and g.pending is None
+    assert forced.settle_talk(guild, g, order) == ["The crew drives the pack off."]
+    assert g.pending is None and g.order.kind == "idle"
 
 
 def test_the_ambushes_and_the_guard_open_a_talk():

@@ -267,7 +267,7 @@ def test_the_gathering_tab_marks_who_gathers_and_who_stands_guard():
 
 
 def test_a_gathering_shift_stays_on_the_gather_tab_and_reports_what_it_found(monkeypatch):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: False)
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: None)
     hub, guild, g = _hub("lumber_yard", "market")
     hub.gathering.buy_licence()
     g.members[0].give_to_pack("Axe")

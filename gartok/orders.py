@@ -33,6 +33,7 @@ below (`caught`, `prev_node`, `resume_path`, `pack`, `job`) are theirs.
 from dataclasses import dataclass
 
 from . import economy, i18n, world
+from . import gather as gather_mod
 
 AUTO_KINDS = frozenset({"travel", "work", "rest", "solo", "wait"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
@@ -63,7 +64,7 @@ class Order:
     recipe: str | None = None  # solo craft: what is being made
     gather: bool = False     # work: gather items at the node (gather.py) instead of taking the wage
     parley: dict | None = None  # forced: how the talk before the fight ended (`dialogue.Result.to_dict`), once rolled
-    owed: float = 0.0        # supply run: hours of this leg still to walk past the ambush the order stops at
+    owed: float = 0.0        # supply run, gather: hours still to go past the ambush the order stops at
     crew: tuple = ()         # stint: uids of the members it settles for (the performers, the patients)
     wagon: str | None = None  # stint "repair": uid of the wagon being mended
     state: dict | None = None  # hunting: the hunt out on the clock and what its stretch rolled (`HuntSession`)
@@ -116,7 +117,10 @@ def work(guild, group, hours, gather=False, task=None, resume=None, licensed=Tru
     if gather and not any(economy.owns_tool(u, group.node) for u in group.members):
         raise ValueError(i18n.t("orders.no_one_in_carries_node", display_name=group.display_name, gather_tools=economy.GATHER_TOOLS[group.node]))
     clock_hours = hours * guild.work_speedup(group.members)
-    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task, job=resume)
+    order = Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task, job=resume)
+    if gather:
+        gather_mod.split_at_ambush(order, group.node, guild.gather_risk_mult(group, group.node))
+    return order
 
 
 def holds_post(order):

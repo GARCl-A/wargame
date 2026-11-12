@@ -152,11 +152,11 @@ def test_a_headless_shift_runs_every_other_bands_order_too():
 
 
 def _hunters(monkeypatch, ambush):
-    from gartok import hunt
+    from gartok import encounters
     from gartok.web.map_session import MapSession
     from gartok.web.server import Game
     from tests.test_web_hub import _guild
-    monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", ambush)
+    monkeypatch.setitem(encounters.AMBUSH_CHANCE_PER_HOUR, "hunt", ambush)
     guild = _guild("wilds")
     game = Game(MapSession(guild))
     g = guild.groups[0]
@@ -196,11 +196,11 @@ def test_an_ambush_springs_on_the_hunt_screen_at_its_hour_with_the_other_band_st
 def _hunt_saved(monkeypatch, ambush, mill_left):
     """A hunt sent out on a 16 h shift while a mill band has `mill_left` hours to go: the map takes over
     mid-stretch and autosaves; -> the game rebuilt from that save, its guild, the hunt and the mill."""
-    from gartok import hunt
+    from gartok import encounters
     from gartok.web.map_session import MapSession
     from gartok.web.server import Game
     from tests.test_web_hub import _guild
-    monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", ambush)
+    monkeypatch.setitem(encounters.AMBUSH_CHANCE_PER_HOUR, "hunt", ambush)
     guild = _guild("wilds")
     game = Game(MapSession(guild, "w1"))
     g = guild.groups[0]
@@ -346,11 +346,11 @@ def test_a_stretch_due_behind_the_card_is_not_lost_on_a_save_and_load(monkeypatc
 
 
 def test_the_autosave_before_a_hunt_ambush_still_holds_the_stretch(monkeypatch):
-    from gartok import hunt
+    from gartok import encounters
     from gartok.web.map_session import MapSession
     from gartok.web.server import Game
     from tests.test_web_hub import _guild
-    monkeypatch.setattr(hunt, "AMBUSH_CHANCE_PER_HOUR", 1.0)
+    monkeypatch.setitem(encounters.AMBUSH_CHANCE_PER_HOUR, "hunt", 1.0)
     guild = _guild("wilds")
     game = Game(MapSession(guild, "w1"))
     game.session.act(guild.groups[0].gid, "hunt")

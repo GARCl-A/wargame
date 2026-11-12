@@ -482,16 +482,17 @@ def test_deep_miner_cuts_the_mine_ambush_odds():
     g = Guild([dwarf], name="Delvers")
     group = g.groups[0]
     group.node = "mine"
+    dwarf.give_to_pack("Pick")
+    dwarf.give_to_pack("Axe")
     seen = []
 
     def spy(node_id, hours, mult=1.0, rng=None):
         seen.append(mult)
-        return False
 
-    with patch("gartok.gather.ambushed", side_effect=spy):
-        g.gather_shift(group, orders.Order("work", hours=8, gather=True))
+    with patch("gartok.gather.ambush_hour", side_effect=spy):
+        orders.work(g, group, 8, gather=True, licensed=False)
         group.node = "lumber_yard"
-        g.gather_shift(group, orders.Order("work", hours=8, gather=True))
+        orders.work(g, group, 8, gather=True, licensed=False)
     assert seen[0] == pytest.approx(seen[1] * 0.75)
 
 

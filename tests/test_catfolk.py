@@ -231,13 +231,13 @@ def test_open_market_keeps_the_break_for_a_kindred_tendency():
 
 
 def test_a_cautious_hunt_that_crosses_dusk_is_trimmed_only_for_the_dark_hours():
-    from gartok import hunt
+    from gartok import encounters, hunt
     cat = _catfolk("night_prowler")
     guild = _guild_at(15)
 
     class Roll:                                         # always rolls this share of the plain hourly chance
         def random(self):
-            return hunt.AMBUSH_CHANCE_PER_HOUR * 0.9
+            return encounters.AMBUSH_CHANCE_PER_HOUR["hunt"] * 0.9
 
     def stretch(stance, hours=8, start=15):
         state = hunt.begin(guild, [cat], None, stance, hours_left=hours)

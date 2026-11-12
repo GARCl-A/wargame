@@ -243,7 +243,7 @@ def test_the_miner_policy_buys_a_pick_and_works_the_mine_past_the_old_road():
 
 
 def test_the_gatherer_buys_the_yards_licence_then_gathers_and_sells_the_haul(monkeypatch):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: False)
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: None)
     sim = _run(_sim("gatherer", capital=900), 6)
     assert sim.guild.has_licence("lumber_yard")
     assert sum(u.work_hours for u in sim.guild.roster) > 0
@@ -251,7 +251,8 @@ def test_the_gatherer_buys_the_yards_licence_then_gathers_and_sells_the_haul(mon
 
 
 def test_a_pack_on_a_gathering_shift_is_fought_with_its_own_pack_and_a_win_banks_the_haul(monkeypatch):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+    hits = iter([2.0])
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: next(hits, None))
     sim = _sim(skill=1.0, library=_WON, seed=2)
     sim.guild.licences.add("lumber_yard")
     for u in sim.guild.roster:
@@ -557,7 +558,7 @@ def _claim_sim(monkeypatch, raids=0.0, **pools):
 
 
 def test_the_claim_campaign_runs_its_stages_and_is_established_after_ten_days(monkeypatch):
-    sim = _claim_sim(monkeypatch, claim_clear=[_win()], claim_sweep=[_win()], raid=[_win()])
+    sim = _claim_sim(monkeypatch, claim_clear=[_win()], claim_sweep=[_win()], raid=[_win()], **{"gather:wilds_territory": [_win()]})
     sim.claim_run()
     guild = sim.guild
     assert guild.wilds_claim_stage == "ESTABLISHED" and guild.wilds_claim_owner == "guild"
@@ -581,7 +582,7 @@ def test_a_raid_the_garrison_loses_starts_the_countdown_over(monkeypatch):
 
 
 def test_the_garrison_leaves_when_the_food_runs_low(monkeypatch):
-    sim = _claim_sim(monkeypatch, claim_clear=[_win()], claim_sweep=[_win()], raid=[_win()])
+    sim = _claim_sim(monkeypatch, claim_clear=[_win()], claim_sweep=[_win()], raid=[_win()], **{"gather:wilds_territory": [_win()]})
     sim.claim_run()
     sim.guild.wilds_claim_stage = "SWEPT"
     for u in sim.members:

@@ -213,7 +213,7 @@ def test_a_shift_at_the_claim_needs_no_licence_but_an_axe():
 
 def test_the_garrison_keeps_holding_the_claim_while_it_gathers_and_after(monkeypatch):
     random.seed(1)
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: False)
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: None)
     guild, g = _gathering_garrison()
     g.order = orders.work(guild, g, 16, gather=True, resume="hold")
     assert guild.claim_garrison() is g
@@ -225,8 +225,10 @@ def test_the_garrison_keeps_holding_the_claim_while_it_gathers_and_after(monkeyp
 
 def test_a_won_ambush_at_the_claim_goes_back_to_the_post_and_a_lost_one_leaves_it():
     guild, g = _gathering_garrison()
-    ambush = orders.Order("gather_ambush", pack=(Unit("enemy"),), hours=8, job="hold")
+    ambush = orders.Order("gather_ambush", pack=(Unit("enemy"),), hours=8, job="hold", owed=5, eta=8)
     forced.resolve_gather_ambush(guild, g, ambush, SimpleNamespace(won=True, survivors=list(g.members)))
+    assert g.order.kind == "work" and g.order.job == "hold" and g.order.remaining == 5
+    campaign.advance(guild)
     assert g.order.kind == "garrison" and g.order.job == "hold"
     forced.resolve_gather_ambush(guild, g, ambush, SimpleNamespace(won=False, survivors=[]))
     assert g.order.kind == "idle" and guild.claim_garrison() is None

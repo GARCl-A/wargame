@@ -111,27 +111,30 @@ def test_the_chance_is_rolled_as_ever_and_only_a_hit_rolls_the_pack(monkeypatch)
 # ---- the work ------------------------------------------------------------ #
 
 def _shift(monkeypatch, members, pack):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+    hits = iter([2.0])                                  # the first roll hits at hour 2, the next hours none
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: next(hits, None))
     monkeypatch.setattr(gather, "ambush_pack", lambda node_id: pack)
     for u in members:
         u.give_to_pack(gather.tool("mine"))
     guild = Guild(members, node="mine")
     guild.licences.add("mine")
     group = guild.groups[0]
-    order = orders.work(guild, group, 8, gather=True)
-    return guild.gather_shift(group, order)
+    group.order = orders.work(guild, group, 8, gather=True)
+    return guild, group, campaign.advance(guild)
 
 
-def test_a_crew_the_pack_would_not_take_on_banks_its_shift_as_if_none_came(monkeypatch):
-    events, ambush = _shift(monkeypatch, _strong(), _wolves(2))
-    assert ambush is None
-    assert any("gathered" in e for e in events) and not any("pack" in e for e in events)
+def test_a_crew_the_pack_would_not_take_on_works_the_rest_of_its_shift_as_if_none_came(monkeypatch):
+    _, group, result = _shift(monkeypatch, _strong(), _wolves(2))
+    assert not result.pending and group.pending is None
+    assert group.order.kind == "work" and group.order.owed == 0 and group.order.remaining == pytest.approx(6)
+    assert not any("pack" in e for e in result.events)
 
 
-def test_a_crew_the_pack_would_take_on_is_found_at_work(monkeypatch):
-    events, ambush = _shift(monkeypatch, _weak(), _wolves(2))
-    assert ambush.kind == "gather_ambush" and len(ambush.pack) == 2
-    assert any("a pack finds" in e for e in events)
+def test_a_crew_the_pack_would_take_on_is_found_partway_through_its_shift(monkeypatch):
+    _, group, result = _shift(monkeypatch, _weak(), _wolves(2))
+    (g, ambush), = result.pending
+    assert g is group and ambush.kind == "gather_ambush" and len(ambush.pack) == 2
+    assert ambush.hours == 8 and ambush.owed == pytest.approx(6)
 
 
 # ---- the caravan --------------------------------------------------------- #

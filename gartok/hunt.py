@@ -34,7 +34,6 @@ from . import (
 PACK_NATURE = fight_nature.OPPORTUNIST     # a Wilds pack picks its prey
 BIWOLF_NATURE = fight_nature.DETERMINED    # the party baited him with the meat
 
-AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield of 1.0
 # Marginal yield of the 1st, 2nd, ... hunter: a crew of 3 is worth 1.0 (what the
 # hunt was tuned around), and each hand after that adds less until a 7th adds
@@ -168,7 +167,7 @@ def hunt_stretch(state, rng=random, hour=None, lure=False, roll_pack=None):
     ends the stretch is left in `state.pack`."""
     state.pack = []
     elapsed = 0
-    chance = AMBUSH_CHANCE_PER_HOUR * state.ambush_mult
+    chance = encounters.ambush_chance_per_hour("hunt", state.ambush_mult)
     yield_now = party_yield(len(state.party)) * state.yield_mult
     while state.hours_left > 0:
         state.hours_left -= 1

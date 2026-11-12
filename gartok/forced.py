@@ -7,7 +7,7 @@ a supply caravan. Each is one `ForcedEvent` in `EVENTS`, keyed by its order kind
 - **where it is caught.** `arrival` catchers run when a group reaches a node
   (`arrival_pause`, called by `campaign.advance`); a `daily` check runs once per tick for the
   days crossed (`daily_checks`); an event with neither is raised by the work that triggers it
-  (`Guild.gather_shift`; a supply run's leg stopping at its ambush, `Guild.supply_leg`).
+  (`Guild.gather_ambush`; a supply run's leg stopping at its ambush, `Guild.supply_leg`).
 - **how it is played** (`play`): "battle" goes straight into the fight against `order.pack`,
   "map" lands on the map with a red CTA to start it, "talk" opens the dialogue before it
   (`encounter`, `dialogue.py`; a pack nobody in talks goes straight to the fight). The road
@@ -38,6 +38,7 @@ from . import (
     encounters,
     factions,
     fight_nature,
+    gather,
     i18n,
     justice,
     missions,
@@ -338,17 +339,22 @@ def resolve_road_ambush(guild, group, order, outcome=None):
 
 
 def resolve_gather_ambush(guild, group, order, outcome):
-    """A win banks the shift's haul for whoever is left; a loss sends them away with nothing."""
+    """A win sends whoever is left back to the rest of the shift (the haul banks when it ends); a loss
+    sends them away with nothing."""
     group.pending = None
     if group.empty:
         return []
     group.order = orders.idle()
     if not outcome.won:
         return [i18n.t("forced.gather.lost")]
-    if order.job is not None:
-        group.order = orders.garrison(order.job)
     survivors = [u for u in group.members if u in outcome.survivors]
-    return [i18n.t("forced.gather.won")] + guild.bank_haul(survivors, order.hours, group.node)
+    if any(economy.owns_tool(u, group.node) for u in survivors):
+        group.order = orders.Order("work", eta=order.eta, remaining=order.owed, hours=order.hours,
+                                   gather=True, job=order.job)
+        gather.split_at_ambush(group.order, group.node, guild.gather_risk_mult(group, group.node))
+    elif order.job is not None:
+        group.order = orders.garrison(order.job)
+    return [i18n.t("forced.gather.won")]
 
 
 def resolve_supply_ambush(guild, group, order, outcome):

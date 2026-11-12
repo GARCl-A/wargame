@@ -1041,6 +1041,8 @@ class Sim:
                 self.group.order = orders.work(g, self.group, SHIFT_HOURS, gather=True, resume="hold")
                 held = {name: sum(u.count_of(name) for u in self.members) for name, _ in gather.TABLES[CLAIM_NODE]}
                 self._claim_step(campaign.advance(g))
+                while self.group.order is not None and self.group.order.kind == "work":
+                    self._claim_step(campaign.advance(g))      # a pack cut the shift short and the crew won
                 for name, had in held.items():
                     self.sellable[name] += max(0, sum(u.count_of(name) for u in self.members) - had)
                     self.claim_lumber += max(0, sum(u.count_of(name) for u in self.members) - had) * (name == "Lumber")

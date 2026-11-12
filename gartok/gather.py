@@ -6,8 +6,10 @@ rolls `rolls(hours)` times on the node's drop table, rarer items further down, a
 into their pack. Only a worker who carries the node's own tool (`economy.WORK_TOOLS`: the Yard's
 Axe, the Mine's Pick) gathers: they roll and bank work XP at the node's `LEVEL` (the Yard 2, the
 Mine 3, past the wage's 1). A worker without it takes no roll and no XP but stays with the crew as
-a guard, and fights if a pack comes. A pack may find the crew first (`ambushed`); the haul is
-banked only if the crew wins. `Guild.gather_shift` runs it, `campaign` and `app` play the fight.
+a guard, and fights if a pack comes. Every hour on the clock rolls the node's ambush chance
+(`ambush_hour`, the same per-hour channel as a hunt's): a pack that finds the crew cuts the shift short,
+the rest of it waits in `Order.owed` and is worked on if the crew wins, and the haul is banked when the
+shift ends. `Guild.gather_ambush` runs it, `campaign` and the web play the fight.
 
 The Wilds Claim is the third gathering node and the odd one out: the same Axe, work level and shift,
 but the ground is the guild's, so there is no licence and no wage, a Fruit bonus roll (`BONUS`) and the
@@ -22,6 +24,7 @@ that also runs shift after shift): the licence is meant for a full group left at
 a shift gets `hours / HOURS_PER_ROLL` of them, the fraction left over being the chance of one more.
 """
 
+import math
 import random
 from collections import Counter
 
@@ -46,7 +49,6 @@ BONUS = {CLAIM: ("Fruit", 10)}
 # the Claim is the guild's own ground: no licence to buy, no wage to compare with
 LICENCE_PRICE = {"lumber_yard": 270, "mine": 385}
 LEVEL = {"lumber_yard": 2, "mine": 3, CLAIM: 2}
-RISK_PER_HOUR = {"lumber_yard": 0.005, "mine": 0.01, CLAIM: 0.005}
 AMBUSH_TABLES = {"lumber_yard": encounters.LUMBER_YARD_TABLE, "mine": encounters.MINE_TABLE,
                  CLAIM: encounters.WILDS_TABLE}
 AMBUSH_LEVEL_WEIGHTS = encounters.WILDS_LEVEL_WEIGHTS
@@ -111,12 +113,27 @@ def expected_value(node_id, hours):
 
 
 def ambush_chance(node_id, hours, chance_mult=1.0):
-    """The odds a pack finds a crew that gathers `hours`: at least one hour's roll."""
-    return 1 - (1 - RISK_PER_HOUR[node_id] * chance_mult) ** hours
+    return encounters.ambush_chance(node_id, hours, chance_mult)
 
 
-def ambushed(node_id, hours, chance_mult=1.0, rng=random):
-    return rng.random() < ambush_chance(node_id, hours, chance_mult)
+def ambush_hour(node_id, clock_hours, chance_mult=1.0, rng=random):
+    """The clock hour, `0 < t < clock_hours`, a pack finds a crew that works `clock_hours` here: every hour
+    rolls the node's per-hour chance and the first hit lands somewhere inside that hour. None when none hits."""
+    for hour in range(math.ceil(clock_hours)):
+        if rng.random() < encounters.ambush_chance_per_hour(node_id, chance_mult):
+            t = hour + rng.random()
+            if t < clock_hours:
+                return t
+    return None
+
+
+def split_at_ambush(order, node_id, chance_mult=1.0, rng=random):
+    """Roll `order`'s remaining hours for an ambush: a hit cuts it short at that hour and keeps the rest
+    in `owed`, to work on after the fight."""
+    t = ambush_hour(node_id, order.remaining, chance_mult, rng)
+    if t is not None:
+        order.owed = order.remaining - t
+        order.remaining = t
 
 
 def ambush_pack(node_id, rng=random):

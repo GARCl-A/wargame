@@ -115,7 +115,7 @@ exactly one consumer that reads it back:
     pixie_dust        actions.PixieDust                --
     trap_range        Battle.can_plant_trap            --
     trap_salvage      campaign.absorb_battle           --
-    deep_miner        Guild.gather_shift               --
+    deep_miner        Guild.gather_ambush              --
     quartermaster     cohesion._roll_groups            --
     parley            dialogue.Encounter.mod           --
     small_appetite    Unit.consume_daily_food          --

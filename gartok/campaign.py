@@ -454,6 +454,13 @@ def _settle(guild, active, step, pending, note):
         if g.order.remaining > 1e-9:
             continue
         order = g.order
+        if order.kind == "work" and order.gather and order.owed > 0:
+            gathered, ambush = guild.gather_ambush(g, order)
+            events += note(gathered, "work", g)
+            if ambush is not None:
+                g.order = None
+                pending.append((g, ambush))
+            continue
         if order.kind == "travel" and order.owed > 0:
             # a supply caravan stopped on the road: it stays at the leg's start until the fight
             ambush = guild.supply_ambush(order, g)
@@ -499,11 +506,8 @@ def _settle(guild, active, step, pending, note):
                 continue
             events += note(forced.arrival_notices(guild, order.dest), "travel", g)
         elif order.kind == "work" and order.gather:
-            gathered, ambush = guild.gather_shift(g, order)
-            events += note(gathered, "work", g)
-            if ambush is not None:
-                pending.append((g, ambush))
-            elif order.job is not None:
+            events += note(guild.bank_haul(g.members, order.hours, g.node), "work", g)
+            if order.job is not None:
                 g.order = orders.garrison(order.job)
         elif order.kind == "work" and order.task == "put_out":
             events += note(wildfire.put_out(guild, g), "work", g)

@@ -12,6 +12,7 @@ screen itself (setup, an interlude, an ambush) the hunt lives only here: a load 
 from typing import ClassVar
 
 from .. import (
+    encounters,
     hunt,
     i18n,
     missions,
@@ -382,8 +383,9 @@ class HuntSession(Session):
     def _setup(self):
         s = self.state_
         crew = hunt.party_yield(len(s.party)) * s.yield_mult * s.meat_mult
-        odds = round(hunt.AMBUSH_CHANCE_PER_HOUR * s.ambush_mult * 100)
-        night = round(hunt.AMBUSH_CHANCE_PER_HOUR * s.ambush_mult * s.night_mult * 100)
+        per_hour = encounters.ambush_chance_per_hour("hunt", s.ambush_mult)
+        odds = round(per_hour * 100, 1)
+        night = round(per_hour * s.night_mult * 100, 1)
         return {"targets": [{"id": "meat", "name": i18n.t("hunt_session.hunt_for_meat"), "sub": i18n.t("hunt_session.kg_for_every_hours_of"),
                              "on": s.target == "meat"},
                             {"id": "shrooms", "name": i18n.t("hunt_session.forage_wilds"), "sub": i18n.t("hunt_session.red_mushrooms_and_fresh_fruit"),

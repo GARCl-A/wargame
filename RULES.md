@@ -56,7 +56,7 @@ The generator's exact order:
 A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
 - The guild picks one **vocation** (`vocations.py`), once and for good: six races and one fixed perk that **the whole guild** has, whatever a member's race (the catalog is `REFERENCE.md` § Vocations). The draft pool of the chosen vocation always holds at least one candidate of each of its six races, the other three come from the natural race table (all 18 races); a commission replaces a card from that same natural table. What the catalog line leaves out: the Warband's +1 is starting morale in a fight, for every member (`vocations.morale_bonus`); the Delvers' +15% covers the gather tabs of the Mine and the Lumber Yard and the food of a hunt or forage, never a work shift's wage and never a creature's drop (a wolf's hide); the Survivors' relief softens the attribute penalty of a Hungry or Starving member by 2 (`vocations.hunger_relief`), while a Starving member's HP stays capped at 1 and the last two days are unchanged; the Caravan's cut comes after wagon and animal speed.
 
-- **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers every ambush the player walks into: the Old Road leg (`forced.road_ambush_catch`), the hunt's hourly roll (`hunt.hunt_stretch`), a gathering shift (`Guild.gather_risk_mult`) and each leg of a supply run (`Guild.supply_leg`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wanderers perk makes it x0.8 and the Elf's *Woodland Scout* x0.9 and the Catfolk's *Night Prowler* x0.8 (at night only: the clock when the roll is made), and they multiply (road 0.2 -> 0.144 with Wanderers and Scout). The night is read off the clock at the roll: a hunt hour by hour (a long stretch can cross dusk), the road leg on arrival, a gathering shift when it ends, a supply leg when it sets out. *Cautious* costs nothing but the XP and loot of the fights it avoids.
+- **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers every ambush the player walks into: the Old Road leg (`forced.road_ambush_catch`), the hunt's hourly roll (`hunt.hunt_stretch`), a gathering shift (`Guild.gather_risk_mult`) and each leg of a supply run (`Guild.supply_leg`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wanderers perk makes it x0.8 and the Elf's *Woodland Scout* x0.9 and the Catfolk's *Night Prowler* x0.8 (at night only: the clock when the roll is made), and they multiply (road 0.2 -> 0.144 with Wanderers and Scout). The night is read off the clock at the roll: a hunt hour by hour (a long stretch can cross dusk), the road leg on arrival, a gathering shift when it is ordered, a supply leg when it sets out. *Cautious* costs nothing but the XP and loot of the fights it avoids.
 - The draft offers a **pool of 9 candidates**; the player keeps 3 of them as the starting squad (click to pick, click again to put one back, scroll to see all nine).
 - To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
 - Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) in the pool: the commission names the archetypes, then the player clicks the candidate it replaces with a fresh one that has them (a replaced pick leaves the squad; tokens are spent only when the replacement happens). The nine tags and their thresholds are `REFERENCE.md` § Squad archetypes. TOUGH is HP (8+, the hit die counts) and HEALTHY is CON +2 (it sets the HP a rest gives back, `guild_upkeep.rest_heal`): they are two tags on purpose. **RISKY** is the warning tag (CON 8 or less, the six attributes adding up to 56 or less, or a carry too low for the starting kit); a card says which reason it has, and it can be commissioned like the rest for a player who wants a hard start. The pick step's tutorial card lists every tag from the catalog.
@@ -1204,7 +1204,7 @@ this attacker still come?*
 | Fight | Started by | Who brings it | What the group can do | Nature |
 |---|---|---|---|---|
 | Road ambush | an `unsafe` node on arrival | a pack off the node's table | talk (persuade, bluff, intimidate, bribe) or fight | opportunist |
-| Ambushed at work | a lumber yard or Mine shift (`gather_shift`) | a pack off the site's table | talk or fight | opportunist |
+| Ambushed at work | an hour of a lumber yard, Mine or Claim shift (`Guild.gather_ambush`) | a pack off the site's table | talk or fight | opportunist |
 | The caravan is attacked | a supply run's leg (`supply_leg`) | frontier raiders | talk or fight | opportunist |
 | Ambush in the Wilds | an hour of a hunt (`hunt_stretch`) | a Wilds pack (the Ogre's goblins while his fortress stands) | fight | opportunist |
 | Ambushed at Field Command | the trust mission, arriving with the sealed chest | bandits after the chest | talk or fight | determined |
@@ -1222,11 +1222,11 @@ this attacker still come?*
 | An arena bout | the arena | the group | not stake | sought |
 
 **An ambush needs a pack that would take the group on.** The chance of an opportunist ambush is rolled
-as ever (`world.ROAD_AMBUSH_CHANCE`, `gather.ambush_chance`, `hunt.AMBUSH_CHANCE_PER_HOUR`,
+as ever (`world.ROAD_AMBUSH_CHANCE`, `encounters.AMBUSH_CHANCE_PER_HOUR`,
 `economy.SUPPLY_RUN_AMBUSH_CHANCE`, stance and perks included); a hit rolls the pack, and
 `encounters.would_attack` asks whether it would go for the people who would fight it, standing and at the
 HP they have now. If not, nothing happens and nothing is told: no log line, no board, the group keeps its
-clock, the shift banks its haul, the caravan walks on, the hunt spends its next hour (and rolls another
+clock, the shift works on, the caravan walks on, the hunt spends its next hour (and rolls another
 pack if that one hits). The measure is Lanchester's square law: each side's HP times what its blows deal
 a round (two attacks at the odds the attack bonus gives against the other side's mean AC, at the held
 weapon's mean blow), the pack's share of the two being `pack_power`; it is a share, not a chance to win,
@@ -1530,10 +1530,11 @@ map; `orders.work(..., gather=True)`) instead of the wage.
   wage for the same hours, and a full 16 h day at least **3 copper** more (`gather.PREMIUM`; a test holds
   both). The Yard's day pays 8 against a wage of 5, the Mine's 14.3 against 10 (its road and its risk are
   longer). A licence pays back in about 30 days for 3 workers gathering 16 h a day, plus a tool each.
-- **Risk:** every hour carries a chance that a pack finds the crew (Yard 0.5% an hour, Mine 1%;
-  Cautious and the Woodland Scout shave it like any ambush). **Yard:** wolves, Snakes or Giant Spiders;
+- **Risk:** every hour carries a chance that a pack finds the crew (`encounters.AMBUSH_CHANCE_PER_HOUR`: Yard and
+  Claim 1% an hour, Mine 2%; the hunt rolls the same table at 7%; Cautious and the Woodland Scout shave it like any
+  ambush). The hours are rolled when the shift is ordered and the first hit cuts it short, like a hunt's stretch. **Yard:** wolves, Snakes or Giant Spiders;
   **Mine:** Giant Spiders or Skeletons; 1-3 bodies, never a lone wolf (`encounters.WOLF_PACK_MIN`). It is a lethal forced fight (`gather_ambush`);
-  a win banks the haul for the survivors, a loss sends them away with nothing.
+  a win sends the survivors back to the rest of the shift (rolled again) and the haul is banked when it ends, a loss sends them away with nothing.
 
 ### The tavern stage: busking for tips 🟡
 
@@ -1650,7 +1651,7 @@ shop, potion brewing, the Medic and jobs.
 
 The `wilds` node (`kind = "wilds"`). Its first activity is **Hunt**: `hunt.py` +
 `web/hunt_session.py`. Pick a party and a shift; the hunt spends hours one at a time,
-with a per-hour **ambush** chance (`hunt.AMBUSH_CHANCE_PER_HOUR`). Each stretch up to an ambush or
+with a per-hour **ambush** chance (`encounters.AMBUSH_CHANCE_PER_HOUR`). Each stretch up to an ambush or
 the shift's end is rolled as it starts and runs as a `hunting` order on the shared clock: the screen
 opens again when it is up (after the hand-over card when the map was on another group). A stretch on the
 clock is saved with its order (the hunt so far and what the stretch rolled ride in it), so a load finds the

@@ -198,6 +198,19 @@ FRONTIER_SUPPLY_LEVEL = level_weights(3, 8, peak=4, spread=2)
 
 AMBUSH_MIN_POWER = 0.10     # below this share of the combined power, an opportunist pack lets the group be
 
+# The one per-hour ambush channel of an activity that spends hours in a place: a hunt and a gather
+# shift both roll it every hour worked.
+AMBUSH_CHANCE_PER_HOUR = {"hunt": 0.07, "mine": 0.02, "lumber_yard": 0.01, "wilds_territory": 0.01}
+
+
+def ambush_chance_per_hour(key, mult=1.0):
+    return AMBUSH_CHANCE_PER_HOUR[key] * mult
+
+
+def ambush_chance(key, hours, mult=1.0):
+    """The odds a pack finds a crew that spends `hours` on `key`: at least one hour's roll."""
+    return 1 - (1 - ambush_chance_per_hour(key, mult)) ** hours
+
 
 def _blow(unit):
     weapon = unit.weapon

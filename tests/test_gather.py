@@ -115,9 +115,9 @@ def test_the_odds_of_a_haul_follow_the_table():
 
 
 def test_a_mine_is_riskier_than_a_yard():
-    assert gather.RISK_PER_HOUR["mine"] > gather.RISK_PER_HOUR["lumber_yard"]
+    assert encounters.AMBUSH_CHANCE_PER_HOUR["mine"] > encounters.AMBUSH_CHANCE_PER_HOUR["lumber_yard"]
     rng = random.Random(4)
-    hits = {n: sum(gather.ambushed(n, 16, rng=rng) for _ in range(4000)) for n in gather.TABLES}
+    hits = {n: sum(gather.ambush_hour(n, 16, rng=rng) is not None for _ in range(4000)) for n in gather.TABLES}
     assert 0 < hits["lumber_yard"] < hits["mine"]
 
 
@@ -161,7 +161,7 @@ def test_a_gather_order_needs_the_licence():
 
 
 def test_a_gathering_shift_fills_each_pack_instead_of_paying_the_wage(monkeypatch):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: False)
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: None)
     random.seed(6)
     guild, group = _crew("mine", 2)
     group.order = orders.work(guild, group, 16, gather=True)
@@ -182,14 +182,40 @@ def test_a_wage_shift_at_a_licensed_node_still_pays():
     assert group.members[0].count_of("Lumber") == 0
 
 
+def _ambush_at(monkeypatch, hour=4.0):
+    """The first roll of a shift hits at `hour`, the rolls for what is left of it do not."""
+    hits = iter([hour])
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: next(hits, None))
+
+
+def test_an_ambush_hour_cuts_the_shift_short_and_keeps_the_rest_owed(monkeypatch):
+    _ambush_at(monkeypatch, 4.0)
+    guild, group = _crew("lumber_yard")
+    order = orders.work(guild, group, 16, gather=True)
+    assert order.remaining == pytest.approx(4) and order.owed == pytest.approx(12) and order.hours == 16
+
+
+def test_every_hour_rolls_the_nodes_chance_and_the_first_hit_ends_the_walk():
+    class Rolls:
+        def __init__(self, *vals):
+            self.vals = list(vals)
+
+        def random(self):
+            return self.vals.pop(0)
+    p = encounters.AMBUSH_CHANCE_PER_HOUR["mine"]
+    assert gather.ambush_hour("mine", 4, rng=Rolls(1, 1, p / 2, 0.5, 1)) == pytest.approx(2.5)
+    assert gather.ambush_hour("mine", 3, rng=Rolls(1, 1, 1)) is None
+    assert gather.ambush_hour("mine", 2.5, rng=Rolls(1, 1, p / 2, 0.9)) is None      # the hit falls past the clock
+
+
 def test_a_pack_that_finds_the_crew_is_a_forced_fight_and_holds_the_haul(monkeypatch):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+    _ambush_at(monkeypatch)
     guild, group = _crew("lumber_yard")
     group.order = orders.work(guild, group, 16, gather=True)
     result = campaign.advance(guild)
     (g, ambush), = result.pending
     assert g is group and ambush.kind == "gather_ambush" and ambush.kind in forced.EVENTS
-    assert ambush.pack and ambush.hours == 16
+    assert ambush.pack and ambush.hours == 16 and ambush.owed == pytest.approx(12)
     assert group.pending is ambush and group.locked
     assert group.members[0].count_of("Lumber") + group.members[0].count_of("Fruit") == 0
 
@@ -199,20 +225,50 @@ def _outcome(group, won):
 
 
 @pytest.mark.parametrize("won", (True, False))
-def test_winning_the_ambush_banks_the_haul_and_losing_it_does_not(monkeypatch, won):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+def test_winning_the_ambush_sends_the_crew_back_to_work_and_losing_it_banks_nothing(monkeypatch, won):
+    _ambush_at(monkeypatch)
     random.seed(7)
     guild, group = _crew("lumber_yard", 2)
     group.order = orders.work(guild, group, 16, gather=True)
     (g, ambush), = campaign.advance(guild).pending
     events = forced.resolve_gather_ambush(guild, g, ambush, _outcome(group, won))
-    held = sum(u.count_of("Lumber") + u.count_of("Fruit") for u in group.members)
-    assert group.pending is None and group.order.kind == "idle" and events
-    if won:
-        assert 4 <= held <= 6
-        assert sum(u.work_hours for u in group.members) == 2 * 16 * (gather.LEVEL["lumber_yard"] + 1)
-    else:
-        assert held == 0 and sum(u.work_hours for u in group.members) == 0
+    def held():
+        return sum(u.count_of("Lumber") + u.count_of("Fruit") for u in group.members)
+
+    assert group.pending is None and events and held() == 0
+    if not won:
+        assert group.order.kind == "idle" and sum(u.work_hours for u in group.members) == 0
+        return
+    assert group.order.kind == "work" and group.order.gather
+    assert group.order.remaining == pytest.approx(12) and group.order.hours == 16
+    campaign.advance(guild)
+    assert 4 <= held() <= 6
+    assert sum(u.work_hours for u in group.members) == 2 * 16 * (gather.LEVEL["lumber_yard"] + 1)
+
+
+def test_the_rest_of_a_shift_rolls_for_an_ambush_again(monkeypatch):
+    hits = iter([4.0, 3.0])
+    monkeypatch.setattr(gather, "ambush_hour", lambda *a, **k: next(hits, None))
+    guild, group = _crew("lumber_yard", 2)
+    group.order = orders.work(guild, group, 16, gather=True)
+    (g, ambush), = campaign.advance(guild).pending
+    forced.resolve_gather_ambush(guild, g, ambush, _outcome(group, True))
+    assert group.order.remaining == pytest.approx(3) and group.order.owed == pytest.approx(9)
+
+
+def test_a_routines_gather_shift_rolls_for_an_ambush_too(monkeypatch):
+    _ambush_at(monkeypatch, 2.0)
+    guild, group = _crew("mine", 2)
+    order = orders.work(guild, group, 8, gather=True, licensed=False)
+    assert order.owed > 0
+
+
+def test_a_shift_cut_short_survives_a_save(monkeypatch):
+    _ambush_at(monkeypatch, 5.0)
+    guild, group = _crew("mine", 2)
+    group.order = orders.work(guild, group, 16, gather=True)
+    back = persist.order_from_dict(persist.order_to_dict(group.order))
+    assert back.owed == pytest.approx(11) and back.remaining == pytest.approx(5)
 
 
 def test_the_ai_plays_out_the_fight_a_gathering_crew_gets_into():
@@ -237,7 +293,7 @@ def test_the_licences_and_a_gather_order_survive_a_save():
 
 
 def test_ambush_chance_is_the_odds_of_at_least_one_hours_roll():
-    per_hour = gather.RISK_PER_HOUR["mine"]
+    per_hour = encounters.AMBUSH_CHANCE_PER_HOUR["mine"]
     assert gather.ambush_chance("mine", 16) == pytest.approx(1 - (1 - per_hour) ** 16)
     assert gather.ambush_chance("mine", 16, 0.5) < gather.ambush_chance("mine", 16)
     assert gather.ambush_chance("mine", 0) == 0
@@ -331,7 +387,7 @@ def test_a_band_with_no_tool_cannot_order_a_gather_shift():
 
 
 def test_a_mixed_crew_fights_the_ambush_together_and_only_gatherers_bank(monkeypatch):
-    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+    _ambush_at(monkeypatch)
     monkeypatch.setattr(encounters, "AMBUSH_MIN_POWER", 0.0)
     random.seed(10)
     guild, group = _crew("mine", 3, tools=2)
@@ -339,6 +395,7 @@ def test_a_mixed_crew_fights_the_ambush_together_and_only_gatherers_bank(monkeyp
     (g, ambush), = campaign.advance(guild).pending
     assert g is group
     forced.resolve_gather_ambush(guild, g, ambush, _outcome(group, True))
+    campaign.advance(guild)
     a, b, guard = group.members
     assert a.work_hours == b.work_hours == 16 * (gather.LEVEL["mine"] + 1) and guard.work_hours == 0
 
@@ -357,7 +414,7 @@ def test_the_preview_counts_only_the_gatherers_haul():
 def test_the_claim_gathers_lumber_and_fruit_with_a_bonus_fruit_roll():
     assert gather.TABLES[CLAIM] == (("Lumber", 80), ("Fruit", 20)) and gather.BONUS == {CLAIM: ("Fruit", 10)}
     assert gather.AMBUSH_TABLES[CLAIM] is encounters.WILDS_TABLE
-    assert gather.RISK_PER_HOUR[CLAIM] == gather.RISK_PER_HOUR["lumber_yard"]
+    assert encounters.AMBUSH_CHANCE_PER_HOUR[CLAIM] == encounters.AMBUSH_CHANCE_PER_HOUR["lumber_yard"]
     assert gather.tool(CLAIM) == gather.tool("lumber_yard") == "Axe"
 
 

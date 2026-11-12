@@ -94,22 +94,24 @@ class LaborMixin:
         self.licences.add(node_id)
         return True
 
-    def gather_shift(self, group, order):
-        """A gathering shift whose clock has run out. Returns `(events, ambush)`: with no ambush
-        the crew's haul is banked here; with one, `ambush` is the forced `gather_ambush` Order for
-        the caller to fight, and the haul waits for `bank_haul` on a win. A pack the crew would sweep
-        (`encounters.would_attack`) is not told of: the shift banks as if none came."""
+    def gather_ambush(self, group, order):
+        """A gathering shift cut short by a pack at its ambush hour. Returns `(events, ambush)`: the forced
+        `gather_ambush` Order for the caller to fight (the rest of the shift waits in `owed`, the haul is
+        banked when it ends), or None when the pack would not take the crew on (`encounters.would_attack`):
+        nothing is told and the shift carries on, its remaining hours rolled again."""
         node_id = group.node
-        if gather.ambushed(node_id, order.hours, self.gather_risk_mult(group, node_id)):
-            pack = gather.ambush_pack(node_id)
-            attacks = encounters.would_attack(pack, group.members)
-            recorder.emit("ambush_roll", node=node_id, hours=order.hours, foes=len(pack),
-                          result="fight" if attacks else "dismissed")
-            if attacks:
-                name = world.node(node_id).name
-                return ([i18n.t("guild_labor.pack_finds_at_work", name=name, display_name=group.display_name)],
-                        orders.Order("gather_ambush", pack=tuple(pack), hours=order.hours, job=order.job))
-        return self.bank_haul(group.members, order.hours, node_id), None
+        pack = gather.ambush_pack(node_id)
+        attacks = encounters.would_attack(pack, group.members)
+        recorder.emit("ambush_roll", node=node_id, hours=order.hours, foes=len(pack),
+                      result="fight" if attacks else "dismissed")
+        if not attacks:
+            order.remaining, order.owed = order.owed, 0
+            gather.split_at_ambush(order, node_id, self.gather_risk_mult(group, node_id))
+            return [], None
+        name = world.node(node_id).name
+        return ([i18n.t("guild_labor.pack_finds_at_work", name=name, display_name=group.display_name)],
+                orders.Order("gather_ambush", pack=tuple(pack), hours=order.hours, job=order.job,
+                             eta=order.eta, owed=order.owed))
 
     def gather_risk_mult(self, group, node_id):
         """The factor on `node_id`'s ambush odds for `group`: its stance, a Woodland Scout and,

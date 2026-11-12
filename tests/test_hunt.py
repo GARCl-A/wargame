@@ -71,7 +71,7 @@ def test_wagon_guard_above_level_1_earns_no_work_xp():
 
 class _ScriptRNG:
     """Feeds `hunt_stretch` a fixed sequence of `random()` values (ambush when
-    the value is below `AMBUSH_CHANCE_PER_HOUR`)."""
+    the value is below the hunt's `encounters.AMBUSH_CHANCE_PER_HOUR`)."""
     def __init__(self, *vals):
         self.vals = list(vals)
 
@@ -91,7 +91,7 @@ def test_a_won_ambush_lets_the_hunt_carry_on_from_where_it_stopped():
         u.work_hours = 0
     st = hunt.HuntState(party, None, hours_left=8)
 
-    elapsed, ambushed = hunt.hunt_stretch(st, _ScriptRNG(0.9, 0.9, 0.01))
+    elapsed, ambushed = hunt.hunt_stretch(st, _ScriptRNG(0.9, 0.9, 0.001))
     assert (elapsed, ambushed) == (3, True)                   # 3 h in, a pack hits
     assert st.hours_hunted == 3 and st.hours_left == 5 and st.meat == 1
 

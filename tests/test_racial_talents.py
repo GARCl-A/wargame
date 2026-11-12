@@ -336,7 +336,7 @@ def _kenku():
 
 
 def test_elf_woodland_scout_trims_road_and_hunt_ambushes_only_when_cautious():
-    from gartok import forced, hunt, vocations, world
+    from gartok import encounters, forced, hunt, vocations, world
     from gartok.group import CAUTIOUS, NORMAL
     elf = _elf()
     assert elf.choose_talent("racial", "woodland_scout")
@@ -353,7 +353,7 @@ def test_elf_woodland_scout_trims_road_and_hunt_ambushes_only_when_cautious():
 
     class FakeRNG:
         def random(self):
-            return hunt.AMBUSH_CHANCE_PER_HOUR * 0.95
+            return encounters.AMBUSH_CHANCE_PER_HOUR["hunt"] * 0.95
 
     normal = hunt.HuntState([elf], None, 4, ambush_mult=vocations.ambush_mult(guild, NORMAL, scout=True))
     assert hunt.hunt_stretch(normal, rng=FakeRNG())[1] is True

@@ -311,5 +311,5 @@ def test_the_setup_note_gives_the_odds_after_dark_to_a_cautious_night_prowler():
     assert "after dark" not in s.state()["setup"]["note"]
     g.stance = CAUTIOUS
     _, s = _hunt(guild, g)
-    assert "12% after dark" in s.state()["setup"]["note"]
+    assert "5.6% after dark" in s.state()["setup"]["note"]
     assert "x0.80 after dark" in s.state()["yields"]["ambush_mult"]

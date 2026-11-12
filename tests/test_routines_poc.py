@@ -74,7 +74,7 @@ def _hunt_by_hand(a):
 def test_a_hunter_played_by_hand_while_a_gatherer_and_a_trader_run_on_routines(monkeypatch):
     random.seed(7)
     monkeypatch.setattr(forced, "arrival_pause", lambda *args, **kwargs: None)
-    monkeypatch.setattr(gather, "ambushed", lambda *args, **kwargs: False)
+    monkeypatch.setattr(gather, "ambush_hour", lambda *args, **kwargs: None)
     guild, a, b, c = _stage()
     _program(guild, b, c)
     roster = len(guild.roster)
