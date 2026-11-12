@@ -47,6 +47,8 @@ class CombatLabScreen(Screen):
     def _pick(self, fight_id):
         self.fight = fight_id
         self.squad = combat_lab.FIGHTS[fight_id].squad
+        if combat_lab.FIGHTS[fight_id].level is not None:
+            self.level = combat_lab.FIGHTS[fight_id].level
 
     def _click(self, px):
         if self.editing:

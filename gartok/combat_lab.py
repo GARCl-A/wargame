@@ -28,6 +28,7 @@ from . import (
     world,
 )
 from .battle import Battle
+from .cult_site import CultSiteScenario
 from .fortress_scenario import FortressScenario
 from .guild import Guild
 from .scenario import AncientRuinsScenario, ErmosScenario
@@ -43,6 +44,7 @@ class LabFight:
     name: str
     note: str
     squad: int = 3          # a fresh setup's size; the fixed-size ones set it
+    level: int | None = None   # a fresh setup's level when the fight has a natural one
 
 
 FIGHTS = {f.id: f for f in (
@@ -62,6 +64,8 @@ FIGHTS = {f.id: f for f in (
              "an invisible necromancer raising the dead; met when he falls; lethal", squad=4),
     LabFight("lair", "The Dragon's Lair", "a heist: kobold patrols that challenge, a sleeping level-20 dragon "
              "that noise wakes; met by leaving with an egg; lethal", squad=4),
+    LabFight("cult", "The Demon Cult's circle", "six cultists channel a rite on the Cult Site; break the bar "
+             "before it fills; lethal", squad=6, level=7),
 )}
 
 BOUTS = {"scrapper": arena.scrapper_bout, "champion": arena.champion_bout, "brawl": arena.brawl_bout,
@@ -94,6 +98,10 @@ def build(fight_id, level, squad_size, seed=None):
                         aggressor="player")
     elif fight_id == "lair":
         scenario = lair.LairScenario(level)
+        battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=False, lethal=True,
+                        aggressor="player")
+    elif fight_id == "cult":
+        scenario = CultSiteScenario(squad)
         battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=False, lethal=True,
                         aggressor="player")
     elif fight_id == "necromancer":
