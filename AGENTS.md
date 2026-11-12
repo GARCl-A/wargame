@@ -42,6 +42,8 @@ dismissed item is deleted, never kept with a note, the record is the git log).
 - **World-first.** Rules exist as world things first; if they talk to combat, better.
 - **No guild treasury.** Money is `Copper Coin` / `Gold Coin` items in a character's pack
   (`Unit.money` is their sum); gold only comes from the bank exchange. Never add a guild-level pool.
+  "The guild is richer" is derived, never stored: the sum of what its members own, plus what sits in a
+  property's vault (the Claim, a bank vault).
 - **Vision is per-character.** The drawing never shows what the rules hide: the web board is sent only
   as the side knows it, and `ai/` reads a foe only through `intel.known_fields`.
 - **Adventure out-earns day labour.** After touching wages, purses, prices or loot, run
