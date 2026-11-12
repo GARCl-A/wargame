@@ -111,6 +111,7 @@ def sections():
                                  spent=poisons.POISONS["snake_venom"].hours, rot=poisons.POISONS["gut_rot"].hours)),
         (title("study"), _lines("study", 4, cost=economy.TAVERN_STUDY_COST_PER_DAY)),
         (title("dungeon"), _lines("dungeon", 4)),
+        (title("placement"), _lines("placement", 3)),
         (title("reading"), _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS,
                                  assess=actions.ASSESS.cost)),
     ]

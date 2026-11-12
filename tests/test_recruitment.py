@@ -595,3 +595,14 @@ def test_a_prison_joint_pitch_bars_through_the_prison_list(monkeypatch):
     scr._pitch(a)
     assert {tuple(b) for b in g.prison_blocked} == {(cand.uid, m.uid) for m in (a, *mates)}
     assert g.taverna_blocked == []
+
+
+def test_the_work_tree_reaches_joint_pitch_and_crowd_pleaser_through_fixer():
+    from gartok import talents
+    assert talents.get("joint_pitch").requires == "fixer" and talents.get("joint_pitch").tier == 3
+    assert talents.get("crowd_pleaser").requires == "joint_pitch" and talents.get("crowd_pleaser").tier == 4
+    u = standard_unit()
+    u.set_track_level("work", 1)
+    assert not u.choose_talent("work", "joint_pitch")
+    assert [u.set_track_level("work", n) or u.choose_talent("work", t)
+            for n, t in enumerate(_CUT, 1)] == [True] * 4

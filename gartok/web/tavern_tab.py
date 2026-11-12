@@ -120,6 +120,9 @@ class TavernTab:
             can, label = False, i18n.t("tavern_tab.cannot_afford_bail", fmt_money=fmt_money(bail))
         elif who is not None and not can:
             label = i18n.t("tavern_tab.cannot_pitch", name=who.name, pitch_condition=s._pitch_condition(c, who)[0])
+        joint = self._joint(c, who)
+        if joint and joint["on"] and can:
+            label = i18n.t("tavern_tab.convince_together", n=len(joint["names"]) + 1)
         hint = None
         if not s._eligible(c):
             hint = {"text": recruit.pitch_block_reason(self.guild, s.party, c, lambda g, x, m: s._barred(x, m)),
@@ -128,14 +131,15 @@ class TavernTab:
             warn = recruit.overflow_warning(self.guild, who)
             hint = {"text": warn, "tone": "money"} if warn else None
         return {"pitchers": pitchers, "button": {"label": label, "on": can}, "hint": hint,
-                "terms": self._terms(who), "joint": self._joint(c, who)}
+                "terms": self._terms(who), "joint": joint}
 
     def _joint(self, c, who):
         """The Joint Pitch choice, or None: who would roll beside the one pitching, and whether it is on."""
         if who is None:
             return None
         allies = recruit.joint_allies(self.guild, self.s.party, c, who, self.s._barred)
-        return {"on": self.s.joint, "names": [m.name for m in allies]} if allies else None
+        return ({"on": self.s.joint, "names": [m.name for m in allies],
+                 "faces": [{"name": m.name, "portrait": _portrait(m)} for m in allies]} if allies else None)
 
     def _terms(self, who):
         """The two numbers a pitch is weighed by before the roll: the crowd penalty and the room in
@@ -147,6 +151,8 @@ class TavernTab:
             note += i18n.t("tavern_tab.crowd_cut", plain=pen + cut, cut=cut)
         crowd = {"label": i18n.lab("Crowd"), "value": f"-{pen}" if pen else "0", "tone": "bad" if pen else "good",
                  "note": note}
+        if cut:
+            crowd["tip"] = i18n.t("tavern_tab.crowd_tip", plain=pen + cut, cut=cut, paid=pen)
         grp = (self.guild.group_of(who) if who is not None else None) or self.group
         (base, base_lbl), *rest = grp.capacity_terms()
         sum_line = " ".join([f"{base} {i18n.lab(base_lbl)}", *(f"{v:+} {i18n.lab(lbl)}" for v, lbl in rest)])

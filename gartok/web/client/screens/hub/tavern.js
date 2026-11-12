@@ -57,8 +57,8 @@ const Tavern = (() => {
       ${last(d.last)}
       <div class="sec dark"><span class="lbl">${tr("tavern.who_pitches")}</span></div>
       <div class="pitchers">${pitchers}</div>
-      ${d.joint ? `<div class="aside ${d.joint.on ? "good" : "muted"}" id="joint"${tip(tr("tavern.joint_tip"))}><b>${tr(d.joint.on ? "tavern.joint_on" : "tavern.joint_off")}</b> ${esc(d.joint.names.join(", "))}</div>` : ""}
-      <div class="pterms">${d.terms.map(t => `<div class="fact"><span class="lbl">${esc(t.label)}</span><b class="${t.tone}">${esc(t.value)}</b><span class="use">${esc(t.note)}</span></div>`).join("")}</div>
+      ${d.joint ? `<div class="aside ${d.joint.on ? "good" : "muted"}" id="joint"${tip(tr("tavern.joint_tip"))}><b>${tr(d.joint.on ? "tavern.joint_on" : "tavern.joint_off")}</b> ${d.joint.faces.map(f => `<span class="medal">${face(f.portrait, f.name)}</span> ${esc(f.name)}`).join(" ")}</div>` : ""}
+      <div class="pterms">${d.terms.map(t => `<div class="fact"${t.tip ? tip(t.tip, "sum") : ""}><span class="lbl">${esc(t.label)}</span><b class="${t.tone}">${esc(t.value)}</b><span class="use">${esc(t.note)}</span></div>`).join("")}</div>
       ${d.hint ? `<p class="aside ${d.hint.tone}">${esc(d.hint.text.charAt(0).toUpperCase() + d.hint.text.slice(1))}</p>` : ""}
       <div class="brass-btn wide ${d.button.on ? "" : "off"}" id="convince"><div><b>${esc(d.button.label)}</b></div></div>`;
   }

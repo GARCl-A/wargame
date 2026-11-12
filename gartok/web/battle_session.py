@@ -27,6 +27,7 @@ from .. import (
     vision,
     wiki_terms,
 )
+from ..actions.base import in_straight_line
 from ..board import cells
 from ..combatant import AP_PER_TURN
 from ..foe_card import foe_card
@@ -473,8 +474,11 @@ class BattleSession(Session):
                 opts = action.heights(b, actor, c) if action.can(b, actor, c) else []
                 if len(opts) > 1:
                     heights[f"{c[0]},{c[1]}"] = [[z, label] for z, label in opts]
-        return {"cells": [_cell(c) for c in shown], "targets": targets,
-                "kind": actions.aim_kind(action), "heights": heights}
+        kind = actions.aim_kind(action)
+        line = [c for c in shown if kind == "attack" and actor.ranged and actor.char.talent_bonus("straight_shot_brutal")
+                and c != actor.pos and in_straight_line(actor.pos, c)]
+        return {"cells": [_cell(c) for c in shown], "targets": targets, "kind": kind, "heights": heights,
+                "line": [_cell(c) for c in line]}
 
     def _observers(self):
         return vision.observers(self.battle, False, self.team)

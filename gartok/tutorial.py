@@ -19,7 +19,7 @@ TUTORIALS = (
     "market", "taverna", "hunt", "bank", "level", "library",
     "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "dialogue", "prison", "stable", "wagon_yard", "watch", "garage", "gathering", "initiation",
     "group_turn",
-    "hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon",
+    "hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon", "hint.place",
 )
 
 

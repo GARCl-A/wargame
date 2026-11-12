@@ -213,3 +213,19 @@ def test_a_place_the_squad_walks_out_of_fires_its_card_before_the_reading_one():
     ruins = Battle(list(g.members), AncientRuinsScenario().enemies, scenario=AncientRuinsScenario())
     assert hints.in_battle(guild, ruins, {"battle"}) == hints.DUNGEON
     assert hints.in_battle(guild, ruins, {"battle", hints.DUNGEON}) == hints.READING
+
+
+def test_the_placement_card_fires_when_a_person_has_a_cell_to_pick():
+    from gartok import hints
+    from gartok.battle import Battle
+    from gartok.scenario import Scenario
+    from tests.helpers import standard_unit
+    _, guild, g = _ambushed("w1")
+    guild.battles_won = 1
+    unit = standard_unit("player")
+    unit.combat_xp = 1000
+    for t in ("tactical_mind", "vantage"):
+        assert unit.choose_talent("combat", t)
+    batt = Battle([unit], [standard_unit("enemy")], scenario=Scenario(), lethal=True)
+    assert hints.in_battle(guild, batt, {"battle"}) == hints.PLACE
+    assert hints.in_battle(guild, batt, {"battle", hints.PLACE}) == hints.READING

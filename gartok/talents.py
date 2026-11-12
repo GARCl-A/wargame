@@ -208,7 +208,11 @@ class Talent:
     @property
     def effect(self):
         """The player-facing one-liner."""
-        return i18n.desc("talent", self.id)
+        facts = {}
+        for e in self.effects:
+            facts[e.channel] = e.amount
+            facts[f"{e.channel}_pct"] = round(e.amount * 100)
+        return i18n.desc("talent", self.id, **facts)
 
     @property
     def desc(self):

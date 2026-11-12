@@ -651,3 +651,37 @@ def test_a_placement_goes_to_the_combat_log(tmp_path):
     holder = next(u for u in batt.units if u.char is squad[0])
     batt.place(holder, batt.place_cells(holder)[0])
     assert combat_log.load(log.path)[1]["action"] == "place"
+
+
+def test_the_leader_must_be_on_the_board_for_the_whole_side_to_place():
+    from gartok.battle import Battle
+    from gartok.scenario import Scenario
+    holder, mate = standard_unit("player"), standard_unit("player")
+    holder.combat_xp = 1000
+    holder.leads_group = True
+    for t in ("tactical_mind", "vantage", "battle_plan"):
+        assert holder.choose_talent("combat", t)
+    batt = Battle([mate], [standard_unit("enemy")], scenario=Scenario(), lethal=True)
+    batt.units[0].char.leads_group = False
+    assert batt.place_queue == []
+
+
+def test_a_surprised_side_does_not_place():
+    batt, squad = _vantage()
+    holder = next(u for u in batt.units if u.char is squad[0])
+    assert batt.place_queue == [holder]
+    batt.open_with(surprised="player")
+    assert batt.place_queue == [] and batt.awaiting_place is None
+
+
+def test_the_combat_log_frames_follow_a_placement(tmp_path):
+    from gartok import combat_log
+    batt, squad = _vantage()
+    log = combat_log.CombatLog(str(tmp_path / "frames.jsonl"), {}, {})
+    batt.record_to(log)
+    holder = next(u for u in batt.units if u.char is squad[0])
+    target = batt.place_cells(holder)[-1]
+    batt.place(holder, target)
+    last = combat_log.frames(combat_log.load(log.path))[-1]
+    idx = batt.units.index(holder)
+    assert (last["units"][idx]["x"], last["units"][idx]["y"]) == tuple(target)

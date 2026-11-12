@@ -231,3 +231,18 @@ def test_a_fight_with_both_actions_is_recorded_as_one_row_each(tmp_path):
         rows = [r for r in combat_log.load(log.path) if r["e"] == "act"]
         assert [r["action"] for r in rows] == [act.id]
         assert rows[0]["ap"] == 2 and act.id in rows[0]["options"], race
+
+
+def test_a_fight_with_both_body_actions_replays_from_its_log(tmp_path):
+    from gartok import combat_log
+    for race, act in (("Horse", actions.TRAMPLE), ("Wolf", actions.CLAMP)):
+        batt, beast, foe = _beast_scene(race)
+        log = combat_log.CombatLog(str(tmp_path / f"{race}.jsonl"), {}, {})
+        batt.record_to(log)
+        with fixed_d20(20):
+            act.execute(batt, beast, foe)
+        rows = combat_log.load(log.path)
+        assert [r["action"] for r in rows[1:]] == [act.id]
+        seen = combat_log.frames(rows)[-1]["units"]
+        for unit, state in zip(batt.units, seen):
+            assert (state["hp"], (state["x"], state["y"])) == (unit.hp, tuple(unit.pos))

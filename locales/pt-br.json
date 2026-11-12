@@ -3780,6 +3780,8 @@
         "resists_cha": "{kind} · resiste a CAR {mod_charisma:+}",
         "speaks": "Fala {join}",
         "bail": " · fiança {fmt_money}",
+        "crowd_tip": "Penalidade de multidão\nTamanho da guilda: -{plain}\nAgrada-Multidão: +{cut}\n= -{paid}",
+        "convince_together": "Convencer a entrar na guilda, juntos ({n} rolagens)",
         "crowd_cut": " (os {plain} normais, menos {cut} por Agrada-Multidão)",
         "d_cha": "d20 {recruiter_roll} {mod_charisma:+} CAR",
         "d_cha_2": "d20 {candidate_roll} {mod_charisma:+} CAR",
@@ -6352,10 +6354,10 @@
             "wrestler": "+1 nos testes de Empurrar e Agarrar.",
             "agile": "+1 de Destreza.",
             "long_reach": "+1 casa de alcance com armas à distância e de arremesso.",
-            "steady_aim": "+1 de dano com uma arma à distância de Destreza: arco ou besta, não um arremesso.",
+            "steady_aim": "+{ranged_damage} de dano com uma arma à distância de Destreza: arco ou besta, não um arremesso.",
             "vantage": "Antes da luta, quem tem o talento escolhe a própria casa de partida dentro da zona de posicionamento do seu lado.",
             "battle_plan": "Antes da luta, o líder do grupo escolhe a casa de partida de cada membro do lado, um a um. Exige Vantagem.",
-            "true_line": "Um disparo de arco ou besta é Brutal 1 quando atirador e alvo estão na mesma linha, na mesma coluna ou numa diagonal exata (contando a casa-âncora de cada um).",
+            "true_line": "Um disparo de arco ou besta é Brutal {straight_shot_brutal} quando atirador e alvo estão na mesma linha, na mesma coluna ou numa diagonal exata (contando a casa-âncora de cada um).",
             "heavy_bolts": "+1 de dano com a Besta.",
             "ambush_shot": "Um disparo de Besta contra um alvo desprevenido é Brutal 1.",
             "ready_hand": "Depois de um arremesso, uma arma idêntica da mochila já está na mão, sem gastar ação.",
@@ -6398,7 +6400,7 @@
             "charismatic": "+1 de Carisma.",
             "negotiator": "+1 de Carisma nos testes de compra e venda no mercado.",
             "joint_pitch": "Propõe a um estranho junto com todo membro do bando que poderia recrutá-lo sozinho: um dado cada, +1 por cada outro que rola, vale o melhor. Uma falha impede todos vocês de tentar de novo na semana.",
-            "crowd_pleaser": "Sua proposta paga 10% menos da penalidade de multidão, arredondado para cima. Exige Proposta Conjunta.",
+            "crowd_pleaser": "Sua proposta paga {crowd_penalty_cut_pct}% menos da penalidade de multidão, arredondado para cima. Exige Proposta Conjunta.",
             "fixer": "+1 na sua lábia ao convencer alguém a entrar na guilda.",
             "provisioner": "+1 na pechincha de comida, com idioma em comum ou não.",
             "troubadour": "+1 nas rolagens de apresentação no palco da taverna.",
@@ -6561,6 +6563,13 @@
                 "body": [
                     "Limpar as ruínas não encerra a luta: quando o último inimigo cai a incursão continua, e ela só é vencida quando o esquadrão saiu pela entrada.",
                     "Baús e relíquias ficam onde as ruínas os guardam até alguém pegá-los, então o que você não leva para fora não é seu. Planeje a volta."
+                ]
+            },
+            "place": {
+                "title": "Escolhendo onde começar",
+                "body": [
+                    "Quem tem Vantagem escolhe a própria casa de partida antes da luta, e o líder do grupo com Plano de Batalha escolhe a de todo o lado.",
+                    "Clique numa casa iluminada dentro da área inicial do seu lado, ou mantenha a posição para ficar onde foi colocado."
                 ]
             }
         },
@@ -7030,6 +7039,12 @@
             "2": "Baús, relíquias e o Códice Antigo ficam onde as ruínas os guardam até alguém pegá-los; o que não é levado para fora não é seu.",
             "3": "A entrada é a saída: as casas junto à porta por onde o esquadrão entrou. Um membro que cai ou fica lá dentro não saiu.",
             "4": "As ruínas lembram: um inimigo que caiu continua caído e o que uma mão pegou não está lá na próxima incursão, enquanto uma armadilha não disparada ou um baú fechado esperam."
+        },
+        "placement": {
+            "title": "Posicionando o lado",
+            "1": "Vantagem deixa quem a tem escolher a própria casa de partida antes da luta; Plano de Batalha, do líder do grupo, deixa o líder escolher a de todos os membros do lado.",
+            "2": "As casas são escolhidas uma após a outra, na ordem de iniciativa, dentro da área onde o lado se posiciona, em chão livre e com espaço para o corpo inteiro.",
+            "3": "Manter a posição deixa a unidade onde o posicionamento a pôs. O líder precisa estar no tabuleiro: sem líder, ninguém posiciona o grupo, e um lado pego de surpresa não posiciona."
         },
         "poison": {
             "title": "Veneno e Antídoto",

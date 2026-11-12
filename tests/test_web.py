@@ -842,3 +842,33 @@ def test_an_ai_vantage_holder_places_itself_without_asking():
             break
         s._advance()
     assert foe not in b.place_queue
+
+
+def test_a_queens_arrow_archer_aim_marks_the_straight_line_cells_and_nobody_else_does():
+    from gartok.battle import Battle
+    from gartok.scenario import Scenario
+    from tests.helpers import standard_unit
+    archer = standard_unit("player")
+    archer.combat_xp = 5000
+    chain = ("agile", "deadeye", "steady_aim", "true_line")
+    for level, tid in enumerate(chain, 1):
+        archer.set_track_level("combat", level)
+        assert archer.choose_talent("combat", tid)
+    archer.give_to_pack("Quiver")
+    archer.give_to_hand("Shortbow")
+    batt = Battle([archer], [standard_unit("enemy")], scenario=Scenario(), lethal=True)
+    batt.board.walls = set()
+    me = batt.player_units[0]
+    me.pos = (8, 8)
+    for u in batt.units:
+        u.turns_taken = 1
+    while batt.active is not me:
+        batt.end_turn()
+    s = BattleSession(batt, {"name": "t", "players": 1})
+    aim = s.aim("attack")
+    line = {tuple(c) for c in aim["line"]}
+    assert line and all(c[0] == 8 or c[1] == 8 or abs(c[0] - 8) == abs(c[1] - 8) for c in line)
+    assert (10, 10) in line and (9, 10) not in line and (8, 8) not in line
+    me.char.talents["combat"].remove("true_line")
+    me.char._derive_combat()
+    assert s.aim("attack")["line"] == []

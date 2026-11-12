@@ -4,8 +4,9 @@ that holds the rule (`wiki_ref`). The map and the battle ask here which one is d
 
 from . import items, wiki_rules
 
-STUDY, ROAD, READING, FALLEN, DUNGEON = "hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon"
-IDS = (STUDY, ROAD, READING, FALLEN, DUNGEON)
+STUDY, ROAD, READING, FALLEN, DUNGEON, PLACE = ("hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon",
+                                                "hint.place")
+IDS = (STUDY, ROAD, READING, FALLEN, DUNGEON, PLACE)
 
 
 def _studyable(unit):
@@ -23,6 +24,8 @@ def on_map(guild, seen):
 
 def in_battle(guild, battle, seen):
     """The hint a campaign fight owes the player now, or None: a fallen member of the squad, a place the squad has to walk out of, a second fight."""
+    if PLACE not in seen and battle.place_queue and battle.place_queue[0].team == "player":
+        return PLACE
     if FALLEN not in seen and any(u.team == "player" and u.status == "dying" for u in battle.units):
         return FALLEN
     if DUNGEON not in seen and battle.scenario.holds_field(battle):
@@ -36,4 +39,4 @@ def wiki_ref(hint):
     """The wiki entry (`chapter:id`) that holds the rule `hint` announces."""
     return {STUDY: "rules:" + wiki_rules.title("study"), ROAD: "rules:" + wiki_rules.title("hunger"),
             READING: "rules:" + wiki_rules.title("reading"), FALLEN: "actions:stabilize",
-            DUNGEON: "rules:" + wiki_rules.title("dungeon")}.get(hint)
+            DUNGEON: "rules:" + wiki_rules.title("dungeon"), PLACE: "rules:" + wiki_rules.title("placement")}.get(hint)

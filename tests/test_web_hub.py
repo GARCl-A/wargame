@@ -1396,5 +1396,7 @@ def test_a_joint_pitch_holder_sees_who_joins_and_the_verb_flips_the_choice():
     hub.verb("recruiter", True)(hub, {"uid": leader.uid})
     d = hub.pick_tab("recruits")["tavern"]["dossier"]
     assert d["joint"]["on"] and len(d["joint"]["names"]) == len(g.members) - 1 and mate.name in d["joint"]["names"]
+    assert d["button"]["label"].startswith("Convince") and "together" in d["button"]["label"]
+    assert [f["name"] for f in d["joint"]["faces"]] == d["joint"]["names"]
     d = hub.verb("joint", True)(hub, {})["tavern"]["dossier"]
-    assert d["joint"]["on"] is False
+    assert d["joint"]["on"] is False and "together" not in d["button"]["label"]
