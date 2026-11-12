@@ -16,8 +16,8 @@ def mods_line(race):
     return "  ".join(f"{i18n.lab(a)} {m:+d}" for a, m in zip(_ABBREV, race["mods"]))
 
 
-def meta_line(race):
-    return "  ·  ".join([i18n.name("size", race["size"]), i18n.t("wiki_session.hit_die_d", b=race["hd"]),
+def meta_line(race, hit_die=True):
+    return "  ·  ".join([i18n.name("size", race["size"]), *([i18n.t("wiki_session.hit_die_d", b=race["hd"])] if hit_die else []),
                          i18n.t("wiki_session.speed_m", b=race["speed"]),
                          i18n.t("wiki_session.speaks", languages=", ".join(i18n.names("language", race["languages"])))])
 
@@ -57,5 +57,5 @@ def race_tip(name: str) -> str:
     mods = mods_line(race)
     traits = [abilities.get(a) for a in _ability_ids(race)]
     ab_lines = [f"{t.name}: {t.effect}" for t in traits if t is not None]
-    return "\n".join([head, mods, *ab_lines])
+    return "\n".join([head, mods, meta_line(race, hit_die=False), *ab_lines])
 

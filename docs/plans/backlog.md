@@ -48,8 +48,8 @@ the rest.
 - **Translation leftovers.** The combat log keeps a unit's name as the string of the moment (a `Ref` for authored NPCs would fix it);
   `routine.paused` reasons, the memorial `cause`, a dialogue's `Result.text` and the guard notices are stored already translated; an ambush
   title is chosen when the talk opens; text built from ids with `.title()` / `.capitalize()` (school, stage, node ids) and the stat labels of
-  `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md`: turn the 78 literals of `reference.py`
-  into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
+  `magic.py`, `intel.py`, `unit_derive.py`, `group.py` still need a review. `REFERENCE.pt-br.md` does not exist yet: turn the literals of
+  `reference.py` into keys so `python -m gartok.reference` can write it. Run `scripts/i18n_leaks.py` when a screen is added.
 
 - **Ambush on the way in, at every dangerous node (author, note outside playtests).** The Wilds, the
   Frontier Outpost and the Battlefield should roll an ambush per leg like the Old Road
@@ -85,10 +85,12 @@ the rest.
   from the server (`st.sounds` off the combat log, `battle.py`), with a test in `tests/test_battle_fx.py`.
 
 - **Is a STR/CON-heavy draft objectively best? (author 2026-11-01).** The author drafts a Charisma leader
-  plus the strongest, toughest bodies for the rest and cannot tell bias from fact. Measure with the headless
-  fights and the economy sim: squads built on max STR/CON against squads spread over other attributes, at
-  equal cost. Result decides whether the starting squad and the stat draft need a rebalance
-  (*Starting squad is weak* in the playtest notes).
+  plus the strongest, toughest bodies for the rest. The race study measures it (`scripts/attribute_rank.py`, on
+  the `val4` run: 215 thousand squad results, race and build held fixed): +1 modifier on every unit is worth about
+  +8.6 win points for CON, +8.0 STR, +7.2 DEX, and +1 to +2 for WIS, CHA and INT. So it is a fact, not bias,
+  for the fighters; the mental attributes are measured over all builds, casters not apart. Left: decide whether the
+  starting squad and the stat draft need a rebalance (*Starting squad is weak* in the playtest notes), and measure
+  the casters' builds alone.
 
 - **AI heuristics: Shove vs Attack x2 (playtest 2026-11-08).** Review AI combat priorities when surrounded or
   flanked. Ensure the AI does not overvalue shoving a foe away (to break flanking or force movement) over
@@ -101,10 +103,6 @@ the rest.
 - **Weapon icons: give each its own (author 2026-11-08).** Broadsword, sword and rapier share the `broadsword`
   glyph; axe and hatchet share `battle-axe` (`item_icon.GLYPHS` / `HEAD_GLYPHS`). Source a distinct glyph for each: other `assets/icons/`
   folders, otherwise new game-icons.net SVGs (same licence).
-
-- **Show what a race and a vocation give at the pick (Johann, 2026-10-31).** He chose Delvers by lore and
-  could not read what a race gives. The draft hover already shows modifiers and racial abilities (commit
-  `92c60533`); check what the pick still hides and say it in plain words.
 
 - **AI: Crowd-control-aware target decision (author/Yohan alignment).** Improve AI action sequencing when applying control
   effects: when a boss, caster or controller inflicts Sleep or similar incapacitation that breaks on damage, nearby AI
@@ -302,7 +300,7 @@ agent asks for art instead of generating it. Order is the suggested priority.
   assess of it; a beast appears at a 100% assess. Decided 2026-11-04: entries are partial (the assess
   fills a beast in bit by bit). What exists to gate on: the guild's `Bestiary` (`intel.py`: races fought,
   abilities seen, the best read of each authored NPC) and each unit's `known_recipes`; nothing records an item
-  seen, so an item's entry needs a new saved set. A recipe's entry shows only for a recipe someone knows; an
+  seen, so an item's entry needs a new saved set (author 2026-11-12: breaking saves is not a concern). A recipe's entry shows only for a recipe someone knows; an
   item's entry does not depend on knowing its recipe. Cases still to decide: recipes (known, or seen crafted), talents
   (of the races in the guild), conditions (first suffered or inflicted), weapon traits and actions (when a
   unit owns or gets them), places and factions (visited, met), spells (known or a scroll owned), what
@@ -426,8 +424,9 @@ has one "Enter" button and its functions are tabs inside.
   2026-10-19) to design an excavation system with tools (Shovel / Pick), multi-step iterations,
   artifacts, money and lost lore. The Ruins now remember a raid (`Guild.ruins_cleared`) and drop off the
   inspector once empty, so a dig needs the node to keep offering something after it is cleared.
-  Author 2026-10-30: still no idea of how archaeology should work to be interesting; nothing to size
-  until that answer exists.
+  Author 2026-10-30: still no idea of how archaeology should work to be interesting. Author 2026-11-12: the
+  Farmer's quest (clues gathered one by one, `investigation.py`) opened possibilities and is a subsystem a dig
+  could reuse; not yet a design.
 - **The Claim:** let the player build their own farm to stock food.
 - **Combat leveling (Lv 1 -> 2):** assist XP or an
   intermediate arena bout wait on future playtests.
@@ -495,11 +494,12 @@ has one "Enter" button and its functions are tabs inside.
      recruit that target alone (`slots_free`, the shared language, the rest of `recruit.py`'s checks).
      Decided (author 2026-11-04, moved 2026-11-11): three separate nodes that may connect, all in the *work*
      Charisma tree (Charismatic, Negotiator, Fixer, Provisioner, Troubadour today). Group size +1 and crowd
-     penalty -10% are work talents, no longer combat; joint pitch comes after Fixer. Open: the tier of each
-     (group size +1 deep, recruiting is the strongest thing in the game so far); whether "group size limit" is
-     `cohesion.py`'s capacity (to be replaced by Loyalty, see above); and the trade-off rule above, which spoke
-     of a pick that would make a better *fighter*: in the work track the price is a work pick, so say what a
-     big guild gives up.
+     penalty -10% are work talents, no longer combat; joint pitch comes after Fixer. Decided (author 2026-11-12):
+     joint pitch and the crowd-penalty cut are built now; the group size +1 node waits for *Loyalty*
+     (`cohesion.py`'s capacity is replaced by it). What a big guild gives up (author 2026-11-12): its work is slower,
+     it has fewer specialists in craft or healing, so it knows fewer recipes, carries less and earns less per
+     action: the bonuses on the work it does are smaller. Open: the tier of each (group size +1 deep, recruiting
+     is the strongest thing in the game so far).
   2. *Intelligence tree (combat), two talents:* (a) **group leader only: places the whole group** before
      the fight; (b) **places only oneself**. Decided (author 2026-11-11): a ladder, (b) hangs under Tactical Mind
      and (a) under (b) (`requires`). (a) needs the leader to be on the board. Decided (author 2026-11-01): only inside the start zone;
@@ -527,7 +527,9 @@ has one "Enter" button and its functions are tabs inside.
   holds only Alert -> Quick Wits (-> Peripheral Vision) and Iron Will (-> Iron Stance). The first use is the
   prerequisite of *Demoralize on beasts* (*Talent ideas*, item 3), which waits for this tree. Decided (author 2026-11-11): the set is Demoralize on
   beasts, a pre-encounter dialogue window with beasts, taming a captured beast, and at the top commanding beasts in combat.
-  Open: the tiers and the order of the nodes (`Group.herd_capacity` is already Beast Whisperer's in the work tree).
+  Decided (author 2026-11-12): the order is Alert -> the dialogue window; the dialogue window + Wordless Menace (Charisma) -> taming;
+  taming -> commanding in combat. *Demoralize on beasts* stays as *Talent ideas*, item 3 says (it waits for this tree).
+  Open: the tier of each node (`Group.herd_capacity` is already Beast Whisperer's in the work tree).
 
 - **Does the Assess action itself need a reward? (author 2026-10-31, author/Yohan alignment).** The talent line
   under Tactical Mind (Analytical Eye, Exploit Weakness, Anatomist, Surgical Strike; `talents.py`) already pays
@@ -539,14 +541,14 @@ has one "Enter" button and its functions are tabs inside.
   `Horns`: one special action per natural weapon (`natural_weapons.py` is built), like Wrest for `Unarmed`,
   as a trait of that weapon. Decided 2026-11-11 for `Hooves`: one action that resolves an attack, a shove
   and a Takedown, in that order (the condition and Takedown exist, `conditions.py`, `actions/combat.py`).
-  `Hooves` costs 2 AP. Decided (author 2026-11-11) for `Bite`: it attacks and, if it hits, grabs automatically (no roll); against a foe already `Grappled` the blow gains Brutal. Open: the action for `Claws`, `Fangs` and `Horns`, and which of them knock the foe `Prone`. Each is end-to-end (rules, web tab,
+  `Hooves` costs 2 AP. Decided (author 2026-11-11) for `Bite`: it attacks and, if it hits, grabs automatically (no roll); against a foe already `Grappled` the blow gains Brutal. Decided (author 2026-11-12): none of `Claws`, `Fangs` and `Horns` knocks the foe `Prone`; their actions are about something else. Open: what each one does. Each is end-to-end (rules, web tab,
   AI, tests, tutorial card). Compare with Takedown and Grab in the sim so none dominates.
 
 - **Growing the action bar slowly (author 2026-10-31).** Giving every unit many actions at the start is
   too much friction; new actions have to come in gradually, so a new player is not flooded while the
   complexity builds. Open: which actions come at which level or talent. Decide it after *New body
   actions* (author 2026-11-01): Takedown and the natural and unarmed actions are most of what the bar
-  would gate. Takedown and Stand Up are on the bar for everyone today. Ties to *Roster of characters* (*Notes to remember*) and *Levelling is vertical only*.
+  would gate (author 2026-11-12: it is gated behind *New body actions*). Takedown and Stand Up are on the bar for everyone today. Ties to *Roster of characters* (*Notes to remember*) and *Levelling is vertical only*.
 
 - **Magic as the vertical progression.** The arc's work is the *Scroll of Invisibility* (*Ready to do ->
   Small*) and *Magic Arc, later* (*Large*). The schools are
@@ -559,7 +561,10 @@ has one "Enter" button and its functions are tabs inside.
   paper, and few exist. The intent: learn by owning an item (take the axe to the smith and study it until you can make it)
   or by being taught. A first form: the Library makes dictionaries, so a leader who speaks only Draconic hires a Lizardfolk and
   writes the dictionary to learn the language. Some recipes come from missions, artefacts from quests; the Kobold learns trap
-  recipes and places traps farther. The tester's idea: a research system to discover formulas. Decided (author 2026-11-11): a teacher is
+  recipes and places traps farther. The tester's idea: a research system to discover formulas. Author 2026-11-12, the source of more recipes: write a
+  recipe from paper, ink, leather and an item of the kind to be written, "studying" that item until the recipe is
+  learned; the recipe is then written down the same way a dictionary is. The Library's dictionary teaches more
+  languages, which count in Demoralize, trade and recruiting. Decided (author 2026-11-11): a teacher is
   either an NPC who teaches for free or another member of the group held back studying with the student, as if that member were
   the dictionary, recipe or scroll itself; the study time depends on the level of what is learned, and the teacher's Charisma
   bonus helps the student. Open: what the Library's dictionary gives, research. Size a first form when the production chain is picked up.

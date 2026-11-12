@@ -27,6 +27,8 @@ def test_race_tip_lists_localized_name_attribute_modifiers_and_abilities():
     tip = wiki_races.race_tip("Dwarf")
     assert tip.startswith("Dwarf\nSTR +0  DEX +0  CON +1")
     assert f"Darkvision: {abilities.get('darkvision').effect}" in tip
+    body = wiki_races.meta_line(data.race_by_name("Dwarf"), hit_die=False)
+    assert body in tip and "Hit Die" not in tip
     assert wiki_races.race_tip("") == ""
     assert wiki_races.race_tip("NonExistent") == ""
     for r in data.RACE_NAMES:
