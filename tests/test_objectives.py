@@ -13,7 +13,7 @@ def test_objectives_initial_state():
     assert g.objectives_done == []
 
     card = objectives.card_data(g)
-    assert card["name"] == "Guild Objectives"
+    assert card["name"] == "Establish your guild"
     n = len(objectives.OBJECTIVES)
     assert card["rep"] == f"0/{n}"
     assert card["rep_label"] == "done"

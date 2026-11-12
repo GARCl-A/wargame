@@ -412,7 +412,7 @@ def test_a_guild_with_every_member_jailed_waits_out_the_sentence_and_stands_a_ba
     t0 = guild.clock.seconds
     s = _game(guild).session
     (band,) = guild.groups
-    assert band.members == [unit] and not guild.jailed and band.node == world.START_NODE
+    assert band.members == [unit] and not guild.jailed and band.node == world.JAIL_RELEASE_NODE
     assert guild.clock.seconds > t0 and not s.wiped
     st = s.state()
     assert [b["gid"] for b in st["groups"]] == [band.gid] and not st["wiped"]

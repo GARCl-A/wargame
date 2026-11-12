@@ -321,7 +321,8 @@ EDGES = [
     ("mine", "wilds_territory", 2),
 ]
 
-START_NODE = "city"
+START_NODE = "tavern"              # where a new guild stands on day one
+JAIL_RELEASE_NODE = "city"        # where a sentence served lets the freed walk out
 
 _BY_ID = {n.id: n for n in NODES}
 

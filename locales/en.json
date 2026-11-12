@@ -87,7 +87,7 @@
         "Each card on the left is one group of your people. Select a group, then click a place on the map to send it there; the panel on the right lists what it can do where it stands.",
         "There is no turn button: once every group has an order the clock runs by itself, and stops when a group needs you. Everyone eats one food a day, so watch the RATIONS line.",
         "Everything that happens is written in THE LOG at the bottom right, newest last, with what is due next below it. Click its title to search it by word, kind or band.",
-        "Not sure what to do first? Your objectives are on the next screen."
+        "Not sure what to do first? \"Establish your guild\" is on the next screen: start there."
       ]
     },
     "guild": {
@@ -112,7 +112,8 @@
         "title": "What you're playing for",
         "button": "See your roster",
         "body": [
-          "There is no score and no fight you must win. The objectives at the top are small tasks that show you what the guild can do; take them in any order.",
+          "There is no score and no fight you must win. Start with the card at the top, \"Establish your guild\": small tasks that teach what a guild can do, from buying food to hiring a second band. Do them before anything else. A new squad is weak, hungry and poor, and the first thing the world teaches is that it kills the unprepared.",
+          "Everything is open from the first day: every place on the map, every job, every mission. But you will not be able to do all of it. Places, missions and enemies do not care about your level, and an unknown place can hold a fight a fresh squad cannot win. Be careful with what you do somewhere you have never been, and learn the ground before you trust it.",
           "Below them, each faction lists its deeds. Reputation only moves when you pull one off (a one-shot achievement, not a grind) and it unlocks what the card lists. The Pits and the Bankers are open from day one; the others appear once you walk into their places."
         ]
       },
@@ -991,7 +992,7 @@
       "bank_note": "Taking things out needs a band at the Bank in the City.",
       "holdings": "Holdings",
       "objectives": "Objectives",
-      "objectives_title": "Guild Objectives",
+      "objectives_title": "Establish your guild",
       "faction": "Faction",
       "complete": ": COMPLETE",
       "open_sheet": "Open this faction's sheet",
@@ -5480,7 +5481,7 @@
     "step_reach_work_lv_at": "Step 2/3: reach Work Lv 2 at the Lumber Yard, with your own Axe.",
     "step_buy_axe_at_smithy": "Step 1/3: buy an Axe at the Smithy.",
     "step_work_shifts_at_lumber": "Step 0/3: work shifts at the Lumber Yard to reach Work Lv 1.",
-    "guild_objectives": "Guild Objectives",
+    "guild_objectives": "Establish your guild",
     "small_tasks_that_show_what": "Small tasks that show what the guild can do, in any order. No coins or fame, just a guide.",
     "done": "done",
     "section": "Objectives"

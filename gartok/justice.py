@@ -92,10 +92,10 @@ def release_due(guild):
     guild.jailed = [pair for pair in guild.jailed if guild.clock.day < pair[1]]
     released = [u for u, _ in due]
     city_group = next((g for g in guild.groups
-                       if g.node == world.START_NODE and not g.busy), None)
+                       if g.node == world.JAIL_RELEASE_NODE and not g.busy), None)
     for u in released:
         if city_group is None:
-            city_group = Group([u], node=world.START_NODE)
+            city_group = Group([u], node=world.JAIL_RELEASE_NODE)
             guild.groups.append(city_group)
         else:
             city_group.members.append(u)   # not add_member: one sync below covers the whole batch

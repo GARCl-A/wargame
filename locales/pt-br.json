@@ -931,7 +931,7 @@
             "bank_note": "Tirar coisas exige um grupo no Banco da Cidade.",
             "holdings": "Posses",
             "objectives": "Objetivos",
-            "objectives_title": "Objetivos da Guilda",
+            "objectives_title": "Estabeleça sua guilda",
             "faction": "Facção",
             "complete": ": COMPLETO",
             "open_sheet": "Abrir a ficha desta facção",
@@ -4626,7 +4626,7 @@
         "step_reach_work_lv_at": "Etapa 2/3: alcance o Nv de Trabalho 2 no Pátio de Madeira, com o seu próprio Machado.",
         "step_buy_axe_at_smithy": "Etapa 1/3: compre um Machado na Ferraria.",
         "step_work_shifts_at_lumber": "Etapa 0/3: trabalhe turnos no Pátio de Madeira para chegar ao Nv de Trabalho 1.",
-        "guild_objectives": "Objetivos da Guilda",
+        "guild_objectives": "Estabeleça sua guilda",
         "small_tasks_that_show_what": "Pequenas tarefas que mostram o que a guilda pode fazer, em qualquer ordem. Sem moedas nem fama, apenas um guia.",
         "done": "feito",
         "section": "Objetivos"
@@ -6552,7 +6552,7 @@
                 "Cada cartão à esquerda é um grupo de gente sua. Selecione um grupo e clique num lugar do mapa para mandá-lo até lá; o painel à direita lista o que ele pode fazer onde está.",
                 "Não há botão de turno: quando todo grupo tem uma ordem, o relógio corre sozinho e para quando um grupo precisa de você. Todo mundo come uma comida por dia, então fique de olho na linha RAÇÕES.",
                 "Tudo o que acontece fica escrito em O REGISTRO, embaixo à direita, o mais novo por último, com o que vence a seguir logo abaixo. Clique no título para buscar por palavra, tipo ou grupo.",
-                "Sem saber o que fazer primeiro? Seus objetivos estão na próxima tela."
+                "Sem saber o que fazer primeiro? \"Estabeleça sua guilda\" está na próxima tela: comece por ela."
             ]
         },
         "guild": {
@@ -6577,7 +6577,8 @@
                 "title": "Pelo que você joga",
                 "button": "Ver seu elenco",
                 "body": [
-                    "Não há pontuação nem luta que você precise vencer. Os objetivos no topo são tarefas pequenas que mostram o que a guilda pode fazer; faça-as em qualquer ordem.",
+                    "Não há pontuação nem luta que você precise vencer. Comece pelo cartão no topo, \"Estabeleça sua guilda\": tarefas pequenas que ensinam o que uma guilda pode fazer, de comprar comida a contratar um segundo grupo. Faça-as antes de qualquer outra coisa. Um grupo novo é fraco, faminto e pobre, e a primeira lição do mundo é que ele mata quem não se prepara.",
+                    "Tudo está aberto desde o primeiro dia: todo lugar do mapa, todo trabalho, toda missão. Mas você não vai conseguir fazer tudo. Lugares, missões e inimigos não ligam para o seu nível, e um lugar desconhecido pode guardar uma luta que um grupo novo não vence. Tenha cuidado com o que faz num lugar onde nunca esteve e aprenda o terreno antes de confiar nele.",
                     "Abaixo deles, cada facção lista seus feitos. A reputação só se move quando você realiza um (uma conquista única, não uma moagem) e ela destrava o que o cartão lista. As Fossas e os Banqueiros estão abertos desde o primeiro dia; as outras aparecem quando você entra nos lugares delas."
                 ]
             },
