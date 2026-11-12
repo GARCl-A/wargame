@@ -3,7 +3,7 @@
 
 import subprocess
 
-GAME_VERSION = "0.1.7"
+GAME_VERSION = "0.1.8"
 
 
 def build_hash():
