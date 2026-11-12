@@ -171,11 +171,11 @@ The guild's founding trade, picked once at the draft: a set of races (the draft 
 | Small Javelin | Small | 1d4 | melee | -- | 12 sq | 1 | 0.75 kg | 6 |
 | Large Javelin | Large | 1d8 | melee | -- | 12 sq | 1 | 3 kg | 24 |
 | Huge Javelin | Huge | 1d10 | melee | -- | 12 sq | 1 | 6 kg | 48 |
-| Throwing Spear | Medium | 1d8 | melee | -- | 12 sq | 1 | 2 kg | 45 |
-| Tiny Throwing Spear | Tiny | 1d4 | melee | -- | 12 sq | 1 | 0.5 kg | 12 |
-| Small Throwing Spear | Small | 1d6 | melee | -- | 12 sq | 1 | 1 kg | 23 |
-| Large Throwing Spear | Large | 1d10 | melee | -- | 12 sq | 1 | 4 kg | 90 |
-| Huge Throwing Spear | Huge | 1d12 | melee | -- | 12 sq | 1 | 8 kg | 180 |
+| Trident | Medium | 1d8 | melee | -- | 8 sq | 1 | 2 kg | 45 |
+| Tiny Trident | Tiny | 1d4 | melee | -- | 8 sq | 1 | 0.5 kg | 12 |
+| Small Trident | Small | 1d6 | melee | -- | 8 sq | 1 | 1 kg | 23 |
+| Large Trident | Large | 1d10 | melee | -- | 8 sq | 1 | 4 kg | 90 |
+| Huge Trident | Huge | 1d12 | melee | -- | 8 sq | 1 | 8 kg | 180 |
 | Light Pick | Medium | 1d4 | melee | yes | 6 sq | 1 | 1 kg | 10 |
 | Tiny Light Pick | Tiny | 1d2 | melee | yes | 6 sq | 1 | 0.25 kg | 3 |
 | Small Light Pick | Small | 1d3 | melee | yes | 6 sq | 1 | 0.5 kg | 5 |
@@ -458,7 +458,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Keen Bolts | A Crossbow shot is a Critical hit on a natural 19 or 20. | Deadeye |
 | 4 | Ambush Shot | A Crossbow shot at an off-guard target is Brutal 1. | Heavy Bolts + Keen Bolts |
 | 2 | Duelist | +1 damage and +2 AC with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
-| 3 | Single Combat | Your finesse blows are Brutal 1 while your off hand is empty, no ally of your target stands beside you and no ally of yours stands beside your target. | Duelist |
+| 3 | Single Combat | Your blows with finesse weapons gain Brutal 1 if:<br>- One of your hands is empty, and<br>- No character other than the target is adjacent to you. | Duelist |
 | 3 | Fleet | +2 squares of Speed. | Deadeye |
 | 4 | Free Step | Once per turn, step 1 square without spending an action point. | Fleet |
 | 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against off-guard targets. | Deadeye |

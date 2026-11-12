@@ -87,7 +87,7 @@ BUILDS = {b.id: b for b in (
           ("tough", "bulwark", "hardy"), CASTER_WORK, ("faith",),
           (), ("healing_touch", "spare_the_dying", "sleep", "magic_missile"),
           ("arcane_mind", "spell_focus", "blessed_hands"), role="caster"),
-    Build("thrower", "Throwing Spear thrown: spares in the pack", ("Throwing Spear",), AUTO, None,
+    Build("thrower", "Trident thrown: spares in the pack", ("Trident",), AUTO, None,
           ("agile", "strong", "long_reach", "ready_hand", "deadeye"), ("brawny", "nimble_fingers", "sturdy", "observant"),
           thrower=True, role="ranged"),
     Build("crossbow", "Crossbow and quiver", ("Crossbow",), AUTO, None,

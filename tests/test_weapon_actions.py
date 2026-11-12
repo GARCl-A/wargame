@@ -405,11 +405,11 @@ def test_long_thrust_needs_a_glaive():
     assert actions.LONG_THRUST.applicable(batt, a)[0] is False
 
 
-def test_the_throwing_spear_is_the_javelin_with_a_d8_a_triple_crit_and_a_steeper_price():
-    jav, spear = items.get("javelin"), items.get("throwing_spear")
+def test_the_trident_is_the_javelin_with_a_d8_a_triple_crit_and_a_steeper_price():
+    jav, spear = items.get("javelin"), items.get("trident")
     assert (jav.damage, jav.crit_mult, jav.price) == ((1, 6), 2, 12)
     assert (spear.damage, spear.crit_mult, spear.price) == ((1, 8), 3, 45)
-    assert spear.thrown == jav.thrown == 12 and spear.has_trait("javelin_charge") and spear.has_trait("crit_3x")
+    assert (spear.thrown, jav.thrown) == (8, 12) and spear.has_trait("javelin_charge") and spear.has_trait("crit_3x")
     assert spear.price > items.get("sword").price
 
 

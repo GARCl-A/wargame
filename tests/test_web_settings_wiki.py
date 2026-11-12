@@ -397,3 +397,10 @@ def test_a_keyword_that_names_the_routed_condition_links_to_its_conditions_entry
     assert link["ref"] == "conditions:routed" and "morale spent" in link["tip"].lower()
     assert "routed" not in {e["id"] for e in w.chapter("keywords")["entries"]}
     assert w.open(link["ref"])["focus"] == "routed"
+
+
+def test_marks_name_the_keywords_and_finesse_a_description_uses_with_their_tips():
+    marks = wiki_terms.marks("Your blows with finesse weapons gain Brutal 1 if the way is clear.")
+    assert [m["word"] for m in marks] == ["finesse", "Brutal"]
+    assert marks[1]["tip"] == wiki_terms.tip("brutal") and marks[0]["tip"] == wiki_terms.tip("finesse")
+    assert wiki_terms.marks("+2 squares of Speed.") == [] and wiki_terms.marks("") == []

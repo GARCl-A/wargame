@@ -2853,7 +2853,7 @@
     "javelin_charge": {
       "name": "Javelin Charge",
       "desc": "1 AP: Throws the spear after moving this turn for +1d4 bonus damage.",
-      "reason": "requires a javelin or a throwing spear",
+      "reason": "requires a javelin or a trident",
       "label": "Javelin Charge (1 pt, throw after a move, +1d4 dmg)"
     },
     "parry_strike": {
@@ -3577,7 +3577,7 @@
       "Hooves": "Hooves",
       "Horns": "Horns",
       "Javelin": "Javelin",
-      "Throwing Spear": "Throwing Spear",
+      "Trident": "Trident",
       "Light Pick": "Light Pick",
       "Pick": "Pick",
       "Sword": "Sword",
@@ -4037,7 +4037,7 @@
       "library": "\"We need to expand our archives. Translations are well paid.\"",
       "trust": "\"Prove the guild can be trusted with something precious.\"",
       "ledger": "\"The march needs steady hands. Train my recruit and I will remember it.\"",
-      "farmer": "\"My girl went to the church and never came back. Please.\""
+      "farmer": "\"There is always work to do around here. Steady hands never go idle.\""
     },
     "keeper": {
       "blood": "\"Blood remembers. What runs in the veins can be read.\"",
@@ -5805,7 +5805,7 @@
       "deadeye": "+1 to hit with Dexterity-based attacks.",
       "fleet": "+2 squares of Speed.",
       "nimble_skirmisher": "+2 damage on Dexterity melee attacks against off-guard targets.",
-      "single_combat": "Your finesse blows are Brutal 1 while your off hand is empty, no ally of your target stands beside you and no ally of yours stands beside your target.",
+      "single_combat": "Your blows with finesse weapons gain Brutal 1 if:\n- One of your hands is empty, and\n- No character other than the target is adjacent to you.",
       "duelist": "+1 damage and +2 AC with a finesse weapon while the off hand is empty (no shield, no light).",
       "free_step": "Once per turn, step 1 square without spending an action point.",
       "tough": "+1 Constitution.",

@@ -58,7 +58,7 @@ def _table(headers, rows):
     out = ["| " + " | ".join(headers) + " |",
            "|" + "|".join("---" for _ in headers) + "|"]
     for row in rows:
-        out.append("| " + " | ".join(str(c) for c in row) + " |")
+        out.append("| " + " | ".join(str(c).replace("\n", "<br>") for c in row) + " |")
     return "\n".join(out)
 
 

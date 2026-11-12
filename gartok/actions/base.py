@@ -175,17 +175,14 @@ def off_guard_reasons(battle, attacker, target):
 
 
 def _dueling(battle, attacker, target, thrown=False):
-    """Single Combat: a finesse blow struck with the off hand free, while no ally of the target stands
-    beside the attacker and no ally of the attacker stands beside the target."""
+    """Single Combat: a finesse blow struck with the off hand free, while nobody but the target
+    stands beside the attacker (an ally of the target's flanking it does not matter)."""
     if thrown or not hasattr(attacker, "char") or not attacker.char.talent_bonus("duel_brutal"):
         return False
     if attacker.ranged or not attacker.free_hand or not attacker._finesse_in_hand:
         return False
-    target_side_beside_me = any(u.alive and u is not target and u.team == target.team
-                                and battle.units_distance(u, attacker) <= 1 for u in battle.units)
-    my_side_beside_target = any(u.alive and u is not attacker and u.team == attacker.team
-                                and battle.units_distance(u, target) <= 1 for u in battle.units)
-    return not target_side_beside_me and not my_side_beside_target
+    return not any(u.alive and u is not attacker and u is not target
+                   and battle.units_distance(u, attacker) <= 1 for u in battle.units)
 
 
 def off_guard(battle, attacker, target):

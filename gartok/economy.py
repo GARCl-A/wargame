@@ -162,7 +162,7 @@ STOCK = {
 # down at the same rate; a rate of 0 leaves it alone.
 _SHELVES = {
     "smith": {
-        "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Javelin": (6, 2), "Throwing Spear": (2, 0.3),
+        "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Javelin": (6, 2), "Trident": (2, 0.3),
         "Axe": (6, 1), "Pick": (6, 1), "Hammer": (6, 1), "Sword": (6, 1), "Broadsword": (3, 0.5), "Glaive": (2, 0.3), "Rapier": (2, 0.3),
         "Chainmail": (2, 0.3), "Brigandine": (1, 0.15), "Plate Armor": (1, 0.1),
         "Chains": (3, 0.5),

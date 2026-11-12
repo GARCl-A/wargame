@@ -359,7 +359,7 @@ function hand() {
     <div class="kicker">${tr("talents.in_hand")}<em>${tr("talents.in_hand_note")}</em></div>
     <div class="slip"><div class="big"><div class="${n.state}">${disc(n, true)}</div>
         <div><h2>${esc(n.name)}</h2><div class="tt">${tr("talents.tier", {track: t.label, tier: ROMAN[n.tier - 1] || n.tier})}</div></div></div>
-      <div class="eff">${esc(n.effect)}</div>
+      <div class="eff">${marked(n.effect, n.marks)}</div>
       <div class="status ${n.state}">${esc(h.status)}</div>
       ${ledger}${steps}</div>
     ${others.length ? `<div class="after">${tr("talents.still", {list: others.map(x => `${x.picks} ${x.label}`).join(", ")})}</div>` : ""}
@@ -367,6 +367,18 @@ function hand() {
   $("hand").querySelectorAll(".step").forEach(el => el.onclick = () => post("look", {id: el.dataset.id}));
   const take = $("take");
   if (take) take.onclick = () => post("take", {track: T.track, id: h.id});
+}
+
+// a description with the keywords it names underlined, each carrying its entry as a tooltip
+function marked(text, marks) {
+  const at = marks.map(m => ({...m, i: text.indexOf(m.word)})).filter(m => m.i >= 0).sort((a, b) => a.i - b.i);
+  let out = "", pos = 0;
+  for (const m of at) {
+    if (m.i < pos) continue;
+    out += `${esc(text.slice(pos, m.i))}<span class="kw"${tip(m.tip, "item")}>${esc(m.word)}</span>`;
+    pos = m.i + m.word.length;
+  }
+  return out + esc(text.slice(pos));
 }
 
 function render(r) {

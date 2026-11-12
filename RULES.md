@@ -462,7 +462,7 @@ Where each part lives is the code map of `README.md`.
   case**; in that case the strike is **Brutal 1** (the keyword in `gartok/keywords.py`: N more rolls of the weapon's damage) plus the
   action's own edge, and beats the two attacks whatever the weapon or the modifiers. Cleave (two blows
   already), Extreme Shot and Long Thrust do not double: their case is a target only they reach.
-  Javelin Charge (Javelin, Throwing Spear) costs **1 point**, a throw after a walk this turn, so a walk and the
+  Javelin Charge (Javelin, Trident) costs **1 point**, a throw after a walk this turn, so a walk and the
   throw fill a turn. The AI scores each by expected damage (hit odds against the AC it can reckon)
   against the two plain attacks the same points buy (one shot for a crossbow, whose other point
   reloads it) and takes the better; a test holds the premise for every action, STR 10-18 and AC 10-19.

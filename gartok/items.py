@@ -332,7 +332,7 @@ _BASE_WEAPONS_DATA = [
     ("club", "Club", ItemRarity.COMMON, 1.5, 6, (1, 6), 0, False, 0, 1, False, ("maiming_strike",), 2),
     ("quarterstaff", "Quarterstaff", ItemRarity.COMMON, 2.0, 5, (1, 6), 0, True, 0, 1, False, ("finesse", "repel_strike"), 2),
     ("javelin", "Javelin", ItemRarity.COMMON, 1.5, 12, (1, 6), 0, False, 12, 1, False, ("thrown", "javelin_charge"), 2),
-    ("throwing_spear", "Throwing Spear", ItemRarity.COMMON, 2.0, 45, (1, 8), 0, False, 12, 1, False, ("thrown", "javelin_charge", "crit_3x"), 3),
+    ("trident", "Trident", ItemRarity.COMMON, 2.0, 45, (1, 8), 0, False, 8, 1, False, ("thrown", "javelin_charge", "crit_3x"), 3),
     ("light_pick", "Light Pick", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 6, 1, False, ("finesse", "thrown", "crit_3x", "armor_pierce"), 3),
     ("pick", "Pick", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("crit_3x", "armor_pierce"), 3),
     ("sword", "Sword", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("parry_strike",), 2),
@@ -990,9 +990,9 @@ CRAFTING_RECIPES: dict[str, list[CraftingRecipe]] = RecipeDict({
             station=CraftingStation.CARPENTER,
         ),
     ],
-    "Throwing Spear": [
+    "Trident": [
         CraftingRecipe(
-            target="Throwing Spear",
+            target="Trident",
             materials=["Lumber", "Iron Bar", "Iron Bar"],
             complexity=12,
             station=CraftingStation.CARPENTER,

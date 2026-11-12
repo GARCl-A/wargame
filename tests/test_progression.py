@@ -804,7 +804,7 @@ def test_duelist_adds_two_ac_only_with_a_finesse_weapon_and_the_off_hand_empty()
     assert shielded.ac == shielded.ac_base
 
 
-def _duel_battle(foe_ally_beside_me=False, my_ally_beside_foe=False, weapon="Dagger", offhand=None):
+def _duel_battle(foe_ally_beside_me=False, my_ally_beside_foe=False, my_ally_beside_me=False, weapon="Dagger", offhand=None):
     from tests.helpers import Battle, Unit
     me, foe = Unit("player"), Unit("enemy")
     me.combat_xp = 100
@@ -813,13 +813,13 @@ def _duel_battle(foe_ally_beside_me=False, my_ally_beside_foe=False, weapon="Dag
     me.give_to_hand(weapon)
     if offhand:
         me.equipped_offhand = offhand
-    units = [me, foe] + ([Unit("enemy")] if foe_ally_beside_me else []) + ([Unit("player")] if my_ally_beside_foe else [])
+    units = ([me, foe] + ([Unit("enemy")] if foe_ally_beside_me else []) + ([Unit("player")] if my_ally_beside_foe or my_ally_beside_me else []))
     b = Battle([u for u in units if u.team == "player"], [u for u in units if u.team == "enemy"])
     a, t = b.units[0], next(u for u in b.units if u.team == "enemy")
     a.pos, t.pos = (5, 5), (6, 5)
     for u in b.units:
         if u is not a and u is not t:
-            u.pos = (4, 5) if u.team == "enemy" else (7, 5)
+            u.pos = (4, 5) if u.team == "enemy" or my_ally_beside_me else (7, 5)
     return b, a, t
 
 

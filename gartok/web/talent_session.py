@@ -9,7 +9,7 @@ Opened from a member's sheet (`GuildSession.talents`) and a level-up (`ReportSes
 import copy
 from typing import ClassVar
 
-from .. import i18n, progression, talents
+from .. import i18n, progression, talents, wiki_terms
 from .map_session import _portrait
 from .session import Session
 
@@ -158,7 +158,7 @@ class TalentSession(Session):
     @staticmethod
     def _node(u, track, t):
         return {"id": t.id, "name": t.name, "tier": t.tier, "requires": t.requires, "also": t.also, "icon": t.icon or None,
-                "effect": t.effect, "state": node_state(u, track, t)}
+                "effect": t.effect, "marks": wiki_terms.marks(t.effect), "state": node_state(u, track, t)}
 
     def _why(self, u, track, t, state):
         if state == "taken":

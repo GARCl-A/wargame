@@ -45,6 +45,18 @@ def keywords_in(text: str) -> list[str]:
     return [kid for _, kid in sorted(found)]
 
 
+def marks(text: str) -> list[dict]:
+    """The keywords (and Finesse) a description names, as the words to highlight in it, each with its
+    tooltip: the first appearance of each, in reading order."""
+    known = terms()
+    found = []
+    for tid in (*(k.id for k in keywords.all_keywords()), "finesse", *LINKED_CONDITIONS):
+        m = tid in known and re.search(rf"\b{re.escape(known[tid]['name'])}s?\b", text or "", re.I)
+        if m:
+            found.append((m.start(), {"word": m.group(0), "tip": tip(tid)}))
+    return [mark for _, mark in sorted(found, key=lambda f: f[0])]
+
+
 def tip(term_id: str) -> str:
     """The entry as the game's tooltip reads it: the name, the kind, the text, then the text of each
     keyword it names (one level, so a tooltip never opens a chain)."""

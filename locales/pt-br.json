@@ -3301,7 +3301,7 @@
             "library": "\"Precisamos ampliar nossos arquivos. Traduções são bem pagas.\"",
             "trust": "\"Prove que a guilda merece confiança com algo precioso.\"",
             "ledger": "\"A fronteira precisa de mãos firmes. Treine meu recruta e eu me lembro disso.\"",
-            "farmer": "\"Minha menina foi à igreja e nunca voltou. Por favor.\""
+            "farmer": "\"Há sempre o que fazer por aqui. Quem tem mãos firmes não fica sem serviço.\""
         },
         "keeper": {
             "blood": "\"O sangue lembra. O que corre nas veias pode ser lido.\"",
@@ -5366,9 +5366,9 @@
                 "name": "Azagaia",
                 "gender": "f"
             },
-            "Throwing Spear": {
-                "name": "Lança de Arremesso",
-                "gender": "f"
+            "Trident": {
+                "name": "Tridente",
+                "gender": "m"
             },
             "Light Pick": {
                 "name": "Picareta Leve",
@@ -6302,7 +6302,7 @@
             "deadeye": "+1 para acertar com ataques baseados em Destreza.",
             "fleet": "+2 casas de Velocidade.",
             "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos desprevenidos.",
-            "single_combat": "Seus golpes de acuidade são Brutais 1 enquanto sua outra mão está vazia, nenhum aliado do seu alvo está ao seu lado e nenhum aliado seu está ao lado do alvo.",
+            "single_combat": "Seus golpes realizados com armas que têm acuidade ganham Brutal 1 se:\n- Uma de suas mãos estiver vazia e\n- Nenhum personagem além do alvo estiver adjacente a você.",
             "duelist": "+1 de dano e +2 de CA com uma arma de acuidade enquanto a outra mão está vazia (sem escudo, sem luz).",
             "free_step": "Uma vez por turno, dê 1 passo de 1 casa sem gastar ponto de ação.",
             "tough": "+1 de Constituição.",

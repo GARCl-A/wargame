@@ -32,7 +32,7 @@ ICONS = {
     "Club": ("hafted", "wood", {"head": "club", "length": 66}),
     "Quarterstaff": ("hafted", "wood", {"head": "staff", "length": 90}),
     "Javelin": ("hafted", "wood", {"head": "spear", "length": 84, "metal": TONES["steel"]}),
-    "Throwing Spear": ("hafted", "wood", {"head": "spear", "length": 96, "metal": TONES["steel"]}),
+    "Trident": ("hafted", "wood", {"head": "spear", "length": 96, "metal": TONES["steel"]}),
     "Glaive": ("hafted", "wood", {"head": "glaive", "length": 92, "metal": TONES["iron"]}),
     "Light Pick": ("hafted", "wood", {"head": "pick", "length": 60, "size": .7, "metal": TONES["iron"]}),
     "Pick": ("hafted", "wood", {"head": "pick", "length": 74, "metal": TONES["iron"]}),
