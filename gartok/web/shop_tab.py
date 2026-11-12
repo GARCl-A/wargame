@@ -82,7 +82,7 @@ class ShopTab:
             shared = [t for t in economy.vendor_tongues(lang) if t in voice.languages]
             out["marks"] = [{"text": i18n.t("shop_tab.speaks", join=', '.join(i18n.names("language", shared))), "good": True},
                             {"text": i18n.t("shop_tab.cha", cha=cha), "good": cha > 0},
-                            {"text": trade.BENT_WORDS[dist].capitalize(), "good": dist <= 1}]
+                            {"text": i18n.t(trade.BENT_WORDS[dist]).capitalize(), "good": dist <= 1}]
         elif lang:
             out["marks"] = [{"text": i18n.t("shop_tab.no_one_speaks", join=i18n.t("trade.or_sep").join(i18n.names("language", economy.vendor_tongues(lang)))), "good": False}]
         return out
