@@ -608,3 +608,5 @@ has one "Enter" button and its functions are tabs inside.
 ================
 
 Durante o combate, ao clicar na foto do seu proprio persoangem no canto inferior esquerdo abrir a ficha.
+Durante o combate o tutorial de stabilize quando apraece, o jogo continua rodando por tras. O jogador não consegue saber oq aconteceu por que o jogo ta rolando e tem um turoial aberto. O correto seria pausar o combate quando um tutorial ou o menu esiver aberto.
+Durante o combate não da pra abrir o menu do jogo.
