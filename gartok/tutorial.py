@@ -19,7 +19,7 @@ TUTORIALS = (
     "market", "taverna", "hunt", "bank", "level", "library",
     "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "dialogue", "prison", "stable", "wagon_yard", "watch", "garage", "gathering", "initiation",
     "group_turn",
-    "hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon", "hint.place",
+    "hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon", "hint.place", "hint.flank",
 )
 
 
@@ -53,6 +53,11 @@ def _battle():
     from . import actions
     from .combatant import AP_PER_TURN
     return {"ap": AP_PER_TURN, "assess": actions.ASSESS.cost}
+
+
+def _flank():
+    from .actions.base import OFF_GUARD_AC
+    return {"ac": OFF_GUARD_AC}
 
 
 def _hunt():
@@ -150,6 +155,7 @@ _FACTS = {
     "draft.identity": _identity,
     "battle": _battle,
     "hint.reading": _battle,
+    "hint.flank": _flank,
     "hunt": _hunt,
     "ox_hunt": _ox_hunt,
     "bank": _bank,

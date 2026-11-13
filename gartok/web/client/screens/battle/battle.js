@@ -49,10 +49,15 @@ async function act(body, path = "/api/battle/act") {
 // what the side does not decide plays on its own; a question put to a person stops it
 const waiting = () => S.setup || S.talk || S.handoff;
 
+// a card, a sheet or the menu over the board stops the fight where it is: nothing plays until they are shut
+const held = () => Tutorial.up || !!document.getElementById("sheet-veil") || !$("pause").hidden;
+async function hold() { while (held()) await sleep(100); }
+
 async function pump() {
   if (!S || S.winner || S.my_turn || waiting() || ui.busy) return;
   ui.busy = true;
   try {
+    await hold();
     const t0 = performance.now();
     const r = await api("/api/battle/advance", {inspect: ui.inspect});
     if (r.steps.some(shows)) await sleep(AI_DELAY - (performance.now() - t0));
@@ -66,6 +71,7 @@ const shows = st => st.moves.length || st.fx.length || st.acts.length || st.cues
 // one step per decision: the walks first, then the board after it, then what it showed
 async function playSteps(steps) {
   for (const [i, st] of steps.entries()) {
+    await hold();
     for (const cue of st.sounds) Sound.play(cue);
     if (S && st.moves.length) await walk(st.moves);
     if (S && st.rolls && st.rolls.length) await playRolls(st.rolls);
@@ -369,7 +375,7 @@ function renderUnit() {
     : `<div class="hpbar"><i style="width:${a.hp_frac * 100}%"></i></div>`;
   const w = a.weapon;
   const lvl = a.level == null ? "" : `<div class="lvl"${tip(tr("battle.level_tip", {level: a.level, combat: a.tracks.combat, work: a.tracks.work, magic: a.tracks.magic}))}><small>${tr("battle.lv")}</small>${a.level}</div>`;
-  box.innerHTML = `<div class="med" style="--side:${SEAT[a.seat]}">${face(a.portrait, a.name)}</div>${lvl}
+  box.innerHTML = `<div class="med${a.sheet ? " own" : ""}" style="--side:${SEAT[a.seat]}"${a.sheet ? ` data-sheet="${a.sheet}"${tip(tr("battle.open_sheet"))}` : ""}>${face(a.portrait, a.name)}</div>${lvl}
     <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · ${esc(a.alignment)}</div>
     ${S.my_turn ? `<div class="stats"><div class="stat hp"><span>${tr("battle.hit_points")}${own ? ` · ${a.hp}/${a.hp_max}` : ""}</span>${hp}</div>
       <div class="stat"><span>${tr("battle.ac")}</span><b>${a.ac ?? "?"}</b></div><div class="stat"><span>${tr("battle.md")}</span><b>${a.md ?? "?"}</b></div>${a.morale == null ? "" : `<div class="stat"><span>${tr("battle.morale")}</span><b>${a.morale}/${a.morale_max}</b></div>`}<div class="stat"><span>${tr("battle.speed")}</span><b>${a.speed}</b></div></div>
@@ -925,10 +931,20 @@ $("dialog").addEventListener("click", e => {
   if (t.dataset.speaker !== undefined) return act({speaker: Number(t.dataset.speaker)}, "/api/battle/talk");
   if (!t.classList.contains("off")) return act({verb: t.dataset.verb}, "/api/battle/talk");
 });
+function pause(open) { $("pause").hidden = !open; }
+$("menubtn").addEventListener("click", () => pause(true));
+$("pause").addEventListener("click", e => {
+  if (e.target === $("pause")) return pause(false);
+  const t = e.target.closest("[data-pause]");
+  if (!t || t.classList.contains("off")) return;
+  if (t.dataset.pause === "resume") return pause(false);
+  api(`/api/battle/${t.dataset.pause}`, {}).then(r => { if (r.screen) location.reload(); }).catch(() => {});
+});
 $("newfight").hidden = !Shell.lab;
 $("newfight").addEventListener("click", () => S && showEnd(true));
 
 document.addEventListener("keydown", e => {
+  if (!$("pause").hidden) { if (e.key === "Escape") pause(false); return; }
   if (!S || !$("modal").hidden || !$("dialog").hidden) return;
   if (ui.draw) {
     const n = S.draws.length, step = d => { let i = ui.draw.sel; do i = (i + d + n) % n; while (!S.draws[i].ok && i !== ui.draw.sel); ui.draw.sel = i; renderDraw(); };
@@ -957,7 +973,10 @@ document.addEventListener("keydown", e => {
     if (/^[1-9]$/.test(e.key) && Number(e.key) <= n) return takePile(Number(e.key) - 1);
     return;
   }
-  if (e.key === "Escape") { ui.aim = null; ui.armed = null; ui.ledger = null; ui.spellbook = false; renderAll(); return; }
+  if (e.key === "Escape") {
+    if (!ui.aim && !ui.armed && !ui.ledger && !ui.spellbook) return pause(true);
+    ui.aim = null; ui.armed = null; ui.ledger = null; ui.spellbook = false; renderAll(); return;
+  }
   const pan = {ArrowLeft: [160, 0], ArrowRight: [-160, 0], ArrowUp: [0, 160], ArrowDown: [0, -160]}[e.key];
   if (pan) { e.preventDefault(); return Board.panBy(...pan); }
   if (e.key === "+" || e.key === "=") return Board.zoomAt(692, 390, 1.25);

@@ -8,6 +8,7 @@ assets/
                state/ symbol/ trap/ wing/ keep the download's own nesting (ffffff/transparent/1x1/<author>/
                <name>.svg): the condition marks of the battle board read them (`web/condition_marks.py`).
   portraits/   engraved medallion portraits, one folder per race, creature or `npc`, numbered PNGs.
+  tutorial/    pictures a tutorial card shows (`flank_*.svg`, drawn for this game; `web/battle_session.py` names them).
   sounds/      Kenney sound effects (OGG, CC0, LICENSE.txt); `gartok/sound.py` names each cue's files.
 ```
 

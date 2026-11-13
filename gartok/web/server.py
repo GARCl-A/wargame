@@ -42,7 +42,7 @@ from .session import ASSETS
 from .title_session import TitleSession
 
 CLIENT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "client")
-ART = ("portraits", "icons", "sounds", "music")    # the asset folders the client may read
+ART = ("portraits", "icons", "sounds", "music", "tutorial")    # the asset folders the client may read
 SCREENS = {"map": MapSession, "guild": lambda guild, world: GuildSession(MapSession(guild, world))}
 # the screens a save opens; a battle comes from the lab or the campaign
 

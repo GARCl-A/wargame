@@ -285,7 +285,7 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   `tutorial.TUTORIALS`, a `title`/`body`/optional `suggestion` block under
   `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
   screen's session (`web/session.py`). What the copy cannot hold (a list drawn from a registry, later a
-  picture) is `tutorial_rows(key)` on the session: each row is a stamp, a rule and a text, optionally an `image` and a `focus` (a selector lit on the screen
+  picture) is `tutorial_rows(key)` on the session: each row is a stamp, a rule and a text, optionally an `image` (`big`: a 120 px picture, for a diagram) and a `focus` (a selector lit on the screen
   while the pointer is on the row). `tutorial_spot(key)` names the part of the screen the card is about (the battle's action bar), kept
   lit above the veil while the card is up.
 - **New rule pop-up** (a one-time card a trigger fires, with a *See in the wiki* button): an id in `hints.IDS` and

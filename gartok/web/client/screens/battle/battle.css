@@ -193,6 +193,20 @@
 #modal[hidden],#dialog[hidden]{display:none}
 #dialog.opaque{background:radial-gradient(ellipse at center,#2a1d12,#0b0806)}
 #topright{display:flex;gap:10px}
+.unit .med.own{cursor:pointer}
+
+/* the menu over the fight */
+#pause{position:absolute;inset:var(--bleed);display:grid;place-items:center;background:rgba(8,6,4,.72);z-index:25}
+#pause[hidden]{display:none}
+#pause .leather{width:520px;padding:34px 40px 30px}
+#pause .tagline{font:600 12px/1 Cinzel,serif;letter-spacing:.4em;color:var(--brass);text-transform:uppercase}
+#pause h3{margin:12px 0 18px;font:700 30px/1.1 Cinzel,serif;color:#e8d8b4}
+#pause .pm{position:relative;display:flex;align-items:center;height:50px;padding:0 16px 0 26px;cursor:pointer;
+  font:700 17px/1 Cinzel,serif;letter-spacing:.16em;color:#e8d8b4;text-transform:uppercase}
+#pause .pm .num{position:absolute;left:0;font:14px/1 var(--read);letter-spacing:0;color:#6f5a3e}
+#pause .pm .hint{margin-left:auto;font:16px/1 var(--read);letter-spacing:0;color:#8f7a59;text-transform:none}
+#pause .pm:hover{color:var(--brass-hi);background:linear-gradient(90deg,rgba(201,163,94,.16),rgba(201,163,94,0) 85%)}
+#pause .pm.off{color:#5e4d37;cursor:default;background:none}
 #topright [hidden]{display:none}
 
 /* a crit across the board */

@@ -6,6 +6,7 @@ health is in `intel` steps, cells never seen carry no terrain, and the light is 
 `lighting.cell_levels` gives. The client is never trusted with the rest.
 """
 
+import os
 import random
 from typing import ClassVar
 
@@ -27,14 +28,14 @@ from .. import (
     vision,
     wiki_terms,
 )
-from ..actions.base import in_straight_line
+from ..actions.base import OFF_GUARD_AC, in_straight_line
 from ..board import cells
 from ..combatant import AP_PER_TURN
 from ..foe_card import foe_card
 from ..fog import FogMemory
 from ..scenario import own_half, wall_kind
 from . import condition_marks
-from .session import Session, asset_url
+from .session import ASSETS, Session, asset_url
 
 LOG_LINES = 120
 
@@ -91,6 +92,8 @@ class BattleSession(Session):
         "talk": lambda s, b: _steps(s.answer(b.get("verb"), b.get("speaker"), bool(b.get("go_on")), b.get("inspect"))),
         "seat": lambda s, b: _steps(s.take_seat(b.get("inspect"))),
         "done": lambda s, b: s.done(),
+        "settings": lambda s, b: s.aside("settings"),
+        "wiki": lambda s, b: s.aside("wiki"),
     }
 
     def __init__(self, battle, meta=None, controllers=None, then=None, guild=None):
@@ -195,7 +198,8 @@ class BattleSession(Session):
         if self.guild is None:
             return None
         seen = self.guild.tutorial.seen
-        return (hints.in_battle(self.guild, self.battle, seen) if "battle" in seen else None) or "battle"
+        return (hints.in_battle(self.guild, self.battle, seen, lambda u: self.uid(u) in self._shown)
+                if "battle" in seen else None) or "battle"
 
     def tutorial_wiki(self, key):
         return hints.wiki_ref(key)
@@ -204,7 +208,10 @@ class BattleSession(Session):
         return ".bar, #seal" if key == "battle" else None
 
     def tutorial_rows(self, key):
-        """The bar's standing actions, each lighting its plate while the pointer is on its row."""
+        """The battle card's rows (the bar's standing actions, each lighting its plate while the pointer is on its
+        row, then the Space and double-click shortcuts) or the flank card's three pictures."""
+        if key == hints.FLANK:
+            return self._flank_rows()
         rows = []
         if key != "battle":
             return rows
@@ -213,7 +220,33 @@ class BattleSession(Session):
             cost = i18n.plural("tutorial.battle.cost", action.cost) if action.cost else i18n.t("tutorial.battle.free")
             rows.append({"stamp": {"label": cost, "style": "brass" if action.cost else "green"},
                          "rule": action.name, "text": action.desc, "focus": f'[data-action="{action.id}"]'})
+        for key_, focus in (("space", "#seal"), ("double_click", None)):
+            row = {"stamp": {"label": i18n.t(f"tutorial.battle.{key_}.key"), "style": "warn"},
+                   "rule": i18n.t(f"tutorial.battle.{key_}.rule"), "text": i18n.t(f"tutorial.battle.{key_}.text")}
+            rows.append(row | {"focus": focus} if focus else row)
         return rows
+
+    @staticmethod
+    def _flank_rows():
+        """What a flank looks like, as the pictures of the card (`assets/tutorial/flank_*.svg`)."""
+        ac = OFF_GUARD_AC
+        return [{"image": asset_url(os.path.join(ASSETS, "tutorial", f"flank_{name}.svg")), "big": True,
+                 "stamp": {"label": i18n.t(f"tutorial.hint.flank.{name}.stamp", ac=ac), "style": style},
+                 "rule": i18n.t(f"tutorial.hint.flank.{name}.rule"), "text": i18n.t(f"tutorial.hint.flank.{name}.text", ac=ac)}
+                for name, style in (("foe", "green"), ("you", "warn"), ("none", "brass"))]
+
+    def sheet_units(self):
+        """The characters of the side at the screen: their sheet opens from the portrait at the bottom left."""
+        return [u.char for u in self.battle.units if u.team == self.team and hasattr(u.char, "uid")]
+
+    def aside(self, which):
+        """The wiki or the settings from the menu; back comes to the fight as it was."""
+        from .settings_session import SettingsSession
+        from .wiki_session import WikiSession
+        label = i18n.t("battle.back_to_fight")
+        session = WikiSession(self.resume, label) if which == "wiki" else SettingsSession(self.resume, label, self.guild)
+        self.game.open(session)
+        return {"screen": session.screen}
 
     def snapshot(self, inspect=None):
         """The board as it stands, as the one step of a fight just opened."""
@@ -756,6 +789,7 @@ class BattleSession(Session):
         w = u.weapon
         return {
             "id": self.uid(u), "name": u.name, "side": self._side(u), "seat": self._seat(u),
+            "sheet": u.char.uid if u.team == self.team and hasattr(u.char, "uid") else None,
             "level": u.char.racial_level if u.team == self.team else None,
             "tracks": ({"combat": u.char.combat_level, "work": u.char.work_level, "magic": u.char.magic_level}
                        if u.team == self.team else None),

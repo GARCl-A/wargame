@@ -116,7 +116,7 @@ const Sound = (() => {
 const Tutorial = (() => {
   let key = null, up = false, shown = null;
   // what the card's copy cannot hold: a stamp (or a picture), its rule and what it is for
-  const rows = list => !list?.length ? "" : `<div class="tut-rows">${list.map(r => `<div class="trow"${r.focus ? ` data-focus="${esc(r.focus)}"` : ""}>
+  const rows = list => !list?.length ? "" : `<div class="tut-rows">${list.map(r => `<div class="trow${r.big ? " big" : ""}"${r.focus ? ` data-focus="${esc(r.focus)}"` : ""}>
     ${r.image ? `<img src="${esc(r.image)}" draggable="false">` : ""}<span class="tstamp ${esc(r.stamp?.style)}">${esc(r.stamp?.label)}</span>
     <div><b>${esc(r.rule)}</b><span>${esc(r.text)}</span></div></div>`).join("")}</div>`;
   const card = c => `<div id="tut-card" class="paper"><div class="kicker">${tr("tutorial.notes")}</div>
@@ -177,6 +177,7 @@ const Tutorial = (() => {
   }, true);
   return {
     place,
+    get up() { return up; },
     sync(header) {
       const [k, flag] = (header || "").split("|");
       key = k || null;

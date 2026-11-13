@@ -179,12 +179,15 @@ def test_the_battle_card_lists_the_bars_standing_actions_and_lights_the_bar():
     s = game.session
     assert s.tutorial_key() == "battle" and s.tutorial_spot("battle") == ".bar, #seal"
     rows = s.tutorial_rows("battle")
+    keys = rows[-2:]
+    rows = rows[:-2]
     assert [r["focus"] for r in rows] == [f'[data-action="{i}"]' for i in
                                           ("attack", "defend", "assess", "push", "takedown", "flee", "delay")]
     on_bar = {a.id for a in actions.PANEL_ACTIONS}
     assert all(r["focus"].split('"')[1] in on_bar for r in rows)
     free = next(r for r in rows if "delay" in r["focus"])
     assert free["stamp"]["style"] == "green" and next(r for r in rows if "attack" in r["focus"])["stamp"]["label"]
+    assert [r["stamp"]["label"] for r in keys] == ["Space", "Double click"] and keys[0]["focus"] == "#seal"
 
 
 def test_a_fallen_member_and_a_second_fight_fire_their_cards_after_the_battle_card():
@@ -229,3 +232,74 @@ def test_the_placement_card_fires_when_a_person_has_a_cell_to_pick():
     batt = Battle([unit], [standard_unit("enemy")], scenario=Scenario(), lethal=True)
     assert hints.in_battle(guild, batt, {"battle"}) == hints.PLACE
     assert hints.in_battle(guild, batt, {"battle", hints.PLACE}) == hints.READING
+
+
+def _line_up(battle, you, foes, *, flank):
+    """Put `foes` (one or two) beside `you`, on opposite sides when `flank`, else both on the same one."""
+    x, y = 6, 6
+    you.pos = (x, y)
+    spots = [(x - 1, y), (x + 1, y)] if flank else [(x - 1, y), (x - 1, y - 1)]
+    for foe, spot in zip(foes, spots):
+        foe.pos = spot
+    return you
+
+
+def test_the_flank_card_fires_once_when_either_side_is_flanked_and_shows_three_pictures():
+    from gartok import hints
+    from gartok.actions.base import _flanked
+    game, guild, g = _ambushed("w1")
+    game.session.act(g.gid, "resolve_event")
+    s = game.session
+    guild.tutorial.dismiss("battle")
+    mine = [u for u in s.battle.units if u.team == "player"]
+    foes = [u for u in s.battle.units if u.team != "player"]
+    assert len(mine) >= 2 and len(foes) >= 2
+    for u in s.battle.units:
+        u.pos = (0, 0)
+    for i, u in enumerate(s.battle.units):
+        u.pos = (20 + 3 * i, 20)
+    visible = lambda u: True
+    assert hints.in_battle(guild, s.battle, {"battle"}, visible) != hints.FLANK
+    _line_up(s.battle, mine[0], foes[:2], flank=False)
+    assert not _flanked(s.battle, foes[0], mine[0])
+    assert hints.in_battle(guild, s.battle, {"battle"}, visible) != hints.FLANK
+    _line_up(s.battle, mine[0], foes[:2], flank=True)
+    assert _flanked(s.battle, foes[0], mine[0])
+    assert hints.in_battle(guild, s.battle, {"battle"}, visible) == hints.FLANK
+    assert hints.in_battle(guild, s.battle, {"battle", hints.FLANK}, visible) != hints.FLANK
+    assert hints.in_battle(guild, s.battle, {"battle"}, lambda u: u.team == "player") != hints.FLANK
+    rows = s.tutorial_rows(hints.FLANK)
+    assert len(rows) == 3 and all(r["big"] and r["image"].endswith(".svg") for r in rows)
+    assert s.tutorial_wiki(hints.FLANK).startswith("rules:")
+    _line_up(s.battle, foes[0], mine[:2], flank=True)
+    assert hints.in_battle(guild, s.battle, {"battle"}, visible) == hints.FLANK
+
+
+def test_the_flank_pictures_are_shipped():
+    import os
+
+    from gartok.web.session import ASSETS
+    from gartok.web import server
+    from gartok.web.battle_session import BattleSession
+    assert "tutorial" in server.ART
+    for name in ("foe", "you", "none"):
+        assert os.path.isfile(os.path.join(ASSETS, "tutorial", f"flank_{name}.svg"))
+    assert {r["image"].split("/")[2] for r in BattleSession._flank_rows()} <= set(server.ART)
+
+
+def test_the_portrait_opens_the_sheet_of_the_side_at_the_screen_and_the_menu_goes_aside_and_back():
+    game, _, g = _ambushed("w1")
+    game.session.act(g.gid, "resolve_event")
+    s = game.session
+    mine = [u for u in s.battle.units if u.team == "player"]
+    assert {u.uid for u in s.sheet_units()} == {u.char.uid for u in mine}
+    state = s.state()
+    assert state["active"]["sheet"] == s.battle.active.char.uid
+    assert s.sheet(state["active"]["sheet"])["name"] == s.battle.active.name
+    foe = next(u for u in s.battle.units if u.team != "player")
+    with pytest.raises(ValueError):
+        s.sheet(foe.char.uid)
+    assert s.aside("settings") == {"screen": "settings"} and game.session.screen == "settings"
+    assert game.session.back_to() == {"screen": "battle"} and game.session is s
+    assert s.aside("wiki") == {"screen": "wiki"}
+    assert game.session.back_to() == {"screen": "battle"} and game.session is s

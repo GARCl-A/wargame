@@ -607,6 +607,13 @@ has one "Enter" button and its functions are tabs inside.
 
 ================
 
-Durante o combate, ao clicar na foto do seu proprio persoangem no canto inferior esquerdo abrir a ficha.
-Durante o combate o tutorial de stabilize quando apraece, o jogo continua rodando por tras. O jogador não consegue saber oq aconteceu por que o jogo ta rolando e tem um turoial aberto. O correto seria pausar o combate quando um tutorial ou o menu esiver aberto.
-Durante o combate não da pra abrir o menu do jogo.
+
+Os comission token os jogadores não estão usando, acho que vale mais focar pra incentivar explicitamente o jogador a usar. Eai fazer tipo um balãozinho saindo do botão.
+Na tela de nomear a guilda ao inves de estar escrito "A Guilda" deixe escrito "Nomeie sua guilda"
+Não ta ficando claro pro jogador que trabalho da XP de trabalho e isso faz o personagem ficar mais forte.
+No card da guild de "estabeleça sua guilda" logo abaixo de "comprar uma tocha" tem que ter o card de "equipe a tocha em um pesoangem, na sua mão secundaria"
+Quando o jogador sair de um nó da jurisdição da cidade, um tutorial avisa ele que lá fora é "perigoso" e vale ele tentar se preparar melhor, como treinar umas lutas na arena para se acostumar e comprar equipamentos.
+
+Na taverna, eu preciso explicar o conceito de alinhamento pro jogador, isso pode ser feito logo quando eu falo de como o recrutamento funciona.
+
+Adicionar uma missão no "Estabeleça sua guilda" pra cortar lenha com um machado equipado.

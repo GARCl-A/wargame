@@ -523,6 +523,16 @@ body:not(.ready) #tut-badge {
   object-fit: contain
 }
 
+#tut-card .trow.big {
+  grid-template-columns: 120px 110px 1fr;
+  padding: 8px 0
+}
+
+#tut-card .trow.big img {
+  width: 120px;
+  height: 120px
+}
+
 #tut-card .trow:not(:has(img)) {
   grid-template-columns: 132px 1fr
 }

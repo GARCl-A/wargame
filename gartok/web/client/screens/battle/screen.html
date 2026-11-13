@@ -1,7 +1,7 @@
 <div id="top">
   <div class="cartouche"><div class="place" id="place"></div><div class="sub" id="sub"></div></div>
   <div id="init"></div>
-  <div id="topright"><div class="ghost-btn" id="skiptraps" hidden data-t="battle.skip_traps"></div><div class="ghost-btn" id="skipplace" hidden data-t="battle.skip_place"></div><div class="ghost-btn" id="skipplaces" hidden data-t="battle.skip_places"></div><div class="ghost-btn" id="withdraw" hidden data-t="battle.withdraw"></div><div class="ghost-btn" id="newfight" data-t="battle.new_fight"></div></div>
+  <div id="topright"><div class="ghost-btn" id="skiptraps" hidden data-t="battle.skip_traps"></div><div class="ghost-btn" id="skipplace" hidden data-t="battle.skip_place"></div><div class="ghost-btn" id="skipplaces" hidden data-t="battle.skip_places"></div><div class="ghost-btn" id="withdraw" hidden data-t="battle.withdraw"></div><div class="ghost-btn" id="newfight" data-t="battle.new_fight"></div><div class="ghost-btn" id="menubtn" data-t="battle.menu"></div></div>
 </div>
 
 <div id="sheet">
@@ -40,3 +40,13 @@
 
 <div id="dialog" hidden></div>
 <div id="modal" hidden></div>
+<div id="pause" hidden>
+  <div class="leather">
+    <div class="tagline" data-t="pause.waits"></div>
+    <h3 data-t="battle.menu"></h3>
+    <div class="pm" data-pause="resume"><span class="num">I</span><span data-t="pause.resume"></span><span class="hint">Esc</span></div>
+    <div class="pm off" data-pause="save"><span class="num">II</span><span data-t="pause.save"></span><span class="hint" data-t="battle.no_save"></span></div>
+    <div class="pm" data-pause="settings"><span class="num">III</span><span data-t="pause.settings"></span></div>
+    <div class="pm" data-pause="wiki"><span class="num">IV</span><span data-t="pause.wiki"></span></div>
+  </div>
+</div>

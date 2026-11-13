@@ -455,6 +455,9 @@
             "skip_places": "Manter todos",
             "withdraw": "Recuar",
             "new_fight": "Nova luta",
+            "menu": "Menu",
+            "no_save": "não numa luta",
+            "open_sheet": "Abrir a ficha do personagem",
             "held_ok": "OK",
             "chronicle": "Crônica",
             "combat": "Combate",
@@ -3705,6 +3708,7 @@
         }
     },
     "battle": {
+        "back_to_fight": "Voltar à luta",
         "err": {
             "no_seat": "ninguém espera pelo lugar",
             "lab_end": "uma luta de laboratório não tem nada depois",
@@ -6602,6 +6606,28 @@
                     "Quem tem Vantagem escolhe a própria casa de partida antes da luta, e o líder do grupo com Plano de Batalha escolhe a de todo o lado.",
                     "Clique numa casa iluminada dentro da área inicial do seu lado, ou mantenha a posição para ficar onde foi colocado."
                 ]
+            },
+            "flank": {
+                "title": "Flanco",
+                "body": [
+                    "Um inimigo está flanqueado quando dois combatentes do mesmo lado ficam em lados opostos dele: a linha entre eles precisa cruzar o inimigo, e a diagonal conta.",
+                    "Quem está flanqueado fica desprevenido, -{ac} de CA contra todo ataque, corpo a corpo, à distância ou arremessado. Vale para os dois lados: cerque um inimigo por dois lados e não deixe dois inimigos prenderem um dos seus."
+                ],
+                "foe": {
+                    "stamp": "-{ac} CA",
+                    "rule": "Você flanqueia um inimigo",
+                    "text": "Um dos seus e um aliado em lados opostos dele: a CA dele cai {ac} contra os dois."
+                },
+                "you": {
+                    "stamp": "Flanqueado",
+                    "rule": "Um dos seus está flanqueado",
+                    "text": "Dois inimigos em lados opostos o atacam com -{ac} de CA. Saia da linha ou derrube um deles."
+                },
+                "none": {
+                    "stamp": "Sem flanco",
+                    "rule": "Não é flanco",
+                    "text": "Dois no mesmo lado não mudam nada: a linha entre eles não cruza o alvo."
+                }
             }
         },
         "wiki_button": "Ver na enciclopédia",
@@ -6709,7 +6735,7 @@
         "battle": {
             "title": "Lutando",
             "body": [
-                "Cada personagem tem {ap} pontos de ação por turno, e a barra iluminada embaixo é o que ele pode fazer com eles: passe o mouse numa linha abaixo e a placa dela se acende. Espaço ou o selo ao lado encerra o turno. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
+                "Cada personagem tem {ap} pontos de ação por turno, e a barra iluminada embaixo é o que ele pode fazer com eles: passe o mouse numa linha abaixo e a placa dela se acende. O selo ao lado encerra o turno. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
                 "Você só vê o que a luz e os sentidos do personagem ativo alcançam; L mostra a visão de todo o esquadrão. Os campos ? de um inimigo são o que você ainda não leu: todos leem um inimigo ao avistá-lo, e Avaliar ({assess} ponto) lê mais fundo. Toda rolagem cai na bandeja sob a crônica; um selo vermelho no lugar de um número é uma dificuldade que você ainda não leu.",
                 "Com 0 PV um personagem cai, não morre: Estabilize-o ou use Primeiros Socorros antes que sangre até o fim."
         ],
@@ -6717,7 +6743,17 @@
                 "one": "{n} ponto",
                 "other": "{n} pontos"
             },
-            "free": "Grátis"
+            "free": "Grátis",
+            "space": {
+                "key": "Espaço",
+                "rule": "Defender e encerrar o turno",
+                "text": "Se o personagem pode pagar Defender, ele guarda a postura primeiro e então o turno acaba: o jeito rápido de passar o turno protegido."
+            },
+            "double_click": {
+                "key": "Clique duplo",
+                "rule": "Ataque básico",
+                "text": "Clique num inimigo para marcá-lo e clique de novo para atingi-lo com o ataque básico."
+            }
     },
         "loot": {
             "title": "Dividindo o espólio",
