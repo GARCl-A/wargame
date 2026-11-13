@@ -14,9 +14,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Building the executable with PyInstaller...
-uv run pyinstaller --onefile --noconsole --name GARTOK --add-data "locales;locales" --add-data "maps;maps" --add-data "npcs;npcs" --add-data "gartok/assets;gartok/assets" --add-data "gartok/web/client;gartok/web/client" main.py
+echo Building the native client (server with PyInstaller, window with Electron)...
+uv run python scripts/build_client.py
+if errorlevel 1 (
+    echo Fix the error above and run again.
+    pause
+    exit /b 1
+)
 
 echo.
-echo Done! The executable is in the "dist" folder.
+echo Done! The client is the zip in the "dist" folder.
 pause
