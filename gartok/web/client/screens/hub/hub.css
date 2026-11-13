@@ -196,7 +196,7 @@
 .worker p.bad,.worker .pay.bad b{color:var(--blood-hi)}
 .worker .pay .lbl{display:block;margin-top:6px}
 .fact{display:flex;align-items:baseline;gap:14px;margin-top:14px}
-.fact .lbl{width:70px;flex:none}
+.fact .lbl{width:100px;flex:none}
 .fact b{font:600 16px/1.2 var(--read);color:#f0dfb8}
 .fact b.good{color:#a9c98a}
 .fact b.bad{color:var(--blood-hi)}
