@@ -417,5 +417,5 @@ class HuntSession(Session):
                 i18n.plural("hunt_session.pack_of_hostile_cuts_across", n))
         return {"title": i18n.t("hunt_session.biwolf_2") if s.biwolf else i18n.t("hunt_session.ambush_in_wilds_2"), "lead": lead, "line": None,
                 "swift": self.look.state(),
-                "foes": [{"name": u.name, "race": u.race_label, "portrait": _portrait(u),
+                "foes": [{"name": i18n.name("race", u.name), "race": u.race_label, "portrait": _portrait(u),
                           "weapon": u.equipped_weapon or i18n.t("hunt_session.claws_and_teeth")} for u in foes]}

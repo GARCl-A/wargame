@@ -81,17 +81,19 @@ class MapView:
                 return i18n.t("map_view.via_h", dest_name=dest_name, name=world.node(o.dest).name, remaining=o.remaining)
             return f"→ {dest_name} ({o.remaining:g} h)"
         if stints.is_stint(o):
-            return f"{stints.doing(o)} ({o.remaining:g} h left)"
+            return i18n.t("map_view.doing_left", doing=stints.doing(o), remaining=o.remaining)
         if o.kind == "work":
-            doing = "gathering" if o.gather else "searching" if o.task in campaign.SEARCHES else "working"
-            return f"{doing} ({o.remaining:g} h left)"
+            doing = (i18n.t("map_view.doing_gathering") if o.gather
+                     else i18n.t("map_view.doing_searching") if o.task in campaign.SEARCHES
+                     else i18n.t("map_view.doing_working"))
+            return i18n.t("map_view.doing_left", doing=doing, remaining=o.remaining)
         if o.kind == "rest":
             return i18n.t("map_view.resting_left", format_hours=rest.format_hours(o.remaining))
         if o.kind == "hunting":
-            return f"hunting ({o.remaining:g} h left)"
+            return i18n.t("map_view.doing_left", doing=i18n.t("map_view.doing_hunting"), remaining=o.remaining)
         if o.kind == "solo":
-            doing = i18n.t("map_view.in_hospital") if o.task == "hospital" else i18n.t("map_view.crafting", recipe=o.recipe)
-            return f"{doing} ({o.remaining:g} h left)"
+            doing = i18n.t("map_view.in_hospital") if o.task == "hospital" else i18n.t("map_view.crafting", recipe=i18n.name("item", o.recipe))
+            return i18n.t("map_view.doing_left", doing=doing, remaining=o.remaining)
         return i18n.t("map_view.heading_to_h", kind=o.kind, remaining=o.remaining)
 
     def _mates_for(self, g):

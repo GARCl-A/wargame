@@ -62,7 +62,7 @@ const Claim = (() => {
     $("body").innerHTML = `<div class="leather lcol"><div class="lbl">${tr("claim.here", {members: plural(C.members.length, "member")})}</div>
         <p class="hint">${tr("claim.fences")}</p>
         <div class="crew">${C.members.map(member).join("")}</div></div>
-      <div class="paper ledger"><div class="kicker">${tr("claim.title")} <em>${C.seized ? tr("claim.seized") : esc(C.stage.toLowerCase())}</em></div>
+      <div class="paper ledger"><div class="kicker">${tr("claim.title")} <em>${C.seized ? tr("claim.seized") : esc(C.stage_label.toLowerCase())}</em></div>
         ${track(C)}
         <div class="cstage ${C.seized ? "bad" : ""}">${C.lines.map(l => `<p>${esc(l)}</p>`).join("")}</div>
         ${progress(C)}${job(C)}

@@ -43,7 +43,7 @@ class InitiationTab:
                             "note": r["note"], "on": r["enabled"], "picked": r["picked"]})
         picked = s._member(s.picked)
         notice, s.notice = s.notice, None
-        return {"cards": s.hub_cards(), "school": school.title(),
+        return {"cards": s.hub_cards(), "school": i18n.lab(school.title()),
                 "faction": factions.FACTIONS[rite.FACTION[school]].name,
                 "terms": [{"label": lbl, "value": val, "ok": ok} for lbl, val, ok in s._terms()],
                 "members": members, "picked": picked.name if picked else None, "action": s._action(),

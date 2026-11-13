@@ -216,9 +216,9 @@ class TavernTab:
             elif recipe := magic.recipe_of(m.study_target):
                 name, needed = recipe.name, magic.points_to_learn(recipe.level)
             else:
-                name, needed = i18n.t("tavern_tab.dictionary_of", study_target=m.study_target), magic.points_to_learn(0)
+                name, needed = i18n.t("tavern_tab.dictionary_of", study_target=i18n.name("language", m.study_target)), magic.points_to_learn(0)
             target = {"name": name, "progress": m.study_progress.get(m.study_target, 0), "needed": needed}
-        schools = "/".join(x.capitalize() for x in m.magic_sources) + " magic" if m.magic_sources else i18n.t("tavern_tab.no_magic")
+        schools = i18n.t("tavern_tab.schools_magic", schools="/".join(i18n.lab(x.capitalize()) for x in m.magic_sources)) if m.magic_sources else i18n.t("tavern_tab.no_magic")
         return {"uid": m.uid, "name": m.name, "portrait": _portrait(m),
                 "sub": i18n.t("tavern_tab.int", kind=_kind(m), mod_intelligence=m.mod_intelligence, schools=schools, money=m.money), "target": target,
                 "options": [{"id": o["id"], "name": o["name"], "desc": o["desc"]}

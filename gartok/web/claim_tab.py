@@ -152,8 +152,8 @@ class ClaimTab:
         watch = None
         if g.claim_garage_open and garrison is None and not g.claim_garage.empty:
             watch = f"{wagon_watch.flight_chance(g.claim_garage):.0%}"
-        return {"cards": self.hub_cards(), "stage": stage, "seized": self.seized, "steps": steps,
-                "lines": self._lines(),
+        return {"cards": self.hub_cards(), "stage": stage, "stage_label": i18n.name("claim_stage", stage),
+                "seized": self.seized, "steps": steps, "lines": self._lines(),
                 "actions": [{"verb": v, "label": lbl, "can": ok, "why": why} for v, lbl, ok, why in self._actions()],
                 "fight": stage in FIGHTS,
                 "lumber": {"have": g.wilds_claim_fence_lumber, "need": economy.WILDS_CLAIM_FENCE_LUMBER,
