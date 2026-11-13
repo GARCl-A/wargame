@@ -3360,7 +3360,6 @@
         "burned": "  ·  {burned} queimados",
         "keeper_takes_it_and_speaks": "o guardião aceita e fala o seu nome à escola.",
         "bankers_accept_letter_your_trust": "os Banqueiros aceitam a carta e sua confiança está conquistada.",
-        "bankers_accept_letter_no_pay": "os Banqueiros aceitam a carta. Este trabalho não paga moedas nem reputação ainda: a confiança deles vem quando a guilda também cumprir: {deeds}.",
         "accept_job": "ACEITAR O TRABALHO",
         "take_task": "ASSUMIR A TAREFA",
         "accept_trust": "ACEITAR A PROVA DE CONFIANÇA",

@@ -1434,13 +1434,3 @@ def test_the_shop_deal_strip_names_the_vendors_bent_in_words_not_as_a_key():
     marks = hub.state()["shop"]["deal"]["marks"]
     assert len(marks) == 3 and not any("trade." in m["text"] for m in marks)
     assert marks[2]["text"].endswith("bent")
-
-
-def test_the_trust_letter_does_not_claim_trust_before_the_other_bankers_deeds():
-    hub, _, g = _vault()
-    hub.pick_tab("jobs")
-    hub.verb("accept", True)(hub, {"id": "bankers_trust_chest"})
-    g.leader.remove_named(data.MISSION_CHEST_ITEM)
-    g.leader.give_to_pack(data.LETTER_ITEM)
-    notice = hub.verb("turn_in", True)(hub, {"id": "bankers_trust_chest"})["jobs"]["notice"]
-    assert "no coin" in notice and "Good for Business" in notice and "earned" in notice
