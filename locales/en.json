@@ -656,7 +656,8 @@
       "load_btn": "Load",
       "saves_of": "The saves of",
       "saves_note": "Pick a moment to go back to. Loading it makes it the live state; every other save stays on the list.",
-      "back_guilds": "Back to the guilds"
+      "back_guilds": "Back to the guilds",
+      "update": "Version {version} is out: open the download page"
     },
     "hub": {
       "back": "Back to map",

@@ -1419,7 +1419,8 @@
             "load_btn": "Carregar",
             "saves_of": "Os salvamentos de",
             "saves_note": "Escolha um momento para voltar. Carregá-lo o torna o estado atual; todos os outros salvamentos continuam na lista.",
-            "back_guilds": "Voltar às guildas"
+            "back_guilds": "Voltar às guildas",
+            "update": "A versão {version} saiu: abrir a página de download"
         },
         "arena": {
             "tag": {

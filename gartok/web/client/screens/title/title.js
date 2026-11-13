@@ -181,4 +181,16 @@ addEventListener("keydown", e => {
   }
 });
 
-api("/api/title/state").then(render).catch(e => toast(e.message));
+const UPDATE_POLLS = 8, UPDATE_EVERY_MS = 1500;
+function checkUpdate(left = UPDATE_POLLS) {
+  api("/api/title/update").then(r => {
+    if (r.update) {
+      const a = $("update");
+      a.href = r.update.url;
+      a.textContent = tr("title.update", { version: r.update.version });
+      a.hidden = false;
+    } else if (r.pending && left > 0) setTimeout(() => checkUpdate(left - 1), UPDATE_EVERY_MS);
+  }).catch(() => {});
+}
+
+api("/api/title/state").then(state => { render(state); checkUpdate(); }).catch(e => toast(e.message));

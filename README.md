@@ -177,6 +177,7 @@ gartok/
   demon_lair.py     the Demon's lair at that site, 15 days after a failed rite: the lone lethal fight; its death reopens the Farm
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
   version.py        GAME_VERSION + build hash; docs/versions.csv is the release table, scripts/version_check.py guards it
+  update_check.py   start-up check for a newer GitHub release: one anonymous GET in a thread, the title's notice
   playtest_export.py  the Settings "Export playtest data" zip (saves, combat logs, build)
   fault_log.py      every unexpected exception and script error, one JSON line each in saves/errors.jsonl (the playtest zip carries it)
   settings.py       player preferences (settings.json), listed on the settings screen

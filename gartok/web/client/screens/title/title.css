@@ -18,6 +18,8 @@
 .quote b{font-style:normal;font-weight:400;color:#e2cfa6}
 .notice{margin-top:16px;font:italic 19px/1.3 "IM Fell English",serif;color:var(--blood-hi)}
 .notice[hidden]{display:none}
+.update{display:block;margin-top:12px;font:italic 18px/1.3 "IM Fell English",serif;color:var(--brass-hi);text-decoration:underline;cursor:pointer}
+.update[hidden]{display:none}
 
 #menu{margin-top:44px;width:520px}
 .item{position:relative;display:flex;align-items:center;height:54px;padding:0 22px 0 26px;cursor:pointer;

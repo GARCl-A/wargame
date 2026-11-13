@@ -24,7 +24,7 @@ import threading
 import time
 import webbrowser
 
-from .. import combat_lab, settings
+from .. import combat_lab, settings, update_check
 from .server import SCREENS, Game, serve
 
 _BROWSERS = (
@@ -89,6 +89,8 @@ def main():
     else:
         game = Game.fight(args.fight, args.level, args.squad, args.seed, args.players,
                           None if args.no_log else combat_lab.ROOT)
+    if args.fight is None and not args.save:
+        update_check.start()
     server = serve(game, args.port, args.cache_static)
     game.quit = lambda: threading.Thread(target=server.shutdown, daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"

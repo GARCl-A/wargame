@@ -5,7 +5,7 @@ yet, the invitation shows a face of each of `INVITE_RACES`."""
 import time
 from typing import ClassVar
 
-from .. import art_files, i18n, persist, recorder, vocations, world
+from .. import art_files, i18n, persist, recorder, update_check, vocations, world
 from ..guild import DEFAULT_BANNER_COLOR, DEFAULT_BANNER_ICON
 from .credits_session import CreditsSession
 from .map_session import MapSession, _icon, _plural, _portrait
@@ -35,7 +35,7 @@ def _banner(row):
 
 class TitleSession(Session):
     screen = "title"
-    GET: ClassVar[dict] = {"state": lambda s, q: s.state()}
+    GET: ClassVar[dict] = {"state": lambda s, q: s.state(), "update": lambda s, q: update_check.status()}
     POST: ClassVar[dict] = {
         "page": lambda s, b: s.page(b["page"], b.get("world")),
         "continue": lambda s, b: s.load(s.latest["world"] if s.latest else None),
