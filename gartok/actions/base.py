@@ -255,7 +255,7 @@ def _land_thrown(battle, actor, target, weapon_name):
     where (the action bar says why its weapon actions are gone)."""
     actor.disarm()
     landing = _drop_cell(battle, target)
-    battle.ground.append(GroundObject.weapon(landing, weapon_name))
+    battle.ground.append(GroundObject.weapon(landing, weapon_name, owner=actor))
     actor.let_go = {"at": target.name}
     battle.log("log.thrown_lands", weapon=item_ref(weapon_name), cell=str(landing), actor=actor.name)
     if actor.alive and weapon_name in actor.inventory and actor.char.talent_bonus("throw_resupply"):

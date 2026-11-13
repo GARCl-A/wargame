@@ -788,6 +788,22 @@ def test_a_surrounded_foe_gets_the_weapon_on_its_own_cell_and_it_can_be_picked_u
     assert not [o for o in batt.ground if o.is_weapon]
 
 
+def test_a_thrown_weapon_goes_back_to_its_thrower_when_the_battle_ends():
+    batt, a, _d = _thrown_hatchet()
+    assert a.unarmed
+    batt.return_dropped_gear()
+    assert a.weapon_name == "Hatchet" and a.weapon_hand
+    assert not [o for o in batt.ground if o.is_weapon]
+
+
+def test_a_thrown_weapon_stays_loot_when_its_thrower_took_another_weapon():
+    batt, a, _d = _thrown_hatchet()
+    a.equip_weapon(fitted(a, "Dagger"))
+    batt.return_dropped_gear()
+    assert a.weapon_name == "Dagger"
+    assert [o.weapon_name for o in batt.ground if o.is_weapon] == ["Hatchet"]
+
+
 def test_the_bar_shows_a_weapon_action_disabled_with_the_reason_once_the_weapon_is_thrown():
     batt, a, d = _thrown_hatchet()
     where = next(o.pos for o in batt.ground if o.is_weapon)
