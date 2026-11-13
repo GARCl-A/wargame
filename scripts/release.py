@@ -2,9 +2,10 @@
 and after its version bump is committed and pushed.
 
 Reads the last row of `docs/versions.csv`, refuses when the tree is dirty, HEAD is not on
-origin/main, HEAD or the exe in dist/ carries code the row does not, or the tag already exists.
+origin/main, HEAD or the client in dist/ carries code the row does not, or the tag already exists.
 Prints the notes (the commit subjects since the previous row) and asks before it creates the tag
-`v<version>` on HEAD and uploads dist/GARTOK.exe with `gh`. --dry-run stops after the notes, --yes skips the question."""
+`v<version>` on HEAD and uploads dist/GARTOK-<version>-win64.zip (`scripts/build_client.py`) with `gh`.
+--dry-run stops after the notes, --yes skips the question."""
 
 import csv
 import os
@@ -17,9 +18,18 @@ sys.path.insert(0, ROOT)
 
 from scripts.version_check import CSV_PATH, RELEASE_FILES, code_changed_since, git
 
-EXE = os.path.join(ROOT, "dist", "GARTOK.exe")
 BUILD_INFO = os.path.join(ROOT, "gartok", "build_info.py")
-SHIPPED = ("gartok/", "locales/", "maps/", "npcs/", "main.py")
+SHIPPED = ("gartok/", "locales/", "maps/", "npcs/", "main.py", "shell/")
+
+
+def package(version):
+    return os.path.join(ROOT, "dist", f"GARTOK-{version}-win64.zip")
+
+
+def had_client(commit):
+    """Whether the client's shell existed at `commit`: its first release tells the player where the saves went."""
+    return subprocess.run(["git", "cat-file", "-e", f"{commit}:shell/main.js"], cwd=ROOT, check=False,
+                          capture_output=True).returncode == 0
 
 
 def changes(prev_hash, last_hash):
@@ -34,15 +44,21 @@ def changes(prev_hash, last_hash):
     return subjects
 
 
-def notes(row, subjects):
+def notes(row, subjects, first_client=False):
     lines = []
     if row["breaks_save"] == "yes":
         lines += ["**Esta versão não abre os saves das anteriores.**", ""]
+    if first_client:
+        lines += [("**O jogo agora abre na própria janela, e os saves mudaram de lugar:** ficam em "
+                   "`%APPDATA%\\GARTOK\\saves`. Para levar uma guilda de uma versão anterior, copie a pasta "
+                   "`saves` que ficava ao lado do `GARTOK.exe` antigo para lá (e o `settings.json`, para manter "
+                   "as configurações)."), ""]
     lines += ["## Mudanças", ""]
     lines += [f"- {s}" for s in subjects] or ["- Sem mudanças de jogo."]
     lines += ["", "## Como jogar", "",
-              ("Baixe o `GARTOK.exe` abaixo e execute. O executável não é assinado: se o Windows mostrar "
-               "o aviso do SmartScreen, clique em *Mais informações* e depois em *Executar assim mesmo*.")]
+              (f"Baixe o `GARTOK-{row['version']}-win64.zip` abaixo, extraia em qualquer pasta e execute o "
+               "`GARTOK.exe`. O jogo não é assinado: se o Windows mostrar o aviso do SmartScreen, clique em "
+               "*Mais informações* e depois em *Executar assim mesmo*.")]
     return "\n".join(lines) + "\n"
 
 
@@ -57,13 +73,13 @@ def built_hash():
 def problems(row, head, tag):
     """Why this release cannot go out now, as sentences. Empty when it can."""
     found = []
-    if not os.path.exists(EXE):
-        found.append("dist/GARTOK.exe does not exist: run build_exe.bat")
+    if not os.path.exists(package(row["version"])):
+        found.append(f"dist/GARTOK-{row['version']}-win64.zip does not exist: run build_exe.bat")
     built = built_hash()
     if not built:
         found.append("gartok/build_info.py is missing: run build_exe.bat")
     elif code_changed_since(row["hash"], git("rev-parse", built) or built):
-        found.append(f"the exe was built from {built}, which is not v{row['version']}: run build_exe.bat")
+        found.append(f"the client was built from {built}, which is not v{row['version']}: run build_exe.bat")
     if git("status", "--porcelain"):
         found.append("the working tree has uncommitted changes: commit the version bump first")
     if code_changed_since(row["hash"], head):
@@ -85,7 +101,8 @@ def main(argv):
     found = problems(row, head, tag)
     for p in found:
         print(f"ERROR: {p}")
-    text = notes(row, changes(rows[-2]["hash"], row["hash"]) if len(rows) > 1 else [])
+    text = notes(row, changes(rows[-2]["hash"], row["hash"]) if len(rows) > 1 else [],
+                 first_client=len(rows) > 1 and not had_client(rows[-2]["hash"]))
     print(f"\n=== GARTOK {row['version']} ({tag} on {head[:7]}) ===\n")
     print(text)
     if found:
@@ -99,7 +116,7 @@ def main(argv):
         notes_path = os.path.join(tmp, "notes.md")
         with open(notes_path, "w", encoding="utf-8") as fh:
             fh.write(text)
-        return subprocess.run(["gh", "release", "create", tag, EXE, "--title", f"GARTOK {row['version']}",
+        return subprocess.run(["gh", "release", "create", tag, package(row["version"]), "--title", f"GARTOK {row['version']}",
                                "--notes-file", notes_path, "--target", head], cwd=ROOT, check=False).returncode
 
 

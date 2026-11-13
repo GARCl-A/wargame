@@ -1,6 +1,6 @@
 ---
 name: release
-description: Ships a new version of the game end to end — tests, build of the exe, version bump commit, push and the GitHub release with its notes. Use when the user types /release or says "lançar release", "lança a release", "solta uma versão", "publica a versão", "faz a release".
+description: Ships a new version of the game end to end — tests, build of the client zip, version bump commit, push and the GitHub release with its notes. Use when the user types /release or says "lançar release", "lança a release", "solta uma versão", "publica a versão", "faz a release".
 ---
 
 The user asking for a release is the approval to build, to commit the version bump, to push `main`
@@ -20,9 +20,10 @@ work around a refusal of `scripts/release.py` or `scripts/version_check.py`.
 3. **Tests.** `python -m pytest tests/ -n auto -m "not balance"`. A failure ends the release.
 
 4. **Build.** `cmd /c ".\build_exe.bat < NUL"` (the `< NUL` answers the script's `pause`; without
-   the `.\` cmd does not find the script here), with a 10 minute timeout. It must end with `Done!`
-   and leave a fresh `dist/GARTOK.exe`; the line `Released v<version>` says a new version was cut,
-   and whether saves break.
+   the `.\` cmd does not find the script here). It needs Node on PATH, and the first run downloads Electron:
+   run it in the background and wait for it rather than under a 10 minute timeout. It must end with `Done!`
+   and leave a fresh `dist/GARTOK-<version>-win64.zip` (the native client: the Electron window plus the
+   server); the line `Released v<version>` says a new version was cut, and whether saves break.
    When the output has no `Released` line, no code changed since the last version: go on, step 6
    refuses by itself if that version is already published.
 
@@ -32,7 +33,7 @@ work around a refusal of `scripts/release.py` or `scripts/version_check.py`.
    Any other dirty file here is a bug of the build: stop and report it.
 
 6. **Publish.** `python scripts/release.py --yes`. It prints the notes, creates the tag
-   `v<version>` on HEAD and uploads the exe. On `ERROR:` lines, report them as they are.
+   `v<version>` on HEAD and uploads the zip. On `ERROR:` lines, report them as they are.
 
 7. **Report**, in Portuguese: the version, whether it breaks saves, the release URL that `gh`
    printed, and the notes' list of changes.
