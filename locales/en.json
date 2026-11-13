@@ -16,6 +16,23 @@
           "Check the pack before you set out: the map warns when the rations will not last the trip, and a band that runs out goes hungry."
         ]
       },
+      "wilds": {
+        "title": "Out here it is dangerous",
+        "body": [
+          "Inside the city's jurisdiction the guard keeps the peace. Past it, nobody does: roads, forests and ruins hold wolves, bandits and worse, and a guild caught unprepared pays with its members.",
+          "Prepare before you walk further: train a few fights in the Arena, where nobody dies, and buy gear and rations in the shops."
+        ],
+        "combat": {
+          "stamp": "Combat Lv 0",
+          "rule": "Train at the Arena",
+          "text": "Nobody in the guild has won a fight yet. Stake a little coin on a bout at the Arena to learn the ropes, safely."
+        },
+        "work": {
+          "stamp": "Work Lv 0",
+          "rule": "Work at the Lumber Yard",
+          "text": "Work XP makes a character stronger too: it counts toward hit dice and opens picks in the work talent tree. A shift at the Lumber Yard is the easy start."
+        }
+      },
       "reading": {
         "title": "Reading your foes",
         "body": [
@@ -236,6 +253,7 @@
       "title": "Recruiting",
       "body": [
         "Pick a stranger, then who from the party makes the pitch: Charisma against Charisma, in a language both speak. Each member of the guild past {free} costs {size_pen}, and each step of alignment apart {align_pen}. A failed pitch can't be retried by that member until the pool turns over next week.",
+        "Alignment is how a character sees order and morals: Lawful, Neutral or Chaotic, and Good, Neutral or Evil. The pitch is the recruiter's d20 + Charisma modifier + the modifiers below against the stranger's d20 + Charisma modifier, and the recruiter must beat it. A step of alignment apart on either axis is -{align_pen}, up to four steps: a Lawful Good recruiter talks a fellow Lawful Good into signing far easier than a Chaotic Evil one. Pick as pitchman the member whose alignment is closest to the stranger's.",
         "Each member can sponsor {base} + their Charisma modifier recruits; the guild leader adds their racial level.",
         "STUDY rents a room (${study} a day) to learn a language from a Dictionary, or a spell from its Scroll if the student has that school. PERFORM sends anyone with a Musical Instrument on stage for tips."
       ]
@@ -1279,6 +1297,7 @@
       },
       "tokens_spent": "Every token is spent; the squad is what the pool gives.",
       "commission": "Commission",
+      "token_bubble": "Stronger characters are one click away. We recommend spending your tokens here: swap a card for one with the tags you want, to fill the roles your guild needs.",
       "no_tokens": "No tokens left",
       "to_charter": "to the charter",
       "picked": "{a} of {b} picked",
@@ -1328,7 +1347,7 @@
       "charter": "Charter of the guild",
       "charter_note": "drawn up at Ankareth, on the first day",
       "bek": "Be it known that the undersigned found the guild of",
-      "the_guild_ph": "The Guild",
+      "the_guild_ph": "Name your guild",
       "trade": "in the trade of <b>{name}</b>, under the word <i>“{motto}”</i>",
       "perk_line": "<b>Perk</b> &nbsp;{perk} <i>(every member)</i>",
       "arms": "Its arms",
@@ -3844,6 +3863,9 @@
       "obj_buy_food": "Buy Food",
       "obj_work_shift": "Earn a Wage",
       "obj_buy_torch": "Carry a Light",
+      "obj_equip_torch": "Hold the Light",
+      "obj_buy_weapon": "Arm Yourself",
+      "obj_chop_wood": "Cut Wood with Your Axe",
       "obj_arena_bout": "Arena Bout",
       "obj_combat_lv1": "Combat Level 1",
       "obj_medic": "See the Medic",
@@ -5605,9 +5627,9 @@
   },
   "objectives": {
     "work_lv_reached": "Work Lv 2 reached.",
-    "step_reach_work_lv_at": "Step 2/3: reach Work Lv 2 at the Lumber Yard, with your own Axe.",
+    "step_reach_work_lv_at": "Step 2/3: reach Work Lv 2 at the Lumber Yard, with your own Axe. Work levels count toward your hit dice and open picks in the work talent tree, so work makes you stronger in combat too.",
     "step_buy_axe_at_smithy": "Step 1/3: buy an Axe at the Smithy.",
-    "step_work_shifts_at_lumber": "Step 0/3: work shifts at the Lumber Yard to reach Work Lv 1.",
+    "step_work_shifts_at_lumber": "Step 0/3: work shifts at the Lumber Yard to reach Work Lv 1. Work levels make a character stronger in combat too: they count toward hit dice and open picks in the work talent tree.",
     "guild_objectives": "Establish your guild",
     "small_tasks_that_show_what": "Small tasks that show what the guild can do, in any order. No coins or fame, just a guide.",
     "done": "done",
@@ -6176,12 +6198,15 @@
       "obj_buy_food": "Everyone eats one food a day. Potatoes and Meat are sold at the Farm.",
       "obj_work_shift": "Work a shift at the Lumber Yard or the Mine: little pay, no risk.",
       "obj_buy_torch": "Buy a Torch or a Lantern at the Market: the dark hides foes, at night and underground.",
+      "obj_equip_torch": "Put the Torch in a character's secondary hand (their off hand): a lit hand is what pushes the dark back.",
+      "obj_buy_weapon": "Buy a weapon at the Smithy: a character who fights with a real weapon hits harder than one with bare hands.",
+      "obj_chop_wood": "Work a shift at the Lumber Yard with an Axe in the pack: your own tool pays better and earns more work XP.",
       "obj_arena_bout": "Fight a bout at the Arena: you stake money, and nobody dies.",
       "obj_combat_lv1": "Down foes at or above your level until someone reaches Combat Level 1.",
       "obj_medic": "Have the Medic at the Apothecary treat someone wounded, sick or poisoned.",
       "obj_recruit_tavern": "Recruit a new companion at the Tavern.",
       "obj_recruit_prison": "Pay a prisoner's bail at the City Prison and recruit them.",
-      "obj_work_chain": "Reach Work Lv 1, buy an Axe at the Smithy, reach Work Lv 2.",
+      "obj_work_chain": "Reach Work Lv 2. Work XP is a way to grow stronger too: work levels count toward your hit dice and open picks in the work talent tree.",
       "obj_licence": "Buy a gathering licence at the Lumber Yard or the Mine and keep what the crew finds.",
       "obj_mission": "Accept a job from a giver's board; a node with work on offer says so on the map.",
       "obj_two_groups": "Run two groups at once (the gear icon on a group's card splits it).",

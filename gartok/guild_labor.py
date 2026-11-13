@@ -14,6 +14,7 @@ from . import (
     gather,
     i18n,
     items,
+    objectives,
     orders,
     recorder,
     vocations,
@@ -64,6 +65,8 @@ class LaborMixin:
             level = economy.work_level(u, node_id)
             pay = economy.work_pay(node_id, hours, level)
             paid.append(self._pay_worker(u, pay, hours, level, events))
+            if node_id == "lumber_yard" and level >= economy.LUMBER_LEVEL_OWN_AXE:
+                objectives.complete(self, "obj_chop_wood")
         if earners:
             names = ", ".join(u.name for u in earners)
             wage = (i18n.t("guild_labor.each", fmt_money=fmt_money(paid[0])) if len(set(paid)) == 1

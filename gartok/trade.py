@@ -429,6 +429,8 @@ class Counter(economy.PartyPurse):
             objectives.complete(self.guild, "obj_buy_food")
         if name in ("Torch", "Lantern"):
             objectives.complete(self.guild, "obj_buy_torch")
+        if "forge" in getattr(self.node, "functions", ()) and items.is_weapon(name):
+            objectives.complete(self.guild, "obj_buy_weapon")
 
     def _buy_one(self, member, name):
         """Buy one `name` into `member`'s pack; the reason it can't, or None."""

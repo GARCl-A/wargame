@@ -827,6 +827,14 @@ class MapSession(MapView, Session):
         seen = self.guild.tutorial.seen
         return key if key not in seen else hints.on_map(self.guild, seen) or key
 
+    def tutorial_rows(self, key):
+        """The wilds card names the first steps the guild has not taken: a fight at the Arena, a shift at the Lumber Yard."""
+        if key != hints.WILDS:
+            return []
+        return [{"stamp": {"label": i18n.t(f"tutorial.hint.wilds.{gap}.stamp"), "style": ""},
+                 "rule": i18n.t(f"tutorial.hint.wilds.{gap}.rule"), "text": i18n.t(f"tutorial.hint.wilds.{gap}.text")}
+                for gap in hints.wilds_gaps(self.guild)]
+
     def tutorial_wiki(self, key):
         return hints.wiki_ref(key)
 

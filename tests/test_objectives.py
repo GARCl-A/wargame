@@ -209,3 +209,37 @@ def test_the_medic_marks_its_objective():
     u.hp = max(1, u.hp_max - 2)
     ok, _ = medic.treat(g, g.groups[0], [u])
     assert ok and "obj_medic" in g.objectives_done
+
+
+def test_the_smithy_sells_the_weapon_that_completes_arm_yourself():
+    from gartok import items, world
+    from gartok.trade import Counter
+    u = standard_unit()
+    u.give_to_pack("Copper Coin", 500)
+    g = Guild([u])
+    Counter(g, [u], world.node("market"))._buy(u, ["Meat"])
+    assert "obj_buy_weapon" not in g.objectives_done
+    smith = world.node("smith")
+    weapon = next(n for n in g.shop(smith.id).stock if items.is_weapon(n))
+    Counter(g, [u], smith)._buy(u, [weapon])
+    assert "obj_buy_weapon" in g.objectives_done
+
+
+def test_a_torch_in_the_off_hand_completes_hold_the_light():
+    u = standard_unit()
+    g = Guild([u])
+    assert not objectives.is_done(g, "obj_equip_torch")
+    u.give_to_pack("Torch")
+    assert not objectives.is_done(g, "obj_equip_torch")
+    u.give_to_offhand("Torch")
+    assert objectives.is_done(g, "obj_equip_torch")
+
+
+def test_a_lumber_shift_with_your_own_axe_completes_cut_wood_but_a_bare_one_does_not():
+    bare, armed = standard_unit(), standard_unit()
+    armed.give_to_pack("Axe")
+    g = Guild([bare, armed])
+    g.work_shift([bare], 8)
+    assert "obj_chop_wood" not in g.objectives_done
+    g.work_shift([armed], 8)
+    assert "obj_chop_wood" in g.objectives_done

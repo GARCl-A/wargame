@@ -1,25 +1,43 @@
 """One-time rule cards a trigger fires (the rules players miss): the card is a tutorial id, so
 `TutorialState.seen` is its saved "seen" flag, and it carries a button that opens the wiki on the entry
-that holds the rule (`wiki_ref`). The map and the battle ask here which one is due."""
+that holds the rule (`wiki_ref`, none for a card that only advises). The map and the battle ask here which one is due."""
 
-from . import actions, items, wiki_rules
+from . import actions, economy, items, wiki_rules, world
 
-STUDY, ROAD, READING, FALLEN, DUNGEON, PLACE, FLANK = ("hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon",
-                                                       "hint.place", "hint.flank")
-IDS = (STUDY, ROAD, READING, FALLEN, DUNGEON, PLACE, FLANK)
+STUDY, ROAD, READING, FALLEN, DUNGEON, PLACE, FLANK, WILDS = ("hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon",
+                                                              "hint.place", "hint.flank", "hint.wilds")
+IDS = (STUDY, ROAD, READING, FALLEN, DUNGEON, PLACE, FLANK, WILDS)
 
 
 def _studyable(unit):
     return any((d := items.get(it.name)) and (d.spell_id or d.language or d.recipe_id) for it in unit.inventory)
 
 
+def _wild(node_id):
+    """A node past the city's jurisdiction that is not a work node: the Lumber Yard and the Mine are where the guild is sent first."""
+    return not world.node(node_id).jurisdiction and node_id not in economy.WORK_TOOLS
+
+
 def on_map(guild, seen):
-    """The hint the map owes the player now, or None: a studyable item in a pack, a band on the road."""
+    """The hint the map owes the player now, or None: a studyable item in a pack, a band on the road, a band
+    that stands outside the city's jurisdiction."""
     if STUDY not in seen and any(_studyable(u) for u in guild.roster):
         return STUDY
     if ROAD not in seen and any(g.order is not None and g.order.kind == "travel" for g in guild.groups):
         return ROAD
+    if WILDS not in seen and any(_wild(g.node) for g in guild.groups):
+        return WILDS
     return None
+
+
+def wilds_gaps(guild):
+    """What the wilds card tells an unseasoned guild to do first: ("combat", "work") for the track no member has left level 0."""
+    gaps = []
+    if all(u.combat_level == 0 for u in guild.roster):
+        gaps.append("combat")
+    if all(u.work_level == 0 for u in guild.roster):
+        gaps.append("work")
+    return gaps
 
 
 def _flank_seen(battle, visible):

@@ -30,6 +30,9 @@ OBJECTIVES = tuple(Objective(i) for i in (
     "obj_buy_food",
     "obj_work_shift",
     "obj_buy_torch",
+    "obj_equip_torch",
+    "obj_buy_weapon",
+    "obj_chop_wood",
     "obj_arena_bout",
     "obj_combat_lv1",
     "obj_medic",
@@ -67,6 +70,7 @@ def _initiated(unit):
 
 
 _CHECKS = {
+    "obj_equip_torch": lambda g: any(u.equipped_offhand in (items.TORCH_ITEM, items.LANTERN_ITEM) for u in g.roster),
     "obj_work_shift": lambda g: any(u.work_hours > 0 for u in g.roster),
     "obj_combat_lv1": lambda g: any(u.combat_level >= 1 for u in g.roster),
     "obj_work_chain": lambda g: any(u.work_level >= 2 for u in g.roster),

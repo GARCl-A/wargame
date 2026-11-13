@@ -591,6 +591,7 @@
             },
             "tokens_spent": "Todas as fichas foram gastas; o esquadrão é o que o sorteio dá.",
             "commission": "Encomendar",
+            "token_bubble": "Personagens mais fortes estão a um clique. Recomendamos gastar suas fichas aqui: troque uma carta por outra com as marcas que você quer, para preencher os papéis de que a guilda precisa.",
             "no_tokens": "Sem fichas",
             "to_charter": "para o estatuto",
             "picked": "{a} de {b} escolhidos",
@@ -640,7 +641,7 @@
             "charter": "Estatuto da guilda",
             "charter_note": "redigido em Ankareth, no primeiro dia",
             "bek": "Seja sabido que os abaixo assinados fundam a guilda de",
-            "the_guild_ph": "A Guilda",
+            "the_guild_ph": "Nomeie sua guilda",
             "trade": "no ofício de <b>{name}</b>, sob a palavra <i>“{motto}”</i>",
             "perk_line": "<b>Vantagem</b> &nbsp;{perk} <i>(todos os membros)</i>",
             "arms": "Suas armas",
@@ -4703,9 +4704,9 @@
     },
     "objectives": {
         "work_lv_reached": "Nv de Trabalho 2 alcançado.",
-        "step_reach_work_lv_at": "Etapa 2/3: alcance o Nv de Trabalho 2 no Pátio de Madeira, com o seu próprio Machado.",
+        "step_reach_work_lv_at": "Etapa 2/3: alcance o Nv de Trabalho 2 no Pátio de Madeira, com o seu próprio Machado. Níveis de trabalho contam para os dados de vida e abrem escolhas na árvore de talentos de trabalho: trabalhar deixa você mais forte no combate também.",
         "step_buy_axe_at_smithy": "Etapa 1/3: compre um Machado na Ferraria.",
-        "step_work_shifts_at_lumber": "Etapa 0/3: trabalhe turnos no Pátio de Madeira para chegar ao Nv de Trabalho 1.",
+        "step_work_shifts_at_lumber": "Etapa 0/3: trabalhe turnos no Pátio de Madeira para chegar ao Nv de Trabalho 1. Níveis de trabalho deixam o personagem mais forte no combate também: contam para os dados de vida e abrem escolhas na árvore de talentos de trabalho.",
         "guild_objectives": "Estabeleça sua guilda",
         "small_tasks_that_show_what": "Pequenas tarefas que mostram o que a guilda pode fazer, em qualquer ordem. Sem moedas nem fama, apenas um guia.",
         "done": "feito",
@@ -5776,6 +5777,9 @@
             "obj_buy_food": "Comprar Comida",
             "obj_work_shift": "Ganhar um Salário",
             "obj_buy_torch": "Levar uma Luz",
+            "obj_equip_torch": "Empunhe a Luz",
+            "obj_buy_weapon": "Arme-se",
+            "obj_chop_wood": "Corte Lenha com o seu Machado",
             "obj_arena_bout": "Luta na Arena",
             "obj_combat_lv1": "Combate Nível 1",
             "obj_medic": "Ver o Médico",
@@ -6273,12 +6277,15 @@
             "obj_buy_food": "Todos comem uma comida por dia. Batatas e Carne são vendidas na Fazenda.",
             "obj_work_shift": "Trabalhe um turno na Serraria ou na Mina: pouco pagamento, nenhum risco.",
             "obj_buy_torch": "Compre uma Tocha ou uma Lanterna no Mercado: o escuro esconde inimigos, à noite e no subsolo.",
+            "obj_equip_torch": "Ponha a Tocha na mão secundária de um personagem: uma mão acesa é o que afasta o escuro.",
+            "obj_buy_weapon": "Compre uma arma na Ferraria: quem luta com uma arma de verdade bate mais forte do que de mãos nuas.",
+            "obj_chop_wood": "Trabalhe um turno no Pátio de Madeira com um Machado na mochila: a ferramenta própria paga melhor e rende mais XP de trabalho.",
             "obj_arena_bout": "Lute uma luta na Arena: você aposta dinheiro, e ninguém morre.",
             "obj_combat_lv1": "Abata inimigos do seu nível ou acima até alguém chegar ao Nível de Combate 1.",
             "obj_medic": "Peça ao Médico da Botica que trate alguém ferido, doente ou envenenado.",
             "obj_recruit_tavern": "Recrute um novo companheiro na Taverna.",
             "obj_recruit_prison": "Pague a fiança de um preso na Prisão da Cidade e recrute-o.",
-            "obj_work_chain": "Chegue ao Nível de Trabalho 1, compre um Machado na Forja, chegue ao Nível de Trabalho 2.",
+            "obj_work_chain": "Chegue ao Nível de Trabalho 2. O XP de trabalho também deixa você mais forte: níveis de trabalho contam para os dados de vida e abrem escolhas na árvore de talentos de trabalho.",
             "obj_licence": "Compre uma licença de coleta na Serraria ou na Mina e fique com o que a turma achar.",
             "obj_mission": "Aceite um trabalho do quadro de um contratante; um local com trabalho à oferta avisa no mapa.",
             "obj_two_groups": "Comande dois grupos ao mesmo tempo (o ícone de engrenagem no cartão do grupo o divide).",
@@ -6580,6 +6587,23 @@
                     "Confira a mochila antes de partir: o mapa avisa quando as rações não aguentam a viagem, e um bando que fica sem elas passa fome."
                 ]
             },
+            "wilds": {
+                "title": "Lá fora é perigoso",
+                "body": [
+                    "Dentro da jurisdição da cidade a guarda mantém a paz. Além dela, ninguém mantém: estradas, florestas e ruínas guardam lobos, bandidos e coisa pior, e uma guilda despreparada paga com os seus membros.",
+                    "Prepare-se antes de seguir adiante: treine algumas lutas na Arena, onde ninguém morre, e compre equipamento e rações nas lojas."
+                ],
+                "combat": {
+                    "stamp": "Nv de Combate 0",
+                    "rule": "Treine na Arena",
+                    "text": "Ninguém na guilda venceu uma luta ainda. Aposte um pouco de dinheiro numa luta da Arena para aprender o ofício com segurança."
+                },
+                "work": {
+                    "stamp": "Nv de Trabalho 0",
+                    "rule": "Trabalhe no Pátio de Madeira",
+                    "text": "O XP de trabalho também deixa o personagem mais forte: conta para os dados de vida e abre escolhas na árvore de talentos de trabalho. Um turno no Pátio de Madeira é o começo fácil."
+                }
+            },
             "reading": {
                 "title": "Lendo os inimigos",
                 "body": [
@@ -6800,6 +6824,7 @@
             "title": "Recrutando",
             "body": [
                 "Escolha um estranho e depois quem do grupo faz o convite: Carisma contra Carisma, num idioma que os dois falem. Cada membro da guilda além de {free} custa {size_pen}, e cada passo de alinhamento de distância {align_pen}. Um convite falho não pode ser repetido por aquele membro até a reserva renovar na semana seguinte.",
+                "Alinhamento é como um personagem enxerga ordem e moral: Leal, Neutro ou Caótico, e Bom, Neutro ou Mau. O convite é o d20 + modificador de Carisma de quem convida + os modificadores abaixo contra o d20 + modificador de Carisma do estranho, e quem convida precisa superar. Cada passo de alinhamento de distância em um dos eixos é -{align_pen}, até quatro passos: um recrutador Leal e Bom convence outro Leal e Bom muito mais fácil que um Caótico e Mau. Escolha para o convite quem tem o alinhamento mais próximo do estranho.",
                 "Cada membro pode patrocinar {base} + seu modificador de Carisma recrutas; o líder da guilda soma o nível racial.",
                 "ESTUDAR aluga um quarto (${study} por dia) para aprender um idioma de um Dicionário, ou uma magia do seu Pergaminho, se o aluno tiver essa escola. APRESENTAR manda quem tem um Instrumento Musical para o palco atrás de gorjetas."
             ]

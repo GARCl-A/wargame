@@ -206,7 +206,8 @@ def test_every_hint_has_copy_and_a_wiki_entry_that_opens():
     from gartok.web.wiki_session import WikiSession
     for hid in hints.IDS:
         assert hid in tutorial.TUTORIALS and i18n.has(f"tutorial.{hid}.title"), hid
-        WikiSession(lambda: None).open(hints.wiki_ref(hid))
+        if hints.wiki_ref(hid):
+            WikiSession(lambda: None).open(hints.wiki_ref(hid))
 
 
 def test_the_wiki_button_dismisses_the_card_and_opens_the_wiki_over_the_map(served):
@@ -222,3 +223,21 @@ def test_the_wiki_button_dismisses_the_card_and_opens_the_wiki_over_the_map(serv
     assert isinstance(game.session, WikiSession) and game.session.focus == "Studying"
     game.session.back_to()
     assert game.session is map_session
+
+
+def test_leaving_the_city_fires_the_wilds_card_naming_the_tracks_still_at_level_zero(saves):
+    from gartok import hints
+    guild = _guild("tavern")
+    guild.tutorial.dismiss("map")
+    s = MapSession(guild)
+    assert s.tutorial_key() == "map"
+    guild.groups[0].node = "lumber_yard"
+    assert s.tutorial_key() == "map", "the work nodes are where the guild is sent first"
+    guild.groups[0].node = "wilds"
+    assert s.tutorial_key() == hints.WILDS
+    assert [r["stamp"]["label"] for r in s.tutorial_rows(hints.WILDS)] == ["Combat Lv 0", "Work Lv 0"]
+    guild.roster[0].work_hours = 999
+    guild.roster[1].combat_xp = 99
+    assert hints.wilds_gaps(guild) == []
+    guild.tutorial.dismiss(hints.WILDS)
+    assert s.tutorial_key() == "map"
