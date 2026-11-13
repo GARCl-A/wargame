@@ -93,9 +93,10 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   dragged ware is a paper slip. End Turn and a screen's main action are a wax seal.
 - **Colour is state:** blue your side, blood red the foe, brass the focus (the active unit, the chosen
   action), cool verdigris for idle edges, labels and plates.
-- **Fog of war** (approved 2026-10-30, `battle_mockup/fog_b.png`): never seen is the dark table, empty
-  (a margin note or sound rings for what is only heard); seen before is a pale paper survey with the walls
-  inked; in sight is the real floor, warm where lit and cool and dim where not.
+- **Fog of war** (`battle_mockup/fog_b.png` of 2026-10-30, the remembered floor dropped on 2026-11-13): the
+  brighter, the better known. In sight is the real floor, warm where lit and cool and dim where not; of what
+  was seen before only the terrain (walls, pits, water) and the things remembered there stay, dark silhouettes below anything in sight;
+  the rest is the dark table, flat and empty (a margin note or sound rings for what is only heard).
 - **Type:** running text is `--read` (EB Garamond Medium, never italic) at 16px or more; IM Fell English is a voice (a keeper's
   line, a dialogue, a flavour line), never under 17px; Cinzel is for names and labels. The map sheet's
   lettering is the chart's hand, drawn on the canvas.

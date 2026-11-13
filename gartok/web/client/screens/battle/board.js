@@ -24,8 +24,9 @@ const Board = (() => {
     const im = new Image(); im.onload = () => { IMG[f.split(".")[0]] = im; r(); }; im.onerror = r;
     im.src = "/client/img/" + f;
   })));
-  // One value scale holds every layer apart: what was seen before is pale paper, the lit floor sits
-  // mid, the never seen is the dark table, walls are dark and the tokens carry the strongest contrast. Each place tints one texture:
+  // One value scale holds every layer apart, the brighter the better known: the floor in sight on top,
+  // the terrain remembered sunk below it, the dark table under both, and the tokens carry the strongest
+  // contrast. Each place tints one texture:
   // `hue` gives it the place's colour (a "color" blend keeps the engraving's values), `mul` then
   // pulls it down into the floor's band. `cells` is the texture's span on the board.
   const FLOORS = {
@@ -413,17 +414,18 @@ const Board = (() => {
     return c;
   }
 
-  // seen before: the same ground washed to sepia and sunk below the lit floor, hatched like a map's old
-  // survey; washed once per board, since a canvas filter over the whole world is dear
+  // seen before: only the terrain and the remembered things are kept, washed to sepia and sunk below anything
+  // in sight; a floor remembered cell by cell among pillars read as noise, so it goes back to the dark
+  // table. Washed once per board, since a canvas filter over the whole world is dear
   let memKey = null, memCanvas = null;
   function memory(g, s) {
     if (memKey !== staticKey) {
       const [m, mc] = canvas();
-      mc.filter = "grayscale(1) sepia(.8) brightness(1.55) contrast(.4)";
+      mc.filter = "grayscale(1) sepia(.7) brightness(.38) contrast(.75)";
       mc.drawImage(staticCanvas, 0, 0); mc.filter = "none";
       memKey = staticKey; memCanvas = m;
     }
-    const seen = new Set(s.seen.map(([x, y]) => K(x, y)));
+    const seen = terrainSeen(s);
     g.drawImage(masked(memCanvas, cellGrid((x, y) => seen.has(K(x, y)) ? "#fff" : null), edge()), 0, 0);
   }
 
@@ -453,10 +455,16 @@ const Board = (() => {
     requestAnimationFrame(animate);
   }
 
+  // what the side keeps of a cell out of sight: its terrain, and the thing it remembers lying there
+  function terrainSeen(s) {
+    const t = new Set([...s.board.walls, ...s.board.elevation, ...s.board.water, ...s.props.filter(p => p.remembered).map(p => p.pos)].map(([x, y]) => K(x, y)));
+    return new Set(s.seen.map(([x, y]) => K(x, y)).filter(k => t.has(k)));
+  }
+
   function fogAndLight(g, s) {
     flames = [];
     const vis = new Set(s.visible.map(([x, y]) => K(x, y)));
-    const seen = new Set(s.seen.map(([x, y]) => K(x, y)));
+    const seen = terrainSeen(s);
     const level = new Map(s.light.map(([x, y, v]) => [K(x, y), v]));
     const blur = edge();
 
@@ -488,7 +496,7 @@ const Board = (() => {
     g.save(); g.beginPath(); g.rect(L.ox, L.oy, L.cols * L.cell, L.rows * L.cell); g.clip();
     g.globalCompositeOperation = "multiply"; g.drawImage(lit, 0, 0); g.restore();
 
-    // never seen: the dark table, empty
+    // out of sight with no terrain remembered: the dark table, flat (a mottled one read as lights)
     g.drawImage(masked(worldVoid, cellGrid((x, y) => !vis.has(K(x, y)) && !seen.has(K(x, y)) ? "#fff" : null), blur), 0, 0);
 
     // the glow of what burns
@@ -569,13 +577,7 @@ const Board = (() => {
     await ready;
     const b = s.board;
     if (layout(b.cols, b.rows) || !worldVoid) {
-      const [pc, p] = canvas(); paper(p, WW, WH, "#0e0b08", 13);
-      const r = rng(77);
-      for (let i = 0; i < 260; i++) {
-        const x = L.ox + r() * L.cols * L.cell, y = L.oy + r() * L.rows * L.cell;
-        p.strokeStyle = `rgba(150,115,70,${.03 + r() * .04})`; p.lineWidth = .8;
-        p.beginPath(); p.moveTo(x, y); p.lineTo(x + 8 + r() * 14, y - 2 - r() * 8); p.stroke();
-      }
+      const [pc, p] = canvas(); p.fillStyle = "#0c0a07"; p.fillRect(0, 0, WW, WH);
       worldVoid = pc;
     }
     if (!paperCanvas) { const [pc, p] = canvas(W, H); paper(p, W, H, "#16110c", 11); paperCanvas = pc; }
