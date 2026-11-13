@@ -59,9 +59,13 @@ def test_release_changes_skip_the_version_bookkeeping_commits():
     from scripts import release
     with open(version_check.CSV_PATH, encoding="utf-8", newline="") as fh:
         rows = list(csv.DictReader(fh))
-    prev, last = rows[-2]["hash"], rows[-1]["hash"]
-    if not version_check.git("rev-parse", "--verify", "--quiet", f"{prev}^{{commit}}"):
-        return
-    subjects = release.changes(prev, last)
-    count = int(version_check.git("rev-list", "--count", "--no-merges", f"{prev}..{last}"))
-    assert subjects and len(subjects) <= count
+    for older, newer in reversed(list(zip(rows, rows[1:]))):
+        prev, last = older["hash"], newer["hash"]
+        if not version_check.git("rev-parse", "--verify", "--quiet", f"{prev}^{{commit}}"):
+            return
+        subjects = release.changes(prev, last)
+        if subjects:
+            count = int(version_check.git("rev-list", "--count", "--no-merges", f"{prev}..{last}"))
+            assert len(subjects) <= count
+            return
+    raise AssertionError("no version pair lists a game change")
