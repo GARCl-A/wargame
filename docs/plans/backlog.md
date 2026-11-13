@@ -604,3 +604,7 @@ has one "Enter" button and its functions are tabs inside.
     of level 6 to 8 with 6 to 8 members; with the bar on, the sim player almost always loses). The Demon is
     meant to be a problem and is not tuned for the guild to win.
   - **The Demon knows only Hex and Dragonfire.** More schools wait for the new spells the author will design.
+
+================
+
+Durante o combate, ao clicar na foto do seu proprio persoangem no canto inferior esquerdo abrir a ficha.
