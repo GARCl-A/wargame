@@ -591,7 +591,7 @@
             },
             "tokens_spent": "Todas as fichas foram gastas; o esquadrão é o que o sorteio dá.",
             "commission": "Encomendar",
-            "token_bubble": "Personagens mais fortes estão a um clique. Recomendamos gastar suas fichas aqui: troque uma carta por outra com as marcas que você quer, para preencher os papéis de que a guilda precisa.",
+            "token_bubble": "Precisa de um líder ou de um lutador resistente? Gaste um token para trocar um card por outro com a tag que você pedir. Você pode gastar vários no mesmo personagem para acumular tags e montar um card mais forte.",
             "no_tokens": "Sem fichas",
             "to_charter": "para o estatuto",
             "picked": "{a} de {b} escolhidos",
