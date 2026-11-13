@@ -1,7 +1,7 @@
 """The Bankers' trust mission (Sistema 4): accept hands over the sealed chest,
 Field Command's fortress ambush fires exactly once for that shipment, the
 exchange trades chest for letter, and turning the letter in at the City
-closes the arc's 4th deed once the three economic ones are already banked."""
+earns the `bankers_trust` deed."""
 
 import random
 
@@ -110,11 +110,8 @@ def test_ledger_hold_exchanges_the_chest_for_a_letter():
     assert scr.notice and "letter of receipt" in scr.notice
 
 
-def test_turning_in_the_letter_closes_bankers_trust_once_the_economic_deeds_are_done():
+def test_turning_in_the_letter_earns_bankers_trust():
     guild, g, signer = _guild_with_signer()
-    guild.deeds_done = ["bankers_good_for_business", "bankers_steady_customer",
-                        "bankers_diverse_portfolio"]
-    guild.reputation["bankers"] = 3
     m = missions.accept(guild, signer, missions.TRUST_CHEST)
     signer.remove_named(data.MISSION_CHEST_ITEM)
     signer.give_to_pack(data.LETTER_ITEM)
@@ -123,35 +120,9 @@ def test_turning_in_the_letter_closes_bankers_trust_once_the_economic_deeds_are_
     earned = missions.turn_in(guild, m)
 
     assert [d.id for d in earned] == ["bankers_trust"]
-    assert guild.reputation["bankers"] == 4
+    assert guild.reputation["bankers"] == 1
+    assert "bankers_trust" in guild.deeds_done
     assert m.state == "done"
-
-
-def test_turning_in_early_does_not_earn_the_deed_without_the_economic_three():
-    guild, g, signer = _guild_with_signer()
-    m = missions.accept(guild, signer, missions.TRUST_CHEST)
-    signer.remove_named(data.MISSION_CHEST_ITEM)
-    signer.give_to_pack(data.LETTER_ITEM)
-
-    earned = missions.turn_in(guild, m)
-    assert earned == [] and guild.reputation.get("bankers", 0) == 0
-
-
-def test_trust_deed_lands_later_when_the_economic_three_finish_after_the_turn_in():
-    from gartok import factions
-    guild, _, signer = _guild_with_signer()
-    m = missions.accept(guild, signer, missions.TRUST_CHEST)
-    signer.remove_named(data.MISSION_CHEST_ITEM)
-    signer.give_to_pack(data.LETTER_ITEM)
-    missions.turn_in(guild, m)
-    guild.deeds_done = ["bankers_good_for_business", "bankers_steady_customer",
-                        "bankers_diverse_portfolio"]
-    guild.reputation["bankers"] = 3
-
-    earned = factions.settle(guild, factions.Event("market"))
-
-    assert [d.id for d in earned] == ["bankers_trust"]
-    assert guild.reputation["bankers"] == 4
 
 
 def test_opening_the_sealed_chest_early_fails_the_mission_and_marks_a_crime():

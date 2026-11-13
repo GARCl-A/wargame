@@ -182,17 +182,12 @@ _DEEDS = [
          check=lambda g, e: (
              e.kind == "market" and len(g.items_sold_kinds) >= 5)),
 
-    # Gated on all three economic deeds above rather than a single `requires`
-    # (that field only chains one prerequisite) -- `check` reads
-    # `guild.deeds_done` directly instead. It reads the finished trust mission
-    # rather than the turn-in event: the chest can come home before the three
-    # deeds are done, and the one-shot event would be gone by then.
+    # Reads the finished trust mission rather than the turn-in event, so the
+    # deed lands whenever settle runs after the chest came home.
     Deed("bankers_trust", "bankers", rep=1,
-         check=lambda g, e: (
-             any(m.template_id == "bankers_trust_chest" and m.state == "done"
-                 for m in g.missions)
-             and {"bankers_good_for_business", "bankers_steady_customer",
-                  "bankers_diverse_portfolio"} <= set(g.deeds_done))),
+         check=lambda g, e: any(m.template_id == "bankers_trust_chest" and m.state == "done"
+                                for m in g.missions)),
+
     
     Deed("tanners_hides", "tanners", rep=1,
          check=lambda g, e: e.kind == "mission" and "hides" in e.tags),
