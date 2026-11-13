@@ -43,13 +43,18 @@ from .unit import ATTRIBUTES, Unit
 from .version import GAME_VERSION
 from .wagon import Wagon
 
-# Se estiver rodando como um executável do PyInstaller, sys.frozen será True.
-if getattr(sys, "frozen", False):
-    _BASE_DIR = os.path.dirname(sys.executable)
-else:
-    _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-SAVE_DIR = os.path.join(_BASE_DIR, "saves")
+def data_dir(env, frozen, executable):
+    """Where the player's files live (saves, settings.json, errors.jsonl, log-export): the folder the native
+    client names, else beside a frozen exe, else the repo root."""
+    given = env.get("GARTOK_DATA_DIR")
+    if given:
+        return given
+    return os.path.dirname(executable) if frozen else os.path.dirname(os.path.dirname(__file__))
+
+
+DATA_DIR = data_dir(os.environ, getattr(sys, "frozen", False), sys.executable)
+SAVE_DIR = os.path.join(DATA_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
 MAX_SAVE_NAME = 40

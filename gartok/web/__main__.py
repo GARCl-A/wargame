@@ -4,6 +4,11 @@ browser window; the server stops when the window is closed.
     python -m gartok.web                     the title screen: continue or load a guild
     python -m gartok.web --fight fortress --level 2 --squad 4 [--seed N] [--players 2] [--no-log] [--no-window]
     python -m gartok.web --save <world> [--screen map]
+    python -m gartok.web --shell             under the native client (`shell/`): no window of its own; the
+                                             server stops when its stdin closes (the client is gone) or on QUIT
+
+Under `--shell` the first line on stdout, `GARTOK web: http://127.0.0.1:<port>/`, is how the client finds the
+port; the player's files go where `GARTOK_DATA_DIR` says (`persist.data_dir`).
 
 A lab fight is logged to `combat_lab/<date>/` as the pygame lab logs its own, unless `--no-log`.
 """
@@ -12,6 +17,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -49,6 +55,16 @@ def _stop_when_closed(game, stop):
     stop()
 
 
+def _stop_on_eof(stream, stop):
+    """Stop when `stream` ends: the native client holds the server's stdin open, so its end means the client
+    is gone, closed or killed."""
+    try:
+        stream.read()
+    except (OSError, ValueError):
+        pass
+    stop()
+
+
 def main():
     p = argparse.ArgumentParser(prog="python -m gartok")
     p.add_argument("--fight", choices=sorted(combat_lab.FIGHTS), help="a combat-lab fight instead of the title")
@@ -61,6 +77,7 @@ def main():
     p.add_argument("--screen", default="map", choices=sorted(SCREENS), help="the screen --save opens")
     p.add_argument("--port", type=int, default=0)
     p.add_argument("--no-window", action="store_true")
+    p.add_argument("--shell", action="store_true", help="run under the native client: no window, stop when stdin closes")
     args = p.parse_args()
     settings.apply_language()
     if args.save:
@@ -73,14 +90,22 @@ def main():
     server = serve(game, args.port)
     game.quit = lambda: threading.Thread(target=server.shutdown, daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"
-    print(f"GARTOK web: {url}  (Ctrl+C to stop)")
-    if not args.no_window:
+    print(f"GARTOK web: {url}  (Ctrl+C to stop)", flush=True)      # flushed: a pipe buffers it, and the client waits for it
+    if args.shell:
+        if sys.stdin is not None:
+            threading.Thread(target=_stop_on_eof, args=(sys.stdin, game.quit), daemon=True).start()
+    elif not args.no_window:
         open_window(url)
         threading.Thread(target=_stop_when_closed, args=(game, game.quit), daemon=True).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
+    if args.shell:
+        # the thread reading stdin is still blocked: leaving it for the interpreter's shutdown can abort the exit code
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
 
 
 if __name__ == "__main__":

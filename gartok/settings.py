@@ -10,7 +10,7 @@ import os
 
 from . import i18n, persist
 
-PATH = os.path.join(os.path.dirname(persist.SAVE_DIR), "settings.json")
+PATH = os.path.join(persist.DATA_DIR, "settings.json")
 
 SPEC = {
     "record_play": ("settings.name.record_play", ("OFF", "ON"), "OFF"),
@@ -62,6 +62,7 @@ def put(key, value):
         _load()
     _values[key] = value
     try:
+        os.makedirs(os.path.dirname(PATH), exist_ok=True)      # the native client's data folder is not there on a first run
         with open(PATH, "w", encoding="utf-8") as f:
             json.dump(_values, f, indent=2)
     except OSError:
