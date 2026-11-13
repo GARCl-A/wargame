@@ -1,9 +1,9 @@
 // The native window for GARTOK Tactical: starts the Python server (`python -m gartok --shell`, or the
 // packaged gartok-server.exe), loads the page it serves, and stops it when the window closes.
-// No game logic lives here; plan: docs/plans/native_client.md.
+// No game logic lives here: the page only talks to the server over HTTP.
 "use strict";
 
-const { app, BrowserWindow, Menu, dialog, screen, shell } = require("electron");
+const { app, BrowserWindow, Menu, dialog, screen, session, shell } = require("electron");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -54,7 +54,7 @@ function startServer() {
   if (app.isPackaged) {
     env.GARTOK_DATA_DIR = DATA_DIR;
     command = path.join(process.resourcesPath, "gartok-server", "gartok-server.exe");
-    args = ["--shell", ...serverArgs];
+    args = ["--shell", "--cache-static", ...serverArgs];
     cwd = DATA_DIR;
   } else {
     command = pythonCommand();
@@ -189,6 +189,7 @@ if (!SMOKE && !app.requestSingleInstanceLock()) {      // two copies would write
 
   app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);
+    await session.defaultSession.clearCache();      // the server serves its files as cacheable for good: for this session only
     try {
       openWindow(await startServer());
     } catch (e) {

@@ -4,6 +4,7 @@ browser window; the server stops when the window is closed.
     python -m gartok.web                     the title screen: continue or load a guild
     python -m gartok.web --fight fortress --level 2 --squad 4 [--seed N] [--players 2] [--no-log] [--no-window]
     python -m gartok.web --save <world> [--screen map]
+    python -m gartok.web --cache-static      the files of the page are served as cacheable for good (the native client passes it)
     python -m gartok.web --shell             under the native client (`shell/`): no window of its own; the
                                              server stops when its stdin closes (the client is gone) or on QUIT
 
@@ -77,6 +78,7 @@ def main():
     p.add_argument("--screen", default="map", choices=sorted(SCREENS), help="the screen --save opens")
     p.add_argument("--port", type=int, default=0)
     p.add_argument("--no-window", action="store_true")
+    p.add_argument("--cache-static", action="store_true", help="serve /client/ and /assets/ as cacheable for good: a screen change stops asking for each file again")
     p.add_argument("--shell", action="store_true", help="run under the native client: no window, stop when stdin closes")
     args = p.parse_args()
     settings.apply_language()
@@ -87,7 +89,7 @@ def main():
     else:
         game = Game.fight(args.fight, args.level, args.squad, args.seed, args.players,
                           None if args.no_log else combat_lab.ROOT)
-    server = serve(game, args.port)
+    server = serve(game, args.port, args.cache_static)
     game.quit = lambda: threading.Thread(target=server.shutdown, daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"
     print(f"GARTOK web: {url}  (Ctrl+C to stop)", flush=True)      # flushed: a pipe buffers it, and the client waits for it

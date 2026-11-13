@@ -15,6 +15,7 @@ import pytest
 
 from gartok import persist, settings
 from gartok.web import __main__ as launcher
+from gartok.web.server import STATIC_CACHE, Game, serve
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -99,3 +100,30 @@ def test_the_server_serves_a_first_run_and_exits_clean_when_the_client_closes_it
 def test_the_server_exits_clean_when_the_player_quits_in_the_game(shell_server):
     assert shell_server.post("/api/title/quit")["quit"] is True
     assert shell_server.proc.wait(timeout=10) == 0
+
+
+def _cache_headers(cache_static):
+    srv = serve(Game.fight("wilds", 2, 3, seed=4), cache_static=cache_static)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        out = {}
+        for name, path in (("page", "/game"), ("host", "/"), ("script", "/client/shell.js"),
+                           ("icon", "/assets/icons/map/signpost.svg"), ("api", "/api/screen")):
+            with urllib.request.urlopen(base + path) as r:
+                out[name] = r.headers["Cache-Control"]
+        return out
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_with_cache_static_the_files_are_cacheable_for_good_and_the_page_and_api_are_not():
+    got = _cache_headers(True)
+    assert got["script"] == got["icon"] == STATIC_CACHE
+    assert got["page"] == got["host"] == "no-cache" and got["api"] == "no-store"
+
+
+def test_without_cache_static_every_file_is_revalidated():
+    got = _cache_headers(False)
+    assert got["script"] == got["icon"] == got["page"] == got["host"] == "no-cache" and got["api"] == "no-store"

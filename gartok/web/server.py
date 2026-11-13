@@ -205,7 +205,12 @@ def _table(session):
     return checks.drain(guild) if guild is not None and getattr(guild, "table", None) else []
 
 
-def make_handler(game):
+STATIC_CACHE = "max-age=31536000, immutable"      # `--cache-static`: the files under /client/ and /assets/ do not change while the server runs
+
+
+def make_handler(game, cache_static=False):
+    static = STATIC_CACHE if cache_static else "no-cache"
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
@@ -230,7 +235,7 @@ def make_handler(game):
         def _missing(self):
             self._send(b"not found", "text/plain", 404)
 
-        def _file(self, path):
+        def _file(self, path, cache="no-cache"):
             if path is None:
                 return self._missing()
             ctype = mimetypes.guess_type(path)[0] or "application/octet-stream"
@@ -238,7 +243,7 @@ def make_handler(game):
             if tag in (t.strip() for t in self.headers.get("If-None-Match", "").split(",")):
                 self.send_response(304)
                 self.send_header("ETag", tag)
-                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Cache-Control", cache)
                 self.end_headers()
                 return
             with open(path, "rb") as fh:
@@ -253,8 +258,8 @@ def make_handler(game):
                     return self._send(b"", ctype, 416, (("Content-Range", f"bytes */{size}"),))
                 return self._send(body[first:last + 1], ctype, 206,
                                   (("ETag", tag), ("Accept-Ranges", "bytes"),
-                                   ("Content-Range", f"bytes {first}-{last}/{size}")), cache="no-cache")
-            self._send(body, ctype, headers=(("ETag", tag), ("Accept-Ranges", "bytes")), cache="no-cache")
+                                   ("Content-Range", f"bytes {first}-{last}/{size}")), cache=cache)
+            self._send(body, ctype, headers=(("ETag", tag), ("Accept-Ranges", "bytes")), cache=cache)
 
         def _body(self):
             n = int(self.headers.get("Content-Length") or 0)
@@ -351,9 +356,9 @@ def make_handler(game):
             if url.path == "/game":
                 return self._file(os.path.join(CLIENT, "index.html"))
             if parts[0] == "client" and len(parts) > 1:
-                return self._file(_inside(CLIENT, "/".join(parts[1:])))
+                return self._file(_inside(CLIENT, "/".join(parts[1:])), static)
             if parts[0] == "assets" and len(parts) > 2 and parts[1] in ART:
-                return self._file(_inside(ASSETS, "/".join(parts[1:])))
+                return self._file(_inside(ASSETS, "/".join(parts[1:])), static)
             if parts[0] == "api":
                 with game.lock:
                     return self._guarded(parts[1:], {k: v[0] for k, v in parse_qs(url.query).items()}, False)
@@ -370,6 +375,6 @@ def make_handler(game):
     return Handler
 
 
-def serve(game, port=0):
+def serve(game, port=0, cache_static=False):
     """A server bound to localhost (port 0: a free one), not yet serving."""
-    return ThreadingHTTPServer(("127.0.0.1", port), make_handler(game))
+    return ThreadingHTTPServer(("127.0.0.1", port), make_handler(game, cache_static))
