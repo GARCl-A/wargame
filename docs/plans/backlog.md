@@ -1,7 +1,7 @@
 # Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
-`docs/plans/` ([storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
+`docs/plans/` ([storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md), [onboarding.md](onboarding.md)) or to the doc
 that owns the subject: the test suite [../../tests/README.md](../../tests/README.md), the economy sim
 [../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
 What is already built is in the code, its tests and the git log.
@@ -27,6 +27,10 @@ Parts, in this order:
 Goal: a stable build for the author's playtest and one with friends. Left:
 
 - **Tutorials.** The author reads every card in play and flags what still rings false.
+- **Onboarding (proposal 2026-11-13, awaiting the author's calls).** Plan: [onboarding.md](onboarding.md). A new
+  player closes 7 cards (877 words) before the first order, and the recorded runs spend 79% of their first two
+  weeks on wage shifts. The plan: a quiet map where the keepers' errands give the direction, a first season of five played chapters, notes at
+  the decision in place of cards. Its phase 1 (copy and two triggers) needs no new system.
 - **Translation to pt-br.** The author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
 - **Holy Symbol.** The author plays the Farmer's quest through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair); the polish is in *Needs more information*.
