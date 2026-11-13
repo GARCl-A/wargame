@@ -120,16 +120,16 @@
 .unit h1{font:700 28px/1 Cinzel,serif;color:#f4e6c3;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
 .unit .race{font:16px/1 var(--read);color:#b59c76;margin-top:6px}
 .unit .waiting{position:absolute;left:192px;top:54px;font:italic 20px/1.3 "IM Fell English",serif;color:#b59c76}
-.stats{display:flex;gap:9px;margin-top:10px}
-.stat{min-width:58px;padding:6px 8px 5px;text-align:center;border-radius:2px;
+.stats{display:flex;gap:6px;margin-top:10px}
+.stat{min-width:46px;flex-shrink:0;padding:6px 8px 5px;text-align:center;border-radius:2px;
   background:linear-gradient(#0e1010,#171a19);box-shadow:inset 0 0 0 1px rgba(111,148,140,.35)}
-.stat span{display:block;font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:var(--verdigris);text-transform:uppercase}
+.stat span{display:block;white-space:nowrap;font:600 9px/1 Cinzel,serif;letter-spacing:.12em;color:var(--verdigris);text-transform:uppercase}
 .stat b{display:block;font:700 20px/1 Cinzel,serif;color:#f0dfb8;margin-top:4px}
-.stat.hp{width:140px;text-align:left;padding-left:10px}
-.drops{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap;max-width:112px}
-.drops i{width:10px;height:13px;background:var(--blood-hi);clip-path:path("M5 0 C5 0 10 6 10 8.5 A5 5 0 0 1 0 8.5 C0 6 5 0 5 0Z")}
+.stat.hp{width:128px;text-align:left;padding-left:10px;padding-right:6px}
+.drops{display:flex;gap:2px;margin-top:6px;height:12px}
+.drops i{flex:none;width:8px;height:11px;background:var(--blood-hi);clip-path:path("M4 0 C4 0 8 4.8 8 6.8 A4 4 0 0 1 0 6.8 C0 4.8 4 0 4 0Z")}
 .drops i.off{background:#3a2a1e}
-.hpbar{height:8px;margin-top:6px;border-radius:2px;background:#3a2a1e;overflow:hidden}
+.hpbar{height:8px;margin-top:10px;border-radius:2px;background:#3a2a1e;overflow:hidden}
 .hpbar i{display:block;height:100%;background:var(--blood-hi)}
 .weapon{margin-top:8px;font:16px/1.1 var(--read);color:#c9b38c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .weapon b{font:600 13px/1 Cinzel,serif;letter-spacing:.08em;color:#f0dfb8;margin-right:6px}
