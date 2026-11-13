@@ -428,6 +428,38 @@ class FarmerBoard(Board):
         return i18n.t("job_board.farmer_thanks", fmt_money=fmt_money(reward))
 
 
+class TavernBoard(Board):
+    """The Tavern's one job: three Potatoes from the Farm. The innkeeper warns the band off eating them, which
+    is the lesson: food in the pack is eaten by the day, so carry something else to eat on the way."""
+    GIVER = "innkeeper"
+
+    @property
+    def subtitle_text(self):
+        return i18n.t("job_board.subtitle.innkeeper")
+
+    def get_template(self):
+        return next(iter(self.get_templates()), None)
+
+    def get_templates(self):
+        return missions.board(self.guild, self.GIVER, self.group.node)
+
+    def get_req_str(self, t):
+        return i18n.t("job_board.tavern_req", goal_qty=t.goal_qty, deadline_days=t.deadline_days,
+                      fmt_money=fmt_money(t.reward))
+
+    def get_status_str(self, t, progress, ready, days_left):
+        return i18n.t("job_board.tavern_status", progress=progress, goal_qty=t.goal_qty, days_left=days_left)
+
+    def get_success_notice(self, reward):
+        return i18n.t("job_board.tavern_thanks", fmt_money=fmt_money(reward))
+
+    def accept(self, t):
+        taken = super().accept(t)
+        if taken:
+            self.notice = i18n.t("job_board.tavern_warning")
+        return taken
+
+
 # a node's function -> its giver's board, in the order a node's tabs list them
-BOARDS = (("tanner", TannerBoard), ("apothecary", ApothecaryBoard), ("library", LibraryBoard),
+BOARDS = (("innkeeper", TavernBoard), ("tanner", TannerBoard), ("apothecary", ApothecaryBoard), ("library", LibraryBoard),
           ("shrine", ShrineBoard), ("trust", TrustBoard), ("ledger", LedgerBoard), ("farmer", FarmerBoard))

@@ -244,7 +244,15 @@ FARMER_DAUGHTER = MissionTemplate(
     reward_items=(items.HOLY_SYMBOL_ITEM,), min_day=50, needs_revealed="faith_cathedral",
 )
 
+# The first job a new guild is offered, on the start node: it walks the leader to the Farm and back.
+TAVERN_POTATOES = MissionTemplate(
+    "tavern_potatoes", "innkeeper", "tavern",
+    goal_item="Potato", goal_qty=3, reward=20, deadline_days=5,
+    tags=("tavern",),
+)
+
 TEMPLATES = {
+    TAVERN_POTATOES.id: TAVERN_POTATOES,
     TANNER_HIDES.id: TANNER_HIDES,
     TANNER_BIWOLF.id: TANNER_BIWOLF,
     TANNER_OX.id: TANNER_OX,

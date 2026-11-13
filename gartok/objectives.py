@@ -1,7 +1,8 @@
 """Guild objectives: a checklist of small tasks that walks a new guild through what it can do.
 
-Shown on the Guild Screen's REPUTATIONS tab above the faction deeds, all visible from day one
-and taken in any order. Pure orientation -- no coins, fame, or mechanical rewards. Most are read
+Shown on the Guild Screen's REPUTATIONS tab above the faction deeds, all visible from day one,
+in the order a new guild is best taught them (roughly: nothing forces it, and the screen marks the first
+one still open as the next). Pure orientation -- no coins, fame, or mechanical rewards. Most are read
 off the guild's state (`is_done`); the few a state cannot tell (a purchase, a treatment, a bout)
 are marked by the screen where they happen (`complete`).
 """
@@ -28,25 +29,26 @@ class Objective:
 
 OBJECTIVES = tuple(Objective(i) for i in (
     "obj_buy_food",
+    "obj_mission",
     "obj_work_shift",
+    "obj_work_lv1",
     "obj_buy_torch",
     "obj_equip_torch",
-    "obj_buy_weapon",
-    "obj_chop_wood",
     "obj_arena_bout",
     "obj_combat_lv1",
-    "obj_medic",
     "obj_recruit_tavern",
-    "obj_recruit_prison",
+    "obj_deed",
+    "obj_buy_weapon",
+    "obj_chop_wood",
     "obj_work_chain",
-    "obj_licence",
-    "obj_mission",
-    "obj_two_groups",
     "obj_strongbox",
     "obj_pack_animal",
     "obj_wagon",
-    "obj_deed",
     "obj_initiation",
+    "obj_medic",
+    "obj_licence",
+    "obj_recruit_prison",
+    "obj_two_groups",
 ))
 
 
@@ -73,6 +75,7 @@ _CHECKS = {
     "obj_equip_torch": lambda g: any(u.equipped_offhand in (items.TORCH_ITEM, items.LANTERN_ITEM) for u in g.roster),
     "obj_work_shift": lambda g: any(u.work_hours > 0 for u in g.roster),
     "obj_combat_lv1": lambda g: any(u.combat_level >= 1 for u in g.roster),
+    "obj_work_lv1": lambda g: any(u.work_level >= 1 for u in g.roster),
     "obj_work_chain": lambda g: any(u.work_level >= 2 for u in g.roster),
     "obj_licence": lambda g: bool(g.licences),
     "obj_mission": lambda g: bool(g.missions),

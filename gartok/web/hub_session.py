@@ -78,6 +78,8 @@ def _node_tabs(node):
     if node.has("recruit"):
         tabs += ((("recruits", "Recruit"), ("rooms", "Study"), ("perform", "Perform")) if node.id == "tavern"
                  else (("tavern", "Tavern"),))
+    if node.has("innkeeper"):
+        tabs.append(("jobs", "Jobs"))
     if node.has("stable"):
         tabs.append(("stable", "Stables"))
     if node.has("farmer") and missions.FARMER_QUEST_LIVE:

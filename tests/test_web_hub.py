@@ -661,7 +661,7 @@ def test_the_tavern_opens_on_its_shop_and_its_recruits_show_the_strangers_and_th
     hub, guild, g = _tavern()
     assert hub.state()["tab"] == "shop"
     st = hub.pick_tab("recruits")
-    assert st["tab"] == "recruits" and [t["key"] for t in st["tabs"]] == ["shop", "recruits", "rooms", "perform"]
+    assert st["tab"] == "recruits" and [t["key"] for t in st["tabs"]] == ["shop", "recruits", "rooms", "perform", "jobs"]
     assert all(t["live"] for t in st["tabs"])
     t = st["tavern"]
     assert [c["uid"] for c in t["strangers"]] == [c.uid for c in guild.taverna_pool]

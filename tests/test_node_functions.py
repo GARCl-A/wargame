@@ -35,7 +35,7 @@ def test_a_nodes_hub_lists_a_tab_per_function():
 
     def keys(node_id):
         return [k for k, _ in tabs_for("market", world.node(node_id))]
-    assert keys("tavern") == ["shop", "recruits", "rooms", "perform"]
+    assert keys("tavern") == ["shop", "recruits", "rooms", "perform", "jobs"]
     assert keys("farm") == ["shop", "stable", "jobs"]
     assert keys("lumber_yard") == ["shop", "work", "gather"]
 

@@ -241,7 +241,7 @@ NODES = [
          vendors={"shop": Vendor("Pimbletwig", "Gnome", "apothecary", "apothecary.png")}),
     Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          jurisdiction="ankareth", garrison_job="study",
-         language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop"),
+         language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop", "innkeeper"),
          vendors={"shop": Vendor("Tobbin Hearthcup", "Halfling", "innkeeper", "innkeeper.png", female=True)}),
     Node("prison", "Prison", "prison", (0.22, 0.36),
          jurisdiction="ankareth", functions=("prison",),

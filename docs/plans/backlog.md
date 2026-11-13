@@ -607,4 +607,10 @@ has one "Enter" button and its functions are tabs inside.
 
 ================
 
-Adicionar uma missão na Taverna logo no inicio que faz vc ir na taverna comprar batatas e trazer pro taverneiro.
+Adicionar uma carne no kit inicial de cada persaongem.
+
+ACho que os avisos de tutorial estão com MUITO TEXTO, precisaremos ver um jeito de diminuir a quantidade de texto por card e deixar as coisas mais interativas.
+
+O jogo não avisa que gastar tudo de uma vez pode prejudicar o próximo passo. Quado o jogador chegar a 9cp a primeira vez, um aviso fala pra ele tomar cuidado com o dinheiro.
+
+Tavern Recruit: ninguém do grupo fala a língua dos recrutas disponíveis. -> na primeira vez os 3 personagens da ataverna nao forem recrutaveis, ou seja pq o jogador tentou todos e nao conseguiu nenhum ou pq nenhum fala o idioma dele, fvale mostra rum "volte aqui daqui uns dias, talvez tenham novos aventureiros" e explica q a taverna se renova semanalmente.

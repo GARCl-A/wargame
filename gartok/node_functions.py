@@ -12,7 +12,7 @@ a new kind of service is one entry here plus its opener.
 `absorbs` names functions this one hosts inside its own screen: the hubs of the Library,
 Smithy, Tannery and Apothecary carry the shop as a tab, so a node with both gets one button, not two.
 `label=None` is a function with no map button of its own (`work` draws a shift
-picker, `trust` and `farmer` are reached through their hub).
+picker, `trust`, `farmer` and `innkeeper` are reached through their hub).
 """
 
 from dataclasses import dataclass
@@ -49,6 +49,7 @@ FUNCTIONS = {f.id: f for f in (
     NodeFunction("apothecary", "apothecary", absorbs=("shop",)),
     NodeFunction("stable", "stable", absorbs=("shop",)),
     NodeFunction("farmer"),
+    NodeFunction("innkeeper"),
     NodeFunction("library", "library", absorbs=("shop",)),
     NodeFunction("property", "property"),
     NodeFunction("claim", "claim"),

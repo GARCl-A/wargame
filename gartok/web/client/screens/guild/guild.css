@@ -170,6 +170,9 @@
 .ob.failed b{text-decoration:line-through}
 .ob p{margin-top:3px;font:16px/1.2 var(--read);color:#6b5233}
 .ob.done p{display:none}
+.ob .no{color:#7b6142;font-weight:400}
+.ob.next{background:rgba(142,42,30,.07)}
+.ob.next .pt{color:#8e2a1e}
 #facs{position:absolute;left:608px;top:108px;width:1280px;height:944px;column-count:3;column-gap:16px;overflow-y:auto;scrollbar-width:none}
 #guild .fac{position:relative;break-inside:avoid;margin-bottom:16px;padding:22px 24px 20px;display:inline-block;width:100%}
 .fac .top2{display:flex;align-items:flex-start;gap:12px}

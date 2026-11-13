@@ -951,6 +951,7 @@
             "holdings": "Posses",
             "objectives": "Objetivos",
             "objectives_title": "Estabeleça sua guilda",
+            "objective_next": "PRÓXIMO",
             "faction": "Facção",
             "complete": ": COMPLETO",
             "open_sheet": "Abrir a ficha desta facção",
@@ -3305,6 +3306,10 @@
         "farmer_req": "meta: trazer a filha dele viva para casa  ·  {deadline_days} dias  ·  você recebe {fmt_money} e {reward_item}",
         "farmer_status": "filha {progress} / {goal_qty}  ·  {days_left} dia(s) restante(s)",
         "farmer_thanks": "Edric abraça a filha e paga {fmt_money}.",
+        "tavern_req": "meta: {goal_qty} Batatas da Fazenda  ·  {deadline_days} dias  ·  você recebe {fmt_money}",
+        "tavern_status": "batatas {progress} / {goal_qty}  ·  {days_left} dia(s) restante(s)",
+        "tavern_warning": "Tobbin: \"Não coma as minhas batatas! Leve umas cervejas com você.\"",
+        "tavern_thanks": "Tobbin conta as batatas duas vezes e paga {fmt_money}.",
         "party_purse": "bolsa do grupo",
         "turn_in": "ENTREGAR",
         "paid_out_split_across_group": "pagou {fmt_money}, dividido entre o grupo.",
@@ -3365,7 +3370,8 @@
             "library": "\"Precisamos ampliar nossos arquivos. Traduções são bem pagas.\"",
             "trust": "\"Prove que a guilda merece confiança com algo precioso.\"",
             "ledger": "\"A fronteira precisa de mãos firmes. Treine meu recruta e eu me lembro disso.\"",
-            "farmer": "\"Há sempre o que fazer por aqui. Quem tem mãos firmes não fica sem serviço.\""
+            "farmer": "\"Há sempre o que fazer por aqui. Quem tem mãos firmes não fica sem serviço.\"",
+            "innkeeper": "\"Minha despensa está vazia e o caldeirão também. Traga-me algumas coisas e eu pago.\""
         },
         "keeper": {
             "blood": "\"O sangue lembra. O que corre nas veias pode ser lido.\"",
@@ -4708,7 +4714,7 @@
         "step_buy_axe_at_smithy": "Etapa 1/3: compre um Machado na Ferraria.",
         "step_work_shifts_at_lumber": "Etapa 0/3: trabalhe turnos no Pátio de Madeira para chegar ao Nv de Trabalho 1. Níveis de trabalho deixam o personagem mais forte no combate também: contam para os dados de vida e abrem escolhas na árvore de talentos de trabalho.",
         "guild_objectives": "Estabeleça sua guilda",
-        "small_tasks_that_show_what": "Pequenas tarefas que mostram o que a guilda pode fazer, em qualquer ordem. Sem moedas nem fama, apenas um guia.",
+        "small_tasks_that_show_what": "Pequenas tarefas que mostram o que a guilda pode fazer, numa boa ordem para cumpri-las: mais ou menos de cima para baixo, mas nada impede de pular adiante. Sem moedas nem fama, apenas um guia.",
         "done": "feito",
         "section": "Objetivos"
     },
@@ -5273,6 +5279,7 @@
             "magic": "magia",
             "mentorship": "mentoria",
             "farm": "fazenda",
+            "tavern": "taverna",
             "rescue": "resgate",
             "nature": "natureza",
             "necromancer": "necromante",
@@ -5776,6 +5783,7 @@
         "objective": {
             "obj_buy_food": "Comprar Comida",
             "obj_work_shift": "Ganhar um Salário",
+            "obj_work_lv1": "Aprender um Ofício",
             "obj_buy_torch": "Levar uma Luz",
             "obj_equip_torch": "Empunhe a Luz",
             "obj_buy_weapon": "Arme-se",
@@ -5814,7 +5822,8 @@
             "nature_wildfire": "O Incêndio do Ogro",
             "blood_clutch": "A Ninhada do Dragão",
             "ledger_treefolk": "Mentoria do Povo-Árvore",
-            "farmer_daughter": "A Filha do Fazendeiro"
+            "farmer_daughter": "A Filha do Fazendeiro",
+            "tavern_potatoes": "Batatas para a Cozinha"
         },
         "deed": {
             "arena_first_blood": "Primeiro Sangue",
@@ -6276,6 +6285,7 @@
         "objective": {
             "obj_buy_food": "Todos comem uma comida por dia. Batatas e Carne são vendidas na Fazenda.",
             "obj_work_shift": "Trabalhe um turno na Serraria ou na Mina: pouco pagamento, nenhum risco.",
+            "obj_work_lv1": "Continue trabalhando turnos até alguém chegar ao nível de trabalho 1: o XP de trabalho é um segundo jeito de crescer.",
             "obj_buy_torch": "Compre uma Tocha ou uma Lanterna no Mercado: o escuro esconde inimigos, à noite e no subsolo.",
             "obj_equip_torch": "Ponha a Tocha na mão secundária de um personagem: uma mão acesa é o que afasta o escuro.",
             "obj_buy_weapon": "Compre uma arma na Ferraria: quem luta com uma arma de verdade bate mais forte do que de mãos nuas.",
@@ -6287,7 +6297,7 @@
             "obj_recruit_prison": "Pague a fiança de um preso na Prisão da Cidade e recrute-o.",
             "obj_work_chain": "Chegue ao Nível de Trabalho 2. O XP de trabalho também deixa você mais forte: níveis de trabalho contam para os dados de vida e abrem escolhas na árvore de talentos de trabalho.",
             "obj_licence": "Compre uma licença de coleta na Serraria ou na Mina e fique com o que a turma achar.",
-            "obj_mission": "Aceite um trabalho do quadro de um contratante; um local com trabalho à oferta avisa no mapa.",
+            "obj_mission": "Aceite um trabalho do quadro de um contratante. A Taverna tem um à espera desde o primeiro dia; um local com trabalho à oferta avisa no mapa.",
             "obj_two_groups": "Comande dois grupos ao mesmo tempo (o ícone de engrenagem no cartão do grupo o divide).",
             "obj_strongbox": "Alugue o baú dos Banqueiros na Cidade para guardar o que ninguém carrega.",
             "obj_pack_animal": "Compre um animal nos estábulos da Fazenda e dê a ele uma Sela de Carga, ou um Arreio para puxar uma carroça.",
@@ -6333,7 +6343,8 @@
             "nature_wildfire": "Um Ogro trouxe um bando de goblins para os Ermos para limpar terreno para uma fortaleza, e eles queimam a floresta para isso, só que mal. Cada fogo que acendem foge do controle. Ensine-os, ou detenha-os, e apague os fogos antes que se espalhem. O Ogro está no centro de tudo.",
             "blood_clutch": "O Códice nomeia uma toca abaixo da Mina, onde as galerias esquentam: um dragão dorme ali sobre a ninhada. Vasculhe as galerias fundas, desça e traga-nos um dos ovos: a própria linhagem, ainda não chocada. O que mais você trouxer de lá é seu.",
             "ledger_treefolk": "O Comandante Varkas do Posto de Comando confia à sua guilda um recruta novo do Povo-Árvore. Treine-o na estrada até dominar suas raízes raciais (nível racial 2) e devolva-o à guarnição.",
-            "farmer_daughter": "A filha de Edric Ashvale partiu para a Catedral da Fé e não manda notícia desde então. Ele não pode deixar a fazenda e não vende nada até ela voltar. Pergunte por aí, descubra aonde ela foi e traga-a de volta viva. Ele paga o que tem, e o Símbolo Sagrado que ela carrega é seu."
+            "farmer_daughter": "A filha de Edric Ashvale partiu para a Catedral da Fé e não manda notícia desde então. Ele não pode deixar a fazenda e não vende nada até ela voltar. Pergunte por aí, descubra aonde ela foi e traga-a de volta viva. Ele paga o que tem, e o Símbolo Sagrado que ela carrega é seu.",
+            "tavern_potatoes": "O caldeirão de Tobbin está vazio e a despensa também. Vá até a Fazenda, compre três Batatas com o seu dinheiro e traga-as de volta à Taverna em cinco dias. Ela paga vinte cobres, e avisa: uma Batata na sua mochila é uma Batata que você pode comer."
         },
         "deed": {
             "arena_first_blood": "Vença uma luta apostada nos fossos.",

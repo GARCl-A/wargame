@@ -1077,6 +1077,7 @@
       "holdings": "Holdings",
       "objectives": "Objectives",
       "objectives_title": "Establish your guild",
+      "objective_next": "NEXT",
       "faction": "Faction",
       "complete": ": COMPLETE",
       "open_sheet": "Open this faction's sheet",
@@ -3862,6 +3863,7 @@
     "objective": {
       "obj_buy_food": "Buy Food",
       "obj_work_shift": "Earn a Wage",
+      "obj_work_lv1": "Learn a Trade",
       "obj_buy_torch": "Carry a Light",
       "obj_equip_torch": "Hold the Light",
       "obj_buy_weapon": "Arm Yourself",
@@ -3926,7 +3928,8 @@
       "nature_wildfire": "The Ogre's Wildfire",
       "blood_clutch": "The Dragon's Clutch",
       "ledger_treefolk": "Treefolk Mentorship",
-      "farmer_daughter": "The Farmer's Daughter"
+      "farmer_daughter": "The Farmer's Daughter",
+      "tavern_potatoes": "Potatoes for the Kitchen"
     },
     "deed": {
       "arena_first_blood": "First Blood",
@@ -4051,6 +4054,7 @@
       "magic": "magic",
       "mentorship": "mentorship",
       "farm": "farm",
+      "tavern": "tavern",
       "rescue": "rescue",
       "nature": "nature",
       "necromancer": "necromancer",
@@ -4116,6 +4120,10 @@
     "farmer_req": "goal: bring his daughter home alive  ·  {deadline_days} days  ·  you get {fmt_money} and {reward_item}",
     "farmer_status": "daughter {progress} / {goal_qty}  ·  {days_left} day(s) left",
     "farmer_thanks": "Edric holds his daughter and pays {fmt_money}.",
+    "tavern_req": "goal: {goal_qty} Potatoes from the Farm  ·  {deadline_days} days  ·  you get {fmt_money}",
+    "tavern_status": "potatoes {progress} / {goal_qty}  ·  {days_left} day(s) left",
+    "tavern_warning": "Tobbin: \"Don't you eat my potatoes! Take some beers with you.\"",
+    "tavern_thanks": "Tobbin counts the potatoes twice and pays {fmt_money}.",
     "party_purse": "party purse",
     "turn_in": "TURN IN",
     "paid_out_split_across_group": "paid out {fmt_money}, split across the group.",
@@ -4176,7 +4184,8 @@
       "library": "\"We need to expand our archives. Translations are well paid.\"",
       "trust": "\"Prove the guild can be trusted with something precious.\"",
       "ledger": "\"The march needs steady hands. Train my recruit and I will remember it.\"",
-      "farmer": "\"There is always work to do around here. Steady hands never go idle.\""
+      "farmer": "\"There is always work to do around here. Steady hands never go idle.\"",
+      "innkeeper": "\"My cellar is bare and the stew pot is empty. Fetch me a few things and I'll pay.\""
     },
     "keeper": {
       "blood": "\"Blood remembers. What runs in the veins can be read.\"",
@@ -5631,7 +5640,7 @@
     "step_buy_axe_at_smithy": "Step 1/3: buy an Axe at the Smithy.",
     "step_work_shifts_at_lumber": "Step 0/3: work shifts at the Lumber Yard to reach Work Lv 1. Work levels make a character stronger in combat too: they count toward hit dice and open picks in the work talent tree.",
     "guild_objectives": "Establish your guild",
-    "small_tasks_that_show_what": "Small tasks that show what the guild can do, in any order. No coins or fame, just a guide.",
+    "small_tasks_that_show_what": "Small tasks that show what the guild can do, listed in a good order to take them: roughly top to bottom, though nothing stops you from skipping ahead. No coins or fame, just a guide.",
     "done": "done",
     "section": "Objectives"
   },
@@ -6197,6 +6206,7 @@
     "objective": {
       "obj_buy_food": "Everyone eats one food a day. Potatoes and Meat are sold at the Farm.",
       "obj_work_shift": "Work a shift at the Lumber Yard or the Mine: little pay, no risk.",
+      "obj_work_lv1": "Keep working shifts until someone reaches Work Lv 1: work XP is a second way to grow.",
       "obj_buy_torch": "Buy a Torch or a Lantern at the Market: the dark hides foes, at night and underground.",
       "obj_equip_torch": "Put the Torch in a character's secondary hand (their off hand): a lit hand is what pushes the dark back.",
       "obj_buy_weapon": "Buy a weapon at the Smithy: a character who fights with a real weapon hits harder than one with bare hands.",
@@ -6208,7 +6218,7 @@
       "obj_recruit_prison": "Pay a prisoner's bail at the City Prison and recruit them.",
       "obj_work_chain": "Reach Work Lv 2. Work XP is a way to grow stronger too: work levels count toward your hit dice and open picks in the work talent tree.",
       "obj_licence": "Buy a gathering licence at the Lumber Yard or the Mine and keep what the crew finds.",
-      "obj_mission": "Accept a job from a giver's board; a node with work on offer says so on the map.",
+      "obj_mission": "Accept a job from a giver's board. The Tavern has one waiting from the first day; a node with work on offer says so on the map.",
       "obj_two_groups": "Run two groups at once (the gear icon on a group's card splits it).",
       "obj_strongbox": "Rent the Bankers' chest in the City to keep what nobody carries.",
       "obj_pack_animal": "Buy an animal at the Farm's stables and give it a Pack Saddle, or a Harness to pull a wagon.",
@@ -6249,7 +6259,8 @@
       "nature_wildfire": "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn the forest to do it, though badly. Every fire they set runs wild. Teach them, or stop them, and put the fires out before they spread. The Ogre is at the heart of it.",
       "blood_clutch": "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on its clutch. Search the deep galleries, go down, and bring us one of its eggs: the bloodline itself, unhatched. Whatever else you carry out of there is yours.",
       "ledger_treefolk": "Commander Varkas of Field Command entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison.",
-      "farmer_daughter": "Edric Ashvale's daughter set out for the Faith Cathedral and has sent no word since. He cannot leave the farm, and he will sell nothing until she is home. Ask around, find where she went, and bring her back alive. He pays what he has, and the Holy Symbol she carries is yours."
+      "farmer_daughter": "Edric Ashvale's daughter set out for the Faith Cathedral and has sent no word since. He cannot leave the farm, and he will sell nothing until she is home. Ask around, find where she went, and bring her back alive. He pays what he has, and the Holy Symbol she carries is yours.",
+      "tavern_potatoes": "Tobbin's stew pot is empty and her cellar is bare. Walk to the Farm, buy three Potatoes with your own coin and bring them back to the Tavern within five days. She pays twenty copper, and her warning: a Potato in your pack is a Potato you can eat."
     },
     "faction": {
       "arena": "The staked bouts in the cellars under the city. Win, and be known.",

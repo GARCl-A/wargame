@@ -139,11 +139,13 @@ function drawCharter() {
 // ---------------------------------------------------------------- REPUTATIONS
 function drawReputations() {
   const R = G.reputations, o = R.objectives;
-  const objs = [...o.rows.filter(d => !d.done), ...o.rows.filter(d => d.done)];
+  const numbered = o.rows.map((d, i) => ({...d, n: i + 1}));
+  const objs = [...numbered.filter(d => !d.done), ...numbered.filter(d => d.done)];
+  const next = numbered.find(d => !d.done)?.n;
   const page = `<div class="paper" id="objs"><div class="kicker">${tr("guild.objectives")}</div>
     <div class="objhead"><h2>${tr("guild.objectives_title")}</h2><b>${o.done}<small> / ${o.total}</small></b></div>
     <div class="objblurb">${esc(o.blurb)}</div>
-    <div class="objs">${objs.map(d => `<div class="ob ${d.done ? "done" : ""}"><span class="box2"></span><div><b>${esc(d.name)}</b><p>${esc(d.blurb)}</p></div></div>`).join("")}</div></div>`;
+    <div class="objs">${objs.map(d => `<div class="ob ${d.done ? "done" : ""} ${d.n === next ? "next" : ""}"><span class="box2"></span><div><b><span class="no">${d.n}.</span> ${esc(d.name)}</b>${d.n === next ?`<span class="pt">${tr("guild.objective_next")}</span>` : ""}<p>${esc(d.blurb)}</p></div></div>`).join("")}</div></div>`;
   const facs = R.factions.map(f => {
     const shut = isShut(f);
     const head = `<div class="top2" data-facfold="${esc(f.name)}"${tip(shut ? tr("guild.open_sheet") : tr("guild.collapse_sheet"))}>
