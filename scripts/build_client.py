@@ -5,7 +5,7 @@ of the result. Run by `build_exe.bat`, after `version_check.py --build`.
     dist/GARTOK-win32-x64/           the client: GARTOK.exe + resources/gartok-server
     dist/GARTOK-<version>-win64.zip  what the release publishes
 
-Stops at the first failing command, its output above the message. Plan: docs/plans/native_client.md."""
+Stops at the first failing command, its output above the message."""
 
 import os
 import shutil

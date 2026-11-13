@@ -1,7 +1,7 @@
 # Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
-`docs/plans/` ([storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md), [native_client.md](native_client.md)) or to the doc
+`docs/plans/` ([storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
 that owns the subject: the test suite [../../tests/README.md](../../tests/README.md), the economy sim
 [../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
 What is already built is in the code, its tests and the git log.
@@ -186,10 +186,11 @@ the rest.
 
 ## Large
 
-- **Native client (Electron shell).** Plan: [native_client.md](native_client.md). The game ships as its own
-  window instead of opening the player's browser: the shell starts the Python server and closes it, the
-  player's files move to `%APPDATA%\GARTOK`, the release becomes a zip of a folder, and static files are cached for the session so a screen change stops
-  asking for them again. Six steps, one commit each.
+- **Screens stop reloading the page.** Every screen change is a `location.reload()`, so the page, its scripts and
+  the decoded sounds are rebuilt each time (measured 2026-11-12, day-4 guild, headless Edge at 1920x1080: the map
+  opens in 0.24 s with the files cached and 1.8 s on a CPU slowed 4 times, of which the browser rebuilding the
+  page, mostly one tiny SVG document per icon, is most). Only a screen that swaps in place fixes that; it touches
+  every screen. Measure first on a modest laptop with a late save, and the hub and battle screens too.
 
 - **Loyalty & Aspirations system (author/Yohan alignment).** Plan: [loyalty.md](loyalty.md). Replaces traditional
   alignment with organic motivation mechanics. Characters receive individual aspirations organically tied to their
@@ -285,6 +286,9 @@ the rest.
   to `kind == "market"` (the Library's cash never refills, nor would the tavern's).
 
 ## Art (made by hand, not code)
+
+- **A window icon for the native client.** No `.ico` exists, so `GARTOK.exe` shows Electron's default one; with
+  the file, `scripts/build_client.py` takes it as one `--icon` argument to `electron-packager`.
 
 Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`; the rest is game-icons.net
 SVG silhouettes. How the art is made (Gemini first, anchored on the four reference portraits; the

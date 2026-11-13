@@ -1,6 +1,7 @@
 # Web client guide: how to build a screen
 
-The game is a web client over a Python core: `python main.py` serves it and opens it in a browser window.
+The game is a web client over a Python core: `python main.py` serves it and opens it in a browser window, and the
+native client (`shell/`, Electron) shows the same page in a window of its own.
 Read this before you add or change a screen. It is a standing guide (the rules, the look, the layouts that
 hold); open work is in [plans/backlog.md](../plans/backlog.md), and how each step was built is in
 `git log -p --follow -- docs/web_ui/web_client.md`.
@@ -48,7 +49,7 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   in a frame (`/game`, the page `shell.js` runs in). A screen change reloads the frame, never the host, so a track
   plays through every screen without a cut; the game reaches it through its frame's parent (`enter(screen)` from `api()` the
   moment an answer names another screen, and at boot; `volume`; `poke()` on a press or key, which retries a start the
-  browser refused before the first click; the app window opens with the autoplay policy lifted, so only the default-browser fallback waits for a click). Files and timings are in `sound.py` (`MUSIC`, `MUSIC_SILENCE`, `MUSIC_FADE`),
+  browser refused before the first click; the app window and the native client open with the autoplay policy lifted, so only the default-browser fallback waits for a click). Files and timings are in `sound.py` (`MUSIC`, `MUSIC_SILENCE`, `MUSIC_FADE`),
   the volume is its own `music` setting. A radio on every screen but the fight: one of 4 tracks, 30 to 60 seconds of
   quiet, the next; in a fight one of 3 battle tracks at random, chained while the fight lasts. A change between the two
   fades the old one out and the new one in; leaving a fight starts with the quiet. The game opened on `/game` alone is

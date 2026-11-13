@@ -87,10 +87,8 @@ Not needed for this gate: a native window, Steamworks, save migration, more cont
 A demo is the main wishlist engine for a game without a publisher, and Steam Next Fest is where it counts
 most. A game enters Next Fest once, so the demo goes in only after it passes its exit test on its own.
 
-1. **A native window.** Today the game opens in Edge or Chrome in app mode, which reads as a web page and
-   depends on the browser each machine has. An Electron shell starts the Python server as a child process
-   and closes it on exit: plan in [native_client.md](native_client.md). It is the usual route for web games
-   on Steam. Left for this gate after that plan: the Steam overlay on Chromium windows needs testing.
+1. **A native window.** Done: the game ships as an Electron window (`shell/`). Left for this gate: test the
+   Steam overlay on a Chromium window.
 2. **The demo's cut.** The first 10 to 15 days of a guild, or up to the first title in the Pit: enough to
    draft, travel, work, fight, lose someone and write one routine. A save from the demo should load in the
    full game.

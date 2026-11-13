@@ -1,7 +1,7 @@
 # GARTOK Tactical — agent context
 
 Python turn-based squad wargame, a guild-manager sandbox rebuilt from a lost tabletop RPG's character
-generator. The game is the web client (`python main.py`); pygame survives only as the Editor
+generator. The game is the web client (`python main.py`, shown by the Electron shell in `shell/` when it ships); pygame survives only as the Editor
 (`editor/`, `python -m editor`), a separate package the game never imports.
 
 **One owner per topic** (this file is loaded on every request: rules only, never a module's
@@ -64,7 +64,7 @@ dismissed item is deleted, never kept with a note, the record is the git log).
   Versions are automatic: `build_exe.bat` runs `scripts/version_check.py --build`, which loads a
   save written by the last released commit with the current code, bumps `SAVE_VERSION` when it no
   longer loads, bumps `GAME_VERSION`, appends the `docs/versions.csv` row; commit the files it touched.
-  `release.bat` (`scripts/release.py`) then publishes that committed, pushed build as the GitHub release
+  `release.bat` (`scripts/release.py`) then publishes that committed, pushed build (the zip of the native client) as the GitHub release
   `v<version>`.
 - **Registries, not branches:** actions are `Action` subclasses in `actions/` (+ `PANEL_ACTIONS`),
   racial abilities `abilities.py`, conditions `conditions.py`, weapon traits `weapon_traits.py`
@@ -76,6 +76,8 @@ dismissed item is deleted, never kept with a note, the record is the git log).
   every base material a source (`sources.py`); `REFERENCE.md` must match the registries.
 - **Combat log:** every `Action.execute`, end of turn and flag/trap goes through
   `CombatLog.record`, human or AI, so a fight rebuilds from its JSONL alone.
+- **The player's files** (saves, `settings.json`, `errors.jsonl`, `log-export`) live under `persist.DATA_DIR`
+  (`GARTOK_DATA_DIR` sets it: the native client points it at `%APPDATA%\GARTOK`), never beside the code.
 - **One clock:** only `campaign.advance` moves it (`Guild.pass_time` is its, a test checks it). Hours a band
   spends on a screen are an order (`stints.py`, a `solo` craft, a `hunting` stretch) run through
   `MapSession.spend`, never a jump of their own.

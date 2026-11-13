@@ -10,12 +10,14 @@ client over a Python core; pygame survives only in the Editor.
 
 ```
 pip install -r requirements.txt      # the game needs nothing but the standard library
-python main.py                       # the game, in a browser window (Edge or Chrome in app mode)
+python main.py                       # the game, in a browser window (Edge or Chrome in app mode): the way to develop
+cd shell && npm ci && npm start      # the game in the native client (Electron, needs Node): the way it ships
 pip install -r editor/requirements.txt && python -m editor   # the Editor, a separate pygame program: characters, maps, the combat lab
 ```
 
 `python -m gartok` is the same as `python main.py`; `python -m gartok.web --help` lists the browser's own
-flags. The server stops when the window is closed.
+flags. The server stops when the window is closed. `build_exe.bat` builds the native client (Node on PATH) and
+leaves `dist/GARTOK-<version>-win64.zip`; `npm start -- --cache-static` runs the client the way the build does.
 
 Dev tools (pytest, pytest-xdist, ruff) live apart: `pip install -r requirements-dev.txt`.
 
@@ -205,7 +207,7 @@ gartok/
                     screen), session.py (a screen's server half) and one session (or tab) module per
                     screen or hub tab, client/ (the shell + one folder per screen under screens/;
                     dice.js + dice.css, the one die every screen rolls);
-                    `python main.py` / `python -m gartok` (the title),
+                    `python main.py` / `python -m gartok` (the title); `--shell` is how the native client starts it,
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   art_files.py      where the art is: portrait_path, BANNER_ICONS, `RACE_ICON` and
                     name each race's glyph (`map_view.NODE_ICON` the nodes')
@@ -218,6 +220,7 @@ gartok/
   store_column.py   a wagon or an animal as one more pack (the web's shop and vault)
 
 main.py             entry point (gartok/__main__.py: the browser)
+shell/              the native client: main.js (Electron: starts the server with --shell, shows its page, stops it on exit), run.js (npm start's launcher), package.json
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
 scripts/            the sims and tools; each opens with a docstring saying what it reads and prints:
@@ -226,6 +229,7 @@ scripts/            the sims and tools; each opens with a docstring saying what 
                     (what a guild can take up today), play_analysis.py (play.jsonl), combat_analysis.py and
                     combat_pairs.py (read the combat logs; the AI replays a person's squads),
                     make_cult_npcs.py (writes the Demon Cult's eight NPCs to npcs/),
+                    build_client.py (the server with PyInstaller, the window with Electron, the zip; run by build_exe.bat),
                     release.py (publishes the last built version as a GitHub release; run by release.bat),
                     gen_portrait.py (portraits from the local model, the /gen-portrait skill; portrait_lora/ has the setup),
                     portrait_press.py (levels every portrait to the same paper and ink; run after installing one)
