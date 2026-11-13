@@ -328,7 +328,7 @@ function renderInspect() {
   }
   if (t.kind === "ally") {
     card(tr("battle.your_squad"),
-      foeHead(t, `<div class="race">${esc(t.race)} · · ${esc(t.alignment)}</div>${chipRow(t.conditions || [], "chip muted")}`),
+      foeHead(t, `<div class="race">${esc(t.race)} · ${esc(t.alignment)}</div>${chipRow(t.conditions || [], "chip muted")}`),
       tier(tr("battle.vitals"), `<span>${tr("battle.hp")} <b>${t.hp}/${t.hp_max}</b></span><span>${tr("battle.ac")} <b>${t.ac}</b></span><span>${tr("battle.md")} <b>${t.md}</b></span>${t.morale == null ? "" : `<span>${tr("battle.morale")} <b>${t.morale}/${t.morale_max}</b></span>`}<span>${tr("battle.speed")} <b>${t.speed}</b></span>`)
         + (t.weapon ? tier(tr("battle.weapon"), weaponFacts(t.weapon)) : "") + groundTier(t),
       S.active && S.active.id === t.id && t.loot.length ? `<div class="assess">${tr("battle.pick_up_note")}</div>` : "");
@@ -370,7 +370,7 @@ function renderUnit() {
   const w = a.weapon;
   const lvl = a.level == null ? "" : `<div class="lvl"${tip(tr("battle.level_tip", {level: a.level, combat: a.tracks.combat, work: a.tracks.work, magic: a.tracks.magic}))}><small>${tr("battle.lv")}</small>${a.level}</div>`;
   box.innerHTML = `<div class="med" style="--side:${SEAT[a.seat]}">${face(a.portrait, a.name)}</div>${lvl}
-    <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · · ${esc(a.alignment)}</div>
+    <div class="body"><h1>${esc(a.name)}</h1><div class="race">${esc(a.race)} · ${esc(a.alignment)}</div>
     ${S.my_turn ? `<div class="stats"><div class="stat hp"><span>${tr("battle.hit_points")}${own ? ` · ${a.hp}/${a.hp_max}` : ""}</span>${hp}</div>
       <div class="stat"><span>${tr("battle.ac")}</span><b>${a.ac ?? "?"}</b></div><div class="stat"><span>${tr("battle.md")}</span><b>${a.md ?? "?"}</b></div>${a.morale == null ? "" : `<div class="stat"><span>${tr("battle.morale")}</span><b>${a.morale}/${a.morale_max}</b></div>`}<div class="stat"><span>${tr("battle.speed")}</span><b>${a.speed}</b></div></div>
       ${w ? `<div class="weapon"><b>${esc(w.name)}</b>${esc(w.damage || "")}${w.thrown ? ` · ${tr("battle.thrown", {n: w.thrown})}` : ""}${w.range ? ` · ${tr("battle.range", {n: w.range})}` : ""}${w.action ? `<em>${esc(w.action)}</em>` : ""}${a.off_hand ? ` · ${tr("battle.off_hand", {name: esc(a.off_hand)})}` : ""}</div>` : `<div class="weapon">${tr("battle.unarmed")}${a.off_hand ? ` · ${tr("battle.off_hand", {name: esc(a.off_hand)})}` : ""}</div>`}`

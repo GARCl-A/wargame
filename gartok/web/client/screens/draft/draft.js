@@ -73,7 +73,7 @@ function side() {
       if (i === undefined) return `<div class="slot empty">${tr(`draft.slot_${k + 1}`)}</div>`;
       const c = D.pool[i];
       return `<div class="slot" data-pick="${i}"><span class="num">${k + 1}</span>${medal(c.portrait, c.name, 60, "var(--enamel-hi)")}
-        <div><b>${esc(c.name)}</b><small>${esc(c.race)} ·</small><div class="mini">${c.attrs.map(a => `<span>${a.k}<i>${a.v}</i></span>`).join("")}</div></div></div>`;
+        <div><b>${esc(c.name)}</b><small>${esc(c.race)}</small><div class="mini">${c.attrs.map(a => `<span>${a.k}<i>${a.v}</i></span>`).join("")}</div></div></div>`;
     }).join("");
     const coins = Array.from({length: D.tokens_max}, (_, k) => `<div class="coin ${k < D.tokens ? "" : "spent"}"></div>`).join("");
     body = `<div class="lbl">${tr("draft.squad", {a: D.squad.length, b: D.team})}</div>${slots}
@@ -91,7 +91,7 @@ function side() {
         <div><div class="nm">${renaming === i
           ? `<input id="rename" maxlength="${C.max_founder}" value="${esc(f.name)}">`
           : `${esc(f.name)}<span class="pen" data-rename="${i}" data-tip="${tr("draft.rename")}">${ico("gui/pencil")}</span>`}</div>
-          <small>${esc(f.race)} · · ${esc(f.align)}</small>
+          <small>${esc(f.race)} · ${esc(f.align)}</small>
           <div class="rec">${tr("draft.recruit", {n: f.recruits})}<i>${esc(f.recruits_why)}</i></div></div>
         <div class="mods">${f.attrs.map(a => `<div><span>${a.k}</span><b class="${modCls(a.mod)}">${sign(a.mod)}</b></div>`).join("")}</div></div>`).join("")}`;
     sealHtml(tr("draft.found"), C.can_found ? tr("draft.the_guild") : tr("draft.pick_leader"), "map/city", !C.can_found);
@@ -125,7 +125,7 @@ function dossier(c, i) {
   return `<div class="paper dos ${k >= 0 ? "picked" : ""}" data-pick="${i}" style="left:${530 + (i % 3) * 452}px;top:${108 + Math.floor(i / 3) * 314}px">
     ${k >= 0 ? `<div class="ribbon">${k + 1}</div>` : c.commissioned ? `<span class="newmark">${tr("draft.commissioned")}</span>` : ""}
     <div class="top"><div data-sheet="${c.uid}"${tip(tr("draft.open_sheet", {name: c.name}))}>${medal(c.portrait, c.name, 68)}</div>
-      <div class="who"><h4>${esc(c.name)}</h4><div class="ro"${tip(c.race_tip, "item")}>${esc(c.race)} ·</div>
+      <div class="who"><h4>${esc(c.name)}</h4><div class="ro"${tip(c.race_tip, "item")}>${esc(c.race)}</div>
         <div class="al">${tr("draft.age", {align: esc(c.align), size: esc(c.size), age: c.age})}</div><div class="stamps">${stamps}</div></div></div>
     <div class="vit"><div><span>${tr("stat.hp")}</span><b>${c.hp}</b></div><div><span>${tr("stat.ac")}</span><b>${c.ac}</b></div><div><span>${tr("stat.md")}</span><b>${c.md}</b></div><div><span>${tr("stat.spd")}</span><b>${c.spd}</b></div><div><span>${tr("stat.init")}</span><b>${esc(c.init)}</b></div></div>
     <div class="carry ${c.carry.load > c.carry.limit ? "over" : ""}"${tip(c.carry.tip, "sum")}>${tr("draft.carry", {load: +c.carry.load.toFixed(1), limit: +c.carry.limit.toFixed(1)})}</div>
@@ -185,7 +185,7 @@ function charter() {
     <div class="sec"><div class="kicker">${tr("draft.signed")}</div>
       <div class="sigs">${order.map(i => { const f = C.founders[i];
         return `<div class="sig ${f.leader ? "first" : ""}">${f.leader ? `<span class="master"></span>` : ""}
-          <div class="hand">${esc(f.name)}</div><div class="line"></div><b>${f.leader ? tr("draft.master") : tr("draft.founder")}</b><small>${esc(f.race)} ·</small></div>`; }).join("")}</div></div>
+          <div class="hand">${esc(f.name)}</div><div class="line"></div><b>${f.leader ? tr("draft.master") : tr("draft.founder")}</b><small>${esc(f.race)}</small></div>`; }).join("")}</div></div>
   </div>
   <div id="banner"><div class="cloth"></div><div class="trim"></div><div class="rod"></div>${ico(emb.icon)}<div class="motto" id="bannername">${esc(C.name || tr("draft.the_guild_ph"))}</div></div>
   <div class="bannercap">${tr("draft.banner_note")}</div>`;

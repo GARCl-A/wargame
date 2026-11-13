@@ -1424,3 +1424,13 @@ def test_a_joint_pitch_throws_every_die_and_the_cells_throw_them_too(monkeypatch
     assert type(prison.tavern.s).__name__ == "Prison"
     checks.put(guild, checks.Check("A", 15, 2, 17, 5, True, "x", (4, 5), (9, 2)))
     assert checks.drain(guild)[0]["spare"] == [9, 2]
+
+
+def test_the_shop_deal_strip_names_the_vendors_bent_in_words_not_as_a_key():
+    hub, _, g = _hub("smith", "market")
+    for u in g.members:
+        if "Dwarvish" not in u.languages:
+            u.languages.append("Dwarvish")
+    marks = hub.state()["shop"]["deal"]["marks"]
+    assert len(marks) == 3 and not any("trade." in m["text"] for m in marks)
+    assert marks[2]["text"].endswith("bent")
