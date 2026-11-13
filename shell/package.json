@@ -1,0 +1,16 @@
+{
+  "name": "gartok",
+  "productName": "GARTOK",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Native window for GARTOK Tactical: starts the Python server and shows it.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node run.js",
+    "smoke": "node run.js --smoke=smoke.png"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "45.3.1"
+  }
+}

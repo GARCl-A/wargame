@@ -20,3 +20,5 @@ localnote.txt
 scratch/
 /settings.json
 gartok/build_info.py
+shell/node_modules/
+shell/smoke.png
