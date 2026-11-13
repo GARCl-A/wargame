@@ -5628,7 +5628,7 @@
                 "gender": "fp"
             },
             "Flint and Steel": {
-                "name": "Pederneira e Aço",
+                "name": "Pederneira",
                 "gender": "f"
             },
             "Semi-precious Gemstone": {
@@ -6834,7 +6834,7 @@
             "body": [
                 "Só aparecem receitas que alguém do grupo conhece. Começar uma consome os materiais de todas as mochilas do grupo, carroças e animais inclusive (nunca um item com cadeado); depois cada hora rola d20 + INT rumo ao lote. Uma ferramenta nomeada (um Cinzel, por exemplo) não é consumida, mas alguma mochila precisa tê-la.",
                 "TRABALHAR faz o grupo inteiro esperar as horas. SOZINHO separa o artesão num grupo só dele (ocupa um espaço livre, e só a mochila dele alimenta a fabricação); junte-os de volta à mão.",
-                "Todos sabem cozinhar (Charque, Carne Assada, Compota de Fruta) numa fogueira: uma fogueira de campo (Pederneira e Aço, {fire_units} Madeira e {fire_units} Carvão, pelo mapa), a do Território, ou o forno da casa. O Charque dura {jerky} dias; a Carne só {meat}."
+                "Todos sabem cozinhar (Charque, Carne Assada, Compota de Fruta) numa fogueira: uma fogueira de campo (Pederneira, {fire_units} Madeira e {fire_units} Carvão, pelo mapa), a do Território, ou o forno da casa. O Charque dura {jerky} dias; a Carne só {meat}."
             ]
         },
         "initiation": {

@@ -377,11 +377,11 @@ class MapSession(MapView, Session):
         else:
             missing = []
             if not any(u.has_item(economy.FIELD_CAMPFIRE_TOOL) for u in (*g.members, *g.stores)):
-                missing.append(economy.FIELD_CAMPFIRE_TOOL)
+                missing.append(i18n.name("item", economy.FIELD_CAMPFIRE_TOOL))
             if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_LUMBER) for u in g.members) < 1:
-                missing.append("1 Lumber")
+                missing.append(f"{economy.FIELD_CAMPFIRE_UNITS} {i18n.name('item', economy.FIELD_CAMPFIRE_LUMBER)}")
             if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in g.members) < 1:
-                missing.append("1 Coal")
+                missing.append(i18n.name("item", economy.FIELD_CAMPFIRE_COAL))
             fire = {"label": i18n.lab("Campfire"), "enabled": not missing,
                     "sub": i18n.t("map_session.needs", join=', '.join(missing)) if missing else i18n.t("map_session.light_it_and_cook_burns")}
         hurt = [u for u in g.members if u.hp < u.hp_max or u.sick or u.poisoned]
