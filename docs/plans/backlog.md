@@ -285,6 +285,11 @@ the rest.
   first estimate from the sim's restock sweep, and a shop's till and its refill belong to a shop function, not
   to `kind == "market"` (the Library's cash never refills, nor would the tavern's).
 
+- **The native client, before the game is published.** Later, not for the playtest: an installer (the zip is
+  enough for friends); auto-update; code signing (an unsigned `GARTOK.exe` triggers SmartScreen); Linux and macOS
+  builds (`build_client.py` is win32-x64 only); the Steam build, with its overlay tested on the Chromium window
+  ([go_to_market.md](go_to_market.md), gate 3). The window icon is under *Art*.
+
 ## Art (made by hand, not code)
 
 - **A window icon for the native client.** No `.ico` exists, so `GARTOK.exe` shows Electron's default one; with
