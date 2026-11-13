@@ -3,7 +3,8 @@
 #top{position:absolute;left:32px;right:32px;top:18px;height:76px;display:flex;align-items:center}
 .cartouche{width:420px}
 .cartouche .place{font:700 25px/1 Cinzel,serif;letter-spacing:.14em;color:var(--brass-hi);text-transform:uppercase;
-  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  text-shadow:0 1px 0 #000,0 0 18px rgba(201,163,94,.25);white-space:nowrap}
+.cartouche .place.two{white-space:normal;line-height:1.08}
 .cartouche .sub{margin-top:7px;font:italic 17px/1 "IM Fell English",serif;color:#9fb3ad}
 #init{position:absolute;left:450px;right:200px;top:0;height:76px;display:flex;align-items:center;gap:14px}
 .round{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;text-align:center;flex:none;

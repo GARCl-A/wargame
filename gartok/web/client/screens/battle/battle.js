@@ -287,8 +287,18 @@ function pips(marks) {
   return `<div class="pips">${shown.map(m => `<i class="c-${m.cls}">${ico(m.icon)}</i>`).join("")}${rest ? `<i class="more">+${rest}</i>` : ""}</div>`;
 }
 
+// the title reads whole: one line shrunk down to 20px, then two lines at that size
+function fitTitle(el, text) {
+  el.textContent = text;
+  el.classList.remove("two");
+  el.style.fontSize = "";
+  let size = 25;
+  while (el.scrollWidth > el.clientWidth && size > 20) el.style.fontSize = `${--size}px`;
+  if (el.scrollWidth > el.clientWidth) el.classList.add("two");
+}
+
 function renderTop() {
-  $("place").textContent = S.meta.name || tr("battle.title");
+  fitTitle($("place"), S.meta.name || tr("battle.title"));
   $("sub").innerHTML = S.campaign ? esc(S.meta.sub) : tr("battle.sub_lab", {level: esc(S.meta.level), squad: esc(S.meta.squad), seed: esc(S.meta.seed)});
   const coins = S.initiative.map(c => {
     if (!c.id) return `<div class="coin unknown">?</div>`;
