@@ -5,7 +5,7 @@ the Non-lethal toggle."""
 from .. import i18n, intel, morale, natural_weapons
 from ..board import cells, cells_in_radius, cone_cells
 from ..conditions import DEMORALIZE_MAX_STACKS, Defending, Demoralized, Grappled, Prone
-from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll, squares
+from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll, roll_dice, squares
 from ..i18n import Msg, Ref, plural_key
 from .base import (
     Action,
@@ -41,9 +41,8 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None, brutal=0, brutal
         battle.log("log.feint", actor=actor.name, ability=Ref("ability", ab.id, ab.name))
 
     bonus, applied = resolve_bonus(mods)
-    detail = " ".join(f"{v:+}({r})" for v, r in applied)
     nat = d20()
-    result = _resolve_hit(battle, actor, target, nat, bonus, detail,
+    result = _resolve_hit(battle, actor, target, nat, bonus, applied,
                           prefix or Msg("log.attack.head", actor=actor.name, target=target.name), weapon=weapon,
                           brutal=brutal, brutal_why=brutal_why)
 
@@ -55,6 +54,7 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None, brutal=0, brutal
         nat2 = d20()
         total2 = nat2 + bonus - nonlethal_penalty(actor)
         hits = nat2 == 20 or total2 >= target.ac_vs(actor)
+        battle.rolled(actor, target, nat2, total2 - nat2, total2, "ac", intel.shown(battle, target, "ac", target.ac_vs(actor)), hits)
         battle.log("log.luck_attack.hit" if hits else "log.luck_attack.miss", actor=actor.name, nat=nat2, total=total2)
         if hits:
             target.take_damage(actor.damage_roll(crit=nat2 == 20, weapon=weapon), battle.log,
@@ -280,15 +280,15 @@ class Throw(Action):
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True, battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.throw.head", actor=actor.name, weapon=item_ref(weapon_name), target=target.name)
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, thrown=True)
+        res = _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, thrown=True)
         if res == "miss" and actor.can_use_luck(getattr(battle, "clock_day", 1)):
             actor.use_luck(getattr(battle, "clock_day", 1))
             nat2 = d20()
             total2 = nat2 + bonus - nonlethal_penalty(actor)
             hits = nat2 == 20 or total2 >= target.ac_vs(actor)
+            battle.rolled(actor, target, nat2, total2 - nat2, total2, "ac", intel.shown(battle, target, "ac", target.ac_vs(actor)), hits)
             battle.log("log.luck_throw.hit" if hits else "log.luck_throw.miss", actor=actor.name, nat=nat2, total=total2)
             if hits:
                 target.take_damage(actor.damage_roll(crit=nat2 == 20, thrown=True), battle.log,
@@ -411,8 +411,9 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
         md += 1                                # the champion is hard to rattle in their own pit
     crit = nat == 20
     head = Msg("log.demoralize.head_free" if free else "log.demoralize.head", actor=actor.name, target=target.name)
-    roll_line = {"head": head, "nat": nat, "detail": detail, "total": total, "md": intel.shown(battle, target, "md", md),
-                 "target": target.name}
+    shown_md = intel.shown(battle, target, "md", md)
+    roll_line = {"head": head, "nat": nat, "detail": detail, "total": total, "md": shown_md, "target": target.name}
+    battle.rolled(actor, target, nat, bonus, total, "md", shown_md, crit or (nat != 1 and total >= md))
     if nat == 1:
         battle.log("log.demoralize.crit_miss", **roll_line)
     elif crit or total >= md:
@@ -596,6 +597,7 @@ class Push(Action):
         nat = d20()
         push_b = getattr(actor.char, "talent_bonus", lambda x: 0)("push_bonus") if hasattr(actor, "char") else 0
         total = nat + actor.mod_strength + push_b
+        battle.rolled(actor, target, nat, total - nat, total, "dc", str(dc), nat == 20 or (nat != 1 and total >= dc))
         mighty = bool(actor.char.talent_bonus("mighty_shove"))
         head = Msg("log.push.head_heave" if mighty else "log.push.head_shove", actor=actor.name, target=target.name,
                    nat=nat, str=actor.mod_strength, total=total, dc=dc,
@@ -733,17 +735,17 @@ class DragonBreath(Action):
         battle.log("log.breath.head", actor=actor.name, nat=nat, con=actor.mod_constitution, total=total,
                    pulled=Msg("log.breath.pulled", n=pulled) if pulled else "")
         if nat == 1:
+            battle.rolled(actor, target, nat, total - nat, total, "ac", "?", False)
             battle.log("log.breath.sputters")
             return
         for u in victims:
             ac = u.ac_vs(actor)
             shown = intel.shown(battle, u, "ac", ac)
+            battle.rolled(actor, u, nat, total - nat, total, "ac", shown, nat == 20 or total >= ac)
             if nat != 20 and total < ac:
                 battle.log("log.breath.miss", target=u.name, shown=shown)
-                battle.fx(u.pos, i18n.t("fx.vs_ac", total=total, shown=shown), "faint")
                 battle.cue("miss", u.pos)
                 continue
-            battle.fx(u.pos, i18n.t("fx.vs_ac", total=total, shown=shown), "crit" if nat == 20 else "ok")
             if nat == 20:
                 battle.cue("crit", u.pos)
             dice = self.DICE[0] * (2 if nat == 20 else 1)
@@ -804,6 +806,7 @@ class Grab(Action):
         bonus = actor.mod_strength + getattr(char, "talent_bonus", lambda _: 0)("grab_bonus")
         total = nat + bonus
         roll_line = {"actor": actor.name, "target": target.name, "nat": nat, "bonus": bonus, "total": total, "dc": dc}
+        battle.rolled(actor, target, nat, bonus, total, "dc", str(dc), nat == 20 or total >= dc)
         if nat == 20 or total >= dc:
             self.hold(battle, actor, target)
             battle.log("log.grab.hit", **roll_line)
@@ -866,6 +869,8 @@ class Takedown(Action):
         resist = theirs + target.mod_dexterity
         roll_line = {"actor": actor.name, "target": target.name, "mine": mine, "str": actor.mod_strength, "total": total,
                      "theirs": theirs, "dex": target.mod_dexterity, "resist": resist}
+        battle.rolled(actor, target, mine, actor.mod_strength, total, "contest", str(resist),
+                      mine == 20 or total >= resist, theirs={"nat": theirs, "total": resist})
         if mine == 20 or total >= resist:
             target.add_condition(Prone())
             battle.log("log.takedown.hit", **roll_line)
@@ -934,6 +939,7 @@ class EscapeGrapple(Action):
         esc_bonus = max(actor.mod_strength, actor.mod_dexterity)
         total = nat + esc_bonus
         roll_line = {"actor": actor.name, "nat": nat, "bonus": esc_bonus, "total": total, "dc": dc}
+        battle.rolled(actor, grappler or actor, nat, esc_bonus, total, "dc", str(dc), nat == 20 or total >= dc)
         if nat == 20 or total >= dc:
             if cond in actor.conditions:
                 actor.conditions.remove(cond)
@@ -1000,6 +1006,8 @@ class ZombieBite(Action):
         ac = target.ac_vs(actor)
         crit = nat == 20 or (nat != 1 and total >= ac + 10)
         hit = nat != 1 and (nat == 20 or total >= ac)
+        rolled = battle.rolled(actor, target, nat, bonus, total, "ac", intel.shown(battle, target, "ac", ac),
+                               "fumble" if nat == 1 else "crit" if crit else "hit" if hit else "miss")
         if not hit:
             battle.log("log.bite.miss", head=head, nat=nat, detail=detail, total=total, ac=ac)
             battle.fx(target.pos, i18n.t("fx.miss"), "miss")
@@ -1008,9 +1016,12 @@ class ZombieBite(Action):
         res = "crit" if crit else "hit"
         if crit:
             battle.cue("crit", target.pos)
-        dice = roll(2, 8) if crit else roll(1, 8)
+        each = roll_dice(2 if crit else 1, 8)
+        dice = sum(each)
         char = getattr(actor, "char", actor)
         dmg = max(1, dice + actor.mod_strength + getattr(char, "talent_bonus", lambda _: 0)("melee_damage"))
+        rolled["damage"] = {"dice": "2d8" if crit else "1d8", "rolls": [dice], "each": [each], "faces": 8, "mod": dmg - dice,
+                            "flat": 0, "mult": 1, "total": dmg}
         battle.log("log.bite.crit" if crit else "log.bite.hit", head=head, nat=nat, detail=detail, total=total, ac=ac, dmg=dmg)
         battle.fx(target.pos, f"-{dmg}", res)
         target.take_damage(dmg, battle.log, knockout=actor.nonlethal_blows)

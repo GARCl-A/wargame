@@ -490,7 +490,7 @@ def open_mission_chest(guild, unit):
     `(False, 0)` if `unit` isn't carrying one."""
     if not unit.has_item(data.MISSION_CHEST_ITEM):
         return False, 0
-    gems = chest.roll_lock(unit)
+    gems = chest.roll_lock(unit, guild=guild)
     if gems is None:
         return False, 0
     unit.remove_named(data.MISSION_CHEST_ITEM)

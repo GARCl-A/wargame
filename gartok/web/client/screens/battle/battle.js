@@ -61,17 +61,88 @@ async function pump() {
   pump();
 }
 
-const shows = st => st.moves.length || st.fx.length || st.acts.length || st.cues.length;
+const shows = st => st.moves.length || st.fx.length || st.acts.length || st.cues.length || (st.rolls || []).length;
 
 // one step per decision: the walks first, then the board after it, then what it showed
 async function playSteps(steps) {
   for (const [i, st] of steps.entries()) {
     for (const cue of st.sounds) Sound.play(cue);
     if (S && st.moves.length) await walk(st.moves);
+    if (S && st.rolls && st.rolls.length) await playRolls(st.rolls);
     const actor = S && st.acts.length && Board.zoomed() && S.units.find(t => t.id === st.acts[0].actor);
     if (actor) Board.reveal(actor.pos, actor.fp);
     await apply(st.state, st);
+    if (st.rolls && st.rolls.length) markRolls(st.rolls);
     if (shows(st) && i < steps.length - 1) await sleep(STEP_PAUSE);
+  }
+}
+
+// the dice of a step: thrown on the tray, the sum and the difficulty over whoever acted. The player's own
+// acts are rolled in full; what the player did not choose (a foe, a save nobody asked for) is the short throw
+async function playRolls(rolls) {
+  const own = id => { const u = S.units.find(t => t.id === id); return !!u && u.team === S.team && !u.ai_ally; };
+  bands.clear();
+  await Dice.roll($("tray"), rolls, {
+    short: !rolls.some(r => !r.passive && own(r.actor)),
+    onStop(r) {
+      const el = r.actor && $("tokens").querySelector(`[data-id="${r.actor}"]`);
+      if (!el) return;
+      const box = document.createElement("div");
+      box.className = "rollsum";
+      box.innerHTML = Dice.sum(r) + Dice.chip(r);
+      box.style.left = el.offsetLeft + el.offsetWidth / 2 + "px";
+      box.style.top = el.offsetTop - 6 + "px";
+      $("fx").appendChild(box);
+      bands.set(r, box);
+    },
+    onVerdict(r, v) {
+      const box = bands.get(r);
+      if (box) {
+        box.classList.add(v);
+        if (r.decisive) box.insertAdjacentHTML("beforeend", `<small class="why">${esc(tr("battle.dice_decisive", {why: r.decisive.why, n: sign(r.decisive.n)}))}</small>`);
+      }
+      blow(r, v);
+    },
+  });
+}
+
+const STILL = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// a melee blow moves the tokens at the moment of the verdict: the attacker lunges a third of a cell, a hit
+// knocks the target back and flashes it, a critical shakes the sheet once. The `translate` property keeps the
+// tilt of a fallen token (`transform`) out of it.
+function blow(r, v) {
+  if (STILL || r.passive || r.vs !== "ac" || !r.actor || !r.target) return;
+  const tok = id => $("tokens").querySelector(`[data-id="${id}"]`);
+  const a = tok(r.actor), t = tok(r.target);
+  if (!a || !t) return;
+  const mid = el => [el.offsetLeft + el.offsetWidth / 2, el.offsetTop + el.offsetHeight / 2];
+  const [ax, ay] = mid(a), [tx, ty] = mid(t), dist = Math.hypot(tx - ax, ty - ay), cell = Board.layout.cell;
+  if (!dist || dist > cell * (1.5 + (a.offsetWidth + t.offsetWidth) / cell / 2)) return;
+  const ux = (tx - ax) / dist, uy = (ty - ay) / dist, lunge = cell / 3, back = cell * .14;
+  a.animate([{translate: "0 0"}, {translate: `${ux * lunge}px ${uy * lunge}px`, offset: .4}, {translate: "0 0"}], {duration: 320, easing: "ease-out"});
+  if (v === "hit" || v === "crit") {
+    t.animate([{translate: "0 0", filter: "none"}, {translate: `${ux * back}px ${uy * back}px`, filter: "brightness(2.2)", offset: .3}, {translate: "0 0", filter: "none"}],
+              {duration: 360, delay: 110, easing: "ease-out"});
+  }
+  if (v === "crit") {
+    $("sheet").animate([{translate: "0 0"}, {translate: "-7px 3px"}, {translate: "6px -3px"}, {translate: "-4px 2px"}, {translate: "0 0"}], {duration: 320, delay: 110});
+  }
+}
+
+// the number over whoever acted stays until its line is written in the chronicle, and both take the colour of
+// the verdict: the eye goes from the band to the line that tells the same roll
+const bands = new Map();
+const rollMarks = new Map();     // absolute log line -> verdict: the d20 drawn in that line keeps its colour
+function markRolls(rolls) {
+  const entries = $("log").children;
+  for (const r of rolls) {
+    const line = entries[S.log.length + r.line];
+    const kind = r.vs === "free" ? "plain" : r.outcome;
+    rollMarks.set(S.log_total + r.line, kind);
+    if (line) { line.classList.add("rl", "rl-" + kind, "rm-" + kind); if (r.decisive) line.classList.add("rl-decisive"); }
+    const box = bands.get(r);
+    if (box) setTimeout(() => { box.classList.add("leave"); setTimeout(() => box.remove(), 500); }, 1500);
   }
 }
 
@@ -169,7 +240,9 @@ function renderTokens() {
     else if (ui.armed === u.id || (ui.inspect === u.id && u.side === "foe")) cls.push("target");
     if (u.downed) cls.push("downed", "is-" + u.state);
     if (ui.lift === u.id) cls.push("lift");
+    const tipsOver = el.className !== "" && !el.classList.contains("downed") && u.downed && u.state !== "dead";
     el.className = cls.join(" ");
+    if (tipsOver && !STILL) el.animate([{transform: "none"}, {transform: "rotate(-14deg)"}], {duration: 420, easing: "ease-in"});
     el.style.cssText = `left:${x}px;top:${y}px;width:${d}px;height:${d}px;z-index:${n - at};--offer:${offerCol}`;
     const col = u.hp_frac > .5 ? "#7fa557" : "#d0493a";
     const badge = n === 1 && (u.dying || u.altitude) ? `<div class="badge">${esc(u.dying || "↑" + u.altitude)}</div>` : "";
@@ -265,10 +338,12 @@ function renderLog() {
   const lines = S.log.map((line, i) => {
     const m = /^-+\s*Round\s+(\d+)\s*-+$/i.exec(line.trim());
     if (m) return `<div class="rnd">${tr("battle.round")} ${ROMAN(+m[1])}</div>`;
-    let html = esc(line);
+    let html = Dice.inkLine(esc(line));
     for (const [n, side] of [...names].sort((a, b) => b[0].length - a[0].length))
       html = html.split(esc(n)).join(`<span class="${side === "ally" ? "a" : "f"}">${esc(n)}</span>`);
-    return `<p${S.log_marks && S.log_marks[i] ? ` class="${S.log_marks[i]}"` : ""}>${html}</p>`;
+    const kind = rollMarks.get(S.log_total - S.log.length + i);
+    const cls = [S.log_marks && S.log_marks[i], kind && "rm-" + kind].filter(Boolean).join(" ");
+    return `<p${cls ? ` class="${cls}"` : ""}>${html}</p>`;
   });
   box.innerHTML = lines.join("");
   if (pinned) box.scrollTop = box.scrollHeight;

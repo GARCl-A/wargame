@@ -23,7 +23,6 @@ Independent, one commit each, smallest first. Stop after any of them.
 | B | The battle title is cut | Small | no |
 | C | A band's pawn covers a place's name on the map | Small | no |
 | D | Fog of war in a room full of pillars | Medium | yes, picks the look |
-| E | A blow moves the token | Medium | no |
 | G | Small text faults the photo review found | Small | no |
 
 ### A. The unit panel overflows at low hit points
@@ -91,27 +90,6 @@ Do, in this order:
 3. **Not a client matter, ask before touching:** whether an arena bout is fully known from the start (the
    crowd's light, a place both sides walked into). That is a rule (`AGENTS.md`, *Vision is per-character*),
    so it is the author's call and is listed here only as a question.
-
-### E. A blow moves the token
-
-The board already answers a blow with a floating number, a miss or critical word, a critical banner, the
-action's name over the actor and a dashed arc for a shot (`playEvents` and `missile` in `battle.js`, fed by
-`st.fx`, `st.cues` and `st.acts`; tests in `tests/test_battle_fx.py`). What a five-second clip still lacks
-is motion in the tokens themselves: nothing moves when a sword lands and nothing happens when a fighter
-falls.
-
-Do, client only, from the events the server already sends:
-
-- The actor's token lunges a third of a cell toward the target and returns (melee acts: an act with a
-  target and no `aim`).
-- The target's token is knocked back a few pixels and flashes on a hit; a critical shakes the board once.
-- A fighter that drops (dying, dead, knocked out) tips over or fades to its fallen state instead of
-  switching in one frame.
-
-All of it is skipped under `prefers-reduced-motion` (`board.js` already reads it as `STILL`). No new sound
-here: the cues are their own backlog item (*UI sound: the missing cues*). If an event the client needs is
-not sent (which unit dropped), add it to the state the combat log already produces, with a test beside the
-others.
 
 ### G. Small text faults the photo review found
 

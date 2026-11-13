@@ -33,30 +33,30 @@ def test_a_pulled_blow_is_one_worse_to_hit():
     batt, a, d = _sturdy_battle()
     d.hp = 50
     ac = d.ac_vs(a)
-    assert _resolve_hit(batt, a, d, 10, ac - 10, "", "x") == "hit"
+    assert _resolve_hit(batt, a, d, 10, ac - 10, [], "x") == "hit"
     a.nonlethal_blows = True
-    assert _resolve_hit(batt, a, d, 10, ac - 10, "", "x") == "miss"
+    assert _resolve_hit(batt, a, d, 10, ac - 10, [], "x") == "miss"
 
 
 def test_a_foe_dropped_by_a_pulled_blow_is_knocked_out_not_dying():
     batt, a, d = _sturdy_battle()
     a.nonlethal_blows = True
-    _resolve_hit(batt, a, d, 20, 0, "", "x")
+    _resolve_hit(batt, a, d, 20, 0, [], "x")
     assert d.status == "stable"
 
 
 def test_a_lethal_blow_still_leaves_the_foe_dying():
     batt, a, d = _sturdy_battle()
-    _resolve_hit(batt, a, d, 20, 0, "", "x")
+    _resolve_hit(batt, a, d, 20, 0, [], "x")
     assert d.status == "dying"
 
 
 def test_a_pulled_blow_on_a_dying_body_spares_it():
     batt, a, d = _sturdy_battle()
-    _resolve_hit(batt, a, d, 20, 0, "", "x")
+    _resolve_hit(batt, a, d, 20, 0, [], "x")
     a.nonlethal_blows = True
     clock = d.death_clock
-    _resolve_hit(batt, a, d, 20, 0, "", "x")
+    _resolve_hit(batt, a, d, 20, 0, [], "x")
     assert d.status == "dying" and d.death_clock == clock
 
 

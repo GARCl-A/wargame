@@ -121,7 +121,7 @@ def test_zombie_talents_grab_bonus_and_bite():
     # Execute bite: 1d8 + STR damage, +2 circumstance to hit
     initial_hp = ct.hp
     with patch("gartok.actions.combat.d20", return_value=12), \
-         patch("gartok.actions.combat.roll", return_value=6):
+         patch("gartok.actions.combat.roll_dice", return_value=[6]):
         actions.ZOMBIE_BITE.execute(b, cz, ct)
 
     # Damage dealt is 6 + STR (1) = 7
@@ -164,7 +164,7 @@ def test_dragon_sweeping_claws_give_its_claws_cleave():
     hp1_before = c_t1.hp
     hp2_before = c_t2.hp
     with patch("gartok.actions.weapon_actions.d20", return_value=15), \
-         patch("gartok.combatant.roll", return_value=8):
+         patch("gartok.combatant.roll_dice", return_value=[8]):
         actions.CLEAVE.execute(b, c_d, c_t1)
 
     assert c_t1.hp < hp1_before
@@ -226,7 +226,7 @@ def test_ai_zombie_combos_grab_and_bite():
 
     # With d20=15, first action will Grab, second action will Bite!
     with patch("gartok.actions.combat.d20", return_value=15), \
-         patch("gartok.actions.combat.roll", return_value=6):
+         patch("gartok.actions.combat.roll_dice", return_value=[6]):
         ai.take_turn(b, cz)
 
     assert ct.has_condition("grappled")

@@ -136,9 +136,15 @@ def _store(battle, team, target, margin):
         best.named[slug] = max(margin, best.named.get(slug, margin))
 
 
-def _roll(battle, team, roller, bonus=0):
+def _roll_parts(battle, team, roller, bonus=0):
+    """One read's d20 and what it adds, apart."""
     t_bonus = getattr(roller.char, "talent_bonus", lambda x: 0)("assess_bonus") if hasattr(roller, "char") else 0
-    return battle.intel.rng.randint(1, 20) + roller.mod_intelligence + battle.intel.bonus[team] + bonus + t_bonus
+    return battle.intel.rng.randint(1, 20), roller.mod_intelligence + battle.intel.bonus[team] + bonus + t_bonus
+
+
+def _roll(battle, team, roller, bonus=0):
+    nat, mod = _roll_parts(battle, team, roller, bonus)
+    return nat + mod
 
 
 def _sight(battle, team):
@@ -214,8 +220,11 @@ def assess(battle, actor, target):
     observe(battle, team)
     before = _open(battle, team, target)
     act_bonus = getattr(actor.char, "talent_bonus", lambda x: 0)("assess_active_bonus") if hasattr(actor, "char") else 0
-    total = _roll(battle, team, actor, ASSESS_BONUS + act_bonus)
-    margin = total - dc(battle, team, target)
+    nat, mod = _roll_parts(battle, team, actor, ASSESS_BONUS + act_bonus)
+    total = nat + mod
+    need = dc(battle, team, target)
+    margin = total - need
+    battle.rolled(actor, target, nat, mod, total, "dc", str(need), nat == 20 or (nat != 1 and margin >= 0))
     battle.intel.assessed[(team, target)] = battle.round_no
     _store(battle, team, target, margin)
     return total, margin, sorted(_open(battle, team, target) - before, key=list(FIELDS).index)

@@ -23,6 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 from .. import (
+    checks,
     combat_lab,
     fault_log,
     i18n,
@@ -197,6 +198,13 @@ def _inside(root, rel):
     return path if path.startswith(os.path.normpath(root) + os.sep) and os.path.isfile(path) else None
 
 
+def _table(session):
+    """The checks the player's last order rolled outside a fight, as `dice.js` throws them (`checks.drain`)."""
+    owner = session if hasattr(session, "guild") else getattr(session, "map", None)
+    guild = getattr(owner, "guild", None)
+    return checks.drain(guild) if guild is not None and getattr(guild, "table", None) else []
+
+
 def make_handler(game):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
@@ -214,6 +222,8 @@ def make_handler(game):
 
         def _json(self, payload, status=200):
             """The answer, with the tutorial card of the screen open once it has run."""
+            if isinstance(payload, dict) and (rolled := _table(game.session)):
+                payload = {**payload, "checks": rolled}
             self._send(json.dumps(payload).encode(), "application/json", status,
                        (("X-Tutorial", tutorial_header(game.session)),))
 
@@ -261,7 +271,8 @@ def make_handler(game):
                 return self._json({})
             if parts == ["screen"] and not post:
                 return self._json({"screen": s.screen, "lab": game.lab is not None,
-                                   "volume": settings.get("volume"), "music": settings.get("music")})
+                                   "volume": settings.get("volume"), "music": settings.get("music"),
+                                   "dice": settings.get("dice")})
             if parts == ["locale"] and not post:
                 return self._json({"lang": i18n.language(), "text": i18n.group("ui"), "names": i18n.group("name")})
             if parts == ["sounds"] and not post:

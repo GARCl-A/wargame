@@ -60,7 +60,7 @@ finished and a sentence that says what the game is.
 1. **The frames.** Build [storefront_polish.md](storefront_polish.md): packages A, B, C and G are small;
    D (the fog) decides whether the Pit can be shown at all. Then retake the photos following that plan's
    last section (presentable names, no empty states, campaign fights instead of lab fights, the board zoomed).
-2. **Motion and sound for a trailer:** the same plan's package E (a blow moves the token); the music is in.
+2. **Motion and sound for a trailer:** a blow already moves the token and the music is in; the sound cues are in the backlog.
    A trailer of 30 to 45 seconds: the map with two bands walking, a routine written and then running, a
    fight with the fog opening, a death and its memorial.
 3. **The capsule image** (the picture in Steam's lists; it drives clicks more than anything else on the

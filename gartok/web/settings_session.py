@@ -86,4 +86,4 @@ class SettingsSession(Session):
         if self.guild is not None:
             tut = {"enabled": self.guild.tutorial.enabled, "reset": self.reset_note}
         return {"rows": rows, "tutorial": tut, "guild": self.guild.name if self.guild else None,
-                "version": f"GARTOK v{GAME_VERSION} · {build_hash()}", "volume": settings.get("volume"), "music": settings.get("music"), "back": self.back_label}
+                "version": f"GARTOK v{GAME_VERSION} · {build_hash()}", "volume": settings.get("volume"), "music": settings.get("music"), "dice": settings.get("dice"), "back": self.back_label}

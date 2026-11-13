@@ -271,7 +271,7 @@ def test_water_jet_hits_for_d8_plus_int_and_throws_the_target_back():
     jet = actions.CastSpellAction("water_jet")
     assert jet.can(batt, p, e)
     hp = e.hp
-    with fixed_d20(20), patch("gartok.data.roll", return_value=3):
+    with fixed_d20(20), patch("gartok.data.roll_dice", return_value=[3]):
         jet.execute(batt, p, e)
     assert e.pos == (6, 5) and e.hp == hp - max(1, 3 + p.mod_intelligence)
 
@@ -280,7 +280,7 @@ def test_water_jet_cannot_throw_through_a_wall_and_misses_do_nothing():
     batt, p, e = _jet_battle()
     batt.board.walls = {(6, 5)}
     jet = actions.CastSpellAction("water_jet")
-    with fixed_d20(20), patch("gartok.data.roll", return_value=3):
+    with fixed_d20(20), patch("gartok.data.roll_dice", return_value=[3]):
         jet.execute(batt, p, e)
     assert e.pos == (5, 5)
     p.ap, hp = 2, e.hp

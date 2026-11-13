@@ -120,8 +120,22 @@ class Battle:
         Hits and falls need no cue, the screen reads them off the HP."""
         self.cues.append((kind, pos))
 
+    def rolled(self, actor, target, nat, mod, total, vs, dc, outcome, theirs=None, damage=None, passive=False):
+        """Queue one d20 for the screen's dice tray and return its record (the caller may attach `damage`
+        later). `actor` / `target` are combatants or a cell; `vs` is "ac" | "md" | "dc" | "contest"; `dc` is
+        what the side may read of the difficulty ("?" when it has not read it); `theirs` is the other die
+        of a contest; `passive` is a roll nobody chose (death save, morale, poison). `outcome` is the word
+        or, for a plain pass/fail check, a bool the natural die turns into the word."""
+        if isinstance(outcome, bool):
+            outcome = "fumble" if nat == 1 else "crit" if nat == 20 else "hit" if outcome else "miss"
+        rec = {"actor": actor, "target": target, "nat": nat, "mod": mod, "total": total, "vs": vs, "dc": dc,
+               "outcome": outcome, "theirs": theirs, "damage": damage, "passive": passive, "line": self.log_total}
+        self.rolls.append(rec)
+        return rec
+
     def setup(self):
         self.log_lines.clear()
+        self.rolls = []
         self.fx_events = []
         self.cues = []
         self.acts = []
@@ -1035,9 +1049,11 @@ class Battle:
         """d20 >= DEATH_SAVE_MIN -> stable; otherwise dead. Logs and returns the
         new status."""
         roll = d20()
+        self.rolled(unit, unit, roll, 0, roll, "dc", str(data.DEATH_SAVE_MIN), roll >= data.DEATH_SAVE_MIN, passive=True)
         if roll < data.DEATH_SAVE_MIN and unit.can_use_luck(self.clock_day):
             unit.use_luck(self.clock_day)
             roll2 = d20()
+            self.rolled(unit, unit, roll2, 0, roll2, "dc", str(data.DEATH_SAVE_MIN), roll2 >= data.DEATH_SAVE_MIN, passive=True)
             self.log("log.death_save.luck", unit=unit.name, nat=roll2)
             roll = roll2
         if roll >= data.DEATH_SAVE_MIN:

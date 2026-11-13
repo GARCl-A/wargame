@@ -16,7 +16,7 @@ the Dragon racial talents (`dragon`, `dragon_breath`).
 
 import random
 
-from . import data, encounters, i18n, missions, npc_lib
+from . import checks, data, encounters, i18n, missions, npc_lib
 from .board import Board, grid_distance
 from .ground import GroundObject
 from .scenario import Scenario
@@ -76,6 +76,7 @@ def search(guild, group):
     nat = data.d20()
     wis = scout.mod_wisdom if scout else 0
     total = nat + wis
+    checks.put(guild, checks.Check(who, nat, wis, total, SEARCH_DC, total >= SEARCH_DC, i18n.t("checks.scout")))
     if total >= SEARCH_DC:
         guild.reveal_node(NODE)
         return True, (i18n.t("serpent_nest.follows_shed_skins_to_split", who=who))

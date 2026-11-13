@@ -10,7 +10,7 @@ clue asking around turned up (`investigation.bonus`).
 import math
 import random
 
-from . import data, i18n, investigation, items, loot, missions, world
+from . import checks, data, i18n, investigation, items, loot, missions, world
 from .board import Board, grid_distance
 from .ground import GroundObject
 from .scenario import Scenario
@@ -85,6 +85,7 @@ def search(guild, group):
     mod = scout.mod_wisdom if scout else 0
     bonus = search_bonus(guild)
     total = nat + mod + bonus
+    checks.put(guild, checks.Check(who, nat, mod + bonus, total, SEARCH_DC, total >= SEARCH_DC, i18n.t("checks.scout")))
     if total >= SEARCH_DC:
         reveal(guild)
         return True, i18n.t("cult_site.found", who=who)

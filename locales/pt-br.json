@@ -522,6 +522,12 @@
             "critical": "Crítico!",
             "miss": "Errou",
             "crit_banner": "Acerto crítico",
+            "dice_unread": "Ainda não lida: use Avaliar no inimigo para ver",
+            "dice_ac": "CA",
+            "dice_md": "DM",
+            "dice_dc": "CD",
+            "dice_contest": "contra",
+            "dice_decisive": "{why} {n} decidiu",
             "new_fight_h": "Nova luta",
             "pick_lab": "Escolha uma luta no laboratório de combate.",
             "won": "O campo é seu.",
@@ -1365,6 +1371,10 @@
                     "label": "Linhas do registro",
                     "note": "Quantas linhas o registro do mapa guarda antes de perguntar o que fazer com as mais antigas. De 200 a 50000."
                 },
+                "dice": {
+                    "label": "Dados",
+                    "note": "Como os dados rolam na mesa: completo mostra cada rolagem, rápido é um arremesso curto, desligado mostra o resultado sem espera."
+                },
                 "language": {
                     "label": "Idioma",
                     "note": "O idioma dos textos do jogo; trocar recarrega a tela."
@@ -1372,7 +1382,9 @@
             },
             "value": {
                 "off": "Desligado",
-                "on": "Ligado"
+                "on": "Ligado",
+                "full": "Completo",
+                "quick": "Rápido"
             },
             "unknown": "não existe configuração chamada {name}",
             "cannot_be": "{label} não pode ser {value}",
@@ -2262,12 +2274,13 @@
                 "flanked": "flanqueado"
             },
             "phalanx": " [Falange]",
-            "crit_miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> erro crítico.",
-            "spared": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> o golpe é contido; o caído é poupado.",
-            "on_fallen": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> um golpe no caído.",
-            "crit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> ACERTO CRÍTICO!",
-            "hit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> acerta.",
-            "miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}  -> erra."
+            "decisive": " [{why} {n:+} decidiu]",
+            "crit_miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> erro crítico.",
+            "spared": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> o golpe é contido; o caído é poupado.",
+            "on_fallen": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> um golpe no caído.",
+            "crit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> ACERTO CRÍTICO!",
+            "hit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> acerta.",
+            "miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> erra."
         },
         "brutal": "  {why}: Brutal {n}!",
         "damage_roll": "  Dano: {detail} = {dmg}",
@@ -2681,8 +2694,9 @@
             "arena_born": "Nascido na Arena",
             "cavalry_charge": "Carga de Cavalaria",
             "run_down": "Atropelar",
-            "nonlethal": " -{n}(não letal)",
-            "obscured": " -{n}(encoberto)"
+            "nonlethal": "não letal",
+            "obscured": "encoberto",
+            "crit_range": "margem de crítico"
         },
         "mod_kind": {
             "circumstance": "circunstância",
@@ -3638,7 +3652,6 @@
         "peep": "Entre, entre. A água está ótima. Eu conto os respingos."
     },
     "fx": {
-        "vs_ac": "{total} contra CA {shown}",
         "crit_miss": "Erro Crítico!",
         "grappled": "agarrado",
         "prone": "caído",
@@ -3647,13 +3660,11 @@
         "miss": "erra",
         "got": "Pegou {item:o}!",
         "chest_opened": "Baú Aberto!",
-        "vs": "{total} contra {dc}",
         "stabilize_ok": "d20({nat}) Sucesso",
         "stabilize_fail": "d20({nat}) Falha",
         "heal": "+{heal} PV",
         "web": "Teia!",
         "signal_horn": "Trompa Sinalizadora!",
-        "vs_dc": "{total} contra CD {dc}",
         "secret_opened": "Segredo Aberto!",
         "found": "Achou!",
         "web_cleared": "Teia Rasgada!",
@@ -4338,6 +4349,12 @@
     "session": {
         "nobody_by_that_id_here": "ninguém com esse id aqui"
     },
+    "checks": {
+        "ask": "pergunta por ai",
+        "chest": "arromba a fechadura",
+        "scout": "explora a area",
+        "pitch": "faz a proposta"
+    },
     "investigation": {
         "nobody_knows": "Ninguém aqui sabe nada sobre isso.",
         "found": "{name} faz algumas pessoas falarem.",
@@ -4868,7 +4885,8 @@
             "volume": "VOLUME",
             "music": "MÚSICA",
             "log_lines": "LINHAS DO REGISTRO",
-            "language": "IDIOMA"
+            "language": "IDIOMA",
+            "dice": "DADOS"
         }
     },
     "vision": {
@@ -6686,7 +6704,7 @@
             "title": "Lutando",
             "body": [
                 "Cada personagem tem {ap} pontos de ação por turno, e a barra iluminada embaixo é o que ele pode fazer com eles: passe o mouse numa linha abaixo e a placa dela se acende. Espaço ou o selo ao lado encerra o turno. Clique numa casa verde para andar, num inimigo com contorno vermelho para mirá-lo, e de novo para atacar. A roda dá zoom, arrastar com o botão direito move a tela.",
-                "Você só vê o que a luz e os sentidos do personagem ativo alcançam; L mostra a visão de todo o esquadrão. Os campos ? de um inimigo são o que você ainda não leu: todos leem um inimigo ao avistá-lo, e Avaliar ({assess} ponto) lê mais fundo.",
+                "Você só vê o que a luz e os sentidos do personagem ativo alcançam; L mostra a visão de todo o esquadrão. Os campos ? de um inimigo são o que você ainda não leu: todos leem um inimigo ao avistá-lo, e Avaliar ({assess} ponto) lê mais fundo. Toda rolagem cai na bandeja sob a crônica; um selo vermelho no lugar de um número é uma dificuldade que você ainda não leu.",
                 "Com 0 PV um personagem cai, não morre: Estabilize-o ou use Primeiros Socorros antes que sangre até o fim."
         ],
             "cost": {

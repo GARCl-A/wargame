@@ -58,7 +58,7 @@ def test_spell_focus_destructive_casting_blessed_hands_and_far_cast():
     target.pos = (9, 2)
     target.hp = 30
     with patch("gartok.actions.spells.d20", return_value=10), \
-            patch("gartok.actions.spells.data.roll", return_value=3):
+            patch("gartok.actions.spells.data.roll_dice", return_value=[3]):
         mm.execute(batt, me, target)
     assert target.hp == 30 - 4                        # 3 rolled + 1 Destructive Casting
 
@@ -68,7 +68,7 @@ def test_spell_focus_destructive_casting_blessed_hands_and_far_cast():
     heal = actions.CastSpellAction("healing_touch")
     me.hp = 1
     me.ap = 2
-    with patch("gartok.actions.spells.data.roll", return_value=4):
+    with patch("gartok.actions.spells.data.roll_dice", return_value=[4]):
         heal.execute(batt, me, me)
     assert me.hp == 1 + 5                             # 4 rolled + 1 Blessed Hands
 

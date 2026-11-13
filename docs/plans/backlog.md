@@ -124,17 +124,6 @@ the rest.
 
 ## Medium
 
-- **A d20 rolled on the table (visual audit 2026-11-12, author approved).** The game comes from a tabletop
-  RPG and the chronicle already prints `d20(19) +3`, but no die is ever seen. Do: when a roll decides an act
-  (a strike, a Demoralize, an Assess, a forced talk's roll), a die tumbles on the table beside the board and
-  stops on the number rolled, before the floating number and the chronicle line; a natural 20 and a natural 1
-  each have their own stop. Client only, from the events the server already sends (`st.fx`, `st.cues`,
-  `st.acts` in `battle.js`; add the rolled face to them if it is not there, with a test in
-  `tests/test_battle_fx.py`). The die is an object on the table like the seal and the coins, not a panel; it
-  must not slow a turn (the AI's rolls play short or batch) and is skipped under `prefers-reduced-motion`. A
-  sound cue for the roll goes with *UI sound: the missing cues*. Builds on package E of
-  [storefront_polish.md](storefront_polish.md) (a blow moves the token).
-
 - **Objects on the table, not boxes on a page (visual audit 2026-11-12).** The screens that look most like
   a game are the ones made of physical things that overlap and sit a little crooked (the title: the map
   sheet, the guild card, the coins, the seal; the charter; the Victory stamp). The ones that look like a web
@@ -150,7 +139,7 @@ the rest.
 - **Storefront polish (photo review 2026-11-12).** Plan: [storefront_polish.md](storefront_polish.md). What the
   real screenshots in [../photos/12112026/](../photos/12112026/) show: the unit panel overflowing at low hit
   points, the cut battle title, band pawns over place names on the map (three *Small*), the fog of war in a room
-  full of pillars (the author picks the look) and a blow that moves the token.
+  full of pillars (the author picks the look).
 
 - **Race study in four tests (`docs/race_study.md`).** The waves and `mixed_study_report.py` exist; missing: a full run
   (sizes in the doc), the mixed error (a build twice in one squad is credited twice per unit, which is the intended score, but
@@ -160,10 +149,6 @@ the rest.
 - **Auto flee button (playtest 2026-11-02).** One button that moves every unit of the side toward the exit
   while it can, instead of ordering each one. Read the flee rules first (what blocks a flee, who is held)
   and reuse the AI's flee path. End-to-end: web button in `screens/battle/`, `ai/`, tests, tutorial mention.
-
-- **"Modifiers Matter" in the combat log (author/Yohan alignment).** The *Damage* line already lists dice, modifiers and
-  multiplier (`log_marks`). Left: mark the modifier that was decisive, the one that turned a miss into a hit or a strike
-  into a critical (inspired by Pathfinder 2e's *Modifiers Matter*).
 
 - **Intimidation build rework & mathematical tuning (author/Yohan alignment).** Overhaul the mathematical progression, DCs,
   and action economy for the Intimidation combat build (Demoralize, Provoke, and associated Charisma/Wisdom talents) to raise

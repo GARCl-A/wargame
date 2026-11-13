@@ -724,7 +724,7 @@ def test_keen_bolts_make_a_19_a_critical_hit_only_with_a_crossbow():
         batt = Battle([Unit("player")], [Unit("enemy")])
         batt.units[0].pos, batt.units[1].pos = (5, 5), (8, 5)
         with fixed_d20(nat):
-            return base._resolve_hit(batt, shooter, batt.units[1], nat, 99, "", "x") == "crit"
+            return base._resolve_hit(batt, shooter, batt.units[1], nat, 99, [], "x") == "crit"
     keen = _bolt_shooter("keen_bolts")
     assert crits(keen, 19) and not crits(_bolt_shooter(), 19)
 
@@ -741,7 +741,7 @@ def _brutal_of_a_shot(shooter, target_acted):
     real = shooter.damage_roll
     shooter.damage_roll = lambda **kw: seen.append(kw["brutal"]) or real(**kw)
     with fixed_d20(10):
-        base._resolve_hit(batt, shooter, foe, 10, 99, "", "x")
+        base._resolve_hit(batt, shooter, foe, 10, 99, [], "x")
     return seen[0]
 
 

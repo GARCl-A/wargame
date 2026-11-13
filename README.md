@@ -149,6 +149,7 @@ gartok/
   fight_nature.py   sought / opportunist / determined: what kind of fight each source declares
   economy.py        prices, market stock, haggling (language + Charisma + alignment)
   constants.py      tuning knobs shared by economy/justice/campaign (bail, patrols, taxes)
+  checks.py         the d20 a player's order rolls outside a fight (`Check` on `guild.table`, drained into the web answer)
   chest.py          a generic locked pack item (d20+DEX vs DC), opened from the band's item menu
   justice.py        crime per character, City jurisdiction, the guard's catch/patrol/prison
   lair.py           the Dragon's Lair under the Mine: a heist past kobold patrols and a sleeping dragon
@@ -202,7 +203,8 @@ gartok/
   # presentation of the game
   web/              the web client (guide: docs/web_ui/web_client.md): server.py (stdlib JSON API routed by
                     screen), session.py (a screen's server half) and one session (or tab) module per
-                    screen or hub tab, client/ (the shell + one folder per screen under screens/);
+                    screen or hub tab, client/ (the shell + one folder per screen under screens/;
+                    dice.js + dice.css, the one die every screen rolls);
                     `python main.py` / `python -m gartok` (the title),
                     `python -m gartok.web --fight <lab fight>` or `--save <world>`
   art_files.py      where the art is: portrait_path, BANNER_ICONS, `RACE_ICON` and

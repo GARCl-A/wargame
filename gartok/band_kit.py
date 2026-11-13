@@ -288,7 +288,7 @@ class BandKit(LoadoutMoveMixin):
         same lock but fails its mission and marks a crime on a hit."""
         sealed = item == data.MISSION_CHEST_ITEM
         opened, gems = (missions.open_mission_chest(self.guild, unit) if sealed
-                        else chest.try_open(unit))
+                        else chest.try_open(unit, guild=self.guild))
         if not opened:
             self.notice = i18n.t("band_kit.can_t_pick_lock_chest", name=unit.name)
         elif sealed:

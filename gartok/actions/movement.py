@@ -173,6 +173,7 @@ class Climb(_VerticalStep):
         nat = d20()
         total = nat + actor.mod_strength
         roll = Msg("log.climb.roll", actor=actor.name, way=way, nat=nat, str=actor.mod_strength, total=total, dc=dc)
+        battle.rolled(actor, target, nat, actor.mod_strength, total, "dc", str(dc), nat == 20 or total >= dc)
         if nat == 20 or total >= dc:
             actor.pos = target
             actor.z = z_to
@@ -303,6 +304,7 @@ class Jump(Action):
         nat = d20()
         total = nat + actor.mod_strength
         dist = self._reach(actor, total)
+        battle.rolled(actor, target, nat, actor.mod_strength, total, "free", None, "hit")
         landing = actor.pos
         for step, cell in enumerate(line_cells(actor.pos, target)[1:], start=1):
             if step > dist or cell in battle.board.walls \
@@ -393,6 +395,7 @@ class Swim(Action):
         nat = d20()
         total = nat + actor.mod_strength
         dist = self._squares(actor, total // SWIM_DIVISOR)
+        battle.rolled(actor, target, nat, actor.mod_strength, total, "free", None, "hit")
         landing = actor.pos
         for step, cell in enumerate(line_cells(actor.pos, target)[1:], start=1):
             if step > dist or cell in battle.board.walls \

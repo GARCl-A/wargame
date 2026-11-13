@@ -52,16 +52,26 @@ def test_a_bad_roll_costs_the_hour_and_can_be_tried_again(monkeypatch):
     assert investigation.clues(guild, JOB) == 1
 
 
-def test_a_place_with_nothing_to_tell_says_so_without_a_roll(monkeypatch):
+def test_a_place_with_nothing_to_tell_says_so_when_the_roll_passes(monkeypatch):
     guild, g = _guild("farm")
-    monkeypatch.setattr(data, "d20", lambda: pytest.fail("rolled"))
+    _roll(monkeypatch, 15)
     assert investigation.ask(guild, g, JOB) == [investigation.answer(JOB, "farm")]
-    assert investigation.clues(guild, JOB) == 0 and investigation.asked(guild, JOB, "farm")
+    (c,) = guild.table
+    assert c.nat == 15 and c.dc == investigation.GATHER_DC and c.ok
+    assert investigation.asked(guild, JOB, "farm")
+
+
+def test_a_place_with_nothing_to_tell_needs_the_roll_to_learn_it(monkeypatch):
+    guild, g = _guild("farm")
+    _roll(monkeypatch, 1)
+    lines = investigation.ask(guild, g, JOB)
+    assert lines != [investigation.answer(JOB, "farm")] and not investigation.asked(guild, JOB, "farm")
+    assert not guild.table[0].ok
 
 
 def test_every_job_falls_back_to_nobody_knows_at_a_place_without_clues(monkeypatch):
     guild, g = _guild("city")
-    monkeypatch.setattr(data, "d20", lambda: pytest.fail("rolled"))
+    _roll(monkeypatch, 20)
     assert investigation.ask(guild, g, missions.TANNER_HIDES.id)[0] == investigation.answer("anything", "city")
 
 
@@ -154,3 +164,13 @@ def test_one_cannot_ask_about_a_job_not_out():
     guild.missions.clear()
     with pytest.raises(ValueError):
         _hub(guild).ask_around(JOB)
+
+
+def test_the_hour_asked_reaches_the_web_answer_as_a_die(monkeypatch):
+    from gartok.web import server
+    guild, g = _guild()
+    _roll(monkeypatch, 14)
+    hub = _hub(guild)
+    hub.ask_around(JOB)
+    (record,) = server._table(hub)
+    assert record["nat"] == 14 and record["dc"] == str(investigation.GATHER_DC)

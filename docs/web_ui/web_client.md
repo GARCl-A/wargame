@@ -125,6 +125,28 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
   who to stabilize or attack, and Pick up keeps its own pick list. Draw opens a card too (`#draw`): one row per drawable item in the
   pack, the blocked ones with their reason, then the stows, each showing what the hands hold afterwards.
 
+### The dice
+
+- **Every d20 the player may watch is a `rolls` record** (`Battle.rolled`, drained in `battle_session._events`
+  and cut to what the side sees; the actor's id is null when the actor is not seen). `client/dice.js` +
+  `dice.css` draw it: `Dice.roll(tray, rolls, {short, onStop, onVerdict})` throws the d20 onto the chronicle's
+  tray (`#tray`, a wooden rim and a felt floor at the foot of the chronicle), turns it, stops it on the natural,
+  and tints it green (hit), gold (natural 20), red (miss) or dark red (natural 1); on a hit the damage dice
+  (`damage.each`, one die per die rolled) turn after it. The number over whoever acted (`17 +3 = 20` and the
+  difficulty chip) is `battle.js:playRolls`, through `onStop` / `onVerdict`.
+- **The difficulty chip** is a small shield with the number and its label, or, for a difficulty the side has not
+  read (`dc == "?"`), a wax seal with the `uncertainty` glyph.
+- **Timeline of a step** (`playSteps`): walk, the dice (awaited), then the board state and its floats; the HP bar and
+  the damage number never come before the die stops. The player's own acts roll in full (about 0.55 s on a miss,
+  0.85 s on a hit); what the player did not choose (a foe, a save) is the short throw, about 0.22 s. A click or a
+  key snaps the dice to their result. The timing constants sit at the top of `dice.js`.
+- **Dice outside combat** (`checks.py`): a rule that rolls on the player's own order (the tavern's pitch, a lock picked from the pack) puts a `Check` on `guild.table`; `server._json` drains it into the answer's `checks` field and `api()` in `shell.js` hands it to `Dice.table`, a small tray that slides in over whatever screen is open. Routines (an hour of scouting, ask-around, a repair) put nothing. The talk screen's d20 is the same `Dice` die (`Dice.spin`).
+- **The decisive modifier is named** (`_decisive` in `actions/base.py`, `decisive` on the roll record): when a hit lands only because of one modifier, or a miss only because of one penalty, the number over the actor gets a small line ("Flank +2 made it") and the chronicle line a thicker edge. Never on a nat 20 or nat 1, never for a foe whose defence is unread (`dc "?"`), never when the roll had room to spare.
+- **A thrown die is heard** (`dice` in `sound.py`, one of `die-throw-1..3` drawn, played by `Dice` when a die is thrown onto a tray, in a fight and out of one; silent when the `Dice` setting is off).
+- **A blow moves the token** (`blow` in `battle.js`, at the verdict of a melee roll): the attacker lunges a third of a cell, a hit knocks the target back and flashes it, a critical shakes the sheet once; a fighter that drops tips over (`renderTokens`). They use the `translate` property so the tilt of a fallen token is left alone, and `prefers-reduced-motion` skips them.
+- **The `Dice` setting** (`full` / `quick` / `off`, `Shell.dice`) and `prefers-reduced-motion` make the dice
+  stopped and the wait none.
+
 ### Layouts that hold
 
 - **A hub tab:** the hub's cards from the tab's `hub_cards()`; the people or the thing you act on on leather

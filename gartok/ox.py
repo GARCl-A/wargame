@@ -15,7 +15,7 @@ Aurochs himself is authored (`npcs/aurochs.json`); killing him closes the trail
 
 import random
 
-from . import clock, data, fight_nature, i18n, missions, npc_lib
+from . import checks, clock, data, fight_nature, i18n, missions, npc_lib
 from .ox_fields import AUROCHS_SLUG
 
 SCOUT_HOURS = 2
@@ -39,6 +39,7 @@ def scout_country_roads(guild, group):
         return False, i18n.t("ox.walks_lanes_for_hours_farms", who=who, scout_hours=SCOUT_HOURS)
     nat = data.d20()
     total = nat + (scout.mod_wisdom if scout else 0)
+    checks.put(guild, checks.Check(who, nat, total - nat, total, SCOUT_DC, total >= SCOUT_DC, i18n.t("checks.scout")))
     if total >= SCOUT_DC:
         guild.reveal_node("ox_fields")
         return True, (i18n.t("ox.follows_churned_earth_to_where", who=who))

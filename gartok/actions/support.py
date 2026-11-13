@@ -173,14 +173,15 @@ class Stabilize(Action):
             nat = d20()
             total = nat + actor.mod_intelligence
             ok = total >= data.AUTOMATON_REPAIR_DC
+            battle.rolled(actor, target, nat, actor.mod_intelligence, total, "dc", str(data.AUTOMATON_REPAIR_DC), ok)
             battle.log("log.repair.ok" if ok else "log.repair.fail", actor=actor.name, target=target.name, nat=nat,
                        int=actor.mod_intelligence, total=total, dc=data.AUTOMATON_REPAIR_DC)
-            battle.fx(target.pos, i18n.t("fx.vs", total=total, dc=data.AUTOMATON_REPAIR_DC), "ok" if ok else "faint")
             if ok:
                 battle.repair(target)
             return ok
         nat = d20()
         ok = nat >= data.DEATH_SAVE_MIN
+        battle.rolled(actor, target, nat, 0, nat, "dc", str(data.DEATH_SAVE_MIN), ok)
         battle.log("log.stabilize.ok" if ok else "log.stabilize.fail", actor=actor.name, target=target.name, nat=nat)
         battle.fx(target.pos, i18n.t("fx.stabilize_ok" if ok else "fx.stabilize_fail", nat=nat), "ok" if ok else "faint")
         if ok:
@@ -224,6 +225,7 @@ class FirstAid(Stabilize):
         ok = total >= data.FIRST_AID_DC
         target_sick = getattr(target.char, "sick", False)
         target_dying = target.dying
+        battle.rolled(actor, target, nat, actor.mod_wisdom, total, "dc", str(data.FIRST_AID_DC), ok)
 
         battle.log(plural_key("log.first_aid.ok" if ok else "log.first_aid.fail", actor.first_aid_charges),
                    actor=actor.name, target=target.name, nat=nat, wis=actor.mod_wisdom, total=total,
@@ -347,6 +349,7 @@ class EatCorpse(Action):
         for u in battle.units:
             if u.team != actor.team and u.alive and battle.can_see_unit(u, actor):
                 md = u.mental_defense
+                battle.rolled(actor, u, nat, bonus, total, "md", intel.shown(battle, u, "md", md), total >= md)
                 if total >= md:
                     u.add_condition(Demoralized())
                     battle.log("log.feast_terrified", target=u.name, md=intel.shown(battle, u, "md", md))
@@ -693,7 +696,6 @@ class Assess(Action):
         learned = ", ".join(intel.label(f) for f in opened) or Msg("log.assess_nothing")
         battle.log("log.assess", actor=actor.name, target=target.name, bonus=intel.ASSESS_BONUS, total=total,
                    dc=need, learned=learned)
-        battle.fx(target.pos, i18n.t("fx.vs_dc", total=total, dc=need), "ok" if opened else "faint")
 
 
 class Investigate(Action):
@@ -735,7 +737,12 @@ class Investigate(Action):
             return
         found = False
         for u in lurkers:
-            if battle.units_distance(actor, u) <= self.RADIUS and d20() + actor.mod_wisdom >= 10 + u.mod_intelligence:
+            if battle.units_distance(actor, u) > self.RADIUS:
+                continue
+            nat = d20()
+            total, dc = nat + actor.mod_wisdom, 10 + u.mod_intelligence
+            battle.rolled(actor, u, nat, actor.mod_wisdom, total, "dc", "?", total >= dc)
+            if total >= dc:
                 u.reveal_to(actor.team)
                 found = True
                 battle.log("log.finds_hiding", actor=actor.name, target=u.name, cell=str(u.pos))
@@ -770,6 +777,7 @@ class Disarm(Action):
         total = nat + bonus
         dc = 12
         ok = total >= dc
+        battle.rolled(actor, trap.pos, nat, bonus, total, "dc", str(dc), ok)
         kind = Ref("trap", trap.trap_type, trap.trap_type)
         battle.log("log.disarm.ok" if ok else "log.disarm.fail", actor=actor.name, trap=kind, nat=nat, dex=bonus,
                    total=total, dc=dc)

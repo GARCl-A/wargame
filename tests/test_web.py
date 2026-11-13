@@ -292,7 +292,7 @@ def test_advance_never_moves_for_the_player():
 def test_events_drain_what_the_step_did():
     s = _session("fortress", seed=11)
     steps = s.advance()
-    assert steps and all(set(st) == {"moves", "sounds", "log", "fx", "acts", "cues", "state"} for st in steps)
+    assert steps and all(set(st) == {"moves", "sounds", "log", "fx", "acts", "cues", "rolls", "state"} for st in steps)
     assert not s.battle.fx_events and not s.battle.acts and not s.battle.cues
 
 

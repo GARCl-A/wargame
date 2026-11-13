@@ -18,6 +18,7 @@ SPEC = {
     "music": ("settings.name.music", (0, 25, 50, 75, 100), 50),
     "log_lines": ("settings.name.log_lines", (500, 1000, 2000, 5000), 2000),
     "language": ("settings.name.language", tuple(i18n.LANGUAGES), i18n.DEFAULT_LANG),
+    "dice": ("settings.name.dice", ("full", "quick", "off"), "full"),
 }
 
 # A value the player types, within bounds; the choices of such an entry are the steps the map's "raise the limit" climbs.

@@ -284,7 +284,8 @@ def _envenom(battle, attacker, target):
     poison = poisons.get(pid)
     dc = poisons.save_dc(poison, attacker.char)
     ok, nat, total = target.char.poison_save(dc)
-    save = i18n.Msg("log.con_save", nat=nat, mod=target.char.mod_constitution, total=total, dc=dc)
+    battle.rolled(target, target, nat, total - nat, total, "dc", str(dc), ok, passive=True)
+    save =i18n.Msg("log.con_save", nat=nat, mod=target.char.mod_constitution, total=total, dc=dc)
     pref = i18n.Ref("poison", pid, poison.name)
     if ok:
         battle.log("log.poison_shaken", target=target.name, poison=pref, roll=save)
@@ -394,16 +395,51 @@ def _guard_why(battle, attacker, target):
     return ", ".join(i18n.t(f"log.roll.off_guard_why.{r}") for r in off_guard_reasons(battle, attacker, target))
 
 
-def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
+def _tier(applied):
+    if applied[1].split()[0] in ("STR", "DEX"):
+        return 2
+    return 1 if getattr(applied, "kind", None) == "status" else 0
+
+
+_TIE = random.Random()  # its own stream: naming a modifier must never move the battle's dice
+
+
+def _decisive(applied, nat, total, ac, hit, crit, relief):
+    """The modifier without which this attack would have gone the other way, as `(value, why)`, or None.
+    A critical by the die needs no help from a bonus; one made only by a wider crit range names the range.
+    On a hit it is the largest bonus `v` with `total - v < ac`; on a miss, the largest penalty with
+    `total < ac <= total - v`. What the fight put on the roll (a circumstance, a flank, a talent) is named
+    before a condition (`status`), and a condition before the character's own attribute, which is named
+    only when nothing else decided. A tie in the same group is drawn."""
+    if nat == 1:
+        return None
+    if crit:
+        return (relief, i18n.t("log.mod.crit_range")) if relief > 0 and nat < 20 else None
+    if hit:
+        pool = [m for m in applied if m[0] > 0 and total - m[0] < ac]
+    else:
+        pool = [m for m in applied if m[0] < 0 and total - m[0] >= ac]
+    if not pool:
+        return None
+    for tier in (0, 1, 2):
+        group = [p for p in pool if _tier(p) == tier]
+        if group:
+            top = max(abs(v) for v, _ in group)
+            return _TIE.choice([p for p in group if abs(p[0]) == top])
+
+
+def _resolve_hit(battle, attacker, target, nat, bonus, applied, prefix, thrown=False,
                  weapon=None, armor_pierce=False, bonus_damage=0, crit_mult=None, brutal=0, brutal_why=""):
+    applied = list(applied)
     pulled = nonlethal_penalty(attacker)
     if pulled:
         bonus -= pulled
-        detail += i18n.t("log.mod.nonlethal", n=pulled)
+        applied.append((-pulled, i18n.t("log.mod.nonlethal")))
     obscured = obscured_penalty(battle, attacker, target)
     if obscured:
         bonus -= obscured
-        detail += i18n.t("log.mod.obscured", n=obscured)
+        applied.append((-obscured, i18n.t("log.mod.obscured")))
+    detail = " ".join(f"{v:+}({r})" for v, r in applied)
     total = nat + bonus
     melee = not thrown and (weapon is not None or not attacker.ranged)
     ac = target.ac_vs(attacker, armor_pierce=armor_pierce, ranged=not melee)
@@ -421,6 +457,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         crit_range = w.get("crit_range", 20)
     else:
         crit_range = 20
+    base_range = crit_range
     if hasattr(attacker, "char") and intel.has_full_intel(battle, attacker.team, target):
         crit_relief = getattr(attacker.char, "talent_bonus", lambda x: 0)("full_intel_crit_range")
         crit_range = max(2, crit_range - crit_relief)
@@ -438,14 +475,19 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     roll_line = {"head": prefix, "nat": nat, "detail": detail, "total": total, "shown": shown,
                  "off_guard": i18n.Msg("log.roll.off_guard", n=guard_pen, why=_guard_why(battle, attacker, target)) if guard_pen else "",
                  "phalanx": i18n.Msg("log.roll.phalanx") if phalanx and shown != "?" else ""}
-    fx_text = i18n.t("fx.vs_ac", total=total, shown=shown)
+    hit = crit or (nat != 1 and total >= ac)
+    outcome = "fumble" if nat == 1 else "crit" if crit else "hit" if hit else "miss"
+    rolled = battle.rolled(attacker, target, nat, bonus, total, "ac", str(shown), outcome)
+    decisive = _decisive(applied, nat, total, ac, hit, crit, base_range - crit_range) if shown != "?" else None
+    if decisive:
+        rolled["decisive"] = {"n": decisive[0], "why": decisive[1]}
+    roll_line["decisive"] = i18n.Msg("log.roll.decisive", n=decisive[0], why=decisive[1]) if decisive else ""
     if nat == 1:
         battle.log("log.roll.crit_miss", **roll_line)
         battle.fx(target.pos, i18n.t("fx.crit_miss"), "faint")
         battle.cue("miss", target.pos)
         return "miss"
     if crit or total >= ac:
-        battle.fx(target.pos, fx_text, "ok" if not crit else "crit")
         if crit:
             battle.cue("crit", target.pos)
         if target.dying:
@@ -481,6 +523,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         if detail := attacker.damage_detail():
             battle.log("log.damage_roll", detail=detail, dmg=dmg)
         dmg = _stone_endurance(battle, target, dmg)
+        rolled["damage"] = {**(attacker.last_damage or {}), "total": dmg}
         target.take_damage(dmg, battle.log, knockout=bool(pulled))
         if dmg > 0:
             target.hurt_by.add(attacker)
@@ -499,6 +542,5 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             _claw(battle, attacker, target, dmg, weapon)
         return "crit" if crit else "hit"
     battle.log("log.roll.miss", **roll_line)
-    battle.fx(target.pos, fx_text, "faint")
     battle.cue("miss", target.pos)
     return "miss"

@@ -110,7 +110,7 @@ function slip(r, rolled) {
   if (r.roll) {
     const {nat, mod, total, dc} = r.roll;
     const what = p && p.check ? p.check.split(" ")[0] : tr("talk.modifier");
-    h += `<div class="dice"><div class="d20 ${rolled ? "rolling" : ""}"><svg viewBox="0 0 100 100"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27" fill="#7a2218" stroke="#3a0c06" stroke-width="3"/><polygon points="50,22 77,66 23,66" fill="#9a2f22" stroke="#e8c9a8" stroke-opacity=".35" stroke-width="1.5"/><path d="M50 3 50 22M93 27 77 66M7 27 23 66M50 97 23 66M50 97 77 66M7 73 23 66M93 73 77 66M7 27 50 22M93 27 50 22" stroke="#e8c9a8" stroke-opacity=".35" stroke-width="1.5" fill="none"/></svg><b id="nat">${nat}</b></div>
+    h += `<div class="dice"><div class="die d20 ${rolled ? "" : r.won ? "hit" : "miss"}" id="die">${Dice.svg(20)}<b id="nat">${nat}</b></div>
       <div class="sum">${nat} ${mod < 0 ? "−" : "+"} ${Math.abs(mod)} = ${total}<span class="vs">${tr("talk.vs")}</span>${dc}<small>${tr("talk.dice_note", {of: p ? tr("talk.dice_of", {speaker: esc(p.speaker), what: esc(what)}) : esc(what)})}</small></div></div>`;
   }
   h += `<div class="tells">${esc(r.text)}</div>`;
@@ -182,6 +182,8 @@ function render(state, rolled = false) {
   topBar();
   $("foe").innerHTML = foePage();
   $("mid").innerHTML = mid(rolled);
+  const die = $("die");
+  if (die && rolled) Dice.spin(die, 20, T.result.roll.nat).then(() => die.classList.add(T.result.won ? "hit" : "miss"));
   $("band").innerHTML = band();
   if (rolled && T.result) Sound.play(T.result.paid ? "coins" : T.result.won ? "level_up" : "miss");
 }

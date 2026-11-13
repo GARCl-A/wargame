@@ -19,8 +19,13 @@ from . import i18n, items
 # Dice                                                                         #
 # --------------------------------------------------------------------------- #
 
+def roll_dice(n, sides):
+    """The `n` dice of an `ndS` roll, each on its own, for the screen that tumbles them one by one."""
+    return [random.randint(1, sides) for _ in range(n)]
+
+
 def roll(n, sides):
-    return sum(random.randint(1, sides) for _ in range(n))
+    return sum(roll_dice(n, sides))
 
 
 def d20():
@@ -49,6 +54,16 @@ def squares(meters):
 #   Untyped bonuses (type None) and ALL penalties stack normally.              #
 # --------------------------------------------------------------------------- #
 
+class Applied(tuple):
+    """One `(value, label)` of a resolved roll that also remembers the type it was given (`kind`)."""
+    kind = None
+
+    def __new__(cls, value, label, kind=None):
+        self = super().__new__(cls, (value, label))
+        self.kind = kind
+        return self
+
+
 def resolve_bonus(mods):
     """mods: list of (value, type, label). Returns (total, [(value, label)])."""
     total = 0
@@ -59,7 +74,7 @@ def resolve_bonus(mods):
             continue
         if kind is None or value < 0:
             total += value
-            applied.append((value, label))
+            applied.append(Applied(value, label, kind))
         else:
             current = best_by_type.get(kind)
             if current is None or value > current[0]:
@@ -67,7 +82,7 @@ def resolve_bonus(mods):
     for kind, (value, label) in best_by_type.items():
         total += value
         kind_key = "log.mod_kind." + kind
-        applied.append((value, f"{label} [{i18n.t(kind_key) if i18n.has(kind_key) else kind}]"))
+        applied.append(Applied(value, f"{label} [{i18n.t(kind_key) if i18n.has(kind_key) else kind}]", kind))
     return total, applied
 
 

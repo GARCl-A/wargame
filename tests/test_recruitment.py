@@ -80,6 +80,26 @@ def test_taverna_pitch_does_not_double_pop_the_shared_pool():
     assert cand not in scr.candidates
 
 
+def test_a_pitch_puts_its_contest_on_the_table():
+    from gartok import checks
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    from gartok.tavern import Tavern
+
+    random.seed(4)
+    recruiter = _person(1, cha=100)
+    g = Guild([recruiter], clock=Clock())
+    scr = Tavern(g, g.groups[0])
+    cand = scr.candidates[scr.sel or 0]
+    scr.sel = scr.candidates.index(cand)
+    recruiter.languages = list(cand.languages)
+    scr._pitch(recruiter)
+
+    (record,) = checks.drain(g)
+    assert record["vs"] == "contest" and record["theirs"]["total"] == int(record["dc"])
+    assert record["outcome"] in ("hit", "crit") and record["label"].startswith(recruiter.name)
+
+
 def test_recruit_alignment_distance_docks_the_pitch():
     r = _person(1, align="Lawful and Good")
     c = _person(2, align="Chaotic and Evil")                  # distance 4

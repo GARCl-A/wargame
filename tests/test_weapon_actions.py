@@ -68,7 +68,7 @@ def test_weapon_traits_catalog_and_properties():
 def test_a_critical_hit_multiplies_the_whole_blow_last():
     batt, a, d = _melee_battle()
     a.equip_weapon(fitted(a, "Pick"))
-    with patch("gartok.combatant.roll", return_value=4):
+    with patch("gartok.combatant.roll_dice", return_value=[4]):
         plain = a.damage_roll()
         assert a.damage_roll(crit=True) == 3 * plain
         assert a.damage_roll(crit=True, bonus_damage=2) == 3 * (plain + 2)
@@ -76,7 +76,7 @@ def test_a_critical_hit_multiplies_the_whole_blow_last():
 
 def test_brutal_adds_a_roll_and_a_critical_hit_multiplies_it():
     batt, a, d = _melee_battle()
-    with patch("gartok.combatant.roll", return_value=4) as dice:
+    with patch("gartok.combatant.roll_dice", return_value=[4]) as dice:
         plain = a.damage_roll()
         assert a.damage_roll(brutal=1) == 2 * plain and dice.call_count == 3
         assert a.damage_roll(brutal=1, crit=True) == 2 * (2 * plain)

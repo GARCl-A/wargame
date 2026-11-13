@@ -51,6 +51,7 @@ async function api(path, body) {
     throw Object.assign(new Error(data.error || res.statusText), {refusal: true});
   }
   if (data && data.screen && Shell.screen && data.screen !== Shell.screen) Music.enter(data.screen);
+  if (data && Array.isArray(data.checks)) Dice.table(data.checks);
   return data;
 }
 
@@ -444,10 +445,10 @@ Promise.all([api("/api/screen"), api("/api/locale")]).then(([info, loc]) => {
   document.documentElement.lang = loc.lang;
   document.querySelector("title").textContent = tr("app.title");
   try { parent.document.querySelector("title").textContent = tr("app.title"); } catch (e) {}
-  Object.assign(Shell, {screen: info.screen, lab: info.lab});
+  Object.assign(Shell, {screen: info.screen, lab: info.lab, dice: info.dice});
   Sound.volume = info.volume ?? 70;
   Music.volume = info.music ?? 50;
   Music.enter(info.screen);
   return open(info.screen);
 }).catch(e => { $("screen").innerHTML = `<div id="failed">${esc(e.message)}</div>`; })
-  .finally(() => { document.body.classList.add("ready"); reveal(); });
+  .finally(() => { document.body.classList.add("ready"); reveal(); Dice.resume(); });

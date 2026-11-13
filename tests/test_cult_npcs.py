@@ -83,7 +83,7 @@ def test_infernal_presence_costs_morale_on_a_failed_save(monkeypatch):
     bearer = SimpleNamespace(team="enemy", alive=True, name="Demon", char=demon, mod_charisma=demon.mod_charisma)
     foe = SimpleNamespace(team="player", status="up", mod_wisdom=0, morale=5, morale_max=9, name="Foe", alive=True)
     battle = SimpleNamespace(units=[bearer, foe], lethal=True, units_distance=lambda a, b: 1,
-                             log=lambda key, **kw: log.append(key))
+                             log=lambda key, **kw: log.append(key), rolled=lambda *a, **kw: None)
     monkeypatch.setattr(morale, "has_morale", lambda b, c: True)
     monkeypatch.setattr(morale, "_sync_rout", lambda b, u: None)
     monkeypatch.setattr(data, "d20", lambda: 1)

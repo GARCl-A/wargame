@@ -119,7 +119,7 @@ def test_the_world_clock_ticks_every_roster_members_poison():
 def test_a_bite_that_hurts_forces_a_save_and_a_failure_poisons(monkeypatch):
     _force(monkeypatch, save=1)
     batt, sp, victim = _fight()
-    actions._resolve_hit(batt, sp, victim, 20, 0, "", "bite")
+    actions._resolve_hit(batt, sp, victim, 20, 0, [], "bite")
     assert victim.char.poisons[VENOM]["level"] == 1
     assert victim.char.dexterity == 9                        # 10 - 1
 
@@ -127,19 +127,19 @@ def test_a_bite_that_hurts_forces_a_save_and_a_failure_poisons(monkeypatch):
 def test_a_passed_save_leaves_no_poison(monkeypatch):
     _force(monkeypatch, save=20)
     batt, sp, victim = _fight()
-    actions._resolve_hit(batt, sp, victim, 20, 0, "", "bite")
+    actions._resolve_hit(batt, sp, victim, 20, 0, [], "bite")
     assert not victim.char.poisoned
 
 
 def test_a_miss_or_a_non_venomous_attacker_never_poisons(monkeypatch):
     _force(monkeypatch, save=1)
     batt, sp, victim = _fight()
-    actions._resolve_hit(batt, sp, victim, 2, -50, "", "bite")      # a miss
+    actions._resolve_hit(batt, sp, victim, 2, -50, [], "bite")      # a miss
     assert not victim.char.poisoned
     wolf = Unit("enemy", race=data.race_by_name("Wolf"))
     batt2 = Battle([_human()], [wolf])
     w, v = batt2.enemy_units[0], batt2.player_units[0]
-    actions._resolve_hit(batt2, w, v, 20, 0, "", "bite")
+    actions._resolve_hit(batt2, w, v, 20, 0, [], "bite")
     assert not v.char.poisoned
 
 
@@ -149,7 +149,7 @@ def test_the_stacks_pile_up_across_bites_and_across_the_fight(monkeypatch):
     for _ in range(3):
         victim.hp = victim.hp_max
         victim.status = "up"
-        actions._resolve_hit(batt, sp, victim, 20, 0, "", "bite")
+        actions._resolve_hit(batt, sp, victim, 20, 0, [], "bite")
     assert victim.char.poisons[VENOM]["level"] == 3
     assert victim.char.dexterity == 7
 
@@ -158,7 +158,7 @@ def test_a_body_already_on_the_ground_is_not_poisoned_again(monkeypatch):
     _force(monkeypatch, save=1)
     batt, sp, victim = _fight()
     victim.go_down(batt.log)
-    actions._resolve_hit(batt, sp, victim, 20, 0, "", "bite")
+    actions._resolve_hit(batt, sp, victim, 20, 0, [], "bite")
     assert not victim.char.poisoned
 
 
@@ -216,7 +216,7 @@ def test_poison_that_takes_the_last_point_drops_the_victim_mid_fight(monkeypatch
     victim.char.add_poison(VENOM, 11)
     victim.char.add_poison(VENOM, 11)                       # one short of zero already
     victim.status = "up"
-    actions._resolve_hit(batt, sp, victim, 20, 0, "", "bite")
+    actions._resolve_hit(batt, sp, victim, 20, 0, [], "bite")
     assert victim.char.dexterity <= 0 and victim.dying
 
 

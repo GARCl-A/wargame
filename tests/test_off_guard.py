@@ -34,7 +34,7 @@ def test_the_penalty_holds_against_a_shot_from_afar():
     d.turns_taken = 0
     d.pos = (12, 5)
     assert actions._off_guard_penalty(batt, a, d) == 2
-    _resolve_hit(batt, a, d, 10, 0, "", "shot", thrown=True)
+    _resolve_hit(batt, a, d, 10, 0, [], "shot", thrown=True)
     assert any("[Off-guard -2: has not acted]" in ln for ln in batt.log_lines)
 
 
@@ -45,7 +45,7 @@ def test_the_reasons_name_every_source_and_the_log_lists_them():
     assert actions.off_guard_reasons(batt, a, d) == ["unacted"]
     _flanked_pair(batt, a, d)
     assert actions.off_guard_reasons(batt, a, d) == ["unacted", "flanked"]
-    _resolve_hit(batt, a, d, 10, 0, "", "blow")
+    _resolve_hit(batt, a, d, 10, 0, [], "blow")
     assert any("[Off-guard -2: has not acted, flanked]" in ln for ln in batt.log_lines)
 
 

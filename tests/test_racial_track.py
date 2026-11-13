@@ -130,7 +130,7 @@ def test_grudge_hits_harder_at_whoever_hurt_you():
 
 def test_a_hit_that_lands_damage_marks_the_attacker():
     batt, dwarf, foe = _duel(_racial("Dwarf", "grudge"), Unit("enemy"))
-    _resolve_hit(batt, foe, dwarf, 19, 30, "", "test")
+    _resolve_hit(batt, foe, dwarf, 19, 30, [], "test")
     assert foe in dwarf.hurt_by
 
 
@@ -220,8 +220,8 @@ def test_hold_the_line_lends_ac_to_allies_beside_the_defender():
 
 def _hit(batt, attacker, target, nat=19):
     hp = target.hp
-    with patch("gartok.combatant.roll", return_value=1), patch("gartok.actions.base.roll", return_value=1):
-        _resolve_hit(batt, attacker, target, nat, 40, "", "test")
+    with patch("gartok.combatant.roll_dice", return_value=[1]), patch("gartok.actions.base.roll", return_value=1):
+        _resolve_hit(batt, attacker, target, nat, 40, [], "test")
     return hp - target.hp
 
 
@@ -237,7 +237,7 @@ def test_blood_frenzy_on_a_target_below_half():
 
 def test_savage_attacks_makes_a_crit_brutal_1_before_the_multiplier():
     _batt, orc, _foe = _duel(_racial("Orc", "savage_attacks"), Unit("enemy"))
-    with patch("gartok.combatant.roll", return_value=1):
+    with patch("gartok.combatant.roll_dice", return_value=[1]):
         blow = orc.damage_roll()
         savage = orc.damage_roll(crit=True)
         stacked = orc.damage_roll(crit=True, brutal=1)
@@ -250,12 +250,12 @@ def test_savage_attacks_makes_a_crit_brutal_1_before_the_multiplier():
 def test_the_log_reads_the_brutal_of_a_crit_as_one_number():
     batt, orc, foe = _duel(_racial("Orc", "savage_attacks"), Unit("enemy"))
     foe.hp = foe.hp_max = 100
-    _resolve_hit(batt, orc, foe, 20, 40, "", "test")
+    _resolve_hit(batt, orc, foe, 20, 40, [], "test")
     assert any("Savage Attacks: Brutal 1!" in ln for ln in batt.log_lines)
-    _resolve_hit(batt, orc, foe, 20, 40, "", "test", brutal=1, brutal_why="A full draw")
+    _resolve_hit(batt, orc, foe, 20, 40, [], "test", brutal=1, brutal_why="A full draw")
     assert any("A full draw: Brutal 2!" in ln for ln in batt.log_lines)
     n = len(batt.log_lines)
-    _resolve_hit(batt, orc, foe, 15, 40, "", "test", brutal=1, brutal_why="Parry and riposte")
+    _resolve_hit(batt, orc, foe, 15, 40, [], "test", brutal=1, brutal_why="Parry and riposte")
     assert any("Parry and riposte: Brutal 1!" in ln for ln in batt.log_lines[n:])
 
 
@@ -283,8 +283,8 @@ def test_thornskin_pricks_a_melee_attacker():
 def test_thornskin_does_not_prick_a_ranged_shot():
     batt, tree, foe = _duel(_racial("Treefolk", "thornskin"), Unit("enemy"), bpos=(9, 5))
     foe.hp = foe.hp_max = 50
-    with patch("gartok.combatant.roll", return_value=1):
-        _resolve_hit(batt, foe, tree, 19, 40, "", "shot", thrown=True)
+    with patch("gartok.combatant.roll_dice", return_value=[1]):
+        _resolve_hit(batt, foe, tree, 19, 40, [], "shot", thrown=True)
     assert foe.hp == 50
 
 
@@ -326,7 +326,7 @@ def test_run_down_needs_the_run_up():
 
 
 def _extra_damage_after_a_run(c, **attack):
-    with patch("gartok.combatant.roll", return_value=1):
+    with patch("gartok.combatant.roll_dice", return_value=[1]):
         c.path = [(4 - i, 5) for i in range(6)]
         ran = c.damage_roll(**attack)
         c.path = [c.pos]

@@ -132,11 +132,11 @@ def test_razor_claws_make_a_bare_handed_hit_bleed_for_one_over_two_turns():
     batt, cat, human = _duel(("razor_claws",))
     cat.char.strength = 18
     with fixed_d20(20):
-        _resolve_hit(batt, cat, human, 20, 0, "", "claw")
+        _resolve_hit(batt, cat, human, 20, 0, [], "claw")
     bleed = human.condition("bleeding")
     assert bleed is not None and (bleed.damage, bleed.duration) == (1, 2)
     with fixed_d20(20):
-        _resolve_hit(batt, cat, human, 20, 0, "", "claw")
+        _resolve_hit(batt, cat, human, 20, 0, [], "claw")
     assert human.condition("bleeding").damage == 2
 
 
@@ -144,11 +144,11 @@ def test_razor_claws_do_nothing_with_a_weapon_in_hand_or_without_the_talent():
     batt, cat, human = _duel(("razor_claws",), armed=True)
     assert cat.armed
     with fixed_d20(20):
-        _resolve_hit(batt, cat, human, 20, 0, "", "blade")
+        _resolve_hit(batt, cat, human, 20, 0, [], "blade")
     assert not human.has_condition("bleeding")
     batt, plain, human = _duel(())
     with fixed_d20(20):
-        _resolve_hit(batt, plain, human, 20, 0, "", "fist")
+        _resolve_hit(batt, plain, human, 20, 0, [], "fist")
     assert not human.has_condition("bleeding")
 
 
@@ -156,7 +156,7 @@ def test_everyone_bleeds_even_an_automaton():
     batt, cat, robot = _duel(("razor_claws",), foe_race="Automaton")
     cat.char.strength = 18
     with fixed_d20(20):
-        _resolve_hit(batt, cat, robot, 20, 0, "", "claw")
+        _resolve_hit(batt, cat, robot, 20, 0, [], "claw")
     assert robot.has_condition("bleeding")
 
 
@@ -272,7 +272,7 @@ def test_a_seized_weapon_strike_does_not_bleed_even_from_bare_hands():
     cat.char.strength = 18
     dagger = items.get("Dagger")
     with fixed_d20(20):
-        _resolve_hit(batt, cat, human, 20, 0, "", "wrest", weapon=dagger)
+        _resolve_hit(batt, cat, human, 20, 0, [], "wrest", weapon=dagger)
     assert not human.has_condition("bleeding")
 
 

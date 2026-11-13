@@ -191,6 +191,7 @@ def dread(battle, unit):
         roll = data.d20()
         total, dc = roll + unit.mod_wisdom, PRESENCE_DC + bearer.mod_charisma
         args = {"unit": unit.name, "bearer": bearer.name, "roll": roll, "mod": unit.mod_wisdom, "total": total, "dc": dc}
+        battle.rolled(unit, bearer, roll, unit.mod_wisdom, total, "dc", str(dc), total >= dc, passive=True)
         if total >= dc:
             battle.log("log.infernal_presence_resisted", **args)
             continue

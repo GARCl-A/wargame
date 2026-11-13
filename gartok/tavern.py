@@ -15,13 +15,21 @@ study target (a scroll or dictionary the band carries) gains daily progress towa
 language.
 """
 
-from . import economy, i18n, magic, orders, recorder, recruit, stints
+from . import checks, economy, i18n, magic, orders, recorder, recruit, stints
 from .constants import fmt_money
 from .data import alignment_distance
 
 ARCHETYPE_TONE = {"brass": "money", "green": "good", "muted": "muted"}
 BAIL_BONUS = (2, "tavern.paid_bail")
 BAIL_STEP = 1                  # each doubling of the offer adds this much more to the pitch
+
+
+def _spare(pitch):
+    """The dice of a joint pitch that did not count: every die thrown but the best one."""
+    rest = list(pitch.rolls)
+    if pitch.recruiter_roll in rest:
+        rest.remove(pitch.recruiter_roll)
+    return tuple(rest)
 
 
 class Tavern:
@@ -229,6 +237,11 @@ class Tavern:
                                  extra_mods=[*((v, i18n.t(label)) for v, label in self.PITCH_BONUS), *self._raise_mods()],
                                  allies=allies)
         self.last[cand.uid] = (pitch, member)
+        if pitch.rolls:
+            checks.put(self.guild, checks.Check(member.name, pitch.recruiter_roll, pitch.recruiter_total - pitch.recruiter_roll,
+                                                pitch.recruiter_total, pitch.candidate_total, pitch.ok,
+                                                i18n.t("checks.pitch"), (pitch.candidate_roll, pitch.candidate_total),
+                                                _spare(pitch)))
         paid = cost if pitch.ok else 0
         raised, self.raise_k = self.raise_k, 0
         recorder.emit("recruit", pitcher=member.name, candidate=cand.name, bail=paid, raised=raised,

@@ -151,7 +151,7 @@
       "title": "Fighting it out",
       "body": [
         "Each character has {ap} action points a turn, and the lit bar at the bottom is what it can do with them: hover a line below and its plate lights up. Space or the seal beside it ends the turn. Click a green cell to walk, a red-outlined foe to target it, and again to attack. The wheel zooms, a right-drag pans.",
-        "You see only what the active character's light and senses reach; L shows the whole squad's sight. A foe's ? fields are what you have not read yet: everyone reads a foe on first sight, and Assess ({assess} point) reads harder.",
+        "You see only what the active character's light and senses reach; L shows the whole squad's sight. A foe's ? fields are what you have not read yet: everyone reads a foe on first sight, and Assess ({assess} point) reads harder. Every roll lands on the tray under the chronicle; a red seal where a number should be is a difficulty you have not read.",
         "At 0 HP a character is down, not dead: Stabilize or First Aid them before they bleed out."
     ],
       "cost": {
@@ -579,6 +579,10 @@
           "label": "Log lines",
           "note": "How many lines the map's log keeps before it asks what to do with the oldest. From 200 to 50000."
         },
+        "dice": {
+          "label": "Dice",
+          "note": "How the dice are rolled on the table: full is every roll, quick is a short throw, off shows the result without the wait."
+        },
         "language": {
           "label": "Language",
           "note": "The language of the game's text; changing it reloads the screen."
@@ -586,7 +590,9 @@
       },
       "value": {
         "off": "Off",
-        "on": "On"
+        "on": "On",
+        "full": "Full",
+        "quick": "Quick"
       },
       "unknown": "no setting called {name}",
       "cannot_be": "{label} cannot be {value}",
@@ -1970,6 +1976,12 @@
       "critical": "Critical!",
       "miss": "Miss",
       "crit_banner": "Critical hit",
+      "dice_unread": "Not read yet: Assess the foe to see it",
+      "dice_ac": "AC",
+      "dice_md": "MD",
+      "dice_dc": "DC",
+      "dice_contest": "vs",
+      "dice_decisive": "{why} {n} made it",
       "new_fight_h": "New fight",
       "pick_lab": "Pick a fight from the combat lab.",
       "won": "The field is yours.",
@@ -2255,7 +2267,6 @@
     }
   },
   "fx": {
-    "vs_ac": "{total} vs AC {shown}",
     "crit_miss": "Crit Miss!",
     "grappled": "grappled",
     "prone": "prone",
@@ -2264,13 +2275,11 @@
     "miss": "miss",
     "got": "Got {item}!",
     "chest_opened": "Chest Opened!",
-    "vs": "{total} vs {dc}",
     "stabilize_ok": "d20({nat}) Success",
     "stabilize_fail": "d20({nat}) Fail",
     "heal": "+{heal} HP",
     "web": "Web!",
     "signal_horn": "Signal Horn!",
-    "vs_dc": "{total} vs DC {dc}",
     "secret_opened": "Secret Opened!",
     "found": "Found!",
     "web_cleared": "Web Cleared!",
@@ -2289,12 +2298,13 @@
         "flanked": "flanked"
       },
       "phalanx": " [Phalanx]",
-      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> critical miss.",
-      "spared": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> the blow is pulled; the fallen is spared.",
-      "on_fallen": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> a blow on the fallen.",
-      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> CRITICAL HIT!",
-      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> hit.",
-      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}  -> misses."
+      "decisive": " [{why} {n:+} decided it]",
+      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> critical miss.",
+      "spared": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> the blow is pulled; the fallen is spared.",
+      "on_fallen": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> a blow on the fallen.",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> CRITICAL HIT!",
+      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> hit.",
+      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> misses."
     },
     "brutal": "  {why}: Brutal {n}!",
     "damage_roll": "  Damage: {detail} = {dmg}",
@@ -2708,8 +2718,9 @@
       "arena_born": "Arena Born",
       "cavalry_charge": "Cavalry Charge",
       "run_down": "Run Down",
-      "nonlethal": " -{n}(non-lethal)",
-      "obscured": " -{n}(obscured)"
+      "nonlethal": "non-lethal",
+      "obscured": "obscured",
+      "crit_range": "crit range"
     },
     "mod_kind": {
       "circumstance": "circumstance",
@@ -5213,6 +5224,12 @@
     },
     "fight_due_tip": "A fight is about to start. This group can't change until it is over"
   },
+  "checks": {
+    "ask": "asks around",
+    "chest": "picks the lock",
+    "scout": "searches the area",
+    "pitch": "pitches"
+  },
   "investigation": {
     "nobody_knows": "Nobody here knows anything about that.",
     "found": "{name} gets a few people talking.",
@@ -5794,7 +5811,8 @@
       "volume": "VOLUME",
       "music": "MUSIC",
       "log_lines": "LOG LINES",
-      "language": "LANGUAGE"
+      "language": "LANGUAGE",
+      "dice": "DICE"
     }
   },
   "vision": {

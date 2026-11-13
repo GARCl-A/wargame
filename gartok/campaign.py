@@ -31,6 +31,7 @@ from . import (
     aftermath,
     arena,
     captives,
+    checks,
     cult_site,
     data,
     draw,
@@ -607,6 +608,8 @@ def scout_ancient_ruins(guild, group):
     nat = data.d20()
     total = nat + wis_mod
     dc = 12
+    name = scout.name if scout else i18n.t("campaign.scout.squad")
+    checks.put(guild, checks.Check(name, nat, wis_mod, total, dc, total >= dc, i18n.t("checks.scout")))
     if total >= dc:
         guild.reveal_node("ancient_ruins")
         name = scout.name if scout else i18n.t("campaign.scout.squad")

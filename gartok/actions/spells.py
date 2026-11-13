@@ -17,6 +17,20 @@ def _dice(dice):
     return f"{dice[0]}d{dice[1]}"
 
 
+def _spell_roll(battle, actor, target, atk, mod, defence, vs="ac"):
+    """The spell's d20 for the dice tray: against `defence`, shown as the side has read it."""
+    total = atk + mod
+    field = "md" if vs == "md" else "ac"
+    return battle.rolled(actor, target, atk, mod, total, field, intel.shown(battle, target, field, defence),
+                         atk == 20 or (atk != 1 and total >= defence))
+
+
+def _spell_damage(dice, each, flat, total):
+    """The damage record a spell hands the tray: `each` is the individual dice."""
+    return {"dice": _dice(dice), "rolls": [sum(each)], "each": [each], "faces": dice[1], "mod": 0, "flat": flat,
+            "mult": 1, "total": total}
+
+
 class SpellAction(Action):
     """Shared plumbing for a spell cast as a combat action: one subclass per
     spell (same "one class = one mechanic" rule as the rest of this file),
@@ -77,14 +91,19 @@ class MagicMissileAction(SpellAction):
         actor.ap -= self.cost
         battle.log("log.spell.casts", actor=actor.name, spell=self.spell_ref, target=target.name)
         atk = d20()
-        if atk == 1:
-            battle.log("log.spell.crit_miss")
-            return
         pulled = nonlethal_penalty(actor)
         hit_score = atk + self.spell_to_hit(actor) - pulled
         ac = target.ac_vs(actor)
+        rolled = _spell_roll(battle, actor, target, atk, hit_score - atk, ac)
+        if atk == 1:
+            battle.log("log.spell.crit_miss")
+            return
         if atk == 20 or hit_score >= ac:
-            dmg = data.roll(*self.DICE) + self.spell_damage_bonus(actor)
+            flat = self.spell_damage_bonus(actor)
+            each = data.roll_dice(*self.DICE)
+            die = sum(each)
+            dmg = die + flat
+            rolled["damage"] = _spell_damage(self.DICE, each, flat, dmg)
             battle.log("log.spell.hit_magic", score=hit_score, ac=intel.shown(battle, target, "ac", ac), dmg=dmg)
             was_up = target.alive
             target.take_damage(dmg, battle.log, knockout=bool(pulled))
@@ -127,6 +146,7 @@ class SleepAction(SpellAction):
         md = target.mental_defense
         roll = Msg("log.spell.roll_md", atk=atk, bonus=to_hit, score=hit_score,
                    md=intel.shown(battle, target, "md", md))
+        _spell_roll(battle, actor, target, atk, to_hit, md, "md")
 
         if atk == 1:
             battle.log("log.spell.roll_crit_miss", roll=roll)
@@ -176,17 +196,22 @@ class WaterJetAction(SpellAction):
         actor.ap -= self.cost
         battle.log("log.spell.casts", actor=actor.name, spell=self.spell_ref, target=target.name)
         atk = d20()
-        if atk == 1:
-            battle.log("log.spell.crit_miss")
-            return
         pulled = nonlethal_penalty(actor)
         hit_score = atk + self.spell_to_hit(actor) - pulled
         ac = target.ac_vs(actor)
         shown = intel.shown(battle, target, "ac", ac)
+        rolled = _spell_roll(battle, actor, target, atk, hit_score - atk, ac)
+        if atk == 1:
+            battle.log("log.spell.crit_miss")
+            return
         if atk != 20 and hit_score < ac:
             battle.log("log.spell.miss", score=hit_score, ac=shown)
             return
-        dmg = max(1, data.roll(*self.DICE) + actor.mod_intelligence + self.spell_damage_bonus(actor))
+        each = data.roll_dice(*self.DICE)
+        die = sum(each)
+        flat = actor.mod_intelligence + self.spell_damage_bonus(actor)
+        dmg = max(1, die + flat)
+        rolled["damage"] = _spell_damage(self.DICE, each, flat, dmg)
         battle.log("log.spell.hit_plain", score=hit_score, ac=shown, dmg=dmg)
         was_up = target.alive
         dest = self.landing(battle, actor, target)
@@ -232,18 +257,22 @@ class DragonfireAction(SpellAction):
         actor.ap -= self.cost
         battle.log("log.dragonfire.spits", actor=actor.name, spell=self.spell_ref, target=target.name)
         atk = d20()
-        if atk == 1:
-            battle.log("log.spell.crit_miss")
-            return
         pulled = nonlethal_penalty(actor)
         hit_score = atk + self.spell_to_hit(actor) - pulled
         ac = target.ac_vs(actor)
         shown = intel.shown(battle, target, "ac", ac)
+        rolled = _spell_roll(battle, actor, target, atk, hit_score - atk, ac)
+        if atk == 1:
+            battle.log("log.spell.crit_miss")
+            return
         if atk != 20 and hit_score < ac:
             battle.log("log.spell.miss", score=hit_score, ac=shown)
             return
         dice = self.DICE[0] * (2 if atk == 20 else 1)
-        dmg = data.roll(dice, self.DICE[1]) + self.spell_damage_bonus(actor)
+        each = data.roll_dice(dice, self.DICE[1])
+        flat = self.spell_damage_bonus(actor)
+        dmg = sum(each) + flat
+        rolled["damage"] = _spell_damage((dice, self.DICE[1]), each, flat, dmg)
         battle.log("log.spell.hit_fire", score=hit_score, ac=shown, dmg=dmg)
         was_up = target.alive
         target.take_damage(dmg, battle.log, knockout=bool(pulled))
@@ -280,6 +309,7 @@ class _HostileSpellAction(SpellAction):
             defence = target.touch_ac if self.against == "touch" else target.ac_vs(actor)
             roll = Msg("log.spell.roll_touch" if self.against == "touch" else "log.spell.roll_ac", atk=atk,
                        bonus=to_hit, score=score, ac=intel.shown(battle, target, "ac", defence))
+        _spell_roll(battle, actor, target, atk, to_hit, defence, self.against)
         if atk == 1:
             battle.log("log.spell.roll_crit_miss", roll=roll)
         elif atk == 20 or score >= defence:

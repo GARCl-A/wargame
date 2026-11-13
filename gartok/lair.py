@@ -19,7 +19,7 @@
 
 import random
 
-from . import data, dialogue, encounters, i18n, items, missions, npc_lib
+from . import checks, data, dialogue, encounters, i18n, items, missions, npc_lib
 from .board import Board, grid_distance
 from .conditions import Demoralized, Surprised
 from .ground import GroundObject
@@ -94,6 +94,7 @@ def search(guild, group, rng=random):
     nat = rng.randint(1, 20)
     wis = scout.mod_wisdom if scout else 0
     total = nat + wis
+    checks.put(guild, checks.Check(who, nat, wis, total, SEARCH_DC, total >= SEARCH_DC, i18n.t("checks.scout")))
     if total >= SEARCH_DC:
         guild.reveal_node(NODE)
         return True, (i18n.t("lair.follows_warm_air_past_where", who=who))

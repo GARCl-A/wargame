@@ -14,12 +14,12 @@ of quietly paying out (see `missions.open_mission_chest`, which reuses
 `roll_lock` below for the same odds but not the same consequences).
 """
 
-from . import data, items
+from . import checks, data, i18n, items
 
 GEM_YIELD_DICE = (1, 4)   # gems inside, rolled once per successful open: 1d4 + 1 (2..5)
 
 
-def roll_lock(unit, day=1):
+def roll_lock(unit, day=1, guild=None):
     """The pick-the-lock roll alone, no chest or inventory involved: None on
     a miss, otherwise the gems a hit yields. Shared with
     `missions.open_mission_chest`, which needs the same odds but a different
@@ -28,19 +28,23 @@ def roll_lock(unit, day=1):
     if roll + unit.mod_dexterity < data.CHEST_DC and unit.can_use_luck(day):
         unit.use_luck(day)
         roll = data.d20()
-    if roll + unit.mod_dexterity < data.CHEST_DC:
+    ok = roll + unit.mod_dexterity >= data.CHEST_DC
+    if guild is not None:
+        checks.put(guild, checks.Check(unit.name, roll, unit.mod_dexterity, roll + unit.mod_dexterity, data.CHEST_DC, ok,
+                                       i18n.t("checks.chest")))
+    if not ok:
         return None
     return data.roll(*GEM_YIELD_DICE) + 1
 
 
-def try_open(unit, day=1):
+def try_open(unit, day=1, guild=None):
     """Attempt to pick one `items.BOX_OF_GEMS_ITEM` in `unit`'s pack. On success it
     is replaced with the gems inside and an empty Box; on a miss nothing changes.
     Returns `(opened, gems)` -- `gems` is 0 on a miss. No-op, `(False, 0)`, if
     `unit` isn't carrying one."""
     if not unit.has_item(items.BOX_OF_GEMS_ITEM):
         return False, 0
-    gems = roll_lock(unit, day=day)
+    gems = roll_lock(unit, day=day, guild=guild)
     if gems is None:
         return False, 0
     unit.remove_named(items.BOX_OF_GEMS_ITEM)

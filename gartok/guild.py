@@ -151,6 +151,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.taverna_week = taverna_week      # week index the pool was rolled for, or None
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)
         self.taverna_blocked = taverna_blocked if taverna_blocked is not None else []
+        self.table = []                  # the checks of the player's last order, not saved (`checks.py`)
         #   ^ [[candidate_uid, recruiter_uid], ...] pitches already failed this week
         
         # the prison's strangers (bail & recruit), re-rolled weekly by `recruit.refresh_prison_pool`

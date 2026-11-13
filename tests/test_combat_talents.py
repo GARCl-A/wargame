@@ -450,13 +450,13 @@ def test_anatomist_crit_range_full_intel():
     # Not full intel: roll 19 is normal hit (crit is 20)
     b.intel.margin["player"][cf] = 2
     with fixed_d20(19):
-        res = actions.base._resolve_hit(b, c, cf, 19, 0, "+0", "Test")
+        res = actions.base._resolve_hit(b, c, cf, 19, 0, [], "Test")
         assert res == "hit"
 
     # Full intel: roll 19 becomes CRITICAL HIT (crit is 19-20)
     b.intel.margin["player"][cf] = 12
     with fixed_d20(19):
-        res = actions.base._resolve_hit(b, c, cf, 19, 0, "+0", "Test")
+        res = actions.base._resolve_hit(b, c, cf, 19, 0, [], "Test")
         assert res == "crit"
 
 
@@ -537,7 +537,7 @@ def _brutal_at(shooter, target_pos, shooter_pos=(5, 5), thrown=False):
     real = shooter.damage_roll
     shooter.damage_roll = lambda **kw: seen.append(kw["brutal"]) or real(**kw)
     with fixed_d20(10):
-        base._resolve_hit(batt, shooter, foe, 10, 99, "", "x", thrown=thrown)
+        base._resolve_hit(batt, shooter, foe, 10, 99, [], "x", thrown=thrown)
     return seen[0]
 
 

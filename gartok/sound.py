@@ -17,6 +17,7 @@ CUES = {
     "coins": ("handleCoins.ogg", "handleCoins2.ogg"),
     "level_up": ("confirmation_002.ogg",),
     "click": ("click_002.ogg",),
+    "dice": ("die-throw-1.ogg", "die-throw-2.ogg", "die-throw-3.ogg"),
     "eat": tuple(f"crunch_{i}.ogg" for i in range(1, 8)),
 }
 
@@ -31,4 +32,4 @@ MUSIC_FADE = 1.5            # seconds
 MUSIC_LEVEL = 0.6           # where the music sits against the effects, before the player's setting
 
 # how loud each cue sits against the others, before the player's volume
-LEVEL = {"hit": 0.7, "crit": 0.9, "miss": 0.5, "fall": 0.8, "coins": 0.7, "level_up": 0.5, "click": 0.35, "eat": 0.6}
+LEVEL = {"hit": 0.7, "crit": 0.9, "miss": 0.5, "fall": 0.8, "coins": 0.7, "level_up": 0.5, "click": 0.35, "eat": 0.6, "dice": 0.6}

@@ -27,7 +27,7 @@ from . import (
     progression,
 )
 from .conditions import DEMORALIZE_MAX_STACKS, Hexed, Prone
-from .data import resolve_bonus, roll
+from .data import resolve_bonus, roll_dice
 from .i18n import Ref
 from .unit import flatten_pack
 
@@ -863,11 +863,12 @@ class Combatant:
         bonus_damage += self.run_down_bonus("run_down_damage")
         if crit:
             brutal += self.crit_brutal()
-        dice = [roll(n, faces) for _ in range(1 + brutal)]
+        each = [roll_dice(n, faces) for _ in range(1 + brutal)]
+        dice = [sum(group) for group in each]
         total = sum(d + bonus for d in dice) + bonus_damage
         mult = max(1, crit_mult or w.get("crit_mult", 2)) if crit else 1
         total *= mult
-        self.last_damage = {"dice": f"{n}d{faces}" if len(dice) == 1 else f"{len(dice)}x{n}d{faces}", "rolls": dice, "mod": bonus * len(dice), "flat": bonus_damage, "mult": mult}
+        self.last_damage = {"dice": f"{n}d{faces}" if len(dice) == 1 else f"{len(dice)}x{n}d{faces}", "rolls": dice, "each": each, "faces": faces, "mod": bonus * len(dice), "flat": bonus_damage, "mult": mult}
         return max(1, total)
 
     def damage_detail(self):
@@ -875,7 +876,7 @@ class Combatant:
         d = self.last_damage
         if d is None:
             return ""
-        text = f"{d['dice']}({'+'.join(map(str, d['rolls']))})"
+        text = f"{d['dice']}({'+'.join(str(v) for group in d['each'] for v in group)})"
         extra = d["mod"] + d["flat"]
         if extra:
             text += f" {extra:+}"

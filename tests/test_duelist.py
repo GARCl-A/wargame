@@ -26,7 +26,7 @@ def _fencer(team="player", *talents, weapon="Rapier", offhand=None, dex=14, stre
 
 
 def _damage(c, monkeypatch):
-    monkeypatch.setattr("gartok.combatant.roll", lambda n, faces: n)
+    monkeypatch.setattr("gartok.combatant.roll_dice", lambda n, faces: [1] * n)
     return c.damage_roll()
 
 

@@ -1400,3 +1400,27 @@ def test_a_joint_pitch_holder_sees_who_joins_and_the_verb_flips_the_choice():
     assert [f["name"] for f in d["joint"]["faces"]] == d["joint"]["names"]
     d = hub.verb("joint", True)(hub, {})["tavern"]["dossier"]
     assert d["joint"]["on"] is False and "together" not in d["button"]["label"]
+
+
+def test_a_pitch_hands_its_two_dice_to_the_web_answer_once(monkeypatch):
+    from gartok.web import server
+    hub, guild, g = _tavern()
+    hub.verb("recruiter", True)(hub, {"uid": g.leader.uid})
+    _roll(monkeypatch, 20, 1)
+    hub.verb("convince", True)(hub, {})
+    (record,) = server._table(hub)
+    assert record["vs"] == "contest" and record["outcome"] == "crit"
+    assert (record["nat"], record["theirs"]["nat"]) == (20, 1)
+    assert server._table(hub) == []
+
+
+def test_a_joint_pitch_throws_every_die_and_the_cells_throw_them_too(monkeypatch):
+    from gartok import checks
+    from gartok.tavern import _spare
+    pitch = recruit.Pitch(True, recruiter_roll=15, recruiter_total=17, candidate_roll=4, candidate_total=5, rolls=[9, 15, 2])
+    assert _spare(pitch) == (9, 2)
+    hub, guild, g = _tavern()
+    prison, pguild, pg = _hub("prison", "prison")[0], None, None
+    assert type(prison.tavern.s).__name__ == "Prison"
+    checks.put(guild, checks.Check("A", 15, 2, 17, 5, True, "x", (4, 5), (9, 2)))
+    assert checks.drain(guild)[0]["spare"] == [9, 2]

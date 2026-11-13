@@ -235,7 +235,7 @@ class BattleSession(Session):
 
     def _events_pending(self):
         b = self.battle
-        return b.log_total != self._log_seen or b.fx_events or b.acts or b.cues
+        return b.log_total != self._log_seen or b.fx_events or b.acts or b.cues or b.rolls
 
     def cut_step(self, before):
         """Close one step: the units that moved (each with the cells it went through, cut to
@@ -568,6 +568,7 @@ class BattleSession(Session):
             "trail": [_cell(c) for c in b.active.path] if my_turn and len(b.active.path) >= 2 else [],
             "inspect": self._inspect(inspect, obs, my_turn),
             "log": list(b.log_lines[-LOG_LINES:]),
+            "log_total": b.log_total,
             "log_marks": {i: ln.mark for i, ln in enumerate(b.log_lines[-LOG_LINES:]) if getattr(ln, "mark", None)},
             "flags": {"mopping_up": b.mopping_up, "binding": b.binding_captives, "ctf": b.is_ctf,
                       "can_withdraw": bool(b.can_withdraw and self.controllers["player"] == "human"
@@ -806,6 +807,20 @@ class BattleSession(Session):
                 "portrait": asset_url(art_files.portrait_path(u.race["name"], getattr(u, "portrait_id", None))),
                 **card}
 
+    def _roll(self, rec, visible):
+        """A d20 the side may watch: its own, or one whose actor or target stands in sight. The actor's id
+        is null when the actor itself is not seen, so the tray shows the die and nothing more."""
+        actor, target = rec["actor"], rec["target"]
+        actor_seen = actor.team == self.team or actor.pos in visible
+        target_pos = getattr(target, "pos", target)
+        if not (actor_seen or (target_pos is not None and tuple(target_pos) in visible)):
+            return None
+        return {"actor": self.uid(actor) if actor_seen else None,
+                "target": self.uid(target) if hasattr(target, "team") else _cell(target),
+                "line": rec["line"] - self.battle.log_total,
+                "decisive": rec.get("decisive"),
+                **{k: rec[k] for k in ("nat", "mod", "total", "vs", "dc", "outcome", "theirs", "damage", "passive")}}
+
     def _events(self, visible=None):
         """What the last step did that the side could see, drained off the battle: the
         floating numbers, the named actions and their missiles, crits and misses, new log lines."""
@@ -821,7 +836,9 @@ class BattleSession(Session):
             "acts": [{"actor": self.uid(actor), "name": name, "aim": _cell(getattr(aim, "pos", aim)) if aim else None}
                      for actor, name, aim in b.acts if actor.pos in visible or actor.team == self.team],
             "cues": [{"kind": kind, "pos": _cell(pos)} for kind, pos in b.cues if tuple(pos) in visible],
+            "rolls": [r for r in (self._roll(rec, visible) for rec in b.rolls) if r],
         }
+        b.rolls.clear()
         b.fx_events.clear()
         b.acts.clear()
         b.cues.clear()

@@ -86,10 +86,9 @@ class SneakAttack(Action):
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.sneak_attack.head", actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=bonus_dmg,
+        _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, bonus_damage=bonus_dmg,
                      brutal=BRUTAL, brutal_why=Msg("log.sneak_attack.brutal"))
 
 
@@ -128,10 +127,9 @@ class PreciseThrust(Action):
         mods.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.precise_thrust")))
 
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.precise_thrust.head", actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+        _resolve_hit(battle, actor, target, nat, bonus, applied, prefix,
                      brutal=BRUTAL, brutal_why=Msg("log.precise_thrust.brutal"))
 
 
@@ -185,21 +183,19 @@ class Cleave(Action):
         if sec is not None:
             mods.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.cleave")))
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         head_key = "log.cleave.head" if actor.armed else "log.cleave.head_claws"
         prefix = Msg(head_key, actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
+        _resolve_hit(battle, actor, target, nat, bonus, applied, prefix)
 
         # 2. Secondary strike on adjacent foe
         if sec is not None and sec.alive:
             mods2 = actor.attack_mods(sec, _pack_flank(battle, actor, sec), battle=battle)
             mods2.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.cleave")))
             bonus2, applied2 = resolve_bonus(mods2)
-            detail2 = " ".join(f"{v:+}({r})" for v, r in applied2)
             nat2 = d20()
             prefix2 = Msg(head_key + "_sweeps", target=sec.name)
-            _resolve_hit(battle, actor, sec, nat2, bonus2, detail2, prefix2)
+            _resolve_hit(battle, actor, sec, nat2, bonus2, applied2, prefix2)
 
 
 # --------------------------------------------------------------------------- #
@@ -248,10 +244,9 @@ class RepelStrike(Action):
         pinned = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.repel_strike.head", actor=actor.name, target=target.name)
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+        res = _resolve_hit(battle, actor, target, nat, bonus, applied, prefix,
                            bonus_damage=roll(*EDGE_DIE) if pinned else 0, brutal=BRUTAL * pinned,
                            brutal_why=Msg("log.repel_strike.brutal", target=target.name))
 
@@ -260,6 +255,8 @@ class RepelStrike(Action):
             shove_nat = d20()
             shove_total = shove_nat + actor.mod_strength + 2
             check = {"nat": shove_nat, "str": actor.mod_strength, "total": shove_total, "dc": dc}
+            battle.rolled(actor, target, shove_nat, shove_total - shove_nat, shove_total, "dc", str(dc),
+                          shove_nat == 20 or (shove_nat != 1 and shove_total >= dc))
             if shove_nat != 20 and (shove_nat == 1 or shove_total < dc):
                 battle.log("log.repel_strike.holds", **check)
                 return
@@ -317,10 +314,9 @@ class MaimingStrike(Action):
         if unguarded:
             mods.append((EDGE_TO_HIT, "circumstance", i18n.t("log.mod.maiming_strike")))
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.maiming_strike.head", actor=actor.name, target=target.name)
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * unguarded,
+        res = _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, brutal=BRUTAL * unguarded,
                            brutal_why=Msg("log.maiming_strike.brutal", target=target.name))
 
         if res in ("hit", "crit"):
@@ -364,10 +360,9 @@ class ArmorPierce(Action):
         armoured = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.armor_pierce.head", actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, armor_pierce=True,
+        _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, armor_pierce=True,
                      brutal=BRUTAL * armoured, brutal_why=Msg("log.armor_pierce.brutal"))
 
 
@@ -416,10 +411,9 @@ class PowerShot(Action):
         str_bonus = max(1 if far else 0, actor.mod_strength)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.power_shot.head", actor=actor.name, target=target.name)
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=str_bonus,
+        res = _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, bonus_damage=str_bonus,
                            brutal=BRUTAL * far, brutal_why=Msg("log.power_shot.brutal"))
 
         actor.ammo = max(0, actor.ammo - 1)
@@ -464,10 +458,9 @@ class ExtremeShot(Action):
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.extreme_shot.head", actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
+        _resolve_hit(battle, actor, target, nat, bonus, applied, prefix)
 
         actor.crossbow_loaded = False
         actor.ammo = max(0, actor.ammo - 1)
@@ -513,10 +506,9 @@ class HookShield(Action):
             battle.log("log.hook_shield.hooked", actor=actor.name, target=target.name)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.hook_shield.head", actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * shielded,
+        _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, brutal=BRUTAL * shielded,
                      brutal_why=Msg("log.hook_shield.brutal"))
 
 
@@ -562,10 +554,9 @@ class JavelinCharge(Action):
         bonus_dmg = roll(1, 4)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True, battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.javelin_charge.head", actor=actor.name, target=target.name)
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, thrown=True, bonus_damage=bonus_dmg)
+        res = _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, thrown=True, bonus_damage=bonus_dmg)
         if res in ("hit", "crit"):
             battle.log("log.javelin_charge.impact", n=bonus_dmg)
 
@@ -611,10 +602,9 @@ class ParryStrike(Action):
         pressed = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = Msg("log.parry_strike.head", actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, brutal=BRUTAL * pressed,
+        _resolve_hit(battle, actor, target, nat, bonus, applied, prefix, brutal=BRUTAL * pressed,
                      brutal_why=Msg("log.parry_strike.brutal"))
 
         actor.add_condition(Defending())
@@ -666,9 +656,8 @@ class LongThrust(Action):
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         mods.append((self.TO_HIT, "circumstance", i18n.t("log.mod.long_thrust")))
         bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
         prefix = Msg("log.long_thrust.head", actor=actor.name, target=target.name)
-        _resolve_hit(battle, actor, target, d20(), bonus, detail, prefix)
+        _resolve_hit(battle, actor, target, d20(), bonus, applied, prefix)
 
 
 # --------------------------------------------------------------------------- #
@@ -715,6 +704,7 @@ class Wrest(Action):
         total = nat + actor.mod_dexterity
         roll_line = {"actor": actor.name, "target": target.name, "nat": nat, "dex": actor.mod_dexterity,
                      "total": total, "dc": dc, "weapon": item_ref(name)}
+        battle.rolled(actor, target, nat, actor.mod_dexterity, total, "dc", str(dc), nat == 20 or (nat != 1 and total >= dc))
         if nat != 20 and (nat == 1 or total < dc):
             battle.log("log.wrest.keeps", **roll_line)
             return

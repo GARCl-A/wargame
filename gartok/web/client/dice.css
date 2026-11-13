@@ -1,0 +1,82 @@
+/* the dice (dice.js): engraved polygons, a number on each, and the tray they are thrown in */
+.die{--face:#2e5f8e;--rim:#120d08;--ink:#f6ead0;position:relative;width:var(--s,64px);height:var(--s,64px);flex:none}
+.die svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 5px 4px rgba(0,0,0,.5))}
+.die .body{fill:var(--face);stroke:var(--rim);stroke-width:3;stroke-linejoin:round;transition:fill .12s}
+.die .in{fill:rgba(255,255,255,.07);stroke:rgba(232,201,168,.35);stroke-width:1.5}
+.die .edge{stroke:rgba(232,201,168,.35);stroke-width:1.5;fill:none}
+.die b{position:absolute;inset:0;display:grid;place-items:center;font:700 calc(var(--s,64px) * .36)/1 Cinzel,serif;color:var(--ink);text-shadow:0 2px 0 rgba(0,0,0,.55)}
+.die.d20 b{padding-top:calc(var(--s,64px) * .05)}
+.die.hit{--face:#3c6b34}
+.die.crit,.die.nat20{--face:#c9a35e;--ink:#2a1a0e}
+.die.miss{--face:#8a2a1e}
+.die.fumble{--face:#5a160f}
+.die.plain{--face:#2e5f8e}
+.die.theirs{--s:46px;opacity:.9}
+.die.dd{--s:40px;--face:#4a86bd}
+.die.dd .body{stroke-width:2.5}
+.die.rolling svg{animation:dieturn var(--turn,1s) cubic-bezier(.2,.7,.3,1)}
+.die.stopped.nat20 svg{animation:diebounce .45s ease-out}
+.die.stopped.nat1 svg{transform:translateY(5px) scale(.94)}
+.die.stopped.crit svg{filter:drop-shadow(0 0 9px rgba(255,207,90,.8)) drop-shadow(0 5px 4px rgba(0,0,0,.5))}
+@keyframes dieturn{from{transform:translate(-90px,-30px) rotate(-1080deg) scale(.5)}60%{transform:translate(8px,6px) rotate(-120deg) scale(1.08)}to{transform:none}}
+@keyframes diebounce{0%{transform:scale(1)}35%{transform:translateY(-14px) scale(1.12)}70%{transform:translateY(0) scale(.97)}100%{transform:none}}
+
+/* the difficulty: a small shield with its number, or the wax seal of one not read yet */
+.dchip{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:3px 9px 3px 7px;vertical-align:middle;
+  font:700 15px/1 Cinzel,serif;color:#f3e6c6;background:linear-gradient(#3a2a1a,#22180f);border:1px solid rgba(240,215,158,.5);
+  border-radius:3px 3px 10px 10px;box-shadow:0 2px 4px rgba(0,0,0,.45)}
+.dchip i{font:600 10px/1 Cinzel,serif;font-style:normal;letter-spacing:.12em;color:#c9b38c}
+.dchip.seal{width:26px;height:26px;padding:0;justify-content:center;border:0;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#d3584a,#9a2f22 55%,#5a160f);box-shadow:0 0 0 1.5px #3a0c06,0 2px 4px rgba(0,0,0,.5)}
+.dchip.seal .mask{display:block;width:16px;height:16px;color:#3a0c06;opacity:.85}
+
+/* the number over whoever acted, in the fx layer */
+.rollsum{position:absolute;transform:translate(-50%,-100%);white-space:nowrap;padding:5px 12px;
+  font:700 22px/1 Cinzel,serif;color:#f6ead0;background:rgba(26,18,10,.88);border:1px solid rgba(240,215,158,.45);
+  border-radius:3px;box-shadow:0 4px 10px rgba(0,0,0,.5);transition:background .12s,color .12s,opacity .5s}
+.rollsum.leave{opacity:0}
+.rollsum.hit{background:#2f5a2a}
+.rollsum.crit{background:#c9a35e;color:#2a1a0e}
+.rollsum.miss{background:#7a2218}
+.rollsum.fumble{background:#4a120c;color:#c9a89a}
+/* the chronicle line of a roll the player just watched, in the colour of its verdict */
+.rl{border-left:4px solid var(--rl,#2e5f8e);margin-left:-8px;padding-left:18px;background:linear-gradient(90deg,color-mix(in srgb,var(--rl,#2e5f8e) 22%,transparent),transparent 85%);animation:rlpulse 1s ease-out}
+.rl-hit{--rl:#3c6b34} .rl-crit{--rl:#c9a35e} .rl-miss{--rl:#8a2a1e} .rl-fumble{--rl:#5a160f}
+@keyframes rlpulse{from{filter:brightness(1.5)}to{filter:none}}
+
+/* the tray is the chronicle's whole field (battle.css rims it in wood): the dice are thrown over the log itself,
+   then settle in the corner so the lines stay readable */
+.tray{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:3px;z-index:3}
+.dstage{position:absolute;left:50%;top:58%;display:flex;align-items:flex-start;justify-content:center;gap:22px;
+  transform:translate(-50%,-50%);transform-origin:top right;transition:left .6s ease,top .6s ease,transform .6s ease,opacity .6s ease}
+.dstage.rest{left:100%;top:16px;transform:translate(calc(-100% - 32px),0) scale(.5);opacity:.95}
+.chron .kicker{transition:margin-right .6s ease;margin-right:var(--held,0)}
+.throw{position:relative;display:flex;align-items:center;gap:10px;padding-bottom:22px}
+.throw .cap{position:absolute;bottom:0;left:50%;transform:translateX(-50%);white-space:nowrap;font:700 14px/1 Cinzel,serif;color:#2a1a0e;pointer-events:auto}
+.throw .cap i{font-style:normal;color:#6b5236}
+.dmg{display:flex;align-items:center;gap:6px}
+.dmg .dm{font:700 16px/1 Cinzel,serif;color:#2a1a0e}
+
+@media (prefers-reduced-motion:reduce){.die.rolling svg,.die.stopped.nat20 svg,.rollsum{animation:none}}
+.die.sm{text-indent:0;--s:24px;display:inline-block;vertical-align:-5px;margin:0 1px}
+.die.sm svg{filter:none}
+.die.sm b{font-size:11px;text-shadow:none}
+.die.sm.d20 b{padding-top:1px}
+.rm-hit .die.d20{--face:#3c6b34}
+.rm-crit .die.d20{--face:#c9a35e;--ink:#2a1a0e}
+.rm-miss .die.d20{--face:#8a2a1e}
+.rm-fumble .die.d20{--face:#4a120c}
+
+/* the table tray: checks outside a fight, slid in over any screen (dice.js `Dice.table`) */
+.tray.table{position:fixed;inset:96px 24px auto auto;width:auto;height:auto;overflow:visible;z-index:60;
+  transform:translateX(140%);opacity:0;transition:transform .45s ease,opacity .45s ease}
+.tray.table.in{transform:none;opacity:1}
+.tray.table.leave{transform:translateX(140%);opacity:0}
+.tray.table .dstage{position:static;transform:none;padding:18px 22px 8px;background:rgba(232,214,176,.94);border:2px solid #6b4a24;border-radius:6px;box-shadow:0 10px 24px rgba(0,0,0,.5)}
+.tray.table .throw{flex-wrap:wrap;justify-content:center;padding-bottom:0}
+.tray.table .die{--s:84px}
+.tray.table .cap{position:static;transform:none;width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:6px;font-size:18px}
+.tray.table .cap em{font:italic 600 13px/1.1 var(--read);color:#4a3520}
+.die.spare{opacity:.55}
+.rollsum .why{display:block;margin-top:3px;font:italic 600 12px/1.1 var(--read);letter-spacing:0;text-transform:none;opacity:.9}
+.rl-decisive{border-left-width:7px}
