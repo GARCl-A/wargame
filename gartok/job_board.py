@@ -324,6 +324,9 @@ class ShrineBoard(Board):
         return i18n.t("job_board.keeper_weighs_egg_in_both", name=holder.name, SHRINE_EGG_PRICE=lair.SHRINE_EGG_PRICE)
 
 
+TRUST_PREREQS = ("bankers_good_for_business", "bankers_steady_customer", "bankers_diverse_portfolio")
+
+
 class TrustBoard(Board):
     """The Bankers' test of trust: accepting hands the signer a sealed chest
     (`missions.TRUST_CHEST.starting_item`); the goal is the letter of receipt Field Command
@@ -349,7 +352,10 @@ class TrustBoard(Board):
         return i18n.t("job_board.turn_in_letter") if ready else i18n.t("job_board.not_back_yet")
 
     def get_success_notice(self, reward):
-        return i18n.t("job_board.bankers_accept_letter_your_trust")
+        if "bankers_trust" in self.guild.deeds_done:
+            return i18n.t("job_board.bankers_accept_letter_your_trust")
+        todo = [factions.DEEDS[d].name for d in TRUST_PREREQS if d not in self.guild.deeds_done]
+        return i18n.t("job_board.bankers_accept_letter_no_pay", deeds=", ".join(todo))
 
 
 class LedgerBoard(Board):

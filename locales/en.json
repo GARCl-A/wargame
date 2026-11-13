@@ -4174,6 +4174,7 @@
     "burned": "  ·  {burned} burned",
     "keeper_takes_it_and_speaks": "the keeper takes it and speaks your name to the school.",
     "bankers_accept_letter_your_trust": "the Bankers accept the letter and your trust is earned.",
+    "bankers_accept_letter_no_pay": "the Bankers accept the letter. This job pays no coin and no reputation yet: their trust is earned once the guild has also done: {deeds}.",
     "accept_job": "ACCEPT THE JOB",
     "take_task": "TAKE ON THE TASK",
     "accept_trust": "ACCEPT THE TEST OF TRUST",
