@@ -257,7 +257,7 @@ $("logfull").addEventListener("click", async e => {
 
 // ---------------------------------------------------------------- places and pawns
 function drawPlaces() {
-  const b = band(sel), side = MapSheet.labelSides();
+  const b = band(sel), side = MapSheet.labelSides(true);
   let html = M.nodes.map(n => {
     const [x, y] = MapSheet.P(n.id);
     const cls = ["node", /fort|outpost/.test(n.icon || "") || n.id === "ledger_hold" ? "fort" : "",
@@ -271,7 +271,7 @@ function drawPlaces() {
     (at[key] = at[key] || []).push(g);
   }
   for (const list of Object.values(at)) list.forEach((g, i) => {
-    const [x, y] = MapSheet.bandPoint(g), dx = (i - (list.length - 1) / 2) * 46;
+    const [x, y] = MapSheet.bandPoint(g), dx = (i - (list.length - 1) / 2) * MapSheet.PAWN_GAP;
     const lead = g.members.find(m => m.lead) || g.members[0];
     html += `<div class="pawn ${g.gid === sel ? "sel" : ""} ${g.blocked ? "bad" : ""}" data-band="${g.gid}"${tip(g.name)}
       style="left:${x + dx}px;top:${y + (typeof g.at === "string" ? -6 : 14)}px"><div class="pin"></div><div class="p">${face(lead.portrait, lead.name)}</div></div>`;

@@ -321,10 +321,20 @@ const MapSheet = (() => {
   }
 
   // which side of its mark each place's name goes (below, up, right, left), kept off the marks and the
-  // names already set
+  // names already set; `pawns` also keeps them off the bands standing on a place (a band on the road
+  // moves every tick, so it never counts)
   const NAME_W = 7.6;   // px per letter
-  function labelSides() {
+  const PAWN_GAP = 46;  // map.js drawPlaces spaces the pawns of one place by this
+  function labelSides(pawns = false) {
     const boxes = M.nodes.map(n => { const [x, y] = P(n.id); const r = 20; return [x - r, y - r, x + r, y + r]; });
+    if (pawns) {
+      const here = {};
+      for (const g of M.groups) if (typeof g.at === "string") here[g.at] = (here[g.at] || 0) + 1;
+      for (const [id, n] of Object.entries(here)) {
+        const [x, y] = P(id);
+        for (let i = 0; i < n; i++) { const cx = x + (i - (n - 1) / 2) * PAWN_GAP; boxes.push([cx - 25, y - 84, cx + 25, y - 18]); }
+      }
+    }
     const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
     const out = {};
     for (const n of M.nodes) {
@@ -371,7 +381,7 @@ const MapSheet = (() => {
   $("zfit").onclick = fit;
 
   return {
-    selected: null, onmove: null, dragged: 0, P, bandPoint, walk, lerp, fit, draw, labelSides,
+    selected: null, onmove: null, dragged: 0, P, bandPoint, walk, lerp, fit, draw, labelSides, PAWN_GAP,
     zoomIn: () => zoomAt(W / 2, H / 2, 1.3), zoomOut: () => zoomAt(W / 2, H / 2, 1 / 1.3),
     set(state) {
       M = state;
