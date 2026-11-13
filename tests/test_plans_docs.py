@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PLANS = ROOT / "docs" / "plans"
 DOCS = [*sorted(PLANS.glob("*.md")),
         ROOT / "docs" / "economy_sim.md", ROOT / "tests" / "README.md"]
-PROPOSED = {"gartok/version.py", "scripts/i18n_audit.py"}        # a file an open backlog item says to create
+PROPOSED = {"gartok/version.py", "scripts/i18n_audit.py", "scripts/build_client.py"}        # a file an open backlog item says to create
 TEXT = {p: p.read_text(encoding="utf-8") for p in DOCS}
 
 

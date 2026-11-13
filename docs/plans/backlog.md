@@ -1,7 +1,7 @@
 # Backlog — everything still open
 
 The one place for open work. A task here is a few lines; when it needs more, it **points to its plan** in
-`docs/plans/` ([storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md)) or to the doc
+`docs/plans/` ([storefront_polish.md](storefront_polish.md), [go_to_market.md](go_to_market.md), [loyalty.md](loyalty.md), [campaign_ai_roadmap.md](campaign_ai_roadmap.md), [native_client.md](native_client.md)) or to the doc
 that owns the subject: the test suite [../../tests/README.md](../../tests/README.md), the economy sim
 [../economy_sim.md](../economy_sim.md), the web client [../web_ui/web_client.md](../web_ui/web_client.md).
 What is already built is in the code, its tests and the git log.
@@ -186,6 +186,11 @@ the rest.
 
 ## Large
 
+- **Native client (Electron shell).** Plan: [native_client.md](native_client.md). The game ships as its own
+  window instead of opening the player's browser: the shell starts the Python server and closes it, the
+  player's files move to `%APPDATA%\GARTOK`, the release becomes a zip of a folder, and static files are cached for the session so a screen change stops
+  asking for them again. Six steps, one commit each.
+
 - **Loyalty & Aspirations system (author/Yohan alignment).** Plan: [loyalty.md](loyalty.md). Replaces traditional
   alignment with organic motivation mechanics. Characters receive individual aspirations organically tied to their
   attributes, background, and personal vocation:
@@ -329,9 +334,6 @@ agent asks for art instead of generating it. Order is the suggested priority.
   lab's fights). Until then they are only maintained, not extended; nothing in `gartok/` may import them. When picked up, each Editor screen becomes a web screen (a session, a client folder, the
   rules in a pygame-free module) and its pygame screen and tests are deleted; the lab's fights already run in
   the browser (`python -m gartok.web --fight <lab fight>`). Porting it deletes `editor/` and drops pygame from the repo.
-
-- **Native window for the web client (pywebview or Tauri).** Today the game opens in an Edge or Chrome app
-  window. pywebview's `pythonnet` is unverified on Python 3.14. Wanted one day, not now.
 
 - **The in-game wiki shows only what the guild already knows (author 2026-11-01, decided).** The wiki is
   the player's own notebook, not the game's encyclopedia: a player who opens it to reread how the sword's

@@ -88,12 +88,9 @@ A demo is the main wishlist engine for a game without a publisher, and Steam Nex
 most. A game enters Next Fest once, so the demo goes in only after it passes its exit test on its own.
 
 1. **A native window.** Today the game opens in Edge or Chrome in app mode, which reads as a web page and
-   depends on the browser each machine has. Recommended: an Electron shell that starts the Python server as
-   a child process and closes it on exit. It ships its own Chromium, so every player sees the same rendering,
-   and it is the usual route for web games on Steam. Cost: about 100 MB more to download, and the Steam
-   overlay on Chromium windows needs testing. The lighter options (pywebview, Tauri) keep the dependency on
-   the system's browser engine. This replaces *Native window for the web client* under *Deprioritised* in
-   the backlog.
+   depends on the browser each machine has. An Electron shell starts the Python server as a child process
+   and closes it on exit: plan in [native_client.md](native_client.md). It is the usual route for web games
+   on Steam. Left for this gate after that plan: the Steam overlay on Chromium windows needs testing.
 2. **The demo's cut.** The first 10 to 15 days of a guild, or up to the first title in the Pit: enough to
    draft, travel, work, fight, lose someone and write one routine. A save from the demo should load in the
    full game.
