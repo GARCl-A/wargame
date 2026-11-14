@@ -622,7 +622,7 @@ has one "Enter" button and its functions are tabs inside.
 
 ================
 
-Adicionar uma carne no kit inicial de cada persaongem.
+Adicionar uma cerveja no kit inicial de cada persaongem.
 
 ACho que os avisos de tutorial estão com MUITO TEXTO, precisaremos ver um jeito de diminuir a quantidade de texto por card e deixar as coisas mais interativas.
 

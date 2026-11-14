@@ -376,6 +376,12 @@ def make_handler(game, cache_static=False):
     return Handler
 
 
+class _Server(ThreadingHTTPServer):
+    # a screen asks for all its files at once: the default queue of 5 refuses the rest on a busy machine,
+    # and the page opens on "Failed to fetch"
+    request_queue_size = 128
+
+
 def serve(game, port=0, cache_static=False):
     """A server bound to localhost (port 0: a free one), not yet serving."""
-    return ThreadingHTTPServer(("127.0.0.1", port), make_handler(game, cache_static))
+    return _Server(("127.0.0.1", port), make_handler(game, cache_static))

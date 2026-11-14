@@ -38,6 +38,29 @@ developing, run the files of the area you change. Open work on the suite is in
 - **Hidden dice.** A one-hour craft rolls 1d20 against a goal of 20: a natural 20 finishes the batch
   and the next assertion fails 5% of the time. Pin the roll.
 
+## Layout, measured in a browser
+
+`test_layout.py` opens the game in a headless Edge (or Chrome) and asks the page what it drew:
+`tests/browser.py` drives the browser over the DevTools protocol with the standard library alone,
+`tests/layout.py` serves a `Game` to it (`Page`), `tests/layout_audit.js` runs inside the page. It is part of
+the gate (about 30 s, `slow`); a machine with no browser skips it (`GARTOK_BROWSER` names one).
+
+- **What it finds:** `scroll` (a box named in `fit`, like the tutorial card, holds more than it shows),
+  `clipped` (words cut by `overflow: hidden`), `spill` (words past the edge of their box), `offscreen`,
+  `overlap` (two runs of words on each other) and `crowded` (two runs on a line with no gap). An
+  ellipsis is a cut the CSS asked for and is not reported unless the audit is called with `ellipsis`.
+- **What it does not:** a state no test opens, a box that is not a rectangle (words inside a round seal), and
+  whether the screen looks good.
+- **A failure writes a picture** in the temp folder (`gartok-layout`, the path is in the message), the offenders
+  outlined in red, and lists each as kind, pixels, CSS path and words.
+- **Every language.** Each test runs once per `i18n.LANGUAGES`; a third language is covered the day it is added.
+- **Every tutorial card** is drawn by the real client over one screen and must be read whole, without scrolling.
+  A session that draws rows on its card gives them to `_card_rows` (a test fails otherwise).
+- **To cover a screen**, add its `Game` to `SCREENS` in `test_layout.py` (one entry per state worth a look: a
+  step, a tab) and take it off `OWED`; a screen of the client in neither fails a test.
+- **On purpose:** a node that breaks a rule by design says so where it is written, `data-layout-ok="why"`.
+- **The audit is tested too:** one page with each kind of break, and a sound box that must stay silent.
+
 ## The docs are tested too
 
 `test_readme_map`, `test_reference`, `test_rules_doc`, `test_web_client_doc`, `test_local_readmes`

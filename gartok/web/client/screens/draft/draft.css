@@ -132,7 +132,7 @@
 .stamp.warn{color:#a8570f;background:rgba(168,87,15,.1)}
 .stamp.star{color:var(--redink);background:rgba(142,42,30,.08)}
 .vit{display:grid;grid-template-columns:repeat(5,1fr);margin-top:8px;border-top:1px solid rgba(90,60,30,.35);border-bottom:1px solid rgba(90,60,30,.35)}
-.vit div{padding:6px 0 5px;text-align:center}
+.vit div{padding:6px 5px 5px;text-align:center;white-space:nowrap}
 .vit div+div{border-left:1px dashed rgba(90,60,30,.3)}
 .vit span{font:600 9px/1 Cinzel,serif;letter-spacing:.2em;color:#7b6142;margin-right:6px}
 .vit b{font:700 17px/1 Cinzel,serif;color:var(--ink)}
