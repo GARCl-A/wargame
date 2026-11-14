@@ -233,7 +233,7 @@ class GuildSheet:
             sub = i18n.t("guild_sheet.feeds_starving_groupmates_from_its")
         else:
             sub = i18n.t("guild_sheet.keeps_its_food_in_its")
-        rows.append({"key": "share_food", "title": "Rations", "current": False, "sub": sub,
+        rows.append({"key": "share_food", "title": i18n.lab("Rations"), "current": False, "sub": sub,
                      "action": (i18n.t("guild_sheet.stop_sharing") if unit.share_food else i18n.t("guild_sheet.share_rations"), can_share),
                      "tip": i18n.t("guild_sheet.pool_rations_so_hungry_bandmate")})
         size = len(grp.members) if grp else 1

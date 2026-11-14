@@ -158,7 +158,7 @@ def tutorial_header(session):
     return f"{key}|{int(state.should_show(key))}"
 
 
-def _tutorial(session, verb, post):
+def _tutorial(session, verb, post, args=None):
     key, state = session.tutorial_key(), session.tutorials()
     if key is None or state is None:
         raise ValueError(i18n.t("server.this_screen_has_no_tutorial"))
@@ -169,8 +169,9 @@ def _tutorial(session, verb, post):
         state.dismiss(key)
         return session.tutorial_closed(key, first) or {}
     if post and verb == "wiki":
-        ref = session.tutorial_wiki(key)
-        if ref is None:
+        ref = (args or {}).get("ref") or session.tutorial_wiki(key)
+        named = tutorial.card(key)["terms"]
+        if ref is None or (ref != session.tutorial_wiki(key) and ref not in named):
             raise ValueError(i18n.t("server.this_screen_has_no_tutorial"))
         state.dismiss(key)
         return session.open_wiki(ref)
@@ -290,7 +291,7 @@ def make_handler(game, cache_static=False):
                                              "level": sound.MUSIC_LEVEL}})
             if parts[0] == "tutorial" and len(parts) <= 2:
                 try:
-                    answer = _tutorial(s, parts[1] if len(parts) == 2 else None, post)
+                    answer = _tutorial(s, parts[1] if len(parts) == 2 else None, post, args)
                 except ValueError as e:
                     return self._json({"error": str(e)}, 409)
                 return self._missing() if answer is None else self._json(answer)

@@ -34,9 +34,19 @@ function lit(text) {
   return at < 0 ? t : `${t.slice(0, at)}<mark>${t.slice(at, at + esc(q).length)}</mark>${t.slice(at + esc(q).length)}`;
 }
 
+// a line's [[chapter:id|word]] is a word that opens another entry: underlined, its opening on hover
+function linked(line, refs) {
+  let out = "", pos = 0;
+  for (const m of line.matchAll(/\[\[([a-z_]+:[a-z_]+)\|([^\]]+)\]\]/g)) {
+    out += lit(line.slice(pos, m.index)) + (refs?.[m[1]] ? `<span class="ref" data-ref="${m[1]}"${tip(refs[m[1]], "item")}>${lit(m[2])}</span>` : lit(m[2]));
+    pos = m.index + m[0].length;
+  }
+  return out + lit(line.slice(pos));
+}
+
 function entry(e) {
   const list = W.chapter === "rules" || e.body.length > 1;
-  const body = list ? `<ul>${e.body.map(l => `<li>${lit(l)}</li>`).join("")}</ul>` : e.body.map(l => `<p>${lit(l)}</p>`).join("");
+  const body = list ? `<ul>${e.body.map(l => `<li>${linked(l, e.refs)}</li>`).join("")}</ul>` : e.body.map(l => `<p>${linked(l, e.refs)}</p>`).join("");
   const track = e.track && e.track.length ? `<p><i>${tr("wiki.racial")}</i> ${e.track.map(lit).join(", ")}</p>` : "";
   const tags = e.tags.map(t => `<span>${esc(t)}</span>`).join("")
     + e.links.map(l => `<span class="ref" data-ref="${esc(l.ref)}"${tip(l.tip, "item")}>${lit(l.label)}</span>`).join("");

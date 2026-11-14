@@ -591,13 +591,13 @@
             },
             "tokens_spent": "Todas as fichas foram gastas; o esquadrão é o que o sorteio dá.",
             "commission": "Encomendar",
-            "token_bubble": "Precisa de um líder ou de um lutador resistente? Gaste um token para trocar um card por outro com a tag que você pedir. Você pode gastar vários no mesmo personagem para acumular tags e montar um card mais forte.",
+            "token_bubble": "Para obter candidatos melhores, gaste uma ficha para trocar um candidato por outro com as etiquetas que você pedir. Você pode gastar até {max} fichas em um ou mais personagens.",
             "no_tokens": "Sem fichas",
             "to_charter": "para o estatuto",
             "picked": "{a} de {b} escolhidos",
             "leads": "Quem lidera a guilda",
-            "leader_note": "O líder negocia pela guilda e apadrinha os seus recrutas.",
-            "leader": "Líder",
+            "leader_note": "O Porta-Voz negocia pela guilda e apadrinha os seus recrutas.",
+            "leader": "Porta-Voz",
             "rename": "Renomear",
             "recruit": "Pode recrutar {n}",
             "found": "Fundar",
@@ -2819,7 +2819,7 @@
     "guild_sheet": {
         "someone_long_gone": "alguém que partiu há muito",
         "level_up": "NOVO NÍVEL",
-        "guild_leader": "LÍDER DA GUILDA",
+        "guild_leader": "PORTA-VOZ",
         "group_leader": "LÍDER DO GRUPO",
         "lv_c_w": "{race} · Nv {racial_level}  (C{combat_level} T{work_level})",
         "pulls": "puxa {lower:o}",
@@ -2842,12 +2842,12 @@
         "none_left": "nenhum restante",
         "sponsored_recruits_of": "Recrutas apadrinhados: {used} de {cap}: {left}",
         "group": "o grupo",
-        "guild_leader_2": "Líder da guilda",
+        "guild_leader_2": "Porta-Voz",
         "adds_cha_bonus_to_taverna": "Soma um bônus de CAR ao recrutamento na taverna",
         "leads_whole_guild": "Lidera a guilda inteira",
         "free_transfer_left": "1 transferência grátis restante",
         "no_free_transfer_left": "Nenhuma transferência grátis restante",
-        "make_guild_leader": "TORNAR LÍDER DA GUILDA",
+        "make_guild_leader": "TORNAR PORTA-VOZ",
         "make_this_member_lead_whole": "Faz este membro liderar a guilda inteira",
         "group_leader_2": "Líder do grupo",
         "leads_holds_up_to_members": "Lidera {band}: comporta até {cap} membros",
@@ -4261,7 +4261,7 @@
         "recruited_by": "Recrutado por {who}.",
         "founding_member_of_guild": "Membro fundador da guilda.",
         "holds_title_champion_of_pit": "Detém o título de Campeão da Fossa.",
-        "guild_leader": "Líder da guilda",
+        "guild_leader": "Porta-Voz",
         "leads_band": "Lidera o grupo",
         "champion_of_pit": "Campeão da Fossa",
         "not_yet_sworn_in": "Ainda sem juramento",
@@ -4647,8 +4647,8 @@
         "s_unpaid_debt_to_bankers": "A dívida não paga de {name} com os Banqueiros chega aos ouvidos da guarda."
     },
     "guild_rules": {
-        "guild_leader_must_be_roster": "o líder da guilda deve ser membro do rol",
-        "no_free_guild_leader_change": "sem troca de líder da guilda grátis restante",
+        "guild_leader_must_be_roster": "o Porta-Voz deve ser membro do rol",
+        "no_free_guild_leader_change": "sem troca de Porta-Voz grátis restante",
         "split_needs_non_empty_proper": "dividir exige um subconjunto próprio e não vazio do grupo",
         "can_t_split_group_with": "não dá para dividir um grupo com uma ordem em andamento",
         "no_free_group_slot_guild": "sem vaga livre de grupo: a guilda não é famosa o bastante para manter outro",
@@ -6680,36 +6680,40 @@
             }
         },
         "wiki_button": "Ver na enciclopédia",
+        "wiki_more": "Clique em “{term}” para ler a entrada completa.",
         "draft": {
             "intro": {
                 "title": "Bem-vindo a Gartok",
                 "button": "Começar",
                 "body": [
-                    "Gartok é um mundo de fantasia medieval familiar: muitas raças, magia, ruínas, nobres com ouro para gastar.",
-                    "A economia virou. Explorar ruínas, catacumbas e florestas selvagens atrás de criaturas, artefatos e itens mágicos paga muito melhor que trabalho honesto, então todo mundo que consegue segurar uma arma está lá fora, arriscando o pescoço.",
-                    "Aventureiros se juntam em guildas, e as grandes crescem até virar algo mais próximo de companhias: armadas, habilidosas, governando florestas inteiras como território. Você está fundando uma, com um pouco de moeda e três recrutas, escolhidos a seguir."
+                    "Gartok é um mundo de fantasia medieval onde muitas raças e culturas se misturam. Criaturas lendárias, magias e artefatos existem e são caçados por aventureiros, mercenários e exploradores.",
+                    "Após três anos de uma guerra lenta, a economia virou. Quem não é soldado, mas sabe lutar, percebeu que explorar ruínas e florestas selvagens atrás de criaturas, artefatos e itens mágicos paga muito melhor do que qualquer trabalho comum.",
+                    "Aventureiros se juntam em guildas, e as grandes crescem até virar algo mais próximo de forças econômicas e militares em escala regional, governando florestas inteiras como território.",
+                    "Você e seus dois sócios estão fundando uma: pegaram as armas, algumas economias e estão escrevendo o estatuto da guilda.",
+                    "Quem são vocês?"
                 ]
             },
             "vocation": {
                 "title": "Escolha uma vocação",
                 "body": [
-                    "O ofício sobre o qual sua guilda é fundada: seis raças e uma vantagem que todo membro compartilha, seja qual for a raça.",
-                    "A seleção que vem a seguir sempre traz um candidato de cada uma dessas seis raças. A vocação não pode ser mudada depois; a aba GUILDA a mostra."
+                    "Quem vocês eram antes de fundar a guilda?",
+                    "A [[rules:vocations|vocação]] define {races} das {pool} raças que aparecerão na sua seleção de candidatos, além de uma habilidade que todos os membros compartilham."
                 ]
             },
             "pick": {
                 "title": "Montando sua guilda",
                 "body": [
-                    "Nove candidatos sorteados: uma raça, uma arma e um item iniciais, e 3d6 para cada atributo. Clique em três para ficar com eles (clique de novo para devolver um), depois em CONTINUAR. Espere perder alguns: um esquadrão inicial existe para ser gasto.",
-                    "Cada cartão traz etiquetas do que o candidato faz bem. Mire em um pouco de tudo: alguém para liderar, alguém para bater, alguém que dure."
+                    "{pool} candidatos sorteados. Cada um tem uma raça, uma arma, um item inicial e 3d6 para cada atributo.",
+                    "Clique para escolher os {team} membros fundadores (clique de novo para desfazer a escolha).",
+                    "Cada candidato traz etiquetas do que faz bem. Tente ter, entre os fundadores, ao menos um com a etiqueta Líder."
                 ],
-                "suggestion": "Falta alguma coisa? Use suas Fichas de encomenda para trocar um cartão por outro com as etiquetas que você pedir. ARRISCADO também pode ser pedido, para um começo mais difícil."
+                "suggestion": "Você tem {tokens} Fichas de encomenda: use-as para trocar um candidato indesejado por outro com as características que você pedir. ARRISCADO também pode ser pedido, para um começo mais difícil."
             },
             "identity": {
-                "title": "Identidade e liderança",
+                "title": "Identidade e Porta-Voz",
                 "body": [
-                    "O nome e a cor do estandarte acompanham a guilda durante toda a partida.",
-                    "O líder pechincha pela guilda e lidera qualquer grupo em que esteja. Você tem uma troca grátis depois; a partir daí só a morte o substitui. Cada cartão mostra quantas pessoas aquele candidato poderia recrutar como líder: {base} + modificador de Carisma + Nível de Personagem."
+                    "Qual o nome, a cor e o brasão da sua guilda?",
+                    "Qual dos fundadores será o [[rules:leader|Porta-Voz]] da guilda? Passe o mouse sobre o termo para ver o que ele faz."
                 ]
             }
         },
@@ -6725,22 +6729,24 @@
             "title": "Sua guilda",
             "button": "Ver seus objetivos",
             "body": [
-                "Cada cartão à esquerda é um grupo de gente sua. Selecione um grupo e clique num lugar do mapa para mandá-lo até lá; o painel à direita lista o que ele pode fazer onde está.",
-                "Não há botão de turno: quando todo grupo tem uma ordem, o relógio corre sozinho e para quando um grupo precisa de você. Todo mundo come uma comida por dia, então fique de olho na linha RAÇÕES.",
-                "Tudo o que acontece fica escrito em O REGISTRO, embaixo à direita, o mais novo por último, com o que vence a seguir logo abaixo. Clique no título para buscar por palavra, tipo ou grupo.",
-                "Sem saber o que fazer primeiro? \"Estabeleça sua guilda\" está na próxima tela: comece por ela."
+                "Seus grupos ficam à esquerda da tela. Para mandar um grupo a outro lugar, clique no destino no mapa. As viagens levam horas.",
+                "Não há botão de turno: o relógio corre sozinho e para quando um grupo precisa de você.",
+                "Todo mundo come uma refeição por dia, à meia-noite. Fique de olho nas rações para não passar [[rules:hunger|fome]].",
+                "Embaixo à direita fica O Registro, onde aparece tudo o que acontece com seus grupos.",
+                "Vamos olhar os objetivos da guilda: é por eles que você começa a estabelecê-la."
             ]
         },
         "guild": {
             "members": {
                 "title": "Seu elenco",
                 "body": [
-                    "Os membros são listados por grupo; clique num para ver a ficha, os níveis e os talentos. GERENCIAR EQUIPAMENTO, embaixo, abre o grupo do membro selecionado para mover equipamento entre eles.",
-                    "DIVIDIR RAÇÕES deixa os colegas de grupo comerem da mochila daquele membro. Um dia sem comer: com fome ({pen} nos atributos). Dois: faminto (PV máximo {cap}). Três: fraco demais para lutar. Quatro: morto.",
-                    "A fome também corrói os números: se qualquer atributo chegar a zero, o personagem morre, e um corpo frágil chega lá primeiro. O registro então diz \"Definhou\".",
-                    "A morte é permanente; a partida só acaba quando a guilda inteira se foi."
+                    "Os membros são listados por grupo; clique em um para ver a ficha.",
+                    "Para ver os equipamentos, clique em \"GRUPOS\" no menu superior.",
+                    "Por padrão seus personagens dividem as rações.",
+                    "Eles precisam comer, e a [[rules:hunger|fome]] é perigosa: cada dia sem comer traz penalidades progressivas, até a morte.",
+                    "Ah, antes que eu me esqueça: a morte de um personagem é permanente, mas a partida só acaba quando a guilda inteira partir."
                 ],
-                "suggestion": "A aba REPUTAÇÕES guarda seus objetivos e o que cada facção quer."
+                "suggestion": "Perder é divertido. Aprenda com seus erros e funde uma nova guilda... e mais outra... "
             },
             "overview": {
                 "title": "Até onde a guilda alcança",
@@ -6753,9 +6759,9 @@
                 "title": "Pelo que você joga",
                 "button": "Ver seu elenco",
                 "body": [
-                    "Não há pontuação nem luta que você precise vencer. Comece pelo cartão no topo, \"Estabeleça sua guilda\": tarefas pequenas que ensinam o que uma guilda pode fazer, de comprar comida a contratar um segundo grupo. Faça-as antes de qualquer outra coisa. Um grupo novo é fraco, faminto e pobre, e a primeira lição do mundo é que ele mata quem não se prepara.",
-                    "Tudo está aberto desde o primeiro dia: todo lugar do mapa, todo trabalho, toda missão. Mas você não vai conseguir fazer tudo. Lugares, missões e inimigos não ligam para o seu nível, e um lugar desconhecido pode guardar uma luta que um grupo novo não vence. Tenha cuidado com o que faz num lugar onde nunca esteve e aprenda o terreno antes de confiar nele.",
-                    "Abaixo deles, cada facção lista seus feitos. A reputação só se move quando você realiza um (uma conquista única, não uma moagem) e ela destrava o que o cartão lista. As Fossas e os Banqueiros estão abertos desde o primeiro dia; as outras aparecem quando você entra nos lugares delas."
+                    "Comece pela lista à esquerda, \"Estabeleça sua guilda\": tarefas pequenas que ensinam o que uma guilda pode fazer e os primeiros passos nas mecânicas do jogo.",
+                    "Desde o início você pode viajar livremente pelo mapa, mas agora é fraco, pobre e provavelmente faminto (veja [[rules:hunger|fome]]). Prepare-se um pouco antes das aventuras mais perigosas.",
+                    "Nas outras listas, cada facção lista seus feitos. Cada feito é uma conquista única que aumenta a sua [[rules:reputation|reputação]]."
                 ]
             },
             "band_routine": {
@@ -6849,7 +6855,7 @@
             "body": [
                 "Escolha um estranho e depois quem do grupo faz o convite: Carisma contra Carisma, num idioma que os dois falem. Cada membro da guilda além de {free} custa {size_pen}, e cada passo de alinhamento de distância {align_pen}. Um convite falho não pode ser repetido por aquele membro até a reserva renovar na semana seguinte.",
                 "Alinhamento é como um personagem enxerga ordem e moral: Leal, Neutro ou Caótico, e Bom, Neutro ou Mau. O convite é o d20 + modificador de Carisma de quem convida + os modificadores abaixo contra o d20 + modificador de Carisma do estranho, e quem convida precisa superar. Cada passo de alinhamento de distância em um dos eixos é -{align_pen}, até quatro passos: um recrutador Leal e Bom convence outro Leal e Bom muito mais fácil que um Caótico e Mau. Escolha para o convite quem tem o alinhamento mais próximo do estranho.",
-                "Cada membro pode patrocinar {base} + seu modificador de Carisma recrutas; o líder da guilda soma o Nível de Personagem.",
+                "Cada membro pode patrocinar {base} + seu modificador de Carisma recrutas; o Porta-Voz soma o Nível de Personagem.",
                 "ESTUDAR aluga um quarto (${study} por dia) para aprender um idioma de um Dicionário, ou uma magia do seu Pergaminho, se o aluno tiver essa escola. APRESENTAR manda quem tem um Instrumento Musical para o palco atrás de gorjetas."
             ]
         },
@@ -7103,7 +7109,7 @@
             "1": "Uma proposta é d20 + Carisma (o seu) contra d20 + Carisma (o deles); o empate vai para o estranho. É preciso ter uma língua em comum.",
             "2": "Penalidade de lotação: -{pen} para cada membro da guilda inteira além de {free}, contados em todos os grupos, não só no grupo que faz a proposta.",
             "3": "Alinhamento: -{align} por passo entre o alinhamento de quem recruta e o do estranho.",
-            "4": "Cada membro pode apadrinhar {base} + {terms} recrutas; o líder da guilda soma {leader}.",
+            "4": "Cada membro pode apadrinhar {base} + {terms} recrutas; o Porta-Voz soma {leader}.",
             "5": "Uma proposta que falha impede aquele recrutador de tentar com aquele estranho até o grupo de candidatos se renovar. Outra pessoa ainda pode tentar.",
             "6": "A Taverna mantém {tavern} estranhos e a Prisão {prison} prisioneiros; ambos são sorteados de novo a cada {days} dias. A fiança soma +{bail} à proposta, e cada vez que a oferta dobra, +{step}; ela só é cobrada se a proposta vencer."
         },
@@ -7251,10 +7257,15 @@
           "1": "Entender-se é uma porta, não um bônus. Sem idioma em comum você não consegue argumentar com um recruta, uma loja não dá acordo de pechincha (veja Lojas e Pechincha), e um inimigo só se deixa persuadir, enganar ou intimidar no idioma do seu líder (veja Conversar Antes da Luta).",
           "2": "Cada raça fala os seus idiomas, listados no capítulo Raças. Para aprender outro, estude um Dicionário daquele idioma na Taverna (veja Estudar); a Biblioteca vende os dicionários quando a reputação dela permite."
         },
+        "vocations": {
+          "title": "Vocações",
+          "1": "No draft a guilda escolhe uma vocação, uma vez e para sempre: o ofício sobre o qual foi fundada. Uma vocação nomeia {races} raças e uma habilidade que todo membro tem, seja qual for a raça. A seleção sempre traz um candidato de cada uma dessas raças; os demais candidatos (a seleção tem {pool} no total) vêm de qualquer raça.",
+          "each": "{name}: {perk} Raças: {races}."
+        },
         "leader": {
-          "title": "O Líder da Guilda",
-          "1": "A guilda responde a um líder. Trocar quem é custa a única troca grátis da partida; depois disso só a morte o substitui.",
-          "2": "O líder da guilda patrocina mais recrutas (veja Recrutamento). Cada grupo tem também o seu líder, trocado à vontade, que pechincha pelo bando numa loja (veja Lojas e Pechincha) e define quantos o grupo comporta (veja Grupos)."
+          "title": "O Porta-Voz da Guilda",
+          "1": "O Porta-Voz é o fundador que fala pela guilda: não é dono de nada nem manda em ninguém. Seu benefício é o recrutamento: ele patrocina tantos recrutas a mais quanto o seu Nível de Personagem (veja [[rules:recruiting|Recrutamento]]).",
+          "2": "Trocar quem é custa a única troca grátis da partida; depois disso só a morte o substitui."
         },
         "animals": {
           "title": "Animais",
@@ -7342,7 +7353,8 @@
         },
         "hunger": {
             "title": "Fome e Inanição",
-            "1": "Todo membro come 1 refeição por dia, por conta própria, quando o relógio passa da meia-noite. Cada um pega a comida mais perto de estragar, da própria mochila primeiro e depois dos estoques do grupo. COMPARTILHAR RAÇÕES deixa um membro alimentar companheiros famintos com a própria mochila.",
+            "1": "Todo membro come 1 refeição por dia, por conta própria, quando o relógio passa da meia-noite. Cada dia sem comer soma uma penalidade pior, até a inanição matar no dia {death}.",
+            "9": "Cada membro pega a comida mais perto de estragar, da própria mochila primeiro e depois dos estoques do grupo. COMPARTILHAR RAÇÕES deixa um membro alimentar companheiros famintos com a própria mochila.",
             "2": "{d1} dia sem comer · Faminto: {pen1} em todos os atributos.",
             "3": "{d2} dias sem comer · Inanição: {pen2} em todos os atributos; PV máximo limitado a {cap}.",
             "4": "{d3} dias sem comer · Incapacitado: ainda {pen3} em todos os atributos, fraco demais para lutar e não pode ser enviado à batalha.",

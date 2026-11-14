@@ -117,7 +117,7 @@ const Tip = (() => {
     const d = el.dataset;
     if (d.tipItem !== undefined) {
       const [head, ...rest] = d.tipItem.split("\n");
-      return `<h4>${esc(head)}</h4>${rest.filter(Boolean).map(line).join("")}`;
+      return `<h4>${esc(head)}</h4>${rest.filter(Boolean).map(line).join("")}${d.tipMore ? `<p class="more">${esc(d.tipMore)}</p>` : ""}`;
     }
     if (d.tipSum !== undefined) {
       const [head, ...rest] = d.tipSum.split("\n");

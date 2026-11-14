@@ -119,9 +119,12 @@ const Tutorial = (() => {
   const rows = list => !list?.length ? "" : `<div class="tut-rows">${list.map(r => `<div class="trow${r.big ? " big" : ""}"${r.focus ? ` data-focus="${esc(r.focus)}"` : ""}>
     ${r.image ? `<img src="${esc(r.image)}" draggable="false">` : ""}<span class="tstamp ${esc(r.stamp?.style)}">${esc(r.stamp?.label)}</span>
     <div><b>${esc(r.rule)}</b><span>${esc(r.text)}</span></div></div>`).join("")}</div>`;
+  // a paragraph's [[chapter:id|word]] is a word that names a wiki entry: underlined, the entry's opening on hover, the entry on a click
+  const rich = (text, terms, more) => esc(text).replace(/\[\[([a-z_]+:[a-z_]+)\|([^\]]+)\]\]/g, (_, ref, word) =>
+    terms?.[ref] ? `<span class="wl" data-wiki="${ref}" data-tip-item="${esc(terms[ref].tip)}"${terms[ref].more ? ` data-tip-more="${esc(more).replace("{term}", word)}"` : ""}>${word}</span>` : word);
   const card = c => `<div id="tut-card" class="paper"><div class="kicker">${tr("tutorial.notes")}</div>
-    <h2>${esc(c.title)}</h2>${c.body.map(p => `<p>${esc(p)}</p>`).join("")}${rows(c.rows)}
-    ${c.suggestion ? `<p class="next">${esc(c.suggestion)}</p>` : ""}<div class="tut-btns">
+    <h2>${esc(c.title)}</h2>${c.body.map(p => `<p>${rich(p, c.terms, c.wiki_more)}</p>`).join("")}${rows(c.rows)}
+    ${c.suggestion ? `<p class="next">${rich(c.suggestion, c.terms, c.wiki_more)}</p>` : ""}<div class="tut-btns">
     ${c.wiki ? `<div class="btn alt" id="tut-wiki">${esc(c.wiki_button)}</div>` : ""}<div class="btn">${esc(c.button)}</div></div></div>`;
   const node = id => document.getElementById(id) || $("stage").appendChild(Object.assign(document.createElement("div"), {id}));
   const drop = id => document.getElementById(id)?.remove();
@@ -135,11 +138,13 @@ const Tutorial = (() => {
     const veil = node("tut-veil");
     veil.innerHTML = card(c);
     veil.onclick = close;
-    veil.querySelector("#tut-wiki")?.addEventListener("click", async e => {
+    const toWiki = async (e, ref) => {
       e.stopPropagation();
-      const r = await api("/api/tutorial/wiki", {});
+      const r = await api("/api/tutorial/wiki", ref ? {ref} : {});
       if (r.screen) location.reload();
-    });
+    };
+    veil.querySelector("#tut-wiki")?.addEventListener("click", e => toWiki(e));
+    veil.querySelectorAll(".wl").forEach(w => w.addEventListener("click", e => toWiki(e, w.dataset.wiki)));
     unspot();
     spot = c.spot || null;
     veil.classList.toggle("spotted", !!spot);

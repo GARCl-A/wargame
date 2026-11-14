@@ -239,3 +239,46 @@ def test_the_work_and_world_sections_read_their_constants():
     for number in (economy.BANK_CHEST_PRICE, economy.LUMBER_BLOCK_HOURS, economy.SUPPLY_RUN_PAY, gather.LICENCE_PRICE["mine"],
                    arena.SCRAPPER_PURSE, arena.BOSS_PURSE, group.BASE_SLOTS):
         assert str(number) in body
+
+
+def _marked_refs():
+    from gartok import i18n
+    for lang in ("en", "pt-br"):
+        for key, text in i18n._catalog(lang).items():
+            if key.startswith("tutorial.") and key.endswith((".body", ".suggestion")):
+                for line in [text] if isinstance(text, str) else text:
+                    for ref, _ in re.findall(r"\[\[([a-z_]+:[a-z_]+)\|([^\]]+)\]\]", line):
+                        yield lang, key, ref
+
+
+def test_every_wiki_word_in_a_card_opens_an_entry_that_exists():
+    from gartok.web import wiki_session
+    refs = list(_marked_refs())
+    assert refs
+    for lang, key, ref in refs:
+        chapter, _, eid = ref.partition(":")
+        assert chapter == "rules" and any(e["id"] == eid for e in wiki_session.BUILD[chapter]()), (lang, key, ref)
+
+
+def test_a_card_hands_the_client_the_tooltip_of_each_wiki_word_it_names():
+    from gartok import tutorial
+    card = tutorial.card("map")
+    assert "rules:hunger" in card["terms"]
+    hunger = card["terms"]["rules:hunger"]
+    assert hunger["tip"].startswith(wiki_rules.title("hunger")) and hunger["more"]
+    assert tutorial.card("combat_lab")["terms"] == {}
+
+
+def test_the_vocations_rule_lists_every_vocation_with_its_races():
+    from gartok import i18n, vocations
+    lines = {k: ls for k, _, ls in wiki_rules.sections()}["vocations"]
+    assert len(lines) == 1 + len(vocations.VOCATIONS)
+    for v, line in zip(vocations.VOCATIONS.values(), lines[1:]):
+        assert v.name in line and all(i18n.name("race", r) in line for r in v.races)
+
+
+def test_a_rule_line_can_link_another_rule_and_the_wiki_hands_over_its_tooltip():
+    from gartok.web import wiki_session
+    entry = next(e for e in wiki_session.BUILD["rules"]() if e["id"] == "leader")
+    assert "rules:recruiting" in entry["refs"] and any("[[rules:recruiting|" in ln for ln in entry["body"])
+    assert "[[" not in " ".join(wiki_rules.tip("leader")) and "[[" not in entry["_find"]

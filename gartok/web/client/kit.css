@@ -80,6 +80,7 @@
 #tip h4{font:700 15px/1.15 Cinzel,serif;letter-spacing:.06em;color:#24170c;margin-bottom:6px}
 #tip p{font:16px/1.35 var(--read);color:#3a2410}
 #tip p+p{margin-top:5px}
+#tip p.more{margin-top:9px;padding-top:7px;border-top:1px solid rgba(90,60,30,.35);font:italic 15px/1.3 var(--read);color:#2f6b3a}
 #tip p b{font-weight:600;color:#24170c}
 #tip .sum{min-width:220px}
 #tip .sum div{display:flex;gap:18px;justify-content:space-between;font:16px/1.5 var(--read);color:#3a2410}

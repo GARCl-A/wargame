@@ -1,15 +1,35 @@
 """The Rules chapter's "People & World" sections that are not the recruiting, group and wagon ones:
 the numbers read off the modules that run them."""
 
-from . import animals, constants, economy, forced, guild_upkeep, i18n, justice, world
+from . import (
+    animals,
+    constants,
+    draft,
+    economy,
+    forced,
+    guild_upkeep,
+    i18n,
+    justice,
+    vocations,
+    world,
+)
 
 
 def _lines(section, n, **fmt):
     return [i18n.t(f"wiki_rules.{section}.{i}", **fmt) for i in range(1, n + 1)]
 
 
+def _vocation_lines():
+    first = next(iter(vocations.VOCATIONS.values()))
+    return [i18n.t("wiki_rules.vocations.1", races=len(first.races), pool=draft.POOL_SIZE),
+            *(i18n.t("wiki_rules.vocations.each", name=v.name, perk=v.perk,
+                     races=", ".join(i18n.name("race", r) for r in v.races))
+              for v in vocations.VOCATIONS.values())]
+
+
 def built():
     return {
+        "vocations": _vocation_lines(),
         "alignment": _lines("alignment", 2),
         "languages": _lines("languages", 2),
         "leader": _lines("leader", 2),

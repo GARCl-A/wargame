@@ -79,7 +79,7 @@ function side() {
     const nudge = D.tokens === D.tokens_max && !D.pending.length && slip === null;
     body = `<div class="lbl">${tr("draft.squad", {a: D.squad.length, b: D.team})}</div>${slots}
       <div class="tokens"><div class="lbl">${tr("draft.tokens_h", {a: D.tokens, b: D.tokens_max})}</div><div class="coins">${coins}</div>
-      ${nudge ? `<div class="bubble">${tr("draft.token_bubble")}</div>` : `<p>${D.tokens ? trn("draft.token_line", D.tokens) : tr("draft.tokens_spent")}</p>`}
+      ${nudge ? `<div class="bubble">${tr("draft.token_bubble", {max: D.tokens_max})}</div>` : `<p>${D.tokens ? trn("draft.token_line", D.tokens) : tr("draft.tokens_spent")}</p>`}
       <span class="ghost-btn ${D.tokens && !D.pending.length ? "" : "off"}" id="commission">${D.tokens ? tr("draft.commission") : tr("draft.no_tokens")}</span></div>`;
     const full = D.squad.length === D.team;
     sealHtml(tr("draft.continue"), full ? tr("draft.to_charter") : tr("draft.picked", {a: D.squad.length, b: D.team}), "gui/contract", !full);

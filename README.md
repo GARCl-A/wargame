@@ -289,6 +289,8 @@ docs/               economy_sim.md (what the economy sim measures), web_ui/ (web
   picture) is `tutorial_rows(key)` on the session: each row is a stamp, a rule and a text, optionally an `image` (`big`: a 120 px picture, for a diagram) and a `focus` (a selector lit on the screen
   while the pointer is on the row). `tutorial_spot(key)` names the part of the screen the card is about (the battle's action bar), kept
   lit above the veil while the card is up.
+  A word of the copy that names a Rules entry is written `[[rules:<id>|word]]`: the card draws it underlined green, shows the entry's title and
+  first line on hover and opens the entry on a click (`tutorial.wiki_terms`; a card may name any number, a test checks each ref exists).
 - **New rule pop-up** (a one-time card a trigger fires, with a *See in the wiki* button): an id in `hints.IDS` and
   `tutorial.TUTORIALS`, its `tutorial.hint.<name>` copy in `locales/en.json`, the trigger in `hints.on_map` or
   `hints.in_battle` (the map's and the battle's `tutorial_key()` ask there once their own card is read), and the entry

@@ -38,6 +38,7 @@ from .guild_upkeep import (
     SICK_CURE_ROLL,
 )
 from .map_view import ADVANCE_HOURS
+from .tutorial import WIKI_TERM
 from .unit_derive import CARRY_MAX, CARRY_NORMAL, OVERLOAD_PENALTY, OVERLOAD_SPEED
 from .unit_hunger import (
     HUNGER_PENALTIES,
@@ -79,7 +80,7 @@ PARTS = (
     ("combat", ("turns", "attack", "flanking", "dying", "nonlethal", "morale", "demoralize", "weapon", "push", "ammo", "terrain", "hidden", "sides", "talk", "stomp", "placement", "reading")),
     ("body", ("clock", "rest", "hunger", "spoiling", "sickness", "poison", "load", "light", "death")),
     ("work", ("money", "bank", "wages", "gathering", "levels", "crafting", "study", "market", "shop", "missions", "arena")),
-    ("world", ("recruiting", "alignment", "languages", "leader", "groups", "captives", "animals", "wagons", "travel", "claim", "reputation", "justice", "dungeon")),
+    ("world", ("vocations", "recruiting", "alignment", "languages", "leader", "groups", "captives", "animals", "wagons", "travel", "claim", "reputation", "justice", "dungeon")),
 )
 """The Rules chapter's subchapters, in reading order, each with the keys of its sections. A key is the
 section's id for good (a link to `rules:<key>` survives a retitle or a translation); the title is only
@@ -89,6 +90,26 @@ what the player reads."""
 def title(key):
     """A section's title as the wiki shows it."""
     return i18n.t(f"wiki_rules.{key}.title")
+
+
+def plain(line):
+    """A line without its `[[rules:id|word]]` marks: the words alone."""
+    return WIKI_TERM.sub(lambda m: m.group(2), line)
+
+
+def tip(key):
+    """A section as a tooltip: its title and its first line."""
+    return "\n".join((title(key), plain(_built()[key][0])))
+
+
+def has_more(key):
+    return len(_built()[key]) > 1
+
+
+def refs_in(lines):
+    """`{ref: tooltip}` for the Rules sections a section's lines name with `[[rules:id|word]]`."""
+    return {ref: tip(ref.partition(":")[2]) for line in lines for ref, _ in WIKI_TERM.findall(line)
+            if ref.startswith("rules:")}
 
 
 def part_title(part):
@@ -164,7 +185,7 @@ def _built():
         ("wagons", [i18n.t("wiki_rules.wagons.1", dist=wagon.WEAR_DISTANCE, hp=wagon.WEAR_HP), *_lines("wagons", 3)[1:]]),
         ("money", _lines("money", 4, copper=items.COIN_VALUE[items.COIN_ITEM], gold=items.COIN_VALUE[items.GOLD_ITEM])),
         ("hunger", _lines(
-            "hunger", 8, d1=1, d2=2, d3=len(HUNGER_PENALTIES) - 1, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2], pen3=HUNGER_PENALTIES[3],
+            "hunger", 9, d1=1, d2=2, d3=len(HUNGER_PENALTIES) - 1, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2], pen3=HUNGER_PENALTIES[3],
             death=data.STARVATION_DEATH_DAYS, cap=STARVING_HP_MAX)),
         ("stomp", _lines("stomp", 2)),
         ("poison", _lines("poison", 4, hours=poisons.ANTIDOTE_COOLDOWN_HOURS, dc=poisons.POISONS["snake_venom"].base_dc,
@@ -181,4 +202,4 @@ def matching(query):
     """The sections whose title or a line contains `query` (all of them for an empty one)."""
     q = query.lower()
     return [(k, t, lines) for k, t, lines in sections()
-            if not q or q in t.lower() or any(q in ln.lower() for ln in lines)]
+            if not q or q in t.lower() or any(q in plain(ln).lower() for ln in lines)]

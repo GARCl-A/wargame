@@ -85,36 +85,40 @@
       }
     },
     "wiki_button": "See in the wiki",
+    "wiki_more": "Click “{term}” to read the whole entry.",
     "draft": {
       "intro": {
         "title": "Welcome to Gartok",
         "button": "Begin",
         "body": [
-          "Gartok is a familiar medieval-fantasy world: many races, magic, ruins, nobles with gold to spend.",
-          "The economy has tipped. Delving into ruins, catacombs and wild forests for creatures, artefacts and magic items pays far better than honest work, so everyone who can hold a weapon is out there, risking their neck.",
-          "Adventurers band together in guilds, and the big ones grow into something closer to companies: armed, skilled, ruling whole forests as territory. You are founding one, with a little coin and three recruits, picked next."
+          "Gartok is a medieval-fantasy world where many races and cultures mingle. Legendary creatures, magic and artefacts exist, and adventurers, mercenaries and explorers hunt them.",
+          "After three years of a slow war, the economy has tipped. Those who are not soldiers but know how to fight noticed that delving into ruins and wild forests for creatures, artefacts and magic items pays far better than any ordinary work.",
+          "Adventurers band together in guilds, and the big ones grow into something closer to economic and military powers on a regional scale, ruling whole forests as territory.",
+          "You and your two partners are founding one: you took your weapons and a little savings, and you are writing the guild's charter.",
+          "Who are you?"
         ]
       },
       "vocation": {
         "title": "Choose a vocation",
         "body": [
-          "The trade your guild is founded on: six races and one perk that every member shares, whatever their race.",
-          "The draft that follows always holds one candidate of each of those six races. The vocation cannot be changed later; the GUILD tab shows it."
+          "What were you before you founded the guild?",
+          "The [[rules:vocations|vocation]] sets {races} of the {pool} races that will appear among your candidates, plus a perk that every member shares."
         ]
       },
       "pick": {
         "title": "Building your guild",
         "body": [
-          "Nine random candidates: a race, a starting weapon and item, and 3d6 for each attribute. Click three to keep (click again to put one back), then CONTINUE. Expect to lose some: an early squad is meant to be spent.",
-          "Each card wears tags for what its candidate is good at. Aim for a bit of everything: someone to lead, someone to hit, someone who lasts."
+          "{pool} random candidates. Each has a race, a starting weapon, a starting item and 3d6 for each attribute.",
+          "Click to choose the {team} founding members (click again to undo the choice).",
+          "Each candidate wears tags for what they are good at. Try to have at least one founder with the Leader tag."
         ],
-        "suggestion": "Something missing? Use your Commission Tokens to replace a card by one with the tags you ask for. RISKY can be asked for too, for a harder start."
+        "suggestion": "You have {tokens} Commission Tokens: use them to swap an unwanted candidate for one with the traits you ask for. RISKY can be asked for too, for a harder start."
       },
       "identity": {
-        "title": "Identity and leadership",
+        "title": "Identity and Spokesperson",
         "body": [
-          "The name and banner colour follow the guild for the whole run.",
-          "The leader haggles for the guild and leads any group they stand in. You get one free change later; after that only death replaces them. Each card shows how many people that candidate could recruit as leader: {base} + Charisma modifier + Character Level."
+          "What are your guild's name, colour and banner?",
+          "Which founder will be the guild's [[rules:leader|Spokesperson]]? Hover the term to see what they do."
         ]
       }
     },
@@ -130,22 +134,24 @@
       "title": "Your guild",
       "button": "See your objectives",
       "body": [
-        "Each card on the left is one group of your people. Select a group, then click a place on the map to send it there; the panel on the right lists what it can do where it stands.",
-        "There is no turn button: once every group has an order the clock runs by itself, and stops when a group needs you. Everyone eats one food a day, so watch the RATIONS line.",
-        "Everything that happens is written in THE LOG at the bottom right, newest last, with what is due next below it. Click its title to search it by word, kind or band.",
-        "Not sure what to do first? \"Establish your guild\" is on the next screen: start there."
+        "Your groups are on the left of the screen. To send a group somewhere, click the destination on the map. Journeys take hours.",
+        "There is no turn button: the clock runs by itself, and stops when a group needs you.",
+        "Everyone eats one meal a day, at midnight. Keep an eye on your rations so nobody goes [[rules:hunger|hungry]].",
+        "At the bottom right is THE LOG, where everything that happens to your groups is written.",
+        "Let's look at the guild's objectives: that is where you start establishing it."
       ]
     },
     "guild": {
       "members": {
         "title": "Your roster",
         "body": [
-          "Members are listed by group; click one for their sheet, levels and talents. MANAGE GEAR, at the bottom, opens the selected member's group to move gear between them.",
-          "SHARE RATIONS lets group-mates eat from that member's pack. A day unfed: hungry ({pen} to attributes). Two: starving (max HP {cap}). Three: too weak to fight. Four: dead.",
-          "Hunger is also a slow poison on the numbers: if any attribute reaches zero the character dies, and a frail body gets there first. The log then reads \"Wasted away\".",
-          "Death is permanent; the run ends only when the whole guild is gone."
+          "Members are listed by group; click one for their sheet.",
+          "To see their gear, click \"GROUPS\" in the top menu.",
+          "By default your characters share rations.",
+          "They need to eat, and [[rules:hunger|hunger]] is dangerous: each day unfed brings worse penalties, up to death.",
+          "Oh, before I forget: a character's death is permanent, but the run ends only when the whole guild is gone."
         ],
-        "suggestion": "The REPUTATIONS tab holds your objectives and what each faction wants."
+        "suggestion": "Losing is fun. Learn from your mistakes and found a new guild... and another..."
       },
       "overview": {
         "title": "How far the guild reaches",
@@ -158,9 +164,9 @@
         "title": "What you're playing for",
         "button": "See your roster",
         "body": [
-          "There is no score and no fight you must win. Start with the card at the top, \"Establish your guild\": small tasks that teach what a guild can do, from buying food to hiring a second band. Do them before anything else. A new squad is weak, hungry and poor, and the first thing the world teaches is that it kills the unprepared.",
-          "Everything is open from the first day: every place on the map, every job, every mission. But you will not be able to do all of it. Places, missions and enemies do not care about your level, and an unknown place can hold a fight a fresh squad cannot win. Be careful with what you do somewhere you have never been, and learn the ground before you trust it.",
-          "Below them, each faction lists its deeds. Reputation only moves when you pull one off (a one-shot achievement, not a grind) and it unlocks what the card lists. The Pits and the Bankers are open from day one; the others appear once you walk into their places."
+          "Start with the list on the left, \"Establish your guild\": small tasks that teach what a guild can do and the first steps in the game's mechanics.",
+          "From the start you can travel the map freely, but right now you are weak, poor and probably hungry (see [[rules:hunger|hunger]]). Prepare a little before the more dangerous adventures.",
+          "In the other lists, each faction lists its deeds. Each deed is a one-shot achievement that raises your [[rules:reputation|reputation]]."
         ]
       },
       "band_routine": {
@@ -254,7 +260,7 @@
       "body": [
         "Pick a stranger, then who from the party makes the pitch: Charisma against Charisma, in a language both speak. Each member of the guild past {free} costs {size_pen}, and each step of alignment apart {align_pen}. A failed pitch can't be retried by that member until the pool turns over next week.",
         "Alignment is how a character sees order and morals: Lawful, Neutral or Chaotic, and Good, Neutral or Evil. The pitch is the recruiter's d20 + Charisma modifier + the modifiers below against the stranger's d20 + Charisma modifier, and the recruiter must beat it. A step of alignment apart on either axis is -{align_pen}, up to four steps: a Lawful Good recruiter talks a fellow Lawful Good into signing far easier than a Chaotic Evil one. Pick as pitchman the member whose alignment is closest to the stranger's.",
-        "Each member can sponsor {base} + their Charisma modifier recruits; the guild leader adds their Character Level.",
+        "Each member can sponsor {base} + their Charisma modifier recruits; the Spokesperson adds their Character Level.",
         "STUDY rents a room (${study} a day) to learn a language from a Dictionary, or a spell from its Scroll if the student has that school. PERFORM sends anyone with a Musical Instrument on stage for tips."
       ]
     },
@@ -1298,13 +1304,13 @@
       },
       "tokens_spent": "Every token is spent; the squad is what the pool gives.",
       "commission": "Commission",
-      "token_bubble": "Need a leader or a tough fighter? Spend a token to swap a card for one with the tag you ask for. You can spend several on the same character to stack tags and build a stronger card.",
+      "token_bubble": "Need a leader or a tough fighter? Spend a token to swap a candidate for one with the tags you ask for. You can spend up to {max} tokens on one or more characters.",
       "no_tokens": "No tokens left",
       "to_charter": "to the charter",
       "picked": "{a} of {b} picked",
       "leads": "Who leads the guild",
-      "leader_note": "The leader haggles for the guild and sponsors its recruits.",
-      "leader": "Leader",
+      "leader_note": "The Spokesperson haggles for the guild and sponsors its recruits.",
+      "leader": "Spokesperson",
       "rename": "Rename",
       "recruit": "Can recruit {n}",
       "found": "Found",
@@ -5061,7 +5067,7 @@
     "recruited_by": "Recruited by {who}.",
     "founding_member_of_guild": "A founding member of the guild.",
     "holds_title_champion_of_pit": "Holds the title Champion of the Pit.",
-    "guild_leader": "Guild leader",
+    "guild_leader": "Spokesperson",
     "leads_band": "Leads the band",
     "champion_of_pit": "Champion of the Pit",
     "not_yet_sworn_in": "Not yet sworn in",
@@ -5169,7 +5175,7 @@
   "guild_sheet": {
     "someone_long_gone": "someone long gone",
     "level_up": "LEVEL UP",
-    "guild_leader": "GUILD LEADER",
+    "guild_leader": "SPOKESPERSON",
     "group_leader": "GROUP LEADER",
     "lv_c_w": "{race} · Lv {racial_level}  (C{combat_level} W{work_level})",
     "pulls": "pulls {lower}",
@@ -5192,12 +5198,12 @@
     "none_left": "none left",
     "sponsored_recruits_of": "Sponsored recruits: {used} of {cap}: {left}",
     "group": "the group",
-    "guild_leader_2": "Guild leader",
+    "guild_leader_2": "Spokesperson",
     "adds_cha_bonus_to_taverna": "Adds a CHA bonus to taverna recruitment",
     "leads_whole_guild": "Leads the whole guild",
     "free_transfer_left": "1 free transfer left",
     "no_free_transfer_left": "No free transfer left",
-    "make_guild_leader": "MAKE GUILD LEADER",
+    "make_guild_leader": "MAKE SPOKESPERSON",
     "make_this_member_lead_whole": "Make this member lead the whole guild",
     "group_leader_2": "Group leader",
     "leads_holds_up_to_members": "Leads {band}: holds up to {cap} members",
@@ -5580,8 +5586,8 @@
     "s_unpaid_debt_to_bankers": "{name}'s unpaid debt to the Bankers reaches the guard's ears."
   },
   "guild_rules": {
-    "guild_leader_must_be_roster": "guild leader must be a roster member",
-    "no_free_guild_leader_change": "no free guild leader change left",
+    "guild_leader_must_be_roster": "the Spokesperson must be a roster member",
+    "no_free_guild_leader_change": "no free Spokesperson change left",
     "split_needs_non_empty_proper": "split needs a non-empty, proper subset of the group",
     "can_t_split_group_with": "can't split a group with an order in flight",
     "no_free_group_slot_guild": "no free group slot: the guild is not famous enough to run another",
@@ -6710,7 +6716,7 @@
       "1": "A pitch is d20 + Charisma (yours) against d20 + Charisma (theirs); a tie goes to the stranger. You need a language in common.",
       "2": "Crowd penalty: -{pen} for every member of the whole guild past {free}, counted across every group, not the group making the pitch.",
       "3": "Alignment: -{align} per step between the recruiter's alignment and the stranger's.",
-      "4": "Each member can sponsor {base} + {terms} recruits; the guild leader adds {leader}.",
+      "4": "Each member can sponsor {base} + {terms} recruits; the Spokesperson adds {leader}.",
       "5": "A failed pitch bars that recruiter from that stranger until the pool turns over. Someone else may still try.",
       "6": "The Tavern keeps {tavern} strangers and the Prison {prison} prisoners; both re-roll every {days} days. Bail adds +{bail} to the pitch, and each doubling of the offer +{step} more; it is taken only if the pitch wins."
     },
@@ -6858,10 +6864,15 @@
       "1": "Understanding is a gate, not a bonus. With no language in common you cannot pitch a recruit, a shop gives you no haggle deal (see Shops & Haggling), and a foe can only be persuaded, bluffed or intimidated in the tongue of its leader (see Talking).",
       "2": "Each race speaks its own tongues, listed in the Races chapter. To learn another, study a Dictionary of that language at the Tavern (see Studying); the Library sells the dictionaries once its reputation allows."
     },
+    "vocations": {
+      "title": "Vocations",
+      "1": "At the draft the guild picks one vocation, once and for good: the trade it was founded on. A vocation names {races} races and one perk that every member has, whatever their race. The draft pool always holds a candidate of each of those races; the other candidates (the pool is {pool} in all) come from any race.",
+      "each": "{name}: {perk} Races: {races}."
+    },
     "leader": {
-      "title": "The Guild Leader",
-      "1": "The guild answers to one leader. Changing who it is costs the run's one free swap; after that only death replaces them.",
-      "2": "A guild leader sponsors more recruits (see Recruiting). Each group also has its own leader, changed freely, who haggles for the band at a shop (see Shops & Haggling) and sets how many the group holds (see Groups)."
+      "title": "The Guild Spokesperson",
+      "1": "The Spokesperson is the founder who speaks for the guild: they own nothing and command no one. Their benefit is recruiting: they sponsor as many more recruits as their Character Level (see [[rules:recruiting|Recruiting]]).",
+      "2": "Changing who it is costs the run's one free swap; after that only death replaces them."
     },
     "animals": {
       "title": "Animals",
@@ -6949,7 +6960,8 @@
     },
     "hunger": {
       "title": "Hunger \u0026 Starvation",
-      "1": "Every member eats 1 meal a day, by themselves, when the clock crosses midnight. Each takes the food nearest to spoiling, from their own pack first and then from the group's stores. SHARE RATIONS lets a member feed hungry groupmates from their pack.",
+      "1": "Every member eats 1 meal a day, by themselves, when the clock crosses midnight. Every day unfed adds a worse penalty, until starvation kills on day {death}.",
+      "9": "Each member takes the food nearest to spoiling, from their own pack first and then from the group's stores. SHARE RATIONS lets a member feed hungry groupmates from their pack.",
       "2": "{d1} day unfed · Hungry: {pen1} to all attributes.",
       "3": "{d2} days unfed · Starving: {pen2} to all attributes; maximum HP capped at {cap}.",
       "4": "{d3} days unfed · Incapacitated: still {pen3} to all attributes, too weak to fight and cannot be sent into battle.",

@@ -9,6 +9,8 @@ already dismissed, whether the system is switched on at all, and which id (if
 any) the player forced back open with a screen's `?` badge.
 """
 
+import re
+
 from . import i18n
 
 TUTORIALS = (
@@ -42,11 +44,6 @@ def _taverna():
 def _prison():
     from . import tavern
     return {"bail": tavern.BAIL_BONUS[0], "step": tavern.BAIL_STEP}
-
-
-def _members():
-    from .unit_hunger import HUNGER_PENALTIES, STARVING_HP_MAX
-    return {"pen": HUNGER_PENALTIES[1], "cap": STARVING_HP_MAX}
 
 
 def _battle():
@@ -121,9 +118,14 @@ def _overview():
     return {"days": cohesion.NOTICE_DAYS}
 
 
-def _identity():
-    from . import recruit
-    return {"base": recruit.BASE_RECRUIT_CAPACITY}
+def _draft_pick():
+    from . import draft
+    return {"pool": draft.POOL_SIZE, "team": draft.TEAM_SIZE, "tokens": draft.COMMISSION_TOKENS}
+
+
+def _draft_vocation():
+    from . import draft, vocations
+    return {"pool": draft.POOL_SIZE, "races": len(next(iter(vocations.VOCATIONS.values())).races)}
 
 
 def _ox_hunt():
@@ -150,9 +152,9 @@ _FACTS = {
     "library": _library,
     "taverna": _taverna,
     "prison": _prison,
-    "guild.members": _members,
     "guild.overview": _overview,
-    "draft.identity": _identity,
+    "draft.pick": _draft_pick,
+    "draft.vocation": _draft_vocation,
     "battle": _battle,
     "hint.reading": _battle,
     "hint.flank": _flank,
@@ -172,6 +174,24 @@ _FACTS = {
 }
 
 
+WIKI_TERM = re.compile(r"\[\[([a-z_]+:[a-z_]+)\|([^\]]+)\]\]")
+"""A word of card copy that names a wiki entry: `[[rules:hunger|hunger]]`, read as `[[chapter:id|label]]`. The
+client draws the label underlined, shows the entry's opening as a tooltip and opens the entry on a click."""
+
+
+def wiki_terms(*texts):
+    """`{ref: {"tip", "more"}}` for every wiki entry the texts name, read off the entry itself (the Rules chapter
+    only): its title and first line, and whether it has more to read."""
+    from . import wiki_rules
+    out = {}
+    for text in texts:
+        for ref, _ in WIKI_TERM.findall(text or ""):
+            chapter, _, eid = ref.partition(":")
+            if chapter == "rules" and ref not in out:
+                out[ref] = {"tip": wiki_rules.tip(eid), "more": wiki_rules.has_more(eid)}
+    return out
+
+
 def card(key, rows=(), spot=None, wiki=None):
     """The copy of `key`'s card: title, paragraphs, an optional closing pointer and the button.
     `rows` is what the copy cannot hold, drawn by the screen's session from its own registry: each
@@ -188,6 +208,8 @@ def card(key, rows=(), spot=None, wiki=None):
     button_key = f"tutorial.{key}.button"
     button = i18n.t(button_key if i18n.has(button_key) else "tutorial.default_button")
     return {"title": title, "body": list(body), "rows": list(rows), "suggestion": suggestion, "button": button, "spot": spot, "wiki": wiki,
+            "terms": wiki_terms(*body, *([suggestion] if isinstance(suggestion, str) else suggestion or [])),
+            "wiki_more": i18n.t("tutorial.wiki_more"),
             "wiki_button": i18n.t("tutorial.wiki_button") if wiki else None}
 
 

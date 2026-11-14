@@ -130,6 +130,15 @@ the rest.
 
 ## Medium
 
+- **Layout audit: the screens still owed.** `tests/test_layout.py` measures the title, the draft, the map, the
+  guild sheet, the wiki, the settings, the credits and every tutorial card in a browser, in each language
+  (`tests/README.md`). `OWED` there lists the screens with no entry yet: battle, hub (one entry per tab of
+  `HUB_KINDS`), talk, report (one per stage), talents, arena, hunt, watch. Each needs its `Game` built in the
+  test and whatever the first run finds fixed. Then: the open states of the audited screens (the unit sheet, a
+  tooltip, the map's panels, a late-game guild with long names), a smaller window (1366x768) and a stretched
+  pseudo-language (every string 30% longer) so a translation never finds the limit first. Not seen by the
+  audit: the seal's subtitle on the draft ("0 DE 3 ESCOLHIDOS") runs to the edge of the round seal.
+
 - **Objects on the table, not boxes on a page (visual audit 2026-11-12).** The screens that look most like
   a game are the ones made of physical things that overlap and sit a little crooked (the title: the map
   sheet, the guild card, the coins, the seal; the charter; the Victory stamp). The ones that look like a web
@@ -620,3 +629,7 @@ ACho que os avisos de tutorial estão com MUITO TEXTO, precisaremos ver um jeito
 O jogo não avisa que gastar tudo de uma vez pode prejudicar o próximo passo. Quado o jogador chegar a 9cp a primeira vez, um aviso fala pra ele tomar cuidado com o dinheiro.
 
 Tavern Recruit: ninguém do grupo fala a língua dos recrutas disponíveis. -> na primeira vez os 3 personagens da ataverna nao forem recrutaveis, ou seja pq o jogador tentou todos e nao conseguiu nenhum ou pq nenhum fala o idioma dele, fvale mostra rum "volte aqui daqui uns dias, talvez tenham novos aventureiros" e explica q a taverna se renova semanalmente.
+
+Talvez as raças deveriam ser apenas de uma única vocação. Gerando mais diferenças para essa escolha. Eai todos os personagens do draft pertecem as raças escolhidas. Isso vai precisar de ajuste nos textos da tela e nos tutirais associados a vocação e draft.
+
+Com o jogo em portugues, a tela da esquerda fica com scroll escondendo o botão de encomenda. isso acontece por que o blão ocupa espaço real da coluna. O caminho aqui seria ele aparecer para a DIREITA sobrepondo as coisas e ter um botão de "OK" para fechar.

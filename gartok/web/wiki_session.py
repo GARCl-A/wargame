@@ -150,8 +150,9 @@ def _spells():
 
 
 def _rules():
-    return [_entry(title, body=lines, find=[*lines, wiki_rules.part_title(wiki_rules.part_of(key))], eid=key)
-            | {"part": wiki_rules.part_of(key), "part_label": wiki_rules.part_title(wiki_rules.part_of(key))}
+    return [_entry(title, body=lines, find=[*map(wiki_rules.plain, lines), wiki_rules.part_title(wiki_rules.part_of(key))], eid=key)
+            | {"part": wiki_rules.part_of(key), "part_label": wiki_rules.part_title(wiki_rules.part_of(key)),
+               "refs": wiki_rules.refs_in(lines)}
             for key, title, lines in wiki_rules.sections()]
 
 

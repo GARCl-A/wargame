@@ -479,6 +479,15 @@ body:not(.ready) #tut-badge {
   cursor: default
 }
 
+/* a card with rows is a table: wider, so each row stays on a line or two and the card is read whole */
+#tut-card:has(.tut-rows) {
+  width: 920px
+}
+
+#tut-veil.spotted #tut-card:has(.tut-rows) {
+  width: 1040px
+}
+
 #tut-card .kicker {
   font: 600 16px/1 var(--read);
   letter-spacing: .02em;
@@ -1187,3 +1196,17 @@ body:not(.ready) #tut-badge {
 }
 /* balanced lines: a heading that must wrap breaks into even halves, not one word on its own line */
 h1,h2,h3,.cap{text-wrap:balance}
+
+#tut-card .wl {
+  font-weight: 700;
+  color: #2f6b3a;
+  cursor: help;
+  text-decoration: underline;
+  text-decoration-color: rgba(47, 107, 58, .7);
+  text-underline-offset: 3px
+}
+
+#tut-card .wl:hover {
+  color: #1f4f2a;
+  text-decoration-style: solid
+}
