@@ -87,7 +87,7 @@ def _wiki(key):
         return "-", ""
     chapter, entry = ref.split(":", 1)
     if chapter == "rules":
-        ok = entry in [t for t, _ in wiki_rules.sections()]
+        ok = entry in [k for k, _, _ in wiki_rules.sections()]
     elif chapter == "actions":
         ok = entry in [a.id for a in actions.PANEL_ACTIONS]
     else:

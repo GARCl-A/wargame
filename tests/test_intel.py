@@ -228,12 +228,12 @@ def test_an_attack_log_says_question_mark_for_an_unread_ac_and_the_number_once_r
     hero.ap = 2
     _read(batt, "player", foe, -5)
     actions.ATTACK.execute(batt, hero, foe)
-    assert "vs AC ?" in next(ln for ln in batt.log_lines if "vs AC" in ln)
+    assert "vs Guard ?" in next(ln for ln in batt.log_lines if "vs Guard" in ln)
     _read(batt, "player", foe, intel.MEDIUM)
     batt.log_lines.clear()
     hero.ap = 2
     actions.ATTACK.execute(batt, hero, foe)
-    assert f"vs AC {foe.ac}" in next(ln for ln in batt.log_lines if "vs AC" in ln)
+    assert f"vs Guard {foe.ac}" in next(ln for ln in batt.log_lines if "vs Guard" in ln)
 
 
 def test_an_attack_on_your_own_unit_always_shows_its_ac():
@@ -242,7 +242,7 @@ def test_an_attack_on_your_own_unit_always_shows_its_ac():
     batt.turn_idx = batt.order.index(foe)
     foe.ap = 2
     actions.ATTACK.execute(batt, foe, hero)
-    assert f"vs AC {hero.ac}" in next(ln for ln in batt.log_lines if "vs AC" in ln)
+    assert f"vs Guard {hero.ac}" in next(ln for ln in batt.log_lines if "vs Guard" in ln)
 
 
 def test_the_ai_ranks_foes_by_health_step_not_by_hidden_hit_points():

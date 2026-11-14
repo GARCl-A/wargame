@@ -151,7 +151,7 @@ def test_item_tooltip():
     # Armor
     title, desc = item_tooltip("Leather Jerkin")
     assert title == "Leather Jerkin"
-    assert "+1 Armor Class" in desc
+    assert "+1 Guard" in desc
     
     # Kit
     title, desc = item_tooltip("First Aid Kit")

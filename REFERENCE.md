@@ -75,7 +75,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Autotroph | Treefolk | photosynthesises: never needs to eat, immune to the hunger rules. |
 | Ferocity | Orc, Demon | once per battle, when downed drops to 0 HP and Dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | Sprite | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
-| Spider Venom | Giant Spider | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
+| Spider Venom | Giant Spider | a bite that draws blood forces a Constitution save (DC 11 + the spider's Character Level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
 | Serpentine | Snake | a body that strikes before it is seen: every attack is a finesse attack (Dexterity to hit and to hurt), and the unarmed attack is a bite of Fangs. |
 | Pack Tactics | Wolf | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 | Reach | Ogre | long arms on a huge body: melee attacks reach 1 square farther. |
@@ -87,15 +87,15 @@ A spell is cast from a known `Scroll of <Spell>` studied to the end (price in It
 | Level | Spell | Schools | AP | Effect | Learning points |
 |---|---|---|---|---|---|
 | 0 | Floating Disk | any | 1 | A magical platform on a free square within 6 squares, at a chosen height: units walking at that height cross pits and deep water over it. One unit per square. | 105 |
-| 0 | Grasping Roots | nature | 1 | A foe in sight within 6 squares, d20 + INT against touch AC (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it. | 105 |
-| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Mental Defense: -1 on each of its six attribute scores for 2 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
+| 0 | Grasping Roots | nature | 1 | A foe in sight within 6 squares, d20 + INT against Evasion (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it. | 105 |
+| 0 | Hex | blood | 1 | A foe in sight within 6 squares, d20 + INT against Resolve: -1 on each of its six attribute scores for 2 of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it. | 105 |
 | 0 | Light Globe | any | 1 | Drops a light source on a free square within 6 squares. | 105 |
-| 0 | Magic Missile | any | 1 | A foe in sight within 6 squares, d20 + INT against AC: 1d4 damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect. | 105 |
+| 0 | Magic Missile | any | 1 | A foe in sight within 6 squares, d20 + INT against Guard: 1d4 damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect. | 105 |
 | 0 | Spare the Dying | faith | 1 | Touch: a Dying ally in reach is stable, no check. | 105 |
-| 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d6 fire damage. Blood magic costs no hit points. | 224 |
+| 1 | Dragonfire | blood | 1 | A foe within a dagger's throw (6 squares), d20 + INT against Guard: 1d6 fire damage. Blood magic costs no hit points. | 224 |
 | 1 | Healing Touch | faith | 1 | Touch: an ally in reach, or the caster, heals 1d4, nothing added; a body on the ground (dying or stable) is back on its feet. | 224 |
-| 1 | Sleep | any | 1 | A foe within 4 squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for 5 - WIS mod rounds (give or take 1, at least 1), ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected. | 224 |
-| 1 | Water Jet | nature | 1 | A foe within a dagger's throw (6 squares), d20 + INT against AC: 1d8 + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns). | 224 |
+| 1 | Sleep | any | 1 | A foe within 4 squares, d20 + INT against Resolve: it falls asleep (-2 Guard) for 5 - WIS mod rounds (give or take 1, at least 1), ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected. | 224 |
+| 1 | Water Jet | nature | 1 | A foe within a dagger's throw (6 squares), d20 + INT against Guard: 1d8 + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns). | 224 |
 | 2 | Invisibility | any | 2 | The caster vanishes from every other side's sight until it hurts someone. | 357 |
 | 2 | Raise Dead | faith | 2 | A dead body (not dying, not stable) within 6 squares and in sight stands up on the caster's side with 1 HP, the same body with its gear, immune to Sleep. One that falls again is dead for good. | 357 |
 
@@ -112,7 +112,7 @@ Functional squad roles for candidate generation and commission tokens at the dra
 | NIMBLE | DEX +2. Harder to hit, and accurate with finesse weapons. |
 | GENIUS | INT +2. Crafts faster, reads manuals and does research. |
 | WISE | WIS +2. Acts earlier in a fight, resists the mind and treats wounds in the field. |
-| RISKY | CON ≤ 8 · total ≤ 56 · can barely carry gear. A hard pick: a frail body that has to be played around. Low Strength means gear they cannot carry. Low Constitution means slow healing and little HP gained per level. Very low scores mean that hunger or poison can drag Strength, Dexterity or Constitution to zero, and that kills: one missed meal run is enough early on. Not always a bad pick: a fine leader can be fragile. |
+| RISKY | CON ≤ 8 · total ≤ 56 · can barely carry gear. A hard pick: a frail body that has to be played around. Low Strength means gear they cannot carry. Low Constitution means slow healing and little HP gained per level. Very low scores mean that hunger or poison can drag any attribute to zero, and that kills: one missed meal run is enough early on. Not always a bad pick: a fine leader can be fragile. |
 
 ## Vocations
 
@@ -241,12 +241,12 @@ Properties and keywords carried by weapons.
 | Cleave | 2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit. |
 | Repel Strike | 2 AP: One strike that Shoves the target (+2 to the check); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4. |
 | Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1. |
-| Armor Pierce | 2 AP: One strike that ignores the AC of a worn metal armor; against a metal-armoured foe the blow is Brutal 1. |
+| Armor Pierce | 2 AP: One strike that ignores the Guard of a worn metal armor; against a metal-armoured foe the blow is Brutal 1. |
 | Power Shot | 2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1. |
 | Extreme Shot | 2 AP: Doubles attack distance to 36 squares. |
-| Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike. |
+| Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield Guard until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike. |
 | Javelin Charge | 1 AP: Throws the spear after moving this turn, +1d4 bonus damage. |
-| Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1. |
+| Parry & Strike | 2 AP: One strike and Defending (+1 Guard) until next round; with two or more foes in reach the blow is Brutal 1. |
 | Wrest | 2 AP, bare hands only: seize the weapon of an adjacent armed foe (d20 + Dexterity against 15 + its Strength) and, if you can wield it, strike with it at once. |
 | Trample | 2 AP, hooves only: one strike, then a shove, then a takedown; each step is tried only if the foe is still standing and within reach. |
 | Clamp | 2 AP, a bite only: one strike; a hit grabs the foe with no roll. Against a foe already grappled the strike is Brutal 1. |
@@ -259,7 +259,7 @@ Reserved words of the rules: each always means the one thing written here.
 | Keyword | Meaning |
 |---|---|
 | Brutal | Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2. |
-| Critical hit | Critical hit: a natural 20 on the hit roll. It hits whatever the AC, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so. |
+| Critical hit | Critical hit: a natural 20 on the hit roll. It hits whatever the Guard, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so. |
 | Flanked | Flanked: a foe is flanked when you and an ally are both next to it, on opposite sides, and a flanked foe is off-guard. An ally merely next to the foe is not a flank. |
 | Shove | Shove: moves the target 1 cell straight back. A pit behind it drops the target in; a wall or a body behind it stops the shove. Push, Repel Strike and Tail Sweep shove; Mighty Shove throws the target 3 cells instead. |
 | Dying | Dying: at 0 HP a fighter is down on its cell and its death clock runs. On its 4th turn down it makes a death save (d20, 11 or more lives: it is Knocked out; less dies). Each hit on a dying body ticks the clock once. Stabilize and First Aid save it on the spot. |
@@ -267,10 +267,14 @@ Reserved words of the rules: each always means the one thing written here.
 | Morale | Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed. |
 | Reach | Reach: how far a melee attack can be made, in squares. Every weapon has Reach 1 (the adjacent squares), so only a longer one says so: a Glaive has Reach 2. |
 | Distance | Distance: how far a shot flies, in squares: a Crossbow's Distance 18, a thrown weapon's Thrown 6. It is the range of a ranged attack, never of a melee one, which has Reach. |
+| Character Level | Character Level: a character's overall level, half the sum of the combat, work and magic levels. Each one is a hit die, and picks of the race's own talents come at regular steps. It also sets how many recruits a leader can sponsor and how large a group they lead, and Morale, venom saves and the reading of a foe are built on it. |
+| Guard | Guard: the number an attack must reach to hit. 10 + the Dexterity modifier (capped by armour) + armour, shield, talents, size and natural bonuses. An attack that meets or beats it does damage. |
+| Evasion | Evasion: the number a spell that only has to touch its target must reach: 10 + the Dexterity modifier (armour's cap on it ignored) + talents, size and natural bonuses. Armour and shields never add to it. |
+| Resolve | Resolve: a fighter's mental toughness, the number Demoralize, Sleep and the other mind spells must reach: 10 + the Wisdom modifier + talents. A group stretched past its leader's hold lowers its members' Resolve, and the daily roll that decides who leaves is made against it. |
 
 ## Armor
 
-| Armor | Size | AC | Max DEX to AC | Speed | Guard test | Weight | Price ($) |
+| Armor | Size | Guard | Max DEX to Guard | Speed | Disguise | Weight | Price ($) |
 |---|---|---|---|---|---|---|---|
 | Leather Jerkin | Medium | +1 | -- | -- | -- | 4 kg | 20 |
 | Tiny Leather Jerkin | Tiny | +1 | -- | -- | -- | 1 kg | 5 |
@@ -303,7 +307,7 @@ Reserved words of the rules: each always means the one thing written here.
 
 ## Shields
 
-| Shield | Size | AC | Weight | Price ($) |
+| Shield | Size | Guard | Weight | Price ($) |
 |---|---|---|---|---|
 | Dwarf Shield | Medium | +2 | 3 kg | 60 |
 | Tiny Dwarf Shield | Tiny | +2 | 0.75 kg | 15 |
@@ -312,9 +316,9 @@ Reserved words of the rules: each always means the one thing written here.
 
 ## Enemy kit by level
 
-What a generated humanoid of each racial level is outfitted with (`outfit.py`); the rest of the budget buys up to 3 Minor Healing Potions. Level 0 keeps the starting kit; beasts carry none.
+What a generated humanoid of each Character Level is outfitted with (`outfit.py`); the rest of the budget buys up to 3 Minor Healing Potions. Level 0 keeps the starting kit; beasts carry none.
 
-| Racial level | Kit budget ($) | Armor up to ($) | Weapon up to ($) |
+| Character Level | Kit budget ($) | Armor up to ($) | Weapon up to ($) |
 |---|---|---|---|
 | 0 | 56 | -- | -- |
 | 1 | 67 | 34 | 23 |
@@ -441,7 +445,7 @@ Two axes -- order (Lawful/Neutral/Chaotic) and morality (Good/Neutral/Evil) -- 9
 
 ## Talent trees
 
-One tree per track. A new level in a track grants one pick in its tree; `Requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every 5 racial levels; its nodes are race-gated, grouped by race below. The magic track is school-agnostic.
+One tree per track. A new level in a track grants one pick in its tree; `Requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every 5 Character Levels; its nodes are race-gated, grouped by race below. The magic track is school-agnostic.
 
 ### Combat track
 
@@ -461,7 +465,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 3 | Heavy Bolts | +1 damage with a Crossbow. | Deadeye |
 | 3 | Keen Bolts | A Crossbow shot is a Critical hit on a natural 19 or 20. | Deadeye |
 | 4 | Ambush Shot | A Crossbow shot at an off-guard target is Brutal 1. | Heavy Bolts + Keen Bolts |
-| 2 | Duelist | +1 damage and +2 AC with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
+| 2 | Duelist | +1 damage and +2 Guard with a finesse weapon while the off hand is empty (no shield, no light). | Agile |
 | 3 | Single Combat | Your blows with finesse weapons gain Brutal 1 if:<br>- One of your hands is empty, and<br>- No character other than the target is adjacent to you. | Duelist |
 | 3 | Fleet | +2 squares of Speed. | Deadeye |
 | 4 | Free Step | Once per turn, step 1 square without spending an action point. | Fleet |
@@ -469,13 +473,13 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | Tough |
 | 3 | Recovery | Heal 1 HP after every fight you survive. | Hardy |
-| 2 | Bulwark | +1 AC. | Tough |
+| 2 | Bulwark | +1 Guard. | Tough |
 | 3 | Armor Bearer | Reduces the carried weight of equipped armor by up to 6 kg. | Bulwark |
 | 1 | Alert | +1 Wisdom. | -- |
 | 2 | Quick Wits | +2 initiative. | Alert |
-| 3 | Peripheral Vision | When off-guard, your AC is only reduced by 1 instead of 2. | Quick Wits |
-| 2 | Iron Will | +2 Mental Defense. | Alert |
-| 3 | Iron Stance | Using Defend grants +2 Mental Defense in addition to AC until your next turn. | Iron Will |
+| 3 | Peripheral Vision | When off-guard, your Guard is only reduced by 1 instead of 2. | Quick Wits |
+| 2 | Iron Will | +2 Resolve. | Alert |
+| 3 | Iron Stance | Using Defend grants +2 Resolve in addition to Guard until your next turn. | Iron Will |
 | 1 | Imposing | +1 Charisma. | -- |
 | 2 | Menacing | +2 to Demoralize checks. | Imposing |
 | 2 | Gruesome Takedown | Upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language). | Imposing |
@@ -534,7 +538,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 
 | Race | Tier | Talent | Effect | Requires |
 |---|---|---|---|---|
-| Automaton | 1 | Iron Plating | +1 AC. | -- |
+| Automaton | 1 | Iron Plating | +1 Guard. | -- |
 | Automaton | 1 | Self-Repair | Your works mend themselves: heal 1 HP after every fight you survive. | -- |
 | Automaton | 1 | Tireless Worker | Machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- |
 | Catfolk | 1 | Night Prowler | The night is yours: while the group travels Cautious, the chance of an ambush is x0.8 at night. | -- |
@@ -548,7 +552,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Demon | 1 | Infernal Presence | A foe that starts its turn adjacent saves with WIS against 10 + this body's CHA modifier, or loses 1 morale. | -- |
 | Demon | 2 | Cleaving Claws | The claws cleave: a blow can strike a second foe. | Infernal Claws |
 | Demon | 3 | Infernal Wings | Grows wings: flies, with a flying speed of 12. | Infernal Claws |
-| Dragon | 1 | Dragon | Dragon blood runs in you: your hide hardens into scales (+1 AC). | -- |
+| Dragon | 1 | Dragon | Dragon blood runs in you: your hide hardens into scales (+1 Guard). | -- |
 | Dragon | 2 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | Dragon |
 | Dragon | 2 | Sweeping Claws | Your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once. | Dragon |
 | Dragon | 3 | Draconic Wings | Massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares. | Dragon |
@@ -565,7 +569,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Gnoll | 1 | Bloodscent | You smell the wounded: you know where every foe below half its HP is within 6 squares, seen or not. | -- |
 | Gnoll | 1 | Corpse Eater | Brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you. | -- |
 | Gnome | 1 | Magic Excitement | Enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress. | -- |
-| Gnome | 1 | Underfoot | +2 AC against attackers of Large size or bigger. | -- |
+| Gnome | 1 | Underfoot | +2 Guard against attackers of Large size or bigger. | -- |
 | Gnome | 2 | Arcane Curiosity | +1 square of range with non-melee spells. | Magic Excitement |
 | Goblin | 1 | Small Appetite | A goblin lives on scraps: you need a meal only every other day. | -- |
 | Goblin | 1 | Swarm Logic | There is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- |
@@ -577,11 +581,11 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Grippli | 1 | Tongue | Your tongue is a third limb and a weapon: +1 square of reach on melee attacks. | -- |
 | Grippli | 1 | Webbed Feet | A strong swimmer: +1 square on every Swim, never past your full speed. | -- |
 | Grippli | 2 | Sticky Tongue | A Lash that hits also grabs the target and reels it 1 square in. | Tongue |
-| Halfling | 1 | Brave | +2 Mental Defense. | -- |
+| Halfling | 1 | Brave | +2 Resolve. | -- |
 | Halfling | 1 | Halfling Luck | Fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- |
 | Halfling | 1 | Second Breakfast | Recover +1 additional HP for every 8 hours of unbroken rest. | -- |
-| Hobgoblin | 1 | Hold the Line | While you Defend, every ally adjacent to you has +1 AC. | -- |
-| Hobgoblin | 1 | Phalanx | Martial discipline: +1 AC if you are adjacent to at least one ally. | -- |
+| Hobgoblin | 1 | Hold the Line | While you Defend, every ally adjacent to you has +1 Guard. | -- |
+| Hobgoblin | 1 | Phalanx | Martial discipline: +1 Guard if you are adjacent to at least one ally. | -- |
 | Hobgoblin | 1 | Quartermaster | An orderly camp: +2 on the daily cohesion roll of an overextended group you lead. | -- |
 | Human | 1 | Cosmopolitan | At home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- |
 | Human | 1 | Parley | +1 when you Persuade, Bluff or Intimidate in the talk before a fight. | -- |
@@ -601,16 +605,16 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Orc | 1 | War Cry | +1 to Demoralize checks. | -- |
 | Ox | 1 | Aurochs Might | A gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- |
 | Ox | 1 | Gore Charge | After walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- |
-| Ox | 1 | Thick Hide | +1 AC. | -- |
+| Ox | 1 | Thick Hide | +1 Guard. | -- |
 | Skeleton | 1 | Deft Bones | Light, quick bones: your bare hands hit and hurt with Dexterity. | -- |
 | Skeleton | 1 | Elder Skeleton | Centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- |
 | Skeleton | 1 | Faith Initiate | A vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- |
 | Snake | 1 | Serpent Growth | You outgrow your coils: your size goes up one step (Small to Medium). | -- |
-| Snake | 1 | Snake Venom | Your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution. | -- |
+| Snake | 1 | Snake Venom | Your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your Character Level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution. | -- |
 | Snake | 2 | Great Serpent | A second shedding: your size goes up another step (Medium to Large, 2x2). | Serpent Growth |
 | Sprite | 1 | Nature Initiate | Fey magic: you become initiated in nature magic and gain the Share Magic action. | -- |
 | Sprite | 1 | Pixie Dust | 1 point: an adjacent ally takes wing through the end of their next turn. | -- |
-| Sprite | 1 | Tiny Target | +2 AC against ranged and thrown attacks. | -- |
+| Sprite | 1 | Tiny Target | +2 Guard against ranged and thrown attacks. | -- |
 | Treefolk | 1 | Fruitful | Your leafy body blooms at midnight: produce 1 fresh fruit each day to nourish yourself or your companions. | -- |
 | Treefolk | 1 | Thornskin | Whoever hits you in melee takes 1 damage. | -- |
 | Treefolk | 2 | Bountiful Harvest | You bloom twice at midnight, and your fruit heals 1d4 HP to whoever eats it. | Fruitful |
@@ -627,7 +631,7 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | 2 | Spell Focus | +1 to hit with spell attacks. | Arcane Mind |
 | 2 | Destructive Casting | +1 damage with damaging spells. | Arcane Mind |
 | 2 | Blessed Hands | +1 HP restored with healing spells. | Arcane Mind |
-| 2 | Focused Will | +1 Mental Defense. | Arcane Mind |
+| 2 | Focused Will | +1 Resolve. | Arcane Mind |
 | 3 | Far Cast | +1 square of range with non-melee spells. | Spell Focus |
 
 ## Factions and deeds
@@ -693,7 +697,7 @@ The fortified garrison of the march. They train soldiers and hold the border.
 
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|
-| Treefolk Mentorship | Train a designated Treefolk recruit to racial level 2 and deliver them to Field Command. | +1 | -- |
+| Treefolk Mentorship | Train a designated Treefolk recruit to Character Level 2 and deliver them to Field Command. | +1 | -- |
 | Frontier Supply Run | Successfully complete 10 military supply caravan runs to the frontier outpost. | +1 | -- |
 
 ### The Blood Cult
@@ -750,4 +754,4 @@ The tunable knobs, read off the modules that run them.
 | Bank strongbox | $90 to rent, holds 30 kg |
 | Combat XP thresholds | `2n² + n` for level n, no top: 3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253, 300, 351, 406, 465, 528, 595, 666, 741, 820, ... |
 | Work XP thresholds | `n(n + 1)` for level n, no top: 2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156, 182, 210, 240, 272, 306, 342, 380, 420, ... |
-| Racial level thresholds (combat+work+magic) | `2n` for level n, no top: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, ... |
+| Character Level thresholds (combat+work+magic) | `2n` for level n, no top: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, ... |

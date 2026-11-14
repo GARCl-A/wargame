@@ -70,8 +70,8 @@ A new campaign begins at the **Vocation** step, then the **Draft** (`draft.py`):
 
 | Derived | Formula | Note |
 |---|---|---|
-| **AC** (Armor Class) | `10 + Dexterity mod + size` (Tiny +2, Small +1, Medium 0, Large −1, Huge −2) | unarmored (worn armor: 🟡, see below). **Natural armor** (0–5, set in the creator) adds flat on top: no Dex cap, no speed drag |
-| **Mental Defense** 🟡 | `10 + Wisdom mod` | the target number for Demoralize |
+| **Guard** (code: `ac`) | `10 + Dexterity mod + size` (Tiny +2, Small +1, Medium 0, Large −1, Huge −2) | unarmored (worn armor: 🟡, see below). **Natural armor** (0–5, set in the creator) adds flat on top: no Dex cap, no speed drag |
+| **Resolve** (code: `mental_defense`) 🟡 | `10 + Wisdom mod` | the target number for Demoralize |
 | **HP** | `1d(hit die) + Constitution mod` | minimum 1 |
 | **Age** | `d100 × racial multiplier` | see `REFERENCE.md` |
 | **Carry capacity (normal)** | `max(1, round((STR mod × 4 + 15) × carry mult.))` | 🟡 reworked for the wargame |

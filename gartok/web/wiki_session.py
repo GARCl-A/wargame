@@ -51,7 +51,7 @@ def _item(it):
     if it.damage:
         tags.append(f"{it.damage[0]}d{it.damage[1]}")
     if it.ac:
-        tags.append(f"AC +{it.ac}")
+        tags.append(f"{i18n.lab('Guard')} +{it.ac}")
     tags += [tid.replace("_", " ").title() for tid in it.traits if not weapon_traits.get(tid)]
     links = [_link(tid, label) for tid, label in wiki_terms.of_item(it)]
     if it.hands == 2:
@@ -150,7 +150,9 @@ def _spells():
 
 
 def _rules():
-    return [_entry(title, body=lines, find=lines) for title, lines in wiki_rules.sections()]
+    return [_entry(title, body=lines, find=[*lines, wiki_rules.part_title(wiki_rules.part_of(key))], eid=key)
+            | {"part": wiki_rules.part_of(key), "part_label": wiki_rules.part_title(wiki_rules.part_of(key))}
+            for key, title, lines in wiki_rules.sections()]
 
 
 BUILD = {"items": lambda: [_item(i) for i in sorted((i for i in items.all_items().values() if i.base is None),

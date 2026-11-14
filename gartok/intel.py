@@ -37,7 +37,7 @@ FIELDS = {                # field -> the band that opens it
 BANDS = (("EASY", EASY), ("MEDIUM", MEDIUM), ("HARD", HARD))
 LABELS = {
     "damage_die": "damage die", "speed": "speed", "level": "level", "racial_ability": "racial ability",
-    "to_hit": "to hit", "damage_bonus": "damage bonus", "ac": "AC", "md": "mental defense", "morale": "morale",
+    "to_hit": "to hit", "damage_bonus": "damage bonus", "ac": "Guard", "md": "Resolve", "morale": "morale",
     "attrs": "attributes", "hp": "hit points", "talents": "talents", "spells": "spells", "artifact": "artefact",
 }
 _ATTRS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),

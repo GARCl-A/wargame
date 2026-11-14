@@ -38,7 +38,7 @@ FAME_PER_SLOT = 3   # total reputation that buys the guild one more group
 # the rule and the text is read off the same tuple, so the two cannot drift apart.
 CAPACITY_TERMS = (
     ("the leader's Charisma modifier", "CHA", lambda u: u.mod_charisma),
-    ("half the leader's racial level", "half level", lambda u: u.racial_level // 2),
+    ("half the leader's Character Level", "half level", lambda u: u.racial_level // 2),
 )
 
 # The leader's share of `herd_capacity`: (the wiki's label key, the value), read like `CAPACITY_TERMS`.

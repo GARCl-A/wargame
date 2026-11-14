@@ -37,11 +37,17 @@ def terms() -> dict[str, dict]:
     return out
 
 
+def _word(tid: str, name: str) -> str:
+    """The regex for a term's name; `Guard` is the stat, not the City Guard or off-guard."""
+    word = rf"\b{re.escape(name)}s?\b"
+    return rf"(?<!-)(?<!City ){word}(?! da Cidade)" if tid == "guard" else word
+
+
 def keywords_in(text: str) -> list[str]:
     """The ids of the keywords `text` names, in the order they first appear."""
     named = [(k.id, k.name) for k in keywords.all_keywords()] + [(c, terms()[c]["name"]) for c in LINKED_CONDITIONS]
     found = [(m.start(), kid) for kid, name in named
-             for m in [re.search(rf"\b{re.escape(name)}s?\b", text or "")] if m]
+             for m in [re.search(_word(kid, name), text or "")] if m]
     return [kid for _, kid in sorted(found)]
 
 
@@ -51,7 +57,7 @@ def marks(text: str) -> list[dict]:
     known = terms()
     found = []
     for tid in (*(k.id for k in keywords.all_keywords()), "finesse", *LINKED_CONDITIONS):
-        m = tid in known and re.search(rf"\b{re.escape(known[tid]['name'])}s?\b", text or "", re.I)
+        m = tid in known and re.search(_word(tid, known[tid]["name"]), text or "", 0 if tid == "guard" else re.I)
         if m:
             found.append((m.start(), {"word": m.group(0), "tip": tip(tid)}))
     return [mark for _, mark in sorted(found, key=lambda f: f[0])]
@@ -94,7 +100,7 @@ def item_tip(name: str | None) -> str:
     if it is None:
         return ""
     stats = [f"{it.damage[0]}d{it.damage[1]}"] if it.damage else []
-    stats += [f"AC +{it.ac}"] if it.ac else []
+    stats += [f"{i18n.lab('Guard')} +{it.ac}"] if it.ac else []
     known = terms()
     brought = [(lab, known[tid]["text"]) for tid, lab in of_item(it) if known[tid]["text"]]
     return "\n".join([i18n.name("item", it.name), " · ".join([i18n.lab(it.type.value), *stats]),

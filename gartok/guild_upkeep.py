@@ -174,7 +174,7 @@ class UpkeepMixin:
         return events, all_casualties
 
     def reap_collapsed(self):
-        """Whoever has a physical score (Str / Dex / Con) at zero or below dies where they stand: the
+        """Whoever has any of the six attributes at zero or below dies where they stand: the
         world half of `Combatant.check_collapse`. Poison, sickness and hunger all get here the same way.
         -> `(events, dead)`, the dead already off the roster."""
         events, dead = [], []

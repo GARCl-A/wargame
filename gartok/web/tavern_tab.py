@@ -88,7 +88,7 @@ class TavernTab:
     def _dossier(self, c):
         kit = [n for n in (c.equipped_weapon, c.armor_name) if n] + [i.name for i in c.inventory]
         return {"uid": c.uid, "name": c.name, "portrait": _portrait(c), "sub": f"{_kind(c)} · {i18n.name('alignment', c.alignment)}",
-                "chips": _chips(c), "facts": [(i18n.lab("HP"), str(c.hp_max)), (i18n.lab("AC"), str(c.ac)), (i18n.lab("Speed"), i18n.t("tavern_tab.sq", speed=c.speed)),
+                "chips": _chips(c), "facts": [(i18n.lab("HP"), str(c.hp_max)), (i18n.lab("Guard"), str(c.ac)), (i18n.lab("Speed"), i18n.t("tavern_tab.sq", speed=c.speed)),
                                               (i18n.lab("Attack"), i18n.name("item", c.weapon.name))],
                 "kit": [{"name": n, "glyph": item_icon.glyph(n)} for n in kit],
                 "ability": {"name": c.ability.name, "effect": c.ability.effect}, "last": self._last(c),

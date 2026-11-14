@@ -65,17 +65,17 @@
         "title": "Flanking",
         "body": [
           "A foe is flanked when two fighters of one side stand on opposite sides of it: the line between them has to cross the foe, and a diagonal counts.",
-          "A flanked fighter is off-guard, -{ac} AC against every attack, melee, ranged or thrown. It cuts both ways: close on a foe from two sides, and do not let two foes pin one of yours."
+          "A flanked fighter is off-guard, -{ac} Guard against every attack, melee, ranged or thrown. It cuts both ways: close on a foe from two sides, and do not let two foes pin one of yours."
         ],
         "foe": {
-          "stamp": "-{ac} AC",
+          "stamp": "-{ac} Guard",
           "rule": "You flank a foe",
-          "text": "One of yours and an ally on opposite sides of it: its AC drops by {ac} against the two of you."
+          "text": "One of yours and an ally on opposite sides of it: its Guard drops by {ac} against the two of you."
         },
         "you": {
           "stamp": "Flanked",
           "rule": "One of yours is flanked",
-          "text": "Two foes on opposite sides of it strike at -{ac} AC. Step out of the line, or put one of them down."
+          "text": "Two foes on opposite sides of it strike at -{ac} Guard. Step out of the line, or put one of them down."
         },
         "none": {
           "stamp": "No flank",
@@ -114,7 +114,7 @@
         "title": "Identity and leadership",
         "body": [
           "The name and banner colour follow the guild for the whole run.",
-          "The leader haggles for the guild and leads any group they stand in. You get one free change later; after that only death replaces them. Each card shows how many people that candidate could recruit as leader: {base} + Charisma modifier + racial level."
+          "The leader haggles for the guild and leads any group they stand in. You get one free change later; after that only death replaces them. Each card shows how many people that candidate could recruit as leader: {base} + Charisma modifier + Character Level."
         ]
       }
     },
@@ -142,7 +142,7 @@
         "body": [
           "Members are listed by group; click one for their sheet, levels and talents. MANAGE GEAR, at the bottom, opens the selected member's group to move gear between them.",
           "SHARE RATIONS lets group-mates eat from that member's pack. A day unfed: hungry ({pen} to attributes). Two: starving (max HP {cap}). Three: too weak to fight. Four: dead.",
-          "Hunger is also a slow poison on the numbers: if Strength, Dexterity or Constitution reaches zero the character dies, and a frail body gets there first. The log then reads \"Wasted away\".",
+          "Hunger is also a slow poison on the numbers: if any attribute reaches zero the character dies, and a frail body gets there first. The log then reads \"Wasted away\".",
           "Death is permanent; the run ends only when the whole guild is gone."
         ],
         "suggestion": "The REPUTATIONS tab holds your objectives and what each faction wants."
@@ -231,7 +231,7 @@
     "level_up": {
       "title": "A new level",
       "body": [
-        "A new level brings a talent pick: PICK TALENTS spends it now, or later from the roster. A new racial level also rolls one more hit die."
+        "A new level brings a talent pick: PICK TALENTS spends it now, or later from the roster. A new Character Level also rolls one more hit die."
       ]
     },
     "reward": {
@@ -254,7 +254,7 @@
       "body": [
         "Pick a stranger, then who from the party makes the pitch: Charisma against Charisma, in a language both speak. Each member of the guild past {free} costs {size_pen}, and each step of alignment apart {align_pen}. A failed pitch can't be retried by that member until the pool turns over next week.",
         "Alignment is how a character sees order and morals: Lawful, Neutral or Chaotic, and Good, Neutral or Evil. The pitch is the recruiter's d20 + Charisma modifier + the modifiers below against the stranger's d20 + Charisma modifier, and the recruiter must beat it. A step of alignment apart on either axis is -{align_pen}, up to four steps: a Lawful Good recruiter talks a fellow Lawful Good into signing far easier than a Chaotic Evil one. Pick as pitchman the member whose alignment is closest to the stranger's.",
-        "Each member can sponsor {base} + their Charisma modifier recruits; the guild leader adds their racial level.",
+        "Each member can sponsor {base} + their Charisma modifier recruits; the guild leader adds their Character Level.",
         "STUDY rents a room (${study} a day) to learn a language from a Dictionary, or a spell from its Scroll if the student has that school. PERFORM sends anyone with a Musical Instrument on stage for tips."
       ]
     },
@@ -283,7 +283,7 @@
       "title": "Spending picks",
       "body": [
         "Each XP track (combat, work, magic and racial) has its own talent tree. A lit node means a pick is waiting there: click it to take it.",
-        "Combat XP comes from downing foes at or above your level, magic XP from doing it with magic, work XP from hours worked at a job you haven't outgrown. Racial levels come from the sum of the others."
+        "Combat XP comes from downing foes at or above your level, magic XP from doing it with magic, work XP from hours worked at a job you haven't outgrown. Character Level is half the sum of the combat, work and magic levels."
       ]
     },
     "library": {
@@ -585,7 +585,7 @@
       "of_race": "Of the {race}",
       "speaks": "Speaks",
       "career": "Career",
-      "racial_level": "racial level {n}",
+      "racial_level": "Character Level {n}",
       "talents": "Talents",
       "talents_taken": "{n} taken",
       "no_talents": "None taken yet.",
@@ -1095,7 +1095,7 @@
       "rations": "Rations",
       "rotten": "{n} (all rotten)",
       "pace": "Pace",
-      "over_tip": "Past the leader's hold: −{n} mental defense",
+      "over_tip": "Past the leader's hold: −{n} Resolve",
       "over": "Over its hold",
       "picked_one": "{name} picked · drag or click another pack",
       "picked_many": "{items} picked · drag or click another pack",
@@ -1270,8 +1270,8 @@
     },
     "stat": {
       "hp": "HP",
-      "ac": "AC",
-      "md": "MD",
+      "ac": "Guard",
+      "md": "Resolve",
       "spd": "SPD",
       "init": "INIT"
     },
@@ -1452,7 +1452,7 @@
       "title": "{name}'s talents",
       "sub": "<b>{race}</b> · {guild} · day {day}",
       "racial_pick": "a racial pick to spend",
-      "racial_next": "next racial pick at racial level {n} · every level anywhere adds a hit die",
+      "racial_next": "next racial pick at Character Level {n} · every Character Level adds a hit die",
       "no_school": "no school yet · a school opens at its sanctuary",
       "xp": "{into} / {span} XP to level {level}",
       "last_level": "the last level",
@@ -1462,7 +1462,7 @@
       },
       "level": "LEVEL",
       "note_held": "{note} · {n} held",
-      "racial_level": "racial level {level} · HP {hp}/{max}",
+      "racial_level": "Character Level {level} · HP {hp}/{max}",
       "four": "The four tracks",
       "can": "Can take now",
       "can_n": "{n} open",
@@ -1473,7 +1473,7 @@
       "head": {
         "combat": "Each level won in a fight gives one pick. A deeper talent needs the one above it, and nothing is closed for good: given the levels, every talent here can be held.",
         "work": "Each level of work gives one pick: what a shift pays, how fast it ends, what the body bears on the road.",
-        "racial": "The race's own gifts. The racial track earns nothing by itself: it climbs with every level in the other three, a hit die each, and every fifth racial level gives a pick.",
+        "racial": "The race's own gifts. The racial track earns nothing by itself: it climbs with Character Level, which is half the sum of the other three levels. Each Character Level is a hit die, and every fifth gives a pick.",
         "magic": "The caster's tree. Magic XP comes from a foe put down by a spell and from a spell studied to the end; both need a school."
       },
       "attr": {
@@ -1676,7 +1676,7 @@
       "went_in": "{n} went in",
       "the_pack": "The pack",
       "pack_n": "{n}",
-      "pack_lv": "{n}, racial level {lv}",
+      "pack_lv": "{n}, Character Level {lv}",
       "downs": "{n} put down",
       "xp_lbl": "Combat XP · level {level}",
       "dies_with": "what they earned dies with them",
@@ -1736,7 +1736,7 @@
           "why": "from the spells cast"
         },
         "racial": {
-          "l": "Racial level",
+          "l": "Character Level",
           "why": "one level of each track is one of the race's"
         },
         "dice": {
@@ -1987,8 +1987,8 @@
       "weapon": "Weapon",
       "arms": "Arms",
       "hp": "HP",
-      "ac": "AC",
-      "md": "MD",
+      "ac": "Guard",
+      "md": "Resolve",
       "morale": "Morale",
       "speed": "Speed",
       "pick_up_note": "Pick up lifts what your hands can hold.",
@@ -1996,7 +1996,7 @@
       "out_of_sight": "The fight goes on out of sight…",
       "hit_points": "Hit points",
       "lv": "LV",
-      "level_tip": "Racial level {level} (hit dice) · combat {combat} · work {work} · magic {magic}",
+      "level_tip": "Character Level {level} (hit dice) · combat {combat} · work {work} · magic {magic}",
       "thrown": "thrown {n}",
       "range": "range {n}",
       "unarmed": "Unarmed",
@@ -2033,8 +2033,8 @@
       "miss": "Miss",
       "crit_banner": "Critical hit",
       "dice_unread": "Not read yet: Assess the foe to see it",
-      "dice_ac": "AC",
-      "dice_md": "MD",
+      "dice_ac": "Guard",
+      "dice_md": "Resolve",
       "dice_dc": "DC",
       "dice_contest": "vs",
       "dice_decisive": "{why} {n} made it",
@@ -2083,11 +2083,11 @@
     "cond": {
       "entangled": {
         "name": "Entangled",
-        "rule": "No walking until the end of its next whole turn. -2 AC."
+        "rule": "No walking until the end of its next whole turn. -2 Guard."
       },
       "grappled": {
         "name": "Grappled",
-        "rule": "Held fast: speed 0, cannot walk or flee. -2 AC."
+        "rule": "Held fast: speed 0, cannot walk or flee. -2 Guard."
       },
       "prone": {
         "name": "Prone",
@@ -2095,8 +2095,8 @@
       },
       "sleeping": {
         "name": "Asleep",
-        "rule": "-2 AC while it sleeps.",
-        "rule_turns": "-2 AC. Wakes in {turns} more turns."
+        "rule": "-2 Guard while it sleeps.",
+        "rule_turns": "-2 Guard. Wakes in {turns} more turns."
       },
       "surprised": {
         "name": "Surprised",
@@ -2104,7 +2104,7 @@
       },
       "off_guard": {
         "name": "Off-guard",
-        "rule": "Has not had a turn yet this fight: -2 AC against every attack until it does."
+        "rule": "Has not had a turn yet this fight: -2 Guard against every attack until it does."
       },
       "rooted": {
         "name": "Rooted",
@@ -2124,7 +2124,7 @@
       },
       "shield_hooked": {
         "name": "Shield hooked",
-        "rule": "Its shield gives no AC until the end of its next whole turn."
+        "rule": "Its shield gives no Guard until the end of its next whole turn."
       },
       "hexed": {
         "name": "Hexed",
@@ -2132,7 +2132,7 @@
       },
       "demoralized": {
         "name": "Demoralized",
-        "rule": "-1 to attack, AC and mental defense until the end of its turn."
+        "rule": "-1 to attack, Guard and Resolve until the end of its turn."
       },
       "hungry": {
         "name": "Hungry",
@@ -2140,7 +2140,7 @@
       },
       "defending": {
         "name": "Defending",
-        "rule": "+1 AC until the start of its next turn."
+        "rule": "+1 Guard until the start of its next turn."
       },
       "invisible": {
         "name": "Invisible",
@@ -2216,8 +2216,8 @@
       "hands": "Hands",
       "body": "Body",
       "load": "Load",
-      "ac": "AC",
-      "md": "MD",
+      "guard": "Guard",
+      "resolve": "Resolve",
       "spd": "SPD",
       "init": "INIT",
       "hp": "HP",
@@ -2269,7 +2269,6 @@
       "racial ability": "racial ability",
       "to hit": "to hit",
       "damage bonus": "damage bonus",
-      "mental defense": "mental defense",
       "attributes": "attributes",
       "hit points": "hit points",
       "spells": "spells",
@@ -2355,12 +2354,12 @@
       },
       "phalanx": " [Phalanx]",
       "decisive": " [{why} {n:+} decided it]",
-      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> critical miss.",
-      "spared": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> the blow is pulled; the fallen is spared.",
-      "on_fallen": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> a blow on the fallen.",
-      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> CRITICAL HIT!",
-      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> hit.",
-      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {shown}{off_guard}{phalanx}{decisive}  -> misses."
+      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs Guard {shown}{off_guard}{phalanx}{decisive}  -> critical miss.",
+      "spared": "{head}: d20({nat}) {detail} = {total} vs Guard {shown}{off_guard}{phalanx}{decisive}  -> the blow is pulled; the fallen is spared.",
+      "on_fallen": "{head}: d20({nat}) {detail} = {total} vs Guard {shown}{off_guard}{phalanx}{decisive}  -> a blow on the fallen.",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs Guard {shown}{off_guard}{phalanx}{decisive}  -> CRITICAL HIT!",
+      "hit": "{head}: d20({nat}) {detail} = {total} vs Guard {shown}{off_guard}{phalanx}{decisive}  -> hit.",
+      "miss": "{head}: d20({nat}) {detail} = {total} vs Guard {shown}{off_guard}{phalanx}{decisive}  -> misses."
     },
     "brutal": "  {why}: Brutal {n}!",
     "damage_roll": "  Damage: {detail} = {dmg}",
@@ -2410,8 +2409,8 @@
       "other": "{actor} reloads the weapon ({n} bolts left)."
     },
     "defend_again": "{actor} is already defending (circumstance bonus doesn't stack).",
-    "defend": "{actor} defends: +1 AC [circumstance] until next turn.",
-    "defend_iron": "{actor} defends: +1 AC [circumstance], +{iron} Mental Defense [Iron Stance] until next turn.",
+    "defend": "{actor} defends: +1 Guard [circumstance] until next turn.",
+    "defend_iron": "{actor} defends: +1 Guard [circumstance], +{iron} Resolve [Iron Stance] until next turn.",
     "throw": {
       "head": "{actor} throws {weapon} at {target}"
     },
@@ -2419,10 +2418,10 @@
     "demoralize": {
       "head": "{actor} tries to demoralize {target}",
       "head_free": "  {actor} intimidates {target}",
-      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> critical miss.",
-      "none": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> no effect.",
-      "crit": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> CRITICAL HIT! {target} is demoralized (-1 status until the end of their turn).",
-      "lands": "{head}: d20({nat}) {detail} = {total} vs MD {md}  -> lands. {target} is demoralized (-1 status until the end of their turn)."
+      "crit_miss": "{head}: d20({nat}) {detail} = {total} vs Resolve {md}  -> critical miss.",
+      "none": "{head}: d20({nat}) {detail} = {total} vs Resolve {md}  -> no effect.",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs Resolve {md}  -> CRITICAL HIT! {target} is demoralized (-1 status until the end of their turn).",
+      "lands": "{head}: d20({nat}) {detail} = {total} vs Resolve {md}  -> lands. {target} is demoralized (-1 status until the end of their turn)."
     },
     "inspiring_shout": "  Inspiring Shout! {ally} gains +{n} initiative.",
     "inspiring_shout_morale": "  Inspiring Shout! {ally} takes {n} morale back.",
@@ -2446,9 +2445,9 @@
       "head": "{actor} breathes fire! d20({nat}) {con:+}(CON){pulled} = {total}",
       "pulled": " -{n}(non-lethal)",
       "sputters": "  -> the breath sputters out.",
-      "miss": "  {target} (AC {shown}) -> misses.",
-      "crit": "  {target} (AC {shown}) -> CRITICAL HIT!",
-      "hit": "  {target} (AC {shown}) -> hit."
+      "miss": "  {target} (Guard {shown}) -> misses.",
+      "crit": "  {target} (Guard {shown}) -> CRITICAL HIT!",
+      "hit": "  {target} (Guard {shown}) -> hit."
     },
     "grab": {
       "hit": "{actor} grabs {target}: d20({nat}) {bonus:+}(STR) = {total} vs DC {dc} -> {target} is grappled!",
@@ -2465,9 +2464,9 @@
     },
     "bite": {
       "head": "{actor} Bite -> {target}",
-      "miss": "{head}: d20({nat}) {detail} = {total} vs AC {ac} -> miss.",
-      "hit": "{head}: d20({nat}) {detail} = {total} vs AC {ac} -> HIT for {dmg} damage!",
-      "crit": "{head}: d20({nat}) {detail} = {total} vs AC {ac} -> CRIT for {dmg} damage!"
+      "miss": "{head}: d20({nat}) {detail} = {total} vs Guard {ac} -> miss.",
+      "hit": "{head}: d20({nat}) {detail} = {total} vs Guard {ac} -> HIT for {dmg} damage!",
+      "crit": "{head}: d20({nat}) {detail} = {total} vs Guard {ac} -> CRIT for {dmg} damage!"
     },
     "mod_bite": "Bite Grappled Foe",
     "nonlethal_on": "{actor} pulls their blows (non-lethal).",
@@ -2518,7 +2517,7 @@
     "hook_shield": {
       "head": "{actor} Hook Shield -> {target}",
       "brutal": "The hook bites behind the shield",
-      "hooked": "  {actor} hooks {target}'s shield and wrenches it aside (loses shield AC)!"
+      "hooked": "  {actor} hooks {target}'s shield and wrenches it aside (loses shield Guard)!"
     },
     "javelin_charge": {
       "head": "{actor} Javelin Charge -> {target}",
@@ -2527,7 +2526,7 @@
     "parry_strike": {
       "head": "{actor} Parry & Strike -> {target}",
       "brutal": "Parry and riposte",
-      "stance": "  {actor} falls back into a parrying stance (+1 AC until next turn)!"
+      "stance": "  {actor} falls back into a parrying stance (+1 Guard until next turn)!"
     },
     "long_thrust": {
       "head": "{actor} Long Thrust -> {target}"
@@ -2588,8 +2587,8 @@
     },
     "eat_corpse": "{actor} devours {target}'s corpse (hunger reset to 0).",
     "feast": "  Terrifying feast: d20({nat}) {bonus:+} = {total} (AoE Demoralize)",
-    "feast_terrified": "    {target} (MD {md}) is terrified -> DEMORALIZED.",
-    "feast_resists": "    {target} (MD {md}) resists the horror.",
+    "feast_terrified": "    {target} (Resolve {md}) is terrified -> DEMORALIZED.",
+    "feast_resists": "    {target} (Resolve {md}) resists the horror.",
     "spin_web": "{actor} spins a {n}x{n} web.",
     "mounts": "{actor} mounts {target}.",
     "lift_fallen": "{actor} hauls the fallen {target} onto their back.",
@@ -2615,13 +2614,13 @@
     "spell": {
       "casts": "{actor} casts {spell} on {target}!",
       "crit_miss": " Critical miss!",
-      "hit_magic": " Hit ({score} vs AC {ac}) for {dmg} magic damage.",
-      "hit_plain": " Hit ({score} vs AC {ac}) for {dmg} damage.",
-      "hit_fire": " Hit ({score} vs AC {ac}) for {dmg} fire damage.",
-      "miss": " Miss ({score} vs AC {ac}).",
-      "roll_md": " d20({atk}) {bonus:+}(INT) = {score} vs MD {md}",
-      "roll_ac": " d20({atk}) {bonus:+}(INT) = {score} vs AC {ac}",
-      "roll_touch": " d20({atk}) {bonus:+}(INT) = {score} vs touch AC {ac}",
+      "hit_magic": " Hit ({score} vs Guard {ac}) for {dmg} magic damage.",
+      "hit_plain": " Hit ({score} vs Guard {ac}) for {dmg} damage.",
+      "hit_fire": " Hit ({score} vs Guard {ac}) for {dmg} fire damage.",
+      "miss": " Miss ({score} vs Guard {ac}).",
+      "roll_md": " d20({atk}) {bonus:+}(INT) = {score} vs Resolve {md}",
+      "roll_ac": " d20({atk}) {bonus:+}(INT) = {score} vs Guard {ac}",
+      "roll_touch": " d20({atk}) {bonus:+}(INT) = {score} vs Evasion {ac}",
       "roll_crit_miss": "{roll} -> Critical miss!",
       "roll_lands": "{roll} -> lands.",
       "roll_resisted": "{roll} -> resisted."
@@ -2823,8 +2822,8 @@
     },
     "defend": {
       "name": "Defend",
-      "desc": "+1 AC until your next turn.",
-      "label": "Defend (1 pt, +1 AC)"
+      "desc": "+1 Guard until your next turn.",
+      "label": "Defend (1 pt, +1 Guard)"
     },
     "throw": {
       "name": "Throw",
@@ -2834,8 +2833,8 @@
     },
     "demoralize": {
       "name": "Demoralize",
-      "desc": "Cha vs MD. Target is demoralized (cannot move, lower defenses).",
-      "label": "Demoralize (1 pt, CHA vs Mental Defense)"
+      "desc": "Cha vs Resolve. Target is demoralized (cannot move, lower defenses).",
+      "label": "Demoralize (1 pt, CHA vs Resolve)"
     },
     "flee": {
       "name": "Flee",
@@ -2865,7 +2864,7 @@
     },
     "grab": {
       "name": "Grab",
-      "desc": "Grab an adjacent foe to hold them in place (0 speed, -2 AC).",
+      "desc": "Grab an adjacent foe to hold them in place (0 speed, -2 Guard).",
       "label": "Grab (1 pt, STR vs 10 + target STR/DEX)",
       "label_bonus": "Grab (1 pt, STR{bonus:+} vs 10 + target STR/DEX)"
     },
@@ -2938,9 +2937,9 @@
     },
     "armor_pierce": {
       "name": "Armor Pierce",
-      "desc": "2 AP: Attack ignores the AC bonus of a worn metal armor (leather is not pierced).",
+      "desc": "2 AP: Attack ignores the Guard bonus of a worn metal armor (leather is not pierced).",
       "reason": "requires pick",
-      "label": "Armor Pierce (2 pts, ignores metal armor AC; Brutal 1 vs a metal-armoured foe)"
+      "label": "Armor Pierce (2 pts, ignores metal armor Guard; Brutal 1 vs a metal-armoured foe)"
     },
     "power_shot": {
       "name": "Power Shot",
@@ -2956,9 +2955,9 @@
     },
     "hook_shield": {
       "name": "Hook Shield",
-      "desc": "2 AP: Attacks and nullifies target's shield AC bonus until next round.",
+      "desc": "2 AP: Attacks and nullifies target's shield Guard bonus until next round.",
       "reason": "requires hatchet",
-      "label": "Hook Shield (2 pts, strip shield AC; Brutal 1 vs a shield)"
+      "label": "Hook Shield (2 pts, strip shield Guard; Brutal 1 vs a shield)"
     },
     "javelin_charge": {
       "name": "Javelin Charge",
@@ -2968,7 +2967,7 @@
     },
     "parry_strike": {
       "name": "Parry & Strike",
-      "desc": "2 AP: Attacks and assumes a Defending guard (+1 AC until next turn).",
+      "desc": "2 AP: Attacks and assumes a Defending guard (+1 Guard until next turn).",
       "reason": "requires a sword",
       "label": "Parry & Strike (2 pts, attack & Defend; Brutal 1 with 2+ foes in reach)"
     },
@@ -3114,22 +3113,22 @@
       "reason": "Needs a Rope or Chains."
     },
     "cast_magic_missile": {
-      "desc": "A foe in sight within {reach} squares, d20 + INT against AC: {dice} damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect."
+      "desc": "A foe in sight within {reach} squares, d20 + INT against Guard: {dice} damage. A natural 20 rolls the die twice, a natural 1 fumbles with no effect."
     },
     "cast_sleep": {
-      "desc": "A foe within {reach} squares, d20 + INT against Mental Defense: it falls asleep (-2 AC) for {turns} - WIS mod rounds (give or take {noise}, at least 1), ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected."
+      "desc": "A foe within {reach} squares, d20 + INT against Resolve: it falls asleep (-2 Guard) for {turns} - WIS mod rounds (give or take {noise}, at least 1), ending early when it takes damage or an adjacent ally wakes it. A body with Sleep Immunity is never affected."
     },
     "cast_water_jet": {
-      "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against AC: {dice} + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns)."
+      "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against Guard: {dice} + INT damage, and the jet throws the target 1 square straight away from the caster unless something is in the way (into flames, it burns)."
     },
     "cast_dragonfire": {
-      "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against AC: {dice} fire damage. Blood magic costs no hit points."
+      "desc": "A foe within a dagger's throw ({reach} squares), d20 + INT against Guard: {dice} fire damage. Blood magic costs no hit points."
     },
     "cast_grasping_roots": {
-      "desc": "A foe in sight within {reach} squares, d20 + INT against touch AC (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it."
+      "desc": "A foe in sight within {reach} squares, d20 + INT against Evasion (10 + DEX, no armour or shield): it walks 1 square at most until the end of its next turn. A recast refreshes it."
     },
     "cast_hex": {
-      "desc": "A foe in sight within {reach} squares, d20 + INT against Mental Defense: -{points} on each of its six attribute scores for {turns} of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it."
+      "desc": "A foe in sight within {reach} squares, d20 + INT against Resolve: -{points} on each of its six attribute scores for {turns} of its turns. Every cast is a stack of its own and stacks add up; an attribute at zero drops it."
     },
     "cast_spare_the_dying": {
       "desc": "Touch: a Dying ally in reach is stable, no check."
@@ -4112,7 +4111,11 @@
       "dying": "Dying",
       "knocked_out": "Knocked out",
       "reach": "Reach",
-      "distance": "Distance"
+      "distance": "Distance",
+      "character_level": "Character Level",
+      "guard": "Guard",
+      "evasion": "Evasion",
+      "resolve": "Resolve"
     }
   },
   "job_board": {
@@ -4259,7 +4262,7 @@
     "holds": "{display_name} holds {sum_line}",
     "bail_buys_on_pitch_and": "The bail buys +{bail_bonus} on the pitch, and every doubling of the offer another +1. It is taken only if the pitch wins; turned down, you keep the coin, and the one who pitched may not try them again until the cells turn over.",
     "opposite_alignment_docks_pitch_step": "Opposite alignment docks the pitch {alignment_penalty} a step, and every member past {free_slots} another {size_penalty}. Turned down, the one who pitched may not try that stranger again until the crowd changes.",
-    "hp_ac": "{kind} · HP {hp_max} · AC {ac}",
+    "hp_ac": "{kind} · HP {hp_max} · Guard {ac}",
     "scroll_of": "Scroll of {name}",
     "dictionary_of": "Dictionary of {study_target}",
     "no_magic": "no magic",
@@ -4346,7 +4349,7 @@
     "hands_over_sealed_chest_outpost": "{name} hands over the sealed chest, and the outpost gives a letter of receipt in return.",
     "treefolk_joins_your_group_for": "{name} (Treefolk) joins your group for mentorship.",
     "recruit_steps_into_garrison": "The recruit steps into the garrison. {fmt_money} reward received!",
-    "offer_req": "a green Treefolk recruit joins the group  ·  train them to racial level 2, then bring them back  ·  {fmt_money}, and the recruit leaves the guild",
+    "offer_req": "a green Treefolk recruit joins the group  ·  train them to Character Level 2, then bring them back  ·  {fmt_money}, and the recruit leaves the guild",
     "party_purse": "party purse",
     "supply_runs": "supply runs",
     "sealed_chest": "The Sealed Chest",
@@ -4356,7 +4359,7 @@
     "hand_over_chest": "Hand over the chest",
     "accept_recruit": "Accept the recruit",
     "treefolk_recruit_fell_in_battle": "the Treefolk recruit fell in battle: the mentorship has failed",
-    "racial_level": "racial level {lvl} / 2",
+    "racial_level": "Character Level {lvl} / 2",
     "deliver_recruit": "Deliver the recruit",
     "frontier_supply_run": "Frontier Supply Run",
     "to_frontier_outpost_and_back": "to the Frontier Outpost and back",
@@ -4394,7 +4397,7 @@
     "no_dex_cap": "no dex cap",
     "dex_cap": "dex cap {max_dex}",
     "spd": "  ·  -{speed_penalty} spd",
-    "ac": "+{ac} AC  ·  {cap}{spd}",
+    "ac": "+{ac} Guard  ·  {cap}{spd}",
     "you_sell_at_of_price": "you sell at {int}% of the price",
     "fixed_prices": "fixed prices",
     "no_haggling": "no haggling",
@@ -5060,8 +5063,8 @@
     "champion_of_pit": "Champion of the Pit",
     "not_yet_sworn_in": "Not yet sworn in",
     "no_orders": "no orders",
-    "armour_class": "Armour class",
-    "mental_defense": "Mental defense",
+    "armour_class": "Guard",
+    "mental_defense": "Resolve",
     "feeds_on_light": "Feeds on light",
     "days_of_food": "days of food",
     "nothing_to_eat_in_pack": "nothing to eat in the pack",
@@ -5095,7 +5098,7 @@
     "needs_first": "{name} needs {talent} first",
     "redundant_with_ability": "{name} is not offered: {ability} already does everything it does, and does it better",
     "has_no_school_yet_school": "{name} has no school yet: a school opens with initiation at its sanctuary",
-    "next_racial_pick_comes_at": "the next racial pick comes at racial level {nxt}",
+    "next_racial_pick_comes_at": "the next racial pick comes at Character Level {nxt}",
     "has_no_pick_to_spend": "{name} has no {track} pick to spend; one comes with the next level",
     "ready_to_take": "Ready to take",
     "track": {
@@ -5119,7 +5122,7 @@
       "wis": "WIS",
       "cha": "CHA",
       "max_hp": "Max HP",
-      "ac": "AC",
+      "ac": "Guard",
       "mental_def": "Mental Def.",
       "speed": "Speed",
       "load_limit": "Load limit"
@@ -5175,12 +5178,12 @@
     "idle_pack_saddle_lets_it": "idle: a Pack Saddle lets it carry {back_load:g} kg, a Harness lets it pull {draw:g} kg",
     "hungry_day_s_starves_at": "hungry {unfed_days} day(s), starves at {starve_days}",
     "kg": "{load:g} / {most:g} kg",
-    "attack_modifier_d_against_target": "Attack modifier {bab} ({src}): d20 {bonus} against the target's armor class",
+    "attack_modifier_d_against_target": "Attack modifier {bab} ({src}): d20 {bonus} against the target's Guard",
     "weapon_dice_plus_strength_on": "{w}: weapon dice plus strength on a hit",
     "distance_this_weapon_can_strike": "Distance this weapon can strike",
     "arrows_or_bolts_left_across": "Arrows or bolts left across the quivers carried; with none the weapon is swung as a clumsy melee",
     "no_arrows_or_bolts_carry": "No arrows or bolts: carry a quiver with arrows, or the weapon is swung as a clumsy melee",
-    "ac": "+{armor} AC",
+    "ac": "+{armor} Guard",
     "spd": "  -{speed_penalty} SPD",
     "more_may_join_on_their": "{value} more may join on their word",
     "none_left": "none left",
@@ -5195,7 +5198,7 @@
     "make_this_member_lead_whole": "Make this member lead the whole guild",
     "group_leader_2": "Group leader",
     "leads_holds_up_to_members": "Leads {band}: holds up to {cap} members",
-    "group_size_capacity_is_cha": "Group size capacity is 3 + CHA modifier + half racial level",
+    "group_size_capacity_is_cha": "Group size capacity is 3 + CHA modifier + half Character Level",
     "would_hold_up_to_members": "Would hold up to {cap} members",
     "make_group_leader": "MAKE GROUP LEADER",
     "make_this_member_leader_of": "Make this member the leader of {band}",
@@ -5519,7 +5522,7 @@
       "combat": "Combat level",
       "work": "Work level",
       "magic": "Magic level",
-      "racial": "Racial level",
+      "racial": "Character level",
       "hit_dice": "Hit dice",
       "hp_max": "Max HP"
     }
@@ -5876,7 +5879,7 @@
     "crit_fumble": "crit 20, fumble 1",
     "thrown": "  ·  thrown {weapon}",
     "dying": "dying {death_clock}/{dying_turns}",
-    "ac": "{armor_name}  ·  +{a} AC"
+    "ac": "{armor_name}  ·  +{a} Guard"
   },
   "settings": {
     "off": "{name}: OFF",
@@ -5981,18 +5984,18 @@
       "fleet": "+2 squares of Speed.",
       "nimble_skirmisher": "+2 damage on Dexterity melee attacks against off-guard targets.",
       "single_combat": "Your blows with finesse weapons gain Brutal 1 if:\n- One of your hands is empty, and\n- No character other than the target is adjacent to you.",
-      "duelist": "+1 damage and +2 AC with a finesse weapon while the off hand is empty (no shield, no light).",
+      "duelist": "+1 damage and +2 Guard with a finesse weapon while the off hand is empty (no shield, no light).",
       "free_step": "Once per turn, step 1 square without spending an action point.",
       "tough": "+1 Constitution.",
       "hardy": "+1 max HP for every Hit Die you have.",
       "recovery": "Heal 1 HP after every fight you survive.",
-      "bulwark": "+1 AC.",
+      "bulwark": "+1 Guard.",
       "armor_bearer": "Reduces the carried weight of equipped armor by up to 6 kg.",
       "alert": "+1 Wisdom.",
       "quick_wits": "+2 initiative.",
-      "peripheral_vision": "When off-guard, your AC is only reduced by 1 instead of 2.",
-      "iron_will": "+2 Mental Defense.",
-      "iron_stance": "Using Defend grants +2 Mental Defense in addition to AC until your next turn.",
+      "peripheral_vision": "When off-guard, your Guard is only reduced by 1 instead of 2.",
+      "iron_will": "+2 Resolve.",
+      "iron_stance": "Using Defend grants +2 Resolve in addition to Guard until your next turn.",
       "imposing": "+1 Charisma.",
       "menacing": "+2 to Demoralize checks.",
       "wordless_menace": "Demoralize works on a humanoid foe you share no language with, if you both see each other within 6 squares; the check takes -2.",
@@ -6051,7 +6054,7 @@
       "centaur_mount": "Your strong back: allow a Medium or Small ally to ride you.",
       "giant_grip": "Immense physical strength: wield weapons one size above your own (Large for a Goliath, Huge for an Ogre).",
       "mighty_shove": "Your Shove throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more.",
-      "phalanx": "Martial discipline: +1 AC if you are adjacent to at least one ally.",
+      "phalanx": "Martial discipline: +1 Guard if you are adjacent to at least one ally.",
       "organic_harvester": "Scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle.",
       "corpse_eater": "Brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you.",
       "gnome_magic_excitement": "Enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress.",
@@ -6060,12 +6063,12 @@
       "dwarf_crafting": "Your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor.",
       "kobold_trapper": "Cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them.",
       "aurochs_might": "A gore that lifts a man: +5 squares of speed and +3 damage on melee attacks.",
-      "thick_hide": "+1 AC.",
+      "thick_hide": "+1 Guard.",
       "gore_charge": "After walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back.",
       "deep_miner": "At home under the mountain: the odds of a pack finding your crew while gathering at the Mine are 25% lower.",
       "grudge": "A dwarf never forgets: +1 to hit anyone who has hurt you this fight.",
       "self_repair": "Your works mend themselves: heal 1 HP after every fight you survive.",
-      "iron_plating": "+1 AC.",
+      "iron_plating": "+1 Guard.",
       "cavalry_charge": "Your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved.",
       "lift_rider": "1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move.",
       "run_down": "After walking 4+ squares this turn, your attacks (melee, thrown or shot) get +1 to hit and +2 damage.",
@@ -6074,17 +6077,17 @@
       "blood_frenzy": "+2 damage on melee attacks against a target below half its HP.",
       "bloodscent": "You smell the wounded: you know where every foe below half its HP is within 6 squares, seen or not.",
       "arcane_curiosity": "+1 square of range with non-melee spells.",
-      "underfoot": "+2 AC against attackers of Large size or bigger.",
+      "underfoot": "+2 Guard against attackers of Large size or bigger.",
       "small_appetite": "A goblin lives on scraps: you need a meal only every other day.",
       "under_the_whip": "+1 to hit while an ally of a higher combat level than yours stands within 6 squares.",
       "stone_endurance": "Once per fight, the first blow that hurts you deals 1d4 + your Constitution modifier less.",
       "arena_born": "+1 to hit in arena bouts.",
       "sticky_tongue": "A Lash that hits also grabs the target and reels it 1 square in.",
       "frog_leap": "+2 squares on every Jump.",
-      "brave": "+2 Mental Defense.",
+      "brave": "+2 Resolve.",
       "second_breakfast": "Recover +1 additional HP for every 8 hours of unbroken rest.",
       "quartermaster": "An orderly camp: +2 on the daily cohesion roll of an overextended group you lead.",
-      "hold_the_line": "While you Defend, every ally adjacent to you has +1 AC.",
+      "hold_the_line": "While you Defend, every ally adjacent to you has +1 Guard.",
       "ambush_predator": "+2 to hit an off-guard foe.",
       "tail_sweep": "2 points: your tail sweeps two adjacent foes, with an unarmed strike and a Shove on each.",
       "polyglot": "+2 to progress rolls when studying a foreign language.",
@@ -6102,7 +6105,7 @@
       "trap_salvage": "After a won fight, your traps that never sprang go back into your pack.",
       "savage_attacks": "Your Critical hits are Brutal 1.",
       "war_cry": "+1 to Demoralize checks.",
-      "tiny_target": "+2 AC against ranged and thrown attacks.",
+      "tiny_target": "+2 Guard against ranged and thrown attacks.",
       "pixie_dust": "1 point: an adjacent ally takes wing through the end of their next turn.",
       "bountiful_harvest": "You bloom twice at midnight, and your fruit heals 1d4 HP to whoever eats it.",
       "thornskin": "Whoever hits you in melee takes 1 damage.",
@@ -6115,9 +6118,9 @@
       "spin_web": "Spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn.",
       "serpent_growth": "You outgrow your coils: your size goes up one step (Small to Medium).",
       "great_serpent": "A second shedding: your size goes up another step (Medium to Large, 2x2).",
-      "snake_venom": "Your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution.",
+      "snake_venom": "Your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your Character Level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution.",
       "dire_growth": "You grow past your kin: your size goes up one step (a Wolf becomes Large).",
-      "dragon": "Dragon blood runs in you: your hide hardens into scales (+1 AC).",
+      "dragon": "Dragon blood runs in you: your hide hardens into scales (+1 Guard).",
       "dragon_breath": "2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit.",
       "sweeping_claws": "Your claws sweep in wide lethal arcs: they gain the Cleave trait, striking two adjacent foes at once.",
       "draconic_wings": "Massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares.",
@@ -6127,7 +6130,7 @@
       "spell_focus": "+1 to hit with spell attacks.",
       "destructive_casting": "+1 damage with damaging spells.",
       "blessed_hands": "+1 HP restored with healing spells.",
-      "focused_will": "+1 Mental Defense.",
+      "focused_will": "+1 Resolve.",
       "far_cast": "+1 square of range with non-melee spells."
     },
     "ability": {
@@ -6152,7 +6155,7 @@
       "autotroph": "photosynthesises: never needs to eat, immune to the hunger rules.",
       "ferocity": "once per battle, when downed drops to 0 HP and Dying, but only falls at the end of their turn (the death save runs normally from there).",
       "flight": "flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage.",
-      "spider_venom": "a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity.",
+      "spider_venom": "a bite that draws blood forces a Constitution save (DC 11 + the spider's Character Level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity.",
       "serpentine": "a body that strikes before it is seen: every attack is a finesse attack (Dexterity to hit and to hurt), and the unarmed attack is a bite of Fangs.",
       "wolf_pack_tactics": "+1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first.",
       "reach": "long arms on a huge body: melee attacks reach 1 square farther."
@@ -6166,12 +6169,12 @@
       "cleave": "2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit.",
       "repel_strike": "2 AP: One strike that Shoves the target (+2 to the check); against a foe with its back to a wall or a body the blow is Brutal 1, +1d4.",
       "maiming_strike": "2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow is Brutal 1.",
-      "armor_pierce": "2 AP: One strike that ignores the AC of a worn metal armor; against a metal-armoured foe the blow is Brutal 1.",
+      "armor_pierce": "2 AP: One strike that ignores the Guard of a worn metal armor; against a metal-armoured foe the blow is Brutal 1.",
       "power_shot": "2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow is Brutal 1.",
       "extreme_shot": "2 AP: Doubles attack distance to 36 squares.",
-      "hook_shield": "2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike.",
+      "hook_shield": "2 AP: Against a foe with a shield: hooks it first (no shield Guard until next round, this strike included), then one strike that is Brutal 1. Otherwise one plain strike.",
       "javelin_charge": "1 AP: Throws the spear after moving this turn, +1d4 bonus damage.",
-      "parry_strike": "2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow is Brutal 1.",
+      "parry_strike": "2 AP: One strike and Defending (+1 Guard) until next round; with two or more foes in reach the blow is Brutal 1.",
       "wrest": "2 AP, bare hands only: seize the weapon of an adjacent armed foe (d20 + Dexterity against 15 + its Strength) and, if you can wield it, strike with it at once.",
       "long_thrust": "2 AP: One strike one square past the weapon's reach, +1 to hit: the only blow that lands that far.",
       "trample": "2 AP, hooves only: one strike, then a shove, then a takedown; each step is tried only if the foe is still standing and within reach.",
@@ -6185,7 +6188,7 @@
       "NIMBLE": "Harder to hit, and accurate with finesse weapons.",
       "GENIUS": "Crafts faster, reads manuals and does research.",
       "WISE": "Acts earlier in a fight, resists the mind and treats wounds in the field.",
-      "RISKY": "A hard pick: a frail body that has to be played around. Low Strength means gear they cannot carry. Low Constitution means slow healing and little HP gained per level. Very low scores mean that hunger or poison can drag Strength, Dexterity or Constitution to zero, and that kills: one missed meal run is enough early on. Not always a bad pick: a fine leader can be fragile."
+      "RISKY": "A hard pick: a frail body that has to be played around. Low Strength means gear they cannot carry. Low Constitution means slow healing and little HP gained per level. Very low scores mean that hunger or poison can drag any attribute to zero, and that kills: one missed meal run is enough early on. Not always a bad pick: a fine leader can be fragile."
     },
     "vocation": {
       "warband": "+{morale_bonus} starting morale for every member in a fight.",
@@ -6258,7 +6261,7 @@
       "faith_necromancer": "The soldiers who fell at the Battlefield do not stay dead: days later they get up and walk. Someone out there is raising them, and nobody has seen who. Go to the front, find whoever wakes the dead, and put them down.",
       "nature_wildfire": "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn the forest to do it, though badly. Every fire they set runs wild. Teach them, or stop them, and put the fires out before they spread. The Ogre is at the heart of it.",
       "blood_clutch": "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on its clutch. Search the deep galleries, go down, and bring us one of its eggs: the bloodline itself, unhatched. Whatever else you carry out of there is yours.",
-      "ledger_treefolk": "Commander Varkas of Field Command entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (racial level 2) and return them to the garrison.",
+      "ledger_treefolk": "Commander Varkas of Field Command entrusts your guild with a green Treefolk recruit. Train them on the road until they master their racial roots (Character Level 2) and return them to the garrison.",
       "farmer_daughter": "Edric Ashvale's daughter set out for the Faith Cathedral and has sent no word since. He cannot leave the farm, and he will sell nothing until she is home. Ask around, find where she went, and bring her back alive. He pays what he has, and the Holy Symbol she carries is yours.",
       "tavern_potatoes": "Tobbin's stew pot is empty and her cellar is bare. Walk to the Farm, buy three Potatoes with your own coin and bring them back to the Tavern within five days. She pays twenty copper, and her warning: a Potato in your pack is a Potato you can eat."
     },
@@ -6292,7 +6295,7 @@
       "library_trusted": "Complete a second task for the library.",
       "apothecary_mushrooms": "Bring the apothecary fifteen red mushrooms.",
       "apothecary_venom": "Bring the apothecary three venom glands.",
-      "ledger_hold_mentoring": "Train a designated Treefolk recruit to racial level 2 and deliver them to Field Command.",
+      "ledger_hold_mentoring": "Train a designated Treefolk recruit to Character Level 2 and deliver them to Field Command.",
       "blood_codex": "Bring the Ancient Codex to the Blood Sanctuary.",
       "nature_codex": "Bring the Ancient Codex to the Nature Grove.",
       "faith_codex": "Bring the Ancient Codex to the Faith Cathedral.",
@@ -6356,13 +6359,17 @@
     "keyword": {
       "brutal": "Brutal N: the blow rolls the weapon's damage N more times, modifiers included, and adds them. It is still one blow with one hit roll. Brutal from several sources adds up: Brutal 1 and Brutal 1 make Brutal 2.",
       "morale": "Morale: a fighter's nerve in a deadly fight, from a starting value that is also its ceiling. It falls when allies go down, when the fighter is badly wounded and when it is Demoralized, and rises when its side downs a foe. At 0 or less the fighter is Routed.",
-      "critical_hit": "Critical hit: a natural 20 on the hit roll. It hits whatever the AC, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so.",
+      "critical_hit": "Critical hit: a natural 20 on the hit roll. It hits whatever the Guard, and the whole blow (dice, modifiers, bonuses, Brutal) is multiplied last, by 2, or by 3 for a weapon that says so.",
       "flanked": "Flanked: a foe is flanked when you and an ally are both next to it, on opposite sides, and a flanked foe is off-guard. An ally merely next to the foe is not a flank.",
       "shove": "Shove: moves the target 1 cell straight back. A pit behind it drops the target in; a wall or a body behind it stops the shove. Push, Repel Strike and Tail Sweep shove; Mighty Shove throws the target 3 cells instead.",
       "dying": "Dying: at 0 HP a fighter is down on its cell and its death clock runs. On its 4th turn down it makes a death save (d20, 11 or more lives: it is Knocked out; less dies). Each hit on a dying body ticks the clock once. Stabilize and First Aid save it on the spot.",
       "knocked_out": "Knocked out: 0 HP and unconscious, out of the fight; it survives the battle. A hit on a knocked-out body puts it back to Dying. A foe dropped by a Non-lethal blow is knocked out, not dying.",
       "reach": "Reach: how far a melee attack can be made, in squares. Every weapon has Reach 1 (the adjacent squares), so only a longer one says so: a Glaive has Reach 2.",
-      "distance": "Distance: how far a shot flies, in squares: a Crossbow's Distance 18, a thrown weapon's Thrown 6. It is the range of a ranged attack, never of a melee one, which has Reach."
+      "distance": "Distance: how far a shot flies, in squares: a Crossbow's Distance 18, a thrown weapon's Thrown 6. It is the range of a ranged attack, never of a melee one, which has Reach.",
+      "character_level": "Character Level: a character's overall level, half the sum of the combat, work and magic levels. Each one is a hit die, and picks of the race's own talents come at regular steps. It also sets how many recruits a leader can sponsor and how large a group they lead, and Morale, venom saves and the reading of a foe are built on it.",
+      "guard": "Guard: the number an attack must reach to hit. 10 + the Dexterity modifier (capped by armour) + armour, shield, talents, size and natural bonuses. An attack that meets or beats it does damage.",
+      "evasion": "Evasion: the number a spell that only has to touch its target must reach: 10 + the Dexterity modifier (armour's cap on it ignored) + talents, size and natural bonuses. Armour and shields never add to it.",
+      "resolve": "Resolve: a fighter's mental toughness, the number Demoralize, Sleep and the other mind spells must reach: 10 + the Wisdom modifier + talents. A group stretched past its leader's hold lowers its members' Resolve, and the daily roll that decides who leaves is made against it."
     }
   },
   "item": {
@@ -6376,8 +6383,8 @@
       "one": "{n} day left",
       "other": "{n} days left"
     },
-    "armor_note": "+{ac} AC",
-    "armor_note_guard": "+{ac} AC · +{guard} guard",
+    "armor_note": "+{ac} Guard",
+    "armor_note_guard": "+{ac} Guard · +{guard} Disguise",
     "tip": {
       "two_handed": "Two-handed",
       "one_handed": "One-handed",
@@ -6386,13 +6393,13 @@
       "melee_reach": "Melee, reach {n}",
       "weapon": "Weapon: {n}d{faces} damage  ·  {hands}  ·  {reach}.",
       "thrown": "Thrown: Can be thrown up to {m}m.",
-      "armor": "Armor: +{ac} Armor Class.",
-      "max_dex": "Maximum Dexterity bonus to AC is capped at +{max_dex}.",
+      "armor": "Armor: +{ac} Guard.",
+      "max_dex": "Maximum Dexterity bonus to Guard is capped at +{max_dex}.",
       "heavy": "Heavy: Reduces movement speed by {speed} cells.",
-      "disguise": "Disguise: +{guard} to the guard test for a character with a record.",
-      "shield": "Shield: +{ac} Armor Class when equipped in the off-hand.",
+      "disguise": "Disguise: +{guard} to the City Guard test for a character with a record.",
+      "shield": "Shield: +{ac} Guard when equipped in the off-hand.",
       "artifact": "Artifact: worn in its own slot.",
-      "biwolf": "Passive: +1 AC against anything that is not a humanoid.",
+      "biwolf": "Passive: +1 Guard against anything that is not a humanoid.",
       "thunderhide": "Passive: +1 Strength while worn.",
       "artifact_action": "Artifact: worn in its own slot, it grants a combat action.",
       "signal_horn": "Once per battle, 2 points: allies within 10 squares gain +2 initiative.",
@@ -6650,27 +6657,27 @@
       "1": "Every combatant has {ap} action points a turn. Attack, Walk and Defend cost {cost} each, in any mix: walk + attack, attack + attack, attack + defend...",
       "2": "Walk: up to your speed in cells. Diagonals cost 1, then 2, then 1 again within one walk.",
       "3": "You can cross an ally's cell but not stop on it. An enemy's cell blocks you completely.",
-      "4": "Defend: +{ac} AC (circumstance) until the start of your next turn.",
+      "4": "Defend: +{ac} Guard (circumstance) until the start of your next turn.",
       "5": "Delay ({delay} points): drop to the end of the initiative order for good, once a round, before you spend anything.",
       "6": "Flee ({flee} point, ends the turn): only from the map edge, and only when you are faster than the fastest pursuer or already out of its reach.",
-      "7": "Bonuses of the same type do not stack: Defend and another circumstance bonus to AC, only the larger counts."
+      "7": "Bonuses of the same type do not stack: Defend and another circumstance bonus to Guard, only the larger counts."
     },
     "flanking": {
       "title": "Off-guard and flanking",
-      "1": "A fighter is off-guard until its first turn of the fight begins, so whoever acts first strikes foes that have not yet moved. It loses {pen} AC against every attack ({reduced} with Peripheral Vision); the log shows [Off-guard -{pen}] and why (has not acted, flanked).",
-      "2": "A foe is also off-guard when you and an ally are both next to it, on opposite sides (a flank). The two never add up: it is still -{pen} AC.",
+      "1": "A fighter is off-guard until its first turn of the fight begins, so whoever acts first strikes foes that have not yet moved. It loses {pen} Guard against every attack ({reduced} with Peripheral Vision); the log shows [Off-guard -{pen}] and why (has not acted, flanked).",
+      "2": "A foe is also off-guard when you and an ally are both next to it, on opposite sides (a flank). The two never add up: it is still -{pen} Guard.",
       "3": "An ally merely next to the foe is not a flank. It only feeds Pack Tactics, which some races and beasts have.",
       "4": "Sneak Attack (Dagger) and Precise Thrust (Rapier) work only on an off-guard foe: the blow is Brutal {brutal}, plus +{die} (Sneak Attack) or +{hit} to hit (Precise Thrust)."
     },
     "morale": {
       "title": "Morale",
       "1": "In a deadly fight every fighter has Morale, the nerve to keep fighting. The dead, the raised and machines have none, and neither does an arena bout (nobody dies there).",
-      "2": "It starts at {base} + the WIS modifier + the CHA modifier + {per} per racial level, {lawful} if Lawful, {chaotic} if Chaotic, and never under {min}. That value is also the ceiling: morale never rises above it.",
+      "2": "It starts at {base} + the WIS modifier + the CHA modifier + {per} per Character Level, {lawful} if Lawful, {chaotic} if Chaotic, and never under {min}. That value is also the ceiling: morale never rises above it.",
       "3": "It falls by {ally_down} each time an ally it can see goes down, and by {ally_dead} more when that ally dies. It falls by {wound} the first time the fighter's own health drops to {half}% and to {quarter}%, and every time it drops to {low}% (healed and wounded again counts again). It falls by {shaken} each time a Demoralize lands on it.",
-      "4": "It rises by {foe_down} every time the fighter's side downs a foe, whoever does it and however (a blow, a spell, fire), even a fighter who is running. It never goes above the ceiling. Nothing else raises it yet.",
+      "4": "It rises by {foe_down} every time the fighter's side downs a foe, whoever does it and however (a blow, a spell, fire), even a fighter who is running. It never goes above the ceiling. The talent Inspiring Shout also gives a weakened ally some morale back.",
       "5": "At 0 or less (it can go below 0) the fighter is Routed: the AI plays it, a guild member included, and it runs for the exit, the map's own when it has one, else the border. It leaves the fight there if its pursuers cannot keep up. Cornered, it fights.",
       "6": "The moment morale is above 0 again the fighter is its own master and you have the controls back. A fighter who runs still counts: the kills of the others give it its nerve back.",
-      "7": "Your fighters show their exact morale. A foe's is read like its Mental Defense, on a good read of it. Everyone sees who is Routed."
+      "7": "Your fighters show their exact morale. A foe's is read like its Resolve, on a good read of it. Everyone sees who is Routed."
     },
     "weapon": {
       "title": "Weapon Actions (2 Points)",
@@ -6679,7 +6686,7 @@
       "3": "Repel Strike (Quarterstaff): shoves the foe {cells} cell; against a wall or a body, +{die} instead.",
       "4": "Maiming Strike (Club, Hammers): halves the foe's speed; a foe that cannot dodge (Entangled, Sleeping, Surprised, Demoralized) takes it at +{hit} to hit.",
       "5": "Armor Pierce (Picks): ignores worn metal armour. Power Shot (Bows): +STR, best at long range.",
-      "6": "Hook Shield (Hatchet): the foe's shield gives no AC until next round. Parry & Strike (Swords): while Defending, with two or more foes in reach.",
+      "6": "Hook Shield (Hatchet): the foe's shield gives no Guard until next round. Parry & Strike (Swords): while Defending, with two or more foes in reach.",
       "7": "Long Thrust (Glaive): one strike a cell past the Glaive's reach of {reach}, +{hit} to hit."
     },
     "talk": {
@@ -6703,9 +6710,9 @@
     },
     "groups": {
       "title": "Groups, Leaders & Fame",
-      "1": "The guild may run {base} groups, plus one more for every {fame} reputation summed across all factions.",
+      "1": "The guild may run {base} groups, plus one more for every {fame} Fame, which is the reputation summed across all factions.",
       "2": "A group holds {cap} + {terms} members, and {herd} + {herd_terms} animals and captives.",
-      "3": "An overextended group rolls each day against its weakest member's Mental Defense (the leaders are exempt). That member splits off into a group of their own, or with no slot free gives {days} days' notice and then leaves the guild.",
+      "3": "An overextended group rolls each day against its weakest member's Resolve (the leaders are exempt). That member splits off into a group of their own, or with no slot free gives {days} days' notice and then leaves the guild.",
       "4": "Who leaves takes by alignment: Lawful only what they wear, Neutral the pack too, Chaotic everything."
     },
     "captives": {
@@ -6724,18 +6731,19 @@
       "title": "Money, Food & Death",
       "1": "There is no guild treasury: money is Copper (${copper}) and Gold (${gold}) coins in the packs. They weigh, split and move like any item.",
       "2": "Paying spends copper first, then breaks gold and returns change. Gold only comes from the bank exchange.",
-      "3": "Everyone eats every day. Hunger lowers the attributes and brings sickness.",
+      "3": "Everyone eats every day; Hunger & Starvation says what a missed meal costs.",
       "4": "Death is permanent. The run ends only when the whole guild is gone."
     },
     "hunger": {
       "title": "Hunger \u0026 Starvation",
-      "1": "Every member eats 1 meal a day at upkeep. Fresh food nearing spoilage is eaten first. SHARE RATIONS lets a member feed hungry groupmates from their pack.",
+      "1": "Every member eats 1 meal a day, by themselves, when the clock crosses midnight. Each takes the food nearest to spoiling, from their own pack first and then from the group's stores. SHARE RATIONS lets a member feed hungry groupmates from their pack.",
       "2": "{d1} day unfed · Hungry: {pen1} to all attributes.",
       "3": "{d2} days unfed · Starving: {pen2} to all attributes; maximum HP capped at {cap}.",
-      "4": "{d3} days unfed · Incapacitated: too weak to fight, cannot be sent into battle.",
+      "4": "{d3} days unfed · Incapacitated: still {pen3} to all attributes, too weak to fight and cannot be sent into battle.",
       "5": "{death} days unfed · starvation death: the character is gone permanently.",
       "6": "Rotten Food is eaten only on the last day before death, as a desperate last resort. It resets the hunger but sickens the eater. Eaten again while already sick, it adds Gut Rot. Strong Stomach (Gnoll) is immune.",
-      "7": "A hungry or starving character cannot heal through rest. Treefolk (Autotroph) never eat and never starve. If the whole guild starves, the campaign ends."
+      "7": "A hungry or starving character cannot heal through rest. Resting does feed the hungry first: a rest of any length, however short, makes whoever is hungry eat right away; nobody else eats early. Treefolk (Autotroph) never eat and never starve. If the whole guild starves, the campaign ends.",
+      "8": "Whatever the cause (hunger, poison or sickness), a character with any of the six attributes at zero or below dies where they stand, a frail body first. The log then reads \"Wasted away\"."
     },
     "stomp": {
       "title": "Clean Stomp & Auto-Win",
@@ -6764,24 +6772,30 @@
     },
     "poison": {
       "title": "Poison & Antidote",
-      "1": "A venomous bite forces a Constitution save (DC {dc} + the venomous creature's racial level). A failed save poisons the victim: one stack, and each stack costs points of one attribute until it wears off.",
+      "1": "A venomous bite forces a Constitution save (DC {dc} + the venomous creature's Character Level). A failed save poisons the victim: one stack, and each stack costs points of one attribute until it wears off.",
       "2": "Poison outlives the fight. One stack wears off every {spent} h of world time (Gut Rot, from rotten food, every {rot} h); a fresh bite resets the clock.",
       "3": "An Antidote is used outside combat from the band screen: the poisoned member rolls another Constitution save against the worst poison's DC. Success sheds one stack now; failure only burns the dose.",
       "4": "One Antidote per member every {hours} h, whether it worked or not."
     },
     "reading": {
       "title": "Reading a foe",
-      "1": "The first time anyone on your side sees a foe, every teammate that sees it rolls d20 + INT against DC {dc} + the foe's racial level. The best margin is shared by the side.",
+      "1": "The first time anyone on your side sees a foe, every teammate that sees it rolls d20 + INT against DC {dc} + the foe's Character Level. The best margin is shared by the side.",
       "2": "The better the margin, the more fields of the foe's card open (the ? are what you have not read yet). A failed roll reveals nothing and never lies.",
       "3": "A race the guild has fought before is {discount} easier to read, and a racial ability the guild has seen is free on the next of that race.",
       "4": "Assess ({assess} point) rolls again at +{bonus} on one foe in sight, once per foe each round."
     },
     "or": " or ",
+    "part": {
+      "combat": "The fight",
+      "body": "Body and time",
+      "work": "Work and money",
+      "world": "People and the world"
+    },
     "term": {
       "cha": "the leader's Charisma modifier",
-      "half_level": "half the leader's racial level",
+      "half_level": "half the leader's Character Level",
       "member_cha": "their Charisma modifier",
-      "racial_level": "their racial level",
+      "racial_level": "their Character Level",
       "leader_wis": "the leader's Wisdom modifier"
     }
   },
@@ -6790,7 +6804,7 @@
     "not_in_sight": "not in sight",
     "already_assessed": "already assessed this round",
     "artifact": {
-      "biwolf_leather": "+1 AC against anything that is not a humanoid.",
+      "biwolf_leather": "+1 Guard against anything that is not a humanoid.",
       "signal_horn": "Blown once per battle: allies near it gain +2 initiative."
     },
     "worn_bonus": "+{n} {attr} while worn.",

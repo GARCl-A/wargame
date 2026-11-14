@@ -54,7 +54,7 @@
             "went_in": "{n} entraram",
             "the_pack": "A matilha",
             "pack_n": "{n}",
-            "pack_lv": "{n}, nível racial {lv}",
+            "pack_lv": "{n}, Nível de Personagem {lv}",
             "downs": "{n} abatidos",
             "xp_lbl": "XP de combate · nível {level}",
             "dies_with": "o que ganhou morre com ele",
@@ -114,7 +114,7 @@
                     "why": "dos feitiços lançados"
                 },
                 "racial": {
-                    "l": "Nível racial",
+                    "l": "Nível de Personagem",
                     "why": "um nível de cada trilha é um nível da raça"
                 },
                 "dice": {
@@ -480,8 +480,8 @@
             "weapon": "Arma",
             "arms": "Braços",
             "hp": "PV",
-            "ac": "CA",
-            "md": "DM",
+            "ac": "Guarda",
+            "md": "Determinação",
             "morale": "Moral",
             "speed": "Velocidade",
             "pick_up_note": "Pegar levanta o que as suas mãos aguentam.",
@@ -489,7 +489,7 @@
             "out_of_sight": "A luta continua fora de vista…",
             "hit_points": "PV",
             "lv": "NV",
-            "level_tip": "Nível racial {level} (dados de vida) · combate {combat} · trabalho {work} · magia {magic}",
+            "level_tip": "Nível de Personagem {level} (dados de vida) · combate {combat} · trabalho {work} · magia {magic}",
             "thrown": "arremesso {n}",
             "range": "distância {n}",
             "unarmed": "Desarmado",
@@ -526,8 +526,8 @@
             "miss": "Errou",
             "crit_banner": "Acerto crítico",
             "dice_unread": "Ainda não lida: use Avaliar no inimigo para ver",
-            "dice_ac": "CA",
-            "dice_md": "DM",
+            "dice_ac": "Guarda",
+            "dice_md": "Determinação",
             "dice_dc": "CD",
             "dice_contest": "contra",
             "dice_decisive": "{why} {n} decidiu",
@@ -745,7 +745,7 @@
             "title": "Talentos de {name}",
             "sub": "<b>{race}</b> · {guild} · dia {day}",
             "racial_pick": "uma escolha racial para gastar",
-            "racial_next": "próxima escolha racial no nível racial {n} · cada nível, em qualquer trilha, soma um dado de vida",
+            "racial_next": "próxima escolha racial no Nível de Personagem {n} · cada Nível de Personagem soma um dado de vida",
             "no_school": "sem escola ainda · uma escola se abre no seu santuário",
             "xp": "{into} / {span} XP para o nível {level}",
             "last_level": "o último nível",
@@ -755,7 +755,7 @@
             },
             "level": "NÍVEL",
             "note_held": "{note} · {n} obtidos",
-            "racial_level": "nível racial {level} · PV {hp}/{max}",
+            "racial_level": "Nível de Personagem {level} · PV {hp}/{max}",
             "four": "As quatro trilhas",
             "can": "Pode pegar agora",
             "can_n": "{n} abertos",
@@ -766,7 +766,7 @@
             "head": {
                 "combat": "Cada nível ganho numa luta dá uma escolha. Um talento mais fundo exige o de cima, e nada se fecha para sempre: com os níveis, todo talento daqui pode ser obtido.",
                 "work": "Cada nível de trabalho dá uma escolha: o que um turno paga, a rapidez com que acaba, o que o corpo aguenta na estrada.",
-                "racial": "Os dons da própria raça. A trilha racial não rende nada sozinha: ela sobe com cada nível das outras três, um dado de vida cada, e a cada quinto nível racial vem uma escolha.",
+                "racial": "Os dons da própria raça. A trilha racial não rende nada sozinha: ela sobe com o Nível de Personagem, que é metade da soma dos outros três níveis. Cada Nível de Personagem é um dado de vida, e a cada quinto vem uma escolha.",
                 "magic": "A árvore do conjurador. O XP de magia vem de um inimigo abatido por um feitiço e de um feitiço estudado até o fim; ambos exigem uma escola."
             },
             "attr": {
@@ -969,7 +969,7 @@
             "rations": "Rações",
             "rotten": "{n} (tudo podre)",
             "pace": "Ritmo",
-            "over_tip": "Além do limite do líder: −{n} de defesa mental",
+            "over_tip": "Além do limite do líder: −{n} de Determinação",
             "over": "Além do limite",
             "picked_one": "{name} escolhido · arraste ou clique em outra mochila",
             "picked_many": "{items} escolhidos · arraste ou clique em outra mochila",
@@ -1270,11 +1270,11 @@
         "cond": {
             "entangled": {
                 "name": "Enredado",
-                "rule": "Não anda até o fim do seu próximo turno completo. -2 de CA."
+                "rule": "Não anda até o fim do seu próximo turno completo. -2 de Guarda."
             },
             "grappled": {
                 "name": "Agarrado",
-                "rule": "Preso com força: velocidade 0, não pode andar nem fugir. -2 de CA."
+                "rule": "Preso com força: velocidade 0, não pode andar nem fugir. -2 de Guarda."
             },
             "prone": {
                 "name": "Caído",
@@ -1282,8 +1282,8 @@
             },
             "sleeping": {
                 "name": "Dormindo",
-                "rule": "-2 de CA enquanto dorme.",
-                "rule_turns": "-2 de CA. Acorda em mais {turns} turnos."
+                "rule": "-2 de Guarda enquanto dorme.",
+                "rule_turns": "-2 de Guarda. Acorda em mais {turns} turnos."
             },
             "surprised": {
                 "name": "Surpreso",
@@ -1291,7 +1291,7 @@
             },
             "off_guard": {
                 "name": "Desprevenido",
-                "rule": "Ainda não teve turno nesta luta: -2 de CA contra todo ataque até que tenha."
+                "rule": "Ainda não teve turno nesta luta: -2 de Guarda contra todo ataque até que tenha."
             },
             "rooted": {
                 "name": "Enraizado",
@@ -1311,7 +1311,7 @@
             },
             "shield_hooked": {
                 "name": "Escudo preso",
-                "rule": "O escudo não dá CA até o fim do seu próximo turno completo."
+                "rule": "O escudo não dá Guarda até o fim do seu próximo turno completo."
             },
             "hexed": {
                 "name": "Amaldiçoado",
@@ -1319,7 +1319,7 @@
             },
             "demoralized": {
                 "name": "Desmoralizado",
-                "rule": "-1 em ataque, CA e defesa mental até o fim do seu turno."
+                "rule": "-1 em ataque, Guarda e Determinação até o fim do seu turno."
             },
             "hungry": {
                 "name": "Faminto",
@@ -1327,7 +1327,7 @@
             },
             "defending": {
                 "name": "Defendendo",
-                "rule": "+1 de CA até o início do seu próximo turno."
+                "rule": "+1 de Guarda até o início do seu próximo turno."
             },
             "invisible": {
                 "name": "Invisível",
@@ -1472,7 +1472,7 @@
             "of_race": "Da raça {race}",
             "speaks": "Fala",
             "career": "Carreira",
-            "racial_level": "nível racial {n}",
+            "racial_level": "Nível de Personagem {n}",
             "talents": "Talentos",
             "talents_taken": "{n} obtidos",
             "no_talents": "Nenhum obtido ainda.",
@@ -1662,8 +1662,8 @@
         },
         "stat": {
             "hp": "PV",
-            "ac": "CA",
-            "md": "DM",
+            "ac": "Guarda",
+            "md": "Determinação",
             "spd": "VEL",
             "init": "INIC"
         },
@@ -1737,8 +1737,8 @@
             "hands": "Mãos",
             "body": "Corpo",
             "load": "Carga",
-            "ac": "CA",
-            "md": "DM",
+            "guard": "Guarda",
+            "resolve": "Determinação",
             "spd": "VEL",
             "init": "INIC",
             "hp": "PV",
@@ -1790,7 +1790,6 @@
             "racial ability": "habilidade racial",
             "to hit": "para acertar",
             "damage bonus": "bônus de dano",
-            "mental defense": "defesa mental",
             "attributes": "atributos",
             "hit points": "pontos de vida",
             "spells": "magias",
@@ -1884,8 +1883,8 @@
         },
         "defend": {
             "name": "Defender",
-            "desc": "+1 de CA até o seu próximo turno.",
-            "label": "Defender (1 pt, +1 CA)"
+            "desc": "+1 de Guarda até o seu próximo turno.",
+            "label": "Defender (1 pt, +1 de Guarda)"
         },
         "throw": {
             "name": "Arremessar",
@@ -1896,7 +1895,7 @@
         "demoralize": {
             "name": "Desmoralizar",
             "desc": "CAR contra DM. O alvo fica desmoralizado (não pode se mover, defesas menores).",
-            "label": "Desmoralizar (1 pt, CAR contra Defesa Mental)"
+            "label": "Desmoralizar (1 pt, CAR contra Determinação)"
         },
         "flee": {
             "name": "Fugir",
@@ -1926,7 +1925,7 @@
         },
         "grab": {
             "name": "Agarrar",
-            "desc": "Agarra um inimigo adjacente e o prende no lugar (velocidade 0, −2 CA).",
+            "desc": "Agarra um inimigo adjacente e o prende no lugar (velocidade 0, −2 de Guarda).",
             "label": "Agarrar (1 pt, FOR contra 10 + FOR/DES do alvo)",
             "label_bonus": "Agarrar (1 pt, FOR{bonus:+} contra 10 + FOR/DES do alvo)"
         },
@@ -1999,9 +1998,9 @@
         },
         "armor_pierce": {
             "name": "Perfurar Armadura",
-            "desc": "2 pts: o ataque ignora o bônus de CA de uma armadura de metal vestida (couro não é perfurado).",
+            "desc": "2 pts: o ataque ignora o bônus de Guarda de uma armadura de metal vestida (couro não é perfurado).",
             "reason": "exige picareta",
-            "label": "Perfurar Armadura (2 pts, ignora a CA da armadura de metal; Brutal 1 contra inimigo de armadura de metal)"
+            "label": "Perfurar Armadura (2 pts, ignora a Guarda da armadura de metal; Brutal 1 contra inimigo de armadura de metal)"
         },
         "power_shot": {
             "name": "Tiro Poderoso",
@@ -2017,9 +2016,9 @@
         },
         "hook_shield": {
             "name": "Prender Escudo",
-            "desc": "2 pts: ataca e anula o bônus de CA do escudo do alvo até a próxima rodada.",
+            "desc": "2 pts: ataca e anula o bônus de Guarda do escudo do alvo até a próxima rodada.",
             "reason": "exige machadinha",
-            "label": "Prender Escudo (2 pts, anula a CA do escudo; Brutal 1 contra escudo)"
+            "label": "Prender Escudo (2 pts, anula a Guarda do escudo; Brutal 1 contra escudo)"
         },
         "javelin_charge": {
             "name": "Arremesso em Corrida",
@@ -2029,7 +2028,7 @@
         },
         "parry_strike": {
             "name": "Aparar e Golpear",
-            "desc": "2 pts: ataca e assume uma guarda de Defesa (+1 CA até o próximo turno).",
+            "desc": "2 pts: ataca e assume uma guarda de Defesa (+1 de Guarda até o próximo turno).",
             "reason": "exige espada",
             "label": "Aparar e Golpear (2 pts, ataque e Defender; Brutal 1 com 2+ inimigos ao alcance)"
         },
@@ -2175,22 +2174,22 @@
             "reason": "Precisa de Corda ou Correntes."
         },
         "cast_magic_missile": {
-            "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra CA: {dice} de dano. Um 20 natural rola o dado duas vezes; um 1 natural falha sem efeito."
+            "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra Guarda: {dice} de dano. Um 20 natural rola o dado duas vezes; um 1 natural falha sem efeito."
         },
         "cast_sleep": {
-            "desc": "Um inimigo a até {reach} casas, d20 + INT contra Defesa Mental: ele adormece (−2 CA) por {turns} − mod. SAB rodadas (±{noise}, no mínimo 1), acordando antes se sofrer dano ou se um aliado adjacente o acordar. Um corpo com Imunidade a Sono nunca é afetado."
+            "desc": "Um inimigo a até {reach} casas, d20 + INT contra Determinação: ele adormece (−2 de Guarda) por {turns} − mod. SAB rodadas (±{noise}, no mínimo 1), acordando antes se sofrer dano ou se um aliado adjacente o acordar. Um corpo com Imunidade a Sono nunca é afetado."
         },
         "cast_water_jet": {
-            "desc": "Um inimigo ao alcance de um arremesso de adaga ({reach} casas), d20 + INT contra CA: {dice} + INT de dano, e o jato lança o alvo 1 casa para longe do conjurador, a menos que algo esteja no caminho (nas chamas, ele queima)."
+            "desc": "Um inimigo ao alcance de um arremesso de adaga ({reach} casas), d20 + INT contra Guarda: {dice} + INT de dano, e o jato lança o alvo 1 casa para longe do conjurador, a menos que algo esteja no caminho (nas chamas, ele queima)."
         },
         "cast_dragonfire": {
-            "desc": "Um inimigo ao alcance de um arremesso de adaga ({reach} casas), d20 + INT contra CA: {dice} de dano de fogo. A magia de sangue não custa pontos de vida."
+            "desc": "Um inimigo ao alcance de um arremesso de adaga ({reach} casas), d20 + INT contra Guarda: {dice} de dano de fogo. A magia de sangue não custa pontos de vida."
         },
         "cast_grasping_roots": {
-            "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra a CA de toque (10 + DES, sem armadura nem escudo): ele anda no máximo 1 casa até o fim do seu próximo turno. Conjurar de novo renova o efeito."
+            "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra a Evasão (10 + DES, sem armadura nem escudo): ele anda no máximo 1 casa até o fim do seu próximo turno. Conjurar de novo renova o efeito."
         },
         "cast_hex": {
-            "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra Defesa Mental: −{points} em cada um dos seus seis atributos por {turns} dos seus turnos. Cada conjuração é um acúmulo próprio e os acúmulos se somam; um atributo em zero derruba o alvo."
+            "desc": "Um inimigo à vista a até {reach} casas, d20 + INT contra Determinação: −{points} em cada um dos seus seis atributos por {turns} dos seus turnos. Cada conjuração é um acúmulo próprio e os acúmulos se somam; um atributo em zero derruba o alvo."
         },
         "cast_spare_the_dying": {
             "desc": "Toque: um aliado Morrendo ao alcance se estabiliza, sem teste."
@@ -2281,12 +2280,12 @@
             },
             "phalanx": " [Falange]",
             "decisive": " [{why} {n:+} decidiu]",
-            "crit_miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> erro crítico.",
-            "spared": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> o golpe é contido; o caído é poupado.",
-            "on_fallen": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> um golpe no caído.",
-            "crit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> ACERTO CRÍTICO!",
-            "hit": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> acerta.",
-            "miss": "{head}: d20({nat}) {detail} = {total} contra CA {shown}{off_guard}{phalanx}{decisive}  -> erra."
+            "crit_miss": "{head}: d20({nat}) {detail} = {total} contra Guarda {shown}{off_guard}{phalanx}{decisive}  -> erro crítico.",
+            "spared": "{head}: d20({nat}) {detail} = {total} contra Guarda {shown}{off_guard}{phalanx}{decisive}  -> o golpe é contido; o caído é poupado.",
+            "on_fallen": "{head}: d20({nat}) {detail} = {total} contra Guarda {shown}{off_guard}{phalanx}{decisive}  -> um golpe no caído.",
+            "crit": "{head}: d20({nat}) {detail} = {total} contra Guarda {shown}{off_guard}{phalanx}{decisive}  -> ACERTO CRÍTICO!",
+            "hit": "{head}: d20({nat}) {detail} = {total} contra Guarda {shown}{off_guard}{phalanx}{decisive}  -> acerta.",
+            "miss": "{head}: d20({nat}) {detail} = {total} contra Guarda {shown}{off_guard}{phalanx}{decisive}  -> erra."
         },
         "brutal": "  {why}: Brutal {n}!",
         "damage_roll": "  Dano: {detail} = {dmg}",
@@ -2336,8 +2335,8 @@
             "other": "{actor} recarrega a arma (restam {n} virotes)."
         },
         "defend_again": "{actor} já está se defendendo (o bônus de circunstância não acumula).",
-        "defend": "{actor} se defende: +1 CA [circunstância] até o próximo turno.",
-        "defend_iron": "{actor} se defende: +1 CA [circunstância], +{iron} de Defesa Mental [Postura de Ferro] até o próximo turno.",
+        "defend": "{actor} se defende: +1 de Guarda [circunstância] até o próximo turno.",
+        "defend_iron": "{actor} se defende: +1 de Guarda [circunstância], +{iron} de Determinação [Postura de Ferro] até o próximo turno.",
         "throw": {
             "head": "{actor} arremessa {weapon:o} em {target}"
         },
@@ -2372,9 +2371,9 @@
             "head": "{actor} sopra fogo! d20({nat}) {con:+}(CON){pulled} = {total}",
             "pulled": " -{n}(não letal)",
             "sputters": "  -> o sopro se esvai.",
-            "miss": "  {target} (CA {shown}) -> erra.",
-            "crit": "  {target} (CA {shown}) -> ACERTO CRÍTICO!",
-            "hit": "  {target} (CA {shown}) -> acerta."
+            "miss": "  {target} (Guarda {shown}) -> erra.",
+            "crit": "  {target} (Guarda {shown}) -> ACERTO CRÍTICO!",
+            "hit": "  {target} (Guarda {shown}) -> acerta."
         },
         "grab": {
             "hit": "{actor} agarra {target}: d20({nat}) {bonus:+}(FOR) = {total} contra CD {dc} -> {target} está agarrado!",
@@ -2391,9 +2390,9 @@
         },
         "bite": {
             "head": "{actor} Mordida -> {target}",
-            "miss": "{head}: d20({nat}) {detail} = {total} contra CA {ac} -> erra.",
-            "hit": "{head}: d20({nat}) {detail} = {total} contra CA {ac} -> ACERTA e causa {dmg} de dano!",
-            "crit": "{head}: d20({nat}) {detail} = {total} contra CA {ac} -> CRÍTICO e causa {dmg} de dano!"
+            "miss": "{head}: d20({nat}) {detail} = {total} contra Guarda {ac} -> erra.",
+            "hit": "{head}: d20({nat}) {detail} = {total} contra Guarda {ac} -> ACERTA e causa {dmg} de dano!",
+            "crit": "{head}: d20({nat}) {detail} = {total} contra Guarda {ac} -> CRÍTICO e causa {dmg} de dano!"
         },
         "mod_bite": "Mordida em Inimigo Agarrado",
         "nonlethal_on": "{actor} contém os golpes (não letal).",
@@ -2444,7 +2443,7 @@
         "hook_shield": {
             "head": "{actor} Prender Escudo -> {target}",
             "brutal": "O gancho morde atrás do escudo",
-            "hooked": "  {actor} prende o escudo de {target} e o arranca para o lado (perde a CA do escudo)!"
+            "hooked": "  {actor} prende o escudo de {target} e o arranca para o lado (perde a Guarda do escudo)!"
         },
         "javelin_charge": {
             "head": "{actor} Arremesso em Corrida -> {target}",
@@ -2453,7 +2452,7 @@
         "parry_strike": {
             "head": "{actor} Aparar e Golpear -> {target}",
             "brutal": "Aparar e contra-atacar",
-            "stance": "  {actor} recua para uma guarda de aparo (+1 CA até o próximo turno)!"
+            "stance": "  {actor} recua para uma guarda de aparo (+1 de Guarda até o próximo turno)!"
         },
         "long_thrust": {
             "head": "{actor} Estocada Longa -> {target}"
@@ -2541,13 +2540,13 @@
         "spell": {
             "casts": "{actor} conjura {spell} em {target}!",
             "crit_miss": " Erro crítico!",
-            "hit_magic": " Acerta ({score} contra CA {ac}) e causa {dmg} de dano mágico.",
-            "hit_plain": " Acerta ({score} contra CA {ac}) e causa {dmg} de dano.",
-            "hit_fire": " Acerta ({score} contra CA {ac}) e causa {dmg} de dano de fogo.",
-            "miss": " Erra ({score} contra CA {ac}).",
+            "hit_magic": " Acerta ({score} contra Guarda {ac}) e causa {dmg} de dano mágico.",
+            "hit_plain": " Acerta ({score} contra Guarda {ac}) e causa {dmg} de dano.",
+            "hit_fire": " Acerta ({score} contra Guarda {ac}) e causa {dmg} de dano de fogo.",
+            "miss": " Erra ({score} contra Guarda {ac}).",
             "roll_md": " d20({atk}) {bonus:+}(INT) = {score} contra DM {md}",
-            "roll_ac": " d20({atk}) {bonus:+}(INT) = {score} contra CA {ac}",
-            "roll_touch": " d20({atk}) {bonus:+}(INT) = {score} contra CA de toque {ac}",
+            "roll_ac": " d20({atk}) {bonus:+}(INT) = {score} contra Guarda {ac}",
+            "roll_touch": " d20({atk}) {bonus:+}(INT) = {score} contra Evasão {ac}",
             "roll_crit_miss": "{roll} -> Erro crítico!",
             "roll_lands": "{roll} -> pega.",
             "roll_resisted": "{roll} -> resistido."
@@ -2832,12 +2831,12 @@
         "idle_pack_saddle_lets_it": "ocioso: uma Sela de Carga o deixa carregar {back_load:g} kg, um Arnês o deixa puxar {draw:g} kg",
         "hungry_day_s_starves_at": "com fome há {unfed_days} dia(s), morre de fome em {starve_days}",
         "kg": "{load:g} / {most:g} kg",
-        "attack_modifier_d_against_target": "Modificador de ataque {bab} ({src}): d20 {bonus} contra a classe de armadura do alvo",
+        "attack_modifier_d_against_target": "Modificador de ataque {bab} ({src}): d20 {bonus} contra a Guarda do alvo",
         "weapon_dice_plus_strength_on": "{w}: dados da arma mais força em um acerto",
         "distance_this_weapon_can_strike": "Distância que esta arma alcança",
         "arrows_or_bolts_left_across": "Flechas ou virotes restantes nas aljavas carregadas; sem eles a arma é brandida como um corpo a corpo desajeitado",
         "no_arrows_or_bolts_carry": "Sem flechas ou virotes: leve uma aljava com flechas, ou a arma é brandida como um corpo a corpo desajeitado",
-        "ac": "+{armor} CA",
+        "ac": "+{armor} de Guarda",
         "spd": "  -{speed_penalty} VEL",
         "more_may_join_on_their": "mais {value} podem entrar por sua palavra",
         "none_left": "nenhum restante",
@@ -2852,7 +2851,7 @@
         "make_this_member_lead_whole": "Faz este membro liderar a guilda inteira",
         "group_leader_2": "Líder do grupo",
         "leads_holds_up_to_members": "Lidera {band}: comporta até {cap} membros",
-        "group_size_capacity_is_cha": "A capacidade do grupo é 3 + modificador de CAR + metade do nível racial",
+        "group_size_capacity_is_cha": "A capacidade do grupo é 3 + modificador de CAR + metade do Nível de Personagem",
         "would_hold_up_to_members": "Comportaria até {cap} membros",
         "make_group_leader": "TORNAR LÍDER DO GRUPO",
         "make_this_member_leader_of": "Faz este membro líder de {band}",
@@ -3429,7 +3428,7 @@
         "no_dex_cap": "sem limite de DES",
         "dex_cap": "limite de DES {max_dex}",
         "spd": "  ·  -{speed_penalty} vel",
-        "ac": "+{ac} CA  ·  {cap}{spd}",
+        "ac": "+{ac} de Guarda  ·  {cap}{spd}",
         "you_sell_at_of_price": "você vende a {int}% do preço",
         "fixed_prices": "preços fixos",
         "no_haggling": "sem pechincha",
@@ -3830,7 +3829,7 @@
         "holds": "{display_name} guarda {sum_line}",
         "bail_buys_on_pitch_and": "A fiança dá +{bail_bonus} no convite, e cada dobra da oferta mais +1. Só é paga se o convite vencer; se for recusado, você fica com as moedas, e quem convidou não pode tentar de novo até as celas girarem.",
         "opposite_alignment_docks_pitch_step": "Alinhamento oposto tira {alignment_penalty} degrau do convite, e cada membro acima de {free_slots} tira mais {size_penalty}. Se for recusado, quem convidou não pode tentar esse estranho de novo até a multidão mudar.",
-        "hp_ac": "{kind} · PV {hp_max} · CA {ac}",
+        "hp_ac": "{kind} · PV {hp_max} · Guarda {ac}",
         "scroll_of": "Pergaminho de {name}",
         "dictionary_of": "Dicionário de {study_target}",
         "no_magic": "sem magia",
@@ -3917,7 +3916,7 @@
         "hands_over_sealed_chest_outpost": "{name} entrega o baú lacrado, e o posto dá uma carta de recibo em troca.",
         "treefolk_joins_your_group_for": "{name} (Treefolk) se junta ao seu grupo para a mentoria.",
         "recruit_steps_into_garrison": "O recruta entra para a guarnição. Recompensa de {fmt_money} recebida!",
-        "offer_req": "um recruta Treefolk inexperiente se junta ao grupo  ·  treine-o até o nível racial 2 e depois traga-o de volta  ·  {fmt_money}, e o recruta deixa a guilda",
+        "offer_req": "um recruta Treefolk inexperiente se junta ao grupo  ·  treine-o até o Nível de Personagem 2 e depois traga-o de volta  ·  {fmt_money}, e o recruta deixa a guilda",
         "party_purse": "bolsa do grupo",
         "supply_runs": "viagens de suprimentos",
         "sealed_chest": "O Baú Lacrado",
@@ -3927,7 +3926,7 @@
         "hand_over_chest": "Entregar o baú",
         "accept_recruit": "Aceitar o recruta",
         "treefolk_recruit_fell_in_battle": "o recruta Treefolk caiu em batalha: a mentoria fracassou",
-        "racial_level": "nível racial {lvl} / 2",
+        "racial_level": "Nível de Personagem {lvl} / 2",
         "deliver_recruit": "Entregar o recruta",
         "frontier_supply_run": "Viagem de Suprimentos à Fronteira",
         "to_frontier_outpost_and_back": "até o Posto da Fronteira e de volta",
@@ -4267,8 +4266,8 @@
         "champion_of_pit": "Campeão da Fossa",
         "not_yet_sworn_in": "Ainda sem juramento",
         "no_orders": "sem ordens",
-        "armour_class": "Classe de armadura",
-        "mental_defense": "Defesa mental",
+        "armour_class": "Guarda",
+        "mental_defense": "Determinação",
         "feeds_on_light": "Se alimenta de luz",
         "days_of_food": "dias de comida",
         "nothing_to_eat_in_pack": "nada para comer na mochila",
@@ -4302,7 +4301,7 @@
         "needs_first": "{name} exige {talent} antes",
         "redundant_with_ability": "{name} não é oferecido: {ability} já faz tudo o que ele faz, e faz melhor",
         "has_no_school_yet_school": "{name} ainda não tem escola: uma escola se abre com a iniciação em seu santuário",
-        "next_racial_pick_comes_at": "a próxima escolha racial vem no nível racial {nxt}",
+        "next_racial_pick_comes_at": "a próxima escolha racial vem no Nível de Personagem {nxt}",
         "has_no_pick_to_spend": "{name} não tem escolha de {track} para gastar; uma vem com o próximo nível",
         "ready_to_take": "Pronto para pegar",
         "track": {
@@ -4326,7 +4325,7 @@
             "wis": "SAB",
             "cha": "CAR",
             "max_hp": "PV máx.",
-            "ac": "CA",
+            "ac": "Guarda",
             "mental_def": "Def. Mental",
             "speed": "Velocidade",
             "load_limit": "Limite de carga"
@@ -4593,7 +4592,7 @@
             "combat": "Nível de combate",
             "work": "Nível de trabalho",
             "magic": "Nível de magia",
-            "racial": "Nível racial",
+            "racial": "Nível de Personagem",
             "hit_dice": "Dados de vida",
             "hp_max": "PV máx."
         }
@@ -4894,7 +4893,7 @@
         "crit_fumble": "crítico 20, falha 1",
         "thrown": "  ·  {weapon} arremessável",
         "dying": "morrendo {death_clock}/{dying_turns}",
-        "ac": "{armor_name}  ·  +{a} CA"
+        "ac": "{armor_name}  ·  +{a} de Guarda"
     },
     "settings": {
         "off": "{name}: DESLIGADO",
@@ -4989,8 +4988,8 @@
             "one": "resta {n} dia",
             "other": "restam {n} dias"
         },
-        "armor_note": "+{ac} CA",
-        "armor_note_guard": "+{ac} CA · +{guard} guarda",
+        "armor_note": "+{ac} de Guarda",
+        "armor_note_guard": "+{ac} de Guarda · +{guard} de Disfarce",
         "tip": {
             "two_handed": "Duas mãos",
             "one_handed": "Uma mão",
@@ -4999,13 +4998,13 @@
             "melee": "Corpo a corpo",
             "weapon": "Arma: {n}d{faces} de dano  ·  {hands}  ·  {reach}.",
             "thrown": "Arremesso: pode ser arremessada até {m}m.",
-            "armor": "Armadura: +{ac} de Classe de Armadura.",
-            "max_dex": "O bônus máximo de Destreza na CA é limitado a +{max_dex}.",
+            "armor": "Armadura: +{ac} de Guarda.",
+            "max_dex": "O bônus máximo de Destreza na Guarda é limitado a +{max_dex}.",
             "heavy": "Pesada: reduz a velocidade de movimento em {speed} casas.",
-            "disguise": "Disfarce: +{guard} no teste contra a guarda para quem tem ficha criminal.",
-            "shield": "Escudo: +{ac} de Classe de Armadura quando equipado na mão secundária.",
+            "disguise": "Disfarce: +{guard} no teste da Guarda da Cidade para quem tem ficha criminal.",
+            "shield": "Escudo: +{ac} de Guarda quando equipado na mão secundária.",
             "artifact": "Artefato: usado em seu próprio espaço.",
-            "biwolf": "Passivo: +1 CA contra qualquer coisa que não seja humanoide.",
+            "biwolf": "Passivo: +1 de Guarda contra qualquer coisa que não seja humanoide.",
             "thunderhide": "Passivo: +1 de Força enquanto vestido.",
             "artifact_action": "Artefato: usado em seu próprio espaço, concede uma ação de combate.",
             "signal_horn": "Uma vez por batalha, 2 pontos: aliados a até 10 casas ganham +2 de iniciativa.",
@@ -6150,7 +6149,11 @@
             "dying": "Morrendo",
             "knocked_out": "Nocauteado",
             "reach": "Alcance",
-            "distance": "Distância"
+            "distance": "Distância",
+            "character_level": "Nível de Personagem",
+            "guard": "Guarda",
+            "evasion": "Evasão",
+            "resolve": "Determinação"
         }
     },
     "desc": {
@@ -6163,12 +6166,12 @@
             "cleave": "2 pts: um golpe; com um segundo inimigo ao lado dos dois, o arco também o atinge, cada golpe com +2 para acertar.",
             "repel_strike": "2 pts: um golpe que dá Empurrão no alvo (+2 no teste); contra um inimigo com as costas numa parede ou num corpo, o golpe é Brutal 1, +1d4.",
             "maiming_strike": "2 pts: um golpe que reduz à metade a velocidade do alvo até a próxima rodada; contra um inimigo Enredado, Dormindo, Surpreso ou Desmoralizado, +2 para acertar e o golpe é Brutal 1.",
-            "armor_pierce": "2 pts: um golpe que ignora a CA de uma armadura de metal vestida; contra um inimigo de armadura de metal, o golpe é Brutal 1.",
+            "armor_pierce": "2 pts: um golpe que ignora a Guarda de uma armadura de metal vestida; contra um inimigo de armadura de metal, o golpe é Brutal 1.",
             "power_shot": "2 pts: um tiro com +FOR de dano; a metade do alcance do arco ou mais longe, +FOR (no mínimo +1) e o golpe é Brutal 1.",
             "extreme_shot": "2 pts: dobra a distância do ataque para 36 casas.",
-            "hook_shield": "2 pts: contra um inimigo com escudo, prende o escudo primeiro (sem CA do escudo até a próxima rodada, este golpe incluso) e depois dá um golpe Brutal 1. Sem escudo, é um golpe comum.",
+            "hook_shield": "2 pts: contra um inimigo com escudo, prende o escudo primeiro (sem Guarda do escudo até a próxima rodada, este golpe incluso) e depois dá um golpe Brutal 1. Sem escudo, é um golpe comum.",
             "javelin_charge": "1 pt: arremessa a lança depois de se mover neste turno, com +1d4 de dano extra.",
-            "parry_strike": "2 pts: um golpe e Defendendo (+1 CA) até a próxima rodada; com dois ou mais inimigos ao alcance, o golpe é Brutal 1.",
+            "parry_strike": "2 pts: um golpe e Defendendo (+1 de Guarda) até a próxima rodada; com dois ou mais inimigos ao alcance, o golpe é Brutal 1.",
             "wrest": "2 pts, só de mãos nuas: toma a arma de um inimigo armado adjacente (d20 + Destreza contra 15 + a Força dele) e, se puder empunhá-la, golpeia com ela na hora.",
             "long_thrust": "2 pts: um golpe uma casa além do alcance da arma, +1 para acertar: o único golpe que chega tão longe.",
             "trample": "2 pts, só de cascos: um golpe, depois um empurrão, depois uma tentativa de derrubar; cada passo só vale se o inimigo ainda estiver de pé e ao alcance.",
@@ -6182,7 +6185,7 @@
             "NIMBLE": "Mais difícil de acertar, e preciso com armas de acuidade.",
             "GENIUS": "Fabrica mais rápido, lê manuais e faz pesquisa.",
             "WISE": "Age mais cedo numa luta, resiste à mente e trata ferimentos em campo.",
-            "RISKY": "Uma escolha difícil: um corpo frágil, que exige jogar em torno dele. Pouca Força: equipamento que não consegue carregar. Pouca Constituição: cura devagar e ganha pouco PV por nível. Atributos muito baixos: fome ou veneno podem levar Força, Destreza ou Constituição a zero, e isso mata. Nem sempre ruim: um ótimo líder pode ser frágil."
+            "RISKY": "Uma escolha difícil: um corpo frágil, que exige jogar em torno dele. Pouca Força: equipamento que não consegue carregar. Pouca Constituição: cura devagar e ganha pouco PV por nível. Atributos muito baixos: fome ou veneno podem levar qualquer atributo a zero, e isso mata. Nem sempre ruim: um ótimo líder pode ser frágil."
         },
         "vocation": {
             "warband": "+{morale_bonus} de moral inicial para cada membro numa luta.",
@@ -6233,7 +6236,7 @@
             "autotroph": "faz fotossíntese: nunca precisa comer, imune às regras de fome.",
             "ferocity": "uma vez por batalha, quando abatido cai a 0 PV e Morrendo, mas só tomba no fim do seu turno (o teste contra a morte corre normalmente a partir daí).",
             "flight": "voa: move-se livremente em três dimensões (sobe e desce poços sem teste, ignora o terreno) e nunca sofre dano de queda.",
-            "spider_venom": "uma mordida que tira sangue força um teste de Constituição (CD 11 + o nível racial da aranha), ou a vítima é envenenada: Veneno de Aranha Gigante, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Destreza.",
+            "spider_venom": "uma mordida que tira sangue força um teste de Constituição (CD 11 + o Nível de Personagem da aranha), ou a vítima é envenenada: Veneno de Aranha Gigante, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Destreza.",
             "serpentine": "um corpo que ataca antes de ser visto: todo ataque é de acuidade (Destreza para acertar e para o dano), e o ataque desarmado é uma mordida de Presas.",
             "wolf_pack_tactics": "+1 de dano [corpo a corpo] (uma mordida de verdade); +2 [circunstância] no ataque por aliado já no alvo, não só o primeiro.",
             "reach": "braços longos num corpo enorme: ataques corpo a corpo alcançam 1 casa a mais."
@@ -6342,7 +6345,7 @@
             "faith_necromancer": "Os soldados que tombaram no Campo de Batalha não ficam mortos: dias depois eles se levantam e andam. Alguém lá fora os ergue, e ninguém viu quem. Vá à linha de frente, ache quem acorda os mortos e derrube.",
             "nature_wildfire": "Um Ogro trouxe um bando de goblins para os Ermos para limpar terreno para uma fortaleza, e eles queimam a floresta para isso, só que mal. Cada fogo que acendem foge do controle. Ensine-os, ou detenha-os, e apague os fogos antes que se espalhem. O Ogro está no centro de tudo.",
             "blood_clutch": "O Códice nomeia uma toca abaixo da Mina, onde as galerias esquentam: um dragão dorme ali sobre a ninhada. Vasculhe as galerias fundas, desça e traga-nos um dos ovos: a própria linhagem, ainda não chocada. O que mais você trouxer de lá é seu.",
-            "ledger_treefolk": "O Comandante Varkas do Posto de Comando confia à sua guilda um recruta novo do Povo-Árvore. Treine-o na estrada até dominar suas raízes raciais (nível racial 2) e devolva-o à guarnição.",
+            "ledger_treefolk": "O Comandante Varkas do Posto de Comando confia à sua guilda um recruta novo do Povo-Árvore. Treine-o na estrada até dominar suas raízes raciais (Nível de Personagem 2) e devolva-o à guarnição.",
             "farmer_daughter": "A filha de Edric Ashvale partiu para a Catedral da Fé e não manda notícia desde então. Ele não pode deixar a fazenda e não vende nada até ela voltar. Pergunte por aí, descubra aonde ela foi e traga-a de volta viva. Ele paga o que tem, e o Símbolo Sagrado que ela carrega é seu.",
             "tavern_potatoes": "O caldeirão de Tobbin está vazio e a despensa também. Vá até a Fazenda, compre três Batatas com o seu dinheiro e traga-as de volta à Taverna em cinco dias. Ela paga vinte cobres, e avisa: uma Batata na sua mochila é uma Batata que você pode comer."
         },
@@ -6365,7 +6368,7 @@
             "library_trusted": "Complete uma segunda tarefa para a biblioteca.",
             "apothecary_mushrooms": "Traga ao boticário quinze cogumelos vermelhos.",
             "apothecary_venom": "Traga ao boticário três glândulas de veneno.",
-            "ledger_hold_mentoring": "Treine um recruta designado do Povo-Árvore até o nível racial 2 e entregue-o ao Posto de Comando.",
+            "ledger_hold_mentoring": "Treine um recruta designado do Povo-Árvore até o Nível de Personagem 2 e entregue-o ao Posto de Comando.",
             "blood_codex": "Leve o Códice Antigo ao Santuário de Sangue.",
             "nature_codex": "Leve o Códice Antigo ao Bosque da Natureza.",
             "faith_codex": "Leve o Códice Antigo à Catedral da Fé.",
@@ -6420,18 +6423,18 @@
             "fleet": "+2 casas de Velocidade.",
             "nimble_skirmisher": "+2 de dano nos ataques corpo a corpo de Destreza contra alvos desprevenidos.",
             "single_combat": "Seus golpes realizados com armas que têm acuidade ganham Brutal 1 se:\n- Uma de suas mãos estiver vazia e\n- Nenhum personagem além do alvo estiver adjacente a você.",
-            "duelist": "+1 de dano e +2 de CA com uma arma de acuidade enquanto a outra mão está vazia (sem escudo, sem luz).",
+            "duelist": "+1 de dano e +2 de Guarda com uma arma de acuidade enquanto a outra mão está vazia (sem escudo, sem luz).",
             "free_step": "Uma vez por turno, dê 1 passo de 1 casa sem gastar ponto de ação.",
             "tough": "+1 de Constituição.",
             "hardy": "+1 de PV máximo por cada Dado de Vida que você tem.",
             "recovery": "Recupera 1 PV depois de cada luta em que sobreviver.",
-            "bulwark": "+1 de CA.",
+            "bulwark": "+1 de Guarda.",
             "armor_bearer": "Reduz em até 6 kg o peso carregado da armadura equipada.",
             "alert": "+1 de Sabedoria.",
             "quick_wits": "+2 de iniciativa.",
-            "peripheral_vision": "Quando desprevenido, sua CA é reduzida em apenas 1 em vez de 2.",
-            "iron_will": "+2 de Defesa Mental.",
-            "iron_stance": "Usar Defender concede +2 de Defesa Mental, além da CA, até o seu próximo turno.",
+            "peripheral_vision": "Quando desprevenido, sua Guarda é reduzida em apenas 1 em vez de 2.",
+            "iron_will": "+2 de Determinação.",
+            "iron_stance": "Usar Defender concede +2 de Determinação, além da Guarda, até o seu próximo turno.",
             "imposing": "+1 de Carisma.",
             "menacing": "+2 nos testes de Desmoralizar.",
             "wordless_menace": "Desmoralizar funciona contra um humanoide que não fala seu idioma, se os dois se veem a até 6 quadrados; o teste tem -2.",
@@ -6490,7 +6493,7 @@
             "centaur_mount": "Suas costas fortes: permite que um aliado Médio ou Pequeno monte em você.",
             "giant_grip": "Força física imensa: empunha armas um tamanho acima do seu (Grande para um Golias, Enorme para um Ogro).",
             "mighty_shove": "Seu Empurrão lança o alvo 3 casas para trás e causa 1d6; o que o parar no caminho (uma parede, ou um corpo, que também sofre o 1d6) causa mais 1d6.",
-            "phalanx": "Disciplina marcial: +1 de CA se estiver adjacente a pelo menos um aliado.",
+            "phalanx": "Disciplina marcial: +1 de Guarda se estiver adjacente a pelo menos um aliado.",
             "organic_harvester": "Instinto de catador: 25% de chance por tipo de saque orgânico de achar mais carne ou pele depois de uma batalha com feras.",
             "corpse_eater": "Banquete brutal: gaste 1 pt para comer um inimigo morto, saciando a fome e desmoralizando os inimigos que o virem.",
             "gnome_magic_excitement": "Entusiasmo pelo desconhecido: no primeiro dia estudando uma magia nova, rola duas vezes o progresso.",
@@ -6499,12 +6502,12 @@
             "dwarf_crafting": "Seu ofício ancestral: você aprende as receitas para forjar o Machado, o Escudo e a Armadura Enânicos.",
             "kobold_trapper": "Mecanismos astutos: você aprende as receitas das armadilhas de Urso e de Alarme, e pode armá-las.",
             "aurochs_might": "Uma chifrada que ergue um homem: +5 casas de velocidade e +3 de dano nos ataques corpo a corpo.",
-            "thick_hide": "+1 de CA.",
+            "thick_hide": "+1 de Guarda.",
             "gore_charge": "Depois de andar 4+ casas neste turno, um acerto corpo a corpo também lança o alvo 2 casas em linha reta para trás.",
             "deep_miner": "À vontade debaixo da montanha: a chance de uma matilha encontrar sua turma ao coletar na Mina é 25% menor.",
             "grudge": "Um anão nunca esquece: +1 para acertar quem o machucou nesta luta.",
             "self_repair": "Suas peças se consertam sozinhas: recupera 1 PV depois de cada luta em que sobreviver.",
-            "iron_plating": "+1 de CA.",
+            "iron_plating": "+1 de Guarda.",
             "cavalry_charge": "Seu cavaleiro golpeia com o seu peso por trás do golpe: +2 para acertar para quem monta em você, num turno em que você se moveu.",
             "lift_rider": "1 ponto: lança um aliado Pequeno ou Médio adjacente, desperto ou caído, sobre suas costas e o carrega enquanto se move.",
             "run_down": "Depois de andar 4 ou mais casas neste turno, seus ataques (corpo a corpo, arremesso ou tiro) ganham +1 para acertar e +2 de dano.",
@@ -6513,17 +6516,17 @@
             "blood_frenzy": "+2 de dano nos ataques corpo a corpo contra um alvo abaixo da metade dos PV.",
             "bloodscent": "Você fareja os feridos: sabe onde está cada inimigo abaixo da metade dos PV em até 6 casas, visto ou não.",
             "arcane_curiosity": "+1 casa de alcance com magias que não são corpo a corpo.",
-            "underfoot": "+2 de CA contra atacantes de tamanho Grande ou maior.",
+            "underfoot": "+2 de Guarda contra atacantes de tamanho Grande ou maior.",
             "small_appetite": "Um goblin vive de restos: você precisa de uma refeição só dia sim, dia não.",
             "under_the_whip": "+1 para acertar enquanto um aliado de nível de combate maior que o seu estiver a até 6 casas.",
             "stone_endurance": "Uma vez por luta, o primeiro golpe que o machucar causa 1d4 + seu modificador de Constituição a menos.",
             "arena_born": "+1 para acertar nas lutas da arena.",
             "sticky_tongue": "Um Chicote que acerta também agarra o alvo e o puxa 1 casa.",
             "frog_leap": "+2 casas em cada Saltar.",
-            "brave": "+2 de Defesa Mental.",
+            "brave": "+2 de Determinação.",
             "second_breakfast": "Recupera +1 PV a mais a cada 8 horas de descanso ininterrupto.",
             "quartermaster": "Um acampamento organizado: +2 na rolagem diária de coesão de um grupo sobrecarregado que você lidera.",
-            "hold_the_line": "Enquanto você Defende, cada aliado adjacente a você tem +1 de CA.",
+            "hold_the_line": "Enquanto você Defende, cada aliado adjacente a você tem +1 de Guarda.",
             "ambush_predator": "+2 para acertar um inimigo desprevenido.",
             "tail_sweep": "2 pontos: sua cauda varre dois inimigos adjacentes, com um ataque desarmado e um Empurrão em cada um.",
             "polyglot": "+2 nas rolagens de progresso ao estudar um idioma estrangeiro.",
@@ -6541,7 +6544,7 @@
             "trap_salvage": "Depois de uma luta vencida, suas armadilhas que nunca dispararam voltam para a sua mochila.",
             "savage_attacks": "Seu Acerto crítico é Brutal 1.",
             "war_cry": "+1 nos testes de Desmoralizar.",
-            "tiny_target": "+2 de CA contra ataques à distância e de arremesso.",
+            "tiny_target": "+2 de Guarda contra ataques à distância e de arremesso.",
             "pixie_dust": "1 ponto: um aliado adjacente alça voo até o fim do próximo turno dele.",
             "bountiful_harvest": "Você floresce duas vezes à meia-noite, e sua fruta cura 1d4 PV de quem a comer.",
             "thornskin": "Quem o acerta no corpo a corpo sofre 1 de dano.",
@@ -6554,9 +6557,9 @@
             "spin_web": "Tece uma armadilha de teia ao seu lado, tão larga quanto o seu corpo (1x1, 2x2 ou 3x3): o primeiro inimigo a tocá-la fica preso, sem poder andar no próximo turno.",
             "serpent_growth": "Você cresce além das suas espirais: seu tamanho sobe um degrau (Pequeno para Médio).",
             "great_serpent": "Uma segunda muda: seu tamanho sobe mais um degrau (Médio para Grande, 2x2).",
-            "snake_venom": "Suas presas escorrem veneno: uma mordida que machuca força um teste de Constituição (CD 11 + seu nível racial), ou a vítima é envenenada, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Constituição.",
+            "snake_venom": "Suas presas escorrem veneno: uma mordida que machuca força um teste de Constituição (CD 11 + seu Nível de Personagem), ou a vítima é envenenada, um acúmulo a mais a cada teste falho, cada um comendo um ponto de Constituição.",
             "dire_growth": "Você cresce além dos seus parentes: seu tamanho sobe um degrau (um Lobo se torna Grande).",
-            "dragon": "Sangue de dragão corre em você: seu couro endurece em escamas (+1 de CA).",
+            "dragon": "Sangue de dragão corre em você: seu couro endurece em escamas (+1 de Guarda).",
             "dragon_breath": "2 pontos: sopra um cone de 3 casas de profundidade (1, 3 e 5 de largura); uma rolagem de ataque contra todos nele, aliados inclusive, 2d6 de dano em cada acerto.",
             "sweeping_claws": "Suas garras varrem em arcos amplos e letais: ganham o traço Ceifar, atingindo dois inimigos adjacentes de uma vez.",
             "draconic_wings": "Enormes asas coriáceas o levam ao ar: você ganha voo (move-se livremente em terreno 3D e poços, imune a dano de queda) e sua velocidade sobe para 12 casas.",
@@ -6566,19 +6569,23 @@
             "spell_focus": "+1 para acertar com ataques de magia.",
             "destructive_casting": "+1 de dano com magias de dano.",
             "blessed_hands": "+1 PV restaurado com magias de cura.",
-            "focused_will": "+1 de Defesa Mental.",
+            "focused_will": "+1 de Determinação.",
             "far_cast": "+1 casa de alcance com magias que não são corpo a corpo."
         },
         "keyword": {
             "brutal": "Brutal N: o golpe rola o dano da arma N vezes a mais, modificadores incluídos, e soma tudo. Ainda é um só golpe com uma só rolagem de acerto. Brutal de várias fontes se soma: Brutal 1 e Brutal 1 dão Brutal 2.",
             "morale": "Moral: a coragem de um combatente numa luta mortal, com um valor inicial que também é o seu teto. Cai quando aliados caem, quando o combatente está muito ferido e quando é Desmoralizado, e sobe quando o seu lado derruba um inimigo. Em 0 ou menos o combatente entra em fuga.",
-            "critical_hit": "Acerto crítico: um 20 natural na rolagem de acerto. Acerta qualquer CA, e o golpe inteiro (dados, modificadores, bônus, Brutal) é multiplicado por último, por 2, ou por 3 numa arma que diga isso.",
+            "critical_hit": "Acerto crítico: um 20 natural na rolagem de acerto. Acerta qualquer Guarda, e o golpe inteiro (dados, modificadores, bônus, Brutal) é multiplicado por último, por 2, ou por 3 numa arma que diga isso.",
             "flanked": "Flanqueado: um inimigo está flanqueado quando você e um aliado estão ao lado dele, em lados opostos, e um inimigo flanqueado está desprevenido. Um aliado apenas ao lado do inimigo não é um flanco.",
             "shove": "Empurrão: move o alvo 1 casa em linha reta para trás. Um buraco atrás o derruba; uma parede ou um corpo atrás detém o empurrão. Empurrar, Rechaçar e Varrida de Cauda empurram; Empurrão Poderoso arremessa o alvo 3 casas.",
             "dying": "Morrendo: com 0 PV o combatente cai na sua casa e o relógio da morte corre. No 4º turno caído faz um teste de morte (d20, 11 ou mais vive: fica Nocauteado; menos, morre). Cada golpe num corpo morrendo avança o relógio uma vez. Estabilizar e Primeiros Socorros o salvam na hora.",
             "knocked_out": "Nocauteado: 0 PV e inconsciente, fora da luta; sobrevive à batalha. Um golpe num corpo nocauteado o devolve a Morrendo. Um inimigo derrubado por golpe não letal fica nocauteado, não morrendo.",
             "reach": "Alcance: o quão longe um ataque corpo a corpo pode ser feito, em casas. Toda arma tem Alcance 1 (as casas adjacentes), então só a mais longa diz isso: a Glaive tem Alcance 2.",
-            "distance": "Distância: o quão longe um tiro voa, em casas: a Distância 18 de uma Besta, o Arremesso 6 de uma arma arremessada. É o alcance de um ataque à distância, nunca de um corpo a corpo, que tem Alcance."
+            "distance": "Distância: o quão longe um tiro voa, em casas: a Distância 18 de uma Besta, o Arremesso 6 de uma arma arremessada. É o alcance de um ataque à distância, nunca de um corpo a corpo, que tem Alcance.",
+            "character_level": "Nível de Personagem: o nível geral de um personagem, metade da soma dos níveis de combate, trabalho e magia. Cada um é um dado de vida, e as escolhas de talentos da própria raça vêm em intervalos regulares. Ele também define quantos recrutas um líder pode patrocinar e o tamanho do grupo que lidera, e a Moral, os testes de veneno e a leitura de um inimigo partem dele.",
+            "guard": "Guarda: o número que um ataque tem de alcançar para acertar. 10 + o modificador de Destreza (limitado pela armadura) + armadura, escudo, talentos, tamanho e bônus naturais. Um ataque que iguala ou supera esse número causa dano.",
+            "evasion": "Evasão: o número que uma magia que só precisa tocar o alvo tem de alcançar: 10 + o modificador de Destreza (sem o limite da armadura) + talentos, tamanho e bônus naturais. Armadura e escudo nunca somam nela.",
+            "resolve": "Determinação: a firmeza mental de um combatente, o número que Desmoralizar, Sono e as outras magias da mente têm de alcançar: 10 + o modificador de Sabedoria + talentos. Um grupo esticado além do limite do líder reduz a Determinação dos seus membros, e o teste diário que decide quem sai é feito contra ela."
         }
     },
     "tutorial": {
@@ -6647,17 +6654,17 @@
                 "title": "Flanco",
                 "body": [
                     "Um inimigo está flanqueado quando dois combatentes do mesmo lado ficam em lados opostos dele: a linha entre eles precisa cruzar o inimigo, e a diagonal conta.",
-                    "Quem está flanqueado fica desprevenido, -{ac} de CA contra todo ataque, corpo a corpo, à distância ou arremessado. Vale para os dois lados: cerque um inimigo por dois lados e não deixe dois inimigos prenderem um dos seus."
+                    "Quem está flanqueado fica desprevenido, -{ac} de Guarda contra todo ataque, corpo a corpo, à distância ou arremessado. Vale para os dois lados: cerque um inimigo por dois lados e não deixe dois inimigos prenderem um dos seus."
                 ],
                 "foe": {
-                    "stamp": "-{ac} CA",
+                    "stamp": "-{ac} de Guarda",
                     "rule": "Você flanqueia um inimigo",
-                    "text": "Um dos seus e um aliado em lados opostos dele: a CA dele cai {ac} contra os dois."
+                    "text": "Um dos seus e um aliado em lados opostos dele: a Guarda dele cai {ac} contra os dois."
                 },
                 "you": {
                     "stamp": "Flanqueado",
                     "rule": "Um dos seus está flanqueado",
-                    "text": "Dois inimigos em lados opostos o atacam com -{ac} de CA. Saia da linha ou derrube um deles."
+                    "text": "Dois inimigos em lados opostos o atacam com -{ac} de Guarda. Saia da linha ou derrube um deles."
                 },
                 "none": {
                     "stamp": "Sem flanco",
@@ -6696,7 +6703,7 @@
                 "title": "Identidade e liderança",
                 "body": [
                     "O nome e a cor do estandarte acompanham a guilda durante toda a partida.",
-                    "O líder pechincha pela guilda e lidera qualquer grupo em que esteja. Você tem uma troca grátis depois; a partir daí só a morte o substitui. Cada cartão mostra quantas pessoas aquele candidato poderia recrutar como líder: {base} + modificador de Carisma + nível racial."
+                    "O líder pechincha pela guilda e lidera qualquer grupo em que esteja. Você tem uma troca grátis depois; a partir daí só a morte o substitui. Cada cartão mostra quantas pessoas aquele candidato poderia recrutar como líder: {base} + modificador de Carisma + Nível de Personagem."
                 ]
             }
         },
@@ -6724,7 +6731,7 @@
                 "body": [
                     "Os membros são listados por grupo; clique num para ver a ficha, os níveis e os talentos. GERENCIAR EQUIPAMENTO, embaixo, abre o grupo do membro selecionado para mover equipamento entre eles.",
                     "DIVIDIR RAÇÕES deixa os colegas de grupo comerem da mochila daquele membro. Um dia sem comer: com fome ({pen} nos atributos). Dois: faminto (PV máximo {cap}). Três: fraco demais para lutar. Quatro: morto.",
-                    "A fome também corrói os números: se Força, Destreza ou Constituição chegar a zero, o personagem morre, e um corpo frágil chega lá primeiro. O registro então diz \"Definhou\".",
+                    "A fome também corrói os números: se qualquer atributo chegar a zero, o personagem morre, e um corpo frágil chega lá primeiro. O registro então diz \"Definhou\".",
                     "A morte é permanente; a partida só acaba quando a guilda inteira se foi."
                 ],
                 "suggestion": "A aba REPUTAÇÕES guarda seus objetivos e o que cada facção quer."
@@ -6813,7 +6820,7 @@
         "level_up": {
             "title": "Um novo nível",
             "body": [
-                "Um novo nível traz uma escolha de talento: ESCOLHER TALENTOS a gasta agora, ou depois, pelo elenco. Um novo nível racial também rola mais um dado de vida."
+                "Um novo nível traz uma escolha de talento: ESCOLHER TALENTOS a gasta agora, ou depois, pelo elenco. Um novo Nível de Personagem também rola mais um dado de vida."
             ]
         },
         "reward": {
@@ -6836,7 +6843,7 @@
             "body": [
                 "Escolha um estranho e depois quem do grupo faz o convite: Carisma contra Carisma, num idioma que os dois falem. Cada membro da guilda além de {free} custa {size_pen}, e cada passo de alinhamento de distância {align_pen}. Um convite falho não pode ser repetido por aquele membro até a reserva renovar na semana seguinte.",
                 "Alinhamento é como um personagem enxerga ordem e moral: Leal, Neutro ou Caótico, e Bom, Neutro ou Mau. O convite é o d20 + modificador de Carisma de quem convida + os modificadores abaixo contra o d20 + modificador de Carisma do estranho, e quem convida precisa superar. Cada passo de alinhamento de distância em um dos eixos é -{align_pen}, até quatro passos: um recrutador Leal e Bom convence outro Leal e Bom muito mais fácil que um Caótico e Mau. Escolha para o convite quem tem o alinhamento mais próximo do estranho.",
-                "Cada membro pode patrocinar {base} + seu modificador de Carisma recrutas; o líder da guilda soma o nível racial.",
+                "Cada membro pode patrocinar {base} + seu modificador de Carisma recrutas; o líder da guilda soma o Nível de Personagem.",
                 "ESTUDAR aluga um quarto (${study} por dia) para aprender um idioma de um Dicionário, ou uma magia do seu Pergaminho, se o aluno tiver essa escola. APRESENTAR manda quem tem um Instrumento Musical para o palco atrás de gorjetas."
             ]
         },
@@ -6865,7 +6872,7 @@
             "title": "Gastando escolhas",
             "body": [
                 "Cada trilha de XP (combate, trabalho, magia e racial) tem a própria árvore de talentos. Um nó aceso significa que há uma escolha esperando ali: clique para pegá-la.",
-                "O XP de combate vem de derrubar inimigos no seu nível ou acima, o de magia de fazer isso com magia, o de trabalho de horas trabalhadas num serviço que você ainda não superou. Os níveis raciais vêm da soma dos outros."
+                "O XP de combate vem de derrubar inimigos no seu nível ou acima, o de magia de fazer isso com magia, o de trabalho de horas trabalhadas num serviço que você ainda não superou. O Nível de Personagem é metade da soma dos níveis de combate, trabalho e magia."
             ]
         },
         "library": {
@@ -7043,27 +7050,27 @@
             "1": "Todo combatente tem {ap} pontos de ação por turno. Atacar, Mover e Defender custam {cost} cada, em qualquer combinação: mover + atacar, atacar + atacar, atacar + defender...",
             "2": "Mover: até a sua velocidade em casas. Diagonais custam 1, depois 2, depois 1 de novo dentro de um mesmo movimento.",
             "3": "Você pode atravessar a casa de um aliado, mas não parar nela. A casa de um inimigo bloqueia você por completo.",
-            "4": "Defender: +{ac} CA (circunstância) até o início do seu próximo turno.",
+            "4": "Defender: +{ac} de Guarda (circunstância) até o início do seu próximo turno.",
             "5": "Adiar ({delay} pontos): vai para o fim da ordem de iniciativa de vez, uma vez por rodada, antes de gastar qualquer coisa.",
             "6": "Fugir ({flee} ponto, encerra o turno): só pela borda do mapa, e só quando você é mais rápido que o perseguidor mais veloz ou já está fora do alcance dele.",
-            "7": "Bônus do mesmo tipo não se acumulam: Defender e outro bônus de circunstância na CA, só vale o maior."
+            "7": "Bônus do mesmo tipo não se acumulam: Defender e outro bônus de circunstância na Guarda, só vale o maior."
         },
         "flanking": {
             "title": "Desprevenido e flanqueio",
-            "1": "Um combatente está desprevenido até começar o primeiro turno dele na luta, então quem age primeiro golpeia inimigos que ainda não se mexeram. Ele perde {pen} de CA contra todo ataque ({reduced} com Visão Periférica); o registro mostra [Desprevenido -{pen}] e o motivo (ainda não agiu, flanqueado).",
-            "2": "Um inimigo também fica desprevenido quando você e um aliado estão ao lado dele, em lados opostos (um flanco). Os dois motivos não se somam: continua -{pen} de CA.",
+            "1": "Um combatente está desprevenido até começar o primeiro turno dele na luta, então quem age primeiro golpeia inimigos que ainda não se mexeram. Ele perde {pen} de Guarda contra todo ataque ({reduced} com Visão Periférica); o registro mostra [Desprevenido -{pen}] e o motivo (ainda não agiu, flanqueado).",
+            "2": "Um inimigo também fica desprevenido quando você e um aliado estão ao lado dele, em lados opostos (um flanco). Os dois motivos não se somam: continua -{pen} de Guarda.",
             "3": "Um aliado apenas ao lado do inimigo não forma um flanco. Ele só alimenta a Tática de Matilha, que algumas raças e feras têm.",
             "4": "Ataque Furtivo (Adaga) e Estocada Precisa (Rapieira) só funcionam contra um inimigo desprevenido: o golpe é Brutal {brutal}, mais +{die} (Ataque Furtivo) ou +{hit} para acertar (Estocada Precisa)."
         },
         "morale": {
             "title": "Moral",
             "1": "Numa luta mortal todo combatente tem Moral, a coragem de seguir lutando. Mortos, erguidos e máquinas não têm, nem uma luta de arena (ninguém morre lá).",
-            "2": "Começa em {base} + o modificador de SAB + o de CAR + {per} por nível racial, {lawful} se Leal, {chaotic} se Caótico, e nunca abaixo de {min}. Esse valor também é o teto: a moral nunca passa dele.",
+            "2": "Começa em {base} + o modificador de SAB + o de CAR + {per} por Nível de Personagem, {lawful} se Leal, {chaotic} se Caótico, e nunca abaixo de {min}. Esse valor também é o teto: a moral nunca passa dele.",
             "3": "Cai {ally_down} a cada aliado que ele vê cair, e mais {ally_dead} quando esse aliado morre. Cai {wound} na primeira vez que a própria vida chega a {half}% e a {quarter}%, e toda vez que chega a {low}% (curar e ferir de novo conta outra vez). Cai {shaken} a cada Demoralizar que o atinge.",
             "4": "Sobe {foe_down} toda vez que o lado do combatente derruba um inimigo, não importa quem nem como (golpe, magia, fogo), mesmo que seja um combatente em fuga. Nunca passa do teto. Por enquanto nada mais a faz subir.",
             "5": "Em 0 ou menos (pode ficar abaixo de 0) o combatente entra em fuga: a IA joga por ele, mesmo sendo da guilda, e ele corre para a saída, a do próprio mapa quando há, senão a borda. Sai da luta ali se os perseguidores não o alcançarem. Encurralado, luta.",
             "6": "No instante em que a moral volta acima de 0 o combatente é dono de si e você recupera o controle. Quem corre ainda conta: as mortes dos outros devolvem a coragem a ele.",
-            "7": "Os seus combatentes mostram a moral exata. A de um inimigo é lida como a Defesa Mental dele, numa boa leitura. Todos veem quem está em fuga."
+            "7": "Os seus combatentes mostram a moral exata. A de um inimigo é lida como a Determinação dele, numa boa leitura. Todos veem quem está em fuga."
         },
         "weapon": {
             "title": "Ações de Arma (2 Pontos)",
@@ -7072,7 +7079,7 @@
             "3": "Rechaçar (Bordão): empurra o inimigo {cells} casa; contra uma parede ou um corpo, +{die} no lugar.",
             "4": "Golpe Mutilante (Clava, Martelos): corta a velocidade do inimigo pela metade; um inimigo que não pode se esquivar (Enredado, Dormindo, Surpreso, Desmoralizado) o sofre com +{hit} para acertar.",
             "5": "Perfurar Armadura (Picaretas): ignora a armadura de metal vestida. Tiro Poderoso (Arcos): +FOR, melhor a longa distância.",
-            "6": "Prender Escudo (Machadinha): o escudo do inimigo não dá CA até a próxima rodada. Aparar e Golpear (Espadas): enquanto Defende, com dois ou mais inimigos ao alcance.",
+            "6": "Prender Escudo (Machadinha): o escudo do inimigo não dá Guarda até a próxima rodada. Aparar e Golpear (Espadas): enquanto Defende, com dois ou mais inimigos ao alcance.",
             "7": "Estocada Longa (Glaive): um golpe uma casa além do alcance de {reach} da Glaive, +{hit} para acertar."
         },
         "talk": {
@@ -7098,7 +7105,7 @@
             "title": "Grupos, Líderes e Fama",
             "1": "A guilda pode manter {base} grupos, mais um para cada {fame} de reputação somada em todas as facções.",
             "2": "Um grupo comporta {cap} + {terms} membros, e {herd} + {herd_terms} em animais e cativos.",
-            "3": "Um grupo sobrecarregado rola todo dia contra a Defesa Mental do seu membro mais fraco (os líderes são isentos). Esse membro se separa num grupo só dele ou, sem vaga livre, dá aviso prévio de {days} dias e depois deixa a guilda.",
+            "3": "Um grupo sobrecarregado rola todo dia contra a Determinação do seu membro mais fraco (os líderes são isentos). Esse membro se separa num grupo só dele ou, sem vaga livre, dá aviso prévio de {days} dias e depois deixa a guilda.",
             "4": "Quem sai leva conforme o alinhamento: o Leal só o que veste, o Neutro a mochila também, o Caótico tudo."
         },
         "captives": {
@@ -7117,18 +7124,19 @@
             "title": "Dinheiro, Comida e Morte",
             "1": "Não existe tesouro da guilda: o dinheiro são moedas de Cobre (${copper}) e de Ouro (${gold}) nas mochilas. Elas pesam, se dividem e se movem como qualquer item.",
             "2": "Pagar gasta o cobre primeiro, depois quebra o ouro e devolve o troco. O ouro só vem da casa de câmbio do banco.",
-            "3": "Todo mundo come todo dia. A fome reduz os atributos e traz doença.",
+            "3": "Todo mundo come todo dia; Fome e Inanição diz o que custa uma refeição perdida.",
             "4": "A morte é permanente. A campanha só termina quando a guilda inteira se foi."
         },
         "hunger": {
             "title": "Fome e Inanição",
-            "1": "Todo membro come 1 refeição por dia na manutenção. Comida fresca perto de estragar é comida primeiro. COMPARTILHAR RAÇÕES deixa um membro alimentar companheiros famintos com a própria mochila.",
+            "1": "Todo membro come 1 refeição por dia, por conta própria, quando o relógio passa da meia-noite. Cada um pega a comida mais perto de estragar, da própria mochila primeiro e depois dos estoques do grupo. COMPARTILHAR RAÇÕES deixa um membro alimentar companheiros famintos com a própria mochila.",
             "2": "{d1} dia sem comer · Faminto: {pen1} em todos os atributos.",
             "3": "{d2} dias sem comer · Inanição: {pen2} em todos os atributos; PV máximo limitado a {cap}.",
-            "4": "{d3} dias sem comer · Incapacitado: fraco demais para lutar, não pode ser enviado à batalha.",
+            "4": "{d3} dias sem comer · Incapacitado: ainda {pen3} em todos os atributos, fraco demais para lutar e não pode ser enviado à batalha.",
             "5": "{death} dias sem comer · morte por inanição: o personagem se foi permanentemente.",
             "6": "Comida Podre só é comida no último dia antes da morte, como último recurso. Ela zera a fome mas adoece quem come. Comida de novo enquanto já doente adiciona Apodrecimento. Estômago Forte (Gnoll) é imune.",
-            "7": "Um personagem faminto ou em inanição não se cura pelo descanso. Treefolk (Autotrófico) nunca comem e nunca passam fome. Se a guilda inteira morrer de fome, a campanha termina."
+            "7": "Um personagem faminto ou em inanição não se cura pelo descanso. Treefolk (Autotrófico) nunca comem e nunca passam fome. Se a guilda inteira morrer de fome, a campanha termina.",
+            "8": "Seja qual for a causa (fome, veneno ou doença), um personagem com qualquer um dos seis atributos em zero ou menos morre onde está, um corpo frágil primeiro. O registro então diz \"Definhou\"."
         },
         "stomp": {
             "title": "Atropelo Limpo e Vitória Automática",
@@ -7157,24 +7165,30 @@
         },
         "poison": {
             "title": "Veneno e Antídoto",
-            "1": "Uma mordida venenosa força uma salvaguarda de Constituição (CD {dc} + o nível racial da criatura venenosa). Se falhar, a vítima fica envenenada: uma pilha, e cada pilha tira pontos de um atributo até passar.",
+            "1": "Uma mordida venenosa força uma salvaguarda de Constituição (CD {dc} + o Nível de Personagem da criatura venenosa). Se falhar, a vítima fica envenenada: uma pilha, e cada pilha tira pontos de um atributo até passar.",
             "2": "O veneno sobrevive à luta. Uma pilha some a cada {spent} h de tempo do mundo (Podridão Intestinal, de comida podre, a cada {rot} h); uma nova mordida zera o relógio.",
             "3": "O Antídoto é usado fora de combate na tela do bando: o membro envenenado rola outra salvaguarda de Constituição contra a CD do pior veneno. Passar tira uma pilha na hora; falhar só gasta a dose.",
             "4": "Um Antídoto por membro a cada {hours} h, tenha funcionado ou não."
         },
         "reading": {
             "title": "Lendo um inimigo",
-            "1": "Na primeira vez que alguém do seu lado vê um inimigo, cada colega que o vê rola d20 + INT contra CD {dc} + o nível racial do inimigo. A melhor margem é de todo o lado.",
+            "1": "Na primeira vez que alguém do seu lado vê um inimigo, cada colega que o vê rola d20 + INT contra CD {dc} + o Nível de Personagem do inimigo. A melhor margem é de todo o lado.",
             "2": "Quanto melhor a margem, mais campos da ficha do inimigo se abrem (os ? são o que você ainda não leu). Uma rolagem falha não revela nada e nunca mente.",
             "3": "Uma raça que a guilda já enfrentou é {discount} mais fácil de ler, e uma habilidade racial que a guilda já viu sai de graça na próxima da raça.",
             "4": "Avaliar ({assess} ponto) rola de novo com +{bonus} num inimigo à vista, uma vez por inimigo a cada rodada."
         },
         "or": " ou ",
+        "part": {
+            "combat": "A luta",
+            "body": "Corpo e tempo",
+            "work": "Trabalho e dinheiro",
+            "world": "Pessoas e o mundo"
+        },
         "term": {
             "cha": "o modificador de Carisma do líder",
-            "half_level": "metade do nível racial do líder",
+            "half_level": "metade do Nível de Personagem do líder",
             "member_cha": "o seu modificador de Carisma",
-            "racial_level": "o próprio nível racial",
+            "racial_level": "o próprio Nível de Personagem",
             "leader_wis": "o modificador de Sabedoria do líder"
         }
     },
@@ -7183,7 +7197,7 @@
         "not_in_sight": "fora de vista",
         "already_assessed": "já avaliado nesta rodada",
         "artifact": {
-            "biwolf_leather": "+1 CA contra qualquer coisa que não seja humanoide.",
+            "biwolf_leather": "+1 de Guarda contra qualquer coisa que não seja humanoide.",
             "signal_horn": "Soprada uma vez por batalha: aliados próximos ganham +2 de iniciativa."
         },
         "worn_bonus": "+{n} {attr} enquanto vestido.",

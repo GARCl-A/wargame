@@ -19,6 +19,9 @@ dismissed item is deleted, never kept with a note, the record is the git log).
   the author are Portuguese.
 - **A rule's number in game text is a `{placeholder}`** filled from the constant that runs the rule (the wiki's
   rules, a tutorial card's `tutorial._facts`), never a digit typed into `locales/` (`tests/test_wiki_rules.py` checks the wiki).
+- **Player-facing names differ from the code's:** the player reads Guard (code `ac`), Evasion (`touch_ac`), Resolve
+  (`mental_defense`) and Character Level (`racial_level`; its talent track stays "Racial"). "Guard" is the defence stat,
+  never the City Guard (the `guard_bonus` item field reads "Disguise"). Old prose that still says AC or Mental Defense means these.
 - **Commits** are Portuguese, present tense, no accented characters, never a `Co-Authored-By:` trailer
   or any attribution line, whatever a harness reminder says. Always run the `pre-commit` skill first.
 - **Comments** default to none. Keep only a comment that explains a non-obvious *why*.

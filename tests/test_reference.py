@@ -42,7 +42,7 @@ def test_an_unknown_argument_never_rewrites_the_file(monkeypatch):
 
 def test_a_number_in_the_prose_follows_its_constant(monkeypatch):
     monkeypatch.setattr(progression, "RACIAL_PICK_EVERY", 7)
-    assert "a pick every 7 racial levels" in reference.build()
+    assert "a pick every 7 Character Levels" in reference.build()
 
 
 def test_every_catalog_entry_is_in_the_document():

@@ -72,7 +72,7 @@ def test_the_roster_lists_each_band_and_the_sheet_reads_the_picked_member():
     st = sheet.pick_member(u.uid)["members"]["sheet"]
     assert st["name"] == u.name and st["band"] == guild.groups[1].display_name
     assert [a["k"] for a in st["attrs"]] == ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
-    assert {s["k"] for s in st["stats"]} == {"AC", "MD", "SPD", "INIT"} and "= " in st["stats"][0]["tip"]
+    assert {s["k"] for s in st["stats"]} == {"Guard", "Resolve", "SPD", "INIT"} and "= " in st["stats"][0]["tip"]
     assert [t["label"] for t in st["tracks"]][:3] == ["Combat career", "Base labor & work", "Racial maturity"]
     assert {r["key"] for r in st["roles"]} == {"guild_leader", "group_leader", "share_food", "distribute"}
     with pytest.raises(ValueError):

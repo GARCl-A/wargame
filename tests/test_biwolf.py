@@ -129,7 +129,7 @@ def test_the_leather_is_an_artifact_that_fits_the_slot():
     assert u.give_to_artifact(items.BIWOLF_LEATHER_ITEM)
     assert u.equipped_artifact == items.BIWOLF_LEATHER_ITEM
     _title, desc = items.item_tooltip(items.BIWOLF_LEATHER_ITEM)
-    assert "+1 AC" in desc
+    assert "+1 Guard" in desc
 
 
 def test_worn_it_adds_one_ac_against_beasts_and_not_against_humanoids():
@@ -159,14 +159,14 @@ def _wolf_attacks(wearing):
     wolf.ap = 2
     with fixed_d20(10):
         actions.Attack().execute(batt, wolf, me)
-    return me, next(ln for ln in batt.log_lines if "vs AC" in ln)
+    return me, next(ln for ln in batt.log_lines if "vs Guard" in ln)
 
 
 def test_a_beast_attacking_the_wearer_rolls_against_the_raised_ac():
     me, line = _wolf_attacks(wearing=True)
-    assert f"vs AC {me.ac + 1}" in line
+    assert f"vs Guard {me.ac + 1}" in line
     me, line = _wolf_attacks(wearing=False)
-    assert f"vs AC {me.ac}" in line
+    assert f"vs Guard {me.ac}" in line
 
 
 def test_the_ai_plays_out_the_biwolf_fight_to_a_result():

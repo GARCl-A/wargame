@@ -183,10 +183,10 @@ def test_a_foes_morale_is_a_medium_intel_field_and_routed_is_always_seen():
 
 
 def test_the_wiki_reads_the_constants(monkeypatch):
-    text = " ".join(" ".join(lines) for _, lines in wiki_rules.sections())
+    text = " ".join(" ".join(lines) for _, _, lines in wiki_rules.sections())
     assert f"{morale.BASE} +" in text
     monkeypatch.setattr(morale, "BASE", 11)
-    text = " ".join(" ".join(lines) for _, lines in wiki_rules.sections())
+    text = " ".join(" ".join(lines) for _, _, lines in wiki_rules.sections())
     assert "11 +" in text
 
 

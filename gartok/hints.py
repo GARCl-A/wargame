@@ -2,7 +2,7 @@
 `TutorialState.seen` is its saved "seen" flag, and it carries a button that opens the wiki on the entry
 that holds the rule (`wiki_ref`, none for a card that only advises). The map and the battle ask here which one is due."""
 
-from . import actions, economy, items, wiki_rules, world
+from . import actions, economy, items, world
 
 STUDY, ROAD, READING, FALLEN, DUNGEON, PLACE, FLANK, WILDS = ("hint.study", "hint.road", "hint.reading", "hint.fallen", "hint.dungeon",
                                                               "hint.place", "hint.flank", "hint.wilds")
@@ -65,7 +65,5 @@ def in_battle(guild, battle, seen, visible=lambda unit: True):
 
 def wiki_ref(hint):
     """The wiki entry (`chapter:id`) that holds the rule `hint` announces."""
-    return {STUDY: "rules:" + wiki_rules.title("study"), ROAD: "rules:" + wiki_rules.title("hunger"),
-            READING: "rules:" + wiki_rules.title("reading"), FALLEN: "actions:stabilize",
-            DUNGEON: "rules:" + wiki_rules.title("dungeon"), PLACE: "rules:" + wiki_rules.title("placement"),
-            FLANK: "rules:" + wiki_rules.title("flanking")}.get(hint)
+    return {STUDY: "rules:study", ROAD: "rules:hunger", READING: "rules:reading", FALLEN: "actions:stabilize",
+            DUNGEON: "rules:dungeon", PLACE: "rules:placement", FLANK: "rules:flanking"}.get(hint)

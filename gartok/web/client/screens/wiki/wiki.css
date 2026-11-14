@@ -28,6 +28,8 @@
 #entries::-webkit-scrollbar{width:8px}
 #entries::-webkit-scrollbar-thumb{background:rgba(90,60,30,.35);border-radius:4px}
 #entries.rules .cols{columns:2 520px}
+.part{column-span:all;margin:22px 0 2px;font:700 13px/1 Cinzel,serif;letter-spacing:.28em;color:#7a2318;text-transform:uppercase}
+.part:first-child{margin-top:0}
 .e{break-inside:avoid;padding:14px 4px 16px;border-top:1px solid rgba(90,60,30,.3)}
 .e .hd{display:flex;gap:12px;align-items:center}
 .e .gl{width:34px;height:34px;flex:none;color:#5a2116}

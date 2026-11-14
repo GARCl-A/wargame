@@ -89,7 +89,7 @@ def _pulse(guild):
 
 
 def death(unit, cause, **fields):
-    """A character is lost. `cause` is "combat", "starvation" or "collapse" (a physical score at zero); `fields` say how."""
+    """A character is lost. `cause` is "combat", "starvation" or "collapse" (an attribute at zero); `fields` say how."""
     emit("death", name=unit.name, race=unit.race["name"],
          combat=unit.combat_level, work=unit.work_level, hp_max=unit.hp_max, cause=cause, **fields)
 

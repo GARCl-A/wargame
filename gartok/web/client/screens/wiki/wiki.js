@@ -57,7 +57,7 @@ function render(state) {
   else if ($("q").value.toLowerCase() !== W.query) find();
   const el = $("entries");
   el.className = W.chapter === "rules" ? "rules" : "";
-  el.innerHTML = W.entries.length ? `<div class="cols">${W.entries.map(entry).join("")}</div>`
+  el.innerHTML = W.entries.length ? `<div class="cols">${W.entries.map((e, i) => (e.part && e.part !== (W.entries[i - 1] || {}).part ? `<h3 class="part">${esc(e.part_label)}</h3>` : "") + entry(e)).join("")}</div>`
     : `<div class="none">${tr("wiki.none", {chapter: esc(label.toLowerCase()), q: esc(W.query.trim())})}</div>`;
   const at = W.focus && [...el.querySelectorAll(".e")].find(x => x.dataset.id === W.focus);
   if (at) at.scrollIntoView({block: "center"});

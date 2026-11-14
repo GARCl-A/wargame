@@ -105,7 +105,7 @@ def test_a_thrown_weapon_at_a_flanked_foe_gets_no_extra_bonus_to_hit():
     d.turns_taken = 1
     with fixed_d20(10):
         actions.THROW.execute(batt, a, d)
-    line = next(ln for ln in batt.log_lines if "vs AC" in ln)
+    line = next(ln for ln in batt.log_lines if "vs Guard" in ln)
     assert "[Off-guard -2: flanked]" in line and "+2(Flank" not in line
 
 

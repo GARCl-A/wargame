@@ -1,6 +1,6 @@
 """The wiki's RULES tab: the rules a player looks up mid-run, read off the live constants.
 
-`sections()` is `[(title, [line, ...])]`; the numbers come from the modules that run the rule,
+`sections()` is `[(key, title, [line, ...])]`; the numbers come from the modules that run the rule,
 so the page moves with them. RULES.md stays the designer's full prose.
 """
 
@@ -57,22 +57,47 @@ def _terms(pairs):
     return " + ".join(i18n.t(f"wiki_rules.term.{label}") for label, _ in pairs)
 
 
-def title(section):
-    """A section's title as the wiki shows it, which is also its entry id."""
-    return i18n.t(f"wiki_rules.{section}.title")
+PARTS = (
+    ("combat", ("turns", "flanking", "morale", "weapon", "talk", "stomp", "placement", "reading")),
+    ("body", ("hunger", "poison")),
+    ("work", ("money", "study")),
+    ("world", ("recruiting", "groups", "captives", "wagons", "dungeon")),
+)
+"""The Rules chapter's subchapters, in reading order, each with the keys of its sections. A key is the
+section's id for good (a link to `rules:<key>` survives a retitle or a translation); the title is only
+what the player reads."""
+
+
+def title(key):
+    """A section's title as the wiki shows it."""
+    return i18n.t(f"wiki_rules.{key}.title")
+
+
+def part_title(part):
+    return i18n.t(f"wiki_rules.part.{part}")
+
+
+def part_of(key):
+    return next(part for part, keys in PARTS if key in keys)
 
 
 def sections():
+    """`[(key, title, [line, ...])]` in the order of `PARTS`."""
+    built = _built()
+    return [(key, title(key), built[key]) for _, keys in PARTS for key in keys]
+
+
+def _built():
     reach, hit = 1 + items.get("Glaive").reach, actions.LongThrust.TO_HIT
     terms = " + ".join(i18n.t(f"wiki_rules.term.{label.lower().replace(' ', '_')}") for _, label, _ in group.CAPACITY_TERMS)
     tools = i18n.t("wiki_rules.or").join(i18n.name("item", t) for t in captives.CAPTURE_TOOLS)
-    return [
-        (i18n.t("wiki_rules.turns.title"), _lines("turns", 7, ap=AP_PER_TURN, cost=actions.DEFEND.cost, ac=DEFEND_AC,
-                                                       delay=actions.DELAY.cost, flee=actions.FLEE.cost)),
-        (i18n.t("wiki_rules.flanking.title"), _off_guard_lines()),
-        (i18n.t("wiki_rules.morale.title"), _morale_lines()),
-        (i18n.t("wiki_rules.weapon.title"), _weapon_lines(reach, hit)),
-        (i18n.t("wiki_rules.talk.title"), [
+    return dict([
+        ("turns", _lines("turns", 7, ap=AP_PER_TURN, cost=actions.DEFEND.cost, ac=DEFEND_AC,
+                         delay=actions.DELAY.cost, flee=actions.FLEE.cost)),
+        ("flanking", _off_guard_lines()),
+        ("morale", _morale_lines()),
+        ("weapon", _weapon_lines(reach, hit)),
+        ("talk", [
             i18n.t("wiki_rules.talk.1", dc=dialogue.BASE_DC),
             i18n.t("wiki_rules.talk.2", cap=dialogue.OUTMATCH_CAP),
             i18n.t("wiki_rules.talk.3", shift=dialogue.ALIGN_SHIFT),
@@ -81,7 +106,7 @@ def sections():
             i18n.t("wiki_rules.talk.6", bribe=dialogue.BRIBE_PER_FOE),
             i18n.t("wiki_rules.talk.7"),
         ]),
-        (i18n.t("wiki_rules.recruiting.title"), [
+        ("recruiting", [
             i18n.t("wiki_rules.recruiting.1"),
             i18n.t("wiki_rules.recruiting.2", pen=recruit.SIZE_PENALTY, free=recruit.FREE_SLOTS),
             i18n.t("wiki_rules.recruiting.3", align=recruit.ALIGNMENT_PENALTY),
@@ -90,35 +115,35 @@ def sections():
             i18n.t("wiki_rules.recruiting.5"),
             i18n.t("wiki_rules.recruiting.6", tavern=recruit.TAVERNA_SIZE, prison=recruit.PRISON_SIZE, days=recruit.REFRESH_DAYS, bail=tavern.BAIL_BONUS[0], step=tavern.BAIL_STEP),
         ]),
-        (i18n.t("wiki_rules.groups.title"), [
+        ("groups", [
             i18n.t("wiki_rules.groups.1", base=group.BASE_SLOTS, fame=group.FAME_PER_SLOT),
             i18n.t("wiki_rules.groups.2", cap=group.BASE_CAPACITY, terms=terms, herd=group.HERD_BASE, herd_terms=_terms(group.HERD_TERMS)),
             i18n.t("wiki_rules.groups.3", days=cohesion.NOTICE_DAYS),
             i18n.t("wiki_rules.groups.4"),
         ]),
-        (i18n.t("wiki_rules.captives.title"), [
+        ("captives", [
             i18n.t("wiki_rules.captives.1", tools=tools, capture=actions.CAPTURE.cost),
             i18n.t("wiki_rules.captives.2", weight=captives.HERD_WEIGHT, days=captives.CAPTIVE_DAYS),
             i18n.t("wiki_rules.captives.3"),
         ]),
-        (i18n.t("wiki_rules.wagons.title"), [i18n.t("wiki_rules.wagons.1", dist=wagon.WEAR_DISTANCE, hp=wagon.WEAR_HP), *_lines("wagons", 3)[1:]]),
-        (i18n.t("wiki_rules.money.title"), _lines("money", 4, copper=items.COIN_VALUE[items.COIN_ITEM], gold=items.COIN_VALUE[items.GOLD_ITEM])),
-        (i18n.t("wiki_rules.hunger.title"), _lines(
-            "hunger", 7, d1=1, d2=2, d3=len(HUNGER_PENALTIES) - 1, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2],
+        ("wagons", [i18n.t("wiki_rules.wagons.1", dist=wagon.WEAR_DISTANCE, hp=wagon.WEAR_HP), *_lines("wagons", 3)[1:]]),
+        ("money", _lines("money", 4, copper=items.COIN_VALUE[items.COIN_ITEM], gold=items.COIN_VALUE[items.GOLD_ITEM])),
+        ("hunger", _lines(
+            "hunger", 8, d1=1, d2=2, d3=len(HUNGER_PENALTIES) - 1, pen1=HUNGER_PENALTIES[1], pen2=HUNGER_PENALTIES[2], pen3=HUNGER_PENALTIES[3],
             death=data.STARVATION_DEATH_DAYS, cap=STARVING_HP_MAX)),
-        (i18n.t("wiki_rules.stomp.title"), _lines("stomp", 2)),
-        (title("poison"), _lines("poison", 4, hours=poisons.ANTIDOTE_COOLDOWN_HOURS, dc=poisons.POISONS["snake_venom"].base_dc,
+        ("stomp", _lines("stomp", 2)),
+        ("poison", _lines("poison", 4, hours=poisons.ANTIDOTE_COOLDOWN_HOURS, dc=poisons.POISONS["snake_venom"].base_dc,
                                  spent=poisons.POISONS["snake_venom"].hours, rot=poisons.POISONS["gut_rot"].hours)),
-        (title("study"), _lines("study", 4, cost=economy.TAVERN_STUDY_COST_PER_DAY)),
-        (title("dungeon"), _lines("dungeon", 4)),
-        (title("placement"), _lines("placement", 3)),
-        (title("reading"), _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS,
+        ("study", _lines("study", 4, cost=economy.TAVERN_STUDY_COST_PER_DAY)),
+        ("dungeon", _lines("dungeon", 4)),
+        ("placement", _lines("placement", 3)),
+        ("reading", _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS,
                                  assess=actions.ASSESS.cost)),
-    ]
+    ])
 
 
 def matching(query):
     """The sections whose title or a line contains `query` (all of them for an empty one)."""
     q = query.lower()
-    return [(t, lines) for t, lines in sections()
+    return [(k, t, lines) for k, t, lines in sections()
             if not q or q in t.lower() or any(q in ln.lower() for ln in lines)]

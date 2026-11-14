@@ -220,13 +220,12 @@ def test_poison_that_takes_the_last_point_drops_the_victim_mid_fight(monkeypatch
     assert victim.char.dexterity <= 0 and victim.dying
 
 
-@pytest.mark.parametrize("attr", ["strength", "constitution"])
-def test_the_zero_rule_covers_all_three_physical_attributes(attr):
+@pytest.mark.parametrize("attr", data.ATTRIBUTES)
+def test_the_zero_rule_covers_all_six_attributes(attr):
     u = _human()
+    assert u.zeroed_attribute is None
     setattr(u, attr, 0)
     assert u.zeroed_attribute == attr
-    u.intelligence = 0
-    assert standard_unit().zeroed_attribute is None
 
 
 # --------------------------------------------------------------------------- #

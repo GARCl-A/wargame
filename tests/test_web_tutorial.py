@@ -217,10 +217,10 @@ def test_the_wiki_button_dismisses_the_card_and_opens_the_wiki_over_the_map(serv
     guild.roster[0].give_to_pack("Scroll of Sleep")
     map_session = game.session
     card, header = _call(url + "/api/tutorial")
-    assert card["key"] == "hint.study" and card["wiki"] == "rules:Studying" and card["wiki_button"]
+    assert card["key"] == "hint.study" and card["wiki"] == "rules:study" and card["wiki_button"]
     answer, _ = _call(url + "/api/tutorial/wiki", {})
     assert answer == {"screen": "wiki"} and "hint.study" in guild.tutorial.seen
-    assert isinstance(game.session, WikiSession) and game.session.focus == "Studying"
+    assert isinstance(game.session, WikiSession) and game.session.focus == "study"
     game.session.back_to()
     assert game.session is map_session
 

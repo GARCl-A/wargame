@@ -465,7 +465,7 @@ ATTRIBUTE_HELP = {
     ),
     "DEX": (
         "DEXTERITY (DEX)",
-        "Armor Class (AC), ranged & finesse weapon attack rolls, lockpicking, and disarming traps."
+        "Guard, ranged & finesse weapon attack rolls, lockpicking, and disarming traps."
     ),
     "CON": (
         "CONSTITUTION (CON)",
@@ -477,7 +477,7 @@ ATTRIBUTE_HELP = {
     ),
     "WIS": (
         "WISDOM (WIS)",
-        "Mental Defense (MD vs Demoralize), combat initiative bonus, and First Aid stabilization."
+        "Resolve (against Demoralize), combat initiative bonus, and First Aid stabilization."
     ),
     "CHA": (
         "CHARISMA (CHA)",
@@ -491,11 +491,11 @@ DERIVED_HELP = {
         "Current / maximum health. Dropping to 0 HP makes a unit dying."
     ),
     "AC": (
-        "ARMOR CLASS (AC)",
-        "Physical defense target. Attacks meeting or beating AC inflict damage."
+        "GUARD",
+        "The number an attack must reach to hit. Attacks meeting or beating Guard inflict damage."
     ),
     "MD": (
-        "MENTAL DEFENSE (MD)",
+        "RESOLVE",
         "Resistance against Demoralize and psychological effects (10 + WIS mod)."
     ),
     "SPD": (

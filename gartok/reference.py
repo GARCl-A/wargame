@@ -201,7 +201,7 @@ def _armor():
         guard = f"+{a.guard_bonus}" if a.guard_bonus else "--"
         rows.append((name, a.size or "Medium", f"+{a.ac}", cap, spd, guard, f"{a.weight:g} kg",
                      economy.PRICES.get(name, "--")))
-    head = ("Armor", "Size", "AC", "Max DEX to AC", "Speed", "Guard test", "Weight", "Price ($)")
+    head = ("Armor", "Size", "Guard", "Max DEX to Guard", "Speed", "Disguise", "Weight", "Price ($)")
     return "## Armor\n\n" + _table(head, rows)
 
 
@@ -210,7 +210,7 @@ def _shields():
     for name, s in items.shields().items():
         rows.append((name, s.size or "Medium", f"+{s.ac}", f"{s.weight:g} kg",
                      economy.PRICES.get(name, "--")))
-    head = ("Shield", "Size", "AC", "Weight", "Price ($)")
+    head = ("Shield", "Size", "Guard", "Weight", "Price ($)")
     return "## Shields\n\n" + _table(head, rows)
 
 
@@ -218,8 +218,8 @@ def _enemy_kit():
     rows = [(level, cost, f"{cost * outfit.ARMOR_SHARE:.0f}" if level else "--",
              f"{cost * outfit.WEAPON_SHARE:.0f}" if level else "--")
             for level, cost in outfit.KIT_BUDGET.items()]
-    head = ("Racial level", "Kit budget ($)", "Armor up to ($)", "Weapon up to ($)")
-    return ("## Enemy kit by level\n\nWhat a generated humanoid of each racial level is outfitted "
+    head = ("Character Level", "Kit budget ($)", "Armor up to ($)", "Weapon up to ($)")
+    return ("## Enemy kit by level\n\nWhat a generated humanoid of each Character Level is outfitted "
             f"with (`outfit.py`); the rest of the budget buys up to {outfit.POTION_CAP} "
             f"{outfit.POTION}s. Level 0 keeps the starting kit; beasts carry none.\n\n"
             + _table(head, rows))
@@ -296,7 +296,7 @@ def _talent_trees():
            "one pick in its tree; `Requires` gates the deeper nodes. The racial "
            "track's level is `combat + work + magic` on a scale "
            f"(`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every {progression.RACIAL_PICK_EVERY} "
-           "racial levels; its nodes are race-gated, grouped by race below. The magic track is "
+           "Character Levels; its nodes are race-gated, grouped by race below. The magic track is "
            "school-agnostic."]
     for track in talents.TRACKS:
         racial = track == "racial"
@@ -353,7 +353,7 @@ def _constants():
          f"{economy.BANK_CHEST_CAPACITY} kg"),
         ("Combat XP thresholds", _curve(progression.COMBAT_XP_THRESHOLDS)),
         ("Work XP thresholds", _curve(progression.WORK_XP_THRESHOLDS)),
-        ("Racial level thresholds (combat+work+magic)", _curve(progression.RACIAL_XP_THRESHOLDS)),
+        ("Character Level thresholds (combat+work+magic)", _curve(progression.RACIAL_XP_THRESHOLDS)),
     ]
     return "## Constants\n\nThe tunable knobs, read off the modules that run " \
            "them.\n\n" + _table(("Knob", "Value"), rows)

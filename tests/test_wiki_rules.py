@@ -7,27 +7,31 @@ from gartok import data, dialogue, group, recruit, wiki_rules
 from gartok.unit_hunger import HUNGER_PENALTIES
 
 
+def _rules():
+    return {key: lines for key, _, lines in wiki_rules.sections()}
+
+
 def test_the_rules_quote_the_live_constants():
-    body = " ".join(" ".join(lines) for _, lines in wiki_rules.sections())
+    body = " ".join(" ".join(lines) for _, _, lines in wiki_rules.sections())
     assert f"against {dialogue.BASE_DC} +" in body
     assert f"-{recruit.SIZE_PENALTY} for every member of the whole guild past {recruit.FREE_SLOTS}" in body
 
 
 def test_the_hunger_section_quotes_the_live_constants():
-    body = " ".join(dict(wiki_rules.sections())["Hunger & Starvation"])
+    body = " ".join(_rules()["hunger"])
     assert str(HUNGER_PENALTIES[1]) in body
     assert str(HUNGER_PENALTIES[2]) in body
     assert str(data.STARVATION_DEATH_DAYS) in body
 
 
 def test_the_filter_finds_the_crowd_penalty():
-    titles = [t for t, _ in wiki_rules.matching("crowd")]
-    assert titles == ["Recruiting"]
+    keys = [k for k, _, _ in wiki_rules.matching("crowd")]
+    assert keys == ["recruiting"]
     assert len(wiki_rules.matching("")) == len(wiki_rules.sections())
 
 
 def test_the_group_size_line_names_every_term_capacity_adds():
-    line = next(ln for ln in dict(wiki_rules.sections())["Groups, Leaders & Fame"] if "A group holds" in ln)
+    line = next(ln for ln in _rules()["groups"] if "A group holds" in ln)
     assert f"holds {group.BASE_CAPACITY} + " in line
     for phrase, _, _ in group.CAPACITY_TERMS:
         assert phrase in line
@@ -35,7 +39,7 @@ def test_the_group_size_line_names_every_term_capacity_adds():
 
 def test_the_poison_rule_reads_the_antidote_cooldown_off_the_code():
     from gartok import items, poisons
-    line = " ".join(dict(wiki_rules.sections())["Poison & Antidote"])
+    line = " ".join(_rules()["poison"])
     assert f"every {poisons.ANTIDOTE_COOLDOWN_HOURS} h" in line
     assert str(poisons.ANTIDOTE_COOLDOWN_HOURS) in " ".join(items.item_tip_lines("Antidote"))
 
@@ -73,12 +77,12 @@ def test_no_wiki_rule_hardcodes_a_number():
 def test_the_wiki_numbers_follow_the_constants(monkeypatch):
     from gartok import conditions
     from gartok.actions import weapon_actions
-    before = " ".join(dict(wiki_rules.sections())["Turns & Action Points"])
+    before = " ".join(_rules()["turns"])
     monkeypatch.setattr(wiki_rules, "DEFEND_AC", conditions.DEFEND_AC + 7)
-    after = " ".join(dict(wiki_rules.sections())["Turns & Action Points"])
-    assert f"+{conditions.DEFEND_AC} AC" in before and f"+{conditions.DEFEND_AC + 7} AC" in after
+    after = " ".join(_rules()["turns"])
+    assert f"+{conditions.DEFEND_AC} Guard" in before and f"+{conditions.DEFEND_AC + 7} Guard" in after
     monkeypatch.setattr(wiki_rules, "EDGE_TO_HIT", weapon_actions.EDGE_TO_HIT + 5)
-    assert f"+{weapon_actions.EDGE_TO_HIT + 5} to hit" in " ".join(dict(wiki_rules.sections())["Weapon Actions (2 Points)"])
+    assert f"+{weapon_actions.EDGE_TO_HIT + 5} to hit" in " ".join(_rules()["weapon"])
 
 
 def test_the_tavern_card_reads_its_numbers_off_the_code():
@@ -129,11 +133,11 @@ def test_the_cards_read_their_numbers_off_the_code(monkeypatch):
 
 def test_the_sponsor_and_herd_lines_name_every_term_their_formula_adds():
     from gartok import i18n
-    rules = dict(wiki_rules.sections())
-    sponsor = next(ln for ln in rules["Recruiting"] if "can sponsor" in ln)
+    rules = _rules()
+    sponsor = next(ln for ln in rules["recruiting"] if "can sponsor" in ln)
     for label, _ in recruit.SPONSOR_TERMS + recruit.LEADER_SPONSOR_TERMS:
         assert i18n.t(f"wiki_rules.term.{label}") in sponsor
-    herd = next(ln for ln in rules["Groups, Leaders & Fame"] if "animals" in ln)
+    herd = next(ln for ln in rules["groups"] if "animals" in ln)
     for label, _ in group.HERD_TERMS:
         assert i18n.t(f"wiki_rules.term.{label}") in herd
 
@@ -149,3 +153,35 @@ def test_the_library_card_and_the_shelf_read_the_same_reputation(monkeypatch):
     assert trade.DICTIONARY_MIN_REP == factions.DEEDS["library_initiate"].rep
     monkeypatch.setattr(trade, "DICTIONARY_MIN_REP", trade.DICTIONARY_MIN_REP + 4)
     assert " 5 " in " ".join(tutorial.card("library")["body"])
+
+
+def test_every_section_sits_in_one_part_and_has_a_title_and_lines():
+    keys = [k for _, ks in wiki_rules.PARTS for k in ks]
+    assert len(keys) == len(set(keys))
+    for key, title, lines in wiki_rules.sections():
+        assert title and lines and wiki_rules.part_of(key)
+
+
+def test_every_hint_opens_a_wiki_entry_that_exists():
+    from gartok import hints
+    from gartok.web import wiki_session
+    for hint in hints.IDS:
+        ref = hints.wiki_ref(hint)
+        if ref is None:
+            continue
+        chapter, _, eid = ref.partition(":")
+        assert any(e["id"] == eid for e in wiki_session.BUILD[chapter]()), (hint, ref)
+
+
+def test_the_defence_and_level_words_are_keywords_the_wiki_defines():
+    from gartok import keywords, wiki_terms
+    for kid, name in (("character_level", "Character Level"), ("evasion", "Evasion"), ("resolve", "Resolve")):
+        kw = keywords.get(kid)
+        assert kw.name == name and kw.text.startswith(name + ":")
+        assert wiki_terms.terms()[kid]["chapter"] == "keywords"
+
+
+def test_guard_the_stat_is_marked_but_the_city_guard_and_off_guard_are_not():
+    from gartok import wiki_terms
+    assert [m["word"] for m in wiki_terms.marks("An attack must beat Guard.")] == ["Guard"]
+    assert "guard" not in wiki_terms.keywords_in("The City Guard comes. Off-guard foes lose Evasion? No: off-guard, stand guard.")

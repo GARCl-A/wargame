@@ -191,7 +191,7 @@ function blows(P) {
 }
 
 // ---------------------------------------------------------------- the level-up
-const GAIN = {"Combat level": "combat", "Work level": "work", "Magic level": "magic", "Racial level": "racial", "Hit dice": "dice", "Max HP": "hp"};
+const GAIN = {"Combat level": "combat", "Work level": "work", "Magic level": "magic", "Character level": "racial", "Hit dice": "dice", "Max HP": "hp"};
 const gainLbl = l => GAIN[l] ? tr(`report.gain.${GAIN[l]}.l`) : l;
 const gainWhy = l => GAIN[l] ? tr(`report.gain.${GAIN[l]}.why`) : "";
 
