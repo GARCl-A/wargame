@@ -747,8 +747,8 @@
       "crafters_hint": "Click who works; each one rolls d20 + INT an hour toward a batch.",
       "recipes": "Recipes",
       "whose": "{who}'s, from the band's packs · {what}",
-      "food": "{rations} in the band, {meals} eaten at each dawn.",
-      "food_days": "{rations} in the band, {meals} eaten at each dawn ({days} of food).",
+      "food": "{rations} in the band, {meals} eaten at each midnight.",
+      "food_days": "{rations} in the band, {meals} eaten at each midnight ({days} of food).",
       "foot": "Materials go in when a batch starts; a batch left half-made waits for its crafter. Alone, the crafter takes a group slot and takes the recipe's tools and materials from the group's stock."
     },
     "labor": {
@@ -970,7 +970,7 @@
     "shop": {
       "speaks": "<b>{name}</b> speaks for the band",
       "till": "In the till",
-      "till_note": "refills at dawn; a sale above it is refused",
+      "till_note": "refills at midnight; a sale above it is refused",
       "deal": "The deal",
       "you_pay": "You pay",
       "they_pay": "They pay",
@@ -1901,8 +1901,8 @@
       "said": "Said",
       "put_away": "click to put it away",
       "dawns": {
-        "one": "{n} dawn",
-        "other": "{n} dawns"
+        "one": "{n} midnight",
+        "other": "{n} midnights"
       },
       "food": "{rations} to eat on the way ({dawns}); the band holds {have}.",
       "food_short": "{rations} to eat on the way ({dawns}); the band holds {have}, and will go hungry.",
@@ -5410,7 +5410,7 @@
       "one": " Only {n} portion of Rotten Food is left: it is eaten only on the last day before starving, and it makes the eater sick.",
       "other": " Only {n} portions of Rotten Food is left: it is eaten only on the last day before starving, and it makes the eater sick."
     },
-    "no_food_left_whole_guild": "NO FOOD LEFT: the whole guild goes hungry at the next dawn. Buy food now.",
+    "no_food_left_whole_guild": "NO FOOD LEFT: the whole guild goes hungry at midnight. Buy food now.",
     "no_food_left": "NO FOOD LEFT",
     "starving_member_hungry_and_no": "STARVING: {members} hungry and no food left. The first one dies in {days}. Buy food now.",
     "rests_and_recovers_from_their": "{name} rests and recovers from their sickness (treated).",
@@ -5422,7 +5422,7 @@
     "hunger_note": "Hunger had cut every attribute by {pen}.",
     "portions_of_food_rotted_away": "{total_rotten} portions of food rotted away.",
     "rotted_away": "The {name} rotted away.",
-    "blooms_at_dawn_and_yields": "{name} blooms at dawn and yields {n} fresh {fruit}.",
+    "blooms_at_dawn_and_yields": "{name} blooms at midnight and yields {n} fresh {fruit}.",
     "s_criminal_record_fades_by": "{name}'s criminal record fades by 1 (Innocent Face).",
     "starved_to_death": "{name} starved to death.",
     "did_not_eat_today": "{name} did not eat today: {hunger_label}.",
@@ -6041,7 +6041,7 @@
       "pathfinder": "Skilled trail scout: reduces travel time by 10% on paths and roads.",
       "tongue": "Your tongue is a third limb and a weapon: +1 square of reach on melee attacks.",
       "webbed_feet": "A strong swimmer: +1 square on every Swim, never past your full speed.",
-      "fruitful": "Your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions.",
+      "fruitful": "Your leafy body blooms at midnight: produce 1 fresh fruit each day to nourish yourself or your companions.",
       "cosmopolitan": "At home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading.",
       "halfling_luck": "Fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat).",
       "woodland_scout": "The forest whispers its secrets to you: while the group travels Cautious, the chance of an ambush on the road or on a hunt is 10% lower.",
@@ -6104,7 +6104,7 @@
       "war_cry": "+1 to Demoralize checks.",
       "tiny_target": "+2 AC against ranged and thrown attacks.",
       "pixie_dust": "1 point: an adjacent ally takes wing through the end of their next turn.",
-      "bountiful_harvest": "You bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it.",
+      "bountiful_harvest": "You bloom twice at midnight, and your fruit heals 1d4 HP to whoever eats it.",
       "thornskin": "Whoever hits you in melee takes 1 damage.",
       "rending_bite": "Jaws that tear: roll one extra die on your bite.",
       "elder_skeleton": "Centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma.",

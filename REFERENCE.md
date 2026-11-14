@@ -611,9 +611,9 @@ One tree per track. A new level in a track grants one pick in its tree; `Require
 | Sprite | 1 | Nature Initiate | Fey magic: you become initiated in nature magic and gain the Share Magic action. | -- |
 | Sprite | 1 | Pixie Dust | 1 point: an adjacent ally takes wing through the end of their next turn. | -- |
 | Sprite | 1 | Tiny Target | +2 AC against ranged and thrown attacks. | -- |
-| Treefolk | 1 | Fruitful | Your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- |
+| Treefolk | 1 | Fruitful | Your leafy body blooms at midnight: produce 1 fresh fruit each day to nourish yourself or your companions. | -- |
 | Treefolk | 1 | Thornskin | Whoever hits you in melee takes 1 damage. | -- |
-| Treefolk | 2 | Bountiful Harvest | You bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it. | Fruitful |
+| Treefolk | 2 | Bountiful Harvest | You bloom twice at midnight, and your fruit heals 1d4 HP to whoever eats it. | Fruitful |
 | Wolf | 1 | Dire Growth | You grow past your kin: your size goes up one step (a Wolf becomes Large). | -- |
 | Wolf | 1 | Rending Bite | Jaws that tear: roll one extra die on your bite. | -- |
 | Zombie | 1 | Death Grip | Your cold dead hands lock like iron: +2 to grab checks. | -- |

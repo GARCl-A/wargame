@@ -56,7 +56,7 @@ def test_leshy_fruitful_talent_produces_fruit_at_dawn():
     assert not leshy.has_item("Fruit")
     events, _ = g._daily_upkeep()
 
-    assert any("blooms at dawn" in e for e in events)
+    assert any("blooms at midnight" in e for e in events)
     # The fruit was produced; human ate it from the shared larder
     assert human.unfed_days == 0
 
@@ -65,7 +65,7 @@ def test_leshy_without_talent_does_not_produce_fruit():
     leshy = _leshy()
     g = Guild([leshy], name="No Bloom")
     events, _ = g._daily_upkeep()
-    assert not any("blooms at dawn" in e for e in events)
+    assert not any("blooms at midnight" in e for e in events)
     assert not leshy.has_item("Fruit")
 
 

@@ -279,8 +279,8 @@
             "said": "Disse",
             "put_away": "clique para guardar",
             "dawns": {
-                "one": "{n} amanhecer",
-                "other": "{n} amanheceres"
+                "one": "{n} meia-noite",
+                "other": "{n} meias-noites"
             },
             "food": "{rations} para comer no caminho ({dawns}); o grupo tem {have}.",
             "food_short": "{rations} para comer no caminho ({dawns}); o grupo tem {have} e vai passar fome.",
@@ -1069,7 +1069,7 @@
         "shop": {
             "speaks": "<b>{name}</b> fala pelo grupo",
             "till": "No caixa",
-            "till_note": "reabastece ao amanhecer; uma venda acima disso é recusada",
+            "till_note": "reabastece à meia-noite; uma venda acima disso é recusada",
             "deal": "O negócio",
             "you_pay": "Você paga",
             "they_pay": "Eles pagam",
@@ -1548,8 +1548,8 @@
             "crafters_hint": "Clique em quem trabalha; cada um rola d20 + INT por hora rumo a um lote.",
             "recipes": "Receitas",
             "whose": "de {who}, das mochilas do grupo · {what}",
-            "food": "{rations} no grupo, {meals} comidas a cada amanhecer.",
-            "food_days": "{rations} no grupo, {meals} comidas a cada amanhecer ({days} de comida).",
+            "food": "{rations} no grupo, {meals} comidas a cada meia-noite.",
+            "food_days": "{rations} no grupo, {meals} comidas a cada meia-noite ({days} de comida).",
             "foot": "Os materiais entram quando um lote começa; um lote deixado pela metade espera o seu artesão. Sozinho, o artesão ocupa uma vaga de grupo e pega as ferramentas e os materiais da receita do estoque do grupo."
         },
         "kit": {
@@ -4484,7 +4484,7 @@
             "one": " Resta só {n} porção de Comida Podre: ela só é comida no último dia antes de passar fome, e deixa doente quem a come.",
             "other": " Restam só {n} porções de Comida Podre: elas só são comidas no último dia antes de passar fome, e deixam doente quem as come."
         },
-        "no_food_left_whole_guild": "SEM COMIDA: a guilda inteira passa fome no próximo amanhecer. Compre comida agora.",
+        "no_food_left_whole_guild": "SEM COMIDA: a guilda inteira passa fome à meia-noite. Compre comida agora.",
         "no_food_left": "SEM COMIDA",
         "starving_member_hungry_and_no": "FOME: {members} com fome e sem comida. O primeiro morre em {days}. Compre comida agora.",
         "rests_and_recovers_from_their": "{name} descansa e se recupera da doença (tratada).",
@@ -4496,7 +4496,7 @@
         "hunger_note": "A fome havia reduzido todos os atributos em {pen}.",
         "portions_of_food_rotted_away": "{total_rotten} porções de comida apodreceram.",
         "rotted_away": "{name} apodreceu.",
-        "blooms_at_dawn_and_yields": "{name} floresce ao amanhecer e rende {n} {fruit} fresca(s).",
+        "blooms_at_dawn_and_yields": "{name} floresce à meia-noite e rende {n} {fruit} fresca(s).",
         "s_criminal_record_fades_by": "A ficha criminal de {name} diminui em 1 (Rosto Inocente).",
         "starved_to_death": "{name} morreu de fome.",
         "did_not_eat_today": "{name} não comeu hoje: {hunger_label}.",
@@ -6480,7 +6480,7 @@
             "pathfinder": "Batedor habilidoso: reduz em 10% o tempo de viagem em trilhas e estradas.",
             "tongue": "Sua língua é um terceiro membro e uma arma: +1 casa de alcance nos ataques corpo a corpo.",
             "webbed_feet": "Ótimo nadador: +1 casa em cada Nadar, nunca além da sua velocidade total.",
-            "fruitful": "Seu corpo folhoso floresce ao amanhecer: produz 1 fruta fresca por dia para nutrir você ou seus companheiros.",
+            "fruitful": "Seu corpo folhoso floresce à meia-noite: produz 1 fruta fresca por dia para nutrir você ou seus companheiros.",
             "cosmopolitan": "À vontade entre estranhos: reduz em 1 as penalidades de distância de alinhamento ao recrutar, negociar ou comerciar.",
             "halfling_luck": "O destino se curva ao seu redor: uma vez a cada 24 horas, rola de novo o seu primeiro teste de d20 falho (dentro ou fora de combate).",
             "woodland_scout": "A floresta sussurra seus segredos para você: enquanto o grupo viaja Cauteloso, a chance de emboscada na estrada ou numa caçada é 10% menor.",
@@ -6543,7 +6543,7 @@
             "war_cry": "+1 nos testes de Desmoralizar.",
             "tiny_target": "+2 de CA contra ataques à distância e de arremesso.",
             "pixie_dust": "1 ponto: um aliado adjacente alça voo até o fim do próximo turno dele.",
-            "bountiful_harvest": "Você floresce duas vezes ao amanhecer, e sua fruta cura 1d4 PV de quem a comer.",
+            "bountiful_harvest": "Você floresce duas vezes à meia-noite, e sua fruta cura 1d4 PV de quem a comer.",
             "thornskin": "Quem o acerta no corpo a corpo sofre 1 de dano.",
             "rending_bite": "Mandíbulas que rasgam: rola um dado extra na sua mordida.",
             "elder_skeleton": "Séculos de morte-vida afiam a mente e a voz: +4 de Inteligência e +4 de Carisma.",
