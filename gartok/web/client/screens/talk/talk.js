@@ -170,7 +170,7 @@ function band() {
       <div class="medal ours">${face(u.portrait, u.name)}</div>
       <div class="nm"><b>${esc(u.name)}</b><span>${esc(u.race)}</span><div class="tongues">${langs}</div></div>
       <div class="mods"><div class="mod lead"><b>${sign(u.cha)}</b><span>CHA</span></div><div class="mod"><b>${sign(u.int)}</b><span>INT</span></div></div>
-      ${tags.length ? `<div class="tagrow">${tags.join("")}</div>` : ""}</div>`;
+      ${tags.length ? `<div class="tagrow" data-layout-ok="tabs that sit on the card's top edge">${tags.join("")}</div>` : ""}</div>`;
   }
   const hp = T.members.reduce((a, u) => a + u.hp[0], 0), hpm = T.members.reduce((a, u) => a + u.hp[1], 0);
   h += `</div><div class="bandfoot"><span>${trn("talk.souls", T.members.length)}</span><span>${tr("talk.hit_points", {hp, max: hpm})}</span><span>${tr("talk.carried", {purse: esc(T.purse_text)})}</span></div>`;

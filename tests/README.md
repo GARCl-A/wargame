@@ -42,22 +42,33 @@ developing, run the files of the area you change. Open work on the suite is in
 
 `test_layout.py` opens the game in a headless Edge (or Chrome) and asks the page what it drew:
 `tests/browser.py` drives the browser over the DevTools protocol with the standard library alone,
-`tests/layout.py` serves a `Game` to it (`Page`), `tests/layout_audit.js` runs inside the page. It is part of
-the gate (about 30 s, `slow`); a machine with no browser skips it (`GARTOK_BROWSER` names one).
+`tests/layout.py` serves a `Game` to it (`Page`), `tests/layout_scenes.py` builds the screens, and
+`tests/layout_audit.js` runs inside the page. It is part of the gate (about a minute at `-n auto`, `slow`); a
+machine with no browser skips it (`GARTOK_BROWSER` names one).
 
 - **What it finds:** `scroll` (a box named in `fit`, like the tutorial card, holds more than it shows),
-  `clipped` (words cut by `overflow: hidden`), `spill` (words past the edge of their box), `offscreen`,
-  `overlap` (two runs of words on each other) and `crowded` (two runs on a line with no gap). An
-  ellipsis is a cut the CSS asked for and is not reported unless the audit is called with `ellipsis`.
-- **What it does not:** a state no test opens, a box that is not a rectangle (words inside a round seal), and
-  whether the screen looks good.
+  `clipped` (words cut by `overflow: hidden`), `spill` (words past the edge of their box, a painted box past
+  the painted box around it, words outside the ellipse of a round seal), `offscreen`, `overlap` (two runs of
+  words on each other) and `crowded` (two runs on a line with no gap). An ellipsis is a cut the CSS asked for
+  and is not reported unless the audit is called with `ellipsis`. A script error or a shell toast ("something
+  misbehaved") on the screen fails the test too.
+- **What it visits** besides the screen: every distinct tooltip (the pointer rests on each owner of a
+  `data-tip*` and the note is audited) and the unit sheet (the first portrait is clicked; the sheet is audited
+  inside its shadow root).
+- **What it does not:** whether the screen looks good, the map's open panels, a window of another size (the
+  stage is always 1920x1080 and the browser scales it, so a smaller window changes nothing but the scale).
 - **A failure writes a picture** in the temp folder (`gartok-layout`, the path is in the message), the offenders
   outlined in red, and lists each as kind, pixels, CSS path and words.
-- **Every language.** Each test runs once per `i18n.LANGUAGES`; a third language is covered the day it is added.
+- **Every language, and a longer one.** Each test runs once per `i18n.LANGUAGES` and once in `en-x-long`: the
+  English catalog with about a third more letters in each word (placeholders and names kept), made in the
+  test. A translation that runs long finds the limit there first. A third language is covered the day it is added.
 - **Every tutorial card** is drawn by the real client over one screen and must be read whole, without scrolling.
   A session that draws rows on its card gives them to `_card_rows` (a test fails otherwise).
-- **To cover a screen**, add its `Game` to `SCREENS` in `test_layout.py` (one entry per state worth a look: a
-  step, a tab) and take it off `OWED`; a screen of the client in neither fails a test.
+- **To cover a screen**, add its scene to `SCREENS` in `layout_scenes.py` (one entry per state worth a look: a
+  step, a tab; `.crowd` entries are a late-game guild with long names); a screen of the client in neither fails
+  a test. A fight is looked at once the computer's turns are played (`READY`).
+- **A busy machine** drops a connection now and then: `Page.load` asks again (three tries) when the page
+  says it lost the server or a script of it never came, and a fault that stays is reported.
 - **On purpose:** a node that breaks a rule by design says so where it is written, `data-layout-ok="why"`.
 - **The audit is tested too:** one page with each kind of break, and a sound box that must stay silent.
 

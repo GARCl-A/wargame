@@ -101,12 +101,12 @@
 .voc .em .ico{width:36px;height:36px}
 .voc h3{font:700 28px/1 Cinzel,serif;color:#2a1a0e}
 .voc .motto{margin-top:7px;font:16px/1.2 var(--read);color:#5b4630}
-.voc .rlabel{margin-top:22px}
+.voc .rlabel{margin-top:16px}
 .voc .races{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:12px}
 .voc .race{text-align:center}
 .voc .race .medal{width:58px;height:58px;margin:0 auto;box-shadow:0 0 0 1.5px #2a1c10,0 0 0 3px #b8995f,0 0 0 4.5px #2a1c10,0 4px 6px rgba(40,20,5,.35)}
 .voc .race span{display:block;margin-top:8px;font:13px/1 var(--read);color:#4a3522}
-.voc .perk{margin-top:26px;padding:14px 4px 13px;border-top:1px solid rgba(90,60,30,.35);border-bottom:1px solid rgba(90,60,30,.35)}
+.voc .perk{margin-top:14px;padding:12px 4px 12px;border-top:1px solid rgba(90,60,30,.35);border-bottom:1px solid rgba(90,60,30,.35)}
 .voc .perk .k{font:600 10px/1 Cinzel,serif;letter-spacing:.24em;color:var(--redink)}
 .voc .perk p{margin-top:8px;font:17px/1.3 var(--read);color:#2c1c0e}
 .voc.closed{filter:grayscale(.6) brightness(.7);cursor:default}

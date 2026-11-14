@@ -383,7 +383,8 @@
   font: 700 17px/1.15 Cinzel, serif;
   color: #f4e6c3;
   letter-spacing: .03em;
-  min-width: 0
+  min-width: 0;
+  overflow-wrap: anywhere
 }
 
 .chip {
@@ -603,11 +604,12 @@
 
 .bactions .ghost-btn {
   flex: 1 1 auto;
-  height: 32px;
+  min-height: 32px;
   font-size: 10px;
-  padding: 0 8px;
+  line-height: 1.15;
+  padding: 4px 8px;
   letter-spacing: .1em;
-  white-space: nowrap
+  text-align: center
 }
 
 .bactions .ghost-btn .ico {
@@ -720,8 +722,13 @@
   background: rgba(46, 95, 142, .12)
 }
 
+.mate > div:not(.medal) {
+  min-width: 0
+}
+
 .mate b {
   display: block;
+  overflow-wrap: anywhere;
   font: 700 13.5px/1 Cinzel, serif;
   color: #e6eef6
 }

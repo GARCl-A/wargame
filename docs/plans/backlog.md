@@ -130,14 +130,12 @@ the rest.
 
 ## Medium
 
-- **Layout audit: the screens still owed.** `tests/test_layout.py` measures the title, the draft, the map, the
-  guild sheet, the wiki, the settings, the credits and every tutorial card in a browser, in each language
-  (`tests/README.md`). `OWED` there lists the screens with no entry yet: battle, hub (one entry per tab of
-  `HUB_KINDS`), talk, report (one per stage), talents, arena, hunt, watch. Each needs its `Game` built in the
-  test and whatever the first run finds fixed. Then: the open states of the audited screens (the unit sheet, a
-  tooltip, the map's panels, a late-game guild with long names), a smaller window (1366x768) and a stretched
-  pseudo-language (every string 30% longer) so a translation never finds the limit first. Not seen by the
-  audit: the seal's subtitle on the draft ("0 DE 3 ESCOLHIDOS") runs to the edge of the round seal.
+- **Layout audit: what it still does not see.** `tests/test_layout.py` measures every screen of the client,
+  its tooltips and the unit sheet, in each language and in a stretched one (`tests/README.md`). Missing: the
+  map's open panels (a node's card, the camp, the log search) and the late-game guild beyond the map and the
+  guild tabs (a shop full of stock, a long history).
+- **Game text that is English in pt-br.** `CHA +2`, `8+ HP` and `can barely carry gear` are literals in
+  `gartok/archetypes.py`, and "Small" sits on the weapon line of the draft card in any language.
 
 - **Objects on the table, not boxes on a page (visual audit 2026-11-12).** The screens that look most like
   a game are the ones made of physical things that overlap and sit a little crooked (the title: the map

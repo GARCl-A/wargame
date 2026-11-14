@@ -79,7 +79,7 @@
 .cats span:hover{color:#4a3420}
 .cats span.on{color:#24170c;border-bottom:2px solid #7a2318}
 .kicker em{order:2;font:15px/1 var(--read);letter-spacing:0;color:#7b6142;text-transform:none}
-.cols,.row{display:grid;grid-template-columns:50px 1fr 62px 76px 56px 104px;align-items:center}
+.cols,.row{display:grid;grid-template-columns:50px 1fr 76px 76px 56px 104px;align-items:center}
 .cols{margin-top:14px;padding:0 8px 7px;border-bottom:1px solid rgba(90,60,30,.45)}
 .cols span{font:600 9.5px/1 Cinzel,serif;letter-spacing:.2em;color:#8a6c47;text-transform:uppercase}
 .r{text-align:right}.c{text-align:center}
@@ -196,7 +196,7 @@
 .worker p.bad,.worker .pay.bad b{color:var(--blood-hi)}
 .worker .pay .lbl{display:block;margin-top:6px}
 .fact{display:flex;align-items:baseline;gap:14px;margin-top:14px}
-.fact .lbl{width:100px;flex:none}
+.fact .lbl{min-width:100px;flex:none}
 .fact b{font:600 16px/1.2 var(--read);color:#f0dfb8}
 .fact b.good{color:#a9c98a}
 .fact b.bad{color:var(--blood-hi)}

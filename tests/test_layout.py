@@ -8,26 +8,55 @@ import urllib.parse
 
 import pytest
 
-from gartok import hints, i18n, persist, recorder, tutorial, vocations
-from gartok.draft import TEAM_SIZE
+from gartok import hints, i18n, persist, recorder, tutorial
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.web import session as web_session
 from gartok.web.battle_session import BattleSession
-from gartok.web.credits_session import CreditsSession
 from gartok.web.draft_session import DraftSession
-from gartok.web.guild_session import TABS as GUILD_TABS
-from gartok.web.guild_session import GuildSession
 from gartok.web.map_session import MapSession
 from gartok.web.server import Game
-from gartok.web.settings_session import SettingsSession
-from gartok.web.wiki_session import WikiSession
 from tests import browser as browser_mod
 from tests.helpers import standard_unit
 from tests.layout import AUDIT, HERE, Page
+from tests.layout_scenes import READY, SCREENS
 
 pytestmark = pytest.mark.slow
-LANGUAGES = sorted(i18n.LANGUAGES)
+STRETCHED = "en-x-long"      # a valid language tag: the client hands it to toLocaleString
+LANGUAGES = [*sorted(i18n.LANGUAGES), STRETCHED]
+HOLDS = re.compile(r"(\{\{|\}\}|\{[^{}]*\})")
+
+
+WORD = re.compile(r"[A-Za-z]+")
+
+
+def _longer(word):
+    """`word` about a third longer: every few-th vowel doubled, spread along it (a word is never doubled whole)."""
+    vowels = [i for i, c in enumerate(word) if c in "aeiouAEIOU"]
+    count = min(len(vowels), round(len(word) * 0.35))
+    chosen = {vowels[k * len(vowels) // count] for k in range(count)} if count else set()
+    return "".join(c * 2 if i in chosen else c for i, c in enumerate(word))
+
+
+def _stretch(text):
+    """English about a quarter longer (a pt-br line is a third longer one time in ten), its `{placeholders}`
+    as they were and words that still break where words break. The names of things stay: a race or an item
+    is named about as long in any language."""
+    return "".join(part if HOLDS.fullmatch(part) else WORD.sub(lambda m: _longer(m.group()), part)
+                   for part in HOLDS.split(text))
+
+
+@pytest.fixture
+def speak(monkeypatch):
+    """`speak(lang)` sets the language; `stretched` is the English catalog made longer."""
+    def choose(lang):
+        if lang == STRETCHED:
+            monkeypatch.setitem(i18n.LANGUAGES, lang, lang)
+            catalog = {k: [_stretch(v) for v in value] if isinstance(value, list) else _stretch(value)
+                       for k, value in i18n.catalog("en").items() if not k.startswith("name.") and not k.endswith(".gender")}
+            monkeypatch.setitem(i18n._cache, lang, catalog)
+        i18n.set_language(lang)
+    return choose
 
 
 @pytest.fixture(scope="module")
@@ -51,9 +80,10 @@ BROKEN = """<body style="margin:0;font:16px/1.2 serif"><style>div{margin:8px}</s
 <div id="clipped" style="width:60px;overflow:hidden;white-space:nowrap">words cut by their own box</div>
 <div id="ellipsis" style="width:60px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">words ended by dots</div>
 <div id="spill" style="width:60px;white-space:nowrap;border:1px solid">words past the edge of a plate</div>
-<div id="offscreen" style="position:absolute;left:-30px;top:300px">words past the window</div>
+<div id="offscreen" style="position:absolute;left:-30px;top:500px">words past the window</div>
 <div id="overlap" style="position:relative;height:20px"><span style="position:absolute;left:0">first run</span><span style="position:absolute;left:20px">second run</span></div>
 <div id="crowded" style="display:flex"><p style="margin:0">one</p><p style="margin:0">two</p></div>
+<div id="round" style="width:100px;height:100px;border-radius:50%;background:#900;color:#fff;display:flex;align-items:flex-end;justify-content:center"><span style="white-space:nowrap">0 OF 3 CHOSEN</span></div>
 <div id="fine" style="display:flex;gap:12px"><p style="margin:0">one</p><p style="margin:0">two</p></div>
 <div id="meant" data-layout-ok="a ribbon that runs off the page" style="width:60px;white-space:nowrap;border:1px solid">words past on purpose</div>
 </body>"""
@@ -65,30 +95,15 @@ def test_the_audit_sees_each_kind_of_break_and_nothing_in_a_sound_box(browser):
     found = browser.eval(f"({AUDIT})({{fit: ['#scroll'], ellipsis: true}})")
     seen = {(f["kind"], f["where"].split(" ")[0]) for f in found}
     assert seen == {("scroll", "#scroll"), ("clipped", "#clipped"), ("ellipsis", "#ellipsis"), ("spill", "#spill"),
-                    ("offscreen", "#offscreen"), ("overlap", "#overlap"), ("crowded", "#crowded")}
+                    ("spill", "#round"), ("offscreen", "#offscreen"), ("overlap", "#overlap"), ("crowded", "#crowded")}
 
 
-def test_every_screen_of_the_client_is_audited_or_owed():
+def test_every_screen_of_the_client_is_audited():
     source = (pathlib.Path(HERE).parent / "gartok" / "web" / "client" / "shell.js").read_text(encoding="utf-8")
     table = source[source.index("const SCREENS = {"):]
     client = set(re.findall(r"^  (\w+): \{", table[:table.index("};")], re.MULTILINE))
     audited = {name.split(".")[0] for name in SCREENS}
-    assert audited | OWED == client and not audited & OWED, "a new screen joins SCREENS here; one audited leaves OWED"
-
-
-def _draft(step="vocation"):
-    game = Game.title()
-    game.session.new_guild()
-    d = game.session
-    d.tutorial.enabled = False
-    if step != "vocation":
-        d.choose_vocation(next(iter(vocations.VOCATIONS)))
-        d.next()
-    if step == "charter":
-        for i in range(TEAM_SIZE):
-            d.pick(i)
-        d.next()
-    return game
+    assert audited == client, "a new screen of the client joins `SCREENS` in tests/layout_scenes.py"
 
 
 def _guild():
@@ -118,10 +133,10 @@ def test_every_session_that_draws_card_rows_is_in_the_card_test():
 
 
 @pytest.mark.parametrize("lang", LANGUAGES)
-def test_every_tutorial_card_is_read_whole_without_scrolling(browser, saves, lang):
-    i18n.set_language(lang)
+def test_every_tutorial_card_is_read_whole_without_scrolling(browser, saves, speak, lang):
+    speak(lang)
     rows = _card_rows()
-    game = _draft()
+    game = SCREENS["draft.vocation"]()
     d = game.session
     d.tutorial = tutorial.TutorialState()
     shown = {"key": None}
@@ -145,39 +160,23 @@ def test_every_tutorial_card_is_read_whole_without_scrolling(browser, saves, lan
         page.close()
 
 
-def _map():
-    session = MapSession(_guild())
-    session.guild.tutorial.enabled = False
-    return session
-
-
-def _aside(cls):
-    return lambda: Game(cls(lambda: None))
-
-
-SCREENS = {
-    "title": Game.title,
-    "draft.vocation": lambda: _draft("vocation"),
-    "draft.pick": lambda: _draft("pick"),
-    "draft.charter": lambda: _draft("charter"),
-    "map": lambda: Game(_map()),
-    **{f"guild.{tab}": (lambda tab=tab: Game(GuildSession(_map(), tab))) for tab, _ in GUILD_TABS},
-    "wiki": _aside(WikiSession),
-    "settings": _aside(SettingsSession),
-    "credits": _aside(CreditsSession),
-}
-
-
-OWED = {"battle", "hub", "talk", "report", "talents", "arena", "hunt", "watch"}      # docs/plans/backlog.md
-
-
 @pytest.mark.parametrize("lang", LANGUAGES)
 @pytest.mark.parametrize("name", sorted(SCREENS))
-def test_a_screen_draws_nothing_cut_spilled_or_glued(browser, saves, name, lang):
-    i18n.set_language(lang)
-    page = Page(browser, SCREENS[name]())
+def test_a_screen_draws_nothing_cut_spilled_or_glued(browser, saves, speak, name, lang):
+    speak(lang)
+    page = Page(browser, SCREENS[name](), READY.get(name.split(".")[0], "true"))
     try:
         found = page.audit(shot=f"screen-{name}-{lang}")
+        found += page.tips(shot=f"tip-{name}-{lang}") + page.sheet(shot=f"sheet-{name}-{lang}")
         assert not found, "\n" + "\n".join(found)
+    finally:
+        page.close()
+
+
+def test_the_open_states_are_really_visited(browser, saves):
+    page = Page(browser, SCREENS["draft.pick"]())
+    try:
+        assert page.tips() == [] and page.tips_shown > 5, "the tooltips are hovered one by one"
+        assert page.sheet() == [] and page.sheets_opened == 1, "a portrait opens the unit sheet"
     finally:
         page.close()

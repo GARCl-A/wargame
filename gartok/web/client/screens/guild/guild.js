@@ -58,7 +58,7 @@ function roster(M) {
     if (b.folded) continue;
     for (const m of b.rows) {
       const med = `<div class="medal ${m.beast ? "beastmed" : ""} ${m.hurt ? "hurt" : ""}">${face(m.portrait, m.name)}</div>`;
-      h += `<div class="mem ${m.selected ? "sel" : ""}" data-uid="${m.uid}">${med}<div style="min-width:0"><div class="nm"${tip(m.name)}>${esc(m.name)}</div><div class="sb">${esc(m.sub)}</div>
+      h += `<div class="mem ${m.selected ? "sel" : ""}" data-uid="${m.uid}">${med}<div style="min-width:0"><div class="nm"${tip(m.name)}>${esc(m.name)}</div><div class="sb"${tip(m.sub)}>${esc(m.sub)}</div>
         <div class="hpbar"><i class="${hpcls(...m.hp)}" style="width:${m.hp[0] / m.hp[1] * 100}%"></i></div></div>
         <div class="bdg">${m.badges.map(x => `<span class="mark ${x.tone}">${esc(x.text)}</span>`).join("")}</div></div>`;
     }

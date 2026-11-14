@@ -79,8 +79,9 @@ The Editor (`python -m editor`) is the one pygame program left; leave it alone (
 ### How a screen is checked
 
 - **The layout is measured, not eyed.** `tests/test_layout.py` opens the screen in a headless browser, in each
-  language, and fails on a card that must be scrolled and on words cut, past their box, over each other or
-  glued to the next (how to cover a screen: `tests/README.md`). A new screen joins its `SCREENS`.
+  language and in a stretched one, and fails on a card that must be scrolled and on words cut, past their box
+  (a round seal's ellipse too), over each other or glued to the next (how to cover a screen: `tests/README.md`).
+  A new screen joins `SCREENS` in `tests/layout_scenes.py`.
 - **Screenshots at milestones**, only when the step is about the look: headless Edge at 1920x1080 on a copy
   of a real late-game save; clicks and drags driven over the DevTools protocol when they matter.
 - **A new family of screens gets a mockup first**, one HTML page at 1920x1080 with its PNG in
