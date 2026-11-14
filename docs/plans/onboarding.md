@@ -160,6 +160,18 @@ one rule, fired by the event that makes it matter, with a way to the wiki.
 5. **A grind the player chose is not a grind.** What is being saved for, and how far along it is, is on
    screen.
 6. **Nothing is locked.** The sandbox stays open; the season is a path drawn on it, and it can be put away.
+7. **Nothing is seen only once** (author's worry, 2026-11-13). Every rule the player is shown at a moment
+   has a permanent home they can go back to: the screen's `?`, a hover, or a wiki entry. Today a screen's
+   card is safe (its `?` reopens it forever, `TutorialState.reopen`), but a hint is not: once closed, it
+   is never shown again, and its only way back is the "See in the wiki" button inside it. So:
+   - **A card that becomes pointers keeps its text behind the `?`.** It stops opening by itself; the `?`
+     still opens it as that screen's reference. No card text is deleted by this plan.
+   - **Every hint has a wiki entry**, and the hint is listed again under the `?` of the screen it fired on
+     ("Rules met here": each hint seen on the map or in a fight, reopenable). Today the danger hint has no
+     wiki entry at all (`hints.wiki_ref` has no row for it).
+   - **A pop-up on hover is permanent by nature** (the RATIONS pop-up), so it needs nothing more.
+   The audit ([onboarding_audit.md](onboarding_audit.md)) has a column for this: where each rule can be
+   read again.
 
 ## The proposal
 
@@ -219,8 +231,8 @@ What is new content, and needs the author's numbers:
 
 ### 3. Notes in place of cards
 
-Three kinds of teaching replace the card on entering a screen. The long text is not thrown away: it
-becomes the wiki entry the `?` opens.
+Three kinds of teaching replace the card on entering a screen. The long text is not thrown away: the
+card stays behind the screen's `?` as its reference (principle 7), and stops opening by itself.
 
 | Kind | What it is | Budget | Blocks the screen |
 |---|---|---|---|
@@ -394,7 +406,7 @@ note is text in a margin; a pop-up opens on hover; a hint is a card fired by an 
 | The battle card | 197 plus rows | three pointers (move, double click, Space) and the points sentence |
 | First time both points are spent walking | nowhere | the Delay hint |
 | First member down | the fallen hint, 38 | stays, one line longer |
-| After the fight | report 33, loot 49, reward 15, memorial 15 | one pointer each; text to the wiki |
+| After the fight | report 33, loot 49, reward 15, memorial 15 | one pointer each; the card stays behind the `?` |
 
 **E. The second fight and after**
 
@@ -408,7 +420,7 @@ note is text in a margin; a pop-up opens on hover; a hint is a card fired by an 
 | Five days of nothing but shifts | nothing | the stall hint |
 | Old Road chosen | the road hint, 44 | stays and gains the danger text |
 
-**F. Places met later** (one card each today; each becomes a margin note, the rest in the wiki)
+**F. Places met later** (one card each today; each gets a margin note, and the card stays behind the `?`)
 
 market 161, taverna 193, hunt 59, bank 78, level 65, library 50, group 73, missions 65, trust 39,
 ledger 29, craft 127, medic 94, property 63, claim 112, guard 60, dialogue 60, prison 45, stable 88,
@@ -499,11 +511,11 @@ knowing there was a rule, and they are in the order of work below as hints, one 
 | Cards | Become |
 |---|---|
 | Welcome | stays a card |
-| The other draft cards, the map, the shop, work, the squad, loot, report, purse, level-up | pointers and a margin note; the text goes to the wiki |
+| The other draft cards, the map, the shop, work, the squad, loot, report, purse, level-up | pointers and a margin note; the card stays behind the screen's `?` |
 | How far the guild reaches | a margin note and the wiki |
 | The battle card | three pointers on the first turn (move, strike, end the turn), the standing-actions rows as a margin note; Delay gets a hint the first time a unit ends a turn with points unspent |
 | The eight hints | stay, with the danger hint moved to the Old Road |
-| The place cards met late (bank, craft, medic, property, garage, claim, stable, wagons, initiation, prison, library, gathering, routines, watch, guard, talk, hunts) | a margin note each, the rest in the wiki; they are met one at a time by a player who already knows the game, so they are the last to convert |
+| The place cards met late (bank, craft, medic, property, garage, claim, stable, wagons, initiation, prison, library, gathering, routines, watch, guard, talk, hunts) | a margin note each, the card behind the `?`; they are met one at a time by a player who already knows the game, so they are the last to convert |
 | The combat lab | unchanged (not part of a new game) |
 
 The settings keep their switch; it then turns the pointers and notes off, and "show again" brings them back.

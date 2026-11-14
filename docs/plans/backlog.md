@@ -30,7 +30,8 @@ Goal: a stable build for the author's playtest and one with friends. Left:
 - **Onboarding (proposal 2026-11-13, awaiting the author's calls).** Plan: [onboarding.md](onboarding.md). A new
   player closes 7 cards (877 words) before the first order, and the recorded runs spend 79% of their first two
   weeks on wage shifts. The plan: a quiet map where the keepers' errands give the direction, a first season of five played chapters, notes at
-  the decision in place of cards. Its phase 1 (copy and two triggers) needs no new system.
+  the decision in place of cards. Its phase 1 (copy and two triggers) needs no new system. The audit of every
+  card and rule, with the texts that contradict the code: [onboarding_audit.md](onboarding_audit.md).
 - **Translation to pt-br.** The author plays in `pt-br` and flags tone, missing accents, sort order, number and money formats
   ([../glossary_pt_br.md](../glossary_pt_br.md)).
 - **Holy Symbol.** The author plays the Farmer's quest through (the offer from day 50, *Ask around*, the rite fight, the Demon's lair); the polish is in *Needs more information*.
