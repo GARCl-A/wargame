@@ -21,6 +21,7 @@ TORCH_ITEM = data.TORCH_ITEM
 
 STARTING_WEALTH_DICE = (3, 4)           # 3d4 copper rolled at character creation
 SELL_FACTOR = 0.5                       # resale = half the buy price, floored at 1
+SELL_DEAL_SHARE = 0.4                   # resale also moves 40% as far as the deal does
 CHA_DEAL_STEP = 0.04                    # deal fraction per point of haggle Charisma
                                        #   mod (and per step of the food talent)
 
@@ -459,7 +460,7 @@ def sell_price(name, mods=()):
     the keeper takes it off your hands and throws it away."""
     if _base_price(name) <= 0:
         return 0
-    price = _base_price(name) * (SELL_FACTOR + 0.4 * deal_value(mods, name, "sell"))
+    price = _base_price(name) * (SELL_FACTOR + SELL_DEAL_SHARE * deal_value(mods, name, "sell"))
     item, charges = items.get(name), getattr(name, "charges", None)
     if item is not None and item.max_charges and charges is not None:
         price *= min(charges, item.max_charges) / item.max_charges

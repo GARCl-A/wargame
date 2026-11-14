@@ -4113,6 +4113,9 @@
       "reach": "Reach",
       "distance": "Distance",
       "character_level": "Character Level",
+      "modifier": "Modifier",
+      "dc": "DC",
+      "bonus_type": "Bonus type",
       "guard": "Guard",
       "evasion": "Evasion",
       "resolve": "Resolve"
@@ -6368,6 +6371,9 @@
       "distance": "Distance: how far a shot flies, in squares: a Crossbow's Distance 18, a thrown weapon's Thrown 6. It is the range of a ranged attack, never of a melee one, which has Reach.",
       "character_level": "Character Level: a character's overall level, half the sum of the combat, work and magic levels. Each one is a hit die, and picks of the race's own talents come at regular steps. It also sets how many recruits a leader can sponsor and how large a group they lead, and Morale, venom saves and the reading of a foe are built on it.",
       "guard": "Guard: the number an attack must reach to hit. 10 + the Dexterity modifier (capped by armour) + armour, shield, talents, size and natural bonuses. An attack that meets or beats it does damage.",
+      "modifier": "Modifier: the bonus or penalty an attribute score gives, (score - 10) divided by 2, rounded down. A score of 10 gives 0, 14 gives +2, 8 gives -1. Rolls and rules name the attribute: Charisma modifier, WIS modifier.",
+      "dc": "DC: the number a roll must reach, short for difficulty class. A save is a d20 plus an attribute modifier against a DC: reaching it passes, falling short fails, and what a fail costs is in the rule that asks for the save (a Constitution save against poison, a d20 + INT roll against a foe to read it).",
+      "bonus_type": "Bonus type: the label on a bonus, such as circumstance (Defend, Pack Tactics) or status. Bonuses of one type never stack: only the largest counts. Penalties and bonuses with no type always add. A bonus of a different type adds normally.",
       "evasion": "Evasion: the number a spell that only has to touch its target must reach: 10 + the Dexterity modifier (armour's cap on it ignored) + talents, size and natural bonuses. Armour and shields never add to it.",
       "resolve": "Resolve: a fighter's mental toughness, the number Demoralize, Sleep and the other mind spells must reach: 10 + the Wisdom modifier + talents. A group stretched past its leader's hold lowers its members' Resolve, and the daily roll that decides who leaves is made against it."
     }
@@ -6658,9 +6664,9 @@
       "2": "Walk: up to your speed in cells. Diagonals cost 1, then 2, then 1 again within one walk.",
       "3": "You can cross an ally's cell but not stop on it. An enemy's cell blocks you completely.",
       "4": "Defend: +{ac} Guard (circumstance) until the start of your next turn.",
-      "5": "Delay ({delay} points): drop to the end of the initiative order for good, once a round, before you spend anything.",
+      "5": "Delay (costs nothing): drop to the end of the initiative order for good, once a round, before you spend anything.",
       "6": "Flee ({flee} point, ends the turn): only from the map edge, and only when you are faster than the fastest pursuer or already out of its reach.",
-      "7": "Bonuses of the same type do not stack: Defend and another circumstance bonus to Guard, only the larger counts."
+      "7": "Two bonuses of one Bonus type never stack: Defend and another circumstance bonus to Guard, only the larger counts."
     },
     "flanking": {
       "title": "Off-guard and flanking",
@@ -6713,7 +6719,12 @@
       "1": "The guild may run {base} groups, plus one more for every {fame} Fame, which is the reputation summed across all factions.",
       "2": "A group holds {cap} + {terms} members, and {herd} + {herd_terms} animals and captives.",
       "3": "An overextended group rolls each day against its weakest member's Resolve (the leaders are exempt). That member splits off into a group of their own, or with no slot free gives {days} days' notice and then leaves the guild.",
-      "4": "Who leaves takes by alignment: Lawful only what they wear, Neutral the pack too, Chaotic everything."
+      "4": "Who leaves takes by alignment: Lawful only what they wear, Neutral their gear and pack but not their coin, Chaotic everything they can carry. What they leave goes to the group's leader.",
+      "5": "A group past its capacity is overextended: every member loses one Resolve for each member too many.",
+      "6": "A group past its herd limit gives {days} days' notice, then one animal strays (a captive slips its bonds), and the notice starts again.",
+      "7": "A group with a fight pending is locked: no split, merge, leader swap or kit change until it is settled. A locked group cannot split a member off, so an overextended one gives notice instead.",
+      "8": "Split a group off at any time it has no order in flight and the guild has a free slot. Merge two only when they stand on the same node and neither has an order in flight.",
+      "9": "Fame also opens routine seats, one for every {fame} Fame: each group that runs a routine takes one."
     },
     "captives": {
       "title": "Captives",
@@ -6733,6 +6744,208 @@
       "2": "Paying spends copper first, then breaks gold and returns change. Gold only comes from the bank exchange.",
       "3": "Everyone eats every day; Hunger & Starvation says what a missed meal costs.",
       "4": "Death is permanent. The run ends only when the whole guild is gone."
+    },
+    "clock": {
+      "title": "The Clock",
+      "1": "Time moves only when someone is ordered to spend it. A band that travels, works or rests spends hours; a fight spends {round} seconds a round. When a band needs you (idle, or with a fight or ambush waiting) the clock waits for you. Waiting a whole {advance} hours is allowed only when every band is garrisoned.",
+      "2": "Day is {dawn} to {dusk}; the rest is night. Day numbers turn at midnight, not at dawn.",
+      "3": "Whatever the bands are doing, each midnight crossed settles the day: every member eats a meal (see Hunger), food ages a day (see Spoiling), Fruitful Treefolk bear fruit and the shops restock.",
+      "4": "Night changes little on the map. It matters in outdoor fights, which are pitch dark without a light (see Light & Dark), and on hunts, where tracks cannot be read after dark."
+    },
+    "rest": {
+      "title": "Rest & Healing",
+      "1": "Only rest heals. Each full {hours} hours a member rests, they recover HP. Walking, working and fighting heal nothing, and the count starts over whenever they stop resting. A group with Steady Pace counts work, done where it stands, as rest.",
+      "2": "One stretch of {hours} hours heals Character Level × Constitution modifier HP, never less than one. Restful Sleep and Second Breakfast add one each; Triage on anyone in the group adds one for everyone.",
+      "3": "A hungry or starving member heals nothing (see Hunger).",
+      "4": "A REST order says how long: a short stretch, a full stretch, or until everyone is full. Until full counts HP only, not sickness, and stops a minute before a midnight the group has no food to cross. A poisoned member cannot be rested to full, and STOP RESTING keeps the hours already rested.",
+      "5": "Non-lethal damage comes back as HP after {clear} hours of unbroken rest ({hardened} with Hardened), as long as the member is fed."
+    },
+    "spoiling": {
+      "title": "Spoiling & Rotten Food",
+      "1": "Food has a shelf life in days, shown on the item. At each midnight every perishable ages a day, and a stack ages as one. Past its days, food turns into Rotten Food, and anything else perishable, a body for one, is lost.",
+      "2": "It happens wherever food is kept: in a pack, the bank chest, the house stash, and the stores of a wagon or an animal.",
+      "3": "Rotten Food is no ration: it feeds only as a last resort and it sickens (see Hunger and Sickness)."
+    },
+    "sickness": {
+      "title": "Sickness",
+      "1": "Eating Rotten Food sickens: -{con} Constitution and -{other} on each other attribute while it lasts. Hunger alone never sickens. Strong Stomach is immune.",
+      "2": "A sick member can rest it off: each full {hours} hours of rest, a d20 at {roll} or under cures them ({pct}% a stretch). A member the Medic has treated is cured for sure.",
+      "3": "Eating Rotten Food while sick adds a stack of Gut Rot (see Poison). Any attribute worn down to zero kills (see Hunger)."
+    },
+    "load": {
+      "title": "Carrying",
+      "1": "A pack counts weight in kg, with no slots. A member's normal load is {normal0} kg plus {normal_per} kg for each point of Strength modifier; their maximum is {max0} kg plus {max_per} kg for each point. Both scale with the body's size, and a Goliath counts as Large.",
+      "2": "Past the normal load a member is overloaded: -{pen} Strength, -{pen} Dexterity and -{speed} speed. A band walks at the pace of its slowest walker.",
+      "3": "Past the maximum, nothing more goes into that pack, whether bought, looted or stored.",
+      "4": "Strength is read after hunger, so a hungry member carries less."
+    },
+    "light": {
+      "title": "Light & Dark",
+      "1": "Most fights are dark: a fighter sees only what a light reaches. An outdoor fight follows the clock, lit by day and pitch dark at night.",
+      "2": "A Torch lights {torch} squares around its bearer and a Lantern {lantern}, but only while held in the off hand; one in the pack stays dark. Darkvision sees {dv} squares in the dark.",
+      "3": "A light takes a hand: with a two-handed weapon in hand, there is none free for it."
+    },
+    "death": {
+      "title": "Death",
+      "1": "Death is permanent. A character lost in a fight, or to hunger, poison or sickness, never comes back, and the run ends only when the whole guild is gone.",
+      "2": "A character killed in a fight leaves their gear on the field: take it before you leave. One who dies of hunger, poison or collapse leaves no body, and the gear goes with them."
+    },
+    "bank": {
+      "title": "Bank, Strongbox & House",
+      "1": "The Bankers rent the guild a strongbox in the City for ${price} once; it holds {kg} kg and costs nothing more to use. Gold Coins are minted and melted only here: minting a coin costs ${fee} over its value and melting one pays ${fee} under it.",
+      "2": "With {rep} reputation with the Bankers the guild may buy a house in the City: ${house} once, {house_kg} kg of storage, and ${tax} of tax every {period} days. Miss {limit} payments and the Bankers come to collect: give the house back and owe them, or squat in it. Debt left unpaid for {grace} days brings the guard."
+    },
+    "wages": {
+      "title": "Day Labour & Wages",
+      "1": "Day labour pays by the whole block: ${wage} for each {block} hours at the Lumber Yard, and ${premium} more a block at the Mine. A part-block is unpaid. Shifts run {shifts} hours. Nothing attacks a wage crew.",
+      "2": "A worker who carries the node's own tool in the pack, an Axe at the Yard or a Pick at the Mine, is paid {num}/{den} of that, rounded down. Each node counts only its own tool.",
+      "3": "Day labour is a floor, not a living: a full day buys a cheap meal, and a fight or a gathering shift pays better.",
+      "4": "On the stage, a member with a Musical Instrument plays for tips, in shows of {shows} hours. Each hour is a d20 + Charisma modifier test: every full {step} points above {base} tips one coin.",
+      "5": "The Frontier Supply Run pays ${pay} to each member and needs {kg} kg of free cargo space. An ambush may come on each leg, {chance}% of the time."
+    },
+    "gathering": {
+      "title": "Gathering",
+      "1": "With a licence, bought once at the node (${yard} at the Lumber Yard, ${mine} at the Mine) and held by the whole guild, a crew gathers instead of working for a wage: for each member who carries the node's own tool, one roll on the node's table for every {rate} hours of the shift.",
+      "2": "Members without the tool stand guard: no haul and no work XP, but they stay with the crew and fight. Gathering teaches work XP at job level {yard_level} at the Yard and {mine_level} at the Mine. The Wilds Claim is the guild's own ground, so it needs no licence and pays no wage.",
+      "3": "Every hour of a shift rolls for an ambush: {yard_pct}% at the Yard and the Claim, {mine_pct}% at the Mine. A pack that finds the crew cuts the shift short, and what is left of it is worked if the crew wins."
+    },
+    "levels": {
+      "title": "Levels, XP & Hit Dice",
+      "1": "A character has three tracks: Combat, Work and Magic. Each has its own level and its own talent tree, and each level in a track is one talent pick in that tree.",
+      "2": "Combat XP comes from downing a standing foe of your level or higher: (foe's level - yours) plus one. A foe below your level pays nothing. The first level needs {c1} XP and the second {c2}. Only a fighter who survives the battle keeps what they earned.",
+      "3": "Magic XP works the same way when the last hit was magic, and a finished spell study pays the spell's level plus one.",
+      "4": "Work XP counts hours: every {mark} hours banked is one mark. A shift's hours count (job level - your work level) plus one times over, and not at all once the job's level is below yours. Wage jobs are level zero bare-handed and level {own} with the node's own tool. The stage is level {stage}, a hunt {hunt}, the Frontier Supply Run {supply}, gathering as set there, and crafting its recipe's level.",
+      "5": "Character Level is the sum of your three track levels on a curve of {per}n: every {per} track levels, anywhere, make one Character Level and one more hit die. Every {pick}th Character Level also gives a racial talent pick.",
+      "6": "Maximum HP is the starting die plus one die for each Character Level, plus the Constitution modifier once for each die, never under one. The dice are rolled once and kept, so loading a save does not roll them again."
+    },
+    "crafting": {
+      "title": "Crafting",
+      "1": "Crafting needs a recipe the group has learned, its tools in any pack of the group, and the materials, which are spent when the batch starts. Each hour of work rolls d20 + INT toward the batch. WORK keeps the whole group at the bench; ALONE splits the crafter off.",
+      "2": "A recipe's level is worked out, never chosen, and it never blocks anyone: it only sets how much work XP the hours teach a crafter below it. The level is one, plus one for every {per} points. Points come from who may learn it (none for anyone, one for a talent any race can take, two for a racial talent or a quest), from scarce ingredients the shops do not sell without limit (one each, up to {scarce_max}), and from a batch of {short} hours or more (one) or {long} hours or more (one more).",
+      "3": "Recipes come from Work talents, from recipe papers studied at the Tavern, from racial talents and from job rewards."
+    },
+    "market": {
+      "title": "Shops & Haggling",
+      "1": "A shop sells at its table price and buys back at {sell}% of it. One member speaks for the guild: the leader if they share the vendor's language, otherwise the best talker among those who do. With nobody who shares it, the table price stands.",
+      "2": "The speaker's deal moves every price: +{step}% for each point of positive Charisma modifier (a negative one adds nothing), plus a step for how near their alignment is to the vendor's: +{a0}% the same, +{a1}% one step away, nothing two away, -{a3}% three, -{a4}% four. The deal is kept between -{low}% and +{high}%. A positive deal lowers what you pay and raises what you are paid.",
+      "3": "Resale is the table price times {sell}% plus {share}% of the deal, never under one coin. A worthless item fetches nothing: the keeper throws it away."
+    },
+    "shop": {
+      "title": "Shop Tills & Stock",
+      "1": "A shop pays only from its till. It starts at ${start}, takes what you spend, pays what it buys, and earns back ${regen} each midnight up to ${cap}. A sale bigger than the till is refused whole.",
+      "2": "Shelves are finite: each shop stocks what its trade sells and restocks a little each day. Some goods have one shelf only, such as {mine} at the Mine. Any shop will buy anything at the rate above."
+    },
+    "missions": {
+      "title": "Missions",
+      "1": "A mission has a named giver, a concrete goal, a copper reward and a real deadline. The group leader accepts it, and it follows that character rather than the group.",
+      "2": "At hand-in, the whole group that is there splits the reward evenly, the remainder going to the first members, and each share is paid into a pack.",
+      "3": "Past its deadline a mission fails. Many are offered again after a wait the board shows; a few are lost for good."
+    },
+    "arena": {
+      "title": "The Arena",
+      "1": "The Arena lets the guild fight for money, and nobody dies there. The band stakes an entry from the fighters' purses: ${scrapper_entry} a head for the Pit's Scrapper bout, against {scrapper_foes} foes, for a purse of ${scrapper_purse} that one fighter takes on a win. One fighter may enter for each foe fielded, up to {boss_squad} in the boss bout.",
+      "2": "Adelio holds the Pit's title: challenging him costs ${champion_entry} a head for a ${champion_purse} purse. Once he is dethroned the Games open: a brawl and a flag bout at ${games_entry} a head for ${games_purse}, then the Ribbit brothers' boss bout at ${boss_entry} a head for ${boss_purse}.",
+      "3": "The title is held by one character and must be defended: every {cycle} days a challenger comes, and the holder has {grace} days to reach the Arena and turn them away, for ${defense}, or the title is forfeit.",
+      "4": "A bout teaches combat XP by the usual rule: nothing once the foes stand below your level."
+    },
+    "alignment": {
+      "title": "Alignment",
+      "1": "Every character sits on two axes: Lawful, Neutral or Chaotic, and Good, Neutral or Evil. The distance between two alignments is the steps on both axes added together, from none (the same) to four (opposed).",
+      "2": "Distance matters when people meet: it docks a recruit pitch (see Recruiting), moves a vendor's price (see Shops & Haggling), and the law axis decides what a member takes when they leave the guild (see Groups)."
+    },
+    "languages": {
+      "title": "Languages",
+      "1": "Understanding is a gate, not a bonus. With no language in common you cannot pitch a recruit, a shop gives you no haggle deal (see Shops & Haggling), and a foe can only be persuaded, bluffed or intimidated in the tongue of its leader (see Talking).",
+      "2": "Each race speaks its own tongues, listed in the Races chapter. To learn another, study a Dictionary of that language at the Tavern (see Studying); the Library sells the dictionaries once its reputation allows."
+    },
+    "leader": {
+      "title": "The Guild Leader",
+      "1": "The guild answers to one leader. Changing who it is costs the run's one free swap; after that only death replaces them.",
+      "2": "A guild leader sponsors more recruits (see Recruiting). Each group also has its own leader, changed freely, who haggles for the band at a shop (see Shops & Haggling) and sets how many the group holds (see Groups)."
+    },
+    "animals": {
+      "title": "Animals",
+      "1": "An animal eats a ration a day, and one left unfed for {days} days starves and is lost. Each animal and captive takes herd slots from its group (see Groups).",
+      "2": "An animal in the house's garage eats from the house stash and is off the herd limit, and it starves too when the stash has no food. Lose the house and the garage goes with it."
+    },
+    "travel": {
+      "title": "Travel & Danger",
+      "1": "A trip takes the distance over the pace of the slowest walker: armour drag, overload, animals and wagons all slow a band.",
+      "2": "Inside the City's jurisdiction the guard keeps the peace and tests anyone with a record on arrival (see Crime & the Guard). Beyond it nobody does: the roads, forests and ruins hold wolves, bandits and worse.",
+      "3": "A band that arrives at an unsafe place, the Old Road for one, meets an ambush {chance}% of the time: once per leg, never per hour, and only if the pack rolled would attack. Work shifts and hunts roll every hour instead.",
+      "4": "A Cautious stance lowers those odds only for certain vocations and talents (Wilds, Woodland Scout, Night Prowler at night); for anyone else it changes nothing.",
+      "5": "Some places stay hidden until found: the ruins and the ox fields by a scout's search of the area, the three sanctuaries by turning in the Library's Codex. A place once revealed stays revealed."
+    },
+    "claim": {
+      "title": "The Wilds Claim",
+      "1": "The Claim is ground in the Wilds the guild can hold. It is raised in stages, then garrisoned for {days} whole days. Each day a raid of {size} fighters at level {level} comes {chance}% of the time; a lost raid, or a garrison pulled out, restarts the count. A claim that is seized loses what is parked there."
+    },
+    "reputation": {
+      "title": "Reputation & Deeds",
+      "1": "Each faction keeps its own reputation, and it moves only by deeds: one-shot feats, worth one point each, that cannot be ground out by repeating work. The points summed across factions are Fame.",
+      "2": "Reputation opens services: the house with the Bankers, dictionaries at the Library, initiation with a school, supply runs with Field Command.",
+      "3": "Some deeds shut each other out. There is one Ancient Codex and one Snake Dragon, so the first delivery closes the deeds that wanted the other; the faction card shows them struck through."
+    },
+    "justice": {
+      "title": "Crime & the Guard",
+      "1": "Each character has a crime rating, a rap sheet that counts only inside the City's jurisdiction. It rises from a won guard fight, a ruined trust mission or Bankers debt left unpaid for {grace} days, among other things.",
+      "2": "When a band arrives at the City, every member with a record is tested: d20 + crime, minus a worn disguise, at {min} or more and the guard catches them. A clean record never rolls.",
+      "3": "A caught band chooses for everyone. Surrender sends the wanted to the cells for {days} days for each point of crime, and wipes their record. Fight a lethal patrol of {size} guards up to level {cap}, whose survivors gain crime. Bluff or bribe to walk free with the record kept. Or run, back the way the band came.",
+      "4": "A record fades by itself, one point every {fade} days, only with Innocent Face. Otherwise only time in the cells clears it.",
+      "5": "A house squatted instead of paid for is raided by the guard {raid}% of the time on each arrival."
+    },
+    "attack": {
+      "title": "Initiative & the Hit Roll",
+      "1": "Each fighter rolls initiative once, d20 + Wisdom modifier plus talents, and acts from the highest to the lowest. A legendary creature rolls twice and takes two turns a round.",
+      "2": "An attack is d20 + modifiers against the target's Guard. It hits when the total reaches the Guard.",
+      "3": "A natural 20 always hits and is a critical: the whole damage is multiplied, by two unless the weapon says otherwise. Some weapons crit on a wider range. A natural 1 always misses.",
+      "4": "A target the attacker cannot see, only hear in the dark, is obscured: -{obscured} to hit. Penalties and bonuses follow the Bonus type rule (see Turns & Action Points).",
+      "5": "The Signal Horn ({horn_cost} points, once a fight) calls every ally within {horn_radius} squares to act sooner: +{horn_bonus} initiative."
+    },
+    "dying": {
+      "title": "Falling, Death Saves & Stabilizing",
+      "1": "At zero HP a fighter goes down, lies Prone and drops what it holds. It is Dying: the clock counts its own turns, and on turn {turns} it rolls a death save, a flat d20 that survives on {save} or more (stable) and dies below. Every hit on a dying body adds one turn to the clock.",
+      "2": "Stabilize (one point, an adjacent ally): a flat d20 at {save} or more, the same roll the body would face. A stable fighter stays down but is out of danger.",
+      "3": "First Aid (one point, an adjacent ally, one kit charge): d20 + Wisdom modifier against {aid}. It stabilizes a dying ally and cures a sick one. A kit starts with {charges} charges.",
+      "4": "A broken automaton has no clock: Stabilize on it is d20 + Intelligence modifier against {repair}, and a success puts it back up at one HP.",
+      "5": "When a fight ends, everyone still dying makes one last death save. A fight lost is total: every fighter of the losing side still on the ground, dying, stable or broken, dies."
+    },
+    "nonlethal": {
+      "title": "Non-lethal Blows",
+      "1": "The Non-lethal toggle makes a fighter pull its blows: -{pen} to hit, and a foe it drops is knocked out instead of dying, stable at zero HP.",
+      "2": "A pulled blow never finishes a fighter who is already down, and in an arena bout nobody dies. Knocked-out damage heals with rest (see Rest & Healing)."
+    },
+    "demoralize": {
+      "title": "Demoralize",
+      "1": "Demoralize ({cost} point) is a roll of d20 + Charisma modifier against the target's Resolve, on a foe in sight of you and you in sight of it, within {range} squares, who shares a language with you. A natural 20 always lands and a natural 1 never does.",
+      "2": "Each success adds a stack, up to {max}. Every stack takes one point off attack, Guard and Resolve; a stack wears off at the end of the victim's turn. It also costs the victim morale (see Morale), and a Demoralized foe cannot dodge a Maiming Strike."
+    },
+    "terrain": {
+      "title": "Terrain: Water, Pits & Fire",
+      "1": "Shallow water is difficult terrain: entering a cell of it costs one extra square. Deep water, a flooded pit, cannot be walked: you Swim through it (d20 + Strength modifier, divided by {swim}, is the squares you cross, never more than half your speed).",
+      "2": "Under deep water a fighter holds its breath for {breath} + its Constitution modifier rounds. Past that, it takes escalating damage each turn, one d6, then two, then three, until it surfaces or goes down. An Amphibious creature never drowns.",
+      "3": "A pit is a lower floor. Climb (one point) hauls you one level, a Strength check against {stone}, or {rope} with a rope over the edge; a slip costs the action. Drop jumps in on purpose, with no check.",
+      "4": "A fall takes no damage for the first level and one d6 for every level after it. A flier takes nothing; a plunge into deep water is broken by the water.",
+      "5": "Fire burns a body each time it enters a burning cell or starts its turn in one: {dice}d{faces} for each burning cell it covers. Fire spreads cell by cell, never onto a wall or water, and lights the area around it."
+    },
+    "ammo": {
+      "title": "Ammunition",
+      "1": "A bow draws a bolt from the quiver on every shot. A crossbow holds one bolt at a time: it fires once, then needs Reload ({reload} point) to chamber the next from the quiver, and an unloaded crossbow is swung as an improvised weapon.",
+      "2": "A quiver holds {quiver} bolts. Each bolt shot leaves the quiver, and what is left carries over to the next fight."
+    },
+    "push": {
+      "title": "Pushing",
+      "1": "Push ({cost} point) shoves anyone standing next to you, foe or ally, one cell straight back. It is a Strength check against {dc} + the target's Constitution modifier, and a natural 20 always works.",
+      "2": "A wall or a body behind the target stops the shove dead. A pit behind it is a fall: the target goes in and takes the damage (see Terrain). A shove that lands on a trap or a fire cell springs it."
+    },
+    "hidden": {
+      "title": "Invisible Foes",
+      "1": "An invisible fighter cannot be seen or targeted by any other side until it deals damage. A side that finds it, by a bump, an Investigate or a wound, sees it until the start of the invisible fighter's next turn, when it slips away again.",
+      "2": "Investigate ({cost} point) opens a secret wall beside you and searches for hidden foes within {radius} squares: d20 + Wisdom modifier against {base} + the foe's Intelligence modifier."
+    },
+    "sides": {
+      "title": "More Than Two Sides",
+      "1": "A fight can have more than two sides. Every side is hostile to every other: any fighter may strike a fighter of another side, and an ally is only someone of your own side."
     },
     "hunger": {
       "title": "Hunger \u0026 Starvation",
@@ -6782,7 +6995,8 @@
       "1": "The first time anyone on your side sees a foe, every teammate that sees it rolls d20 + INT against DC {dc} + the foe's Character Level. The best margin is shared by the side.",
       "2": "The better the margin, the more fields of the foe's card open (the ? are what you have not read yet). A failed roll reveals nothing and never lies.",
       "3": "A race the guild has fought before is {discount} easier to read, and a racial ability the guild has seen is free on the next of that race.",
-      "4": "Assess ({assess} point) rolls again at +{bonus} on one foe in sight, once per foe each round."
+      "4": "Assess ({assess} point) rolls again at +{bonus} on one foe in sight, once per foe each round.",
+      "5": "The margin decides what opens. From {easy}: damage die, speed, level and racial ability. From {medium}: to hit, damage bonus, Guard, Resolve and morale. From {hard}: attributes, hit points, talents, spells and artefact."
     },
     "or": " or ",
     "part": {

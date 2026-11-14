@@ -32,6 +32,9 @@ CHAMPION_SLUG = "adelio-small-knife"
 
 CHAMPION_LACKEYS = 2               # random level-0 bodies fighting alongside the champion
 CHAMPION_GOONS = CHAMPION_LACKEYS   # alias
+SCRAPPER_ENTRY = 3              # stake per fighter in the Pit's introductory bout
+SCRAPPER_PURSE = 11
+SCRAPPER_FOES = 3
 CHAMPION_ENTRY = 20               # stake per fighter to challenge for the title
 CHAMPION_PURSE = 120             # flat purse for taking the champion team down
 DEFENSE_PURSE = 90              # flat purse for turning a title challenger away
@@ -80,7 +83,7 @@ BOSS_TALKS = {
 
 def scrapper_bout():
     """An introductory fight in the Pit."""
-    return world.Bout(i18n.t("arena.pit_scrapper"), entry=3, purse=11, enemies=3, level=0, rep=0)
+    return world.Bout(i18n.t("arena.pit_scrapper"), entry=SCRAPPER_ENTRY, purse=SCRAPPER_PURSE, enemies=SCRAPPER_FOES, level=0, rep=0)
 
 
 def champion_bout():

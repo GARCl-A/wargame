@@ -47,6 +47,8 @@ function entry(e) {
 
 function render(state) {
   W = state;
+  const f = W.focus && W.entries.find(e => e.id === W.focus);
+  if (f && f.part) shut.delete(f.part);
   $("back").textContent = W.back;
   $("chapters").innerHTML = W.chapters.map((c, i) =>
     `<div class="ch ${c.id === W.chapter ? "on" : ""}" data-ch="${c.id}"><span class="n">${ROMAN[i] || (i + 1)}</span>${esc(c.label)}</div>`).join("");
@@ -55,11 +57,34 @@ function render(state) {
   $("count").textContent = W.query.trim() ? tr("wiki.of_total", {n: W.entries.length, total: W.total, q: W.query.trim()}) : tr("wiki.entries", {n: W.total});
   if (document.activeElement !== $("q")) $("q").value = W.query;
   else if ($("q").value.toLowerCase() !== W.query) find();
-  const el = $("entries");
-  el.className = W.chapter === "rules" ? "rules" : "";
-  el.innerHTML = W.entries.length ? `<div class="cols">${W.entries.map((e, i) => (e.part && e.part !== (W.entries[i - 1] || {}).part ? `<h3 class="part">${esc(e.part_label)}</h3>` : "") + entry(e)).join("")}</div>`
+  paint(true);
+}
+
+// the Rules chapter's parts fold shut; a filter or a link into one opens it
+const shut = new Set();
+
+function toc() {
+  const parts = [];
+  for (const e of W.entries) {
+    let p = parts[parts.length - 1];
+    if (!p || p.id !== e.part) parts.push(p = {id: e.part, label: e.part_label, items: []});
+    p.items.push(e);
+  }
+  return `<nav class="toc">${parts.map(p => `<div class="tp"><b data-gopart="${esc(p.id)}">${esc(p.label)}</b>${p.items.map(e => `<a data-goto="${esc(e.id)}">${esc(e.name)}</a>`).join("")}</div>`).join("")}</nav>`;
+}
+
+function paint(focus) {
+  const el = $("entries"), label = W.chapters.find(c => c.id === W.chapter).label, rules = W.chapter === "rules";
+  const open = id => !rules || W.query.trim() || !shut.has(id);
+  el.className = rules ? "rules" : "";
+  const rows = W.entries.map((e, i) => {
+    const head = e.part && e.part !== (W.entries[i - 1] || {}).part
+      ? `<h3 class="part ${open(e.part) ? "" : "shut"}" data-part="${esc(e.part)}">${esc(e.part_label)}<span class="ct">${W.entries.filter(x => x.part === e.part).length}</span></h3>` : "";
+    return head + (!e.part || open(e.part) ? entry(e) : "");
+  });
+  el.innerHTML = W.entries.length ? `${rules ? toc() : ""}<div class="cols">${rows.join("")}</div>`
     : `<div class="none">${tr("wiki.none", {chapter: esc(label.toLowerCase()), q: esc(W.query.trim())})}</div>`;
-  const at = W.focus && [...el.querySelectorAll(".e")].find(x => x.dataset.id === W.focus);
+  const at = focus && W.focus && [...el.querySelectorAll(".e")].find(x => x.dataset.id === W.focus);
   if (at) at.scrollIntoView({block: "center"});
 }
 
@@ -69,7 +94,30 @@ $("chapters").addEventListener("click", e => {
 });
 $("entries").addEventListener("click", e => {
   const t = e.target.closest("[data-ref]");
-  if (t) post("open", {ref: t.dataset.ref});
+  if (t) { post("open", {ref: t.dataset.ref}); return; }
+  const gp = e.target.closest("[data-gopart]");
+  if (gp) {
+    shut.delete(gp.dataset.gopart);
+    paint(false);
+    const h = [...$("entries").querySelectorAll(".part")].find(x => x.dataset.part === gp.dataset.gopart);
+    if (h) h.scrollIntoView({block: "start", behavior: "smooth"});
+    return;
+  }
+  const part = e.target.closest("[data-part]");
+  if (part) {
+    const id = part.dataset.part;
+    if (shut.has(id)) shut.delete(id); else shut.add(id);
+    paint(false);
+    return;
+  }
+  const go = e.target.closest("[data-goto]");
+  if (go) {
+    const hit = W.entries.find(x => x.id === go.dataset.goto);
+    if (hit && hit.part) shut.delete(hit.part);
+    paint(false);
+    const row = [...$("entries").querySelectorAll(".e")].find(x => x.dataset.id === go.dataset.goto);
+    if (row) row.scrollIntoView({block: "start", behavior: "smooth"});
+  }
 });
 // a find dropped while another was on its way is sent again once the answer shows the page behind
 function find() {

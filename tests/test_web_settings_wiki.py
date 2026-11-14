@@ -343,7 +343,7 @@ def test_a_keyword_has_its_own_chapter_and_the_actions_that_name_it_link_to_it(s
     w = WikiSession(lambda: {"screen": "title"})
     st = w.chapter("keywords")
     assert [e["name"] for e in st["entries"]] == sorted(k.name for k in keywords.all_keywords())
-    brutal = st["entries"][0]
+    brutal = next(e for e in st["entries"] if e["id"] == "brutal")
     assert brutal["kind"] == "Keyword" and brutal["body"] == [keywords.get("brutal").text]
     dagger = next(e for e in w.chapter("actions")["entries"] if e["id"] == "sneak_attack")
     link = next(x for x in dagger["links"] if x["label"] == "Brutal")

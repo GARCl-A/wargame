@@ -14,6 +14,7 @@ from . import economy, items
 ENTRY_POINTS = {"open": 0, "talent": 1, "race": 2}
 HOURS_STEPS = (3, 6)
 LEVEL_PER_POINTS = 2
+SCARCE_POINTS_MAX = 2                 # scarce reagents stop adding points here
 AVG_ROLL = 10.5                       # a d20 at INT mod 0: crafting progress per hour
 
 
@@ -38,7 +39,7 @@ def batch_hours(recipe):
 def breakdown(recipe):
     """The parts of a recipe's difficulty and the level they add up to."""
     entry, scarce, hours = entry_of(recipe.target), scarce_inputs(recipe), batch_hours(recipe)
-    points = (ENTRY_POINTS[entry] + min(2, len(scarce))
+    points = (ENTRY_POINTS[entry] + min(SCARCE_POINTS_MAX, len(scarce))
               + sum(hours >= step for step in HOURS_STEPS))
     return {"entry": entry, "scarce": scarce, "hours": hours, "points": points,
             "level": 1 + points // LEVEL_PER_POINTS}

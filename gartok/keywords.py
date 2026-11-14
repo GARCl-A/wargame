@@ -23,7 +23,7 @@ class Keyword:
         return i18n.desc("keyword", self.id)
 
 
-_KEYWORDS = [Keyword(id=i) for i in ("brutal", "critical_hit", "flanked", "shove", "dying", "knocked_out", "morale", "reach", "distance", "character_level", "guard", "evasion", "resolve")]
+_KEYWORDS = [Keyword(id=i) for i in ("brutal", "critical_hit", "flanked", "shove", "dying", "knocked_out", "morale", "reach", "distance", "character_level", "guard", "evasion", "resolve", "modifier", "dc", "bonus_type")]
 
 KEYWORDS = {k.id: k for k in _KEYWORDS}
 

@@ -524,6 +524,9 @@ The settings keep their switch; it then turns the pointers and notes off, and "s
 
 Each phase stands alone and can be judged in a playtest before the next.
 
+0. **The wiki holds every rule (done).** The Rules chapter has stable ids (`rules:<key>`), four subchapters and a section for
+   each rule the audit lists, every number read off its constant. Cards and hints point to it only after this; it is
+   the one place a rule's text lives.
 1. **Stop the push to the Yard (small, copy and two triggers).** Move the danger hint to the Old Road.
    Cut "do them before anything else" and the repeated "work makes you stronger". Open the Tavern on Jobs.
    Start at dawn with a meal. No new system.

@@ -53,6 +53,9 @@ _UNTIED = {
     "weapon.title": "the title is also the entry id, so it cannot take a placeholder",
     "wagons.1": "a wagon breaks at 0 HP, zero being the definition",
     "talk.1": "natural 1 and 20 are the die's faces",
+    "attack.3": "natural 1 and 20 are the die's faces",
+    "push.1": "natural 20 is the die's face",
+    "demoralize.1": "natural 1 and 20 are the die's faces",
     "talk.6": "the bribe's (level + 1) is a formula, its rate is the placeholder",
     "hunger.1": "one meal a day is the rule's shape",
     "study.3": "'first-level' names the spell level",
@@ -185,3 +188,54 @@ def test_guard_the_stat_is_marked_but_the_city_guard_and_off_guard_are_not():
     from gartok import wiki_terms
     assert [m["word"] for m in wiki_terms.marks("An attack must beat Guard.")] == ["Guard"]
     assert "guard" not in wiki_terms.keywords_in("The City Guard comes. Off-guard foes lose Evasion? No: off-guard, stand guard.")
+
+
+def test_keywords_define_modifier_dc_and_bonus_type():
+    from gartok import data, keywords
+    assert data.mod(14) == 2 and data.mod(10) == 0 and data.mod(8) == -1
+    for kid in ("modifier", "dc", "bonus_type"):
+        assert keywords.get(kid).text and keywords.get(kid).name
+
+
+def test_the_body_and_time_sections_follow_the_constants(monkeypatch):
+    from gartok import clock, data, guild_upkeep, unit_derive, unit_hunger
+    body = " ".join(" ".join(_rules()[k]) for k in ("clock", "rest", "sickness", "load", "light"))
+    for number in (clock.SECONDS_PER_ROUND, guild_upkeep.HOURS_PER_HEAL, guild_upkeep.HOURS_PER_NONLETHAL_CLEAR,
+                   guild_upkeep.HARDENED_NONLETHAL_CLEAR, unit_hunger.SICK_CON_PENALTY, guild_upkeep.SICK_CURE_ROLL,
+                   unit_derive.CARRY_NORMAL[1], unit_derive.CARRY_MAX[1], data.TORCH_RADIUS, data.DARKVISION):
+        assert str(number) in body
+    monkeypatch.setattr(wiki_rules, "SICK_CURE_ROLL", 8)
+    assert "40%" in " ".join(_rules()["sickness"])
+
+
+def test_load_thresholds_and_sick_penalties_read_the_constants():
+    from gartok import unit_derive, unit_hunger
+    from tests.helpers import standard_unit
+    u = standard_unit()
+    assert u.carry_max == unit_derive.carry_thresholds(u.strength + u.hunger_attribute_penalty, u.size, u._ability)[1]
+    before = u.constitution
+    u.sick = True
+    u._apply_attributes()
+    assert u.constitution == before - unit_hunger.SICK_CON_PENALTY
+
+
+def test_the_combat_sections_follow_the_constants():
+    from gartok import actions, conditions, data, intel
+    from gartok.actions import base, combat, movement
+    from gartok.board import CLIMB_DC_ROPE, CLIMB_DC_STONE
+    body = " ".join(" ".join(_rules()[k]) for k in ("attack", "dying", "nonlethal", "demoralize", "terrain", "ammo", "push", "hidden", "reading"))
+    for number in (base.OBSCURED_PENALTY, data.DYING_TURNS, data.DEATH_SAVE_MIN, data.FIRST_AID_DC, data.FIRST_AID_CHARGES,
+                   data.AUTOMATON_REPAIR_DC, base.NONLETHAL_PENALTY, data.DEMORALIZE_RANGE, conditions.DEMORALIZE_MAX_STACKS,
+                   data.BREATH_BASE, data.QUIVER_AMMO, combat.PUSH_DC_BASE, actions.INVESTIGATE.RADIUS, actions.INVESTIGATE.BASE_DC,
+                   actions.SIGNAL_HORN.RADIUS, intel.HARD, CLIMB_DC_STONE, CLIMB_DC_ROPE, movement.SWIM_DIVISOR):
+        assert str(number) in body
+    n, faces = data.FIRE_DICE
+    assert f"{n}d{faces}" in body
+
+
+def test_the_work_and_world_sections_read_their_constants():
+    from gartok import arena, economy, gather, group
+    body = " ".join(" ".join(_rules()[k]) for k in ("bank", "wages", "gathering", "arena", "groups"))
+    for number in (economy.BANK_CHEST_PRICE, economy.LUMBER_BLOCK_HOURS, economy.SUPPLY_RUN_PAY, gather.LICENCE_PRICE["mine"],
+                   arena.SCRAPPER_PURSE, arena.BOSS_PURSE, group.BASE_SLOTS):
+        assert str(number) in body

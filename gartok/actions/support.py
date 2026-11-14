@@ -703,6 +703,7 @@ class Investigate(Action):
     found on d20 + WIS against 10 + its INT (its side then sees it until it slips away)."""
     id, cost, target = "investigate", 1, "none"
     RADIUS = 3
+    BASE_DC = 10
 
     def _adjacent_secrets(self, battle, actor):
         secrets = getattr(battle, "secret_walls", set())
@@ -740,7 +741,7 @@ class Investigate(Action):
             if battle.units_distance(actor, u) > self.RADIUS:
                 continue
             nat = d20()
-            total, dc = nat + actor.mod_wisdom, 10 + u.mod_intelligence
+            total, dc = nat + actor.mod_wisdom, self.BASE_DC + u.mod_intelligence
             battle.rolled(actor, u, nat, actor.mod_wisdom, total, "dc", "?", total >= dc)
             if total >= dc:
                 u.reveal_to(actor.team)

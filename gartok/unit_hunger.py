@@ -8,6 +8,8 @@ from . import data, i18n, items, poisons
 BLOOM_FRUIT = "Bloom Fruit"     # what a Treefolk with Bountiful Harvest bears: food that heals
 BLOOM_HEAL = (1, 4)
 HUNGER_PENALTIES = (0, -2, -4, -4)
+SICK_CON_PENALTY = 4      # rotten food sickens: off Constitution
+SICK_PENALTY = 2          # and off each of the other five
 STARVING_HP_MAX = 1      # from the second unfed day a body holds no more than this
 
 

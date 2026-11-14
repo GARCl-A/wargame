@@ -11,13 +11,20 @@ from .data import ATTRIBUTES, mod, roll
 from .unit_hunger import STARVING_HP_MAX
 
 
+CARRY_NORMAL = (4, 15)       # kg per point of Strength modifier, kg at modifier 0
+CARRY_MAX = (6, 35)
+OVERLOAD_PENALTY = 2         # off Strength and Dexterity while past the normal load
+OVERLOAD_SPEED = 1
+
+
 def carry_thresholds(score, size, ability):
     """(normal, max) kg a body of this Strength `score` and `size` carries: the
     one formula for characters and for the group's animals. An ability may raise
     the size bracket (`carry_size`) or scale the result (`carry_mult`)."""
     cm = data.SIZES[ability.carry_size or size]["carry"] * ability.carry_mult
     str_carry = mod(score)
-    return max(1, round((str_carry * 4 + 15) * cm)), max(2, round((str_carry * 6 + 35) * cm))
+    return (max(1, round((str_carry * CARRY_NORMAL[0] + CARRY_NORMAL[1]) * cm)),
+            max(2, round((str_carry * CARRY_MAX[0] + CARRY_MAX[1]) * cm)))
 
 
 class DerivationMixin:
@@ -96,7 +103,7 @@ class DerivationMixin:
 
     def attribute_score(self, a):
         """The score `mod_<a>` is read off: hunger and the overload already taken."""
-        enc = -2 if self.encumbered and a in ("strength", "dexterity") else 0
+        enc = -OVERLOAD_PENALTY if self.encumbered and a in ("strength", "dexterity") else 0
         return getattr(self, a) + self.hunger_attribute_penalty + enc
 
     @property
@@ -268,7 +275,7 @@ class DerivationMixin:
         if fly_target and fly_target > base_spd:
             terms.append(("flight (wings)", fly_target - base_spd))
         terms.append((f"{self.armor_name} (drag)" if armor else "armor", -(armor.speed_penalty if armor else 0)))
-        terms.append(("overloaded", -1 if self.encumbered else 0))
+        terms.append(("overloaded", -OVERLOAD_SPEED if self.encumbered else 0))
         return self._breakdown(terms, self.speed)
 
     def initiative_breakdown(self):
@@ -311,7 +318,7 @@ class DerivationMixin:
         if armor is not None and armor.speed_penalty:
             self.speed = max(1, self.speed - armor.speed_penalty)
         if self.encumbered:
-            self.speed = max(1, self.speed - 1)
+            self.speed = max(1, self.speed - OVERLOAD_SPEED)
 
     # ------------------------------------------------------------------ #
     # combat previews: read-only views of the equipped loadout, so the   #

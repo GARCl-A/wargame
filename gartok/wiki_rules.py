@@ -7,6 +7,7 @@ so the page moves with them. RULES.md stays the designer's full prose.
 from . import (
     actions,
     captives,
+    clock,
     cohesion,
     data,
     dialogue,
@@ -18,15 +19,32 @@ from . import (
     morale,
     poisons,
     recruit,
+    routine_book,
     talents,
     tavern,
     wagon,
+    wiki_rules_combat,
+    wiki_rules_work,
+    wiki_rules_world,
 )
 from .actions.base import OFF_GUARD_AC
 from .actions.weapon_actions import BRUTAL, EDGE_DIE, EDGE_TO_HIT, REPEL_CELLS
 from .combatant import AP_PER_TURN
 from .conditions import DEFEND_AC
-from .unit_hunger import HUNGER_PENALTIES, STARVING_HP_MAX
+from .guild_upkeep import (
+    HARDENED_NONLETHAL_CLEAR,
+    HOURS_PER_HEAL,
+    HOURS_PER_NONLETHAL_CLEAR,
+    SICK_CURE_ROLL,
+)
+from .map_view import ADVANCE_HOURS
+from .unit_derive import CARRY_MAX, CARRY_NORMAL, OVERLOAD_PENALTY, OVERLOAD_SPEED
+from .unit_hunger import (
+    HUNGER_PENALTIES,
+    SICK_CON_PENALTY,
+    SICK_PENALTY,
+    STARVING_HP_MAX,
+)
 
 
 def _lines(section, n, **fmt):
@@ -58,10 +76,10 @@ def _terms(pairs):
 
 
 PARTS = (
-    ("combat", ("turns", "flanking", "morale", "weapon", "talk", "stomp", "placement", "reading")),
-    ("body", ("hunger", "poison")),
-    ("work", ("money", "study")),
-    ("world", ("recruiting", "groups", "captives", "wagons", "dungeon")),
+    ("combat", ("turns", "attack", "flanking", "dying", "nonlethal", "morale", "demoralize", "weapon", "push", "ammo", "terrain", "hidden", "sides", "talk", "stomp", "placement", "reading")),
+    ("body", ("clock", "rest", "hunger", "spoiling", "sickness", "poison", "load", "light", "death")),
+    ("work", ("money", "bank", "wages", "gathering", "levels", "crafting", "study", "market", "shop", "missions", "arena")),
+    ("world", ("recruiting", "alignment", "languages", "leader", "groups", "captives", "animals", "wagons", "travel", "claim", "reputation", "justice", "dungeon")),
 )
 """The Rules chapter's subchapters, in reading order, each with the keys of its sections. A key is the
 section's id for good (a link to `rules:<key>` survives a retitle or a translation); the title is only
@@ -92,8 +110,20 @@ def _built():
     terms = " + ".join(i18n.t(f"wiki_rules.term.{label.lower().replace(' ', '_')}") for _, label, _ in group.CAPACITY_TERMS)
     tools = i18n.t("wiki_rules.or").join(i18n.name("item", t) for t in captives.CAPTURE_TOOLS)
     return dict([
+        *wiki_rules_combat.built().items(), *wiki_rules_work.built().items(),
+        *wiki_rules_world.built().items(),
+        ("clock", _lines("clock", 4, round=clock.SECONDS_PER_ROUND, advance=ADVANCE_HOURS, dawn=f"{clock.DAY_START:02d}:00",
+                         dusk=f"{clock.NIGHT_START:02d}:00")),
+        ("rest", _lines("rest", 5, hours=HOURS_PER_HEAL, clear=HOURS_PER_NONLETHAL_CLEAR, hardened=HARDENED_NONLETHAL_CLEAR)),
+        ("spoiling", _lines("spoiling", 3)),
+        ("sickness", _lines("sickness", 3, con=SICK_CON_PENALTY, other=SICK_PENALTY, hours=HOURS_PER_HEAL,
+                            roll=SICK_CURE_ROLL, pct=100 * SICK_CURE_ROLL // 20)),
+        ("load", _lines("load", 4, normal0=CARRY_NORMAL[1], normal_per=CARRY_NORMAL[0], max0=CARRY_MAX[1], max_per=CARRY_MAX[0],
+                        pen=OVERLOAD_PENALTY, speed=OVERLOAD_SPEED)),
+        ("light", _lines("light", 3, torch=data.TORCH_RADIUS, lantern=data.LIGHT_SOURCES[data.LANTERN_ITEM], dv=data.DARKVISION)),
+        ("death", _lines("death", 2)),
         ("turns", _lines("turns", 7, ap=AP_PER_TURN, cost=actions.DEFEND.cost, ac=DEFEND_AC,
-                         delay=actions.DELAY.cost, flee=actions.FLEE.cost)),
+                         flee=actions.FLEE.cost)),
         ("flanking", _off_guard_lines()),
         ("morale", _morale_lines()),
         ("weapon", _weapon_lines(reach, hit)),
@@ -120,6 +150,11 @@ def _built():
             i18n.t("wiki_rules.groups.2", cap=group.BASE_CAPACITY, terms=terms, herd=group.HERD_BASE, herd_terms=_terms(group.HERD_TERMS)),
             i18n.t("wiki_rules.groups.3", days=cohesion.NOTICE_DAYS),
             i18n.t("wiki_rules.groups.4"),
+            i18n.t("wiki_rules.groups.5"),
+            i18n.t("wiki_rules.groups.6", days=cohesion.NOTICE_DAYS),
+            i18n.t("wiki_rules.groups.7"),
+            i18n.t("wiki_rules.groups.8"),
+            i18n.t("wiki_rules.groups.9", fame=routine_book.FAME_PER_SLOT),
         ]),
         ("captives", [
             i18n.t("wiki_rules.captives.1", tools=tools, capture=actions.CAPTURE.cost),
@@ -137,8 +172,8 @@ def _built():
         ("study", _lines("study", 4, cost=economy.TAVERN_STUDY_COST_PER_DAY)),
         ("dungeon", _lines("dungeon", 4)),
         ("placement", _lines("placement", 3)),
-        ("reading", _lines("reading", 4, dc=intel.BASE_DC, discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS,
-                                 assess=actions.ASSESS.cost)),
+        ("reading", _lines("reading", 5, easy=intel.EASY, medium=intel.MEDIUM, hard=intel.HARD, dc=intel.BASE_DC,
+                           discount=intel.RACE_DISCOUNT, bonus=intel.ASSESS_BONUS, assess=actions.ASSESS.cost)),
     ])
 
 

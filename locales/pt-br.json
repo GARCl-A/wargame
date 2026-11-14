@@ -6151,6 +6151,9 @@
             "reach": "Alcance",
             "distance": "Distância",
             "character_level": "Nível de Personagem",
+            "modifier": "Modificador",
+            "dc": "CD",
+            "bonus_type": "Tipo de bônus",
             "guard": "Guarda",
             "evasion": "Evasão",
             "resolve": "Determinação"
@@ -6584,6 +6587,9 @@
             "distance": "Distância: o quão longe um tiro voa, em casas: a Distância 18 de uma Besta, o Arremesso 6 de uma arma arremessada. É o alcance de um ataque à distância, nunca de um corpo a corpo, que tem Alcance.",
             "character_level": "Nível de Personagem: o nível geral de um personagem, metade da soma dos níveis de combate, trabalho e magia. Cada um é um dado de vida, e as escolhas de talentos da própria raça vêm em intervalos regulares. Ele também define quantos recrutas um líder pode patrocinar e o tamanho do grupo que lidera, e a Moral, os testes de veneno e a leitura de um inimigo partem dele.",
             "guard": "Guarda: o número que um ataque tem de alcançar para acertar. 10 + o modificador de Destreza (limitado pela armadura) + armadura, escudo, talentos, tamanho e bônus naturais. Um ataque que iguala ou supera esse número causa dano.",
+            "modifier": "Modificador: o bônus ou a penalidade que o valor de um atributo dá, (valor - 10) dividido por 2, arredondado para baixo. Valor 10 dá 0, 14 dá +2, 8 dá -1. As rolagens e regras dizem o atributo: modificador de Carisma, modificador de SAB.",
+            "dc": "CD: o número que uma rolagem precisa alcançar, de classe de dificuldade. Uma salvaguarda é um d20 mais um modificador de atributo contra uma CD: alcançar passa, ficar abaixo falha, e o que a falha custa está na regra que pede a salvaguarda (uma salvaguarda de Constituição contra veneno, um d20 + INT contra um inimigo para lê-lo).",
+            "bonus_type": "Tipo de bônus: o rótulo de um bônus, como circunstância (Defender, Tática de Matilha) ou status. Bônus de um mesmo tipo nunca se acumulam: só vale o maior. Penalidades e bônus sem tipo sempre somam. Um bônus de outro tipo soma normalmente.",
             "evasion": "Evasão: o número que uma magia que só precisa tocar o alvo tem de alcançar: 10 + o modificador de Destreza (sem o limite da armadura) + talentos, tamanho e bônus naturais. Armadura e escudo nunca somam nela.",
             "resolve": "Determinação: a firmeza mental de um combatente, o número que Desmoralizar, Sono e as outras magias da mente têm de alcançar: 10 + o modificador de Sabedoria + talentos. Um grupo esticado além do limite do líder reduz a Determinação dos seus membros, e o teste diário que decide quem sai é feito contra ela."
         }
@@ -7051,9 +7057,9 @@
             "2": "Mover: até a sua velocidade em casas. Diagonais custam 1, depois 2, depois 1 de novo dentro de um mesmo movimento.",
             "3": "Você pode atravessar a casa de um aliado, mas não parar nela. A casa de um inimigo bloqueia você por completo.",
             "4": "Defender: +{ac} de Guarda (circunstância) até o início do seu próximo turno.",
-            "5": "Adiar ({delay} pontos): vai para o fim da ordem de iniciativa de vez, uma vez por rodada, antes de gastar qualquer coisa.",
+            "5": "Adiar (não custa nada): vai para o fim da ordem de iniciativa de vez, uma vez por rodada, antes de gastar qualquer coisa.",
             "6": "Fugir ({flee} ponto, encerra o turno): só pela borda do mapa, e só quando você é mais rápido que o perseguidor mais veloz ou já está fora do alcance dele.",
-            "7": "Bônus do mesmo tipo não se acumulam: Defender e outro bônus de circunstância na Guarda, só vale o maior."
+            "7": "Dois bônus de um mesmo Tipo de bônus nunca se acumulam: Defender e outro bônus de circunstância na Guarda, só vale o maior."
         },
         "flanking": {
             "title": "Desprevenido e flanqueio",
@@ -7106,7 +7112,12 @@
             "1": "A guilda pode manter {base} grupos, mais um para cada {fame} de reputação somada em todas as facções.",
             "2": "Um grupo comporta {cap} + {terms} membros, e {herd} + {herd_terms} em animais e cativos.",
             "3": "Um grupo sobrecarregado rola todo dia contra a Determinação do seu membro mais fraco (os líderes são isentos). Esse membro se separa num grupo só dele ou, sem vaga livre, dá aviso prévio de {days} dias e depois deixa a guilda.",
-            "4": "Quem sai leva conforme o alinhamento: o Leal só o que veste, o Neutro a mochila também, o Caótico tudo."
+            "4": "Quem sai leva conforme o alinhamento: Leal só o que veste, Neutro o equipamento e a mochila mas não a moeda, Caótico tudo o que puder carregar. O que deixam vai para o líder do grupo.",
+            "5": "Um grupo acima da sua capacidade fica sobrecarregado: todo membro perde um de Determinação por membro a mais.",
+            "6": "Um grupo acima do limite de rebanho dá {days} dias de aviso, depois um animal se perde (um cativo escapa das cordas), e o aviso recomeça.",
+            "7": "Um grupo com uma luta pendente fica travado: sem separar, juntar, trocar de líder nem mexer no equipamento até ela se resolver. Um grupo travado não pode separar um membro, então um sobrecarregado dá aviso em vez disso.",
+            "8": "Separe um grupo a qualquer hora em que ele não tenha ordem em andamento e a guilda tenha uma vaga livre. Junte dois só quando estiverem no mesmo local e nenhum tenha ordem em andamento.",
+            "9": "A Fama também abre vagas de rotina, uma a cada {fame} de Fama: cada grupo que roda uma rotina ocupa uma."
         },
         "captives": {
             "title": "Cativos",
@@ -7126,6 +7137,208 @@
             "2": "Pagar gasta o cobre primeiro, depois quebra o ouro e devolve o troco. O ouro só vem da casa de câmbio do banco.",
             "3": "Todo mundo come todo dia; Fome e Inanição diz o que custa uma refeição perdida.",
             "4": "A morte é permanente. A campanha só termina quando a guilda inteira se foi."
+        },
+        "clock": {
+          "title": "O Relógio",
+          "1": "O tempo só anda quando alguém recebe a ordem de gastá-lo. Um grupo que viaja, trabalha ou descansa gasta horas; uma luta gasta {round} segundos por rodada. Quando um grupo precisa de você (parado, ou com uma luta ou emboscada à espera) o relógio espera. Esperar {advance} horas de uma vez só é permitido quando todos os grupos estão de guarnição.",
+          "2": "O dia vai das {dawn} às {dusk}; o resto é noite. O número do dia muda à meia-noite, não ao amanhecer.",
+          "3": "O que quer que os grupos estejam fazendo, cada meia-noite cruzada fecha o dia: todo membro come uma refeição (veja Fome), a comida envelhece um dia (veja Estragar), o Povo-Árvore Frutífero dá fruto e as lojas reabastecem.",
+          "4": "A noite muda pouco no mapa. Ela pesa nas lutas ao ar livre, que são escuras como breu sem uma luz (veja Luz e Escuridão), e nas caçadas, em que não se leem rastros depois de escurecer."
+        },
+        "rest": {
+          "title": "Descanso e Cura",
+          "1": "Só o descanso cura. A cada {hours} horas completas de descanso, o membro recupera PV. Andar, trabalhar e lutar não curam nada, e a contagem recomeça sempre que ele para de descansar. Um grupo com Ritmo Constante conta o trabalho, feito onde está, como descanso.",
+          "2": "Um período de {hours} horas cura Nível de Personagem × modificador de Constituição em PV, nunca menos de um. Sono Reparador e Segundo Café da Manhã somam um cada; Triagem em qualquer pessoa do grupo soma um para todos.",
+          "3": "Um membro com fome ou faminto não cura nada (veja Fome).",
+          "4": "Uma ordem de DESCANSAR diz por quanto tempo: um período curto, um período completo, ou até todos ficarem cheios. Até ficar cheio conta só os PV, não a doença, e para um minuto antes de uma meia-noite que o grupo não tem comida para atravessar. Um membro envenenado não pode ser descansado até ficar cheio, e PARAR DE DESCANSAR guarda as horas já descansadas.",
+          "5": "O dano não letal volta como PV depois de {clear} horas de descanso sem interrupção ({hardened} com Calejado), desde que o membro esteja alimentado."
+        },
+        "spoiling": {
+          "title": "Estragar e Comida Podre",
+          "1": "A comida tem uma validade em dias, mostrada no item. A cada meia-noite todo perecível envelhece um dia, e uma pilha envelhece como uma só. Passados os seus dias, a comida vira Comida Podre, e qualquer outro perecível, um corpo por exemplo, se perde.",
+          "2": "Isso vale onde quer que a comida esteja: na mochila, no baú do banco, no depósito da casa e nos estoques de uma carroça ou de um animal.",
+          "3": "A Comida Podre não é ração: só alimenta como último recurso e deixa doente (veja Fome e Doença)."
+        },
+        "sickness": {
+          "title": "Doença",
+          "1": "Comer Comida Podre deixa doente: -{con} de Constituição e -{other} em cada outro atributo enquanto durar. Só a fome nunca deixa doente. Estômago Forte é imune.",
+          "2": "Um membro doente pode curar-se descansando: a cada {hours} horas completas de descanso, um d20 de {roll} ou menos o cura ({pct}% por período). Quem foi tratado pelo Médico se cura com certeza.",
+          "3": "Comer Comida Podre estando doente soma uma pilha de Podridão Intestinal (veja Veneno). Qualquer atributo reduzido a zero mata (veja Fome)."
+        },
+        "load": {
+          "title": "Carga",
+          "1": "A mochila conta peso em kg, sem espaços. A carga normal de um membro é {normal0} kg mais {normal_per} kg por ponto de modificador de Força; o máximo é {max0} kg mais {max_per} kg por ponto. Os dois variam com o tamanho do corpo, e um Golias conta como Grande.",
+          "2": "Passada a carga normal, o membro fica sobrecarregado: -{pen} de Força, -{pen} de Destreza e -{speed} de velocidade. Um grupo anda no ritmo do seu andarilho mais lento.",
+          "3": "Passado o máximo, nada mais entra naquela mochila, seja comprado, saqueado ou guardado.",
+          "4": "A Força é lida depois da fome, então um membro com fome carrega menos."
+        },
+        "light": {
+          "title": "Luz e Escuridão",
+          "1": "A maioria das lutas é escura: um combatente só vê o que uma luz alcança. Uma luta ao ar livre segue o relógio, clara de dia e escura como breu à noite.",
+          "2": "Uma Tocha ilumina {torch} casas em volta de quem a leva e uma Lanterna {lantern}, mas só enquanto na mão secundária; na mochila, continua apagada. A Visão no Escuro enxerga {dv} casas no escuro.",
+          "3": "Uma luz ocupa uma mão: com uma arma de duas mãos empunhada, não sobra nenhuma para ela."
+        },
+        "death": {
+          "title": "Morte",
+          "1": "A morte é permanente. Um personagem perdido numa luta, ou por fome, veneno ou doença, nunca volta, e a partida só acaba quando a guilda inteira se foi.",
+          "2": "Um personagem morto numa luta deixa o equipamento no campo: pegue-o antes de sair. Quem morre de fome, veneno ou colapso não deixa corpo, e o equipamento vai com ele."
+        },
+        "bank": {
+          "title": "Banco, Cofre e Casa",
+          "1": "Os Banqueiros alugam à guilda um cofre na Cidade por ${price} uma vez; ele guarda {kg} kg e não custa mais nada para usar. Moedas de Ouro só são cunhadas e fundidas aqui: cunhar uma moeda custa ${fee} acima do valor e fundi-la paga ${fee} abaixo.",
+          "2": "Com {rep} de reputação com os Banqueiros a guilda pode comprar uma casa na Cidade: ${house} uma vez, {house_kg} kg de armazenamento e ${tax} de imposto a cada {period} dias. Perca {limit} pagamentos e os Banqueiros vêm cobrar: devolva a casa e fique devendo, ou ocupe-a sem pagar. Dívida sem pagar por {grace} dias traz a guarda."
+        },
+        "wages": {
+          "title": "Trabalho Diário e Salário",
+          "1": "O trabalho diário paga por bloco inteiro: ${wage} a cada {block} horas na Serraria, e ${premium} a mais por bloco na Mina. Um bloco pela metade não é pago. Os turnos duram {shifts} horas. Nada ataca um grupo de salário.",
+          "2": "Quem leva a ferramenta do local na mochila, um Machado na Serraria ou uma Picareta na Mina, recebe {num}/{den} disso, arredondado para baixo. Cada local conta só a sua ferramenta.",
+          "3": "O trabalho diário é um piso, não um sustento: um dia inteiro compra uma refeição barata, e uma luta ou um turno de coleta paga melhor.",
+          "4": "No palco, um membro com um Instrumento Musical toca por gorjetas, em apresentações de {shows} horas. Cada hora é um teste de d20 + modificador de Carisma: a cada {step} pontos completos acima de {base}, a plateia dá uma moeda.",
+          "5": "A Viagem de Suprimentos à Fronteira paga ${pay} a cada membro e exige {kg} kg de carga livre. Uma emboscada pode vir em cada trecho, {chance}% das vezes."
+        },
+        "gathering": {
+          "title": "Coleta",
+          "1": "Com uma licença, comprada uma vez no local (${yard} na Serraria, ${mine} na Mina) e válida para a guilda inteira, um grupo coleta em vez de trabalhar por salário: para cada membro que leva a ferramenta do local, uma rolagem na tabela do local a cada {rate} horas do turno.",
+          "2": "Quem está sem a ferramenta faz guarda: sem coleta e sem XP de trabalho, mas fica com o grupo e luta. A coleta ensina XP de trabalho no nível de trabalho {yard_level} na Serraria e {mine_level} na Mina. O Território dos Ermos é terreno da própria guilda, então não pede licença nem paga salário.",
+          "3": "Toda hora de um turno rola uma emboscada: {yard_pct}% na Serraria e no Território, {mine_pct}% na Mina. Um bando que encontra o grupo encurta o turno, e o que sobra dele é trabalhado se o grupo vencer."
+        },
+        "levels": {
+          "title": "Níveis, XP e Dados de Vida",
+          "1": "Um personagem tem três trilhas: Combate, Trabalho e Magia. Cada uma tem o seu nível e a sua árvore de talentos, e cada nível numa trilha é uma escolha de talento nessa árvore.",
+          "2": "O XP de combate vem de derrubar um inimigo em pé do seu nível ou acima: (nível do inimigo - o seu) mais um. Um inimigo abaixo do seu nível não paga nada. O primeiro nível pede {c1} XP e o segundo {c2}. Só quem sobrevive à batalha fica com o que ganhou.",
+          "3": "O XP de magia funciona igual quando o último golpe foi mágico, e terminar o estudo de uma magia paga o nível da magia mais um.",
+          "4": "O XP de trabalho conta horas: cada {mark} horas guardadas são uma marca. As horas de um turno valem (nível do trabalho - o seu nível de trabalho) mais um vezes, e nada quando o trabalho está abaixo do seu nível. Trabalhos de salário são nível zero de mãos vazias e nível {own} com a ferramenta do local. O palco é nível {stage}, uma caçada {hunt}, a Viagem de Suprimentos à Fronteira {supply}, a coleta como definido lá, e a fabricação, o nível da receita.",
+          "5": "O Nível de Personagem é a soma dos níveis das suas três trilhas numa curva de {per}n: a cada {per} níveis de trilha, em qualquer uma, vem um Nível de Personagem e mais um dado de vida. A cada {pick} Níveis de Personagem também vem uma escolha de talento racial.",
+          "6": "O PV máximo é o dado inicial mais um dado por Nível de Personagem, mais o modificador de Constituição uma vez por dado, nunca abaixo de um. Os dados são rolados uma vez e guardados, então carregar um salvamento não os rola de novo."
+        },
+        "crafting": {
+          "title": "Fabricação",
+          "1": "Fabricar pede uma receita que o grupo aprendeu, as ferramentas dela em qualquer mochila do grupo e os materiais, que se gastam quando o lote começa. Cada hora de trabalho rola d20 + INT para o lote. TRABALHAR mantém o grupo inteiro na bancada; SOZINHO separa o artesão.",
+          "2": "O nível de uma receita é calculado, nunca escolhido, e nunca bloqueia ninguém: só define quanto XP de trabalho as horas ensinam a um artesão abaixo dele. O nível é um, mais um a cada {per} pontos. Os pontos vêm de quem pode aprendê-la (nenhum para qualquer um, um para um talento que qualquer raça pega, dois para um talento racial ou uma missão), de ingredientes escassos que as lojas não vendem sem limite (um cada, até {scarce_max}) e de um lote de {short} horas ou mais (um) ou {long} horas ou mais (mais um).",
+          "3": "As receitas vêm de talentos de Trabalho, de papéis de receita estudados na Taverna, de talentos raciais e de recompensas de trabalhos."
+        },
+        "market": {
+          "title": "Lojas e Pechincha",
+          "1": "Uma loja vende pelo preço de tabela e compra de volta a {sell}% dele. Um membro fala pela guilda: o líder, se partilha o idioma do vendedor, senão o melhor de lábia entre os que partilham. Sem ninguém que o partilhe, vale o preço de tabela.",
+          "2": "O acordo de quem fala move todo preço: +{step}% por ponto de modificador de Carisma positivo (um negativo não soma nada), mais um degrau pela proximidade do seu alinhamento ao do vendedor: +{a0}% igual, +{a1}% a um degrau, nada a dois, -{a3}% a três, -{a4}% a quatro. O acordo fica entre -{low}% e +{high}%. Um acordo positivo baixa o que você paga e sobe o que você recebe.",
+          "3": "A revenda é o preço de tabela vezes {sell}% mais {share}% do acordo, nunca abaixo de uma moeda. Um item sem valor não rende nada: o lojista o joga fora."
+        },
+        "shop": {
+          "title": "Caixa e Estoque das Lojas",
+          "1": "Uma loja só paga do seu caixa. Ele começa em ${start}, recebe o que você gasta, paga o que ela compra e recupera ${regen} a cada meia-noite até ${cap}. Uma venda maior que o caixa é recusada inteira.",
+          "2": "As prateleiras são finitas: cada loja guarda o que o seu ofício vende e repõe um pouco por dia. Alguns bens têm uma prateleira só, como {mine} na Mina. Qualquer loja compra qualquer coisa pela taxa acima."
+        },
+        "missions": {
+          "title": "Missões",
+          "1": "Uma missão tem um contratante com nome, um objetivo concreto, uma recompensa em cobre e um prazo de verdade. O líder do grupo a aceita, e ela segue esse personagem, não o grupo.",
+          "2": "Na entrega, o grupo inteiro que estiver presente divide a recompensa igualmente, o resto indo para os primeiros membros, e cada parte é paga numa mochila.",
+          "3": "Passado o prazo, a missão falha. Muitas são oferecidas de novo depois de uma espera que o quadro mostra; poucas se perdem de vez."
+        },
+        "arena": {
+          "title": "A Arena",
+          "1": "A Arena deixa a guilda lutar por dinheiro, e ninguém morre lá. O grupo aposta uma entrada das bolsas dos lutadores: ${scrapper_entry} por cabeça no combate do Brigão da Fossa, contra {scrapper_foes} inimigos, por uma bolsa de ${scrapper_purse} que um lutador leva ao vencer. Um lutador pode entrar por inimigo em campo, até {boss_squad} no combate do chefe.",
+          "2": "Adelio guarda o título da Fossa: desafiá-lo custa ${champion_entry} por cabeça por uma bolsa de ${champion_purse}. Derrubado ele, os Jogos abrem: um combate livre e um de bandeira a ${games_entry} por cabeça por ${games_purse}, depois o combate de chefe dos irmãos Ribbit a ${boss_entry} por cabeça por ${boss_purse}.",
+          "3": "O título é de um personagem e precisa ser defendido: a cada {cycle} dias vem um desafiante, e o dono tem {grace} dias para chegar à Arena e recusá-lo, por ${defense}, ou perde o título.",
+          "4": "Um combate ensina XP de combate pela regra de sempre: nada quando os inimigos estão abaixo do seu nível."
+        },
+        "alignment": {
+          "title": "Alinhamento",
+          "1": "Todo personagem fica em dois eixos: Leal, Neutro ou Caótico, e Bom, Neutro ou Mau. A distância entre dois alinhamentos é a soma dos passos nos dois eixos, de nenhum (iguais) a quatro (opostos).",
+          "2": "A distância pesa quando as pessoas se encontram: ela desconta no argumento de um recrutamento (veja Recrutamento), move o preço de um vendedor (veja Lojas e Pechincha), e o eixo da lei decide o que um membro leva ao deixar a guilda (veja Grupos)."
+        },
+        "languages": {
+          "title": "Idiomas",
+          "1": "Entender-se é uma porta, não um bônus. Sem idioma em comum você não consegue argumentar com um recruta, uma loja não dá acordo de pechincha (veja Lojas e Pechincha), e um inimigo só se deixa persuadir, enganar ou intimidar no idioma do seu líder (veja Conversar Antes da Luta).",
+          "2": "Cada raça fala os seus idiomas, listados no capítulo Raças. Para aprender outro, estude um Dicionário daquele idioma na Taverna (veja Estudar); a Biblioteca vende os dicionários quando a reputação dela permite."
+        },
+        "leader": {
+          "title": "O Líder da Guilda",
+          "1": "A guilda responde a um líder. Trocar quem é custa a única troca grátis da partida; depois disso só a morte o substitui.",
+          "2": "O líder da guilda patrocina mais recrutas (veja Recrutamento). Cada grupo tem também o seu líder, trocado à vontade, que pechincha pelo bando numa loja (veja Lojas e Pechincha) e define quantos o grupo comporta (veja Grupos)."
+        },
+        "animals": {
+          "title": "Animais",
+          "1": "Um animal come uma ração por dia, e o que fica {days} dias sem comer morre de fome e se perde. Cada animal e cada cativo ocupa vagas de rebanho do seu grupo (veja Grupos).",
+          "2": "Um animal na garagem da casa come do depósito da casa e fica fora do limite do rebanho, e também passa fome quando o depósito está sem comida. Perca a casa e a garagem vai junto."
+        },
+        "travel": {
+          "title": "Viagem e Perigo",
+          "1": "Uma viagem leva a distância sobre o ritmo do andarilho mais lento: peso da armadura, sobrecarga, animais e carroças atrasam o grupo.",
+          "2": "Dentro da jurisdição da Cidade a guarda mantém a paz e testa na chegada quem tem ficha criminal (veja Crime e a Guarda). Além dela ninguém mantém: as estradas, florestas e ruínas guardam lobos, bandidos e coisa pior.",
+          "3": "Um grupo que chega a um lugar inseguro, a Estrada Velha por exemplo, encontra uma emboscada {chance}% das vezes: uma vez por trecho, nunca por hora, e só se o bando sorteado atacaria. Turnos de trabalho e caçadas rolam a cada hora.",
+          "4": "A postura Cautelosa baixa essas chances só para certas vocações e talentos (Andarilhos, Batedor da Floresta, Espreitador Noturno à noite); para os demais não muda nada.",
+          "5": "Alguns lugares ficam ocultos até serem achados: as ruínas e os campos de bois pela busca de um batedor na área, os três santuários pela entrega do Códice da Biblioteca. Um lugar revelado continua revelado."
+        },
+        "claim": {
+          "title": "O Território dos Ermos",
+          "1": "O Território é um chão nos Ermos que a guilda pode manter. Ele é erguido por etapas e depois guarnecido por {days} dias inteiros. A cada dia vem, {chance}% das vezes, uma invasão de {size} combatentes de nível {level}; uma invasão perdida, ou uma guarnição retirada, reinicia a contagem. Um território tomado perde o que estava estacionado nele."
+        },
+        "reputation": {
+          "title": "Reputação e Feitos",
+          "1": "Cada facção guarda a sua reputação, e ela só se move por feitos: façanhas únicas, valendo um ponto cada, que não se conseguem repetindo trabalho. Os pontos somados entre as facções são a Fama.",
+          "2": "A reputação abre serviços: a casa com os Banqueiros, dicionários na Biblioteca, a iniciação numa escola, viagens de suprimentos com o Posto de Comando.",
+          "3": "Alguns feitos se excluem. Há um só Códice Antigo e uma só Dragobra, então a primeira entrega fecha os feitos que queriam o outro; o cartão da facção os mostra riscados."
+        },
+        "justice": {
+          "title": "Crime e a Guarda",
+          "1": "Cada personagem tem uma nota de crime, uma ficha que só conta dentro da jurisdição da Cidade. Ela sobe com uma luta vencida contra a guarda, uma missão de confiança arruinada ou uma dívida com os Banqueiros sem pagar por {grace} dias, entre outras coisas.",
+          "2": "Quando um grupo chega à Cidade, todo membro com ficha é testado: d20 + crime, menos um disfarce vestido, com {min} ou mais a guarda o pega. Quem tem a ficha limpa nunca rola.",
+          "3": "Um grupo pego escolhe por todos. Render-se manda os procurados para as celas por {days} dias a cada ponto de crime, e apaga a ficha deles. Lutar contra uma patrulha letal de {size} guardas até o nível {cap}, cujos sobreviventes ganham crime. Enganar ou subornar deixa seguir livre com a ficha mantida. Ou fugir, de volta por onde o grupo veio.",
+          "4": "Uma ficha some sozinha, um ponto a cada {fade} dias, só com Rosto Inocente. Fora isso só o tempo nas celas a limpa.",
+          "5": "Uma casa ocupada sem pagar é invadida pela guarda {raid}% das vezes a cada chegada."
+        },
+        "attack": {
+          "title": "Iniciativa e Rolagem de Ataque",
+          "1": "Cada combatente rola iniciativa uma vez, d20 + modificador de Sabedoria mais talentos, e age do maior para o menor. Uma criatura lendária rola duas vezes e joga dois turnos por rodada.",
+          "2": "Um ataque é d20 + modificadores contra a Guarda do alvo. Acerta quando o total alcança a Guarda.",
+          "3": "Um 20 natural sempre acerta e é um crítico: o dano todo é multiplicado, por dois salvo se a arma disser o contrário. Algumas armas dão crítico numa faixa maior. Um 1 natural sempre erra.",
+          "4": "Um alvo que o atacante não vê, só ouve no escuro, está encoberto: -{obscured} para acertar. Penalidades e bônus seguem a regra do Tipo de bônus (veja Turnos e Pontos de Ação).",
+          "5": "A Trompa de Sinal ({horn_cost} pontos, uma vez por luta) faz todo aliado a até {horn_radius} casas agir mais cedo: +{horn_bonus} de iniciativa."
+        },
+        "dying": {
+          "title": "Queda, Teste de Morte e Estabilizar",
+          "1": "Com zero PV o combatente cai, fica Caído e larga o que segura. Ele está Morrendo: o relógio conta os turnos dele, e no turno {turns} rola um teste de morte, um d20 seco que sobrevive com {save} ou mais (estável) e morre abaixo disso. Cada golpe num corpo morrendo soma um turno ao relógio.",
+          "2": "Estabilizar (um ponto, um aliado adjacente): um d20 seco com {save} ou mais, a mesma rolagem que o corpo enfrentaria. Um combatente estável continua no chão, mas fora de perigo.",
+          "3": "Primeiros Socorros (um ponto, um aliado adjacente, uma carga do kit): d20 + modificador de Sabedoria contra {aid}. Estabiliza um aliado morrendo e cura um doente. Um kit começa com {charges} cargas.",
+          "4": "Um autômato quebrado não tem relógio: Estabilizar nele é d20 + modificador de Inteligência contra {repair}, e um sucesso o põe de pé com um PV.",
+          "5": "Quando a luta acaba, todo mundo que ainda está morrendo faz um último teste de morte. Uma luta perdida é total: todo combatente do lado derrotado que ainda está no chão, morrendo, estável ou quebrado, morre."
+        },
+        "nonlethal": {
+          "title": "Golpes Não Letais",
+          "1": "A opção Não letal faz o combatente segurar os golpes: -{pen} para acertar, e um inimigo derrubado fica nocauteado em vez de morrer, estável com zero PV.",
+          "2": "Um golpe contido nunca acaba com quem já está no chão, e numa luta de arena ninguém morre. O dano nocauteante some com descanso (veja Descanso e Cura)."
+        },
+        "demoralize": {
+          "title": "Desmoralizar",
+          "1": "Desmoralizar ({cost} ponto) é um d20 + modificador de Carisma contra a Determinação do alvo, num inimigo que você vê e que vê você, a até {range} casas, e que compartilha um idioma com você. Um 20 natural sempre pega e um 1 natural nunca.",
+          "2": "Cada sucesso soma uma pilha, até {max}. Cada pilha tira um ponto de ataque, Guarda e Determinação; uma pilha some no fim do turno da vítima. Também custa moral à vítima (veja Moral), e um inimigo Desmoralizado não desvia de um Golpe Mutilante."
+        },
+        "terrain": {
+          "title": "Terreno: Água, Fossos e Fogo",
+          "1": "A água rasa é terreno difícil: entrar numa casa dela custa uma casa a mais. A água funda, um fosso alagado, não se anda: você Nada por ela (d20 + modificador de Força, dividido por {swim}, são as casas que você cruza, nunca mais que metade da velocidade).",
+          "2": "Sob a água funda o combatente segura o fôlego por {breath} + o modificador de Constituição em rodadas. Depois disso, leva dano crescente a cada turno, um d6, depois dois, depois três, até emergir ou cair. Uma criatura Anfíbia nunca se afoga.",
+          "3": "Um fosso é um piso mais baixo. Escalar (um ponto) leva você um nível, um teste de Força contra {stone}, ou {rope} com uma corda sobre a borda; escorregar custa a ação. Pular dentro é de propósito, sem teste.",
+          "4": "Uma queda não causa dano no primeiro nível e um d6 por nível depois dele. Quem voa não leva nada; mergulhar em água funda é amortecido pela água.",
+          "5": "O fogo queima um corpo cada vez que ele entra numa casa em chamas ou começa o turno em uma: {dice}d{faces} por casa em chamas que ele ocupa. O fogo se espalha casa a casa, nunca sobre parede ou água, e ilumina a área em volta."
+        },
+        "ammo": {
+          "title": "Munição",
+          "1": "Um arco tira uma flecha da aljava a cada tiro. Uma besta guarda um virote por vez: dispara uma vez e então precisa de Recarregar ({reload} ponto) para armar o próximo tirando da aljava, e uma besta descarregada é usada como arma improvisada.",
+          "2": "Uma aljava guarda {quiver} projéteis. Cada projétil disparado sai da aljava, e o que sobra passa para a próxima luta."
+        },
+        "push": {
+          "title": "Empurrar",
+          "1": "Empurrar ({cost} ponto) lança qualquer um de pé ao seu lado, inimigo ou aliado, uma casa para trás em linha reta. É um teste de Força contra {dc} + o modificador de Constituição do alvo, e um 20 natural sempre funciona.",
+          "2": "Uma parede ou um corpo atrás do alvo para o empurrão na hora. Um fosso atrás dele é uma queda: o alvo cai e leva o dano (veja Terreno). Um empurrão que termina numa armadilha ou casa em chamas a ativa."
+        },
+        "hidden": {
+          "title": "Inimigos Invisíveis",
+          "1": "Um combatente invisível não pode ser visto nem alvejado por nenhum outro lado até causar dano. Um lado que o encontra, por um esbarrão, uma Investigação ou um ferimento, o vê até o começo do próximo turno do invisível, quando ele some de novo.",
+          "2": "Investigar ({cost} ponto) abre uma parede secreta ao seu lado e procura inimigos escondidos a até {radius} casas: d20 + modificador de Sabedoria contra {base} + o modificador de Inteligência do inimigo."
+        },
+        "sides": {
+          "title": "Mais de Dois Lados",
+          "1": "Uma luta pode ter mais de dois lados. Todo lado é hostil a todos os outros: qualquer combatente pode atacar um de outro lado, e um aliado é só alguém do seu próprio lado."
         },
         "hunger": {
             "title": "Fome e Inanição",
@@ -7175,7 +7388,8 @@
             "1": "Na primeira vez que alguém do seu lado vê um inimigo, cada colega que o vê rola d20 + INT contra CD {dc} + o Nível de Personagem do inimigo. A melhor margem é de todo o lado.",
             "2": "Quanto melhor a margem, mais campos da ficha do inimigo se abrem (os ? são o que você ainda não leu). Uma rolagem falha não revela nada e nunca mente.",
             "3": "Uma raça que a guilda já enfrentou é {discount} mais fácil de ler, e uma habilidade racial que a guilda já viu sai de graça na próxima da raça.",
-            "4": "Avaliar ({assess} ponto) rola de novo com +{bonus} num inimigo à vista, uma vez por inimigo a cada rodada."
+            "4": "Avaliar ({assess} ponto) rola de novo com +{bonus} num inimigo à vista, uma vez por inimigo a cada rodada.",
+            "5": "A margem decide o que se abre. A partir de {easy}: dado de dano, velocidade, nível e habilidade racial. A partir de {medium}: acerto, bônus de dano, Guarda, Determinação e moral. A partir de {hard}: atributos, pontos de vida, talentos, magias e artefato."
         },
         "or": " ou ",
         "part": {

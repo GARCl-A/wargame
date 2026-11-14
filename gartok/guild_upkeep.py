@@ -25,6 +25,8 @@ from . import (
 from .clock import SECONDS_PER_DAY
 
 HOURS_PER_HEAL = 8
+CRIME_FADE_DAYS = 7                        # Innocent Face: a rap sheet loses a point on every day divisible by this
+SICK_CURE_ROLL = 5                         # a sick body shakes it off on a d20 at or under this, each stretch of rest
 HOURS_PER_NONLETHAL_CLEAR = 24
 HARDENED_NONLETHAL_CLEAR = 16              # two heal stretches: the clock checks every HOURS_PER_HEAL
 
@@ -138,7 +140,7 @@ class UpkeepMixin:
                             cured = True
                             events.append(i18n.t("guild_upkeep.rests_and_recovers_from_their", name=u.name))
                         else:
-                            cured = data.d20() <= 5
+                            cured = data.d20() <= SICK_CURE_ROLL
                             if cured:
                                 events.append(i18n.t("guild_upkeep.rests_and_recovers_from_their_2", name=u.name))
 
@@ -263,7 +265,7 @@ class UpkeepMixin:
                 fruit, n = u.dawn_bloom()
                 u.give_to_pack(fruit, n)
                 events.append(i18n.t("guild_upkeep.blooms_at_dawn_and_yields", name=u.name, n=n, fruit=fruit))
-            if u.ability.id == "innocent_face" and u.crime > 0 and self.clock.day > 0 and self.clock.day % 7 == 0:
+            if u.ability.id == "innocent_face" and u.crime > 0 and self.clock.day > 0 and self.clock.day % CRIME_FADE_DAYS == 0:
                 u.crime -= 1
                 events.append(i18n.t("guild_upkeep.s_criminal_record_fades_by", name=u.name))
         flush("day")

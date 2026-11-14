@@ -26,7 +26,7 @@ from . import abilities, data, economy, i18n, items, magic, names, starter_kit, 
 from .data import ATTRIBUTES, roll
 from .unit_derive import DerivationMixin
 from .unit_edit import EditMixin
-from .unit_hunger import HungerMixin
+from .unit_hunger import SICK_CON_PENALTY, SICK_PENALTY, HungerMixin
 from .unit_levels import LevelingMixin
 from .unit_loadout import (  # noqa: F401 -- re-exported
     LoadoutMixin,
@@ -263,12 +263,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
             setattr(self, a, self.base_attributes[a] + m + self.talent_bonus("attr", a)
                     - self.poison_penalty(a) + self._artifact_bonus(a))
         if getattr(self, "sick", False):
-            self.constitution -= 4
-            self.strength -= 2
-            self.dexterity -= 2
-            self.intelligence -= 2
-            self.wisdom -= 2
-            self.charisma -= 2
+            for a in ATTRIBUTES:
+                setattr(self, a, getattr(self, a) - (SICK_CON_PENALTY if a == "constitution" else SICK_PENALTY))
 
     def _artifact_bonus(self, attr):
         """What the worn artifact adds to attribute `attr` (see `items.ARTIFACT_ATTRIBUTES`)."""

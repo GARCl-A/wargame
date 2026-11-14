@@ -192,7 +192,7 @@ gartok/
   tutorial.py       the tutorial's ids + TutorialState (seen/enabled)
   hints.py          the one-time rule cards a trigger fires (a studyable item, the road, a second fight, a fallen member, a dungeon walked out of) and the wiki entry each opens
 
-  wiki_rules.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
+  wiki_rules.py / wiki_rules_combat.py / wiki_rules_work.py / wiki_rules_world.py / wiki_races.py / wiki_terms.py (the compendium's RULES / RACES / the traits and actions it links)
   keywords.py       the reserved words of the rules (Brutal, Shove, Dying...): one text each, the KEYWORDS chapter of the wiki; a description says only the word
 
   # the Editor lives apart, in editor/ (a sibling package): the one pygame program of the repo.

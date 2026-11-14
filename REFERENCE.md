@@ -271,6 +271,9 @@ Reserved words of the rules: each always means the one thing written here.
 | Guard | Guard: the number an attack must reach to hit. 10 + the Dexterity modifier (capped by armour) + armour, shield, talents, size and natural bonuses. An attack that meets or beats it does damage. |
 | Evasion | Evasion: the number a spell that only has to touch its target must reach: 10 + the Dexterity modifier (armour's cap on it ignored) + talents, size and natural bonuses. Armour and shields never add to it. |
 | Resolve | Resolve: a fighter's mental toughness, the number Demoralize, Sleep and the other mind spells must reach: 10 + the Wisdom modifier + talents. A group stretched past its leader's hold lowers its members' Resolve, and the daily roll that decides who leaves is made against it. |
+| Modifier | Modifier: the bonus or penalty an attribute score gives, (score - 10) divided by 2, rounded down. A score of 10 gives 0, 14 gives +2, 8 gives -1. Rolls and rules name the attribute: Charisma modifier, WIS modifier. |
+| DC | DC: the number a roll must reach, short for difficulty class. A save is a d20 plus an attribute modifier against a DC: reaching it passes, falling short fails, and what a fail costs is in the rule that asks for the save (a Constitution save against poison, a d20 + INT roll against a foe to read it). |
+| Bonus type | Bonus type: the label on a bonus, such as circumstance (Defend, Pack Tactics) or status. Bonuses of one type never stack: only the largest counts. Penalties and bonuses with no type always add. A bonus of a different type adds normally. |
 
 ## Armor
 

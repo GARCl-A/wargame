@@ -14,6 +14,9 @@ that date. Two halves:
 "Read again later" is the column the author asked for: a screen card is safe (its `?` reopens it forever), a
 hover or a wiki entry is safe, a one-time hint is not.
 
+Since 2026-11-14 the Rules chapter of the wiki has a section for each rule in the tables below (`wiki_rules.sections()`, ids
+`rules:<key>`); a row that reads "no wiki entry" in the Gap column is out of date, the wiki is where to read it again.
+
 ## What to fix first
 
 ### 1. Text that says something the code does not do
