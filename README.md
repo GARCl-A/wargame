@@ -1,8 +1,8 @@
-# Gartok
+# Guilds of Gartok
 
 **Found a guild, send your band out into the world, and fight it out turn by turn.**
 
-Gartok is a turn-based tactical strategy game mixed with guild management. You pick the trade your guild is founded on, draw your first squad, and settle into an open world: work for coin, buy and sell, recruit, travel, bet on the Arena and fight tactical battles. Every member is an individual, with a character sheet, talents, loyalty and a story the game keeps writing for them.
+Guilds of Gartok is a turn-based tactical strategy game mixed with guild management. You pick the trade your guild is founded on, draw your first squad, and settle into an open world: work for coin, buy and sell, recruit, travel, bet on the Arena and fight tactical battles. Every member is an individual, with a character sheet, talents, loyalty and a story the game keeps writing for them.
 
 <p align="center">
   <a href="../../releases/latest"><b>⬇&nbsp;&nbsp;DOWNLOAD THE LATEST VERSION (Windows)</b></a>
